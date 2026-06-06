@@ -69,7 +69,7 @@ type SpecReadiness =
   | "designed"    // components, ports, decisions identified
   | "bound"       // runtime + code bindings exist and resolve
   | "executable"  // verification mode is executable; tests defined
-  | "verified";   // a verifying spec/test exists and is enabled (structural; run verdict is CI-side, not in the graph — D3)
+  | "verified";   // a verifying spec/test exists and is enabled (structural; run verdict is CI-side, not in the graph)
 ```
 
 The axes move freely. A `capability`-level spec can sit at `framed` forever (it is not failing CI as long as nothing claims it is `bound`). A `scenario`-level spec can be `executable`. An NFR can be `specified` but not yet `executable`. A `contract` can be `bound` but not `verified`. A linear pipeline cannot express these states; two axes can.
@@ -94,15 +94,15 @@ type SpecKind =
 
 A spec is exactly one kind. If a fact straddles kinds, model it as two specs with a relation between them.
 
-### Enum reconciliation (the E2 inconsistency)
+### Why the enums look the way they do
 
-The analysis (View 1, E2) flagged that the v1 docs listed *different* member sets for these enums across the README, `00`, and `01` — a sign the enums were still settling. This set picks **one coherent member set** and removes the overlaps:
+`abstraction` and `kind` are kept as one coherent, non-overlapping vocabulary:
 
-1. **`abstraction` no longer contains `rule`.** A rule is a *kind* of truth, not a *level of thinking*. Removing it from `abstraction` deletes the `capability`/`rule` overlap with `kind`. Abstraction is now a clean ladder of altitudes: `initiative → domain → capability → feature → scenario → operation → component → contract`.
-2. **`kind` drops the `quality` alias.** The v1 `kind` had both `constraint` *and* `quality` ("alias for performance/reliability/security target"). An alias is a smell. There is one member — `constraint` — and the *flavour* (business / quality / security / performance / compliance) lives on the `ConstraintFacet` (§3), where a `kind: "performance"` constraint with a measurable `target` *is* an NFR. One concept, one place.
-3. **`capability` deliberately appears in both `kind` and `abstraction`** — and that is fine, because they answer different questions. A spec can be `kind: "capability"` (it states an ability) *and* `abstraction: "capability"` (it sits at capability altitude), but the two are set independently. This is the one intentional name-reuse; it is not an inconsistency because the axes are orthogonal.
+1. **`abstraction` does not contain `rule`.** A rule is a *kind* of truth, not a *level of thinking*. Keeping it out of `abstraction` leaves a clean ladder of altitudes: `initiative → domain → capability → feature → scenario → operation → component → contract`.
+2. **`kind` has no `quality` alias.** There is one member — `constraint` — and the *flavour* (business / quality / security / performance / compliance) lives on the `ConstraintFacet` (§3), where a `kind: "performance"` constraint with a measurable `target` *is* an NFR. One concept, one place.
+3. **`capability` deliberately appears in both `kind` and `abstraction`** — and that is fine, because they answer different questions. A spec can be `kind: "capability"` (it states an ability) *and* `abstraction: "capability"` (it sits at capability altitude), set independently. This is the one intentional name-reuse; it is not an inconsistency because the axes are orthogonal.
 
-The result: `abstraction` and `kind` no longer share `rule`; `kind` has no aliases; the only shared token (`capability`) is intentional and orthogonal.
+The result: `abstraction` and `kind` share no overlapping members; `kind` has no aliases; the only shared token (`capability`) is intentional and orthogonal.
 
 ---
 
@@ -119,8 +119,8 @@ Facets carry the detail. All are optional on the type (P7); validators require t
 | `design` | components, ports, dependencies, decisions, tradeoffs | Referenced by ID; ADR bodies are linked, not parsed for semantics. |
 | `runtime` | bindings to runtime composition (routes, layers, registrations) | **Framework-neutral in the MVP** — generic markers only. Deep extraction (Effect `R`, Awilix wiring) is aspirational. |
 | `bindings` | code, tests, schemas, docs (by ID) | Every binding ID must resolve at `bound`+. |
-| `verification` | mode (manual / reviewed / contract / executable), tests | `executable`/`verified` means a linked verifying test *exists and is enabled* (structural). Pass/fail is **not** in the graph — it is CI's, operational (D3). |
-| `evidence` | verifiedBy (structural: a verifying spec exists) | **Extractor-populated only**, never authored by hand (epistemic boundary, `01`). MVP is *structural presence* only; `observedIn` / build / run-result evidence is aspirational (`06`, `07` D3) — test *run results* are never ingested. |
+| `verification` | mode (manual / reviewed / contract / executable), tests | `executable`/`verified` means a linked verifying test *exists and is enabled* (structural). Pass/fail is **not** in the graph — it is CI's, operational. |
+| `evidence` | verifiedBy (structural: a verifying spec exists) | **Extractor-populated only**, never authored by hand (epistemic boundary, `01`). MVP is *structural presence* only; `observedIn` / build evidence is aspirational (`06`, `07`) — test run results are never ingested. |
 | `ui` | references to component stories, design-tool nodes, visual baselines, accessibility status | **Aspirational.** Always links, never owns or renders. |
 
 ### Worked example — one spec enriching in place
@@ -231,7 +231,7 @@ Namespaces in the MVP: `spec`, `pack`, `capability`, `impl`, `api`, `test`, `adr
 
 Code and specs link by these IDs *in strings*, never by import edges (P6) — which is the only thing that lets either side survive heavy refactoring. The cost of string IDs is typos; that is what referential-integrity validation exists to catch (`05`). The optional generated `spec-ids` union type pushes some of those checks to `tsc`, but it is a convenience, not a load-bearing gate (L8).
 
-> **History note (L4):** the v1 model added ID-freeze-after-`bound` with mandatory supersession to protect graph-resident history. This set drops that machinery. IDs are stable by convention and survive refactors; renaming one is a repo edit that git records. We do not bookkeep ID history in the graph (see `01`, git-as-event-log).
+> **IDs carry no history.** IDs are stable by convention and survive refactors; renaming one is a repo edit that git records. The graph does not bookkeep ID history (see `01`, git is the event log).
 
 ---
 
@@ -252,7 +252,7 @@ MVP relation vocabulary (a Representation; extensible):
 | `exemplifies(spec)` | this example illustrates a parent spec |
 | `verifies(spec)` | this scenario/test verifies a parent spec |
 
-`supersedes(decision)` is permitted **only** on decision/ADR specs, as a current authored statement about two records that both still exist in the repo — not as graph-resident history (see the L4 resolution in `01`).
+`supersedes(decision)` is permitted **only** on decision/ADR specs, as a current authored statement about two records that both still exist in the repo — not as graph-resident history (see git is the event log in `01`).
 
 All relations carry provenance (declared, here) like every edge (P9). The extractor adds *inferred* and *annotation* edges separately; they are never merged into declared relations.
 </content>

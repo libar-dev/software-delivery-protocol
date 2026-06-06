@@ -1,27 +1,27 @@
 # G — Trace & Assess Impact
 
-Once everything is one graph, the payoff is navigation: what does a change touch, and what proves a spec works. The job here is confident change and credible coverage.
+Once everything is one graph, the payoff is navigation: what does a change touch, what proves a spec works, and where might the curation be falling behind the code. The job here is confident change, credible coverage, and honest curation — keeping the two graph surfaces (curated vs mechanical substrate) doing their separate jobs.
 
 ---
 
 ## JS-G1
 ### See what a change impacts before making it
 
-**Phase:** Iterate
-**References:** [03 — Graph Metamodel](../docs/concept/03-graph-metamodel.md), [07 — Spec Studio & Projections](../docs/concept/07-spec-studio-and-projections.md)
+**Phase:** MVP
+**References:** [06 — Consumers & Projections](../docs/concept/06-consumers-and-projections.md), [03 — The One Graph](../docs/concept/03-the-one-graph.md)
 
 > **When** I'm about to change a spec or a piece of code, **I want to** see what depends on it upstream and downstream, **so I can** refactor or re-scope with confidence instead of discovering the blast radius after the fact.
 
-**Essence:** The one graph turns "what will this break?" into a query, not a guess.
+**Essence:** The one graph turns "what will this break?" into a query, not a guess. Blast-radius over a changeset is one of the frozen handle methods, and an impact list rides along with every spec in the view.
 
 **Acceptance criteria:**
-1. For any spec or node, the system shows what it depends on and what depends on it.
-2. Impact spans the chain — parent and child specs, the code that realises it, and the tests that verify it.
-3. The impact answer is derived from the live graph, so it reflects the repo's current reality.
+1. For any spec or node, the system shows what it depends on and what depends on it, derived from the live graph so it reflects the repo's current reality.
+2. Impact spans the chain — parent and child specs, the code that satisfies it, and the tests that verify it.
+3. Blast-radius can be taken over a changeset (e.g. a `git diff`), returning the impacted specs and at-risk items — exposed as a frozen method on the typed handle (Theme E) and surfaced as the per-spec impact list in the view.
 4. Each impacted item is identifiable and reachable, not just a count.
-5. Inferred dependencies in the impact set are marked as such, so guesses aren't mistaken for certainties.
-6. The impact view is available before committing a change, so it informs the decision.
-7. The same impact answer can be handed to an AI agent as context for executing the change safely.
+5. Inferred dependencies in the impact set are marked as such, so machine-derived reach is not mistaken for declared certainty.
+6. The impact answer is available before committing, so it informs the decision, and the same answer can be handed to an agent as context for executing the change safely.
+7. Impact uses the mechanical substrate (the inferred import/symbol layer) for exhaustive reach while the curated graph stays editorially sparse — a richer interactive impact UI is a later enhancement over this same query.
 
 ---
 
@@ -29,17 +29,38 @@ Once everything is one graph, the payoff is navigation: what does a change touch
 ### Trace a spec to its verification and back
 
 **Phase:** MVP
-**References:** [03 — Graph Metamodel](../docs/concept/03-graph-metamodel.md), [06 — Extraction & Validation](../docs/concept/06-extraction-and-validation.md)
+**References:** [03 — The One Graph](../docs/concept/03-the-one-graph.md), [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md)
 
-> **When** I need to know whether a spec is actually proven, **I want to** trace from the spec to the tests that verify it and back from any test to the specs it covers, **so I can** trust coverage claims instead of assuming them.
+> **When** I need to know whether a spec is actually backed by a test, **I want to** trace from the spec to the tests that verify it and back from any test to the specs it covers, **so I can** trust coverage as a structural fact instead of a filename convention or an act of faith.
 
-**Essence:** Verification is an explicit, bidirectional link in the one graph — not a filename convention or an act of faith.
+**Essence:** Verification is an explicit, bidirectional `verifies` link in the one graph. "Verified" means a linked verifying test *exists and is enabled* — a structural fact, never a pass/fail verdict.
 
 **Acceptance criteria:**
-1. From a spec, I can see which tests claim to verify it.
-2. From a test, I can see which specs it covers.
-3. A test's claim to verify a spec is explicit and checkable — never inferred silently into a coverage assertion.
-4. A spec that should be verified but has no verifying test is visibly surfaced as a gap.
-5. A test that verifies a non-existent spec is caught as an error.
-6. The trace is bidirectional and queryable without leaving the graph.
-7. Coverage gaps are reportable per spec, capability, or the whole graph, so blind spots are findable.
+1. From a spec, I can see which tests claim to `verifies` it; from a test, I can see which specs it covers.
+2. A test's claim to verify a spec is explicit (an annotation/marker) and checkable — never silently inferred into a coverage assertion.
+3. A spec that claims `executable`/`verified` but has no resolving verifying test is surfaced as a gap, and a test that verifies a non-existent spec is a build error.
+4. "Verified" is structural — a linked, enabled verifying spec/test is present — and the build never ingests or stores the run verdict (pass/fail stays CI's, operational concern).
+5. The trace is bidirectional and queryable directly from the graph, without leaving it.
+6. Coverage gaps are reportable per spec, per capability, and across the whole graph, so blind spots are findable.
+7. The trace survives refactors because it is keyed on stable IDs, not on test file locations.
+
+---
+
+## JS-G3
+### Get curation assistance from the mechanical substrate
+
+**Phase:** Iterate
+**References:** [06 — Consumers & Projections](../docs/concept/06-consumers-and-projections.md), [01 — Founding Principles & Invariants](../docs/concept/01-founding-principles-and-invariants.md)
+
+> **When** the code has grown faster than the curated graph, **I want to** get narrow, honest signals from the mechanical substrate about what might be missing or stale, **so I can** keep the curated architecture current without letting an import graph dictate it.
+
+**Essence:** The curated graph answers "what *is* the architecture" (editorial, sparse); the mechanical substrate answers "what could break / where is this used at all" (derived, exhaustive). The substrate assists curation but never *becomes* it — divergence from the import graph is curation, not drift.
+
+**Acceptance criteria:**
+1. The substrate is a derived import/symbol/call structure, regenerated on demand from code, never authored and never authoritative — so it does not constitute a second source of truth.
+2. It offers exactly two assist roles beyond impact: **propose candidates** (e.g. a high-fan-in module with no curated node) and **flag unambiguous drift** (e.g. a `satisfies` target whose source file was deleted).
+3. Proposals are suggestions a human accepts by editing the repo — they never auto-create declared or annotation edges.
+4. The substrate is never used to "densify" the curated graph by inferring architecture edges from imports.
+5. A curated graph that is a small selection (single-digit to a quarter) of the mechanical firehose is treated as correct by design, not as a coverage deficiency.
+6. Any signal it raises carries `inferred` provenance and confidence, kept visibly distinct from declared/annotation facts.
+7. Disabling the substrate degrades gracefully — the curated graph, view, and validators are unaffected.

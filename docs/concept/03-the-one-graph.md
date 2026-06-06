@@ -1,6 +1,6 @@
 # 03 — The One Graph
 
-The graph is the heart of the trust model. This document defines how it is derived, why it is deterministic, how provenance stays honest, why it is regenerable, and why git — not the graph — is the event log. It realises **P1** (canonical repo), **P2** (one read model), **P3** (determinism), **P9** (provenance never collapsed), **P10** (inference never authoritative), and the **git-as-event-log** decision from `01`.
+The graph is the heart of the trust model. This document defines how it is derived, why it is deterministic, how provenance stays honest, why it is regenerable, and why git — not the graph — is the event log. It realises **P1** (canonical repo), **P2** (one read model), **P3** (determinism), **P9** (provenance never collapsed), **P10** (inference never authoritative), and **git is the event log** from `01`.
 
 > The graph is a *projection of the repository at a commit*. It is never a second source of truth.
 
@@ -72,7 +72,7 @@ Rules that keep this honest:
 
 - **Inferred edges are never authoritative (P10).** They carry confidence, are rendered differently in views, never trigger a validator *error* on their own, and can become "declared" only by a human editing the repo — never by silent promotion.
 - **Ambiguity is loud (L2).** A genuine conflict — two declarations that contradict, a duplicate ID, a marker that disagrees with a declaration — is a build error, not a silent merge. A deterministic precedence (declared over annotation over inferred) resolves *layering*, but never a true contradiction.
-- **Evidence is observed, not declared (epistemic boundary).** Where evidence exists, the pipeline writes it from observation, never a human. In the MVP, "verification" is *structural* — a linked, enabled verifying spec/test exists — and test *run results* are **not** ingested (operational, CI's domain — D3). The runtime-evidence overlay that would carry truly observed data is aspirational. *(See `06`, `07`.)*
+- **Evidence is observed, not declared (epistemic boundary).** Where evidence exists, the pipeline writes it from observation, never a human. In the MVP, "verification" is *structural* — a linked, enabled verifying spec/test exists — and test run results are **not** ingested (operational, CI's domain). The runtime-evidence overlay that would carry truly observed data is aspirational. *(See `06`, `07`.)*
 
 > This is the difference between Libar Omni and a documentation generator: a doc generator treats every edge as an equal "fact." Libar Omni knows which edges are *intent a human asserted* and which are *structure a machine guessed*, and never lets the second masquerade as the first.
 
@@ -88,16 +88,16 @@ There is no "is the graph in sync with the repo?" question, because the graph is
 
 ---
 
-## 5. Git is the event log (the L4 resolution, applied)
+## 5. Git is the event log
 
 Founding Principle #5: **git history IS the event log; the graph and all views are projections of the repo at a commit.** Applied to the graph:
 
 - **The graph carries only current state.** It is the projection of the repo *as it is now*. It does not carry change history, audit trails, or superseded/deprecated bookkeeping as live state.
 - **History is a `git` operation.** To see what a spec used to say, check out the prior commit and regenerate the graph. `git log` / `git blame` *is* the lifecycle history. The graph never reimplements it.
 - **Removed means gone.** A spec deleted from the current repo is absent from the current graph. Its past lives in git, not in a "deleted" flag on a graph node.
-- **The one kept forward-pointer** — an ADR/decision declaring it `supersedes` another — is a *current* authored relationship between two records both present in the repo, not the graph storing a timeline. (Full rationale in `01`, the L4 section.)
+- **The one kept forward-pointer** — an ADR/decision declaring it `supersedes` another — is a *current* authored relationship between two records both present in the repo, not the graph storing a timeline. (Full rationale in `01`, the git-is-the-event-log section.)
 
-This is the cleanest divergence from the v1 model, which modelled supersession and deprecated-status as live read-model state. Here, anything reconstructable from git is left to git.
+Anything reconstructable from git is left to git.
 
 ### A graph diff is just two projections
 

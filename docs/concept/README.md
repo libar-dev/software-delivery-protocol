@@ -29,7 +29,7 @@ These documents are deliberately principle-led and lean. The single most importa
 - A **Principle** is a law the design stands or falls on. Swapping it changes what Libar Omni *is*.
 - A **Representation** is one chosen mechanism among several. Swapping it changes *how* a principle is realised, nothing more.
 
-The earlier v1 concept set oversold several Representations (the runtime anchor, HTML/Web Components, the tier count, the ID grammar, the patch format) as if they were Principles. This set names every load-bearing claim as one or the other, on purpose.
+Every load-bearing claim is named as one or the other, on purpose — so a Representation is never mistaken for a Principle.
 
 | # | Document | What it covers |
 |---|---|---|
@@ -41,7 +41,7 @@ The earlier v1 concept set oversold several Representations (the runtime anchor,
 | 04 | [Authoring & Binding](./04-authoring-and-binding.md) | MVP surfaces: the TypeScript DSL + generic source markers (framework-neutral). Gherkin/harnesses named but deferred. |
 | 05 | [Validation & Honesty](./05-validation-and-honesty.md) | Validation tiers and readiness profiles; the MVP subset sharply separated from aspirational tiers. |
 | 06 | [Consumers & Projections](./06-consumers-and-projections.md) | MVP: typed graph handle + one read-only view; edits via intent→agent→git (no patch loop). Two surfaces (curated vs substrate). Aspirational: Studio, exports, MCP. |
-| 07 | [MVP Roadmap & Open Questions](./07-mvp-roadmap-and-open-questions.md) | The vertical slice, the cut list with rationale, the cuts that warrant a human decision, the resolved tensions. |
+| 07 | [MVP Roadmap & Open Questions](./07-mvp-roadmap-and-open-questions.md) | The vertical slice, the CORE/ASPIRATIONAL map, the cut list with rationale, and the residual open questions. |
 
 **Reading paths:**
 - Evaluating the idea → `00`, then `01`.

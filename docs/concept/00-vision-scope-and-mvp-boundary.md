@@ -21,10 +21,10 @@ The full trajectory spans:
 - **The whole lifecycle as one primitive.** One `Spec` carries idea → capability → behaviour → rule → NFR → decision → contract → executable example → verified evidence. Maturity is required completeness, not a change of artifact type.
 - **Multi-persona consumption.** Domain engineers, architects, PMs/BAs, QA, auditors, execs, and **AI agents** as a first-class consumer — each reading the same truth through a surface that fits them.
 - **The edit / feedback loop.** A view is not just for reading. Edits route as *scoped intent* to an agent that edits the source; git records it and CI validates — no patch subsystem. *(See `06` §4; the richer intent-composition UI is aspirational.)*
-- **Design-time intent vs runtime evidence.** The graph is uniquely valuable when it can answer "is this NFR met in production right now?", "which build produced prod?", "which incident touched this spec?" Delivery evidence (OTel/SLSA/SBOM) closes the loop from claim to observed reality. *(Aspirational. Test *run results* are operational and explicitly **not** ingested — D3.)*
-- **Governance & compliance.** Readiness gates, decision/ADR lifecycle, supply-chain provenance, license and audit answerability — without embedding RBAC (that stays in git/CI). *(Mostly aspirational.)*
+- **Design-time intent vs runtime evidence.** The graph is uniquely valuable when it can answer "is this NFR met in production right now?", "which build produced prod?", "which incident touched this spec?" Delivery evidence closes the loop from claim to observed reality. *(Aspirational. Test run results are operational and not ingested.)*
+- **Governance & compliance.** Readiness gates, decision/ADR lifecycle, license and audit answerability — without embedding RBAC (that stays in git/CI). *(Mostly aspirational.)*
 - **AI-native authoring AND consumption.** Token-budgeted, self-contained graph slices beat raw text for agents; agents propose changes through the same gated write path humans use. *(Consumption thesis is CORE as raw graph JSON; richer tooling is aspirational.)*
-- **Standards interop — the membrane, not a replacement.** Ingest adjacent tools' outputs (dependency graphs, test messages, ADR markdown, later OTel/SBOM) and emit into their formats (OpenAPI, LikeC4, JSON-LD). Libar Omni links the ecosystem; it does not replace it. *(Aspirational beyond the MVP view.)*
+- **Standards interop — the membrane, not a replacement.** Ingest adjacent tools' outputs (dependency graphs, test messages, ADR markdown, later runtime telemetry) and emit into their formats (OpenAPI, LikeC4, JSON-LD). Libar Omni links the ecosystem; it does not replace it. *(Aspirational beyond the MVP view.)*
 - **Harness simulation.** Interactive "what does this spec do under conditions X, Y, Z?" exploration that surfaces coverage gaps before implementation. *(Aspirational.)*
 - **Design / accessibility linkage.** Specs reference (never own) design artifacts — component stories, design-tool nodes, visual-regression baselines, accessibility status. *(Aspirational.)*
 - **Multi-tenant / multi-repo / polyglot.** Tenant variants as child specs; cross-repo federation; per-language extractors sharing one schema. *(Aspirational, far horizon.)*
@@ -60,18 +60,18 @@ Everything below is real, designed-for, and out of the first slice. Each is cut 
 
 | Deferred | Why it is not in the MVP |
 |---|---|
-| **Delivery evidence** (OTel queries, SLSA, CycloneDX/SBOM, `Build`/`Deployment`/`Observation` nodes, `nfr-violated`) | An entire runtime-ingestion subsystem. The design-time half of the thesis stands without it. |
+| **Delivery evidence** (runtime observations, `Build`/`Deployment`/`Observation` nodes, `nfr-violated`) | An entire runtime-ingestion subsystem. The design-time half of the thesis stands without it. |
 | **Runtime-anchor depth** (Effect Layer `R`-parameter analysis, Awilix deep wiring, Fastify plugin trees) | Framework-specific. The MVP binds code to intent generically; *which* runtime is irrelevant to the core job. |
 | **Gherkin authoring surface** | A second parser + tag linter + round-trip export. TS DSL is canonical; Gherkin is an additive surface later. |
 | **Harnesses + scenario simulation** | A new authoring surface plus interactive UI. Excellent later; not needed to prove the loop. |
-| **Patch-back loop + codemod** — *dropped, not deferred* | No structured-patch subsystem. Edits route as intent → agent → git → CI (`06` §4, D2). |
+| **Patch-back loop + codemod** | There is no structured-patch subsystem. Edits route as intent → agent → git → CI (`06` §4). |
 | **Rich projections** (LikeC4, OpenAPI/AsyncAPI, JSON-LD/PROV-O/SHACL) | Each is a generator with its own format fidelity. The graph JSON + one view proves derivation. |
 | **AI-slice / MCP tooling** | The graph JSON *is* structured context for the MVP. Token-budgeted slices and an MCP server are a later layer. |
 | **Architecture enforcement** (forbidden-dependency tiers, ts-arch tests, custom rules) | A whole validation competency. MVP keeps only core graph invariants. |
 | **Incremental builds / caching / sharding** | Full rebuild is fine for <~50 specs. |
 | **Full CLI** (evidence, migrate, ai subcommands) | MVP CLI is `akg build` and `akg validate` (plus maybe a simple `explain`/`search`). |
 
-The judgment-call cuts are now **resolved** in `07` (D1/D2/D3): expose the graph to agents from day one **yes** — as a typed handle, not a verb wall; the patch loop is **dropped** (edits route intent → agent → git); test-result ingestion is **cut** (verification is structural; run verdicts are CI's).
+Three stances shape the deferrals above: the graph is exposed to agents from day one as a typed handle (not a verb wall); there is no patch loop (edits route intent → agent → git); and verification is structural — test run verdicts are CI's, never ingested.
 
 ---
 

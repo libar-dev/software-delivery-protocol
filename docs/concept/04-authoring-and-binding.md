@@ -50,7 +50,7 @@ A lint rule (`akg/spec-static`) can flag violations earlier, but the extractor i
 Two sanctioned moves, both keeping the same IDs (P4):
 
 - **Enrich in place** — add facets and raise readiness on the *same* spec object (same ID). No artifact migration.
-- **Refine into children** — author child specs that `refine` the parent. The parent is retained as long as it expresses current truth (architecture/AI-context/roadmap framing). It is not "superseded ghost state" — it is present in the current repo or it is not (see L4, `01`).
+- **Refine into children** — author child specs that `refine` the parent. The parent is retained as long as it expresses current truth (architecture/AI-context/roadmap framing). It is not "superseded ghost state" — it is present in the current repo or it is not (see git is the event log, `01`).
 
 ### One canonical surface per ID
 

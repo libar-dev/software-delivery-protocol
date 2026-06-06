@@ -53,9 +53,9 @@ A profile says what completeness each readiness level demands. Profiles are the 
 | `designed` | design.components and design.decisions; all relations resolve |
 | `bound` | runtime or code bindings present; all binding IDs resolve |
 | `executable` | verification mode is executable; verification.tests present and resolve |
-| `verified` | a linked verifying spec/test exists and is enabled (structural); run verdict is CI-side, not ingested (D3) |
+| `verified` | a linked verifying spec/test exists and is enabled (structural); run verdict is CI-side, not ingested |
 
-The MVP must enforce profiles **at least through `bound`** (and `executable`/`verified` where spec↔test discovery supports it; `verified` is *structural* — a verifying spec is present and enabled — never run-result ingestion, D3). Higher levels degrade gracefully if their structural inputs are absent.
+The MVP must enforce profiles **at least through `bound`** (and `executable`/`verified` where spec↔test discovery supports it; `verified` is *structural* — a verifying spec is present and enabled — never run-result ingestion). Higher levels degrade gracefully if their structural inputs are absent.
 
 > **Claimed vs derived readiness.** The author *claims* a `readiness`; validators can also compute a *derived* readiness from what the spec actually contains. When they diverge (claimed `bound`, derived `framed`), that divergence is itself surfaced. The MVP can ship the claim-check (profile enforcement) and add the explicit derived-readiness banner as a small follow-up; the principle — *the claim is not trusted, it is verified* — holds either way.
 

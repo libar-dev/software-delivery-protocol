@@ -35,7 +35,7 @@ graph  ──fan──►  ├── one generated read-only view      (humans) 
 
 This is provenance (P9) elevated to two consumable surfaces: the curated surface is the `declared` + `annotation` layers; the substrate is the `inferred` layer.
 
-**Does this violate "no second graph, ever"? No.** The curated graph *is* the read model. The substrate is a *separate derived structure* — regenerable from code, never authored, never authoritative (P10) — not a competing source of truth. Both are pure functions of the repo. (Mirrors architect's ADR-006: the substrate is not a competing read model; a typed handle over both "authors and persists nothing — a front door, not a store.")
+**Does this violate "no second graph, ever"? No.** The curated graph *is* the read model. The substrate is a *separate derived structure* — regenerable from code, never authored, never authoritative (P10) — not a competing source of truth. Both are pure functions of the repo, and a typed handle over both authors and persists nothing — a front door, not a store.
 
 ### The correction that defines this model (do not regress)
 
@@ -45,7 +45,7 @@ This is provenance (P9) elevated to two consumable surfaces: the curated surface
 - Never "densify" the curated graph by inferring edges from imports — that just rebuilds the language server and throws away the curation.
 - The substrate has exactly one firehose job (impact / re-test scope) plus two *assist* roles that never overwrite the curated layer: **propose candidates** (e.g. high-fan-in modules with no node) and **flag unambiguous drift** (a `satisfies` target whose source file was deleted) — narrow, honest signals only.
 
-> MVP sequencing note: the curated surface is unambiguously MVP. A *minimal* mechanical substrate (import/symbol graph) is the natural home for impact/blast-radius (job G1) and curation-assist, and the experiment showed it roughly doubled re-test coverage — so it may be worth pulling a thin version into the MVP rather than deferring all inference. That is a sequencing call for `07`, not a reopening of the two-surface model.
+> MVP sequencing note: the curated surface is unambiguously MVP. A *minimal* mechanical substrate (import/symbol graph) is the natural home for impact/blast-radius and curation-assist, so it may be worth pulling a thin version into the MVP rather than deferring all inference. That is a sequencing call for `07`, not a reopening of the two-surface model.
 
 ---
 
@@ -78,7 +78,7 @@ Everything else (single-field traversals, group-bys, the maturity ladder) stays 
 
 ## 4. The edit model — intent composition, not patching
 
-**Principle · CORE.** A view never writes to canonical source. Its write-affordance is **composing intent**, not mutating state. There is no structured-patch subsystem, no speculative apply, no codemod-from-view. This was a deliberate simplification: the earlier "patch-back loop" solved a problem that does not exist.
+**Principle · CORE.** A view never writes to canonical source. Its write-affordance is **composing intent**, not mutating state. There is no structured-patch subsystem, no speculative apply, no codemod-from-view.
 
 The loop is:
 
@@ -124,13 +124,13 @@ Real, designed-for, out of the MVP — each a generator/subsystem with its own s
 | **AI slices / MCP server** | token-budgeted slices, read-only MCP window, GraphRAG | The typed handle + graph JSON is sufficient structured context at MVP scale (§3). |
 | **Per-PR hosted preview** | publish the view per-PR for stakeholder review | Collaboration mechanic; depends on the richer view. |
 
-There is **no "patch-back loop" row** — it was dropped, not deferred (§4). The aspirational write surface is a richer *intent-composition* UI, never a patch format.
+There is **no patch-back loop** (§4). The aspirational write surface is a richer *intent-composition* UI, never a patch format.
 
 ---
 
 ## 7. Interop posture (aspirational): the membrane, not a replacement
 
-**Principle · ASPIRATIONAL.** Long-term, Libar Omni layers *with* the ecosystem: it ingests adjacent tools' outputs (dependency graphs, ADR markdown, later OTel/SBOM) and emits into their formats (OpenAPI, LikeC4, JSON-LD). It links the issue tracker, the design tool, LikeC4, and OpenAPI rather than replacing them. None of it is in the MVP, which ingests only specs, markers, and basic structural facts, and emits the graph (handle + JSON) and one view.
+**Principle · ASPIRATIONAL.** Long-term, Libar Omni layers *with* the ecosystem: it ingests adjacent tools' outputs (dependency graphs, ADR markdown, later runtime telemetry) and emits into their formats (OpenAPI, LikeC4, JSON-LD). It links the issue tracker, the design tool, LikeC4, and OpenAPI rather than replacing them. None of it is in the MVP, which ingests only specs, markers, and basic structural facts, and emits the graph (handle + JSON) and one view.
 
 ---
 
