@@ -1,80 +1,75 @@
 # Libar Omni — Concept
 
-> A repo-native, TypeScript-first specification graph that turns the entire software delivery process — from idea, through design and implementation, to runtime evidence — into one typed, queryable, validated model with generated interactive views.
+> Libar Omni treats a TypeScript codebase as the single, canonical source of truth for the *whole software delivery process* — idea, capability, behaviour, rule, NFR, decision, contract, executable example, and verified evidence — using one progressive primitive called a `Spec`. A `ts-morph` extractor derives **one graph** from the repo. The graph is never a second source of truth: it is a pure, regenerable projection of the repo. Validators keep it honest in CI. Human- and AI-facing views are generated from the graph.
 
-Working internal codename for the graph subsystem: **AKG** (Architecture Knowledge Graph). The product-level umbrella is **Libar Omni**.
+**Slogan:** *Specs are code; the graph is derived; provenance stays honest; git is the event log.*
 
----
-
-## What this is in one paragraph
-
-Libar Omni treats the codebase as a *typed, queryable model of the whole software delivery process*. The authoring surface is TypeScript, augmented by lightweight source-code markers and (where appropriate) annotated Gherkin. A `ts-morph`-based extractor builds a canonical **graph** of nodes (specs, capabilities, components, runtime layers, routes, tests, decisions, evidence) and edges (declared, annotation-derived, and inferred). Multi-tier validators run in CI. Everything human- or AI-facing — diagrams, traceability matrices, dashboards, AI context slices, OpenAPI/AsyncAPI contracts, ADR indexes — is generated from the graph. A primary human surface is an **HTML Spec Studio**: a generated interactive workbench that lets people read, explore, simulate, and refine specs, with any edits flowing back as validated JSON patches into the canonical TypeScript spec files.
-
-The slogan: **"Specs are code. HTML is the lens. Interactions produce patches. Validators decide what is allowed."**
+The internal codename for the graph subsystem is **AKG** (the `akg` CLI). The product umbrella is **Libar Omni**.
 
 ---
 
-## Why this exists
+## The Founding Principle — One Graph
 
-The discussion in `docs-inputs/01-concept-architecture-discussion/` arrived at this design through six refinement steps. The pain points it addresses:
+Everything in this document set is downstream of this. If any document conflicts with it, the principle wins.
 
-1. **Documentation rots.** Markdown plans and architecture decks drift away from code within weeks. They cannot be type-checked, validated, or referenced by other tools.
-2. **Requirements live in a parallel universe.** Jira tickets, Confluence pages, BDD `.feature` files, and ADR markdown files each carry partial truth, and none of them know about the others.
-3. **AI agents need *structured*, not just textual, context.** A typed graph of `spec → capability → component → route → layer → test → evidence` is dramatically more useful to an LLM than raw concatenated source files.
-4. **TypeScript is already an excellent metamodel.** Discriminated unions, `as const`, `satisfies`, branded IDs, project references, and the compiler API give you most of what a bespoke spec system would need — *if* you organise around them deliberately.
-5. **Markdown is reaching its expressive limit.** As specs get larger and richer (graphs, comparisons, simulations, traceability), Markdown becomes the bottleneck. Generated HTML is a stronger reader surface — and a credible *editing* surface when paired with a validated patch-back loop.
-6. **A single primitive — `Spec` — beats a five-stage requirement pipeline.** The same object shape can carry an idea, a capability, a behavior, a rule, an NFR, a contract, a design binding, an executable example, or verified evidence. Maturity is *required completeness*, not a change of artifact type.
+1. **No second graph, ever.** There is one graph. We never stand up a parallel store that can disagree with the repo.
+2. **The repository is canonical; the graph is derived and regenerable.** Delete the graph and rebuild it byte-for-byte from the repo.
+3. **Provenance is never silently collapsed or promoted.** A *declared* fact, an *annotation*, and an *inferred* guess stay distinguishable forever. Inference never quietly becomes truth.
+4. **Single source of truth: the graph is code in the repo.** Intent, structure, and relationships live as typed code committed alongside the implementation — not in an external tool.
+5. **Event store + projections = code and git commits.** Git history *is* the event log. Specs and code are the events; the graph and every view are projections of the repo at a commit. No bespoke event store.
+
+> The graph is a *projection of the repository at a commit*. Change the repo, regenerate the projection. Nothing to sync, nothing to reconcile, nothing to trust beyond `git` and the code.
 
 ---
 
-## Document map
+## How to read this set
 
-Read in order, or jump to what you need. Each document is self-contained but assumes the vocabulary established in earlier ones.
+These documents are deliberately principle-led and lean. The single most important distinction they make is **Principle vs Representation**:
+
+- A **Principle** is a law the design stands or falls on. Swapping it changes what Libar Omni *is*.
+- A **Representation** is one chosen mechanism among several. Swapping it changes *how* a principle is realised, nothing more.
+
+The earlier v1 concept set oversold several Representations (the runtime anchor, HTML/Web Components, the tier count, the ID grammar, the patch format) as if they were Principles. This set names every load-bearing claim as one or the other, on purpose.
 
 | # | Document | What it covers |
 |---|---|---|
-| 00 | [Vision & Product Concept](./00-vision-and-product.md) | Problem statement, target users, value, scope, non-goals, mental model. |
-| 01 | [Core Primitives](./01-core-primitives.md) | The `Spec` primitive, facets, the two axes (abstraction × readiness), `SpecPack`, refinement vs replacement. |
-| 02 | [System Architecture](./02-system-architecture.md) | Layered architecture, data flow, package boundaries, derived-vs-canonical rule, project references. |
-| 03 | [Graph Metamodel](./03-graph-metamodel.md) | Canonical node/edge kinds, edge provenance (declared/annotation/inferred), stable IDs, lifecycle profiles. |
-| 04 | [Authoring Surfaces](./04-authoring-surfaces.md) | TypeScript Spec DSL, source-code markers (decorators / JSDoc / marker constants), annotated Gherkin, harnesses. |
-| 05 | [Runtime Anchors](./05-runtime-anchors.md) | Fastify as HTTP edge, Effect Layers as typed dependency graph, Awilix as transitional option, one-truth rule. |
-| 06 | [Extraction & Validation](./06-extraction-and-validation.md) | `ts-morph` extractor pipeline, layered validation tiers (TS, schema, graph, lint, arch tests, dataflow), readiness profiles. |
-| 07 | [Spec Studio & Projections](./07-spec-studio-and-projections.md) | HTML Spec Studio UX, Web Components, patch-back loop, harnesses, other generated views (LikeC4, Gherkin export, JSON-LD, AI slices). |
-| 08 | [Delivery Evidence & Tooling](./08-delivery-evidence-and-tooling.md) | OTel / SLSA / CycloneDX integration, CLI surface, repository layout, MVP→V4 roadmap, open questions and limitations. |
+| — | [README](./README.md) | This index: definition, Founding Principle, reading guide, the MVP legend. |
+| 00 | [Vision, Scope & MVP Boundary](./00-vision-scope-and-mvp-boundary.md) | The honest full ambition **and** the sharp MVP line, in one place. |
+| 01 | [Founding Principles & Invariants](./01-founding-principles-and-invariants.md) | The load-bearing laws, each tagged Principle/Representation and CORE/ASPIRATIONAL. Git-as-event-log. Provenance epistemics. |
+| 02 | [Core Model](./02-core-model.md) | The `Spec` primitive, the two axes (abstraction × readiness), facets, stable IDs, relations. |
+| 03 | [The One Graph](./03-the-one-graph.md) | Derivation, determinism, provenance, regenerability, git as the event log, the no-second-store rule. |
+| 04 | [Authoring & Binding](./04-authoring-and-binding.md) | MVP surfaces: the TypeScript DSL + generic source markers (framework-neutral). Gherkin/harnesses named but deferred. |
+| 05 | [Validation & Honesty](./05-validation-and-honesty.md) | Validation tiers and readiness profiles; the MVP subset sharply separated from aspirational tiers. |
+| 06 | [Consumers & Projections](./06-consumers-and-projections.md) | MVP: typed graph handle + one read-only view; edits via intent→agent→git (no patch loop). Two surfaces (curated vs substrate). Aspirational: Studio, exports, MCP. |
+| 07 | [MVP Roadmap & Open Questions](./07-mvp-roadmap-and-open-questions.md) | The vertical slice, the cut list with rationale, the cuts that warrant a human decision, the resolved tensions. |
+
+**Reading paths:**
+- Evaluating the idea → `00`, then `01`.
+- Building the MVP → `07`, then `02`, `04`, `05`.
+- Understanding the trust model → `01`, `03`.
+- Reasoning about the long-term shape → `00`, `06`.
+
+All examples use one running domain: **Order Management** — `pack:checkout-v1`, `spec:orders.create-order`, `capability:order-management`, `impl:CreateOrderUseCase`, `api:POST:/orders`, `test:orders.create-order.valid-cart`. Code examples are framework-neutral.
 
 ---
 
-## The minimum mental model
+## MVP vs Aspirational — the legend
 
-If you only remember five things:
+Every claim in this set carries one of these tags so the boundary is never blurry:
 
-1. **One primitive.** Every durable delivery artifact is a `Spec`, identified by a stable string ID. A `Spec` has the same outer shape regardless of how mature or abstract it is — only its *required facets* change.
-2. **Two axes, not one stage pipeline.** A `Spec` has both an **abstraction** (`initiative | capability | feature | rule | scenario | operation | component | contract`) and a **readiness** (`sketch | framed | specified | designed | bound | executable | verified`). They move independently.
-3. **Graph = declared + annotation + inferred.** Three edge sources, never collapsed: explicit edges in typed model files, annotation-derived edges from source markers, and `ts-morph`-derived structural edges. Every edge carries provenance.
-4. **TypeScript is canonical. HTML is the lens.** The repo holds typed `.spec.ts` files and source code. Everything else — graphs, diagrams, dashboards, the Spec Studio, AI context, OpenAPI — is *derived* and regenerable. HTML edits round-trip through validated patches.
-5. **One runtime truth.** Fastify is the HTTP edge. Effect Layers (preferred) *or* Awilix (transitional) is the dependency graph — never both as first-class. The architecture graph extracts from whichever one is canonical.
+| Tag | Meaning |
+|---|---|
+| **CORE / MVP** | In the buildable first slice. Proves the founding principle on one bounded context. |
+| **ASPIRATIONAL** | Designed-for and deliberately deferred. Named so the model never paints us into a corner — never "forgotten." |
 
----
+The MVP is a tight vertical slice on **one** bounded context (Order Management, ~8–12 specs):
 
-## What is explicitly out of scope (initially)
+- the typed `Spec` DSL + generic source markers,
+- the `ts-morph` one-graph extractor,
+- core validators (referential integrity, duplicate IDs, readiness-profile completeness, orphan detection, `verifies` linkage),
+- one generated read-only view,
+- bidirectional spec↔test trace.
 
-These were considered and deferred:
-
-- A graph database (Neo4j, Memgraph) as the canonical store. The repo file `architecture.graph.json` is enough until traversal scale demands more.
-- A custom TypeScript transformer (`ts-patch`) that fails `tsc` on architectural violations. Tier the gate: TS catches type shape, schema validation catches data shape, graph validators catch invariants. Don't contort the type system.
-- A VS Code extension. Useful eventually; do not block the system on tooling that takes months to build.
-- Auto-recovery of trace links from identifiers, comments, and code relations. Useful as a *suggestion* engine later, never as authoritative truth.
-- Modelling the entire enterprise delivery lifecycle in one pass. Pick one bounded context (e.g. *Order Management*), prove the loop, then expand.
-
----
-
-## How to use this document set
-
-- If you are evaluating the idea → read `00` and `01`, then skim `07` for the Spec Studio UX.
-- If you are a TypeScript architect → read `02`, `03`, `06` carefully; the rest second.
-- If you are a product or UX designer → read `00`, `01`, `07`.
-- If you are planning implementation → read `02`, `06`, `08`.
-- If you are deciding between Awilix and Effect → read `05`.
-
-All examples use a consistent running domain: **Order Management** (`pack:checkout-v1`, `spec:orders.create-order`, and friends).
+The MVP write-path is simply **edit TypeScript + git** — no patch loop. Everything else is aspirational and labelled as such, with the rationale for cutting it in `07`.
+</content>
+</invoke>
