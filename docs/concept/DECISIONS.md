@@ -9,6 +9,11 @@
 
 ## 2026-06-06 — Session: reframe + language base
 
+> **Retired entries (2026-06-07).** **MD-3** (three meta-levels; Phase 0 = primitives as code) is fully absorbed
+> into `ubiquitous-language.md` §1 — conclusion *and* rationale — and was deleted. **MD-6** (Spec named;
+> descriptor enums locked; bounded-context → projection) is canonical in the base ledger + §2; its one unique
+> nugget — the **partial reversal of MD-4** — was folded into MD-4 below, and the entry deleted.
+
 ### MD-1 — Omni is an executable, self-validating software-delivery meta-model  [ACCEPTED]
 **Decision.** We are building a *typed, executable meta-model of the software-delivery process*: teams author
 delivery intent as **instances** of process primitives; the meta-model (code in the repo) deterministically
@@ -32,14 +37,7 @@ user).
 AI-native engine; users must not relearn delivery vocabulary. This **reverses** the prior brief's "not a PM tool /
 don't adopt PM ladder names" stance (see scope note).
 
-### MD-3 — Three meta-levels; Phase 0 of the MVP = the process primitives as code  [ACCEPTED]
-**Decision.** Keep three clean levels: **process meta-model** (code, *governs*) → **authored model** (a project's
-instances, *governed*) → **derived facts** (machine truth, never authored). **Phase 0 of the MVP is building the
-process primitives as code.** Self-hosting (Omni's repo governed by its own meta-model) is a later milestone.
-**Why.** Not a detour: the extractor, the graph schema, and every validator already presuppose the meta-model
-exists as code. Formalizing it first *is* the foundation. (RUP/UMA/MOF lineage, made executable.)
-
-### MD-4 — One authored primitive; familiar delivery nouns are named coordinates  [ACCEPTED · names parked]
+### MD-4 — One authored primitive; familiar delivery nouns are named coordinates  [ACCEPTED · refined & partially superseded — see note]
 **Decision.** One **authored** primitive (enrich-in-place; never migrated to another artifact type), positioned by
 **three descriptors**: **category of truth** (`kind`) is a *true subtype* (changes required detail + validation);
 **altitude/size** and **maturity** are *positions*. Familiar nouns are **named coordinates, not separate authored
@@ -48,6 +46,12 @@ types**: Decision Record / Use Case / NFR / Contract / Model = `kind`; Epic / Fe
 surfaces**, never separate primitives.
 **Why.** Preserves "one primitive" (the differentiation) while honoring "adopt the nouns" — and avoids the
 combinatorial explosion of a subclass per (category × size × maturity) cell. Names deferred per method.
+**Later (2026-06-06; absorbed from the since-removed MD-6).** The primitive is named **`Spec`**, and the three
+descriptor enums are **locked in `ubiquitous-language.md`** (`kind` = 8 values; `altitude` = `epic → feature →
+story`; `readiness` = `idea → scoped → defined → ready`, `ready` carrying a readiness floor). **Partial reversal
+of the above:** a **bounded-context / domain** and a **`capability`** are **not altitudes** — `epic` is the
+altitude ceiling; both are realized as **`Pack` groupings + a Capability Map projection**. Above-epic (initiative
+/ theme) defers, additive later. `candidate` was dropped from readiness (an FSM-status imprint).
 
 ### MD-5 — Candidate framing: "(executable) software delivery protocol" for the meta layer  [PROPOSED]
 **Proposal.** Frame/name the meta layer as a **software delivery protocol** — *"not any kind of protocol, it is
@@ -57,23 +61,12 @@ guardrail 1 governs; arguably **more honest than "process,"** which carries the 
 **Open tensions.** "Protocol" also connotes comms/wire formats (HTTP); "process" is the *recognized* industry noun
 (MD-2 bias). May also feed the **system name**. **Status: under review — recorded to be reviewable.**
 
-### MD-6 — `Spec` named; descriptor values locked; bounded-context becomes a projection (reverses part of MD-4)  [ACCEPTED]
-**Decision.** The primitive is named **`Spec`**. Its three descriptors lock to (lowercase literals + recognized
-display labels): **`kind`** — 8-value discriminated union {`behavior`, `workflow`, `example`, `rule`,
-`constraint`, `model`, `decision`, `contract`} (NFR = a *flavor* of `constraint`; Scenario = an `example`);
-**`altitude`** *(field renamed from `abstraction`)* — `epic → feature → story`; **`readiness`** —
-`idea → scoped → defined → ready` (`ready` carries a **readiness floor**; `scoped` echoes locked `scoped intent`).
-**Reversal of MD-4.** A **bounded-context / domain** and a **`capability`** are **no longer altitudes** — `epic`
-is the altitude ceiling; both are realized as **groupings (packs) + a Capability Map projection**. Above-Epic
-(initiative / theme) defers, additive later.
-**Why.** Keeps the altitude ladder to the universally-recognized agile trio; removes the `Scenario` (altitude vs
-kind) and `capability` double-uses; gives one lowercase-literal convention across all three descriptors; drops
-`candidate` (an FSM-status imprint) from readiness.
-
 ### Scope note — relationship to the prior plan & brief
-The reframe **partially supersedes** `plans/language-finalization-brief.md`: its "Omni is **not** a PM tool; do
-**not** adopt SAFe/PM ladder names" stance is **reversed** by MD-2 (commercial Studio + adopt-the-nouns). The
-structural decisions **D1–D6** and the cleanup plan (`plans/please-do-a-pedantic-tidy-dove.md`) **largely still
-hold**, now reframed under the meta-model (MD-1/MD-3). The first-draft `docs/concept/GLOSSARY.md` and the two
-`UBIQUITOUS_LANGUAGE_*.md` are **inputs**, not authority; the canonical base is now
-`docs/concept/ubiquitous-language.md`.
+**Adopt-the-nouns reversal (kept for the record).** An earlier brief held "Omni is **not** a PM tool; do **not**
+adopt SAFe/PM ladder names." MD-2 **reverses** that: the commercial Studio means users must not relearn delivery
+vocabulary, so Omni adopts the established delivery **nouns** (as projections + vocabulary) and rejects only the
+process **gating** FSM. The structural decisions **D1–D6** and the cleanup plan
+(`plans/please-do-a-pedantic-tidy-dove.md`, rewritten 2026-06-07) **still hold**, reframed under the meta-model
+(MD-1). The first-draft input drafts (`GLOSSARY.md`, `UBIQUITOUS_LANGUAGE_{1,2}.md`) and the language-finalization
+brief have since been **deleted** (consolidated); the **sole canonical base is
+`docs/concept/ubiquitous-language.md`.**

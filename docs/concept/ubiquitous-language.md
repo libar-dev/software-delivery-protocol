@@ -1,13 +1,12 @@
-# Ubiquitous Language — Libar Omni (working consolidation)
+# Ubiquitous Language — Libar Omni (ratified canonical base)
 
-> **Status: LIVING SCAFFOLD.** Built section-by-section in the language grill; supersedes nothing yet.
-> The three input drafts — `docs/concept/GLOSSARY.md` and `/UBIQUITOUS_LANGUAGE_{1,2}.md` — stay untouched as
-> inputs to archive once this is ratified. Sources triangulated: those drafts + the concept docs + JTBD stories
-> + **RUP** (UMA meta-model + glossary) + the **pm-skills** PM/requirements vocabulary.
+> **Status: RATIFIED CANONICAL BASE.** Built section-by-section in the language grill; now the sole canonical
+> source for terminology and the model.
+> Sources triangulated during ratification: the concept docs + JTBD stories + **RUP** (UMA meta-model + glossary)
+> + the **pm-skills** PM/requirements vocabulary.
 >
 > **Method (do not skip):** *define the concept → contextualize it → accept the definition → only then attach a
-> term.* Names are parked until their concept is locked. Each block is tagged **[SETTLED]** decided ·
-> **[WORKING]** converging, safe to build on with care · **[OPEN]** not yet decided.
+> term.* Names were parked until their concept locked. Each substantive block below is now tagged **[SETTLED]**.
 
 ## Governing rubric  [SETTLED]
 - **Adopt the established delivery *noun*** for any concept Omni shares with the industry. Coin/keep a distinct
@@ -18,7 +17,7 @@
   (b) concrete & unambiguous to all three readers — typed code/CLI, the coding agent, and a Studio user. One
   concept → one word; the rest are *aliases to avoid*.
 
-## §0 — Thesis: what we are building  [SETTLED · frame confirmed]  · (the noun "process" vs "protocol" is OPEN — see ledger)
+## §0 — Thesis: what we are building  [SETTLED · frame confirmed]  · (noun = **process**; "protocol" retained only as the MD-5 system-naming candidate, deferred to the system-naming pass)
 Omni is a **typed, executable meta-model of the software-delivery process.** Teams author delivery intent as
 *instances* of a small set of process primitives; the meta-model — **code in the repo** — deterministically
 validates those instances' **conformance and honesty** and derives **one graph**; every other artifact (views,
@@ -27,12 +26,9 @@ Mermaid diagrams, API references, context bundles) is a **projection** of that g
 The innovation is not *executable specs* (BDD has those) — it is an **executable, self-validating delivery
 process**: the process building blocks are code, and instances **conform** to it (conformance checked, never gated).
 
-> **Candidate reframe (for review): a "software delivery protocol."** A *protocol* is a conformance contract, not
-> a workflow — exactly what guardrail 1 says we govern (conformance/honesty, never sequencing). So "protocol" may
-> be the *more honest* noun than "process." *"Not any kind of protocol — it is software"*: an **executable**
-> software-delivery protocol (the meta layer), not a paper standard. Tension to resolve: "protocol" also connotes
-> comms/wire formats, and "process" is the recognized industry noun (rubric). Recorded OPEN; may feed the system
-> name. See `docs/concept/DECISIONS.md` MD-5.
+> **Naming note:** the design noun in this base is **"process."** `"protocol"` remains only as the deferred MD-5
+> system-naming candidate because it captures the conformance-contract aspect, but it is not an open terminology
+> question here. See `docs/concept/DECISIONS.md` MD-5.
 
 **Two honesty guardrails on "self-validating" (so we don't re-import what we rejected):**
 1. **Checks conformance & honesty — not content-quality, not workflow.** The meta-model deterministically checks
@@ -43,16 +39,15 @@ process**: the process building blocks are code, and instances **conform** to it
 2. **"Deterministically validated," not "provably correct."** Conformance to the typed meta-model is provable;
    real-world correctness of the design is not. Claim the former, never the latter.
 
-> §0 frame **confirmed this session** (the thesis + both guardrails + the three levels). What stays open is the
-> *wording* — chiefly "process" vs "protocol" — and every term below. Kept legible so it never hardens into false
-> settledness (the failure this whole pass exists to fix).
+> §0 frame **ratified 2026-06-07** (the thesis + both guardrails + the three levels). The wording here is settled:
+> this base uses **"process"**; `"protocol"` is parked only for the system-naming pass in MD-5.
 
 ## §1 — The meta-levels  [SETTLED]
 Three levels, kept clean (RUP/UMA/MOF lineage, made executable):
 
 | Level | What lives here | Role | When built |
 |---|---|---|---|
-| **Process meta-model** | the primitive, its descriptors, the specialization classes, the relation set, the validators — **as typed code in this repo** | **defines the protocol** | **Phase 0 of the MVP** |
+| **Process meta-model** | the primitive, its descriptors, the specialization classes, the relation set, the validators — **as typed code in this repo** | **defines the conformance contract** | **Phase 0 of the MVP** |
 | **Authored model** | a project's authored intent (its instances) — instances of the classes above | **conforms (checked)** | per project |
 | **Derived facts** | machine truth about the authored model (code realises it · a verifier exists · runtime observed it) | **derived, never authored** | per project |
 
@@ -99,7 +94,7 @@ preserved:
 - The delivery nouns are first-class in the **language and in Studio surfaces/projections** — never separate
   authored primitives.
 
-### The envelope & sections  [SETTLED · concept; `section` is a delegated pick — see note]
+### The envelope & sections  [SETTLED]
 A `Spec`'s **envelope** — `id` · `title` · `kind` · `altitude` · `readiness` · `relations` — is the stable,
 minimal outer shape; it changes almost never. All other detail lives in optional, typed **sections** — the
 **extension surface**: the system grows by adding sections (or enum members), never by reshaping the envelope.
@@ -108,9 +103,17 @@ Sections (all optional; each carries one concern, mapping to a discipline): `int
 · `model` · `design` · `decision` · `verification` · `ui`. A **readiness floor** (§6) requires the right sections
 to *state* a given rung.
 
-> **Name note:** **`section`** replaces the disliked **"Facet."** Picked under delegated confidence (you said "go
-> ahead") for broad accessibility — "the Design section of this Spec" reads naturally to code, agent, and Studio.
-> It is the one term not chosen by your direct call; trivially reversible to `aspect`/`facet`/other if it reads off.
+**Section ⟷ kind — when a concern is inline vs. its own primitive  [SETTLED].** Three sections
+(`constraints` · `model` · `decision`) have a same-named `kind` twin, so the same concern can live two ways. The
+trigger: keep it **inline as a section** when it is **local detail** of its host `Spec`; **promote it to a
+standalone `Spec` of the matching `kind`** (linked by `constrainedBy` / `decidedBy` / `modelRefs`) when it is
+**referenced by >1 `Spec`, or needs its own identity / lifecycle / review.** `modelRefs` on a `Pack` always points
+at standalone `kind:"model"` specs — shared vocabulary is never inlined twice. *(The core-model doc `02` states
+this once for builders; it is not scattered across the other docs.)*
+
+> **Name note:** **`section`** replaces the disliked **"Facet"** — **locked** (blessed 2026-06-07; chosen over
+> `aspect`/`facet` for cross-audience legibility: "the Design section of this Spec" reads naturally to code, the
+> coding agent, and a Studio user).
 
 ### The boundary — what is *not* the primitive  [SETTLED · concept]
 A human authors **three** things; only the first states system truth. Everything else is **derived**.
@@ -132,7 +135,7 @@ span or sub-slice the refinement hierarchy).
 edges/facts (`satisfies`, `has-verifier`, `observed`, derived membership). The primitive *links to* these; it
 never authors them.
 
-## §3 — Relations  [SETTLED · concept] · verb-form names low-risk, parked for final ratification
+## §3 — Relations  [SETTLED · concept] · verb-form names ratified
 **Concept:** an **authored, typed, directed edge** between two authored primitives — a *human-asserted* connection
 (the intent half of the graph). Distinct from *derived* edges (binding, membership, structural).
 
@@ -170,10 +173,13 @@ load-bearing invariant Omni enforces.
 - **`anchor`** *(locked; was "marker")* — the in-code pointer, e.g. `// anchor: spec:orders.create-order`. Carries
   **identity only, never intent**; emits an **`anchored`** edge (`satisfies`, `verifies`).
 - **`claim`** *(locked; replaces "provenance")* — names a fact's **epistemic status**, not its ancestry.
-- **Umbrella:** **authored** = human claims (`declared` + `anchored`); **derived** = machine output. *(Sharpening
-  the warm word "derived": `inferred` = derived by *analysis* (advisory) is distinct from edges *computed
-  deterministically from authored sources* — e.g. `belongsTo` from a manifest — which carry their source's
-  authority. Mechanics in §5.)*
+- **Umbrella:** **authored** = human claims (`declared` + `anchored`); **derived** = machine output.
+- **No 4th `claim`; computed-from-authored edges inherit their source's `claim`.** The enum stays exactly
+  `declared / anchored / inferred`. `inferred` is the *advisory* kind — derived by **analysis** (calls, imports).
+  An edge *computed deterministically from an authored source* is a derivation **mechanism, not a claim
+  category**: it **inherits the source's `claim`**. Worked case: **`belongsTo` carries `claim:"declared"`** — it
+  is a deterministic re-expression of the `Pack`'s authored (declared) manifest, so it inherits that authority;
+  it is **not** advisory `inferred`. (Mechanics in §5.)
 
 > **Naming side-effect, honored:** since `claim` now names the origin class, **readiness is "stated/asserted" by
 > the author — not "claimed."** Reserve "claim" for the `claim` class. (Clears the one collision.)
@@ -222,10 +228,10 @@ claim about the design; delivery facts are observations about the code.
 The one graph is the concrete realisation of the RUP distinction between *model element* (truth) and *view element* (projection), made executable and self-validating. All governance, all surfaces, and all agent behaviour flow from this single derived artifact.
 
 ## §6 — Validation & honesty (conformance)  [SETTLED]
-The deterministic machinery that makes the protocol **self-validating** (§0). Checks run over the one graph; an
-**error fails the build**, a **gap informs**. The meta-model defines the protocol; **instances conform**; these
-checks verify conformance. *(Conformance in the protocol sense — distinct from RUP's "conformance level," which was
-a spec's own implementation tier; use CORE/ASPIRATIONAL for that.)*
+The deterministic machinery that makes the process meta-model **self-validating** (§0). Checks run over the one
+graph; an **error fails the build**, a **gap informs**. The meta-model defines the contract; **instances conform**;
+these checks verify conformance. *(Conformance here means conformance to the typed meta-model — distinct from RUP's
+"conformance level," which was a spec's own implementation tier; use CORE/ASPIRATIONAL for that.)*
 
 | Family | Asks | Examples |
 |---|---|---|
@@ -275,22 +281,22 @@ The goal is recognition and lightweight utility without re-importing the process
 
 | Term | Traditional RUP meaning | How it lands in Omni |
 |------|--------------------------|----------------------|
-| **discipline** | A concern/area of work (Requirements, Analysis & Design, Test, Deployment, …) | A **lens / projection** — filter or group primitives in the one graph by `kind` or facet. “Show me the Requirements discipline” = show all behavior/capability primitives. Not a phase you pass through. |
+| **discipline** | A concern/area of work (Requirements, Analysis & Design, Test, Deployment, …) | A **lens / projection** — filter or group primitives in the one graph by `kind` or section. “Show me the Requirements discipline” = show all behavior primitives (+ the Capability Map projection). Not a phase you pass through. |
 | **phase** | Inception → Elaboration → Construction → Transition | Descriptive vocabulary only. Optional roadmap framing. Never a gate or enforced sequence. |
 | **iteration** | One integration loop leading to a release | Optional temporal grouping. Can appear as a **roadmap / now-next-later projection**. Not enforced. |
 | **milestone** | Assessment checkpoint | Optional named checkpoint (a projection over readiness and delivery state). Not a gate. |
 | **release** | A delivered functional set | A **tagged set** surfaced as a projection (backed by a git tag). |
 | **baseline** | Reviewed/approved, change-controlled snapshot | A **named approved snapshot** (≈ a git tag where a set of primitives is `ready` + has been reviewed). Vocabulary + optional projection. |
 
-**The discipline ≈ kind/facet mapping** (how Omni supports the RUP picture without its gates):
+**The discipline ≈ kind/section mapping** (how Omni supports the RUP picture without its gates):
 
-- **Requirements** → behavior / capability primitives  
-- **Analysis & Design** → design facet + Decision Records  
+- **Requirements** → behavior primitives (+ the Capability Map projection)  
+- **Analysis & Design** → design section + Decision Records  
 - **Test** → example primitives + `verifies` relations  
 - **Deployment** → `observed` / evidence nodes  
 - **Config & Change Management** → git (the source of truth)  
 - **Project Management** → packs + roadmap projections  
-- **Business Modeling** → domain / model primitives
+- **Business Modeling** → `model` primitives
 
 **The RUP hump-chart** (disciplines × phases over iterations) becomes a **Mermaid / analytical projection** — a view showing how authored and derived activity distributes across the graph. It is never a plan the system enforces.
 
@@ -314,7 +320,7 @@ This section demonstrates the governing rubric in action: adopt the established 
   *(field renamed from `abstraction`)* · `readiness` ∈ {`idea`, `scoped`, `defined`, `ready`}. `capability` &
   domain = **projections**; `NFR` / `Scenario` = labels, not separate kinds.
 - **More locked:** **`Pack`** (the grouping / review unit; was "SpecPack") · **`section`** (the typed detail-slice
-  / extension surface; **replaces "Facet"** — delegated pick, reversible) · **delivery facts** (derived, never
+  / extension surface; **replaces "Facet"** — locked 2026-06-07) · **delivery facts** (derived, never
   authored): `implemented` · `has-verifier` (a verifier *exists*, not that it passed) · `observed` (aspirational).
 - **Rejected terms:** `provenance` (concept kept → **`claim`**) · `marker` (→ **`anchor`**) · `FSM`/status-FSM
   (implementation-leak from the Libar Application Platform) · `model element` (as the primitive's name) ·
@@ -322,17 +328,17 @@ This section demonstrates the governing rubric in action: adopt the established 
   `candidate` (as a readiness rung — FSM-status imprint) · `Scenario` / `capability` / `NFR` (as separate
   descriptors — they are labels / projections, not descriptors) · `Facet` (→ **`section`**) · `SpecPack`
   (→ **`Pack`**).
-- **Warm / provisional:** `authored` / `derived` (umbrella pair kept; "derived" sharpened in §4 — *inferred* vs
+- **Locked usage:** `authored` / `derived` (umbrella pair kept; "derived" sharpened in §4 — *inferred* vs
   *computed-from-authored*) · **readiness verb** = "stated/asserted", **not** "claimed" (reserve "claim" for the
   `claim` class).
-- **Resolved (was "open verb"):** the meta-model defines a **protocol**; **instances conform**; the checks are
+- **Resolved terminology:** the meta-model defines the **contract**; **instances conform**; the checks are
   **conformance checks + honesty checks**. "govern"/"validate" retired as the umbrella — the meta-model defines the
   contract, it does not govern/police.
-- **Candidate framings / names (for review):** **"(executable) software delivery protocol"** for the meta layer —
-  protocol = conformance contract (aligns with guardrail 1; possibly more honest than "process"); *it is software,
-  not a paper standard*. May also feed the system-name direction. Open tension: comms-protocol connotation vs
-  "process" as the industry noun. (DECISIONS MD-5.)
-- **Parked names:** the **primitive's name** · the **system name** — criteria so far: evokes the executable
+- **Parked naming candidate:** this base uses **"process"** as the delivery noun. **"(executable) software
+  delivery protocol"** is retained only as the deferred MD-5 system-naming candidate, not as an open terminology
+  choice inside the base. (DECISIONS MD-5.)
+- **Parked names:** the **system name** *(the primitive is named **`Spec`** — locked; removed from this parked
+  list)* — criteria so far: evokes the executable
   delivery-process spine; not PM-flavored; room for the OSS backend layer *and* the commercial Studio; namespaces
   `@libar-dev/` (OSS) vs `@libar-ai/` (commercial); incumbent fallback "Libar Architect"; "Architect" / "Libar
   Delivery Process" disfavored.
