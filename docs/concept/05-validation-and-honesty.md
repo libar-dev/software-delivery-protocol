@@ -43,7 +43,7 @@ Two cross-cutting honesty rules apply to all validators:
 
 ## 3. Readiness profiles (CORE)
 
-A profile says what completeness each readiness level demands. Profiles are the mechanism (Principle); the specific thresholds are config a team can override.
+A profile says what completeness each readiness level demands. Profiles are the mechanism (Principle); the specific thresholds are config a team can override. A profile is a **minimum to *claim* a level, never a maximum to *fill*** — how much detail a spec carries beyond it follows architectural significance, not the level (`01`, P4 corollary).
 
 | Readiness | Profile (must have) |
 |---|---|
