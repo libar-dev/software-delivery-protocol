@@ -7,6 +7,65 @@
 > it depends on no external scratch (the ChatGPT review under `tmp-review/` was a transient input, now fully
 > absorbed into the fixes below; nothing here references it).
 
+---
+
+## ⟐ RECONCILED TO THE RATIFIED LANGUAGE BASE (2026-06-06) — read this first
+
+This plan predates the ubiquitous-language pass. **The single source of truth for terminology and the model is now
+`docs/concept/ubiquitous-language.md` + `docs/concept/DECISIONS.md` (MD-1…MD-6).** Where this plan's *provisional*
+terms or *structural* statements disagree with the base, **the base wins.** Read everything below this banner as
+the *objective-fixes checklist and per-file cascade only* — apply terms from the **base ledger**, not from this
+plan's older vocabulary.
+
+### Frame (new since this plan was written)
+Omni is an **executable, self-validating software-delivery protocol** (MD-1): instances **conform**; checks are
+**conformance + honesty checks** (not "governance"/gates). **Phase 0 of the MVP = the process primitives as code**
+(MD-3). This reframes the *why* of the fixes below; it does not change them.
+
+### Rename map — apply across `docs/concept/` + `jtbd-stories/`
+| old | → new | note |
+|---|---|---|
+| `abstraction` (field) | `altitude` | values also change (below) |
+| readiness `sketch/framed/specified/designed` | `idea/scoped/defined` (`designed` folds into `defined`→`ready`) | 7-rung → 4-rung |
+| readiness `bound/executable/verified` | **not readiness** — delivery facts `implemented`/`has-verifier`/`observed` | §4b |
+| altitude `initiative/domain/capability/scenario/operation/component/contract` | retired as altitudes | only `epic/feature/story`; domain & capability → projections; `scenario` → `example` kind; `contract` → kind; operation/component deferred |
+| `kind: "capability"` | retired as a kind | now the Capability Map projection |
+| `kind: "interface"` | `kind: "contract"` | |
+| `marker` | `anchor` | in-code pointer |
+| `provenance` (field) | `claim` | values `declared`/`anchored`/`inferred` (`annotation`→`anchored`) |
+| `satisfiedBy` (spec←code) | `satisfies` (code→spec) | direction flip |
+| `exemplifies` | dropped | use `kind:"example"` + `refines` + `verifies` |
+| `sharedModel` | `modelRefs` | |
+| `handle` | `reader` | |
+| `mechanical substrate` | `impact graph` | |
+| `readiness profile` | `readiness floor` | checks *structure to derive a fact*, not the fact |
+| `Facet` | `section` | typed detail-slice / extension surface (delegated pick, reversible) |
+| `SpecPack` | `Pack` | |
+
+### Structural supersessions (decided — do not re-open)
+- Readiness = **4 rungs** `idea→scoped→defined→ready`; `bound/executable/verified` are **delivery facts** (§4b), not rungs. *(Supersedes this plan's D1 enum; the readiness↔delivery split itself stands.)*
+- Altitude = **`epic→feature→story`**; **domain & capability are projections/groupings, not altitudes** *(reverses this plan's "domain-altitude ≈ bounded context"; MD-6)*; `scenario` is an `example`-kind Spec, not an altitude.
+- `kind` = **8 values** `behavior/workflow/example/rule/constraint/model/decision/contract`; **`capability` dropped** as a kind; **NFR is a flavor of `constraint`**.
+- Authored vs derived, **`anchor`**, **`claim`** (never collapsed), no-authored-delivery-facts → §4 / §4b / §6 are the authority.
+
+### Verification greps (regenerated — each must return ZERO after the cleanup, modulo intentional retirement-prose)
+```
+grep -rniE '\babstraction\b|\bmarker\b|\bprovenance\b|\bhandle\b|mechanical substrate|sharedModel|satisfiedBy|exemplifies|readiness profile|\bfacet\b|specpack' docs/concept jtbd-stories
+grep -rniE '\b(sketch|framed|specified|designed|bound|executable|verified)\b' docs/concept jtbd-stories
+grep -rniE 'kind:\s*"(capability|interface)"|abstraction:\s*"(initiative|domain|capability|scenario|operation|component|contract)"' docs/concept jtbd-stories
+grep -rniE 'capability:|adr:[0-9]' docs/concept jtbd-stories
+```
+(Run alongside this plan's original objective-fix greps where still term-valid.)
+
+### Execution sequencing (from the cross-doc inventory)
+Two-pass, **biggest blast-radius first**: **(1)** schema/enum rewrites — `02-core-model.md`, `05-validation-and-honesty.md`, `jtbd-stories/01`, `jtbd-stories/04`; **(2)** mechanical renames across the rest; **(3)** conceptual reframing — domain/capability/scenario as projections, delivery facts as derived. Then run the greps → delete this plan → archive `GLOSSARY.md` + `UBIQUITOUS_LANGUAGE_1.md`.
+
+> Everything below is the **original plan body**, kept for its objective-fixes checklist and per-file cascade.
+> Its terminology is superseded by the rename map above; its structural decisions stand except where the
+> "Structural supersessions" list overrides them.
+
+---
+
 ## Context
 
 `docs/concept/` and `jtbd-stories/` describe one design system: a **TypeScript-canonical delivery-lifecycle
