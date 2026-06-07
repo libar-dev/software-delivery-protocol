@@ -85,3 +85,42 @@ After the MVP loop works, let observed pain — not this roadmap — order the n
 - "is this NFR actually met in prod?" → begin the runtime-observation overlay (the `observed` delivery fact).
 
 The point of the principle-led core is that each of these slots in cleanly, without refactoring the laws in `01`.
+
+---
+
+## 6. Forward-looking acceptance criteria (seeded by the post-Session-1 full-MVP review)
+
+Recorded here so the full-scope lens isn't lost; each is honesty-posture-aligned and maps to a slice's "done."
+These came out of the Phase-0 hardening review and were routed here (rather than into that code-only plan) so they
+land in the roadmap at the right altitude. Ordering reflects the synthesis's priority.
+
+- **① Authoring ergonomics — the headline forward risk; a named Slice-2 concern.** There is *no
+  authoring-ergonomics workstream* anywhere in `00`–`07` today (the MVP CLI is just `build`/`validate`), yet if
+  authoring feels heavy, authors (human **and** agent) avoid the system or overfit specs to satisfy tooling. The
+  first lever is **typed sections** (autocomplete + shape guardrails); then great error messages and `sdp validate
+  --watch`; later `sdp new spec` / `sdp explain`. Threads back to the anti-padding rule: make *dishonesty* fail
+  without rewarding low-signal filler (a floor to clear, never a quota to fill).
+- **② Golden-graph fixture — at Slice 1; keep it distinct from `--check-clean`.** Adopt **both**, labeled
+  distinctly: a **determinism self-check** (`03` §2 — rebuild twice, assert **byte-identical**; a self-comparison,
+  **never** a diff against a committed `generated/` artifact, which is gitignored, L8) **and** a **correctness
+  oracle** (a committed `fixtures/order-management/expected/graph.json` — "did the extractor produce the *right*
+  graph," legitimate because it lives in `fixtures/`, not `generated/`). Make paths **repo-relative / POSIX**, and
+  decide consciously whether **line numbers** enter the golden (deterministic, but brittle to unrelated edits).
+- **③ Derived-readiness banner in the MVP view — at Slice 4, but blocked on the open-questions-home fix (H2).**
+  *"Stated readiness: ready · Structural floor reached: defined · Problem: blocking open question."* Teaches the
+  core honesty concept (stated, then checked); cheaply enabled by a floor evaluator that reports *which* clause
+  fails. **Do not pull it forward before H2** — today the floor reads open questions from the wrong section, so the
+  banner would confidently display the wrong thing.
+- **④ `implemented` is a UI hazard — at Slice 4, view-label only.** Model semantics are settled (DECISIONS MD-7:
+  binding/existence, never liveness). Keep the internal fact name `implemented` (it powers the `implemented ∧
+  ¬ready` drift query), but render binding language in views: *"Implementation binding: present / Verifier binding:
+  present / Runtime observation: not tracked."*
+- **`coverage-unknown` — already a settled model commitment (MD-7 / §4 above); make it Slice-4 acceptance.**
+  File-level blast-radius reports changed-but-unanchored files as `coverage-unknown`, never silently
+  under-reporting. The only add is promoting it from design note → explicit Slice-4 acceptance criterion.
+- **The MVP acceptance checklist, mapped across Slices 1–5:** spec extraction · anchor extraction · claim honesty ·
+  readiness honesty · delivery facts · traceability · determinism · view — with three sharpenings: (a) *"ready spec
+  with blocking open questions fails"* is the regression test to add **after** H2 (locked early by an H8 fixture
+  stub); (b) extend *"rejects non-static envelope fields"* to *"the example fixture survives static extraction with
+  **no dropped sections**"* (envelope is clean; sections were the H1 risk, now fixed); (c) *"extracts one api
+  anchor"* is the H10 gap (Slice 2).

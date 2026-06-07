@@ -99,6 +99,30 @@ derived"), not reversals of direction.
 home for approval provenance is **signed git tags** (identity + approved-at, already in git) — not a new authored
 primitive.
 
+### Proposed base refinements (R-series)  [PROPOSED 2026-06-07 · awaiting grilling ratification]
+**Context.** The post-Session-1 founding-ideation review surfaced two wording imprecisions in the ratified base.
+The **code already conforms** in both cases; these are language tightenings, so per the working discipline
+(terminology is ratified — *flag*, don't silently edit) they are recorded here as **PROPOSED** and routed to the
+fresh decision-resolution session (`plans/03-decision-resolution-and-base-reconciliation.md` §4) to ratify and
+apply against `docs/concept/ubiquitous-language.md`. They are **not** model changes.
+- **R1 — harmonize "anchor carries identity only" (§2) with "anchored = a human binding" (§4).** §2 says anchors
+  carry "identity only," while §4's `claim` table calls `anchored` "a human binding" — and a binding (it emits a
+  `satisfies`/`verifies` edge) is more than bare identity. Proposed unified phrasing: *"an anchor says 'this code
+  location is the implementation/test binding for this Spec ID'; binding only, never system-truth content — never
+  behavior, rationale, readiness, acceptance criteria, or delivery facts."* The code already conforms (anchors hold
+  only `id`/`label`/target; `@ts-expect-error` proves the rest is rejected).
+- **R2 — "no consumer reads source directly" → permit source *links*, forbid independent re-parsing.** The
+  principle (`03`/`05`/`06`) is right, but a Design Review linking to source locations *recorded in the graph* is
+  legitimate. Proposed: *"Consumers may link to source locations recorded in the graph; consumers must not
+  independently parse source to derive their own model."* Matters when the Slice-4 Design Review lands.
+- **R3 — reconcile `04`'s `specTest` signature to binding-only.** `04` §2 documents `specTest(id, { verifies,
+  run })` with an executing `run` callback; the implementation (`src/model/anchors.ts`) is identity-only
+  (`{ id, label?, verifies }`, **no `run`**). The code is the *more* faithful one: a binding anchor carrying
+  `run` would couple the graph binding to execution, contradicting "the graph records that an enabled verifier
+  *exists*, never that it ran" (§4b / MD-7). So this is a **doc fidelity bug, not a code gap** — reconcile `04`
+  down to a binding-only signature. Same pattern as R1/R2 (the code already conforms). Surfaced by the
+  post-Session-1 adversarial review (F6).
+
 ### Scope note — relationship to the prior plan & brief
 **Adopt-the-nouns reversal (kept for the record).** An earlier brief held "the Protocol is **not** a PM tool; do **not**
 adopt SAFe/PM ladder names." MD-2 **reverses** that: the commercial Studio means users must not relearn delivery
