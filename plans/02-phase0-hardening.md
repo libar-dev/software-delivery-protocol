@@ -7,12 +7,16 @@
 > **Date:** 2026-06-07 · **Branch:** `feature/mvp-init` · **Repo state:** Session 1 committed (`eb6bf2a`); fully
 > green (`npm run check`: typecheck ×2, lint, format, 43 tests, build).
 >
-> **Three perspectives layered.** (1) a *fresh* implementation review of the committed code; (2) the *planning
+> **Layered review provenance.** (1) a *fresh* implementation review of the committed code; (2) the *planning
 > session* that formed the pre-plan context before the first line of code, framed by the full MVP; (3) the
-> *founding-ideation* review (the ChatGPT web session that seeded the project), framed by the **whole MVP scope**
-> more than Session 1's. This revision absorbs (3): it confirms the concept spine, hard-reinforces the anti-bloat
-> thesis, supplies a should-fail/should-pass fixture set that exercises these findings, and seeds forward-looking
-> acceptance criteria + two concept-wording tightenings.
+> *founding-ideation* review (the ChatGPT web session that seeded the project), framed by the **whole MVP scope**;
+> then (4) a *planning-session synthesis* that re-read the shipped code and sorted (3) into act / already-handled /
+> extend buckets. This revision absorbs (3) **and** (4): it confirms the concept spine, hard-reinforces the
+> anti-bloat thesis, supplies a should-fail/should-pass fixture set, seeds forward-looking acceptance criteria + two
+> concept-wording tightenings, **elevates authoring ergonomics to the headline forward risk**, and adds one new
+> tracer-bullet gap (H10). Layering is deliberate while the repo is mostly code-free: improvisation is fine until
+> there is enough code + graph state for the Design Review to do this in-system (the same principle the product is
+> built on).
 
 This plan covers the gap between *"Slice 0 is green"* and *"Slice 0 is a faithful, lean foundation the extractor
 can safely build on."* It is a **hardening pass on the already-implemented Phase 0**, not new scope. It deliberately
@@ -82,6 +86,15 @@ extractor depend on** — `intent`, `behavior`, `constraints`, `model`, `verific
 `decision` / `ui` as open bags so the unsettled surfaces keep breathing. This closes H2/H3/H4 and the honesty
 bypass for object literals, without over-committing the volatile sections. (Alternatives: type all eight now; or
 type none and add a runtime authoring-shape validator instead. To resolve.)
+
+> **D1 is bigger than honesty/floors — it is the linchpin of the headline MVP risk (synthesis, bucket A/C).** The
+> founding review's strongest contribution is that *authoring ergonomics, not graph theory, is the biggest risk*:
+> if authoring feels heavy, authors (humans **and** agents) avoid the system or overfit specs to satisfy tooling.
+> Untyped sections give **no autocomplete and no shape guardrails** — precisely the heavy-authoring loop. H1 is the
+> first symptom already in the repo: an agent reached for `Object.fromEntries([...]) as Record<string, unknown>`
+> instead of a plain literal — an author fighting an untyped surface. So typing the five sections is not only the
+> cheapest path to H2/H3/H4 and the honesty fix; it is the **single highest-value lever on adoption**. (This is why
+> authoring ergonomics is elevated to a named Slice-2 concern in §4c.)
 
 ---
 
@@ -241,6 +254,26 @@ Disposition: **NOW** (this pass) · **DEFER** (named, later).
 - **Files.** `test/builders.typecheck.ts`.
 - **Verify.** `npm run typecheck` consumes the new `@ts-expect-error`s.
 
+### 🟠 H10 — The example under-proves the generic-anchor claim · **DECIDE (pairs with Slice 2 anchor extraction)**
+
+- **Finding (synthesis, bucket C — new; missed by all prior passes).** The whole point of *generic* anchors is that
+  they bind **any** code location, not just classes (`00`/`04`). But the shipped example has only `impl` + `test`
+  anchors (`anchorImplementation` is namespace-locked to `impl:`; `specTest` to `test:`), and the docs' own example
+  (`04` §5) includes a route anchor `api:orders.post`. So the tracer bullet never exercises the genericity claim —
+  the strongest proof would be binding a **non-class location** (a route/endpoint).
+- **Two layers to the gap:**
+  - **Example layer:** add an `api`/route anchor to `examples/checkout-v1` so the generic-binding claim is actually
+    demonstrated.
+  - ⊳ **DSL-shape question (D6):** the satisfies-anchor builder is locked to `impl:`. Generic binding implies the
+    "code → spec" (`satisfies`) anchor should accept the implementation-flavored code namespaces (`impl` / `api` /
+    `component`), with `specTest` (`verifies`) staying the `test:` variant. Decide: generalize `anchorImplementation`
+    to a `codeAnchor` over those namespaces, or add sibling builders. The `api:` namespace already parses (`ids.ts`);
+    only a builder + branded id is missing.
+- **Why deferred-ish.** It pairs naturally with Slice 2 (anchors + `satisfies`/`verifies` edges). Naming it now keeps
+  the tracer bullet honest about what it proves.
+- **Verify (when scheduled).** Example contains ≥1 non-`impl` code anchor; it extracts to a `satisfies` edge with
+  `claim:"anchored"` like any other.
+
 ---
 
 ## §4 — Forward-looking decision (resolve before Slice 3, name now)
@@ -259,12 +292,14 @@ The founding review surfaced two wording imprecisions in the ratified base. The 
 cases; these are language tightenings to consider against the base (terminology is ratified, so we *flag* rather
 than silently edit — `AGENTS.md` working discipline). No code change.
 
-- ⊳ **R1 — "anchor carries identity only" → "binding assertion only, never system-truth content."** An anchor emits
-  a `satisfies`/`verifies` edge, which is a *binding assertion*, not "identity" in the ordinary sense — so the
-  current phrasing (`ubiquitous-language.md` §2/§4) risks reading as self-contradictory next to the `anchored`
-  claim. Suggested: *"an anchor says 'this code location is the implementation/test binding for this Spec ID'; it
-  must never carry behavior, rationale, readiness, acceptance criteria, or delivery facts."* The code already
-  enforces exactly this (anchors hold only `id`/`label`/target; `@ts-expect-error` proves the rest is rejected).
+- ⊳ **R1 — harmonize "anchor carries identity only" (§2) with "anchored = a human binding" (§4).** The synthesis
+  pins this as a *mild internal inconsistency in the same doc*: `ubiquitous-language.md` §2 says anchors carry
+  "identity only," while §4's `claim` table calls `anchored` "a human binding" — and a binding (it emits a
+  `satisfies`/`verifies` edge) is more than identity. Suggested unified phrasing: *"an anchor says 'this code
+  location is the implementation/test binding for this Spec ID'; binding only, never system-truth content — never
+  behavior, rationale, readiness, acceptance criteria, or delivery facts."* Substance is already present and the
+  code already conforms (anchors hold only `id`/`label`/target; `@ts-expect-error` proves the rest is rejected) —
+  this is a wording harmonization, not a model change.
 - ⊳ **R2 — "no consumer reads source directly" → permit source *links*, forbid independent re-parsing.** The
   principle (`03`/`05`/`06`) is right, but a Design Review linking to source locations *recorded in the graph* is
   legitimate. Suggested: *"Consumers may link to source locations recorded in the graph; consumers must not
@@ -273,28 +308,41 @@ than silently edit — `AGENTS.md` working discipline). No code change.
 ## §4c — Forward-looking acceptance criteria, seeded by the full-MVP review (route to `07`)
 
 Not Phase-0 work; recorded here so the full-scope lens isn't lost, to fold into the roadmap (`docs/concept/07`) and
-the relevant slice's "done." Each is honesty-posture-aligned.
+the relevant slice's "done." Each is honesty-posture-aligned. Ordering reflects the synthesis's priority.
 
-- **Golden-graph determinism fixture (P3) — at Slice 1.** Generalizes H1's forward hook: a tiny fixture repo with
-  `expected/graph.json`; every extractor change must rebuild **byte-identically** (`diff` clean after deleting
-  `generated/`). Forces the hard calls early — path normalization, line-number stability, sort order, schema
-  versioning, unknown-reference handling, claim inheritance, delivery-fact derivation.
-- **`implemented` is a UI hazard — at Slice 4.** Keep the internal fact name `implemented` (it powers the
+- **① Authoring ergonomics — the headline risk; elevate to a named Slice-2 concern.** The synthesis calls this the
+  feedback's highest-value idea and notes there is *no authoring-ergonomics workstream anywhere in `00`–`07`* (the
+  MVP CLI is just `build`/`validate`). The first lever is **typed sections (D1)** for autocomplete + shape
+  guardrails; then great error messages and `sdp validate --watch`; later `sdp new spec` / `sdp explain`. Threads
+  back to the §0 anti-padding corollary: make dishonesty fail without rewarding low-signal filler. (Was framed as
+  Slice 5; the synthesis pulls the *typed-sections* half forward to Slice 2 because it is also D1.)
+- **② Golden-graph fixture — at Slice 1; keep it distinct from `--check-clean`.** The synthesis corrects a
+  conflation of *determinism* and *correctness* — adopt **both**, labeled distinctly:
+  - **Determinism self-check** (`03` §2): rebuild twice, assert **byte-identical** — explicitly a self-comparison,
+    **never** a diff against a committed `generated/` artifact (`generated/` is gitignored, L8).
+  - **Correctness oracle:** a committed `fixtures/order-management/expected/graph.json` ("did the extractor produce
+    the *right* graph," not just the *same* graph) — legitimate because it lives in `fixtures/`, not `generated/`.
+  - Heed the sub-list: make paths **repo-relative / POSIX**, and decide consciously whether **line numbers** enter
+    the golden (deterministic, but they make the oracle brittle to unrelated edits).
+- **③ Derived-readiness banner in the MVP view — at Slice 4, but blocked on H2.** *"Stated readiness: ready ·
+  Structural floor reached: defined · Problem: blocking open question."* Teaches the core honesty concept (stated,
+  then checked), and is cheaply enabled by H5 (a floor evaluator that reports *which* clause fails is the banner's
+  substrate). **Do not pull it forward before H2** — today the floor reads open questions from the wrong section, so
+  the banner would *confidently display the wrong thing* (a UI proposal exposing the model bug).
+- **④ `implemented` is a UI hazard — at Slice 4, view-label only.** Model semantics are already settled (§4b /
+  DECISIONS MD-7: binding/existence, never liveness). Keep the internal fact name `implemented` (it powers the
   `implemented ∧ ¬ready` drift query), but render binding language in views: *"Implementation binding: present /
-  Verifier binding: present / Runtime observation: not tracked."* Don't let the view overpromise liveness.
-- **Derived-readiness banner in the MVP view if cheap — at Slice 4.** *"Stated readiness: ready · Structural floor
-  reached: defined · Problem: blocking open question."* It teaches the core honesty concept (stated, then checked).
-  Cheaply enabled by H5: a floor evaluator that reports *which clause fails* is exactly the banner's substrate.
-- **`coverage-unknown` as a first-class reader/impact output — Slice 4 acceptance.** File-level blast-radius must
-  report changed-but-unanchored files as `coverage-unknown`, never silently under-report (honest "impact is bounded"
-  vs false "impact is complete"). Make it acceptance, not a design note.
-- **Authoring ergonomics is the biggest remaining risk — Slice 5 / ongoing.** Optimize the loop early
-  (`sdp new spec`, `sdp explain`, `sdp validate --watch`, great error messages, copy-pasteable examples, minimal
-  boilerplate). Threads back to the anti-padding corollary in §0: validators make dishonesty fail without rewarding
-  low-signal filler.
+  Verifier binding: present / Runtime observation: not tracked."*
+- **`coverage-unknown` — already a settled model commitment; make it Slice-4 acceptance.** Per DECISIONS MD-7 /
+  `07` §4 this is *decided*, not open: file-level blast-radius reports changed-but-unanchored files as
+  `coverage-unknown`, never silently under-reporting (honest "impact is bounded" vs false "impact is complete"). The
+  only add is promoting it from design note → explicit Slice-4 acceptance criterion.
 - **Adopt the founding review's MVP acceptance checklist** (spec extraction · anchor extraction · claim honesty ·
-  readiness honesty · delivery facts · traceability · determinism · view) as the roadmap's acceptance suite,
-  mapped across Slices 1–5.
+  readiness honesty · delivery facts · traceability · determinism · view) as the roadmap's acceptance suite, mapped
+  across Slices 1–5 — with three synthesis sharpenings: (a) *"ready spec with blocking open questions fails"* is the
+  regression test to add **after** H2 (and is locked early by H8); (b) extend *"rejects non-static envelope fields"*
+  to *"the example fixture survives static extraction with **no dropped sections**"* (envelope is clean today;
+  sections aren't — H1); (c) the checklist's *"extracts one api anchor"* is the H10 gap.
 
 ---
 
@@ -339,5 +387,6 @@ fixture suite passes; H9 `@ts-expect-error` honesty fixtures are in place.
 | **D4** | `AuthoredModel` future vs the one graph (P2) | Decide migrate-to-`GraphSchema` vs documented pre-graph lint; execute Slice 1/3 |
 | **R1** | Tighten "anchor = identity only" → "binding assertion only" (`§4b`) | Adopt against the ratified base; code already conforms |
 | **R2** | Tighten "no consumer reads source" → links-ok, re-parse-no (`§4b`) | Adopt before Slice 4 Design Review |
-| **D5** | Pull the derived-readiness banner into the MVP view? (`§4c`) | Yes if cheap; H5 already produces the substrate |
+| **D5** | Pull the derived-readiness banner into the MVP view? (`§4c`) | Yes if cheap — but **only after H2**; H5 already produces the substrate |
+| **D6** | Generic-anchor DSL shape — `codeAnchor` over `impl`/`api`/`component` vs sibling builders (`H10`) | Generalize the `satisfies` anchor; pairs with Slice-2 anchor extraction |
 | (H7) | Untrack already-committed `.sisyphus/` files? | `git rm --cached` if runner state shouldn't stay in history |
