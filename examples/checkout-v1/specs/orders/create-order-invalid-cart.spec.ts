@@ -1,26 +1,5 @@
 import { refines, spec, specId, verifies } from "@libar-dev/software-delivery-protocol";
 
-const thenKey = "then";
-
-const createOrderInvalidCartBehavior = Object.fromEntries([
-  ["examples", ["Out-of-stock or empty carts are rejected before an order is created."]],
-  [
-    "given",
-    [
-      "A cart is empty or contains at least one item without available inventory.",
-      "The cart is submitted for order creation.",
-    ],
-  ],
-  ["when", ["The create-order use case validates the cart."]],
-  [
-    thenKey,
-    [
-      "No order is created.",
-      "The caller receives a validation error explaining why the cart is invalid.",
-    ],
-  ],
-]) as Record<string, unknown>;
-
 export const createOrderInvalidCartSpec = spec({
   id: specId("spec:orders.create-order.invalid-cart"),
   title: "Invalid cart is rejected",
@@ -32,7 +11,18 @@ export const createOrderInvalidCartSpec = spec({
     value:
       "The authored example captures the rejection path without adding invalid fixtures to the model.",
   },
-  behavior: createOrderInvalidCartBehavior,
+  behavior: {
+    examples: ["Out-of-stock or empty carts are rejected before an order is created."],
+    given: [
+      "A cart is empty or contains at least one item without available inventory.",
+      "The cart is submitted for order creation.",
+    ],
+    when: ["The create-order use case validates the cart."],
+    then: [
+      "No order is created.",
+      "The caller receives a validation error explaining why the cart is invalid.",
+    ],
+  },
   verification: {
     mode: "executable",
     criteria: [

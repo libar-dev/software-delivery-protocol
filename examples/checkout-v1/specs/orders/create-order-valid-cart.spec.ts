@@ -1,28 +1,5 @@
 import { refines, spec, specId, verifies } from "@libar-dev/software-delivery-protocol";
 
-const thenKey = "then";
-
-const createOrderValidCartBehavior = Object.fromEntries([
-  ["examples", ["Valid cart becomes an order with the computed total."]],
-  [
-    "given",
-    [
-      "A customer has a cart with one or more line items.",
-      "Every cart item is in stock.",
-      "Each line item has a positive quantity and a unit price.",
-    ],
-  ],
-  ["when", ["The customer submits the cart for order creation."]],
-  [
-    thenKey,
-    [
-      "An order is created.",
-      "The order total equals the sum of quantity multiplied by unit price for each line item.",
-      "The order contains the original cart lines.",
-    ],
-  ],
-]) as Record<string, unknown>;
-
 export const createOrderValidCartSpec = spec({
   id: specId("spec:orders.create-order.valid-cart"),
   title: "Valid cart creates an order",
@@ -33,7 +10,20 @@ export const createOrderValidCartSpec = spec({
     outcome: "Show that a valid cart can become an order.",
     value: "The authored example demonstrates the happy path for create-order.",
   },
-  behavior: createOrderValidCartBehavior,
+  behavior: {
+    examples: ["Valid cart becomes an order with the computed total."],
+    given: [
+      "A customer has a cart with one or more line items.",
+      "Every cart item is in stock.",
+      "Each line item has a positive quantity and a unit price.",
+    ],
+    when: ["The customer submits the cart for order creation."],
+    then: [
+      "An order is created.",
+      "The order total equals the sum of quantity multiplied by unit price for each line item.",
+      "The order contains the original cart lines.",
+    ],
+  },
   verification: {
     mode: "executable",
     criteria: [
