@@ -256,12 +256,12 @@ second source**. *Everything* consumer-facing is a projection (RUP's *view eleme
 | Surface | What it is | Notes |
 |---|---|---|
 | **Design Review** | the flagship curated review: a primitive/pack rendered *in context* — neighbors, relations, `claim`/delivery badges, auto-generated **design questions** + a **findings** table | the surface where a primitive earns `ready`; adopts the recognized SDLC noun |
-| **agent surface** (D5) | a **visible typed graph the agent *scripts*** via a typed CLI — no verb wall; the schema *is* the contract (under-typing hides a capability) | **push** a Design-Review slice + **pull** by scripting the graph |
+| **agent surface** | a **visible typed graph the agent *scripts*** via a typed CLI — no verb wall; the schema *is* the contract (under-typing hides a capability) | **push** a Design-Review slice + **pull** by scripting the graph |
 | **reader** *(was "handle")* | the thin typed loader: joins + `claim`/taxonomy decode done **once**, returns composable data; authors/persists nothing | a front door, not a store |
 | **Mermaid projection** | logical / analytical / topological charts | live, regenerable |
 | **reference projection** | interface / API reference, kept current | live |
 | **context bundle** | a token-budgeted curated slice pushed to an agent | |
-| **MCP surface** (D6) | integration for user-facing apps — designed-in, **deferred build**, shape TBD | distinct from the agent surface (agents *script*; apps *integrate*) |
+| **MCP surface** | integration for user-facing apps — designed-in, **deferred build**, shape TBD | distinct from the agent surface (agents *script*; apps *integrate*) |
 | **impact graph** *(was "mechanical substrate"; aspirational)* | the exhaustive import/symbol structure for blast-radius / find-all-usages | divergence from the curated graph is **curation, not drift** |
 
 **The edit model** — **intent → agent → git → conformance checks** (§6). No patch loop, no write-back, no

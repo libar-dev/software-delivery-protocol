@@ -1,6 +1,6 @@
 # C — One Graph
 
-This theme *is* the founding principle expressed as jobs. There is one graph; it is derived from the repo; it is deterministic and regenerable; its provenance is honest; and git history is the event log. The graph is never a second source of truth — it is a projection of the repository at a commit.
+This theme *is* the founding principle expressed as jobs. There is one graph; it is derived from the repo; it is deterministic and regenerable; its `claim`s are honest; and git history is the event log. The graph is never a second source of truth — it is a projection of the repository at a commit.
 
 ---
 
@@ -10,12 +10,12 @@ This theme *is* the founding principle expressed as jobs. There is one graph; it
 **Phase:** MVP
 **References:** [03 — The One Graph](../docs/concept/03-the-one-graph.md), [02 — Core Model](../docs/concept/02-core-model.md)
 
-> **When** I have authored specs and marked code, **I want to** build one canonical graph of nodes and edges directly from the repo, **so I can** query the whole delivery state without standing up or syncing a second store.
+> **When** I have authored specs and anchored code, **I want to** build one canonical graph of nodes and edges directly from the repo, **so I can** query the whole delivery state without standing up or syncing a second store.
 
 **Essence:** No second graph, ever. The graph is a pure function of the repo, derived by a single extractor — never separately authored.
 
 **Acceptance criteria:**
-1. A single command (`akg build`) turns the repo's spec files, code markers, and basic structural facts into one graph.
+1. A single command (`akg build`) turns the repo's spec files, code anchors, and basic structural facts into one graph.
 2. The graph is the *only* graph — there is no parallel database that could drift from the code; every consumer (view, trace, agent) reads the graph, and only the extractor reads source to build it.
 3. The graph is flat — arrays of nodes and edges, with hierarchy and containment expressed as edges (`belongsTo`, `refines`) rather than nested objects.
 4. Building the graph needs no running services, network calls, or external state; the extractor's only outputs are the graph and a validation report.
@@ -26,23 +26,23 @@ This theme *is* the founding principle expressed as jobs. There is one graph; it
 ---
 
 ## JS-C2
-### Trust every edge's provenance
+### Trust every edge's `claim`
 
 **Phase:** MVP
 **References:** [03 — The One Graph](../docs/concept/03-the-one-graph.md)
 
-> **When** I look at a relationship in the graph, **I want to** know whether it was **declared** by an author, derived from an in-code **annotation** (marker), or **inferred** by structural analysis, **so I can** trust intentional facts and treat guesses as guesses.
+> **When** I look at a relationship in the graph, **I want to** know whether it was **declared** by an author, **anchored** by an in-code pointer (an anchor), or **inferred** by structural analysis, **so I can** trust intentional facts and treat guesses as guesses.
 
-**Essence:** Provenance is never silently collapsed or promoted. The three sources stay distinguishable forever; inference never becomes truth on its own.
+**Essence:** The `claim` is never silently collapsed or promoted. The three stay distinguishable forever; inference never becomes truth on its own.
 
 **Acceptance criteria:**
-1. Every node and edge records its source: `declared`, `annotation`, or `inferred`.
-2. The three sources are visibly distinct everywhere they appear — never merged into one undifferentiated blob.
+1. Every node and edge records its `claim`: `declared`, `anchored`, or `inferred`.
+2. The three are visibly distinct everywhere they appear — never merged into one undifferentiated blob.
 3. An inferred edge is never automatically converted into a declared one; promotion happens only through an explicit human act that lands in the repo.
 4. Inferred edges carry a confidence signal, are rendered differently, and never trigger a validator *error* on their own — they are advisory.
-5. When inference and a declared fact disagree, the declared fact wins; a deterministic precedence resolves layering, but a genuine contradiction (duplicate ID, marker contradicting a declaration) is a loud build error, not a silent winner.
-6. Evidence is observed, not declared: any evidence a spec carries is written by the pipeline, never authored by hand.
-7. The provenance of any edge traces back to a specific source location (file/line) or to the extractor that produced it.
+5. When inference and a declared fact disagree, the declared fact wins; a deterministic precedence resolves layering, but a genuine contradiction (duplicate ID, an anchor contradicting a declaration) is a loud build error, not a silent winner.
+6. Delivery facts are derived, not declared: a spec's realization (`implemented` / `has-verifier` / `observed`) is computed from edges by the pipeline, never authored by hand.
+7. The `claim` of any edge traces back to a specific source location (file/line) or to the extractor that produced it.
 
 ---
 
@@ -59,7 +59,7 @@ This theme *is* the founding principle expressed as jobs. There is one graph; it
 **Acceptance criteria:**
 1. Deleting everything under `generated/` and rebuilding produces a byte-identical graph: nodes sorted by `id`, edges sorted by `(from, type, to)`, no wall-clock timestamps or run-specific hashes in the compared output.
 2. The graph holds no authored state that would be lost on deletion — everything reconstructs from the repo.
-3. "Is the graph in sync?" is a rebuild-and-compare (`akg build --check-clean`), not a reconciliation process — a divergence between a committed graph and a fresh rebuild is a detectable, failable condition.
+3. "Is the graph in sync?" is a rebuild-and-compare (`akg build --check-clean`) that asserts a fresh rebuild is byte-identical to an independent rebuild from the same commit — not a reconciliation against a committed artifact (`generated/` is gitignored, never a committed graph to diff against).
 4. A non-static expression in a spec degrades locally — that one property is dropped with a warning and the rest of the spec survives — rather than making derivation non-deterministic or aborting the build.
 5. A full rebuild is fast enough to run routinely (the bounded MVP context rebuilds wholesale; incremental builds are a later optimisation that must stay subordinate to determinism).
 6. Generated artifacts are never hand-edited; the only way to change them is to change the repo and regenerate.
@@ -83,5 +83,5 @@ This theme *is* the founding principle expressed as jobs. There is one graph; it
 3. A spec's evolution and "who changed it and why" are answered by ordinary git tooling (`git log`, `git blame`, PRs) — no separate change-log, audit table, or event database exists or needs maintaining.
 4. The graph can be rebuilt at any past commit, reproducing the delivery state as it was then (a direct consequence of determinism, JS-C3).
 5. Comparing the graph at two commits is comparing two projections, yielding a meaningful diff of how intent and structure changed — without any second store.
-6. The one permitted forward-pointer is an ADR/decision spec declaring `supersedes` another record that *also still exists* in the repo — current authored intent, identical in kind to `refines`, not the graph storing a timeline.
-7. Provenance and authorship survive in history because they live in the committed code; a rich diff/time-travel UI over these projections is a natural follow-on, not a precondition.
+6. The one permitted forward-pointer is a decision spec declaring `supersedes` another record that *also still exists* in the repo — current authored intent, identical in kind to `refines`, not the graph storing a timeline.
+7. The `claim` and authorship of any edge survive in history because they live in the committed code; a rich diff/time-travel UI over these projections is a natural follow-on, not a precondition.

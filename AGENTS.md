@@ -11,10 +11,9 @@ building the MVP.
 | Path | What it is |
 |---|---|
 | `docs/concept/ubiquitous-language.md` | **The ratified base** (§0–§8 + §4b, all `[SETTLED]`). **Sole source of truth for terminology and the model.** Read this first. |
-| `docs/concept/DECISIONS.md` | The decision diary (why-log) for *building Omni itself* — MD-1/2/4/5 + scope note. Recaptures rationale + open tensions; distinct from in-system `kind:"decision"` records. |
-| `docs/concept/` (`00`–`07` + README) | 9 principle-led concept docs. The design: one `Spec` primitive, three descriptors, one derived graph, honest `claim`s, conformance + honesty checks, consumer surfaces. *(These predate the language base — the cleanup plan brings them into line.)* |
-| `jtbd-stories/` | JTBD **job stories** (`When [situation], I want to [motivation], so I can [outcome]`, themes A–H) + README. Stable, solution-agnostic jobs — chosen over user stories because consumers are heterogeneous and evolving (humans, CI, CLIs, **AI agents**). |
-| `plans/please-do-a-pedantic-tidy-dove.md` | The live cleanup plan: applies the ratified language to the 18 concept/JTBD docs. **PLAN-ONLY until an execution session runs it.** |
+| `docs/concept/DECISIONS.md` | The decision diary (why-log) for *building Omni itself* — MD-1/2/4/5 + scope note, plus the D1–D6 shorthand and measured-evidence tables. Recaptures rationale + open tensions; distinct from in-system `kind:"decision"` records. |
+| `docs/concept/` (`00`–`07` + README) | 9 principle-led concept docs. The design: one `Spec` primitive, three descriptors, one derived graph, honest `claim`s, conformance + honesty checks, consumer surfaces. *(Now ratified-current — they speak the language base end-to-end, cleanup executed 2026-06-07.)* |
+| `jtbd-stories/` | JTBD **job stories** (`When [situation], I want to [motivation], so I can [outcome]`, themes A–H) + README. Stable, solution-agnostic jobs — chosen over user stories because consumers are heterogeneous and evolving (humans, CI, CLIs, **AI agents**). Ratified-current. |
 
 > Note: `CLAUDE.md` is a symlink to `AGENTS.md` — edit `AGENTS.md`. The earlier input drafts (`GLOSSARY.md`,
 > `UBIQUITOUS_LANGUAGE_{1,2}.md`) and the language-finalization brief have been **deleted** (consolidated into
@@ -80,12 +79,12 @@ never as the answer.
 ## Working discipline
 
 - **Terminology is ratified, not provisional.** Use the exact terms in `docs/concept/ubiquitous-language.md`
-  (and the rationale in `DECISIONS.md`). Flag, don't silently invent, any new term. The legacy `00`–`07` docs
-  still carry pre-ratification vocabulary (`abstraction`, `provenance`, `marker`, `facet`, "two axes", the old
-  readiness ladder) — that is exactly what the cleanup plan fixes; don't take it as current.
-- **Respect plan mode.** The cleanup plan distinguishes **PLAN-ONLY** work (designing, deciding) from
-  **execution** (editing the 18 concept/JTBD docs). Don't start editing those files unless the session is
-  execution.
+  (and the rationale in `DECISIONS.md`). Flag, don't silently invent, any new term. The `00`–`07` docs and the
+  JTBD stories now speak the ratified language end-to-end (cleanup executed 2026-06-07); if you spot any residual
+  pre-ratification term (`abstraction`, `provenance`, `marker`, `facet`, "two axes", the old readiness ladder),
+  treat it as a bug to fix against the base, not as current.
+- **Respect plan mode.** Distinguish **PLAN-ONLY** work (designing, deciding) from **execution** (editing docs or
+  code). For any plan under `plans/`, don't start editing its target files unless the session is execution.
 - **Naming is parked — don't churn it.** The system / CLI / package names (`Omni`, `Libar Omni`, `AKG`, the `akg`
   CLI, `@akg/*`) are provisional placeholders owned by a later naming pass; "process" vs "protocol" (MD-5) is
   open. Leave them alone until that pass.

@@ -10,18 +10,18 @@ The job here is to connect real implementation to the spec that justifies it —
 **Phase:** MVP
 **References:** [04 — Authoring & Binding](../docs/concept/04-authoring-and-binding.md)
 
-> **When** I write a class, function, route, or module that realises part of a spec, **I want to** mark it with the spec's ID right where it lives, **so I can** make the implementation self-describing without maintaining a separate mapping table.
+> **When** I write a class, function, route, or module that realises part of a spec, **I want to** anchor it to the spec's ID right where it lives, **so I can** make the implementation self-describing without maintaining a separate mapping table.
 
-**Essence:** A marker is a one-way pointer from code to intent. It is the annotation layer of the graph — it carries identity and structural bindings, never intent.
+**Essence:** An anchor is a one-way pointer from code to intent. It is the anchored layer of the graph — it carries identity and structural bindings, never intent.
 
 **Acceptance criteria:**
-1. Any significant code construct can carry a marker naming the spec(s) it `satisfies` and its `component` — regardless of the framework it is built on (no Effect/Awilix/Fastify knowledge required).
-2. More than one interchangeable syntax is available (decorator on a class, JSDoc on a function, marker-constant) so the marker never fights the code's shape; a team picks one style.
-3. The marker is metadata only: removing the extractor changes nothing about how the code runs.
-4. A marker carries identity and structural bindings (`id`, `satisfies`, `component`, `implements`) — and is **forbidden** from carrying intent, readiness, behaviour, or verification, which live only on the spec.
-5. The marker points one way: code → spec, never spec → code; it produces **annotation**-provenance edges, kept distinct from the `declared` relations authored on specs.
-6. Adding a marker is a small, local edit reviewable in the same diff as the code.
-7. A missing marker on a designated "significant" construct is catchable as a lint signal, so meaningful code does not silently fall out of the graph — useful, not load-bearing.
+1. Any significant code construct can carry an anchor naming the spec(s) it `satisfies` and its `component` — regardless of the framework it is built on (no Effect/Awilix/Fastify knowledge required).
+2. More than one interchangeable syntax is available (decorator on a class, JSDoc on a function, anchor-constant) so the anchor never fights the code's shape; a team picks one style.
+3. The anchor is metadata only: removing the extractor changes nothing about how the code runs.
+4. An anchor carries identity and structural bindings (`id`, `satisfies`, `component`, `implements`) — and is **forbidden** from carrying intent, readiness, behaviour, or verification, which live only on the spec.
+5. The anchor points one way: code → spec, never spec → code; it produces **anchored**-`claim` edges, kept distinct from the `declared` relations authored on specs.
+6. Adding an anchor is a small, local edit reviewable in the same diff as the code.
+7. A missing anchor on a designated "significant" construct is catchable as a lint signal, so meaningful code does not silently fall out of the graph — useful, not load-bearing.
 
 ---
 

@@ -65,8 +65,37 @@ guardrail 1 governs; arguably **more honest than "process,"** which carries the 
 **Adopt-the-nouns reversal (kept for the record).** An earlier brief held "Omni is **not** a PM tool; do **not**
 adopt SAFe/PM ladder names." MD-2 **reverses** that: the commercial Studio means users must not relearn delivery
 vocabulary, so Omni adopts the established delivery **nouns** (as projections + vocabulary) and rejects only the
-process **gating** FSM. The structural decisions **D1–D6** and the cleanup plan
-(`plans/please-do-a-pedantic-tidy-dove.md`, rewritten 2026-06-07) **still hold**, reframed under the meta-model
-(MD-1). The first-draft input drafts (`GLOSSARY.md`, `UBIQUITOUS_LANGUAGE_{1,2}.md`) and the language-finalization
+process **gating** FSM. The structural decisions **D1–D6** (recorded below) **still hold**, reframed under the meta-model
+(MD-1); the cleanup plan that applied the ratified language across the 18 concept/JTBD docs was **executed and
+retired** (2026-06-07). The first-draft input drafts (`GLOSSARY.md`, `UBIQUITOUS_LANGUAGE_{1,2}.md`) and the language-finalization
 brief have since been **deleted** (consolidated); the **sole canonical base is
 `docs/concept/ubiquitous-language.md`.**
+
+---
+
+## Structural-decision shorthand (D1–D6)  [ACCEPTED · relocated here when the cleanup plan was retired, 2026-06-07]
+
+> These six labels come from the original structural-decisions pass. Their *content* is canonical in
+> `docs/concept/ubiquitous-language.md`; this table is kept for permanent traceability so any historical `(Dn)`
+> reference still resolves now that the single-use cleanup plan (which previously held it) is gone.
+
+| Label | One line | Canonical in |
+|---|---|---|
+| **D1** | readiness (design maturity, authored) is separate from delivery facts (derived) | base §2 + §4b |
+| **D2** | `02` carries explicit typed **sections**, trimmed to essence (branded-ID strings; open `model` list) | base §2 |
+| **D3** | `Pack` is a reified grouping/aggregate (not folded into `Spec`); membership single-sourced on a manifest | base §2 boundary |
+| **D4** | **Design Review** is the flagship curated projection — the surface where a spec earns `ready` | base §7 |
+| **D5** | the **agent surface** = a visible typed graph the agent *scripts* (no verb wall); `reader` = thin loader | base §7 |
+| **D6** | the **MCP surface** = integration for user-facing apps (designed-in, deferred build, shape TBD) | base §7 |
+
+## Measured evidence — figures behind the generalized doc prose  [recorded 2026-06-07]
+
+> The concept docs deliberately carry *principle-level* wording, not point figures (figures age and read as
+> false precision). The measurements that motivated those principles are preserved here as evidence.
+
+| Figure | Context | Generalized in the docs as |
+|---|---|---|
+| **~⅕ tokens** | a multi-probe agent session ran at ~⅕ the tokens of a grep/verb-API equivalent (data kept in-process, only conclusions returned) | `06` §3/§10, `jtbd-05` JS-E2 → "a measured context-efficiency win" |
+| **< ~50 specs** | full-rebuild-per-run is comfortable below ~50 specs | `00` / `05` / `07` → "MVP scale" |
+| **~10k+ nodes** | a property-graph DB is deferred until traversal pain (~10k+ nodes) | `03` / `07` → "until measured traversal pain" |
+| **single-digit to ~25%** | a curated graph is a small selection of the mechanical (impact-graph) firehose | `06` §2, `jtbd-07` JS-G3 → "a deliberately small curated selection" |
