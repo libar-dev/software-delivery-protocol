@@ -37,12 +37,30 @@ The graph is **flat**: arrays of nodes and arrays of edges. Hierarchy and contai
   ],
   "edges": [
     { "from": "impl:orders.create-order-use-case", "type": "satisfies", "to": "spec:orders.create-order", "claim": "anchored" },
-    { "from": "test:orders.create-order.valid-cart", "type": "verifies", "to": "spec:orders.create-order", "claim": "anchored" }
+    { "from": "test:orders.create-order.valid-cart", "type": "verifies", "to": "spec:orders.create-order.valid-cart", "claim": "anchored" }
   ]
 }
 ```
 
-Node typing keeps concerns separate: every node carries `nodeType` (`Primitive` / `Pack` / `Anchor` / `CodeNode` / …), and `Primitive` nodes additionally carry `specKind` (the truth-category from `02`). This split prevents the old single `kind` field from colliding between structural class and domain truth-category. **Delivery facts** (`implemented` here) are **computed from edges** — the `satisfies` edge resolving to the spec — not authored on the node; readiness (`ready`) is the authored maturity, kept separate (`02` §2). The `satisfies` edge runs **code → spec** and is **anchored** (derived from an anchor), never hand-authored.
+Node typing keeps concerns separate: every node carries `nodeType` (`Primitive` / `Pack` / `Anchor` / `CodeNode` / …), and `Primitive` nodes additionally carry `specKind` (the truth-category from `02`). This split prevents the old single `kind` field from colliding between structural class and domain truth-category. **Delivery facts** (`implemented` here) are **computed from edges** — the `satisfies` edge resolving to the spec — not authored on the node; readiness (`ready`) is the authored maturity, kept separate (`02` §2). The `satisfies` edge runs **code → spec** and is **anchored** (derived from an anchor), never hand-authored. The `verifies` edge runs **verifier → its direct target** — here the test verifies the *example* (`spec:orders.create-order.valid-cart`), not the parent; `has-verifier` is then computed per spec from the edges resolving to each, never propagated transitively up `refines` (`02` §2, *Verifier semantics*).
+
+### The edge contract — one row per edge type
+
+Every edge in the graph has a fixed contract: where it comes from, what `claim` it carries, which surface authors it (if any), how a validator treats a broken one, and what it feeds. This table is the single reference (the per-relation detail lives in `02` §3 and `04`):
+
+| Edge | From → To (`nodeType`) | Authored / Derived | `claim` | Authoring surface | Validator severity | Readiness effect | Delivery-fact effect |
+|---|---|---|---|---|---|---|---|
+| `refines` | Primitive → Primitive | authored | declared | spec `relations[]` | **error** if target missing | `ready` floor: target ≥ `defined` | — |
+| `dependsOn` | Primitive → Primitive | authored | declared | spec `relations[]` | **error** if target missing | `ready` floor: target ≥ `defined` | — |
+| `constrainedBy` | Primitive → Primitive (`constraint`) | authored | declared | spec `relations[]` | **error** if target missing | — | — |
+| `decidedBy` | Primitive → Primitive (`decision`) / `doc:` | authored | declared | spec `relations[]` | **error** if target missing (unless `doc:`) | — | — |
+| `verifies` | Primitive (`example`) **or** Anchor (test) → Primitive | authored | `declared` (from an example) / `anchored` (from a test anchor) | spec `relations[]` **or** `specTest` anchor | **error** if target missing | — | contributes `has-verifier` to the **target** (if the verifier is *enabled*) |
+| `supersedes` | Primitive (`decision`) → Primitive (`decision`) | authored | declared | spec `relations[]` | **error** if target missing | — | — |
+| `satisfies` | CodeNode → Primitive | derived (from an anchor) | anchored | source **anchor** | **error** if target missing | `ready` floor: present anchors must *resolve* | contributes `implemented` to the **target** |
+| `belongsTo` | Primitive → Pack | derived (from the manifest) | declared (inherited) | `Pack` manifest `specs[]` | **error** if member missing/duplicate | — | — |
+| calls / imports | CodeNode → CodeNode | derived (analysis) | inferred | — (machine) | **advisory** — never errors on its own | — | feeds the impact graph only |
+
+**Delivery facts are node facts, not edges.** `implemented` / `has-verifier` / `observed` are computed *from* the `satisfies` / `verifies` / runtime edges above and shown as badges on the node (`02` §2; base §4b) — they are never authored and never themselves edges.
 
 ---
 
@@ -56,7 +74,7 @@ Given the same repo at a commit, the extractor emits a **byte-identical** graph:
 
 Determinism is what makes "derived" *falsifiable*. Without it, the no-second-store rule (below) cannot be enforced, because you could not prove the graph is a function of the repo.
 
-A consequence: the authoring surface must be statically extractable (P5). A non-static expression in a spec file would make derivation non-deterministic; the extractor instead drops that one property and surfaces a warning (graceful partial extraction, L3) rather than guessing.
+A consequence: the authoring surface must be statically extractable (P5). A non-static expression in a spec file would make derivation non-deterministic, so the extractor responds in two tiers (`04` §1): a non-static **envelope** field (`id` · `kind` · `altitude` · `readiness` · any relation target) is a **hard error that fails the build** — the graph cannot be keyed or typed without it — while non-static **optional section** detail is dropped with a warning (graceful partial extraction, L3) rather than guessed.
 
 ---
 

@@ -39,7 +39,7 @@ The graph is only valuable if humans and agents can actually consume it. The job
 
 **Acceptance criteria:**
 1. The agent reads through the agent surface — the in-memory **`reader`** (rebuilt fresh each load, persisting nothing) — and/or the raw `graph.json`; the schema is the discovery surface, so a typed field is a usable capability and an un-typed one is hidden.
-2. A small set of high-value methods is provided ("frozen"), namely the ones an agent hand-rolling would get wrong: **entry adapters** that bridge from what the agent has to what the graph knows (`findByConcept(string)`, `byFile(path)`, `bySymbol(sym)`), **blast-radius** over a changeset, and **irreducible cross-source joins** (e.g. spec → satisfies → invariants/scenarios with maturity/`claim` decode).
+2. A small set of high-value methods is provided ("frozen"), namely the ones an agent hand-rolling would get wrong: **entry adapters** that bridge from what the agent has to what the graph knows (`findByConcept(string)`, `byFile(path)` — both MVP; `bySymbol(sym)` is frozen-in-shape but **aspirational**, since it rides the exhaustive impact graph), **file-level blast-radius** over a changeset (MVP; symbol-level reach is aspirational), and **irreducible cross-source joins** (e.g. spec → satisfies → invariants/scenarios with maturity/`claim` decode).
 3. Everything else — single-field traversals, group-bys, the maturity ladder — the agent scripts on demand from the plain, composable shapes the reader returns.
 4. Open questions, validation findings, and gaps are reachable through the agent surface so the agent sees the holes, not just the assertions.
 5. The `claim` travels with the data — the agent can tell `declared` facts from `anchored` and `inferred` ones.
@@ -67,3 +67,24 @@ The graph is only valuable if humans and agents can actually consume it. The job
 5. The shared artifact is a faithful projection of the graph at a known commit, stamped so viewers know which commit it projects.
 6. Updating the source and regenerating produces an updated shareable view with no manual rework.
 7. The interactive surface stays within the read-only gate — its only write-affordance is composing scoped intent (Theme F), never mutating canonical source.
+
+---
+
+## JS-E4
+### Conduct a Design Review and decide readiness
+
+**Phase:** MVP
+**References:** [06 — Consumers & Projections](../docs/concept/06-consumers-and-projections.md) (§5), [02 — Core Model](../docs/concept/02-core-model.md), [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md)
+
+> **When** a spec or `Pack` is mature enough to consider promoting, **I want to** review it in context — its neighbors, relations, `claim`/delivery badges, open questions, and gaps — **so I can** decide whether to state `ready`, with the structural floor visible but the judgment mine.
+
+**Essence:** The **Design Review** is the flagship curated surface (`06` §5) and the human act it supports: reviewing a spec in its related set and *deciding* to state `ready`. It is **not** an automated gate — validators check only the structural readiness floor (`05` §3); promotion is a human's call, never a side effect of the review. This is where the "maturity gates implementation" discipline actually happens.
+
+**Acceptance criteria:**
+1. A spec (or `Pack`) renders *in context* — neighbors, relations, `claim`/delivery badges — reusing the one generated view (JS-E1), so review needs no separate tool.
+2. The review surfaces exactly what stands between the spec and the next rung: blocking open questions, unresolved relations, `dependsOn`/`refines` targets below `defined`, and `gap`s (missing verifier, unmeasured NFR target).
+3. Stating `ready` is a deliberate human edit to the spec, checked against the `ready` floor (`05`) — the review **never** auto-promotes, and validators never adjudicate design quality.
+4. A `Pack` can be reviewed as a unit, so coherence and cross-member tensions (shared terms, conflicting constraints) are visible at the group level, not just per spec.
+5. Findings (the auto-generated design questions + findings table) resolve through the edit loop (Theme F) — there is no stored `Finding` type and no second store; re-running the build regenerates them.
+6. The same review is reproducible from the graph at a commit, so two reviewers see the same context, and the decision is recorded as an ordinary git commit (the readiness change), not as review-tool state.
+7. The review reads the curated graph only — it consumes the same derived facts every other surface does, never a privileged side channel.

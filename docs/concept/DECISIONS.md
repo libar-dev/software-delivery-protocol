@@ -72,6 +72,33 @@ independently endorsed the framing for these reasons.)
 **delivery-process execution**; only the meta-layer's own naming ("process meta-model" → "the protocol")
 changed. This unparks the naming pass.
 
+### MD-7 — Honesty-sharpenings from the Codex adversarial pass: liveness, impact coverage, `ready` semantics  [ACCEPTED 2026-06-07]
+**Context.** An adversarial review (Codex) probed three trust signals: (1) `implemented` / `has-verifier` are
+anchor-driven and assert no liveness — dead code or a skipped test can look done; (2) file-level blast-radius can
+silently under-report; (3) `ready` is described as "reviewed" but the model records no review fact.
+**Decision.** Resolve all three as **honesty clarifications consistent with already-settled decisions**, *not* via
+the reviewer's heavier remedies:
+1. **Delivery facts are binding/existence, never liveness.** Define an *enabled verifier* as a **structurally
+   bound, resolvable test anchor** — skip / quarantine / glob-exclusion is CI's concern, *exactly as pass/fail
+   is*; add "not reachable/live" to `implemented`; name the ladder `implemented → has-verifier → observed`, with
+   **`observed`** (aspirational) as the liveness rung. *Rejected: renaming `implemented`→`has-anchor` — it guts
+   the `implemented ∧ ¬ready` drift alarm, and the `claim`/`observed` ladder already answers the liveness ask.*
+2. **File-level blast-radius reports its own coverage gaps.** An unanchored changed file is surfaced as an
+   explicit *coverage-unknown* item, never silently dropped; the MVP never claims exhaustive reach (that is the
+   deferred symbol-level impact graph). *Rejected: demoting blast-radius from the MVP — the honest-coverage
+   signal preserves it.*
+3. **`ready` = the structural floor + a human's `declared` statement.** "Reviewed in context" is **intended
+   human practice**, not a graph fact or a checked property (checking it would be the workflow-gating §0 guardrail
+   1 forbids); approval provenance, where it matters (a baseline), is **git-native** — a signed tag carries
+   approver + approved-at. *Rejected: an authored review/approval primitive with approver identity — it reverses
+   the one-primitive bet and the explicit "RBAC/approval outside the model" cut.*
+**Scope.** Applied to the **ratified base** (§4b, §6, §7, §8) plus the derived `02`/`04`/`05`/`06`/`07` +
+`jtbd-07` — tightenings of the base's own honesty ethos (§0 guardrail 1; §4b "readiness is stated, facts are
+derived"), not reversals of direction.
+**Forward note.** If multi-actor `ready` / baseline trust later becomes load-bearing, the guardrail-respecting
+home for approval provenance is **signed git tags** (identity + approved-at, already in git) — not a new authored
+primitive.
+
 ### Scope note — relationship to the prior plan & brief
 **Adopt-the-nouns reversal (kept for the record).** An earlier brief held "the Protocol is **not** a PM tool; do **not**
 adopt SAFe/PM ladder names." MD-2 **reverses** that: the commercial Studio means users must not relearn delivery
@@ -95,7 +122,7 @@ brief have since been **deleted** (consolidated); the **sole canonical base is
 | **D1** | readiness (design maturity, authored) is separate from delivery facts (derived) | base §2 + §4b |
 | **D2** | `02` carries explicit typed **sections**, trimmed to essence (branded-ID strings; open `model` list) | base §2 |
 | **D3** | `Pack` is a reified grouping/aggregate (not folded into `Spec`); membership single-sourced on a manifest | base §2 boundary |
-| **D4** | **Design Review** is the flagship curated projection — the surface where a spec earns `ready` | base §7 |
+| **D4** | **Design Review** is the flagship curated projection — the context where a human decides to state `ready` (sharpened by MD-7; the floor is checked, the review is human practice) | base §7 |
 | **D5** | the **agent surface** = a visible typed graph the agent *scripts* (no verb wall); `reader` = thin loader | base §7 |
 | **D6** | the **MCP surface** = integration for user-facing apps (designed-in, deferred build, shape TBD) | base §7 |
 

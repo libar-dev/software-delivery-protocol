@@ -84,13 +84,15 @@ A small, **kind-aware** requirement rides on the base floor (full per-kind overl
 
 **The `ready` floor is earned, not asserted** — and it is **not** a delivery fact. The floor may require that anchors *resolve* (so `implemented` is *derivable*); it **never** requires the spec to *be* `implemented`. Readiness is a *stated position* about the design; delivery facts are observations about the code (`02` §2). Higher floors degrade gracefully if their structural inputs are absent.
 
+**`ready` is the structural floor plus a human's `declared` statement — not a record that a review occurred.** The Design Review (`06` §5) is *where* a human typically decides, but the graph stores **no** review/approval fact, and the validator never checks one — that would be the workflow-gating the honesty guardrail forbids (§1). Where approval provenance matters — a baseline — it is **git-native** (authorship + a signed tag, `03`), not an authored primitive (approval / RBAC stays outside the model, `07`).
+
 > **Stated vs derived readiness.** The author *states* a `readiness`; validators can also compute a *derived* readiness from what the spec actually contains. When they diverge (stated `defined`, derived `scoped`), that divergence is itself surfaced. The MVP can ship the floor-check and add the explicit derived-readiness banner as a small follow-up; the principle — *the stated rung is not trusted, it is verified* — holds either way. (Note the verb: readiness is **stated/asserted**, never "claimed" — "claim" is reserved for the `claim` taxonomy in `04`.)
 
 ---
 
 ## 4. Pack-level coherence (CORE-adjacent)
 
-A `Pack` is validated for **coherence**, not member completeness, and **deterministically only**: referenced terms and `modelRefs` resolve, membership resolves, no duplicate member IDs. There is **no** "duplicated intent" check — a `Pack` states no truth of its own, so it has no intent to duplicate; semantic duplication is a human/agent judgment, not a validator's. This lets a team hold "a large coherent group of low-detail specs" without the build demanding implementation. Coherence-vs-completeness is a distinct check from the readiness floors above.
+A `Pack` is validated for **coherence**, not member completeness, and **deterministically only**: referenced terms and `modelRefs` resolve, membership resolves, no duplicate member IDs. There is **no** "duplicated intent" check — a `Pack` states no truth of its own (only a plain `framing` note, `02` §4), so there is nothing to duplicate; semantic duplication is a human/agent judgment, not a validator's. This lets a team hold "a large coherent group of low-detail specs" without the build demanding implementation. Coherence-vs-completeness is a distinct check from the readiness floors above.
 
 ---
 
