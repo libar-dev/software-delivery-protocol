@@ -84,7 +84,7 @@ type SpecReadiness =
   | "idea"      // title + minimal intent; open questions allowed
   | "scoped"    // intent, terms, parent relation; rules or examples expected
   | "defined"   // rules and/or examples present; NFR targets measurable
-  | "ready";    // reviewed in context (Design Review) and implementation-ready — carries a readiness floor (`05`)
+  | "ready";    // implementation-ready: clears the readiness floor (`05`), stated by a human (typically out of a Design Review, `06`) — the floor is checked; the review is practice, not a recorded fact
 ```
 
 The descriptors move freely. A `feature`-altitude spec can sit at `scoped` forever (it is not failing CI as long as nothing *states* it is `ready`). A `story`-altitude spec can be `ready`. A linear idea→requirement→implementation pipeline cannot express these states; independent descriptors can.
@@ -106,7 +106,7 @@ The descriptors move freely. A `feature`-altitude spec can sit at `scoped` forev
 
 | Delivery fact | Derived when | Means — and does **not** mean |
 |---|---|---|
-| `implemented` | ≥1 `satisfies` edge (from an `anchor`) resolves to the spec | code claims to realise it — *not* that it works |
+| `implemented` | ≥1 `satisfies` edge (from an `anchor`) resolves to the spec | code **claims** to realise it — *not* that it works, is reachable, or is live |
 | `has-verifier` | ≥1 `verifies` edge from an enabled verifier resolves to the spec | a verifier **exists** — *not* that it passed (pass/fail is CI's, not the graph's) |
 | `observed` *(aspirational)* | runtime evidence links to the spec's target | seen live in production / telemetry |
 
@@ -116,6 +116,8 @@ Because readiness and delivery facts answer *separate* questions, two high-value
 - `implemented ∧ ¬ready` → the **drift alarm** (code ran ahead of the design).
 
 A readiness floor (`05`) checks the **structure required to *derive* a fact**, never the fact itself: stating `ready` may require that bindings *resolve* (so `implemented` is *derivable*) — it never requires the spec to *be* `implemented`. Readiness is a *stated position* about the design; delivery facts are observations about the code.
+
+> **Liveness is a separate, higher rung.** `implemented` and `has-verifier` are *binding / existence* facts: neither asserts the code is reachable or that the linked test runs. Runtime liveness is the **`observed`** fact (aspirational, `07`). The ladder — **`implemented`** (a binding exists) → **`has-verifier`** (a verifier exists) → **`observed`** (it ran / was seen live) — is deliberate: an anchor on dead code, or a linked-but-skipped/excluded test, is a human honesty error caught in review, not something the graph's linkage check detects (skip / quarantine / glob-exclusion is CI's concern, exactly as pass/fail is). The graph checks *binding*, never *liveness*.
 
 ---
 
@@ -209,17 +211,24 @@ export const ValidCartCreatesOrder = spec({
 
 The old `exemplifies` relation is gone: an example simply uses `kind:"example"` + `refines` + `verifies`. `verification` carries `mode` + `criteria` only — the *existence* of an enabled verifying test is the derived `has-verifier` fact, observed from a test **anchor**, never authored here.
 
+### Verifier semantics — direct, per-spec, not transitive
+
+`verifies` is a **direct** edge from a verifier to *its stated target*, and `has-verifier` is computed **per spec** from the verifies edges that resolve to **that** spec — it is **not** propagated transitively up `refines`. Two pieces matter:
+
+- **An *enabled verifier*** is an `example`/scenario `Spec` backed by a **linked, resolvable test anchor** (a `specTest`/test **anchor**, `04`), or a test anchored directly to the spec. The example expresses *what* is verified (declared); the test **binds** it to runnable code (anchored). "Enabled" is **structural — a non-dangling test binding, not a runner verdict**: whether that test is skipped, quarantined, or glob-excluded is **CI's concern, exactly as pass/fail is**. A `verifies` edge from a verifier that is **not** enabled (no resolving test binding) does not yield `has-verifier`.
+- **Two edges, two targets — no transitive shortcut.** In the worked example, the `example` `verifies` its **parent** (`spec:orders.create-order`), and the backing test `verifies` the **example** (`spec:orders.create-order.valid-cart`) — *not* the parent. The parent earns `has-verifier` because an *enabled* example verifies it; the example earns `has-verifier` because its test verifies it. A spec never inherits `has-verifier` from a child merely because the child is verified.
+
 ---
 
 ## 4. `Pack` — grouped coherent ideation
 
-A `Pack` clusters related specs (a feature initiative, a bounded slice) so a team can ideate at the group level before drilling down. It is an authored **aggregate** that states **no truth of its own** — it *references* specs, never owns vocabulary. Its `intent` is **descriptive framing** for ideation and review (a human-readable note on why the group exists), **not** authored system truth: it is never checked for completeness and never reconciled against its members — only the member `Spec`s state truth.
+A `Pack` clusters related specs (a feature initiative, a bounded slice) so a team can ideate at the group level before drilling down. It is an authored **aggregate** that states **no truth of its own** — it *references* specs, never owns vocabulary. Its `framing` is **a plain descriptive note** for ideation and review (why the group exists), **not** authored system truth: deliberately *not* the truth-bearing `intent: { outcome, value }` shape a `Spec` carries, so it can never be mistaken for one. It is never checked for completeness and never reconciled against its members — only the member `Spec`s state truth.
 
 ```ts
 export const CheckoutV1 = pack({
   id: "pack:checkout-v1",
   title: "Checkout v1",
-  intent: { outcome: "let customers complete purchases reliably", value: "increase conversion, reduce failed orders" },
+  framing: "let customers complete purchases reliably — lifts conversion, cuts failed orders",
   modelRefs: ["spec:checkout.glossary"],   // → standalone kind:"model" specs; shared vocabulary is never inlined twice
   specs: [
     ref("spec:orders.create-order"),

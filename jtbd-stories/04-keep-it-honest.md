@@ -10,7 +10,7 @@ A graph nobody trusts is worthless. The job here is to make the delivery state *
 **Phase:** MVP
 **References:** [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md)
 
-> **When** I open a pull request, **I want to** have CI reject dangling references, duplicate IDs, orphaned specs, broken `verifies` links, and a stated readiness the spec doesn't back up, **so I can** trust that a green build means the delivery state is actually coherent.
+> **When** I open a pull request, **I want to** have CI reject dangling references, duplicate IDs, broken `verifies` links, and a stated readiness the spec doesn't back up — and surface orphans and missing verifiers as `gap`s — **so I can** trust that a green build means the delivery state is actually coherent.
 
 **Essence:** The graph earns trust by failing loudly and specifically. Ambiguity is rejected, not tie-broken.
 

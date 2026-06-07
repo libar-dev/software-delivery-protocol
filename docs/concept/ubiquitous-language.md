@@ -192,9 +192,19 @@ is what the machine *observes*; readiness is what the human *states*.
 
 | Delivery fact | Derived when | Means — and does **not** mean |
 |---|---|---|
-| **`implemented`** | ≥1 `satisfies` edge (from an `anchor`) resolves to the Spec | code claims to realise it — *not* that it works |
+| **`implemented`** | ≥1 `satisfies` edge (from an `anchor`) resolves to the Spec | code **claims** to realise it — *not* that it works, is reachable, or is live |
 | **`has-verifier`** | ≥1 `verifies` edge from an enabled verifier resolves to the Spec | a verifier **exists** — *not* that it passed (pass/fail is CI's, not the graph's) |
 | **`observed`** *(aspirational)* | runtime evidence links to the Spec's target | seen live in production / telemetry |
+
+> **"Enabled verifier" and the liveness boundary.** These facts are about **binding and existence, never
+> liveness.** `has-verifier` derives from an *enabled verifier* — a verifying `example`/scenario backed by a
+> **linked, resolvable test anchor** (§4/§5) — where "enabled" means **structurally bound, not runner-executed**:
+> whether that test is skipped, quarantined, or glob-excluded is **CI's concern, exactly as pass/fail is**.
+> `implemented` likewise records that code *claims* to realise the Spec (an `anchored` binding), **not** that it
+> is reachable or live. Runtime liveness is the *separate, higher* **`observed`** fact (aspirational). The ladder
+> is deliberate — **`implemented`** (a binding exists) → **`has-verifier`** (a verifier exists) → **`observed`**
+> (it ran / was seen live) — and a misbound anchor (e.g. on dead code) is a human honesty error caught in review,
+> not something the linkage check can detect: the graph checks *binding*, never *liveness*.
 
 **The payoff queries** (possible only because readiness and delivery facts are *separate* axes):
 - `ready ∧ ¬implemented` → the **build backlog** (designed, not yet built).
@@ -247,6 +257,9 @@ layer is what makes the graph trustworthy for agents and humans alike.
   the two families above.
 - **`readiness floor`** *(was "readiness profile")* — the **minimum structural requirement to *state* a readiness
   rung**. A floor to clear, **never a quota to fill or a score** (significance governs detail — no tier-filling).
+  `ready` is thus the floor cleared **plus a human's `declared` statement** — *that a review actually occurred is
+  not a fact the graph records or a validator checks* (that would be the workflow-gating §0 guardrail 1 forbids);
+  where approval provenance matters (a baseline, §8) it is **git-native** (§5), not an authored primitive.
 - **`gap`** — a surfaced absence (e.g. a `ready` `Spec` with no verifier). Informative, **never a gate**.
 - **`orphan`** — a `Spec` with no relations and nothing pointing at it. Informative.
 
@@ -256,7 +269,7 @@ second source**. *Everything* consumer-facing is a projection (a *view element*)
 
 | Surface | What it is | Notes |
 |---|---|---|
-| **Design Review** | the flagship curated review: a `Spec`/pack rendered *in context* — neighbors, relations, `claim`/delivery badges, auto-generated **design questions** + a **findings** table | the surface where a `Spec` earns `ready`; adopts the recognized SDLC noun |
+| **Design Review** | the flagship curated review: a `Spec`/pack rendered *in context* — neighbors, relations, `claim`/delivery badges, auto-generated **design questions** + a **findings** table | the **context in which a human decides** to state `ready` (validators check only the structural floor, §6 — the review is human practice, **never a recorded graph fact or a gate**); adopts the recognized SDLC noun |
 | **agent surface** | a **visible typed graph the agent *scripts*** via a typed CLI — no verb wall; the schema *is* the contract (under-typing hides a capability) | **push** a Design-Review slice + **pull** by scripting the graph |
 | **reader** *(was "handle")* | the thin typed loader: joins + `claim`/taxonomy decode done **once**, returns composable data; authors/persists nothing | a front door, not a store |
 | **Mermaid projection** | logical / analytical / topological charts | live, regenerable |
@@ -287,7 +300,7 @@ The goal is recognition and lightweight utility without re-importing the process
 | **iteration** | One integration loop leading to a release | Optional temporal grouping. Can appear as a **roadmap / now-next-later projection**. Not enforced. |
 | **milestone** | Assessment checkpoint | Optional named checkpoint (a projection over readiness and delivery state). Not a gate. |
 | **release** | A delivered functional set | A **tagged set** surfaced as a projection (backed by a git tag). |
-| **baseline** | Reviewed/approved, change-controlled snapshot | A **named approved snapshot** (≈ a git tag where a set of `Spec`s is `ready` + has been reviewed). Vocabulary + optional projection. |
+| **baseline** | Reviewed/approved, change-controlled snapshot | A **named approved snapshot** (≈ a git tag over a set of `ready` `Spec`s). The **git tag itself is the approval artifact** — a signed tag carries approver identity + approved-at commit — so approval provenance is **git-native** (§5, *git is the event log*), **not** an authored review primitive or a validator-checked property. Vocabulary + optional projection. |
 
 **The discipline ≈ kind/section mapping** (how the Protocol supports the disciplines-and-phases picture without its gates):
 

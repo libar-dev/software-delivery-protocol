@@ -99,10 +99,30 @@ The job here is to get a thought into the system and let it grow without ever fo
 **Essence:** A pack makes "a large coherent group of low-detail specs" a first-class state. It is checked for *coherence*, not for the completeness of any individual member — and it states no truth of its own.
 
 **Acceptance criteria:**
-1. A `pack()` clusters member specs (by ID reference) and carries a shared intent and `modelRefs` to shared `kind:"model"` specs for the group, e.g. `pack:checkout-v1`.
+1. A `pack()` clusters member specs (by ID reference) and carries a shared `framing` note (a plain description, **not** the truth-bearing `intent` shape a `Spec` carries) and `modelRefs` to shared `kind:"model"` specs for the group, e.g. `pack:checkout-v1`.
 2. Members can sit at any readiness — the pack never forces its members toward implementation to be valid.
 3. Pack coherence is checked **deterministically**: referenced terms and `modelRefs` resolve, every member reference resolves, and no member ID is duplicated — never a semantic "duplicated intent" judgment.
 4. Coherence is a distinct check from per-spec readiness floors — a pack of pure ideas can be perfectly coherent.
 5. Adding or removing a member is an ordinary repo edit; a member reference that no longer resolves is caught by referential-integrity checks.
 6. Pack membership is queryable in both directions — pack → members and member → pack — from the graph.
 7. The pack appears in the graph as a node; its membership (`belongsTo`) edges are **derived** from the manifest (carrying `claim:"declared"`), regenerable like everything else.
+
+---
+
+## JS-A6
+### Survey the landscape to decide where to invest next
+
+**Phase:** Iterate
+**References:** [02 — Core Model](../docs/concept/02-core-model.md), [06 — Consumers & Projections](../docs/concept/06-consumers-and-projections.md)
+
+> **When** I'm scoping a new initiative and deciding where to put effort, **I want to** see the pack/capability landscape and where intent is still thin (specs at `idea`/`scoped`), **so I can** choose what to flesh out next instead of guessing from memory or scattered docs.
+
+**Essence:** The same graph that serves engineers and agents answers the shaping question too — *what is barely started, what is mature, where are the holes* — as a projection over `readiness` and grouping, never a separate planning tool. A situation common to product/business shaping, served by the one graph.
+
+**Acceptance criteria:**
+1. The graph can be grouped by `Pack` (and by the Capability Map projection over high-altitude `behavior` specs) so the landscape is legible at the initiative level, not just per spec.
+2. Specs can be filtered and counted by `readiness`, so "what is still `idea`/`scoped`" and "what is already `ready`" are answerable at a glance.
+3. The view distinguishes thin areas (mostly low-readiness specs) from mature ones, surfacing where investment would move the needle.
+4. Nothing here authors truth or status — it is a pure projection of the graph at a commit; shaping decisions become ordinary spec edits, not tool state.
+5. The same answer is reachable by an agent through the agent surface, so a shaping conversation can be handed structured context, not a prose summary.
+6. Open questions and `gap`s roll up to the group level, so a thin area is visible as *what is missing*, not just *how few specs exist*.

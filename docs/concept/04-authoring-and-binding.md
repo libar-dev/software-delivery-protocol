@@ -41,9 +41,12 @@ A spec file is **"a JSON file that TypeScript happens to validate."** The extrac
 - no IO, async, or imports of *product* code (only `@libar-dev/software-delivery-protocol` helpers);
 - relation arguments are string-literal IDs, not expressions.
 
-If a non-static expression appears, the extractor drops *that one property* and emits a warning, keeping the rest of the spec (graceful partial extraction, L3) — it never guesses, and never aborts the build.
+If a non-static expression appears, the extractor responds in **two tiers**, drawn along the same envelope/section line the model is built on (`02` §2):
 
-A lint rule (`sdp/spec-static`) can flag violations earlier, but the extractor is the backstop.
+- **Envelope fields are hard errors.** A non-static `id`, `kind`, `altitude`, `readiness`, or any **relation target** **fails the build** — these are the keys the graph is built on, so the extractor must never guess, drop, or anonymise them. A spec whose identity or position cannot be reified deterministically is not extracted at all.
+- **Optional section detail degrades gracefully.** A non-static expression *inside an optional section* drops *that one property* with a warning, keeping the rest of the spec (graceful partial extraction, L3). It never aborts the build for section detail.
+
+A lint rule (`sdp/spec-static`) can flag both tiers earlier, but the extractor is the backstop.
 
 ### Enrichment in place, refinement into children
 
@@ -98,7 +101,7 @@ specTest("test:orders.create-order.valid-cart", {
 });
 ```
 
-This produces the bidirectional spec↔test trace that is a core MVP deliverable: query "what verifies this spec?" and "what does this test cover?" from the graph. The *result* of the test (pass/fail) is operational — CI's, never in the graph; the graph records only that an enabled verifier *exists* (the derived `has-verifier` delivery fact, `02` §2).
+Here the test `verifies` the **example** it backs (`spec:orders.create-order.valid-cart`); that test anchor is exactly what makes the example an **enabled verifier**, so the example's own `verifies` edge can confer `has-verifier` on the parent it targets (the direct, per-spec, non-transitive rule in `02` §2, *Verifier semantics*). This produces the bidirectional spec↔test trace that is a core MVP deliverable: query "what verifies this spec?" and "what does this test cover?" from the graph. The test's *result and its runner status* (pass/fail, skipped, quarantined, glob-excluded) are operational — CI's, never in the graph; the graph records only that an enabled verifier — a **resolvable test binding** — *exists*, never that it ran (the derived `has-verifier` delivery fact, `02` §2).
 
 ### An anchor-required lint (optional, CORE-adjacent)
 

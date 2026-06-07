@@ -6,6 +6,8 @@ Format: **When [situation], I want to [motivation], so I can [outcome].**
 
 The consumers of this system are heterogeneous and evolving — domain engineers, architects, PMs, QA, CI pipelines, the CLI, the generated views, and **AI agents** as a first-class consumer. Job stories stay valid as new consumers appear, which is exactly why we use them here.
 
+> **Coverage note (honest scope).** These stories are deliberately **engine- and agent-first**: capturing intent, binding code, deriving the one graph, keeping it honest, and serving humans + agents. A few stories cover the wider consumer situations directly — shaping/where-to-invest (JS-A6), verifier-sufficiency planning (JS-G4), decision/audit trace (JS-G5), and the Design-Review readiness decision (JS-E4). Richer persona surfaces — exec status dashboards, architecture-enforcement checks, full compliance/sign-off workflows — are **deliberately deferred post-MVP** and are *not* yet backed by stories. The job-story shape accommodates them when they arrive; their absence here is a scope decision, not an oversight.
+
 ---
 
 ## Founding Principle — One Graph
@@ -46,6 +48,7 @@ The MVP target is one bounded context — Order Management, `pack:checkout-v1`, 
 | [JS-A3](./01-capture-and-evolve-intent.md#js-a3) | Refine a big idea into child specs without losing the parent | MVP |
 | [JS-A4](./01-capture-and-evolve-intent.md#js-a4) | Position any spec on independent descriptors | MVP |
 | [JS-A5](./01-capture-and-evolve-intent.md#js-a5) | Group related specs into a coherent pack | MVP |
+| [JS-A6](./01-capture-and-evolve-intent.md#js-a6) | Survey the landscape to decide where to invest next | Iterate |
 | **B — Bind code to intent** | | |
 | [JS-B1](./02-bind-code-to-intent.md#js-b1) | Mark significant code with its spec ID | MVP |
 | [JS-B2](./02-bind-code-to-intent.md#js-b2) | Link by stable ID so specs and code survive refactors | MVP |
@@ -61,12 +64,15 @@ The MVP target is one bounded context — Order Management, `pack:checkout-v1`, 
 | [JS-E1](./05-see-and-share.md#js-e1) | Read a spec through one generated view | MVP |
 | [JS-E2](./05-see-and-share.md#js-e2) | Give an AI agent structured context through the agent surface | MVP |
 | [JS-E3](./05-see-and-share.md#js-e3) | Share an interactive view with stakeholders | Iterate |
+| [JS-E4](./05-see-and-share.md#js-e4) | Conduct a Design Review and decide readiness | MVP |
 | **F — Edit through the lens** | | |
 | [JS-F1](./06-edit-through-the-lens.md#js-f1) | Drive a change as scoped intent, not a patch | Iterate |
 | **G — Trace & assess impact** | | |
 | [JS-G1](./07-trace-and-impact.md#js-g1) | See what a change impacts before making it | MVP |
 | [JS-G2](./07-trace-and-impact.md#js-g2) | Trace a spec to its verification and back | MVP |
 | [JS-G3](./07-trace-and-impact.md#js-g3) | Get curation assistance from the impact graph | Iterate |
+| [JS-G4](./07-trace-and-impact.md#js-g4) | Find the specs that still need a verifier | MVP |
+| [JS-G5](./07-trace-and-impact.md#js-g5) | Trace a decision to what it shaped, for an audit trail | Iterate |
 | **H — Evidence** | | |
 | [JS-H1](./08-evidence.md#js-h1) | Link runtime observations back to specs | Later |
 
