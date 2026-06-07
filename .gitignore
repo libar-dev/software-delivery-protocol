@@ -1,8 +1,14 @@
 # Local planning artifacts — kept on disk for working notes, out of the published repo
-plans/
+# plans/
+
+# User's scratchpad
+.tmp-scratch/
 
 # Tooling outputs
 node_modules/
 dist/
 generated/
 .sisyphus/evidence/
+
+# OmO plans and state
+.sisyphus/
