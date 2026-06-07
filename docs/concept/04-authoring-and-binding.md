@@ -11,7 +11,7 @@ Realises **P5** (statically extractable), **P6** (ID-linked), **P9/P10** (anchor
 Specs are authored as typed TypeScript in `/specs/**/*.spec.ts`. The DSL is a thin set of helpers (`spec`, `pack`, relation builders) over the `Spec` shape from `02`.
 
 ```ts
-import { spec, refines, dependsOn, verifies, ref } from "@akg/spec";
+import { spec, refines, dependsOn, verifies, ref } from "@libar-dev/software-delivery-protocol";
 
 export const CreateOrder = spec({
   id: "spec:orders.create-order",
@@ -38,12 +38,12 @@ export const CreateOrder = spec({
 A spec file is **"a JSON file that TypeScript happens to validate."** The extractor must reify it deterministically, so spec source is restricted to static, side-effect-free literals:
 
 - no loops, conditionals, or computed/interpolated IDs;
-- no IO, async, or imports of *product* code (only `@akg/spec` helpers);
+- no IO, async, or imports of *product* code (only `@libar-dev/software-delivery-protocol` helpers);
 - relation arguments are string-literal IDs, not expressions.
 
 If a non-static expression appears, the extractor drops *that one property* and emits a warning, keeping the rest of the spec (graceful partial extraction, L3) — it never guesses, and never aborts the build.
 
-A lint rule (`akg/spec-static`) can flag violations earlier, but the extractor is the backstop.
+A lint rule (`sdp/spec-static`) can flag violations earlier, but the extractor is the backstop.
 
 ### Enrichment in place, refinement into children
 
@@ -90,7 +90,7 @@ An anchor does exactly one thing: bind a code location to a graph ID and its str
 A test declares which spec it verifies, via an anchor or a thin wrapper:
 
 ```ts
-import { specTest } from "@akg/spec-test";
+import { specTest } from "@libar-dev/software-delivery-protocol";
 
 specTest("test:orders.create-order.valid-cart", {
   verifies: "spec:orders.create-order.valid-cart",

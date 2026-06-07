@@ -98,7 +98,7 @@ The descriptors move freely. A `feature`-altitude spec can sit at `scoped` forev
 1. **`altitude` is only `epic → feature → story`.** It does not contain `rule` (a *kind* of truth, not a level), nor `contract` (a kind), nor `scenario` (a low-altitude `example`). A clean ladder of altitudes — nothing else smuggled in.
 2. **`kind` has no `quality` alias.** There is one member — `constraint` — and the *flavor* (quality / security / performance / compliance / operational / policy) lives on the `ConstraintSection` (§3), where a `flavor: "performance"` constraint with a measurable `target` *is* an NFR. One concept, one place.
 3. **`capability` and `domain` are neither a `kind` nor an `altitude`.** A capability is a **projection** (the *Capability Map* over high-altitude `behavior` specs); a bounded context / domain is a **`Pack` grouping** and/or projection. Both were removed as descriptors entirely — there is no "capability appears in multiple descriptors" question, because capability is on *none* of them.
-4. **NFR and Scenario are labels, not kinds.** An NFR is a `constraint` with a measurable target; a Scenario is an `example`. The recognizable delivery nouns survive as display labels and projections, never as separate primitives.
+4. **NFR and Scenario are labels, not kinds.** An NFR is a `constraint` with a measurable target; a Scenario is an `example`. The recognizable delivery nouns survive as display labels and projections, never as separate authored truth-primitives.
 
 ### Readiness vs delivery facts (the derived realization signals)
 

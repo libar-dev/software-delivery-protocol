@@ -1,10 +1,10 @@
-# Libar Omni — Concept
+# Libar Software Delivery Protocol — Concept
 
-> Libar Omni is an **executable, self-validating meta-model of the software-delivery process**: teams author delivery intent as instances of one primitive — a `Spec` — and the meta-model (typed code in the repo) deterministically validates their **conformance and honesty** and derives **one graph**. The familiar delivery nouns (Use Case, NFR, Decision Record; Epic, Feature, Story) are **named coordinates** on that one primitive, not separate artifact types. A `ts-morph` extractor derives the graph from the repo; the graph is never a second source of truth — it is a pure, regenerable projection. Conformance + honesty checks keep it honest in CI; every human- and AI-facing surface is a projection of the graph.
+> Libar Software Delivery Protocol is an **executable, self-validating meta-model of the software-delivery process**: teams author delivery intent as instances of one primitive — a `Spec` — and the meta-model (typed code in the repo) deterministically checks **conformance and honesty** and derives **one graph**. The familiar delivery nouns (Use Case, NFR, Decision Record; Epic, Feature, Story) are **named coordinates** on that one primitive, not separate artifact types. A `ts-morph` extractor derives the graph from the repo; the graph is never a second source of truth — it is a pure, regenerable projection. Conformance + honesty checks keep it honest in CI; every human- and AI-facing surface is a projection of the graph.
 
 **Slogan:** *Specs are code; the graph is derived; the `claim` stays honest; git is the event log.*
 
-The internal codename for the graph subsystem is **AKG** (the `akg` CLI). The product umbrella is **Libar Omni**.
+The product is **Libar Software Delivery Protocol**; the CLI is **`sdp`**.
 
 ---
 
@@ -26,7 +26,7 @@ Everything in this document set is downstream of this. If any document conflicts
 
 These documents are deliberately principle-led and lean. The single most important distinction they make is **Principle vs Representation**:
 
-- A **Principle** is a law the design stands or falls on. Swapping it changes what Libar Omni *is*.
+- A **Principle** is a law the design stands or falls on. Swapping it changes what the Protocol *is*.
 - A **Representation** is one chosen mechanism among several. Swapping it changes *how* a principle is realised, nothing more.
 
 Every load-bearing claim is named as one or the other, on purpose — so a Representation is never mistaken for a Principle.

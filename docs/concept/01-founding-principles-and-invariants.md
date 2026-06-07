@@ -13,7 +13,7 @@ This is the backbone of the design. It states the load-bearing laws, and for eac
 
 If a successor kept only the essentials, the design stands or falls on these. Each is a **Principle**; each is **CORE**.
 
-> These laws describe the **process meta-model** level — the primitive, descriptors, relations, and validators authored as typed code (Phase 0 of the MVP). A project's **authored model** *conforms* to them (conformance checked, never *workflow*-gated), and **derived facts** sit above. P1–P10 are the contract that level enforces.
+> These laws describe the **protocol** level — the primitive, descriptors, relations, and validators authored as typed code (Phase 0 of the MVP). A project's **authored model** *conforms* to them (conformance checked, never *workflow*-gated), and **derived facts** sit above. P1–P10 are the contract that level enforces.
 
 ### P1 — Canonical repo, everything else derived
 **Principle · CORE.** There is exactly one authoritative store: committed source in the repo. Every other artifact — the graph, diagrams, dashboards, views, any export — is a pure function of it, never hand-authored or hand-edited. There is no "is the graph in sync?" question because the graph is *defined* as a function of the repo. *(Founding Principle #1, #2, #4.)*

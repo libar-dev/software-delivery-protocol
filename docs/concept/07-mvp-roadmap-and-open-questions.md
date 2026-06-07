@@ -12,33 +12,33 @@ Build in thin vertical slices, each end-to-end on the example — on the foundat
 
 | Slice | Delivers |
 |---|---|
-| 0 | **Phase 0 — the process meta-model as code**: the `Spec` primitive, its three descriptors, the relation set, and every validator, as typed code in this repo. The extractor, the graph schema, and every check presuppose it — the foundation, not a detour. |
+| 0 | **Phase 0 — the protocol as code**: the `Spec` primitive, its three descriptors, the relation set, and every validator, as typed code in this repo. The extractor, the graph schema, and every check presuppose it — the foundation, not a detour. |
 | 1 | TS Spec DSL + spec extraction + basic graph (nodes + declared relations) + `graph.json` output. |
 | 2 | Generic anchors + implementation binding + spec↔test linkage + `verifies` edges (anchored `claim`). |
 | 3 | Core conformance + honesty checks: referential integrity, duplicate IDs, honest readiness (the readiness floor), orphan detection, `verifies` linkage, authoring-shape honesty. CI gate. |
 | 4 | The agent surface (the `reader` — a few trusted accessors: entry adapters + impact) + the Design Review / one generated read-only view, both fully derived. |
-| 5 | Polish: CLI (`akg build`, `akg validate`, maybe `explain`/`search`), error messages, the documented example, and a "regenerate from clean repo" determinism test. |
+| 5 | Polish: CLI (`sdp build`, `sdp validate`, maybe `explain`/`search`), error messages, the documented example, and a "regenerate from clean repo" determinism test. |
 
-Suggested packages (minimal): `@akg/spec` (DSL + types), `@akg/anchors`, `@akg/graph` (types + the reader/query API), `@akg/extractor` (`ts-morph`), `@akg/validate` (core checks), `@akg/projections` (one view generator), `@akg/cli`.
+Package: a single **`@libar-dev/software-delivery-protocol`** (DSL + types, anchors, graph + reader/query API, `ts-morph` extractor, core checks, one view generator, CLI). Internal subpackage boundaries are a later concern, not decided now.
 
 > Tip: write the example specs and anchored code **first**. That forces the DSL and extractor to be usable before they are "finished."
 
 ### What "done" looks like
 
-- You write specs in TS, anchor implementing code and tests with stable IDs, run `akg build`, and get a valid graph.
+- You write specs in TS, anchor implementing code and tests with stable IDs, run `sdp build`, and get a valid graph.
 - Conformance + honesty checks pass/fail with clear messages; CI rejects a PR that breaks links or states readiness the spec has not earned.
 - The agent surface (the `reader`) exposes the graph to an agent (entry adapters + impact); the Design Review / generated view shows linked specs + implementations + tests with correct readiness and impact lists.
 - Edits flow as *intent → agent edits source → git → conformance checks*; there is no patch subsystem.
 - Changing a spec or anchor and re-running produces an updated graph and view.
 - Delete `generated/` and rebuild — **byte-identical** (determinism, P3).
 
-**North Star (one sentence):** *On a small bounded context, an engineer writes specs in TypeScript, anchors the implementing code and tests with stable IDs, runs `akg build`, gets a graph that passes the conformance + honesty checks and that an agent can read as the agent surface, and opens a generated view (the Design Review) that correctly shows intent, implementation links, verification presence, and impact — and CI rejects the PR if any of it is broken or incomplete.*
+**North Star (one sentence):** *On a small bounded context, an engineer writes specs in TypeScript, anchors the implementing code and tests with stable IDs, runs `sdp build`, gets a graph that passes the conformance + honesty checks and that an agent can read as the agent surface, and opens a generated view (the Design Review) that correctly shows intent, implementation links, verification presence, and impact — and CI rejects the PR if any of it is broken or incomplete.*
 
 ---
 
 ## 2. CORE vs ASPIRATIONAL map
 
-**CORE (MVP):** Phase 0 — the process meta-model as code; TS Spec DSL; the three descriptors (`kind` · `altitude` · `readiness`); sections (shape only); stable IDs; generic anchors; `ts-morph` one-graph extractor; honest `claim` (declared / anchored / minimal advisory inferred); core conformance + honesty checks; readiness floors (through `ready`); delivery facts (`implemented` / `has-verifier`) derived, never authored; the agent surface (reader) + `graph.json` as AI context; the Design Review / one read-only view; bidirectional spec↔test trace; determinism + `--check-clean`. The **entire trust model** ships at MVP.
+**CORE (MVP):** Phase 0 — the protocol as code; TS Spec DSL; the three descriptors (`kind` · `altitude` · `readiness`); sections (shape only); stable IDs; generic anchors; `ts-morph` one-graph extractor; honest `claim` (declared / anchored / minimal advisory inferred); core conformance + honesty checks; readiness floors (through `ready`); delivery facts (`implemented` / `has-verifier`) derived, never authored; the agent surface (reader) + `graph.json` as AI context; the Design Review / one read-only view; bidirectional spec↔test trace; determinism + `--check-clean`. The **entire trust model** ships at MVP.
 
 **ASPIRATIONAL:** runtime-observation overlay (the `observed` delivery fact; runtime observations, `Build`/`Deployment`/`Observation` nodes, `nfr-violated`); runtime-composition depth (Effect `R`, Awilix wiring, Fastify trees); Gherkin surface; harnesses + simulation; rich projections (LikeC4/OpenAPI/JSON-LD/SHACL); rich Spec Studio with scoped intent composition; AI slices + the **MCP surface** (designed-in, deferred build) + GraphRAG; architecture-enforcement checks; a fuller impact graph; incremental builds/caching; full CLI; `--lenient` ratchet; multi-tenant/multi-repo/polyglot.
 
@@ -58,7 +58,7 @@ These are out of the first slice. Each is genuinely deferred, and the model in `
 6. **Rich projections + heavy AI tooling.** No LikeC4/OpenAPI/JSON-LD/SHACL; no dedicated slice generator or MCP surface. *Rationale:* the agent surface + graph JSON is sufficient structured context at MVP scale.
 7. **Architecture-enforcement checks.** No forbidden-dependency validators, no ts-arch tests, no custom `defineRule`. Keep only core graph invariants. *Rationale:* a whole validation competency; the small bounded context does not need it yet.
 8. **A fuller impact graph.** A *minimal* import/symbol impact graph may earn its way into the MVP for impact/blast-radius (`06` §2 note); the exhaustive language-server-grade impact graph (cross-package, symbol-level identity, drift/fan-in tooling) is deferred. *Rationale:* the curated surface proves the thesis first.
-9. **Incremental builds / caching / sharding & full CLI** (evidence, migrate, ai subcommands). Full rebuild per run; `akg build` + `akg validate` (+ maybe `explain`/`search`) proves the loop. *Rationale:* fine at MVP scale.
+9. **Incremental builds / caching / sharding & full CLI** (evidence, migrate, ai subcommands). Full rebuild per run; `sdp build` + `sdp validate` (+ maybe `explain`/`search`) proves the loop. *Rationale:* fine at MVP scale.
 
 ---
 

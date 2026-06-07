@@ -1,4 +1,4 @@
-# Libar Omni — concept repo
+# Libar Software Delivery Protocol — concept repo
 
 Second-generation concept for a **programmatic, AI-native software-delivery system**: model the *whole
 delivery lifecycle* as typed code in the repo, derive one graph from it, and generate every other artifact
@@ -11,7 +11,7 @@ building the MVP.
 | Path | What it is |
 |---|---|
 | `docs/concept/ubiquitous-language.md` | **The ratified base** (§0–§8 + §4b, all `[SETTLED]`). **Sole source of truth for terminology and the model.** Read this first. |
-| `docs/concept/DECISIONS.md` | The decision diary (why-log) for *building Omni itself* — MD-1/2/4/5 + scope note, plus the D1–D6 shorthand and measured-evidence tables. Recaptures rationale + open tensions; distinct from in-system `kind:"decision"` records. |
+| `docs/concept/DECISIONS.md` | The decision diary (why-log) for *building the Protocol itself* — MD-1/2/4/5 + scope note, plus the D1–D6 shorthand and measured-evidence tables. Recaptures rationale + open tensions; distinct from in-system `kind:"decision"` records. |
 | `docs/concept/` (`00`–`07` + README) | 9 principle-led concept docs. The design: one `Spec` primitive, three descriptors, one derived graph, honest `claim`s, conformance + honesty checks, consumer surfaces. *(Now ratified-current — they speak the language base end-to-end, cleanup executed 2026-06-07.)* |
 | `jtbd-stories/` | JTBD **job stories** (`When [situation], I want to [motivation], so I can [outcome]`, themes A–H) + README. Stable, solution-agnostic jobs — chosen over user stories because consumers are heterogeneous and evolving (humans, CI, CLIs, **AI agents**). Ratified-current. |
 
@@ -28,8 +28,8 @@ Two conventions run through every doc — honour them:
 - **CORE / MVP vs ASPIRATIONAL** — in the first buildable slice, or designed-for-and-deferred (named so the
   model never paints itself into a corner).
 
-**The frame:** Omni is an **executable, self-validating meta-model of the software-delivery process** — three
-levels: the **process meta-model** (the primitive, descriptors, relations, validators *as typed code* — **Phase 0
+**The frame:** Libar Software Delivery Protocol is an **executable, self-validating meta-model of the software-delivery process** — three
+levels: the **protocol** (the primitive, descriptors, relations, validators *as typed code* — **Phase 0
 of the MVP**) → the **authored model** (a project's instances, which *conform*) → **derived facts** (machine
 truth, never authored). Instances **conform** (checked, never gated). Two permanent honesty guardrails: checks
 police **conformance & honesty**, never content-quality and never workflow; and we claim **"deterministically
@@ -85,8 +85,9 @@ never as the answer.
   treat it as a bug to fix against the base, not as current.
 - **Respect plan mode.** Distinguish **PLAN-ONLY** work (designing, deciding) from **execution** (editing docs or
   code). For any plan under `plans/`, don't start editing its target files unless the session is execution.
-- **Naming is parked — don't churn it.** The system / CLI / package names (`Omni`, `Libar Omni`, `AKG`, the `akg`
-  CLI, `@akg/*`) are provisional placeholders owned by a later naming pass; "process" vs "protocol" (MD-5) is
-  open. Leave them alone until that pass.
+- **Naming is resolved — use these names.** Product: **Libar Software Delivery Protocol** (short form "the
+  Protocol"); CLI **`sdp`**; npm **`@libar-dev/software-delivery-protocol`** (single package; subpackage
+  boundaries are a later, non-near-term concern); repo `libar-dev/software-delivery-protocol`. MD-5 is resolved
+  (the meta-model is "the protocol"; the modeled "software-delivery process" keeps "process").
 - **Git hygiene** follows the global rules (no `git stash`; commit early on a WIP branch; commit/push only when
   asked).

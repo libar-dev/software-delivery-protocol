@@ -26,7 +26,7 @@ The canonical set of surfaces, each a projection of the one graph:
 
 | Surface | What it is | Notes |
 |---|---|---|
-| **Design Review** | the flagship curated review: a primitive/`Pack` rendered *in context* — neighbors, relations, `claim`/delivery badges, auto-generated **design questions** + a **findings** table | the surface where a primitive earns `ready` |
+| **Design Review** | the flagship curated review: a `Spec`/`Pack` rendered *in context* — neighbors, relations, `claim`/delivery badges, auto-generated **design questions** + a **findings** table | the surface where a `Spec` earns `ready` |
 | **agent surface** | a **visible typed graph the agent *scripts*** via the CLI — no verb wall; the schema *is* the contract | **push** a Design-Review slice + **pull** by scripting the graph |
 | **reader** | the thin typed loader: joins + `claim`/taxonomy decode done **once**, returns composable data; persists nothing | a front door, not a store |
 | **Mermaid projection** | logical / analytical / topological charts | live, regenerable |
@@ -68,7 +68,7 @@ This is the `claim` taxonomy (P9) elevated to two consumable surfaces: the curat
 
 ## 3. The agent surface — a typed graph the agent scripts
 
-**Principle · CORE.** Structured graph context beats raw text for AI; Libar Omni is a *producer* of structured context, not just another consumer. This is a genuine differentiator and it is a principle.
+**Principle · CORE.** Structured graph context beats raw text for AI; the Protocol is a *producer* of structured context, not just another consumer. This is a genuine differentiator and it is a principle.
 
 The experiment settled *how* to expose it. The **agent surface** is a **visible, self-describing typed graph the agent *scripts*** via the CLI — deliberately **neither** of two failure modes:
 
@@ -106,7 +106,7 @@ human explores in the view
    │  selects scope (parent / siblings / slice / open-questions), writes intent
    ▼
 view composes scoped, token-budgeted intent              ← the only thing the view produces
-   │  handed to an AI agent (CLI / MCP)
+   │  handed to an AI agent (CLI)
    ▼
 agent edits the source (spec files + code)               ← identical to a human editing source
    ▼
@@ -116,12 +116,12 @@ git records it · conformance + honesty checks are the gate ← the same gate ev
 Two locked terms name the affordance:
 
 - **intent composition** — the write-affordance: compose **scoped intent**, hand it to an agent that edits source exactly as a human would; git records it; conformance checks (`05`) gate. The view is a process-orchestrator, not an editor.
-- **scoped intent** — *what* is composed: an explicit change bounded by a primitive / its neighbors / a `Pack` / open questions.
+- **scoped intent** — *what* is composed: an explicit change bounded by a `Spec` / its neighbors / a `Pack` / open questions.
 
 Why patching dissolves:
 
 - The editor is an **agent editing source**, identical in kind to a human editing source. There is no "derived layer writing back to canonical."
-- Every edit is an ordinary commit; **conformance checks are the validator**. A speculative in-memory patch-check adds nothing they do not already do.
+- Every edit is an ordinary commit; **conformance + honesty checks are the gate**. A speculative in-memory patch-check adds nothing they do not already do.
 - Lifecycle operations — split, combine, refine, delete — are **plain git + edit** (`git mv`, edit in place, `git rm`), no tooling required. Maturity/readiness signals are **computed**, not stored.
 - A structured edit *contract* would be justified only when a **second machine writer** appears (the second-caller bar applied to writes). Not in the MVP; possibly never.
 
@@ -129,9 +129,9 @@ Why patching dissolves:
 
 ## 5. Design Review — the flagship human projection
 
-**Principle · CORE (concept).** The flagship curated surface is the **Design Review**: a primitive (or a `Pack`) rendered **in context** — its neighbors, relations, `claim`/delivery badges, auto-generated **design questions** (from blocking open questions + `gap`s), and a **findings** table. It adopts the recognized SDLC noun.
+**Principle · CORE (concept).** The flagship curated surface is the **Design Review**: a `Spec` (or a `Pack`) rendered **in context** — its neighbors, relations, `claim`/delivery badges, auto-generated **design questions** (from blocking open questions + `gap`s), and a **findings** table. It adopts the recognized SDLC noun.
 
-- It is the surface where a primitive **earns `ready`**: a spec is reviewed *in context* (alone and in its related set / `Pack`), and stating `ready` is the outcome of that review (`02` §2, `05`).
+- It is the surface where a `Spec` **earns `ready`**: a spec is reviewed *in context* (alone and in its related set / `Pack`), and stating `ready` is the outcome of that review (`02` §2, `05`).
 - It is a **pure projection** — findings resolve through the edit loop (§4); there is **no stored `Finding` type**, no second store.
 - *Concept is core; rich diagrams grow later* — the MVP renders the relationship slice; heatmaps and interactive trees are aspirational (Spec Studio, §8).
 
@@ -145,16 +145,16 @@ The MVP human view *is* the Design Review's relationship slice: a single derived
 
 ## 6. Delivery-process execution — projections & vocabulary, not gates
 
-**Principle · CORE (vocabulary) / ASPIRATIONAL (most projections).** Omni adopts the established delivery-process nouns from the industry — but realizes them, where realized at all, as **projections or descriptive vocabulary** over the one graph, **never** as gates, FSM states, or mandatory sequences.
+**Principle · CORE (vocabulary) / ASPIRATIONAL (most projections).** The Protocol adopts the established delivery-process nouns from the industry — but realizes them, where realized at all, as **projections or descriptive vocabulary** over the one graph, **never** as gates, FSM states, or mandatory sequences.
 
-| Term | How it lands in Omni |
+| Term | How it lands in the Protocol |
 |---|---|
-| **discipline** | a **lens / projection** — filter or group primitives by `kind` or section ("show me the Requirements discipline" = the `behavior` primitives + the Capability Map projection). Not a phase you pass through. **Realized** (lightweight, high-value). |
+| **discipline** | a **lens / projection** — filter or group `Spec`s by `kind` or section ("show me the Requirements discipline" = the `behavior` `Spec`s + the Capability Map projection). Not a phase you pass through. **Realized** (lightweight, high-value). |
 | **release** | a **tagged set** surfaced as a projection (backed by a git tag). **Realized.** |
-| **baseline** | a **named approved snapshot** (≈ a git tag where a set of primitives is `ready` + reviewed). Vocabulary + optional projection. **Realized.** |
+| **baseline** | a **named approved snapshot** (≈ a git tag where a set of `Spec`s is `ready` + reviewed). Vocabulary + optional projection. **Realized.** |
 | **phase / iteration / milestone** | **descriptive vocabulary** with optional roadmap / now-next-later projections. Never a gate or enforced sequence. |
 
-The classic RUP **hump-chart** (disciplines × phases over iterations) becomes a **Mermaid / analytical projection** — a view of how authored and derived activity distributes across the graph, never a plan the system enforces. This is what lets `00`'s non-goal be honest: Omni *adopts the delivery nouns as projections* and *rejects only the gating FSM/sprint-state*.
+A classic disciplines × phases × iterations distribution chart becomes a **Mermaid / analytical projection** — a view of how authored and derived activity distributes across the graph, never a plan the system enforces. This is what lets `00`'s non-goal be honest: the Protocol *adopts the delivery nouns as projections* and *rejects only the gating FSM/sprint-state*.
 
 ---
 
@@ -183,7 +183,7 @@ There is **no patch-back loop** (§4). The aspirational write surface is a riche
 
 ## 9. Interop posture (aspirational): the membrane, not a replacement
 
-**Principle · ASPIRATIONAL.** Long-term, Libar Omni layers *with* the ecosystem: it ingests adjacent tools' outputs (dependency graphs, ADR markdown, later runtime telemetry) and emits into their formats (OpenAPI, LikeC4, JSON-LD). It links the issue tracker, the design tool, LikeC4, and OpenAPI rather than replacing them. None of it is in the MVP, which ingests only specs, anchors, and basic structural facts, and emits the graph (agent surface + JSON) and the Design Review / one view.
+**Principle · ASPIRATIONAL.** Long-term, the Protocol layers *with* the ecosystem: it ingests adjacent tools' outputs (dependency graphs, ADR markdown, later runtime telemetry) and emits into their formats (OpenAPI, LikeC4, JSON-LD). It links the issue tracker, the design tool, LikeC4, and OpenAPI rather than replacing them. None of it is in the MVP, which ingests only specs, anchors, and basic structural facts, and emits the graph (agent surface + JSON) and the Design Review / one view.
 
 ---
 

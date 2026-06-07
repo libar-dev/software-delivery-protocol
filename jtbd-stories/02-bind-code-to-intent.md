@@ -42,4 +42,4 @@ The job here is to connect real implementation to the spec that justifies it —
 4. A misspelled or non-existent ID reference is caught at build time by referential-integrity validation — with a "did you mean…?" suggestion where possible — not discovered later as a dangling edge.
 5. Renaming an ID is an ordinary repo edit that git records; any reference that now dangles surfaces as a referential-integrity error to be fixed in the same change — there is no freeze-and-supersede machinery, because the graph keeps no ID history.
 6. The set of valid IDs is discoverable (and optionally surfaced as a generated `spec-ids` union for early `tsc` checks) so references can be checked and autocompleted rather than guessed.
-7. After any refactor, re-running `akg build` yields the same linkage with no manual repair, because the binding never depended on location.
+7. After any refactor, re-running `sdp build` yields the same linkage with no manual repair, because the binding never depended on location.

@@ -1,6 +1,6 @@
-# Decision diary — Libar Omni (meta-design)
+# Decision diary — Libar Software Delivery Protocol (meta-design)
 
-> A why-focused log of hard-to-reverse decisions about **building Omni itself** — distinct from *in-system*
+> A why-focused log of hard-to-reverse decisions about **building the Protocol itself** — distinct from *in-system*
 > decision records (a project's own `kind:"decision"` instances). Its job is to **recapture rationale** so choices
 > stay visible and don't re-smooth into "false settledness." Entries are short and **status-tagged**
 > (`ACCEPTED` / `PROPOSED` / `SUPERSEDED`). Companion to `docs/concept/ubiquitous-language.md` (the language base).
@@ -9,26 +9,29 @@
 
 ## 2026-06-06 — Session: reframe + language base
 
-> **Retired entries (2026-06-07).** **MD-3** (three meta-levels; Phase 0 = primitives as code) is fully absorbed
+> **Retired entries (2026-06-07).** **MD-3** (three meta-levels; Phase 0 = the Protocol as code) is fully absorbed
 > into `ubiquitous-language.md` §1 — conclusion *and* rationale — and was deleted. **MD-6** (Spec named;
 > descriptor enums locked; bounded-context → projection) is canonical in the base ledger + §2; its one unique
 > nugget — the **partial reversal of MD-4** — was folded into MD-4 below, and the entry deleted.
 
-### MD-1 — Omni is an executable, self-validating software-delivery meta-model  [ACCEPTED]
+### MD-1 — The Protocol is an executable, self-validating software-delivery meta-model  [ACCEPTED]
 **Decision.** We are building a *typed, executable meta-model of the software-delivery process*: teams author
-delivery intent as **instances** of process primitives; the meta-model (code in the repo) deterministically
-validates their **conformance and honesty** and derives **one graph**; every other artifact is a **projection**.
-The headline is an **executable, self-validating delivery process — not just executable specs.**
+delivery intent as **`Spec` instances** — the Protocol's one authored truth-primitive — and author only two
+other non-truth constructs, **`Pack`** and **`anchor`**; the meta-model (code in the repo) deterministically
+checks **conformance and honesty** and derives **one graph**; every other artifact is a **projection**.
+The headline is an **executable, self-validating delivery protocol — not just executable specs.**
 **Two permanent honesty guardrails** (these are what keep it from re-becoming the gating we rejected):
-1. It governs **conformance & honesty**, never **content-quality** (design goodness = human/agent judgment) and
-   never **workflow** (no lifecycle gates — the RUP/FSM trap).
+1. It defines the **conformance contract**, and its checks cover **conformance & honesty**, never
+   **content-quality** (design goodness = human/agent judgment) and never **workflow** (no lifecycle gates —
+   the lifecycle-FSM trap).
 2. We claim **"deterministically validated,"** never **"provably correct."**
-**Why / alternatives rejected.** "Executable specs" alone (BDD) is unremarkable; RUP modeled the process but only
-*descriptively*; PM tools (Jira/Linear) have process *state* but no *meta-model*. The executable, governing
-meta-model is the differentiator. Hard to reverse (everything builds on it); confirmed by the user this session.
+**Why / alternatives rejected.** "Executable specs" alone (BDD) is unremarkable; earlier delivery-process frameworks modeled the process only
+*descriptively*; PM tools (Jira/Linear) have process *state* but no *meta-model*. The executable meta-model plus
+conformance + honesty checks is the differentiator. Hard to reverse (everything builds on it); confirmed by the
+user this session.
 
 ### MD-2 — Governing language rubric: adopt the nouns, reject the process state-machine  [ACCEPTED]
-**Decision.** Use the established delivery **noun** for any concept Omni shares with the industry; coin/keep a
+**Decision.** Use the established delivery **noun** for any concept the Protocol shares with the industry; coin/keep a
 distinct word only for a real differentiator (and then it must *name the difference*). Reject process
 **state-machine / lifecycle gating** vocabulary. Every term faces two tests: carries epistemic status where it
 matters (authored vs derived), and is unambiguous to all three readers (typed code/CLI · coding agent · Studio
@@ -43,7 +46,7 @@ don't adopt PM ladder names" stance (see scope note).
 **altitude/size** and **maturity** are *positions*. Familiar nouns are **named coordinates, not separate authored
 types**: Decision Record / Use Case / NFR / Contract / Model = `kind`; Epic / Feature / Story = altitude;
 "Executable Spec" = an example-kind instance with a verifier. They are first-class in the **language and Studio
-surfaces**, never separate primitives.
+surfaces**, never separate authored truth-primitives.
 **Why.** Preserves "one primitive" (the differentiation) while honoring "adopt the nouns" — and avoids the
 combinatorial explosion of a subclass per (category × size × maturity) cell. Names deferred per method.
 **Later (2026-06-06; absorbed from the since-removed MD-6).** The primitive is named **`Spec`**, and the three
@@ -53,18 +56,26 @@ of the above:** a **bounded-context / domain** and a **`capability`** are **not 
 altitude ceiling; both are realized as **`Pack` groupings + a Capability Map projection**. Above-epic (initiative
 / theme) defers, additive later. `candidate` was dropped from readiness (an FSM-status imprint).
 
-### MD-5 — Candidate framing: "(executable) software delivery protocol" for the meta layer  [PROPOSED]
-**Proposal.** Frame/name the meta layer as a **software delivery protocol** — *"not any kind of protocol, it is
-software"* (executable, a reference implementation that *is* the contract).
-**Why it's attractive.** A *protocol* is a **conformance contract, not a workflow** — precisely what MD-1
-guardrail 1 governs; arguably **more honest than "process,"** which carries the workflow connotation we reject.
-**Open tensions.** "Protocol" also connotes comms/wire formats (HTTP); "process" is the *recognized* industry noun
-(MD-2 bias). May also feed the **system name**. **Status: under review — recorded to be reviewable.**
+### MD-5 — "Software delivery protocol" adopted for the meta layer and the system name  [ACCEPTED 2026-06-07]
+**Decision.** Name the meta layer a **software delivery protocol** — *"not any kind of protocol, it is software"*
+(executable, a reference implementation that *is* the contract). Adopted at the **"name + meta-model noun"**
+depth: "protocol" is both the **product name** (Libar Software Delivery Protocol; short form "the Protocol") and
+the **noun for the meta-layer** (the meta-model *is* the conformance contract). The npm package is the single
+**`@libar-dev/software-delivery-protocol`**; the CLI is **`sdp`**; the repo is `libar-dev/software-delivery-protocol`.
+**Why.** A *protocol* is a **conformance contract, not a workflow** — precisely what MD-1 guardrail 1 states;
+**more honest than "process,"** which carries the workflow connotation we reject. It distances the tool from
+PM/ticket gating and reads cleanly alongside the commercial Studio. (External review — Gemini 3.1 Pro —
+independently endorsed the framing for these reasons.)
+**Resolved tensions.** "Protocol" can connote comms/wire formats, and "process" is the recognized industry noun
+(MD-2 bias) — both are resolved by a **surgical split, not a blanket swap**: "process" is retained for the modeled
+**software-delivery process** (the activity teams perform), for the rejected **process state-machine**, and for
+**delivery-process execution**; only the meta-layer's own naming ("process meta-model" → "the protocol")
+changed. This unparks the naming pass.
 
 ### Scope note — relationship to the prior plan & brief
-**Adopt-the-nouns reversal (kept for the record).** An earlier brief held "Omni is **not** a PM tool; do **not**
+**Adopt-the-nouns reversal (kept for the record).** An earlier brief held "the Protocol is **not** a PM tool; do **not**
 adopt SAFe/PM ladder names." MD-2 **reverses** that: the commercial Studio means users must not relearn delivery
-vocabulary, so Omni adopts the established delivery **nouns** (as projections + vocabulary) and rejects only the
+vocabulary, so the Protocol adopts the established delivery **nouns** (as projections + vocabulary) and rejects only the
 process **gating** FSM. The structural decisions **D1–D6** (recorded below) **still hold**, reframed under the meta-model
 (MD-1); the cleanup plan that applied the ratified language across the 18 concept/JTBD docs was **executed and
 retired** (2026-06-07). The first-draft input drafts (`GLOSSARY.md`, `UBIQUITOUS_LANGUAGE_{1,2}.md`) and the language-finalization

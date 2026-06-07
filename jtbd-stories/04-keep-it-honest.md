@@ -22,7 +22,7 @@ A graph nobody trusts is worthless. The job here is to make the delivery state *
 5. A spec with no relations and nothing pointing at it is surfaced (orphan detection) so it cannot silently fall out of the graph's connective tissue.
 6. A genuine conflict — an **anchor** that contradicts a declaration — is a loud error; a deterministic precedence resolves only *layering* (declared over anchored over inferred), never a true contradiction.
 7. The same validators run locally and in CI with identical results, and a single bad spec produces a scoped error rather than aborting extraction — the build reports every problem it can find.
-8. A passing `akg validate` is a credible statement that every reference resolves, no IDs collide, every readiness floor is earned, and nothing hand-authors a derived edge or delivery fact (authoring-shape honesty).
+8. A passing `sdp validate` is a credible statement that every reference resolves, no IDs collide, every readiness floor is earned, and nothing hand-authors a derived edge or delivery fact (authoring-shape honesty).
 
 ---
 

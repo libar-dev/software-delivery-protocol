@@ -15,7 +15,7 @@ This theme *is* the founding principle expressed as jobs. There is one graph; it
 **Essence:** No second graph, ever. The graph is a pure function of the repo, derived by a single extractor — never separately authored.
 
 **Acceptance criteria:**
-1. A single command (`akg build`) turns the repo's spec files, code anchors, and basic structural facts into one graph.
+1. A single command (`sdp build`) turns the repo's spec files, code anchors, and basic structural facts into one graph.
 2. The graph is the *only* graph — there is no parallel database that could drift from the code; every consumer (view, trace, agent) reads the graph, and only the extractor reads source to build it.
 3. The graph is flat — arrays of nodes and edges, with hierarchy and containment expressed as edges (`belongsTo`, `refines`) rather than nested objects.
 4. Building the graph needs no running services, network calls, or external state; the extractor's only outputs are the graph and a validation report.
@@ -59,7 +59,7 @@ This theme *is* the founding principle expressed as jobs. There is one graph; it
 **Acceptance criteria:**
 1. Deleting everything under `generated/` and rebuilding produces a byte-identical graph: nodes sorted by `id`, edges sorted by `(from, type, to)`, no wall-clock timestamps or run-specific hashes in the compared output.
 2. The graph holds no authored state that would be lost on deletion — everything reconstructs from the repo.
-3. "Is the graph in sync?" is a rebuild-and-compare (`akg build --check-clean`) that asserts a fresh rebuild is byte-identical to an independent rebuild from the same commit — not a reconciliation against a committed artifact (`generated/` is gitignored, never a committed graph to diff against).
+3. "Is the graph in sync?" is a rebuild-and-compare (`sdp build --check-clean`) that asserts a fresh rebuild is byte-identical to an independent rebuild from the same commit — not a reconciliation against a committed artifact (`generated/` is gitignored, never a committed graph to diff against).
 4. A non-static expression in a spec degrades locally — that one property is dropped with a warning and the rest of the spec survives — rather than making derivation non-deterministic or aborting the build.
 5. A full rebuild is fast enough to run routinely (the bounded MVP context rebuilds wholesale; incremental builds are a later optimisation that must stay subordinate to determinism).
 6. Generated artifacts are never hand-edited; the only way to change them is to change the repo and regenerate.

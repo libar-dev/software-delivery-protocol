@@ -1,4 +1,4 @@
-# Libar Omni — Job Stories (JTBD)
+# Libar Software Delivery Protocol — Job Stories (JTBD)
 
 These are **job stories**, not user stories or PRDs. Each one captures a *situation*, a *motivation*, and an *outcome* — the stable job to be done — without binding to a persona or a transient feature. Together with the [concept](../docs/concept/README.md), they are the direct input to building the MVP: there is no separate PRD layer, in keeping with the spec-driven philosophy the product itself embodies.
 

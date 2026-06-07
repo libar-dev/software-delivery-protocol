@@ -21,7 +21,7 @@ The job here is to get a thought into the system and let it grow without ever fo
 4. The spec is valid at its lowest readiness — the build never demands rules, anchors, or tests to accept an idea.
 5. The spec source is static, side-effect-free data (a "JSON file that TypeScript happens to validate"), so the extractor reifies it deterministically.
 6. Two people capturing two ideas never collide on identity, because each spec carries a stable, namespaced ID (e.g. `spec:orders.create-order`); a duplicate ID is a loud build error, never a silent merge.
-7. The captured spec appears in the next `akg build` with no extra steps, and its stated readiness is checked against the `idea` floor.
+7. The captured spec appears in the next `sdp build` with no extra steps, and its stated readiness is checked against the `idea` floor.
 
 ---
 
@@ -42,7 +42,7 @@ The job here is to get a thought into the system and let it grow without ever fo
 4. Sections that are not yet known stay **absent** rather than being faked with placeholders — completeness is decided by validators, not by stub values.
 5. Every enrichment is an ordinary TypeScript edit, reviewable as a normal git diff and committed alongside the implementation.
 6. The original intent (the "why") remains visible alongside new detail; raising readiness is a deliberate authored assertion, checked against that level's floor (`05`).
-7. Re-running `akg build` after enrichment yields an updated graph with the spec's new sections and readiness, with no migration step.
+7. Re-running `sdp build` after enrichment yields an updated graph with the spec's new sections and readiness, with no migration step.
 
 ---
 

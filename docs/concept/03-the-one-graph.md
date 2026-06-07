@@ -42,7 +42,7 @@ The graph is **flat**: arrays of nodes and arrays of edges. Hierarchy and contai
 }
 ```
 
-Node typing keeps concerns separate: every node carries `nodeType` (`Primitive` / `Pack` / `Anchor` / `CodeNode` / …), and primitives additionally carry `specKind` (the truth-category from `02`). This split prevents the old single `kind` field from colliding between structural class and domain truth-category. **Delivery facts** (`implemented` here) are **computed from edges** — the `satisfies` edge resolving to the spec — not authored on the node; readiness (`ready`) is the authored maturity, kept separate (`02` §2). The `satisfies` edge runs **code → spec** and is **anchored** (derived from an anchor), never hand-authored.
+Node typing keeps concerns separate: every node carries `nodeType` (`Primitive` / `Pack` / `Anchor` / `CodeNode` / …), and `Primitive` nodes additionally carry `specKind` (the truth-category from `02`). This split prevents the old single `kind` field from colliding between structural class and domain truth-category. **Delivery facts** (`implemented` here) are **computed from edges** — the `satisfies` edge resolving to the spec — not authored on the node; readiness (`ready`) is the authored maturity, kept separate (`02` §2). The `satisfies` edge runs **code → spec** and is **anchored** (derived from an anchor), never hand-authored.
 
 ---
 
@@ -52,7 +52,7 @@ Given the same repo at a commit, the extractor emits a **byte-identical** graph:
 
 - nodes sorted by `id`, edges sorted by `(from, type, to)`;
 - no wall-clock timestamps, no run-specific hashes in the semantically-compared output (any metadata like a build hash is contained and excluded from comparison);
-- a determinism check (`akg build --check-clean`) rebuilds and asserts the result is byte-identical to an independent rebuild from the same commit — never a comparison against a committed `generated/` artifact, which is gitignored (L8). A divergence is a detectable, failable condition.
+- a determinism check (`sdp build --check-clean`) rebuilds and asserts the result is byte-identical to an independent rebuild from the same commit — never a comparison against a committed `generated/` artifact, which is gitignored (L8). A divergence is a detectable, failable condition.
 
 Determinism is what makes "derived" *falsifiable*. Without it, the no-second-store rule (below) cannot be enforced, because you could not prove the graph is a function of the repo.
 
@@ -77,13 +77,13 @@ Rules that keep this honest:
 - **Ambiguity is loud (L2).** A genuine conflict — two declarations that contradict, a duplicate ID, an anchor that disagrees with a declaration — is a build error, not a silent merge. A deterministic precedence (declared over anchored over inferred) resolves *layering*, but never a true contradiction.
 - **Delivery facts are derived, not declared (epistemic boundary).** A spec's realization (`implemented` / `has-verifier` / `observed`) is computed from edges, never authored by a human. In the MVP, `has-verifier` is *structural* — a linked, enabled verifying spec/test exists — and test run results are **not** ingested (operational, CI's domain). The runtime path that would carry truly observed data (`observed`) is aspirational. *(See `06`, `07`.)*
 
-> This is the difference between Libar Omni and a documentation generator: a doc generator treats every edge as an equal "fact." Libar Omni knows which edges are *intent a human asserted*, which are *a binding a human anchored*, and which are *structure a machine guessed*, and never lets one masquerade as another.
+> This is the difference between the Protocol and a documentation generator: a doc generator treats every edge as an equal "fact." The Protocol knows which edges are *intent a human asserted*, which are *a binding a human anchored*, and which are *structure a machine guessed*, and never lets one masquerade as another.
 
 ---
 
 ## 4. Regenerability and the no-second-store rule (P1, P2)
 
-- `generated/` is gitignored and disposable (L8). Delete it, run `akg build`, get the same bytes back.
+- `generated/` is gitignored and disposable (L8). Delete it, run `sdp build`, get the same bytes back.
 - No consumer reads source directly or keeps a parallel model (P2). The view reads the graph; the trace query reads the graph; an AI agent reads the graph (as JSON). One read model, many readers.
 - The MVP graph is a **single JSON file** plus an in-memory graph for queries. A property-graph database is deferred until measured traversal pain — and the schema is designed to map cleanly to one later, so the deferral has forethought.
 

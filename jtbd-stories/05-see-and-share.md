@@ -35,7 +35,7 @@ The graph is only valuable if humans and agents can actually consume it. The job
 
 > **When** an AI agent needs to reason about part of the system, **I want to** hand it the **agent surface** — a visible typed graph it scripts — plus the raw `graph.json`, **so I can** give it structured, joined context to script against instead of dumping the repo into a prompt.
 
-**Essence:** Structured graph context beats raw text, and Libar Omni is a *producer* of it. The **agent surface** is a visible typed graph the agent *scripts*; the schema *is* the contract — joins and `claim`/taxonomy-decode done once in the **`reader`** — not a 30-verb API and not raw JSON the agent must re-join.
+**Essence:** Structured graph context beats raw text, and the Protocol is a *producer* of it. The **agent surface** is a visible typed graph the agent *scripts*; the schema *is* the contract — joins and `claim`/taxonomy-decode done once in the **`reader`** — not a 30-verb API and not raw JSON the agent must re-join.
 
 **Acceptance criteria:**
 1. The agent reads through the agent surface — the in-memory **`reader`** (rebuilt fresh each load, persisting nothing) — and/or the raw `graph.json`; the schema is the discovery surface, so a typed field is a usable capability and an un-typed one is hidden.

@@ -1,10 +1,10 @@
 # 05 — Validation & Honesty
 
-Validation is what makes the graph trustworthy. It is the deterministic machinery that makes the process meta-model **self-validating**: the meta-model defines a **conformance contract**, a project's authored instances **conform** to it (conformance *checked* — an error fails CI — but the *process* is never *workflow-gated*), and the checks verify that conformance — references resolve, ambiguity fails loudly, claims are honest, and nothing derived is faked by hand.
+Validation is what makes the graph trustworthy. It is the deterministic machinery that makes the protocol **self-validating**: the meta-model defines a **conformance contract**, a project's authored instances **conform** to it (conformance *checked* — an error fails CI — but the *process* is never *workflow-gated*), and the checks verify that conformance — references resolve, ambiguity fails loudly, claims are honest, and nothing derived is faked by hand.
 
 This document delineates the **MVP validator subset** sharply from the **aspirational** tiers, realising **P7** (shape vs completeness), **P8** (readiness is stated and checked against a floor), **L2** (ambiguity is loud), and **L3** (graceful partial extraction).
 
-> "Conformance" here means conformance to the typed meta-model. It is **not** RUP's "conformance level" (a spec's own implementation tier) — for *that* notion use CORE / ASPIRATIONAL. Two permanent honesty guardrails bound what these checks claim: (a) they police **conformance & honesty**, never content-quality (design goodness is human/agent judgment) and never workflow (no lifecycle gates); (b) the result is **"deterministically validated," never "provably correct"** — conformance to the typed meta-model is provable; real-world correctness of the design is not.
+> "Conformance" here means conformance to the typed meta-model. It is distinct from a spec's own implementation tier, for which use CORE / ASPIRATIONAL. Two permanent honesty guardrails bound what these checks claim: (a) they police **conformance & honesty**, never content-quality (design goodness is human/agent judgment) and never workflow (no lifecycle gates); (b) the result is **"deterministically validated," never "provably correct"** — conformance to the typed meta-model is provable; real-world correctness of the design is not.
 
 ---
 
@@ -114,7 +114,7 @@ Out of the MVP, designed-for:
 
 ## 7. What CI guarantees at MVP
 
-When `akg validate` passes on a PR, the team knows:
+When `sdp validate` passes on a PR, the team knows:
 
 - every ID reference resolves; no duplicate IDs;
 - every spec **states a readiness floor it earns** — and nothing hand-authors a derived edge or delivery fact (authoring-shape honesty);
