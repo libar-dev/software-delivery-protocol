@@ -1,15 +1,24 @@
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { SDP_HELP_TEXT, runSdpCli } from "../src/cli/sdp.js";
+import { SDP_HELP_TEXT, isCliEntrypoint, runSdpCli } from "../src/cli/sdp.js";
+import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 
-const exampleRoot = fileURLToPath(new URL("../examples/checkout-v1", import.meta.url));
-const hardErrorCorpusRoot = fileURLToPath(
-  new URL("./fixtures/extract/invalid-non-static-id", import.meta.url),
-);
+const repoRoot = fileURLToPath(new URL("..", import.meta.url));
+const exampleRoot = join(repoRoot, "examples", "checkout-v1");
 
 function createCaptureOutput() {
   const stdoutChunks: string[] = [];
@@ -58,7 +67,7 @@ describe("sdp cli", () => {
     expect(capture.readStderr()).toBe("");
   });
 
-  it("builds the checkout-v1 example: writes graph.json and exits 0", () => {
+  it("builds the checkout-v1 example: writes graph.json (and no temp leftover) and exits 0", () => {
     rmSync(join(exampleRoot, "generated"), { recursive: true, force: true });
     const capture = createCaptureOutput();
 
@@ -67,7 +76,21 @@ describe("sdp cli", () => {
     expect(exitCode).toBe(0);
     expect(capture.readStderr()).toBe("");
     expect(capture.readStdout()).toContain("9 specs · 1 packs → 10 nodes · 22 edges");
-    expect(existsSync(join(exampleRoot, "generated", "graph.json"))).toBe(true);
+    expect(readdirSync(join(exampleRoot, "generated"))).toEqual(["graph.json"]);
+  });
+
+  it("builds cleanly with no root argument from the repository root (the default-root path)", () => {
+    // The repo itself must stay a clean default root: corpora are committed defused
+    // (*.sdp.ts.txt), so the only *.sdp.ts under the root is the example model.
+    rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
+    const capture = createCaptureOutput();
+
+    const exitCode = runSdpCli(["build"], capture.output);
+
+    expect(exitCode).toBe(0);
+    expect(capture.readStderr()).toBe("");
+    expect(capture.readStdout()).toContain("9 specs · 1 packs → 10 nodes · 22 edges");
+    rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
   });
 
   it("passes --check-clean on the example (determinism self-check through the CLI)", () => {
@@ -90,16 +113,44 @@ describe("sdp cli", () => {
     expect(readFileSync(graphPath, "utf8")).toBe(firstBuild);
   });
 
-  it("exits 1 and writes nothing on a hard-error corpus (the artifact is all-or-nothing)", () => {
-    rmSync(join(hardErrorCorpusRoot, "generated"), { recursive: true, force: true });
-    const capture = createCaptureOutput();
+  it("exits 1, writes nothing, and removes a stale graph.json on a hard-error corpus", () => {
+    const corpusRoot = materializeExtractCorpus("invalid-non-static-id");
 
-    const exitCode = runSdpCli(["build", hardErrorCorpusRoot], capture.output);
+    try {
+      const stalePath = join(corpusRoot, "generated", "graph.json");
+      mkdirSync(join(corpusRoot, "generated"), { recursive: true });
+      writeFileSync(stalePath, '{ "stale": true }\n', "utf8");
 
-    expect(exitCode).toBe(1);
-    expect(capture.readStderr()).toContain("extract/non-static-envelope");
-    expect(capture.readStderr()).toContain("graph.json not written");
-    expect(existsSync(join(hardErrorCorpusRoot, "generated"))).toBe(false);
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", corpusRoot], capture.output);
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toContain("extract/non-static-envelope");
+      expect(capture.readStderr()).toContain("graph.json not written");
+      // The stale artifact is gone: a failed build leaves no graph that could read as current.
+      expect(existsSync(stalePath)).toBe(false);
+    } finally {
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("recognizes the published-bin path: a .bin-style symlink resolves to the entry module", () => {
+    const directory = mkdtempSync(join(tmpdir(), "sdp-bin-"));
+
+    try {
+      const entryFile = join(directory, "sdp.js");
+      writeFileSync(entryFile, "// stand-in for the built CLI entry\n", "utf8");
+      const binLink = join(directory, "sdp");
+      symlinkSync(entryFile, binLink);
+      const moduleUrl = pathToFileURL(entryFile).href;
+
+      expect(isCliEntrypoint(binLink, moduleUrl)).toBe(true);
+      expect(isCliEntrypoint(entryFile, moduleUrl)).toBe(true);
+      expect(isCliEntrypoint(join(directory, "unrelated.js"), moduleUrl)).toBe(false);
+      expect(isCliEntrypoint(undefined, moduleUrl)).toBe(false);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   it("rejects validate as not wired", () => {

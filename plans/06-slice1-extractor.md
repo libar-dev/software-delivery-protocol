@@ -25,6 +25,24 @@
 > (truthful record; the existing duplicate-ids validator also fires) while the **graph** excludes
 > them all — it cannot be keyed on an ambiguous id.
 >
+> **Post-execution adversarial pass (Codex)** — three findings, all valid, all fixed: (1) the
+> **published-bin no-op** — the entry guard suffix-matched `process.argv[1]` against
+> `/dist/cli/sdp.js`, but Node keeps npm's `node_modules/.bin/sdp` symlink path in `argv[1]`, so an
+> installed CLI exited 0 silently; the guard is now `isCliEntrypoint` — realpath-compare `argv[1]`
+> against the module's own file, fail closed — unit-tested through a real symlink and verified
+> end-to-end against the built binary. (2) the **committed hard-error corpora poisoned the
+> documented default root** — `sdp build` from this repo's root swept `test/fixtures/extract/`'s
+> `.sdp.ts` files and exited 1; discovery's contract stays deliberately config-free (P3), so the
+> corpora stepped outside the extension contract instead: committed as `*.sdp.ts.txt` (the repo
+> never carries an invalid `*.sdp.ts`) and materialized by the corpus tests into temp directories
+> under their real names (`test/helpers/extract-corpus.ts`), keeping the extractor on its genuine
+> file-reading path; the §2.8 tsconfig/eslint corpus exclusions became dead config and were
+> removed; a regression test pins that the repo root builds cleanly as a default root. (3) a
+> **failed build left the previous `graph.json` in place** — "not written" still read as current;
+> a hard-error or diverging `--check-clean` build now removes the prior artifact (stale truth is no
+> truth), and the success path writes temp-then-rename so a crash can never leave a truncated
+> graph looking whole.
+>
 > **Next session: Slice 2 — generic anchors** (`codeAnchor`, MD-8; H10's api anchor) +
 > implementation/test binding → `satisfies` and anchored `verifies` edges.
 >

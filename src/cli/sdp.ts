@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { extract } from "../extract/index.js";
 import { serializeGraph } from "../extract/serialize.js";
@@ -80,11 +81,21 @@ function runBuild(args: readonly string[], output: CliOutput): number {
   const errorCount = findings.filter((finding) => finding.severity === "error").length;
   const warningCount = findings.length - errorCount;
   const summary = `${String(result.model.specs.length)} specs · ${String(result.model.packs.length)} packs → ${String(result.graph.nodes.length)} nodes · ${String(result.graph.edges.length)} edges (${String(errorCount)} errors, ${String(warningCount)} warnings)\n`;
+  const graphPath = join(resolvedRoot, "generated", "graph.json");
+
+  // A stale projection is as dishonest as a partial one: a failed build must not leave a previous
+  // graph.json behind that downstream consumers could read as current.
+  const failBuild = (message: string): number => {
+    rmSync(graphPath, { force: true });
+    writeStderr(output, message);
+    return 1;
+  };
 
   if (errorCount > 0) {
     writeStdout(output, summary);
-    writeStderr(output, "sdp build: hard errors present — graph.json not written.\n");
-    return 1;
+    return failBuild(
+      "sdp build: hard errors present — graph.json not written; any previous graph.json at this root was removed.\n",
+    );
   }
 
   const serialized = serializeGraph(result.graph);
@@ -93,17 +104,17 @@ function runBuild(args: readonly string[], output: CliOutput): number {
     const second = serializeGraph(extract({ root: resolvedRoot }).graph);
 
     if (second !== serialized) {
-      writeStderr(
-        output,
-        "sdp build --check-clean: two independent extractions diverged — the build is not deterministic.\n",
+      return failBuild(
+        "sdp build --check-clean: two independent extractions diverged — the build is not deterministic; any previous graph.json at this root was removed.\n",
       );
-      return 1;
     }
   }
 
-  const graphPath = join(resolvedRoot, "generated", "graph.json");
+  // Temp-then-rename so a crash mid-write can never leave a truncated graph.json looking current.
+  const temporaryPath = `${graphPath}.tmp`;
   mkdirSync(join(resolvedRoot, "generated"), { recursive: true });
-  writeFileSync(graphPath, serialized, "utf8");
+  writeFileSync(temporaryPath, serialized, "utf8");
+  renameSync(temporaryPath, graphPath);
   writeStdout(output, summary);
   writeStdout(output, `Wrote ${graphPath}\n`);
   return 0;
@@ -130,11 +141,25 @@ export function runSdpCli(args: readonly string[], output: CliOutput = defaultCl
   return 1;
 }
 
-const executedPath = process.argv[1];
+/**
+ * True when this module is the executed entry point. npm exposes the CLI as a
+ * `node_modules/.bin/sdp` symlink and Node keeps the symlink path in `process.argv[1]`, so a
+ * path-suffix check would silently no-op for the installed binary; realpath-comparing both sides
+ * recognizes every route to the entry file (direct, symlinked, or behind a symlinked directory).
+ * Fails closed: an unresolvable path means we are not the entry point.
+ */
+export function isCliEntrypoint(executedPath: string | undefined, moduleUrl: string): boolean {
+  if (executedPath === undefined) {
+    return false;
+  }
 
-if (
-  executedPath !== undefined &&
-  (executedPath.endsWith("/dist/cli/sdp.js") || executedPath.endsWith("\\dist\\cli\\sdp.js"))
-) {
+  try {
+    return realpathSync(executedPath) === realpathSync(fileURLToPath(moduleUrl));
+  } catch {
+    return false;
+  }
+}
+
+if (isCliEntrypoint(process.argv[1], import.meta.url)) {
   process.exitCode = runSdpCli(process.argv.slice(2));
 }

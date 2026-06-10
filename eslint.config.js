@@ -16,15 +16,7 @@ const typeCheckedConfigs = [
 
 export default tseslint.config(
   {
-    // test/fixtures/extract holds on-disk extractor corpora: they exercise the extractor, not tsc
-    // or the lint — one is deliberately type-incorrect (the raw-relations smuggle).
-    ignores: [
-      "dist/**",
-      "generated/**",
-      ".sisyphus/evidence/**",
-      "node_modules/**",
-      "test/fixtures/extract/**",
-    ],
+    ignores: ["dist/**", "generated/**", ".sisyphus/evidence/**", "node_modules/**"],
   },
   js.configs.recommended,
   ...typeCheckedConfigs,

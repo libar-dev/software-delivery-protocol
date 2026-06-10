@@ -1,19 +1,31 @@
 import { fileURLToPath } from "node:url";
 
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 
 import { extract, extractFindingIds, serializeGraph, validateAuthoredModel } from "../src/index.js";
+import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 
 const exampleRoot = fileURLToPath(new URL("../examples/checkout-v1", import.meta.url));
 
+const materializedRoots: string[] = [];
+
 function corpusRoot(name: string): string {
-  return fileURLToPath(new URL(`./fixtures/extract/${name}`, import.meta.url));
+  const root = materializeExtractCorpus(name);
+  materializedRoots.push(root);
+  return root;
 }
+
+afterAll(() => {
+  for (const root of materializedRoots) {
+    removeMaterializedCorpus(root);
+  }
+});
 
 /**
  * On-disk extractor corpora (the extractor reads files, not in-memory objects), should-fail /
  * should-pass style: each pins one extraction finding id. Three names recorded in
- * `test/fixtures/authored-model.fixtures.ts` are activated here.
+ * `test/fixtures/authored-model.fixtures.ts` are activated here. The corpora are committed as
+ * `*.sdp.ts.txt` and materialized into temp directories — see `helpers/extract-corpus.ts`.
  */
 describe("extraction corpora", () => {
   it("invalid-non-static-id: envelope hard error; the static sibling still extracts (L3)", () => {
