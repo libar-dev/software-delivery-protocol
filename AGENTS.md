@@ -9,9 +9,10 @@ This repo is the **concept made right before the engine exists**. The concept sy
 language, and the JTBD stories together **are the spec** — the product's own thesis (*the spec is the prompt is the
 design*) applied to itself: there is no separate PRD.
 
-> **Status:** concept ratified and locked; the repo is now in its **first implementation sessions**, starting with
-> **Phase 0 — the protocol as typed code**. The live per-session build plan is in **`plans/`**; the slice roadmap is
-> **`docs/concept/07`**. (`plans/` is the source of truth for "what now.")
+> **Status:** concept ratified and locked; **Slice 0 (Phase 0 — the protocol as typed code) is built, green, and
+> hardened** (Wave A done; all post-Session-1 decisions resolved, DECISIONS MD-8…MD-15). The live per-session build
+> plan is in **`plans/`**; the slice roadmap is **`docs/concept/07`**. (`plans/` is the source of truth for "what
+> now.")
 
 ## The frame
 
@@ -70,10 +71,11 @@ read it before writing code.
 | **4** | The agent surface (the `reader` — entry adapters + impact) + the Design Review / one generated read-only view — both fully derived. |
 | **5** | Polish: the `sdp` CLI (`build` · `validate` · maybe `explain`/`search`), error messages, the documented example, a clean-repo determinism test. |
 
-**Where we are now (`plans/`):** **Session 1** = Slice 0 + the repo/toolchain bootstrap, authoring the
-`checkout-v1` example against the DSL **so it typechecks** — pure types, no I/O, deterministic by construction;
-stops *before* the extractor. **Session 2** = Slice 1, the `ts-morph` extractor (deterministic rebuild P3 +
-graceful partial extraction L3); session 1's example becomes its first real input.
+**Where we are now (`plans/`):** Session 1 (Slice 0 + bootstrap) is done and hardened; the post-Session-1
+decisions are all resolved (grill 2026-06-10, MD-10…MD-15). **Next session = Wave B** (`plans/02` §4): typed
+floor-bearing sections → the kind-conditional floor table → de-pad the example → the `.sdp.ts` rename. **Then**
+Slice 1, the `ts-morph` extractor (deterministic rebuild P3 + graceful partial extraction L3); the hardened
+example becomes its first real input.
 
 > **Tracer-bullet discipline.** Author the example specs and anchored code *first*, so the DSL and extractor are
 > forced to be usable before they are finished. If the example doesn't typecheck, fix the DSL — not the example.

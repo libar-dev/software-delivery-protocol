@@ -1,29 +1,14 @@
 # Phase 0 Hardening — Fidelity & Simplification Pass (post-Session-1)
 
-> **Status: EXECUTION · Wave A done · Wave B EXECUTION-READY (unblocked 2026-06-10 — the grill resolved
-> all gates, MD-10…MD-15).** This is the **code hardening** half of the post-Session-1 review — fidelity
-> corrections and net complexity reductions on the already-implemented Phase 0. The decisions these fixes'
-> siblings depend on, the concept-base wording tightenings, and the roadmap acceptance criteria were
-> **split out of this plan** into their proper homes (see "Where the rest went," below).
-> **Date:** 2026-06-07 · **Branch:** `feature/mvp-init` · **Repo state:** Session 1 (`eb6bf2a`) + Wave A
-> green (`npm run check`: typecheck ×2, lint, format, **47 tests + 2 todo**, build).
-> **2026-06-10 folds:** R1/R2/R3 ratified & applied; MD-8 (`codeAnchor`) and MD-9 (`intent.openQuestions`)
-> recorded decided. **2026-06-10 grill:** D1/D2/D3/D4/D7/D8 resolved as **MD-10…MD-15** — §4 below is
-> rewritten execution-ready against them; run it as the next code session.
-
-This plan covers the gap between *"Slice 0 is green"* and *"Slice 0 is a faithful, lean foundation the
-extractor can safely build on."* It stays inside the Slice 0 boundary — **no extractor, no graph
-emission, no graph gate** — except where a fix must be *designed now* so the extractor (Slice 1)
-doesn't inherit a landmine.
-
-**Where the rest went (the re-home).** This plan was originally one document fusing three kinds of work;
-they now live where each gets the right rigor:
-- **Open decisions** → `plans/03-decision-resolution-and-base-reconciliation.md` — the grilling agenda,
-  now slimmed to the six genuinely-open (D1–D4, D7, D8). Wave B's typed-section fixes are **blocked on
-  D1/D2/D3**; the former D6 (anchor shape) was folded out as **decided** (DECISIONS MD-8).
-- **Concept-base wording (R1, R2, R3)** → `docs/concept/DECISIONS.md` — **ratified & applied 2026-06-10**
-  in the pre-grill folds.
-- **Forward-looking acceptance criteria** → `docs/concept/07` §6 (mapped across Slices 1–5).
+> **Status: EXECUTION · Wave A ✅ done · Wave B EXECUTION-READY — run §4 as the next code session.**
+> Code hardening on the already-implemented Phase 0: fidelity corrections + net complexity reductions,
+> covering the gap between *"Slice 0 is green"* and *"Slice 0 is a faithful, lean foundation the
+> extractor can safely build on."* Stays inside the Slice 0 boundary — **no extractor, no graph
+> emission, no graph gate** — except where a fix must be *designed now* so Slice 1 doesn't inherit a
+> landmine. Every decision this plan was gated on is **resolved**: R1/R2/R3 applied; **MD-8/MD-9**
+> (pre-grill folds) and **MD-10…MD-15** (the 2026-06-10 grill, agenda `plans/03`) recorded in
+> `docs/concept/DECISIONS.md`. Forward-looking acceptance criteria live in `docs/concept/07` §6.
+> **Branch:** `feature/mvp-init` · **Repo state:** Session 1 + Wave A, `npm run check` green.
 
 ---
 
@@ -53,67 +38,39 @@ they now live where each gets the right rigor:
 
 **Regression gate:** `npm run check` stays green; all invariants above still hold.
 
-## §2 — The root tension (drives the Wave-B fidelity fixes)
+## §2 — The root tension — ✅ RESOLVED (MD-11 on MD-10)
 
 `src/model/sections.ts` types every section as `Record<string, unknown>`; the base (**L9**, `02` §3)
-intends **typed-but-optional** sections. This was the linchpin — **resolved 2026-06-10**: MD-11 (the typing
-law — floor-bearing sections are closed-typed; six today) on MD-10's content-only `behavior` shape. §4/B1
-carries the locked field shapes.
+intends **typed-but-optional** sections. Resolved by the typing law (MD-11 — floor-bearing ⟹
+closed-typed; six today) on MD-10's content-only `behavior` shape. §4/B1 carries the locked field shapes.
 
 ---
 
 ## §3 — Wave A (decision-free) — ✅ DONE
 
-Quick, contract-shrinking, reversible wins. All landed and verified; `npm run check` green.
+All landed and verified; `npm run check` green. One line each — the full was/done/verified detail lives
+in git history (provenance: `reviews/01`).
 
-### ✅ H1 — Make the example statically extractable (P5)
-- **Was.** Both scenario specs built `behavior` via `Object.fromEntries([...]) as Record<string,
-  unknown>` (+ a `thenKey` indirection) — not statically evaluable, so the Slice-1 `ts-morph` extractor
-  (which reifies without executing, `04` §1) would silently drop the section and flip the `example`
-  floor from valid → honesty violation.
-- **Done.** Replaced both with plain static object literals.
-- **Verified.** `grep -rn "Object.fromEntries\|thenKey\|as Record" examples/` → none; example typecheck
-  + tests green.
-- **Forward hook (DEFER, named).** Slice 1's "done" must include *the example survives static extraction
-  byte-for-byte*; the `sdp/spec-static` lint rule (`04` §1) is the earlier backstop.
-
-### ✅ H6 — Simplify the tsup build; stop leaking a shebang onto the library entry
-- **Was.** `dist/index.js` started with `#!/usr/bin/env node` because `banner.js` applied to **all**
-  entries, compensated by an esbuild strip-plugin + an `onSuccess` shebang-normalise hook.
-- **Done.** Removed the banner, the strip-plugin, and the hook; rely on esbuild preserving the source
-  shebang on the CLI **entry** only.
-- **Verified.** `dist/index.js` first line is `// src/ids.ts` (no shebang); `dist/cli/sdp.js` has
-  exactly one `#!/usr/bin/env node`; `node dist/cli/sdp.js --help` exits 0.
-
-### ✅ H7 — Hygiene (`.prettierignore`)
-- **Done.** Added `.tmp-scratch/**` to `.prettierignore` so `format:check` no longer trips on scratch.
-- **Still open (low, optional).** Already-committed `.sisyphus/` files (from `eb6bf2a`) remain tracked
-  despite the ignore; `git rm --cached .sisyphus` would untrack them if wanted. `package.json` lacks
-  `description`/`license`/`repository` — note for the publish checklist. The `vitest-test.mjs` wrapper
-  is optional ergonomics.
-
-### ✅ H8 (active) — A should-fail / should-pass validator fixture suite (`05` §5)
-- **Done.** `test/fixtures/authored-model.fixtures.ts` + `test/fixtures.test.ts` with the **active**
-  (decision-free) fixtures, each pinning one validator outcome:
-  - `valid-minimal-idea-spec` → passes.
-  - `invalid-duplicate-id` → `conformance/duplicate-ids`.
-  - `invalid-scoped-without-relation` → `honesty/readiness-floor` (`at-least-one-relation`).
-  - `invalid-defined-constraint-without-target` → `honesty/readiness-floor`
-    (`constraint-machine-readable-target`).
-- **Gated stubs (inherited checklist, `it.todo`):** `invalid-ready-with-blocking-question` (flips active
-  with **H2**) · `invalid-hand-authored-delivery-fact-in-section` (flips active with **D1**). The
-  extractor-era fixtures (`invalid-non-static-id`, `invalid-non-static-section`,
-  `invalid-hand-authored-satisfies-edge`, `invalid-ready-with-unresolved-dependency`,
-  `invalid-ready-with-target-below-defined`) remain named for Slice 1+.
-
-### ✅ H9 — Lock the type-level honesty defenses with compile-time fixtures
-- **Done.** Added `@ts-expect-error` fixtures in `test/builders.typecheck.ts`: the `Spec` envelope
-  rejects a top-level `implemented` / `has-verifier`; the `Pack` rejects `intent` / `readiness` /
-  `constraints`. `npm run typecheck` consumes them (an unused directive would fail the build, so they
-  *prove* the defenses fire).
-- **Note (tracked with D1).** The **in-section** bypass (`behavior: { "has-verifier": true }`) is *not*
-  closed by these — it is closed only by typing sections (D1, plan 03) and locked by the gated H8
-  fixture.
+- **H1 — the example is statically extractable (P5).** The `Object.fromEntries(...) as Record` +
+  `thenKey` indirection replaced with plain static literals. **Forward hook (Slice 1):** "done" must
+  include *the example survives static extraction byte-for-byte*; the `sdp/spec-static` lint (`04` §1)
+  is the earlier backstop.
+- **H6 — tsup build simplified.** The shebang ships only on the CLI entry (no banner / strip-plugin /
+  `onSuccess` hook); `dist/index.js` is shebang-free.
+- **H7 — hygiene.** `.tmp-scratch/**` prettier-ignored. The optional leftovers were **finalized in the
+  grill session**: `.sisyphus/` untracked; `package.json` carries description + Apache-2.0.
+- **H8 — the validator fixture suite (`05` §5).** `test/fixtures/authored-model.fixtures.ts` +
+  `fixtures.test.ts`; four **active** fixtures, each pinning one validator outcome
+  (`valid-minimal-idea-spec` · `invalid-duplicate-id` · `invalid-scoped-without-relation` ·
+  `invalid-defined-constraint-without-target`). **Gated stubs (`it.todo`), flipped by Wave B:**
+  `invalid-ready-with-blocking-question` (B2) · `invalid-hand-authored-delivery-fact-in-section` (B1 —
+  lands as a compile-time fixture). The extractor-era fixtures stay named for Slice 1+
+  (`invalid-non-static-id` · `invalid-non-static-section` · `invalid-hand-authored-satisfies-edge` ·
+  `invalid-ready-with-unresolved-dependency` · `invalid-ready-with-target-below-defined`).
+- **H9 — type-level honesty defenses.** `@ts-expect-error` fixtures in `test/builders.typecheck.ts`: the
+  `Spec` envelope rejects top-level delivery facts; the `Pack` rejects `intent`/`readiness`/`constraints`.
+  The **in-section** bypass (`behavior: { "has-verifier": true }`) is closed only by B1's typed sections;
+  the envelope-defense caveat (excess-property / inline-literal scope, F7) is recorded in the file.
 
 ---
 
@@ -216,14 +173,9 @@ clause reads them); a dedicated `contract` section is a named deferral (MD-12).
 
 ## §6 — Sequencing
 
-1. **Wave A** — ✅ done (H1, H6, H7, H8-active, H9).
-2. **Pre-grill folds (2026-06-10)** — ✅ done: R1/R2/R3 ratified & applied; the anchor shape (MD-8) and the
-   open-questions home (MD-9) recorded decided; `plans/03` slimmed to the six open decisions.
-3. **Resolve decisions** — ✅ done (2026-06-10 grill): all six resolved and recorded as **MD-10…MD-15**;
-   the base reconciled inline; H7's leftovers finalized (`.sisyphus/` untracked; `package.json`
-   description + Apache-2.0).
-4. **Wave B** — ← **NEXT** (the next code session): B1 (typed sections) → B2 (the floor table) → B3
-   (de-pad + re-author the example) → B4 (the `.sdp.ts` rename); H10 rides Slice-2 anchor extraction.
+Wave A ✅ → pre-grill folds ✅ (R1–R3 applied; MD-8/MD-9) → the grill ✅ (MD-10…MD-15; H7 leftovers
+finalized) → **Wave B ← NEXT** (one code session: B1 → B2 → B3 → B4); H10 rides Slice-2 anchor
+extraction.
 
 **Done gate for Wave B:** the in-section honesty bypass (`behavior: { "has-verifier": true }`) **fails to
 typecheck**, locked by a `@ts-expect-error` fixture; blocking open questions read from
