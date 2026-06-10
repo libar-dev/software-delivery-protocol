@@ -8,8 +8,16 @@ const PATH_SEGMENT_PATTERN = /^[A-Za-z0-9][A-Za-z0-9-]*$/u;
 export type SpecId = Brand<"SpecId">;
 export type PackId = Brand<"PackId">;
 export type AnchorId = Brand<"AnchorId">;
-export type ImplAnchorId = AnchorId & Brand<"ImplAnchorId">;
+export type CodeAnchorId = AnchorId & Brand<"CodeAnchorId">;
 export type TestAnchorId = AnchorId & Brand<"TestAnchorId">;
+
+/**
+ * The implementation-flavored code namespaces a `codeAnchor` may bind (the generic `codeAnchor`,
+ * MD-8): any code location — a class, function, route, or module — regardless of how the runtime
+ * is wired. The `test:` namespace is deliberately not here: a test anchor is the *verifying*
+ * binding (`specTest`), a different binding direction, not a fourth code flavor.
+ */
+export const CODE_ANCHOR_NAMESPACES = ["impl", "api", "component"] as const;
 
 export interface IdParts {
   readonly namespace: string;
@@ -96,12 +104,17 @@ function validateIdShape(value: string): IdParts {
 
 function requireNamespace<TBrand extends string>(
   value: string,
-  expectedNamespace: string,
+  expectedNamespaces: readonly string[],
 ): Brand<TBrand> {
   const parsed = validateIdShape(value);
 
-  if (parsed.namespace !== expectedNamespace) {
-    failId(value, `expected namespace "${expectedNamespace}"`);
+  if (!expectedNamespaces.includes(parsed.namespace)) {
+    failId(
+      value,
+      expectedNamespaces.length === 1
+        ? `expected namespace "${expectedNamespaces[0] ?? ""}"`
+        : `expected one of the namespaces ${expectedNamespaces.map((entry) => `"${entry}"`).join(" · ")}`,
+    );
   }
 
   return brandId<TBrand>(value);
@@ -123,19 +136,19 @@ export function anchorId(value: string): AnchorId {
 }
 
 export function specId(value: string): SpecId {
-  return requireNamespace<"SpecId">(value, "spec");
+  return requireNamespace<"SpecId">(value, ["spec"]);
 }
 
 export function packId(value: string): PackId {
-  return requireNamespace<"PackId">(value, "pack");
+  return requireNamespace<"PackId">(value, ["pack"]);
 }
 
-export function implAnchorId(value: string): ImplAnchorId {
-  return requireNamespace<"ImplAnchorId">(value, "impl") as ImplAnchorId;
+export function codeAnchorId(value: string): CodeAnchorId {
+  return requireNamespace<"CodeAnchorId">(value, CODE_ANCHOR_NAMESPACES) as CodeAnchorId;
 }
 
 export function testAnchorId(value: string): TestAnchorId {
-  return requireNamespace<"TestAnchorId">(value, "test") as TestAnchorId;
+  return requireNamespace<"TestAnchorId">(value, ["test"]) as TestAnchorId;
 }
 
 /**

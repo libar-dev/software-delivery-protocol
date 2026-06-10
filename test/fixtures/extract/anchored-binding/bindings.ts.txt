@@ -1,0 +1,12 @@
+import { codeAnchor, codeAnchorId, ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+
+export const anchoredParentUseCaseAnchor = codeAnchor({
+  id: codeAnchorId("impl:orders.anchored-parent-use-case"),
+  label: "anchoredParentUseCase",
+  satisfies: ref("spec:orders.anchored-parent"),
+});
+
+export const anchoredParentExampleTest = specTest({
+  id: testAnchorId("test:orders.anchored-parent.example"),
+  verifies: ref("spec:orders.anchored-parent.example"),
+});

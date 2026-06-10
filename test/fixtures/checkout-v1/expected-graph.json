@@ -1,6 +1,22 @@
 {
-  "schemaVersion": "0.2.0",
+  "schemaVersion": "0.3.0",
   "nodes": [
+    {
+      "id": "api:orders.post",
+      "nodeType": "CodeNode",
+      "claim": "anchored",
+      "label": "POST /orders",
+      "file": "src/orders/create-order.route.ts",
+      "line": 6
+    },
+    {
+      "id": "impl:orders.create-order-use-case",
+      "nodeType": "CodeNode",
+      "claim": "anchored",
+      "label": "createOrderFromCart",
+      "file": "src/orders/create-order.use-case.ts",
+      "line": 23
+    },
     {
       "id": "pack:checkout-v1",
       "nodeType": "Pack",
@@ -53,7 +69,11 @@
           "outcome": "Turn a valid cart into an order.",
           "value": "Customers can complete purchases without the example modeling the rest of checkout."
         }
-      }
+      },
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ]
     },
     {
       "id": "spec:orders.create-order.invalid-cart",
@@ -135,7 +155,10 @@
             "The returned total matches the cart math."
           ]
         }
-      }
+      },
+      "deliveryFacts": [
+        "has-verifier"
+      ]
     },
     {
       "id": "spec:orders.order-inventory-rule",
@@ -250,9 +273,29 @@
           ]
         }
       }
+    },
+    {
+      "id": "test:orders.create-order.valid-cart",
+      "nodeType": "Anchor",
+      "claim": "anchored",
+      "label": "valid cart verifies the create-order happy path",
+      "file": "test/orders/create-order.valid-cart.test.ts",
+      "line": 3
     }
   ],
   "edges": [
+    {
+      "from": "api:orders.post",
+      "type": "satisfies",
+      "to": "spec:orders.create-order",
+      "claim": "anchored"
+    },
+    {
+      "from": "impl:orders.create-order-use-case",
+      "type": "satisfies",
+      "to": "spec:orders.create-order",
+      "claim": "anchored"
+    },
     {
       "from": "spec:decisions.order-lifecycle",
       "type": "belongsTo",
@@ -384,6 +427,12 @@
       "type": "refines",
       "to": "spec:orders.create-order",
       "claim": "declared"
+    },
+    {
+      "from": "test:orders.create-order.valid-cart",
+      "type": "verifies",
+      "to": "spec:orders.create-order.valid-cart",
+      "claim": "anchored"
     }
   ]
 }

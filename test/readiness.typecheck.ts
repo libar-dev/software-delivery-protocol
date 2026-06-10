@@ -1,7 +1,7 @@
 import {
-  anchorImplementation,
   authoredEdgeTypes,
-  implAnchorId,
+  codeAnchor,
+  codeAnchorId,
   pack,
   packId,
   ref,
@@ -28,8 +28,8 @@ const model = {
     }),
   ],
   anchors: [
-    anchorImplementation({
-      id: implAnchorId("impl:orders.create-order-use-case"),
+    codeAnchor({
+      id: codeAnchorId("impl:orders.create-order-use-case"),
       satisfies: ref("spec:orders.create-order"),
     }),
   ],

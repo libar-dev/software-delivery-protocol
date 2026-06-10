@@ -124,6 +124,160 @@ describe("extraction corpora", () => {
   });
 });
 
+/**
+ * The anchored-layer corpora (Slice 2): anchor constants in `*.ts` source files, committed
+ * defused as `*.ts.txt`. Each pins one outcome, should-fail / should-pass style (`05` §5).
+ */
+describe("anchor extraction corpora", () => {
+  it("anchored-binding: the full ladder — anchored edges and delivery facts per `02` §2", () => {
+    const result = extract({ root: corpusRoot("anchored-binding") });
+
+    expect(result.report.findings).toEqual([]);
+    expect(result.model.anchors).toHaveLength(2);
+
+    const anchoredEdges = result.graph.edges.filter((edge) => edge.claim === "anchored");
+    expect(anchoredEdges).toEqual(
+      expect.arrayContaining([
+        {
+          from: "impl:orders.anchored-parent-use-case",
+          type: "satisfies",
+          to: "spec:orders.anchored-parent",
+          claim: "anchored",
+        },
+        {
+          from: "test:orders.anchored-parent.example",
+          type: "verifies",
+          to: "spec:orders.anchored-parent.example",
+          claim: "anchored",
+        },
+      ]),
+    );
+    expect(anchoredEdges).toHaveLength(2);
+
+    const factsById = new Map(
+      result.graph.nodes
+        .filter((node) => node.nodeType === "Primitive")
+        .map((node) => [node.id, node.deliveryFacts ?? []]),
+    );
+    // The parent: implemented from the resolving satisfies binding, has-verifier from the
+    // enabled example; the example: has-verifier from the test anchored directly to it.
+    expect(factsById.get("spec:orders.anchored-parent")).toEqual(["implemented", "has-verifier"]);
+    expect(factsById.get("spec:orders.anchored-parent.example")).toEqual(["has-verifier"]);
+
+    const codeNode = result.graph.nodes.find(
+      (node) => node.id === "impl:orders.anchored-parent-use-case",
+    );
+    const testNode = result.graph.nodes.find(
+      (node) => node.id === "test:orders.anchored-parent.example",
+    );
+    expect(codeNode?.nodeType).toBe("CodeNode");
+    expect(testNode?.nodeType).toBe("Anchor");
+  });
+
+  it("unenabled-verifier: a declared verifies without a test binding confers nothing (MD-7)", () => {
+    const result = extract({ root: corpusRoot("unenabled-verifier") });
+
+    expect(result.report.findings).toEqual([]);
+
+    for (const node of result.graph.nodes) {
+      if (node.nodeType === "Primitive") {
+        expect(node.deliveryFacts ?? []).toEqual([]);
+      }
+    }
+  });
+
+  it("invalid-non-static-anchor: envelope hard error; the static sibling still extracts (L3)", () => {
+    const result = extract({ root: corpusRoot("invalid-non-static-anchor") });
+    const errors = result.report.findings.filter((finding) => finding.severity === "error");
+
+    expect(errors).toHaveLength(1);
+    expect(errors[0]?.validatorId).toBe(extractFindingIds.nonStaticEnvelope);
+    expect(errors[0]?.path).toBe("satisfies");
+    expect(result.model.anchors.map((entry) => entry.id)).toEqual([
+      "impl:orders.static-sibling-binding",
+    ]);
+  });
+
+  it("invalid-anchor-namespace: a code anchor with a test: id is an invalid-id hard error", () => {
+    const result = extract({ root: corpusRoot("invalid-anchor-namespace") });
+    const errors = result.report.findings.filter((finding) => finding.severity === "error");
+
+    expect(errors).toHaveLength(1);
+    expect(errors[0]?.validatorId).toBe(extractFindingIds.invalidId);
+    expect(result.model.anchors).toEqual([]);
+  });
+
+  it("duplicate-anchor-id: both sites reported (L2); neither enters the graph; the model records both", () => {
+    const result = extract({ root: corpusRoot("duplicate-anchor-id") });
+    const errors = result.report.findings.filter(
+      (finding) => finding.validatorId === extractFindingIds.duplicateId,
+    );
+
+    expect(errors).toHaveLength(2);
+    expect(new Set(errors.map((finding) => finding.file)).size).toBe(2);
+    expect(errors.every((finding) => finding.subjectId === "impl:orders.duplicate-binding")).toBe(
+      true,
+    );
+    expect(result.graph.nodes).toEqual([]);
+    expect(result.model.anchors).toHaveLength(2);
+  });
+
+  it("dangling-anchor: the edge is emitted, no fact is conferred, and the model validator flags it", () => {
+    const result = extract({ root: corpusRoot("dangling-anchor") });
+
+    expect(result.report.findings).toEqual([]);
+    expect(result.graph.edges).toContainEqual({
+      from: "impl:orders.dangling-binding",
+      type: "satisfies",
+      to: "spec:orders.missing-implementation-target",
+      claim: "anchored",
+    });
+    expect(
+      result.graph.nodes.some(
+        (node) => node.nodeType === "Primitive" && (node.deliveryFacts ?? []).length > 0,
+      ),
+    ).toBe(false);
+
+    const modelFindings = validateAuthoredModel(result.model).findings;
+    expect(
+      modelFindings.some((finding) => finding.validatorId === "conformance/dangling-references"),
+    ).toBe(true);
+  });
+
+  it("misplaced-anchor: authoring calls outside their surface warn and are not extracted", () => {
+    const result = extract({ root: corpusRoot("misplaced-anchor") });
+    const warnings = result.report.findings.filter((finding) => finding.severity === "warning");
+
+    expect(result.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
+    expect(warnings).toHaveLength(2);
+    expect(
+      warnings.every((finding) => finding.validatorId === extractFindingIds.misplacedAuthoring),
+    ).toBe(true);
+    expect(result.model.anchors).toEqual([]);
+    expect(result.model.specs).toEqual([]);
+  });
+
+  it("non-static-anchor-label: the label drops with a warning; the binding survives whole", () => {
+    const result = extract({ root: corpusRoot("non-static-anchor-label") });
+    const warnings = result.report.findings.filter((finding) => finding.severity === "warning");
+
+    expect(result.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]?.validatorId).toBe(extractFindingIds.nonStaticSection);
+    expect(warnings[0]?.path).toBe("label");
+
+    const [anchor] = result.model.anchors;
+    expect(anchor?.id).toBe("impl:orders.non-static-label");
+    expect(anchor?.label).toBeUndefined();
+    expect(result.graph.edges).toContainEqual({
+      from: "impl:orders.non-static-label",
+      type: "satisfies",
+      to: "spec:orders.labelled-target",
+      claim: "anchored",
+    });
+  });
+});
+
 describe("determinism self-check (rebuild twice, byte-compare — distinct from the golden oracle)", () => {
   it("two independent extractions of the example serialize byte-identically", () => {
     const first = serializeGraph(extract({ root: exampleRoot }).graph);

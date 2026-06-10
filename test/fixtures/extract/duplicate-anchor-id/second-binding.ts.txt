@@ -1,0 +1,8 @@
+import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+
+// The same anchor id reified from a second site (L2 — ambiguity is loud): both sites are
+// reported and neither enters the graph.
+export const secondDuplicateBinding = codeAnchor({
+  id: codeAnchorId("impl:orders.duplicate-binding"),
+  satisfies: ref("spec:orders.duplicate-target"),
+});

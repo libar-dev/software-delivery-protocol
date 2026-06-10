@@ -1,0 +1,14 @@
+import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+
+// Envelope hard error: the satisfies target is assembled through a substitution template, so the
+// binding identity is non-static — the anchor is not extracted and the build fails.
+export const nonStaticTargetAnchor = codeAnchor({
+  id: codeAnchorId("impl:orders.non-static-target"),
+  satisfies: ref(`spec:orders.${"assembled"}`),
+});
+
+// The static sibling: one bad anchor never poisons the rest of the corpus (L3).
+export const staticSiblingAnchor = codeAnchor({
+  id: codeAnchorId("impl:orders.static-sibling-binding"),
+  satisfies: ref("spec:orders.static-anchor-target"),
+});

@@ -15,7 +15,8 @@ Usage:
   sdp validate
 
 Commands:
-  build      Extract every *.sdp.ts under root (default: cwd) into <root>/generated/graph.json.
+  build      Extract every *.sdp.ts under root (default: cwd), plus the anchor constants in the
+             other *.ts/*.tsx source files, into <root>/generated/graph.json.
              Exits 1 and writes nothing on any hard error — the emitted artifact is
              all-or-nothing. --check-clean additionally runs a second independent extraction
              and fails on any byte divergence (the determinism self-check).
@@ -80,7 +81,7 @@ function runBuild(args: readonly string[], output: CliOutput): number {
 
   const errorCount = findings.filter((finding) => finding.severity === "error").length;
   const warningCount = findings.length - errorCount;
-  const summary = `${String(result.model.specs.length)} specs · ${String(result.model.packs.length)} packs → ${String(result.graph.nodes.length)} nodes · ${String(result.graph.edges.length)} edges (${String(errorCount)} errors, ${String(warningCount)} warnings)\n`;
+  const summary = `${String(result.model.specs.length)} specs · ${String(result.model.packs.length)} packs · ${String(result.model.anchors.length)} anchors → ${String(result.graph.nodes.length)} nodes · ${String(result.graph.edges.length)} edges (${String(errorCount)} errors, ${String(warningCount)} warnings)\n`;
   const graphPath = join(resolvedRoot, "generated", "graph.json");
 
   // A stale projection is as dishonest as a partial one: a failed build must not leave a previous

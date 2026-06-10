@@ -7,7 +7,7 @@ import type {
   SourceFile,
 } from "ts-morph";
 
-import { parseId } from "../ids.js";
+import { CODE_ANCHOR_NAMESPACES, parseId } from "../ids.js";
 import { SPEC_ALTITUDES, SPEC_KINDS, SPEC_READINESS } from "../model/descriptors.js";
 import { SPEC_RELATION_TYPES } from "../model/relations.js";
 import type { Finding, Severity } from "../validate/contracts.js";
@@ -22,11 +22,16 @@ import type { Finding, Severity } from "../validate/contracts.js";
 export const PROTOCOL_MODULE_SPECIFIER = "@libar-dev/software-delivery-protocol";
 
 /**
- * The five extraction finding ids, pinned. Two tiers (`03` §2): envelope failures
- * (`non-static-envelope` · `invalid-id` · `duplicate-id`) are hard errors — the spec/pack is not
- * extracted and the build fails; content failures (`non-static-section` ·
- * `unrecognized-statement`) degrade loudly — one property or statement is dropped and the rest
- * survives (graceful partial extraction, L3).
+ * The extraction finding ids, pinned. Two tiers (`03` §2), covering both authored surfaces (spec
+ * files and anchor constants): envelope failures (`non-static-envelope` · `invalid-id` ·
+ * `duplicate-id`) are hard errors — the carrier is not extracted and the build fails; content
+ * failures (`non-static-section` · `unrecognized-statement` · `misplaced-authoring`) degrade
+ * loudly — one property, statement, or call is dropped and the rest survives (graceful partial
+ * extraction, L3). The content-tier ids name the *tier*, not the artifact: `non-static-section`
+ * also covers an anchor's degradable `label`, and `misplaced-authoring` covers any protocol
+ * authoring call outside its recognized surface (an anchor builder not in top-level-const
+ * position; a `spec(…)`/`pack(…)` call in a non-`.sdp.ts` file) — a binding the author believes
+ * exists must never silently fall out of the graph (L2).
  */
 export const extractFindingIds = {
   nonStaticEnvelope: "extract/non-static-envelope",
@@ -34,12 +39,23 @@ export const extractFindingIds = {
   duplicateId: "extract/duplicate-id",
   nonStaticSection: "extract/non-static-section",
   unrecognizedStatement: "extract/unrecognized-statement",
+  misplacedAuthoring: "extract/misplaced-authoring",
 } as const;
 
-const ID_UNWRAP_BUILDERS: ReadonlyMap<string, string> = new Map([
-  ["specId", "spec"],
-  ["packId", "pack"],
-  ["ref", "spec"],
+/**
+ * Builders whose single string-literal argument reifies to an id, mapped to the namespaces that
+ * builder accepts (its own runtime contract — the extractor never evaluates, so it re-states the
+ * check statically).
+ */
+export const ID_UNWRAP_BUILDERS: ReadonlyMap<string, readonly string[]> = new Map<
+  string,
+  readonly string[]
+>([
+  ["specId", ["spec"]],
+  ["packId", ["pack"]],
+  ["ref", ["spec"]],
+  ["codeAnchorId", CODE_ANCHOR_NAMESPACES],
+  ["testAnchorId", ["test"]],
 ]);
 
 const RELATION_BUILDER_NAMES = new Set<string>(SPEC_RELATION_TYPES);
@@ -97,7 +113,7 @@ interface StaticFailure {
   readonly reason: string;
 }
 
-type StaticResult =
+export type StaticResult =
   | { readonly ok: true; readonly value: unknown }
   | { readonly ok: false; readonly failure: StaticFailure };
 
@@ -110,7 +126,7 @@ function describeNonStatic(node: Node): string {
 }
 
 /** `as const` and parentheses are transparent; every other wrapper is non-static. */
-function unwrapTransparent(node: Node): Node {
+export function unwrapTransparent(node: Node): Node {
   let current = node;
 
   for (;;) {
@@ -128,9 +144,9 @@ function unwrapTransparent(node: Node): Node {
   }
 }
 
-type ProtocolBindings = ReadonlyMap<string, string>;
+export type ProtocolBindings = ReadonlyMap<string, string>;
 
-function collectProtocolBindings(sourceFile: SourceFile): ProtocolBindings {
+export function collectProtocolBindings(sourceFile: SourceFile): ProtocolBindings {
   const bindings = new Map<string, string>();
 
   for (const importDeclaration of sourceFile.getImportDeclarations()) {
@@ -148,12 +164,12 @@ function collectProtocolBindings(sourceFile: SourceFile): ProtocolBindings {
   return bindings;
 }
 
-interface ResolvedBuilderCall {
+export interface ResolvedBuilderCall {
   readonly call: CallExpression;
   readonly builder: string;
 }
 
-function resolveBuilderCall(
+export function resolveBuilderCall(
   node: Node,
   bindings: ProtocolBindings,
 ): ResolvedBuilderCall | undefined {
@@ -174,7 +190,7 @@ function resolveBuilderCall(
   return builder === undefined ? undefined : { call: unwrapped, builder };
 }
 
-function readPropertyName(property: PropertyAssignment): string | undefined {
+export function readPropertyName(property: PropertyAssignment): string | undefined {
   const nameNode = property.getNameNode();
 
   if (Node.isIdentifier(nameNode)) {
@@ -188,7 +204,7 @@ function readPropertyName(property: PropertyAssignment): string | undefined {
   return undefined;
 }
 
-function reifyStaticString(node: Node, path: string): StaticResult {
+export function reifyStaticString(node: Node, path: string): StaticResult {
   const unwrapped = unwrapTransparent(node);
 
   if (Node.isStringLiteral(unwrapped) || Node.isNoSubstitutionTemplateLiteral(unwrapped)) {
@@ -198,7 +214,7 @@ function reifyStaticString(node: Node, path: string): StaticResult {
   return staticFailure(unwrapped, path, describeNonStatic(unwrapped));
 }
 
-type IdReification =
+export type IdReification =
   | { readonly ok: true; readonly id: string }
   | {
       readonly ok: false;
@@ -208,13 +224,14 @@ type IdReification =
     };
 
 /**
- * An id slot accepts a string literal or an id-builder unwrap (`specId` / `packId` / `ref` around
- * a string literal); the reified string must clear the `parseId` grammar and carry the slot's
- * namespace — the graph is never keyed on a malformed id.
+ * An id slot accepts a string literal or an id-builder unwrap (`specId` / `packId` / `ref` /
+ * `codeAnchorId` / `testAnchorId` around a string literal); the reified string must clear the
+ * `parseId` grammar and carry one of the slot's namespaces — the graph is never keyed on a
+ * malformed id.
  */
-function reifyStaticIdExpression(
+export function reifyStaticIdExpression(
   node: Node,
-  expectedNamespace: string,
+  expectedNamespaces: readonly string[],
   bindings: ProtocolBindings,
   path: string,
 ): IdReification {
@@ -247,12 +264,17 @@ function reifyStaticIdExpression(
   try {
     const parsed = parseId(idText);
 
-    if (parsed.namespace !== expectedNamespace) {
+    if (!expectedNamespaces.includes(parsed.namespace)) {
+      const expectedLabel =
+        expectedNamespaces.length === 1
+          ? `"${expectedNamespaces[0] ?? ""}" is required`
+          : `one of ${expectedNamespaces.map((entry) => `"${entry}"`).join(" · ")} is required`;
+
       return {
         ok: false,
         kind: "invalid",
         line,
-        reason: `id "${idText}" carries namespace "${parsed.namespace}" where "${expectedNamespace}" is required`,
+        reason: `id "${idText}" carries namespace "${parsed.namespace}" where ${expectedLabel}`,
       };
     }
   } catch (error) {
@@ -310,9 +332,9 @@ function reifyStaticValue(node: Node, path: string, bindings: ProtocolBindings):
   const builderCall = resolveBuilderCall(unwrapped, bindings);
 
   if (builderCall !== undefined) {
-    const expectedNamespace = ID_UNWRAP_BUILDERS.get(builderCall.builder);
+    const expectedNamespaces = ID_UNWRAP_BUILDERS.get(builderCall.builder);
 
-    if (expectedNamespace === undefined) {
+    if (expectedNamespaces === undefined) {
       return staticFailure(
         unwrapped,
         path,
@@ -320,7 +342,7 @@ function reifyStaticValue(node: Node, path: string, bindings: ProtocolBindings):
       );
     }
 
-    const idResult = reifyStaticIdExpression(unwrapped, expectedNamespace, bindings, path);
+    const idResult = reifyStaticIdExpression(unwrapped, expectedNamespaces, bindings, path);
 
     if (!idResult.ok) {
       return { ok: false, failure: { path, line: idResult.line, reason: idResult.reason } };
@@ -496,9 +518,9 @@ interface CallReification<TEntry> {
   readonly findings: readonly Finding[];
 }
 
-function peekId(
+export function peekId(
   objectLiteral: ObjectLiteralExpression,
-  expectedNamespace: string,
+  expectedNamespaces: readonly string[],
   bindings: ProtocolBindings,
 ): string | undefined {
   for (const property of objectLiteral.getProperties()) {
@@ -512,7 +534,7 @@ function peekId(
       return undefined;
     }
 
-    const result = reifyStaticIdExpression(initializer, expectedNamespace, bindings, "id");
+    const result = reifyStaticIdExpression(initializer, expectedNamespaces, bindings, "id");
 
     return result.ok ? result.id : undefined;
   }
@@ -671,7 +693,7 @@ function reifyRelations(
       continue;
     }
 
-    const idResult = reifyStaticIdExpression(target, "spec", bindings, `${entryPath}.target`);
+    const idResult = reifyStaticIdExpression(target, ["spec"], bindings, `${entryPath}.target`);
 
     if (!idResult.ok) {
       appendIdFinding(idResult, file, subjectId, `${entryPath}.target`, findings);
@@ -709,7 +731,7 @@ function reifySpecCall(
     return { findings };
   }
 
-  const subjectId = peekId(objectLiteral, "spec", bindings);
+  const subjectId = peekId(objectLiteral, ["spec"], bindings);
   const data: Record<string, unknown> = {};
   let envelopeOk = true;
 
@@ -756,7 +778,7 @@ function reifySpecCall(
     }
 
     if (name === "id") {
-      const idResult = reifyStaticIdExpression(initializer, "spec", bindings, "id");
+      const idResult = reifyStaticIdExpression(initializer, ["spec"], bindings, "id");
 
       if (!idResult.ok) {
         appendIdFinding(idResult, file, subjectId, "id", findings);
@@ -923,7 +945,7 @@ function reifyIdArray(
 
   for (const [index, element] of unwrapped.getElements().entries()) {
     const entryPath = `${fieldName}[${String(index)}]`;
-    const idResult = reifyStaticIdExpression(element, "spec", bindings, entryPath);
+    const idResult = reifyStaticIdExpression(element, ["spec"], bindings, entryPath);
 
     if (!idResult.ok) {
       appendIdFinding(idResult, file, subjectId, entryPath, findings);
@@ -949,7 +971,7 @@ function reifyPackCall(
     return { findings };
   }
 
-  const subjectId = peekId(objectLiteral, "pack", bindings);
+  const subjectId = peekId(objectLiteral, ["pack"], bindings);
   const data: Record<string, unknown> = {};
   let envelopeOk = true;
 
@@ -996,7 +1018,7 @@ function reifyPackCall(
     }
 
     if (name === "id") {
-      const idResult = reifyStaticIdExpression(initializer, "pack", bindings, "id");
+      const idResult = reifyStaticIdExpression(initializer, ["pack"], bindings, "id");
 
       if (!idResult.ok) {
         appendIdFinding(idResult, file, subjectId, "id", findings);

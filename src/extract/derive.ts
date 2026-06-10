@@ -1,5 +1,8 @@
 import { schemaVersion } from "../graph/schema.js";
 import type {
+  AnchorNode,
+  CodeNode,
+  DeliveryFactName,
   GraphEdge,
   GraphEdgeType,
   GraphNode,
@@ -10,6 +13,7 @@ import type {
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import { SPEC_SECTION_NAMES } from "../model/sections.js";
 import type { SpecSections } from "../model/sections.js";
+import type { ReifiedAnchor } from "./anchors.js";
 import type { ReifiedPack, ReifiedSpec } from "./reify.js";
 
 interface ReifiedRelation {
@@ -65,20 +69,125 @@ function derivePackNode(entry: ReifiedPack): PackNode {
   };
 }
 
+function deriveAnchorNode(entry: ReifiedAnchor): AnchorNode | CodeNode {
+  const label = entry.data.label;
+
+  if (entry.flavor === "code") {
+    return {
+      id: entry.id,
+      nodeType: "CodeNode",
+      claim: "anchored",
+      ...(typeof label === "string" ? { label } : {}),
+      file: entry.file,
+      line: entry.line,
+    };
+  }
+
+  return {
+    id: entry.id,
+    nodeType: "Anchor",
+    claim: "anchored",
+    ...(typeof label === "string" ? { label } : {}),
+    file: entry.file,
+    line: entry.line,
+  };
+}
+
 /**
- * The declared layer of the one graph: one `Primitive` node per spec, one `Pack` node per pack,
- * one edge per authored relation, and one derived `belongsTo` edge per manifest entry (spec →
- * pack). `belongsTo` is a deterministic re-expression of the declared manifest, so it inherits its
- * source's claim — there is no 4th claim (`03` §3). A dangling target is emitted, not dropped: the
- * unresolved id itself is the sentinel, and the referential-integrity gate rides Slice 3.
+ * Delivery facts, computed exactly per `02` §2 — derived from edges, never authored:
  *
- * Delivery facts stay absent: no anchored edges exist before Slice 2, and a declared `verifies`
- * relation confers nothing — `has-verifier` requires an enabled verifier (a resolvable test
- * binding; binding, never liveness — MD-7).
+ * - `implemented` — ≥1 `satisfies` edge resolves to the spec (its node exists). A dangling
+ *   binding confers nothing.
+ * - `has-verifier` — an **anchored** `verifies` edge resolves to the spec directly (a test
+ *   anchored to the spec), or a **declared** `verifies` edge from an *enabled* example resolves to
+ *   it — enabled = an `example`-kind spec that is itself the target of a resolving anchored
+ *   `verifies` edge. Direct, per-spec, never propagated up `refines`; a declared `verifies` from a
+ *   verifier that is not enabled confers nothing (binding, never liveness — MD-7).
+ * - `observed` — never computed (aspirational, the liveness rung).
+ *
+ * Facts are listed in ladder order (`implemented` → `has-verifier`).
+ */
+function computeDeliveryFacts(
+  nodes: readonly GraphNode[],
+  edges: readonly GraphEdge[],
+): ReadonlyMap<string, readonly DeliveryFactName[]> {
+  const primitivesById = new Map<string, PrimitiveNode>();
+
+  for (const node of nodes) {
+    if (node.nodeType === "Primitive") {
+      primitivesById.set(node.id, node);
+    }
+  }
+
+  const implemented = new Set<string>();
+  const anchorVerified = new Set<string>();
+
+  for (const edge of edges) {
+    if (!primitivesById.has(edge.to)) {
+      continue;
+    }
+
+    if (edge.type === "satisfies") {
+      implemented.add(edge.to);
+    }
+
+    if (edge.type === "verifies" && edge.claim === "anchored") {
+      anchorVerified.add(edge.to);
+    }
+  }
+
+  const hasVerifier = new Set<string>(anchorVerified);
+
+  for (const edge of edges) {
+    if (edge.type !== "verifies" || edge.claim !== "declared" || !primitivesById.has(edge.to)) {
+      continue;
+    }
+
+    const verifier = primitivesById.get(edge.from);
+    const verifierIsEnabledExample =
+      verifier?.specKind === "example" && anchorVerified.has(verifier.id);
+
+    if (verifierIsEnabledExample) {
+      hasVerifier.add(edge.to);
+    }
+  }
+
+  const facts = new Map<string, readonly DeliveryFactName[]>();
+
+  for (const id of primitivesById.keys()) {
+    const ladder: DeliveryFactName[] = [];
+
+    if (implemented.has(id)) {
+      ladder.push("implemented");
+    }
+
+    if (hasVerifier.has(id)) {
+      ladder.push("has-verifier");
+    }
+
+    if (ladder.length > 0) {
+      facts.set(id, ladder);
+    }
+  }
+
+  return facts;
+}
+
+/**
+ * The declared + anchored layers of the one graph: one `Primitive` node per spec, one `Pack` node
+ * per pack, one binding node per anchor (`CodeNode` for a code anchor, `Anchor` for a test anchor
+ * — the `03` §1 edge contract), one edge per authored relation, one derived `belongsTo` per
+ * manifest entry, and one anchored `satisfies`/`verifies` edge per anchor. `belongsTo` is a
+ * deterministic re-expression of the declared manifest, so it inherits its source's claim — there
+ * is no 4th claim (`03` §3). A dangling target is emitted, not dropped: the unresolved id itself
+ * is the sentinel, and the referential-integrity gate rides Slice 3 — but resolution does gate the
+ * delivery facts (see `computeDeliveryFacts`). Zero `inferred` claims until the Slice-4 consumer
+ * defines the minimal advisory set.
  */
 export function deriveGraph(
   specs: readonly ReifiedSpec[],
   packs: readonly ReifiedPack[],
+  anchors: readonly ReifiedAnchor[],
 ): GraphSchema {
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
@@ -117,5 +226,32 @@ export function deriveGraph(
     }
   }
 
-  return { schemaVersion, nodes, edges };
+  for (const entry of anchors) {
+    nodes.push(deriveAnchorNode(entry));
+
+    const targetField = entry.flavor === "code" ? "satisfies" : "verifies";
+    const target = entry.data[targetField];
+
+    if (typeof target === "string") {
+      edges.push({
+        from: entry.id,
+        type: targetField,
+        to: target,
+        claim: "anchored",
+      });
+    }
+  }
+
+  const deliveryFacts = computeDeliveryFacts(nodes, edges);
+  const decoratedNodes = nodes.map((node) => {
+    if (node.nodeType !== "Primitive") {
+      return node;
+    }
+
+    const facts = deliveryFacts.get(node.id);
+
+    return facts === undefined ? node : { ...node, deliveryFacts: facts };
+  });
+
+  return { schemaVersion, nodes: decoratedNodes, edges };
 }

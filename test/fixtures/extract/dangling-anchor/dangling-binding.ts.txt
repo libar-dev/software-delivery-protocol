@@ -1,0 +1,9 @@
+import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+
+// The satisfies target resolves to no spec: the edge is emitted (the unresolved id is the
+// sentinel), the pre-graph validator flags it, and no implemented fact is conferred —
+// resolution gates the delivery fact.
+export const danglingBindingAnchor = codeAnchor({
+  id: codeAnchorId("impl:orders.dangling-binding"),
+  satisfies: ref("spec:orders.missing-implementation-target"),
+});

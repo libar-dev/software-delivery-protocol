@@ -1,7 +1,7 @@
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSections } from "../model/sections.js";
 
-export const schemaVersion = "0.2.0" as const;
+export const schemaVersion = "0.3.0" as const;
 
 export const graphNodeTypes = ["Primitive", "Pack", "Anchor", "CodeNode"] as const;
 export type GraphNodeType = (typeof graphNodeTypes)[number];
@@ -64,12 +64,24 @@ export interface PackNode extends GraphNodeBase {
   readonly file: string;
 }
 
+/**
+ * The test anchor's node (the `verifies` edge contract row: Anchor (test) → Primitive, anchored).
+ * Binding nodes carry `file` + `line`: the line *is* the binding location — what a Design Review
+ * links to (consumers may link to source locations recorded in the graph, R2). `Primitive`/`Pack`
+ * nodes stay line-free so the golden stays robust to spec-file editing.
+ */
 export interface AnchorNode extends GraphNodeBase {
   readonly nodeType: "Anchor";
+  readonly label?: string;
+  /** Extraction-root-relative, POSIX separators, no leading `./` — never absolute (JS-C3). */
+  readonly file: string;
+  readonly line: number;
 }
 
+/** A code anchor's node (the `satisfies` edge contract row: CodeNode → Primitive, anchored). */
 export interface CodeNode extends GraphNodeBase {
   readonly nodeType: "CodeNode";
+  readonly label?: string;
   readonly file: string;
   readonly line?: number;
 }

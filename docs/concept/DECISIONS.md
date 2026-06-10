@@ -28,7 +28,7 @@ specs at the post-Slice-1 fold, under the future spec id reserved here.
 | MD-4 | one primitive, named coordinates | durable | `spec:protocol.decisions.one-primitive` |
 | MD-5 | the protocol naming | durable | `spec:protocol.decisions.protocol-naming` |
 | MD-7 | binding, never liveness | durable | `spec:protocol.decisions.binding-not-liveness` |
-| MD-8 | the generic `codeAnchor` | folds at Slice 2 → doc-comment on the `codeAnchor` builder | — |
+| MD-8 | the generic `codeAnchor` | **folded** (Slice 2) → doc-comment on the `codeAnchor` builder (`src/model/anchors.ts`) | — |
 | MD-9 | the open-questions home | folds at the fold (lives in `sections.ts`, the floor, `02` §3) | — |
 | MD-10 | content-only sections | durable | `spec:protocol.decisions.content-only-sections` |
 | MD-11 | the typing law | durable | `spec:protocol.decisions.typing-law` |
@@ -184,7 +184,7 @@ brief have since been **deleted** (consolidated); the **sole canonical base is
 > review artifacts into tracked `reviews/`. The grill (`plans/03`) now opens onto a lean base and only
 > genuinely-open decisions.
 
-### MD-8 — Generic-anchor DSL shape: one `codeAnchor` over the implementation-flavored code namespaces  [ACCEPTED 2026-06-10]
+### MD-8 — Generic-anchor DSL shape: one `codeAnchor` over the implementation-flavored code namespaces  [ACCEPTED 2026-06-10 · FOLDED at Slice 2 — the rationale lives on the `codeAnchor` builder doc-comment (`src/model/anchors.ts`); kept as the historical record]
 **Decision.** Generalize `anchorImplementation` into a **`codeAnchor`** builder (plus branded id) accepting the
 implementation-flavored code namespaces — **`impl` / `api` / `component`** — so a *generic* anchor can bind any
 code location (class, function, route, module) as the base requires.

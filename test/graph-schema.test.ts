@@ -10,7 +10,7 @@ import {
 
 describe("graph schema", () => {
   it("exports the graph schema contracts", () => {
-    expect(schemaVersion).toBe("0.2.0");
+    expect(schemaVersion).toBe("0.3.0");
     expect(graphNodeTypes).toEqual(["Primitive", "Pack", "Anchor", "CodeNode"]);
     expect(deliveryFactNames).toEqual(["implemented", "has-verifier", "observed"]);
     expect(derivedEdgeTypes).toEqual(["belongsTo", "satisfies"]);

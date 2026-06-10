@@ -3,8 +3,6 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { createOrderUseCaseAnchor } from "../examples/checkout-v1/src/orders/create-order.use-case.js";
-import { createOrderValidCartTest } from "../examples/checkout-v1/test/orders/create-order.valid-cart.test.js";
 import { extract, extractFindingIds, serializeGraph, validateAuthoredModel } from "../src/index.js";
 
 const exampleRoot = fileURLToPath(new URL("../examples/checkout-v1", import.meta.url));
@@ -59,25 +57,59 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
     }
   });
 
-  it("extracts the pack and honestly shows zero delivery facts at Slice 1", () => {
+  it("extracts the pack and the three anchors (the anchored layer, Slice 2)", () => {
     expect(extraction.model.packs.map((entry) => entry.id)).toEqual(["pack:checkout-v1"]);
-    expect(extraction.model.anchors).toEqual([]);
+    expect(extraction.model.anchors.map((entry) => entry.id).sort()).toEqual([
+      "api:orders.post",
+      "impl:orders.create-order-use-case",
+      "test:orders.create-order.valid-cart",
+    ]);
 
-    for (const node of extraction.graph.nodes) {
-      if (node.nodeType === "Primitive") {
-        expect(node.deliveryFacts ?? []).toEqual([]);
-      }
-    }
-
-    expect(extraction.graph.edges.every((edge) => edge.claim === "declared")).toBe(true);
+    const anchoredEdges = extraction.graph.edges.filter((edge) => edge.claim === "anchored");
+    expect(anchoredEdges).toEqual(
+      expect.arrayContaining([
+        {
+          from: "impl:orders.create-order-use-case",
+          type: "satisfies",
+          to: "spec:orders.create-order",
+          claim: "anchored",
+        },
+        {
+          from: "api:orders.post",
+          type: "satisfies",
+          to: "spec:orders.create-order",
+          claim: "anchored",
+        },
+        {
+          from: "test:orders.create-order.valid-cart",
+          type: "verifies",
+          to: "spec:orders.create-order.valid-cart",
+          claim: "anchored",
+        },
+      ]),
+    );
+    expect(anchoredEdges).toHaveLength(3);
   });
 
-  it("keeps the two authored anchors typechecked in place until Slice 2 extracts them", () => {
-    const exampleSpecIds = new Set(extraction.model.specs.map((entry) => entry.id));
+  it("derives the delivery facts honestly: bound specs only, never the unenabled verifier", () => {
+    const factsById = new Map(
+      extraction.graph.nodes
+        .filter((node) => node.nodeType === "Primitive")
+        .map((node) => [node.id, node.deliveryFacts ?? []]),
+    );
 
-    expect(createOrderUseCaseAnchor.id).toBe("impl:orders.create-order-use-case");
-    expect(createOrderValidCartTest.id).toBe("test:orders.create-order.valid-cart");
-    expect(exampleSpecIds.has(createOrderUseCaseAnchor.satisfies)).toBe(true);
-    expect(exampleSpecIds.has(createOrderValidCartTest.verifies)).toBe(true);
+    // Two satisfies bindings + the enabled valid-cart example verifying it (`02` §2).
+    expect(factsById.get("spec:orders.create-order")).toEqual(["implemented", "has-verifier"]);
+    // The test anchor verifies the example directly — the example earns its own has-verifier.
+    expect(factsById.get("spec:orders.create-order.valid-cart")).toEqual(["has-verifier"]);
+    // The invalid-cart example declares verifies but has no test anchor: not an enabled
+    // verifier — it confers nothing and carries nothing (binding, never liveness — MD-7).
+    expect(factsById.get("spec:orders.create-order.invalid-cart")).toEqual([]);
+
+    for (const [id, facts] of factsById) {
+      if (id !== "spec:orders.create-order" && id !== "spec:orders.create-order.valid-cart") {
+        expect(facts).toEqual([]);
+      }
+    }
   });
 });

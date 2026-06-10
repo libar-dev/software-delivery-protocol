@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  anchorImplementation,
+  codeAnchor,
+  codeAnchorId,
   dependsOn,
-  implAnchorId,
   pack,
   packId,
   ref,
@@ -98,8 +98,8 @@ describe("validators", () => {
         }),
       ],
       anchors: [
-        anchorImplementation({
-          id: implAnchorId("impl:orders.create-order-use-case"),
+        codeAnchor({
+          id: codeAnchorId("impl:orders.create-order-use-case"),
           satisfies: anchorTarget,
         }),
         specTest({
@@ -207,8 +207,8 @@ describe("validators", () => {
       ],
       packs: [],
       anchors: [
-        anchorImplementation({
-          id: implAnchorId("impl:orders.undefined-anchor"),
+        codeAnchor({
+          id: codeAnchorId("impl:orders.undefined-anchor"),
           satisfies: ref("spec:orders.undefined-anchor-target"),
         }),
       ],
@@ -251,8 +251,8 @@ describe("validators", () => {
         }),
       ],
       anchors: [
-        anchorImplementation({
-          id: implAnchorId("impl:orders.create-order-use-case"),
+        codeAnchor({
+          id: codeAnchorId("impl:orders.create-order-use-case"),
           satisfies: createOrder.id,
         }),
         specTest({

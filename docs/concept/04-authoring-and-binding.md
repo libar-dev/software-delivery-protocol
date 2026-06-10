@@ -75,14 +75,20 @@ export class CreateOrderUseCase { /* ... */ }
 /** @arch.node id=impl:orders.create-order-use-case satisfies=spec:orders.create-order */
 export function createOrder() { /* ... */ }
 
-// Anchor-constant form (equivalent, decorator-free)
-export const _anchor = anchorImplementation({ id: "impl:orders.create-order-use-case", satisfies: ["spec:orders.create-order"] });
+// Anchor-constant form (equivalent, decorator-free) — the one surface the MVP extractor reads
+export const _anchor = codeAnchor({
+  id: codeAnchorId("impl:orders.create-order-use-case"),
+  satisfies: ref("spec:orders.create-order"),
+});
 ```
 
-The three syntaxes are interchangeable Representations; the *binding* is the thing. A team picks one style.
-The builder generalizes to **`codeAnchor`** over the implementation-flavored code namespaces (`impl` / `api` /
-`component`) — the generic `codeAnchor` decision (MD-8), landing with Slice-2 anchor extraction; until then the
-DSL ships the narrower `anchorImplementation`.
+The three syntaxes are interchangeable Representations; the *binding* is the thing. A team picks one style;
+the MVP extracts the **anchor-constant form** (a top-level `const` initialized with the builder call) — the
+decorator and JSDoc forms remain unextracted Representations. The builder is the generic **`codeAnchor`**
+over the implementation-flavored code namespaces (`impl` / `api` / `component`) — the generic `codeAnchor`
+decision (MD-8, folded into the builder's doc-comment in `src/model/anchors.ts`). One binding target per
+anchor (two bindings are two anchors); the decorator sketch above shows an array form that is a possible
+later Representation, not the landed signature.
 
 ### Anchors assert a binding — never intent (P9/P10)
 

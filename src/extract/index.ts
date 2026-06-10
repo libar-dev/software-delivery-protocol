@@ -3,13 +3,16 @@ import { readFileSync } from "node:fs";
 import { Project } from "ts-morph";
 
 import type { GraphSchema } from "../graph/schema.js";
+import type { Anchor } from "../model/anchors.js";
 import type { Pack } from "../model/pack.js";
 import type { Spec } from "../model/spec.js";
 import type { AuthoredModel } from "../validate/authored-model.js";
 import type { Finding, ValidationReport } from "../validate/contracts.js";
+import { reifyAnchorSourceFile } from "./anchors.js";
+import type { ReifiedAnchor } from "./anchors.js";
 import { deriveGraph } from "./derive.js";
-import { discoverSpecFiles } from "./discover.js";
-import { extractFindingIds, reifySourceFile } from "./reify.js";
+import { discoverFiles } from "./discover.js";
+import { PROTOCOL_MODULE_SPECIFIER, extractFindingIds, reifySourceFile } from "./reify.js";
 import type { ReifiedPack, ReifiedSpec } from "./reify.js";
 
 export { PROTOCOL_MODULE_SPECIFIER, extractFindingIds } from "./reify.js";
@@ -18,7 +21,11 @@ export { serializeGraph } from "./serialize.js";
 export const extractValidatorId = "extract";
 
 export interface ExtractOptions {
-  /** The extraction root: every `*.sdp.ts` below it (minus tooling output) is read. */
+  /**
+   * The extraction root: every `*.sdp.ts` below it (minus tooling output) is read as the declared
+   * layer, and every other `*.ts`/`*.tsx` source file is swept for anchor constants (the anchored
+   * layer).
+   */
   readonly root: string;
 }
 
@@ -32,9 +39,9 @@ export interface ExtractionResult {
    */
   readonly report: ValidationReport;
   /**
-   * The MD-14 Slice-1 bridge: the extractor now feeds the existing pre-graph floor checks through
-   * this `AuthoredModel`; it dissolves at the Slice-3 re-key that points the validators at the
-   * graph. Duplicated-id carriers stay in the model (truthful record of what was authored) but are
+   * The MD-14 bridge: the extractor feeds the existing pre-graph floor checks through this
+   * `AuthoredModel`; it dissolves at the Slice-3 re-key that points the validators at the graph.
+   * Duplicated-id carriers stay in the model (truthful record of what was authored) but are
    * excluded from the graph, which cannot be keyed on an ambiguous id.
    */
   readonly model: AuthoredModel;
@@ -60,11 +67,12 @@ function sortFindings(findings: readonly Finding[]): readonly Finding[] {
 function findDuplicatedIds(
   specs: readonly ReifiedSpec[],
   packs: readonly ReifiedPack[],
+  anchors: readonly ReifiedAnchor[],
   findings: Finding[],
 ): ReadonlySet<string> {
   const sites = new Map<string, { file: string; line: number }[]>();
 
-  for (const entry of [...specs, ...packs]) {
+  for (const entry of [...specs, ...packs, ...anchors]) {
     const list = sites.get(entry.id) ?? [];
     list.push({ file: entry.file, line: entry.line });
     sites.set(entry.id, list);
@@ -96,20 +104,22 @@ function findDuplicatedIds(
 }
 
 /**
- * The extractor — the producer, the only component that reads source (`03` §1), Slice 1: the
- * declared layer only. Spec files are reified standalone by pure AST reading (no type checker, no
- * tsconfig dependence, no import following — static reification without execution, MD-14), then
- * the one graph is derived. Anchors, `satisfies`/anchored-`verifies` edges, and the inferred layer
- * ride Slice 2; the graph-validator gate rides Slice 3.
+ * The extractor — the producer, the only component that reads source (`03` §1): the declared
+ * layer (spec files, pack manifests) plus the anchored layer (anchor constants in source files).
+ * Files are reified standalone by pure AST reading (no type checker, no tsconfig dependence, no
+ * import following — static reification without execution, MD-14), then the one graph is derived,
+ * delivery facts included. The inferred layer stays empty until its Slice-4 consumer defines the
+ * minimal advisory set; the graph-validator gate rides Slice 3.
  */
 export function extract(options: ExtractOptions): ExtractionResult {
-  const files = discoverSpecFiles(options.root);
+  const files = discoverFiles(options.root);
   const project = new Project({ useInMemoryFileSystem: true });
   const specs: ReifiedSpec[] = [];
   const packs: ReifiedPack[] = [];
+  const anchors: ReifiedAnchor[] = [];
   const findings: Finding[] = [];
 
-  for (const file of files) {
+  for (const file of files.specFiles) {
     const sourceText = readFileSync(file.absolutePath, "utf8");
     const sourceFile = project.createSourceFile(file.relativePath, sourceText);
     const reified = reifySourceFile(sourceFile, file.relativePath);
@@ -118,17 +128,32 @@ export function extract(options: ExtractOptions): ExtractionResult {
     findings.push(...reified.findings);
   }
 
-  const duplicated = findDuplicatedIds(specs, packs, findings);
+  for (const file of files.anchorCandidateFiles) {
+    const sourceText = readFileSync(file.absolutePath, "utf8");
+
+    // Anchors are recognized by import binding, which requires this literal in an import
+    // declaration — so a plain text test soundly skips the AST work for the bulk of source files.
+    if (!sourceText.includes(PROTOCOL_MODULE_SPECIFIER)) {
+      continue;
+    }
+
+    const sourceFile = project.createSourceFile(file.relativePath, sourceText);
+    const reified = reifyAnchorSourceFile(sourceFile, file.relativePath);
+    anchors.push(...reified.anchors);
+    findings.push(...reified.findings);
+  }
+
+  const duplicated = findDuplicatedIds(specs, packs, anchors, findings);
   const graph = deriveGraph(
     specs.filter((entry) => !duplicated.has(entry.id)),
     packs.filter((entry) => !duplicated.has(entry.id)),
+    anchors.filter((entry) => !duplicated.has(entry.id)),
   );
 
   const model: AuthoredModel = {
     specs: specs.map((entry) => entry.data as unknown as Spec),
     packs: packs.map((entry) => entry.data as unknown as Pack),
-    // Anchor extraction rides Slice 2; an empty list is the honest Slice-1 reading.
-    anchors: [],
+    anchors: anchors.map((entry) => entry.data as unknown as Anchor),
   };
 
   return {

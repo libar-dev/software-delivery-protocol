@@ -75,13 +75,15 @@ describe("sdp cli", () => {
 
     expect(exitCode).toBe(0);
     expect(capture.readStderr()).toBe("");
-    expect(capture.readStdout()).toContain("9 specs · 1 packs → 10 nodes · 22 edges");
+    expect(capture.readStdout()).toContain("9 specs · 1 packs · 3 anchors → 13 nodes · 25 edges");
     expect(readdirSync(join(exampleRoot, "generated"))).toEqual(["graph.json"]);
   });
 
   it("builds cleanly with no root argument from the repository root (the default-root path)", () => {
     // The repo itself must stay a clean default root: corpora are committed defused
-    // (*.sdp.ts.txt), so the only *.sdp.ts under the root is the example model.
+    // (*.sdp.ts.txt / *.ts.txt), so the only *.sdp.ts under the root is the example model, and
+    // the anchor sweep finds only the example's anchors (recognition is by import binding — this
+    // repo's own tests import the protocol by relative path, so they bind nothing).
     rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
     const capture = createCaptureOutput();
 
@@ -89,7 +91,7 @@ describe("sdp cli", () => {
 
     expect(exitCode).toBe(0);
     expect(capture.readStderr()).toBe("");
-    expect(capture.readStdout()).toContain("9 specs · 1 packs → 10 nodes · 22 edges");
+    expect(capture.readStdout()).toContain("9 specs · 1 packs · 3 anchors → 13 nodes · 25 edges");
     rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
   });
 

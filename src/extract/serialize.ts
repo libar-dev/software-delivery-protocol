@@ -51,12 +51,16 @@ function canonicalNode(node: GraphNode): Record<string, unknown> {
         id: node.id,
         nodeType: node.nodeType,
         claim: node.claim,
+        ...(node.label === undefined ? {} : { label: node.label }),
+        file: node.file,
+        line: node.line,
       };
     case "CodeNode":
       return {
         id: node.id,
         nodeType: node.nodeType,
         claim: node.claim,
+        ...(node.label === undefined ? {} : { label: node.label }),
         file: node.file,
         ...(node.line === undefined ? {} : { line: node.line }),
       };

@@ -1,4 +1,6 @@
 import type {
+  AnchorNode,
+  CodeNode,
   DeliveryFactName,
   GraphEdge,
   GraphEdgeType,
@@ -21,6 +23,24 @@ const primitiveNode = {
 
 const graphNode = primitiveNode satisfies GraphNode;
 
+// Binding nodes carry their binding location (file + line) — what a Design Review links to (R2).
+const codeNode = {
+  id: "impl:orders.create-order-use-case",
+  nodeType: "CodeNode",
+  claim: "anchored",
+  label: "createOrderFromCart",
+  file: "src/orders/create-order.use-case.ts",
+  line: 23,
+} satisfies CodeNode satisfies GraphNode;
+
+const anchorNode = {
+  id: "test:orders.create-order.valid-cart",
+  nodeType: "Anchor",
+  claim: "anchored",
+  file: "test/orders/create-order.valid-cart.test.ts",
+  line: 3,
+} satisfies AnchorNode satisfies GraphNode;
+
 const graphEdge = {
   from: "impl:orders.create-order-use-case",
   type: "satisfies" satisfies GraphEdgeType,
@@ -29,4 +49,6 @@ const graphEdge = {
 } satisfies GraphEdge;
 
 void graphNode;
+void codeNode;
+void anchorNode;
 void graphEdge;
