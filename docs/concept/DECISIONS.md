@@ -3,7 +3,9 @@
 > A why-focused log of hard-to-reverse decisions about **building the Protocol itself** — distinct from *in-system*
 > decision records (a project's own `kind:"decision"` instances). Its job is to **recapture rationale** so choices
 > stay visible and don't re-smooth into "false settledness." Entries are short and **status-tagged**
-> (`ACCEPTED` / `PROPOSED` / `SUPERSEDED`). Companion to `docs/concept/ubiquitous-language.md` (the language base).
+> (`ACCEPTED` / `PROPOSED` / `SUPERSEDED`). Companion to `docs/concept/ubiquitous-language.md` (the ratified
+> glossary; since the 2026-06-10 Fold-A restructure the model exposition lives in `00`–`07` — historical
+> `base §n` references in the entries below resolve via the §-map in the glossary header).
 
 ---
 
@@ -99,22 +101,25 @@ derived"), not reversals of direction.
 home for approval provenance is **signed git tags** (identity + approved-at, already in git) — not a new authored
 primitive.
 
-### Proposed base refinements (R-series)  [PROPOSED 2026-06-07 · awaiting grilling ratification]
+### Base refinements (R-series)  [R1/R2 ACCEPTED & applied 2026-06-10 (Fold-A) · R3 see below]
 **Context.** The post-Session-1 founding-ideation review surfaced two wording imprecisions in the ratified base.
 The **code already conforms** in both cases; these are language tightenings, so per the working discipline
-(terminology is ratified — *flag*, don't silently edit) they are recorded here as **PROPOSED** and routed to the
-fresh decision-resolution session (`plans/03-decision-resolution-and-base-reconciliation.md` §4) to ratify and
-apply against `docs/concept/ubiquitous-language.md`. They are **not** model changes.
-- **R1 — harmonize "anchor carries identity only" (§2) with "anchored = a human binding" (§4).** §2 says anchors
-  carry "identity only," while §4's `claim` table calls `anchored` "a human binding" — and a binding (it emits a
-  `satisfies`/`verifies` edge) is more than bare identity. Proposed unified phrasing: *"an anchor says 'this code
-  location is the implementation/test binding for this Spec ID'; binding only, never system-truth content — never
-  behavior, rationale, readiness, acceptance criteria, or delivery facts."* The code already conforms (anchors hold
+(terminology is ratified — *flag*, don't silently edit) they were recorded as **PROPOSED** and assessed by the
+post-split adversarial review as *already determined* (ratification, not deliberation). They were ratified and
+applied in the **pre-grill fold session (2026-06-10)** — R1/R2 during the Fold-A base restructure, R3 in Fold-B —
+rather than spending grill time on no-op-on-code wording. They are **not** model changes.
+- **R1 — harmonize "anchor carries identity only" (§2) with "anchored = a human binding" (§4).**  [ACCEPTED ·
+  applied] §2 said anchors carry "identity only," while §4's `claim` table called `anchored` "a human binding" —
+  and a binding (it emits a `satisfies`/`verifies` edge) is more than bare identity. Unified phrasing, now in the
+  glossary's `anchor` entry, `01` (epistemic boundary), and `04` §2: *"an anchor says 'this code location is the
+  implementation/test binding for this Spec ID'; binding only, never system-truth content — never behavior,
+  rationale, readiness, acceptance criteria, or delivery facts."* The code already conforms (anchors hold
   only `id`/`label`/target; `@ts-expect-error` proves the rest is rejected).
-- **R2 — "no consumer reads source directly" → permit source *links*, forbid independent re-parsing.** The
-  principle (`03`/`05`/`06`) is right, but a Design Review linking to source locations *recorded in the graph* is
-  legitimate. Proposed: *"Consumers may link to source locations recorded in the graph; consumers must not
-  independently parse source to derive their own model."* Matters when the Slice-4 Design Review lands.
+- **R2 — "no consumer reads source directly" → permit source *links*, forbid independent re-parsing.**  [ACCEPTED ·
+  applied] The principle (`03`/`05`/`06`) is right, but a Design Review linking to source locations *recorded in
+  the graph* is legitimate. Now stated in `01` P2 and `03` §4: *"Consumers may link to source locations recorded
+  in the graph; consumers must not independently parse source to derive their own model."* Matters when the
+  Slice-4 Design Review lands.
 - **R3 — reconcile `04`'s `specTest` signature to binding-only.** `04` §2 documents `specTest(id, { verifies,
   run })` with an executing `run` callback; the implementation (`src/model/anchors.ts`) is identity-only
   (`{ id, label?, verifies }`, **no `run`**). The code is the *more* faithful one: a binding anchor carrying
@@ -137,18 +142,21 @@ brief have since been **deleted** (consolidated); the **sole canonical base is
 
 ## Structural-decision shorthand (D1–D6)  [ACCEPTED · relocated here when the cleanup plan was retired, 2026-06-07]
 
-> These six labels come from the original structural-decisions pass. Their *content* is canonical in
-> `docs/concept/ubiquitous-language.md`; this table is kept for permanent traceability so any historical `(Dn)`
-> reference still resolves now that the single-use cleanup plan (which previously held it) is gone.
+> These six labels come from the original structural-decisions pass. Their *content* is canonical in the
+> design docs (`00`–`07` — since the Fold-A restructure rehomed the base's model exposition there); this table
+> is kept for permanent traceability so any historical `(Dn)` reference still resolves now that the
+> single-use cleanup plan (which previously held it) is gone. **Do not confuse this legacy D-space with the
+> open-decision handles D1–D8 used by `plans/02`/`plans/03`** — those name the post-Session-1 grill agenda
+> (typed sections, prose-vs-ref, floor collapse, …), a different code-space; in prose, lead with meaning.
 
 | Label | One line | Canonical in |
 |---|---|---|
-| **D1** | readiness (design maturity, authored) is separate from delivery facts (derived) | base §2 + §4b |
-| **D2** | `02` carries explicit typed **sections**, trimmed to essence (branded-ID strings; open `model` list) | base §2 |
-| **D3** | `Pack` is a reified grouping/aggregate (not folded into `Spec`); membership single-sourced on a manifest | base §2 boundary |
-| **D4** | **Design Review** is the flagship curated projection — the context where a human decides to state `ready` (sharpened by MD-7; the floor is checked, the review is human practice) | base §7 |
-| **D5** | the **agent surface** = a visible typed graph the agent *scripts* (no verb wall); `reader` = thin loader | base §7 |
-| **D6** | the **MCP surface** = integration for user-facing apps (designed-in, deferred build, shape TBD) | base §7 |
+| **D1** | readiness (design maturity, authored) is separate from delivery facts (derived) | `02` §2 |
+| **D2** | `02` carries explicit typed **sections**, trimmed to essence (branded-ID strings; open `model` list) | `02` §3 |
+| **D3** | `Pack` is a reified grouping/aggregate (not folded into `Spec`); membership single-sourced on a manifest | `02` §4 |
+| **D4** | **Design Review** is the flagship curated projection — the context where a human decides to state `ready` (sharpened by MD-7; the floor is checked, the review is human practice) | `06` §5 |
+| **D5** | the **agent surface** = a visible typed graph the agent *scripts* (no verb wall); `reader` = thin loader | `06` §3 |
+| **D6** | the **MCP surface** = integration for user-facing apps (designed-in, deferred build, shape TBD) | `06` §7 |
 
 ## Measured evidence — figures behind the generalized doc prose  [recorded 2026-06-07]
 

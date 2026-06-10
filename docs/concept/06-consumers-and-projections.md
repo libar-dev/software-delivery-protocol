@@ -62,7 +62,7 @@ This is the `claim` taxonomy (P9) elevated to two consumable surfaces: the curat
 - Never "densify" the curated graph by inferring edges from imports — that just rebuilds the language server and throws away the curation.
 - The impact graph has exactly one firehose job (impact / re-test scope) plus two *assist* roles that never overwrite the curated layer: **propose candidates** (e.g. high-fan-in modules with no node) and **flag unambiguous drift** (a `satisfies` target whose source file was deleted) — narrow, honest signals only.
 
-> MVP boundary (decided, not a sequencing call): the curated surface is MVP, and so is **file-level** impact — `git diff` → `byFile` → a curated-graph walk of `refines`/`dependsOn`/`satisfies`/`verifies` yields changeset blast-radius **without a symbol index**. The **exhaustive** impact graph — symbol-level identity, `bySymbol`, cross-package find-all-usages — is the `inferred` surface and stays **aspirational** (base §7). So MVP impact rides the curated graph + file-level reach; symbol-level reach is deferred. This is a boundary on the impact graph's *depth*, not a reopening of the two-surface model. Because it rides anchors + curated edges, it answers *which anchored specs a changeset touches*: **a changed file with no anchor maps to no spec and is surfaced as an explicit `coverage-unknown` item, never silently dropped** — file-level reach can under-report for shared or unanchored code, and the answer says so rather than implying a complete reach set.
+> MVP boundary (decided, not a sequencing call): the curated surface is MVP, and so is **file-level** impact — `git diff` → `byFile` → a curated-graph walk of `refines`/`dependsOn`/`satisfies`/`verifies` yields changeset blast-radius **without a symbol index**. The **exhaustive** impact graph — symbol-level identity, `bySymbol`, cross-package find-all-usages — is the `inferred` surface and stays **aspirational** (the glossary's *impact graph* entry). So MVP impact rides the curated graph + file-level reach; symbol-level reach is deferred. This is a boundary on the impact graph's *depth*, not a reopening of the two-surface model. Because it rides anchors + curated edges, it answers *which anchored specs a changeset touches*: **a changed file with no anchor maps to no spec and is surfaced as an explicit `coverage-unknown` item, never silently dropped** — file-level reach can under-report for shared or unanchored code, and the answer says so rather than implying a complete reach set.
 
 ---
 
@@ -83,7 +83,7 @@ The **`reader`** is the *component* behind the surface: joins and `claim`/taxono
 
 **Freeze only** the small irreducible set — a *universal bridge* or an *irreducible cross-source join* — the things an agent hand-rolling would get wrong:
 
-- **Entry adapters** — the grep→graph bridge. Real work starts from a **string** ("rate limiter"), a **file** (`src/...`), or a **changeset** (`git diff`); the graph is keyed by name. `findByConcept(str)` and `byFile(path)` bridge from what-the-agent-has to what-the-graph-knows and are **MVP** (both resolve off the curated graph + anchors, no symbol index). `bySymbol(sym)` is the same shape but resolves through the **exhaustive impact graph**, so it is frozen-in-*shape* yet **aspirational** in build (§2 boundary, base §7). *(grep is an entry-point problem, not a context problem.)*
+- **Entry adapters** — the grep→graph bridge. Real work starts from a **string** ("rate limiter"), a **file** (`src/...`), or a **changeset** (`git diff`); the graph is keyed by name. `findByConcept(str)` and `byFile(path)` bridge from what-the-agent-has to what-the-graph-knows and are **MVP** (both resolve off the curated graph + anchors, no symbol index). `bySymbol(sym)` is the same shape but resolves through the **exhaustive impact graph**, so it is frozen-in-*shape* yet **aspirational** in build (§2 boundary; the glossary's *impact graph* entry). *(grep is an entry-point problem, not a context problem.)*
 - **Blast-radius** over a changeset (impact + at-risk specs). The **file-level** form (`git diff` → `byFile` → curated-graph walk) is **MVP**; **symbol-level** exhaustive reach rides the aspirational impact graph. The MVP form **reports uncovered (unanchored) changed files explicitly** (a `coverage-unknown` signal) — honest coverage, never a silently-small answer (§2).
 - **Irreducible joins** — e.g. the multi-hop `spec → satisfies → … → invariants/scenarios` bridge with maturity/`claim` decode. Freeze because it is a true cross-source join, not a thin walk.
 
@@ -91,7 +91,7 @@ Everything else (single-field traversals, group-bys, the maturity ladder) stays 
 
 > Context efficiency is a measured win, not a hope: keeping the data in-process and returning only conclusions ran a multi-probe session at a measured fraction of the tokens of a grep/verb-API equivalent. Freezing answers is expensive both as bytes on disk and as tokens in context.
 
-**Aspirational (named, deferred):** `bySymbol` and symbol-level / cross-package reach (they ride the exhaustive impact graph, base §7); token-budgeted self-contained slices (`per-pack`, `change-impact-<id>`); the **MCP surface** (§7) exposing a read-only window; GraphRAG retrieval for very large graphs. All stay inside the read-only gate (§4).
+**Aspirational (named, deferred):** `bySymbol` and symbol-level / cross-package reach (they ride the exhaustive impact graph — §2 boundary); token-budgeted self-contained slices (`per-pack`, `change-impact-<id>`); the **MCP surface** (§7) exposing a read-only window; GraphRAG retrieval for very large graphs. All stay inside the read-only gate (§4).
 
 ---
 
@@ -153,6 +153,18 @@ The MVP human view *is* the Design Review's relationship slice: a single derived
 | **release** | a **tagged set** surfaced as a projection (backed by a git tag). **Realized** — as a trivial git-tag projection, **no dedicated MVP slice or machinery**. |
 | **baseline** | a **named approved snapshot** (≈ a git tag over a set of `ready` `Spec`s); the **git tag is the approval artifact** (a signed tag carries approver + approved-at), so approval provenance is **git-native**, not an authored fact. Vocabulary + optional projection. **Realized** — as a trivial git-tag projection, **no dedicated MVP slice or machinery**. |
 | **phase / iteration / milestone** | **descriptive vocabulary** with optional roadmap / now-next-later projections. Never a gate or enforced sequence. |
+
+The **discipline ≈ kind/section mapping** (how the Protocol supports the disciplines-and-phases picture without its gates):
+
+- **Requirements** → `behavior` `Spec`s (+ the Capability Map projection)
+- **Analysis & Design** → `design` sections + Decision Records
+- **Test** → `example` `Spec`s + `verifies` relations
+- **Deployment** → `observed` / evidence nodes
+- **Config & Change Management** → git (the source of truth)
+- **Project Management** → `Pack`s + roadmap projections
+- **Business Modeling** → `model` `Spec`s
+
+The Protocol imposes no particular delivery style (iterative or sequential), and none of these terms is ever modeled as an additional authored truth-primitive, relation, or validator.
 
 A classic disciplines × phases × iterations distribution chart becomes a **Mermaid / analytical projection** — a view of how authored and derived activity distributes across the graph, never a plan the system enforces. This is what lets `00`'s non-goal be honest: the Protocol *adopts the delivery nouns as projections* and *rejects only the gating FSM/sprint-state*.
 

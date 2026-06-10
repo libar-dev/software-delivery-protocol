@@ -238,7 +238,7 @@ export const CheckoutV1 = pack({
 });
 ```
 
-Membership is authored on the `Pack` manifest; the `belongsTo` edge is **derived** from it (it carries `claim:"declared"`, because it is a deterministic re-expression of the declared manifest — see §6 and `04`). A pack is checked for **coherence** (referenced terms and `modelRefs` resolve, membership resolves, no duplicate members) — *not* for the completeness of any individual member, and *not* for "duplicated intent" (a pack has no truth of its own to duplicate). This supports "a large coherent group of low-detail specs" as a first-class state.
+A spec may belong to **many** packs. Membership is authored on the `Pack` manifest; the `belongsTo` edge is **derived** from it (it carries `claim:"declared"`, because it is a deterministic re-expression of the declared manifest — see §6 and `04`). A pack is checked for **coherence** (referenced terms and `modelRefs` resolve, membership resolves, no duplicate members) — *not* for the completeness of any individual member, and *not* for "duplicated intent" (a pack has no truth of its own to duplicate). This supports "a large coherent group of low-detail specs" as a first-class state.
 
 **Two grouping mechanisms stay distinct:** *refinement* (a parent spec → its children — authored truth that happens to have descendants) vs *the aggregate* (the `Pack` — a cross-cutting review collection with no truth of its own, which may span or sub-slice the refinement hierarchy). A `Pack` is the unit a **Design Review** (`06`) renders "in context."
 
@@ -287,6 +287,8 @@ MVP relation vocabulary (a Representation; extensible):
 | `supersedes(decision)` | new → old | current forward-pointer between two Decision Records that both still exist |
 
 `supersedes` is permitted **only** on decision specs, as a current authored statement about two records that both still exist in the repo — not as graph-resident history (see git is the event log in `01`).
+
+Two notes carried from the language ratification: the verb forms align with UML where a standard stereotype exists (`refines` ≈ «refine», `dependsOn` ≈ UML *Dependency*, `decidedBy` ≈ «trace», `verifies` ≈ «verify») — adopted nouns, per the governing rubric. And `constrainedBy` / `decidedBy` are deliberately kept **distinct** from a generic `dependsOn`: "bounded by an NFR" and "shaped by a decision" are high-value, separately-queryable intents that a generic dependency edge would flatten.
 
 **Derived edges — never authored:**
 

@@ -80,9 +80,9 @@ export const _anchor = anchorImplementation({ id: "impl:orders.create-order-use-
 
 The three syntaxes are interchangeable Representations; the *binding* is the thing. A team picks one style.
 
-### Anchors are read-only pointers — never carry intent (P9/P10)
+### Anchors assert a binding — never intent (P9/P10)
 
-An anchor does exactly one thing: bind a code location to a graph ID and its structural bindings (`component`, `satisfies`, `implements`, and — aspirationally — `handles`/`emits`). It is **forbidden** from carrying spec-level sections (intent, behaviour, readiness, verification). This asymmetry is load-bearing:
+An anchor says exactly one thing: *"this code location is the implementation/test **binding** for this Spec ID"* — a binding assertion only, never system-truth content (DECISIONS R1). It binds a code location to a graph ID and its structural bindings (`component`, `satisfies`, `implements`, and — aspirationally — `handles`/`emits`). It is **forbidden** from carrying anything spec-level: behavior, rationale, readiness, acceptance criteria, or delivery facts. This asymmetry is load-bearing:
 
 - **Intent stays centralized** in the spec files, never scattered through code comments.
 - Anchors produce **anchored**-`claim` edges, distinct from **declared** relations (P9).

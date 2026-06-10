@@ -19,7 +19,7 @@ If a successor kept only the essentials, the design stands or falls on these. Ea
 **Principle · CORE.** There is exactly one authoritative store: committed source in the repo. Every other artifact — the graph, diagrams, dashboards, views, any export — is a pure function of it, never hand-authored or hand-edited. There is no "is the graph in sync?" question because the graph is *defined* as a function of the repo. *(Founding Principle #1, #2, #4.)*
 
 ### P2 — One derived read model
-**Principle · CORE.** A single canonical graph is the sole input to every projection, validator, and query. No consumer reads source directly or maintains a parallel model. (The extractor that *builds* the graph reads source — that is the producer, not a downstream consumer.)
+**Principle · CORE.** A single canonical graph is the sole input to every projection, validator, and query. No consumer reads source directly or maintains a parallel model. (The extractor that *builds* the graph reads source — that is the producer, not a downstream consumer.) Consumers may *link to* source locations recorded in the graph; what is forbidden is independently *re-parsing* source to derive a model of their own (DECISIONS R2).
 
 ### P3 — Deterministic derivation
 **Principle · CORE.** Derivation is reproducible: `graph = f(repo)` and `view = f(graph)`, with stable ordering (specs sorted by ID, edges by `(from, type, to)`) and non-determinism (timestamps, hashes) excluded from the semantic comparison. Delete `generated/` and rebuild byte-identically. Without determinism, "derived" is unfalsifiable and the no-second-store rule cannot be enforced.
@@ -55,7 +55,7 @@ If a successor kept only the essentials, the design stands or falls on these. Ea
 
 **Principle · CORE.** There is a clean division of epistemic labour, and the two halves are never confused:
 
-- **Humans assert intent and bindings.** Relations, stated readiness, decisions — and an in-code **anchor** that points code → a spec ID (identity only, never intent). Authored and taken at face value until a validator can check them.
+- **Humans assert intent and bindings.** Relations, stated readiness, decisions — and an in-code **anchor** that points code → a spec ID (a binding assertion only, never intent — DECISIONS R1). Authored and taken at face value until a validator can check them.
 - **Machines assert structure.** Calls, imports, route wiring — derived and distrusted as *intent*.
 
 P9 and P10 are corollaries of this boundary. So is the rule that **delivery facts are derived, not authored**: a spec's realization (`implemented` / `has-verifier` / `observed`) is **derived** by the pipeline from graph edges and runtime, never authored by hand — authoring one is a violation because it would drift from reality. *(In the MVP this is structural only — `has-verifier` means a linked, enabled verifying spec/test exists; test run results are not ingested, they are CI's. The point stands: "did it actually happen" is structurally separate from "what we state should happen".)*

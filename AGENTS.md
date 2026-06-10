@@ -42,9 +42,9 @@ Progressive disclosure — start at the top, follow the pointers down.
 
 | Look here | What you get | Read |
 |---|---|---|
-| `docs/concept/ubiquitous-language.md` | **the vocabulary & the model** — the ratified base (§0–§8, all `[SETTLED]`); our bounded context and sole source of truth for terminology | **first, always** |
+| `docs/concept/ubiquitous-language.md` | **the vocabulary** — the ratified lean glossary (terms · relations · a worked dialogue · flagged ambiguities); sole source of truth for terminology. The **model exposition** was rehomed into `00`–`07` (2026-06-10 Fold-A; the glossary header maps the old `base §n` refs) | **first, always** |
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
-| `docs/concept/00`–`07` (+ README) | **the technical design** — 9 principle-led docs: vision & MVP boundary, founding principles (P1–P10), core model, the one graph, authoring & binding, validation & honesty, consumers, roadmap | to know *how* it works |
+| `docs/concept/00`–`07` (+ README) | **the technical design and the model** — 9 principle-led docs: vision & MVP boundary, founding principles (P1–P10), core model (`02` — the primitive, descriptors, sections, relations), the one graph, authoring & binding, validation & honesty, consumers, roadmap | to know *how* it works |
 | `docs/concept/DECISIONS.md` | **the why-log** for building the Protocol itself (MD-1/2/4/5/7, the D1–D6 shorthand, measured evidence) — rationale + open tensions | when a choice looks arbitrary |
 | `plans/` | **the build plan** — what each implementation session does, and why | before writing code |
 
