@@ -9,11 +9,8 @@ This repo is the **concept made right before the engine exists**. The concept sy
 language, and the JTBD stories together **are the spec** — the product's own thesis (*the spec is the prompt is the
 design*) applied to itself: there is no separate PRD.
 
-> **Status:** concept ratified and locked; **Slice 0 (Phase 0 — the protocol as typed code) is built, green, and
-> hardened — hardening complete** (Waves A + B done plus the post-execution adversarial pass; all
-> post-Session-1 decisions resolved *and executed*, DECISIONS MD-8…MD-16). The live per-session build plan is
-> in **`plans/`**; the slice roadmap is **`docs/concept/07`**. (`plans/` is the source of truth for "what
-> now.")
+> **Status:** concept ratified and locked. Build state and "what now" live in **`plans/`** — read the
+> highest-numbered plan's status header; the slice roadmap is **`docs/concept/07`**.
 
 ## The frame
 
@@ -44,10 +41,10 @@ Progressive disclosure — start at the top, follow the pointers down.
 
 | Look here | What you get | Read |
 |---|---|---|
-| `docs/concept/ubiquitous-language.md` | **the vocabulary** — the ratified lean glossary (terms · relations · a worked dialogue · flagged ambiguities); sole source of truth for terminology. The **model exposition** was rehomed into `00`–`07` (2026-06-10 Fold-A; the glossary header maps the old `base §n` refs) | **first, always** |
+| `docs/concept/ubiquitous-language.md` | **the vocabulary** — the ratified lean glossary (terms · relations · a worked dialogue · flagged ambiguities); sole source of truth for terminology; the model exposition lives in `00`–`07` | **first, always** |
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
 | `docs/concept/00`–`07` (+ README) | **the technical design and the model** — 9 principle-led docs: vision & MVP boundary, founding principles (P1–P10), core model (`02` — the primitive, descriptors, sections, relations), the one graph, authoring & binding, validation & honesty, consumers, roadmap | to know *how* it works |
-| `docs/concept/DECISIONS.md` | **the why-log** for building the Protocol itself (the MD-series MD-1…MD-16, the ratified R-series, the legacy D1–D6 shorthand, measured evidence) — rationale + open tensions | when a choice looks arbitrary |
+| `docs/concept/DECISIONS.md` | **the why-log** for building the Protocol itself (the ratified-name registry + the MD-series, the R-series, the legacy D1–D6 shorthand, measured evidence) — rationale + open tensions | when a choice looks arbitrary |
 | `plans/` | **the build plan** — what each implementation session does, and why | before writing code |
 | `reviews/` | **archived session reviews** (implementation, founding-ideation, adversarial + prompts) — durable findings already folded into plans/DECISIONS; read for provenance | rarely |
 
@@ -71,12 +68,6 @@ read it before writing code.
 | **3** | Core conformance + honesty checks (referential integrity · duplicate IDs · honest readiness against the floor · orphans · `verifies` linkage · authoring-shape honesty) + the CI gate. |
 | **4** | The agent surface (the `reader` — entry adapters + impact) + the Design Review / one generated read-only view — both fully derived. |
 | **5** | Polish: the `sdp` CLI (`build` · `validate` · maybe `explain`/`search`), error messages, the documented example, a clean-repo determinism test. |
-
-**Where we are now (`plans/`):** Phase 0 is complete — Session 1 (Slice 0 + bootstrap) plus both hardening
-waves (`plans/02`, now a done-record): typed floor-bearing sections, the kind-conditional floor table,
-the de-padded example, the `.sdp.ts` spec files. **Next session = Slice 1**, the `ts-morph` extractor
-(deterministic rebuild P3 + graceful partial extraction L3; reads `*.sdp.ts` from day one — MD-15); the
-hardened example becomes its first real input.
 
 > **Tracer-bullet discipline.** Author the example specs and anchored code *first*, so the DSL and extractor are
 > forced to be usable before they are finished. If the example doesn't typecheck, fix the DSL — not the example.

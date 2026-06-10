@@ -41,7 +41,7 @@ Types describe **shape**; validators decide **completeness** (P7). Completeness 
 
 These are the non-negotiable core. CI fails on any error. They split across the two families.
 
-**They run over the one graph — there is exactly one validation path** (MD-14): source → extract (static reification, P5) → graph → checks; `sdp validate` is `sdp build` + checks. Validating any *evaluated* form (importing spec modules and checking the resulting objects) would check a phantom — a non-static expression evaluates to a value on import but is dropped by static reification, so the checks could pass a spec the graph doesn't actually hold. The Session-1 pre-graph `AuthoredModel` is a stand-in that retires into (at most) an extractor-internal shape when the extractor lands; it is never a second public validation seam. Authoring-time feedback is the type system's job (typed sections, `02` §3) plus the `sdp/spec-static` lint — not a parallel validator path.
+**They run over the one graph — there is exactly one validation path** (MD-14): source → extract (static reification, P5) → graph → checks; `sdp validate` is `sdp build` + checks. Validating any *evaluated* form (importing spec modules and checking the resulting objects) would check a phantom — a non-static expression evaluates to a value on import but is dropped by static reification, so the checks could pass a spec the graph doesn't actually hold. The pre-graph `AuthoredModel` is a stand-in that retires into (at most) an extractor-internal shape when the extractor lands (Slice 1); it is never a second public validation seam. Authoring-time feedback is the type system's job (typed sections, `02` §3) plus the `sdp/spec-static` lint — not a parallel validator path.
 
 **Conformance checks:**
 

@@ -149,7 +149,7 @@ Five section concerns have a same-named (or same-natured) `kind` twin, so the sa
 - Keep it **inline as a section** when it is **local detail** of its host `Spec`.
 - **Promote it to a standalone `Spec`** of the matching `kind` when it is **referenced by more than one `Spec`, or needs its own identity / lifecycle / review.** The promoted spec is linked by **relations** — `constrainedBy` / `decidedBy` / `modelRefs` for the truth-section twins; `refines` (+ `verifies` for verifying examples) from the promoted `rule` / `example` child to its parent.
 
-Two laws make the duality safe (ratified with the 2026-06-10 grill, DECISIONS MD-10):
+Two laws make the duality safe (content-only sections — DECISIONS MD-10):
 
 - **Sections carry content; relations carry linkage.** A section never holds a spec ref — `behavior.rules` and `behavior.examples` are prose / structured entries only. "Which examples does this spec have?" is a reverse-edge query over the children's `refines`/`verifies`, never an authored list.
 - **Promotion is exclusive.** An entry lives inline **or** as a promoted child — never both. Promotion *moves* the content out; nothing is left behind to drift. (The readiness floor counts promoted children as evidence, `05` §3 — promotion never costs a spec its earned rung.)

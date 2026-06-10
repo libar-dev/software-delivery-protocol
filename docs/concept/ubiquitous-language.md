@@ -1,17 +1,10 @@
 # Ubiquitous Language — Glossary (ratified)
 
 > **Status: RATIFIED · LEAN GLOSSARY.** The terminology base of the Libar Software Delivery Protocol — our
-> bounded context's vocabulary: **one concept → one word**; the rest are *aliases to avoid*. Built
-> section-by-section in the language grill; ratified 2026-06-07.
+> bounded context's vocabulary: **one concept → one word**; the rest are *aliases to avoid*.
 >
-> **Restructured 2026-06-10 (Fold-A).** This document now carries **terms only**. The model exposition that
-> used to live here (§0–§8) was rehomed into the design docs — terms and meanings did **not** change in that
-> move, only where they live. Rationale stays in `DECISIONS.md`. For historical `base §n` references (in
-> `DECISIONS.md` and the plans), the old sections map to:
-> §0 thesis · §1 meta-levels → `00` §2 · §2 primitive & boundary → `02` §1–§4 · §3 relations → `02` §6 ·
-> §4 claims & the authored/derived split → `01` + `03` §3 · §4b delivery facts → `02` §2 ·
-> §5 the one graph → `03` · §6 validation & honesty → `05` · §7 surfaces & projections → `06` ·
-> §8 delivery-process execution → `06` §6.
+> This document carries **terms only**; the model exposition lives in the design docs (`00`–`07`),
+> rationale in `DECISIONS.md`.
 
 ## Governing rubric  [SETTLED]
 

@@ -4,8 +4,14 @@
 > decision records (a project's own `kind:"decision"` instances). Its job is to **recapture rationale** so choices
 > stay visible and don't re-smooth into "false settledness." Entries are short and **status-tagged**
 > (`ACCEPTED` / `PROPOSED` / `SUPERSEDED`). Companion to `docs/concept/ubiquitous-language.md` (the ratified
-> glossary; since the 2026-06-10 Fold-A restructure the model exposition lives in `00`–`07` — historical
-> `base §n` references in the entries below resolve via the §-map in the glossary header).
+> glossary; the model exposition lives in `00`–`07`).
+>
+> **Decoding historical `base §n` references** (used by older entries below and the archived `reviews/`):
+> the restructured base's old sections map to —
+> §0 thesis · §1 meta-levels → `00` §2 · §2 primitive & boundary → `02` §1–§4 · §3 relations → `02` §6 ·
+> §4 claims & the authored/derived split → `01` + `03` §3 · §4b delivery facts → `02` §2 ·
+> §5 the one graph → `03` · §6 validation & honesty → `05` · §7 surfaces & projections → `06` ·
+> §8 delivery-process execution → `06` §6.
 
 ---
 

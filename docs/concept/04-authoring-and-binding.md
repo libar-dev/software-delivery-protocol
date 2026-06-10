@@ -81,7 +81,8 @@ export const _anchor = anchorImplementation({ id: "impl:orders.create-order-use-
 
 The three syntaxes are interchangeable Representations; the *binding* is the thing. A team picks one style.
 The builder generalizes to **`codeAnchor`** over the implementation-flavored code namespaces (`impl` / `api` /
-`component`) — ratified MD-8, lands with Slice-2 anchor extraction; `anchorImplementation` is the Session-1 name.
+`component`) — the generic `codeAnchor` decision (MD-8), landing with Slice-2 anchor extraction; until then the
+DSL ships the narrower `anchorImplementation`.
 
 ### Anchors assert a binding — never intent (P9/P10)
 

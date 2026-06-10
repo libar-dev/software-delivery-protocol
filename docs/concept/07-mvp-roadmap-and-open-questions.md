@@ -88,7 +88,7 @@ The point of the principle-led core is that each of these slots in cleanly, with
 
 ---
 
-## 6. Forward-looking acceptance criteria (seeded by the post-Session-1 full-MVP review)
+## 6. Forward-looking acceptance criteria (seeded by the Phase-0 full-MVP review)
 
 Recorded here so the full-scope lens isn't lost; each is honesty-posture-aligned and maps to a slice's "done."
 These came out of the Phase-0 hardening review and were routed here (rather than into that code-only plan) so they
