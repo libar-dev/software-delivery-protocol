@@ -196,7 +196,7 @@ artifact** — approval provenance is git-native, never an authored primitive).
 - **Resolved (MD-15):** authored Spec files carry the **`.sdp.ts`** extension (never `.spec.ts`, which every
   JS test-runner default glob executes); the model name `Spec` itself was always settled — only the file
   serialization changed.
-- **Naming (resolved — MD-5):** product **Libar Software Delivery Protocol** (short form "the Protocol");
+- **Naming (resolved — the protocol naming, MD-5):** product **Libar Software Delivery Protocol** (short form "the Protocol");
   CLI **`sdp`**; npm **`@libar-dev/software-delivery-protocol`** (single package); repo
   `libar-dev/software-delivery-protocol`; namespaces `@libar-dev/` (OSS) vs `@libar-ai/` (commercial).
   "Protocol" names the meta-layer (a conformance contract, not a workflow); "process" is retained only for

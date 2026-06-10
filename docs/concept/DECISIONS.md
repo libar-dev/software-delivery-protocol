@@ -13,6 +13,31 @@
 > §5 the one graph → `03` · §6 validation & honesty → `05` · §7 surfaces & projections → `06` ·
 > §8 delivery-process execution → `06` §6.
 
+## The ratified-name registry
+
+The name is the primary handle; the ID is the breadcrumb. **In prose, lead with meaning — write "the
+typing law (MD-11)," never bare "MD-n."** (Generalizes MD-8's own footnote.) *Curation* records each
+entry's standing against the ADR three-part test (hard to reverse · surprising without context · a
+real trade-off — see the working discipline in `AGENTS.md`); *durable* entries become `kind:"decision"`
+specs at the post-Slice-1 fold, under the future spec id reserved here.
+
+| ID | Ratified name | Curation | Future spec id |
+|---|---|---|---|
+| MD-1 | the executable meta-model | durable | `spec:protocol.decisions.executable-meta-model` |
+| MD-2 | adopt the nouns, reject the gates | durable | `spec:protocol.decisions.adopt-the-nouns` |
+| MD-4 | one primitive, named coordinates | durable | `spec:protocol.decisions.one-primitive` |
+| MD-5 | the protocol naming | durable | `spec:protocol.decisions.protocol-naming` |
+| MD-7 | binding, never liveness | durable | `spec:protocol.decisions.binding-not-liveness` |
+| MD-8 | the generic `codeAnchor` | folds at Slice 2 → doc-comment on the `codeAnchor` builder | — |
+| MD-9 | the open-questions home | folds at the fold (lives in `sections.ts`, the floor, `02` §3) | — |
+| MD-10 | content-only sections | durable | `spec:protocol.decisions.content-only-sections` |
+| MD-11 | the typing law | durable | `spec:protocol.decisions.typing-law` |
+| MD-12 | the kind-conditional floor | durable | `spec:protocol.decisions.kind-conditional-floor` |
+| MD-13 | floor-table-as-truth | folds (lives in `05` §3's Representation note + the `readiness-floor.ts` header) | — |
+| MD-14 | one validation path | durable | `spec:protocol.decisions.one-validation-path` |
+| MD-15 | the `.sdp.ts` extension | durable | `spec:protocol.decisions.sdp-ts-extension` |
+| MD-16 | carried evidence | durable | `spec:protocol.decisions.carried-evidence` |
+
 ---
 
 ## 2026-06-06 — Session: reframe + language base

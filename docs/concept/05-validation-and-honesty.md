@@ -77,7 +77,7 @@ The floor has two parts: **kind-blind structural clauses** (the same for every k
 |---|---|
 | `idea` | id, title, kind, altitude; `intent.outcome` **or** a parent relation |
 | `scoped` | `intent.outcome`; at least one relation; **the kind's evidence is *present*** (table below) |
-| `defined` | **the kind's evidence is *complete*** (table below); no *blocking* open questions (`intent.openQuestions`, MD-9) |
+| `defined` | **the kind's evidence is *complete*** (table below); no *blocking* open questions (`intent.openQuestions` — the open-questions home, MD-9) |
 | `ready` | the `defined` floor **and**: no blocking open questions; all relations resolve; every `dependsOn`/`refines` target is itself **≥ `defined`**; any anchors present *resolve* (so `implemented` is *derivable*) |
 
 **The per-kind evidence table.** Each kind names its **natural evidence**; `scoped` requires it *present* (prose acceptable), `defined` requires it *complete* where the kind defines a stronger form. There is no separate overlay mechanism — this table is the whole kind-aware story:

@@ -98,7 +98,7 @@ land in the roadmap at the right altitude. Ordering reflects the synthesis's pri
   authoring-ergonomics workstream* anywhere in `00`–`07` today (the MVP CLI is just `build`/`validate`), yet if
   authoring feels heavy, authors (human **and** agent) avoid the system or overfit specs to satisfy tooling. The
   first lever — **typed sections** (autocomplete + shape guardrails) — **landed in the Phase-0 hardening
-  (MD-11)**; the next are great error messages and `sdp validate --watch`; later `sdp new spec` /
+  (the typing law, MD-11)**; the next are great error messages and `sdp validate --watch`; later `sdp new spec` /
   `sdp explain`. Threads back to the anti-padding rule: make *dishonesty* fail without rewarding
   low-signal filler (a floor to clear, never a quota to fill).
 - **② Golden-graph fixture — at Slice 1; keep it distinct from `--check-clean`.** Adopt **both**, labeled
@@ -111,12 +111,12 @@ land in the roadmap at the right altitude. Ordering reflects the synthesis's pri
   ready · Structural floor reached: defined · Problem: blocking open question."* Teaches the core honesty
   concept (stated, then checked); cheaply enabled by the floor evaluator, which reports *which* clause
   fails. The old blocker — the floor reading open questions from the wrong section — was fixed in the
-  Phase-0 hardening (MD-9: the floor reads `intent.openQuestions`).
+  Phase-0 hardening (the open-questions home, MD-9 — the floor reads `intent.openQuestions`).
 - **④ `implemented` is a UI hazard — at Slice 4, view-label only.** Model semantics are settled (DECISIONS MD-7:
   binding/existence, never liveness). Keep the internal fact name `implemented` (it powers the `implemented ∧
   ¬ready` drift query), but render binding language in views: *"Implementation binding: present / Verifier binding:
   present / Runtime observation: not tracked."*
-- **`coverage-unknown` — already a settled model commitment (MD-7 / §4 above); make it Slice-4 acceptance.**
+- **`coverage-unknown` — already a settled model commitment (binding, never liveness — MD-7 / §4 above); make it Slice-4 acceptance.**
   File-level blast-radius reports changed-but-unanchored files as `coverage-unknown`, never silently
   under-reporting. The only add is promoting it from design note → explicit Slice-4 acceptance criterion.
 - **The MVP acceptance checklist, mapped across Slices 1–5:** spec extraction · anchor extraction · claim honesty ·

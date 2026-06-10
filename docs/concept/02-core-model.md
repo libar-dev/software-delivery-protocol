@@ -127,7 +127,7 @@ Sections carry the detail. They are the **extension surface**: the system grows 
 
 | Section | Carries | Notes |
 |---|---|---|
-| `intent` | actor, problem, outcome, value, risks, assumptions, open questions | `openQuestions` may be flagged `blocking` to prevent stating `defined` or `ready` (MD-9). |
+| `intent` | actor, problem, outcome, value, risks, assumptions, open questions | `openQuestions` may be flagged `blocking` to prevent stating `defined` or `ready` (the open-questions home, MD-9). |
 | `behavior` | rules (prose), examples (prose or structured Given/When/Then), flows | **Content only — never refs** (the duality rule below). An example entry matures *in place*: prose → a structured `{ given, when, then }` entry → (promoted) a child `example` spec backed by a verifier. |
 | `constraints[]` | a `flavor` (quality / security / performance / compliance / operational / policy), a statement, an optional `target`, optional `measurableBy` | A `performance` constraint with a measurable `target` is an NFR. `target` must be machine-readable (`p95 < 300ms`, not "fast enough") to state `defined`+. |
 | `model` | domain terms (vocabulary only) — `terms: Record<term, definition>` | Used for pack-level coherence checks. Richer concept structures (typed concepts, attributes) are a **named deferral**; when one lands, the typing law below pulls it into the closed shape. |
@@ -136,7 +136,7 @@ Sections carry the detail. They are the **extension surface**: the system grows 
 | `verification` | mode (manual / reviewed / contract / executable) + criteria | A verifying test *existing and enabled* is the derived `has-verifier` delivery fact (§2), not an authored field here. Pass/fail is **not** in the graph — it is CI's, operational. |
 | `ui` | references to component stories, design-tool nodes, visual baselines, accessibility status | **Aspirational.** Always links, never owns or renders. |
 
-The `decision` section carries **no `status` field** (MD-11): a decision's adoption arc is the envelope's `readiness` (raised → explored → written → ratified), checked against the floor like any spec; replacement is the `supersedes` relation; a *rejected* path is not a truth-spec at all — it lives in the chosen decision's `alternatives` / `consequences`. One concept, one place.
+The `decision` section carries **no `status` field** (rejected by the typing law, MD-11): a decision's adoption arc is the envelope's `readiness` (raised → explored → written → ratified), checked against the floor like any spec; replacement is the `supersedes` relation; a *rejected* path is not a truth-spec at all — it lives in the chosen decision's `alternatives` / `consequences`. One concept, one place.
 
 ### The typing law — which sections have typed shapes (MD-11)
 
