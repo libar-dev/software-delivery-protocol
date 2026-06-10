@@ -280,7 +280,7 @@
       "claim": "anchored",
       "label": "valid cart verifies the create-order happy path",
       "file": "test/orders/create-order.valid-cart.test.ts",
-      "line": 3
+      "line": 10
     }
   ],
   "edges": [

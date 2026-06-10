@@ -7,9 +7,11 @@ import type {
   SourceFile,
 } from "ts-morph";
 
+import { deliveryFactNames } from "../graph/schema.js";
 import { CODE_ANCHOR_NAMESPACES, parseId } from "../ids.js";
 import { SPEC_ALTITUDES, SPEC_KINDS, SPEC_READINESS } from "../model/descriptors.js";
 import { SPEC_RELATION_TYPES } from "../model/relations.js";
+import { SPEC_SECTION_NAMES } from "../model/sections.js";
 import type { Finding, Severity } from "../validate/contracts.js";
 
 /**
@@ -24,21 +26,27 @@ export const PROTOCOL_MODULE_SPECIFIER = "@libar-dev/software-delivery-protocol"
 /**
  * The extraction finding ids, pinned. Two tiers (`03` §2), covering both authored surfaces (spec
  * files and anchor constants): envelope failures (`non-static-envelope` · `invalid-id` ·
- * `duplicate-id`) are hard errors — the carrier is not extracted and the build fails; content
- * failures (`non-static-section` · `unrecognized-statement` · `misplaced-authoring`) degrade
- * loudly — one property, statement, or call is dropped and the rest survives (graceful partial
- * extraction, L3). The content-tier ids name the *tier*, not the artifact: `non-static-section`
- * also covers an anchor's degradable `label`, and `misplaced-authoring` covers any protocol
- * authoring call outside its recognized surface (an anchor builder not in top-level-const
- * position; a `spec(…)`/`pack(…)` call in a non-`.sdp.ts` file) — a binding the author believes
- * exists must never silently fall out of the graph (L2).
+ * `duplicate-id` · `reserved-property`) are hard errors — the carrier is not extracted and the
+ * build fails; content failures (`non-static-section` · `unrecognized-statement` ·
+ * `unrecognized-property` · `misplaced-authoring`) degrade loudly — one property, statement, or
+ * call is dropped and the rest survives (graceful partial extraction, L3). The content-tier ids
+ * name the *tier*, not the artifact: `non-static-section` also covers an anchor's degradable
+ * `label`, `unrecognized-property` covers a spec or pack property outside its authored shape (a
+ * typoed section name must never silently fall out of the graph, L2), and `misplaced-authoring`
+ * covers any protocol authoring call outside its recognized surface (an anchor builder not in
+ * top-level-const position; a `spec(…)`/`pack(…)` call in a non-`.sdp.ts` file) — a binding the
+ * author believes exists must never silently fall out of the graph (L2). `reserved-property` is
+ * the envelope-tier honesty twin: a hand-authored piece of derived graph vocabulary (a delivery
+ * fact, a `claim`, an edge field) impersonates machine truth, so the carrier is rejected whole.
  */
 export const extractFindingIds = {
   nonStaticEnvelope: "extract/non-static-envelope",
   invalidId: "extract/invalid-id",
   duplicateId: "extract/duplicate-id",
+  reservedProperty: "extract/reserved-property",
   nonStaticSection: "extract/non-static-section",
   unrecognizedStatement: "extract/unrecognized-statement",
+  unrecognizedProperty: "extract/unrecognized-property",
   misplacedAuthoring: "extract/misplaced-authoring",
 } as const;
 
@@ -62,6 +70,26 @@ const RELATION_BUILDER_NAMES = new Set<string>(SPEC_RELATION_TYPES);
 const SPEC_KIND_VALUES = new Set<string>(SPEC_KINDS);
 const SPEC_ALTITUDE_VALUES = new Set<string>(SPEC_ALTITUDES);
 const SPEC_READINESS_VALUES = new Set<string>(SPEC_READINESS);
+const SPEC_SECTION_NAME_SET = new Set<string>(SPEC_SECTION_NAMES);
+
+/**
+ * Derived graph vocabulary an authored carrier must never state: the delivery facts plus the
+ * graph's own node and edge fields. Hand-authoring one impersonates machine truth, so it is an
+ * envelope-tier hard error — the extraction-layer twin of authoring-shape honesty (`05` §2,
+ * check 5) on the top-level authored shape, exactly as raw `relations[]` entries and foreign
+ * anchor fields are on theirs. In-section content stays the honesty checks' jurisdiction: it
+ * reifies through and the `honesty/authoring-shape` validator sees it in the model.
+ */
+const RESERVED_DERIVED_PROPERTIES = new Set<string>([
+  ...deliveryFactNames,
+  "deliveryFacts",
+  "claim",
+  "nodeType",
+  "specKind",
+  "satisfies",
+  "verifies",
+  "belongsTo",
+]);
 
 export interface ReifiedSpec {
   /** Plain `Spec`-shaped data in authored property order — built from the AST, never evaluated. */
@@ -122,7 +150,7 @@ function staticFailure(node: Node, path: string, reason: string): StaticResult {
 }
 
 function describeNonStatic(node: Node): string {
-  return `${node.getKindName()} is outside the static value grammar (string/number/boolean literals, array and fresh object literals, id-builder unwraps; \`as const\` and parentheses are transparent)`;
+  return `${node.getKindName()} is outside the static value grammar (string/number/boolean literals, array and fresh object literals; \`as const\` and parentheses are transparent; id builders unwrap in id slots only)`;
 }
 
 /** `as const` and parentheses are transparent; every other wrapper is non-static. */
@@ -332,23 +360,27 @@ function reifyStaticValue(node: Node, path: string, bindings: ProtocolBindings):
   const builderCall = resolveBuilderCall(unwrapped, bindings);
 
   if (builderCall !== undefined) {
-    const expectedNamespaces = ID_UNWRAP_BUILDERS.get(builderCall.builder);
-
-    if (expectedNamespaces === undefined) {
+    // Id builders unwrap in id slots only (`reifyStaticIdExpression`), never in a value position:
+    // a `ref(…)` riding section content would survive as a plain string the graph treats as
+    // ordinary prose — a smuggled reference no referential check ever sees. Sections carry
+    // content, relations carry linkage (MD-10). The guard covers the typed affordance only: a
+    // raw id-shaped string in content is prose by definition — never a reference, never an edge,
+    // never validated — exactly as any sentence naming a spec is. Closing that would mean
+    // policing prose, which checks never do (conformance and honesty, never content-quality);
+    // the boundary is pinned by the `id-shaped-string-content` corpus.
+    if (ID_UNWRAP_BUILDERS.has(builderCall.builder)) {
       return staticFailure(
         unwrapped,
         path,
-        `call to "${builderCall.builder}" is not an id-builder unwrap and is non-static in a value position`,
+        `call to "${builderCall.builder}" is an id builder outside an id slot — sections carry content, relations carry linkage (MD-10), so a spec reference cannot ride along as content`,
       );
     }
 
-    const idResult = reifyStaticIdExpression(unwrapped, expectedNamespaces, bindings, path);
-
-    if (!idResult.ok) {
-      return { ok: false, failure: { path, line: idResult.line, reason: idResult.reason } };
-    }
-
-    return { ok: true, value: idResult.id };
+    return staticFailure(
+      unwrapped,
+      path,
+      `call to "${builderCall.builder}" is non-static in a value position`,
+    );
   }
 
   return staticFailure(unwrapped, path, describeNonStatic(unwrapped));
@@ -855,9 +887,40 @@ function reifySpecCall(
       continue;
     }
 
-    // The section tier: known sections and unknown properties alike reify lossily, so static
-    // content (including a smuggled delivery fact, which the honesty checks must get to see)
-    // survives and only the non-static parts drop, loudly.
+    if (RESERVED_DERIVED_PROPERTIES.has(name)) {
+      findings.push(
+        createExtractFinding(
+          extractFindingIds.reservedProperty,
+          "error",
+          `spec field "${name}" states derived graph vocabulary — delivery facts and derived edges are computed by the extractor, never authored, so the spec is not extracted`,
+          file,
+          property.getStartLineNumber(),
+          subjectId,
+          name,
+        ),
+      );
+      envelopeOk = false;
+      continue;
+    }
+
+    if (!SPEC_SECTION_NAME_SET.has(name)) {
+      findings.push(
+        createExtractFinding(
+          extractFindingIds.unrecognizedProperty,
+          "warning",
+          `property "${name}" is outside the spec shape (the envelope plus the sections ${SPEC_SECTION_NAMES.join(" · ")}) and is dropped — authored content must never silently fall out of the graph (L2)`,
+          file,
+          property.getStartLineNumber(),
+          subjectId,
+          name,
+        ),
+      );
+      continue;
+    }
+
+    // The section tier: the eight ratified sections reify lossily, so static content (including
+    // an in-section smuggled delivery fact, which the authoring-shape honesty check must get to
+    // see) survives and only the non-static parts drop, loudly.
     const inner = unwrapTransparent(initializer);
 
     if (Node.isObjectLiteralExpression(inner)) {
@@ -1066,34 +1129,34 @@ function reifyPackCall(
       continue;
     }
 
-    const inner = unwrapTransparent(initializer);
-
-    if (Node.isObjectLiteralExpression(inner)) {
-      const lossy = reifyObjectLossy(inner, name, bindings);
-      data[name] = lossy.value;
-      appendDropFindings(lossy.drops, file, subjectId, findings);
+    if (RESERVED_DERIVED_PROPERTIES.has(name)) {
+      findings.push(
+        createExtractFinding(
+          extractFindingIds.reservedProperty,
+          "error",
+          `pack field "${name}" states derived graph vocabulary — delivery facts and derived edges are computed by the extractor, never authored (a pack states no truth of its own), so the pack is not extracted`,
+          file,
+          property.getStartLineNumber(),
+          subjectId,
+          name,
+        ),
+      );
+      envelopeOk = false;
       continue;
     }
 
-    const result = reifyStaticValue(initializer, name, bindings);
-
-    if (result.ok) {
-      data[name] = result.value;
-      continue;
-    }
-
-    appendDropFindings(
-      [
-        {
-          droppedPath: name,
-          failurePath: result.failure.path,
-          line: result.failure.line,
-          reason: result.failure.reason,
-        },
-      ],
-      file,
-      subjectId,
-      findings,
+    // The pack manifest has no section tier: every authored field is named above, so anything
+    // else drops loudly (L2) instead of riding into the model unread.
+    findings.push(
+      createExtractFinding(
+        extractFindingIds.unrecognizedProperty,
+        "warning",
+        `property "${name}" is outside the pack manifest shape (id · specs · modelRefs · title · framing) and is dropped — authored content must never silently fall out of the graph (L2)`,
+        file,
+        property.getStartLineNumber(),
+        subjectId,
+        name,
+      ),
     );
   }
 

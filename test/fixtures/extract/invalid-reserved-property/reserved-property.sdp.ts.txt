@@ -1,0 +1,13 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+// Envelope hard error: a hand-authored piece of derived graph vocabulary impersonates machine
+// truth (the extraction-layer twin of authoring-shape honesty), so the spec is not extracted.
+export const reservedPropertySpec = spec({
+  id: specId("spec:orders.reserved-property"),
+  title: "Spec hand-authoring derived graph vocabulary",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  intent: { outcome: "Pin the reserved-property hard error." },
+  deliveryFacts: ["implemented"],
+});

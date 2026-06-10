@@ -122,6 +122,75 @@ describe("extraction corpora", () => {
     expect(warnings[0]?.validatorId).toBe(extractFindingIds.unrecognizedStatement);
     expect(result.model.specs.map((entry) => entry.id)).toEqual(["spec:orders.recognized"]);
   });
+
+  it("invalid-reserved-property: a hand-authored delivery fact at the top level is an envelope hard error; the sibling survives (L3)", () => {
+    const result = extract({ root: corpusRoot("invalid-reserved-property") });
+    const errors = result.report.findings.filter((finding) => finding.severity === "error");
+
+    expect(errors).toHaveLength(1);
+    expect(errors[0]?.validatorId).toBe(extractFindingIds.reservedProperty);
+    expect(errors[0]?.path).toBe("deliveryFacts");
+    expect(errors[0]?.subjectId).toBe("spec:orders.reserved-property");
+    expect(result.model.specs.map((entry) => entry.id)).toEqual([
+      "spec:orders.reserved-static-sibling",
+    ]);
+    expect(result.graph.nodes.map((node) => node.id)).toEqual([
+      "spec:orders.reserved-static-sibling",
+    ]);
+  });
+
+  it("unrecognized-property: a typoed section name drops with a warning; the spec survives without it", () => {
+    const result = extract({ root: corpusRoot("unrecognized-property") });
+
+    expect(result.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
+
+    const warnings = result.report.findings.filter((finding) => finding.severity === "warning");
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]?.validatorId).toBe(extractFindingIds.unrecognizedProperty);
+    expect(warnings[0]?.path).toBe("behaviour");
+
+    const [survivingSpec] = result.model.specs;
+    expect(survivingSpec?.id).toBe("spec:orders.typoed-section");
+    expect((survivingSpec as unknown as Record<string, unknown>).behaviour).toBeUndefined();
+
+    const node = result.graph.nodes.find((entry) => entry.id === "spec:orders.typoed-section");
+    expect(node?.nodeType).toBe("Primitive");
+  });
+
+  it("id-shaped-string-content: a raw id-shaped string in section content is prose — kept, edge-free, finding-free", () => {
+    const result = extract({ root: corpusRoot("id-shaped-string-content") });
+
+    // The MD-10 guard covers the typed affordance only (`ref(…)` is rejected, below); prose that
+    // happens to look like an id is content by definition — the documented boundary, pinned.
+    expect(result.report.findings).toEqual([]);
+
+    const [survivingSpec] = result.model.specs;
+    expect(survivingSpec?.id).toBe("spec:orders.id-shaped-string");
+    expect(survivingSpec?.behavior?.examples).toEqual(["spec:orders.promoted-child"]);
+    expect(result.graph.edges).toEqual([]);
+  });
+
+  it("ref-in-section-content: an id builder in section content drops the owning property (MD-10)", () => {
+    const result = extract({ root: corpusRoot("ref-in-section-content") });
+
+    expect(result.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
+
+    const warnings = result.report.findings.filter((finding) => finding.severity === "warning");
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]?.validatorId).toBe(extractFindingIds.nonStaticSection);
+    expect(warnings[0]?.path).toBe("behavior.examples");
+    expect(warnings[0]?.message).toContain("relations carry linkage");
+
+    const [survivingSpec] = result.model.specs;
+    expect(survivingSpec?.id).toBe("spec:orders.ref-in-section");
+    expect(survivingSpec?.behavior?.rules).toEqual([
+      "A real rule survives beside the dropped property.",
+    ]);
+    expect(survivingSpec?.behavior?.examples).toBeUndefined();
+    // Nothing was smuggled: the graph carries no edge and no content naming the ref target.
+    expect(result.graph.edges).toEqual([]);
+    expect(JSON.stringify(result.graph.nodes)).not.toContain("spec:orders.promoted-child");
+  });
 });
 
 /**

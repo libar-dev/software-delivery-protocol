@@ -23,6 +23,32 @@
 > "impl" · "api" · "component"`) — the §2.1 item's natural shape, recorded for the message-text
 > change it implies.
 >
+> **Post-execution adversarial pass (Codex, 2026-06-10) — three valid findings, all landed as
+> drift repair forced by the base (L2 · MD-10 · `04` §2), no DECISIONS entries:**
+> (1) *silent top-level property loss* — `reifySpecCall`/`reifyPackCall` accepted any unknown
+> top-level property while `deriveGraph` serialized only the eight sections, so a typo
+> (`behaviour`) or a hand-authored graph-shaped field could vanish from the graph with zero
+> findings; the extractor now hard-errors on derived graph vocabulary at the top level
+> (`extract/reserved-property` — delivery facts · `claim` · edge fields; the extraction-layer
+> twin of authoring-shape honesty) and warns-and-drops anything else outside the authored shape
+> (`extract/unrecognized-property`), pinned by the `invalid-reserved-property` and
+> `unrecognized-property` corpora. (2) *refs smuggled through section content* — the static value
+> grammar unwrapped id builders in any value position (a path only section content ever reached),
+> so `ref(…)` in a section survived as plain prose against MD-10; id builders now unwrap in id
+> slots only, and a section ref drops loudly (the `ref-in-section-content` corpus). (3) *the
+> tracer-bullet verifier was an anchor-only file* — `04` §2 puts the runner test beside the
+> binding anchor, so `create-order.valid-cart.test.ts` gained its executable half (the example's
+> GWT: stable id · cart-math total · original lines) and the example's tests joined the vitest
+> include; the golden's one-line diff is the anchor's binding location moving with the file.
+> A validation re-review pressed one boundary on fix 2: a *raw id-shaped string* in section
+> content. Resolved as the documented boundary, not a guard extension (the reviewer's own
+> lighter remedy): the MD-10 guard covers the typed affordance (`ref(…)`) — prose that happens
+> to name a spec id is content by definition (no claim, no edge, no validation), and closing it
+> would mean policing prose, which checks never do (MD-1 guardrail 1). The boundary is stated on
+> the guard (`src/extract/reify.ts`) and pinned by the `id-shaped-string-content` corpus; whether
+> an *informative* id-shaped-prose surfacing (a `gap`-style signal, never a gate) earns its way
+> in is decided at Slice 3 with the check families.
+>
 > **Next session: Slice 3 — the graph-validator gate**: re-key the conformance + honesty checks
 > to the graph (one validation path, MD-14 completes), wire `sdp validate`, demote
 > `AuthoredModel` + the pre-graph validators, land the graph-shaped `ready` clauses and their two
