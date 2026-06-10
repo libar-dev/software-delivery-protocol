@@ -1,4 +1,5 @@
 export * from "./ids.js";
+export * from "./extract/index.js";
 export * from "./graph/schema.js";
 export * from "./model/anchors.js";
 export * from "./model/descriptors.js";

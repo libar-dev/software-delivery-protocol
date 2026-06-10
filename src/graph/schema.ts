@@ -1,6 +1,7 @@
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
+import type { SpecSections } from "../model/sections.js";
 
-export const schemaVersion = "0.1.0" as const;
+export const schemaVersion = "0.2.0" as const;
 
 export const graphNodeTypes = ["Primitive", "Pack", "Anchor", "CodeNode"] as const;
 export type GraphNodeType = (typeof graphNodeTypes)[number];
@@ -38,11 +39,29 @@ export interface PrimitiveNode extends GraphNodeBase {
   readonly specKind: SpecKind;
   readonly altitude: SpecAltitude;
   readonly readiness: SpecReadiness;
+  /** Degradable: a non-static title is dropped with a warning, never a hard error (`03` §2). */
+  readonly title?: string;
+  /** Extraction-root-relative, POSIX separators, no leading `./` — never absolute (JS-C3). */
+  readonly file: string;
+  /**
+   * The reified section content rides the node (the graph is the sole input every consumer reads —
+   * P2): structural metadata stays flat above; content is fenced here, in authored order. Omitted
+   * when the spec carries no sections.
+   */
+  readonly sections?: SpecSections;
   readonly deliveryFacts?: readonly DeliveryFactName[];
 }
 
 export interface PackNode extends GraphNodeBase {
   readonly nodeType: "Pack";
+  readonly title?: string;
+  readonly framing?: string;
+  /**
+   * Node data, not edges: the `03` edge contract has no `modelRefs` edge type — pack coherence
+   * reads this at Slice 3 (F4).
+   */
+  readonly modelRefs?: readonly string[];
+  readonly file: string;
 }
 
 export interface AnchorNode extends GraphNodeBase {

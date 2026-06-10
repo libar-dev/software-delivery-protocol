@@ -8,3 +8,7 @@ plans/**
 
 # Archived review artifacts - verbatim historical records, not format-policed
 reviews/
+
+# The golden graph oracle carries the serializer's exact bytes (serialize.ts owns all output
+# bytes); reformatting it would break the byte-compare against extractor output
+test/fixtures/checkout-v1/expected-graph.json

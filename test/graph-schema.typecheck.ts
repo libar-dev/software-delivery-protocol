@@ -13,6 +13,9 @@ const primitiveNode = {
   specKind: "behavior",
   altitude: "feature",
   readiness: "ready",
+  title: "Customer creates an order",
+  file: "specs/orders/create-order.sdp.ts",
+  sections: { intent: { outcome: "Turn a valid cart into an order." } },
   deliveryFacts: ["implemented", "has-verifier"] as const satisfies readonly DeliveryFactName[],
 } satisfies PrimitiveNode;
 

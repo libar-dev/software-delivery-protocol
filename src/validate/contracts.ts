@@ -12,6 +12,13 @@ export interface Finding {
   readonly subjectId?: string;
   readonly relatedId?: string;
   readonly path?: string;
+  /**
+   * Source location, carried by producers that read files (the extractor). Additive (L9) so the
+   * one diagnostic currency stays one — no parallel extraction-report shape. Root-relative POSIX
+   * path; 1-based line.
+   */
+  readonly file?: string;
+  readonly line?: number;
 }
 
 export interface ValidationReport {

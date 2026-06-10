@@ -11,8 +11,10 @@ import type { AuthoredModel } from "../../src/index.js";
  * section types reject it for inline literals; the runtime fixture here proves
  * `honesty/authoring-shape` catches the non-fresh object that slips past TypeScript's
  * excess-property check.
- * The extractor-era fixtures stay named, awaiting Slice 1+: `invalid-non-static-id` ·
- * `invalid-non-static-section` · `invalid-hand-authored-satisfies-edge` ·
+ * Three extractor-era names are activated as on-disk corpora under `test/fixtures/extract/`
+ * (exercised by `test/extract.test.ts`, Slice 1): `invalid-non-static-id` ·
+ * `invalid-non-static-section` · `invalid-hand-authored-satisfies-edge`. Two stay reserved for the
+ * Slice-3 gate, where the graph-shaped `ready` clauses ride:
  * `invalid-ready-with-unresolved-dependency` · `invalid-ready-with-target-below-defined`.
  */
 export interface ValidatorFixture {
