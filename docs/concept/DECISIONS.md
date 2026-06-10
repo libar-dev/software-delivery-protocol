@@ -133,6 +133,11 @@ home for approval provenance is **signed git tags** (identity + approved-at, alr
 primitive.
 
 ### Base refinements (R-series)  [R1/R2 ACCEPTED & applied 2026-06-10 (Fold-A) · R3 see below]
+
+> **[RETIRE-AT-FOLD]** — pure change-log by the three-part test (the entries' own words: "the code already
+> conforms"); substance fully absorbed into the glossary, `01`, `03`, `04`. Kept until the decision-spec fold
+> because `04` §2 cites "DECISIONS R1"/"R3" live.
+
 **Context.** The post-Session-1 founding-ideation review surfaced two wording imprecisions in the ratified base.
 The **code already conforms** in both cases; these are language tightenings, so per the working discipline
 (terminology is ratified — *flag*, don't silently edit) they were recorded as **PROPOSED** and assessed by the
@@ -371,6 +376,9 @@ than its scope.
 > single-use cleanup plan (which previously held it) is gone. **Do not confuse this legacy D-space with the
 > open-decision handles D1–D8 used by `plans/02`/`plans/03`** — those name the post-Session-1 grill agenda
 > (typed sections, prose-vs-ref, floor collapse, …), a different code-space; in prose, lead with meaning.
+> **[KEEP for traceability]** — at the decision-spec fold, **D3** (Pack reified), **D5** (the agent surface
+> scripts the graph), and **D6** (the MCP-deferred *no*) become decision specs of their own; the table
+> retires when the artifacts citing `(Dn)` do.
 
 | Label | One line | Canonical in |
 |---|---|---|

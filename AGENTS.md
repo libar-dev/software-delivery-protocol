@@ -98,6 +98,12 @@ Every doc honours both — never mistake one half for the other:
   invent, new ones. The docs speak the ratified language end-to-end — a residual pre-ratification term
   (`abstraction`, `provenance`, `marker`, `facet`, "two axes", the old readiness ladder) is a **bug to fix against
   the base**, not current usage.
+- **DECISIONS.md admits sparingly, and reads by name.** An entry must pass the ADR three-part test — *hard to
+  reverse · surprising without context · a real trade-off*. If the "Why" says the base already forced the
+  answer, it's drift repair, not a decision — its paper trail is git + the plan done-record. Authoring
+  guidance only, never a validator (checks police conformance and honesty, never content-quality). In prose,
+  lead with meaning: "the typing law (MD-11)," never bare MD-n (the registry at the top of `DECISIONS.md`
+  holds the ratified names).
 - **Naming is resolved — use these names.** Product **Libar Software Delivery Protocol** (short form "the
   Protocol"); CLI **`sdp`**; npm **`@libar-dev/software-delivery-protocol`** (single package); repo
   `libar-dev/software-delivery-protocol`. Namespaces: `@libar-dev/` (OSS) vs `@libar-ai/` (commercial).

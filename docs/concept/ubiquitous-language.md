@@ -192,7 +192,9 @@ artifact** — approval provenance is git-native, never an authored primitive).
   `alternatives`/`consequences` — MD-11).
 - **Locked usage:** readiness is **"stated/asserted," never "claimed"** ("claim" is reserved for the `claim`
   taxonomy) · the meta-model defines the **contract**, **instances conform**; "govern"/"police" retired ·
-  checks are **conformance checks + honesty checks**.
+  checks are **conformance checks + honesty checks** · **pre-graph** = upstream of graph derivation in the
+  one validation path (the authored layer before the extractor runs) — fences stand-in checks, never a
+  second validation path (one validation path, MD-14).
 - **Resolved (MD-15):** authored Spec files carry the **`.sdp.ts`** extension (never `.spec.ts`, which every
   JS test-runner default glob executes); the model name `Spec` itself was always settled — only the file
   serialization changed.
