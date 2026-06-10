@@ -98,9 +98,14 @@ spec({
   "has-verifier": true,
 });
 
-// invalid-hand-authored-delivery-fact-in-section (the H8 fixture, landed compile-time): the
-// in-section bypass is closed by the typed floor-bearing sections (MD-11) — a closed BehaviorSection
-// has no index signature, so a smuggled delivery fact no longer typechecks.
+// invalid-hand-authored-delivery-fact-in-section, the compile-time twin (MD-11): the in-section
+// bypass is closed for inline literals by the typed floor-bearing sections — a closed
+// BehaviorSection has no index signature, so a smuggled delivery fact no longer typechecks. The
+// same excess-property caveat as the envelope defenses above applies: this fires only on fresh
+// literals. A section assembled through an intermediate variable slips past tsc and is caught at
+// runtime by `honesty/authoring-shape` (MD-16; the runtime twin lives in the fixture suite);
+// structurally, non-static section authoring is rejected by static reification (P5) and the
+// `sdp/spec-static` lint when the extractor lands (Slice 1).
 spec({
   id: specId("spec:orders.create-order"),
   title: "Customer creates an order",

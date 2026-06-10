@@ -95,7 +95,7 @@ The floor has two parts: **kind-blind structural clauses** (the same for every k
 Three laws bound the table:
 
 - **Monotonic by construction.** Every `defined` cell implies its `scoped` cell — clearing the higher rung always clears the lower. (The pre-MD-12 floor failed this for `constraint`: its natural evidence stopped counting between `scoped` and `defined`.)
-- **Promotion-neutral.** Promoted forms count wherever one exists (`02` §3) — de-composing a spec into children never costs it its earned rung.
+- **Promotion-neutral.** Promoted forms count wherever one exists (`02` §3) — de-composing a spec into children never costs it its earned rung. The converse honesty bound (MD-16): a promoted form counts **only when it itself carries its kind's evidence** — promotion *moves content out* (`02` §3), so an empty stub child, or a `constrainedBy` edge that does not resolve to a `constraint`-kind spec carrying its constraints, is not evidence.
 - **Convergence is honest.** Where the rungs converge (`rule`, `model`), the floor refuses to become a quota ("more terms," "more rules" — the tier-filling P4 forbids); those rungs then differ only by the author's stated confidence plus the kind-blind clauses.
 
 > **Representation note (MD-13).** In code, the floor *table* is the single source of truth: rows carry the clause id, description, and a named predicate; the evaluator is one generic loop and the clause-id type is derived from the table. The tables above and the data in `readiness-floor.ts` are intended to be reviewable as mirror images.

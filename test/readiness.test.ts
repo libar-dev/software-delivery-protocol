@@ -92,6 +92,21 @@ describe("readiness and validation contracts", () => {
     expect(
       evaluateReadinessFloor(parent, modelOf(parent)).map((failure) => failure.clauseId),
     ).toEqual(["kind-evidence-present", "kind-evidence-complete"]);
+
+    // An empty stub child is not a promotion (MD-16): promotion moves content out (MD-10), so a
+    // rule child with no statement of its own contributes no evidence.
+    const stubRule = spec({
+      id: specId("spec:orders.order-total-rule"),
+      title: "Order total matches cart math",
+      kind: "rule",
+      altitude: "story",
+      readiness: "idea",
+      relations: [refines(specId("spec:orders.create-order"))],
+    });
+
+    expect(
+      evaluateReadinessFloor(parent, modelOf(parent, stubRule)).map((failure) => failure.clauseId),
+    ).toEqual(["kind-evidence-present", "kind-evidence-complete"]);
   });
 
   it("keeps the constraint floor monotonic: an untargeted entry clears scoped, not defined (MD-12)", () => {

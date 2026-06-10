@@ -178,7 +178,8 @@ artifact** — approval provenance is git-native, never an authored primitive).
 - **"epistemic boundary"** is a *working name* for the humans-assert-intent / machines-assert-structure
   division (`01`); a friendlier Studio-facing name is a minor open item.
 - **`ref()`** in the DSL is today a **spec-only** reference builder wearing a generic name (it rejects
-  `pack:`/`doc:` targets) — documented on the export (`src/ids.ts`); revisit when `doc:`-target
+  `pack:`/`doc:` targets) — documented on the export (`src/ids.ts`). Consequently `decidedBy` → an
+  external `doc:` ADR is a **named deferral** (MD-16, stated in `02` §6); revisit when `doc:`-target
   relations or pack-targeting arrive.
 
 ## Term ledger  (locked / rejected / resolved)

@@ -81,8 +81,10 @@ literals; `npm run check` green (typecheck ×2 · lint · format · tests · bui
 
 ### Carried review backlog — closed or re-homed
 
-- **F2 ✅** — `ref()`'s spec-only nature is documented on the export (`src/ids.ts`); revisit when
-  `doc:`-target relations or pack-targeting arrive (the flag stays in the glossary).
+- **F2 ✅ (as scoped — a doc note)** — `ref()`'s spec-only nature is documented on the export
+  (`src/ids.ts`), and the consequence — `decidedBy` → external `doc:` ADR is not yet representable —
+  is an explicit named deferral in `02` §6 (MD-16); revisit when `doc:`-target relations or
+  pack-targeting arrive (the flag stays in the glossary).
 - **F3 ✅** — the aggregate `validateAuthoredModel` report no longer claims a single `family`
   (`ValidationReport.family` is optional; the aggregate id is `authored-model`); each finding carries
   its own family.
@@ -92,6 +94,16 @@ literals; `npm run check` green (typecheck ×2 · lint · format · tests · bui
   extraction.
 - **H4 — dissolved** for `behavior` (MD-10): refs cannot exist in sections, so there is nothing to
   check; what remains is exactly F4 above.
+
+### Post-execution adversarial pass — ✅ folded in same-day (MD-16)
+
+A post-Wave-B adversarial review (Codex) challenged three honesty surfaces; all three were resolved
+and landed 2026-06-10 (rationale in MD-16): promoted evidence counts only when the promoted spec
+itself carries its kind's evidence (an empty stub child or a wrong-kind/dangling `constrainedBy`
+edge no longer clears a floor — regression fixtures added); `validateAuthoringShape` is the
+Session-1 runtime stand-in for the `05` §2 authoring-shape honesty check (a delivery fact smuggled
+into a section via a non-fresh object now fails at runtime, not only at the type level); and
+`doc:`-target relations are an explicit named deferral (`02` §6).
 
 ## §5 — Explicitly out of scope (still deferred)
 

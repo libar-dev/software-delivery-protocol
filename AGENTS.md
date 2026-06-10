@@ -10,9 +10,10 @@ language, and the JTBD stories together **are the spec** — the product's own t
 design*) applied to itself: there is no separate PRD.
 
 > **Status:** concept ratified and locked; **Slice 0 (Phase 0 — the protocol as typed code) is built, green, and
-> hardened — hardening complete** (Waves A + B done; all post-Session-1 decisions resolved *and executed*,
-> DECISIONS MD-8…MD-15). The live per-session build plan is in **`plans/`**; the slice roadmap is
-> **`docs/concept/07`**. (`plans/` is the source of truth for "what now.")
+> hardened — hardening complete** (Waves A + B done plus the post-execution adversarial pass; all
+> post-Session-1 decisions resolved *and executed*, DECISIONS MD-8…MD-16). The live per-session build plan is
+> in **`plans/`**; the slice roadmap is **`docs/concept/07`**. (`plans/` is the source of truth for "what
+> now.")
 
 ## The frame
 
@@ -46,7 +47,7 @@ Progressive disclosure — start at the top, follow the pointers down.
 | `docs/concept/ubiquitous-language.md` | **the vocabulary** — the ratified lean glossary (terms · relations · a worked dialogue · flagged ambiguities); sole source of truth for terminology. The **model exposition** was rehomed into `00`–`07` (2026-06-10 Fold-A; the glossary header maps the old `base §n` refs) | **first, always** |
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
 | `docs/concept/00`–`07` (+ README) | **the technical design and the model** — 9 principle-led docs: vision & MVP boundary, founding principles (P1–P10), core model (`02` — the primitive, descriptors, sections, relations), the one graph, authoring & binding, validation & honesty, consumers, roadmap | to know *how* it works |
-| `docs/concept/DECISIONS.md` | **the why-log** for building the Protocol itself (the MD-series MD-1…MD-15, the ratified R-series, the legacy D1–D6 shorthand, measured evidence) — rationale + open tensions | when a choice looks arbitrary |
+| `docs/concept/DECISIONS.md` | **the why-log** for building the Protocol itself (the MD-series MD-1…MD-16, the ratified R-series, the legacy D1–D6 shorthand, measured evidence) — rationale + open tensions | when a choice looks arbitrary |
 | `plans/` | **the build plan** — what each implementation session does, and why | before writing code |
 | `reviews/` | **archived session reviews** (implementation, founding-ideation, adversarial + prompts) — durable findings already folded into plans/DECISIONS; read for provenance | rarely |
 

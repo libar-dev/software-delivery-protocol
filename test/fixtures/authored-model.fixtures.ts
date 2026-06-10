@@ -1,4 +1,4 @@
-import { refines, spec, specId } from "../../src/index.js";
+import { constrainedBy, refines, spec, specId } from "../../src/index.js";
 import type { AuthoredModel } from "../../src/index.js";
 
 /**
@@ -6,9 +6,10 @@ import type { AuthoredModel } from "../../src/index.js";
  * (`05` §5 "Validator self-testing"). Each fixture pins a single validator outcome so a regression
  * that silently stops a validator firing is itself caught.
  *
- * The Wave-B compile-time twin lives in `test/builders.typecheck.ts`: a hand-authored delivery fact
- * inside a section (`invalid-hand-authored-delivery-fact-in-section`) is rejected by the closed
- * section types (MD-11), so it is pinned as a `@ts-expect-error` fixture, not a runtime one.
+ * The hand-authored-delivery-fact bypass is pinned twice, on purpose (MD-11 + MD-16): the
+ * compile-time twin in `test/builders.typecheck.ts` proves the closed section types reject it for
+ * inline literals; the runtime fixture here proves `honesty/authoring-shape` catches the non-fresh
+ * object that slips past TypeScript's excess-property check.
  * The extractor-era fixtures stay named for Slice 1+ (`plans/02` §3 H8): `invalid-non-static-id` ·
  * `invalid-non-static-section` · `invalid-hand-authored-satisfies-edge` ·
  * `invalid-ready-with-unresolved-dependency` · `invalid-ready-with-target-below-defined`.
@@ -256,6 +257,106 @@ const validDefinedDecisionOnNaturalEvidence: ValidatorFixture = {
   expect: "pass",
 };
 
+// The runtime twin of the compile-time bypass fixture (MD-16): excess-property checking fires only
+// on fresh literals, so a section assembled through an intermediate variable smuggles a delivery
+// fact past tsc — the authoring-shape honesty check is what catches it.
+const smuggledBehaviorSection = {
+  rules: ["Only valid carts become orders."],
+  "has-verifier": true,
+};
+
+const invalidHandAuthoredDeliveryFactInSection: ValidatorFixture = {
+  name: "invalid-hand-authored-delivery-fact-in-section",
+  model: {
+    specs: [
+      spec({
+        id: specId("spec:orders.create-order"),
+        title: "Create order",
+        kind: "behavior",
+        altitude: "feature",
+        readiness: "idea",
+        intent: { outcome: "Turn a valid cart into an order." },
+        behavior: smuggledBehaviorSection,
+      }),
+    ],
+    packs: [],
+    anchors: [],
+  },
+  expect: { validatorId: "honesty/authoring-shape", relatedId: "has-verifier" },
+};
+
+// MD-16's promoted-evidence bound: an empty stub child is not a promotion — promotion moves content
+// out (MD-10), so a child carrying no evidence of its own never clears the parent's floor.
+const invalidDefinedBehaviorWithEmptyPromotedChild: ValidatorFixture = {
+  name: "invalid-defined-behavior-with-empty-promoted-child",
+  model: {
+    specs: [
+      spec({
+        id: specId("spec:orders.order-management"),
+        title: "Order management",
+        kind: "behavior",
+        altitude: "epic",
+        readiness: "idea",
+        intent: { outcome: "Own the order lifecycle for checkout." },
+      }),
+      spec({
+        id: specId("spec:orders.create-order"),
+        title: "Create order",
+        kind: "behavior",
+        altitude: "feature",
+        readiness: "defined",
+        intent: { outcome: "Turn a valid cart into an order." },
+        // No inline behavior content — the only would-be evidence is the empty stub child below.
+        relations: [refines(specId("spec:orders.order-management"))],
+      }),
+      spec({
+        id: specId("spec:orders.order-total-rule"),
+        title: "Order total matches cart math",
+        kind: "rule",
+        altitude: "story",
+        readiness: "idea",
+        // The stub: a rule child with no behavior.rules statement. It clears its own idea floor
+        // (parent relation present) but contributes no evidence to the parent.
+        relations: [refines(specId("spec:orders.create-order"))],
+      }),
+    ],
+    packs: [],
+    anchors: [],
+  },
+  expect: { validatorId: "honesty/readiness-floor", relatedId: "kind-evidence-present" },
+};
+
+// MD-16's constrainedBy bound: the evidence slot is the promoted twin of the inline constraints
+// section, so an edge to a non-constraint spec is not constraints evidence.
+const invalidScopedBehaviorWithNonConstraintConstrainedBy: ValidatorFixture = {
+  name: "invalid-scoped-behavior-with-non-constraint-constrained-by",
+  model: {
+    specs: [
+      spec({
+        id: specId("spec:orders.order-management"),
+        title: "Order management",
+        kind: "behavior",
+        altitude: "epic",
+        readiness: "idea",
+        intent: { outcome: "Own the order lifecycle for checkout." },
+      }),
+      spec({
+        id: specId("spec:orders.create-order"),
+        title: "Create order",
+        kind: "behavior",
+        altitude: "feature",
+        readiness: "scoped",
+        intent: { outcome: "Turn a valid cart into an order." },
+        // The edge resolves, but to a behavior spec — not a constraint carrying its evidence.
+        relations: [constrainedBy(specId("spec:orders.order-management"))],
+      }),
+    ],
+    packs: [],
+    anchors: [],
+  },
+  expect: { validatorId: "honesty/readiness-floor", relatedId: "kind-evidence-present" },
+};
+
 export const activeValidatorFixtures: readonly ValidatorFixture[] = [
   validMinimalIdeaSpec,
   invalidDuplicateId,
@@ -265,4 +366,7 @@ export const activeValidatorFixtures: readonly ValidatorFixture[] = [
   validDefinedWithNonBlockingQuestion,
   validDefinedModelOnNaturalEvidence,
   validDefinedDecisionOnNaturalEvidence,
+  invalidHandAuthoredDeliveryFactInSection,
+  invalidDefinedBehaviorWithEmptyPromotedChild,
+  invalidScopedBehaviorWithNonConstraintConstrainedBy,
 ];

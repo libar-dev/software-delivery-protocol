@@ -296,6 +296,42 @@ lives only in the path — future colocated specs would carry no marker).
 **Execution.** Wave B renames the example files and this repo's docs/globs; the extractor (Slice 1) ships
 reading `*.sdp.ts` from day one.
 
+## 2026-06-10 — Session: Wave B execution + post-execution adversarial pass
+
+### MD-16 — Honesty-sharpenings from the post-Wave-B adversarial pass: promoted evidence must be carried; authoring-shape gets its runtime stand-in; `doc:` targets are an explicit deferral  [ACCEPTED 2026-06-10]
+**Context.** An adversarial review (Codex) of the executed Wave B challenged three honesty surfaces:
+(1) the promotion-neutral floor counted *any* refining `rule`/`example` child and *any* `constrainedBy`
+edge as evidence — an empty stub child or a wrong-kind edge could clear a parent's `scoped`/`defined`;
+(2) MD-11's closed sections rely on TypeScript's excess-property check, which fires only on fresh
+literals — a section assembled through an intermediate variable smuggles a delivery fact past `tsc`,
+and nothing caught it at runtime before Slice 3; (3) the base's `decidedBy` → external `doc:` ADR
+affordance (`02` §6) is unrepresentable in the DSL, making the F2 doc-note close-out read stronger
+than its scope.
+**Decision.** All three resolved as honesty clarifications consistent with the settled decisions:
+1. **Promoted evidence counts only when the promoted spec itself carries its kind's evidence** (its
+   `scoped` cell in the per-kind table): a refining `rule`/`example` child must hold its
+   statement/entry; a `constrainedBy` edge counts only when it resolves in the model to a
+   `constraint`-kind spec with non-empty `constraints[]` (the section ⟷ kind twin of inline
+   `constraints`). Follows from MD-10 — promotion *moves content out*, so an empty child is not a
+   promotion but a stub. *Rejected:* requiring a minimum child **readiness** (a cross-spec readiness
+   gate below `ready` — the base reserves cross-spec rungs for the deferred `ready` clauses, and
+   readiness is the author's statement, not structural evidence); counting `rule`-kind `constrainedBy`
+   targets in the constraints-evidence slot (the duality twin of `constraints` is `constraint`;
+   additive to relax later if real usage wants it).
+2. **Authoring-shape honesty (`05` §2, check 5) gets its Session-1 runtime stand-in now**:
+   `validateAuthoringShape` fails any spec or pack that hand-authors a delivery-fact key
+   (`implemented` / `has-verifier` / `observed`) at the envelope or inside any section. Not a second
+   validation path (MD-14): it is an MVP honesty check implemented early on the same stand-in harness
+   the readiness floor already rides, and it migrates onto the graph with the rest. The type-level
+   closure (MD-11) stays the ergonomics lever; its fresh-literal scope is now recorded for sections
+   exactly as F7 recorded it for the envelope, and the bypass is pinned twice (compile-time +
+   runtime fixtures).
+3. **`doc:`-target relations are an explicit named deferral**, stated where the affordance is promised
+   (`02` §6, the glossary's flagged ambiguities, and doc notes in `ids.ts`/`relations.ts`): the DSL
+   stays `spec:`-target-only until the external-ADR need arrives. F2 stays closed *as the doc-note it
+   was scoped to be*; implementing a `DocId` target type now was rejected (no call site wants it, and
+   the shape should be decided when `doc:`/pack-targeting actually arrive).
+
 ## Structural-decision shorthand (D1–D6)  [ACCEPTED · relocated here when the cleanup plan was retired, 2026-06-07]
 
 > These six labels come from the original structural-decisions pass. Their *content* is canonical in the

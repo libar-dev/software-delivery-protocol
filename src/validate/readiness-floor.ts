@@ -104,19 +104,49 @@ function hasInlineBehaviorEvidence(spec: Spec): boolean {
   return hasInlineRulesOrExamples(spec) || hasEntries(spec.behavior?.flows);
 }
 
-/** Promotion-neutral evidence (MD-10/MD-12): a promoted child counts wherever an inline entry would. */
-function hasRefiningRuleOrExampleChild(spec: Spec, model: AuthoredModel): boolean {
+/** Typed accessor into the evidence table — returns the cell at its declared (2-arg) predicate type. */
+function evidenceCell(kind: SpecKind, rung: keyof KindEvidenceRow): KindEvidenceCell {
+  return kindEvidence[kind][rung];
+}
+
+/**
+ * Promotion-neutral evidence (MD-10/MD-12), bounded by MD-16: a promoted child counts wherever an
+ * inline entry would — but only when the child itself carries its kind's evidence. Promotion moves
+ * content out (MD-10), so an empty stub child is not a promotion and never clears a parent's floor.
+ */
+function hasPromotedRuleOrExampleEvidence(spec: Spec, model: AuthoredModel): boolean {
   return model.specs.some(
     (child) =>
       (child.kind === "rule" || child.kind === "example") &&
+      evidenceCell(child.kind, "scoped").predicate(child, model) &&
       (child.relations ?? []).some(
         (relation) => relation.type === "refines" && relation.target === spec.id,
       ),
   );
 }
 
-function hasConstrainedByRelation(spec: Spec): boolean {
-  return (spec.relations ?? []).some((relation) => relation.type === "constrainedBy");
+/**
+ * The constrainedBy evidence slot is the promoted twin of the inline `constraints` section (`02` §3
+ * duality), so it counts only when the edge resolves in the model to a `constraint`-kind spec that
+ * carries its own evidence (MD-16). A dangling or wrong-kind target is not evidence.
+ */
+function hasConstrainedByConstraintEvidence(spec: Spec, model: AuthoredModel): boolean {
+  const targets = new Set(
+    (spec.relations ?? [])
+      .filter((relation) => relation.type === "constrainedBy")
+      .map((relation) => relation.target),
+  );
+
+  if (targets.size === 0) {
+    return false;
+  }
+
+  return model.specs.some(
+    (candidate) =>
+      targets.has(candidate.id) &&
+      candidate.kind === "constraint" &&
+      evidenceCell("constraint", "scoped").predicate(candidate, model),
+  );
 }
 
 function hasStructuredExampleEntry(spec: Spec): boolean {
@@ -157,18 +187,18 @@ function hasWrittenDecision(spec: Spec): boolean {
 const behaviorFamilyEvidence: KindEvidenceRow = {
   scoped: {
     description:
-      "rules, examples, flows, or constraints — inline, or promoted (a refining rule/example child, or a constrainedBy target)",
+      "rules, examples, flows, or constraints — inline, or promoted (a refining rule/example child, or a constrainedBy-linked constraint, each carrying its own evidence)",
     predicate: (spec, model) =>
       hasInlineBehaviorEvidence(spec) ||
       hasConstraintEntries(spec) ||
-      hasConstrainedByRelation(spec) ||
-      hasRefiningRuleOrExampleChild(spec, model),
+      hasConstrainedByConstraintEvidence(spec, model) ||
+      hasPromotedRuleOrExampleEvidence(spec, model),
   },
   defined: {
     description:
-      "rules and/or examples, inline or promoted children — constraints alone no longer suffice",
+      "rules and/or examples — inline or promoted children carrying their evidence; constraints alone no longer suffice",
     predicate: (spec, model) =>
-      hasInlineRulesOrExamples(spec) || hasRefiningRuleOrExampleChild(spec, model),
+      hasInlineRulesOrExamples(spec) || hasPromotedRuleOrExampleEvidence(spec, model),
   },
 };
 
@@ -232,10 +262,10 @@ export const kindEvidence = {
 } as const satisfies Record<SpecKind, KindEvidenceRow>;
 
 const kindEvidencePresent: ReadinessPredicate = (spec, model) =>
-  kindEvidence[spec.kind].scoped.predicate(spec, model);
+  evidenceCell(spec.kind, "scoped").predicate(spec, model);
 
 const kindEvidenceComplete: ReadinessPredicate = (spec, model) =>
-  kindEvidence[spec.kind].defined.predicate(spec, model);
+  evidenceCell(spec.kind, "defined").predicate(spec, model);
 
 /* ----- the kind-blind structural clauses (mirrors `05` §3) ----- */
 

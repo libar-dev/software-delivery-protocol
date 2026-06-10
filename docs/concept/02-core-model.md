@@ -302,6 +302,8 @@ MVP relation vocabulary (a Representation; extensible):
 
 Two notes carried from the language ratification: the verb forms align with UML where a standard stereotype exists (`refines` ≈ «refine», `dependsOn` ≈ UML *Dependency*, `decidedBy` ≈ «trace», `verifies` ≈ «verify») — adopted nouns, per the governing rubric. And `constrainedBy` / `decidedBy` are deliberately kept **distinct** from a generic `dependsOn`: "bounded by an NFR" and "shaped by a decision" are high-value, separately-queryable intents that a generic dependency edge would flatten.
 
+> **`doc:` targets are a named deferral (MD-16).** The DSL's relation builders and `ref()` accept only `spec:` targets today, so `decidedBy` → an external `doc:` ADR is designed-for but not yet representable; until the need arrives, an external ADR is referenced from the decision spec's body, not by a typed edge. (The glossary's flagged-ambiguities entry and the notes in `src/ids.ts` / `src/model/relations.ts` carry the same flag.)
+
 **Derived edges — never authored:**
 
 - `satisfies` (code → spec) — emitted from an **anchor** in source; carries `claim:"anchored"`. This is the inverse of the old `satisfiedBy`: the direction is **code → spec**, and it is **derived from anchors**, never hand-authored.
