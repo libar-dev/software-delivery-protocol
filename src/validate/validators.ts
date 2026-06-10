@@ -4,6 +4,7 @@ import type {
   DeliveryFactName,
   GraphClaim,
   GraphEdge,
+  GraphNode,
   GraphNodeType,
   GraphSchema,
   PackNode,
@@ -333,6 +334,32 @@ function checkEdgeContractRow(edge: GraphEdge, index: GraphIndex, findings: Find
     }
   };
 
+  // The kind-typed endpoint rows (`03` §1): evaluated only where the endpoint resolves to a
+  // Primitive carrying a ratified kind — a non-Primitive endpoint is the endpoint row's finding,
+  // and an unratified kind is the descriptor check's, never a second one here.
+  const requireSpecKind = (
+    endpoint: GraphNode | undefined,
+    role: "targets" | "originates from",
+    kinds: readonly string[],
+    meaning: string,
+  ): void => {
+    if (endpoint?.nodeType !== "Primitive" || !specKindSet.has(endpoint.specKind)) {
+      return;
+    }
+
+    if (kinds.includes(endpoint.specKind)) {
+      return;
+    }
+
+    findings.push(
+      claimSeparationFinding(
+        `${describeEdge} ${role} a ${endpoint.specKind}-kind spec — ${meaning}.`,
+        edge.from,
+        fromNode?.file,
+      ),
+    );
+  };
+
   switch (edge.type) {
     case "satisfies":
       requireClaim("anchored");
@@ -361,9 +388,45 @@ function checkEdgeContractRow(edge: GraphEdge, index: GraphIndex, findings: Find
         ),
       );
       return;
+    case "constrainedBy":
+      requireClaim("declared");
+      requireEndpoints(["Primitive"], "Primitive");
+      requireSpecKind(
+        toNode,
+        "targets",
+        ["rule", "constraint"],
+        "constrainedBy bounds a spec by a rule- or constraint-kind spec (a typed dependency, `02` §6)",
+      );
+      return;
+    case "decidedBy":
+      requireClaim("declared");
+      requireEndpoints(["Primitive"], "Primitive");
+      requireSpecKind(
+        toNode,
+        "targets",
+        ["decision"],
+        "decidedBy points at a decision-kind spec (a Decision Record)",
+      );
+      return;
+    case "supersedes":
+      requireClaim("declared");
+      requireEndpoints(["Primitive"], "Primitive");
+      requireSpecKind(
+        fromNode,
+        "originates from",
+        ["decision"],
+        "supersedes is permitted only on decision specs (`02` §6)",
+      );
+      requireSpecKind(
+        toNode,
+        "targets",
+        ["decision"],
+        "supersedes is a current forward-pointer between two decision-kind specs (Decision Records)",
+      );
+      return;
     default:
-      // The remaining authored relation types: refines · dependsOn · constrainedBy · decidedBy ·
-      // supersedes — declared, Primitive → Primitive.
+      // The remaining authored relation types: refines · dependsOn — declared,
+      // Primitive → Primitive, any kind (the contract types no endpoint kind for them).
       requireClaim("declared");
       requireEndpoints(["Primitive"], "Primitive");
   }

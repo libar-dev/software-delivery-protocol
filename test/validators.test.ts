@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   codeAnchor,
   codeAnchorId,
+  constrainedBy,
+  decidedBy,
   dependsOn,
   graphValidatorIds,
   pack,
@@ -13,6 +15,7 @@ import {
   spec,
   specId,
   specTest,
+  supersedes,
   testAnchorId,
   validateGraph,
 } from "../src/index.js";
@@ -224,6 +227,131 @@ describe("graph validators", () => {
     );
     expect(claims).toHaveLength(1);
     expect(claims[0]?.message).toContain('Primitive nodes carry "declared"');
+  });
+
+  it("rejects wrong-kind endpoints on the kind-typed relations — constrainedBy, decidedBy, supersedes", () => {
+    const orderManagement = spec({
+      id: specId("spec:orders.order-management"),
+      title: "Order management",
+      kind: "behavior",
+      altitude: "epic",
+      readiness: "idea",
+      intent: { outcome: "Define order management." },
+    });
+    const orderLifecycle = spec({
+      id: specId("spec:decisions.order-lifecycle"),
+      title: "Order lifecycle",
+      kind: "decision",
+      altitude: "story",
+      readiness: "idea",
+      intent: { outcome: "Settle the order lifecycle." },
+      // A decision superseding a rule-kind spec: the to-endpoint row fails.
+      relations: [supersedes(specId("spec:orders.order-total-rule"))],
+    });
+    const orderTotalRule = spec({
+      id: specId("spec:orders.order-total-rule"),
+      title: "Order total rule",
+      kind: "rule",
+      altitude: "story",
+      readiness: "idea",
+      intent: { outcome: "Keep order totals consistent." },
+      // A rule superseding a decision: the from-endpoint row fails.
+      relations: [supersedes(orderLifecycle.id)],
+    });
+    const createOrder = spec({
+      id: specId("spec:orders.create-order"),
+      title: "Create order",
+      kind: "behavior",
+      altitude: "feature",
+      readiness: "idea",
+      intent: { outcome: "Turn a valid cart into an order." },
+      relations: [
+        // A behavior-kind bound and a behavior-kind decider: both target rows fail.
+        constrainedBy(orderManagement.id),
+        decidedBy(orderManagement.id),
+      ],
+    });
+
+    const findings = validateGraph(
+      deriveFixtureGraph({ specs: [orderManagement, orderLifecycle, orderTotalRule, createOrder] }),
+    ).findings;
+
+    expect(findings).toHaveLength(4);
+    expect(
+      findings.every(
+        (finding) =>
+          finding.validatorId === graphValidatorIds.claimSeparation && finding.severity === "error",
+      ),
+    ).toBe(true);
+
+    const messages = findings.map((finding) => finding.message);
+    expect(messages.some((m) => m.includes("(constrainedBy)") && m.includes("behavior-kind"))).toBe(
+      true,
+    );
+    expect(messages.some((m) => m.includes("(decidedBy)") && m.includes("behavior-kind"))).toBe(
+      true,
+    );
+    expect(
+      messages.some((m) => m.includes("(supersedes)") && m.includes("originates from a rule-kind")),
+    ).toBe(true);
+    expect(
+      messages.some((m) => m.includes("(supersedes)") && m.includes("targets a rule-kind")),
+    ).toBe(true);
+  });
+
+  it("accepts the valid kind-typed relation shapes — rule/constraint bounds, a decision decider, decision supersedes decision", () => {
+    const latencyConstraint = spec({
+      id: specId("spec:orders.order-latency-constraint"),
+      title: "Order latency constraint",
+      kind: "constraint",
+      altitude: "story",
+      readiness: "idea",
+      intent: { outcome: "Bound order-creation latency." },
+    });
+    const orderTotalRule = spec({
+      id: specId("spec:orders.order-total-rule"),
+      title: "Order total rule",
+      kind: "rule",
+      altitude: "story",
+      readiness: "idea",
+      intent: { outcome: "Keep order totals consistent." },
+    });
+    const orderLifecycle = spec({
+      id: specId("spec:decisions.order-lifecycle"),
+      title: "Order lifecycle",
+      kind: "decision",
+      altitude: "story",
+      readiness: "idea",
+      intent: { outcome: "Settle the order lifecycle." },
+    });
+    const orderLifecycleV2 = spec({
+      id: specId("spec:decisions.order-lifecycle-v2"),
+      title: "Order lifecycle v2",
+      kind: "decision",
+      altitude: "story",
+      readiness: "idea",
+      intent: { outcome: "Revise the order lifecycle." },
+      relations: [supersedes(orderLifecycle.id)],
+    });
+    const createOrder = spec({
+      id: specId("spec:orders.create-order"),
+      title: "Create order",
+      kind: "behavior",
+      altitude: "feature",
+      readiness: "idea",
+      intent: { outcome: "Turn a valid cart into an order." },
+      relations: [
+        constrainedBy(latencyConstraint.id),
+        constrainedBy(orderTotalRule.id),
+        decidedBy(orderLifecycleV2.id),
+      ],
+    });
+
+    const graph = deriveFixtureGraph({
+      specs: [latencyConstraint, orderTotalRule, orderLifecycle, orderLifecycleV2, createOrder],
+    });
+
+    expect(validateGraph(graph).findings).toEqual([]);
   });
 
   it("fails the anchors-resolve ready clause when a binding edge has no binding node behind it", () => {

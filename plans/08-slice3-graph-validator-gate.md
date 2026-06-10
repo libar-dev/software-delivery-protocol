@@ -43,7 +43,16 @@
 > · `readiness`) against their ratified values (conformance errors), and `evaluateReadinessFloor`
 > is total — over an unratified kind or readiness it evaluates no clauses, the conformance error
 > owning the finding. Both pinned by synthetic-graph tests; the gaps should-pass pin (execution
-> deviation 3 above) re-authored onto a real resolving test binding.
+> deviation 3 above) re-authored onto a real resolving test binding. A second pass (same
+> session, post-commit) pressed one more row of the same seam: the `03` §1 **kind-typed
+> endpoints** were stated but unenforced (§1.2 scoped endpoint checks to `nodeType`) — landed as
+> claim-separation conformance errors: `constrainedBy` → a `rule`/`constraint`-kind spec (per
+> `02` §6's "a rule / NFR / policy spec" — `constraint`-only would contradict MD-16's
+> contemplated rule-kind targets), `decidedBy` → a `decision`-kind spec, `supersedes` only
+> between `decision`-kind specs; evaluated only on resolving, ratified-kind endpoints (dangling
+> is referential integrity's finding, unratified the descriptor check's), and the
+> declared-`verifies`-from-an-example row deliberately stays the informative `verifies`-linkage
+> warning (§1.2's pinned severity). Pinned by DSL-fixture should-fail/should-pass tests.
 >
 > **Next session: Slice 4 — the agent surface**: the `reader` (thin typed loader; entry adapters +
 > file-level impact with `coverage-unknown`), the Design Review / one generated read-only view
