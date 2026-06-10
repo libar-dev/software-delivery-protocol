@@ -66,7 +66,7 @@ const invalidAuthoredModel: AuthoredModel = {
   specs: [],
   packs: [],
   anchors: [],
-  // @ts-expect-error Session 1 authored models stay in-memory only.
+  // @ts-expect-error the pre-graph authored model is an in-memory DTO — it carries no source-file bookkeeping.
   sourceFiles: [],
 };
 

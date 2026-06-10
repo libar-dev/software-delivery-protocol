@@ -2,15 +2,16 @@ import { constrainedBy, refines, spec, specId } from "../../src/index.js";
 import type { AuthoredModel } from "../../src/index.js";
 
 /**
- * Systematic should-pass / should-fail fixtures for the Session-1 authored-layer validators
+ * Systematic should-pass / should-fail fixtures for the pre-graph authored-layer validators
  * (`05` §5 "Validator self-testing"). Each fixture pins a single validator outcome so a regression
  * that silently stops a validator firing is itself caught.
  *
- * The hand-authored-delivery-fact bypass is pinned twice, on purpose (MD-11 + MD-16): the
- * compile-time twin in `test/builders.typecheck.ts` proves the closed section types reject it for
- * inline literals; the runtime fixture here proves `honesty/authoring-shape` catches the non-fresh
- * object that slips past TypeScript's excess-property check.
- * The extractor-era fixtures stay named for Slice 1+ (`plans/02` §3 H8): `invalid-non-static-id` ·
+ * The hand-authored-delivery-fact bypass is pinned twice, on purpose (the typing law MD-11 +
+ * carried evidence MD-16): the compile-time twin in `test/builders.typecheck.ts` proves the closed
+ * section types reject it for inline literals; the runtime fixture here proves
+ * `honesty/authoring-shape` catches the non-fresh object that slips past TypeScript's
+ * excess-property check.
+ * The extractor-era fixtures stay named, awaiting Slice 1+: `invalid-non-static-id` ·
  * `invalid-non-static-section` · `invalid-hand-authored-satisfies-edge` ·
  * `invalid-ready-with-unresolved-dependency` · `invalid-ready-with-target-below-defined`.
  */

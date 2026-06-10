@@ -219,9 +219,10 @@ export function validateReadinessFloors(model: AuthoredModel): ValidationReport 
 }
 
 /**
- * Pre-graph authored-layer validation only. This composes the tiny Session 1 authored-model checks and is not the
- * Slice 3 graph validator gate. The aggregate spans both check families, so it carries no single
- * `family` of its own — each finding states its family (`conformance` or `honesty`).
+ * Pre-graph authored-layer validation only. This composes the pre-graph authored-model checks and
+ * is not the Slice 3 graph validator gate (one validation path, MD-14). The aggregate spans both
+ * check families, so it carries no single `family` of its own — each finding states its family
+ * (`conformance` or `honesty`).
  */
 export function validateAuthoredModel(model: AuthoredModel): ValidationReport {
   const findings = [

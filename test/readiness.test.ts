@@ -52,10 +52,12 @@ describe("readiness and validation contracts", () => {
     ]);
   });
 
-  it("keeps the graph-shaped ready clauses deferred in Session 1 (MD-14)", () => {
-    expect(readinessFloors.ready.clauses.every((clause) => "deferredInSession1" in clause)).toBe(
-      true,
-    );
+  it("marks the ready clauses graph-shaped — evaluated over the one graph, never the pre-graph harness (one validation path, MD-14)", () => {
+    expect(
+      readinessFloors.ready.clauses.every(
+        (clause) => "evaluatedOver" in clause && clause.evaluatedOver === "graph",
+      ),
+    ).toBe(true);
   });
 
   it("covers every kind in the evidence table; workflow and contract ride the behavior row (MD-12)", () => {

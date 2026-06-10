@@ -21,14 +21,17 @@ export interface ActiveReadinessClause {
   readonly predicate: ReadinessPredicate;
 }
 
-/** Graph-shaped clauses that execute over the one graph (MD-14, Slice 1/3); the Session-1 evaluator skips them. */
-export interface DeferredReadinessClause {
+/**
+ * Graph-shaped clauses — they resolve across the one graph (one validation path, MD-14; executes
+ * Slice 1/3) and carry no pre-graph predicate, so the pre-graph evaluator skips them.
+ */
+export interface GraphReadinessClause {
   readonly id: string;
   readonly description: string;
-  readonly deferredInSession1: true;
+  readonly evaluatedOver: "graph";
 }
 
-export type ReadinessClause = ActiveReadinessClause | DeferredReadinessClause;
+export type ReadinessClause = ActiveReadinessClause | GraphReadinessClause;
 
 export interface ReadinessFloor {
   readonly readiness: SpecReadiness;
@@ -341,17 +344,17 @@ export const readinessFloors = {
       {
         id: "all-relations-resolve",
         description: "All authored relations resolve to known targets.",
-        deferredInSession1: true,
+        evaluatedOver: "graph",
       },
       {
         id: "depends-on-and-refines-targets-are-defined",
         description: "Every dependsOn and refines target is at least defined.",
-        deferredInSession1: true,
+        evaluatedOver: "graph",
       },
       {
         id: "anchors-resolve",
         description: "Any authored anchors present resolve.",
-        deferredInSession1: true,
+        evaluatedOver: "graph",
       },
     ],
   },
@@ -367,7 +370,8 @@ export interface ReadinessFloorFailure {
 
 /**
  * The one generic evaluator (MD-13): floors are cumulative, so every clause at or below the stated
- * rung must hold; deferred (graph-shaped) clauses are skipped until the extractor lands.
+ * rung must hold; graph-shaped clauses carry no pre-graph predicate and are skipped until the
+ * extractor lands (Slice 1/3).
  */
 export function evaluateReadinessFloor(
   spec: Spec,
@@ -378,7 +382,7 @@ export function evaluateReadinessFloor(
 
   for (const readiness of SPEC_READINESS.slice(0, statedIndex + 1)) {
     for (const clause of readinessFloors[readiness].clauses) {
-      if ("deferredInSession1" in clause) {
+      if ("evaluatedOver" in clause) {
         continue;
       }
 

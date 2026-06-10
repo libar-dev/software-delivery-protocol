@@ -196,7 +196,7 @@ describe("validators", () => {
     ]);
   });
 
-  it("ignores Session 1 deferred ready checks for target readiness and anchor resolution", () => {
+  it("skips graph-shaped ready clauses pre-graph (target readiness and anchor resolution wait for the extractor)", () => {
     const report = validateReadinessFloors({
       specs: [
         createBehaviorSpec(specId("spec:orders.create-order"), "ready", {

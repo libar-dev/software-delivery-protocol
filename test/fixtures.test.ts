@@ -23,10 +23,4 @@ describe("authored-model validator fixtures (should-pass / should-fail regressio
       expect(matching.length).toBeGreaterThan(0);
     });
   }
-
-  // The Wave-B gated stubs resolved (plans/02 §4): `invalid-ready-with-blocking-question` is active
-  // above (MD-9 — the floor reads intent.openQuestions); `invalid-hand-authored-delivery-fact-in-
-  // section` is pinned twice — a compile-time `@ts-expect-error` fixture in `builders.typecheck.ts`
-  // (MD-11, the fresh-literal path) and the active runtime fixture above (MD-16, the non-fresh
-  // object that slips past excess-property checking).
 });
