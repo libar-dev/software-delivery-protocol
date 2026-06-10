@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { validateAuthoredModel } from "../src/index.js";
-import { activeValidatorFixtures } from "./fixtures/authored-model.fixtures.js";
+import { validateGraph } from "../src/index.js";
+import { activeValidatorFixtures } from "./fixtures/graph-validator.fixtures.js";
+import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
-describe("authored-model validator fixtures (should-pass / should-fail regression net)", () => {
+describe("graph-validator fixtures (should-pass / should-fail regression net)", () => {
   for (const fixture of activeValidatorFixtures) {
     it(fixture.name, () => {
-      const { findings } = validateAuthoredModel(fixture.model);
+      const { findings } = validateGraph(deriveFixtureGraph(fixture.model));
       const { expect: expected } = fixture;
 
       if (expected === "pass") {

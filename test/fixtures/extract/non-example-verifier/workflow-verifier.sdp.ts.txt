@@ -1,0 +1,23 @@
+import { spec, specId, verifies } from "@libar-dev/software-delivery-protocol";
+
+export const createOrderSpec = spec({
+  id: specId("spec:orders.create-order"),
+  title: "Create order",
+  kind: "behavior",
+  altitude: "feature",
+  readiness: "idea",
+  intent: { outcome: "Turn a valid cart into an order." },
+});
+
+// A workflow spec declaring verifies: the relation is authored freely, but only an
+// example/scenario can be an enabled verifier (MD-7), so it confers no has-verifier — the
+// verifies-linkage check surfaces it informatively, never as a gate.
+export const reconciliationWorkflowSpec = spec({
+  id: specId("spec:orders.reconciliation-workflow"),
+  title: "Reconciliation workflow claims to verify order creation",
+  kind: "workflow",
+  altitude: "story",
+  readiness: "idea",
+  intent: { outcome: "Show a non-example verifier surfacing informatively." },
+  relations: [verifies(specId("spec:orders.create-order"))],
+});

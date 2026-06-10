@@ -1,0 +1,10 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const createOrderSpec = spec({
+  id: specId("spec:orders.create-order"),
+  title: "Create order",
+  kind: "behavior",
+  altitude: "feature",
+  readiness: "idea",
+  intent: { outcome: "Turn a valid cart into an order." },
+});

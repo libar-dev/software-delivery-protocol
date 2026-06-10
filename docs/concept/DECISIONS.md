@@ -301,7 +301,7 @@ silent-skip failure mode survives).
 **Execution.** Wave B (plan 02 H5), together with the MD-12 floor rewrite — one change, since the table
 being rewritten is the table being collapsed.
 
-### MD-14 — One validation path, through the one graph; `AuthoredModel` retires as a public seam  [ACCEPTED 2026-06-10 · direction; executes Slice 1/3]
+### MD-14 — One validation path, through the one graph; `AuthoredModel` retires as a public seam  [ACCEPTED 2026-06-10 · EXECUTED — the extractor landed at Slice 1, the graph-validator re-key at Slice 3; `AuthoredModel` is deleted and `validateGraph` is the sole validation seam]
 **Decision.** When the extractor lands, validators consume **the extractor's output** — one path: source →
 extract (static reification, P5) → graph (in memory) → conformance + honesty checks; `sdp validate` =
 `sdp build` + checks. `AuthoredModel` is demoted to (at most) an extractor-internal intermediate — never a

@@ -1,0 +1,35 @@
+import { refines, spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const orderManagementSpec = spec({
+  id: specId("spec:orders.order-management"),
+  title: "Order management",
+  kind: "behavior",
+  altitude: "epic",
+  readiness: "idea",
+  intent: { outcome: "Own the order lifecycle for checkout." },
+});
+
+export const createOrderSpec = spec({
+  id: specId("spec:orders.create-order"),
+  title: "Create order",
+  kind: "behavior",
+  altitude: "feature",
+  readiness: "defined",
+  intent: { outcome: "Turn a valid cart into an order." },
+  behavior: { rules: ["Only valid carts become orders."] },
+  relations: [refines(specId("spec:orders.order-management"))],
+});
+
+// Clears the whole ready floor — every reference resolves, the refines target is defined — but no
+// verifier binds it: a gap (a surfaced absence), informative only, because ready never requires
+// delivery facts.
+export const orderTotalRuleSpec = spec({
+  id: specId("spec:orders.order-total-rule"),
+  title: "Order total matches cart math",
+  kind: "rule",
+  altitude: "story",
+  readiness: "ready",
+  intent: { outcome: "Keep order totals deterministic." },
+  behavior: { rules: ["The order total is the sum of all line subtotals."] },
+  relations: [refines(specId("spec:orders.create-order"))],
+});

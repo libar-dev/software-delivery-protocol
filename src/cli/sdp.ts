@@ -6,13 +6,15 @@ import { fileURLToPath } from "node:url";
 
 import { extract } from "../extract/index.js";
 import { serializeGraph } from "../extract/serialize.js";
+import type { GraphSchema } from "../graph/schema.js";
 import type { Finding } from "../validate/contracts.js";
+import { validateGraph } from "../validate/validators.js";
 
 export const SDP_HELP_TEXT = `sdp — Libar Software Delivery Protocol
 Usage:
   sdp --help
   sdp build [root] [--check-clean]
-  sdp validate
+  sdp validate [root] [--check-clean]
 
 Commands:
   build      Extract every *.sdp.ts under root (default: cwd), plus the anchor constants in the
@@ -20,7 +22,10 @@ Commands:
              Exits 1 and writes nothing on any hard error — the emitted artifact is
              all-or-nothing. --check-clean additionally runs a second independent extraction
              and fails on any byte divergence (the determinism self-check).
-  validate   Validation gate not wired yet (Slice 3: graph validator gate)`;
+  validate   build, then run the conformance + honesty checks over the one graph (one
+             validation path). A check error exits 1; gaps and orphans inform as warnings.
+             graph.json is still written when the checks fail — the graph is the faithful
+             projection; check errors describe the repo's conformance, not the artifact.`;
 
 interface CliOutput {
   stdout?: { write: (chunk: string) => void };
@@ -48,7 +53,13 @@ function formatFinding(finding: Finding): string {
   return `[${finding.severity}] ${finding.validatorId} — ${finding.message}\n`;
 }
 
-function runBuild(args: readonly string[], output: CliOutput): number {
+interface BuildOutcome {
+  readonly exitCode: number;
+  /** Present only when the build succeeded — the graph the checks consume. */
+  readonly graph?: GraphSchema;
+}
+
+function runBuild(args: readonly string[], output: CliOutput, command: string): BuildOutcome {
   let root: string | undefined;
   let checkClean = false;
 
@@ -59,13 +70,13 @@ function runBuild(args: readonly string[], output: CliOutput): number {
     }
 
     if (argument.startsWith("--")) {
-      writeStderr(output, `Unknown option for build: ${argument}\n`);
-      return 1;
+      writeStderr(output, `Unknown option for ${command}: ${argument}\n`);
+      return { exitCode: 1 };
     }
 
     if (root !== undefined) {
-      writeStderr(output, "sdp build takes at most one root argument.\n");
-      return 1;
+      writeStderr(output, `sdp ${command} takes at most one root argument.\n`);
+      return { exitCode: 1 };
     }
 
     root = argument;
@@ -81,21 +92,21 @@ function runBuild(args: readonly string[], output: CliOutput): number {
 
   const errorCount = findings.filter((finding) => finding.severity === "error").length;
   const warningCount = findings.length - errorCount;
-  const summary = `${String(result.model.specs.length)} specs · ${String(result.model.packs.length)} packs · ${String(result.model.anchors.length)} anchors → ${String(result.graph.nodes.length)} nodes · ${String(result.graph.edges.length)} edges (${String(errorCount)} errors, ${String(warningCount)} warnings)\n`;
+  const summary = `${String(result.counts.specs)} specs · ${String(result.counts.packs)} packs · ${String(result.counts.anchors)} anchors → ${String(result.graph.nodes.length)} nodes · ${String(result.graph.edges.length)} edges (${String(errorCount)} errors, ${String(warningCount)} warnings)\n`;
   const graphPath = join(resolvedRoot, "generated", "graph.json");
 
   // A stale projection is as dishonest as a partial one: a failed build must not leave a previous
   // graph.json behind that downstream consumers could read as current.
-  const failBuild = (message: string): number => {
+  const failBuild = (message: string): BuildOutcome => {
     rmSync(graphPath, { force: true });
     writeStderr(output, message);
-    return 1;
+    return { exitCode: 1 };
   };
 
   if (errorCount > 0) {
     writeStdout(output, summary);
     return failBuild(
-      "sdp build: hard errors present — graph.json not written; any previous graph.json at this root was removed.\n",
+      `sdp ${command}: hard errors present — graph.json not written; any previous graph.json at this root was removed.\n`,
     );
   }
 
@@ -106,7 +117,7 @@ function runBuild(args: readonly string[], output: CliOutput): number {
 
     if (second !== serialized) {
       return failBuild(
-        "sdp build --check-clean: two independent extractions diverged — the build is not deterministic; any previous graph.json at this root was removed.\n",
+        `sdp ${command} --check-clean: two independent extractions diverged — the build is not deterministic; any previous graph.json at this root was removed.\n`,
       );
     }
   }
@@ -118,7 +129,36 @@ function runBuild(args: readonly string[], output: CliOutput): number {
   renameSync(temporaryPath, graphPath);
   writeStdout(output, summary);
   writeStdout(output, `Wrote ${graphPath}\n`);
-  return 0;
+  return { exitCode: 0, graph: result.graph };
+}
+
+/**
+ * `sdp validate` = `sdp build` + the checks (one validation path, MD-14). Extraction hard errors
+ * keep build semantics and short-circuit the checks — checking a partial graph would validate a
+ * phantom. With extraction clean the artifact is written even when checks fail: the graph is the
+ * faithful projection, and the check errors describe the repo's conformance, not the artifact.
+ */
+function runValidate(args: readonly string[], output: CliOutput): number {
+  const build = runBuild(args, output, "validate");
+
+  if (build.graph === undefined) {
+    return build.exitCode;
+  }
+
+  const findings = validateGraph(build.graph).findings;
+
+  for (const finding of findings) {
+    writeStderr(output, formatFinding(finding));
+  }
+
+  const errorCount = findings.filter((finding) => finding.severity === "error").length;
+  const warningCount = findings.length - errorCount;
+  writeStdout(
+    output,
+    `validate: ${String(errorCount)} errors · ${String(warningCount)} warnings (conformance + honesty over the one graph)\n`,
+  );
+
+  return errorCount > 0 ? 1 : 0;
 }
 
 export function runSdpCli(args: readonly string[], output: CliOutput = defaultCliOutput): number {
@@ -130,12 +170,11 @@ export function runSdpCli(args: readonly string[], output: CliOutput = defaultCl
   }
 
   if (command === "build") {
-    return runBuild(rest, output);
+    return runBuild(rest, output, "build").exitCode;
   }
 
   if (command === "validate") {
-    writeStderr(output, "sdp validate gate is not wired yet (Slice 3: graph validator gate).\n");
-    return 1;
+    return runValidate(rest, output);
   }
 
   writeStderr(output, `${SDP_HELP_TEXT}\n\nUnknown command: ${command}\n`);

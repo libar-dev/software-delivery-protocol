@@ -57,8 +57,8 @@ export interface PackNode extends GraphNodeBase {
   readonly title?: string;
   readonly framing?: string;
   /**
-   * Node data, not edges: the `03` edge contract has no `modelRefs` edge type — pack coherence
-   * reads this at Slice 3 (F4).
+   * Node data, not edges: the `03` edge contract has no `modelRefs` edge type — the
+   * pack-coherence check reads this (every entry resolves to a `model`-kind spec).
    */
   readonly modelRefs?: readonly string[];
   readonly file: string;

@@ -41,3 +41,6 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Validate the example (the conformance + honesty gate)
+        run: npm run check:example

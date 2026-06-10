@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   SPEC_KINDS,
+  buildGraphIndex,
   evaluateReadinessFloor,
   kindEvidence,
   readinessFloors,
@@ -11,10 +12,22 @@ import {
   validationSeverities,
   validatorFamilies,
 } from "../src/index.js";
-import type { AuthoredModel, Spec } from "../src/index.js";
+import type { ReadinessFloorFailure, Spec } from "../src/index.js";
+import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
-function modelOf(...specs: readonly Spec[]): AuthoredModel {
-  return { specs, packs: [], anchors: [] };
+/** Evaluates the floor for one spec over the graph derived from the given model. */
+function floorFailuresFor(
+  subjectId: string,
+  ...specs: readonly Spec[]
+): readonly ReadinessFloorFailure[] {
+  const index = buildGraphIndex(deriveFixtureGraph({ specs }));
+  const node = index.primitivesById.get(subjectId);
+
+  if (node === undefined) {
+    throw new Error(`Fixture graph is missing the subject node "${subjectId}".`);
+  }
+
+  return evaluateReadinessFloor(node, index);
 }
 
 describe("readiness and validation contracts", () => {
@@ -52,8 +65,12 @@ describe("readiness and validation contracts", () => {
     ]);
   });
 
-  it("marks the ready clauses graph-shaped — evaluated over the one graph, never the pre-graph harness (one validation path, MD-14)", () => {
-    expect(readinessFloors.ready.clauses.every((clause) => "evaluatedOver" in clause)).toBe(true);
+  it("evaluates every clause — the ready clauses included — over the one graph (one validation path, MD-14)", () => {
+    for (const floor of Object.values(readinessFloors)) {
+      for (const clause of floor.clauses) {
+        expect(typeof clause.predicate).toBe("function");
+      }
+    }
   });
 
   it("covers every kind in the evidence table; workflow and contract ride the behavior row (MD-12)", () => {
@@ -85,11 +102,12 @@ describe("readiness and validation contracts", () => {
       relations: [refines(specId("spec:orders.create-order"))],
     });
 
-    expect(evaluateReadinessFloor(parent, modelOf(parent, promotedRule))).toEqual([]);
+    expect(floorFailuresFor(parent.id, parent, promotedRule)).toEqual([]);
 
-    expect(
-      evaluateReadinessFloor(parent, modelOf(parent)).map((failure) => failure.clauseId),
-    ).toEqual(["kind-evidence-present", "kind-evidence-complete"]);
+    expect(floorFailuresFor(parent.id, parent).map((failure) => failure.clauseId)).toEqual([
+      "kind-evidence-present",
+      "kind-evidence-complete",
+    ]);
 
     // An empty stub child is not a promotion (MD-16): promotion moves content out (MD-10), so a
     // rule child with no statement of its own contributes no evidence.
@@ -103,7 +121,7 @@ describe("readiness and validation contracts", () => {
     });
 
     expect(
-      evaluateReadinessFloor(parent, modelOf(parent, stubRule)).map((failure) => failure.clauseId),
+      floorFailuresFor(parent.id, parent, stubRule).map((failure) => failure.clauseId),
     ).toEqual(["kind-evidence-present", "kind-evidence-complete"]);
   });
 
@@ -121,12 +139,12 @@ describe("readiness and validation contracts", () => {
       });
 
     const scoped = constraintAt("scoped");
-    expect(evaluateReadinessFloor(scoped, modelOf(scoped))).toEqual([]);
+    expect(floorFailuresFor(scoped.id, scoped)).toEqual([]);
 
     const defined = constraintAt("defined");
-    expect(
-      evaluateReadinessFloor(defined, modelOf(defined)).map((failure) => failure.clauseId),
-    ).toEqual(["kind-evidence-complete"]);
+    expect(floorFailuresFor(defined.id, defined).map((failure) => failure.clauseId)).toEqual([
+      "kind-evidence-complete",
+    ]);
   });
 
   it("requires a structured GWT entry for a defined example; prose clears scoped only (MD-10)", () => {
@@ -143,9 +161,9 @@ describe("readiness and validation contracts", () => {
       });
 
     const prose = exampleWith(["Valid cart becomes an order with the computed total."]);
-    expect(
-      evaluateReadinessFloor(prose, modelOf(prose)).map((failure) => failure.clauseId),
-    ).toEqual(["kind-evidence-complete"]);
+    expect(floorFailuresFor(prose.id, prose).map((failure) => failure.clauseId)).toEqual([
+      "kind-evidence-complete",
+    ]);
 
     const structured = exampleWith([
       {
@@ -154,6 +172,6 @@ describe("readiness and validation contracts", () => {
         then: ["An order is created."],
       },
     ]);
-    expect(evaluateReadinessFloor(structured, modelOf(structured))).toEqual([]);
+    expect(floorFailuresFor(structured.id, structured)).toEqual([]);
   });
 });

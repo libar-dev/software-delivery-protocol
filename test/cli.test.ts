@@ -155,16 +155,58 @@ describe("sdp cli", () => {
     }
   });
 
-  it("rejects validate as not wired", () => {
+  it("validates the example: exit 0, the artifact written, and exactly the one surfaced warning", () => {
     const capture = createCaptureOutput();
 
-    const exitCode = runSdpCli(["validate"], capture.output);
+    const exitCode = runSdpCli(["validate", exampleRoot, "--check-clean"], capture.output);
 
-    expect(exitCode).toBe(1);
-    expect(capture.readStdout()).toBe("");
-    expect(capture.readStderr()).toBe(
-      "sdp validate gate is not wired yet (Slice 3: graph validator gate).\n",
+    expect(exitCode).toBe(0);
+    expect(capture.readStdout()).toContain("9 specs · 1 packs · 3 anchors → 13 nodes · 25 edges");
+    expect(capture.readStdout()).toContain(
+      "validate: 0 errors · 1 warnings (conformance + honesty over the one graph)",
     );
+    // The standing warning is the invalid-cart example's unenabled verifier — informative, never
+    // a gate (it is the surfaced absence the check exists for, not noise to silence).
+    expect(capture.readStderr()).toContain("conformance/verifies-linkage");
+    expect(capture.readStderr()).not.toContain("[error]");
+    expect(existsSync(join(exampleRoot, "generated", "graph.json"))).toBe(true);
+  });
+
+  it("gates on the checks, not the build: a clean-building broken link validates to exit 1 with the artifact kept", () => {
+    const corpusRoot = materializeExtractCorpus("dangling-relation");
+
+    try {
+      expect(runSdpCli(["build", corpusRoot], createCaptureOutput().output)).toBe(0);
+
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["validate", corpusRoot], capture.output);
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toContain("conformance/referential-integrity");
+      expect(capture.readStdout()).toContain("validate: 1 errors · 0 warnings");
+      // The artifact stays: the graph is the faithful projection — the check errors describe the
+      // repo's conformance, not the artifact.
+      expect(existsSync(join(corpusRoot, "generated", "graph.json"))).toBe(true);
+    } finally {
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("short-circuits the checks on extraction hard errors: validate keeps build semantics", () => {
+    const corpusRoot = materializeExtractCorpus("invalid-non-static-id");
+
+    try {
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["validate", corpusRoot], capture.output);
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toContain("extract/non-static-envelope");
+      expect(capture.readStderr()).toContain("sdp validate: hard errors present");
+      expect(capture.readStdout()).not.toContain("conformance");
+      expect(existsSync(join(corpusRoot, "generated", "graph.json"))).toBe(false);
+    } finally {
+      removeMaterializedCorpus(corpusRoot);
+    }
   });
 
   it("prints help plus an unknown-command error", () => {

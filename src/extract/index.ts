@@ -3,10 +3,6 @@ import { readFileSync } from "node:fs";
 import { Project } from "ts-morph";
 
 import type { GraphSchema } from "../graph/schema.js";
-import type { Anchor } from "../model/anchors.js";
-import type { Pack } from "../model/pack.js";
-import type { Spec } from "../model/spec.js";
-import type { AuthoredModel } from "../validate/authored-model.js";
 import type { Finding, ValidationReport } from "../validate/contracts.js";
 import { reifyAnchorSourceFile } from "./anchors.js";
 import type { ReifiedAnchor } from "./anchors.js";
@@ -29,6 +25,12 @@ export interface ExtractOptions {
   readonly root: string;
 }
 
+export interface ExtractionCounts {
+  readonly specs: number;
+  readonly packs: number;
+  readonly anchors: number;
+}
+
 export interface ExtractionResult {
   readonly graph: GraphSchema;
   /**
@@ -39,12 +41,12 @@ export interface ExtractionResult {
    */
   readonly report: ValidationReport;
   /**
-   * The MD-14 bridge: the extractor feeds the existing pre-graph floor checks through this
-   * `AuthoredModel`; it dissolves at the Slice-3 re-key that points the validators at the graph.
-   * Duplicated-id carriers stay in the model (truthful record of what was authored) but are
-   * excluded from the graph, which cannot be keyed on an ambiguous id.
+   * Authored-carrier counts as reified — duplicate-id carriers included: the truthful record of
+   * what was authored even when ambiguity (L2) excludes a carrier from the graph, which cannot be
+   * keyed on an ambiguous id. Everything else about the authored layer is read off the graph
+   * itself (one validation path, MD-14).
    */
-  readonly model: AuthoredModel;
+  readonly counts: ExtractionCounts;
 }
 
 function compareCodeUnits(left: string, right: string): number {
@@ -108,8 +110,9 @@ function findDuplicatedIds(
  * layer (spec files, pack manifests) plus the anchored layer (anchor constants in source files).
  * Files are reified standalone by pure AST reading (no type checker, no tsconfig dependence, no
  * import following — static reification without execution, MD-14), then the one graph is derived,
- * delivery facts included. The inferred layer stays empty until its Slice-4 consumer defines the
- * minimal advisory set; the graph-validator gate rides Slice 3.
+ * delivery facts included. The conformance + honesty checks consume the graph (`validateGraph`),
+ * never any pre-graph shape. The inferred layer stays empty until its Slice-4 consumer defines
+ * the minimal advisory set.
  */
 export function extract(options: ExtractOptions): ExtractionResult {
   const files = discoverFiles(options.root);
@@ -150,15 +153,9 @@ export function extract(options: ExtractOptions): ExtractionResult {
     anchors.filter((entry) => !duplicated.has(entry.id)),
   );
 
-  const model: AuthoredModel = {
-    specs: specs.map((entry) => entry.data as unknown as Spec),
-    packs: packs.map((entry) => entry.data as unknown as Pack),
-    anchors: anchors.map((entry) => entry.data as unknown as Anchor),
-  };
-
   return {
     graph,
     report: { validatorId: extractValidatorId, findings: sortFindings(findings) },
-    model,
+    counts: { specs: specs.length, packs: packs.length, anchors: anchors.length },
   };
 }

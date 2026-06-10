@@ -1,0 +1,12 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+// No relations and nothing pointing at it: fallen out of the graph's connective tissue — an
+// orphan, surfaced informatively (a warning, never a gate).
+export const strandedSpec = spec({
+  id: specId("spec:orders.stranded"),
+  title: "Stranded spec with no connective tissue",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  intent: { outcome: "Surface as an orphan, not fail the build." },
+});

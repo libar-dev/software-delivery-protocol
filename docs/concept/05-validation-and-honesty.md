@@ -41,24 +41,25 @@ Types describe **shape**; validators decide **completeness** (P7). Completeness 
 
 These are the non-negotiable core. CI fails on any error. They split across the two families.
 
-**They run over the one graph — there is exactly one validation path** (MD-14): source → extract (static reification, P5) → graph → checks; `sdp validate` is `sdp build` + checks. Validating any *evaluated* form (importing spec modules and checking the resulting objects) would check a phantom — a non-static expression evaluates to a value on import but is dropped by static reification, so the checks could pass a spec the graph doesn't actually hold. The pre-graph `AuthoredModel` is a stand-in that retires into (at most) an extractor-internal shape when the extractor lands (Slice 1); it is never a second public validation seam. Authoring-time feedback is the type system's job (typed sections, `02` §3) plus the `sdp/spec-static` lint — not a parallel validator path.
+**They run over the one graph — there is exactly one validation path** (MD-14): source → extract (static reification, P5) → graph → checks; `sdp validate` is `sdp build` + checks, and `validateGraph` is the sole validation seam. Validating any *evaluated* form (importing spec modules and checking the resulting objects) would check a phantom — a non-static expression evaluates to a value on import but is dropped by static reification, so the checks could pass a spec the graph doesn't actually hold. For the same reason there is no pre-graph validation seam of any kind: a check that reads anything but the derived graph is a second validation path, forbidden. Authoring-time feedback is the type system's job (typed sections, `02` §3) plus the `sdp/spec-static` lint — not a parallel validator path.
 
 **Conformance checks:**
 
 1. **Referential integrity.** Every ID referenced (in relations, `modelRefs`, anchors) resolves to a node that exists. A dangling reference is an error — with a "did you mean…?" suggestion where possible. *(This is the cost of string-ID linkage from P6, paid down at build time.)*
 2. **Duplicate-ID detection.** No two nodes share an ID. A duplicate is an error, never an auto-resolved merge (L2 — ambiguity is loud).
-3. **`claim` separation never collapsed.** A `declared` edge is never silently "satisfied" by an `inferred` one; node/edge typing (`nodeType` / `specKind` / `claim`) stays valid and distinct (`03`, `04`).
+3. **`claim` separation never collapsed.** A `declared` edge is never silently "satisfied" by an `inferred` one; node/edge typing stays valid and distinct (`03`, `04`) — `nodeType` / `claim` / the edge-contract rows, and the three descriptors (`specKind` · `altitude` · `readiness`) carry their ratified values. The floor is never evaluated over an unratified descriptor (fail closed, never a crash or a silent skip).
 4. **`verifies` linkage.** The bidirectional spec↔test trace resolves: a test anchored `verifies: spec:X` must point at an existing spec.
 
 **Honesty checks:**
 
 5. **Authoring-shape honesty.** No spec or pack file hand-authors a derived edge or fact — `satisfies`, an `anchored` edge, an `inferred` edge, or any delivery fact (`implemented` / `has-verifier` / `observed`). Those are the machine's to derive; authoring one is a violation.
-6. **Honest readiness (the readiness floor).** A spec that *states* a readiness rung but lacks the structure that rung requires fails. **Readiness is stated by the author; validators verify the stated rung against the floor** (P8). See §3.
+6. **Derived-facts honesty.** A `Primitive` node's stated delivery facts equal what the one derivation rule recomputes from the graph's resolving binding edges. Extractor output holds by construction; the check has teeth for any other graph producer — a stated fact no binding earns (including `observed`, which nothing derives yet) is authored derived truth, and an omitted fact corrupts the backlog/drift queries. The gap check (9) reads the recomputed facts, so a faked fact never silences it.
+7. **Honest readiness (the readiness floor).** A spec that *states* a readiness rung but lacks the structure that rung requires fails. **Readiness is stated by the author; validators verify the stated rung against the floor** (P8). See §3.
 
 **Informative (a `gap` or `orphan`, not an error by default):**
 
-7. **Orphan detection.** A spec with no relations and nothing pointing at it is surfaced (warning or error per config) — it has fallen out of the graph's connective tissue.
-8. **Readiness/delivery gaps.** A `ready` spec with no resolving verifier is a surfaced `gap` (the build backlog and drift-alarm queries, `02` §2), not an error.
+8. **Orphan detection.** A spec with no relations and nothing pointing at it is surfaced (warning or error per config) — it has fallen out of the graph's connective tissue.
+9. **Readiness/delivery gaps.** A `ready` spec with no resolving verifier is a surfaced `gap` (the build backlog and drift-alarm queries, `02` §2), not an error.
 
 Two cross-cutting honesty rules apply to all validators:
 

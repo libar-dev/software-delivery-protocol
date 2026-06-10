@@ -1,3 +1,5 @@
+import type { GraphSchema } from "../graph/schema.js";
+
 export const validatorFamilies = ["conformance", "honesty"] as const;
 export type ValidatorFamily = (typeof validatorFamilies)[number];
 
@@ -32,8 +34,8 @@ export interface ValidationReport {
   readonly findings: readonly Finding[];
 }
 
-export interface Validator<TModel = unknown> {
+export interface Validator<TInput = GraphSchema> {
   readonly id: string;
   readonly family: ValidatorFamily;
-  validate(model: TModel): ValidationReport;
+  validate(input: TInput): ValidationReport;
 }

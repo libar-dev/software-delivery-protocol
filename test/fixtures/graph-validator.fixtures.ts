@@ -1,32 +1,36 @@
-import { constrainedBy, refines, spec, specId } from "../../src/index.js";
-import type { AuthoredModel } from "../../src/index.js";
+import { constrainedBy, pack, packId, refines, spec, specId } from "../../src/index.js";
+import type { FixtureModel } from "../helpers/fixture-graph.js";
 
 /**
- * Systematic should-pass / should-fail fixtures for the pre-graph authored-layer validators
- * (`05` §5 "Validator self-testing"). Each fixture pins a single validator outcome so a regression
- * that silently stops a validator firing is itself caught.
+ * Systematic should-pass / should-fail fixtures for the graph validators (`05` §5 "Validator
+ * self-testing"). Each fixture pins a single validator outcome so a regression that silently stops
+ * a validator firing is itself caught. Fixtures are authored with the DSL builders and derived
+ * through the real `deriveGraph` (see `helpers/fixture-graph.ts`); `validateGraph` consumes the
+ * result — the same seam every consumer uses (one validation path, MD-14).
  *
- * The hand-authored-delivery-fact bypass is pinned twice, on purpose (the typing law MD-11 +
+ * The hand-authored-delivery-fact bypass is pinned three ways, on purpose (the typing law MD-11 +
  * carried evidence MD-16): the compile-time twin in `test/builders.typecheck.ts` proves the closed
  * section types reject it for inline literals; the runtime fixture here proves
  * `honesty/authoring-shape` catches the non-fresh object that slips past TypeScript's
- * excess-property check.
- * Three extractor-era names are activated as on-disk corpora under `test/fixtures/extract/`
- * (exercised by `test/extract.test.ts`, Slice 1): `invalid-non-static-id` ·
- * `invalid-non-static-section` · `invalid-hand-authored-satisfies-edge`. Two stay reserved for the
- * Slice-3 gate, where the graph-shaped `ready` clauses ride:
- * `invalid-ready-with-unresolved-dependency` · `invalid-ready-with-target-below-defined`.
+ * excess-property check; and the on-disk corpus `invalid-hand-authored-delivery-fact-in-section`
+ * (`test/extract.test.ts`) proves the same end-to-end from a source file the typechecker never
+ * sees. The once-reserved extractor-era names are all active on-disk corpora now:
+ * `invalid-non-static-id` · `invalid-non-static-section` · `invalid-hand-authored-satisfies-edge`
+ * · `invalid-ready-with-unresolved-dependency` · `invalid-ready-with-target-below-defined`.
  */
 export interface ValidatorFixture {
   readonly name: string;
-  readonly model: AuthoredModel;
+  readonly model: FixtureModel;
   /**
-   * `"pass"` asserts `validateAuthoredModel` returns no findings. Otherwise the model must produce a
-   * finding from `validatorId`; when `relatedId` is given, at least one finding must also match it.
+   * `"pass"` asserts `validateGraph` returns no findings at all. Otherwise the model must produce
+   * a finding from `validatorId`; when `relatedId` is given, at least one finding must also match
+   * it (other informative findings may legitimately accompany a should-fail model).
    */
   readonly expect: "pass" | { readonly validatorId: string; readonly relatedId?: string };
 }
 
+// The minimal clean repo: one idea spec carried by a pack — connected (a lone spec would
+// legitimately surface as an orphan, pinned by the `orphan-spec` corpus instead).
 const validMinimalIdeaSpec: ValidatorFixture = {
   name: "valid-minimal-idea-spec",
   model: {
@@ -40,12 +44,20 @@ const validMinimalIdeaSpec: ValidatorFixture = {
         intent: { outcome: "Own the order lifecycle for checkout." },
       }),
     ],
-    packs: [],
-    anchors: [],
+    packs: [
+      pack({
+        id: packId("pack:checkout-v1"),
+        title: "Checkout v1",
+        specs: [specId("spec:orders.order-management")],
+      }),
+    ],
   },
   expect: "pass",
 };
 
+// The graph backstop for L2: the extractor excludes duplicate carriers before derivation
+// (`extract/duplicate-id`), so this fixture deliberately reaches `validateGraph` with both nodes —
+// the non-extractor-producer input class the graph check exists for.
 const invalidDuplicateId: ValidatorFixture = {
   name: "invalid-duplicate-id",
   model: {
@@ -67,8 +79,6 @@ const invalidDuplicateId: ValidatorFixture = {
         intent: { outcome: "Accidental second definition of the same id." },
       }),
     ],
-    packs: [],
-    anchors: [],
   },
   expect: { validatorId: "conformance/duplicate-ids" },
 };
@@ -88,8 +98,6 @@ const invalidScopedWithoutRelation: ValidatorFixture = {
         // No relations: a scoped spec must declare at least one authored relation.
       }),
     ],
-    packs: [],
-    anchors: [],
   },
   expect: { validatorId: "honesty/readiness-floor", relatedId: "at-least-one-relation" },
 };
@@ -119,8 +127,6 @@ const invalidDefinedConstraintWithoutTarget: ValidatorFixture = {
         relations: [refines(specId("spec:orders.create-order"))],
       }),
     ],
-    packs: [],
-    anchors: [],
   },
   expect: {
     validatorId: "honesty/readiness-floor",
@@ -158,8 +164,6 @@ const invalidReadyWithBlockingQuestion: ValidatorFixture = {
         relations: [refines(specId("spec:orders.order-management"))],
       }),
     ],
-    packs: [],
-    anchors: [],
   },
   expect: { validatorId: "honesty/readiness-floor", relatedId: "no-blocking-open-questions" },
 };
@@ -194,8 +198,6 @@ const validDefinedWithNonBlockingQuestion: ValidatorFixture = {
         relations: [refines(specId("spec:orders.order-management"))],
       }),
     ],
-    packs: [],
-    anchors: [],
   },
   expect: "pass",
 };
@@ -225,8 +227,6 @@ const validDefinedModelOnNaturalEvidence: ValidatorFixture = {
         relations: [refines(specId("spec:orders.order-management"))],
       }),
     ],
-    packs: [],
-    anchors: [],
   },
   expect: "pass",
 };
@@ -254,15 +254,13 @@ const validDefinedDecisionOnNaturalEvidence: ValidatorFixture = {
         relations: [refines(specId("spec:orders.create-order"))],
       }),
     ],
-    packs: [],
-    anchors: [],
   },
   expect: "pass",
 };
 
 // The runtime twin of the compile-time bypass fixture (MD-16): excess-property checking fires only
 // on fresh literals, so a section assembled through an intermediate variable smuggles a delivery
-// fact past tsc — the authoring-shape honesty check is what catches it.
+// fact past tsc — the authoring-shape honesty check over the graph is what catches it.
 const smuggledBehaviorSection = {
   rules: ["Only valid carts become orders."],
   "has-verifier": true,
@@ -282,8 +280,6 @@ const invalidHandAuthoredDeliveryFactInSection: ValidatorFixture = {
         behavior: smuggledBehaviorSection,
       }),
     ],
-    packs: [],
-    anchors: [],
   },
   expect: { validatorId: "honesty/authoring-shape", relatedId: "has-verifier" },
 };
@@ -323,8 +319,6 @@ const invalidDefinedBehaviorWithEmptyPromotedChild: ValidatorFixture = {
         relations: [refines(specId("spec:orders.create-order"))],
       }),
     ],
-    packs: [],
-    anchors: [],
   },
   expect: { validatorId: "honesty/readiness-floor", relatedId: "kind-evidence-present" },
 };
@@ -354,8 +348,6 @@ const invalidScopedBehaviorWithNonConstraintConstrainedBy: ValidatorFixture = {
         relations: [constrainedBy(specId("spec:orders.order-management"))],
       }),
     ],
-    packs: [],
-    anchors: [],
   },
   expect: { validatorId: "honesty/readiness-floor", relatedId: "kind-evidence-present" },
 };
