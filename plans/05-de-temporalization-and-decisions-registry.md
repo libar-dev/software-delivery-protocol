@@ -18,7 +18,11 @@
 > instead of subtracting exemptions, so root/tooling files — including the guard itself, whose
 > header cited a numbered plan — escaped scanning. The sweep now covers **all tracked files minus
 > the genre exemptions**; re-verified on all three paths, including a seeded token in the
-> previously-unscanned `ci.yml`.
+> previously-unscanned `ci.yml`. A third pass narrowed the guard's self-exemption from file-level
+> to **line-level use–mention** (only the line that *is* the pattern literal is allowed; any other
+> line in the guard is swept like any file's) and un-capped the numbered-plan pattern
+> (`plans/[0-9]+` — the zero-padded form would have stopped guarding at plan 10). Verified: a
+> banned token seeded into the guard's own comments fails the check.
 >
 > **Next session: Slice 1 — the `ts-morph` extractor** (deterministic rebuild P3 + graceful partial
 > extraction L3; reads `*.sdp.ts` from day one — the `.sdp.ts` extension, MD-15); the hardened example
@@ -239,11 +243,11 @@ never runs `npm run check`, so the script-level wiring alone never reached the m
 wrapper passes **only** on git-grep exit 1 (searched, found nothing); exit 0 fails listing the
 matches; any other exit fails closed.
 
-- **File set (as built, second round):** **all tracked files**, minus the genre exemptions —
-  `docs/concept/DECISIONS.md` (dated diary), `plans/` (done-records), `reviews/` (archive),
-  `package-lock.json` (machine-generated, not authored prose), and `check-temporal.mjs` itself
-  (use–mention: its pattern must name the tokens it bans). Subtractive, never additive — new files
-  are guarded by default.
+- **File set (as built, final):** **all tracked files**, minus the genre exemptions —
+  `docs/concept/DECISIONS.md` (dated diary), `plans/` (done-records), `reviews/` (archive), and
+  `package-lock.json` (machine-generated, not authored prose). The guard sweeps its own file too;
+  its single allowance is line-level use–mention (only the pattern-literal line, which must name
+  the tokens it bans). Subtractive, never additive — new files are guarded by default.
 - **Patterns:** session/wave/fold tokens, the old flag name (regression tripwire for 1a), numbered
   plan-file refs, ISO dates. **Deliberately absent:** `Slice [0-9]`/`Phase 0` (allowed
   forward-pointers) and `MD-n` (citations encouraged).
