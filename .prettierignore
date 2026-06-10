@@ -5,3 +5,6 @@ jtbd-stories/**
 plans/**
 .sisyphus/**
 .tmp-scratch/**
+
+# Archived review artifacts - verbatim historical records, not format-policed
+reviews/
