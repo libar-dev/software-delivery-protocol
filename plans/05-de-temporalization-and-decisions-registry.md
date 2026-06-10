@@ -21,8 +21,11 @@
 > previously-unscanned `ci.yml`. A third pass narrowed the guard's self-exemption from file-level
 > to **line-level use–mention** (only the line that *is* the pattern literal is allowed; any other
 > line in the guard is swept like any file's) and un-capped the numbered-plan pattern
-> (`plans/[0-9]+` — the zero-padded form would have stopped guarding at plan 10). Verified: a
-> banned token seeded into the guard's own comments fails the check.
+> (`plans/[0-9]+` — the zero-padded form would have stopped guarding at plan 10). A fourth pass
+> tightened the allowance predicate to **exact-line equality with an at-most-one rule** — a copied
+> regex with anything else beside it on the line, or a second copy of the literal, is a violation.
+> Verified: a banned token in the guard's own comments, the copied-regex smuggle, and the
+> duplicated literal all fail the check.
 >
 > **Next session: Slice 1 — the `ts-morph` extractor** (deterministic rebuild P3 + graceful partial
 > extraction L3; reads `*.sdp.ts` from day one — the `.sdp.ts` extension, MD-15); the hardened example

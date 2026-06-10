@@ -35,13 +35,21 @@ if (result.status !== 0 && result.status !== 1) {
 }
 
 // This file is swept like every other; its single allowance is line-level use–mention: the guard
-// must name the tokens it bans, so the one line that *is* the pattern literal is permitted. Any
-// other matching line here — a comment, a header — is a violation like any file's. (If this file
-// is renamed, the allowance stops matching and the pattern line fails loudly: fail closed.)
+// must name the tokens it bans, so exactly one line — the pattern literal, alone on its line — is
+// permitted. The predicate is exact-content equality, so a copied regex with anything else beside
+// it on the line, or a second copy of the literal, is a violation like any other. (If this file is
+// renamed, the allowance stops matching and the pattern line fails loudly: fail closed.)
 const matches = result.status === 0 ? result.stdout.split("\n").filter(Boolean) : [];
-const violations = matches.filter(
-  (line) => !(line.startsWith("check-temporal.mjs:") && line.includes(pattern)),
-);
+const allowedSelfLine = `"${pattern}";`;
+let selfAllowanceUsed = false;
+const violations = matches.filter((line) => {
+  const selfMatch = /^check-temporal\.mjs:\d+:(.*)$/.exec(line);
+  if (selfMatch !== null && selfMatch[1].trim() === allowedSelfLine && !selfAllowanceUsed) {
+    selfAllowanceUsed = true;
+    return false;
+  }
+  return true;
+});
 
 if (violations.length > 0) {
   console.error("check:temporal — banned temporal tokens found:\n");
