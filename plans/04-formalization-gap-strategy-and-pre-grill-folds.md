@@ -1,12 +1,13 @@
 # Session 4 — Formalization: gap strategy + pre-grill folds (re-entry context)
 
-> **Status: PLAN-ONLY · DRAFT · the re-entry point.** This document exists to bootstrap context fast
-> after a break — it is the formalized residue of a long design arc that hit the ceiling of what a
-> chat thread can resolve ("no substrate to grow the decision → formalize"). Read §0 first; the rest
-> is reference.
-> **Date:** 2026-06-08 · **Branch:** `feature/mvp-init` · **Repo state:** green; two commits since
-> Session 1 — `478cc00` (Phase-0 hardening Wave A) and `c8a7ce0` (plan split + adversarial-review
-> absorption). Working tree otherwise clean.
+> **Status: PLAN-ONLY · §3 EXECUTED 2026-06-10 (Fold-A · Fold-B · archive) · §2 still the parked
+> direction.** This document exists to bootstrap context fast after a break — it is the formalized residue
+> of a long design arc that hit the ceiling of what a chat thread can resolve ("no substrate to grow the
+> decision → formalize"). Read §0 first; the rest is reference.
+> **Date:** 2026-06-08 · folds executed 2026-06-10 · **Branch:** `feature/mvp-init` · **Repo state:**
+> green; the pre-grill folds are committed (UL → lean glossary + rehome; R1/R2/R3 applied; MD-8/MD-9
+> recorded; `plans/03` slimmed to six; reviews archived in `reviews/`). **Next: the grill** (§5 kickoff
+> prompt; agenda `plans/03`).
 
 ---
 
@@ -25,9 +26,9 @@ done). No extractor, no graph, no engine yet.
 3. We converged on **how to manage gen-2's own delivery in the gap** before the engine exists — see §2,
    the **crippled graph**.
 
-**What's next (in order):** two scoped **fresh** fold sessions (§3) → then the **grill** on a lean base
-+ a six-item agenda. This session's job was only to *formalize* that — the folds and the grill run cold,
-in fresh sessions, not in a loaded one. Copy-paste launch prompts are in §5.
+**What's next:** ~~two scoped **fresh** fold sessions (§3)~~ **the folds and the archive are DONE
+(2026-06-10, one fresh fold session)** → now the **grill** on the lean base + the six-item agenda
+(`plans/03`). The grill runs cold, in a fresh session; its kickoff prompt is in §5.
 
 **The one decision still genuinely open and yours:** how far the crippled graph goes, and exactly what
 its two instances are (§2). Parked deliberately — it needs substrate to grow, not more chat.
@@ -97,7 +98,13 @@ decisions.** Today neither holds. Two fresh fold sessions fix that. (Naming note
 **Fold-A / Fold-B** to avoid colliding with the *review's* findings F1–F7, which are different things —
 see the ledger, §6.)
 
-### Fold-A — the UL restructure (big; careful; its own fresh session)
+### Fold-A — the UL restructure — ✅ DONE 2026-06-10
+*Executed as planned:* `ubiquitous-language.md` is now the lean glossary (terms · relations · worked
+dialogue · flagged ambiguities · term ledger, with an old-§ map in the header); the exposition was rehomed
+**into `00`–`07`** (the lean option won — measured overlap was ~95%, so rehoming was mostly dedup plus a few
+genuine insertions: the discipline ≈ kind/section mapping into `06` §6, UML alignment + relation-granularity
+rationale into `02` §6, many-packs membership into `02` §4); R1/R2 applied; every pointer re-aimed
+(AGENTS.md, concept README, DECISIONS.md). Original scope kept below for the record.
 The current `docs/concept/ubiquitous-language.md` is a **design-synthesis document wearing a UL hat** — an
 artifact of the 8-hour grill that had to invent *and* name the model in one breath. A true Evans UL is
 lean. Split the one doc into its three real concerns:
@@ -117,7 +124,10 @@ lean. Split the one doc into its three real concerns:
   only where they live. So it does *not* need a grill, but it does need fresh, careful scope and a
   pointer-integrity pass.
 
-### Fold-B — the resolvable-now sweep (small)
+### Fold-B — the resolvable-now sweep — ✅ DONE 2026-06-10
+*Executed as planned:* `04` §2 reconciled to the binding-only `specTest` (R3 applied); the generic-anchor
+shape and the open-questions home recorded **ACCEPTED** in `DECISIONS.md` (MD-8 / MD-9); `plans/03` slimmed
+to the six genuinely-open decisions. Original scope kept below for the record.
 Fold the already-determined items out of the grill's path:
 - **Reconcile the `04` doc's `specTest` signature to binding-only** (no executing `run` callback; the
   code already conforms — doc fidelity fix).
@@ -130,10 +140,10 @@ Fold the already-determined items out of the grill's path:
   prose-vs-ref-incl-examples, collapse-the-floor-validator, AuthoredModel-vs-graph, kind-aware-floor,
   `.spec.ts`-collision. Collapse the "resolvable-now" section to a one-line pointer.
 
-### Optional — archive the artifacts
-The adversarial **review**, its **prompt**, and the **gen-1 study** currently live in gitignored
-`.tmp-scratch/`; they vanish on a clean clone. If they're worth keeping, move them into a tracked
-`reviews/` (or `docs/reviews/`). 2.5h + 8h + this arc of signal otherwise lost to git.
+### Optional — archive the artifacts — ✅ DONE 2026-06-10
+All five scratch artifacts (both earlier reviews, the adversarial review + its prompt, the fold-session
+prompt) moved into tracked **`reviews/`** with a README mapping each to where its durable findings landed.
+The gen-1 study was chat-only; its takeaway is formalized in §0/§2 here.
 
 ### Then — the grill
 A fresh `grill-with-docs` session on `plans/03`, now opening onto a lean base + a tight six-item agenda.
@@ -144,15 +154,13 @@ Wave B execution-ready.
 
 ## §4 — Sequencing & done-criteria
 
-1. **Fold-A** (UL restructure) — fresh session. *Done when:* lean glossary exists; exposition rehomed;
-   every pointer re-aimed; the two wording reconciliations applied; nothing in the model *changed*, only
-   relocated; repo still coherent (no dangling cross-refs).
-2. **Fold-B** (resolvable-now sweep) — fresh session (can follow Fold-A or run independently; it doesn't
-   touch the UL doc except the plans/03 slim). *Done when:* `04` reconciled; two decisions recorded;
+1. ~~**Fold-A** (UL restructure)~~ — ✅ DONE 2026-06-10: lean glossary; exposition rehomed into `00`–`07`;
+   pointers re-aimed; R1/R2 applied; nothing in the model changed, only relocated; repo coherent.
+2. ~~**Fold-B** (resolvable-now sweep)~~ — ✅ DONE 2026-06-10: `04` reconciled (R3); MD-8/MD-9 recorded;
    `plans/03` down to six open decisions.
-3. **(optional) archive** the scratch artifacts.
-4. **Grill** — fresh `grill-with-docs` on `plans/03`. *Done when:* the six decisions resolved + recorded;
-   base reconciled; `plans/02` Wave B execution-ready.
+3. ~~**(optional) archive**~~ — ✅ DONE 2026-06-10: `reviews/` tracked.
+4. **Grill** — fresh `grill-with-docs` on `plans/03`. ← **NEXT.** *Done when:* the six decisions resolved +
+   recorded; base reconciled; `plans/02` Wave B execution-ready.
 5. **Then** Wave B execution, and — gated on a minimal engine — the **crippled graph** (§2) graduates
    from direction to design.
 
@@ -164,7 +172,10 @@ Wave B execution-ready.
 
 ## §5 — Scoped session prompts (copy-paste to launch cold)
 
-### Fold-A prompt
+> The Fold-A / Fold-B prompts below were **executed 2026-06-10** and are kept for the record; the live one
+> is the **grill kickoff**.
+
+### Fold-A prompt — executed ✅
 > Scoped doc-restructure, no model changes. Read `docs/concept/ubiquitous-language.md`, `00`–`07`,
 > `README.md`, `AGENTS.md`, and `plans/03` + `plans/04`. The current `ubiquitous-language.md` is a
 > design-synthesis doc wearing a UL hat; split it into a **lean Evans glossary** (Term · Definition ·
@@ -175,7 +186,7 @@ Wave B execution-ready.
 > source but not *re-parse* it). **Constraint: distillation + rehoming only — do not re-decide the model;
 > terms and meanings stay identical, only their home changes.** End green: no dangling cross-references.
 
-### Fold-B prompt
+### Fold-B prompt — executed ✅
 > Small, decision-free sweep. Read `plans/03`, `plans/04`, `docs/concept/DECISIONS.md`, and
 > `docs/concept/04-authoring-and-binding.md`. (1) Reconcile the `04` doc's `specTest` description to a
 > binding-only signature (no executing `run` callback — the code in `src/model/anchors.ts` already
@@ -184,9 +195,11 @@ Wave B execution-ready.
 > (`intent.openQuestions`; note execution stays Wave B in `plans/02`). (3) Slim `plans/03` to the six
 > genuinely-open decisions and collapse its "resolvable-now" (§3a) to a one-line pointer.
 
-### Grill kickoff (after the folds)
-> `grill-with-docs` on `plans/03` — six open decisions, against the now-lean base. Ratify inline; rewrite
-> `plans/02` Wave B execution-ready.
+### Grill kickoff (the folds are done — this is the live prompt)
+> `grill-with-docs` on `plans/03` — six open decisions (D1 typed-sections · D2 prose-vs-ref incl.
+> `examples` · D3 floor-validator collapse · D4 AuthoredModel-vs-graph · D7 kind-aware `defined` floor ·
+> D8 `.spec.ts` collision), against the now-lean base (terms: the glossary; model: `00`–`07`). Ratify
+> inline; record in `DECISIONS.md`; rewrite `plans/02` Wave B execution-ready.
 
 ---
 
@@ -205,15 +218,15 @@ The antidote to code-noise: every handle, decoded. Two separate code-spaces — 
 | **D7** | Make the `defined` floor **kind-aware** — today it forces behavior-rules onto decision/model/constraint specs, so the example *pads*. The review's top finding; shrinks the contract; de-pads the example. | grill |
 | **D8** | The `.spec.ts` file-extension collides with the JS test-runner glob — adoption landmine. Keep-with-exclusion vs. a collision-free extension. Representation-level. | grill |
 
-**Resolvable-now (folded out by Fold-B — already determined):**
+**Resolvable-now (folded out — all ✅ done 2026-06-10):**
 
 | Handle | Meaning | Disposition |
 |---|---|---|
-| **R1** | Anchor "identity only" (§2) vs "a binding" (§4) → unify to *binding assertion only*. | apply in Fold-A |
-| **R2** | "No consumer reads source" → links-into-graph OK, independent re-parse forbidden. | apply in Fold-A |
-| **R3** | `04` doc's `specTest` → binding-only (no `run`); code already conforms. | apply in Fold-B |
-| **D6** | Generic-anchor shape → `codeAnchor` over impl/api/component. | record in Fold-B; exec Slice 2 |
-| **H2-dir** | Open-questions home = `intent.openQuestions`. | record in Fold-B; exec Wave B |
+| **R1** | Anchor "identity only" vs "a binding" → unified to *binding assertion only*. | ✅ applied in Fold-A (glossary, `01`, `04` §2) |
+| **R2** | "No consumer reads source" → links-into-graph OK, independent re-parse forbidden. | ✅ applied in Fold-A (`01` P2, `03` §4) |
+| **R3** | `04` doc's `specTest` → binding-only (no `run`); code already conforms. | ✅ applied in Fold-B (`04` §2) |
+| **D6** | Generic-anchor shape → `codeAnchor` over impl/api/component. | ✅ recorded **MD-8**; exec Slice 2 (plan 02 H10) |
+| **H2-dir** | Open-questions home = `intent.openQuestions`. | ✅ recorded **MD-9**; exec Wave B (plan 02 H2) |
 
 **Wave B (in `plans/02`, decision-gated; execute after the grill):** H2 (open-questions home fix), H3
 (`constraints` → array), H4 (section-ref referential integrity), H5 (trim floor validator), H10 (api

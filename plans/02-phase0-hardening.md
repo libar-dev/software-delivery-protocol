@@ -7,6 +7,9 @@
 > proper homes (see "Where the rest went," below).
 > **Date:** 2026-06-07 · **Branch:** `feature/mvp-init` · **Repo state:** Session 1 (`eb6bf2a`) + Wave A
 > green (`npm run check`: typecheck ×2, lint, format, **47 tests + 2 todo**, build).
+> **2026-06-10 folds:** R1/R2/R3 ratified & applied; the anchor shape (MD-8 `codeAnchor`) and the
+> open-questions home (MD-9 `intent.openQuestions`) recorded **decided** — H2's direction and H10's shape
+> are no longer open; Wave B's typed-section fixes remain blocked on D1/D2/D3 (the grill, `plans/03`).
 
 This plan covers the gap between *"Slice 0 is green"* and *"Slice 0 is a faithful, lean foundation the
 extractor can safely build on."* It stays inside the Slice 0 boundary — **no extractor, no graph
@@ -15,10 +18,11 @@ doesn't inherit a landmine.
 
 **Where the rest went (the re-home).** This plan was originally one document fusing three kinds of work;
 they now live where each gets the right rigor:
-- **Open decisions (D1–D4, D6)** → `plans/03-decision-resolution-and-base-reconciliation.md` — the
-  fresh-session grilling agenda. Wave B below is **blocked on these**.
-- **Concept-base wording (R1, R2)** → `docs/concept/DECISIONS.md` (recorded **PROPOSED**), to ratify in
-  the grilling session.
+- **Open decisions** → `plans/03-decision-resolution-and-base-reconciliation.md` — the grilling agenda,
+  now slimmed to the six genuinely-open (D1–D4, D7, D8). Wave B's typed-section fixes are **blocked on
+  D1/D2/D3**; the former D6 (anchor shape) was folded out as **decided** (DECISIONS MD-8).
+- **Concept-base wording (R1, R2, R3)** → `docs/concept/DECISIONS.md` — **ratified & applied 2026-06-10**
+  in the pre-grill folds.
 - **Forward-looking acceptance criteria** → `docs/concept/07` §6 (mapped across Slices 1–5).
 
 ---
@@ -118,7 +122,7 @@ Quick, contract-shrinking, reversible wins. All landed and verified; `npm run ch
 Execution-ready specs, held until the named decision lands in
 `plans/03-decision-resolution-and-base-reconciliation.md`. **Sequence after D1/D2/D3.**
 
-### 🟠 H2 — Honesty check points at the wrong section (open questions) · gated on **D1** (+ home decision)
+### 🟠 H2 — Honesty check points at the wrong section (open questions) · direction **decided** (MD-9); execution-ready independent of D1
 - **Finding.** `validators.ts` (`hasNoBlockingOpenQuestions`) and `readiness-floor.ts` read
   `spec.design.openQuestions` / `spec.decision.openQuestions`. The canonical home is
   **`intent.openQuestions`** (`02` §3; the `04` worked example puts it under `intent`).
@@ -166,18 +170,18 @@ Execution-ready specs, held until the named decision lands in
 - **Change (when scheduled).** Extend referential integrity to typed ref-bearing section fields; align
   the example to the resolved D2.
 
-### 🟠 H10 — The example under-proves the generic-anchor claim · gated on **D6**; pairs with Slice 2
+### 🟠 H10 — The example under-proves the generic-anchor claim · shape **decided** (MD-8 `codeAnchor`); pairs with Slice 2
 - **Finding.** *Generic* anchors should bind **any** code location, but the example has only `impl` +
   `test` anchors; the docs' own example (`04` §5) includes a route anchor `api:orders.post`. The tracer
   bullet never exercises the genericity claim — the strongest proof is binding a **non-class location**
   (a route/endpoint).
-- **Change (when scheduled).** Add an `api`/route anchor to `examples/checkout-v1` under the DSL shape
-  resolved in **D6**; it should extract to a `satisfies` edge with `claim:"anchored"` like any other.
+- **Change (when scheduled).** Add an `api`/route anchor to `examples/checkout-v1` under the **MD-8
+  `codeAnchor`** shape; it should extract to a `satisfies` edge with `claim:"anchored"` like any other.
 
 ### Carried review backlog (post-split adversarial review · small, ride Wave B / Slice 1)
 
-Captured so the signal survives — the review lives in gitignored `.tmp-scratch/`. None block the split;
-each is small, decision-free, or doc-level.
+Captured so the signal survives — the review is tracked in `reviews/04-post-split-adversarial-review.md`.
+None block the split; each is small, decision-free, or doc-level.
 - **F2 — `ref` is a spec-only brand wearing a generic name.** `ids.ts` exports `specId as ref`, so
   `ref()` rejects `pack:` / `doc:` targets. Harmless today (every call site wants a spec); add a doc
   note, and revisit when `doc:`-target relations (`decidedBy` → external ADR) / pack-targeting arrive.
@@ -188,10 +192,10 @@ each is small, decision-free, or doc-level.
   "always points at standalone `kind:"model"` specs," but `validateDanglingReferences` only checks the
   ref *resolves*. Needs the kind — likely Slice-1/3 (graph) territory; named so prose doesn't
   over-promise vs. the check.
-- **Cross-refs (owned elsewhere).** F1 → **D7** (plan 03, base §6 refinement — de-pads the example and
-  the H8 constraint fixture in Wave B). F6 → **R3** (`DECISIONS.md`, doc reconciliation). **H2's
-  *direction* is determined** (`intent.openQuestions`, review §3.3) — it can be decoupled from D1 and
-  executed independently in Wave B. **F7 — DONE**: the H9 envelope-defense caveat (excess-property /
+- **Cross-refs (owned elsewhere).** F1 → **D7** (plan 03, a floor-table refinement — `05` §3 — de-pads the
+  example and the H8 constraint fixture in Wave B). F6 → **R3 — applied 2026-06-10** (Fold-B; `04` §2 is
+  now binding-only). **H2's *direction* is decided** (MD-9: `intent.openQuestions`) — execution is
+  decoupled from D1 and lands in Wave B. **F7 — DONE**: the H9 envelope-defense caveat (excess-property /
   inline-literal scope) is now recorded in `test/builders.typecheck.ts`.
 
 ---
@@ -206,9 +210,11 @@ repo. Full typing of `design`/`decision`/`ui` sections stays deferred per D1.
 ## §6 — Sequencing
 
 1. **Wave A** — ✅ done (H1, H6, H7, H8-active, H9).
-2. **Resolve decisions** — the fresh grilling session (`plans/03`): D2 → D1 → D3, plus D4 (direction) and
-   D6 (shape); ratify R1/R2 on the base.
-3. **Wave B** — with typed sections in place: H3, then H2 (+ flip its gated H8 fixture), then H5/D3, then
+2. **Pre-grill folds (2026-06-10)** — ✅ done: R1/R2/R3 ratified & applied; the anchor shape (MD-8) and the
+   open-questions home (MD-9) recorded decided; `plans/03` slimmed to the six open decisions.
+3. **Resolve decisions** — the fresh grilling session (`plans/03`): D2 → D1 → D3, plus D4 (direction),
+   D7 (kind-aware floor), D8 (file extension).
+4. **Wave B** — with typed sections in place: H3, then H2 (+ flip its gated H8 fixture), then H5/D3, then
    H4; H10 with Slice-2 anchor extraction.
 
 **Done gate for Wave B:** the honesty bypass (`behavior: { "has-verifier": true }`) is rejected for
