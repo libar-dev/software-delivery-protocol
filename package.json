@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "description": "Libar Software Delivery Protocol — a typed, executable, self-validating meta-model of the software-delivery process: author Specs as code, derive one graph, check conformance and honesty.",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/libar-dev/software-delivery-protocol.git"
+  },
   "type": "module",
   "files": [
     "dist"
