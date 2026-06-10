@@ -487,3 +487,35 @@ export function evaluateReadinessFloor(
 
   return failures;
 }
+
+/**
+ * Derived readiness (`05` §3): the highest rung whose cumulative clauses all pass — what the spec
+ * structurally *is*, beside what the author *states*. Same table, same predicates, no second
+ * floor (MD-13); the stated rung is never consulted. Returns `undefined` when even the `idea`
+ * clauses fail. Total over foreign data: an unratified `specKind` cannot dereference the evidence
+ * table, so no rung derives — the descriptor conformance error owns that finding, exactly as in
+ * the evaluator. The divergence reading: derived *below* stated is the honesty signal the floor
+ * check fails on; derived at-or-above stated is ordinary information — the floor is never a
+ * quota, and a spec may honestly state less than it clears.
+ */
+export function deriveReadiness(node: PrimitiveNode, index: GraphIndex): SpecReadiness | undefined {
+  if (!ratifiedKinds.has(node.specKind)) {
+    return undefined;
+  }
+
+  let reached: SpecReadiness | undefined;
+
+  for (const readiness of SPEC_READINESS) {
+    const cleared = readinessFloors[readiness].clauses.every((clause) =>
+      clause.predicate(node, index),
+    );
+
+    if (!cleared) {
+      break;
+    }
+
+    reached = readiness;
+  }
+
+  return reached;
+}

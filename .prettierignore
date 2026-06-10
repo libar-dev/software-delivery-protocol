@@ -12,3 +12,8 @@ reviews/
 # The golden graph oracle carries the serializer's exact bytes (serialize.ts owns all output
 # bytes); reformatting it would break the byte-compare against extractor output
 test/fixtures/checkout-v1/expected-graph.json
+
+# The golden Design Review carries the renderer's exact bytes (design-review.ts owns them);
+# same rule for the generated artifacts themselves — derived output is never format-policed
+test/fixtures/checkout-v1/expected-design-review/
+generated/

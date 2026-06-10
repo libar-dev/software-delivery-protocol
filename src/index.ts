@@ -8,6 +8,8 @@ export * from "./model/pack.js";
 export * from "./model/relations.js";
 export * from "./model/sections.js";
 export * from "./model/spec.js";
+export * from "./projections/design-review.js";
+export * from "./reader/reader.js";
 export * from "./validate/contracts.js";
 export * from "./validate/graph-index.js";
 export * from "./validate/readiness-floor.js";

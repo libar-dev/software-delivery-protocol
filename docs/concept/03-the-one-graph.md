@@ -24,7 +24,7 @@ Two pure steps: `graph = f(repo)` and `output = f(graph)`. The extractor is the 
 
 - **Typed spec files** (`/specs/**/*.sdp.ts`) — the declared layer: specs, packs, relations.
 - **Source-code anchors** — the anchored layer: an **anchor** binds a code location to a spec ID and minimal structural facts (component, satisfies, implements). Anchors carry *no* intent (see `04`).
-- **Structural facts** — the inferred layer: `ts-morph`-derived structure (which file defines which `impl`, basic test discovery linking `test:*` to the specs they `verify`). In the MVP this layer is kept minimal and advisory.
+- **Structural facts** — the inferred layer: machine-derived structure (imports, calls, symbol identity). Designed-in — the `claim` value and the advisory edge row exist, and every consumer decodes them — but **empty in the MVP**: the entry adapters and file-level impact resolve off the curated layers (`06` §2), so nothing yet needs an inferred edge; the first producer is the aspirational impact graph.
 
 The graph is **flat**: arrays of nodes and arrays of edges. Hierarchy and containment are expressed as edges (`belongsTo`, `refines`), never by nesting nodes inside nodes. This is a Representation (chosen for uniform querying and cheap diffs), held as a hard rule.
 

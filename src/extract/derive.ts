@@ -101,8 +101,9 @@ function deriveAnchorNode(entry: ReifiedAnchor): AnchorNode | CodeNode {
  * deterministic re-expression of the declared manifest, so it inherits its source's claim — there
  * is no 4th claim (`03` §3). A dangling target is emitted, not dropped: the unresolved id itself
  * is the sentinel the referential-integrity check (`validateGraph`) flags — but resolution does
- * gate the delivery facts (see `computeDeliveryFacts`). Zero `inferred` claims until the Slice-4
- * consumer defines the minimal advisory set.
+ * gate the delivery facts (see `computeDeliveryFacts`). Zero `inferred` claims by decision: the
+ * consumers (the reader's entry adapters and file-level impact) resolve off the curated layers
+ * (`06` §2), so the first inferred producer is the aspirational impact graph.
  */
 export function deriveGraph(
   specs: readonly ReifiedSpec[],

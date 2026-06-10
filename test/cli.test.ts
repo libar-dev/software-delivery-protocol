@@ -218,4 +218,96 @@ describe("sdp cli", () => {
     expect(capture.readStdout()).toBe("");
     expect(capture.readStderr()).toBe(`${SDP_HELP_TEXT}\n\nUnknown command: bogus\n`);
   });
+
+  it("views the example: validate + the Design Review written, with the one standing warning", () => {
+    const capture = createCaptureOutput();
+
+    const exitCode = runSdpCli(["view", exampleRoot, "--check-clean"], capture.output);
+
+    expect(exitCode).toBe(0);
+    expect(capture.readStdout()).toContain(
+      "validate: 0 errors · 1 warnings (conformance + honesty over the one graph)",
+    );
+    expect(capture.readStdout()).toContain("(11 pages)");
+
+    const viewRoot = join(exampleRoot, "generated", "design-review");
+    expect(readdirSync(viewRoot).sort()).toEqual(["index.md", "pack", "spec"]);
+    expect(existsSync(join(viewRoot, "spec", "orders.create-order.md"))).toBe(true);
+    // No temp leftover: the tree lands via temp-then-rename.
+    expect(readdirSync(join(exampleRoot, "generated")).sort()).toEqual([
+      "design-review",
+      "graph.json",
+    ]);
+  });
+
+  it("owns the view directory wholesale: a stale page does not survive a re-render", () => {
+    const stalePath = join(exampleRoot, "generated", "design-review", "spec", "orders.gone.md");
+    mkdirSync(join(exampleRoot, "generated", "design-review", "spec"), { recursive: true });
+    writeFileSync(stalePath, "# A spec deleted from the repo\n", "utf8");
+
+    const exitCode = runSdpCli(["view", exampleRoot], createCaptureOutput().output);
+
+    expect(exitCode).toBe(0);
+    expect(existsSync(stalePath)).toBe(false);
+  });
+
+  it("regenerates the view byte-identically: delete generated/, re-view, same bytes", () => {
+    const pagePath = join(
+      exampleRoot,
+      "generated",
+      "design-review",
+      "spec",
+      "orders.create-order.md",
+    );
+    expect(runSdpCli(["view", exampleRoot], createCaptureOutput().output)).toBe(0);
+    const firstRender = readFileSync(pagePath, "utf8");
+
+    rmSync(join(exampleRoot, "generated"), { recursive: true, force: true });
+    expect(runSdpCli(["view", exampleRoot], createCaptureOutput().output)).toBe(0);
+
+    expect(readFileSync(pagePath, "utf8")).toBe(firstRender);
+  });
+
+  it("writes the view even when checks fail: findings render in it, the exit code is validate's", () => {
+    const corpusRoot = materializeExtractCorpus("dangling-relation");
+
+    try {
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["view", corpusRoot], capture.output);
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toContain("conformance/referential-integrity");
+      // Both artifacts stay — the graph and the view are faithful projections, and the
+      // review surface exists to show exactly these findings in context.
+      expect(existsSync(join(corpusRoot, "generated", "graph.json"))).toBe(true);
+      const indexPage = readFileSync(
+        join(corpusRoot, "generated", "design-review", "index.md"),
+        "utf8",
+      );
+      expect(indexPage).toContain("conformance/referential-integrity");
+    } finally {
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("keeps build semantics on extraction hard errors: no graph, no view, stale view removed", () => {
+    const corpusRoot = materializeExtractCorpus("invalid-non-static-id");
+
+    try {
+      const staleViewPath = join(corpusRoot, "generated", "design-review", "index.md");
+      mkdirSync(join(corpusRoot, "generated", "design-review"), { recursive: true });
+      writeFileSync(staleViewPath, "# A view from a previous run\n", "utf8");
+
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["view", corpusRoot], capture.output);
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toContain("extract/non-static-envelope");
+      expect(existsSync(join(corpusRoot, "generated", "graph.json"))).toBe(false);
+      // A stale view from a previous run is as dishonest as a stale graph.json.
+      expect(existsSync(join(corpusRoot, "generated", "design-review"))).toBe(false);
+    } finally {
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
 });

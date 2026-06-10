@@ -111,8 +111,9 @@ function findDuplicatedIds(
  * Files are reified standalone by pure AST reading (no type checker, no tsconfig dependence, no
  * import following — static reification without execution, MD-14), then the one graph is derived,
  * delivery facts included. The conformance + honesty checks consume the graph (`validateGraph`),
- * never any pre-graph shape. The inferred layer stays empty until its Slice-4 consumer defines
- * the minimal advisory set.
+ * never any pre-graph shape. The inferred layer is empty by decision, not omission: its
+ * consumers (the reader's entry adapters and file-level impact) resolve off the curated layers
+ * (`06` §2), so the first inferred producer is the aspirational impact graph.
  */
 export function extract(options: ExtractOptions): ExtractionResult {
   const files = discoverFiles(options.root);

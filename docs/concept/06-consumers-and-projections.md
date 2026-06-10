@@ -139,7 +139,7 @@ Why patching dissolves:
 
 The MVP human view *is* the Design Review's relationship slice: a single derived, regenerable human-readable projection — **fully derived** and reproducible (delete and rebuild identically). Per spec it shows: header (title, `kind`, `altitude`, `readiness`, and any stated-vs-derived divergence); intent and behaviour (rules/examples); relations; bindings (implementing code, tests, with source links, derived from anchors); verification status (does a linked, enabled verifier *exist* — the `has-verifier` delivery fact, not run results); an impact list; and `claim` cues (declared vs anchored vs inferred shown distinguishably, P9).
 
-**Form is a Representation.** Clean generated HTML (tree + per-spec pages) or high-quality generated Markdown — the MVP needs *one* read-only derived view. The dev-mode and CI surfaces are the *same* generated artifact (no drift-prone "dev view"). The rich interactive **Spec Studio**, and HTML-over-Markdown as a product thesis, are aspirational (§8).
+**Form is a Representation — settled for the MVP: generated Markdown.** An index plus one page per `Spec` and per `Pack` under `generated/design-review/` (`sdp view`), rewritten wholesale each run so no stale page survives; byte-exact regeneration is the same determinism discipline as the graph. The dev-mode and CI surfaces are the *same* generated artifact (no drift-prone "dev view"). The rich interactive **Spec Studio**, and HTML-over-Markdown as a product thesis, are aspirational (§8).
 
 ---
 
