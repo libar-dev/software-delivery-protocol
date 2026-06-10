@@ -120,13 +120,13 @@ rather than spending grill time on no-op-on-code wording. They are **not** model
   the graph* is legitimate. Now stated in `01` P2 and `03` §4: *"Consumers may link to source locations recorded
   in the graph; consumers must not independently parse source to derive their own model."* Matters when the
   Slice-4 Design Review lands.
-- **R3 — reconcile `04`'s `specTest` signature to binding-only.** `04` §2 documents `specTest(id, { verifies,
-  run })` with an executing `run` callback; the implementation (`src/model/anchors.ts`) is identity-only
-  (`{ id, label?, verifies }`, **no `run`**). The code is the *more* faithful one: a binding anchor carrying
-  `run` would couple the graph binding to execution, contradicting "the graph records that an enabled verifier
-  *exists*, never that it ran" (§4b / MD-7). So this is a **doc fidelity bug, not a code gap** — reconcile `04`
-  down to a binding-only signature. Same pattern as R1/R2 (the code already conforms). Surfaced by the
-  post-Session-1 adversarial review (F6).
+- **R3 — reconcile `04`'s `specTest` signature to binding-only.**  [ACCEPTED · applied 2026-06-10 (Fold-B)]
+  `04` §2 documented `specTest(id, { verifies, run })` with an executing `run` callback; the implementation
+  (`src/model/anchors.ts`) is identity-only (`{ id, label?, verifies }`, **no `run`**). The code is the *more*
+  faithful one: a binding anchor carrying `run` would couple the graph binding to execution, contradicting
+  "the graph records that an enabled verifier *exists*, never that it ran" (§4b / MD-7). A **doc fidelity bug,
+  not a code gap** — `04` §2 now shows the binding-only signature matching the code. Same pattern as R1/R2
+  (the code already conforms). Surfaced by the post-Session-1 adversarial review (F6).
 
 ### Scope note — relationship to the prior plan & brief
 **Adopt-the-nouns reversal (kept for the record).** An earlier brief held "the Protocol is **not** a PM tool; do **not**
@@ -139,6 +139,39 @@ brief have since been **deleted** (consolidated); the **sole canonical base is
 `docs/concept/ubiquitous-language.md`.**
 
 ---
+
+## 2026-06-10 — Session: pre-grill folds (Fold-A · Fold-B · archive)
+
+> The fold session prescribed by `plans/04` §3: restructure the language base (Fold-A — the UL doc became
+> the lean glossary; model exposition rehomed into `00`–`07`), ratify-and-apply the R-series (above), fold
+> the already-determined items out of the grill agenda (Fold-B — the two entries below), and archive the
+> review artifacts into tracked `reviews/`. The grill (`plans/03`) now opens onto a lean base and only
+> genuinely-open decisions.
+
+### MD-8 — Generic-anchor DSL shape: one `codeAnchor` over the implementation-flavored code namespaces  [ACCEPTED 2026-06-10]
+**Decision.** Generalize `anchorImplementation` into a **`codeAnchor`** builder (plus branded id) accepting the
+implementation-flavored code namespaces — **`impl` / `api` / `component`** — so a *generic* anchor can bind any
+code location (class, function, route, module) as the base requires.
+**Why / alternatives rejected.** Anchors are generic *by definition* (`04` §2 — the binding is the thing,
+framework- and location-neutral), and the ID grammar already parses any lowercase namespace; only the builder +
+branded id are namespace-locked today. The base therefore already forces this answer — the post-split
+adversarial review assessed it "resolvable now," so it is recorded here rather than spending grill time.
+*Rejected:* per-namespace sibling builders (`anchorApi`, `anchorComponent`, …) — surface bloat for zero
+expressive gain.
+**Execution.** Rides Slice-2 anchor extraction, together with the example's missing api/route anchor
+(`plans/02` H10). *(This is the item the plans' open-decision code-space called "D6" — not the legacy
+structural D6 below; lead with meaning.)*
+
+### MD-9 — Open-questions canonical home: `intent.openQuestions`  [ACCEPTED 2026-06-10]
+**Decision.** Blocking open questions live in **`intent.openQuestions`** — the honesty check (no stated
+`defined`/`ready` with a blocking open question) must read them there.
+**Why.** The base is unambiguous (`02` §3: `intent` carries `openQuestions`, flaggable `blocking`; the `04`
+worked example authors them under `intent`). The Session-1 pre-plan drifted — the implemented floor data reads
+`design.openQuestions` / `decision.openQuestions`, so a doc-following author's blocking question never fires
+the marquee honesty check. The fix direction is determined **regardless of how sections get typed** (the
+typed-sections grill decision only shortens the predicate), so it is recorded now rather than gated on it.
+**Execution.** Stays `plans/02` Wave B (H2): read from `intent.openQuestions`, update the floor data's
+`authoredPaths`, flip the gated should-fail fixture active.
 
 ## Structural-decision shorthand (D1–D6)  [ACCEPTED · relocated here when the cleanup plan was retired, 2026-06-07]
 

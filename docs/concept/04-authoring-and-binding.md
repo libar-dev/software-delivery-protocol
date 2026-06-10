@@ -90,15 +90,21 @@ An anchor says exactly one thing: *"this code location is the implementation/tes
 
 ### Test binding — the `verifies` trace (CORE)
 
-A test declares which spec it verifies, via an anchor or a thin wrapper:
+A test declares which spec it verifies via a **binding-only test anchor** — identity plus the `verifies`
+target, never an executing callback (DECISIONS R3: a binding that carried a `run` body would couple the
+graph binding to execution, contradicting "the graph records that an enabled verifier *exists*, never that
+it ran"). The test body itself stays an ordinary runner test beside the anchor:
 
 ```ts
-import { specTest } from "@libar-dev/software-delivery-protocol";
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
-specTest("test:orders.create-order.valid-cart", {
-  verifies: "spec:orders.create-order.valid-cart",
-  run: async () => { /* ... real test ... */ },
+export const createOrderValidCartTest = specTest({
+  id: testAnchorId("test:orders.create-order.valid-cart"),
+  label: "valid cart verifies the create-order happy path",
+  verifies: ref("spec:orders.create-order.valid-cart"),
 });
+
+// ... the real test (plain Vitest/Jest/etc.) lives alongside ...
 ```
 
 Here the test `verifies` the **example** it backs (`spec:orders.create-order.valid-cart`); that test anchor is exactly what makes the example an **enabled verifier**, so the example's own `verifies` edge can confer `has-verifier` on the parent it targets (the direct, per-spec, non-transitive rule in `02` §2, *Verifier semantics*). This produces the bidirectional spec↔test trace that is a core MVP deliverable: query "what verifies this spec?" and "what does this test cover?" from the graph. The test's *result and its runner status* (pass/fail, skipped, quarantined, glob-excluded) are operational — CI's, never in the graph; the graph records only that an enabled verifier — a **resolvable test binding** — *exists*, never that it ran (the derived `has-verifier` delivery fact, `02` §2).
