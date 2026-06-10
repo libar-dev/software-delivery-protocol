@@ -12,7 +12,10 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "types": ["node"],
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@libar-dev/software-delivery-protocol": ["./src/index.ts"]
+    }
   },
   "include": ["src/**/*.ts", "test/**/*.ts", "tsup.config.ts", "vitest.config.ts"],
   "exclude": ["dist", "generated", "examples"]
