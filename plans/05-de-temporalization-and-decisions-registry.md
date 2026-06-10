@@ -8,6 +8,14 @@
 > simplified to the `in`-check (ESLint `no-unnecessary-condition`: the `evaluatedOver: "graph"` literal
 > type already guarantees the value — the type system carries what the runtime comparison restated).
 >
+> **Post-execution adversarial pass (Codex)** — two valid findings, both fixed: (1) CI never ran the
+> guard (the workflow fans out into discrete steps and skips `npm run check`) → a dedicated
+> "Temporal guard" CI step now runs first; (2) the `!`-negated shell form was fail-open (a git-grep
+> usage error also inverted to a pass) → replaced by the `check-temporal.mjs` Node wrapper, which
+> passes **only** on git-grep exit 1 and fails closed on everything else. All three paths verified:
+> clean tree passes, a seeded banned token fails listing the match, and a forced git-grep error
+> fails closed.
+>
 > **Next session: Slice 1 — the `ts-morph` extractor** (deterministic rebuild P3 + graceful partial
 > extraction L3; reads `*.sdp.ts` from day one — the `.sdp.ts` extension, MD-15); the hardened example
 > becomes its first real input.
@@ -219,12 +227,13 @@ bare ones:
 
 ## 5. The guard — `check:temporal` in `npm run check` (S)
 
-In `package.json` (no new files):
-
-```json
-"check:temporal": "! git grep -nE 'Session[ -][0-9]|Wave[- ][A-Z]|Fold-[A-Z]|deferredInSession|plans/0[0-9]|20[0-9]{2}-[0-9]{2}-[0-9]{2}' -- src test examples AGENTS.md 'docs/concept/*.md' ':(exclude)docs/concept/DECISIONS.md'",
-"check": "npm run check:temporal && npm run typecheck && …"
-```
+As built (revised by the post-execution adversarial pass): the guard is the root-level
+`check-temporal.mjs` Node wrapper (the `vitest-test.mjs` idiom), invoked as
+`"check:temporal": "node ./check-temporal.mjs"` — first in `npm run check` **and** as a dedicated
+"Temporal guard" step in `.github/workflows/ci.yml` (the workflow fans out into discrete steps and
+never runs `npm run check`, so the script-level wiring alone never reached the merge gate). The
+wrapper passes **only** on git-grep exit 1 (searched, found nothing); exit 0 fails listing the
+matches; any other exit fails closed.
 
 - **File set:** `src/`, `test/`, `examples/`, `AGENTS.md`, `docs/concept/` minus `DECISIONS.md`
   (dated diary, exempt by genre). `plans/`/`reviews/` out (temporal by genre). `CLAUDE.md` symlinks
@@ -235,8 +244,9 @@ In `package.json` (no new files):
 - Runs **first** in `check` (fastest step, fail fast). After items 1–3 land this produces zero hits
   (verified against the current tree: the only date in `docs/concept/0*` is `02:152`, fixed in 2a;
   the glossary date is dropped in 2c).
-- Known accepted limitation (note beside the script in this plan's done-record): `!`-negation also
-  inverts a git-grep usage error (exit 128) into a pass — acceptable for a single-developer repo.
+- ~~Known accepted limitation: `!`-negation inverts a git-grep usage error into a pass.~~ Rejected
+  by the adversarial pass — a guard that errors must never pass (the MD-13 silent-skip lesson,
+  applied to the guard itself); the Node wrapper fails closed.
 - Future false-positive path: if a Slice-1 fixture legitimately needs an ISO date (an order
   timestamp), narrow the date pattern or add a targeted pathspec exclude *in the same commit*, never
   by widening the genre exemptions.
