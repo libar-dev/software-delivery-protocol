@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@libar-dev/software-delivery-protocol": ["src/index.ts"]
+    }
+  },
+  "exclude": [],
+  "include": ["examples/**/*.ts"]
+}

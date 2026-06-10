@@ -8,10 +8,10 @@ Realises **P5** (statically extractable), **P6** (ID-linked), **P9/P10** (anchor
 
 ## 1. The TypeScript Spec DSL — canonical (CORE)
 
-Specs are authored as typed TypeScript in `/specs/**/*.spec.ts`. The DSL is a thin set of helpers (`spec`, `pack`, relation builders) over the `Spec` shape from `02`.
+Specs are authored as typed TypeScript in `/specs/**/*.sdp.ts` — the Protocol's own compound extension (MD-15; the `.stories.tsx` pattern), deliberately **not** `.spec.ts`, which every JS test runner's default glob would try to execute. The DSL is a thin set of helpers (`spec`, `pack`, relation builders) over the `Spec` shape from `02`.
 
 ```ts
-import { spec, refines, dependsOn, verifies, ref } from "@libar-dev/software-delivery-protocol";
+import { spec, refines, dependsOn } from "@libar-dev/software-delivery-protocol";
 
 export const CreateOrder = spec({
   id: "spec:orders.create-order",
@@ -26,8 +26,9 @@ export const CreateOrder = spec({
     openQuestions: ["should stock reservation happen before or after order creation?"],
   },
   behavior: {
+    // content only — never refs (02 §3): a promoted example is a child spec that refines/verifies this one
     rules: ["only valid carts can become orders", "creating an order emits OrderCreated"],
-    examples: [ref("spec:orders.create-order.valid-cart")],
+    examples: ["an expired payment card is declined before any order is created"],
   },
   relations: [refines("spec:orders.order-management"), dependsOn("spec:payments.authorize-payment")],
 });
@@ -79,10 +80,13 @@ export const _anchor = anchorImplementation({ id: "impl:orders.create-order-use-
 ```
 
 The three syntaxes are interchangeable Representations; the *binding* is the thing. A team picks one style.
+The builder generalizes to **`codeAnchor`** over the implementation-flavored code namespaces (`impl` / `api` /
+`component`) — the generic `codeAnchor` decision (MD-8), landing with Slice-2 anchor extraction; until then the
+DSL ships the narrower `anchorImplementation`.
 
-### Anchors are read-only pointers — never carry intent (P9/P10)
+### Anchors assert a binding — never intent (P9/P10)
 
-An anchor does exactly one thing: bind a code location to a graph ID and its structural bindings (`component`, `satisfies`, `implements`, and — aspirationally — `handles`/`emits`). It is **forbidden** from carrying spec-level sections (intent, behaviour, readiness, verification). This asymmetry is load-bearing:
+An anchor says exactly one thing: *"this code location is the implementation/test **binding** for this Spec ID"* — a binding assertion only, never system-truth content (DECISIONS R1). It binds a code location to a graph ID and its structural bindings (`component`, `satisfies`, `implements`, and — aspirationally — `handles`/`emits`). It is **forbidden** from carrying anything spec-level: behavior, rationale, readiness, acceptance criteria, or delivery facts. This asymmetry is load-bearing:
 
 - **Intent stays centralized** in the spec files, never scattered through code comments.
 - Anchors produce **anchored**-`claim` edges, distinct from **declared** relations (P9).
@@ -90,15 +94,21 @@ An anchor does exactly one thing: bind a code location to a graph ID and its str
 
 ### Test binding — the `verifies` trace (CORE)
 
-A test declares which spec it verifies, via an anchor or a thin wrapper:
+A test declares which spec it verifies via a **binding-only test anchor** — identity plus the `verifies`
+target, never an executing callback (DECISIONS R3: a binding that carried a `run` body would couple the
+graph binding to execution, contradicting "the graph records that an enabled verifier *exists*, never that
+it ran"). The test body itself stays an ordinary runner test beside the anchor:
 
 ```ts
-import { specTest } from "@libar-dev/software-delivery-protocol";
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
-specTest("test:orders.create-order.valid-cart", {
-  verifies: "spec:orders.create-order.valid-cart",
-  run: async () => { /* ... real test ... */ },
+export const createOrderValidCartTest = specTest({
+  id: testAnchorId("test:orders.create-order.valid-cart"),
+  label: "valid cart verifies the create-order happy path",
+  verifies: ref("spec:orders.create-order.valid-cart"),
 });
+
+// ... the real test (plain Vitest/Jest/etc.) lives alongside ...
 ```
 
 Here the test `verifies` the **example** it backs (`spec:orders.create-order.valid-cart`); that test anchor is exactly what makes the example an **enabled verifier**, so the example's own `verifies` edge can confer `has-verifier` on the parent it targets (the direct, per-spec, non-transitive rule in `02` §2, *Verifier semantics*). This produces the bidirectional spec↔test trace that is a core MVP deliverable: query "what verifies this spec?" and "what does this test cover?" from the graph. The test's *result and its runner status* (pass/fail, skipped, quarantined, glob-excluded) are operational — CI's, never in the graph; the graph records only that an enabled verifier — a **resolvable test binding** — *exists*, never that it ran (the derived `has-verifier` delivery fact, `02` §2).
@@ -137,9 +147,9 @@ Modules that declare controls + an `expected()` model + `coverage()`, rendered a
 
 ```
 /specs
-  checkout.pack.ts
-  orders/create-order.spec.ts
-  payments/authorize-payment.spec.ts
+  checkout.pack.sdp.ts
+  orders/create-order.sdp.ts
+  payments/authorize-payment.sdp.ts
 /src
   orders/
     create-order.use-case.ts      // anchored: impl:orders.create-order-use-case

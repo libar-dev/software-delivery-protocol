@@ -34,6 +34,7 @@ Every load-bearing claim is named as one or the other, on purpose — so a Repre
 | # | Document | What it covers |
 |---|---|---|
 | — | [README](./README.md) | This index: definition, Founding Principle, reading guide, the MVP legend. |
+| — | [Ubiquitous Language](./ubiquitous-language.md) | The ratified **glossary**: terms, descriptor values, relations, a worked dialogue, flagged ambiguities. The terminology base for every doc below. |
 | 00 | [Vision, Scope & MVP Boundary](./00-vision-scope-and-mvp-boundary.md) | The honest full ambition **and** the sharp MVP line, in one place. |
 | 01 | [Founding Principles & Invariants](./01-founding-principles-and-invariants.md) | The load-bearing laws, each tagged Principle/Representation and CORE/ASPIRATIONAL. Git-as-event-log. The `claim` epistemics. |
 | 02 | [Core Model](./02-core-model.md) | The `Spec` primitive, the three descriptors (`kind` · `altitude` · `readiness`), sections, delivery facts, stable IDs, relations. |

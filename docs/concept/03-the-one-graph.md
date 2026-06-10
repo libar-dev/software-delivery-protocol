@@ -22,7 +22,7 @@ Two pure steps: `graph = f(repo)` and `output = f(graph)`. The extractor is the 
 
 ### What the extractor reads
 
-- **Typed spec files** (`/specs/**/*.spec.ts`) — the declared layer: specs, packs, relations.
+- **Typed spec files** (`/specs/**/*.sdp.ts`) — the declared layer: specs, packs, relations.
 - **Source-code anchors** — the anchored layer: an **anchor** binds a code location to a spec ID and minimal structural facts (component, satisfies, implements). Anchors carry *no* intent (see `04`).
 - **Structural facts** — the inferred layer: `ts-morph`-derived structure (which file defines which `impl`, basic test discovery linking `test:*` to the specs they `verify`). In the MVP this layer is kept minimal and advisory.
 
@@ -32,7 +32,7 @@ The graph is **flat**: arrays of nodes and arrays of edges. Hierarchy and contai
 {
   "schemaVersion": "0.1.0",
   "nodes": [
-    { "id": "spec:orders.create-order", "nodeType": "Primitive", "specKind": "behavior", "altitude": "feature", "readiness": "ready", "deliveryFacts": ["implemented"], "claim": "declared", "file": "specs/orders/create-order.spec.ts" },
+    { "id": "spec:orders.create-order", "nodeType": "Primitive", "specKind": "behavior", "altitude": "feature", "readiness": "ready", "deliveryFacts": ["implemented"], "claim": "declared", "file": "specs/orders/create-order.sdp.ts" },
     { "id": "impl:orders.create-order-use-case", "nodeType": "CodeNode", "claim": "anchored", "file": "src/orders/create-order.use-case.ts", "line": 12 }
   ],
   "edges": [
@@ -60,7 +60,7 @@ Every edge in the graph has a fixed contract: where it comes from, what `claim` 
 | `belongsTo` | Primitive → Pack | derived (from the manifest) | declared (inherited) | `Pack` manifest `specs[]` | **error** if member missing/duplicate | — | — |
 | calls / imports | CodeNode → CodeNode | derived (analysis) | inferred | — (machine) | **advisory** — never errors on its own | — | feeds the impact graph only |
 
-**Delivery facts are node facts, not edges.** `implemented` / `has-verifier` / `observed` are computed *from* the `satisfies` / `verifies` / runtime edges above and shown as badges on the node (`02` §2; base §4b) — they are never authored and never themselves edges.
+**Delivery facts are node facts, not edges.** `implemented` / `has-verifier` / `observed` are computed *from* the `satisfies` / `verifies` / runtime edges above and shown as badges on the node (`02` §2) — they are never authored and never themselves edges.
 
 ---
 
@@ -102,7 +102,7 @@ Rules that keep this honest:
 ## 4. Regenerability and the no-second-store rule (P1, P2)
 
 - `generated/` is gitignored and disposable (L8). Delete it, run `sdp build`, get the same bytes back.
-- No consumer reads source directly or keeps a parallel model (P2). The view reads the graph; the trace query reads the graph; an AI agent reads the graph (as JSON). One read model, many readers.
+- No consumer reads source directly or keeps a parallel model (P2). The view reads the graph; the trace query reads the graph; an AI agent reads the graph (as JSON). One read model, many readers. Consumers may *link to* source locations recorded in the graph (a Design Review linking to the anchored file/line is legitimate); what is forbidden is independently *re-parsing* source to derive a parallel model (DECISIONS R2).
 - The MVP graph is a **single JSON file** plus an in-memory graph for queries. A property-graph database is deferred until measured traversal pain — and the schema is designed to map cleanly to one later, so the deferral has forethought.
 
 There is no "is the graph in sync with the repo?" question, because the graph is *defined* as a function of the repo. The only thing to trust is `git` and the code.
