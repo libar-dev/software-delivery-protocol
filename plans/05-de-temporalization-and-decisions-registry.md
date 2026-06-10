@@ -14,7 +14,11 @@
 > usage error also inverted to a pass) → replaced by the `check-temporal.mjs` Node wrapper, which
 > passes **only** on git-grep exit 1 and fails closed on everything else. All three paths verified:
 > clean tree passes, a seeded banned token fails listing the match, and a forced git-grep error
-> fails closed.
+> fails closed. A second pass then caught the guard's own blind spot: the sweep listed subtrees
+> instead of subtracting exemptions, so root/tooling files — including the guard itself, whose
+> header cited a numbered plan — escaped scanning. The sweep now covers **all tracked files minus
+> the genre exemptions**; re-verified on all three paths, including a seeded token in the
+> previously-unscanned `ci.yml`.
 >
 > **Next session: Slice 1 — the `ts-morph` extractor** (deterministic rebuild P3 + graceful partial
 > extraction L3; reads `*.sdp.ts` from day one — the `.sdp.ts` extension, MD-15); the hardened example
@@ -235,9 +239,11 @@ never runs `npm run check`, so the script-level wiring alone never reached the m
 wrapper passes **only** on git-grep exit 1 (searched, found nothing); exit 0 fails listing the
 matches; any other exit fails closed.
 
-- **File set:** `src/`, `test/`, `examples/`, `AGENTS.md`, `docs/concept/` minus `DECISIONS.md`
-  (dated diary, exempt by genre). `plans/`/`reviews/` out (temporal by genre). `CLAUDE.md` symlinks
-  to AGENTS.md — covered.
+- **File set (as built, second round):** **all tracked files**, minus the genre exemptions —
+  `docs/concept/DECISIONS.md` (dated diary), `plans/` (done-records), `reviews/` (archive),
+  `package-lock.json` (machine-generated, not authored prose), and `check-temporal.mjs` itself
+  (use–mention: its pattern must name the tokens it bans). Subtractive, never additive — new files
+  are guarded by default.
 - **Patterns:** session/wave/fold tokens, the old flag name (regression tripwire for 1a), numbered
   plan-file refs, ISO dates. **Deliberately absent:** `Slice [0-9]`/`Phase 0` (allowed
   forward-pointers) and `MD-n` (citations encouraged).

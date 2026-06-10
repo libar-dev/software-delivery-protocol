@@ -1,18 +1,21 @@
 import { spawnSync } from "node:child_process";
 
-// The temporal-token guard (plans/05 §5): durable artifacts carry current truth, so calendar and
-// session tokens are banned from code and the timeless docs. `docs/concept/DECISIONS.md` is exempt
-// by genre (a dated diary); `plans/` and `reviews/` are outside the swept set for the same reason.
-// `Slice N` / `Phase 0` (roadmap-relative capability names) and `MD-n` citations are allowed.
+// The temporal-token guard: durable artifacts carry current truth, so calendar and session tokens
+// (session/wave/fold handles, ISO dates, numbered plan-file refs) are banned from every tracked
+// file. Only the temporal-by-genre artifacts are exempt: the dated decision diary, the per-session
+// plan done-records, the archived reviews — plus the machine-generated lockfile (derived, not
+// authored prose) and this file itself, which must *mention* the tokens it bans (use–mention: the
+// pattern below literally contains one). `Slice N` / `Phase 0` (roadmap-relative capability names)
+// and `MD-n` citations are allowed.
 const pattern =
   "Session[ -][0-9]|Wave[- ][A-Z]|Fold-[A-Z]|deferredInSession|plans/0[0-9]|20[0-9]{2}-[0-9]{2}-[0-9]{2}";
 const pathspecs = [
-  "src",
-  "test",
-  "examples",
-  "AGENTS.md",
-  "docs/concept/*.md",
+  ".",
   ":(exclude)docs/concept/DECISIONS.md",
+  ":(exclude)plans",
+  ":(exclude)reviews",
+  ":(exclude)package-lock.json",
+  ":(exclude)check-temporal.mjs",
 ];
 
 const result = spawnSync("git", ["grep", "-nE", pattern, "--", ...pathspecs], {
