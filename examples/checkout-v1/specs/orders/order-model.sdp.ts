@@ -10,11 +10,6 @@ export const orderModelSpec = spec({
     outcome: "Define the core terms used by the checkout-v1 order-management slice.",
     value: "Specs, code, and tests use the same vocabulary for carts, orders, and inventory.",
   },
-  behavior: {
-    rules: [
-      "The authored slice uses shared term definitions instead of inlining conflicting vocabulary.",
-    ],
-  },
   model: {
     terms: {
       cart: "A customer-selected set of line items that has not yet become an order.",

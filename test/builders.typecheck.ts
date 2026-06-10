@@ -77,9 +77,7 @@ specTest({
 // The Spec envelope rejects hand-authored delivery facts at the top level: delivery facts are
 // derived-only (base §4b). Caveat: the guarantee is "rejected for inline object literals" — it relies
 // on TypeScript's excess-property checking, which only fires on literals passed directly. Sound in
-// practice because P5 mandates static inline literals, but it is not a structural guarantee. Note too:
-// the in-section bypass (`behavior: { "has-verifier": true }`) is NOT closed by these and stays open
-// until sections are typed (D1, plan 03 / Wave B).
+// practice because P5 mandates static inline literals, but it is not a structural guarantee.
 spec({
   id: specId("spec:orders.create-order"),
   title: "Customer creates an order",
@@ -98,6 +96,30 @@ spec({
   readiness: "idea",
   // @ts-expect-error specs never author the derived `has-verifier` delivery fact at the envelope
   "has-verifier": true,
+});
+
+// invalid-hand-authored-delivery-fact-in-section (the H8 fixture, landed compile-time): the
+// in-section bypass is closed by the typed floor-bearing sections (MD-11) — a closed BehaviorSection
+// has no index signature, so a smuggled delivery fact no longer typechecks.
+spec({
+  id: specId("spec:orders.create-order"),
+  title: "Customer creates an order",
+  kind: "behavior",
+  altitude: "feature",
+  readiness: "idea",
+  // @ts-expect-error sections are closed-typed (MD-11) — no hand-authored delivery fact inside a section
+  behavior: { "has-verifier": true },
+});
+
+// The same closure holds for the other floor-bearing sections (MD-11's criterion, not a list).
+spec({
+  id: specId("spec:orders.create-order"),
+  title: "Customer creates an order",
+  kind: "behavior",
+  altitude: "feature",
+  readiness: "idea",
+  // @ts-expect-error the decision section carries no status field (MD-11 — rejected vocabulary)
+  decision: { decision: "Validate before creating.", status: "accepted" },
 });
 
 // The Pack stays truthless (base §2 boundary): it states no system truth, so it rejects

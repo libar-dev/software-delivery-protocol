@@ -1,7 +1,6 @@
 import {
   constrainedBy,
   decidedBy,
-  ref,
   refines,
   spec,
   specId,
@@ -18,13 +17,8 @@ export const createOrderSpec = spec({
     outcome: "Turn a valid cart into an order.",
     value: "Customers can complete purchases without the example modeling the rest of checkout.",
   },
-  behavior: {
-    rules: [ref("spec:orders.order-total-rule"), ref("spec:orders.order-inventory-rule")],
-    examples: [
-      ref("spec:orders.create-order.valid-cart"),
-      ref("spec:orders.create-order.invalid-cart"),
-    ],
-  },
+  // No behavior section: the rules and examples are promoted children — their refines/verifies
+  // relations are the linkage of record (MD-10), and promoted evidence clears the floor.
   relations: [
     refines(specId("spec:orders.order-management")),
     constrainedBy(specId("spec:orders.order-latency-constraint")),

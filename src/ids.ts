@@ -138,4 +138,10 @@ export function testAnchorId(value: string): TestAnchorId {
   return requireNamespace<"TestAnchorId">(value, "test") as TestAnchorId;
 }
 
+/**
+ * `ref()` is today a spec-only reference builder wearing a generic name: it is `specId` aliased, so
+ * it rejects `pack:` / `doc:` targets (F2, post-split adversarial review). Harmless while every call
+ * site wants a spec; revisit when `doc:`-target relations (`decidedBy` → an external ADR) or
+ * pack-targeting arrive.
+ */
 export { specId as ref };

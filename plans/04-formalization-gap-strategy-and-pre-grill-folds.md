@@ -4,15 +4,15 @@
 > direction — the one genuinely open item here.** This document was the formalized residue of a long design
 > arc; its executed scaffolding has been folded down (outcomes live in `DECISIONS.md`, `plans/03`'s
 > resolution table, and `reviews/`). What remains: the re-entry summary, the operating frame, and the parked
-> gap strategy. **Branch:** `feature/mvp-init` · **Next: Wave B execution** (`plans/02` §4), then — gated on
-> a minimal engine — the crippled graph (§2).
+> gap strategy. **Branch:** `feature/mvp-init` · **Next: Slice 1 (the extractor)** — Wave B executed
+> 2026-06-10 (`plans/02` §4) — then, gated on a minimal engine, the crippled graph (§2).
 
 ---
 
 ## §0 — Re-entry in one screen
 
-**Where the code is:** Slice 0 (the protocol as typed code) is built, green, and hardened (Wave A done).
-No extractor, no graph, no engine yet.
+**Where the code is:** Slice 0 (the protocol as typed code) is built, green, and hardened (Waves A and
+B done). No extractor, no graph, no engine yet.
 
 **What happened this arc:** a fresh adversarial review (high-signal; archived `reviews/04`) → the gen-1
 (`@libar-dev/architect`) formal-spec study (*evidence, not template*: gen-1 is proof gen-2's rejections are
@@ -20,7 +20,8 @@ correct — its FSM softened to advisory, its tag taxonomy repeatedly amputated,
 migrate-and-delete; no patterns transferred; chat-only, formalized here) → the pre-grill folds (lean
 glossary, R1–R3, MD-8/MD-9) → the grill (MD-10…MD-15; base reconciled; `plans/02` Wave B execution-ready).
 
-**What's next:** **Wave B execution** (`plans/02` §4), then Slice 1.
+**What's next:** **Slice 1 — the extractor** (Wave B executed 2026-06-10; `plans/02` is its
+done-record), then — on the minimal engine's substrate — the crippled graph (§2).
 
 **The one decision still genuinely open and yours:** how far the crippled graph goes, and exactly what its
 two instances are (§2). Parked deliberately — it needs substrate to grow, not more chat.
@@ -95,8 +96,9 @@ F1–F7; see §6.)*
 ## §4 — Sequencing — ✅ DONE through the grill
 
 Fold-A → Fold-B → archive → **grill** all executed 2026-06-10 (grill outcome: MD-10…MD-15; base reconciled;
-`plans/02` Wave B rewritten execution-ready; H7 leftovers finalized). **Then → Wave B execution ← NEXT**,
-and — gated on a minimal engine — the crippled graph (§2) graduates from direction to design.
+`plans/02` Wave B rewritten execution-ready; H7 leftovers finalized) → **Wave B executed ✅ (2026-06-10)**.
+**Next: Slice 1 (the extractor)** — on its substrate the crippled graph (§2) graduates from direction
+to design.
 
 ## §5 — Scoped session prompts (Fold-A · Fold-B · the grill kickoff)
 

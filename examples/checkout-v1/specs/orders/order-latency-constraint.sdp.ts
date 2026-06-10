@@ -10,14 +10,12 @@ export const orderLatencyConstraintSpec = spec({
     outcome: "Keep create-order fast enough for interactive checkout.",
     value: "Customers are not left waiting after submitting a valid cart.",
   },
-  behavior: {
-    rules: ["The create-order path stays inside a machine-readable latency budget."],
-  },
-  constraints: {
-    statement: "Create-order should respond within the checkout latency budget.",
-    target: "latency.p95.lt:250ms",
-    unit: "ms",
-    percentile: 95,
-  },
+  constraints: [
+    {
+      flavor: "performance",
+      statement: "Create-order should respond within the checkout latency budget.",
+      target: "latency.p95.lt:250ms",
+    },
+  ],
   relations: [refines(specId("spec:orders.create-order"))],
 });

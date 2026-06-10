@@ -12,15 +12,18 @@ export const createOrderInvalidCartSpec = spec({
       "The authored example captures the rejection path without adding invalid fixtures to the model.",
   },
   behavior: {
-    examples: ["Out-of-stock or empty carts are rejected before an order is created."],
-    given: [
-      "A cart is empty or contains at least one item without available inventory.",
-      "The cart is submitted for order creation.",
-    ],
-    when: ["The create-order use case validates the cart."],
-    then: [
-      "No order is created.",
-      "The caller receives a validation error explaining why the cart is invalid.",
+    examples: [
+      {
+        given: [
+          "A cart is empty or contains at least one item without available inventory.",
+          "The cart is submitted for order creation.",
+        ],
+        when: ["The create-order use case validates the cart."],
+        then: [
+          "No order is created.",
+          "The caller receives a validation error explaining why the cart is invalid.",
+        ],
+      },
     ],
   },
   verification: {

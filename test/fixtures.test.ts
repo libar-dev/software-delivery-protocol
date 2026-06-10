@@ -24,10 +24,8 @@ describe("authored-model validator fixtures (should-pass / should-fail regressio
     });
   }
 
-  // Gated fixtures — the inherited checklist for Wave B (plan 03). They are deliberately not active
-  // yet because the behavior they assert does not exist in Session-1 code:
-  //   - the open-questions home is still design/decision, not intent (H2);
-  //   - a hand-authored delivery fact inside an untyped section still typechecks and is uncaught (D1).
-  it.todo("invalid-ready-with-blocking-question fails once H2 reads intent.openQuestions");
-  it.todo("invalid-hand-authored-delivery-fact-in-section fails once sections are typed (D1)");
+  // The Wave-B gated stubs resolved (plans/02 §4): `invalid-ready-with-blocking-question` is active
+  // above (MD-9 — the floor reads intent.openQuestions); `invalid-hand-authored-delivery-fact-in-
+  // section` is a compile-time `@ts-expect-error` fixture in `builders.typecheck.ts` (MD-11 — closed
+  // section types reject it before any validator runs).
 });

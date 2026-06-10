@@ -127,7 +127,7 @@ Sections carry the detail. They are the **extension surface**: the system grows 
 
 | Section | Carries | Notes |
 |---|---|---|
-| `intent` | actor, problem, outcome, value, risks, assumptions, open questions | `openQuestions` may be flagged `blocking` to prevent stating a readiness past `defined`. |
+| `intent` | actor, problem, outcome, value, risks, assumptions, open questions | `openQuestions` may be flagged `blocking` to prevent stating `defined` or `ready` (MD-9). |
 | `behavior` | rules (prose), examples (prose or structured Given/When/Then), flows | **Content only — never refs** (the duality rule below). An example entry matures *in place*: prose → a structured `{ given, when, then }` entry → (promoted) a child `example` spec backed by a verifier. |
 | `constraints[]` | a `flavor` (quality / security / performance / compliance / operational / policy), a statement, an optional `target`, optional `measurableBy` | A `performance` constraint with a measurable `target` is an NFR. `target` must be machine-readable (`p95 < 300ms`, not "fast enough") to state `defined`+. |
 | `model` | domain terms (vocabulary only) — `terms: Record<term, definition>` | Used for pack-level coherence checks. Richer concept structures (typed concepts, attributes) are a **named deferral**; when one lands, the typing law below pulls it into the closed shape. |

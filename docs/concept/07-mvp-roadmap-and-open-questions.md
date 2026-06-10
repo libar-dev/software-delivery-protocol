@@ -97,20 +97,21 @@ land in the roadmap at the right altitude. Ordering reflects the synthesis's pri
 - **① Authoring ergonomics — the headline forward risk; a named Slice-2 concern.** There is *no
   authoring-ergonomics workstream* anywhere in `00`–`07` today (the MVP CLI is just `build`/`validate`), yet if
   authoring feels heavy, authors (human **and** agent) avoid the system or overfit specs to satisfy tooling. The
-  first lever is **typed sections** (autocomplete + shape guardrails); then great error messages and `sdp validate
-  --watch`; later `sdp new spec` / `sdp explain`. Threads back to the anti-padding rule: make *dishonesty* fail
-  without rewarding low-signal filler (a floor to clear, never a quota to fill).
+  first lever — **typed sections** (autocomplete + shape guardrails) — **landed in the Phase-0 hardening
+  (MD-11)**; the next are great error messages and `sdp validate --watch`; later `sdp new spec` /
+  `sdp explain`. Threads back to the anti-padding rule: make *dishonesty* fail without rewarding
+  low-signal filler (a floor to clear, never a quota to fill).
 - **② Golden-graph fixture — at Slice 1; keep it distinct from `--check-clean`.** Adopt **both**, labeled
   distinctly: a **determinism self-check** (`03` §2 — rebuild twice, assert **byte-identical**; a self-comparison,
   **never** a diff against a committed `generated/` artifact, which is gitignored, L8) **and** a **correctness
   oracle** (a committed `fixtures/order-management/expected/graph.json` — "did the extractor produce the *right*
   graph," legitimate because it lives in `fixtures/`, not `generated/`). Make paths **repo-relative / POSIX**, and
   decide consciously whether **line numbers** enter the golden (deterministic, but brittle to unrelated edits).
-- **③ Derived-readiness banner in the MVP view — at Slice 4, but blocked on the open-questions-home fix (H2).**
-  *"Stated readiness: ready · Structural floor reached: defined · Problem: blocking open question."* Teaches the
-  core honesty concept (stated, then checked); cheaply enabled by a floor evaluator that reports *which* clause
-  fails. **Do not pull it forward before H2** — today the floor reads open questions from the wrong section, so the
-  banner would confidently display the wrong thing.
+- **③ Derived-readiness banner in the MVP view — at Slice 4; its blocker is cleared.** *"Stated readiness:
+  ready · Structural floor reached: defined · Problem: blocking open question."* Teaches the core honesty
+  concept (stated, then checked); cheaply enabled by the floor evaluator, which reports *which* clause
+  fails. The old blocker — the floor reading open questions from the wrong section — was fixed in the
+  Phase-0 hardening (MD-9: the floor reads `intent.openQuestions`).
 - **④ `implemented` is a UI hazard — at Slice 4, view-label only.** Model semantics are settled (DECISIONS MD-7:
   binding/existence, never liveness). Keep the internal fact name `implemented` (it powers the `implemented ∧
   ¬ready` drift query), but render binding language in views: *"Implementation binding: present / Verifier binding:

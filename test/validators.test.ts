@@ -171,11 +171,9 @@ describe("validators", () => {
         createBehaviorSpec(specId("spec:orders.create-order"), "ready", {
           intent: { outcome: "turn a valid cart into an order" },
           relations: [dependsOn(ref("spec:orders.order-management"))],
-          constraints: {
-            latencyBudget: {
-              target: "p95 < 200ms",
-            },
-          },
+          // An inline constraint clears the scoped evidence rung, but a defined behavior spec needs
+          // rules and/or examples — constraints alone no longer suffice (MD-12).
+          constraints: [{ statement: "order creation stays fast", target: "p95 < 200ms" }],
         }),
       ],
       packs: [],
@@ -190,10 +188,10 @@ describe("validators", () => {
         family: "honesty",
         severity: "error",
         subjectId: "spec:orders.create-order",
-        relatedId: "rules-and-or-examples",
+        relatedId: "kind-evidence-complete",
         path: "readiness",
         message:
-          'Spec "spec:orders.create-order" states readiness "ready" but does not satisfy authored clause "rules-and-or-examples".',
+          'Spec "spec:orders.create-order" states readiness "ready" but does not satisfy floor clause "kind-evidence-complete": The kind\'s natural evidence is complete (per-kind evidence table).',
       },
     ]);
   });
@@ -226,8 +224,9 @@ describe("validators", () => {
       anchors: [],
     });
 
-    expect(report.validatorId).toBe("conformance/authored-model");
-    expect(report.family).toBe("conformance");
+    expect(report.validatorId).toBe("authored-model");
+    // The aggregate spans both check families, so it carries no single family of its own (F3).
+    expect(report.family).toBeUndefined();
     expect(report.findings).toEqual([]);
   });
 
