@@ -173,6 +173,129 @@ typed-sections grill decision only shortens the predicate), so it is recorded no
 **Execution.** Stays `plans/02` Wave B (H2): read from `intent.openQuestions`, update the floor data's
 `authoredPaths`, flip the gated should-fail fixture active.
 
+## 2026-06-10 — Session: the grill (decision resolution on the lean base)
+
+> The fresh `grill-with-docs` session prescribed by `plans/04` §5, agenda `plans/03`: the six genuinely-open
+> decisions (plans' open-decision handles D1–D4, D7, D8 — not the legacy structural D-space below), resolved
+> against the lean base, ratified inline. Base edits land in `02`/`04`/`05`; terms in the glossary; Wave B
+> (`plans/02`) rewritten execution-ready at the end.
+
+### MD-10 — `behavior` sections carry content only; linkage lives in relations  [ACCEPTED 2026-06-10]
+**Decision.** `behavior.rules` and `behavior.examples` hold **content, never spec refs**: rules are prose;
+an examples entry is prose **or** a structured `{ given, when, then }` object (the entry matures *in place* —
+prose → structured GWT). The section ⟷ kind duality rule (`02` §3) extends to `rule`/`example`: **promotion is
+exclusive** — promoting an entry to a standalone `rule`/`example` spec *moves* the content out, and the only
+linkage is the child's `refines`/`verifies` relation (a reverse-edge query, never an authored ref list).
+**Why / alternatives rejected.** The repo had the same two fields authored three incompatible ways (refs in
+`create-order`; prose + redundant flat GWT in `valid-cart`; prose/refs mixed in the docs), and the ref form
+double-linked the same fact (parent's `behavior.rules: [ref(rule)]` *and* the rule's `refines(parent)`) with
+nothing naming the linkage of record — latent drift, against ambiguity-is-loud (L2). Content-only applies the
+already-ratified duality rule instead of inventing shape. *Rejected:* a `prose | ref` union (formalizes the
+duality, every consumer branches, double-linkage stays legal); refs-only (every two-line rule costs a full
+spec — the heavy-authoring loop `plans/03` §2 warns about).
+**Consequences.** GWT's canonical home is **nested in the examples entry** (the flat `behavior.given/when/then`
+the floor overlay reads today is Session-1 drift — reconciled in Wave B). Section-embedded referential
+integrity (plan 02 H4) **dissolves for `behavior`** — there are no refs to check. The readiness floor must
+count promoted children as evidence so promotion never costs a spec its earned rung (MD-12/D7, `05` §3).
+**Execution.** Wave B: type `BehaviorSection` to this shape (D1), re-author the example (drop ref lists from
+`create-order`; drop `valid-cart`'s redundant prose entry; nest its GWT), repoint the `example` overlay clause.
+
+### MD-11 — The typing law: floor-bearing sections are closed-typed; `decision.status` rejected  [ACCEPTED 2026-06-10]
+**Decision.** Sections get typed by a **criterion, not a list**: *every floor-bearing section* — one a
+readiness-floor clause reads as evidence — gets a **closed typed shape** (no index signature). Today that is
+six: `intent`, `behavior` (per MD-10), `constraints[]` (array, per `02` §1 / plan 02 H3), `model`,
+`verification`, and `decision` (pulled in because the kind-aware floor, MD-12, makes it the natural evidence
+of `decision`-kind specs). `design` and `ui` stay open bags — genuinely-unsettled surfaces keep breathing
+(L9). The criterion outlives the list: a section becomes typed when a floor clause starts reading it.
+**Why / alternatives rejected.** Closed shapes are simultaneously the honesty fix (the in-section bypass
+`behavior: { "has-verifier": true }` stops typechecking — the type level closes what the H8 gated fixture
+locks) and the single highest-value adoption lever (autocomplete + shape guardrails against the
+heavy-authoring loop, `plans/03` §2). *Rejected:* the carried "five" list (same intent, but a list goes stale
+the moment the floor moves — D7 proved it immediately); all eight (commits architecture/UI surfaces that are
+not settled); none + a runtime authoring-shape validator (no guardrails, the tracer bullet keeps proving
+nothing about shape).
+**`decision.status` is rejected vocabulary** (glossary ledger): the adoption arc is the envelope's
+`readiness` (raised → explored → written → ratified, floor-checked); replacement is `supersedes`; a rejected
+path is not a truth-spec — it lives in the chosen decision's `alternatives`/`consequences`. The example's
+`decision.status: "accepted"` is Session-1 drift, cleaned in Wave B.
+**Execution.** Wave B types the six in `sections.ts`, drops the `constraints` record-form handling
+(validators stop string-probing), re-authors the example, and flips the gated H8 fixture
+`invalid-hand-authored-delivery-fact-in-section` active.
+
+### MD-12 — The readiness floor's evidence clause is kind-conditional at both rungs; overlays dissolve  [ACCEPTED 2026-06-10]
+**Decision.** The floor splits into **kind-blind structural clauses** (envelope at `idea`; `intent.outcome` +
+≥1 relation at `scoped`; no blocking open questions at `defined`+; resolution clauses at `ready`) plus **one
+kind-conditional evidence clause**: `scoped` = the kind's natural evidence is *present* (prose acceptable),
+`defined` = the evidence is *complete* where the kind defines a stronger form (structured GWT for `example`,
+machine-readable `target` for `constraint`, the written choice for `decision`). The separate overlay
+mechanism is dissolved into the per-kind evidence table (`05` §3). Three bounding laws: monotonic by
+construction (every `defined` cell implies its `scoped` cell), promotion-neutral (promoted forms count —
+MD-10), convergence is honest (`rule`/`model` rungs converge rather than become quotas). `contract` maps to
+the behavior-family row as a **documented interim** with a named deferral: when a dedicated contract section
+lands, the typing law (MD-11) pulls it in and the row repoints.
+**Why / alternatives rejected.** The review's top finding (F1), extended one rung down by the grill: the
+plan's defined-only sketch would NOT have de-padded the example, because floor clauses are cumulative and
+`scoped`'s kind-blind `rules-examples-or-constraints` clause is what `order-model` (`model.terms` counts for
+nothing) and `order-lifecycle` (the `decision` section counts for nothing) were padding for. The old floor
+was also non-monotonic for `constraint` (its natural evidence stopped counting between `scoped` and
+`defined`) — half-delivering the P8 "kind changes required detail" promise: at the floor, `kind` only ever
+*added*. *Rejected:* defined-only (leaves the padding one rung lower); dropping evidence below `ready`
+(guts the honest-readiness differentiator — `defined` would stop meaning anything checkable).
+**Consequences.** The canonical example de-pads — the throwaway `behavior.rules` on `order-lifecycle`,
+`order-model`, and `order-latency-constraint` are deleted, and `checkout-v1.test.ts` stops asserting padding
+is green. An AI author no longer learns to sprinkle `behavior.rules` onto decision records.
+**Execution.** Wave B rewrites `readiness-floor.ts` as the per-kind evidence table (with D3's
+table-as-single-source collapse), de-pads the example, and re-authors the H8 fixture
+`invalid-defined-constraint-without-target` (which itself currently pads).
+
+### MD-13 — The floor table in code is the single source of truth; the evaluator is generic  [ACCEPTED 2026-06-10]
+**Decision.** `readiness-floor.ts` becomes the one home of the floor: each row carries `{ clauseId,
+description, predicate }` (a named predicate from a small library, with paths as arguments where presence
+*is* the check); the per-kind evidence map (MD-12) lives beside the clauses; the clause-id union is
+**derived** from the table via `typeof`, never re-enumerated; the evaluator is one generic loop. Evidence
+predicates take `(spec, model)` — promotion-neutrality (MD-10/MD-12) needs the authored model to see
+refining children. Decorative metadata is banned: `authoredPaths` either becomes a real predicate argument
+or is deleted.
+**Why / alternatives rejected.** 453 lines for three checks; clause ids enumerated in four places (add a
+clause → edit 3–4 spots; miss the switch and it **silently skips** — a validator that silently stops firing
+is exactly what `05` §5 exists to prevent); `authoredPaths` was verified decorative. Table-as-truth also
+buys doc↔code fidelity: `05` §3's tables and the data table are reviewable as mirror images. *Rejected:*
+evaluator-as-truth (the doc table would mirror a switch; the sync burden survives); minimal trim (the
+silent-skip failure mode survives).
+**Execution.** Wave B (plan 02 H5), together with the MD-12 floor rewrite — one change, since the table
+being rewritten is the table being collapsed.
+
+### MD-14 — One validation path, through the one graph; `AuthoredModel` retires as a public seam  [ACCEPTED 2026-06-10 · direction; executes Slice 1/3]
+**Decision.** When the extractor lands, validators consume **the extractor's output** — one path: source →
+extract (static reification, P5) → graph (in memory) → conformance + honesty checks; `sdp validate` =
+`sdp build` + checks. `AuthoredModel` is demoted to (at most) an extractor-internal intermediate — never a
+second public validation seam, never a "pre-graph lint" mode. Authoring-time feedback is owned by typed
+sections + `tsc` (MD-11) and the `sdp/spec-static` lint, not by a parallel validator path.
+**Why / alternatives rejected.** Sharper than the "two paths drift" worry: the two ingestion modes can
+**disagree** — the Session-1 harness validates *imported, evaluated* spec objects, while the extractor
+*statically reifies without executing* (`04` §1). A non-static expression evaluates to a value on import but
+drops in reification, so import-path validation can pass a spec the graph doesn't hold — honesty checks
+validating a phantom. The protocol's truth is what source *statically states*, not what it *evaluates to*.
+This also makes the crippled-graph gap strategy's minimal slice ("extract → graph, no more," `plans/04` §2)
+sufficient for self-validation. *Rejected:* a documented dual path (the disagreement above, institutionalized).
+**Execution.** Slice 1 (extractor feeds the floor checks) / Slice 3 (the full gate); until then the Session-1
+harness stands in, honestly fenced (the `authored-model.ts` doc-comment already says so).
+
+### MD-15 — Authored Spec files carry the `.sdp.ts` extension  [ACCEPTED 2026-06-10]
+**Decision.** Spec files are `/specs/**/*.sdp.ts` (packs: `*.pack.sdp.ts`). The Protocol's own compound
+extension — the `.stories.tsx` pattern: tool-branded, collision-free, tooling-scopeable. The model name
+`Spec` is untouched (it was always settled); only the file serialization changes.
+**Why / alternatives rejected.** `*.spec.ts` is *the* default test glob of the JS ecosystem (Vitest:
+`**/*.{test,spec}.?(c|m)[jt]s(x)`; Jest/Mocha conventions match). An adopter on runner defaults gets their
+runner executing Spec-primitive files — Vitest fails files with no test suites, so first contact with the
+Protocol is a baffling CI failure. This repo's own narrowed `vitest.config.ts` was the dodge that proved the
+landmine. Decided now, while the rename costs nine example files and zero adopters. *Rejected:* keep +
+documented exclusion (pushes a config edit onto every adopter, and IDE test explorers keep mislisting spec
+files); `.spec.sdp.ts` (collision-free but verbose self-restatement); directory-convention-only (identity
+lives only in the path — future colocated specs would carry no marker).
+**Execution.** Wave B renames the example files and this repo's docs/globs; the extractor (Slice 1) ships
+reading `*.sdp.ts` from day one.
+
 ## Structural-decision shorthand (D1–D6)  [ACCEPTED · relocated here when the cleanup plan was retired, 2026-06-07]
 
 > These six labels come from the original structural-decisions pass. Their *content* is canonical in the

@@ -1,11 +1,19 @@
 # The grilling agenda — Decision Resolution & Base Reconciliation
 
-> **Status: PLAN-ONLY · the agenda for a FRESH `grill-with-docs` session.** This document holds the **six
-> genuinely-open decisions** the post-Session-1 reviews surfaced, framed for resolution **against the base**
-> (terms: `docs/concept/ubiquitous-language.md`, the lean glossary; model: `docs/concept/00`–`07`), in
-> dependency order. It deliberately does **not** pre-resolve them — that is the grilling session's job.
-> **Date:** 2026-06-07 · **slimmed 2026-06-10 (pre-grill folds)** · **Branch:** `feature/mvp-init` ·
-> **Repo state:** Session 1 + hardening Wave A + the Fold-A/Fold-B folds + the `reviews/` archive, all green.
+> **Status: ✅ EXECUTED 2026-06-10 — the grill ran; all six decisions resolved and ratified (MD-10…MD-15).**
+> The base was reconciled inline (`02`/`03`/`04`/`05` + the glossary), and `plans/02` Wave B was rewritten
+> execution-ready. This document is kept as the agenda-of-record; the resolutions live in
+> `docs/concept/DECISIONS.md`. **Date:** 2026-06-07 · slimmed 2026-06-10 (pre-grill folds) · **grilled
+> 2026-06-10** · **Branch:** `feature/mvp-init`.
+>
+> | Handle | Resolution | Recorded |
+> |---|---|---|
+> | **D2** | `behavior.rules`/`examples` carry **content only** (prose / structured GWT, maturing in place); linkage lives in relations; promotion is exclusive | **MD-10** |
+> | **D1** | **The typing law**: every floor-bearing section is closed-typed — six today (`intent`, `behavior`, `constraints[]`, `model`, `verification`, `decision`); `design`/`ui` stay open bags; `decision.status` rejected | **MD-11** |
+> | **D7** | The floor's evidence clause is **kind-conditional at both `scoped` and `defined`** (present → complete); the overlay mechanism dissolves into the per-kind table; `contract` interim = behavior-family row | **MD-12** |
+> | **D3** | The floor **table is the single source of truth**: named predicates `(spec, model)`, derived clause-id union, one generic evaluator, no decorative metadata | **MD-13** |
+> | **D4** | **One validation path** through the one graph (extract → graph → checks); `AuthoredModel` retires as a public seam (direction now; executes Slice 1/3) | **MD-14** |
+> | **D8** | Spec files carry the **`.sdp.ts`** extension (collision-free with JS test-runner globs; the `.stories.tsx` pattern) | **MD-15** |
 >
 > **Folded out — do not re-litigate (the former §3a/§4).** The resolvable-now items left this agenda in the
 > 2026-06-10 fold session: **R1/R2/R3** ratified and applied to the base, and two items recorded **ACCEPTED**
@@ -162,11 +170,18 @@ Once D1–D3 land and the base is reconciled, plan 02's **Wave B** becomes execu
 unlocks, and the two gated H8 fixtures flip from `it.todo` to active. H10 (the api/route anchor in the
 example) executes with Slice-2 anchor extraction under the MD-8 `codeAnchor` shape.
 
-## §5 — Definition of done for this session
+## §5 — Definition of done for this session — ✅ ALL MET 2026-06-10
 
-- **D1, D2, D3, D4, D7, D8 resolved** and recorded in `DECISIONS.md` (rationale + what each unblocks).
-- **The core model and floor reconciled** to the resolved section shapes (`02` §1/§3) and the kind-aware
-  `defined` floor (`05` §3, per D7); any term changes land in the glossary.
-- **Plan 02 Wave B rewritten execution-ready** with the now-locked field shapes, including the example
-  de-padding that D7 unlocks.
-- No code changed in this session (it is PLAN-ONLY); the code follows in the Wave-B execution session.
+- ✅ **D1, D2, D3, D4, D7, D8 resolved** and recorded in `DECISIONS.md` as **MD-10…MD-15** (rationale + what
+  each unblocks). The grill went two steps *past* the agenda where the evidence forced it: D7 covers
+  **`scoped` too** (the kind-blind scoped clause was what the padding actually cleared), and D1 became a
+  **criterion** ("floor-bearing ⟹ typed") rather than a list — which pulled `decision` into the typed set
+  and rejected `decision.status` as FSM vocabulary.
+- ✅ **The core model and floor reconciled**: `02` §2/§3 (duality laws, typing law, readiness comments,
+  worked examples), `05` §2/§3 (one validation path; the two-part floor + per-kind evidence table),
+  `04` §1/§5 + `00`/`03`/`jtbd-01` (content-only DSL example, `.sdp.ts`); term changes in the glossary
+  (duality entry, `status` rejection, `.sdp.ts` resolution).
+- ✅ **Plan 02 Wave B rewritten execution-ready** (locked shapes, de-padding, the `.sdp.ts` rename, the H4
+  dissolution).
+- ✅ No `src/`/`test/` code changed (PLAN-ONLY held); the only non-doc touches were the two H7 leftovers the
+  session was asked to finalize (`.sisyphus/` untracked; `package.json` description + Apache-2.0).

@@ -82,8 +82,8 @@ Altitude is a clean 3-rung ladder. `epic` is the ceiling; above-epic framing (in
 ```ts
 type SpecReadiness =
   | "idea"      // title + minimal intent; open questions allowed
-  | "scoped"    // intent, terms, parent relation; rules or examples expected
-  | "defined"   // rules and/or examples present; NFR targets measurable
+  | "scoped"    // intent + a relation; the kind's natural evidence *present* (kind-conditional floor, `05` §3)
+  | "defined"   // the kind's natural evidence *complete* (structured GWT, measurable targets, the written choice…)
   | "ready";    // implementation-ready: clears the readiness floor (`05`), stated by a human (typically out of a Design Review, `06`) — the floor is checked; the review is practice, not a recorded fact
 ```
 
@@ -128,7 +128,7 @@ Sections carry the detail. They are the **extension surface**: the system grows 
 | Section | Carries | Notes |
 |---|---|---|
 | `intent` | actor, problem, outcome, value, risks, assumptions, open questions | `openQuestions` may be flagged `blocking` to prevent stating a readiness past `defined`. |
-| `behavior` | examples (Given/When/Then), rules, flows | An example progresses from prose → structured steps → a verifier. |
+| `behavior` | rules (prose), examples (prose or structured Given/When/Then), flows | **Content only — never refs** (the duality rule below). An example entry matures *in place*: prose → a structured `{ given, when, then }` entry → (promoted) a child `example` spec backed by a verifier. |
 | `constraints[]` | a `flavor` (quality / security / performance / compliance / operational / policy), a statement, an optional `target`, optional `measurableBy` | A `performance` constraint with a measurable `target` is an NFR. `target` must be machine-readable (`p95 < 300ms`, not "fast enough") to state `defined`+. |
 | `model` | domain terms and concepts (vocabulary only) | Used for pack-level coherence checks. `DomainConcept.kind` is an open, illustrative list, not a closed enum. |
 | `design` | components, ports, dependencies, decisions, tradeoffs | Referenced by ID; decision bodies are linked, not parsed for semantics. |
@@ -136,12 +136,23 @@ Sections carry the detail. They are the **extension surface**: the system grows 
 | `verification` | mode (manual / reviewed / contract / executable) + criteria | A verifying test *existing and enabled* is the derived `has-verifier` delivery fact (§2), not an authored field here. Pass/fail is **not** in the graph — it is CI's, operational. |
 | `ui` | references to component stories, design-tool nodes, visual baselines, accessibility status | **Aspirational.** Always links, never owns or renders. |
 
+The `decision` section carries **no `status` field** (MD-11): a decision's adoption arc is the envelope's `readiness` (raised → explored → written → ratified), checked against the floor like any spec; replacement is the `supersedes` relation; a *rejected* path is not a truth-spec at all — it lives in the chosen decision's `alternatives` / `consequences`. One concept, one place.
+
+### The typing law — which sections have typed shapes (MD-11)
+
+**Every floor-bearing section is typed, as a closed shape.** A section is *floor-bearing* when a readiness-floor clause reads it as evidence (`05` §3): `intent`, `behavior`, `constraints`, `model`, `verification`, `decision`. Closed means no index signature — which is what closes the in-section honesty bypass (`behavior: { "has-verifier": true }`) at the type level, and gives authors (human and agent) autocomplete + shape guardrails, the highest-value adoption lever. The genuinely-unsettled surfaces — `design`, `ui` — stay **open bags** so they keep breathing (L9). The criterion outlives the list: when a floor clause starts reading a section, that section gets typed.
+
 ### Section ⟷ kind — when a concern is inline vs. its own primitive
 
-Three sections — `constraints`, `model`, `decision` — have a same-named `kind` twin, so the same concern can live two ways. **The rule** (stated here once, not scattered across the other docs):
+Five section concerns have a same-named (or same-natured) `kind` twin, so the same concern can live two ways: `constraints` ⟷ `constraint`, `model` ⟷ `model`, `decision` ⟷ `decision`, and `behavior.rules` / `behavior.examples` ⟷ the `rule` / `example` kinds. **The rule** (stated here once, not scattered across the other docs):
 
 - Keep it **inline as a section** when it is **local detail** of its host `Spec`.
-- **Promote it to a standalone `Spec`** of the matching `kind` (linked by `constrainedBy` / `decidedBy` / `modelRefs`) when it is **referenced by more than one `Spec`, or needs its own identity / lifecycle / review.**
+- **Promote it to a standalone `Spec`** of the matching `kind` when it is **referenced by more than one `Spec`, or needs its own identity / lifecycle / review.** The promoted spec is linked by **relations** — `constrainedBy` / `decidedBy` / `modelRefs` for the truth-section twins; `refines` (+ `verifies` for verifying examples) from the promoted `rule` / `example` child to its parent.
+
+Two laws make the duality safe (ratified with the 2026-06-10 grill, DECISIONS MD-10):
+
+- **Sections carry content; relations carry linkage.** A section never holds a spec ref — `behavior.rules` and `behavior.examples` are prose / structured entries only. "Which examples does this spec have?" is a reverse-edge query over the children's `refines`/`verifies`, never an authored list.
+- **Promotion is exclusive.** An entry lives inline **or** as a promoted child — never both. Promotion *moves* the content out; nothing is left behind to drift. (The readiness floor counts promoted children as evidence, `05` §3 — promotion never costs a spec its earned rung.)
 
 `modelRefs` on a `Pack` always points at standalone `kind:"model"` specs — shared vocabulary is never inlined twice.
 
@@ -175,7 +186,8 @@ export const CreateOrder = spec({
   altitude: "feature",
   readiness: "ready",
   intent: { actor: "customer", outcome: "turn a valid cart into an order", value: "customers can complete purchases" },
-  behavior: { examples: [ref("spec:orders.create-order.valid-cart")] },
+  // content only — the valid-cart example is a promoted child (it refines + verifies this spec); no refs here
+  behavior: { rules: ["only valid carts can become orders", "creating an order emits OrderCreated"] },
   constraints: [
     { flavor: "performance", statement: "order creation is fast enough for checkout", target: "p95 < 300ms" },
   ],

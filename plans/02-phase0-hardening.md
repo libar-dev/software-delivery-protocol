@@ -1,15 +1,15 @@
 # Phase 0 Hardening — Fidelity & Simplification Pass (post-Session-1)
 
-> **Status: EXECUTION · Wave A done; Wave B blocked on plan 03 decisions.** This is the **code
-> hardening** half of the post-Session-1 review — fidelity corrections and net complexity reductions on
-> the already-implemented Phase 0. The decisions these fixes' siblings depend on, the concept-base
-> wording tightenings, and the roadmap acceptance criteria were **split out of this plan** into their
-> proper homes (see "Where the rest went," below).
+> **Status: EXECUTION · Wave A done · Wave B EXECUTION-READY (unblocked 2026-06-10 — the grill resolved
+> all gates, MD-10…MD-15).** This is the **code hardening** half of the post-Session-1 review — fidelity
+> corrections and net complexity reductions on the already-implemented Phase 0. The decisions these fixes'
+> siblings depend on, the concept-base wording tightenings, and the roadmap acceptance criteria were
+> **split out of this plan** into their proper homes (see "Where the rest went," below).
 > **Date:** 2026-06-07 · **Branch:** `feature/mvp-init` · **Repo state:** Session 1 (`eb6bf2a`) + Wave A
 > green (`npm run check`: typecheck ×2, lint, format, **47 tests + 2 todo**, build).
-> **2026-06-10 folds:** R1/R2/R3 ratified & applied; the anchor shape (MD-8 `codeAnchor`) and the
-> open-questions home (MD-9 `intent.openQuestions`) recorded **decided** — H2's direction and H10's shape
-> are no longer open; Wave B's typed-section fixes remain blocked on D1/D2/D3 (the grill, `plans/03`).
+> **2026-06-10 folds:** R1/R2/R3 ratified & applied; MD-8 (`codeAnchor`) and MD-9 (`intent.openQuestions`)
+> recorded decided. **2026-06-10 grill:** D1/D2/D3/D4/D7/D8 resolved as **MD-10…MD-15** — §4 below is
+> rewritten execution-ready against them; run it as the next code session.
 
 This plan covers the gap between *"Slice 0 is green"* and *"Slice 0 is a faithful, lean foundation the
 extractor can safely build on."* It stays inside the Slice 0 boundary — **no extractor, no graph
@@ -56,9 +56,9 @@ they now live where each gets the right rigor:
 ## §2 — The root tension (drives the Wave-B fidelity fixes)
 
 `src/model/sections.ts` types every section as `Record<string, unknown>`; the base (**L9**, `02` §3)
-intends **typed-but-optional** sections. This is the linchpin — its resolution (**D1**) is owned by
-**plan 03 §2–§3**, where the full framing and the authoring-ergonomics rationale live. Wave B cannot
-execute its field-shape fixes until D1/D2 land there.
+intends **typed-but-optional** sections. This was the linchpin — **resolved 2026-06-10**: MD-11 (the typing
+law — floor-bearing sections are closed-typed; six today) on MD-10's content-only `behavior` shape. §4/B1
+carries the locked field shapes.
 
 ---
 
@@ -117,66 +117,72 @@ Quick, contract-shrinking, reversible wins. All landed and verified; `npm run ch
 
 ---
 
-## §4 — Wave B (blocked on plan 03 decisions) — fidelity fixes, DECISION-GATED
+## §4 — Wave B — ✅ UNBLOCKED 2026-06-10 (the grill resolved every gate: MD-10…MD-15) — EXECUTION-READY
 
-Execution-ready specs, held until the named decision lands in
-`plans/03-decision-resolution-and-base-reconciliation.md`. **Sequence after D1/D2/D3.**
+One execution session, four steps in order; `npm run check` green after each. The decision pointers are
+the contract — when a shape question comes up mid-execution, the MD entry wins, then the base (`02`/`05`).
 
-### 🟠 H2 — Honesty check points at the wrong section (open questions) · direction **decided** (MD-9); execution-ready independent of D1
-- **Finding.** `validators.ts` (`hasNoBlockingOpenQuestions`) and `readiness-floor.ts` read
-  `spec.design.openQuestions` / `spec.decision.openQuestions`. The canonical home is
-  **`intent.openQuestions`** (`02` §3; the `04` worked example puts it under `intent`).
-- **Impact.** A doc-following author who flags a `blocking` question in `intent.openQuestions` can still
-  state `defined`/`ready` and the honesty check **won't fire** — the marquee differentiator aimed at the
-  wrong target. (Plan↔concept drift introduced by the Session-1 pre-plan; the implementation faithfully
-  followed it.)
-- **Change.** Read open questions from `intent.openQuestions`; update the floor data `authoredPaths`. A
-  typed `IntentSection` (D1) shrinks the predicate to a few lines.
-- **Files.** `validators.ts`, `readiness-floor.ts`; `test/readiness.test.ts` / `test/validators.test.ts`.
-- **Verify.** Flip the gated H8 fixture `invalid-ready-with-blocking-question` to active: a spec with
-  `intent.openQuestions:[{blocking:true}]` stating `defined` **fails**; with `blocking:false`/absent
-  **passes**.
+### B1 — Type the six floor-bearing sections (MD-11 + MD-10; absorbs old H3)
+- **`sections.ts`** — closed shapes (no index signature); fields optional per P7 (types describe shape,
+  validators decide completeness):
+  - `IntentSection { actor?; problem?; outcome?; value?; risks?: string[]; assumptions?: string[];
+    openQuestions?: (string | { question: string; blocking?: boolean })[] }`
+  - `BehaviorSection { rules?: string[]; examples?: (string | { given: string[]; when: string[];
+    then: string[] })[]; flows?: string[] }` — **content only, never refs** (MD-10)
+  - `constraints?: ConstraintSection[]` with `ConstraintSection { flavor?; statement: string; target?;
+    measurableBy? }` — the array shape (old H3); **drop the validator's dual array/record handling**
+  - `ModelSection { terms?: Record<string, string> }` (richer concepts stay deferred)
+  - `VerificationSection { mode?: "manual" | "reviewed" | "contract" | "executable"; criteria?: string[] }`
+  - `DecisionSection { context?: string; decision?: string; rationale?: string[]; alternatives?: string[];
+    consequences?: string[] }` — **no `status`** (MD-11; rejected vocabulary)
+  - `design` / `ui` stay open bags (`Record<string, unknown>`).
+- **Verify:** the in-section honesty bypass `behavior: { "has-verifier": true }` now **fails to typecheck**
+  — so the gated H8 fixture `invalid-hand-authored-delivery-fact-in-section` lands as a `@ts-expect-error`
+  compile-time fixture beside the H9 set (not a runtime fixture); `order-latency-constraint` authors a
+  constraints **array**.
 
-### 🟠 H3 — `constraints` must be an array, not a single object · gated on **D1**
-- **Finding.** `sections.ts` types `constraints?: ConstraintsSection` (one `Record`); `02` §1 specifies
-  `constraints?: ConstraintSection[]`. A spec can be bounded by several NFRs; a single object can't
-  express that. `validators.ts` already defends against **both** array and record forms — a tell the
-  shape was unsettled.
-- **Change.** `constraints?: ConstraintSection[]` (typed per D1: `{ flavor?, statement, target?,
-  measurableBy? }`). Update `order-latency-constraint.spec.ts` to author an array. **Simplify** the
-  validator: drop the dual array/record handling — one shape only.
-- **Files.** `sections.ts`, `order-latency-constraint.spec.ts`, `validators.ts`.
-- **Verify.** `constraint` floor test still passes; validator no longer branches on `Array.isArray`.
+### B2 — Rewrite the floor as the kind-conditional table (MD-12 + MD-13 + MD-9; absorbs old H2 + H5)
+- **`readiness-floor.ts` becomes THE table**, mirroring `05` §3 row-for-row: kind-blind structural clauses
+  + the per-kind evidence map (`scoped` = evidence *present*, `defined` = evidence *complete*). Rows carry
+  `{ id, description, predicate }` — named predicates with a `(spec, model)` signature (promotion-neutrality
+  needs the model: behavior-family evidence counts refining `rule`/`example` children and `constrainedBy`
+  targets). The clause-id union is **derived** (`typeof`); delete the overlay mechanism, the hand-written
+  `ReadinessClauseId` union, `toSupportedReadinessClauseId`, and decorative `authoredPaths`.
+- **Old H2 lands inside this step** (MD-9): blocking open questions read from `intent.openQuestions` — the
+  typed `IntentSection` makes the predicate a few lines. Flip the gated H8 fixture
+  `invalid-ready-with-blocking-question` active: `intent.openQuestions: [{ blocking: true }]` stating
+  `defined` **fails**; `blocking: false`/absent **passes**.
+- The `example`-kind evidence reads **structured `behavior.examples` entries** (MD-10), not the flat
+  `behavior.given/when/then` the Session-1 overlay probed.
+- **Verify:** same outcomes for the non-padding fixtures; clause list defined exactly once; `model`- and
+  `decision`-kind fixtures reach `scoped`/`defined` on natural content alone.
 
-### 🟡 H5 — Trim the readiness-floor validator (complexity masking a simple design) · gated on **D3**
-- **Finding (verified).** `validators.ts` is 453 lines for three checks. Clause ids are enumerated in
-  **four** places — `readinessFloors` data, the `ReadinessClauseId` union, the
-  `toSupportedReadinessClauseId` switch, and the `evaluateClause` switch (add a clause → edit 3–4 spots;
-  miss one and it **silently skips**). `authoredPaths` is **decorative** — referenced only by its
-  declaration + tests, never by the evaluator, so the "which field does this clause check" fact lives in
-  two places, free to drift.
-- **Change.** Per **D3** (recommendation: table-as-single-source-of-truth) — the evaluator reads
-  `authoredPaths` + a few generic predicates, killing the 4× enumeration. Safe once sections are typed.
-- **Verify.** Same floor test outcomes; clause-id list defined exactly once; no decorative metadata.
+### B3 — De-pad and re-author the example (MD-10/11/12 — the visible quality signal)
+- **Delete the throwaway `behavior.rules`** from `order-lifecycle`, `order-model`,
+  `order-latency-constraint` — each now clears the floor on its natural evidence (`decision` section ·
+  `model.terms` · `constraints.target`).
+- **`create-order`**: drop both ref lists from `behavior` (the rules/examples children already
+  `refines`/`verifies` it — promotion-neutral evidence); keep inline prose only if it states something no
+  child does.
+- **`create-order-valid-cart` / `-invalid-cart`**: drop the redundant prose `examples` entry; author the
+  GWT as one **structured `examples` entry** (nested, per MD-10).
+- **`order-lifecycle`**: drop `decision.status: "accepted"` (MD-11 — the adoption arc is `readiness`).
+- **Re-author the H8 fixture `invalid-defined-constraint-without-target`** (it currently pads with
+  `behavior.rules` itself) and re-assert `checkout-v1.test.ts` green on the de-padded example.
 
-### 🟠 H4 — Referential integrity is blind to section-embedded refs · gated on **D1 + D2**; likely Slice 1
-- **Finding.** `validateDanglingReferences` checks relations, pack members, `modelRefs`, anchors — but
-  not refs inside sections. Yet `create-order.spec.ts` puts real refs there
-  (`behavior.rules:[ref(...)]`, `behavior.examples:[ref(...)]`). A typo there escapes the check; `05`
-  §2.1 wants *every* referenced ID to resolve.
-- **Why deferred-ish.** The proper fix belongs with the extractor, which must know *structurally* where
-  refs can live — impossible while sections are `unknown`. Typing `behavior` (D1) + resolving the
-  `behavior.rules` shape (**D2**) makes both the check and the extractor tractable.
-- **Change (when scheduled).** Extend referential integrity to typed ref-bearing section fields; align
-  the example to the resolved D2.
+### B4 — The `.sdp.ts` rename (MD-15)
+- `examples/checkout-v1/specs/**/*.spec.ts` → `*.sdp.ts`; `checkout.pack.ts` → `checkout.pack.sdp.ts`.
+- Update `tsconfig.examples.json` includes and any glob that names `.spec.ts`; confirm vitest still sees
+  only `test/**/*.test.ts` (the config narrowing stays, but is no longer load-bearing for the collision).
 
-### 🟠 H10 — The example under-proves the generic-anchor claim · shape **decided** (MD-8 `codeAnchor`); pairs with Slice 2
-- **Finding.** *Generic* anchors should bind **any** code location, but the example has only `impl` +
-  `test` anchors; the docs' own example (`04` §5) includes a route anchor `api:orders.post`. The tracer
-  bullet never exercises the genericity claim — the strongest proof is binding a **non-class location**
-  (a route/endpoint).
-- **Change (when scheduled).** Add an `api`/route anchor to `examples/checkout-v1` under the **MD-8
-  `codeAnchor`** shape; it should extract to a `satisfies` edge with `claim:"anchored"` like any other.
+### Dissolved / re-homed by the grill
+- **H4 (section-embedded ref integrity) is dissolved for `behavior`** (MD-10): refs cannot exist in
+  sections, so there is nothing to check — the cheapest validator is the one a model rule makes
+  unnecessary. What remains of H4 is only **F4** (`modelRefs` targets must be `kind:"model"`), which rides
+  the Slice-1/3 graph validators under the one-path rule (MD-14).
+- **H10 unchanged**: the api/route anchor rides Slice-2 anchor extraction under MD-8 `codeAnchor`.
+- **`AuthoredModel`** needs no Wave-B work: it stays the honestly-fenced Session-1 stand-in until the
+  extractor lands, then retires per MD-14 (Slice 1/3 — not this wave).
 
 ### Carried review backlog (post-split adversarial review · small, ride Wave B / Slice 1)
 
@@ -205,19 +211,24 @@ None block the split; each is small, decision-free, or doc-level.
 The `ts-morph` extractor · `graph.json` / graph emission · the graph-level validator gate ·
 `--check-clean` · reader / views / Design Review · architecture rules · custom team rules · `--lenient`
 · derived-readiness banner · runtime `observed` path · MCP surface · self-hosting the Protocol's own
-repo. Full typing of `design`/`decision`/`ui` sections stays deferred per D1.
+repo. Typing of `design`/`ui` stays deferred per the typing law (MD-11 — they become typed when a floor
+clause reads them); a dedicated `contract` section is a named deferral (MD-12).
 
 ## §6 — Sequencing
 
 1. **Wave A** — ✅ done (H1, H6, H7, H8-active, H9).
 2. **Pre-grill folds (2026-06-10)** — ✅ done: R1/R2/R3 ratified & applied; the anchor shape (MD-8) and the
    open-questions home (MD-9) recorded decided; `plans/03` slimmed to the six open decisions.
-3. **Resolve decisions** — the fresh grilling session (`plans/03`): D2 → D1 → D3, plus D4 (direction),
-   D7 (kind-aware floor), D8 (file extension).
-4. **Wave B** — with typed sections in place: H3, then H2 (+ flip its gated H8 fixture), then H5/D3, then
-   H4; H10 with Slice-2 anchor extraction.
+3. **Resolve decisions** — ✅ done (2026-06-10 grill): all six resolved and recorded as **MD-10…MD-15**;
+   the base reconciled inline; H7's leftovers finalized (`.sisyphus/` untracked; `package.json`
+   description + Apache-2.0).
+4. **Wave B** — ← **NEXT** (the next code session): B1 (typed sections) → B2 (the floor table) → B3
+   (de-pad + re-author the example) → B4 (the `.sdp.ts` rename); H10 rides Slice-2 anchor extraction.
 
-**Done gate for Wave B:** the honesty bypass (`behavior: { "has-verifier": true }`) is rejected for
-typed sections **and** locked by the (now-active) H8 fixture; open questions read from
-`intent.openQuestions`; `constraints` is an array; the floor clause-id list is defined exactly once; the
-example still contains only static literals; `npm run check` green.
+**Done gate for Wave B:** the in-section honesty bypass (`behavior: { "has-verifier": true }`) **fails to
+typecheck**, locked by a `@ts-expect-error` fixture; blocking open questions read from
+`intent.openQuestions` with the H8 fixture active; `constraints` is a typed array (no dual-shape
+validator); the floor is one kind-conditional table mirroring `05` §3, clause ids defined exactly once, no
+decorative metadata; the example is **de-padded** (no `behavior.rules` on `decision`/`model`/`constraint`
+specs, no section refs, no `decision.status`, GWT nested) and every spec file is `*.sdp.ts`; the example
+still contains only static literals; `npm run check` green.

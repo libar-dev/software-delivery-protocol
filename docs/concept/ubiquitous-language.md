@@ -62,7 +62,7 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
 | **section** | the typed, optional detail-slice of a `Spec` — the **extension surface**; one concern each: `intent` · `behavior` · `constraints` · `model` · `design` · `decision` · `verification` · `ui` | "Facet" · "aspect" |
-| **section ⟷ kind duality** | `constraints`/`model`/`decision` have a same-named `kind` twin: keep **inline** when local detail; **promote** to a standalone `Spec` when shared or needing its own identity/lifecycle/review | — |
+| **section ⟷ kind duality** | `constraints`/`model`/`decision` — and `behavior.rules`/`behavior.examples` vs the `rule`/`example` kinds — have a `kind` twin: keep **inline** when local detail; **promote** to a standalone `Spec` when shared or needing its own identity/lifecycle/review. **Sections carry content, relations carry linkage** (never a ref inside a section); **promotion is exclusive** (inline XOR promoted — content moves out, MD-10) | — |
 
 ## The other authored things  (no system truth — → `02` §4, `04` §2)
 
@@ -177,8 +177,6 @@ artifact** — approval provenance is git-native, never an authored primitive).
 
 - **"epistemic boundary"** is a *working name* for the humans-assert-intent / machines-assert-structure
   division (`01`); a friendlier Studio-facing name is a minor open item.
-- **`.spec.ts`** as the Spec file extension collides with the universal JS test-runner glob — an open
-  Representation-level decision (the grill agenda, `plans/03`); the model name `Spec` itself is settled.
 - **`ref()`** in the DSL is today a **spec-only** reference builder wearing a generic name (it rejects
   `pack:`/`doc:` targets) — a doc-note item on the Wave-B backlog (`plans/02`).
 
@@ -194,10 +192,15 @@ artifact** — approval provenance is git-native, never an authored primitive).
 - **Rejected:** `provenance` (→ `claim`) · `marker` (→ `anchor`) · `Facet` (→ `section`) · `SpecPack`
   (→ `Pack`) · `abstraction` (→ `altitude`) · `candidate` (as a readiness rung — FSM imprint) · FSM /
   status-FSM · `model element` (as the primitive's name) · `genus`/`species` · `Scenario`/`capability`/`NFR`
-  as descriptors (labels / projections, not descriptors) · `exemplifies` (relation).
+  as descriptors (labels / projections, not descriptors) · `exemplifies` (relation) · `status` (on the
+  `decision` section — FSM imprint; adoption arc = `readiness`, replacement = `supersedes`, rejected paths =
+  `alternatives`/`consequences` — MD-11).
 - **Locked usage:** readiness is **"stated/asserted," never "claimed"** ("claim" is reserved for the `claim`
   taxonomy) · the meta-model defines the **contract**, **instances conform**; "govern"/"police" retired ·
   checks are **conformance checks + honesty checks**.
+- **Resolved (MD-15):** authored Spec files carry the **`.sdp.ts`** extension (never `.spec.ts`, which every
+  JS test-runner default glob executes); the model name `Spec` itself was always settled — only the file
+  serialization changed.
 - **Naming (resolved — MD-5):** product **Libar Software Delivery Protocol** (short form "the Protocol");
   CLI **`sdp`**; npm **`@libar-dev/software-delivery-protocol`** (single package); repo
   `libar-dev/software-delivery-protocol`; namespaces `@libar-dev/` (OSS) vs `@libar-ai/` (commercial).

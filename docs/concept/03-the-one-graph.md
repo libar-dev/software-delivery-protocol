@@ -22,7 +22,7 @@ Two pure steps: `graph = f(repo)` and `output = f(graph)`. The extractor is the 
 
 ### What the extractor reads
 
-- **Typed spec files** (`/specs/**/*.spec.ts`) — the declared layer: specs, packs, relations.
+- **Typed spec files** (`/specs/**/*.sdp.ts`) — the declared layer: specs, packs, relations.
 - **Source-code anchors** — the anchored layer: an **anchor** binds a code location to a spec ID and minimal structural facts (component, satisfies, implements). Anchors carry *no* intent (see `04`).
 - **Structural facts** — the inferred layer: `ts-morph`-derived structure (which file defines which `impl`, basic test discovery linking `test:*` to the specs they `verify`). In the MVP this layer is kept minimal and advisory.
 
@@ -32,7 +32,7 @@ The graph is **flat**: arrays of nodes and arrays of edges. Hierarchy and contai
 {
   "schemaVersion": "0.1.0",
   "nodes": [
-    { "id": "spec:orders.create-order", "nodeType": "Primitive", "specKind": "behavior", "altitude": "feature", "readiness": "ready", "deliveryFacts": ["implemented"], "claim": "declared", "file": "specs/orders/create-order.spec.ts" },
+    { "id": "spec:orders.create-order", "nodeType": "Primitive", "specKind": "behavior", "altitude": "feature", "readiness": "ready", "deliveryFacts": ["implemented"], "claim": "declared", "file": "specs/orders/create-order.sdp.ts" },
     { "id": "impl:orders.create-order-use-case", "nodeType": "CodeNode", "claim": "anchored", "file": "src/orders/create-order.use-case.ts", "line": 12 }
   ],
   "edges": [

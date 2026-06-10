@@ -8,10 +8,10 @@ Realises **P5** (statically extractable), **P6** (ID-linked), **P9/P10** (anchor
 
 ## 1. The TypeScript Spec DSL — canonical (CORE)
 
-Specs are authored as typed TypeScript in `/specs/**/*.spec.ts`. The DSL is a thin set of helpers (`spec`, `pack`, relation builders) over the `Spec` shape from `02`.
+Specs are authored as typed TypeScript in `/specs/**/*.sdp.ts` — the Protocol's own compound extension (MD-15; the `.stories.tsx` pattern), deliberately **not** `.spec.ts`, which every JS test runner's default glob would try to execute. The DSL is a thin set of helpers (`spec`, `pack`, relation builders) over the `Spec` shape from `02`.
 
 ```ts
-import { spec, refines, dependsOn, verifies, ref } from "@libar-dev/software-delivery-protocol";
+import { spec, refines, dependsOn } from "@libar-dev/software-delivery-protocol";
 
 export const CreateOrder = spec({
   id: "spec:orders.create-order",
@@ -26,8 +26,9 @@ export const CreateOrder = spec({
     openQuestions: ["should stock reservation happen before or after order creation?"],
   },
   behavior: {
+    // content only — never refs (02 §3): a promoted example is a child spec that refines/verifies this one
     rules: ["only valid carts can become orders", "creating an order emits OrderCreated"],
-    examples: [ref("spec:orders.create-order.valid-cart")],
+    examples: ["an expired payment card is declined before any order is created"],
   },
   relations: [refines("spec:orders.order-management"), dependsOn("spec:payments.authorize-payment")],
 });
@@ -143,9 +144,9 @@ Modules that declare controls + an `expected()` model + `coverage()`, rendered a
 
 ```
 /specs
-  checkout.pack.ts
-  orders/create-order.spec.ts
-  payments/authorize-payment.spec.ts
+  checkout.pack.sdp.ts
+  orders/create-order.sdp.ts
+  payments/authorize-payment.sdp.ts
 /src
   orders/
     create-order.use-case.ts      // anchored: impl:orders.create-order-use-case

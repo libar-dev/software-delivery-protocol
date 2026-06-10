@@ -27,7 +27,7 @@ An **error fails the build**; a **gap informs**. This is the one sense in which 
 
 | Layer | Checks | Status |
 |---|---|---|
-| Types | structural shape of `Spec` (all sections optional, branded IDs) | CORE |
+| Types | structural shape of `Spec` (all sections optional, branded IDs; floor-bearing sections closed-typed — the typing law, `02` §3 / MD-11) | CORE |
 | Schema | the graph JSON validates against its schema | CORE |
 | Graph validators | cross-file conformance + honesty invariants (§2) | CORE |
 | Architecture rules | forbidden-dependency, layer boundaries, domain purity | ASPIRATIONAL |
@@ -39,7 +39,9 @@ Types describe **shape**; validators decide **completeness** (P7). Completeness 
 
 ## 2. The MVP graph validators (CORE)
 
-These are the non-negotiable core. CI fails on any error. They split across the two families:
+These are the non-negotiable core. CI fails on any error. They split across the two families.
+
+**They run over the one graph — there is exactly one validation path** (MD-14): source → extract (static reification, P5) → graph → checks; `sdp validate` is `sdp build` + checks. Validating any *evaluated* form (importing spec modules and checking the resulting objects) would check a phantom — a non-static expression evaluates to a value on import but is dropped by static reification, so the checks could pass a spec the graph doesn't actually hold. The Session-1 pre-graph `AuthoredModel` is a stand-in that retires into (at most) an extractor-internal shape when the extractor lands; it is never a second public validation seam. Authoring-time feedback is the type system's job (typed sections, `02` §3) plus the `sdp/spec-static` lint — not a parallel validator path.
 
 **Conformance checks:**
 
@@ -69,18 +71,34 @@ Two cross-cutting honesty rules apply to all validators:
 
 A **readiness floor** is the **minimum structural requirement to *state* a readiness rung** — a floor to clear, **never a quota to fill or a score** (significance governs detail — no tier-filling; `01`, P4 corollary). The floors are the mechanism (Principle); the specific thresholds are config a team can override.
 
-| Readiness | Floor (minimum structure to *state* the rung) |
+The floor has two parts: **kind-blind structural clauses** (the same for every kind) and **one evidence clause that is kind-conditional** (MD-12) — `kind` is a true subtype, and the floor is where that changes what is required, in both directions (it can *relax* as well as add).
+
+| Readiness | Kind-blind structural clauses (every kind) |
 |---|---|
 | `idea` | id, title, kind, altitude; `intent.outcome` **or** a parent relation |
-| `scoped` | `intent.outcome`; at least one relation; one of `behavior.rules` / `behavior.examples` / `constraints` |
-| `defined` | rules and/or examples; any constraint has a machine-readable `target`; no *blocking* open questions |
+| `scoped` | `intent.outcome`; at least one relation; **the kind's evidence is *present*** (table below) |
+| `defined` | **the kind's evidence is *complete*** (table below); no *blocking* open questions (`intent.openQuestions`, MD-9) |
 | `ready` | the `defined` floor **and**: no blocking open questions; all relations resolve; every `dependsOn`/`refines` target is itself **≥ `defined`**; any anchors present *resolve* (so `implemented` is *derivable*) |
 
-A small, **kind-aware** requirement rides on the base floor (full per-kind overlays are deferred):
+**The per-kind evidence table.** Each kind names its **natural evidence**; `scoped` requires it *present* (prose acceptable), `defined` requires it *complete* where the kind defines a stronger form. There is no separate overlay mechanism — this table is the whole kind-aware story:
 
-- `constraint` → a parseable, machine-readable `target` before `defined`+;
-- `example` → structured `given` / `when` / `then` before `defined`+;
-- `model` → term definitions present.
+| `kind` | `scoped` — evidence present | `defined` — evidence complete |
+|---|---|---|
+| `behavior` / `workflow` | rules / examples / flows / constraints — inline, **or promoted** (a refining `rule`/`example` child, or a `constrainedBy` target) | rules and/or examples (inline or promoted children); constraints alone no longer suffice |
+| `rule` | its statement in `behavior.rules` | same — a rule's content *is* its statement |
+| `example` | an examples entry (prose fine) | ≥ 1 **structured** `{ given, when, then }` entry |
+| `constraint` | `constraints[]` non-empty | every entry has a machine-readable `target` |
+| `model` | `model.terms` non-empty | same — a vocabulary either has terms or it doesn't |
+| `decision` | `decision` section present (context / alternatives may precede the choice) | `decision.decision` — the chosen option — is written |
+| `contract` *(interim)* | as `behavior` (examples read naturally as sample payloads) | as `behavior` — **named deferral:** when a dedicated contract section lands, the typing law (`02` §3) pulls it in and this row repoints to it |
+
+Three laws bound the table:
+
+- **Monotonic by construction.** Every `defined` cell implies its `scoped` cell — clearing the higher rung always clears the lower. (The pre-MD-12 floor failed this for `constraint`: its natural evidence stopped counting between `scoped` and `defined`.)
+- **Promotion-neutral.** Promoted forms count wherever one exists (`02` §3) — de-composing a spec into children never costs it its earned rung.
+- **Convergence is honest.** Where the rungs converge (`rule`, `model`), the floor refuses to become a quota ("more terms," "more rules" — the tier-filling P4 forbids); those rungs then differ only by the author's stated confidence plus the kind-blind clauses.
+
+> **Representation note (MD-13).** In code, the floor *table* is the single source of truth: rows carry the clause id, description, and a named predicate; the evaluator is one generic loop and the clause-id type is derived from the table. The tables above and the data in `readiness-floor.ts` are intended to be reviewable as mirror images.
 
 **The `ready` floor is earned, not asserted** — and it is **not** a delivery fact. The floor may require that anchors *resolve* (so `implemented` is *derivable*); it **never** requires the spec to *be* `implemented`. Readiness is a *stated position* about the design; delivery facts are observations about the code (`02` §2). Higher floors degrade gracefully if their structural inputs are absent.
 

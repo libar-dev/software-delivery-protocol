@@ -51,12 +51,12 @@ The MVP proves the founding principle — *one regenerable graph derived from th
 
 - **Typed `Spec` DSL** in TypeScript: `spec()`, `pack()`, sections, relations, the three descriptors (`kind` · `altitude` · `readiness`), enrichment-in-place, refinement into child specs. One primitive, stable IDs, no artifact migration.
 - **Generic source anchors** that bind any code location (class, function, route, module) to a spec ID + optional component. Framework-neutral — *how* the runtime is wired is an extractor detail, not a job.
-- **The `ts-morph` one-graph extractor**: one canonical, regenerable graph from `/specs/**/*.spec.ts` + anchors + basic test discovery, with honest edge `claim`s.
+- **The `ts-morph` one-graph extractor**: one canonical, regenerable graph from `/specs/**/*.sdp.ts` + anchors + basic test discovery, with honest edge `claim`s.
 - **Core conformance + honesty checks**: referential integrity (no dangling ID references), duplicate-ID detection, honest readiness (against the readiness floor), orphan detection, `verifies` linkage from tests to specs, and authoring-shape honesty (no hand-authored derived edges or delivery facts). CI fails on errors.
 - **One generated read-only view**: a derived, regenerable human-readable projection (spec tree + per-spec detail with readiness, relations, impact list, source links).
 - **Bidirectional spec↔test trace**: query "what verifies this spec?" and "what does this test cover?" from the graph.
 
-**The MVP write-path is "edit TypeScript + git."** No patch loop, no codemod. You change a `.spec.ts` file or an anchor, re-run `sdp build`, and the view updates. CI rejects PRs that break links or state readiness the spec has not earned.
+**The MVP write-path is "edit TypeScript + git."** No patch loop, no codemod. You change a `.sdp.ts` spec file or an anchor, re-run `sdp build`, and the view updates. CI rejects PRs that break links or state readiness the spec has not earned.
 
 **"Done" for the MVP:** you can write specs in TS, anchor implementing code and tests with stable IDs, run `sdp build`, get a graph that passes the conformance + honesty checks, and open a generated view that correctly shows intent, implementation links, verification status, and impact — and CI rejects the PR if any of it is broken or incomplete. Delete `generated/` and rebuild identically.
 

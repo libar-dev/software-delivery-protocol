@@ -1,13 +1,14 @@
 # Session 4 — Formalization: gap strategy + pre-grill folds (re-entry context)
 
-> **Status: PLAN-ONLY · §3 EXECUTED 2026-06-10 (Fold-A · Fold-B · archive) · §2 still the parked
-> direction.** This document exists to bootstrap context fast after a break — it is the formalized residue
-> of a long design arc that hit the ceiling of what a chat thread can resolve ("no substrate to grow the
-> decision → formalize"). Read §0 first; the rest is reference.
-> **Date:** 2026-06-08 · folds executed 2026-06-10 · **Branch:** `feature/mvp-init` · **Repo state:**
-> green; the pre-grill folds are committed (UL → lean glossary + rehome; R1/R2/R3 applied; MD-8/MD-9
-> recorded; `plans/03` slimmed to six; reviews archived in `reviews/`). **Next: the grill** (§5 kickoff
-> prompt; agenda `plans/03`).
+> **Status: PLAN-ONLY · §3 EXECUTED 2026-06-10 (Fold-A · Fold-B · archive) · §4 step 4 (the grill)
+> EXECUTED 2026-06-10 — all six decisions resolved, MD-10…MD-15 · §2 still the parked direction.** This
+> document exists to bootstrap context fast after a break — it is the formalized residue of a long design
+> arc that hit the ceiling of what a chat thread can resolve ("no substrate to grow the decision →
+> formalize"). Read §0 first; the rest is reference.
+> **Date:** 2026-06-08 · folds executed 2026-06-10 · grill executed 2026-06-10 · **Branch:**
+> `feature/mvp-init` · **Repo state:** green; folds + grill landed (lean glossary; R1/R2/R3 + MD-8…MD-15;
+> `plans/02` Wave B execution-ready). **Next: Wave B execution** (`plans/02` §4), then — gated on a
+> minimal engine — the crippled graph (§2).
 
 ---
 
@@ -27,8 +28,9 @@ done). No extractor, no graph, no engine yet.
    the **crippled graph**.
 
 **What's next:** ~~two scoped **fresh** fold sessions (§3)~~ **the folds and the archive are DONE
-(2026-06-10, one fresh fold session)** → now the **grill** on the lean base + the six-item agenda
-(`plans/03`). The grill runs cold, in a fresh session; its kickoff prompt is in §5.
+(2026-06-10)** → ~~the grill~~ **the grill is DONE (2026-06-10): all six decisions resolved as
+MD-10…MD-15, base reconciled, `plans/02` Wave B execution-ready** → now **Wave B execution**
+(`plans/02` §4), then Slice 1.
 
 **The one decision still genuinely open and yours:** how far the crippled graph goes, and exactly what
 its two instances are (§2). Parked deliberately — it needs substrate to grow, not more chat.
@@ -159,10 +161,12 @@ Wave B execution-ready.
 2. ~~**Fold-B** (resolvable-now sweep)~~ — ✅ DONE 2026-06-10: `04` reconciled (R3); MD-8/MD-9 recorded;
    `plans/03` down to six open decisions.
 3. ~~**(optional) archive**~~ — ✅ DONE 2026-06-10: `reviews/` tracked.
-4. **Grill** — fresh `grill-with-docs` on `plans/03`. ← **NEXT.** *Done when:* the six decisions resolved +
-   recorded; base reconciled; `plans/02` Wave B execution-ready.
-5. **Then** Wave B execution, and — gated on a minimal engine — the **crippled graph** (§2) graduates
-   from direction to design.
+4. ~~**Grill**~~ — ✅ DONE 2026-06-10: all six resolved + recorded (**MD-10…MD-15**); base reconciled
+   (`02`/`03`/`04`/`05` + glossary + `00`/`jtbd-01` for the `.sdp.ts` rename); `plans/02` Wave B rewritten
+   execution-ready; H7's optional leftovers finalized.
+5. **Then** Wave B execution ← **NEXT**, and — gated on a minimal engine — the **crippled graph** (§2)
+   graduates from direction to design. (MD-14's one-path rule makes the minimal engine slice — extract →
+   graph — sufficient for self-validation, exactly what §2 needs.)
 
 > Fold-A precedes the grill for a real reason, not tidiness: the grill *edits the base* (typed sections →
 > §2/§3; kind-aware floor → §6). If the model has already moved into `00`–`07`, the grill knows its edits
@@ -195,11 +199,13 @@ Wave B execution-ready.
 > (`intent.openQuestions`; note execution stays Wave B in `plans/02`). (3) Slim `plans/03` to the six
 > genuinely-open decisions and collapse its "resolvable-now" (§3a) to a one-line pointer.
 
-### Grill kickoff (the folds are done — this is the live prompt)
+### Grill kickoff — executed ✅ 2026-06-10 (kept for the record)
 > `grill-with-docs` on `plans/03` — six open decisions (D1 typed-sections · D2 prose-vs-ref incl.
 > `examples` · D3 floor-validator collapse · D4 AuthoredModel-vs-graph · D7 kind-aware `defined` floor ·
 > D8 `.spec.ts` collision), against the now-lean base (terms: the glossary; model: `00`–`07`). Ratify
 > inline; record in `DECISIONS.md`; rewrite `plans/02` Wave B execution-ready.
+> *(Outcome: MD-10…MD-15; resolution table in `plans/03`'s header. The live next prompt is Wave B —
+> `plans/02` §4.)*
 
 ---
 
@@ -207,16 +213,16 @@ Wave B execution-ready.
 
 The antidote to code-noise: every handle, decoded. Two separate code-spaces — don't conflate them.
 
-**Open decisions (the grill agenda after Fold-B):**
+**Open decisions — ✅ all RESOLVED in the 2026-06-10 grill (resolution table: `plans/03` header; rationale: `DECISIONS.md`):**
 
-| Handle | Meaning | Home |
+| Handle | Meaning | Resolved as |
 |---|---|---|
-| **D1** | How much to *type* sections now (lean: type the five floor/extractor-bearing ones — intent, behavior, constraints, model, verification; leave design/decision/ui open). The linchpin. | grill |
-| **D2** | The prose-vs-ref-list duality, across **both** `behavior.rules` and `behavior.examples`. Gates typing `behavior`. | grill |
-| **D3** | Collapse the readiness-floor validator (clause-ids enumerated 4×; `authoredPaths` is decorative). Lean: table = single source of truth. | grill |
-| **D4** | The `AuthoredModel` seam vs. the one graph — pre-graph lint that retires, or stays a documented lint? (Interacts with the crippled graph, §2.) | grill |
-| **D7** | Make the `defined` floor **kind-aware** — today it forces behavior-rules onto decision/model/constraint specs, so the example *pads*. The review's top finding; shrinks the contract; de-pads the example. | grill |
-| **D8** | The `.spec.ts` file-extension collides with the JS test-runner glob — adoption landmine. Keep-with-exclusion vs. a collision-free extension. Representation-level. | grill |
+| **D1** | How much to *type* sections now. The linchpin. | **MD-11** — the typing law: floor-bearing ⟹ closed-typed (six, incl. `decision`; `status` rejected) |
+| **D2** | The prose-vs-ref-list duality, across **both** `behavior.rules` and `behavior.examples`. | **MD-10** — content only; relations carry linkage; promotion exclusive; GWT nests in entries |
+| **D3** | Collapse the readiness-floor validator (clause-ids 4×; decorative `authoredPaths`). | **MD-13** — table = single source of truth; named predicates `(spec, model)`; derived clause-id union |
+| **D4** | The `AuthoredModel` seam vs. the one graph. (Interacts with the crippled graph, §2.) | **MD-14** — one validation path via the graph; `AuthoredModel` retires as a public seam (exec Slice 1/3) |
+| **D7** | Make the floor **kind-aware** — the example *pads* to clear kind-blind clauses. | **MD-12** — evidence kind-conditional at **both** `scoped` and `defined`; overlays dissolve; example de-pads |
+| **D8** | The `.spec.ts` extension collides with the JS test-runner glob. | **MD-15** — `.sdp.ts` (the `.stories.tsx` pattern) |
 
 **Resolvable-now (folded out — all ✅ done 2026-06-10):**
 
