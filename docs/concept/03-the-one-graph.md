@@ -22,7 +22,7 @@ Two pure steps: `graph = f(repo)` and `output = f(graph)`. The extractor is the 
 
 ### What the extractor reads
 
-- **Typed spec files** (`/specs/**/*.sdp.ts`) — the declared layer: specs, packs, relations.
+- **Typed spec files** — every `*.sdp.ts` under the extraction root (conventionally `/specs/`; discovery is by suffix alone — the `.sdp.ts` extension, MD-15) — the declared layer: specs, packs, relations.
 - **Source-code anchors** — the anchored layer: an **anchor** binds a code location to a spec ID — identity, an optional label, and one `satisfies`/`verifies` target; richer structural facts are aspirational (`04` §2). Anchors carry *no* intent (see `04`).
 - **Structural facts** — the inferred layer: machine-derived structure (imports, calls, symbol identity). Designed-in — the `claim` value and the advisory edge row exist, and every consumer decodes them — but **empty in the MVP**: the entry adapters and file-level impact resolve off the curated layers (`06` §2), so nothing yet needs an inferred edge; the first producer is the aspirational impact graph.
 
@@ -30,9 +30,9 @@ The graph is **flat**: arrays of nodes and arrays of edges. Hierarchy and contai
 
 ```jsonc
 {
-  "schemaVersion": "0.1.0",
+  "schemaVersion": "0.3.0",
   "nodes": [
-    { "id": "spec:orders.create-order", "nodeType": "Primitive", "specKind": "behavior", "altitude": "feature", "readiness": "ready", "deliveryFacts": ["implemented"], "claim": "declared", "file": "specs/orders/create-order.sdp.ts" },
+    { "id": "spec:orders.create-order", "nodeType": "Primitive", "claim": "declared", "specKind": "behavior", "altitude": "feature", "readiness": "ready", "title": "Customer creates an order", "file": "specs/orders/create-order.sdp.ts", "deliveryFacts": ["implemented"] },
     { "id": "impl:orders.create-order-use-case", "nodeType": "CodeNode", "claim": "anchored", "file": "src/orders/create-order.use-case.ts", "line": 12 }
   ],
   "edges": [
@@ -53,7 +53,7 @@ Every edge in the graph has a fixed contract: where it comes from, what `claim` 
 | `refines` | Primitive → Primitive | authored | declared | spec `relations[]` | **error** if target missing | `ready` floor: target ≥ `defined` | — |
 | `dependsOn` | Primitive → Primitive | authored | declared | spec `relations[]` | **error** if target missing | `ready` floor: target ≥ `defined` | — |
 | `constrainedBy` | Primitive → Primitive (`constraint`) | authored | declared | spec `relations[]` | **error** if target missing | — | — |
-| `decidedBy` | Primitive → Primitive (`decision`) / `doc:` | authored | declared | spec `relations[]` | **error** if target missing (unless `doc:`) | — | — |
+| `decidedBy` | Primitive → Primitive (`decision`) | authored | declared | spec `relations[]` | **error** if target missing (a `doc:` target is a named deferral — carried evidence, MD-16; `02` §6) | — | — |
 | `verifies` | Primitive (`example`) **or** Anchor (test) → Primitive | authored | `declared` (from an example) / `anchored` (from a test anchor) | spec `relations[]` **or** `specTest` anchor | **error** if target missing | — | contributes `has-verifier` to the **target** (if the verifier is *enabled*) |
 | `supersedes` | Primitive (`decision`) → Primitive (`decision`) | authored | declared | spec `relations[]` | **error** if target missing | — | — |
 | `satisfies` | CodeNode → Primitive | derived (from an anchor) | anchored | source **anchor** | **error** if target missing | `ready` floor: present anchors must *resolve* | contributes `implemented` to the **target** |

@@ -41,7 +41,7 @@ Types describe **shape**; validators decide **completeness** (P7). Completeness 
 
 These are the non-negotiable core. CI fails on any error. They split across the two families.
 
-**They run over the one graph — there is exactly one validation path** (MD-14): source → extract (static reification, P5) → graph → checks; `sdp validate` is `sdp build` + checks, and `validateGraph` is the sole validation seam. Validating any *evaluated* form (importing spec modules and checking the resulting objects) would check a phantom — a non-static expression evaluates to a value on import but is dropped by static reification, so the checks could pass a spec the graph doesn't actually hold. For the same reason there is no pre-graph validation seam of any kind: a check that reads anything but the derived graph is a second validation path, forbidden. Authoring-time feedback is the type system's job (typed sections, `02` §3) plus the `sdp/spec-static` lint — not a parallel validator path.
+**They run over the one graph — there is exactly one validation path** (MD-14): source → extract (static reification, P5) → graph → checks; `sdp validate` is `sdp build` + checks, and `validateGraph` is the sole validation seam. Validating any *evaluated* form (importing spec modules and checking the resulting objects) would check a phantom — a non-static expression evaluates to a value on import but is dropped by static reification, so the checks could pass a spec the graph doesn't actually hold. For the same reason there is no pre-graph validation seam of any kind: a check that reads anything but the derived graph is a second validation path, forbidden. Authoring-time feedback is the type system's job (typed sections, `02` §3) — static reification (P5) is what rejects non-static authoring, and the `sdp/spec-static` lint is a designed-for earlier surfacing of the same tiers (`04` §1), never a parallel validator path.
 
 **Conformance checks:**
 
@@ -58,7 +58,7 @@ These are the non-negotiable core. CI fails on any error. They split across the 
 
 **Informative (a `gap` or `orphan`, not an error by default):**
 
-8. **Orphan detection.** A spec with no relations and nothing pointing at it is surfaced (warning or error per config) — it has fallen out of the graph's connective tissue.
+8. **Orphan detection.** A spec with no relations and nothing pointing at it is surfaced as a warning — it has fallen out of the graph's connective tissue. (A per-team severity override is designed-for, deferred.)
 9. **Readiness/delivery gaps.** A `ready` spec with no resolving verifier is a surfaced `gap` (the build backlog and drift-alarm queries, `02` §2), not an error.
 
 Two cross-cutting honesty rules apply to all validators:
@@ -70,7 +70,7 @@ Two cross-cutting honesty rules apply to all validators:
 
 ## 3. Readiness floors (CORE)
 
-A **readiness floor** is the **minimum structural requirement to *state* a readiness rung** — a floor to clear, **never a quota to fill or a score** (significance governs detail — no tier-filling; `01`, P4 corollary). The floors are the mechanism (Principle); the specific thresholds are config a team can override.
+A **readiness floor** is the **minimum structural requirement to *state* a readiness rung** — a floor to clear, **never a quota to fill or a score** (significance governs detail — no tier-filling; `01`, P4 corollary). The floors are the mechanism (Principle); the specific thresholds are a Representation — a team-overridable floor config is designed-for, deferred.
 
 The floor has two parts: **kind-blind structural clauses** (the same for every kind) and **one evidence clause that is kind-conditional** (MD-12) — `kind` is a true subtype, and the floor is where that changes what is required, in both directions (it can *relax* as well as add).
 

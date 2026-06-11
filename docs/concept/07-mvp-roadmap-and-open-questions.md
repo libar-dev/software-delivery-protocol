@@ -88,41 +88,45 @@ The point of the principle-led core is that each of these slots in cleanly, with
 
 ---
 
-## 6. Forward-looking acceptance criteria (seeded by the Phase-0 full-MVP review)
+## 6. Acceptance criteria of record (the full-MVP lens)
 
-Recorded here so the full-scope lens isn't lost; each is honesty-posture-aligned and maps to a slice's "done."
-These came out of the Phase-0 hardening review and were routed here (rather than into that code-only plan) so they
-land in the roadmap at the right altitude. Ordering reflects the synthesis's priority.
+Kept here so the full-scope lens is never lost; each criterion is honesty-posture-aligned and is stated as
+the standing invariant plus where its protection lives.
 
-- **① Authoring ergonomics — the headline forward risk.** There is *no
-  authoring-ergonomics workstream* anywhere in `00`–`07` (the MVP CLI is just `build`/`validate`/`view`), yet if
-  authoring feels heavy, authors (human **and** agent) avoid the system or overfit specs to satisfy tooling. The
-  first lever — **typed sections** (autocomplete + shape guardrails) — **landed in the Phase-0 hardening
-  (the typing law, MD-11)**; the second — the diagnostics rule (location rendered from the finding's structured
-  fields; first contact fails clean) — landed at Slice 5; the next is `sdp validate --watch`; later `sdp new spec` /
-  `sdp explain`. Threads back to the anti-padding rule: make *dishonesty* fail without rewarding
-  low-signal filler (a floor to clear, never a quota to fill).
-- **② Golden-graph fixture — at Slice 1; keep it distinct from `--check-clean`.** Adopt **both**, labeled
-  distinctly: a **determinism self-check** (`03` §2 — rebuild twice, assert **byte-identical**; a self-comparison,
-  **never** a diff against a committed `generated/` artifact, which is gitignored, L8) **and** a **correctness
-  oracle** (a committed `fixtures/order-management/expected/graph.json` — "did the extractor produce the *right*
-  graph," legitimate because it lives in `fixtures/`, not `generated/`). Make paths **repo-relative / POSIX**, and
-  decide consciously whether **line numbers** enter the golden (deterministic, but brittle to unrelated edits).
-- **③ Derived-readiness banner in the MVP view — at Slice 4; its blocker is cleared.** *"Stated readiness:
-  ready · Structural floor reached: defined · Problem: blocking open question."* Teaches the core honesty
-  concept (stated, then checked); cheaply enabled by the floor evaluator, which reports *which* clause
-  fails. The old blocker — the floor reading open questions from the wrong section — was fixed in the
-  Phase-0 hardening (the open-questions home, MD-9 — the floor reads `intent.openQuestions`).
-- **④ `implemented` is a UI hazard — at Slice 4, view-label only.** Model semantics are settled (DECISIONS MD-7:
-  binding/existence, never liveness). Keep the internal fact name `implemented` (it powers the `implemented ∧
-  ¬ready` drift query), but render binding language in views: *"Implementation binding: present / Verifier binding:
+- **① Authoring ergonomics — the headline forward risk.** If authoring feels heavy, authors (human **and**
+  agent) avoid the system or overfit specs to satisfy tooling. Two levers ship in the MVP: **typed sections**
+  (autocomplete + shape guardrails — the typing law, MD-11) and the one diagnostic rendering rule (location
+  rendered from the finding's structured fields; first contact fails clean — §1, Slice 5). The remaining
+  levers are genuinely forward-looking: `sdp validate --watch`; later `sdp new spec` / `sdp explain` (below
+  the second-caller bar, `06` §3). Threads back to the anti-padding rule: make *dishonesty* fail without
+  rewarding low-signal filler (a floor to clear, never a quota to fill).
+- **② A golden correctness oracle, kept distinct from the determinism self-checks.** Both exist, labeled
+  distinctly, never conflated. The **correctness oracle** — "did the extractor produce the *right* graph" —
+  is the committed golden fixture: `test/fixtures/checkout-v1/expected-graph.json` plus the
+  `expected-design-review/` golden tree (legitimate because it lives under `test/fixtures/`, never gitignored
+  `generated/`, L8; paths repo-relative / POSIX; binding line numbers deliberately included — the line *is*
+  the binding location, `03` §1). The **determinism self-checks** — "is the output a pure function of the
+  repo" — live separately in the CLI tests: `--check-clean` (two independent extractions, byte-identical),
+  delete-`generated/`-and-rebuild, and the clean-repo determinism test (the full pipeline at a different
+  absolute path is byte-identical) — each a self-comparison, **never** a diff against a committed
+  `generated/` artifact (`03` §2).
+- **③ The derived-readiness banner ships in the Design Review.** The view renders stated readiness beside
+  the structurally-reached floor and names the first unmet clause — cheap because the floor evaluator
+  reports *which* clause fails (`05` §3, with the open-questions home, MD-9: the floor reads
+  `intent.openQuestions`). The banner fires only in the dishonest direction — derived at-or-above stated is
+  ordinary information, because the floor is a floor, never a quota that nags upward. It teaches the core
+  honesty concept: stated, then checked.
+- **④ `implemented` is a UI hazard — view-label only.** Model semantics are settled (binding, never
+  liveness — MD-7): the internal fact name stays `implemented` (it powers the `implemented ∧ ¬ready` drift
+  query), and views render binding language instead: *"Implementation binding: present / Verifier binding:
   present / Runtime observation: not tracked."*
-- **`coverage-unknown` — already a settled model commitment (binding, never liveness — MD-7 / §4 above); make it Slice-4 acceptance.**
-  File-level blast-radius reports changed-but-unanchored files as `coverage-unknown`, never silently
-  under-reporting. The only add is promoting it from design note → explicit Slice-4 acceptance criterion.
-- **The MVP acceptance checklist, mapped across Slices 1–5:** spec extraction · anchor extraction · claim honesty ·
-  readiness honesty · delivery facts · traceability · determinism · view — with three sharpenings: (a) *"ready spec
-  with blocking open questions fails"* is the regression test to add **after** H2 (locked early by an H8 fixture
-  stub); (b) extend *"rejects non-static envelope fields"* to *"the example fixture survives static extraction with
-  **no dropped sections**"* (envelope is clean; sections were the H1 risk, now fixed); (c) *"extracts one api
-  anchor"* is the H10 gap (Slice 2).
+- **⑤ `coverage-unknown` is acceptance, never a design note.** File-level blast-radius (the reader, `06` §2)
+  reports a changed-but-unanchored file as an explicit `coverage-unknown` item, never silently
+  under-reporting — test-pinned, so a too-small reach set is a caught regression, not a rendering choice.
+- **The MVP acceptance checklist** — spec extraction · anchor extraction · `claim` honesty · readiness
+  honesty · delivery facts · traceability · determinism · view — with three sharpenings, each pinned:
+  (a) a stated-`ready` spec with a blocking `intent.openQuestions` entry fails the readiness-floor honesty
+  check (a should-fail fixture pins it); (b) the example survives static extraction with **no dropped
+  sections** (the drops-no-sections extraction test pins it — rejecting non-static envelope fields alone is
+  not enough); (c) the extractor extracts an `api:` anchor (the example's `api:orders.post` assertion pins
+  it).

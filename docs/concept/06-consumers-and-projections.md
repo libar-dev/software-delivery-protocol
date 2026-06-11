@@ -70,7 +70,7 @@ This is the `claim` taxonomy (P9) elevated to two consumable surfaces: the curat
 
 **Principle · CORE.** Structured graph context beats raw text for AI; the Protocol is a *producer* of structured context, not just another consumer. This is a genuine differentiator and it is a principle.
 
-The experiment settled *how* to expose it. The **agent surface** is a **visible, self-describing typed graph the agent *scripts*** via the CLI — deliberately **neither** of two failure modes:
+The agent-surface decision (D5) settled *how* to expose it. The **agent surface** is a **visible, self-describing typed graph the agent *scripts*** via the CLI — deliberately **neither** of two failure modes:
 
 - **not a 30-verb API** — that hides the shapes and rebuilds the pipeline we are deleting;
 - **not raw-JSON-you-rejoin** — that makes every agent re-derive the same joins and decode the same taxonomy quirks.
@@ -131,7 +131,7 @@ Why patching dissolves:
 
 **Principle · CORE (concept).** The flagship curated surface is the **Design Review**: a `Spec` (or a `Pack`) rendered **in context** — its neighbors, relations, `claim`/delivery badges, auto-generated **design questions** (from blocking open questions + `gap`s), and a **findings** table. It adopts the recognized SDLC noun.
 
-- It is the context in which a human **decides** to state `ready`: a spec is reviewed *in context* (alone and in its related set / `Pack`), and stating `ready` is the human's call coming out of that review. The review is **never an automated gate** — validators check only the structural **readiness floor** (`05`); they do not adjudicate the review or promote a spec. This keeps the honesty guardrail from `00`/`05` (checks police conformance & honesty, never workflow) intact (`02` §2, `05`). So `ready` is an **authored `declared` statement** — its *checkable* content is the floor; that a review actually happened is **not a fact the graph records**, so where review provenance matters it rides **git** (authorship, commit, the baseline tag — `03` §5), never an authored approval primitive.
+- It is the context in which a human **decides** to state `ready`: a spec is reviewed *in context* (alone and in its related set / `Pack`), and stating `ready` is the human's call coming out of that review. The review is **never an automated gate** — validators check only the structural **readiness floor** (`05`); they do not adjudicate the review or state `ready` on the author's behalf. This keeps the honesty guardrail from `00`/`05` (checks police conformance & honesty, never workflow) intact (`02` §2, `05`). So `ready` is an **authored `declared` statement** — its *checkable* content is the floor; that a review actually happened is **not a fact the graph records**, so where review provenance matters it rides **git** (authorship, commit, the baseline tag — `03` §5), never an authored approval primitive.
 - It is a **pure projection** — findings resolve through the edit loop (§4); there is **no stored `Finding` type**, no second store.
 - *Concept is core; rich diagrams grow later* — the MVP renders the relationship slice; heatmaps and interactive trees are aspirational (Spec Studio, §8).
 

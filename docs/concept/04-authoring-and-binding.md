@@ -8,13 +8,13 @@ Realises **P5** (statically extractable), **P6** (ID-linked), **P9/P10** (anchor
 
 ## 1. The TypeScript Spec DSL — canonical (CORE)
 
-Specs are authored as typed TypeScript in `/specs/**/*.sdp.ts` — the Protocol's own compound extension (MD-15; the `.stories.tsx` pattern), deliberately **not** `.spec.ts`, which every JS test runner's default glob would try to execute. The DSL is a thin set of helpers (`spec`, `pack`, relation builders) over the `Spec` shape from `02`.
+Specs are authored as typed TypeScript in `*.sdp.ts` files, discovered by suffix anywhere under the extraction root (conventionally `/specs/`) — the Protocol's own compound extension (MD-15; the `.stories.tsx` pattern), deliberately **not** `.spec.ts`, which every JS test runner's default glob would try to execute. The DSL is a thin set of helpers (`spec`, `pack`, the branded-ID builders, relation builders) over the `Spec` shape from `02`.
 
 ```ts
-import { spec, refines, dependsOn } from "@libar-dev/software-delivery-protocol";
+import { dependsOn, refines, spec, specId } from "@libar-dev/software-delivery-protocol";
 
 export const CreateOrder = spec({
-  id: "spec:orders.create-order",
+  id: specId("spec:orders.create-order"),
   title: "Customer creates an order",
   kind: "behavior",
   altitude: "feature",
@@ -30,7 +30,7 @@ export const CreateOrder = spec({
     rules: ["only valid carts can become orders", "creating an order emits OrderCreated"],
     examples: ["an expired payment card is declined before any order is created"],
   },
-  relations: [refines("spec:orders.order-management"), dependsOn("spec:payments.authorize-payment")],
+  relations: [refines(specId("spec:orders.order-management")), dependsOn(specId("spec:payments.authorize-payment"))],
 });
 ```
 
@@ -164,7 +164,7 @@ Modules that declare controls + an `expected()` model + `coverage()`, rendered a
   orders/create-order.valid-cart.test.ts   // specTest verifies spec:...
 /generated                         // gitignored, disposable (L8)
   graph.json
-  view/                            // the one generated read-only view
+  design-review/                   // the one generated read-only view
 ```
 
 Specs are not separate from code — they are part of the codebase, committed alongside it. That is the whole point: the repo is the single source of truth (P1), and authoring is editing TypeScript + git (the MVP write path).
