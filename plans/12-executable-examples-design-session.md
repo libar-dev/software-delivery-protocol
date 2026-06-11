@@ -112,6 +112,8 @@ the graph reads; everything below is DX in the runner, invisible to extraction.
 | **C1** | **Gherkin as the sole authoring home of `example`-kind specs** | The extractor gains a Gherkin parser; `.feature` (or `.sdp.feature`) files reify to the same `example` Primitive (id/readiness/relations via a typed header or annotations); step contracts generated as in A2; TS DSL remains canonical for the other seven kinds | Compile-time via generated contracts (gen 1's linter becomes `tsc`) | the dual-source letter survives (one home per spec); the spirit and the cut-list rationale need an explicit ruling; second parser + grammar discipline is the recorded cost |
 | **C2** | **SDP-flavored Gherkin (redefinition/reimplementation)** | An own, minimal, statically-parsed grammar — Gherkin's readable skeleton with the Protocol's envelope as first-class syntax (id · kind · altitude · readiness · relations), designed for the graph rather than annotated onto it; reifies to the same Primitive; contracts generated as in A2 | Compile-time via generated contracts | same rulings as C1, plus owning a grammar + parser forever (supply-chain note: in-house parser vs a Gherkin dependency); the strongest non-engineer surface, the largest standing cost |
 | **D** | **Specs carry step closures** | `example` specs embed executable step functions | n/a | dead on §1.2/§1.8 (non-static content; intent/implementation fusion) — recorded here so it is rejected by name, not forgotten |
+| **F1** | **Typed-markup documents — `.sdp.tsx`** | Specs authored as TSX documents: typed spec components carry the envelope and the structured sections (`tsc` checks them natively — **no typing-law gap window**, C2's heaviest cost); prose flows as markup around the typed islands; the document renders to HTML as a projection with derived data injected from the graph at render time, never authored (the `.stories.tsx` pattern MD-15 already cites) | **Compile-time**, everywhere the typing law reaches today | no new parser (ts-morph speaks TSX); new rulings needed: where free prose lives in the graph (MD-10 extension), and the authored-vs-derived render discipline; MD-15 extends to the new extension |
+| **F2** | **Typed-markup documents — `.sdp.mdx`** | Markdown body — the most LLM-native register there is — with typed component islands for the envelope and structured sections | Compile-time on the islands; the body is prose by design | second parser (MDX/remark) — the same standing-cost class as C1/C2, plus a real supply-chain expansion against the one-dependency posture |
 | **E** | **Status quo (the null option)** | Agent generates plain tests from GWT; pairing policed by the existing checks | review-time only | none — the baseline DX gains are measured against; under the mandate (§7) never a terminal state |
 
 Shared notes:
@@ -158,9 +160,11 @@ the plan's own pin):
 1. **Ratify or refute the §0 framing** (executability vs dual-source as the disease). Likely a
    DECISIONS entry refining MD-1's gloss — surprising without context, hard to reverse once
    surfaces ship against it.
-2. **Ratify the path to the language destination (§7):** the sequenced A2 → B → C2 or a direct
-   C1/C2-first route — which surfaces ship, in which order (D dies in §3; E is a baseline
-   measure, never a terminal state; elimination on cost grounds is outside the mandate).
+2. **Ratify the path to the language destination (§7):** the sequenced A2 → B → C2, a direct
+   C1/C2-first route, a typed-markup route (F1/F2), or the layered convergence (§7: the GWT
+   grammar carried inside typed-markup documents) — which surfaces ship, in which order (D dies
+   in §3; E is a baseline measure, never a terminal state; elimination on cost grounds is
+   outside the mandate).
 3. **Rule on JS-B2.3** (keep · refine with a named test-side exception · supersede), and on the
    dual-source letter-vs-spirit question if any C option wins. Both are story/criterion edits —
    the JTBD base is the functional spec, so this is a recorded change, not drift.
@@ -311,10 +315,41 @@ change after contact with users** — sequencing it last means every upstream de
 and dogfooded before syntax freezes anything. A direct C1/C2-first route stays scoreable beside
 the path — the mandate fixes the destination, not the order.
 
+### The typed-markup family (F) and the convergence question
+
+Recorded after the mandate, same day: the destination — a delivery language the whole org and
+its agents author natively — may be reachable by **three routes**, and the session scores them
+as routes to the *same* destination, never as a retreat from it:
+
+- **C2** — the from-scratch grammar: strongest non-engineer surface; pays the typing-law gap
+  window and permanent grammar ownership.
+- **F (typed markup)** — `.sdp.tsx` (no new parser — ts-morph speaks TSX; **no typing-law gap
+  window at all**, which is C2's heaviest cost) or `.sdp.mdx` (markdown body — the most
+  LLM-native register — at the cost of a second parser). The `.stories.tsx` pattern MD-15
+  already cites is the industrial precedent. F additionally converges three aspirational pieces
+  onto one substrate: the interactive harness (`04` §4) becomes embedded islands in the same
+  documents, Studio gets the surface it must render and edit anyway, and the authored document
+  and the Design Review can share rendering machinery — under one non-negotiable discipline:
+  **derived data (banners, facts) is injected from the graph at render time, never authored in
+  the markup** (authoring-shape honesty extended to markup).
+- **The layered convergence** — possibly the most ambitious shape of all: the Gherkin-like GWT
+  notation as the *example-section grammar carried inside* typed-markup documents. The readable
+  grammar exactly where prose is the content; full `tsc` typing exactly where structure is; one
+  document per spec, one home per kind.
+
+New rulings the F routes add to the session's docket: where free prose around the typed islands
+lives in the graph (an MD-10 extension — authored truth, section content, or documentation
+flavor outside the graph); the render discipline above; the component library as a standing
+competency (shared with Studio, so possibly a cost already on the books). JS-B2.3 is untouched
+(no spec↔code imports), MD-15 extends to the new compound extensions, and the executable-half
+machinery (§3) is fully orthogonal — contracts and runner are identical under every route.
+
 ### Scope ruling
 
 Plan 12 rules on **the path and the law rulings** — never on syntax, and never on *whether*.
-Grammar design is its own PLAN-ONLY session with its own plan, scheduled at this session's
-close: envelope syntax, `And`/`But`, Examples tables, escaping, formatter rules, grammar
-versioning, and the per-kind partition law each have enough surface area to deserve the
-grilling there, not here.
+Surface design is its own PLAN-ONLY session with its own plan, scheduled at this session's
+close — for whichever route wins: grammar design (envelope syntax, `And`/`But`, Examples
+tables, escaping, formatter rules, grammar versioning) under C2, document design (the spec
+components, the prose ruling, the render discipline) under F, or both under the layered
+convergence — plus the per-kind partition law in every case. Each has enough surface area to
+deserve the grilling there, not here.
