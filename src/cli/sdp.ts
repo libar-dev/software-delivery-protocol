@@ -140,6 +140,23 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+/**
+ * Best-effort stale-artifact removal for recovery paths. `force: true` is not enough on every
+ * supported runtime: Node 20 ignores only ENOENT, so a path through `generated`-as-a-file still
+ * raises ENOTDIR through the file parent — and recovery must never itself throw and crash out of
+ * the one-line law. A path whose parent is not a directory holds no readable artifact, so
+ * swallowing the failure leaves nothing stale behind. Success-path removals stay raw `rmSync`:
+ * there a swallowed failure could rename a stale temp tree into place, and the surrounding
+ * try/catch already routes the error into the one-line law.
+ */
+function removeArtifact(path: string): void {
+  try {
+    rmSync(path, { recursive: true, force: true });
+  } catch {
+    // nothing readable exists at a path through a non-directory; the one-line law holds
+  }
+}
+
 interface BuildOutcome {
   readonly exitCode: number;
   /** Present only when the build succeeded — the graph the checks consume. */
@@ -158,11 +175,11 @@ function runBuild(
 
   // A stale projection is as dishonest as a partial one: a failed build must not leave a previous
   // graph.json behind that downstream consumers could read as current — nor a half-written temp
-  // twin. Recovery is recursive+force so it can never itself throw (a `generated` that exists as
-  // a file raises ENOTDIR from a non-recursive remove) and crash out of the one-line law.
+  // twin. Recovery rides removeArtifact, which never throws — so it cannot crash out of the
+  // one-line law.
   const failBuild = (message: string): BuildOutcome => {
-    rmSync(graphPath, { recursive: true, force: true });
-    rmSync(`${graphPath}.tmp`, { recursive: true, force: true });
+    removeArtifact(graphPath);
+    removeArtifact(`${graphPath}.tmp`);
     writeStderr(output, message);
     return { exitCode: 1 };
   };
@@ -285,8 +302,9 @@ function runView(parsed: BuildArgs, output: CliOutput, hooks: CliHooks): number 
 
   if (validate.graph === undefined) {
     // Build semantics: no graph, no view — and a stale view from a previous run is as dishonest
-    // as a stale graph.json, so it goes the same way.
-    rmSync(viewPath, { recursive: true, force: true });
+    // as a stale graph.json, so it goes the same way (never-throw: this runs outside the
+    // try/catch, and a `generated`-as-a-file root must still fail on build's one line).
+    removeArtifact(viewPath);
     return validate.exitCode;
   }
 
@@ -295,8 +313,8 @@ function runView(parsed: BuildArgs, output: CliOutput, hooks: CliHooks): number 
   // tree from a write that failed mid-loop.
   const temporaryPath = `${viewPath}.tmp`;
   const failView = (message: string): number => {
-    rmSync(viewPath, { recursive: true, force: true });
-    rmSync(temporaryPath, { recursive: true, force: true });
+    removeArtifact(viewPath);
+    removeArtifact(temporaryPath);
     writeStderr(output, message);
     return 1;
   };
