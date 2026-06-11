@@ -1,4 +1,4 @@
-import { computeDeliveryFacts } from "../graph/delivery-facts.js";
+import { computeDeliveryFacts, isResolvingTestAnchorVerify } from "../graph/delivery-facts.js";
 import { authoredEdgeTypes } from "../graph/schema.js";
 import type {
   DeliveryFactName,
@@ -397,9 +397,8 @@ export function createReader(graph: GraphSchema): Reader {
       .sort((left, right) => compareCodeUnits(left.codeId, right.codeId));
 
     const anchorVerified = (verifierId: string): boolean =>
-      (index.edgesByTo.get(verifierId) ?? []).some(
-        (edge) =>
-          edge.type === "verifies" && edge.claim === "anchored" && index.nodesById.has(edge.from),
+      (index.edgesByTo.get(verifierId) ?? []).some((edge) =>
+        isResolvingTestAnchorVerify(edge, index.nodesById),
       );
 
     const verifiers = (index.edgesByTo.get(id) ?? [])
@@ -412,8 +411,10 @@ export function createReader(graph: GraphSchema): Reader {
             verifierId: edge.from,
             via: "test-anchor",
             claim: edge.claim,
-            // A resolving test anchor *is* the enabled binding (MD-7).
-            enabled: true,
+            // A resolving test anchor *is* the enabled binding (MD-7) — but only along its
+            // contract row: an off-contract claim confers nothing, exactly as in the derived
+            // facts (the shared resolving-test-anchor rule; fail closed).
+            enabled: isResolvingTestAnchorVerify(edge, index.nodesById),
             ...(source.label === undefined ? {} : { label: source.label }),
             file: source.file,
             line: source.line,

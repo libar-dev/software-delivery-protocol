@@ -14,6 +14,7 @@ import {
   refines,
   spec,
   specId,
+  verifies,
 } from "../src/index.js";
 import type { GraphSchema, Reader } from "../src/index.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
@@ -442,6 +443,63 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
           .findings()
           .some((finding) => finding.validatorId === graphValidatorIds.deliveryFacts),
       ).toBe(true);
+    });
+
+    it("never decodes an anchored verifies edge from a non-Anchor source as the enabling test binding", () => {
+      const graph = deriveFixtureGraph({
+        specs: [
+          spec({
+            id: specId("spec:orders.create-order"),
+            title: "Create order",
+            kind: "behavior",
+            altitude: "feature",
+            readiness: "idea",
+            intent: { outcome: "Turn a valid cart into an order." },
+          }),
+          spec({
+            id: specId("spec:orders.create-order.valid-cart"),
+            title: "Valid cart creates an order",
+            kind: "example",
+            altitude: "story",
+            readiness: "idea",
+            intent: { outcome: "Verify the happy path." },
+            relations: [verifies(specId("spec:orders.create-order"))],
+          }),
+        ],
+        anchors: [
+          codeAnchor({
+            id: codeAnchorId("impl:orders.create-order-use-case"),
+            satisfies: specId("spec:orders.create-order"),
+          }),
+        ],
+      });
+      // A foreign producer points an anchored verifies edge from the CodeNode at the example —
+      // off-contract (`03` §1: an anchored verifies edge resolves from an Anchor node only).
+      const foreign: GraphSchema = {
+        ...graph,
+        edges: [
+          ...graph.edges,
+          {
+            from: "impl:orders.create-order-use-case",
+            type: "verifies",
+            to: "spec:orders.create-order.valid-cart",
+            claim: "anchored",
+          },
+        ],
+      };
+
+      const context = createReader(foreign).specContext("spec:orders.create-order");
+
+      // The example's enabled decode stays false (the shared resolving-test-anchor rule), and
+      // the parent earns no has-verifier from it — reader and derived facts agree, fail closed.
+      expect(context?.verifiers).toEqual([
+        expect.objectContaining({
+          verifierId: "spec:orders.create-order.valid-cart",
+          via: "example",
+          enabled: false,
+        }),
+      ]);
+      expect(context?.deliveryFacts).toEqual(["implemented"]);
     });
 
     it("carries the claim through impact answers — machine-derived reach is marked, never promoted", () => {

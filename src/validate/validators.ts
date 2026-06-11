@@ -1,4 +1,4 @@
-import { computeDeliveryFacts } from "../graph/delivery-facts.js";
+import { computeDeliveryFacts, isResolvingTestAnchorVerify } from "../graph/delivery-facts.js";
 import { deliveryFactNames, graphClaims, graphEdgeTypes, graphNodeTypes } from "../graph/schema.js";
 import type {
   DeliveryFactName,
@@ -495,7 +495,9 @@ function checkVerifiesLinkage(graph: GraphSchema, index: GraphIndex): readonly F
   const anchorVerified = new Set<string>();
 
   for (const edge of graph.edges) {
-    if (edge.type === "verifies" && edge.claim === "anchored" && index.nodesById.has(edge.to)) {
+    // The shared resolving-test-anchor rule (delivery-facts): an anchored verifies edge whose
+    // source is not an Anchor node never enables — this set and the derived facts agree.
+    if (isResolvingTestAnchorVerify(edge, index.nodesById)) {
       anchorVerified.add(edge.to);
     }
   }

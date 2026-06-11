@@ -23,6 +23,24 @@ import type { DeliveryFactName, GraphEdge, GraphNode, PrimitiveNode } from "./sc
  *
  * Facts are listed in ladder order (`implemented` → `has-verifier`).
  */
+/**
+ * The one resolving-test-anchor rule: an anchored `verifies` edge counts only along its `03` §1
+ * contract row — its source resolves to an `Anchor` node present in the graph. Shared by
+ * delivery-fact derivation, the verifies-linkage check, and the reader's enabled decode so the
+ * three surfaces can never disagree: on a malformed or foreign graph an off-contract edge (wrong
+ * claim, non-Anchor source) confers nothing (fail closed).
+ */
+export function isResolvingTestAnchorVerify(
+  edge: GraphEdge,
+  nodesById: ReadonlyMap<string, GraphNode>,
+): boolean {
+  return (
+    edge.type === "verifies" &&
+    edge.claim === "anchored" &&
+    nodesById.get(edge.from)?.nodeType === "Anchor"
+  );
+}
+
 export function computeDeliveryFacts(
   nodes: readonly GraphNode[],
   edges: readonly GraphEdge[],
@@ -58,11 +76,7 @@ export function computeDeliveryFacts(
       implemented.add(edge.to);
     }
 
-    if (
-      edge.type === "verifies" &&
-      edge.claim === "anchored" &&
-      nodesById.get(edge.from)?.nodeType === "Anchor"
-    ) {
+    if (isResolvingTestAnchorVerify(edge, nodesById)) {
       anchorVerified.add(edge.to);
     }
   }

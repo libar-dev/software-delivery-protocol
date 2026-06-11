@@ -87,12 +87,12 @@ the MVP extracts the **anchor-constant form** (a top-level `const` initialized w
 decorator and JSDoc forms remain unextracted Representations. The builder is the generic **`codeAnchor`**
 over the implementation-flavored code namespaces (`impl` / `api` / `component`) — the generic `codeAnchor`
 decision (MD-8, folded into the builder's doc-comment in `src/model/anchors.ts`). One binding target per
-anchor (two bindings are two anchors); the decorator sketch above shows an array form that is a possible
-later Representation, not the landed signature.
+anchor (two bindings are two anchors); the decorator sketch above shows an array form and a `component`
+field that are possible later Representations, not the landed signature.
 
 ### Anchors assert a binding — never intent (P9/P10)
 
-An anchor says exactly one thing: *"this code location is the implementation/test **binding** for this Spec ID"* — a binding assertion only, never system-truth content (DECISIONS R1). It binds a code location to a graph ID and its structural bindings (`component`, `satisfies`, `implements`, and — aspirationally — `handles`/`emits`). It is **forbidden** from carrying anything spec-level: behavior, rationale, readiness, acceptance criteria, or delivery facts. This asymmetry is load-bearing:
+An anchor says exactly one thing: *"this code location is the implementation/test **binding** for this Spec ID"* — a binding assertion only, never system-truth content (DECISIONS R1). The landed contract is exactly that minimal: `id` · an optional display `label` · **one** binding target (`satisfies` on a code anchor, `verifies` on a test anchor). Any other field is an extraction **error** — the anchored-surface twin of authoring-shape honesty. Richer structural bindings (`component`, `implements`, `handles`/`emits`) are **ASPIRATIONAL** — possible later extensions (see the inline-vs-centralized open question, `07` §4), never the MVP contract. An anchor is **forbidden** from carrying anything spec-level: behavior, rationale, readiness, acceptance criteria, or delivery facts. This asymmetry is load-bearing:
 
 - **Intent stays centralized** in the spec files, never scattered through code comments.
 - Anchors produce **anchored**-`claim` edges, distinct from **declared** relations (P9).

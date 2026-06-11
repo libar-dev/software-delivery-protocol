@@ -489,6 +489,49 @@ describe("graph validators", () => {
     expect(factsOf(faked)[0]?.message).toContain("derived, never authored");
   });
 
+  it("never lets an anchored verifies edge from a non-Anchor source enable an example — fail closed", () => {
+    const parent = ideaPrimitive("spec:orders.create-order", "Turn a valid cart into an order.");
+    const example: PrimitiveNode = {
+      ...ideaPrimitive("spec:orders.create-order.valid-cart", "Verify the happy path."),
+      specKind: "example",
+      altitude: "story",
+    };
+    const impostor: GraphNode = {
+      id: "impl:orders.create-order-use-case",
+      nodeType: "CodeNode",
+      claim: "anchored",
+      file: "src/orders/create-order.use-case.ts",
+    };
+
+    const findings = validateGraph(
+      syntheticGraph(
+        [parent, example, impostor],
+        [
+          { from: example.id, type: "verifies", to: parent.id, claim: "declared" },
+          // Off-contract: an anchored verifies edge resolves from an Anchor node only (`03` §1).
+          { from: impostor.id, type: "verifies", to: example.id, claim: "anchored" },
+        ],
+      ),
+    ).findings;
+
+    // The off-contract edge is the claim-separation check's own finding...
+    expect(
+      findings.filter((finding) => finding.validatorId === graphValidatorIds.claimSeparation),
+    ).toHaveLength(1);
+
+    // ...and it never stands in for the test binding: the example stays un-enabled, so the
+    // incomplete spec↔test trace is still named loudly (the shared resolving-test-anchor rule).
+    const linkage = findings.filter(
+      (finding) => finding.validatorId === graphValidatorIds.verifiesLinkage,
+    );
+    expect(linkage).toHaveLength(1);
+    expect(linkage[0]).toMatchObject({
+      subjectId: example.id,
+      relatedId: parent.id,
+      severity: "warning",
+    });
+  });
+
   it("rejects stated delivery facts the graph does not earn — derived, never authored", () => {
     const node = {
       ...ideaPrimitive("spec:orders.create-order", "Turn a valid cart into an order."),
