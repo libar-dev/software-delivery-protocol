@@ -182,7 +182,7 @@ describe("sdp cli", () => {
 
     expect(exitCode).toBe(1);
     expect(capture.readStdout()).toBe("");
-    expect(capture.readStderr()).toBe("Unknown option for build: --bogus\n");
+    expect(capture.readStderr()).toBe("sdp build: unknown option --bogus\n");
   });
 
   it("rejects a second root argument: one line, exit 1, nothing runs", () => {

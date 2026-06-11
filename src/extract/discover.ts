@@ -12,6 +12,12 @@ const SPEC_FILE_SUFFIX = ".sdp.ts";
 const SOURCE_FILE_SUFFIXES = [".ts", ".tsx"] as const;
 const DECLARATION_FILE_SUFFIX = ".d.ts";
 
+/**
+ * The tooling-output names discovery skips (alongside every dot-directory). Other build outputs
+ * (`build/`, `out/`) stay in scope under suffix-alone discovery (MD-15): a stale copy beside its
+ * live source fails loudly as a duplicate id; widening the skip list is deferred until external
+ * adoption needs a configurable exclude.
+ */
 const EXCLUDED_DIRECTORY_NAMES = new Set(["node_modules", "dist", "generated", "coverage"]);
 
 export interface DiscoveredSourceFile {

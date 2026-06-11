@@ -105,7 +105,7 @@ function parseBuildArgs(
     }
 
     if (argument.startsWith("--")) {
-      writeStderr(output, `Unknown option for ${command}: ${argument}\n`);
+      writeStderr(output, `sdp ${command}: unknown option ${argument}\n`);
       return undefined;
     }
 

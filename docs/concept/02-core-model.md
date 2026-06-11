@@ -136,7 +136,7 @@ Sections carry the detail. They are the **extension surface**: the system grows 
 | `verification` | mode (manual / reviewed / contract / executable) + criteria | A verifying test *existing and enabled* is the derived `has-verifier` delivery fact (§2), not an authored field here. Pass/fail is **not** in the graph — it is CI's, operational. |
 | `ui` | references to component stories, design-tool nodes, visual baselines, accessibility status | **Aspirational.** Always links, never owns or renders. |
 
-The `decision` section carries **no `status` field** (rejected by the typing law, MD-11): a decision's adoption arc is the envelope's `readiness` (raised → explored → written → ratified), checked against the floor like any spec; replacement is the `supersedes` relation; a *rejected* path is not a truth-spec at all — it lives in the chosen decision's `alternatives` / `consequences`. One concept, one place.
+The `decision` section carries **no `status` field** (rejected by the typing law, MD-11): a decision's adoption arc is the envelope's `readiness` (`idea` raised → `scoped` explored → `defined` written → `ready` ratified), checked against the floor like any spec; replacement is the `supersedes` relation; a *rejected* path is not a truth-spec at all — it lives in the chosen decision's `alternatives` / `consequences`. One concept, one place.
 
 ### The typing law — which sections have typed shapes (MD-11)
 

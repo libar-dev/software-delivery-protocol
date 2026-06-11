@@ -375,10 +375,14 @@ export type IdReification =
       readonly reason: string;
     };
 
+function namespacesList(namespaces: readonly string[]): string {
+  return namespaces.map((entry) => `"${entry}"`).join(" · ");
+}
+
 function namespacesLabel(namespaces: readonly string[]): string {
   return namespaces.length === 1
-    ? `"${namespaces[0] ?? ""}" is required`
-    : `one of ${namespaces.map((entry) => `"${entry}"`).join(" · ")} is required`;
+    ? `${namespacesList(namespaces)} is required`
+    : `one of ${namespacesList(namespaces)} is required`;
 }
 
 /**
@@ -436,7 +440,7 @@ export function reifyStaticIdExpression(
         ok: false,
         kind: "invalid",
         line,
-        reason: `id "${idText}" carries namespace "${parsed.namespace}" where ${builderCall.builder}(…) accepts ${namespacesLabel(builderNamespaces)} — the builder's own contract, restated statically`,
+        reason: `id "${idText}" carries namespace "${parsed.namespace}" where ${builderCall.builder}(…) accepts only ${namespacesList(builderNamespaces)} — the builder's own contract, restated statically`,
       };
     }
 
