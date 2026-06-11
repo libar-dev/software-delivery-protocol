@@ -12,6 +12,11 @@
 > **Queue note:** this session was pulled ahead of the decision-spec fold (the pointer plans 10
 > and 11 carry); the fold stays pending and is unaffected by anything decided here.
 >
+> **Addendum recorded 2026-06-11, ahead of the session:** §7 carries pre-session input from the
+> product owner — the ambition mandate, the recommended sequenced path (A2 → B → C2), the
+> differentiation test for any Gherkin-like direction, and the scope ruling that grammar design
+> earns its own PLAN-ONLY session. The session scores the path beside the single-option forks.
+>
 > **Spec anchors:** `02` §3 (an example becomes executable as a low-altitude `example`-kind spec;
 > verifier semantics — direct, per-spec, structural) · `04` §1 (the TS DSL is canonical) · `04`
 > §4 (Gherkin and harnesses — named, ASPIRATIONAL) · `00` §5 (the cut table rows for Gherkin and
@@ -122,6 +127,8 @@ Shared notes:
 - **The friction is the contract:** under compile-time binding, editing a GWT string breaks the
   bound test at `tsc` time. That is the drift alarm surfacing at the cheapest moment; binding by
   index instead would be the silent failure the model forbids elsewhere.
+- **The options compose into a path, not only a fork** — §7 records a sequenced candidate
+  (A2 → B → C2) the session must score beside the single options.
 
 ## §4 — Evaluation scorecard
 
@@ -149,7 +156,8 @@ the plan's own pin):
 1. **Ratify or refute the §0 framing** (executability vs dual-source as the disease). Likely a
    DECISIONS entry refining MD-1's gloss — surprising without context, hard to reverse once
    surfaces ship against it.
-2. **Choose the surface(s):** A1 · A2 · A2+B · C1 · C2 (D dies in §3; E is the bar to beat).
+2. **Choose the surface(s) — or the sequenced path (§7):** A1 · A2 · A2+B · C1 · C2 ·
+   A2 → B → C2 (D dies in §3; E is the bar to beat).
 3. **Rule on JS-B2.3** (keep · refine with a named test-side exception · supersede), and on the
    dual-source letter-vs-spirit question if any C option wins. Both are story/criterion edits —
    the JTBD base is the functional spec, so this is a recorded change, not drift.
@@ -176,6 +184,117 @@ the plan's own pin):
 4. Draft the DECISIONS entries and language-base candidates; write plan 13 (execution) with its
    done-record criteria.
 
-**Exit criteria:** one ratified option with its law rulings recorded; the naming candidates
-flagged in the language base's terms; plan 13 scoped against the worked example; the cut-table /
-JTBD repair list enumerated. Until those exist, nothing under `src/` or `examples/` changes.
+**Exit criteria:** one ratified option — or the sequenced path — with its law rulings recorded;
+the naming candidates flagged in the language base's terms; plan 13 scoped against the worked
+example; the cut-table / JTBD repair list enumerated; if a C option (or the path) wins, the
+grammar-design session scheduled as its own PLAN-ONLY plan, per §7. Until those exist, nothing
+under `src/` or `examples/` changes.
+
+## §7 — Pre-session input (recorded ahead of the session; the session may overrule)
+
+### The ambition mandate
+
+The product owner's directive, recorded as session posture: *think ambitious — the goal is
+solving the software-delivery problem in the age of AI engineering, a real challenge worth
+solving.* For the scorecard (§4) this is a weighting instruction, not a tie-breaker rule:
+**differentiation and AI-native authoring are first-class criteria**, and a standing cost
+(owning a grammar, a parser competency) is acceptable where the unlock is real. The session
+must not default to the cheapest option out of cost-aversion; it must default to the option
+that best serves the founding bets, with costs named and staffed rather than avoided.
+
+### The differentiation case for a Gherkin-like language (C-direction)
+
+The test any Gherkin-like proposal must pass: **does the language know things Gherkin doesn't?**
+Tags-on-Gherkin (gen 1's `@architect-pattern:` / `@architect-maturity:` annotations, with a
+custom linter policing what the grammar couldn't express) fails it. Envelope-as-syntax passes
+it: when identity, kind, altitude, readiness, and relations *parse* rather than annotate, the
+readiness floor, referential integrity, and the did-you-mean diagnostics apply to a file a
+non-engineer can author and review in a PR diff. Gherkin gave the industry a shared grammar for
+*behavior* and stopped there; nobody has a grammar for **delivery state**. That — not prose —
+is the unlock.
+
+Illustrative sketch only (the grammar is the grammar session's to design; nothing here is
+ratified):
+
+```
+spec orders.create-order.valid-cart
+  example · story · ready
+  refines  orders.create-order
+  verifies orders.create-order
+
+Valid cart creates an order
+
+  Given a customer has a cart with one or more line items
+    And every cart item is in stock
+  When the customer submits the cart for order creation
+  Then an order is created
+    And the order total equals the cart-math sum
+```
+
+Three arguments, in the order they should weigh:
+
+1. **AI-native authoring — the heaviest.** A line-oriented grammar is token-cheap and
+   low-syntax-noise — the register agents emit most reliably, against the TS DSL's imports,
+   builders, and brackets. It closes a loop the TS DSL cannot: an agent proposes a spec as
+   plain text in conversation, the human reads it natively, and the same text lands in the
+   repo verbatim — *the spec is the prompt* becomes literally true, with no transcription step.
+   This compounds the founding bets rather than adding to them.
+2. **The whole delivery org can author.** Today the Design Review is the read surface and
+   authoring is TS-only. A ratified text grammar makes the authored model writable by PMs and
+   domain experts — the adopt-the-nouns rubric (MD-2) applied at the syntax level (Given/When/
+   Then are the industry's nouns for examples), and the surface the commercial Studio renders
+   and edits.
+3. **The adoption wedge.** File formats are adopted faster than platforms (Markdown, YAML
+   pipelines, `.feature` itself). An OSS grammar useful standalone under `@libar-dev/` is the
+   cheapest front door to the graph and the honesty model; Studio sits above it under
+   `@libar-ai/`. The language is not the product — it is the product's handshake.
+
+### The costs the session must stress-test (not avoid)
+
+- **Owning a language is forever:** grammar versioning, an in-house parser (a Cucumber
+  dependency would re-import the semantics mismatch gen 1 paid for, and break the dependency
+  posture), a canonical formatter from day one, error messages under the one-line law, an LSP
+  eventually. Small grammar, permanent commitment.
+- **The typing-law gap window:** MD-11's closed shapes, autocomplete, and in-editor rejection
+  have no native text-grammar equivalent. Compensations: the extractor's diagnostics, generated
+  step contracts at the binding seam, the formatter, later an LSP — but `07` §6 ① names
+  authoring ergonomics as the headline forward risk, and the window where Gherkin-SDP is less
+  guarded than TS is real and must be sized, not waved at.
+- **The partition must be law, or dual-source returns:** the grammar earns its keep where prose
+  *is* the content (`example`, plausibly `rule` — Gherkin has `Rule:` natively) and loses where
+  structure dominates (`model` term maps, `constraint` targets, `decision` records). Per-kind
+  single home, enforced by a conformance check; checkout-v1's examples are the migration tracer
+  bullet.
+- **The positioning sentence:** a Gherkin-like surface invites the "yet another BDD tool"
+  mis-read MD-1 fought. The ruling to ratify: *the language is the front door; the graph and
+  the honesty model are the building.* Marketing says that sentence forever, so it gets
+  recorded, not implied.
+
+### The recommended path: A2 → B → C2 (a sequence, not a fork)
+
+The binding machinery is surface-independent — generated step contracts, the framework-neutral
+runner core, the vitest adapter, and the world lifecycle are identical under every surviving
+option, and lawful today (JS-B2.6's pattern). So sequence the ambition instead of betting it in
+one move:
+
+1. **A2 now** — ship the executable-example DX on the TS surface: contracts generated by
+   `sdp build`, compile-time step drift, failure messages in spec language.
+2. **B next** — emit the Gherkin-like text as a one-way projection of example specs: a near-free
+   probe of the grammar's readability value on real specs with real reviewers, before anything
+   parses.
+3. **C2 then** — promote the grammar to an authored surface once the runner, the contracts, and
+   the dogfooding evidence exist; the grammar slice reduces to a parser plus the partition law.
+
+Two strategic corollaries the session should test: **A2 beats A1 on strategy, not only on law**
+(A1's const-generic DSL work is throwaway under a future text surface; A2's contracts are
+exactly the mechanism C2 needs), and **a grammar is the hardest artifact to change after
+contact with users** — sequencing it last means every upstream decision is settled and
+dogfooded before syntax freezes anything.
+
+### Scope ruling
+
+Plan 12 rules on **whether** and **where in the sequence** — never on syntax. If the
+C-direction (or the path) survives, grammar design is its own PLAN-ONLY session with its own
+plan: envelope syntax, `And`/`But`, Examples tables, escaping, formatter rules, grammar
+versioning, and the per-kind partition law each have enough surface area to deserve the
+grilling there, not here.
