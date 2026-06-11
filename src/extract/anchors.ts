@@ -5,12 +5,14 @@ import { CODE_ANCHOR_NAMESPACES } from "../ids.js";
 import type { Finding, Severity } from "../validate/contracts.js";
 import {
   collectProtocolBindings,
+  duplicatePropertyMessage,
   extractFindingIds,
   peekId,
   readPropertyName,
   reifyStaticIdExpression,
   reifyStaticString,
   resolveBuilderCall,
+  resolveProtocolCalleeBuilder,
   unwrapTransparent,
 } from "./reify.js";
 import type { IdReification, ProtocolBindings } from "./reify.js";
@@ -140,6 +142,7 @@ function reifyAnchorCall(
   const targetField = ANCHOR_BUILDER_TARGET_FIELDS[builder];
   const subjectId = peekId(objectLiteral, ANCHOR_ID_NAMESPACES[builder], bindings);
   const data: Record<string, unknown> = {};
+  const authoredNames = new Set<string>();
   let envelopeOk = true;
 
   const failEnvelope = (line: number, message: string, path?: string): void => {
@@ -173,6 +176,12 @@ function reifyAnchorCall(
       continue;
     }
 
+    if (authoredNames.has(name)) {
+      failEnvelope(property.getStartLineNumber(), duplicatePropertyMessage(name), name);
+      continue;
+    }
+
+    authoredNames.add(name);
     const initializer = property.getInitializer();
 
     if (initializer === undefined) {
@@ -248,8 +257,9 @@ function reifyAnchorCall(
     );
   }
 
+  // Absence is judged on authored names, never on reified values (see `reifySpecCall`).
   for (const required of ["id", targetField]) {
-    if (!(required in data) && envelopeOk) {
+    if (!authoredNames.has(required)) {
       failEnvelope(
         call.getStartLineNumber(),
         `anchor field "${required}" is missing — the binding cannot be constructed without it`,
@@ -283,7 +293,7 @@ export function reifyAnchorSourceFile(
 ): AnchorFileReification {
   const bindings = collectProtocolBindings(sourceFile);
 
-  if (bindings.size === 0) {
+  if (bindings.named.size === 0 && bindings.namespaceLocals.size === 0) {
     return { anchors: [], findings: [] };
   }
 
@@ -329,13 +339,7 @@ export function reifyAnchorSourceFile(
       return;
     }
 
-    const callee = node.getExpression();
-
-    if (!Node.isIdentifier(callee)) {
-      return;
-    }
-
-    const builder = bindings.get(callee.getText());
+    const builder = resolveProtocolCalleeBuilder(node.getExpression(), bindings);
 
     if (builder === undefined || !AUTHORING_BUILDER_NAMES.has(builder)) {
       return;

@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { afterAll, describe, expect, it } from "vitest";
@@ -171,6 +173,78 @@ describe("extraction corpora", () => {
     const node = primitiveNode(result.graph, "spec:orders.id-shaped-string");
     expect(node?.sections?.behavior?.examples).toEqual(["spec:orders.promoted-child"]);
     expect(result.graph.edges).toEqual([]);
+  });
+
+  it("invalid-parse-error: a parse-broken file is excluded whole, loudly, on both surfaces; siblings survive (L3)", () => {
+    const result = extract({ root: corpusRoot("invalid-parse-error") });
+    const errors = result.report.findings.filter((finding) => finding.severity === "error");
+
+    expect(errors).toHaveLength(2);
+    expect(errors.every((finding) => finding.validatorId === extractFindingIds.parseError)).toBe(
+      true,
+    );
+    expect(errors.map((finding) => finding.file)).toEqual([
+      "parse-broken-binding.ts",
+      "parse-broken.sdp.ts",
+    ]);
+    expect(errors.every((finding) => typeof finding.line === "number")).toBe(true);
+
+    // No phantom carriers: nothing from either parse-broken file enters the graph — not the
+    // carrier the recovered AST would swallow, not the well-formed binding above the break.
+    expect(result.graph.nodes.map((node) => node.id)).toEqual(["spec:orders.healthy-sibling"]);
+    expect(result.graph.edges).toEqual([]);
+    expect(result.counts).toEqual({ specs: 1, packs: 0, anchors: 0 });
+    expect(JSON.stringify(result.graph)).not.toContain("spec:orders.swallowed");
+  });
+
+  it("invalid-missing-envelope-fields: every absent required field reports in one pass — spec, pack, and anchor carriers", () => {
+    const result = extract({ root: corpusRoot("invalid-missing-envelope-fields") });
+    const errors = result.report.findings.filter((finding) => finding.severity === "error");
+
+    expect(
+      errors.every((finding) => finding.validatorId === extractFindingIds.nonStaticEnvelope),
+    ).toBe(true);
+
+    const pathsByFile = new Map<string, string[]>();
+
+    for (const finding of errors) {
+      const list = pathsByFile.get(finding.file ?? "") ?? [];
+      list.push(finding.path ?? "");
+      pathsByFile.set(finding.file ?? "", list);
+    }
+
+    expect(pathsByFile.get("bare-spec.sdp.ts")).toEqual(["id", "kind", "altitude", "readiness"]);
+    expect(pathsByFile.get("bare-pack.sdp.ts")).toEqual(["id", "specs"]);
+    expect(pathsByFile.get("bare-binding.ts")).toEqual(["id", "satisfies"]);
+    expect(errors).toHaveLength(8);
+    expect(result.graph.nodes).toEqual([]);
+    expect(result.counts).toEqual({ specs: 0, packs: 0, anchors: 0 });
+  });
+
+  it("invalid-duplicate-property: a property authored twice in one carrier fails the envelope loudly; the last value never wins", () => {
+    const result = extract({ root: corpusRoot("invalid-duplicate-property") });
+    const errors = result.report.findings.filter((finding) => finding.severity === "error");
+
+    expect(errors).toHaveLength(2);
+    expect(
+      errors.every((finding) => finding.validatorId === extractFindingIds.nonStaticEnvelope),
+    ).toBe(true);
+    expect(errors.every((finding) => finding.message.includes("authored more than once"))).toBe(
+      true,
+    );
+
+    const specError = errors.find((finding) => finding.file === "duplicate-id-property.sdp.ts");
+    expect(specError?.path).toBe("id");
+    expect(specError?.subjectId).toBe("spec:orders.first-authored-id");
+
+    const anchorError = errors.find((finding) => finding.file === "duplicate-target-property.ts");
+    expect(anchorError?.path).toBe("satisfies");
+    expect(anchorError?.subjectId).toBe("impl:orders.duplicate-target-binding");
+
+    expect(result.graph.nodes).toEqual([]);
+    expect(result.graph.edges).toEqual([]);
+    expect(JSON.stringify(result.graph)).not.toContain("spec:orders.last-authored-id");
+    expect(result.counts).toEqual({ specs: 0, packs: 0, anchors: 0 });
   });
 
   it("ref-in-section-content: an id builder in section content drops the owning property (MD-10)", () => {
@@ -357,6 +431,85 @@ describe("anchor extraction corpora", () => {
       to: "spec:orders.labelled-target",
       claim: "anchored",
     });
+  });
+});
+
+/**
+ * The import-surface and discovery corpora: the namespace import form and the discovery walk are
+ * extraction surface area too — a carrier the author believes exists must never silently fall
+ * out of the graph (L2).
+ */
+describe("import-surface and discovery corpora", () => {
+  it("namespace-import: carriers authored as `ns.builder(…)` extract on both surfaces — the full anchored ladder", () => {
+    const result = extract({ root: corpusRoot("namespace-import") });
+
+    expect(result.report.findings).toEqual([]);
+    expect(result.counts).toEqual({ specs: 2, packs: 0, anchors: 2 });
+
+    expect(result.graph.edges).toEqual(
+      expect.arrayContaining([
+        {
+          from: "spec:orders.namespace-parent.example",
+          type: "refines",
+          to: "spec:orders.namespace-parent",
+          claim: "declared",
+        },
+        {
+          from: "spec:orders.namespace-parent.example",
+          type: "verifies",
+          to: "spec:orders.namespace-parent",
+          claim: "declared",
+        },
+        {
+          from: "impl:orders.namespace-binding",
+          type: "satisfies",
+          to: "spec:orders.namespace-parent",
+          claim: "anchored",
+        },
+        {
+          from: "test:orders.namespace-parent.example",
+          type: "verifies",
+          to: "spec:orders.namespace-parent.example",
+          claim: "anchored",
+        },
+      ]),
+    );
+    expect(result.graph.edges).toHaveLength(4);
+
+    const parent = primitiveNode(result.graph, "spec:orders.namespace-parent");
+    expect(parent?.deliveryFacts).toEqual(["implemented", "has-verifier"]);
+    expect(validateGraph(result.graph).findings).toEqual([]);
+  });
+
+  it("namespace-misplaced-authoring: the misplaced-authoring sweep sees the property-access spelling (L2)", () => {
+    const result = extract({ root: corpusRoot("namespace-misplaced-authoring") });
+    const warnings = result.report.findings.filter((finding) => finding.severity === "warning");
+
+    expect(result.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
+    expect(warnings).toHaveLength(2);
+    expect(
+      warnings.every((finding) => finding.validatorId === extractFindingIds.misplacedAuthoring),
+    ).toBe(true);
+    expect(result.counts).toEqual({ specs: 0, packs: 0, anchors: 0 });
+    expect(result.graph.nodes).toEqual([]);
+  });
+
+  it("dot-directory-skipped: discovery never descends into a dot-directory, so a stray copy raises no duplicate-id noise", () => {
+    const root = corpusRoot("dot-directory-skipped");
+
+    // The stray copies are genuinely on disk — the clean result below is the walker's skip, not a
+    // missing fixture.
+    expect(existsSync(join(root, ".history", "surface-spec.sdp.ts"))).toBe(true);
+    expect(existsSync(join(root, ".history", "surface-binding.ts"))).toBe(true);
+
+    const result = extract({ root });
+
+    expect(result.report.findings).toEqual([]);
+    expect(result.counts).toEqual({ specs: 1, packs: 0, anchors: 1 });
+    expect(result.graph.nodes.map((node) => node.id)).toEqual([
+      "spec:orders.dot-directory-surface",
+      "impl:orders.dot-directory-binding",
+    ]);
   });
 });
 

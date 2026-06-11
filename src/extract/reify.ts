@@ -18,8 +18,9 @@ import type { Finding, Severity } from "../validate/contracts.js";
  * Static reification (`04` §1): a spec file is a JSON file that TypeScript happens to validate
  * (P5), so reification reads the AST and never evaluates — no imports are followed, no builder is
  * called (evaluation is the phantom-value trap MD-14 closes). Recognized builders are matched by
- * import binding from this one module specifier, so authored aliasing survives and lookalike
- * builders from other modules stay non-static.
+ * import binding from this one module specifier — named imports (authored aliasing survives) and
+ * namespace imports (`ns.builder(…)`), which exhaust the package's import surface, as it ships no
+ * default export — so lookalike builders from other modules stay non-static.
  */
 export const PROTOCOL_MODULE_SPECIFIER = "@libar-dev/software-delivery-protocol";
 
@@ -38,8 +39,13 @@ export const PROTOCOL_MODULE_SPECIFIER = "@libar-dev/software-delivery-protocol"
  * author believes exists must never silently fall out of the graph (L2). `reserved-property` is
  * the envelope-tier honesty twin: a hand-authored piece of derived graph vocabulary (a delivery
  * fact, a `claim`, an edge field) impersonates machine truth, so the carrier is rejected whole.
+ * Above both tiers sits the one file-level id: `parse-error` — a file carrying a syntactic
+ * diagnostic is never reified, because the error-tolerant parse recovers by guessing and content
+ * bleeds between carriers; one hard error per file, carrying the first diagnostic, and the whole
+ * file's content stays out of the graph (ambiguity is loud, L2).
  */
 export const extractFindingIds = {
+  parseError: "extract/parse-error",
   nonStaticEnvelope: "extract/non-static-envelope",
   invalidId: "extract/invalid-id",
   duplicateId: "extract/duplicate-id",
@@ -175,10 +181,16 @@ export function unwrapTransparent(node: Node): Node {
   }
 }
 
-export type ProtocolBindings = ReadonlyMap<string, string>;
+export interface ProtocolBindings {
+  /** Local name → exported builder name, from named imports. */
+  readonly named: ReadonlyMap<string, string>;
+  /** Locals bound by `import * as ns`: every protocol builder is reachable as a property. */
+  readonly namespaceLocals: ReadonlySet<string>;
+}
 
 export function collectProtocolBindings(sourceFile: SourceFile): ProtocolBindings {
-  const bindings = new Map<string, string>();
+  const named = new Map<string, string>();
+  const namespaceLocals = new Set<string>();
 
   for (const importDeclaration of sourceFile.getImportDeclarations()) {
     if (importDeclaration.getModuleSpecifierValue() !== PROTOCOL_MODULE_SPECIFIER) {
@@ -188,16 +200,46 @@ export function collectProtocolBindings(sourceFile: SourceFile): ProtocolBinding
     for (const namedImport of importDeclaration.getNamedImports()) {
       const exportedName = namedImport.getName();
       const localName = namedImport.getAliasNode()?.getText() ?? exportedName;
-      bindings.set(localName, exportedName);
+      named.set(localName, exportedName);
+    }
+
+    const namespaceImport = importDeclaration.getNamespaceImport();
+
+    if (namespaceImport !== undefined) {
+      namespaceLocals.add(namespaceImport.getText());
     }
   }
 
-  return bindings;
+  return { named, namespaceLocals };
 }
 
 export interface ResolvedBuilderCall {
   readonly call: CallExpression;
   readonly builder: string;
+}
+
+/**
+ * The callee form mirrors the import form: a bare identifier from a named import, or
+ * `ns.builder(…)` through a namespace-import local. Anything else (an element access, a chained
+ * property) is not an import binding of the protocol package, so it stays non-static.
+ */
+export function resolveProtocolCalleeBuilder(
+  callee: Node,
+  bindings: ProtocolBindings,
+): string | undefined {
+  if (Node.isIdentifier(callee)) {
+    return bindings.named.get(callee.getText());
+  }
+
+  if (Node.isPropertyAccessExpression(callee)) {
+    const qualifier = callee.getExpression();
+
+    return Node.isIdentifier(qualifier) && bindings.namespaceLocals.has(qualifier.getText())
+      ? callee.getName()
+      : undefined;
+  }
+
+  return undefined;
 }
 
 export function resolveBuilderCall(
@@ -210,13 +252,7 @@ export function resolveBuilderCall(
     return undefined;
   }
 
-  const callee = unwrapped.getExpression();
-
-  if (!Node.isIdentifier(callee)) {
-    return undefined;
-  }
-
-  const builder = bindings.get(callee.getText());
+  const builder = resolveProtocolCalleeBuilder(unwrapped.getExpression(), bindings);
 
   return builder === undefined ? undefined : { call: unwrapped, builder };
 }
@@ -233,6 +269,16 @@ export function readPropertyName(property: PropertyAssignment): string | undefin
   }
 
   return undefined;
+}
+
+/**
+ * A property name authored twice in one carrier literal is ambiguity, never detail: evaluation
+ * keeps the last value while diagnostics key on the first id seen, so the carrier fails whole.
+ * tsc reports the duplication (TS1117) to typechecking authors; the extractor reads files
+ * standalone, so it is the backstop.
+ */
+export function duplicatePropertyMessage(name: string): string {
+  return `property "${name}" is authored more than once in this carrier (ambiguity is loud, L2); evaluation would keep the last value silently, so the carrier is not extracted`;
 }
 
 export function reifyStaticString(node: Node, path: string): StaticResult {
@@ -768,6 +814,7 @@ function reifySpecCall(
 
   const subjectId = peekId(objectLiteral, ["spec"], bindings);
   const data: Record<string, unknown> = {};
+  const authoredNames = new Set<string>();
   let envelopeOk = true;
 
   const failEnvelope = (line: number, message: string, path?: string): void => {
@@ -801,6 +848,12 @@ function reifySpecCall(
       continue;
     }
 
+    if (authoredNames.has(name)) {
+      failEnvelope(property.getStartLineNumber(), duplicatePropertyMessage(name), name);
+      continue;
+    }
+
+    authoredNames.add(name);
     const initializer = property.getInitializer();
 
     if (initializer === undefined) {
@@ -955,8 +1008,11 @@ function reifySpecCall(
     );
   }
 
+  // Absence is judged on authored names, never on reified values: every genuinely missing field
+  // is reported in one pass, and a field that was authored but failed to reify already carries
+  // its own finding.
   for (const required of ["id", "kind", "altitude", "readiness"]) {
-    if (!(required in data) && envelopeOk) {
+    if (!authoredNames.has(required)) {
       failEnvelope(
         call.getStartLineNumber(),
         `envelope field "${required}" is missing — the typed envelope cannot be constructed without it`,
@@ -1039,6 +1095,7 @@ function reifyPackCall(
 
   const subjectId = peekId(objectLiteral, ["pack"], bindings);
   const data: Record<string, unknown> = {};
+  const authoredNames = new Set<string>();
   let envelopeOk = true;
 
   const failEnvelope = (line: number, message: string, path?: string): void => {
@@ -1072,6 +1129,12 @@ function reifyPackCall(
       continue;
     }
 
+    if (authoredNames.has(name)) {
+      failEnvelope(property.getStartLineNumber(), duplicatePropertyMessage(name), name);
+      continue;
+    }
+
+    authoredNames.add(name);
     const initializer = property.getInitializer();
 
     if (initializer === undefined) {
@@ -1163,8 +1226,9 @@ function reifyPackCall(
     );
   }
 
+  // Absence is judged on authored names, never on reified values (see `reifySpecCall`).
   for (const required of ["id", "specs"]) {
-    if (!(required in data) && envelopeOk) {
+    if (!authoredNames.has(required)) {
       failEnvelope(
         call.getStartLineNumber(),
         `envelope field "${required}" is missing — the pack manifest cannot be constructed without it`,

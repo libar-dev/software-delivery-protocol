@@ -1,0 +1,9 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const healthySiblingSpec = spec({
+  id: specId("spec:orders.healthy-sibling"),
+  title: "Sibling file untouched by the parse break next door",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+});

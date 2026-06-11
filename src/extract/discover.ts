@@ -12,7 +12,7 @@ const SPEC_FILE_SUFFIX = ".sdp.ts";
 const SOURCE_FILE_SUFFIXES = [".ts", ".tsx"] as const;
 const DECLARATION_FILE_SUFFIX = ".d.ts";
 
-const EXCLUDED_DIRECTORY_NAMES = new Set(["node_modules", "dist", "generated"]);
+const EXCLUDED_DIRECTORY_NAMES = new Set(["node_modules", "dist", "generated", "coverage"]);
 
 export interface DiscoveredSourceFile {
   readonly absolutePath: string;
@@ -55,7 +55,9 @@ function walkDirectory(
       relativeDirectory === "" ? entry.name : `${relativeDirectory}/${entry.name}`;
 
     if (entry.isDirectory()) {
-      if (EXCLUDED_DIRECTORY_NAMES.has(entry.name)) {
+      // No authoring surface lives in a dot-directory: a stray source copy under one (`.git`, an
+      // editor history cache) would reify into phantom carriers or duplicate-id hard errors.
+      if (entry.name.startsWith(".") || EXCLUDED_DIRECTORY_NAMES.has(entry.name)) {
         continue;
       }
 
@@ -88,10 +90,10 @@ function walkDirectory(
 
 /**
  * One walk, two surfaces: every `*.sdp.ts` under the extraction root (the declared layer) and
- * every other `*.ts`/`*.tsx` source file (the anchor candidates), minus tooling output
- * directories. Both lists are sorted (code-unit, on the root-relative path) so diagnostics never
- * depend on filesystem enumeration order; output-byte ordering is owned by the serializer
- * regardless.
+ * every other `*.ts`/`*.tsx` source file (the anchor candidates), minus tooling-output
+ * directories and dot-directories. Both lists are sorted (code-unit, on the root-relative path)
+ * so diagnostics never depend on filesystem enumeration order; output-byte ordering is owned by
+ * the serializer regardless.
  */
 export function discoverFiles(root: string): DiscoveredFiles {
   const specFiles: DiscoveredSourceFile[] = [];

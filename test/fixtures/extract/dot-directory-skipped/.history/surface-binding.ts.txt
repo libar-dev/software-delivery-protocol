@@ -1,0 +1,7 @@
+import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+
+// The `.history` twin of this file is the stray copy discovery must skip (see surface-spec).
+export const surfaceBinding = codeAnchor({
+  id: codeAnchorId("impl:orders.dot-directory-binding"),
+  satisfies: ref("spec:orders.dot-directory-surface"),
+});

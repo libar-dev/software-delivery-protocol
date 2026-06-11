@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import { Project } from "ts-morph";
+import type { Program, SourceFile } from "ts-morph";
 
 import type { GraphSchema } from "../graph/schema.js";
 import type { Finding, ValidationReport } from "../validate/contracts.js";
@@ -8,6 +9,7 @@ import { reifyAnchorSourceFile } from "./anchors.js";
 import type { ReifiedAnchor } from "./anchors.js";
 import { deriveGraph } from "./derive.js";
 import { discoverFiles } from "./discover.js";
+import type { DiscoveredSourceFile } from "./discover.js";
 import { PROTOCOL_MODULE_SPECIFIER, extractFindingIds, reifySourceFile } from "./reify.js";
 import type { ReifiedPack, ReifiedSpec } from "./reify.js";
 
@@ -105,31 +107,65 @@ function findDuplicatedIds(
   return duplicated;
 }
 
+interface ParsedSourceFile {
+  readonly file: DiscoveredSourceFile;
+  readonly sourceFile: SourceFile;
+}
+
+/**
+ * A file carrying a syntactic diagnostic is excluded whole: the parser is error-tolerant, so past
+ * the first syntax error the recovered AST is guesswork — content bleeds between carriers — and
+ * reifying it would put unfaithful shapes in the graph, or silently drop a binding the author
+ * believes exists (L2). One hard error per file, carrying the first diagnostic; every other file
+ * still extracts (graceful partial extraction, L3, at file granularity).
+ */
+function fileParses(program: Program, source: ParsedSourceFile, findings: Finding[]): boolean {
+  const [firstDiagnostic] = program.getSyntacticDiagnostics(source.sourceFile);
+
+  if (firstDiagnostic === undefined) {
+    return true;
+  }
+
+  const text = firstDiagnostic.getMessageText();
+
+  findings.push({
+    validatorId: extractFindingIds.parseError,
+    family: "conformance",
+    severity: "error",
+    message: `the file does not parse: ${typeof text === "string" ? text : text.getMessageText()} — the error-tolerant parse recovers by guessing, so the file cannot be reified faithfully and its content is excluded from the graph (ambiguity is loud, L2)`,
+    file: source.file.relativePath,
+    line: firstDiagnostic.getLineNumber(),
+  });
+
+  return false;
+}
+
 /**
  * The extractor — the producer, the only component that reads source (`03` §1): the declared
  * layer (spec files, pack manifests) plus the anchored layer (anchor constants in source files).
  * Files are reified standalone by pure AST reading (no type checker, no tsconfig dependence, no
- * import following — static reification without execution, MD-14), then the one graph is derived,
- * delivery facts included. The conformance + honesty checks consume the graph (`validateGraph`),
- * never any pre-graph shape. The inferred layer is empty by decision, not omission: its
- * consumers (the reader's entry adapters and file-level impact) resolve off the curated layers
- * (`06` §2), so the first inferred producer is the aspirational impact graph.
+ * import following — static reification without execution, MD-14); a file that does not parse is
+ * excluded whole, loudly (`fileParses`). Then the one graph is derived, delivery facts included.
+ * The conformance + honesty checks consume the graph (`validateGraph`), never any pre-graph
+ * shape. The inferred layer is empty by decision, not omission: its consumers (the reader's entry
+ * adapters and file-level impact) resolve off the curated layers (`06` §2), so the first inferred
+ * producer is the aspirational impact graph.
  */
 export function extract(options: ExtractOptions): ExtractionResult {
   const files = discoverFiles(options.root);
-  const project = new Project({ useInMemoryFileSystem: true });
+  // The project only ever parses: reification is pure AST reading and the program exists solely
+  // for syntactic diagnostics, so the default lib would never be read — `noLib` skips loading it.
+  const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { noLib: true } });
   const specs: ReifiedSpec[] = [];
   const packs: ReifiedPack[] = [];
   const anchors: ReifiedAnchor[] = [];
   const findings: Finding[] = [];
+  const specSources: ParsedSourceFile[] = [];
+  const anchorSources: ParsedSourceFile[] = [];
 
   for (const file of files.specFiles) {
     const sourceText = readFileSync(file.absolutePath, "utf8");
-    const sourceFile = project.createSourceFile(file.relativePath, sourceText);
-    const reified = reifySourceFile(sourceFile, file.relativePath);
-    specs.push(...reified.specs);
-    packs.push(...reified.packs);
-    findings.push(...reified.findings);
+    specSources.push({ file, sourceFile: project.createSourceFile(file.relativePath, sourceText) });
   }
 
   for (const file of files.anchorCandidateFiles) {
@@ -141,8 +177,33 @@ export function extract(options: ExtractOptions): ExtractionResult {
       continue;
     }
 
-    const sourceFile = project.createSourceFile(file.relativePath, sourceText);
-    const reified = reifyAnchorSourceFile(sourceFile, file.relativePath);
+    anchorSources.push({
+      file,
+      sourceFile: project.createSourceFile(file.relativePath, sourceText),
+    });
+  }
+
+  // One program, requested after every file is added: ts-morph rebuilds the program whenever a
+  // file lands, so asking per file would redo the work quadratically.
+  const program = project.getProgram();
+
+  for (const source of specSources) {
+    if (!fileParses(program, source, findings)) {
+      continue;
+    }
+
+    const reified = reifySourceFile(source.sourceFile, source.file.relativePath);
+    specs.push(...reified.specs);
+    packs.push(...reified.packs);
+    findings.push(...reified.findings);
+  }
+
+  for (const source of anchorSources) {
+    if (!fileParses(program, source, findings)) {
+      continue;
+    }
+
+    const reified = reifyAnchorSourceFile(source.sourceFile, source.file.relativePath);
     anchors.push(...reified.anchors);
     findings.push(...reified.findings);
   }

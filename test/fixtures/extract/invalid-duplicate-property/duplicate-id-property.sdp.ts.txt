@@ -1,0 +1,13 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+// Two id properties in one carrier: evaluation would keep the last while diagnostics key on the
+// first — ambiguity the extractor must reject loudly (tsc reports TS1117 only to typechecking
+// authors; the extractor reads files standalone, so it is the backstop).
+export const duplicateIdSpec = spec({
+  id: specId("spec:orders.first-authored-id"),
+  title: "Carrier with a repeated id property",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  id: specId("spec:orders.last-authored-id"),
+});

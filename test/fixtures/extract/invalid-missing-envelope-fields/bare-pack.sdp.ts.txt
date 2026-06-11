@@ -1,0 +1,3 @@
+import { pack } from "@libar-dev/software-delivery-protocol";
+
+export const barePack = pack({});
