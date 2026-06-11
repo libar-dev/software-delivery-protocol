@@ -1,0 +1,29 @@
+# Stage 3 — SAME ID, now `ready`: it verifies its parent, verification mode is
+# executable, and (test-side, not here) a specTest anchor binds the executable
+# half — which makes it an ENABLED VERIFIER, so the parent earns `has-verifier`.
+# From here, `sdp build` emits the step contract in 4-seam/contracts/.
+#
+# Note what is NOT in this file: no step bindings, no test code, no delivery
+# facts. Intent and implementation stay split (JS-B1.4); facts are derived.
+
+spec orders.create-order.valid-cart
+  example · story · ready
+  refines  orders.create-order
+  verifies orders.create-order
+
+Valid cart creates an order
+
+  The happy path of create-order: a fully stocked cart becomes an order and
+  the order math holds.
+
+  Given a customer has a cart with one or more line items
+    And every cart item is in stock
+    And each line item has a positive quantity and a unit price
+  When the customer submits the cart for order creation
+  Then an order is created
+    And the order total equals the sum of quantity times unit price per line
+    And the order contains the original cart lines
+
+  verification executable
+    The order result contains a stable id.
+    The returned total matches the cart math.

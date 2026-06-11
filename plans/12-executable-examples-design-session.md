@@ -19,6 +19,14 @@
 > the language, and the scope ruling that grammar design earns its own PLAN-ONLY session. The
 > session designs the path and resolves the law rulings; it does not relitigate *whether*.
 >
+> **Second addendum recorded 2026-06-11, ahead of the session:** a pre-session exploration
+> built micro-implementations of the contender surfaces over the real
+> `spec:orders.create-order.valid-cart` and proved the binding seam compile-time with captured
+> `tsc` errors. Its outputs — the exhibits and the argued narrowings (six proposed
+> settlements + the pros/cons scorecard) — live in **`explorations/executable-examples/`**
+> (`FINDINGS.md` first); §7's closing subsection records what they narrow. The session opens
+> onto those settlements as input, ratifying or overruling by name.
+>
 > **Spec anchors:** `02` §3 (an example becomes executable as a low-altitude `example`-kind spec;
 > verifier semantics — direct, per-spec, structural) · `04` §1 (the TS DSL is canonical) · `04`
 > §4 (Gherkin and harnesses — named, ASPIRATIONAL) · `00` §5 (the cut table rows for Gherkin and
@@ -343,6 +351,26 @@ flavor outside the graph); the render discipline above; the component library as
 competency (shared with Studio, so possibly a cost already on the books). JS-B2.3 is untouched
 (no spec↔code imports), MD-15 extends to the new compound extensions, and the executable-half
 machinery (§3) is fully orthogonal — contracts and runner are identical under every route.
+
+### The exploration record (recorded 2026-06-11; exhibits committed)
+
+`explorations/executable-examples/` holds the pre-session micro-implementations and
+`FINDINGS.md`, whose six proposed settlements the session ratifies or overrules by name:
+the §0 framing holds (gen 1's costs split into a **seam family** cured by generated contracts
+and a **foreign-grammar family** cured by owning the notation — the twelve-rule step-linter
+catalog is the evidence); **A2 over A1**, adding the one-validation-path argument (MD-14: A1
+binds tests to the *evaluated* spec value, A2 to the *reified graph truth*) — proven with
+captured `tsc` errors that name the drifted step strings; **C1 dies on DX evidence** (it
+re-imports the policed quirk catalog); the notation ships as a **renderer before it is a
+parser** (one renderer: failure messages, the B projection, the Design Review); **F1/TSX
+demotes from authoring route to projection-layer competency** (the interactive dials render
+derives entirely from the graph, so it serves every authoring surface — the harness
+convergence without an authoring-law cost); and the mechanism defaults (per-example contracts,
+dedupe-by-text, adapter-owned world lifecycle, `/runner` + `/vitest` subpaths, typed step
+parameters as committed capability with grammar-session syntax). The surviving fork the
+session must rule on narrows to **F2-layered (markdown carrier) vs C2-pure (own grammar)** —
+same owned notation, different carrier — plus the envelope representation
+(syntax vs frontmatter) and the prose-in-graph ruling (an MD-10 extension).
 
 ### Scope ruling
 

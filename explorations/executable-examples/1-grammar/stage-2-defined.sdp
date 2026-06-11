@@ -1,0 +1,21 @@
+# Stage 2 — SAME ID, enriched in place. The blocking question is resolved
+# (whole-cart stock is a Given; the split-order idea moved to its own spec),
+# the example matured prose → structured GWT, readiness climbs to `defined`.
+# The floor checks this: stating `defined` with no structured GWT fails honest-readiness.
+
+spec orders.create-order.valid-cart
+  example · story · defined
+  refines orders.create-order
+
+Valid cart creates an order
+
+  The happy path of create-order: a fully stocked cart becomes an order and
+  the order math holds.
+
+  Given a customer has a cart with one or more line items
+    And every cart item is in stock
+    And each line item has a positive quantity and a unit price
+  When the customer submits the cart for order creation
+  Then an order is created
+    And the order total equals the sum of quantity times unit price per line
+    And the order contains the original cart lines

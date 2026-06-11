@@ -1,0 +1,133 @@
+<!doctype html>
+<!-- MOCK: the Design Review as an interactive projection of the .sdp.tsx document.
+     Everything marked "derived" is injected from the graph at render time — never
+     authored in the document. The "dials" panel is the interactive-harness
+     convergence (04 §4): controls + an expected() model + coverage discovery. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Design Review — spec:orders.create-order.valid-cart</title>
+<style>
+  :root { --bg:#0f1115; --panel:#161a22; --line:#262c38; --txt:#d7dce5; --dim:#8b93a3;
+          --green:#3ecf8e; --amber:#e8b339; --red:#e8606b; --blue:#6aa9ff; --mono:ui-monospace,SFMono-Regular,Menlo,monospace; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:15px/1.55 system-ui,sans-serif; }
+  .wrap { max-width:880px; margin:32px auto; padding:0 20px; }
+  .chip { display:inline-block; padding:1px 10px; border:1px solid var(--line); border-radius:999px;
+          font:12px var(--mono); color:var(--dim); margin-right:6px; }
+  .chip b { color:var(--txt); font-weight:600; }
+  .derived { border-color:#2c4a3c; color:var(--green); }
+  .derived::before { content:"derived · "; color:var(--dim); }
+  h1 { font-size:22px; margin:10px 0 2px; }
+  .id { font:13px var(--mono); color:var(--dim); }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px 20px; margin:14px 0; }
+  .banner { border-left:3px solid var(--green); }
+  .banner.gap { border-left-color:var(--amber); }
+  .gwt { font:14px/1.9 var(--mono); white-space:pre; overflow-x:auto; }
+  .kw { color:var(--blue); font-weight:600; }
+  .dials { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .dials label { display:block; font-size:13px; color:var(--dim); margin:10px 0 2px; }
+  .dials input[type=number] { width:64px; background:#0c0e12; color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:3px 8px; font:13px var(--mono); }
+  .row { display:flex; gap:8px; align-items:center; font:13px var(--mono); }
+  .toggle { cursor:pointer; user-select:none; }
+  .out { font:14px var(--mono); padding:12px 14px; border-radius:8px; background:#0c0e12; border:1px solid var(--line); }
+  .ok { color:var(--green); } .warn { color:var(--amber); } .bad { color:var(--red); }
+  .small { font-size:12.5px; color:var(--dim); }
+  button { background:#1d2430; color:var(--txt); border:1px solid var(--line); border-radius:7px; padding:5px 12px; font-size:13px; cursor:pointer; }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:var(--dim); margin:0 0 10px; }
+</style>
+</head>
+<body><div class="wrap">
+
+  <div>
+    <span class="chip">kind <b>example</b></span>
+    <span class="chip">altitude <b>story</b></span>
+    <span class="chip">readiness <b>ready</b> <span class="small">(stated)</span></span>
+    <span class="chip derived">floor <b class="ok">ready ✓</b></span>
+    <span class="chip derived">verifier binding <b class="ok">present</b></span>
+  </div>
+  <h1>Valid cart creates an order</h1>
+  <div class="id">spec:orders.create-order.valid-cart · refines → spec:orders.create-order · verifies → spec:orders.create-order</div>
+
+  <div class="panel banner">
+    <b class="ok">Stated readiness is earned.</b>
+    <span class="small">derived · the floor evaluator reports every clause meets `ready`;
+    enabled verifier: <code>test:orders.create-order.valid-cart</code> (anchor resolves).
+    Pass/fail is CI's — this page asserts binding, never liveness.</span>
+  </div>
+
+  <div class="panel">
+    <h2>Example <span class="small">(authored)</span></h2>
+    <div class="gwt"><span class="kw">Given</span> a customer has a cart with one or more line items
+  <span class="kw">And</span> every cart item is in stock
+  <span class="kw">And</span> each line item has a positive quantity and a unit price
+<span class="kw">When</span> the customer submits the cart for order creation
+<span class="kw">Then</span> an order is created
+  <span class="kw">And</span> the order total equals the sum of quantity times unit price per line
+  <span class="kw">And</span> the order contains the original cart lines</div>
+  </div>
+
+  <div class="panel">
+    <h2>Explore the behavior <span class="small">(harness — controls + expected model + coverage; not a test runner, never authoritative)</span></h2>
+    <div class="dials">
+      <div>
+        <label>Cart lines (quantity × unit price)</label>
+        <div id="lines"></div>
+        <button onclick="addLine()">+ line</button>
+        <label class="row toggle" style="margin-top:14px">
+          <input type="checkbox" id="stock" checked onchange="update()"> every cart item is in stock
+        </label>
+      </div>
+      <div>
+        <label>Expected outcome <span class="small">(computed from the spec set, not from code)</span></label>
+        <div class="out" id="out"></div>
+        <div class="small" id="cov" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="small" style="margin:18px 4px">
+    Authored content above came from the document; every badge and the coverage verdict are
+    injected from the graph at render time. Authoring a badge in the document is an
+    authoring-shape honesty failure — the check, not this page, enforces that.
+  </div>
+
+<script>
+  let lines = [ {q:2, p:25}, {q:1, p:50} ];
+  function addLine(){ lines.push({q:1, p:10}); update(); }
+  function rmLine(i){ lines.splice(i,1); update(); }
+  function set(i,k,v){ lines[i][k] = Number(v); update(); }
+
+  function update(){
+    const host = document.getElementById('lines');
+    host.innerHTML = lines.map((l,i) =>
+      `<div class="row" style="margin:4px 0">
+         <input type="number" min="0" value="${l.q}" onchange="set(${i},'q',this.value)"> ×
+         <input type="number" min="0" value="${l.p}" onchange="set(${i},'p',this.value)">
+         <button onclick="rmLine(${i})" title="remove">−</button>
+       </div>`).join('');
+
+    const stock = document.getElementById('stock').checked;
+    const out = document.getElementById('out'), cov = document.getElementById('cov');
+    const empty = lines.length === 0, badQty = lines.some(l => l.q <= 0 || l.p <= 0);
+    const total = lines.reduce((s,l) => s + l.q*l.p, 0);
+
+    if (empty) {
+      out.innerHTML = '<span class="bad">cart rejected — no order is created</span>';
+      cov.innerHTML  = 'covered by <code>spec:orders.create-order.invalid-cart</code> (sibling example)';
+    } else if (!stock) {
+      out.innerHTML = '<span class="bad">cart rejected — an item is out of stock</span>';
+      cov.innerHTML  = 'covered by <code>spec:orders.create-order.invalid-cart</code> (sibling example)';
+    } else if (badQty) {
+      out.innerHTML = '<span class="warn">⚠ no spec covers this combination</span>';
+      cov.innerHTML  = '<b class="warn">coverage gap</b> — zero/negative quantity is asserted impossible by a Given, '
+                     + 'but no example states what the system DOES. '
+                     + '<button onclick="alert(\'mock: drafts a new example-kind spec at readiness idea, refining spec:orders.create-order\')">draft example from these dials</button>';
+    } else {
+      out.innerHTML = `<span class="ok">order created · total = ${total}</span>`;
+      cov.innerHTML  = 'covered by <b>this spec</b> — the bound test asserts exactly this shape';
+    }
+  }
+  update();
+</script>
+</div></body>
+</html>

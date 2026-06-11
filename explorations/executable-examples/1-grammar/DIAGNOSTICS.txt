@@ -1,0 +1,23 @@
+Mock `sdp validate --watch` output — what the grammar surface's guardrails look
+like without tsc (extractor diagnostics under the one-line rendering rule).
+Illustrative; the real diagnostics ride the existing validator machinery.
+
+── watch: specs/orders/create-order-valid-cart.sdp changed ────────────────────
+
+specs/orders/create-order-valid-cart.sdp:7:11 error referential-integrity
+  relation target `spec:orders.create-ordr` does not resolve — did you mean
+  `spec:orders.create-order`?
+
+specs/orders/create-order-valid-cart.sdp:6:21 error honest-readiness
+  states `defined` but the floor reaches `scoped`: kind `example` requires a
+  structured Given/When/Then entry at `defined` (found prose only)
+
+specs/orders/create-order-valid-cart.sdp:6:21 error envelope
+  `examle` is not a kind — did you mean `example`?
+  (kinds: behavior workflow example rule constraint model decision contract)
+
+── 3 errors · re-checking on save ──────────────────────────────────────────────
+
+The honest comparison with tsc-in-editor: these arrive on save in a terminal
+(or via LSP later), not as you type. Compile-time binding drift is NOT affected
+either way — that lives in the generated contract (4-seam), which is plain TS.

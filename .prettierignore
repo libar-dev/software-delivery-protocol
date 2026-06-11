@@ -9,6 +9,10 @@ plans/**
 # Archived review artifacts - verbatim historical records, not format-policed
 reviews/
 
+# Exploration exhibits — verbatim register sketches (surface micro-implementations); their
+# exact formatting IS the content, never format-policed (the gen-1 playground discipline)
+explorations/
+
 # The golden graph oracle carries the serializer's exact bytes (serialize.ts owns all output
 # bytes); reformatting it would break the byte-compare against extractor output
 test/fixtures/checkout-v1/expected-graph.json
