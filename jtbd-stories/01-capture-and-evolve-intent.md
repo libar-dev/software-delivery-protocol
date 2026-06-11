@@ -16,7 +16,7 @@ The job here is to get a thought into the system and let it grow without ever fo
 
 **Acceptance criteria:**
 1. A spec can be created at `readiness: "idea"` with only `id`, `title`, `kind`, `altitude`, and either `intent.outcome` or a parent relation — nothing else is required.
-2. The new spec lives in `/specs/**/*.sdp.ts` as committed code, immediately part of the single source of truth — no status field, ticket, or external tool is needed for it to "exist."
+2. The new spec lives in a `*.sdp.ts` file under the extraction root (conventionally `/specs/`) as committed code, immediately part of the single source of truth — no status field, ticket, or external tool is needed for it to "exist."
 3. Open questions can be attached (`intent.openQuestions`) without resolving them and without blocking capture; only questions explicitly marked `blocking` constrain stating `defined`/`ready` later.
 4. The spec is valid at its lowest readiness — the build never demands rules, anchors, or tests to accept an idea.
 5. The spec source is static, side-effect-free data (a "JSON file that TypeScript happens to validate"), so the extractor reifies it deterministically.

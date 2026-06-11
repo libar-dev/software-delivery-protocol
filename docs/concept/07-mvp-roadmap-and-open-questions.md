@@ -19,7 +19,7 @@ Build in thin vertical slices, each end-to-end on the example — on the foundat
 | 4 | The agent surface (the `reader` — a few trusted accessors: entry adapters + impact) + the Design Review / one generated read-only view, both fully derived. |
 | 5 | Polish: the CLI surface resolved (`build` · `validate` · `view` — `explain`/`search` stay below the second-caller bar, `06` §3), one diagnostic rendering rule (location from the finding's structured fields; first contact fails clean), the documented example walkthrough (`examples/checkout-v1/README.md`), and the clean-repo determinism test (the full pipeline at a different absolute path is byte-identical). |
 
-Package: a single **`@libar-dev/software-delivery-protocol`** (DSL + types, anchors, graph + reader/query API, `ts-morph` extractor, core checks, one view generator, CLI). Internal subpackage boundaries are a later concern, not decided now.
+Package: a single **`@libar-dev/software-delivery-protocol`** (DSL + types, anchors, graph + reader/query API, `ts-morph` extractor, core checks, one view generator, CLI). Internal subpackage boundaries are a later concern, deliberately undecided.
 
 > Tip: write the example specs and anchored code **first**. That forces the DSL and extractor to be usable before they are "finished."
 

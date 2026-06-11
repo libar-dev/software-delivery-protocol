@@ -1,0 +1,18 @@
+import { pack, packId, ref, spec, specId } from "@libar-dev/software-delivery-protocol";
+
+// Each id wraps the wrong builder for its namespace: the slot namespace is satisfied, but the
+// builder's own contract is not — evaluation would throw, and tsc rejects the branded
+// assignment, so the extractor (reading standalone) must restate the check statically.
+export const wrongBuilderPack = pack({
+  id: specId("pack:checkout-v1"),
+  title: "Pack id wrapped in specId",
+  specs: [ref("spec:orders.create-order")],
+});
+
+export const wrongBuilderSpec = spec({
+  id: packId("spec:orders.wrong-builder"),
+  title: "Spec id wrapped in packId",
+  kind: "behavior",
+  altitude: "feature",
+  readiness: "idea",
+});

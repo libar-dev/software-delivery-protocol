@@ -320,6 +320,110 @@ describe("sdp cli", () => {
     }
   });
 
+  it("fails clean when generated exists as a file: one line each for build and view, never a stack trace", () => {
+    const corpusRoot = materializeExtractCorpus("anchored-binding");
+
+    try {
+      // `generated` as a file makes the write phase throw — and the recovery itself must not
+      // re-throw (a non-recursive remove raises ENOTDIR through a file parent).
+      writeFileSync(join(corpusRoot, "generated"), "not a directory\n", "utf8");
+
+      const buildCapture = createCaptureOutput();
+      expect(runSdpCli(["build", corpusRoot], buildCapture.output)).toBe(1);
+      expect(buildCapture.readStderr()).toMatch(/^sdp build: /);
+      expect(buildCapture.readStderr().trimEnd().split("\n")).toHaveLength(1);
+      expect(buildCapture.readStderr()).not.toContain("    at ");
+
+      const viewCapture = createCaptureOutput();
+      expect(runSdpCli(["view", corpusRoot], viewCapture.output)).toBe(1);
+      expect(viewCapture.readStderr()).not.toContain("    at ");
+    } finally {
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("fails clean when the checks throw: one line, exit 1, the built graph.json stays", () => {
+    const corpusRoot = materializeExtractCorpus("anchored-binding");
+
+    try {
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["validate", corpusRoot], capture.output, {
+        validateGraph: () => {
+          throw new Error("validator exploded");
+        },
+      });
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toBe("sdp validate: validator exploded\n");
+      // The graph was cleanly built before the checks ran; the failure describes the checks,
+      // not the artifact, so graph.json stays.
+      expect(existsSync(join(corpusRoot, "generated", "graph.json"))).toBe(true);
+    } finally {
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("suppresses the empty-model note when spec files were found but none reified — a failed file is not an absent one", () => {
+    const corpusRoot = materializeExtractCorpus("invalid-wrong-builder");
+
+    try {
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", corpusRoot], capture.output);
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toContain("extract/invalid-id");
+      expect(capture.readStderr()).not.toContain("no *.sdp.ts spec files found");
+    } finally {
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("removes the temp twin on a failed build and a failed view — no partial .tmp artifact survives", () => {
+    const corpusRoot = materializeExtractCorpus("anchored-binding");
+
+    try {
+      const temporaryGraph = join(corpusRoot, "generated", "graph.json.tmp");
+      const temporaryView = join(corpusRoot, "generated", "design-review.tmp");
+      mkdirSync(join(corpusRoot, "generated"), { recursive: true });
+      writeFileSync(temporaryGraph, "partial\n", "utf8");
+      mkdirSync(temporaryView, { recursive: true });
+      writeFileSync(join(temporaryView, "index.md"), "partial\n", "utf8");
+
+      let extractions = 0;
+      const buildCapture = createCaptureOutput();
+      const buildExit = runSdpCli(["build", corpusRoot, "--check-clean"], buildCapture.output, {
+        extract: (options) => {
+          extractions += 1;
+          const result = extract(options);
+
+          return extractions === 1 ? result : { ...result, graph: { ...result.graph, edges: [] } };
+        },
+      });
+
+      expect(buildExit).toBe(1);
+      expect(existsSync(temporaryGraph)).toBe(false);
+
+      mkdirSync(temporaryView, { recursive: true });
+      writeFileSync(join(temporaryView, "index.md"), "partial\n", "utf8");
+
+      let renders = 0;
+      const viewCapture = createCaptureOutput();
+      const viewExit = runSdpCli(["view", corpusRoot, "--check-clean"], viewCapture.output, {
+        renderDesignReview: (reader) => {
+          renders += 1;
+          const pages = renderDesignReview(reader);
+
+          return renders === 1 ? pages : pages.slice(1);
+        },
+      });
+
+      expect(viewExit).toBe(1);
+      expect(existsSync(temporaryView)).toBe(false);
+    } finally {
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
   it("recognizes the published-bin path: a .bin-style symlink resolves to the entry module", () => {
     const directory = mkdtempSync(join(tmpdir(), "sdp-bin-"));
 

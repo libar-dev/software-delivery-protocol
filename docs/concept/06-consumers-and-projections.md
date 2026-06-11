@@ -89,7 +89,7 @@ The **`reader`** is the *component* behind the surface: joins and `claim`/taxono
 
 Everything else (single-field traversals, group-bys, the maturity ladder) stays a script. The discriminator is not "is it a traversal" but **"would an agent hand-rolling this get it wrong?"** Freeze a typed contract only when a **second machine consumer** appears — **the second-caller bar** (the name `00` §4 and `07` cite; §4 below applies it to writes).
 
-> Context efficiency is a measured win, not a hope: keeping the data in-process and returning only conclusions ran a multi-probe session at a measured fraction of the tokens of a grep/verb-API equivalent. Freezing answers is expensive both as bytes on disk and as tokens in context.
+> Context efficiency is a measured win, not a hope (the measured evidence, `DECISIONS.md`): keeping the data in-process and returning only conclusions runs a multi-probe agent session at a measured fraction of the tokens of a grep/verb-API equivalent. Freezing answers is expensive both as bytes on disk and as tokens in context.
 
 **Aspirational (named, deferred):** `bySymbol` and symbol-level / cross-package reach (they ride the exhaustive impact graph — §2 boundary); token-budgeted self-contained slices (`per-pack`, `change-impact-<id>`); the **MCP surface** (§7) exposing a read-only window; GraphRAG retrieval for very large graphs. All stay inside the read-only gate (§4).
 

@@ -1,4 +1,8 @@
-import { computeDeliveryFacts, isResolvingTestAnchorVerify } from "../graph/delivery-facts.js";
+import {
+  computeDeliveryFacts,
+  isEnabledExampleVerify,
+  isResolvingTestAnchorVerify,
+} from "../graph/delivery-facts.js";
 import { authoredEdgeTypes } from "../graph/schema.js";
 import type {
   DeliveryFactName,
@@ -422,13 +426,9 @@ export function createReader(graph: GraphSchema): Reader {
         }
 
         const example = index.primitivesById.get(edge.from);
-        // An example confers the binding only along its `03` §1 contract row — a *declared*
-        // `verifies` edge from an enabled example: an off-contract claim confers nothing,
-        // exactly as in the derived facts (fail closed).
-        const enabled =
-          edge.claim === "declared" &&
-          example?.specKind === "example" &&
-          anchorVerified(example.id);
+        // The shared enabled-example rule (delivery-facts): one predicate decides conferral for
+        // the decode and the derived facts, so the two surfaces can never disagree (fail closed).
+        const enabled = isEnabledExampleVerify(edge, index.nodesById, anchorVerified);
 
         return {
           verifierId: edge.from,

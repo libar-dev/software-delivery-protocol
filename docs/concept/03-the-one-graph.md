@@ -22,7 +22,7 @@ Two pure steps: `graph = f(repo)` and `output = f(graph)`. The extractor is the 
 
 ### What the extractor reads
 
-- **Typed spec files** — every `*.sdp.ts` under the extraction root (conventionally `/specs/`; discovery is by suffix alone — the `.sdp.ts` extension, MD-15) — the declared layer: specs, packs, relations.
+- **Typed spec files** — every `*.sdp.ts` under the extraction root (conventionally `/specs/`; discovery is by suffix alone, outside tooling-output and dot-directories — the `.sdp.ts` extension, MD-15) — the declared layer: specs, packs, relations.
 - **Source-code anchors** — the anchored layer: an **anchor** binds a code location to a spec ID — identity, an optional label, and one `satisfies`/`verifies` target; richer structural facts are aspirational (`04` §2). Anchors carry *no* intent (see `04`).
 - **Structural facts** — the inferred layer: machine-derived structure (imports, calls, symbol identity). Designed-in — the `claim` value and the advisory edge row exist, and every consumer decodes them — but **empty in the MVP**: the entry adapters and file-level impact resolve off the curated layers (`06` §2), so nothing yet needs an inferred edge; the first producer is the aspirational impact graph.
 

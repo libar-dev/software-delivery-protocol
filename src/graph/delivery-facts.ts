@@ -41,6 +41,32 @@ export function isResolvingTestAnchorVerify(
   );
 }
 
+/**
+ * The one enabled-example rule — the declared twin of the resolving-test-anchor rule: a declared
+ * `verifies` edge confers the binding only along its `02` §2 contract row — its source resolves,
+ * by first carrier exactly as the graph index keys, to an `example`-kind `Primitive` that a
+ * resolving test anchor binds. Shared by delivery-fact derivation and the reader's enabled decode
+ * so the two conferral surfaces can never disagree — including on a duplicate-id graph, where
+ * both key the same first carrier (the duplicate-ids check reports the ambiguity loudly, L2).
+ * The verifies-linkage check stays the per-cause loud twin: it names *why* a declared verifier
+ * confers nothing; this predicate only decides *whether*.
+ */
+export function isEnabledExampleVerify(
+  edge: GraphEdge,
+  nodesById: ReadonlyMap<string, GraphNode>,
+  anchorVerified: (verifierId: string) => boolean,
+): boolean {
+  if (edge.type !== "verifies" || edge.claim !== "declared") {
+    return false;
+  }
+
+  const source = nodesById.get(edge.from);
+
+  return (
+    source?.nodeType === "Primitive" && source.specKind === "example" && anchorVerified(source.id)
+  );
+}
+
 export function computeDeliveryFacts(
   nodes: readonly GraphNode[],
   edges: readonly GraphEdge[],
@@ -84,15 +110,11 @@ export function computeDeliveryFacts(
   const hasVerifier = new Set<string>(anchorVerified);
 
   for (const edge of edges) {
-    if (edge.type !== "verifies" || edge.claim !== "declared" || !primitivesById.has(edge.to)) {
+    if (!primitivesById.has(edge.to)) {
       continue;
     }
 
-    const verifier = primitivesById.get(edge.from);
-    const verifierIsEnabledExample =
-      verifier?.specKind === "example" && anchorVerified.has(verifier.id);
-
-    if (verifierIsEnabledExample) {
+    if (isEnabledExampleVerify(edge, nodesById, (verifierId) => anchorVerified.has(verifierId))) {
       hasVerifier.add(edge.to);
     }
   }

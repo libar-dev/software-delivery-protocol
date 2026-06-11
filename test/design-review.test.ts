@@ -175,6 +175,59 @@ describe("the Design Review — the one generated read-only view", () => {
     expect(page).not.toContain("the enabled verifying binding");
   });
 
+  it("names the off-contract claim, never a missing anchor, when a bound example's edge is off-contract", () => {
+    // A resolving test anchor binds the example, but its own verifies edge rides an inferred
+    // claim — blaming a missing anchor would send the reader hunting for one that exists.
+    const graph = deriveFixtureGraph({
+      specs: [
+        spec({
+          id: specId("spec:orders.create-order"),
+          title: "Create order",
+          kind: "behavior",
+          altitude: "feature",
+          readiness: "idea",
+          intent: { outcome: "Turn a valid cart into an order." },
+        }),
+        spec({
+          id: specId("spec:orders.create-order.valid-cart"),
+          title: "Valid cart creates an order",
+          kind: "example",
+          altitude: "story",
+          readiness: "idea",
+          intent: { outcome: "Verify the happy path." },
+        }),
+      ],
+      anchors: [
+        specTest({
+          id: testAnchorId("test:orders.create-order.valid-cart"),
+          verifies: specId("spec:orders.create-order.valid-cart"),
+        }),
+      ],
+    });
+    const foreign: GraphSchema = {
+      ...graph,
+      edges: [
+        ...graph.edges,
+        {
+          from: "spec:orders.create-order.valid-cart",
+          type: "verifies",
+          to: "spec:orders.create-order",
+          claim: "inferred",
+        },
+      ],
+    };
+
+    const page = pageByPath(
+      renderDesignReview(createReader(foreign)),
+      "spec/orders.create-order.md",
+    );
+
+    expect(page).toContain(
+      "**not enabled** (an off-contract `verifies` edge — it confers no verifier binding)",
+    );
+    expect(page).not.toContain("no test anchor binds this example");
+  });
+
   it("renders the pack as a review unit with the verifier gaps surfaced", () => {
     const packPage = pageByPath(examplePages, "pack/checkout-v1.md");
 

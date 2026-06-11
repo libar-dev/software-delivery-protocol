@@ -18,9 +18,12 @@ import type { Finding, Severity } from "../validate/contracts.js";
  * Static reification (`04` §1): a spec file is a JSON file that TypeScript happens to validate
  * (P5), so reification reads the AST and never evaluates — no imports are followed, no builder is
  * called (evaluation is the phantom-value trap MD-14 closes). Recognized builders are matched by
- * import binding from this one module specifier — named imports (authored aliasing survives) and
- * namespace imports (`ns.builder(…)`), which exhaust the package's import surface, as it ships no
- * default export — so lookalike builders from other modules stay non-static.
+ * import binding from this one module specifier — named imports (authored aliasing survives),
+ * namespace imports (`ns.builder(…)`), and a default-import local treated the same (the package
+ * ships no default export, but an interop consumer can author through one) — so lookalike
+ * builders from other modules stay non-static. The boundary is the import declaration: a binding
+ * reached any other way (`require`, a re-aliased local, an element access) is out of contract and
+ * stays out of the graph.
  */
 export const PROTOCOL_MODULE_SPECIFIER = "@libar-dev/software-delivery-protocol";
 
@@ -31,9 +34,12 @@ export const PROTOCOL_MODULE_SPECIFIER = "@libar-dev/software-delivery-protocol"
  * build fails; content failures (`non-static-section` · `unrecognized-statement` ·
  * `unrecognized-property` · `misplaced-authoring`) degrade loudly — one property, statement, or
  * call is dropped and the rest survives (graceful partial extraction, L3). The content-tier ids
- * name the *tier*, not the artifact: `non-static-section` also covers an anchor's degradable
- * `label`, `unrecognized-property` covers a spec or pack property outside its authored shape (a
- * typoed section name must never silently fall out of the graph, L2), and `misplaced-authoring`
+ * name the *tier*, not the artifact: `non-static-envelope` is the general envelope-failure id —
+ * a non-static or opaque entry, a required field missing, a property name authored twice —
+ * everything that leaves the carrier unconstructable; `non-static-section` also covers an
+ * anchor's degradable `label`, `unrecognized-property` covers a spec or pack property outside
+ * its authored shape (a typoed section name must never silently fall out of the graph, L2), and
+ * `misplaced-authoring`
  * covers any protocol authoring call outside its recognized surface (an anchor builder not in
  * top-level-const position; a `spec(…)`/`pack(…)` call in a non-`.sdp.ts` file) — a binding the
  * author believes exists must never silently fall out of the graph (L2). `reserved-property` is
@@ -184,7 +190,11 @@ export function unwrapTransparent(node: Node): Node {
 export interface ProtocolBindings {
   /** Local name → exported builder name, from named imports. */
   readonly named: ReadonlyMap<string, string>;
-  /** Locals bound by `import * as ns`: every protocol builder is reachable as a property. */
+  /**
+   * Locals bound by `import * as ns` — every protocol builder is reachable as a property — and by
+   * a default import (the package ships no default export, but an interop consumer can still
+   * author through one; treating it the same keeps the binding from silently falling out, L2).
+   */
   readonly namespaceLocals: ReadonlySet<string>;
 }
 
@@ -208,6 +218,12 @@ export function collectProtocolBindings(sourceFile: SourceFile): ProtocolBinding
     if (namespaceImport !== undefined) {
       namespaceLocals.add(namespaceImport.getText());
     }
+
+    const defaultImport = importDeclaration.getDefaultImport();
+
+    if (defaultImport !== undefined) {
+      namespaceLocals.add(defaultImport.getText());
+    }
   }
 
   return { named, namespaceLocals };
@@ -219,22 +235,77 @@ export interface ResolvedBuilderCall {
 }
 
 /**
+ * A binding identifier matched by text can be lexically shadowed — a parameter or local sharing
+ * the import's name is somebody else's value, and attributing its calls to the protocol would
+ * raise spurious findings. The walk is syntactic (no type checker, MD-14): parameters, variable
+ * declarations, function/class declaration names, and catch bindings on the path to the file top.
+ */
+function isShadowedAtUse(use: Node, name: string): boolean {
+  for (let scope = use.getParent(); scope !== undefined; scope = scope.getParent()) {
+    if (
+      (Node.isFunctionDeclaration(scope) ||
+        Node.isFunctionExpression(scope) ||
+        Node.isArrowFunction(scope) ||
+        Node.isMethodDeclaration(scope) ||
+        Node.isConstructorDeclaration(scope) ||
+        Node.isGetAccessorDeclaration(scope) ||
+        Node.isSetAccessorDeclaration(scope)) &&
+      scope.getParameters().some((parameter) => parameter.getName() === name)
+    ) {
+      return true;
+    }
+
+    if (Node.isCatchClause(scope) && scope.getVariableDeclaration()?.getName() === name) {
+      return true;
+    }
+
+    if (Node.isBlock(scope) || Node.isModuleBlock(scope)) {
+      for (const statement of scope.getStatements()) {
+        if (
+          Node.isVariableStatement(statement) &&
+          statement.getDeclarations().some((declaration) => declaration.getName() === name)
+        ) {
+          return true;
+        }
+
+        if (
+          (Node.isFunctionDeclaration(statement) || Node.isClassDeclaration(statement)) &&
+          statement.getName() === name
+        ) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
  * The callee form mirrors the import form: a bare identifier from a named import, or
- * `ns.builder(…)` through a namespace-import local. Anything else (an element access, a chained
- * property) is not an import binding of the protocol package, so it stays non-static.
+ * `ns.builder(…)` through a namespace- or default-import local — unless the binding is lexically
+ * shadowed at the use site. Anything else (an element access, a re-aliased local, a `require`
+ * binding) is not an import binding of the protocol package, so it stays non-static and out of
+ * the graph — the recognized-forms boundary the misplaced-authoring sweep polices.
  */
 export function resolveProtocolCalleeBuilder(
   callee: Node,
   bindings: ProtocolBindings,
 ): string | undefined {
   if (Node.isIdentifier(callee)) {
-    return bindings.named.get(callee.getText());
+    const builder = bindings.named.get(callee.getText());
+
+    return builder !== undefined && !isShadowedAtUse(callee, callee.getText())
+      ? builder
+      : undefined;
   }
 
   if (Node.isPropertyAccessExpression(callee)) {
     const qualifier = callee.getExpression();
 
-    return Node.isIdentifier(qualifier) && bindings.namespaceLocals.has(qualifier.getText())
+    return Node.isIdentifier(qualifier) &&
+      bindings.namespaceLocals.has(qualifier.getText()) &&
+      !isShadowedAtUse(qualifier, qualifier.getText())
       ? callee.getName()
       : undefined;
   }
@@ -272,13 +343,17 @@ export function readPropertyName(property: PropertyAssignment): string | undefin
 }
 
 /**
- * A property name authored twice in one carrier literal is ambiguity, never detail: evaluation
- * keeps the last value while diagnostics key on the first id seen, so the carrier fails whole.
- * tsc reports the duplication (TS1117) to typechecking authors; the extractor reads files
- * standalone, so it is the backstop.
+ * A property name authored twice at one object tier is ambiguity, never detail: evaluation keeps
+ * the last value while diagnostics key on the first seen. tsc reports the duplication (TS1117) to
+ * typechecking authors; the extractor reads files standalone, so it is the backstop — at every
+ * tier: the envelope fails the carrier whole, the section tier drops the repeat and keeps the
+ * first authored value (L3). The consequence clause names the caller's tier.
  */
-export function duplicatePropertyMessage(name: string): string {
-  return `property "${name}" is authored more than once in this carrier (ambiguity is loud, L2); evaluation would keep the last value silently, so the carrier is not extracted`;
+export function duplicatePropertyMessage(
+  name: string,
+  consequence = "so the carrier is not extracted",
+): string {
+  return `property "${name}" is authored more than once in this carrier (ambiguity is loud, L2); evaluation would keep the last value silently, ${consequence}`;
 }
 
 export function reifyStaticString(node: Node, path: string): StaticResult {
@@ -300,11 +375,18 @@ export type IdReification =
       readonly reason: string;
     };
 
+function namespacesLabel(namespaces: readonly string[]): string {
+  return namespaces.length === 1
+    ? `"${namespaces[0] ?? ""}" is required`
+    : `one of ${namespaces.map((entry) => `"${entry}"`).join(" · ")} is required`;
+}
+
 /**
  * An id slot accepts a string literal or an id-builder unwrap (`specId` / `packId` / `ref` /
  * `codeAnchorId` / `testAnchorId` around a string literal); the reified string must clear the
- * `parseId` grammar and carry one of the slot's namespaces — the graph is never keyed on a
- * malformed id.
+ * `parseId` grammar and carry one of the slot's namespaces — and, when a builder wraps it, one of
+ * that builder's own namespaces (its runtime contract, restated statically) — the graph is never
+ * keyed on a malformed id or on a carrier evaluation would have rejected.
  */
 export function reifyStaticIdExpression(
   node: Node,
@@ -314,9 +396,11 @@ export function reifyStaticIdExpression(
 ): IdReification {
   const unwrapped = unwrapTransparent(node);
   const builderCall = resolveBuilderCall(unwrapped, bindings);
+  const builderNamespaces =
+    builderCall === undefined ? undefined : ID_UNWRAP_BUILDERS.get(builderCall.builder);
   let stringResult: StaticResult;
 
-  if (builderCall !== undefined && ID_UNWRAP_BUILDERS.has(builderCall.builder)) {
+  if (builderCall !== undefined && builderNamespaces !== undefined) {
     const [argument] = builderCall.call.getArguments();
     stringResult =
       argument === undefined || builderCall.call.getArguments().length !== 1
@@ -341,17 +425,27 @@ export function reifyStaticIdExpression(
   try {
     const parsed = parseId(idText);
 
-    if (!expectedNamespaces.includes(parsed.namespace)) {
-      const expectedLabel =
-        expectedNamespaces.length === 1
-          ? `"${expectedNamespaces[0] ?? ""}" is required`
-          : `one of ${expectedNamespaces.map((entry) => `"${entry}"`).join(" · ")} is required`;
-
+    // The wrapping builder's contract checks first: it is the narrower statement, and the one
+    // evaluation would enforce (the builder throws on a foreign namespace).
+    if (
+      builderCall !== undefined &&
+      builderNamespaces !== undefined &&
+      !builderNamespaces.includes(parsed.namespace)
+    ) {
       return {
         ok: false,
         kind: "invalid",
         line,
-        reason: `id "${idText}" carries namespace "${parsed.namespace}" where ${expectedLabel}`,
+        reason: `id "${idText}" carries namespace "${parsed.namespace}" where ${builderCall.builder}(…) accepts ${namespacesLabel(builderNamespaces)} — the builder's own contract, restated statically`,
+      };
+    }
+
+    if (!expectedNamespaces.includes(parsed.namespace)) {
+      return {
+        ok: false,
+        kind: "invalid",
+        line,
+        reason: `id "${idText}" carries namespace "${parsed.namespace}" where ${namespacesLabel(expectedNamespaces)}`,
       };
     }
   } catch (error) {
@@ -463,6 +557,7 @@ function reifyStaticObject(
   bindings: ProtocolBindings,
 ): StaticResult {
   const value: Record<string, unknown> = {};
+  const seenNames = new Set<string>();
 
   for (const property of objectLiteral.getProperties()) {
     if (!Node.isPropertyAssignment(property)) {
@@ -478,6 +573,18 @@ function reifyStaticObject(
     if (name === undefined) {
       return staticFailure(property, path, "computed property names are non-static");
     }
+
+    // A repeated name would last-win silently — the carrier-level duplicate guard, kept at every
+    // object tier (ambiguity is loud, L2).
+    if (seenNames.has(name)) {
+      return staticFailure(
+        property,
+        `${path}.${name}`,
+        duplicatePropertyMessage(name, "so the value cannot be reified faithfully"),
+      );
+    }
+
+    seenNames.add(name);
 
     const initializer = property.getInitializer();
 
@@ -526,6 +633,7 @@ function reifyObjectLossy(
 ): LossyObjectResult {
   const value: Record<string, unknown> = {};
   const drops: LossyDrop[] = [];
+  const seenNames = new Set<string>();
 
   for (const property of objectLiteral.getProperties()) {
     if (!Node.isPropertyAssignment(property)) {
@@ -553,6 +661,23 @@ function reifyObjectLossy(
     }
 
     const propertyPath = `${path}.${name}`;
+
+    // A repeated name would last-win silently; at the section tier the repeat drops with a
+    // warning and the first authored value survives (graceful partial extraction, L3).
+    if (seenNames.has(name)) {
+      drops.push({
+        droppedPath: propertyPath,
+        failurePath: propertyPath,
+        line: property.getStartLineNumber(),
+        reason: duplicatePropertyMessage(
+          name,
+          "so the repeat drops and the first authored value survives",
+        ),
+      });
+      continue;
+    }
+
+    seenNames.add(name);
     const initializer = property.getInitializer();
 
     if (initializer === undefined) {
@@ -815,6 +940,7 @@ function reifySpecCall(
   const subjectId = peekId(objectLiteral, ["spec"], bindings);
   const data: Record<string, unknown> = {};
   const authoredNames = new Set<string>();
+  let sawOpaqueEntry = false;
   let envelopeOk = true;
 
   const failEnvelope = (line: number, message: string, path?: string): void => {
@@ -834,6 +960,15 @@ function reifySpecCall(
 
   for (const property of objectLiteral.getProperties()) {
     if (!Node.isPropertyAssignment(property)) {
+      // A shorthand entry still names its field; a spread or accessor could carry any field —
+      // either way the absence pass must not call an authored field missing on top of this
+      // finding (a non-static field is not an absent one).
+      if (Node.isShorthandPropertyAssignment(property)) {
+        authoredNames.add(property.getName());
+      } else {
+        sawOpaqueEntry = true;
+      }
+
       failEnvelope(
         property.getStartLineNumber(),
         "the spec object literal must be fresh: only plain property assignments are static (a spread or shorthand entry could carry envelope fields opaquely)",
@@ -844,6 +979,7 @@ function reifySpecCall(
     const name = readPropertyName(property);
 
     if (name === undefined) {
+      sawOpaqueEntry = true;
       failEnvelope(property.getStartLineNumber(), "computed property names are non-static");
       continue;
     }
@@ -1010,9 +1146,10 @@ function reifySpecCall(
 
   // Absence is judged on authored names, never on reified values: every genuinely missing field
   // is reported in one pass, and a field that was authored but failed to reify already carries
-  // its own finding.
+  // its own finding. An opaque entry (spread, accessor, computed name) could carry any field, so
+  // beside one nothing can honestly be called missing.
   for (const required of ["id", "kind", "altitude", "readiness"]) {
-    if (!authoredNames.has(required)) {
+    if (!authoredNames.has(required) && !sawOpaqueEntry) {
       failEnvelope(
         call.getStartLineNumber(),
         `envelope field "${required}" is missing — the typed envelope cannot be constructed without it`,
@@ -1096,6 +1233,7 @@ function reifyPackCall(
   const subjectId = peekId(objectLiteral, ["pack"], bindings);
   const data: Record<string, unknown> = {};
   const authoredNames = new Set<string>();
+  let sawOpaqueEntry = false;
   let envelopeOk = true;
 
   const failEnvelope = (line: number, message: string, path?: string): void => {
@@ -1115,6 +1253,14 @@ function reifyPackCall(
 
   for (const property of objectLiteral.getProperties()) {
     if (!Node.isPropertyAssignment(property)) {
+      // The absence pass must not call an authored field missing (a non-static field is not an
+      // absent one): a shorthand entry still names its field; a spread or accessor is opaque.
+      if (Node.isShorthandPropertyAssignment(property)) {
+        authoredNames.add(property.getName());
+      } else {
+        sawOpaqueEntry = true;
+      }
+
       failEnvelope(
         property.getStartLineNumber(),
         "the pack object literal must be fresh: only plain property assignments are static (a spread or shorthand entry could carry envelope fields opaquely)",
@@ -1125,6 +1271,7 @@ function reifyPackCall(
     const name = readPropertyName(property);
 
     if (name === undefined) {
+      sawOpaqueEntry = true;
       failEnvelope(property.getStartLineNumber(), "computed property names are non-static");
       continue;
     }
@@ -1228,7 +1375,7 @@ function reifyPackCall(
 
   // Absence is judged on authored names, never on reified values (see `reifySpecCall`).
   for (const required of ["id", "specs"]) {
-    if (!authoredNames.has(required)) {
+    if (!authoredNames.has(required) && !sawOpaqueEntry) {
       failEnvelope(
         call.getStartLineNumber(),
         `envelope field "${required}" is missing — the pack manifest cannot be constructed without it`,

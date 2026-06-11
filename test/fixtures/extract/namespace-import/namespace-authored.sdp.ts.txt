@@ -1,6 +1,6 @@
 import * as sdp from "@libar-dev/software-delivery-protocol";
 
-// The namespace import is the package's other import form (it ships no default export):
+// The namespace import is one of the recognized import forms (named · namespace · default):
 // `sdp.spec(…)` must extract exactly as the named-import spelling does.
 export const namespaceParentSpec = sdp.spec({
   id: sdp.specId("spec:orders.namespace-parent"),

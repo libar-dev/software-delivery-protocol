@@ -562,6 +562,109 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
       expect(context?.deliveryFacts).toEqual([]);
     });
 
+    it("never confers has-verifier from an anchor-bound non-example verifier — the kind gate of the shared enabled-example rule", () => {
+      // Extractor-reachable, not foreign: a behavior-kind spec declares verifies and a test
+      // anchor binds it. The enabled-example rule's kind gate must hold on both conferral
+      // surfaces at once — decode and derived facts ride the one shared predicate.
+      const graph = deriveFixtureGraph({
+        specs: [
+          spec({
+            id: specId("spec:orders.create-order"),
+            title: "Create order",
+            kind: "behavior",
+            altitude: "feature",
+            readiness: "idea",
+            intent: { outcome: "Turn a valid cart into an order." },
+          }),
+          spec({
+            id: specId("spec:orders.create-order.smoke"),
+            title: "Smoke check",
+            kind: "behavior",
+            altitude: "story",
+            readiness: "idea",
+            intent: { outcome: "A non-example verifier confers nothing." },
+            relations: [verifies(specId("spec:orders.create-order"))],
+          }),
+        ],
+        anchors: [
+          specTest({
+            id: testAnchorId("test:orders.create-order.smoke"),
+            verifies: specId("spec:orders.create-order.smoke"),
+          }),
+        ],
+      });
+
+      const context = createReader(graph).specContext("spec:orders.create-order");
+
+      expect(context?.verifiers).toEqual([
+        expect.objectContaining({
+          verifierId: "spec:orders.create-order.smoke",
+          via: "example",
+          claim: "declared",
+          enabled: false,
+        }),
+      ]);
+      expect(context?.deliveryFacts).toEqual([]);
+    });
+
+    it("keys the verifier by first carrier on a duplicate-id graph — decode and derived facts agree", () => {
+      const graph = deriveFixtureGraph({
+        specs: [
+          spec({
+            id: specId("spec:orders.create-order"),
+            title: "Create order",
+            kind: "behavior",
+            altitude: "feature",
+            readiness: "idea",
+            intent: { outcome: "Turn a valid cart into an order." },
+          }),
+          spec({
+            id: specId("spec:orders.create-order.valid-cart"),
+            title: "Valid cart creates an order",
+            kind: "example",
+            altitude: "story",
+            readiness: "idea",
+            intent: { outcome: "Verify the happy path." },
+            relations: [verifies(specId("spec:orders.create-order"))],
+          }),
+        ],
+        anchors: [
+          specTest({
+            id: testAnchorId("test:orders.create-order.valid-cart"),
+            verifies: specId("spec:orders.create-order.valid-cart"),
+          }),
+        ],
+      });
+      const anchorNode = graph.nodes.find((node) => node.nodeType === "Anchor");
+
+      if (anchorNode === undefined) {
+        throw new Error("the fixture graph must carry an Anchor node");
+      }
+
+      // A foreign producer re-carries the example's id on an Anchor node ordered first. The
+      // duplicate-ids check owns the ambiguity loudly; until it is fixed, both conferral
+      // surfaces key the same first carrier, so neither confers from the declared edge.
+      const foreign: GraphSchema = {
+        ...graph,
+        nodes: [{ ...anchorNode, id: "spec:orders.create-order.valid-cart" }, ...graph.nodes],
+      };
+
+      const reader = createReader(foreign);
+      const context = reader.specContext("spec:orders.create-order");
+
+      expect(
+        reader.findings().some((finding) => finding.validatorId === graphValidatorIds.duplicateIds),
+      ).toBe(true);
+      expect(context?.verifiers).toEqual([
+        expect.objectContaining({
+          verifierId: "spec:orders.create-order.valid-cart",
+          via: "test-anchor",
+          enabled: false,
+        }),
+      ]);
+      expect(context?.deliveryFacts).toEqual([]);
+    });
+
     it("carries the claim through impact answers — machine-derived reach is marked, never promoted", () => {
       const graph = deriveFixtureGraph({
         specs: [

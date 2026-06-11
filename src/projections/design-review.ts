@@ -139,9 +139,15 @@ function describeVerifier(verifier: VerifierBinding): string {
       : "**not enabled** (an off-contract `verifies` edge — it confers no verifier binding)";
   }
 
-  return verifier.enabled
-    ? "**enabled** (a resolving test anchor binds this example)"
-    : "**not enabled** (no test anchor binds this example — it confers no verifier binding)";
+  if (verifier.enabled) {
+    return "**enabled** (a resolving test anchor binds this example)";
+  }
+
+  // Name the actual cause: an off-contract claim confers nothing even when a test anchor binds
+  // the example, so blaming a missing anchor would send the reader hunting for one that exists.
+  return verifier.claim === "declared"
+    ? "**not enabled** (no test anchor binds this example — it confers no verifier binding)"
+    : "**not enabled** (an off-contract `verifies` edge — it confers no verifier binding)";
 }
 
 function renderBindings(context: SpecContext, page: string): readonly string[] {

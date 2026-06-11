@@ -49,6 +49,7 @@ interface CliOutput {
 interface CliHooks {
   readonly extract?: typeof extract;
   readonly renderDesignReview?: typeof renderDesignReview;
+  readonly validateGraph?: typeof validateGraph;
 }
 
 const defaultCliOutput: CliOutput = {
@@ -156,9 +157,12 @@ function runBuild(
   const graphPath = join(resolvedRoot, "generated", "graph.json");
 
   // A stale projection is as dishonest as a partial one: a failed build must not leave a previous
-  // graph.json behind that downstream consumers could read as current.
+  // graph.json behind that downstream consumers could read as current — nor a half-written temp
+  // twin. Recovery is recursive+force so it can never itself throw (a `generated` that exists as
+  // a file raises ENOTDIR from a non-recursive remove) and crash out of the one-line law.
   const failBuild = (message: string): BuildOutcome => {
-    rmSync(graphPath, { force: true });
+    rmSync(graphPath, { recursive: true, force: true });
+    rmSync(`${graphPath}.tmp`, { recursive: true, force: true });
     writeStderr(output, message);
     return { exitCode: 1 };
   };
@@ -172,8 +176,13 @@ function runBuild(
     }
 
     // An empty authored model is conformant — no finding, exit 0 — but a typo'd cwd must never be
-    // a silent success, so the CLI (the invocation surface) says where it looked.
-    if (result.counts.specs === 0) {
+    // a silent success, so the CLI (the invocation surface) says where it looked. A finding that
+    // names a spec file proves spec files were found (a failed file is not an absent one), so the
+    // note stays silent beside it.
+    if (
+      result.counts.specs === 0 &&
+      !findings.some((finding) => finding.file?.endsWith(".sdp.ts"))
+    ) {
       writeStderr(
         output,
         `note: no *.sdp.ts spec files found under ${resolvedRoot} — the authored model is empty. Is this the right extraction root?\n`,
@@ -236,20 +245,29 @@ function runValidate(
     return build;
   }
 
-  const findings = validateGraph(build.graph).findings;
+  const runValidateGraph = hooks.validateGraph ?? validateGraph;
 
-  for (const finding of findings) {
-    writeStderr(output, formatFinding(finding));
+  try {
+    const findings = runValidateGraph(build.graph).findings;
+
+    for (const finding of findings) {
+      writeStderr(output, formatFinding(finding));
+    }
+
+    const errorCount = findings.filter((finding) => finding.severity === "error").length;
+    const warningCount = findings.length - errorCount;
+    writeStdout(
+      output,
+      `validate: ${String(errorCount)} errors · ${String(warningCount)} warnings (conformance + honesty over the one graph)\n`,
+    );
+
+    return { exitCode: errorCount > 0 ? 1 : 0, graph: build.graph };
+  } catch (error) {
+    // The checks ride the same one-line law as every stage past discovery. graph.json stays — it
+    // was cleanly built, and the failure describes the checks, not the artifact.
+    writeStderr(output, `sdp ${command}: ${errorMessage(error)}\n`);
+    return { exitCode: 1 };
   }
-
-  const errorCount = findings.filter((finding) => finding.severity === "error").length;
-  const warningCount = findings.length - errorCount;
-  writeStdout(
-    output,
-    `validate: ${String(errorCount)} errors · ${String(warningCount)} warnings (conformance + honesty over the one graph)\n`,
-  );
-
-  return { exitCode: errorCount > 0 ? 1 : 0, graph: build.graph };
 }
 
 /**
@@ -273,9 +291,12 @@ function runView(parsed: BuildArgs, output: CliOutput, hooks: CliHooks): number 
   }
 
   // The graph's stale-artifact law, applied to the view: a failed render must not leave a
-  // previous design-review behind that a reviewer could read as current.
+  // previous design-review behind that a reviewer could read as current — nor a partial temp
+  // tree from a write that failed mid-loop.
+  const temporaryPath = `${viewPath}.tmp`;
   const failView = (message: string): number => {
     rmSync(viewPath, { recursive: true, force: true });
+    rmSync(temporaryPath, { recursive: true, force: true });
     writeStderr(output, message);
     return 1;
   };
@@ -293,7 +314,6 @@ function runView(parsed: BuildArgs, output: CliOutput, hooks: CliHooks): number 
       }
     }
 
-    const temporaryPath = `${viewPath}.tmp`;
     rmSync(temporaryPath, { recursive: true, force: true });
 
     for (const page of pages) {

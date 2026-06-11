@@ -143,6 +143,7 @@ function reifyAnchorCall(
   const subjectId = peekId(objectLiteral, ANCHOR_ID_NAMESPACES[builder], bindings);
   const data: Record<string, unknown> = {};
   const authoredNames = new Set<string>();
+  let sawOpaqueEntry = false;
   let envelopeOk = true;
 
   const failEnvelope = (line: number, message: string, path?: string): void => {
@@ -162,6 +163,14 @@ function reifyAnchorCall(
 
   for (const property of objectLiteral.getProperties()) {
     if (!Node.isPropertyAssignment(property)) {
+      // The absence pass must not call an authored field missing (a non-static field is not an
+      // absent one): a shorthand entry still names its field; a spread or accessor is opaque.
+      if (Node.isShorthandPropertyAssignment(property)) {
+        authoredNames.add(property.getName());
+      } else {
+        sawOpaqueEntry = true;
+      }
+
       failEnvelope(
         property.getStartLineNumber(),
         "the anchor object literal must be fresh: only plain property assignments are static (a spread or shorthand entry could carry binding fields opaquely)",
@@ -172,6 +181,7 @@ function reifyAnchorCall(
     const name = readPropertyName(property);
 
     if (name === undefined) {
+      sawOpaqueEntry = true;
       failEnvelope(property.getStartLineNumber(), "computed property names are non-static");
       continue;
     }
@@ -259,7 +269,7 @@ function reifyAnchorCall(
 
   // Absence is judged on authored names, never on reified values (see `reifySpecCall`).
   for (const required of ["id", targetField]) {
-    if (!authoredNames.has(required)) {
+    if (!authoredNames.has(required) && !sawOpaqueEntry) {
       failEnvelope(
         call.getStartLineNumber(),
         `anchor field "${required}" is missing — the binding cannot be constructed without it`,
@@ -284,8 +294,12 @@ function reifyAnchorCall(
 /**
  * Reifies the anchor constants of one source file standalone — no type checker, no import
  * following (static reification without execution, MD-14). Also runs the misplaced-authoring scan:
- * any protocol authoring call outside its recognized surface warns loudly (L2 — a binding the
- * author believes exists must never silently fall out of the graph) and is not extracted.
+ * a protocol authoring call outside its recognized surface warns loudly (L2 — a binding the
+ * author believes exists must never silently fall out of the graph) and is not extracted. The
+ * scan reaches exactly as far as the import-binding contract (`PROTOCOL_MODULE_SPECIFIER`):
+ * a call through an out-of-contract binding (`require`, a re-aliased local, an element access)
+ * is indistinguishable from any other library's call without evaluating, so it stays silent —
+ * the named boundary of the L2 claim, not an oversight.
  */
 export function reifyAnchorSourceFile(
   sourceFile: SourceFile,

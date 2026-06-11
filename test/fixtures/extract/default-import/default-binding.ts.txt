@@ -1,0 +1,8 @@
+import sdp from "@libar-dev/software-delivery-protocol";
+
+// The package ships no default export, but an interop consumer can still author through a
+// default import — the binding must extract exactly as the namespace spelling does (L2).
+export const defaultImportBinding = sdp.codeAnchor({
+  id: sdp.codeAnchorId("impl:orders.default-import-surface"),
+  satisfies: sdp.ref("spec:orders.default-import-parent"),
+});

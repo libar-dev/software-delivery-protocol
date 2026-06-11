@@ -171,8 +171,10 @@ export function extract(options: ExtractOptions): ExtractionResult {
   for (const file of files.anchorCandidateFiles) {
     const sourceText = readFileSync(file.absolutePath, "utf8");
 
-    // Anchors are recognized by import binding, which requires this literal in an import
-    // declaration — so a plain text test soundly skips the AST work for the bulk of source files.
+    // Anchors are recognized by import binding, and the contract takes the specifier written
+    // verbatim — so a raw text test skips the AST work for the bulk of source files. An
+    // escape-spelled specifier (same cooked value, different raw text) sits outside the binding
+    // contract here, exactly as `require` and re-aliased locals do.
     if (!sourceText.includes(PROTOCOL_MODULE_SPECIFIER)) {
       continue;
     }

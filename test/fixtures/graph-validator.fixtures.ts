@@ -14,7 +14,7 @@ import type { FixtureModel } from "../helpers/fixture-graph.js";
  * `honesty/authoring-shape` catches the non-fresh object that slips past TypeScript's
  * excess-property check; and the on-disk corpus `invalid-hand-authored-delivery-fact-in-section`
  * (`test/extract.test.ts`) proves the same end-to-end from a source file the typechecker never
- * sees. The once-reserved extractor-era names are all active on-disk corpora now:
+ * sees. The once-reserved extractor-era names are all active on-disk corpora:
  * `invalid-non-static-id` · `invalid-non-static-section` · `invalid-hand-authored-satisfies-edge`
  * · `invalid-ready-with-unresolved-dependency` · `invalid-ready-with-target-below-defined`.
  */

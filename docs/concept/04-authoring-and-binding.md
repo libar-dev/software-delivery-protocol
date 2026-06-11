@@ -47,7 +47,7 @@ If a non-static expression appears, the extractor responds in **two tiers**, dra
 - **Envelope fields are hard errors.** A non-static `id`, `kind`, `altitude`, `readiness`, or any **relation target** **fails the build** — these are the keys the graph is built on, so the extractor must never guess, drop, or anonymise them. A spec whose identity or position cannot be reified deterministically is not extracted at all.
 - **Optional section detail degrades gracefully.** A non-static expression *inside an optional section* drops *that one property* with a warning, keeping the rest of the spec (graceful partial extraction, L3). It never aborts the build for section detail.
 
-A lint rule (`sdp/spec-static`) can flag both tiers earlier, but the extractor is the backstop.
+A designed-for lint rule (`sdp/spec-static`) would flag both tiers earlier; the extractor is the backstop.
 
 ### Enrichment in place, refinement into children
 

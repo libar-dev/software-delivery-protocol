@@ -267,6 +267,54 @@ describe("extraction corpora", () => {
     expect(result.graph.edges).toEqual([]);
     expect(JSON.stringify(result.graph.nodes)).not.toContain("spec:orders.promoted-child");
   });
+
+  it("invalid-wrong-builder: an id wrapping the wrong builder is an invalid-id hard error — the builder's contract, restated statically", () => {
+    const result = extract({ root: corpusRoot("invalid-wrong-builder") });
+    const errors = result.report.findings.filter((finding) => finding.severity === "error");
+
+    expect(errors).toHaveLength(2);
+    expect(errors.every((finding) => finding.validatorId === extractFindingIds.invalidId)).toBe(
+      true,
+    );
+    expect(
+      errors.every((finding) =>
+        finding.message.includes("the builder's own contract, restated statically"),
+      ),
+    ).toBe(true);
+    expect(result.counts).toEqual({ specs: 0, packs: 0, anchors: 0 });
+    expect(result.graph.nodes).toEqual([]);
+  });
+
+  it("opaque-envelope-entries: a shorthand or spread entry never double-reports its fields as missing", () => {
+    const result = extract({ root: corpusRoot("opaque-envelope-entries") });
+    const errors = result.report.findings.filter((finding) => finding.severity === "error");
+
+    // One fresh-literal error per carrier — and no false absence report stacked on top: a
+    // non-static field is not an absent one.
+    expect(errors).toHaveLength(2);
+    expect(
+      errors.every((finding) => finding.validatorId === extractFindingIds.nonStaticEnvelope),
+    ).toBe(true);
+    expect(result.report.findings.some((finding) => finding.message.includes("is missing"))).toBe(
+      false,
+    );
+    expect(result.counts.specs).toBe(0);
+  });
+
+  it("duplicate-section-property: a repeated name inside section content drops with a warning; the first authored value survives", () => {
+    const result = extract({ root: corpusRoot("duplicate-section-property") });
+
+    expect(result.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
+
+    const warnings = result.report.findings.filter((finding) => finding.severity === "warning");
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]?.validatorId).toBe(extractFindingIds.nonStaticSection);
+    expect(warnings[0]?.path).toBe("intent.outcome");
+    expect(warnings[0]?.message).toContain("authored more than once");
+
+    const node = primitiveNode(result.graph, "spec:orders.nested-duplicate");
+    expect(node?.sections?.intent?.outcome).toBe("first authored value");
+  });
 });
 
 /**
@@ -509,6 +557,33 @@ describe("import-surface and discovery corpora", () => {
     expect(result.graph.nodes.map((node) => node.id)).toEqual([
       "spec:orders.dot-directory-surface",
       "impl:orders.dot-directory-binding",
+    ]);
+  });
+
+  it("shadowed-namespace-local: a parameter or local shadowing the import is somebody else's value — no spurious misplaced-authoring", () => {
+    const result = extract({ root: corpusRoot("shadowed-namespace-local") });
+
+    expect(
+      result.report.findings.filter(
+        (finding) => finding.validatorId === extractFindingIds.misplacedAuthoring,
+      ),
+    ).toEqual([]);
+    expect(result.counts).toEqual({ specs: 0, packs: 0, anchors: 1 });
+    expect(result.graph.nodes.map((node) => node.id)).toEqual(["impl:orders.shadow-surface"]);
+  });
+
+  it("default-import: a binding authored through a default-import local extracts — it never silently falls out (L2)", () => {
+    const result = extract({ root: corpusRoot("default-import") });
+
+    expect(result.report.findings).toEqual([]);
+    expect(result.counts).toEqual({ specs: 0, packs: 0, anchors: 1 });
+    expect(result.graph.edges).toEqual([
+      {
+        from: "impl:orders.default-import-surface",
+        type: "satisfies",
+        to: "spec:orders.default-import-parent",
+        claim: "anchored",
+      },
     ]);
   });
 });
