@@ -30,6 +30,7 @@ Every line is a one-hop neighbor over the curated graph: changing this spec touc
 - decidedBy → [`spec:decisions.order-lifecycle`](decisions.order-lifecycle.md) — Order lifecycle keeps validation before creation `[declared]`
 - [`spec:orders.create-order`](orders.create-order.md) — Customer creates an order — refines → this spec `[declared]`
 - [`spec:orders.order-model`](orders.order-model.md) — Order-management domain vocabulary — refines → this spec `[declared]`
+- [`spec:orders.order-placement-flow`](orders.order-placement-flow.md) — Order placement flow — refines → this spec `[declared]`
 
 ## Findings
 

@@ -2,7 +2,7 @@
 
 `spec:orders.create-order.valid-cart` · Example / Scenario (`example`) · altitude `story` · authored in [specs/orders/create-order-valid-cart.sdp.ts](../../../specs/orders/create-order-valid-cart.sdp.ts) `[declared]`
 
-**Readiness:** stated `defined` · structural floor reached: `ready`
+**Readiness:** stated `ready` · structural floor reached: `ready`
 
 ## Bindings
 

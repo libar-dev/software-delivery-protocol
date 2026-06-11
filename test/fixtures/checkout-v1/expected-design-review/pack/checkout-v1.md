@@ -10,13 +10,15 @@
 |---|---|---|---|---|---|---|
 | [`spec:decisions.order-lifecycle`](../spec/decisions.order-lifecycle.md) Order lifecycle keeps validation before creation | decision | feature | defined | ready | none | none |
 | [`spec:orders.create-order`](../spec/orders.create-order.md) Customer creates an order | behavior | feature | defined | ready | present | present |
+| [`spec:orders.create-order.api-contract`](../spec/orders.create-order.api-contract.md) Create-order API contract | contract | story | idea | idea | none | none |
 | [`spec:orders.create-order.invalid-cart`](../spec/orders.create-order.invalid-cart.md) Invalid cart is rejected | example | story | defined | ready | none | none |
-| [`spec:orders.create-order.valid-cart`](../spec/orders.create-order.valid-cart.md) Valid cart creates an order | example | story | defined | ready | none | present |
+| [`spec:orders.create-order.valid-cart`](../spec/orders.create-order.valid-cart.md) Valid cart creates an order | example | story | ready | ready | none | present |
 | [`spec:orders.order-inventory-rule`](../spec/orders.order-inventory-rule.md) Order creation requires available inventory | rule | story | defined | ready | none | none |
 | [`spec:orders.order-latency-constraint`](../spec/orders.order-latency-constraint.md) Create-order latency stays within checkout budget | constraint | story | defined | ready | none | none |
 | [`spec:orders.order-management`](../spec/orders.order-management.md) Order management | behavior | epic | defined | ready | none | none |
 | [`spec:orders.order-model`](../spec/orders.order-model.md) Order-management domain vocabulary | model | story | defined | ready | none | none |
-| [`spec:orders.order-total-rule`](../spec/orders.order-total-rule.md) Order total matches cart math | rule | story | defined | ready | none | none |
+| [`spec:orders.order-placement-flow`](../spec/orders.order-placement-flow.md) Order placement flow | workflow | feature | scoped | scoped | none | none |
+| [`spec:orders.order-total-rule`](../spec/orders.order-total-rule.md) Order total matches cart math | rule | story | defined | ready | present | none |
 
 **Vocabulary (`modelRefs`):** [`spec:orders.order-model`](../spec/orders.order-model.md) — Order-management domain vocabulary
 
@@ -25,11 +27,13 @@
 Members with no verifier binding — a surfaced absence, informative, never a gate. `ready` members are the priority slice (designed, stated done, unverified):
 
 - [`spec:decisions.order-lifecycle`](../spec/decisions.order-lifecycle.md) — Order lifecycle keeps validation before creation (stated `defined`)
+- [`spec:orders.create-order.api-contract`](../spec/orders.create-order.api-contract.md) — Create-order API contract (stated `idea`)
 - [`spec:orders.create-order.invalid-cart`](../spec/orders.create-order.invalid-cart.md) — Invalid cart is rejected (stated `defined`)
 - [`spec:orders.order-inventory-rule`](../spec/orders.order-inventory-rule.md) — Order creation requires available inventory (stated `defined`)
 - [`spec:orders.order-latency-constraint`](../spec/orders.order-latency-constraint.md) — Create-order latency stays within checkout budget (stated `defined`)
 - [`spec:orders.order-management`](../spec/orders.order-management.md) — Order management (stated `defined`)
 - [`spec:orders.order-model`](../spec/orders.order-model.md) — Order-management domain vocabulary (stated `defined`)
+- [`spec:orders.order-placement-flow`](../spec/orders.order-placement-flow.md) — Order placement flow (stated `scoped`)
 - [`spec:orders.order-total-rule`](../spec/orders.order-total-rule.md) — Order total matches cart math (stated `defined`)
 
 ## Findings

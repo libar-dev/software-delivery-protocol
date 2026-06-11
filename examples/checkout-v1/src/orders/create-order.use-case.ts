@@ -26,6 +26,14 @@ export const createOrderUseCaseAnchor = codeAnchor({
   satisfies: ref("spec:orders.create-order"),
 });
 
+// A second binding in the same file: anchors bind per spec, never per file (MD-8) — the total
+// reduction below is where the order-total rule is implemented.
+export const orderTotalRuleAnchor = codeAnchor({
+  id: codeAnchorId("impl:orders.order-total"),
+  label: "cart-math order total",
+  satisfies: ref("spec:orders.order-total-rule"),
+});
+
 export function createOrderFromCart(cart: CartInput, inventory: InventorySnapshot): CreatedOrder {
   if (cart.lines.length === 0) {
     throw new Error("Cart must contain at least one line.");

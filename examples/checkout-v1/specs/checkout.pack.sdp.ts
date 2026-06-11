@@ -6,9 +6,11 @@ export const checkoutV1Pack = pack({
   framing: "Let customers create orders from valid carts with honest authored traceability.",
   specs: [
     ref("spec:orders.order-management"),
+    ref("spec:orders.order-placement-flow"),
     ref("spec:orders.create-order"),
     ref("spec:orders.create-order.valid-cart"),
     ref("spec:orders.create-order.invalid-cart"),
+    ref("spec:orders.create-order.api-contract"),
     ref("spec:orders.order-total-rule"),
     ref("spec:orders.order-inventory-rule"),
     ref("spec:orders.order-latency-constraint"),

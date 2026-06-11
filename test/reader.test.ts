@@ -38,12 +38,14 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
       expect(summaries.map((summary) => summary.id)).toEqual([
         "spec:decisions.order-lifecycle",
         "spec:orders.create-order",
+        "spec:orders.create-order.api-contract",
         "spec:orders.create-order.invalid-cart",
         "spec:orders.create-order.valid-cart",
         "spec:orders.order-inventory-rule",
         "spec:orders.order-latency-constraint",
         "spec:orders.order-management",
         "spec:orders.order-model",
+        "spec:orders.order-placement-flow",
         "spec:orders.order-total-rule",
       ]);
 
@@ -108,7 +110,7 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
       ]);
     });
 
-    it("matches an anchor label, case-insensitively", () => {
+    it("matches an anchor label, case-insensitively — label tier before prose tier", () => {
       const matches = exampleReader().findByConcept("post /ORDERS");
 
       expect(matches).toEqual([
@@ -116,6 +118,12 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
           id: "api:orders.post",
           nodeType: "CodeNode",
           matchedIn: ["label"],
+        },
+        {
+          id: "spec:orders.create-order.api-contract",
+          nodeType: "Primitive",
+          title: "Create-order API contract",
+          matchedIn: ["sections.intent"],
         },
       ]);
     });
@@ -142,11 +150,16 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
       });
     });
 
-    it("maps a source file through its binding to the spec it satisfies (./-prefix normalized)", () => {
+    it("maps a source file through its bindings to the specs they satisfy (./-prefix normalized)", () => {
+      // Two anchors live in this one file (anchors bind per spec, never per file — MD-8); the
+      // file answer carries both bindings and both bound specs.
       expect(exampleReader().byFile("./src/orders/create-order.use-case.ts")).toEqual({
         path: "src/orders/create-order.use-case.ts",
-        nodes: [{ id: "impl:orders.create-order-use-case", nodeType: "CodeNode", line: 23 }],
-        specs: ["spec:orders.create-order"],
+        nodes: [
+          { id: "impl:orders.create-order-use-case", nodeType: "CodeNode", line: 23 },
+          { id: "impl:orders.order-total", nodeType: "CodeNode", line: 31 },
+        ],
+        specs: ["spec:orders.create-order", "spec:orders.order-total-rule"],
       });
     });
 
@@ -179,6 +192,19 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
               file: "src/orders/create-order.use-case.ts",
               throughBinding: {
                 id: "impl:orders.create-order-use-case",
+                edgeType: "satisfies",
+                claim: "anchored",
+              },
+            },
+          ],
+        },
+        {
+          id: "spec:orders.order-total-rule",
+          reasons: [
+            {
+              file: "src/orders/create-order.use-case.ts",
+              throughBinding: {
+                id: "impl:orders.order-total",
                 edgeType: "satisfies",
                 claim: "anchored",
               },
@@ -225,7 +251,7 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
       expect(radius.impactedPacks).toEqual([
         { id: "pack:checkout-v1", reasons: [{ file: "specs/checkout.pack.sdp.ts" }] },
       ]);
-      expect(radius.atRisk).toHaveLength(9);
+      expect(radius.atRisk).toHaveLength(11);
       expect(radius.atRisk[0]?.reasons[0]?.edgeType).toBe("belongsTo");
     });
 
@@ -236,7 +262,10 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
       ]);
 
       expect(radius.coverageUnknown).toEqual(["src/orders/pricing.ts"]);
-      expect(radius.impactedSpecs.map((item) => item.id)).toEqual(["spec:orders.create-order"]);
+      expect(radius.impactedSpecs.map((item) => item.id)).toEqual([
+        "spec:orders.create-order",
+        "spec:orders.order-total-rule",
+      ]);
     });
 
     it("normalizes, dedupes, and sorts the changed-file list", () => {
@@ -355,18 +384,21 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
     it("lists members with their decode and the verifier gaps, ready ones as the priority slice", () => {
       const context = exampleReader().packContext("pack:checkout-v1");
 
-      expect(context?.members).toHaveLength(9);
+      expect(context?.members).toHaveLength(11);
       expect(context?.members.every((member) => member.resolved)).toBe(true);
 
       // Verifier gaps: every member without a verifier binding; the example has two covered
-      // specs (create-order and its valid-cart example) and no ready member, so no priority.
+      // specs (create-order and its valid-cart example — the one ready member, covered, so not
+      // a gap) and no ready member among the gaps, so no priority.
       expect(context?.verifierGaps.map((gap) => gap.id)).toEqual([
         "spec:decisions.order-lifecycle",
+        "spec:orders.create-order.api-contract",
         "spec:orders.create-order.invalid-cart",
         "spec:orders.order-inventory-rule",
         "spec:orders.order-latency-constraint",
         "spec:orders.order-management",
         "spec:orders.order-model",
+        "spec:orders.order-placement-flow",
         "spec:orders.order-total-rule",
       ]);
       expect(context?.verifierGaps.every((gap) => !gap.priority)).toBe(true);

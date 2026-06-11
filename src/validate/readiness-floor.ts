@@ -148,6 +148,12 @@ function evidenceCell(kind: SpecKind, rung: keyof KindEvidenceRow): KindEvidence
  * content out (MD-10), so an empty stub child is not a promotion and never clears a parent's
  * floor. On the graph, a promoted child is a `rule`/`example` Primitive whose declared `refines`
  * edge targets this spec.
+ *
+ * Reachability note (the cross-row coupling the table alone doesn't show): a parent's scoped
+ * *and* defined behavior-family cells may be cleared by promoted children alone, and a child
+ * counts by *its own kind's scoped cell* — so editing a child kind's scoped cell changes what
+ * promotion confers on every parent. The monotonicity probe in `test/readiness.test.ts` pins the
+ * defined-implies-scoped direction over every evidence form, promoted forms included.
  */
 function hasPromotedRuleOrExampleEvidence(node: PrimitiveNode, index: GraphIndex): boolean {
   return (index.edgesByTo.get(node.id) ?? []).some((edge) => {

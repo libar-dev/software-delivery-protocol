@@ -78,7 +78,7 @@ describe("sdp cli", () => {
 
     expect(exitCode).toBe(0);
     expect(capture.readStderr()).toBe("");
-    expect(capture.readStdout()).toContain("9 specs · 1 packs · 3 anchors → 13 nodes · 25 edges");
+    expect(capture.readStdout()).toContain("11 specs · 1 packs · 4 anchors → 16 nodes · 31 edges");
     expect(readdirSync(join(exampleRoot, "generated"))).toEqual(["graph.json"]);
   });
 
@@ -94,7 +94,7 @@ describe("sdp cli", () => {
 
     expect(exitCode).toBe(0);
     expect(capture.readStderr()).toBe("");
-    expect(capture.readStdout()).toContain("9 specs · 1 packs · 3 anchors → 13 nodes · 25 edges");
+    expect(capture.readStdout()).toContain("11 specs · 1 packs · 4 anchors → 16 nodes · 31 edges");
     rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
   });
 
@@ -449,7 +449,7 @@ describe("sdp cli", () => {
     const exitCode = runSdpCli(["validate", exampleRoot, "--check-clean"], capture.output);
 
     expect(exitCode).toBe(0);
-    expect(capture.readStdout()).toContain("9 specs · 1 packs · 3 anchors → 13 nodes · 25 edges");
+    expect(capture.readStdout()).toContain("11 specs · 1 packs · 4 anchors → 16 nodes · 31 edges");
     expect(capture.readStdout()).toContain(
       "validate: 0 errors · 1 warnings (conformance + honesty over the one graph)",
     );
@@ -516,7 +516,7 @@ describe("sdp cli", () => {
     expect(capture.readStdout()).toContain(
       "validate: 0 errors · 1 warnings (conformance + honesty over the one graph)",
     );
-    expect(capture.readStdout()).toContain("(11 pages)");
+    expect(capture.readStdout()).toContain("(13 pages)");
 
     const viewRoot = join(exampleRoot, "generated", "design-review");
     expect(readdirSync(viewRoot).sort()).toEqual(["index.md", "pack", "spec"]);

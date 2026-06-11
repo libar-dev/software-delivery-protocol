@@ -22,6 +22,11 @@ import { evaluateReadinessFloor } from "./readiness-floor.js";
  * (one validation path, MD-14): source → extract → graph → checks. Errors fail the build; a
  * `gap` or `orphan` informs as a warning, never a gate. Ids are referenced typo-safely, mirroring
  * `extractFindingIds`.
+ *
+ * The deferred check families are named (`05` §6) so a future validator never collides here:
+ * architecture enforcement, custom team rules, and the runtime NFR check (`nfr-violated`, gated
+ * on the `observed` fact's producer). Each lands by extending this registry under its own new
+ * id — a landed id is never reused or repurposed.
  */
 export const graphValidatorIds = {
   referentialIntegrity: "conformance/referential-integrity",

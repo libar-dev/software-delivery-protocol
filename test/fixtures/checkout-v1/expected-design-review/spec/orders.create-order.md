@@ -34,7 +34,9 @@ Every line is a one-hop neighbor over the curated graph: changing this spec touc
 - constrainedBy → [`spec:orders.order-latency-constraint`](orders.order-latency-constraint.md) — Create-order latency stays within checkout budget `[declared]`
 - decidedBy → [`spec:decisions.order-lifecycle`](decisions.order-lifecycle.md) — Order lifecycle keeps validation before creation `[declared]`
 - refines → [`spec:orders.order-management`](orders.order-management.md) — Order management `[declared]`
+- [`spec:orders.order-placement-flow`](orders.order-placement-flow.md) — Order placement flow — dependsOn → this spec `[declared]`
 - [`spec:decisions.order-lifecycle`](decisions.order-lifecycle.md) — Order lifecycle keeps validation before creation — refines → this spec `[declared]`
+- [`spec:orders.create-order.api-contract`](orders.create-order.api-contract.md) — Create-order API contract — refines → this spec `[declared]`
 - [`spec:orders.create-order.invalid-cart`](orders.create-order.invalid-cart.md) — Invalid cart is rejected — refines → this spec `[declared]`
 - [`spec:orders.create-order.valid-cart`](orders.create-order.valid-cart.md) — Valid cart creates an order — refines → this spec `[declared]`
 - [`spec:orders.order-inventory-rule`](orders.order-inventory-rule.md) — Order creation requires available inventory — refines → this spec `[declared]`

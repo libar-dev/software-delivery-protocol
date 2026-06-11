@@ -1,7 +1,7 @@
 # checkout-v1 — the worked example
 
-The MVP bounded context: **Order Management**, modeled as `pack:checkout-v1` — nine `Spec`s, one
-`Pack`, three anchors. It exists to prove the loop end-to-end on one small, honest slice: author
+The MVP bounded context: **Order Management**, modeled as `pack:checkout-v1` — eleven `Spec`s, one
+`Pack`, four anchors. It exists to prove the loop end-to-end on one small, honest slice: author
 delivery intent as typed code, bind the implementing code and tests with anchors, derive **the one
 graph**, run the conformance + honesty checks, and read the generated Design Review. It is also
 the tracer bullet: if this example stops typechecking or extracting, the DSL or the extractor is
@@ -16,15 +16,18 @@ pointed at.
 
 - **`specs/`** — the **authored model**: one `Spec` per `*.sdp.ts` file, plus the pack manifest
   (`checkout.pack.sdp.ts`). The familiar delivery nouns appear as **named coordinates on the one
-  primitive**, never separate types: a `behavior` epic (`order-management`), a `behavior` feature
-  (`create-order`), two `example` stories (`valid-cart`, `invalid-cart`), two `rule`s, one
-  `constraint` (the latency NFR), one `model` (the domain vocabulary), and one `decision` record.
-  Every spec states its own `readiness`; the checks only verify the stated rung is structurally
-  earned.
-- **`src/`** — the implementation, carrying two **anchors**: `impl:orders.create-order-use-case`
-  on the use-case and `api:orders.post` on the route. An anchor is a binding only — "this code
-  location is the implementation binding for this Spec ID" — never intent; each yields a
-  `satisfies` edge with `claim: "anchored"`.
+  primitive**, never separate types — all eight `kind`s are on disk: a `behavior` epic
+  (`order-management`), a `workflow` feature (`order-placement-flow`), a `behavior` feature
+  (`create-order`), two `example` stories (`valid-cart`, `invalid-cart`), a `contract` story
+  (`api-contract`), two `rule`s, one `constraint` (the latency NFR), one `model` (the domain
+  vocabulary), and one `decision` record. Every spec states its own `readiness`, and the stated
+  rungs span the ladder (`idea` · `scoped` · `defined` · `ready`); the checks only verify the
+  stated rung is structurally earned.
+- **`src/`** — the implementation, carrying three **anchors**: `impl:orders.create-order-use-case`
+  and `impl:orders.order-total` on the use-case file (anchors bind per spec, never per file) and
+  `api:orders.post` on the route. An anchor is a binding only — "this code location is the
+  implementation binding for this Spec ID" — never intent; each yields a `satisfies` edge with
+  `claim: "anchored"`.
 - **`test/`** — the runner test plus the **test anchor** (`specTest`) that binds it to
   `spec:orders.create-order.valid-cart`. That binding is what makes the valid-cart example an
   **enabled verifier**, which in turn confers the derived `has-verifier` delivery fact on its
@@ -46,7 +49,7 @@ node ./dist/cli/sdp.js view     examples/checkout-v1   # validate + the Design R
 carrying its `claim` (`declared` / `anchored` / `inferred`, never collapsed):
 
 ```
-9 specs · 1 packs · 3 anchors → 13 nodes · 25 edges (0 errors, 0 warnings)
+11 specs · 1 packs · 4 anchors → 16 nodes · 31 edges (0 errors, 0 warnings)
 ```
 
 `validate` runs the checks over that graph — one validation path — and reports **0 errors and
@@ -72,8 +75,11 @@ pack, all pure projections of the graph. Open
 - **`claim` cues** — the example's own `verifies` is `[declared]`; the test anchor's is
   `[anchored]`; the enabled verifier (`valid-cart`) is distinguished from the unenabled one
   (`invalid-cart`);
-- **stated vs derived readiness** — every spec here states `defined` while structurally clearing
-  `ready`; the honest direction renders as plain header information, no banner;
+- **stated vs derived readiness** — the rungs vary honestly: most specs state `defined` while
+  structurally clearing `ready` (stating less than you clear is the honest direction — plain
+  header information, no banner); `valid-cart` states `ready` and earns it through its test
+  binding; the placement flow states `scoped` because flows are scoped-rung evidence only; the
+  API contract is parked at `idea` with its blocking open question recorded in the spec;
 - **Relations & impact (one hop)** — the relation list read as the blast radius of changing this
   spec.
 
@@ -98,8 +104,10 @@ with `git checkout -- examples/checkout-v1` afterwards.
   against the floor.
 - **Unbind the test.** Delete the `specTest` anchor from
   `test/orders/create-order.valid-cart.test.ts`. The valid-cart example stops being an enabled
-  verifier, the parent loses its verifier binding, and a second `conformance/verifies-linkage`
-  warning appears — still exit 0, because a missing verifier is a surfaced gap, never a gate.
+  verifier, the parent loses its verifier binding, and two more warnings appear: a second
+  `conformance/verifies-linkage` (valid-cart's own declared `verifies` no longer confers
+  anything) and `honesty/gaps` (valid-cart states `ready` with no resolving verifier) — still
+  exit 0, because a missing verifier is a surfaced gap, never a gate.
 - **Hand-author a delivery fact.** Add `"has-verifier": true` inside any section of a spec. The
   closed section types reject it (`npm run typecheck:examples` fails), and even smuggled past the
   types it fails `validate` with `honesty/authoring-shape` — delivery facts are derived, never

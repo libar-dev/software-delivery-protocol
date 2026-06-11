@@ -18,6 +18,14 @@
       "line": 23
     },
     {
+      "id": "impl:orders.order-total",
+      "nodeType": "CodeNode",
+      "claim": "anchored",
+      "label": "cart-math order total",
+      "file": "src/orders/create-order.use-case.ts",
+      "line": 31
+    },
+    {
       "id": "pack:checkout-v1",
       "nodeType": "Pack",
       "claim": "declared",
@@ -76,6 +84,27 @@
       ]
     },
     {
+      "id": "spec:orders.create-order.api-contract",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "contract",
+      "altitude": "story",
+      "readiness": "idea",
+      "title": "Create-order API contract",
+      "file": "specs/orders/create-order-api-contract.sdp.ts",
+      "sections": {
+        "intent": {
+          "outcome": "Pin the request and response shapes of POST /orders.",
+          "openQuestions": [
+            {
+              "question": "Does the response carry the inventory-snapshot version the order was validated against?",
+              "blocking": true
+            }
+          ]
+        }
+      }
+    },
+    {
       "id": "spec:orders.create-order.invalid-cart",
       "nodeType": "Primitive",
       "claim": "declared",
@@ -121,7 +150,7 @@
       "claim": "declared",
       "specKind": "example",
       "altitude": "story",
-      "readiness": "defined",
+      "readiness": "ready",
       "title": "Valid cart creates an order",
       "file": "specs/orders/create-order-valid-cart.sdp.ts",
       "sections": {
@@ -253,6 +282,29 @@
       }
     },
     {
+      "id": "spec:orders.order-placement-flow",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "workflow",
+      "altitude": "feature",
+      "readiness": "scoped",
+      "title": "Order placement flow",
+      "file": "specs/orders/order-placement-flow.sdp.ts",
+      "sections": {
+        "intent": {
+          "outcome": "Sequence cart submission through validation to a created order.",
+          "value": "The slice states how create-order is reached without modeling the rest of checkout."
+        },
+        "behavior": {
+          "flows": [
+            "The customer submits a cart from checkout.",
+            "Create-order validates the cart against the inventory snapshot.",
+            "A valid cart becomes an order; an invalid cart returns a validation error."
+          ]
+        }
+      }
+    },
+    {
       "id": "spec:orders.order-total-rule",
       "nodeType": "Primitive",
       "claim": "declared",
@@ -272,7 +324,10 @@
             "The order total is the sum of all line subtotals."
           ]
         }
-      }
+      },
+      "deliveryFacts": [
+        "implemented"
+      ]
     },
     {
       "id": "test:orders.create-order.valid-cart",
@@ -294,6 +349,12 @@
       "from": "impl:orders.create-order-use-case",
       "type": "satisfies",
       "to": "spec:orders.create-order",
+      "claim": "anchored"
+    },
+    {
+      "from": "impl:orders.order-total",
+      "type": "satisfies",
+      "to": "spec:orders.order-total-rule",
       "claim": "anchored"
     },
     {
@@ -333,6 +394,18 @@
       "claim": "declared"
     },
     {
+      "from": "spec:orders.create-order.api-contract",
+      "type": "belongsTo",
+      "to": "pack:checkout-v1",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.create-order.api-contract",
+      "type": "refines",
+      "to": "spec:orders.create-order",
+      "claim": "declared"
+    },
+    {
       "from": "spec:orders.create-order.invalid-cart",
       "type": "belongsTo",
       "to": "pack:checkout-v1",
@@ -412,6 +485,24 @@
     },
     {
       "from": "spec:orders.order-model",
+      "type": "refines",
+      "to": "spec:orders.order-management",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.order-placement-flow",
+      "type": "belongsTo",
+      "to": "pack:checkout-v1",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.order-placement-flow",
+      "type": "dependsOn",
+      "to": "spec:orders.create-order",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.order-placement-flow",
       "type": "refines",
       "to": "spec:orders.order-management",
       "claim": "declared"

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   SPEC_KINDS,
   buildGraphIndex,
+  constrainedBy,
   deriveReadiness,
   evaluateReadinessFloor,
   kindEvidence,
@@ -186,6 +187,162 @@ describe("readiness and validation contracts", () => {
     expect(floorFailuresFor(defined.id, defined).map((failure) => failure.clauseId)).toEqual([
       "kind-evidence-complete",
     ]);
+  });
+
+  it("keeps every kind's evidence row monotonic: defined evidence implies scoped evidence (MD-12)", () => {
+    // "Monotonic by construction" (MD-12) is structural for the kind-blind clauses (the evaluator
+    // is cumulative) but a table property for the evidence cells: every kind's defined cell must
+    // be at least as strict as its scoped cell. The probe corpus spans every evidence form the
+    // table reads — inline and promoted — so a future row whose defined cell passes where its
+    // scoped cell fails is caught here, never only in review.
+    const subjectId = specId("spec:orders.create-order");
+    const probeSpec = (overrides: Partial<Spec>): Spec =>
+      spec({
+        id: subjectId,
+        title: "Create order",
+        kind: "behavior",
+        altitude: "feature",
+        readiness: "idea",
+        intent: { outcome: "Turn a valid cart into an order." },
+        ...overrides,
+      });
+
+    const ruleChild = spec({
+      id: specId("spec:orders.order-total-rule"),
+      title: "Order total matches cart math",
+      kind: "rule",
+      altitude: "story",
+      readiness: "defined",
+      intent: { outcome: "Keep totals deterministic." },
+      behavior: { rules: ["The order total is the sum of all line subtotals."] },
+      relations: [refines(subjectId)],
+    });
+    const exampleChild = spec({
+      id: specId("spec:orders.create-order.valid-cart"),
+      title: "Valid cart creates an order",
+      kind: "example",
+      altitude: "story",
+      readiness: "scoped",
+      intent: { outcome: "Show that a valid cart can become an order." },
+      behavior: { examples: ["Valid cart becomes an order with the computed total."] },
+      relations: [refines(subjectId)],
+    });
+    const stubChild = spec({
+      id: specId("spec:orders.order-inventory-rule"),
+      title: "Order creation requires available inventory",
+      kind: "rule",
+      altitude: "story",
+      readiness: "idea",
+      relations: [refines(subjectId)],
+    });
+    const constraintSpec = spec({
+      id: specId("spec:orders.order-latency-constraint"),
+      title: "Create-order latency budget",
+      kind: "constraint",
+      altitude: "story",
+      readiness: "defined",
+      intent: { outcome: "Keep create-order fast enough for interactive checkout." },
+      constraints: [
+        { statement: "Create-order responds within the checkout budget.", target: "latency.p95" },
+      ],
+    });
+
+    const structuredExample = {
+      given: ["A customer has a valid cart."],
+      when: ["The customer submits the cart."],
+      then: ["An order is created."],
+    };
+
+    const probes: readonly { readonly label: string; readonly specs: readonly Spec[] }[] = [
+      { label: "no evidence", specs: [probeSpec({})] },
+      { label: "prose rules", specs: [probeSpec({ behavior: { rules: ["Totals add up."] } })] },
+      {
+        label: "prose example",
+        specs: [probeSpec({ behavior: { examples: ["Valid cart becomes an order."] } })],
+      },
+      {
+        label: "structured GWT example",
+        specs: [probeSpec({ behavior: { examples: [structuredExample] } })],
+      },
+      {
+        label: "flows only",
+        specs: [probeSpec({ behavior: { flows: ["Submit, validate, create."] } })],
+      },
+      {
+        label: "untargeted constraint entry",
+        specs: [probeSpec({ constraints: [{ statement: "Respond within budget." }] })],
+      },
+      {
+        label: "targeted constraint entry",
+        specs: [
+          probeSpec({
+            constraints: [{ statement: "Respond within budget.", target: "latency.p95" }],
+          }),
+        ],
+      },
+      {
+        label: "model terms",
+        specs: [probeSpec({ model: { terms: { order: "An accepted cart." } } })],
+      },
+      {
+        label: "decision context only",
+        specs: [probeSpec({ decision: { context: "Two validation orders were considered." } })],
+      },
+      {
+        label: "written decision",
+        specs: [probeSpec({ decision: { decision: "Validate before creating." } })],
+      },
+      { label: "promoted rule child", specs: [probeSpec({}), ruleChild] },
+      { label: "promoted example child", specs: [probeSpec({}), exampleChild] },
+      { label: "promoted stub child", specs: [probeSpec({}), stubChild] },
+      {
+        label: "constrainedBy a targeted constraint",
+        specs: [probeSpec({ relations: [constrainedBy(constraintSpec.id)] }), constraintSpec],
+      },
+      {
+        label: "every evidence form at once",
+        specs: [
+          probeSpec({
+            behavior: {
+              rules: ["Totals add up."],
+              examples: [structuredExample],
+              flows: ["Submit, validate, create."],
+            },
+            constraints: [{ statement: "Respond within budget.", target: "latency.p95" }],
+            model: { terms: { order: "An accepted cart." } },
+            decision: { decision: "Validate before creating." },
+          }),
+        ],
+      },
+    ];
+
+    const violations: string[] = [];
+    const definedCoverage = new Map<string, boolean>(SPEC_KINDS.map((kind) => [kind, false]));
+
+    for (const probe of probes) {
+      const { node, index } = indexedSubject(subjectId, probe.specs);
+
+      for (const kind of SPEC_KINDS) {
+        const flavored = { ...node, specKind: kind };
+        const row = kindEvidence[kind];
+        const defined = row.defined.predicate(flavored, index);
+
+        if (defined) {
+          definedCoverage.set(kind, true);
+
+          if (!row.scoped.predicate(flavored, index)) {
+            violations.push(`${kind} × ${probe.label}`);
+          }
+        }
+      }
+    }
+
+    expect(violations).toEqual([]);
+    // The implication must not hold vacuously: the corpus exercises every kind's defined cell
+    // positively, so a new kind whose evidence form is missing here fails loudly instead of
+    // passing unprobed.
+    const unprobedKinds = [...definedCoverage].filter(([, covered]) => !covered).map(([k]) => k);
+    expect(unprobedKinds).toEqual([]);
   });
 
   it("requires a structured GWT entry for a defined example; prose clears scoped only (MD-10)", () => {

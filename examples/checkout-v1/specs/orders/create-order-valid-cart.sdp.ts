@@ -5,7 +5,9 @@ export const createOrderValidCartSpec = spec({
   title: "Valid cart creates an order",
   kind: "example",
   altitude: "story",
-  readiness: "defined",
+  // States ready and earns it: structured GWT evidence, resolving relations, and the test anchor
+  // (test/orders/create-order.valid-cart.test.ts) binding it as the enabled verifier.
+  readiness: "ready",
   intent: {
     outcome: "Show that a valid cart can become an order.",
     value: "The authored example demonstrates the happy path for create-order.",

@@ -6,6 +6,7 @@ import {
   constrainedBy,
   decidedBy,
   dependsOn,
+  graphClaims,
   graphValidatorIds,
   pack,
   packId,
@@ -209,6 +210,50 @@ describe("graph validators", () => {
     expect(findings[0]?.validatorId).toBe(graphValidatorIds.claimSeparation);
     expect(findings[0]?.severity).toBe("error");
     expect(findings[0]?.message).toContain('a satisfies edge carries "anchored"');
+  });
+
+  it("admits no inferred edge on the ratified edge types: the claim ships designed-in and empty", () => {
+    // The claim taxonomy ratifies "inferred" (the schema and every consumer decode it), but its
+    // first producer is the aspirational impact graph — so no edge-contract row admits it. This
+    // pin is the seam's tripwire: the first inferred producer must land its own contract row and
+    // flip this test deliberately, never ride an existing row unnoticed.
+    expect(graphClaims).toContain("inferred");
+
+    const graph = syntheticGraph(
+      [
+        ideaPrimitive("spec:orders.create-order", "Turn a valid cart into an order."),
+        ideaPrimitive("spec:orders.create-order.valid-cart", "Show the happy path."),
+      ],
+      [
+        // The verifies row has its own claim branch; dependsOn rides the default declared-only
+        // row — an inferred claim must fail on both paths.
+        {
+          from: "spec:orders.create-order.valid-cart",
+          type: "verifies",
+          to: "spec:orders.create-order",
+          claim: "inferred",
+        },
+        {
+          from: "spec:orders.create-order",
+          type: "dependsOn",
+          to: "spec:orders.create-order.valid-cart",
+          claim: "inferred",
+        },
+      ],
+    );
+
+    const claims = validateGraph(graph).findings.filter(
+      (finding) => finding.validatorId === graphValidatorIds.claimSeparation,
+    );
+    expect(claims).toHaveLength(2);
+    expect(
+      claims.every(
+        (finding) =>
+          finding.severity === "error" &&
+          finding.message.includes('claim "inferred"') &&
+          finding.message.includes("never collapsed"),
+      ),
+    ).toBe(true);
   });
 
   it("rejects a node claim its nodeType never carries", () => {

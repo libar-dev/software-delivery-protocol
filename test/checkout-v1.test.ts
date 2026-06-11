@@ -24,7 +24,7 @@ const extraction = extract({ root: exampleRoot });
 describe("checkout-v1 tracer bullet (extractor-fed)", () => {
   it("extracts the example with zero findings", () => {
     expect(extraction.report.findings).toEqual([]);
-    expect(extraction.counts).toEqual({ specs: 9, packs: 1, anchors: 3 });
+    expect(extraction.counts).toEqual({ specs: 11, packs: 1, anchors: 4 });
   });
 
   it("validates with zero errors and exactly the one surfaced absence: the unenabled invalid-cart verifier", () => {
@@ -77,7 +77,7 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
     }
   });
 
-  it("extracts the pack and the three anchors (the anchored layer)", () => {
+  it("extracts the pack and the four anchors (the anchored layer)", () => {
     expect(
       extraction.graph.nodes.filter((node) => node.nodeType === "Pack").map((n) => n.id),
     ).toEqual(["pack:checkout-v1"]);
@@ -89,6 +89,7 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
     ).toEqual([
       "api:orders.post",
       "impl:orders.create-order-use-case",
+      "impl:orders.order-total",
       "test:orders.create-order.valid-cart",
     ]);
 
@@ -108,6 +109,12 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
           claim: "anchored",
         },
         {
+          from: "impl:orders.order-total",
+          type: "satisfies",
+          to: "spec:orders.order-total-rule",
+          claim: "anchored",
+        },
+        {
           from: "test:orders.create-order.valid-cart",
           type: "verifies",
           to: "spec:orders.create-order.valid-cart",
@@ -115,7 +122,7 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
         },
       ]),
     );
-    expect(anchoredEdges).toHaveLength(3);
+    expect(anchoredEdges).toHaveLength(4);
   });
 
   it("derives the delivery facts honestly: bound specs only, never the unenabled verifier", () => {
@@ -129,12 +136,21 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
     expect(factsById.get("spec:orders.create-order")).toEqual(["implemented", "has-verifier"]);
     // The test anchor verifies the example directly — the example earns its own has-verifier.
     expect(factsById.get("spec:orders.create-order.valid-cart")).toEqual(["has-verifier"]);
+    // The second impl anchor binds the rule where its reduction lives (anchors bind per spec,
+    // never per file — MD-8).
+    expect(factsById.get("spec:orders.order-total-rule")).toEqual(["implemented"]);
     // The invalid-cart example declares verifies but has no test anchor: not an enabled
     // verifier — it confers nothing and carries nothing (binding, never liveness — MD-7).
     expect(factsById.get("spec:orders.create-order.invalid-cart")).toEqual([]);
 
+    const boundSpecs = new Set([
+      "spec:orders.create-order",
+      "spec:orders.create-order.valid-cart",
+      "spec:orders.order-total-rule",
+    ]);
+
     for (const [id, facts] of factsById) {
-      if (id !== "spec:orders.create-order" && id !== "spec:orders.create-order.valid-cart") {
+      if (!boundSpecs.has(id)) {
         expect(facts).toEqual([]);
       }
     }

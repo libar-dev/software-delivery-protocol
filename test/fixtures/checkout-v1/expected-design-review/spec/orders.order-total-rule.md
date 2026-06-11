@@ -6,9 +6,13 @@
 
 ## Bindings
 
-- Implementation binding: **none**
+- Implementation binding: **present**
 - Verifier binding: **none**
 - Runtime observation: **not tracked**
+
+### Implementations
+
+- `impl:orders.order-total` — cart-math order total ([src/orders/create-order.use-case.ts:31](../../../src/orders/create-order.use-case.ts)) `[anchored]`
 
 ## Intent
 
