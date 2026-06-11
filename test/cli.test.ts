@@ -16,6 +16,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { SDP_HELP_TEXT, isCliEntrypoint, runSdpCli } from "../src/cli/sdp.js";
+import { extract } from "../src/extract/index.js";
+import { renderDesignReview } from "../src/projections/design-review.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -173,6 +175,26 @@ describe("sdp cli", () => {
     expect(fileCapture.readStderr()).toBe(`sdp validate: root "${fileRoot}" is not a directory.\n`);
   });
 
+  it("rejects an unknown option: one line, exit 1, nothing runs", () => {
+    const capture = createCaptureOutput();
+
+    const exitCode = runSdpCli(["build", "--bogus"], capture.output);
+
+    expect(exitCode).toBe(1);
+    expect(capture.readStdout()).toBe("");
+    expect(capture.readStderr()).toBe("Unknown option for build: --bogus\n");
+  });
+
+  it("rejects a second root argument: one line, exit 1, nothing runs", () => {
+    const capture = createCaptureOutput();
+
+    const exitCode = runSdpCli(["build", "first-root", "second-root"], capture.output);
+
+    expect(exitCode).toBe(1);
+    expect(capture.readStdout()).toBe("");
+    expect(capture.readStderr()).toBe("sdp build takes at most one root argument.\n");
+  });
+
   it("notes an empty authored model: zero spec files still builds and exits 0, but says where it looked", () => {
     const emptyRoot = mkdtempSync(join(tmpdir(), "sdp-empty-root-"));
 
@@ -234,6 +256,67 @@ describe("sdp cli", () => {
       expect(existsSync(stalePath)).toBe(false);
     } finally {
       removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("fails --check-clean on a diverging second extraction: exit 1, the stale graph.json removed", () => {
+    const corpusRoot = materializeExtractCorpus("anchored-binding");
+
+    try {
+      const stalePath = join(corpusRoot, "generated", "graph.json");
+      mkdirSync(join(corpusRoot, "generated"), { recursive: true });
+      writeFileSync(stalePath, '{ "stale": true }\n', "utf8");
+
+      // The divergence branch is unreachable from honest inputs (extraction is deterministic),
+      // so the second extraction is forced to diverge through the injection seam.
+      let extractions = 0;
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", corpusRoot, "--check-clean"], capture.output, {
+        extract: (options) => {
+          extractions += 1;
+          const result = extract(options);
+
+          return extractions === 1 ? result : { ...result, graph: { ...result.graph, edges: [] } };
+        },
+      });
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStdout()).toBe("");
+      expect(capture.readStderr()).toBe(
+        "sdp build --check-clean: two independent extractions diverged — the build is not deterministic; any previous graph.json at this root was removed.\n",
+      );
+      // The stale artifact is gone: nothing at this root reads as current.
+      expect(existsSync(stalePath)).toBe(false);
+    } finally {
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("fails clean when extraction throws past discovery: one line, exit 1, the stale graph.json removed", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-unreadable-root-"));
+
+    try {
+      const stalePath = join(root, "generated", "graph.json");
+      mkdirSync(join(root, "generated"), { recursive: true });
+      writeFileSync(stalePath, '{ "stale": true }\n', "utf8");
+
+      // A mid-extraction filesystem error (e.g. an unreadable file under the root) is
+      // deterministic only through the injection seam — never a chmod trick in a test.
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", root], capture.output, {
+        extract: () => {
+          throw new Error("EACCES: permission denied, open 'specs/locked.sdp.ts'");
+        },
+      });
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStdout()).toBe("");
+      expect(capture.readStderr()).toBe(
+        "sdp build: EACCES: permission denied, open 'specs/locked.sdp.ts'\n",
+      );
+      expect(existsSync(stalePath)).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
     }
   });
 
@@ -407,6 +490,65 @@ describe("sdp cli", () => {
       expect(existsSync(join(corpusRoot, "generated", "graph.json"))).toBe(false);
       // A stale view from a previous run is as dishonest as a stale graph.json.
       expect(existsSync(join(corpusRoot, "generated", "design-review"))).toBe(false);
+    } finally {
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("fails view --check-clean on a diverging second render: exit 1, the stale view removed", () => {
+    const corpusRoot = materializeExtractCorpus("anchored-binding");
+
+    try {
+      const viewPath = join(corpusRoot, "generated", "design-review");
+      mkdirSync(viewPath, { recursive: true });
+      writeFileSync(join(viewPath, "index.md"), "# A view from a previous run\n", "utf8");
+
+      // The divergence branch is unreachable from honest inputs (rendering is deterministic),
+      // so the second render is forced to diverge through the injection seam.
+      let renders = 0;
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["view", corpusRoot, "--check-clean"], capture.output, {
+        renderDesignReview: (reader) => {
+          renders += 1;
+          const pages = renderDesignReview(reader);
+
+          return renders === 1 ? pages : pages.slice(1);
+        },
+      });
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toContain(
+        "sdp view --check-clean: two independent renders diverged — the view is not deterministic; any previous design-review at this root was removed.\n",
+      );
+      // The stale view is gone; graph.json stays — the build and its determinism check were clean.
+      expect(existsSync(viewPath)).toBe(false);
+      expect(existsSync(join(corpusRoot, "generated", "graph.json"))).toBe(true);
+    } finally {
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("fails clean when the render throws: one line on stderr, exit 1, the stale view removed", () => {
+    const corpusRoot = materializeExtractCorpus("anchored-binding");
+
+    try {
+      const viewPath = join(corpusRoot, "generated", "design-review");
+      mkdirSync(viewPath, { recursive: true });
+      writeFileSync(join(viewPath, "index.md"), "# A view from a previous run\n", "utf8");
+
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["view", corpusRoot], capture.output, {
+        renderDesignReview: () => {
+          throw new Error("ENOSPC: no space left on device, write");
+        },
+      });
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toContain("sdp view: ENOSPC: no space left on device, write\n");
+      expect(existsSync(viewPath)).toBe(false);
+      // graph.json stays: it was written by a clean build, and the check errors (none here) and
+      // the render failure describe the run, not that artifact.
+      expect(existsSync(join(corpusRoot, "generated", "graph.json"))).toBe(true);
     } finally {
       removeMaterializedCorpus(corpusRoot);
     }

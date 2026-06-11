@@ -41,6 +41,16 @@ interface CliOutput {
   stderr?: { write: (chunk: string) => void };
 }
 
+/**
+ * The internal injection seam — never a CLI flag, never part of the agent surface. Extraction and
+ * rendering are deterministic (P3), so the --check-clean divergence branches and the error
+ * boundaries are unreachable from honest inputs; their coverage substitutes these producers.
+ */
+interface CliHooks {
+  readonly extract?: typeof extract;
+  readonly renderDesignReview?: typeof renderDesignReview;
+}
+
 const defaultCliOutput: CliOutput = {
   stdout: process.stdout,
   stderr: process.stderr,
@@ -125,33 +135,24 @@ function isDirectory(path: string): boolean {
   }
 }
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 interface BuildOutcome {
   readonly exitCode: number;
   /** Present only when the build succeeded — the graph the checks consume. */
   readonly graph?: GraphSchema;
 }
 
-function runBuild(parsed: BuildArgs, output: CliOutput, command: string): BuildOutcome {
+function runBuild(
+  parsed: BuildArgs,
+  output: CliOutput,
+  command: string,
+  hooks: CliHooks,
+): BuildOutcome {
   const { root: resolvedRoot, checkClean } = parsed;
-  const result = extract({ root: resolvedRoot });
-  const findings = result.report.findings;
-
-  for (const finding of findings) {
-    writeStderr(output, formatFinding(finding));
-  }
-
-  // An empty authored model is conformant — no finding, exit 0 — but a typo'd cwd must never be
-  // a silent success, so the CLI (the invocation surface) says where it looked.
-  if (result.counts.specs === 0) {
-    writeStderr(
-      output,
-      `note: no *.sdp.ts spec files found under ${resolvedRoot} — the authored model is empty. Is this the right extraction root?\n`,
-    );
-  }
-
-  const errorCount = findings.filter((finding) => finding.severity === "error").length;
-  const warningCount = findings.length - errorCount;
-  const summary = `${String(result.counts.specs)} specs · ${String(result.counts.packs)} packs · ${String(result.counts.anchors)} anchors → ${String(result.graph.nodes.length)} nodes · ${String(result.graph.edges.length)} edges (${String(errorCount)} errors, ${String(warningCount)} warnings)\n`;
+  const runExtract = hooks.extract ?? extract;
   const graphPath = join(resolvedRoot, "generated", "graph.json");
 
   // A stale projection is as dishonest as a partial one: a failed build must not leave a previous
@@ -162,33 +163,59 @@ function runBuild(parsed: BuildArgs, output: CliOutput, command: string): BuildO
     return { exitCode: 1 };
   };
 
-  if (errorCount > 0) {
-    writeStdout(output, summary);
-    return failBuild(
-      `sdp ${command}: hard errors present — graph.json not written; any previous graph.json at this root was removed.\n`,
-    );
-  }
+  try {
+    const result = runExtract({ root: resolvedRoot });
+    const findings = result.report.findings;
 
-  const serialized = serializeGraph(result.graph);
+    for (const finding of findings) {
+      writeStderr(output, formatFinding(finding));
+    }
 
-  if (checkClean) {
-    const second = serializeGraph(extract({ root: resolvedRoot }).graph);
-
-    if (second !== serialized) {
-      return failBuild(
-        `sdp ${command} --check-clean: two independent extractions diverged — the build is not deterministic; any previous graph.json at this root was removed.\n`,
+    // An empty authored model is conformant — no finding, exit 0 — but a typo'd cwd must never be
+    // a silent success, so the CLI (the invocation surface) says where it looked.
+    if (result.counts.specs === 0) {
+      writeStderr(
+        output,
+        `note: no *.sdp.ts spec files found under ${resolvedRoot} — the authored model is empty. Is this the right extraction root?\n`,
       );
     }
-  }
 
-  // Temp-then-rename so a crash mid-write can never leave a truncated graph.json looking current.
-  const temporaryPath = `${graphPath}.tmp`;
-  mkdirSync(join(resolvedRoot, "generated"), { recursive: true });
-  writeFileSync(temporaryPath, serialized, "utf8");
-  renameSync(temporaryPath, graphPath);
-  writeStdout(output, summary);
-  writeStdout(output, `Wrote ${graphPath}\n`);
-  return { exitCode: 0, graph: result.graph };
+    const errorCount = findings.filter((finding) => finding.severity === "error").length;
+    const warningCount = findings.length - errorCount;
+    const summary = `${String(result.counts.specs)} specs · ${String(result.counts.packs)} packs · ${String(result.counts.anchors)} anchors → ${String(result.graph.nodes.length)} nodes · ${String(result.graph.edges.length)} edges (${String(errorCount)} errors, ${String(warningCount)} warnings)\n`;
+
+    if (errorCount > 0) {
+      writeStdout(output, summary);
+      return failBuild(
+        `sdp ${command}: hard errors present — graph.json not written; any previous graph.json at this root was removed.\n`,
+      );
+    }
+
+    const serialized = serializeGraph(result.graph);
+
+    if (checkClean) {
+      const second = serializeGraph(runExtract({ root: resolvedRoot }).graph);
+
+      if (second !== serialized) {
+        return failBuild(
+          `sdp ${command} --check-clean: two independent extractions diverged — the build is not deterministic; any previous graph.json at this root was removed.\n`,
+        );
+      }
+    }
+
+    // Temp-then-rename so a crash mid-write can never leave a truncated graph.json looking current.
+    const temporaryPath = `${graphPath}.tmp`;
+    mkdirSync(join(resolvedRoot, "generated"), { recursive: true });
+    writeFileSync(temporaryPath, serialized, "utf8");
+    renameSync(temporaryPath, graphPath);
+    writeStdout(output, summary);
+    writeStdout(output, `Wrote ${graphPath}\n`);
+    return { exitCode: 0, graph: result.graph };
+  } catch (error) {
+    // Failures past root discovery keep the same law as the typo'd root: one line of invocation
+    // feedback, exit 1, never a Node stack trace — and the stale-artifact removal above holds.
+    return failBuild(`sdp ${command}: ${errorMessage(error)}\n`);
+  }
 }
 
 /**
@@ -197,8 +224,13 @@ function runBuild(parsed: BuildArgs, output: CliOutput, command: string): BuildO
  * phantom. With extraction clean the artifact is written even when checks fail: the graph is the
  * faithful projection, and the check errors describe the repo's conformance, not the artifact.
  */
-function runValidate(parsed: BuildArgs, output: CliOutput, command: string): BuildOutcome {
-  const build = runBuild(parsed, output, command);
+function runValidate(
+  parsed: BuildArgs,
+  output: CliOutput,
+  command: string,
+  hooks: CliHooks,
+): BuildOutcome {
+  const build = runBuild(parsed, output, command, hooks);
 
   if (build.graph === undefined) {
     return build;
@@ -228,9 +260,10 @@ function runValidate(parsed: BuildArgs, output: CliOutput, command: string): Bui
  * refused to show findings would hide exactly what it exists to show — so the exit code is
  * validate's, the artifacts stay.
  */
-function runView(parsed: BuildArgs, output: CliOutput): number {
+function runView(parsed: BuildArgs, output: CliOutput, hooks: CliHooks): number {
+  const render = hooks.renderDesignReview ?? renderDesignReview;
   const viewPath = join(parsed.root, "generated", "design-review");
-  const validate = runValidate(parsed, output, "view");
+  const validate = runValidate(parsed, output, "view", hooks);
 
   if (validate.graph === undefined) {
     // Build semantics: no graph, no view — and a stale view from a previous run is as dishonest
@@ -239,37 +272,52 @@ function runView(parsed: BuildArgs, output: CliOutput): number {
     return validate.exitCode;
   }
 
-  const pages = renderDesignReview(createReader(validate.graph));
+  // The graph's stale-artifact law, applied to the view: a failed render must not leave a
+  // previous design-review behind that a reviewer could read as current.
+  const failView = (message: string): number => {
+    rmSync(viewPath, { recursive: true, force: true });
+    writeStderr(output, message);
+    return 1;
+  };
 
-  if (parsed.checkClean) {
-    const second = renderDesignReview(createReader(validate.graph));
+  try {
+    const pages = render(createReader(validate.graph));
 
-    if (JSON.stringify(second) !== JSON.stringify(pages)) {
-      rmSync(viewPath, { recursive: true, force: true });
-      writeStderr(
-        output,
-        "sdp view --check-clean: two independent renders diverged — the view is not deterministic; any previous design-review at this root was removed.\n",
-      );
-      return 1;
+    if (parsed.checkClean) {
+      const second = render(createReader(validate.graph));
+
+      if (JSON.stringify(second) !== JSON.stringify(pages)) {
+        return failView(
+          "sdp view --check-clean: two independent renders diverged — the view is not deterministic; any previous design-review at this root was removed.\n",
+        );
+      }
     }
+
+    const temporaryPath = `${viewPath}.tmp`;
+    rmSync(temporaryPath, { recursive: true, force: true });
+
+    for (const page of pages) {
+      const target = join(temporaryPath, page.path);
+      mkdirSync(dirname(target), { recursive: true });
+      writeFileSync(target, page.content, "utf8");
+    }
+
+    rmSync(viewPath, { recursive: true, force: true });
+    renameSync(temporaryPath, viewPath);
+    writeStdout(output, `Wrote ${viewPath} (${String(pages.length)} pages)\n`);
+    return validate.exitCode;
+  } catch (error) {
+    // Failures past root discovery keep the same law as the typo'd root: one line of invocation
+    // feedback, exit 1, never a Node stack trace — and the stale-artifact removal above holds.
+    return failView(`sdp view: ${errorMessage(error)}\n`);
   }
-
-  const temporaryPath = `${viewPath}.tmp`;
-  rmSync(temporaryPath, { recursive: true, force: true });
-
-  for (const page of pages) {
-    const target = join(temporaryPath, page.path);
-    mkdirSync(dirname(target), { recursive: true });
-    writeFileSync(target, page.content, "utf8");
-  }
-
-  rmSync(viewPath, { recursive: true, force: true });
-  renameSync(temporaryPath, viewPath);
-  writeStdout(output, `Wrote ${viewPath} (${String(pages.length)} pages)\n`);
-  return validate.exitCode;
 }
 
-export function runSdpCli(args: readonly string[], output: CliOutput = defaultCliOutput): number {
+export function runSdpCli(
+  args: readonly string[],
+  output: CliOutput = defaultCliOutput,
+  hooks: CliHooks = {},
+): number {
   const [command, ...rest] = args;
 
   if (command === undefined || command === "--help") {
@@ -289,14 +337,14 @@ export function runSdpCli(args: readonly string[], output: CliOutput = defaultCl
   }
 
   if (command === "build") {
-    return runBuild(parsed, output, "build").exitCode;
+    return runBuild(parsed, output, "build", hooks).exitCode;
   }
 
   if (command === "validate") {
-    return runValidate(parsed, output, "validate").exitCode;
+    return runValidate(parsed, output, "validate", hooks).exitCode;
   }
 
-  return runView(parsed, output);
+  return runView(parsed, output, hooks);
 }
 
 /**
