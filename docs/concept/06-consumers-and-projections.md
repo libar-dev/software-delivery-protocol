@@ -87,7 +87,7 @@ The **`reader`** is the *component* behind the surface: joins and `claim`/taxono
 - **Blast-radius** over a changeset (impact + at-risk specs). The **file-level** form (`git diff` → `byFile` → curated-graph walk) is **MVP**; **symbol-level** exhaustive reach rides the aspirational impact graph. The MVP form **reports uncovered (unanchored) changed files explicitly** (a `coverage-unknown` signal) — honest coverage, never a silently-small answer (§2).
 - **Irreducible joins** — e.g. the multi-hop `spec → satisfies → … → invariants/scenarios` bridge with maturity/`claim` decode. Freeze because it is a true cross-source join, not a thin walk.
 
-Everything else (single-field traversals, group-bys, the maturity ladder) stays a script. The discriminator is not "is it a traversal" but **"would an agent hand-rolling this get it wrong?"** Freeze a typed contract only when a **second machine consumer** appears.
+Everything else (single-field traversals, group-bys, the maturity ladder) stays a script. The discriminator is not "is it a traversal" but **"would an agent hand-rolling this get it wrong?"** Freeze a typed contract only when a **second machine consumer** appears — **the second-caller bar** (the name `00` §4 and `07` cite; §4 below applies it to writes).
 
 > Context efficiency is a measured win, not a hope: keeping the data in-process and returning only conclusions ran a multi-probe session at a measured fraction of the tokens of a grep/verb-API equivalent. Freezing answers is expensive both as bytes on disk and as tokens in context.
 

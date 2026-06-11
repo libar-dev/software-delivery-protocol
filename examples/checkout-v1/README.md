@@ -78,8 +78,10 @@ pack, all pure projections of the graph. Open
   spec.
 
 Determinism is checkable, not promised: `--check-clean` on any command runs the pipeline twice
-independently and fails on a single divergent byte. Deleting `generated/` and rerunning
-reproduces the same bytes (`npm run check:example` gates CI on exactly this).
+independently and fails on a single divergent byte — `npm run check:example` gates CI on exactly
+this over this example. Deleting `generated/` and rerunning reproduces the same bytes, and so
+does the pipeline run from a copy at a different absolute path — both pinned in the test suite,
+which CI also gates.
 
 ## Break it on purpose
 
