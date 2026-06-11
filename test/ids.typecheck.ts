@@ -37,4 +37,16 @@ const wrongTest: TestAnchorId = specId("spec:orders.create-order.valid-cart");
 // @ts-expect-error a CodeAnchorId slot rejects the generic anchorId result
 const wrongImpl: CodeAnchorId = anchorId("api:orders.post");
 
-void [wrongPack, rawSpec, wrongTest, wrongImpl];
+// The two anchor flavors never cross-assign: the flavor is a second branded layer over the one
+// `AnchorId` brand (see `ids.ts`), so a verifying binding and an implementation binding stay
+// distinct types while both remain assignable to `AnchorId`.
+
+// @ts-expect-error a TestAnchorId slot rejects a CodeAnchorId result
+const wrongFlavorTest: TestAnchorId = codeAnchorId("impl:orders.create-order-use-case");
+
+// @ts-expect-error a CodeAnchorId slot rejects a TestAnchorId result
+const wrongFlavorImpl: CodeAnchorId = testAnchorId("test:orders.create-order.valid-cart");
+
+const widensToAnchor: AnchorId = codeAnchorId("impl:orders.create-order-use-case");
+
+void [wrongPack, rawSpec, wrongTest, wrongImpl, wrongFlavorTest, wrongFlavorImpl, widensToAnchor];

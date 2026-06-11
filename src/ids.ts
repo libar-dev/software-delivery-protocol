@@ -8,8 +8,11 @@ const PATH_SEGMENT_PATTERN = /^[A-Za-z0-9][A-Za-z0-9-]*$/u;
 export type SpecId = Brand<"SpecId">;
 export type PackId = Brand<"PackId">;
 export type AnchorId = Brand<"AnchorId">;
-export type CodeAnchorId = AnchorId & Brand<"CodeAnchorId">;
-export type TestAnchorId = AnchorId & Brand<"TestAnchorId">;
+// The flavor layers a second key over the `AnchorId` brand rather than intersecting a second
+// `Brand<…>`: two disjoint unit types on one `__brand` key reduce the intersection to `never`,
+// and `never` assigns everywhere — tsc would stop enforcing the flavored ids entirely.
+export type CodeAnchorId = AnchorId & { readonly __anchorFlavor: "code" };
+export type TestAnchorId = AnchorId & { readonly __anchorFlavor: "test" };
 
 /**
  * The implementation-flavored code namespaces a `codeAnchor` may bind (the generic `codeAnchor`,
@@ -144,15 +147,15 @@ export function packId(value: string): PackId {
 }
 
 export function codeAnchorId(value: string): CodeAnchorId {
-  return requireNamespace<"CodeAnchorId">(value, CODE_ANCHOR_NAMESPACES) as CodeAnchorId;
+  return requireNamespace<"AnchorId">(value, CODE_ANCHOR_NAMESPACES) as CodeAnchorId;
 }
 
 export function testAnchorId(value: string): TestAnchorId {
-  return requireNamespace<"TestAnchorId">(value, ["test"]) as TestAnchorId;
+  return requireNamespace<"AnchorId">(value, ["test"]) as TestAnchorId;
 }
 
 /**
- * `ref()` is today a spec-only reference builder wearing a generic name: it is `specId` aliased, so
+ * `ref()` is a spec-only reference builder wearing a generic name: it is `specId` aliased, so
  * it rejects `pack:` / `doc:` targets — a named deferral (carried evidence, MD-16). Harmless while
  * every call site wants a spec; revisit when `doc:`-target relations (`decidedBy` → an external ADR)
  * or pack-targeting arrive.
