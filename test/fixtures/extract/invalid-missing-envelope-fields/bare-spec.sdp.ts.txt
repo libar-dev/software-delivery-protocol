@@ -1,0 +1,5 @@
+import { spec } from "@libar-dev/software-delivery-protocol";
+
+// Every absent required envelope field must surface in one extraction pass — never drip-fed one
+// finding per run.
+export const bareSpec = spec({});

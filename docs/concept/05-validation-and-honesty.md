@@ -41,24 +41,25 @@ Types describe **shape**; validators decide **completeness** (P7). Completeness 
 
 These are the non-negotiable core. CI fails on any error. They split across the two families.
 
-**They run over the one graph — there is exactly one validation path** (MD-14): source → extract (static reification, P5) → graph → checks; `sdp validate` is `sdp build` + checks. Validating any *evaluated* form (importing spec modules and checking the resulting objects) would check a phantom — a non-static expression evaluates to a value on import but is dropped by static reification, so the checks could pass a spec the graph doesn't actually hold. The pre-graph `AuthoredModel` is a stand-in that retires into (at most) an extractor-internal shape when the extractor lands (Slice 1); it is never a second public validation seam. Authoring-time feedback is the type system's job (typed sections, `02` §3) plus the `sdp/spec-static` lint — not a parallel validator path.
+**They run over the one graph — there is exactly one validation path** (MD-14): source → extract (static reification, P5) → graph → checks; `sdp validate` is `sdp build` + checks, and `validateGraph` is the sole validation seam. Validating any *evaluated* form (importing spec modules and checking the resulting objects) would check a phantom — a non-static expression evaluates to a value on import but is dropped by static reification, so the checks could pass a spec the graph doesn't actually hold. For the same reason there is no pre-graph validation seam of any kind: a check that reads anything but the derived graph is a second validation path, forbidden. Authoring-time feedback is the type system's job (typed sections, `02` §3) — static reification (P5) is what rejects non-static authoring, and the `sdp/spec-static` lint is a designed-for earlier surfacing of the same tiers (`04` §1), never a parallel validator path.
 
 **Conformance checks:**
 
 1. **Referential integrity.** Every ID referenced (in relations, `modelRefs`, anchors) resolves to a node that exists. A dangling reference is an error — with a "did you mean…?" suggestion where possible. *(This is the cost of string-ID linkage from P6, paid down at build time.)*
 2. **Duplicate-ID detection.** No two nodes share an ID. A duplicate is an error, never an auto-resolved merge (L2 — ambiguity is loud).
-3. **`claim` separation never collapsed.** A `declared` edge is never silently "satisfied" by an `inferred` one; node/edge typing (`nodeType` / `specKind` / `claim`) stays valid and distinct (`03`, `04`).
+3. **`claim` separation never collapsed.** A `declared` edge is never silently "satisfied" by an `inferred` one; node/edge typing stays valid and distinct (`03`, `04`) — `nodeType` / `claim` / the edge-contract rows, and the three descriptors (`specKind` · `altitude` · `readiness`) carry their ratified values. The floor is never evaluated over an unratified descriptor (fail closed, never a crash or a silent skip). The edge-contract rows include the kind-typed endpoints (`03` §1): `constrainedBy` → a `rule`/`constraint`-kind spec (`02` §6's "a rule / NFR / policy spec") · `decidedBy` → a `decision`-kind spec · `supersedes` only between `decision`-kind specs; the declared-`verifies`-from-an-example row stays check 4's informative warning (a wrong-kind verifier confers nothing rather than failing the build).
 4. **`verifies` linkage.** The bidirectional spec↔test trace resolves: a test anchored `verifies: spec:X` must point at an existing spec.
 
 **Honesty checks:**
 
 5. **Authoring-shape honesty.** No spec or pack file hand-authors a derived edge or fact — `satisfies`, an `anchored` edge, an `inferred` edge, or any delivery fact (`implemented` / `has-verifier` / `observed`). Those are the machine's to derive; authoring one is a violation.
-6. **Honest readiness (the readiness floor).** A spec that *states* a readiness rung but lacks the structure that rung requires fails. **Readiness is stated by the author; validators verify the stated rung against the floor** (P8). See §3.
+6. **Derived-facts honesty.** A `Primitive` node's stated delivery facts equal what the one derivation rule recomputes from the graph's resolving binding edges. Extractor output holds by construction; the check has teeth for any other graph producer — a stated fact no binding earns (including `observed`, which nothing derives yet) is authored derived truth, and an omitted fact corrupts the backlog/drift queries. The gap check (9) reads the recomputed facts, so a faked fact never silences it.
+7. **Honest readiness (the readiness floor).** A spec that *states* a readiness rung but lacks the structure that rung requires fails. **Readiness is stated by the author; validators verify the stated rung against the floor** (P8). See §3.
 
 **Informative (a `gap` or `orphan`, not an error by default):**
 
-7. **Orphan detection.** A spec with no relations and nothing pointing at it is surfaced (warning or error per config) — it has fallen out of the graph's connective tissue.
-8. **Readiness/delivery gaps.** A `ready` spec with no resolving verifier is a surfaced `gap` (the build backlog and drift-alarm queries, `02` §2), not an error.
+8. **Orphan detection.** A spec with no relations and nothing pointing at it is surfaced as a warning — it has fallen out of the graph's connective tissue. (A per-team severity override is designed-for, deferred.)
+9. **Readiness/delivery gaps.** A `ready` spec with no resolving verifier is a surfaced `gap` (the build backlog and drift-alarm queries, `02` §2), not an error.
 
 Two cross-cutting honesty rules apply to all validators:
 
@@ -69,7 +70,7 @@ Two cross-cutting honesty rules apply to all validators:
 
 ## 3. Readiness floors (CORE)
 
-A **readiness floor** is the **minimum structural requirement to *state* a readiness rung** — a floor to clear, **never a quota to fill or a score** (significance governs detail — no tier-filling; `01`, P4 corollary). The floors are the mechanism (Principle); the specific thresholds are config a team can override.
+A **readiness floor** is the **minimum structural requirement to *state* a readiness rung** — a floor to clear, **never a quota to fill or a score** (significance governs detail — no tier-filling; `01`, P4 corollary). The floors are the mechanism (Principle); the specific thresholds are a Representation — a team-overridable floor config is designed-for, deferred.
 
 The floor has two parts: **kind-blind structural clauses** (the same for every kind) and **one evidence clause that is kind-conditional** (MD-12) — `kind` is a true subtype, and the floor is where that changes what is required, in both directions (it can *relax* as well as add).
 
@@ -104,7 +105,7 @@ Three laws bound the table:
 
 **`ready` is the structural floor plus a human's `declared` statement — not a record that a review occurred.** The Design Review (`06` §5) is *where* a human typically decides, but the graph stores **no** review/approval fact, and the validator never checks one — that would be the workflow-gating the honesty guardrail forbids (§1). Where approval provenance matters — a baseline — it is **git-native** (authorship + a signed tag, `03`), not an authored primitive (approval / RBAC stays outside the model, `07`).
 
-> **Stated vs derived readiness.** The author *states* a `readiness`; validators can also compute a *derived* readiness from what the spec actually contains. When they diverge (stated `defined`, derived `scoped`), that divergence is itself surfaced. The MVP can ship the floor-check and add the explicit derived-readiness banner as a small follow-up; the principle — *the stated rung is not trusted, it is verified* — holds either way. (Note the verb: readiness is **stated/asserted**, never "claimed" — "claim" is reserved for the `claim` taxonomy in `04`.)
+> **Stated vs derived readiness.** The author *states* a `readiness`; the same floor table also yields a *derived* readiness — the highest rung whose cumulative clauses pass. Both ship in the MVP: the floor check fails a stated rung the structure does not earn, and the Design Review renders stated beside the floor reached, naming the first unmet clause (the evaluator reports which clause fails). The divergence banner fires only in the dishonest direction — derived *at-or-above* stated is ordinary information, because the floor is a floor, never a quota that nags upward. The principle: *the stated rung is not trusted, it is verified.* (Note the verb: readiness is **stated/asserted**, never "claimed" — "claim" is reserved for the `claim` taxonomy in `04`.)
 
 ---
 

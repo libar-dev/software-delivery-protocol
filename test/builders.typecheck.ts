@@ -1,6 +1,6 @@
 import {
-  anchorImplementation,
-  implAnchorId,
+  codeAnchor,
+  codeAnchorId,
   pack,
   packId,
   ref,
@@ -25,8 +25,8 @@ const authoredPack = pack({
   specs: [ref("spec:orders.create-order")],
 });
 
-const implementationAnchor = anchorImplementation({
-  id: implAnchorId("impl:orders.create-order-use-case"),
+const implementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:orders.create-order-use-case"),
   label: "CreateOrderUseCase",
   satisfies: ref("spec:orders.create-order"),
 });
@@ -39,22 +39,22 @@ const testAnchor = specTest({
 
 void [authoredSpec, authoredPack, implementationAnchor, testAnchor];
 
-anchorImplementation({
-  id: implAnchorId("impl:orders.create-order-use-case"),
+codeAnchor({
+  id: codeAnchorId("impl:orders.create-order-use-case"),
   satisfies: ref("spec:orders.create-order"),
   // @ts-expect-error anchors are identity-only and do not carry readiness
   readiness: "ready",
 });
 
-anchorImplementation({
-  id: implAnchorId("impl:orders.create-order-use-case"),
+codeAnchor({
+  id: codeAnchorId("impl:orders.create-order-use-case"),
   satisfies: ref("spec:orders.create-order"),
   // @ts-expect-error anchors do not accept spec sections such as intent
   intent: { outcome: "turn a valid cart into an order" },
 });
 
-anchorImplementation({
-  id: implAnchorId("impl:orders.create-order-use-case"),
+codeAnchor({
+  id: codeAnchorId("impl:orders.create-order-use-case"),
   satisfies: ref("spec:orders.create-order"),
   // @ts-expect-error anchors do not author delivery facts
   implemented: true,
@@ -104,8 +104,8 @@ spec({
 // same excess-property caveat as the envelope defenses above applies: this fires only on fresh
 // literals. A section assembled through an intermediate variable slips past tsc and is caught at
 // runtime by `honesty/authoring-shape` (MD-16; the runtime twin lives in the fixture suite);
-// structurally, non-static section authoring is rejected by static reification (P5) and the
-// `sdp/spec-static` lint when the extractor lands (Slice 1).
+// structurally, non-static section authoring is rejected by static reification (P5), with the
+// `sdp/spec-static` lint a designed-for authoring-time guard.
 spec({
   id: specId("spec:orders.create-order"),
   title: "Customer creates an order",

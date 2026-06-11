@@ -1,0 +1,21 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+// The unterminated template literal below is the parse break: an error-tolerant parse would
+// swallow the second carrier into the first one's section prose, so the whole file must fail
+// loudly instead of reifying anything (ambiguity is loud, L2).
+export const swallowingSpec = spec({
+  id: specId("spec:orders.parse-broken"),
+  title: "Carrier whose section prose never terminates",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  intent: { outcome: `unterminated
+});
+
+export const swallowedSpec = spec({
+  id: specId("spec:orders.swallowed"),
+  title: "Carrier the recovered AST would silently absorb",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+});

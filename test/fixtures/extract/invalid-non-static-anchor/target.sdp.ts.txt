@@ -1,0 +1,10 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const staticAnchorTargetSpec = spec({
+  id: specId("spec:orders.static-anchor-target"),
+  title: "Target of the surviving sibling anchor",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  intent: { outcome: "Resolve the surviving binding." },
+});

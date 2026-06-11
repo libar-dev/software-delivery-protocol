@@ -1,0 +1,21 @@
+import { codeAnchor, codeAnchorId, ref, spec, specId } from "@libar-dev/software-delivery-protocol";
+
+// An anchor call buried in a function body is outside the anchor-constant form: it warns loudly
+// and is not extracted — a binding the author believes exists must never silently fall out of
+// the graph (L2).
+export function registerBindings() {
+  return codeAnchor({
+    id: codeAnchorId("impl:orders.buried-binding"),
+    satisfies: ref("spec:orders.create-order"),
+  });
+}
+
+// A spec() call in a non-.sdp.ts source file is equally misplaced: specs are extracted from
+// *.sdp.ts files only (the .sdp.ts extension, MD-15).
+export const misplacedSpec = spec({
+  id: specId("spec:orders.misplaced-in-source"),
+  title: "Spec authored outside the spec surface",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+});

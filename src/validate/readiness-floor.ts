@@ -1,37 +1,33 @@
-import { SPEC_READINESS } from "../model/descriptors.js";
+import { SPEC_KINDS, SPEC_READINESS } from "../model/descriptors.js";
 import type { SpecKind, SpecReadiness } from "../model/descriptors.js";
-import type { Spec } from "../model/spec.js";
-import type { AuthoredModel } from "./authored-model.js";
+import type { SpecSectionName } from "../model/sections.js";
+import { authoredEdgeTypes } from "../graph/schema.js";
+import type { GraphEdge, PrimitiveNode } from "../graph/schema.js";
+import type { GraphIndex } from "./graph-index.js";
 
 /**
- * The readiness floor — the single source of truth (MD-13), mirroring `05` §3 row-for-row: kind-blind
- * structural clauses (`readinessFloors`) plus one kind-conditional evidence clause read from the
- * per-kind evidence table (`kindEvidence`, MD-12) — `scoped` requires the kind's natural evidence
- * *present* (prose acceptable), `defined` requires it *complete* where the kind defines a stronger
- * form. The clause-id union is derived from the table, the evaluator is one generic loop, and
- * evidence predicates take `(spec, model)` because promotion-neutrality (MD-10) needs the authored
- * model to count refining children.
+ * The readiness floor — the single source of truth (MD-13), mirroring `05` §3 row-for-row:
+ * kind-blind structural clauses (`readinessFloors`) plus one kind-conditional evidence clause read
+ * from the per-kind evidence table (`kindEvidence`, MD-12) — `scoped` requires the kind's natural
+ * evidence *present* (prose acceptable), `defined` requires it *complete* where the kind defines a
+ * stronger form. The clause-id union is derived from the table, the evaluator is one generic loop,
+ * and predicates read the one graph (one validation path, MD-14): the spec is a `Primitive` node,
+ * relations are its declared edges, and promotion-neutrality (MD-10) walks `refines` edges into
+ * the children's nodes.
+ *
+ * Evidence predicates are total over arbitrary section content: a graph node's sections are
+ * statically-reified value data, never a typechecked instance, so a malformed shape reads as
+ * absent evidence — typed sections (MD-11) stay the authoring-time guardrail, the floor never
+ * throws.
  */
 
-export type ReadinessPredicate = (spec: Spec, model: AuthoredModel) => boolean;
+export type ReadinessPredicate = (node: PrimitiveNode, index: GraphIndex) => boolean;
 
-export interface ActiveReadinessClause {
+export interface ReadinessClause {
   readonly id: string;
   readonly description: string;
   readonly predicate: ReadinessPredicate;
 }
-
-/**
- * Graph-shaped clauses — they resolve across the one graph (one validation path, MD-14; executes
- * Slice 1/3) and carry no pre-graph predicate, so the pre-graph evaluator skips them.
- */
-export interface GraphReadinessClause {
-  readonly id: string;
-  readonly description: string;
-  readonly evaluatedOver: "graph";
-}
-
-export type ReadinessClause = ActiveReadinessClause | GraphReadinessClause;
 
 export interface ReadinessFloor {
   readonly readiness: SpecReadiness;
@@ -50,61 +46,95 @@ export interface KindEvidenceRow {
   readonly defined: KindEvidenceCell;
 }
 
-/* ----- the named predicate library ----- */
+/* ----- defensive value access (reified content, not typechecked instances) ----- */
 
-function hasNonEmptyString(value: unknown): boolean {
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+
+  return undefined;
+}
+
+function asArray(value: unknown): readonly unknown[] | undefined {
+  return Array.isArray(value) ? (value as readonly unknown[]) : undefined;
+}
+
+function isNonEmptyString(value: unknown): boolean {
   return typeof value === "string" && value.trim().length > 0;
 }
 
-function hasEntries(value: readonly unknown[] | undefined): boolean {
-  return (value?.length ?? 0) > 0;
+function hasEntries(value: unknown): boolean {
+  return (asArray(value)?.length ?? 0) > 0;
 }
 
-function hasSpecId(spec: Spec): boolean {
-  return hasNonEmptyString(spec.id);
+function sectionOf(node: PrimitiveNode, name: SpecSectionName): unknown {
+  return node.sections?.[name];
 }
 
-function hasTitle(spec: Spec): boolean {
-  return hasNonEmptyString(spec.title);
+/* ----- the named predicate library ----- */
+
+function hasSpecId(node: PrimitiveNode): boolean {
+  return isNonEmptyString(node.id);
 }
 
-function hasKind(spec: Spec): boolean {
-  return hasNonEmptyString(spec.kind);
+function hasTitle(node: PrimitiveNode): boolean {
+  return isNonEmptyString(node.title);
 }
 
-function hasAltitude(spec: Spec): boolean {
-  return hasNonEmptyString(spec.altitude);
+function hasKind(node: PrimitiveNode): boolean {
+  return isNonEmptyString(node.specKind);
 }
 
-function hasIntentOutcome(spec: Spec): boolean {
-  return hasNonEmptyString(spec.intent?.outcome);
+function hasAltitude(node: PrimitiveNode): boolean {
+  return isNonEmptyString(node.altitude);
 }
 
-function hasParentRelation(spec: Spec): boolean {
-  return (spec.relations ?? []).some((relation) => relation.type === "refines");
+function hasIntentOutcome(node: PrimitiveNode): boolean {
+  return isNonEmptyString(asRecord(sectionOf(node, "intent"))?.outcome);
 }
 
-function hasIntentOutcomeOrParentRelation(spec: Spec): boolean {
-  return hasIntentOutcome(spec) || hasParentRelation(spec);
-}
+const authoredEdgeTypeSet: ReadonlySet<string> = new Set(authoredEdgeTypes);
 
-function hasAtLeastOneRelation(spec: Spec): boolean {
-  return hasEntries(spec.relations);
-}
-
-/** Blocking open questions live in `intent.openQuestions` (MD-9); only an entry flagged `blocking: true` blocks. */
-function hasNoBlockingOpenQuestions(spec: Spec): boolean {
-  return !(spec.intent?.openQuestions ?? []).some(
-    (entry) => typeof entry !== "string" && entry.blocking === true,
+/**
+ * The spec's authored relations on the graph: declared edges of an authored relation type.
+ * `belongsTo` is derived from the pack manifest and never counts as a relation the spec declared.
+ */
+function declaredRelationEdges(node: PrimitiveNode, index: GraphIndex): readonly GraphEdge[] {
+  return (index.edgesByFrom.get(node.id) ?? []).filter(
+    (edge) => edge.claim === "declared" && authoredEdgeTypeSet.has(edge.type),
   );
 }
 
-function hasInlineRulesOrExamples(spec: Spec): boolean {
-  return hasEntries(spec.behavior?.rules) || hasEntries(spec.behavior?.examples);
+function hasParentRelation(node: PrimitiveNode, index: GraphIndex): boolean {
+  return declaredRelationEdges(node, index).some((edge) => edge.type === "refines");
 }
 
-function hasInlineBehaviorEvidence(spec: Spec): boolean {
-  return hasInlineRulesOrExamples(spec) || hasEntries(spec.behavior?.flows);
+function hasIntentOutcomeOrParentRelation(node: PrimitiveNode, index: GraphIndex): boolean {
+  return hasIntentOutcome(node) || hasParentRelation(node, index);
+}
+
+function hasAtLeastOneRelation(node: PrimitiveNode, index: GraphIndex): boolean {
+  return declaredRelationEdges(node, index).length > 0;
+}
+
+/** Blocking open questions live in `intent.openQuestions` (MD-9); only an entry flagged `blocking: true` blocks. */
+function hasNoBlockingOpenQuestions(node: PrimitiveNode): boolean {
+  const openQuestions = asArray(asRecord(sectionOf(node, "intent"))?.openQuestions) ?? [];
+
+  return !openQuestions.some((entry) => asRecord(entry)?.blocking === true);
+}
+
+function behaviorOf(node: PrimitiveNode): Record<string, unknown> | undefined {
+  return asRecord(sectionOf(node, "behavior"));
+}
+
+function hasInlineRulesOrExamples(node: PrimitiveNode): boolean {
+  return hasEntries(behaviorOf(node)?.rules) || hasEntries(behaviorOf(node)?.examples);
+}
+
+function hasInlineBehaviorEvidence(node: PrimitiveNode): boolean {
+  return hasInlineRulesOrExamples(node) || hasEntries(behaviorOf(node)?.flows);
 }
 
 /** Typed accessor into the evidence table — returns the cell at its declared (2-arg) predicate type. */
@@ -115,74 +145,128 @@ function evidenceCell(kind: SpecKind, rung: keyof KindEvidenceRow): KindEvidence
 /**
  * Promotion-neutral evidence (MD-10/MD-12), bounded by MD-16: a promoted child counts wherever an
  * inline entry would — but only when the child itself carries its kind's evidence. Promotion moves
- * content out (MD-10), so an empty stub child is not a promotion and never clears a parent's floor.
+ * content out (MD-10), so an empty stub child is not a promotion and never clears a parent's
+ * floor. On the graph, a promoted child is a `rule`/`example` Primitive whose declared `refines`
+ * edge targets this spec.
  */
-function hasPromotedRuleOrExampleEvidence(spec: Spec, model: AuthoredModel): boolean {
-  return model.specs.some(
-    (child) =>
-      (child.kind === "rule" || child.kind === "example") &&
-      evidenceCell(child.kind, "scoped").predicate(child, model) &&
-      (child.relations ?? []).some(
-        (relation) => relation.type === "refines" && relation.target === spec.id,
-      ),
-  );
+function hasPromotedRuleOrExampleEvidence(node: PrimitiveNode, index: GraphIndex): boolean {
+  return (index.edgesByTo.get(node.id) ?? []).some((edge) => {
+    if (edge.type !== "refines" || edge.claim !== "declared") {
+      return false;
+    }
+
+    const child = index.primitivesById.get(edge.from);
+
+    return (
+      child !== undefined &&
+      (child.specKind === "rule" || child.specKind === "example") &&
+      evidenceCell(child.specKind, "scoped").predicate(child, index)
+    );
+  });
 }
 
 /**
  * The constrainedBy evidence slot is the promoted twin of the inline `constraints` section (`02` §3
- * duality), so it counts only when the edge resolves in the model to a `constraint`-kind spec that
+ * duality), so it counts only when the edge resolves in the graph to a `constraint`-kind spec that
  * carries its own evidence (MD-16). A dangling or wrong-kind target is not evidence.
  */
-function hasConstrainedByConstraintEvidence(spec: Spec, model: AuthoredModel): boolean {
-  const targets = new Set(
-    (spec.relations ?? [])
-      .filter((relation) => relation.type === "constrainedBy")
-      .map((relation) => relation.target),
-  );
+function hasConstrainedByConstraintEvidence(node: PrimitiveNode, index: GraphIndex): boolean {
+  return declaredRelationEdges(node, index).some((edge) => {
+    if (edge.type !== "constrainedBy") {
+      return false;
+    }
 
-  if (targets.size === 0) {
-    return false;
-  }
+    const target = index.primitivesById.get(edge.to);
 
-  return model.specs.some(
-    (candidate) =>
-      targets.has(candidate.id) &&
-      candidate.kind === "constraint" &&
-      evidenceCell("constraint", "scoped").predicate(candidate, model),
-  );
+    return (
+      target?.specKind === "constraint" &&
+      evidenceCell("constraint", "scoped").predicate(target, index)
+    );
+  });
 }
 
-function hasStructuredExampleEntry(spec: Spec): boolean {
-  return (spec.behavior?.examples ?? []).some(
-    (entry) =>
-      typeof entry !== "string" &&
-      entry.given.length > 0 &&
-      entry.when.length > 0 &&
-      entry.then.length > 0,
-  );
+function hasStructuredExampleEntry(node: PrimitiveNode): boolean {
+  return (asArray(behaviorOf(node)?.examples) ?? []).some((entry) => {
+    const structured = asRecord(entry);
+
+    return (
+      structured !== undefined &&
+      hasEntries(structured.given) &&
+      hasEntries(structured.when) &&
+      hasEntries(structured.then)
+    );
+  });
 }
 
-function hasConstraintEntries(spec: Spec): boolean {
-  return hasEntries(spec.constraints);
+function hasConstraintEntries(node: PrimitiveNode): boolean {
+  return hasEntries(sectionOf(node, "constraints"));
 }
 
-function constraintTargetsAreMachineReadable(spec: Spec): boolean {
-  return (
-    hasConstraintEntries(spec) &&
-    (spec.constraints ?? []).every((entry) => hasNonEmptyString(entry.target))
-  );
+function constraintTargetsAreMachineReadable(node: PrimitiveNode): boolean {
+  const entries = asArray(sectionOf(node, "constraints")) ?? [];
+
+  return entries.length > 0 && entries.every((entry) => isNonEmptyString(asRecord(entry)?.target));
 }
 
-function hasModelTerms(spec: Spec): boolean {
-  return spec.model?.terms !== undefined && Object.keys(spec.model.terms).length > 0;
+function hasModelTerms(node: PrimitiveNode): boolean {
+  const terms = asRecord(asRecord(sectionOf(node, "model"))?.terms);
+
+  return terms !== undefined && Object.keys(terms).length > 0;
 }
 
-function hasDecisionSection(spec: Spec): boolean {
-  return spec.decision !== undefined && Object.keys(spec.decision).length > 0;
+function hasDecisionSection(node: PrimitiveNode): boolean {
+  const decision = asRecord(sectionOf(node, "decision"));
+
+  return decision !== undefined && Object.keys(decision).length > 0;
 }
 
-function hasWrittenDecision(spec: Spec): boolean {
-  return hasNonEmptyString(spec.decision?.decision);
+function hasWrittenDecision(node: PrimitiveNode): boolean {
+  return isNonEmptyString(asRecord(sectionOf(node, "decision"))?.decision);
+}
+
+/* ----- the graph-shaped ready clauses ----- */
+
+function allRelationsResolve(node: PrimitiveNode, index: GraphIndex): boolean {
+  return declaredRelationEdges(node, index).every((edge) => index.nodesById.has(edge.to));
+}
+
+const definedIndex = SPEC_READINESS.indexOf("defined");
+
+/**
+ * Evaluates resolving targets only — an unresolved target is `all-relations-resolve`'s failure,
+ * never a second floor failure. A target resolving to a non-`Primitive` node is not a spec at
+ * `defined` and fails (the edge contract makes that shape a conformance error besides).
+ */
+function dependsOnAndRefinesTargetsAreDefined(node: PrimitiveNode, index: GraphIndex): boolean {
+  return declaredRelationEdges(node, index).every((edge) => {
+    if (edge.type !== "dependsOn" && edge.type !== "refines") {
+      return true;
+    }
+
+    if (!index.nodesById.has(edge.to)) {
+      return true;
+    }
+
+    const target = index.primitivesById.get(edge.to);
+
+    return target !== undefined && SPEC_READINESS.indexOf(target.readiness) >= definedIndex;
+  });
+}
+
+/**
+ * Every binding edge naming this spec originates from a binding node present in the graph — so
+ * `implemented` stays derivable from a real binding (the delivery-fact computation trusts edges).
+ * Extractor output satisfies this by construction (an anchor and its edge derive together); the
+ * clause has teeth for any other graph producer, and a regression that emitted an edge without
+ * its node would fail here.
+ */
+function anchorsResolve(node: PrimitiveNode, index: GraphIndex): boolean {
+  return (index.edgesByTo.get(node.id) ?? []).every((edge) => {
+    const isBindingEdge =
+      edge.type === "satisfies" || (edge.type === "verifies" && edge.claim === "anchored");
+
+    return !isBindingEdge || index.nodesById.has(edge.from);
+  });
 }
 
 /* ----- the per-kind evidence table (MD-12; mirrors `05` §3) ----- */
@@ -191,17 +275,17 @@ const behaviorFamilyEvidence: KindEvidenceRow = {
   scoped: {
     description:
       "rules, examples, flows, or constraints — inline, or promoted (a refining rule/example child, or a constrainedBy-linked constraint, each carrying its own evidence)",
-    predicate: (spec, model) =>
-      hasInlineBehaviorEvidence(spec) ||
-      hasConstraintEntries(spec) ||
-      hasConstrainedByConstraintEvidence(spec, model) ||
-      hasPromotedRuleOrExampleEvidence(spec, model),
+    predicate: (node, index) =>
+      hasInlineBehaviorEvidence(node) ||
+      hasConstraintEntries(node) ||
+      hasConstrainedByConstraintEvidence(node, index) ||
+      hasPromotedRuleOrExampleEvidence(node, index),
   },
   defined: {
     description:
       "rules and/or examples — inline or promoted children carrying their evidence; constraints alone no longer suffice",
-    predicate: (spec, model) =>
-      hasInlineRulesOrExamples(spec) || hasPromotedRuleOrExampleEvidence(spec, model),
+    predicate: (node, index) =>
+      hasInlineRulesOrExamples(node) || hasPromotedRuleOrExampleEvidence(node, index),
   },
 };
 
@@ -211,7 +295,7 @@ export const kindEvidence = {
   example: {
     scoped: {
       description: "an examples entry (prose acceptable)",
-      predicate: (spec) => hasEntries(spec.behavior?.examples),
+      predicate: (node) => hasEntries(behaviorOf(node)?.examples),
     },
     defined: {
       description: "at least one structured { given, when, then } examples entry",
@@ -221,11 +305,11 @@ export const kindEvidence = {
   rule: {
     scoped: {
       description: "its statement in behavior.rules",
-      predicate: (spec) => hasEntries(spec.behavior?.rules),
+      predicate: (node) => hasEntries(behaviorOf(node)?.rules),
     },
     defined: {
       description: "its statement in behavior.rules — a rule's content is its statement",
-      predicate: (spec) => hasEntries(spec.behavior?.rules),
+      predicate: (node) => hasEntries(behaviorOf(node)?.rules),
     },
   },
   constraint: {
@@ -264,11 +348,11 @@ export const kindEvidence = {
   contract: behaviorFamilyEvidence,
 } as const satisfies Record<SpecKind, KindEvidenceRow>;
 
-const kindEvidencePresent: ReadinessPredicate = (spec, model) =>
-  evidenceCell(spec.kind, "scoped").predicate(spec, model);
+const kindEvidencePresent: ReadinessPredicate = (node, index) =>
+  evidenceCell(node.specKind, "scoped").predicate(node, index);
 
-const kindEvidenceComplete: ReadinessPredicate = (spec, model) =>
-  evidenceCell(spec.kind, "defined").predicate(spec, model);
+const kindEvidenceComplete: ReadinessPredicate = (node, index) =>
+  evidenceCell(node.specKind, "defined").predicate(node, index);
 
 /* ----- the kind-blind structural clauses (mirrors `05` §3) ----- */
 
@@ -344,17 +428,17 @@ export const readinessFloors = {
       {
         id: "all-relations-resolve",
         description: "All authored relations resolve to known targets.",
-        evaluatedOver: "graph",
+        predicate: allRelationsResolve,
       },
       {
         id: "depends-on-and-refines-targets-are-defined",
         description: "Every dependsOn and refines target is at least defined.",
-        evaluatedOver: "graph",
+        predicate: dependsOnAndRefinesTargetsAreDefined,
       },
       {
         id: "anchors-resolve",
-        description: "Any authored anchors present resolve.",
-        evaluatedOver: "graph",
+        description: "Any anchors present resolve.",
+        predicate: anchorsResolve,
       },
     ],
   },
@@ -368,25 +452,32 @@ export interface ReadinessFloorFailure {
   readonly description: string;
 }
 
+const ratifiedKinds: ReadonlySet<string> = new Set(SPEC_KINDS);
+const ratifiedReadiness: ReadonlySet<string> = new Set(SPEC_READINESS);
+
 /**
  * The one generic evaluator (MD-13): floors are cumulative, so every clause at or below the stated
- * rung must hold; graph-shaped clauses carry no pre-graph predicate and are skipped until the
- * extractor lands (Slice 1/3).
+ * rung must hold. Evaluates a `Primitive` node against the indexed graph (one validation path,
+ * MD-14).
  */
 export function evaluateReadinessFloor(
-  spec: Spec,
-  model: AuthoredModel,
+  node: PrimitiveNode,
+  index: GraphIndex,
 ): readonly ReadinessFloorFailure[] {
-  const statedIndex = SPEC_READINESS.indexOf(spec.readiness);
+  // Foreign graph data can carry unratified strings in the typed descriptor slots; those are the
+  // descriptor conformance errors (`05` §2 check 3 — validateGraph fails closed), and the
+  // evaluator stays total: over an unratified kind or readiness it evaluates no clauses rather
+  // than dereferencing the evidence table into a throw or guessing a rung.
+  if (!ratifiedKinds.has(node.specKind) || !ratifiedReadiness.has(node.readiness)) {
+    return [];
+  }
+
+  const statedIndex = SPEC_READINESS.indexOf(node.readiness);
   const failures: ReadinessFloorFailure[] = [];
 
   for (const readiness of SPEC_READINESS.slice(0, statedIndex + 1)) {
     for (const clause of readinessFloors[readiness].clauses) {
-      if ("evaluatedOver" in clause) {
-        continue;
-      }
-
-      if (clause.predicate(spec, model)) {
+      if (clause.predicate(node, index)) {
         continue;
       }
 
@@ -395,4 +486,36 @@ export function evaluateReadinessFloor(
   }
 
   return failures;
+}
+
+/**
+ * Derived readiness (`05` §3): the highest rung whose cumulative clauses all pass — what the spec
+ * structurally *is*, beside what the author *states*. Same table, same predicates, no second
+ * floor (MD-13); the stated rung is never consulted. Returns `undefined` when even the `idea`
+ * clauses fail. Total over foreign data: an unratified `specKind` cannot dereference the evidence
+ * table, so no rung derives — the descriptor conformance error owns that finding, exactly as in
+ * the evaluator. The divergence reading: derived *below* stated is the honesty signal the floor
+ * check fails on; derived at-or-above stated is ordinary information — the floor is never a
+ * quota, and a spec may honestly state less than it clears.
+ */
+export function deriveReadiness(node: PrimitiveNode, index: GraphIndex): SpecReadiness | undefined {
+  if (!ratifiedKinds.has(node.specKind)) {
+    return undefined;
+  }
+
+  let reached: SpecReadiness | undefined;
+
+  for (const readiness of SPEC_READINESS) {
+    const cleared = readinessFloors[readiness].clauses.every((clause) =>
+      clause.predicate(node, index),
+    );
+
+    if (!cleared) {
+      break;
+    }
+
+    reached = readiness;
+  }
+
+  return reached;
 }

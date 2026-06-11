@@ -1,0 +1,6 @@
+import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+
+export const firstDuplicateBinding = codeAnchor({
+  id: codeAnchorId("impl:orders.duplicate-binding"),
+  satisfies: ref("spec:orders.duplicate-target"),
+});

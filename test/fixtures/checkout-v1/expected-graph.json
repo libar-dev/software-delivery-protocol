@@ -1,0 +1,438 @@
+{
+  "schemaVersion": "0.3.0",
+  "nodes": [
+    {
+      "id": "api:orders.post",
+      "nodeType": "CodeNode",
+      "claim": "anchored",
+      "label": "POST /orders",
+      "file": "src/orders/create-order.route.ts",
+      "line": 6
+    },
+    {
+      "id": "impl:orders.create-order-use-case",
+      "nodeType": "CodeNode",
+      "claim": "anchored",
+      "label": "createOrderFromCart",
+      "file": "src/orders/create-order.use-case.ts",
+      "line": 23
+    },
+    {
+      "id": "pack:checkout-v1",
+      "nodeType": "Pack",
+      "claim": "declared",
+      "title": "Checkout v1",
+      "framing": "Let customers create orders from valid carts with honest authored traceability.",
+      "file": "specs/checkout.pack.sdp.ts",
+      "modelRefs": [
+        "spec:orders.order-model"
+      ]
+    },
+    {
+      "id": "spec:decisions.order-lifecycle",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "decision",
+      "altitude": "feature",
+      "readiness": "defined",
+      "title": "Order lifecycle keeps validation before creation",
+      "file": "specs/decisions/order-lifecycle.sdp.ts",
+      "sections": {
+        "intent": {
+          "outcome": "Decide when checkout-v1 may create an order.",
+          "value": "The authored example has one stable lifecycle rule for success and rejection paths."
+        },
+        "decision": {
+          "decision": "Create orders only after cart validation confirms non-empty input and sufficient inventory.",
+          "rationale": [
+            "The valid-cart and invalid-cart examples need one consistent gate.",
+            "Rejecting before persistence keeps the tracer bullet small and internally consistent."
+          ],
+          "consequences": [
+            "Rejected carts never create partial orders."
+          ]
+        }
+      }
+    },
+    {
+      "id": "spec:orders.create-order",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "behavior",
+      "altitude": "feature",
+      "readiness": "defined",
+      "title": "Customer creates an order",
+      "file": "specs/orders/create-order.sdp.ts",
+      "sections": {
+        "intent": {
+          "actor": "customer",
+          "outcome": "Turn a valid cart into an order.",
+          "value": "Customers can complete purchases without the example modeling the rest of checkout."
+        }
+      },
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ]
+    },
+    {
+      "id": "spec:orders.create-order.invalid-cart",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "example",
+      "altitude": "story",
+      "readiness": "defined",
+      "title": "Invalid cart is rejected",
+      "file": "specs/orders/create-order-invalid-cart.sdp.ts",
+      "sections": {
+        "intent": {
+          "outcome": "Show that an invalid cart does not become an order.",
+          "value": "The authored example captures the rejection path without adding invalid fixtures to the model."
+        },
+        "behavior": {
+          "examples": [
+            {
+              "given": [
+                "A cart is empty or contains at least one item without available inventory.",
+                "The cart is submitted for order creation."
+              ],
+              "when": [
+                "The create-order use case validates the cart."
+              ],
+              "then": [
+                "No order is created.",
+                "The caller receives a validation error explaining why the cart is invalid."
+              ]
+            }
+          ]
+        },
+        "verification": {
+          "mode": "executable",
+          "criteria": [
+            "The use case throws when inventory is missing.",
+            "The use case throws when the cart is empty."
+          ]
+        }
+      }
+    },
+    {
+      "id": "spec:orders.create-order.valid-cart",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "example",
+      "altitude": "story",
+      "readiness": "defined",
+      "title": "Valid cart creates an order",
+      "file": "specs/orders/create-order-valid-cart.sdp.ts",
+      "sections": {
+        "intent": {
+          "outcome": "Show that a valid cart can become an order.",
+          "value": "The authored example demonstrates the happy path for create-order."
+        },
+        "behavior": {
+          "examples": [
+            {
+              "given": [
+                "A customer has a cart with one or more line items.",
+                "Every cart item is in stock.",
+                "Each line item has a positive quantity and a unit price."
+              ],
+              "when": [
+                "The customer submits the cart for order creation."
+              ],
+              "then": [
+                "An order is created.",
+                "The order total equals the sum of quantity multiplied by unit price for each line item.",
+                "The order contains the original cart lines."
+              ]
+            }
+          ]
+        },
+        "verification": {
+          "mode": "executable",
+          "criteria": [
+            "The order result contains a stable id.",
+            "The returned total matches the cart math."
+          ]
+        }
+      },
+      "deliveryFacts": [
+        "has-verifier"
+      ]
+    },
+    {
+      "id": "spec:orders.order-inventory-rule",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "rule",
+      "altitude": "story",
+      "readiness": "defined",
+      "title": "Order creation requires available inventory",
+      "file": "specs/orders/order-inventory-rule.sdp.ts",
+      "sections": {
+        "intent": {
+          "outcome": "Reject carts whose items are not fully available.",
+          "value": "Order creation does not over-promise unavailable stock."
+        },
+        "behavior": {
+          "rules": [
+            "Every cart line must have at least the requested quantity available.",
+            "Any unavailable line blocks order creation for the whole cart."
+          ]
+        }
+      }
+    },
+    {
+      "id": "spec:orders.order-latency-constraint",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "constraint",
+      "altitude": "story",
+      "readiness": "defined",
+      "title": "Create-order latency stays within checkout budget",
+      "file": "specs/orders/order-latency-constraint.sdp.ts",
+      "sections": {
+        "intent": {
+          "outcome": "Keep create-order fast enough for interactive checkout.",
+          "value": "Customers are not left waiting after submitting a valid cart."
+        },
+        "constraints": [
+          {
+            "flavor": "performance",
+            "statement": "Create-order should respond within the checkout latency budget.",
+            "target": "latency.p95.lt:250ms"
+          }
+        ]
+      }
+    },
+    {
+      "id": "spec:orders.order-management",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "behavior",
+      "altitude": "epic",
+      "readiness": "defined",
+      "title": "Order management",
+      "file": "specs/orders/order-management.sdp.ts",
+      "sections": {
+        "intent": {
+          "outcome": "Coordinate the authored order-management slice for checkout v1.",
+          "value": "The pack can express order creation behavior without modeling the full checkout flow."
+        },
+        "behavior": {
+          "rules": [
+            "Order management keeps order creation, rules, constraints, and decisions traceable in one authored slice.",
+            "Every order-management child spec keeps its targets inside the checkout-v1 example set."
+          ]
+        }
+      }
+    },
+    {
+      "id": "spec:orders.order-model",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "model",
+      "altitude": "story",
+      "readiness": "defined",
+      "title": "Order-management domain vocabulary",
+      "file": "specs/orders/order-model.sdp.ts",
+      "sections": {
+        "intent": {
+          "outcome": "Define the core terms used by the checkout-v1 order-management slice.",
+          "value": "Specs, code, and tests use the same vocabulary for carts, orders, and inventory."
+        },
+        "model": {
+          "terms": {
+            "cart": "A customer-selected set of line items that has not yet become an order.",
+            "cartLine": "A requested product, quantity, and unit price inside a cart.",
+            "inventorySnapshot": "The available quantity for each product at validation time.",
+            "order": "The persisted result of accepting a valid cart.",
+            "orderTotal": "The sum of all accepted cart line subtotals."
+          }
+        }
+      }
+    },
+    {
+      "id": "spec:orders.order-total-rule",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "rule",
+      "altitude": "story",
+      "readiness": "defined",
+      "title": "Order total matches cart math",
+      "file": "specs/orders/order-total-rule.sdp.ts",
+      "sections": {
+        "intent": {
+          "outcome": "Keep the order total equal to the sum of cart line subtotals.",
+          "value": "Customers and downstream systems see one deterministic order total."
+        },
+        "behavior": {
+          "rules": [
+            "Each line subtotal is quantity multiplied by unit price.",
+            "The order total is the sum of all line subtotals."
+          ]
+        }
+      }
+    },
+    {
+      "id": "test:orders.create-order.valid-cart",
+      "nodeType": "Anchor",
+      "claim": "anchored",
+      "label": "valid cart verifies the create-order happy path",
+      "file": "test/orders/create-order.valid-cart.test.ts",
+      "line": 10
+    }
+  ],
+  "edges": [
+    {
+      "from": "api:orders.post",
+      "type": "satisfies",
+      "to": "spec:orders.create-order",
+      "claim": "anchored"
+    },
+    {
+      "from": "impl:orders.create-order-use-case",
+      "type": "satisfies",
+      "to": "spec:orders.create-order",
+      "claim": "anchored"
+    },
+    {
+      "from": "spec:decisions.order-lifecycle",
+      "type": "belongsTo",
+      "to": "pack:checkout-v1",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:decisions.order-lifecycle",
+      "type": "refines",
+      "to": "spec:orders.create-order",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.create-order",
+      "type": "belongsTo",
+      "to": "pack:checkout-v1",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.create-order",
+      "type": "constrainedBy",
+      "to": "spec:orders.order-latency-constraint",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.create-order",
+      "type": "decidedBy",
+      "to": "spec:decisions.order-lifecycle",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.create-order",
+      "type": "refines",
+      "to": "spec:orders.order-management",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.create-order.invalid-cart",
+      "type": "belongsTo",
+      "to": "pack:checkout-v1",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.create-order.invalid-cart",
+      "type": "refines",
+      "to": "spec:orders.create-order",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.create-order.invalid-cart",
+      "type": "verifies",
+      "to": "spec:orders.create-order",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.create-order.valid-cart",
+      "type": "belongsTo",
+      "to": "pack:checkout-v1",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.create-order.valid-cart",
+      "type": "refines",
+      "to": "spec:orders.create-order",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.create-order.valid-cart",
+      "type": "verifies",
+      "to": "spec:orders.create-order",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.order-inventory-rule",
+      "type": "belongsTo",
+      "to": "pack:checkout-v1",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.order-inventory-rule",
+      "type": "refines",
+      "to": "spec:orders.create-order",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.order-latency-constraint",
+      "type": "belongsTo",
+      "to": "pack:checkout-v1",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.order-latency-constraint",
+      "type": "refines",
+      "to": "spec:orders.create-order",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.order-management",
+      "type": "belongsTo",
+      "to": "pack:checkout-v1",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.order-management",
+      "type": "decidedBy",
+      "to": "spec:decisions.order-lifecycle",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.order-model",
+      "type": "belongsTo",
+      "to": "pack:checkout-v1",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.order-model",
+      "type": "refines",
+      "to": "spec:orders.order-management",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.order-total-rule",
+      "type": "belongsTo",
+      "to": "pack:checkout-v1",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.order-total-rule",
+      "type": "refines",
+      "to": "spec:orders.create-order",
+      "claim": "declared"
+    },
+    {
+      "from": "test:orders.create-order.valid-cart",
+      "type": "verifies",
+      "to": "spec:orders.create-order.valid-cart",
+      "claim": "anchored"
+    }
+  ]
+}

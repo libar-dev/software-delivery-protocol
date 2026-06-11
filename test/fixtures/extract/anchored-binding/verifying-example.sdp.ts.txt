@@ -1,0 +1,16 @@
+import { refines, spec, specId, verifies } from "@libar-dev/software-delivery-protocol";
+
+// The enabled verifier: this example declares verifies(parent), and the test anchor in
+// bindings.ts verifies *this example* — two edges, two targets, no transitive shortcut (`02` §2).
+export const anchoredParentExampleSpec = spec({
+  id: specId("spec:orders.anchored-parent.example"),
+  title: "Example verifying the anchored parent",
+  kind: "example",
+  altitude: "story",
+  readiness: "idea",
+  intent: { outcome: "Confer has-verifier on the parent as an enabled verifier." },
+  relations: [
+    refines(specId("spec:orders.anchored-parent")),
+    verifies(specId("spec:orders.anchored-parent")),
+  ],
+});

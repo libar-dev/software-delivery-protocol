@@ -1,0 +1,15 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+// The MD-10 guard covers the typed affordance (`ref(…)`) only: a raw id-shaped string in section
+// content is prose by definition — it survives as content, names no edge, and is never validated,
+// exactly as any other sentence mentioning a spec is. This corpus pins that boundary.
+export const idShapedStringSpec = spec({
+  id: specId("spec:orders.id-shaped-string"),
+  title: "Spec whose section prose mentions a spec id",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  behavior: {
+    examples: ["spec:orders.promoted-child"],
+  },
+});

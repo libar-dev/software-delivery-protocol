@@ -1,0 +1,24 @@
+import * as sdp from "@libar-dev/software-delivery-protocol";
+
+// The namespace import is one of the recognized import forms (named · namespace · default):
+// `sdp.spec(…)` must extract exactly as the named-import spelling does.
+export const namespaceParentSpec = sdp.spec({
+  id: sdp.specId("spec:orders.namespace-parent"),
+  title: "Parent authored through the namespace import",
+  kind: "behavior",
+  altitude: "feature",
+  readiness: "idea",
+  intent: { outcome: "Extract through the property-access builder spelling." },
+});
+
+export const namespaceExampleSpec = sdp.spec({
+  id: sdp.specId("spec:orders.namespace-parent.example"),
+  title: "Example authored through the namespace import",
+  kind: "example",
+  altitude: "story",
+  readiness: "idea",
+  relations: [
+    sdp.refines(sdp.specId("spec:orders.namespace-parent")),
+    sdp.verifies(sdp.specId("spec:orders.namespace-parent")),
+  ],
+});

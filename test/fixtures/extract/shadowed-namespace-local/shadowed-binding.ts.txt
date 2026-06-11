@@ -1,0 +1,22 @@
+import * as sdp from "@libar-dev/software-delivery-protocol";
+
+export const shadowAnchor = sdp.codeAnchor({
+  id: sdp.codeAnchorId("impl:orders.shadow-surface"),
+  satisfies: sdp.ref("spec:orders.shadow-parent"),
+});
+
+interface Toolkit {
+  codeAnchor(input: { id: string }): unknown;
+}
+
+// The parameter shadows the namespace import: this call belongs to the Toolkit value, not the
+// protocol, so the misplaced-authoring sweep must stay silent over it.
+export function register(sdp: Toolkit): unknown {
+  return sdp.codeAnchor({ id: "not-a-protocol-anchor" });
+}
+
+// A block-scoped local shadows it too.
+export function rebind(): unknown {
+  const sdp = { spec: (input: { id: string }) => input };
+  return sdp.spec({ id: "not-a-protocol-spec" });
+}

@@ -136,7 +136,7 @@ Sections carry the detail. They are the **extension surface**: the system grows 
 | `verification` | mode (manual / reviewed / contract / executable) + criteria | A verifying test *existing and enabled* is the derived `has-verifier` delivery fact (§2), not an authored field here. Pass/fail is **not** in the graph — it is CI's, operational. |
 | `ui` | references to component stories, design-tool nodes, visual baselines, accessibility status | **Aspirational.** Always links, never owns or renders. |
 
-The `decision` section carries **no `status` field** (rejected by the typing law, MD-11): a decision's adoption arc is the envelope's `readiness` (raised → explored → written → ratified), checked against the floor like any spec; replacement is the `supersedes` relation; a *rejected* path is not a truth-spec at all — it lives in the chosen decision's `alternatives` / `consequences`. One concept, one place.
+The `decision` section carries **no `status` field** (rejected by the typing law, MD-11): a decision's adoption arc is the envelope's `readiness` (`idea` raised → `scoped` explored → `defined` written → `ready` ratified), checked against the floor like any spec; replacement is the `supersedes` relation; a *rejected* path is not a truth-spec at all — it lives in the chosen decision's `alternatives` / `consequences`. One concept, one place.
 
 ### The typing law — which sections have typed shapes (MD-11)
 
@@ -161,7 +161,7 @@ Two laws make the duality safe (content-only sections — DECISIONS MD-10):
 ```ts
 // idea
 export const CreateOrder = spec({
-  id: "spec:orders.create-order",
+  id: specId("spec:orders.create-order"),
   title: "Customer creates an order",
   kind: "behavior",
   altitude: "feature",
@@ -171,7 +171,7 @@ export const CreateOrder = spec({
     outcome: "turn a valid cart into an order",
     value: "customers can complete purchases",
   },
-  relations: [refines("spec:orders.order-management")],
+  relations: [refines(specId("spec:orders.order-management"))],
 });
 ```
 
@@ -180,7 +180,7 @@ Later, the *same* spec — same ID — gains sections and climbs readiness:
 ```ts
 // ready — same object, enriched (no artifact migration)
 export const CreateOrder = spec({
-  id: "spec:orders.create-order",
+  id: specId("spec:orders.create-order"),
   title: "Customer creates an order",
   kind: "behavior",
   altitude: "feature",
@@ -192,8 +192,8 @@ export const CreateOrder = spec({
     { flavor: "performance", statement: "order creation is fast enough for checkout", target: "p95 < 300ms" },
   ],
   relations: [
-    refines("spec:orders.order-management"),
-    decidedBy("spec:decisions.order-lifecycle"),
+    refines(specId("spec:orders.order-management")),
+    decidedBy(specId("spec:decisions.order-lifecycle")),
   ],
 });
 ```
@@ -204,7 +204,7 @@ A low-altitude example becomes executable the same way — it is not a separate 
 
 ```ts
 export const ValidCartCreatesOrder = spec({
-  id: "spec:orders.create-order.valid-cart",
+  id: specId("spec:orders.create-order.valid-cart"),
   title: "Valid cart creates an order",
   kind: "example",
   altitude: "story",
@@ -217,7 +217,7 @@ export const ValidCartCreatesOrder = spec({
     }],
   },
   verification: { mode: "executable", criteria: ["an order row exists", "an OrderCreated event is published"] },
-  relations: [refines("spec:orders.create-order"), verifies("spec:orders.create-order")],
+  relations: [refines(specId("spec:orders.create-order")), verifies(specId("spec:orders.create-order"))],
 });
 ```
 
@@ -238,10 +238,10 @@ A `Pack` clusters related specs (a feature initiative, a bounded slice) so a tea
 
 ```ts
 export const CheckoutV1 = pack({
-  id: "pack:checkout-v1",
+  id: packId("pack:checkout-v1"),
   title: "Checkout v1",
   framing: "let customers complete purchases reliably — lifts conversion, cuts failed orders",
-  modelRefs: ["spec:checkout.glossary"],   // → standalone kind:"model" specs; shared vocabulary is never inlined twice
+  modelRefs: [ref("spec:checkout.glossary")],   // → standalone kind:"model" specs; shared vocabulary is never inlined twice
   specs: [
     ref("spec:orders.create-order"),
     ref("spec:payments.authorize-payment"),
@@ -277,7 +277,7 @@ Namespaces in the MVP: `spec`, `pack`, `impl`, `api`, `test`, `component`, `doc`
 
 `doc:` is reserved for a genuinely *external* document linked from a decision spec (e.g. `doc:adr-order-lifecycle`) — never for an in-system decision, which is a `spec:decisions.*` spec.
 
-Code and specs link by these IDs *in strings*, never by import edges (P6) — which is the only thing that lets either side survive heavy refactoring. The cost of string IDs is typos; that is what referential-integrity checks exist to catch (`05`). The optional generated `spec-ids` union type pushes some of those checks to `tsc`, but it is a convenience, not a load-bearing gate (L8).
+Code and specs link by these IDs *in strings*, never by import edges (P6) — which is the only thing that lets either side survive heavy refactoring. The cost of string IDs is typos; that is what referential-integrity checks exist to catch (`05`). An optional generated `spec-ids` union type could push some of those checks to `tsc` — a deferred convenience, never a load-bearing gate (L8).
 
 > **IDs carry no history.** IDs are stable by convention and survive refactors; renaming one is a repo edit that git records. The graph does not bookkeep ID history (see `01`, git is the event log).
 
@@ -302,7 +302,7 @@ MVP relation vocabulary (a Representation; extensible):
 
 Two notes carried from the language ratification: the verb forms align with UML where a standard stereotype exists (`refines` ≈ «refine», `dependsOn` ≈ UML *Dependency*, `decidedBy` ≈ «trace», `verifies` ≈ «verify») — adopted nouns, per the governing rubric. And `constrainedBy` / `decidedBy` are deliberately kept **distinct** from a generic `dependsOn`: "bounded by an NFR" and "shaped by a decision" are high-value, separately-queryable intents that a generic dependency edge would flatten.
 
-> **`doc:` targets are a named deferral (MD-16).** The DSL's relation builders and `ref()` accept only `spec:` targets today, so `decidedBy` → an external `doc:` ADR is designed-for but not yet representable; until the need arrives, an external ADR is referenced from the decision spec's body, not by a typed edge. (The glossary's flagged-ambiguities entry and the notes in `src/ids.ts` / `src/model/relations.ts` carry the same flag.)
+> **`doc:` targets are a named deferral (MD-16).** The DSL's relation builders and `ref()` accept only `spec:` targets, so `decidedBy` → an external `doc:` ADR is designed-for but not yet representable; until the need arrives, an external ADR is referenced from the decision spec's body, not by a typed edge. (The glossary's flagged-ambiguities entry and the notes in `src/ids.ts` / `src/model/relations.ts` carry the same flag.)
 
 **Derived edges — never authored:**
 

@@ -1,0 +1,11 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+// The `.history` twin of this file is the stray copy discovery must skip: no authoring surface
+// lives in a dot-directory, and descending would raise duplicate-id hard errors.
+export const surfaceSpec = spec({
+  id: specId("spec:orders.dot-directory-surface"),
+  title: "Spec on the real authoring surface",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+});

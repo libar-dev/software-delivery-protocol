@@ -170,7 +170,7 @@ artifact** — approval provenance is git-native, never an authored primitive).
 
 - **"epistemic boundary"** is a *working name* for the humans-assert-intent / machines-assert-structure
   division (`01`); a friendlier Studio-facing name is a minor open item.
-- **`ref()`** in the DSL is today a **spec-only** reference builder wearing a generic name (it rejects
+- **`ref()`** in the DSL is a **spec-only** reference builder wearing a generic name (it rejects
   `pack:`/`doc:` targets) — documented on the export (`src/ids.ts`). Consequently `decidedBy` → an
   external `doc:` ADR is a **named deferral** (MD-16, stated in `02` §6); revisit when `doc:`-target
   relations or pack-targeting arrive.
@@ -193,8 +193,8 @@ artifact** — approval provenance is git-native, never an authored primitive).
 - **Locked usage:** readiness is **"stated/asserted," never "claimed"** ("claim" is reserved for the `claim`
   taxonomy) · the meta-model defines the **contract**, **instances conform**; "govern"/"police" retired ·
   checks are **conformance checks + honesty checks** · **pre-graph** = upstream of graph derivation in the
-  one validation path (the authored layer before the extractor runs) — fences stand-in checks, never a
-  second validation path (one validation path, MD-14).
+  one validation path (the authored layer before the extractor runs) — a layer checks never live in:
+  validators consume the one graph only, never a second validation path (one validation path, MD-14).
 - **Resolved (MD-15):** authored Spec files carry the **`.sdp.ts`** extension (never `.spec.ts`, which every
   JS test-runner default glob executes); the model name `Spec` itself was always settled — only the file
   serialization changed.

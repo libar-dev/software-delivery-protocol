@@ -8,13 +8,13 @@ Realises **P5** (statically extractable), **P6** (ID-linked), **P9/P10** (anchor
 
 ## 1. The TypeScript Spec DSL — canonical (CORE)
 
-Specs are authored as typed TypeScript in `/specs/**/*.sdp.ts` — the Protocol's own compound extension (MD-15; the `.stories.tsx` pattern), deliberately **not** `.spec.ts`, which every JS test runner's default glob would try to execute. The DSL is a thin set of helpers (`spec`, `pack`, relation builders) over the `Spec` shape from `02`.
+Specs are authored as typed TypeScript in `*.sdp.ts` files, discovered by suffix anywhere under the extraction root (conventionally `/specs/`) — the Protocol's own compound extension (MD-15; the `.stories.tsx` pattern), deliberately **not** `.spec.ts`, which every JS test runner's default glob would try to execute. The DSL is a thin set of helpers (`spec`, `pack`, the branded-ID builders, relation builders) over the `Spec` shape from `02`.
 
 ```ts
-import { spec, refines, dependsOn } from "@libar-dev/software-delivery-protocol";
+import { dependsOn, refines, spec, specId } from "@libar-dev/software-delivery-protocol";
 
 export const CreateOrder = spec({
-  id: "spec:orders.create-order",
+  id: specId("spec:orders.create-order"),
   title: "Customer creates an order",
   kind: "behavior",
   altitude: "feature",
@@ -30,7 +30,7 @@ export const CreateOrder = spec({
     rules: ["only valid carts can become orders", "creating an order emits OrderCreated"],
     examples: ["an expired payment card is declined before any order is created"],
   },
-  relations: [refines("spec:orders.order-management"), dependsOn("spec:payments.authorize-payment")],
+  relations: [refines(specId("spec:orders.order-management")), dependsOn(specId("spec:payments.authorize-payment"))],
 });
 ```
 
@@ -47,7 +47,7 @@ If a non-static expression appears, the extractor responds in **two tiers**, dra
 - **Envelope fields are hard errors.** A non-static `id`, `kind`, `altitude`, `readiness`, or any **relation target** **fails the build** — these are the keys the graph is built on, so the extractor must never guess, drop, or anonymise them. A spec whose identity or position cannot be reified deterministically is not extracted at all.
 - **Optional section detail degrades gracefully.** A non-static expression *inside an optional section* drops *that one property* with a warning, keeping the rest of the spec (graceful partial extraction, L3). It never aborts the build for section detail.
 
-A lint rule (`sdp/spec-static`) can flag both tiers earlier, but the extractor is the backstop.
+A designed-for lint rule (`sdp/spec-static`) would flag both tiers earlier; the extractor is the backstop.
 
 ### Enrichment in place, refinement into children
 
@@ -75,18 +75,24 @@ export class CreateOrderUseCase { /* ... */ }
 /** @arch.node id=impl:orders.create-order-use-case satisfies=spec:orders.create-order */
 export function createOrder() { /* ... */ }
 
-// Anchor-constant form (equivalent, decorator-free)
-export const _anchor = anchorImplementation({ id: "impl:orders.create-order-use-case", satisfies: ["spec:orders.create-order"] });
+// Anchor-constant form (equivalent, decorator-free) — the one surface the MVP extractor reads
+export const _anchor = codeAnchor({
+  id: codeAnchorId("impl:orders.create-order-use-case"),
+  satisfies: ref("spec:orders.create-order"),
+});
 ```
 
-The three syntaxes are interchangeable Representations; the *binding* is the thing. A team picks one style.
-The builder generalizes to **`codeAnchor`** over the implementation-flavored code namespaces (`impl` / `api` /
-`component`) — the generic `codeAnchor` decision (MD-8), landing with Slice-2 anchor extraction; until then the
-DSL ships the narrower `anchorImplementation`.
+The three syntaxes are interchangeable Representations; the *binding* is the thing. A team picks one style;
+the MVP extracts the **anchor-constant form** (a top-level `const` initialized with the builder call) — the
+decorator and JSDoc forms remain unextracted Representations. The builder is the generic **`codeAnchor`**
+over the implementation-flavored code namespaces (`impl` / `api` / `component`) — the generic `codeAnchor`
+decision (MD-8, folded into the builder's doc-comment in `src/model/anchors.ts`). One binding target per
+anchor (two bindings are two anchors); the decorator sketch above shows an array form and a `component`
+field that are possible later Representations, not the landed signature.
 
 ### Anchors assert a binding — never intent (P9/P10)
 
-An anchor says exactly one thing: *"this code location is the implementation/test **binding** for this Spec ID"* — a binding assertion only, never system-truth content (DECISIONS R1). It binds a code location to a graph ID and its structural bindings (`component`, `satisfies`, `implements`, and — aspirationally — `handles`/`emits`). It is **forbidden** from carrying anything spec-level: behavior, rationale, readiness, acceptance criteria, or delivery facts. This asymmetry is load-bearing:
+An anchor says exactly one thing: *"this code location is the implementation/test **binding** for this Spec ID"* — a binding assertion only, never system-truth content (DECISIONS R1). The landed contract is exactly that minimal: `id` · an optional display `label` · **one** binding target (`satisfies` on a code anchor, `verifies` on a test anchor). Any other field is an extraction **error** — the anchored-surface twin of authoring-shape honesty. Richer structural bindings (`component`, `implements`, `handles`/`emits`) are **ASPIRATIONAL** — possible later extensions (see the inline-vs-centralized open question, `07` §4), never the MVP contract. An anchor is **forbidden** from carrying anything spec-level: behavior, rationale, readiness, acceptance criteria, or delivery facts. This asymmetry is load-bearing:
 
 - **Intent stays centralized** in the spec files, never scattered through code comments.
 - Anchors produce **anchored**-`claim` edges, distinct from **declared** relations (P9).
@@ -158,7 +164,7 @@ Modules that declare controls + an `expected()` model + `coverage()`, rendered a
   orders/create-order.valid-cart.test.ts   // specTest verifies spec:...
 /generated                         // gitignored, disposable (L8)
   graph.json
-  view/                            // the one generated read-only view
+  design-review/                   // the one generated read-only view
 ```
 
 Specs are not separate from code — they are part of the codebase, committed alongside it. That is the whole point: the repo is the single source of truth (P1), and authoring is editing TypeScript + git (the MVP write path).

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   SPEC_KINDS,
+  buildGraphIndex,
+  deriveReadiness,
   evaluateReadinessFloor,
   kindEvidence,
   readinessFloors,
@@ -11,10 +13,39 @@ import {
   validationSeverities,
   validatorFamilies,
 } from "../src/index.js";
-import type { AuthoredModel, Spec } from "../src/index.js";
+import type { GraphIndex, PrimitiveNode, ReadinessFloorFailure, Spec } from "../src/index.js";
+import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
-function modelOf(...specs: readonly Spec[]): AuthoredModel {
-  return { specs, packs: [], anchors: [] };
+/** Indexes the graph derived from the given model and resolves the subject's Primitive node. */
+function indexedSubject(
+  subjectId: string,
+  specs: readonly Spec[],
+): { node: PrimitiveNode; index: GraphIndex } {
+  const index = buildGraphIndex(deriveFixtureGraph({ specs }));
+  const node = index.primitivesById.get(subjectId);
+
+  if (node === undefined) {
+    throw new Error(`Fixture graph is missing the subject node "${subjectId}".`);
+  }
+
+  return { node, index };
+}
+
+/** Evaluates the floor for one spec over the graph derived from the given model. */
+function floorFailuresFor(
+  subjectId: string,
+  ...specs: readonly Spec[]
+): readonly ReadinessFloorFailure[] {
+  const { node, index } = indexedSubject(subjectId, specs);
+
+  return evaluateReadinessFloor(node, index);
+}
+
+/** Derives the structural rung for one spec over the graph derived from the given model. */
+function derivedReadinessFor(subjectId: string, ...specs: readonly Spec[]) {
+  const { node, index } = indexedSubject(subjectId, specs);
+
+  return deriveReadiness(node, index);
 }
 
 describe("readiness and validation contracts", () => {
@@ -52,8 +83,35 @@ describe("readiness and validation contracts", () => {
     ]);
   });
 
-  it("marks the ready clauses graph-shaped — evaluated over the one graph, never the pre-graph harness (one validation path, MD-14)", () => {
-    expect(readinessFloors.ready.clauses.every((clause) => "evaluatedOver" in clause)).toBe(true);
+  it("evaluates every clause — the ready clauses included — over the one graph (one validation path, MD-14)", () => {
+    const subject = spec({
+      id: specId("spec:orders.order-total-rule"),
+      title: "Order total matches cart math",
+      kind: "rule",
+      altitude: "story",
+      readiness: "ready",
+      intent: { outcome: "Keep totals deterministic." },
+      behavior: { rules: ["The order total is the sum of all line subtotals."] },
+      relations: [refines(specId("spec:orders.order-management"))],
+    });
+    const target = spec({
+      id: specId("spec:orders.order-management"),
+      title: "Order management",
+      kind: "behavior",
+      altitude: "epic",
+      readiness: "defined",
+      intent: { outcome: "Own the order lifecycle for checkout." },
+      behavior: { rules: ["Order management keeps the slice traceable."] },
+    });
+
+    // With the refines target in the graph, every clause through ready holds.
+    expect(floorFailuresFor(subject.id, subject, target)).toEqual([]);
+
+    // The identical spec over a graph missing the target flips the graph-shaped ready clause —
+    // the clause reads the one graph, not the spec value alone.
+    expect(floorFailuresFor(subject.id, subject).map((failure) => failure.clauseId)).toEqual([
+      "all-relations-resolve",
+    ]);
   });
 
   it("covers every kind in the evidence table; workflow and contract ride the behavior row (MD-12)", () => {
@@ -85,11 +143,12 @@ describe("readiness and validation contracts", () => {
       relations: [refines(specId("spec:orders.create-order"))],
     });
 
-    expect(evaluateReadinessFloor(parent, modelOf(parent, promotedRule))).toEqual([]);
+    expect(floorFailuresFor(parent.id, parent, promotedRule)).toEqual([]);
 
-    expect(
-      evaluateReadinessFloor(parent, modelOf(parent)).map((failure) => failure.clauseId),
-    ).toEqual(["kind-evidence-present", "kind-evidence-complete"]);
+    expect(floorFailuresFor(parent.id, parent).map((failure) => failure.clauseId)).toEqual([
+      "kind-evidence-present",
+      "kind-evidence-complete",
+    ]);
 
     // An empty stub child is not a promotion (MD-16): promotion moves content out (MD-10), so a
     // rule child with no statement of its own contributes no evidence.
@@ -103,7 +162,7 @@ describe("readiness and validation contracts", () => {
     });
 
     expect(
-      evaluateReadinessFloor(parent, modelOf(parent, stubRule)).map((failure) => failure.clauseId),
+      floorFailuresFor(parent.id, parent, stubRule).map((failure) => failure.clauseId),
     ).toEqual(["kind-evidence-present", "kind-evidence-complete"]);
   });
 
@@ -121,12 +180,12 @@ describe("readiness and validation contracts", () => {
       });
 
     const scoped = constraintAt("scoped");
-    expect(evaluateReadinessFloor(scoped, modelOf(scoped))).toEqual([]);
+    expect(floorFailuresFor(scoped.id, scoped)).toEqual([]);
 
     const defined = constraintAt("defined");
-    expect(
-      evaluateReadinessFloor(defined, modelOf(defined)).map((failure) => failure.clauseId),
-    ).toEqual(["kind-evidence-complete"]);
+    expect(floorFailuresFor(defined.id, defined).map((failure) => failure.clauseId)).toEqual([
+      "kind-evidence-complete",
+    ]);
   });
 
   it("requires a structured GWT entry for a defined example; prose clears scoped only (MD-10)", () => {
@@ -143,9 +202,9 @@ describe("readiness and validation contracts", () => {
       });
 
     const prose = exampleWith(["Valid cart becomes an order with the computed total."]);
-    expect(
-      evaluateReadinessFloor(prose, modelOf(prose)).map((failure) => failure.clauseId),
-    ).toEqual(["kind-evidence-complete"]);
+    expect(floorFailuresFor(prose.id, prose).map((failure) => failure.clauseId)).toEqual([
+      "kind-evidence-complete",
+    ]);
 
     const structured = exampleWith([
       {
@@ -154,6 +213,79 @@ describe("readiness and validation contracts", () => {
         then: ["An order is created."],
       },
     ]);
-    expect(evaluateReadinessFloor(structured, modelOf(structured))).toEqual([]);
+    expect(floorFailuresFor(structured.id, structured)).toEqual([]);
+  });
+
+  describe("derived readiness (the stated-vs-derived split, `05` §3)", () => {
+    const parent = spec({
+      id: specId("spec:orders.order-management"),
+      title: "Order management",
+      kind: "behavior",
+      altitude: "epic",
+      readiness: "defined",
+      intent: { outcome: "Coordinate the order-management slice." },
+      behavior: { rules: ["Order management keeps the slice traceable."] },
+    });
+
+    /** A rule spec whose only relation resolves to the parent above. */
+    const ruleAt = (readiness: Spec["readiness"], overrides?: Partial<Spec>): Spec =>
+      spec({
+        id: specId("spec:orders.order-total-rule"),
+        title: "Order total matches cart math",
+        kind: "rule",
+        altitude: "story",
+        readiness,
+        intent: { outcome: "Keep totals deterministic." },
+        behavior: { rules: ["The order total is the sum of all line subtotals."] },
+        relations: [refines(specId("spec:orders.order-management"))],
+        ...overrides,
+      });
+
+    it("derives the highest cumulatively-cleared rung, independent of the stated one", () => {
+      // States idea but structurally clears every rung through ready — derived above stated is
+      // ordinary information, never a finding (the floor is a floor, not a quota).
+      expect(derivedReadinessFor("spec:orders.order-total-rule", ruleAt("idea"), parent)).toBe(
+        "ready",
+      );
+    });
+
+    it("derives below the stated rung exactly where the floor check fails (the divergence)", () => {
+      const padded = ruleAt("ready", {
+        intent: {
+          outcome: "Keep totals deterministic.",
+          openQuestions: [{ question: "Do bundle discounts apply per line?", blocking: true }],
+        },
+      });
+
+      // The blocking open question caps the derived rung at scoped; the stated ready also fails
+      // the floor check — the same table answers both readings (MD-13).
+      expect(derivedReadinessFor(padded.id, padded, parent)).toBe("scoped");
+      expect(
+        floorFailuresFor(padded.id, padded, parent).map((failure) => failure.clauseId),
+      ).toEqual(["no-blocking-open-questions"]);
+    });
+
+    it("derives undefined when even the idea clauses fail", () => {
+      const bare = spec({
+        id: specId("spec:orders.order-total-rule"),
+        title: "Order total matches cart math",
+        kind: "rule",
+        altitude: "story",
+        readiness: "idea",
+        // No intent.outcome and no parent relation: the idea floor itself is unmet.
+      });
+
+      expect(derivedReadinessFor(bare.id, bare)).toBeUndefined();
+    });
+
+    it("stays total over an unratified kind: no rung derives, the conformance error owns it", () => {
+      const { node, index } = indexedSubject("spec:orders.order-total-rule", [
+        ruleAt("scoped"),
+        parent,
+      ]);
+      const foreign = { ...node, specKind: "saga" as PrimitiveNode["specKind"] };
+
+      expect(deriveReadiness(foreign, index)).toBeUndefined();
+    });
   });
 });

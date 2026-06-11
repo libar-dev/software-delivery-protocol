@@ -12,6 +12,8 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
-    include: ["test/**/*.test.ts"],
+    // The example's tests run too: the tracer-bullet verifier anchor must sit beside a real,
+    // executing runner test (`04` §2), not stand alone as a binding-only file.
+    include: ["test/**/*.test.ts", "examples/**/*.test.ts"],
   },
 });

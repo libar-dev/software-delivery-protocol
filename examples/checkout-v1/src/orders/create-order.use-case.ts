@@ -1,4 +1,4 @@
-import { anchorImplementation, implAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
 
 export interface CartLine {
   readonly productId: string;
@@ -20,8 +20,8 @@ export interface CreatedOrder {
   readonly lines: readonly CartLine[];
 }
 
-export const createOrderUseCaseAnchor = anchorImplementation({
-  id: implAnchorId("impl:orders.create-order-use-case"),
+export const createOrderUseCaseAnchor = codeAnchor({
+  id: codeAnchorId("impl:orders.create-order-use-case"),
   label: "createOrderFromCart",
   satisfies: ref("spec:orders.create-order"),
 });

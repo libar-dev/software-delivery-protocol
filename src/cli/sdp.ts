@@ -1,18 +1,55 @@
 #!/usr/bin/env node
 
+import { mkdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { extract } from "../extract/index.js";
+import { serializeGraph } from "../extract/serialize.js";
+import type { GraphSchema } from "../graph/schema.js";
+import { renderDesignReview } from "../projections/design-review.js";
+import { createReader } from "../reader/reader.js";
+import type { Finding } from "../validate/contracts.js";
+import { validateGraph } from "../validate/validators.js";
+
 export const SDP_HELP_TEXT = `sdp — Libar Software Delivery Protocol
 Usage:
   sdp --help
-  sdp build
-  sdp validate
+  sdp build [root] [--check-clean]
+  sdp validate [root] [--check-clean]
+  sdp view [root] [--check-clean]
 
 Commands:
-  build      Not implemented yet (Slice 1: extractor)
-  validate   Validation gate not wired yet (Slice 3: graph validator gate)`;
+  build      Extract every *.sdp.ts under root (default: cwd), plus the anchor constants in the
+             other *.ts/*.tsx source files, into <root>/generated/graph.json.
+             Exits 1 and writes nothing on any hard error — the emitted artifact is
+             all-or-nothing. --check-clean additionally runs a second independent extraction
+             and fails on any byte divergence (the determinism self-check).
+  validate   build, then run the conformance + honesty checks over the one graph (one
+             validation path). A check error exits 1; gaps and orphans inform as warnings.
+             graph.json is still written when the checks fail — the graph is the faithful
+             projection; check errors describe the repo's conformance, not the artifact.
+  view       validate, then generate the Design Review — the one read-only human view, a pure
+             projection of the graph — into <root>/generated/design-review/ (rewritten
+             wholesale, so no stale page survives). The view is written even when checks
+             fail: findings render in it, which is what a review surface is for. Exit code
+             follows validate. --check-clean additionally re-renders independently and fails
+             on any byte divergence.`;
 
 interface CliOutput {
   stdout?: { write: (chunk: string) => void };
   stderr?: { write: (chunk: string) => void };
+}
+
+/**
+ * The internal injection seam — never a CLI flag, never part of the agent surface. Extraction and
+ * rendering are deterministic (P3), so the --check-clean divergence branches and the error
+ * boundaries are unreachable from honest inputs; their coverage substitutes these producers.
+ */
+interface CliHooks {
+  readonly extract?: typeof extract;
+  readonly renderDesignReview?: typeof renderDesignReview;
+  readonly validateGraph?: typeof validateGraph;
 }
 
 const defaultCliOutput: CliOutput = {
@@ -32,33 +69,341 @@ function writeStderr(output: CliOutput, text: string): void {
   }
 }
 
-export function runSdpCli(args: readonly string[], output: CliOutput = defaultCliOutput): number {
-  const [command] = args;
+/**
+ * The one text rendering of a finding: location comes from the structured `file`/`line` fields
+ * (messages never embed it — stating it twice is the duplication the model itself forbids).
+ * Graph-validator findings often carry `file` without `line` (`Primitive` nodes are line-free by
+ * design), so each part renders only when known.
+ */
+function formatFinding(finding: Finding): string {
+  const location =
+    finding.file === undefined
+      ? ""
+      : `${finding.file}${finding.line === undefined ? "" : `:${String(finding.line)}`} — `;
+
+  return `${location}[${finding.severity}] ${finding.validatorId} — ${finding.message}\n`;
+}
+
+interface BuildArgs {
+  /** The resolved extraction root. */
+  readonly root: string;
+  readonly checkClean: boolean;
+}
+
+function parseBuildArgs(
+  args: readonly string[],
+  output: CliOutput,
+  command: string,
+): BuildArgs | undefined {
+  let root: string | undefined;
+  let checkClean = false;
+
+  for (const argument of args) {
+    if (argument === "--check-clean") {
+      checkClean = true;
+      continue;
+    }
+
+    if (argument.startsWith("--")) {
+      writeStderr(output, `sdp ${command}: unknown option ${argument}\n`);
+      return undefined;
+    }
+
+    if (root !== undefined) {
+      writeStderr(output, `sdp ${command} takes at most one root argument.\n`);
+      return undefined;
+    }
+
+    root = argument;
+  }
+
+  const resolvedRoot = resolve(process.cwd(), root ?? ".");
+
+  // First contact fails clean: a typo'd root is invocation feedback, never a Node stack trace.
+  if (!isDirectory(resolvedRoot)) {
+    writeStderr(output, `sdp ${command}: root "${resolvedRoot}" is not a directory.\n`);
+    return undefined;
+  }
+
+  return { root: resolvedRoot, checkClean };
+}
+
+function isDirectory(path: string): boolean {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * Best-effort stale-artifact removal for recovery paths. `force: true` is not enough on every
+ * supported runtime: Node 20 ignores only ENOENT, so a path through `generated`-as-a-file still
+ * raises ENOTDIR through the file parent — and recovery must never itself throw and crash out of
+ * the one-line law. A path whose parent is not a directory holds no readable artifact, so
+ * swallowing the failure leaves nothing stale behind. Success-path removals stay raw `rmSync`:
+ * there a swallowed failure could rename a stale temp tree into place, and the surrounding
+ * try/catch already routes the error into the one-line law.
+ */
+function removeArtifact(path: string): void {
+  try {
+    rmSync(path, { recursive: true, force: true });
+  } catch {
+    // nothing readable exists at a path through a non-directory; the one-line law holds
+  }
+}
+
+interface BuildOutcome {
+  readonly exitCode: number;
+  /** Present only when the build succeeded — the graph the checks consume. */
+  readonly graph?: GraphSchema;
+}
+
+function runBuild(
+  parsed: BuildArgs,
+  output: CliOutput,
+  command: string,
+  hooks: CliHooks,
+): BuildOutcome {
+  const { root: resolvedRoot, checkClean } = parsed;
+  const runExtract = hooks.extract ?? extract;
+  const graphPath = join(resolvedRoot, "generated", "graph.json");
+
+  // A stale projection is as dishonest as a partial one: a failed build must not leave a previous
+  // graph.json behind that downstream consumers could read as current — nor a half-written temp
+  // twin. Recovery rides removeArtifact, which never throws — so it cannot crash out of the
+  // one-line law.
+  const failBuild = (message: string): BuildOutcome => {
+    removeArtifact(graphPath);
+    removeArtifact(`${graphPath}.tmp`);
+    writeStderr(output, message);
+    return { exitCode: 1 };
+  };
+
+  try {
+    const result = runExtract({ root: resolvedRoot });
+    const findings = result.report.findings;
+
+    for (const finding of findings) {
+      writeStderr(output, formatFinding(finding));
+    }
+
+    // An empty authored model is conformant — no finding, exit 0 — but a typo'd cwd must never be
+    // a silent success, so the CLI (the invocation surface) says where it looked. A finding that
+    // names a spec file proves spec files were found (a failed file is not an absent one), so the
+    // note stays silent beside it.
+    if (
+      result.counts.specs === 0 &&
+      !findings.some((finding) => finding.file?.endsWith(".sdp.ts"))
+    ) {
+      writeStderr(
+        output,
+        `note: no *.sdp.ts spec files found under ${resolvedRoot} — the authored model is empty. Is this the right extraction root?\n`,
+      );
+    }
+
+    const errorCount = findings.filter((finding) => finding.severity === "error").length;
+    const warningCount = findings.length - errorCount;
+    const summary = `${String(result.counts.specs)} specs · ${String(result.counts.packs)} packs · ${String(result.counts.anchors)} anchors → ${String(result.graph.nodes.length)} nodes · ${String(result.graph.edges.length)} edges (${String(errorCount)} errors, ${String(warningCount)} warnings)\n`;
+
+    if (errorCount > 0) {
+      writeStdout(output, summary);
+      return failBuild(
+        `sdp ${command}: hard errors present — graph.json not written; any previous graph.json at this root was removed.\n`,
+      );
+    }
+
+    const serialized = serializeGraph(result.graph);
+
+    if (checkClean) {
+      const second = serializeGraph(runExtract({ root: resolvedRoot }).graph);
+
+      if (second !== serialized) {
+        return failBuild(
+          `sdp ${command} --check-clean: two independent extractions diverged — the build is not deterministic; any previous graph.json at this root was removed.\n`,
+        );
+      }
+    }
+
+    // Temp-then-rename so a crash mid-write can never leave a truncated graph.json looking current.
+    const temporaryPath = `${graphPath}.tmp`;
+    mkdirSync(join(resolvedRoot, "generated"), { recursive: true });
+    writeFileSync(temporaryPath, serialized, "utf8");
+    renameSync(temporaryPath, graphPath);
+    writeStdout(output, summary);
+    writeStdout(output, `Wrote ${graphPath}\n`);
+    return { exitCode: 0, graph: result.graph };
+  } catch (error) {
+    // Failures past root discovery keep the same law as the typo'd root: one line of invocation
+    // feedback, exit 1, never a Node stack trace — and the stale-artifact removal above holds.
+    return failBuild(`sdp ${command}: ${errorMessage(error)}\n`);
+  }
+}
+
+/**
+ * `sdp validate` = `sdp build` + the checks (one validation path, MD-14). Extraction hard errors
+ * keep build semantics and short-circuit the checks — checking a partial graph would validate a
+ * phantom. With extraction clean the artifact is written even when checks fail: the graph is the
+ * faithful projection, and the check errors describe the repo's conformance, not the artifact.
+ */
+function runValidate(
+  parsed: BuildArgs,
+  output: CliOutput,
+  command: string,
+  hooks: CliHooks,
+): BuildOutcome {
+  const build = runBuild(parsed, output, command, hooks);
+
+  if (build.graph === undefined) {
+    return build;
+  }
+
+  const runValidateGraph = hooks.validateGraph ?? validateGraph;
+
+  try {
+    const findings = runValidateGraph(build.graph).findings;
+
+    for (const finding of findings) {
+      writeStderr(output, formatFinding(finding));
+    }
+
+    const errorCount = findings.filter((finding) => finding.severity === "error").length;
+    const warningCount = findings.length - errorCount;
+    writeStdout(
+      output,
+      `validate: ${String(errorCount)} errors · ${String(warningCount)} warnings (conformance + honesty over the one graph)\n`,
+    );
+
+    return { exitCode: errorCount > 0 ? 1 : 0, graph: build.graph };
+  } catch (error) {
+    // The checks ride the same one-line law as every stage past discovery. graph.json stays — it
+    // was cleanly built, and the failure describes the checks, not the artifact.
+    writeStderr(output, `sdp ${command}: ${errorMessage(error)}\n`);
+    return { exitCode: 1 };
+  }
+}
+
+/**
+ * `sdp view` = `sdp validate` + the Design Review render. The view directory is owned wholesale —
+ * removed and rewritten every run (a deleted spec's page must not survive as a stale artifact),
+ * via temp-then-rename so a crash mid-write never leaves a half-written tree looking current.
+ * The view is written even when checks fail: findings render *in* it — a review surface that
+ * refused to show findings would hide exactly what it exists to show — so the exit code is
+ * validate's, the artifacts stay.
+ */
+function runView(parsed: BuildArgs, output: CliOutput, hooks: CliHooks): number {
+  const render = hooks.renderDesignReview ?? renderDesignReview;
+  const viewPath = join(parsed.root, "generated", "design-review");
+  const validate = runValidate(parsed, output, "view", hooks);
+
+  if (validate.graph === undefined) {
+    // Build semantics: no graph, no view — and a stale view from a previous run is as dishonest
+    // as a stale graph.json, so it goes the same way (never-throw: this runs outside the
+    // try/catch, and a `generated`-as-a-file root must still fail on build's one line).
+    removeArtifact(viewPath);
+    return validate.exitCode;
+  }
+
+  // The graph's stale-artifact law, applied to the view: a failed render must not leave a
+  // previous design-review behind that a reviewer could read as current — nor a partial temp
+  // tree from a write that failed mid-loop.
+  const temporaryPath = `${viewPath}.tmp`;
+  const failView = (message: string): number => {
+    removeArtifact(viewPath);
+    removeArtifact(temporaryPath);
+    writeStderr(output, message);
+    return 1;
+  };
+
+  try {
+    const pages = render(createReader(validate.graph));
+
+    if (parsed.checkClean) {
+      const second = render(createReader(validate.graph));
+
+      if (JSON.stringify(second) !== JSON.stringify(pages)) {
+        return failView(
+          "sdp view --check-clean: two independent renders diverged — the view is not deterministic; any previous design-review at this root was removed.\n",
+        );
+      }
+    }
+
+    rmSync(temporaryPath, { recursive: true, force: true });
+
+    for (const page of pages) {
+      const target = join(temporaryPath, page.path);
+      mkdirSync(dirname(target), { recursive: true });
+      writeFileSync(target, page.content, "utf8");
+    }
+
+    rmSync(viewPath, { recursive: true, force: true });
+    renameSync(temporaryPath, viewPath);
+    writeStdout(output, `Wrote ${viewPath} (${String(pages.length)} pages)\n`);
+    return validate.exitCode;
+  } catch (error) {
+    // Failures past root discovery keep the same law as the typo'd root: one line of invocation
+    // feedback, exit 1, never a Node stack trace — and the stale-artifact removal above holds.
+    return failView(`sdp view: ${errorMessage(error)}\n`);
+  }
+}
+
+export function runSdpCli(
+  args: readonly string[],
+  output: CliOutput = defaultCliOutput,
+  hooks: CliHooks = {},
+): number {
+  const [command, ...rest] = args;
 
   if (command === undefined || command === "--help") {
     writeStdout(output, `${SDP_HELP_TEXT}\n`);
     return 0;
   }
 
-  if (command === "build") {
-    writeStderr(output, "sdp build is not implemented yet (Slice 1: extractor).\n");
+  if (command !== "build" && command !== "validate" && command !== "view") {
+    writeStderr(output, `${SDP_HELP_TEXT}\n\nUnknown command: ${command}\n`);
     return 1;
+  }
+
+  const parsed = parseBuildArgs(rest, output, command);
+
+  if (parsed === undefined) {
+    return 1;
+  }
+
+  if (command === "build") {
+    return runBuild(parsed, output, "build", hooks).exitCode;
   }
 
   if (command === "validate") {
-    writeStderr(output, "sdp validate gate is not wired yet (Slice 3: graph validator gate).\n");
-    return 1;
+    return runValidate(parsed, output, "validate", hooks).exitCode;
   }
 
-  writeStderr(output, `${SDP_HELP_TEXT}\n\nUnknown command: ${command}\n`);
-  return 1;
+  return runView(parsed, output, hooks);
 }
 
-const executedPath = process.argv[1];
+/**
+ * True when this module is the executed entry point. npm exposes the CLI as a
+ * `node_modules/.bin/sdp` symlink and Node keeps the symlink path in `process.argv[1]`, so a
+ * path-suffix check would silently no-op for the installed binary; realpath-comparing both sides
+ * recognizes every route to the entry file (direct, symlinked, or behind a symlinked directory).
+ * Fails closed: an unresolvable path means we are not the entry point.
+ */
+export function isCliEntrypoint(executedPath: string | undefined, moduleUrl: string): boolean {
+  if (executedPath === undefined) {
+    return false;
+  }
 
-if (
-  executedPath !== undefined &&
-  (executedPath.endsWith("/dist/cli/sdp.js") || executedPath.endsWith("\\dist\\cli\\sdp.js"))
-) {
+  try {
+    return realpathSync(executedPath) === realpathSync(fileURLToPath(moduleUrl));
+  } catch {
+    return false;
+  }
+}
+
+if (isCliEntrypoint(process.argv[1], import.meta.url)) {
   process.exitCode = runSdpCli(process.argv.slice(2));
 }

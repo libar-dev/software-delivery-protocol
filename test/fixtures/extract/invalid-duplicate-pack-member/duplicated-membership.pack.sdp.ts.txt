@@ -1,0 +1,9 @@
+import { pack, packId, ref } from "@libar-dev/software-delivery-protocol";
+
+// Lists the same member twice: membership is single-sourced on the manifest, and a duplicate is
+// ambiguous (L2) — the pack-coherence check fails it.
+export const duplicatedMembershipPack = pack({
+  id: packId("pack:checkout-v1"),
+  title: "Checkout v1",
+  specs: [ref("spec:orders.create-order"), ref("spec:orders.create-order")],
+});

@@ -1,0 +1,11 @@
+import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+
+// The binding itself is well-formed; the parse break further down poisons the file, and a binding
+// in a parse-broken code file must fail loudly rather than ride an untrustworthy AST into the
+// graph (L2).
+export const parseBrokenBinding = codeAnchor({
+  id: codeAnchorId("impl:orders.parse-broken-binding"),
+  satisfies: ref("spec:orders.healthy-sibling"),
+});
+
+export const danglingProse = `unterminated
