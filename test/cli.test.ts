@@ -283,7 +283,7 @@ describe("sdp cli", () => {
       expect(exitCode).toBe(1);
       expect(capture.readStdout()).toBe("");
       expect(capture.readStderr()).toBe(
-        "sdp build --check-clean: two independent extractions diverged — the build is not deterministic; any previous graph.json at this root was removed.\n",
+        "sdp build --check-clean: two independent extractions diverged — the build is not deterministic.\n",
       );
       // The stale artifact is gone: nothing at this root reads as current.
       expect(existsSync(stalePath)).toBe(false);
@@ -339,6 +339,47 @@ describe("sdp cli", () => {
       expect(viewCapture.readStderr()).not.toContain("    at ");
     } finally {
       removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("names the survivor when a recovery-path removal is denied: a stale artifact never silently reads as current", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-denied-removal-"));
+
+    try {
+      const stalePath = join(root, "generated", "graph.json");
+      mkdirSync(join(root, "generated"), { recursive: true });
+      writeFileSync(stalePath, '{ "stale": true }\n', "utf8");
+
+      // A denied removal (EACCES/EPERM) is deterministic only through the injection seam — never
+      // a chmod trick in a test. The nothing-readable failures (ENOENT/ENOTDIR) stay silent; any
+      // other failure must name the survivor instead of silently breaking the removal promise.
+      const denyExisting: typeof rmSync = (path) => {
+        if (existsSync(path)) {
+          const denied: NodeJS.ErrnoException = new Error("EACCES: permission denied");
+          denied.code = "EACCES";
+          throw denied;
+        }
+      };
+
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", root], capture.output, {
+        extract: () => {
+          throw new Error("extractor exploded");
+        },
+        rmSync: denyExisting,
+      });
+
+      expect(exitCode).toBe(1);
+      const lines = capture.readStderr().trimEnd().split("\n");
+      expect(lines).toHaveLength(2);
+      expect(lines[0]).toBe("sdp build: extractor exploded");
+      expect(lines[1]).toContain(`sdp build: stale ${stalePath} could not be removed`);
+      expect(lines[1]).toContain("do not read it as current");
+      expect(capture.readStderr()).not.toContain("    at ");
+      // The artifact genuinely survived — the survivor line told the truth.
+      expect(existsSync(stalePath)).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
     }
   });
 
@@ -622,7 +663,7 @@ describe("sdp cli", () => {
 
       expect(exitCode).toBe(1);
       expect(capture.readStderr()).toContain(
-        "sdp view --check-clean: two independent renders diverged — the view is not deterministic; any previous design-review at this root was removed.\n",
+        "sdp view --check-clean: two independent renders diverged — the view is not deterministic.\n",
       );
       // The stale view is gone; graph.json stays — the build and its determinism check were clean.
       expect(existsSync(viewPath)).toBe(false);

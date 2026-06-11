@@ -45,11 +45,14 @@ interface CliOutput {
  * The internal injection seam — never a CLI flag, never part of the agent surface. Extraction and
  * rendering are deterministic (P3), so the --check-clean divergence branches and the error
  * boundaries are unreachable from honest inputs; their coverage substitutes these producers.
+ * `removeArtifact` rides the same seam: a denied recovery-path removal (EACCES/EPERM) is
+ * deterministic only through injection — never a chmod trick in a test.
  */
 interface CliHooks {
   readonly extract?: typeof extract;
   readonly renderDesignReview?: typeof renderDesignReview;
   readonly validateGraph?: typeof validateGraph;
+  readonly rmSync?: typeof rmSync;
 }
 
 const defaultCliOutput: CliOutput = {
@@ -141,19 +144,47 @@ function errorMessage(error: unknown): string {
 }
 
 /**
- * Best-effort stale-artifact removal for recovery paths. `force: true` is not enough on every
- * supported runtime: Node 20 ignores only ENOENT, so a path through `generated`-as-a-file still
- * raises ENOTDIR through the file parent — and recovery must never itself throw and crash out of
- * the one-line law. A path whose parent is not a directory holds no readable artifact, so
- * swallowing the failure leaves nothing stale behind. Success-path removals stay raw `rmSync`:
- * there a swallowed failure could rename a stale temp tree into place, and the surrounding
- * try/catch already routes the error into the one-line law.
+ * Stale-artifact removal for recovery paths: never throws (recovery must not crash out of the
+ * one-line law) and never silent about a survivor. Only the nothing-readable failures are
+ * swallowed — ENOENT, and ENOTDIR because `force: true` is not enough on every supported
+ * runtime (Node 20 ignores only ENOENT, so a path through `generated`-as-a-file still raises
+ * ENOTDIR through the file parent, and such a path holds no readable artifact). Any other
+ * failure (EACCES/EPERM/EBUSY) means a readable artifact may persist: the failure is returned
+ * so the caller reports the survivor instead of letting a stale artifact read as current.
+ * Success-path removals stay raw `rmSync`: there a swallowed failure could rename a stale temp
+ * tree into place, and the surrounding try/catch already routes the error into the one-line law.
  */
-function removeArtifact(path: string): void {
+function removeArtifact(path: string, rm: typeof rmSync): string | undefined {
   try {
-    rmSync(path, { recursive: true, force: true });
-  } catch {
-    // nothing readable exists at a path through a non-directory; the one-line law holds
+    rm(path, { recursive: true, force: true });
+    return undefined;
+  } catch (error) {
+    const code = error instanceof Error ? (error as NodeJS.ErrnoException).code : undefined;
+
+    return code === "ENOENT" || code === "ENOTDIR" ? undefined : errorMessage(error);
+  }
+}
+
+/**
+ * Removes every recovery-path artifact and reports each survivor on its own line — the surfaced
+ * counterpart of the stale-artifact law: when removal cannot keep the promise, the consumer is
+ * told what not to trust instead of being promised silently.
+ */
+function removeArtifacts(
+  paths: readonly string[],
+  output: CliOutput,
+  command: string,
+  rm: typeof rmSync,
+): void {
+  for (const path of paths) {
+    const failure = removeArtifact(path, rm);
+
+    if (failure !== undefined) {
+      writeStderr(
+        output,
+        `sdp ${command}: stale ${path} could not be removed (${failure}) — do not read it as current.\n`,
+      );
+    }
   }
 }
 
@@ -171,16 +202,16 @@ function runBuild(
 ): BuildOutcome {
   const { root: resolvedRoot, checkClean } = parsed;
   const runExtract = hooks.extract ?? extract;
+  const recoveryRm = hooks.rmSync ?? rmSync;
   const graphPath = join(resolvedRoot, "generated", "graph.json");
 
   // A stale projection is as dishonest as a partial one: a failed build must not leave a previous
   // graph.json behind that downstream consumers could read as current — nor a half-written temp
-  // twin. Recovery rides removeArtifact, which never throws — so it cannot crash out of the
-  // one-line law.
+  // twin. Recovery rides removeArtifacts, which never throws (the one-line law holds) and names
+  // any survivor it could not remove.
   const failBuild = (message: string): BuildOutcome => {
-    removeArtifact(graphPath);
-    removeArtifact(`${graphPath}.tmp`);
     writeStderr(output, message);
+    removeArtifacts([graphPath, `${graphPath}.tmp`], output, command, recoveryRm);
     return { exitCode: 1 };
   };
 
@@ -212,9 +243,7 @@ function runBuild(
 
     if (errorCount > 0) {
       writeStdout(output, summary);
-      return failBuild(
-        `sdp ${command}: hard errors present — graph.json not written; any previous graph.json at this root was removed.\n`,
-      );
+      return failBuild(`sdp ${command}: hard errors present — graph.json not written.\n`);
     }
 
     const serialized = serializeGraph(result.graph);
@@ -224,7 +253,7 @@ function runBuild(
 
       if (second !== serialized) {
         return failBuild(
-          `sdp ${command} --check-clean: two independent extractions diverged — the build is not deterministic; any previous graph.json at this root was removed.\n`,
+          `sdp ${command} --check-clean: two independent extractions diverged — the build is not deterministic.\n`,
         );
       }
     }
@@ -297,6 +326,7 @@ function runValidate(
  */
 function runView(parsed: BuildArgs, output: CliOutput, hooks: CliHooks): number {
   const render = hooks.renderDesignReview ?? renderDesignReview;
+  const recoveryRm = hooks.rmSync ?? rmSync;
   const viewPath = join(parsed.root, "generated", "design-review");
   const validate = runValidate(parsed, output, "view", hooks);
 
@@ -304,7 +334,7 @@ function runView(parsed: BuildArgs, output: CliOutput, hooks: CliHooks): number 
     // Build semantics: no graph, no view — and a stale view from a previous run is as dishonest
     // as a stale graph.json, so it goes the same way (never-throw: this runs outside the
     // try/catch, and a `generated`-as-a-file root must still fail on build's one line).
-    removeArtifact(viewPath);
+    removeArtifacts([viewPath], output, "view", recoveryRm);
     return validate.exitCode;
   }
 
@@ -313,9 +343,8 @@ function runView(parsed: BuildArgs, output: CliOutput, hooks: CliHooks): number 
   // tree from a write that failed mid-loop.
   const temporaryPath = `${viewPath}.tmp`;
   const failView = (message: string): number => {
-    removeArtifact(viewPath);
-    removeArtifact(temporaryPath);
     writeStderr(output, message);
+    removeArtifacts([viewPath, temporaryPath], output, "view", recoveryRm);
     return 1;
   };
 
@@ -327,7 +356,7 @@ function runView(parsed: BuildArgs, output: CliOutput, hooks: CliHooks): number 
 
       if (JSON.stringify(second) !== JSON.stringify(pages)) {
         return failView(
-          "sdp view --check-clean: two independent renders diverged — the view is not deterministic; any previous design-review at this root was removed.\n",
+          "sdp view --check-clean: two independent renders diverged — the view is not deterministic.\n",
         );
       }
     }
