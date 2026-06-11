@@ -39,7 +39,7 @@ A graph nobody trusts is worthless. The job here is to make the delivery state *
 **Acceptance criteria:**
 1. Each readiness level has an explicit floor of required sections/relations: `idea` (id/title/kind/altitude + outcome-or-parent) → `scoped` → `defined` → `ready`.
 2. A spec stating a level it does not satisfy is flagged, with the specific missing pieces named.
-3. Low readiness is permissive — ideas and scoped specs are not punished for being incomplete; an open question only blocks promotion when it is explicitly marked `blocking`.
+3. Low readiness is permissive — ideas and scoped specs are not punished for being incomplete; an open question only blocks stating `defined`/`ready` when it is explicitly marked `blocking`.
 4. High readiness is strict and **structural**: the `ready` floor requires resolved relations, every `dependsOn`/`refines` target at least `defined`, no blocking open questions, and any anchors present resolving. **Delivery facts** (`implemented`, `has-verifier`) are *derived* from edges — never required by the floor, never an ingested pass/fail verdict.
 5. A quality constraint must carry a machine-readable `target` (e.g. `p95 < 300ms`, not "fast enough") before its spec can state `defined` or higher.
 6. The author's *stated* readiness and a *derived* readiness (computed from what the spec actually contains) can be compared, and a divergence (stated `defined`, derived `scoped`) is itself surfacable.
