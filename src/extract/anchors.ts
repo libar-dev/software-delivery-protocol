@@ -68,7 +68,9 @@ function createAnchorFinding(
     validatorId,
     family: "conformance",
     severity,
-    message: `${file}:${String(line)} — ${message}`,
+    // Location lives in the structured `file`/`line` fields only; renderers print it (one
+    // diagnostic rendering rule — same as `createExtractFinding`).
+    message,
     subjectId,
     path,
     file,

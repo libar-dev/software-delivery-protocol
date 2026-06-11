@@ -22,9 +22,9 @@ The one generated read-only view — a pure projection of the one graph (`graph.
 
 ## Findings
 
-| Severity | Check | Message |
-|---|---|---|
-| warning | `conformance/verifies-linkage` | Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier. |
+| Severity | Check | Message | Where |
+|---|---|---|---|
+| warning | `conformance/verifies-linkage` | Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier. | `specs/orders/create-order-invalid-cart.sdp.ts` |
 
 ---
 

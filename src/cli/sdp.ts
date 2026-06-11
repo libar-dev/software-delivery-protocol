@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { mkdirSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -58,8 +58,19 @@ function writeStderr(output: CliOutput, text: string): void {
   }
 }
 
+/**
+ * The one text rendering of a finding: location comes from the structured `file`/`line` fields
+ * (messages never embed it — stating it twice is the duplication the model itself forbids).
+ * Graph-validator findings often carry `file` without `line` (`Primitive` nodes are line-free by
+ * design), so each part renders only when known.
+ */
 function formatFinding(finding: Finding): string {
-  return `[${finding.severity}] ${finding.validatorId} — ${finding.message}\n`;
+  const location =
+    finding.file === undefined
+      ? ""
+      : `${finding.file}${finding.line === undefined ? "" : `:${String(finding.line)}`} — `;
+
+  return `${location}[${finding.severity}] ${finding.validatorId} — ${finding.message}\n`;
 }
 
 interface BuildArgs {
@@ -95,7 +106,23 @@ function parseBuildArgs(
     root = argument;
   }
 
-  return { root: resolve(process.cwd(), root ?? "."), checkClean };
+  const resolvedRoot = resolve(process.cwd(), root ?? ".");
+
+  // First contact fails clean: a typo'd root is invocation feedback, never a Node stack trace.
+  if (!isDirectory(resolvedRoot)) {
+    writeStderr(output, `sdp ${command}: root "${resolvedRoot}" is not a directory.\n`);
+    return undefined;
+  }
+
+  return { root: resolvedRoot, checkClean };
+}
+
+function isDirectory(path: string): boolean {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
 }
 
 interface BuildOutcome {
@@ -111,6 +138,15 @@ function runBuild(parsed: BuildArgs, output: CliOutput, command: string): BuildO
 
   for (const finding of findings) {
     writeStderr(output, formatFinding(finding));
+  }
+
+  // An empty authored model is conformant — no finding, exit 0 — but a typo'd cwd must never be
+  // a silent success, so the CLI (the invocation surface) says where it looked.
+  if (result.counts.specs === 0) {
+    writeStderr(
+      output,
+      `note: no *.sdp.ts spec files found under ${resolvedRoot} — the authored model is empty. Is this the right extraction root?\n`,
+    );
   }
 
   const errorCount = findings.filter((finding) => finding.severity === "error").length;

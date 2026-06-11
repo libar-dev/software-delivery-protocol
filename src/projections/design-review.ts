@@ -488,11 +488,17 @@ function renderFindings(findings: readonly Finding[]): readonly string[] {
     return ["## Findings", "", "None — conformance + honesty clean for this page's subject."];
   }
 
-  const lines = ["## Findings", "", "| Severity | Check | Message |", "|---|---|---|"];
+  const lines = ["## Findings", "", "| Severity | Check | Message | Where |", "|---|---|---|---|"];
 
   for (const finding of findings) {
+    // Location from the structured `file`/`line` fields — a source location *recorded in the
+    // graph* (R2); `Primitive` nodes are line-free by design, so the line renders only when known.
+    const where =
+      finding.file === undefined
+        ? "—"
+        : `\`${finding.file}${finding.line === undefined ? "" : `:${String(finding.line)}`}\``;
     lines.push(
-      `| ${finding.severity} | \`${finding.validatorId}\` | ${tableCell(finding.message)} |`,
+      `| ${finding.severity} | \`${finding.validatorId}\` | ${tableCell(finding.message)} | ${where} |`,
     );
   }
 

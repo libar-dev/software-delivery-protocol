@@ -17,7 +17,7 @@ Build in thin vertical slices, each end-to-end on the example — on the foundat
 | 2 | Generic anchors + implementation binding + spec↔test linkage + `verifies` edges (anchored `claim`). |
 | 3 | Core conformance + honesty checks: referential integrity, duplicate IDs, honest readiness (the readiness floor), orphan detection, `verifies` linkage, authoring-shape honesty. CI gate. |
 | 4 | The agent surface (the `reader` — a few trusted accessors: entry adapters + impact) + the Design Review / one generated read-only view, both fully derived. |
-| 5 | Polish: CLI (`sdp build`, `sdp validate`, maybe `explain`/`search`), error messages, the documented example, and a "regenerate from clean repo" determinism test. |
+| 5 | Polish: the CLI surface resolved (`build` · `validate` · `view` — `explain`/`search` stay below the second-caller bar, `06` §3), one diagnostic rendering rule (location from the finding's structured fields; first contact fails clean), the documented example walkthrough (`examples/checkout-v1/README.md`), and the clean-repo determinism test (the full pipeline at a different absolute path is byte-identical). |
 
 Package: a single **`@libar-dev/software-delivery-protocol`** (DSL + types, anchors, graph + reader/query API, `ts-morph` extractor, core checks, one view generator, CLI). Internal subpackage boundaries are a later concern, not decided now.
 
@@ -58,7 +58,7 @@ These are out of the first slice. Each is genuinely deferred, and the model in `
 6. **Rich projections + heavy AI tooling.** No LikeC4/OpenAPI/JSON-LD/SHACL; no dedicated slice generator or MCP surface. *Rationale:* the agent surface + graph JSON is sufficient structured context at MVP scale.
 7. **Architecture-enforcement checks.** No forbidden-dependency validators, no ts-arch tests, no custom `defineRule`. Keep only core graph invariants. *Rationale:* a whole validation competency; the small bounded context does not need it yet.
 8. **A fuller impact graph.** The MVP ships **file-level** impact/blast-radius off the curated graph (`06` §2 boundary); the exhaustive language-server-grade impact graph (cross-package, symbol-level identity, `bySymbol`, drift/fan-in tooling) is deferred. *Rationale:* the curated surface proves the thesis first, and file-level reach needs no symbol index.
-9. **Incremental builds / caching / sharding & full CLI** (evidence, migrate, ai subcommands). Full rebuild per run; `sdp build` + `sdp validate` (+ maybe `explain`/`search`) proves the loop. *Rationale:* fine at MVP scale.
+9. **Incremental builds / caching / sharding & full CLI** (evidence, migrate, ai subcommands). Full rebuild per run; `sdp build` + `sdp validate` + `sdp view` prove the loop — `explain`/`search` stay below the second-caller bar (`06` §3). *Rationale:* fine at MVP scale.
 
 ---
 
@@ -94,11 +94,12 @@ Recorded here so the full-scope lens isn't lost; each is honesty-posture-aligned
 These came out of the Phase-0 hardening review and were routed here (rather than into that code-only plan) so they
 land in the roadmap at the right altitude. Ordering reflects the synthesis's priority.
 
-- **① Authoring ergonomics — the headline forward risk; a named Slice-2 concern.** There is *no
-  authoring-ergonomics workstream* anywhere in `00`–`07` today (the MVP CLI is just `build`/`validate`), yet if
+- **① Authoring ergonomics — the headline forward risk.** There is *no
+  authoring-ergonomics workstream* anywhere in `00`–`07` (the MVP CLI is just `build`/`validate`/`view`), yet if
   authoring feels heavy, authors (human **and** agent) avoid the system or overfit specs to satisfy tooling. The
   first lever — **typed sections** (autocomplete + shape guardrails) — **landed in the Phase-0 hardening
-  (the typing law, MD-11)**; the next are great error messages and `sdp validate --watch`; later `sdp new spec` /
+  (the typing law, MD-11)**; the second — the diagnostics rule (location rendered from the finding's structured
+  fields; first contact fails clean) — landed at Slice 5; the next is `sdp validate --watch`; later `sdp new spec` /
   `sdp explain`. Threads back to the anti-padding rule: make *dishonesty* fail without rewarding
   low-signal filler (a floor to clear, never a quota to fill).
 - **② Golden-graph fixture — at Slice 1; keep it distinct from `--check-clean`.** Adopt **both**, labeled

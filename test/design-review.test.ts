@@ -111,6 +111,15 @@ describe("the Design Review — the one generated read-only view", () => {
     }
   });
 
+  it("locates findings from the structured fields — the Where column (line-free for a Primitive)", () => {
+    const index = pageByPath(examplePages, "index.md");
+
+    expect(index).toContain("| Severity | Check | Message | Where |");
+    // The standing warning's subject is a spec file: `file` known, no line (Primitive nodes are
+    // line-free by design), and the location is never embedded in the message a second time.
+    expect(index).toContain("| `specs/orders/create-order-invalid-cart.sdp.ts` |");
+  });
+
   it("shows what a verifier covers on its own page (JS-G2: from the test back to the spec)", () => {
     const validCart = pageByPath(examplePages, "spec/orders.create-order.valid-cart.md");
 

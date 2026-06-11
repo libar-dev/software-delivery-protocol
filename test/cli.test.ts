@@ -1,4 +1,5 @@
 import {
+  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -104,6 +105,46 @@ describe("sdp cli", () => {
     expect(capture.readStderr()).toBe("");
   });
 
+  it("clean-repo determinism: the full pipeline at a different absolute path is byte-identical", () => {
+    // --check-clean runs the pipeline twice over the *same* root, and delete-generated/-and-rerun
+    // reuses the same root too — neither can catch an absolute path leaking into artifact bytes.
+    // A working-tree copy of the authored surfaces (never `git archive`: an uncommitted example
+    // edit must not fail a determinism test) at a fresh absolute path pins the projection
+    // property: bytes are a function of the root's *content*, never its location or leftover
+    // local state.
+    const cleanRoot = mkdtempSync(join(tmpdir(), "sdp-clean-repo-"));
+
+    try {
+      for (const surface of ["specs", "src", "test"]) {
+        cpSync(join(exampleRoot, surface), join(cleanRoot, surface), { recursive: true });
+      }
+
+      expect(runSdpCli(["view", exampleRoot, "--check-clean"], createCaptureOutput().output)).toBe(
+        0,
+      );
+      expect(runSdpCli(["view", cleanRoot, "--check-clean"], createCaptureOutput().output)).toBe(0);
+
+      const readArtifactTree = (root: string): ReadonlyMap<string, string> => {
+        const tree = new Map<string, string>();
+
+        for (const entry of readdirSync(root, { recursive: true, withFileTypes: true })) {
+          if (entry.isFile()) {
+            const absolute = join(entry.parentPath, entry.name);
+            tree.set(absolute.slice(root.length + 1), readFileSync(absolute, "utf8"));
+          }
+        }
+
+        return tree;
+      };
+
+      expect(readArtifactTree(join(cleanRoot, "generated"))).toEqual(
+        readArtifactTree(join(exampleRoot, "generated")),
+      );
+    } finally {
+      rmSync(cleanRoot, { recursive: true, force: true });
+    }
+  });
+
   it("end-to-end determinism self-check: delete generated/, rebuild, byte-identical", () => {
     const graphPath = join(exampleRoot, "generated", "graph.json");
     expect(runSdpCli(["build", exampleRoot], createCaptureOutput().output)).toBe(0);
@@ -113,6 +154,66 @@ describe("sdp cli", () => {
     expect(runSdpCli(["build", exampleRoot], createCaptureOutput().output)).toBe(0);
 
     expect(readFileSync(graphPath, "utf8")).toBe(firstBuild);
+  });
+
+  it("fails clean on a root that is not a directory: one line, exit 1, never a stack trace", () => {
+    const missingRoot = join(tmpdir(), "sdp-no-such-root");
+    const capture = createCaptureOutput();
+
+    const exitCode = runSdpCli(["build", missingRoot], capture.output);
+
+    expect(exitCode).toBe(1);
+    expect(capture.readStdout()).toBe("");
+    expect(capture.readStderr()).toBe(`sdp build: root "${missingRoot}" is not a directory.\n`);
+
+    // A file as root is the same invocation mistake and gets the same one-liner.
+    const fileRoot = join(repoRoot, "package.json");
+    const fileCapture = createCaptureOutput();
+    expect(runSdpCli(["validate", fileRoot], fileCapture.output)).toBe(1);
+    expect(fileCapture.readStderr()).toBe(`sdp validate: root "${fileRoot}" is not a directory.\n`);
+  });
+
+  it("notes an empty authored model: zero spec files still builds and exits 0, but says where it looked", () => {
+    const emptyRoot = mkdtempSync(join(tmpdir(), "sdp-empty-root-"));
+
+    try {
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", emptyRoot], capture.output);
+
+      // An empty authored model is conformant — no finding, the graph written, exit 0; the note
+      // is invocation feedback (a typo'd cwd must never be a silent success).
+      expect(exitCode).toBe(0);
+      expect(capture.readStdout()).toContain("0 specs · 0 packs · 0 anchors");
+      expect(capture.readStderr()).toContain(
+        `note: no *.sdp.ts spec files found under ${emptyRoot}`,
+      );
+      expect(existsSync(join(emptyRoot, "generated", "graph.json"))).toBe(true);
+    } finally {
+      rmSync(emptyRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("renders a finding's location exactly once, from the structured fields: file:line — [severity]", () => {
+    const corpusRoot = materializeExtractCorpus("invalid-non-static-id");
+
+    try {
+      const capture = createCaptureOutput();
+      runSdpCli(["build", corpusRoot], capture.output);
+
+      expect(capture.readStderr()).toMatch(
+        /non-static-id\.sdp\.ts:\d+ — \[error\] extract\/non-static-envelope — /,
+      );
+
+      // One diagnostic rendering rule: the location lives in the `file`/`line` fields and is
+      // printed by the formatter — never embedded in the message a second time.
+      const findingLine = capture
+        .readStderr()
+        .split("\n")
+        .find((line) => line.includes("extract/non-static-envelope"));
+      expect(findingLine?.match(/non-static-id\.sdp\.ts/g)).toHaveLength(1);
+    } finally {
+      removeMaterializedCorpus(corpusRoot);
+    }
   });
 
   it("exits 1, writes nothing, and removes a stale graph.json on a hard-error corpus", () => {

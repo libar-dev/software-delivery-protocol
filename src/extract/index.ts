@@ -94,7 +94,7 @@ function findDuplicatedIds(
         validatorId: extractFindingIds.duplicateId,
         family: "conformance",
         severity: "error",
-        message: `${location.file}:${String(location.line)} — id "${id}" is reified from ${String(locations.length)} sites (ambiguity is loud, L2); every site is reported and none enters the graph`,
+        message: `id "${id}" is reified from ${String(locations.length)} sites (ambiguity is loud, L2); every site is reported and none enters the graph`,
         subjectId: id,
         file: location.file,
         line: location.line,

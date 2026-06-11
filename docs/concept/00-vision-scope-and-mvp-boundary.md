@@ -79,7 +79,7 @@ Everything below is real, designed-for, and out of the first slice. Each is cut 
 | **MCP surface** (designed-in, deferred build) | The integration surface for *user-facing apps* — one more projection of the one read model, **distinct from the agent surface** (agents *script*; apps *integrate*). Designed-in, but its build is deferred and its shape is a fresh design — not an afterthought, and not carried over from any prior implementation. |
 | **Architecture enforcement** (forbidden-dependency tiers, ts-arch tests, custom rules) | A whole validation competency. MVP keeps only core graph invariants. |
 | **Incremental builds / caching / sharding** | Full rebuild is fine at MVP scale. |
-| **Full CLI** (evidence, migrate, ai subcommands) | MVP CLI is `sdp build` and `sdp validate` (plus maybe a simple `explain`/`search`). |
+| **Full CLI** (evidence, migrate, ai subcommands) | MVP CLI is `sdp build` · `sdp validate` · `sdp view`. `explain`/`search` stay below the second-caller bar (`06` §3): the agent scripts the reader, the human reads the Design Review — a terminal verb over the same joins would render the same information a third time. Revisit on measured pain (`07` §5). |
 
 Three stances shape the deferrals above: the graph is exposed to agents from day one as the **agent surface** (a typed graph the agent scripts, not a verb wall); there is no patch loop (edits route intent → agent → git); and verification is structural — test run verdicts are CI's, never ingested.
 

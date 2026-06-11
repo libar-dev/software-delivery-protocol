@@ -125,7 +125,10 @@ function createExtractFinding(
     validatorId,
     family: "conformance",
     severity,
-    message: `${file}:${String(line)} — ${message}`,
+    // Location lives in the structured `file`/`line` fields only; renderers print it. Embedding
+    // it in the message too would state the same information twice (one diagnostic rendering
+    // rule).
+    message,
     subjectId,
     path,
     file,
