@@ -84,11 +84,34 @@ describe("readiness and validation contracts", () => {
   });
 
   it("evaluates every clause — the ready clauses included — over the one graph (one validation path, MD-14)", () => {
-    for (const floor of Object.values(readinessFloors)) {
-      for (const clause of floor.clauses) {
-        expect(typeof clause.predicate).toBe("function");
-      }
-    }
+    const subject = spec({
+      id: specId("spec:orders.order-total-rule"),
+      title: "Order total matches cart math",
+      kind: "rule",
+      altitude: "story",
+      readiness: "ready",
+      intent: { outcome: "Keep totals deterministic." },
+      behavior: { rules: ["The order total is the sum of all line subtotals."] },
+      relations: [refines(specId("spec:orders.order-management"))],
+    });
+    const target = spec({
+      id: specId("spec:orders.order-management"),
+      title: "Order management",
+      kind: "behavior",
+      altitude: "epic",
+      readiness: "defined",
+      intent: { outcome: "Own the order lifecycle for checkout." },
+      behavior: { rules: ["Order management keeps the slice traceable."] },
+    });
+
+    // With the refines target in the graph, every clause through ready holds.
+    expect(floorFailuresFor(subject.id, subject, target)).toEqual([]);
+
+    // The identical spec over a graph missing the target flips the graph-shaped ready clause —
+    // the clause reads the one graph, not the spec value alone.
+    expect(floorFailuresFor(subject.id, subject).map((failure) => failure.clauseId)).toEqual([
+      "all-relations-resolve",
+    ]);
   });
 
   it("covers every kind in the evidence table; workflow and contract ride the behavior row (MD-12)", () => {

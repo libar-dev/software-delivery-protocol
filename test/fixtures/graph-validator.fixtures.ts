@@ -23,10 +23,13 @@ export interface ValidatorFixture {
   readonly model: FixtureModel;
   /**
    * `"pass"` asserts `validateGraph` returns no findings at all. Otherwise the model must produce
-   * a finding from `validatorId`; when `relatedId` is given, at least one finding must also match
-   * it (other informative findings may legitimately accompany a should-fail model).
+   * a finding from `validatorId`; when `relatedId` and/or `path` is given, at least one finding
+   * must also match them (other informative findings may legitimately accompany a should-fail
+   * model).
    */
-  readonly expect: "pass" | { readonly validatorId: string; readonly relatedId?: string };
+  readonly expect:
+    | "pass"
+    | { readonly validatorId: string; readonly relatedId?: string; readonly path?: string };
 }
 
 // The minimal clean repo: one idea spec carried by a pack — connected (a lone spec would
@@ -258,6 +261,95 @@ const validDefinedDecisionOnNaturalEvidence: ValidatorFixture = {
   expect: "pass",
 };
 
+// The should-fail twins of the two natural-evidence passes above: the same evidence cells with the
+// evidence absent — a floor that stops reading model.terms or decision.decision regresses here,
+// never silently. The section's presence is not the evidence (per-kind evidence table, MD-12).
+const invalidScopedModelWithoutTerms: ValidatorFixture = {
+  name: "invalid-scoped-model-without-terms",
+  model: {
+    specs: [
+      spec({
+        id: specId("spec:orders.order-management"),
+        title: "Order management",
+        kind: "behavior",
+        altitude: "epic",
+        readiness: "idea",
+        intent: { outcome: "Own the order lifecycle for checkout." },
+      }),
+      spec({
+        id: specId("spec:orders.order-model"),
+        title: "Order-management domain vocabulary",
+        kind: "model",
+        altitude: "story",
+        readiness: "scoped",
+        intent: { outcome: "Define the core order terms." },
+        // A model's evidence is its terms: the bare section carries none, so scoped's
+        // evidence-present clause fails.
+        model: {},
+        relations: [refines(specId("spec:orders.order-management"))],
+      }),
+    ],
+  },
+  expect: { validatorId: "honesty/readiness-floor", relatedId: "kind-evidence-present" },
+};
+
+const invalidScopedDecisionWithoutSection: ValidatorFixture = {
+  name: "invalid-scoped-decision-without-section",
+  model: {
+    specs: [
+      spec({
+        id: specId("spec:orders.create-order"),
+        title: "Create order",
+        kind: "behavior",
+        altitude: "feature",
+        readiness: "idea",
+        intent: { outcome: "Turn a valid cart into an order." },
+      }),
+      spec({
+        id: specId("spec:decisions.order-lifecycle"),
+        title: "Order lifecycle keeps validation before creation",
+        kind: "decision",
+        altitude: "feature",
+        readiness: "scoped",
+        intent: { outcome: "Decide when an order may be created." },
+        // No decision section at all: a decision-kind spec's natural evidence is missing outright.
+        relations: [refines(specId("spec:orders.create-order"))],
+      }),
+    ],
+  },
+  expect: { validatorId: "honesty/readiness-floor", relatedId: "kind-evidence-present" },
+};
+
+const invalidDefinedDecisionWithoutWrittenChoice: ValidatorFixture = {
+  name: "invalid-defined-decision-without-written-choice",
+  model: {
+    specs: [
+      spec({
+        id: specId("spec:orders.create-order"),
+        title: "Create order",
+        kind: "behavior",
+        altitude: "feature",
+        readiness: "idea",
+        intent: { outcome: "Turn a valid cart into an order." },
+      }),
+      spec({
+        id: specId("spec:decisions.order-lifecycle"),
+        title: "Order lifecycle keeps validation before creation",
+        kind: "decision",
+        altitude: "feature",
+        readiness: "defined",
+        intent: { outcome: "Decide when an order may be created." },
+        // Context alone clears scoped (the section is present — context may precede the choice)
+        // but not defined: evidence-complete requires decision.decision — the chosen option —
+        // written.
+        decision: { context: "Carts arrive at checkout both validated and unvalidated." },
+        relations: [refines(specId("spec:orders.create-order"))],
+      }),
+    ],
+  },
+  expect: { validatorId: "honesty/readiness-floor", relatedId: "kind-evidence-complete" },
+};
+
 // The runtime twin of the compile-time bypass fixture (MD-16): excess-property checking fires only
 // on fresh literals, so a section assembled through an intermediate variable smuggles a delivery
 // fact past tsc — the authoring-shape honesty check over the graph is what catches it.
@@ -282,6 +374,36 @@ const invalidHandAuthoredDeliveryFactInSection: ValidatorFixture = {
     ],
   },
   expect: { validatorId: "honesty/authoring-shape", relatedId: "has-verifier" },
+};
+
+// The array-carrier half of the same scan: an array section's carriers are its entries, so a
+// delivery fact smuggled into a constraints[] entry is found at the entry's path — pinned via
+// `path`, so the scan's array branch cannot regress behind the record-carrier pin above.
+const smuggledConstraintEntry = {
+  statement: "Create-order should respond within the checkout budget.",
+  implemented: true,
+};
+
+const invalidHandAuthoredDeliveryFactInArrayEntry: ValidatorFixture = {
+  name: "invalid-hand-authored-delivery-fact-in-array-entry",
+  model: {
+    specs: [
+      spec({
+        id: specId("spec:orders.order-latency-constraint"),
+        title: "Create-order latency budget",
+        kind: "constraint",
+        altitude: "story",
+        readiness: "idea",
+        intent: { outcome: "Keep create-order fast enough for interactive checkout." },
+        constraints: [smuggledConstraintEntry],
+      }),
+    ],
+  },
+  expect: {
+    validatorId: "honesty/authoring-shape",
+    relatedId: "implemented",
+    path: "constraints[0].implemented",
+  },
 };
 
 // MD-16's promoted-evidence bound: an empty stub child is not a promotion — promotion moves content
@@ -361,7 +483,11 @@ export const activeValidatorFixtures: readonly ValidatorFixture[] = [
   validDefinedWithNonBlockingQuestion,
   validDefinedModelOnNaturalEvidence,
   validDefinedDecisionOnNaturalEvidence,
+  invalidScopedModelWithoutTerms,
+  invalidScopedDecisionWithoutSection,
+  invalidDefinedDecisionWithoutWrittenChoice,
   invalidHandAuthoredDeliveryFactInSection,
+  invalidHandAuthoredDeliveryFactInArrayEntry,
   invalidDefinedBehaviorWithEmptyPromotedChild,
   invalidScopedBehaviorWithNonConstraintConstrainedBy,
 ];

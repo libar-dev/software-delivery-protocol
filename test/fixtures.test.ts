@@ -18,7 +18,8 @@ describe("graph-validator fixtures (should-pass / should-fail regression net)", 
       const matching = findings.filter(
         (finding) =>
           finding.validatorId === expected.validatorId &&
-          (expected.relatedId === undefined || finding.relatedId === expected.relatedId),
+          (expected.relatedId === undefined || finding.relatedId === expected.relatedId) &&
+          (expected.path === undefined || finding.path === expected.path),
       );
 
       expect(matching.length).toBeGreaterThan(0);

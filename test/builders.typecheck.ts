@@ -104,8 +104,8 @@ spec({
 // same excess-property caveat as the envelope defenses above applies: this fires only on fresh
 // literals. A section assembled through an intermediate variable slips past tsc and is caught at
 // runtime by `honesty/authoring-shape` (MD-16; the runtime twin lives in the fixture suite);
-// structurally, non-static section authoring is rejected by static reification (P5) and the
-// `sdp/spec-static` lint when the extractor lands (Slice 1).
+// structurally, non-static section authoring is rejected by static reification (P5), with the
+// `sdp/spec-static` lint a designed-for authoring-time guard.
 spec({
   id: specId("spec:orders.create-order"),
   title: "Customer creates an order",
