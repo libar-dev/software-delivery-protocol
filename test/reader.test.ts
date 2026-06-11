@@ -14,6 +14,8 @@ import {
   refines,
   spec,
   specId,
+  specTest,
+  testAnchorId,
   verifies,
 } from "../src/index.js";
 import type { GraphSchema, Reader } from "../src/index.js";
@@ -500,6 +502,64 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
         }),
       ]);
       expect(context?.deliveryFacts).toEqual(["implemented"]);
+    });
+
+    it("never decodes an off-contract verifies edge from an anchor-bound example as enabled", () => {
+      const graph = deriveFixtureGraph({
+        specs: [
+          spec({
+            id: specId("spec:orders.create-order"),
+            title: "Create order",
+            kind: "behavior",
+            altitude: "feature",
+            readiness: "idea",
+            intent: { outcome: "Turn a valid cart into an order." },
+          }),
+          spec({
+            id: specId("spec:orders.create-order.valid-cart"),
+            title: "Valid cart creates an order",
+            kind: "example",
+            altitude: "story",
+            readiness: "idea",
+            intent: { outcome: "Verify the happy path." },
+          }),
+        ],
+        anchors: [
+          specTest({
+            id: testAnchorId("test:orders.create-order.valid-cart"),
+            verifies: specId("spec:orders.create-order.valid-cart"),
+          }),
+        ],
+      });
+      // A foreign producer points an inferred verifies edge from the anchor-bound example at the
+      // parent — off-contract (`03` §1: an example's verifies edge confers the binding only as
+      // `declared`); the claim taxonomy is never collapsed into "an example, so enabled".
+      const foreign: GraphSchema = {
+        ...graph,
+        edges: [
+          ...graph.edges,
+          {
+            from: "spec:orders.create-order.valid-cart",
+            type: "verifies",
+            to: "spec:orders.create-order",
+            claim: "inferred",
+          },
+        ],
+      };
+
+      const context = createReader(foreign).specContext("spec:orders.create-order");
+
+      // The decode stays not-enabled even though a resolving test anchor binds the example, and
+      // the parent earns no has-verifier — reader and derived facts agree, fail closed.
+      expect(context?.verifiers).toEqual([
+        expect.objectContaining({
+          verifierId: "spec:orders.create-order.valid-cart",
+          via: "example",
+          claim: "inferred",
+          enabled: false,
+        }),
+      ]);
+      expect(context?.deliveryFacts).toEqual([]);
     });
 
     it("carries the claim through impact answers — machine-derived reach is marked, never promoted", () => {

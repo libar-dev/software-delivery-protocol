@@ -422,7 +422,13 @@ export function createReader(graph: GraphSchema): Reader {
         }
 
         const example = index.primitivesById.get(edge.from);
-        const enabled = example?.specKind === "example" && anchorVerified(example.id);
+        // An example confers the binding only along its `03` §1 contract row — a *declared*
+        // `verifies` edge from an enabled example: an off-contract claim confers nothing,
+        // exactly as in the derived facts (fail closed).
+        const enabled =
+          edge.claim === "declared" &&
+          example?.specKind === "example" &&
+          anchorVerified(example.id);
 
         return {
           verifierId: edge.from,

@@ -13,8 +13,10 @@ import {
   renderDesignReview,
   spec,
   specId,
+  specTest,
+  testAnchorId,
 } from "../src/index.js";
-import type { DesignReviewPage } from "../src/index.js";
+import type { DesignReviewPage, GraphSchema } from "../src/index.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
 const exampleRoot = fileURLToPath(new URL("../examples/checkout-v1", import.meta.url));
@@ -126,6 +128,51 @@ describe("the Design Review — the one generated read-only view", () => {
     expect(validCart).toContain("verifies → [`spec:orders.create-order`](orders.create-order.md)");
     expect(validCart).toContain("the enabled verifying binding (a resolving test anchor)");
     expect(validCart).toContain("test/orders/create-order.valid-cart.test.ts:10");
+  });
+
+  it("renders a test-anchor verifier as the enabled binding only along its contract row", () => {
+    // The enabled rendering, pinned over the example graph (a resolving test anchor)...
+    const validCart = pageByPath(examplePages, "spec/orders.create-order.valid-cart.md");
+    expect(validCart).toContain("the enabled verifying binding (a resolving test anchor)");
+
+    // ...and the not-enabled one over a foreign graph: a declared-claim verifies edge from an
+    // Anchor node is off-contract (`03` §1: a test anchor's verifies edge is `anchored`) — it
+    // confers no verifier binding, and the enabled-binding line must not render beside it.
+    const graph = deriveFixtureGraph({
+      specs: [
+        spec({
+          id: specId("spec:orders.create-order.valid-cart"),
+          title: "Valid cart creates an order",
+          kind: "example",
+          altitude: "story",
+          readiness: "idea",
+          intent: { outcome: "Verify the happy path." },
+        }),
+      ],
+      anchors: [
+        specTest({
+          id: testAnchorId("test:orders.create-order.valid-cart"),
+          verifies: specId("spec:orders.create-order.valid-cart"),
+        }),
+      ],
+    });
+    const foreign: GraphSchema = {
+      ...graph,
+      edges: graph.edges.map((edge) =>
+        edge.type === "verifies" ? { ...edge, claim: "declared" } : edge,
+      ),
+    };
+
+    const page = pageByPath(
+      renderDesignReview(createReader(foreign)),
+      "spec/orders.create-order.valid-cart.md",
+    );
+
+    expect(page).toContain("- Verifier binding: **none**");
+    expect(page).toContain(
+      "**not enabled** (an off-contract `verifies` edge — it confers no verifier binding)",
+    );
+    expect(page).not.toContain("the enabled verifying binding");
   });
 
   it("renders the pack as a review unit with the verifier gaps surfaced", () => {

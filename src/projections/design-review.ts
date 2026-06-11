@@ -1,3 +1,4 @@
+import { SPEC_READINESS } from "../model/descriptors.js";
 import type { Finding } from "../validate/contracts.js";
 import type {
   PackContext,
@@ -99,8 +100,6 @@ function textEntries(value: unknown): readonly string[] {
 
 /* ----- the readiness header (`05` §3, `07` §6 ③) ----- */
 
-const readinessOrder = ["idea", "scoped", "defined", "ready"];
-
 function renderReadiness(context: SpecContext): readonly string[] {
   const derived = context.derivedReadiness;
   const lines = [
@@ -109,8 +108,8 @@ function renderReadiness(context: SpecContext): readonly string[] {
     }`,
   ];
 
-  const statedRank = readinessOrder.indexOf(context.statedReadiness);
-  const derivedRank = derived === undefined ? -1 : readinessOrder.indexOf(derived);
+  const statedRank = SPEC_READINESS.indexOf(context.statedReadiness);
+  const derivedRank = derived === undefined ? -1 : SPEC_READINESS.indexOf(derived);
 
   // The banner fires only in the dishonest direction: derived at-or-above stated is ordinary
   // information (the floor is never a quota and never nags upward).
@@ -135,7 +134,9 @@ function renderReadiness(context: SpecContext): readonly string[] {
 
 function describeVerifier(verifier: VerifierBinding): string {
   if (verifier.via === "test-anchor") {
-    return "the enabled verifying binding (a resolving test anchor)";
+    return verifier.enabled
+      ? "the enabled verifying binding (a resolving test anchor)"
+      : "**not enabled** (an off-contract `verifies` edge — it confers no verifier binding)";
   }
 
   return verifier.enabled
