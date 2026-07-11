@@ -251,30 +251,28 @@ describe("the contracts codegen stage", () => {
     expect(space).toContain("readonly n: number;");
   });
 
-  it("reads a single quoted literal in a vocabulary as a one-value union — the documented consumer interpretation", () => {
-    const oneValueVocabulary = parent({
+  it("refuses to guess the single-quoted-literal vocabulary form — deferred to the grammar session, loudly", () => {
+    // The value-form's vocabulary reading is a grammar-design question the carrier ruling
+    // session owns (plan 12's scope ruling: syntax is never ruled in plan 13). Until it rules,
+    // the group declares nothing — and warns, so the authored slot never falls out silently.
+    const valueFormVocabulary = parent({
       given: ['the payment method is {method: "card"}'],
       when: ["the customer submits the cart for order creation"],
       then: ['order creation is rejected because {reason: "empty cart"}'],
     });
-    const bound = child({
-      given: ['the payment method is {method: "card"}'],
-      when: ["the customer submits the cart for order creation"],
-      then: ['order creation is rejected because {reason: "empty cart"}'],
-    });
-    const graph = deriveFixtureGraph({ specs: [oneValueVocabulary, bound] });
+    const graph = deriveFixtureGraph({ specs: [valueFormVocabulary] });
     const generated = generateContracts(graph);
-
-    // The Given-side declaration enters Conditions as a one-value union, the Then-side one
-    // becomes the Outcome variant's payload, the child's binding matches without any
-    // undeclared-slot misattribution — and nothing warns.
-    expect(generated.findings).toEqual([]);
-    const space = generated.files.get("orders.create-order.space.ts") ?? "";
-    expect(space).toContain('readonly method: "card";');
-    expect(space).toContain(
-      '{ readonly kind: "order creation is rejected because {reason}"; readonly reason: "empty cart" }',
+    const warnings = generated.findings.filter(
+      (finding) => finding.validatorId === contractsFindingIds.untypedVocabularySlot,
     );
-    expect(space).toContain('point: { method: "card" }');
+
+    expect(warnings).toHaveLength(2);
+    expect(warnings.every((finding) => finding.subjectId === "spec:orders.create-order")).toBe(
+      true,
+    );
+    const space = generated.files.get("orders.create-order.space.ts") ?? "";
+    expect(space).not.toContain("method");
+    expect(space).toContain('{ readonly kind: "order creation is rejected because {reason}" }');
   });
 
   it("warns on a vocabulary slot that declares no usable type — an authored slot never falls out silently (L2)", () => {
@@ -389,7 +387,7 @@ describe("the contracts codegen stage", () => {
     expect(contract).not.toContain("n: 3");
   });
 
-  it("rejects case-colliding contract paths with an error — they cannot coexist on every filesystem (P3)", () => {
+  it("withholds case-colliding contract paths with a warning — refusal, never a second gate (MD-14)", () => {
     const lower = child(BOUND_GWT, "spec:orders.create-order.same-case");
     const upper = child(BOUND_GWT, "spec:orders.create-order.same-Case");
     const graph = deriveFixtureGraph({ specs: [parent(VOCABULARY), lower, upper] });
@@ -399,7 +397,10 @@ describe("the contracts codegen stage", () => {
     );
 
     expect(collisions).toHaveLength(1);
-    expect(collisions[0]?.severity).toBe("error");
+    expect(collisions[0]?.severity).toBe("warning");
     expect(collisions[0]?.message).toContain("orders.create-order.same-case.contract.ts");
+    // The colliding modules are withheld (a silent clobber on a case-insensitive filesystem is
+    // the alternative); the rest of the tree — the space contract — still emits.
+    expect([...generated.files.keys()]).toEqual(["orders.create-order.space.ts"]);
   });
 });

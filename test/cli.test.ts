@@ -216,7 +216,7 @@ export const childSpec = spec({
     }
   });
 
-  it("fails the build on case-colliding contract paths: graph kept, contracts refused, exit 1", () => {
+  it("withholds case-colliding contract paths with a warning: graph kept, nothing gates", () => {
     const root = mkdtempSync(join(tmpdir(), "sdp-case-collision-"));
 
     try {
@@ -249,16 +249,14 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
       const capture = createCaptureOutput();
       const exitCode = runSdpCli(["build", root], capture.output);
 
-      // The graph is the faithful projection and stays; the contracts tree could not be written
-      // faithfully on every filesystem, so it is refused whole and the build fails.
-      expect(exitCode).toBe(1);
-      expect(capture.readStderr()).toMatch(/\[error\] contracts\/case-colliding-path — /);
-      expect(capture.readStderr()).toContain("contracts not written");
+      // A codegen degradation warns and withholds — it never gates (warnings never do; gating
+      // is validateGraph's alone). The graph stays; the colliding modules are the only casualty,
+      // and with nothing left to write, no contracts tree appears at all.
+      expect(exitCode).toBe(0);
+      expect(capture.readStderr()).toMatch(/\[warning\] contracts\/case-colliding-path — /);
+      expect(capture.readStderr()).toContain("withheld");
       expect(existsSync(join(root, "generated", "graph.json"))).toBe(true);
       expect(existsSync(join(root, "generated", "contracts"))).toBe(false);
-
-      // validate inherits the failed build stage: clean checks never override the worse exit.
-      expect(runSdpCli(["validate", root], createCaptureOutput().output)).toBe(1);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

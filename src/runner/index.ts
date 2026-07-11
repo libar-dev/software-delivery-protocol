@@ -110,19 +110,19 @@ export function planExample<W, S extends string, PM extends Record<S, ParamShape
 }
 
 /**
- * The framework-neutral execution loop the adapters share: a fresh world from the factory, every
- * planned step in contract order, and the failure law — a red step names itself in the spec's
- * own language (`at step: Then an order is created with total 100`) before the assertion detail.
+ * The framework-neutral execution loop the adapters share: every planned step in contract order
+ * against the world the CALLER hands in — the world lifecycle is the adapter's (settlement 6:
+ * the adapter creates a fresh world per example inside its test body; the core never calls a
+ * factory). What the core owns is the failure law — a red step names itself in the spec's own
+ * language (`at step: Then an order is created with total 100`) before the assertion detail.
  * The original error is kept where possible (assertion renderers read their own fields off it);
  * a frozen or getter-only error falls back to a wrapper carrying the original as `cause`, and a
  * non-Error throw is wrapped so the step name never gets lost.
  */
-export async function runExamplePlan<W>(plan: ExamplePlan<W>, world: () => W): Promise<void> {
-  const freshWorld = world();
-
+export async function runExamplePlan<W>(plan: ExamplePlan<W>, world: W): Promise<void> {
   for (const step of plan.steps) {
     try {
-      await step.run(freshWorld);
+      await step.run(world);
     } catch (error) {
       throw prefixStepFailure(step.label, error);
     }

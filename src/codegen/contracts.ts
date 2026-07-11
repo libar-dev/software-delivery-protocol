@@ -42,7 +42,8 @@ export const contractsFindingIds = {
   /** An example carries more than one structured entry — only the point entry is executable. */
   multiEntryExample: "contracts/multi-entry-example",
   /** Two contract paths differ only by letter case — they cannot coexist on a case-insensitive
-   *  filesystem, so the artifact could not be written faithfully (an error, not a warning). */
+   *  filesystem, so the colliding modules are withheld (refusal is the honest behavior) and the
+   *  warning names them; gating stays `validateGraph`'s alone (MD-14). */
   caseCollidingPath: "contracts/case-colliding-path",
 } as const;
 
@@ -112,9 +113,10 @@ function structuredEntriesOf(node: PrimitiveNode): readonly StructuredEntry[] {
 interface VocabularyEntry {
   readonly phase: StepPhase;
   readonly skeleton: string;
-  /** Slot name → declared type, authored order. The consumer interpretation the notation module
-   *  documents: a typed group declares its type; a single quoted literal in a vocabulary
-   *  declares a one-value union. Every other identifier-led form declares nothing — and warns
+  /** Slot name → declared type, authored order. Only the ratified type-form declares (`number` /
+   *  `string` / `boolean` / a closed union of two or more quoted literals). Every other
+   *  identifier-led form — bare, malformed, or value-form (whose vocabulary reading is the
+   *  grammar session's to rule) — declares nothing and warns
    *  (`contracts/untyped-vocabulary-slot`), never silently drops (L2). */
   readonly slots: ReadonlyMap<string, SlotDeclaredType>;
 }
@@ -145,21 +147,14 @@ function vocabularyOf(
           continue;
         }
 
-        // The documented vocabulary reading of the ambiguous single-string form: a one-value
-        // union ({x: "only"} declares "only" as the slot's whole closed vocabulary).
-        if (slot.form === "bound" && typeof slot.value === "string") {
-          if (!slots.has(slot.name)) {
-            slots.set(slot.name, { kind: "enum", values: [slot.value] });
-          }
-          continue;
-        }
-
-        // A bare group, a malformed one, or a non-string value binding declares no type — an
-        // authored slot must never silently fall out of the space (L2), so the parent is named.
+        // A bare group, a malformed one, or a value-form binding declares no type here — the
+        // value-form's vocabulary reading is a grammar-design question the carrier ruling
+        // session owns, so the codegen refuses to guess. An authored slot must never silently
+        // fall out of the space (L2), so the parent is named.
         findings.push(
           contractsFinding(
             contractsFindingIds.untypedVocabularySlot,
-            `vocabulary step "${skeleton}" carries slot "{${slot.name}}" without a usable type declaration — a dimension declares number/string/boolean or a closed union of quoted literals; the slot declares nothing`,
+            `vocabulary step "${skeleton}" carries slot "{${slot.name}}" without a usable type declaration — a dimension declares number/string/boolean or a closed union of two or more quoted literals; the slot declares nothing`,
             node,
             "behavior.exampleSpace",
           ),
@@ -888,9 +883,11 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
     );
   }
 
-  // Case-folded path collisions cannot coexist on a case-insensitive filesystem — the artifact
-  // could not be written faithfully anywhere, so this is the stage's one hard error (P3: the
-  // artifact is a pure function of the repo on every OS, or it is not written at all).
+  // Case-folded path collisions cannot coexist on a case-insensitive filesystem, where the
+  // second write would silently clobber the first (P3: the artifact must be the same pure
+  // function of the repo on every OS). The colliding modules are withheld — refusing is the
+  // honest behavior, exactly as for a non-bindable example — and the warning names them;
+  // nothing here gates (warnings never do; gating is validateGraph's alone, MD-14).
   const byFoldedPath = new Map<string, string[]>();
 
   for (const path of files.keys()) {
@@ -903,9 +900,13 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
       findings.push({
         validatorId: contractsFindingIds.caseCollidingPath,
         family: "conformance",
-        severity: "error",
-        message: `contract paths ${colliding.map((path) => `"${path}"`).join(" · ")} differ only by letter case and cannot coexist on a case-insensitive filesystem — the contracts tree is not written`,
+        severity: "warning",
+        message: `contract paths ${colliding.map((path) => `"${path}"`).join(" · ")} differ only by letter case and cannot coexist on a case-insensitive filesystem — the colliding modules are withheld`,
       });
+
+      for (const path of colliding) {
+        files.delete(path);
+      }
     }
   }
 

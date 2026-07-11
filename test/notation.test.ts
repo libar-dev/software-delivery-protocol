@@ -30,8 +30,9 @@ describe("the slot micro-notation — the one owned piece of step-text syntax", 
         raw: '{availability:"in stock"|"out of stock"}',
       },
     ]);
-    // Context decides the single-string form: the parse yields a binding; a vocabulary consumer
-    // may read it as a one-value union, an example consumer as the bound value.
+    // The single-string form parses as a binding (the example reading). What it means in a
+    // vocabulary is the grammar session's to rule — until then a vocabulary consumer treats it
+    // as declaring nothing, loudly (contracts/untyped-vocabulary-slot).
     expect(parseSlots('every item is {availability: "in stock"}')).toEqual([
       { form: "bound", name: "availability", value: "in stock", raw: '{availability: "in stock"}' },
     ]);

@@ -18,14 +18,27 @@
 > warning intact. The concreteness clause is mutation-tested (bound → passes; the identical spec
 > with one binding removed fails exactly `kind-evidence-complete`).
 >
-> **Execution deviations, all recorded:** (1) codegen diagnostics landed as four pinned
+> **Execution deviations, all recorded:** (1) codegen diagnostics landed as seven pinned
 > `contracts/*` finding ids (undeclared-slot · off-dimension-value · conflicting-binding ·
-> conflicting-dimension), family `conformance`, warnings — loud L2/L3 degradation so the
-> generated artifact always compiles while the drift is named at build time; (2) the CLI test
-> suite moved every example-mutating test onto a temp working-tree copy — in-repo mutation of
+> conflicting-dimension · untyped-vocabulary-slot · multi-entry-example · case-colliding-path),
+> family `conformance`, **all warnings** — loud L2/L3 degradation so the generated artifact
+> always compiles while the drift is named at build time, and nothing in the codegen stage ever
+> gates (gating stays `validateGraph`'s alone, MD-14); (2) the CLI test suite moved every
+> example-mutating test onto a temp working-tree copy — in-repo mutation of
 > `examples/checkout-v1/generated/` became a race once the bound test imported from it;
 > (3) the §2.6 import-parser rider did **not** ride — it splits to the side PR as the plan
 > permitted, keeping this slice single-purpose.
+>
+> **Boundary repair (2026-07-11, post stop-gate review):** the adversarial-hardening pass had
+> drifted across three ratified lines, each pulled back: the world lifecycle returned to the
+> **adapter** (`bindExample` calls `world()` in its test body; the core's `runExamplePlan`
+> executes against the world it is handed — settlement 6 restored); the single-quoted-literal
+> vocabulary form is **not** interpreted (its reading belongs to the carrier/grammar ruling —
+> plan 12's scope ruling; until then it declares nothing and `untyped-vocabulary-slot` names it);
+> and the case-collision hard error became a **warning that withholds the colliding modules**
+> (refusal, the codegen's ratified posture — no second gate outside `validateGraph`). The oracle
+> decode in the reader/Design Review was reviewed against settlement 8 and stands: it is an
+> anchor query surfaced, no `has-oracle` fact exists.
 >
 > An **execution** session (edits `src/`, `examples/`, `test/`). It built the
 > carrier-independent executable half the plan-12 session ratified — every line of it serves

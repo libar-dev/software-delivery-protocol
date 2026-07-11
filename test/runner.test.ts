@@ -70,7 +70,7 @@ describe("the runner core — plan, renderer, execution loop", () => {
     ]);
 
     const world: World = { log: [] };
-    await runExamplePlan(plan, () => world);
+    await runExamplePlan(plan, world);
 
     // Both occurrences ran the one handler, each with its authored params, in contract order.
     expect(calls).toEqual([2, 2]);
@@ -103,7 +103,7 @@ describe("the runner core — plan, renderer, execution loop", () => {
       "an order is created": pass,
     });
 
-    await expect(runExamplePlan(plan, () => ({ log: [] }))).rejects.toThrow(
+    await expect(runExamplePlan(plan, { log: [] })).rejects.toThrow(
       "at step: When the cart is submitted\nboom",
     );
   });
@@ -119,7 +119,7 @@ describe("the runner core — plan, renderer, execution loop", () => {
       "an order is created": pass,
     });
 
-    const caught = await runExamplePlan(frozenPlan, () => ({ log: [] })).then(
+    const caught = await runExamplePlan(frozenPlan, { log: [] }).then(
       () => undefined,
       (error: unknown) => error,
     );
@@ -137,13 +137,12 @@ describe("the runner core — plan, renderer, execution loop", () => {
       "an order is created": pass,
     });
 
-    await expect(runExamplePlan(stringPlan, () => ({ log: [] }))).rejects.toThrow(
+    await expect(runExamplePlan(stringPlan, { log: [] })).rejects.toThrow(
       "at step: Given a cart with 2 line items\njust a string",
     );
   });
 
-  it("calls the world factory once per run — a fresh world per example, no state carried over", async () => {
-    let factoryCalls = 0;
+  it("executes against exactly the world the caller hands in — the lifecycle is the adapter's (settlement 6)", async () => {
     const plan = planExample<World, Step, StepParams>(recurringContract, {
       "a cart with {n} line items": (world) => {
         world.log.push("g");
@@ -152,21 +151,12 @@ describe("the runner core — plan, renderer, execution loop", () => {
       "an order is created": pass,
     });
 
-    const worlds: World[] = [];
-    const factory = (): World => {
-      factoryCalls += 1;
-      const world: World = { log: [] };
-      worlds.push(world);
-      return world;
-    };
+    // The core never calls a factory: it mutates the given world and nothing else — creating a
+    // fresh world per example is the adapter's job, inside its own test body.
+    const world: World = { log: [] };
+    await runExamplePlan(plan, world);
 
-    await runExamplePlan(plan, factory);
-    await runExamplePlan(plan, factory);
-
-    expect(factoryCalls).toBe(2);
-    expect(worlds[0]).not.toBe(worlds[1]);
-    expect(worlds[0]?.log).toEqual(["g", "g"]);
-    expect(worlds[1]?.log).toEqual(["g", "g"]);
+    expect(world.log).toEqual(["g", "g"]);
   });
 
   it("contributes the one outcome no spec ever states", () => {

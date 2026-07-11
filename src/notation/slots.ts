@@ -4,16 +4,18 @@
  * renderer's job). Two positions, one grammar:
  *
  * - In a parent's example-space vocabulary, a group **declares** a typed parameter slot:
- *   `{n:number}` · `{availability:"in stock"|"out of stock"}` (a single quoted literal declares a
- *   one-value union).
+ *   `{n:number}` · `{availability:"in stock"|"out of stock"}` (a closed union of two or more
+ *   quoted literals).
  * - In an example's Given/When/Then, a group **binds** a value — the example's bound point:
  *   `{n: 2}` · `{availability: "in stock"}`. A bare `{n}` or a type-form group in an example is an
  *   **unbound** slot — the concreteness law holds such an example below `defined`.
  *
- * The parse is context-free and total; the *consumer* (vocabulary vs example) interprets the
- * ambiguous single-string form (`{x: "only"}` is a binding in an example, a one-value union in a
- * vocabulary). A brace group that does not open with an identifier is prose, never a slot — the
- * notation polices slots only, and checks never police prose.
+ * The parse is context-free and total. The single-quoted-literal form (`{x: "only"}`) parses as
+ * a binding; what that form *means in a vocabulary* is a grammar-design question the carrier
+ * ruling session owns (plan 12's scope ruling: syntax is never ruled here) — until it rules, a
+ * value-form group declares nothing in a vocabulary and the codegen warns. A brace group that
+ * does not open with an identifier is prose, never a slot — the notation polices slots only, and
+ * checks never police prose.
  *
  * The **skeleton** — every slot group normalized to `{name}` — is the step's identity: it keys the
  * generated `Step` union and `StepParams`, matches an example's step to its vocabulary entry, and

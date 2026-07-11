@@ -317,20 +317,6 @@ function runBuild(
     writeFileSync(temporaryPath, serialized, "utf8");
     renameSync(temporaryPath, graphPath);
 
-    // A contract-generation error (a case-colliding path) means the contracts tree could not be
-    // written faithfully on every filesystem — the graph stays (it is the faithful projection),
-    // the contracts do not, and the build fails.
-    if (contracts.findings.some((finding) => finding.severity === "error")) {
-      removeArtifacts([contractsPath, `${contractsPath}.tmp`], output, command, recoveryRm);
-      writeStdout(output, summary);
-      writeStdout(output, `Wrote ${graphPath}\n`);
-      writeStderr(
-        output,
-        `sdp ${command}: contract generation errors present — contracts not written.\n`,
-      );
-      return { exitCode: 1, graph: result.graph };
-    }
-
     // The contracts tree is owned wholesale — rewritten every build via temp-then-rename, and
     // removed outright when nothing generates (a stale contract must never look current).
     const contractsTemporaryPath = `${contractsPath}.tmp`;
@@ -398,9 +384,7 @@ function runValidate(
       `validate: ${String(errorCount)} errors · ${String(warningCount)} warnings (conformance + honesty over the one graph)\n`,
     );
 
-    // A failed build stage (contract-generation errors keep the graph but exit 1) is never
-    // overridden by clean checks — the worse exit wins.
-    return { exitCode: errorCount > 0 || build.exitCode !== 0 ? 1 : 0, graph: build.graph };
+    return { exitCode: errorCount > 0 ? 1 : 0, graph: build.graph };
   } catch (error) {
     // The checks ride the same one-line law as every stage past discovery. graph.json stays — it
     // was cleanly built, and the failure describes the checks, not the artifact.
