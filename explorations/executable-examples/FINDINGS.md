@@ -55,6 +55,60 @@ they can script** — not a verb wall; "the type is the discovery surface — un
 hides a capability." Applied here: the *authoring* surface should optimize for emission
 register (text), while the *typed* experiences ride the derived layer.
 
+### The fork question (recorded 2026-07-11 — the gen-1 repo reread at source, `/Users/darkomijic/dev-projects/architect`)
+
+The product owner asked whether **forking the Gherkin grammar/parser and building own test-runner
+adapters** deserves detailed exploration as the most gen-1-faithful route. A source-level reread
+of gen 1 (the step linter's rule registry, the ADR set, `FEEDBACK.md`, `formal-spec/03–10`, the
+parser wrapper) splits the question into three components with very different verdicts:
+
+- **The static parser (`@cucumber/gherkin`) was the *least* painful component of gen 1** — zero
+  recorded complaints, a clean wrapper (`gherkin-ast-parser.ts`), and no ADR ever considered
+  forking or replacing it. Only **3 of the linter's 13 rules** trace to grammar quirks
+  (`#`-comment lexing in descriptions/steps, keyword-terminated descriptions) — and the linter
+  sidesteps them by regex-scanning raw text *because the parser rejects the malformed files it
+  wants to lint*. Forking the parser fixes the component that wasn't broken, and inherits a
+  foreign machine-generated codebase (the `.berp` grammar pipeline, ~70 i18n keyword sets, the
+  token-matcher architecture).
+- **The runtime matcher (`@amiceli/vitest-cucumber`) was the dominant pain: 10 of 13 linter
+  rules** (regex/`{phrase}` unsupported, the ScenarioOutline two-pattern trap, duplicate-`And`
+  ambiguity, silent re-registration overwrite, missing-destructuring `StepAbleUnknowStepError`…),
+  plus ADR-008's whole stub taxonomy existing to keep stubs runner-shaped. This half of the
+  owner's instinct is **already the settled architecture** — the framework-neutral `/runner`
+  core + `/vitest` adapter over generated contracts (settlement 6) — and it strictly dominates
+  gen 1's shape: binding is compile-time, and where amiceli handed steps untyped
+  `Record<string,string>` DataTables papered over with hand-written accessors, typed parameter
+  slots (settlement 7) hand the handler a typed point.
+- **The tag/metadata encoding was the largest structural cost** — four formal-spec chapters
+  (03 tag system, 04 tag registry, 08 spec evolution, 09 delivery lifecycle) plus the
+  bold-markdown pseudo-fields (`**Invariant:**`, `**Verified by:**` re-parsed from prose by a
+  second bespoke micro-parser) exist *solely* because delivery state could not parse as syntax;
+  `FEEDBACK.md` records the silent-failure traps (space-separated `@architect-uses` drops the
+  whole node; a missing bare marker ignores the block — "annotation mistakes fail silently to
+  zero"). A fork only relieves this if it adds first-class metadata slots — i.e. breaks Gherkin
+  compatibility — at which point every benefit of forking (ecosystem tooling, verbatim
+  familiarity) is forfeit and the route *is* C2 on a heavier chassis.
+
+**Ruling argued:** the fork decomposes into a compatible variant (= tags-on-Gherkin, gen 1's
+own shape, fails the differentiation test by the recorded evidence above) and an incompatible
+variant (= C2, better built on an owned minimal line-oriented parser than on a forked `.berp`
+pipeline). Neither variant is a new option; the fork question **strengthens the existing
+settlements** rather than reopening them. Two salvages worth keeping, both cheap:
+
+1. **`sdp import`** — a one-way, one-time `.feature` → SDP converter built *on the vendored
+   `@cucumber/gherkin` as a devtool dependency* (never the canonical parse path): the adoption
+   wedge for Cucumber shops, lawful because it is a converter, not a surface.
+2. **Cucumber's own `GherkinInMarkdownTokenMatcher`** (gen 1 already used it for `.feature.md`)
+   is industrial prior art that *Cucumber itself* accepted markdown as a Gherkin carrier —
+   direct evidence for the F2-layered finalist.
+
+And the strongest carrier evidence of the reread: **gen 1's feature files were already
+markdown-inside-Gherkin** (`docs/GHERKIN-PATTERNS.md` documents bold pseudo-fields, pipe
+tables, and lists as the sanctioned idiom inside description slots — and deliverables
+hand-tracked in a fake `Background:` table, authored delivery facts the gen-2 model forbids).
+F2-layered inverts the nesting to match where the content actually lived: prose and structure
+as the document, GWT as the owned fenced notation.
+
 ## 3. Proposed settlements (each for the session to ratify by name)
 
 1. **The framing holds: executability was never the disease.** Every documented gen-1 cost
