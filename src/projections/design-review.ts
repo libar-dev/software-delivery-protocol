@@ -284,6 +284,27 @@ function renderBehavior(behavior: Record<string, unknown>): readonly string[] {
     lines.push("", "### Flows", "", ...flows.map((flow) => `- ${flow}`));
   }
 
+  // The example space renders verbatim — the typed slot declarations ARE the reviewable content
+  // (explicit binding is authored truth; natural reading belongs to the interactive harness).
+  const space = asRecord(behavior.exampleSpace);
+
+  if (space !== undefined) {
+    const spaceLines: string[] = [];
+
+    for (const phase of ["given", "when", "then"]) {
+      const steps = textEntries(space[phase]);
+
+      if (steps.length > 0) {
+        spaceLines.push(`  - **${phase}**`);
+        spaceLines.push(...steps.map((step) => `    - ${step}`));
+      }
+    }
+
+    if (spaceLines.length > 0) {
+      lines.push("", "### Example space", "", "- Step vocabulary:", ...spaceLines);
+    }
+  }
+
   return lines.length === 1 ? [] : lines;
 }
 

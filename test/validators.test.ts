@@ -8,6 +8,7 @@ import {
   dependsOn,
   graphClaims,
   graphValidatorIds,
+  oracleAnchorId,
   pack,
   packId,
   ref,
@@ -15,6 +16,7 @@ import {
   schemaVersion,
   spec,
   specId,
+  specOracle,
   specTest,
   supersedes,
   testAnchorId,
@@ -729,5 +731,93 @@ describe("graph validators", () => {
     });
 
     expect(validateGraph(graph).findings).toEqual([]);
+  });
+});
+
+describe("the models edge — the oracle anchor's contract row", () => {
+  const modeled = spec({
+    id: specId("spec:orders.create-order"),
+    title: "Customer creates an order",
+    kind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    intent: { outcome: "Turn a valid cart into an order." },
+  });
+
+  const oracleGraph = () =>
+    deriveFixtureGraph({
+      specs: [modeled],
+      anchors: [
+        specOracle({
+          id: oracleAnchorId("oracle:orders.create-order"),
+          models: ref("spec:orders.create-order"),
+        }),
+      ],
+    });
+
+  it("passes on its contract row (anchored, Anchor → Primitive) and confers no delivery fact", () => {
+    const graph = oracleGraph();
+
+    expect(validateGraph(graph).findings).toEqual([]);
+
+    // The graph records that an oracle EXISTS — never a fact: no has-oracle at MVP, and models
+    // never confers implemented / has-verifier (settlement 8).
+    const primitive = graph.nodes.find((node) => node.id === "spec:orders.create-order");
+    expect(primitive?.nodeType === "Primitive" ? (primitive.deliveryFacts ?? []) : null).toEqual(
+      [],
+    );
+  });
+
+  it("rejects a declared claim on a models edge — the claim taxonomy is never collapsed", () => {
+    const graph = oracleGraph();
+    const foreign: GraphSchema = {
+      ...graph,
+      edges: graph.edges.map((edge) =>
+        edge.type === "models" ? { ...edge, claim: "declared" as const } : edge,
+      ),
+    };
+
+    const findings = validateGraph(foreign).findings;
+    const claimErrors = findings.filter(
+      (finding) => finding.validatorId === graphValidatorIds.claimSeparation,
+    );
+
+    expect(claimErrors.length).toBeGreaterThan(0);
+    expect(claimErrors[0]?.severity).toBe("error");
+    expect(claimErrors[0]?.message).toContain("models");
+  });
+
+  it("rejects a models edge from a non-Anchor source — the endpoints are typed", () => {
+    const graph = oracleGraph();
+    const foreign: GraphSchema = {
+      ...graph,
+      edges: graph.edges.map((edge) =>
+        edge.type === "models" ? { ...edge, from: "spec:orders.create-order" } : edge,
+      ),
+    };
+
+    const findings = validateGraph(foreign).findings.filter(
+      (finding) => finding.validatorId === graphValidatorIds.claimSeparation,
+    );
+
+    expect(findings.length).toBeGreaterThan(0);
+    expect(findings[0]?.message).toContain("the edge contract allows");
+  });
+
+  it("flags a dangling models target through referential integrity, like every edge", () => {
+    const graph = deriveFixtureGraph({
+      anchors: [
+        specOracle({
+          id: oracleAnchorId("oracle:orders.create-order"),
+          models: ref("spec:orders.create-order"),
+        }),
+      ],
+    });
+
+    const findings = validateGraph(graph).findings.filter(
+      (finding) => finding.validatorId === graphValidatorIds.referentialIntegrity,
+    );
+
+    expect(findings.length).toBeGreaterThan(0);
   });
 });

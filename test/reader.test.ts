@@ -166,7 +166,7 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
     it("maps a test file through its anchor to the example it verifies", () => {
       expect(exampleReader().byFile("test/orders/create-order.valid-cart.test.ts")).toEqual({
         path: "test/orders/create-order.valid-cart.test.ts",
-        nodes: [{ id: "test:orders.create-order.valid-cart", nodeType: "Anchor", line: 10 }],
+        nodes: [{ id: "test:orders.create-order.valid-cart", nodeType: "Anchor", line: 13 }],
         specs: ["spec:orders.create-order.valid-cart"],
       });
     });
@@ -370,7 +370,7 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
           enabled: true,
           label: "valid cart verifies the create-order happy path",
           file: "test/orders/create-order.valid-cart.test.ts",
-          line: 10,
+          line: 13,
         },
       ]);
     });

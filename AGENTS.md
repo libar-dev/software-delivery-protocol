@@ -41,7 +41,7 @@ Progressive disclosure — start at the top, follow the pointers down.
 
 | Look here | What you get | Read |
 |---|---|---|
-| `docs/concept/ubiquitous-language.md` | **the vocabulary** — the ratified lean glossary (terms · relations · a worked dialogue · flagged ambiguities); sole source of truth for terminology; the model exposition lives in `00`–`07` | **first, always** |
+| `CONTEXT.md` (repo root) | **the vocabulary** — the ratified lean glossary (terms · relations · a worked dialogue · flagged ambiguities); sole source of truth for terminology; the model exposition lives in `00`–`07` | **first, always** |
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
 | `docs/concept/00`–`07` (+ README) | **the technical design and the model** — 9 principle-led docs: vision & MVP boundary, founding principles (P1–P10), core model (`02` — the primitive, descriptors, sections, relations), the one graph, authoring & binding, validation & honesty, consumers, roadmap | to know *how* it works |
 | `docs/concept/DECISIONS.md` | **the why-log** for building the Protocol itself (the ratified-name registry + the MD-series, the R-series, the legacy D1–D6 shorthand, measured evidence) — rationale + open tensions | when a choice looks arbitrary |

@@ -26,6 +26,14 @@
       "line": 31
     },
     {
+      "id": "oracle:orders.create-order",
+      "nodeType": "Anchor",
+      "claim": "anchored",
+      "label": "expected create-order outcome over the example space",
+      "file": "test/orders/create-order.oracle.ts",
+      "line": 12
+    },
+    {
       "id": "pack:checkout-v1",
       "nodeType": "Pack",
       "claim": "declared",
@@ -76,6 +84,23 @@
           "actor": "customer",
           "outcome": "Turn a valid cart into an order.",
           "value": "Customers can complete purchases without the example modeling the rest of checkout."
+        },
+        "behavior": {
+          "exampleSpace": {
+            "given": [
+              "a customer has a cart with {n:number} line items",
+              "every line item has quantity {q:number} and unit price {price:number}",
+              "every cart item is {availability:\"in stock\"|\"out of stock\"}"
+            ],
+            "when": [
+              "the customer submits the cart for order creation"
+            ],
+            "then": [
+              "an order is created with total {total:number}",
+              "the order contains the original cart lines",
+              "order creation is rejected because {reason:\"empty cart\"|\"out of stock\"}"
+            ]
+          }
         }
       },
       "deliveryFacts": [
@@ -122,15 +147,13 @@
           "examples": [
             {
               "given": [
-                "A cart is empty or contains at least one item without available inventory.",
-                "The cart is submitted for order creation."
+                "a customer has a cart with {n: 0} line items"
               ],
               "when": [
-                "The create-order use case validates the cart."
+                "the customer submits the cart for order creation"
               ],
               "then": [
-                "No order is created.",
-                "The caller receives a validation error explaining why the cart is invalid."
+                "order creation is rejected because {reason: \"empty cart\"}"
               ]
             }
           ]
@@ -138,8 +161,8 @@
         "verification": {
           "mode": "executable",
           "criteria": [
-            "The use case throws when inventory is missing.",
-            "The use case throws when the cart is empty."
+            "The use case throws when the cart is empty.",
+            "The thrown error names the rejection reason."
           ]
         }
       }
@@ -162,17 +185,16 @@
           "examples": [
             {
               "given": [
-                "A customer has a cart with one or more line items.",
-                "Every cart item is in stock.",
-                "Each line item has a positive quantity and a unit price."
+                "a customer has a cart with {n: 2} line items",
+                "every line item has quantity {q: 1} and unit price {price: 50}",
+                "every cart item is {availability: \"in stock\"}"
               ],
               "when": [
-                "The customer submits the cart for order creation."
+                "the customer submits the cart for order creation"
               ],
               "then": [
-                "An order is created.",
-                "The order total equals the sum of quantity multiplied by unit price for each line item.",
-                "The order contains the original cart lines."
+                "an order is created with total {total: 100}",
+                "the order contains the original cart lines"
               ]
             }
           ]
@@ -181,7 +203,7 @@
           "mode": "executable",
           "criteria": [
             "The order result contains a stable id.",
-            "The returned total matches the cart math."
+            "The returned total matches the authored total — the spec's value, never the test's."
           ]
         }
       },
@@ -335,7 +357,7 @@
       "claim": "anchored",
       "label": "valid cart verifies the create-order happy path",
       "file": "test/orders/create-order.valid-cart.test.ts",
-      "line": 10
+      "line": 13
     }
   ],
   "edges": [
@@ -355,6 +377,12 @@
       "from": "impl:orders.order-total",
       "type": "satisfies",
       "to": "spec:orders.order-total-rule",
+      "claim": "anchored"
+    },
+    {
+      "from": "oracle:orders.create-order",
+      "type": "models",
+      "to": "spec:orders.create-order",
       "claim": "anchored"
     },
     {

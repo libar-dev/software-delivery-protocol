@@ -374,6 +374,13 @@ function checkEdgeContractRow(edge: GraphEdge, index: GraphIndex, findings: Find
       requireClaim("declared");
       requireEndpoints(["Primitive"], "Pack");
       return;
+    case "models":
+      // The oracle anchor's binding edge (plan 12 §8, settlement 8): anchored, Anchor → Primitive
+      // — the graph records that an oracle exists, never what it says, and the edge confers no
+      // delivery fact.
+      requireClaim("anchored");
+      requireEndpoints(["Anchor"], "Primitive");
+      return;
     case "verifies":
       if (edge.claim === "declared") {
         requireEndpoints(["Primitive"], "Primitive");

@@ -3,8 +3,8 @@
 > **Status: RATIFIED · LEAN GLOSSARY.** The terminology base of the Libar Software Delivery Protocol — our
 > bounded context's vocabulary: **one concept → one word**; the rest are *aliases to avoid*.
 >
-> This document carries **terms only**; the model exposition lives in the design docs (`00`–`07`),
-> rationale in `DECISIONS.md`.
+> This document carries **terms only**; the model exposition lives in the design docs
+> (`docs/concept/00`–`07`), rationale in `docs/concept/DECISIONS.md`.
 
 ## Governing rubric  [SETTLED]
 
@@ -19,7 +19,7 @@
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
-| **the Protocol** | the meta-model — the primitive, descriptors, relations, and validators **as typed code**; the conformance contract instances conform to (Phase 0 builds it) | "the process" (reserved, below) · "governs"/"polices" (it defines a contract) |
+| **the Protocol** | the meta-model — the primitive, descriptors, relations, and validators **as typed code**; the conformance contract instances conform to (Phase 0 built it) | "the process" (reserved, below) · "governs"/"polices" (it defines a contract) |
 | **software-delivery process** | the modeled activity teams perform — what the Protocol is a meta-model *of* | — ("process" survives **only** here, in "delivery-process execution," and in the rejected *process state-machine*) |
 | **authored model** | a project's authored instances; **conforms** — conformance checked, never workflow-gated | — |
 | **derived facts** | machine truth about the authored model (code realises it · a verifier exists · runtime observed it) — derived, never authored | — |
@@ -112,6 +112,7 @@ alarm**.
 | **readiness floor** | the **minimum structural requirement to *state*** a readiness rung — a floor to clear, **never a quota to fill** or a score | "readiness profile" |
 | **`gap`** | a surfaced absence (e.g. `ready` with no verifier) — informative, never a gate | — |
 | **`orphan`** | a `Spec` with no relations and nothing pointing at it — informative | — |
+| **derived readiness** | the highest rung whose floor clauses pass, computed from the graph ("structural floor reached"); rendered **beside** the stated rung, never overwriting the author's statement | — |
 
 `ready` = the floor cleared **plus a human's `declared` statement**; that a review occurred is never a graph
 fact or a checked property (that would be workflow-gating). The honesty bound: claim **"deterministically
@@ -125,11 +126,32 @@ validated," never "provably correct."**
 | **Design Review** | the flagship curated review: a `Spec`/`Pack` rendered *in context* — the context in which a human decides to state `ready`; human practice, never a recorded fact or gate | — |
 | **agent surface** | a **visible typed graph the agent *scripts*** via the typed CLI — no verb wall; the schema *is* the contract (under-typing hides a capability) | a 30-verb API · raw-JSON-you-rejoin |
 | **`reader`** | the thin typed loader: joins + `claim` decode done once, returns composable data; authors/persists nothing — a front door, not a store | "handle" |
+| **blast radius** | the reader's file-level impact query: a changeset → the directly impacted `Spec`s/`Pack`s (authored at, or bound to, the changed files) + the explicit one-hop neighborhood; never claims exhaustive reach | — |
+| **coverage-unknown** | the honest blind spot of file-level impact: a changed file the graph records nothing at, **named in the result** — never silently dropped | — |
+| **at-risk** | a node one explicit hop from an impacted node (the connecting edge + its `claim` carried), itself neither impacted nor at a changed file | — |
 | **context bundle** | a token-budgeted curated slice pushed to an agent | — |
 | **MCP surface** | integration for user-facing **apps** (designed-in, deferred build) — distinct from the agent surface: agents *script*, apps *integrate* | — |
 | **impact graph** *(aspirational)* | the exhaustive import/symbol structure for blast-radius / find-all-usages; divergence from the curated graph is **curation, not drift** | "mechanical substrate" |
 | **intent composition** | the write-affordance: compose **scoped intent**, hand it to an agent that edits source; git records it; conformance checks gate — no patch loop | patch-back / codemod-from-view |
 | **scoped intent** | *what* is composed: an explicit change bounded by a `Spec` / its neighbors / a `Pack` / open questions | — |
+
+## The executable half  (ratified at the plan-12 session — carrier-independent machinery)
+
+| Term | Definition | Aliases to avoid |
+|---|---|---|
+| **step contract** | a derived, regenerable typed module emitted per `example` spec from the graph (the generated-union pattern): the union of the example's literal step strings; tests bind handlers against it, so spec-side drift is a compile error — derived, never authored, importable *because* it is a projection | importing the authored spec |
+| **example space** | the typed parameter vocabulary a parent `behavior` spec's steps declare; the space its child examples bind points in — the sibling set shares one vocabulary | "variables" |
+| **parameter slot** (short: **slot**) | one typed placeholder in a step's text | — |
+| **bound point** | the concrete slot values an `example` child binds for the steps it uses; partial points are honest — an unbound slot in a *used* step caps the example below `defined` (the **concreteness law**, one structural floor clause) | — |
+| **space contract** | the per-parent derived sibling of the step contract: the typed dimensions of the example space, every child's bound point, and the Outcome union derived from the parent's Then vocabulary | — |
+| **oracle** | the authored expected-outcome semantics for a parent's example space — implementation-side, beside the tests, bound by a `specOracle` anchor, never extracted; typed against the space contract on input and the derived Outcome union on output (`unspecified` is a first-class answer); rendered surfaces say **"expected outcome"** | a `model`-kind spec · a derived fact |
+| **witness** | an example whose bound point falls in an outcome class — the evidence that class is covered | — |
+| **coverage gap** | a region of the example space with no witness (or where the oracle answers `unspecified`) — an informative absence, never a gate | — |
+| **`sdp import`** | the one-way gen-1 `.feature` converter: parser half carrier-neutral, document emitter authored once in the winning carrier | round-trip sync |
+
+**Structural law (point-per-example, MD-17):** an `example` binds exactly **one** point; a table of cases is
+authoring-surface sugar that statically expands to N sibling examples at extraction, and renderers may project
+a sibling set back as a table — the graph never holds a multi-point example.
 
 ## Relations  (authored, typed, directed `Spec`→`Spec` edges — → `02` §6)
 
@@ -174,13 +196,21 @@ artifact** — approval provenance is git-native, never an authored primitive).
   `pack:`/`doc:` targets) — documented on the export (`src/ids.ts`). Consequently `decidedBy` → an
   external `doc:` ADR is a **named deferral** (MD-16, stated in `02` §6); revisit when `doc:`-target
   relations or pack-targeting arrive.
+- **Candidate vocabulary still open from the executable-spec exploration** (`explorations/executable-examples/`):
+  *notation* · *carrier* — named here so they are flagged, not silently invented; they ratify or die
+  at the **carrier ruling session** (the plan-12 session record defines it) and are **not** ratified
+  terms of this glossary yet. The rest of the exploration's candidates ratified with their referents
+  at the plan-12 session — see **The executable half** above.
 
 ## Term ledger  (locked / rejected / resolved)
 
 - **Locked:** `Spec` · `Pack` · `section` · `anchor` · `claim` (`declared`/`anchored`/`inferred`) · the
   graph · `extractor` · `conformance` · `readiness floor` · `validator` · `gap` · `orphan` · `projection` ·
   `Design Review` · `reader` · `impact graph` · `agent surface` · `context bundle` · `MCP surface` ·
-  `intent composition` / `scoped intent` · delivery facts `implemented`/`has-verifier`/`observed`.
+  `intent composition` / `scoped intent` · delivery facts `implemented`/`has-verifier`/`observed` ·
+  `blast radius` / `coverage-unknown` / `at-risk` · `derived readiness` · `step contract` ·
+  `space contract` · `example space` · `parameter slot` (short *slot*) · `bound point` · `oracle`
+  (`specOracle` anchor; rendered as "expected outcome") · `witness` · `coverage gap` · `sdp import`.
 - **Descriptor values locked:** `kind` ∈ {`behavior`,`workflow`,`example`,`rule`,`constraint`,`model`,
   `decision`,`contract`} · `altitude` ∈ {`epic`,`feature`,`story`} · `readiness` ∈
   {`idea`,`scoped`,`defined`,`ready`}.

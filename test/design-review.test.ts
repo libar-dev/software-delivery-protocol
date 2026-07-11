@@ -127,7 +127,7 @@ describe("the Design Review — the one generated read-only view", () => {
 
     expect(validCart).toContain("verifies → [`spec:orders.create-order`](orders.create-order.md)");
     expect(validCart).toContain("the enabled verifying binding (a resolving test anchor)");
-    expect(validCart).toContain("test/orders/create-order.valid-cart.test.ts:10");
+    expect(validCart).toContain("test/orders/create-order.valid-cart.test.ts:13");
   });
 
   it("renders a test-anchor verifier as the enabled binding only along its contract row", () => {

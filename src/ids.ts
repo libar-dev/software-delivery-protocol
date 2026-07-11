@@ -13,6 +13,7 @@ export type AnchorId = Brand<"AnchorId">;
 // and `never` assigns everywhere — tsc would stop enforcing the flavored ids entirely.
 export type CodeAnchorId = AnchorId & { readonly __anchorFlavor: "code" };
 export type TestAnchorId = AnchorId & { readonly __anchorFlavor: "test" };
+export type OracleAnchorId = AnchorId & { readonly __anchorFlavor: "oracle" };
 
 /**
  * The implementation-flavored code namespaces a `codeAnchor` may bind (the generic `codeAnchor`,
@@ -152,6 +153,10 @@ export function codeAnchorId(value: string): CodeAnchorId {
 
 export function testAnchorId(value: string): TestAnchorId {
   return requireNamespace<"AnchorId">(value, ["test"]) as TestAnchorId;
+}
+
+export function oracleAnchorId(value: string): OracleAnchorId {
+  return requireNamespace<"AnchorId">(value, ["oracle"]) as OracleAnchorId;
 }
 
 /**

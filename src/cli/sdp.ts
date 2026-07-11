@@ -4,6 +4,7 @@ import { mkdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } 
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { generateContracts } from "../codegen/contracts.js";
 import { extract } from "../extract/index.js";
 import { serializeGraph } from "../extract/serialize.js";
 import type { GraphSchema } from "../graph/schema.js";
@@ -21,10 +22,12 @@ Usage:
 
 Commands:
   build      Extract every *.sdp.ts under root (default: cwd), plus the anchor constants in the
-             other *.ts/*.tsx source files, into <root>/generated/graph.json.
-             Exits 1 and writes nothing on any hard error — the emitted artifact is
-             all-or-nothing. --check-clean additionally runs a second independent extraction
-             and fails on any byte divergence (the determinism self-check).
+             other *.ts/*.tsx source files, into <root>/generated/graph.json — then derive the
+             executable contracts (per-example step contracts + per-parent space contracts,
+             the A2 mechanism) into <root>/generated/contracts/. Exits 1 and writes nothing on
+             any hard error — the emitted artifacts are all-or-nothing. --check-clean
+             additionally runs a second independent extraction + generation and fails on any
+             byte divergence (the determinism self-check).
   validate   build, then run the conformance + honesty checks over the one graph (one
              validation path). A check error exits 1; gaps and orphans inform as warnings.
              graph.json is still written when the checks fail — the graph is the faithful
@@ -50,6 +53,7 @@ interface CliOutput {
  */
 interface CliHooks {
   readonly extract?: typeof extract;
+  readonly generateContracts?: typeof generateContracts;
   readonly renderDesignReview?: typeof renderDesignReview;
   readonly validateGraph?: typeof validateGraph;
   readonly rmSync?: typeof rmSync;
@@ -194,6 +198,24 @@ interface BuildOutcome {
   readonly graph?: GraphSchema;
 }
 
+/** Byte-equality over two generated-contract file maps — the contracts half of --check-clean. */
+function contractFilesEqual(
+  first: ReadonlyMap<string, string>,
+  second: ReadonlyMap<string, string>,
+): boolean {
+  if (first.size !== second.size) {
+    return false;
+  }
+
+  for (const [path, content] of first) {
+    if (second.get(path) !== content) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function runBuild(
   parsed: BuildArgs,
   output: CliOutput,
@@ -202,16 +224,23 @@ function runBuild(
 ): BuildOutcome {
   const { root: resolvedRoot, checkClean } = parsed;
   const runExtract = hooks.extract ?? extract;
+  const runGenerateContracts = hooks.generateContracts ?? generateContracts;
   const recoveryRm = hooks.rmSync ?? rmSync;
   const graphPath = join(resolvedRoot, "generated", "graph.json");
+  const contractsPath = join(resolvedRoot, "generated", "contracts");
 
   // A stale projection is as dishonest as a partial one: a failed build must not leave a previous
-  // graph.json behind that downstream consumers could read as current — nor a half-written temp
-  // twin. Recovery rides removeArtifacts, which never throws (the one-line law holds) and names
-  // any survivor it could not remove.
+  // graph.json (or contracts tree) behind that downstream consumers could read as current — nor a
+  // half-written temp twin. Recovery rides removeArtifacts, which never throws (the one-line law
+  // holds) and names any survivor it could not remove.
   const failBuild = (message: string): BuildOutcome => {
     writeStderr(output, message);
-    removeArtifacts([graphPath, `${graphPath}.tmp`], output, command, recoveryRm);
+    removeArtifacts(
+      [graphPath, `${graphPath}.tmp`, contractsPath, `${contractsPath}.tmp`],
+      output,
+      command,
+      recoveryRm,
+    );
     return { exitCode: 1 };
   };
 
@@ -237,23 +266,47 @@ function runBuild(
       );
     }
 
-    const errorCount = findings.filter((finding) => finding.severity === "error").length;
-    const warningCount = findings.length - errorCount;
-    const summary = `${String(result.counts.specs)} specs · ${String(result.counts.packs)} packs · ${String(result.counts.anchors)} anchors → ${String(result.graph.nodes.length)} nodes · ${String(result.graph.edges.length)} edges (${String(errorCount)} errors, ${String(warningCount)} warnings)\n`;
+    const extractionErrorCount = findings.filter((finding) => finding.severity === "error").length;
 
-    if (errorCount > 0) {
-      writeStdout(output, summary);
+    if (extractionErrorCount > 0) {
+      const warningCount = findings.length - extractionErrorCount;
+      writeStdout(
+        output,
+        `${String(result.counts.specs)} specs · ${String(result.counts.packs)} packs · ${String(result.counts.anchors)} anchors → ${String(result.graph.nodes.length)} nodes · ${String(result.graph.edges.length)} edges (${String(extractionErrorCount)} errors, ${String(warningCount)} warnings)\n`,
+      );
       return failBuild(`sdp ${command}: hard errors present — graph.json not written.\n`);
     }
 
     const serialized = serializeGraph(result.graph);
 
+    // The contracts codegen stage (plan 13): pure over the graph the checks consume; its
+    // diagnostics are ordinary build findings (all warnings — a drift is named, never gates).
+    const contracts = runGenerateContracts(result.graph);
+
+    for (const finding of contracts.findings) {
+      writeStderr(output, formatFinding(finding));
+    }
+
+    const allFindings = [...findings, ...contracts.findings];
+    const errorCount = allFindings.filter((finding) => finding.severity === "error").length;
+    const warningCount = allFindings.length - errorCount;
+    const summary = `${String(result.counts.specs)} specs · ${String(result.counts.packs)} packs · ${String(result.counts.anchors)} anchors → ${String(result.graph.nodes.length)} nodes · ${String(result.graph.edges.length)} edges (${String(errorCount)} errors, ${String(warningCount)} warnings)\n`;
+
     if (checkClean) {
-      const second = serializeGraph(runExtract({ root: resolvedRoot }).graph);
+      const secondResult = runExtract({ root: resolvedRoot });
+      const second = serializeGraph(secondResult.graph);
 
       if (second !== serialized) {
         return failBuild(
           `sdp ${command} --check-clean: two independent extractions diverged — the build is not deterministic.\n`,
+        );
+      }
+
+      const secondContracts = runGenerateContracts(secondResult.graph);
+
+      if (!contractFilesEqual(contracts.files, secondContracts.files)) {
+        return failBuild(
+          `sdp ${command} --check-clean: two independent contract generations diverged — the build is not deterministic.\n`,
         );
       }
     }
@@ -263,8 +316,32 @@ function runBuild(
     mkdirSync(join(resolvedRoot, "generated"), { recursive: true });
     writeFileSync(temporaryPath, serialized, "utf8");
     renameSync(temporaryPath, graphPath);
+
+    // The contracts tree is owned wholesale — rewritten every build via temp-then-rename, and
+    // removed outright when nothing generates (a stale contract must never look current).
+    const contractsTemporaryPath = `${contractsPath}.tmp`;
+    rmSync(contractsTemporaryPath, { recursive: true, force: true });
+
+    if (contracts.files.size > 0) {
+      mkdirSync(contractsTemporaryPath, { recursive: true });
+
+      for (const [relativePath, content] of contracts.files) {
+        writeFileSync(join(contractsTemporaryPath, relativePath), content, "utf8");
+      }
+
+      rmSync(contractsPath, { recursive: true, force: true });
+      renameSync(contractsTemporaryPath, contractsPath);
+    } else {
+      rmSync(contractsPath, { recursive: true, force: true });
+    }
+
     writeStdout(output, summary);
     writeStdout(output, `Wrote ${graphPath}\n`);
+
+    if (contracts.files.size > 0) {
+      writeStdout(output, `Wrote ${contractsPath} (${String(contracts.files.size)} modules)\n`);
+    }
+
     return { exitCode: 0, graph: result.graph };
   } catch (error) {
     // Failures past root discovery keep the same law as the typo'd root: one line of invocation

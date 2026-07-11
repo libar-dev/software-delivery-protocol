@@ -1,5 +1,7 @@
 export * from "./ids.js";
+export * from "./codegen/contracts.js";
 export * from "./extract/index.js";
+export * from "./notation/slots.js";
 export * from "./graph/delivery-facts.js";
 export * from "./graph/schema.js";
 export * from "./model/anchors.js";

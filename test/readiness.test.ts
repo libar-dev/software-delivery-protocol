@@ -446,3 +446,77 @@ describe("readiness and validation contracts", () => {
     });
   });
 });
+
+describe("the concreteness law — an example is a bound point (the plan-12 ratification)", () => {
+  const exampleWith = (steps: {
+    given: readonly string[];
+    when: readonly string[];
+    then: readonly string[];
+  }): Spec =>
+    spec({
+      id: specId("spec:orders.create-order.point"),
+      title: "A point in the parent's space",
+      kind: "example",
+      altitude: "story",
+      readiness: "defined",
+      intent: { outcome: "Bind a point." },
+      behavior: { examples: [steps] },
+      relations: [refines(specId("spec:orders.create-order"))],
+    });
+
+  it("holds a fully bound example at defined — the clause flips on the binding alone", () => {
+    const bound = exampleWith({
+      given: ["a customer has a cart with {n: 2} line items"],
+      when: ["the customer submits the cart for order creation"],
+      then: ["an order is created with total {total: 100}"],
+    });
+
+    expect(floorFailuresFor(bound.id, bound)).toEqual([]);
+  });
+
+  it("caps an example with a bare unbound slot in a used step below defined", () => {
+    const unbound = exampleWith({
+      given: ["a customer has a cart with {n} line items"],
+      when: ["the customer submits the cart for order creation"],
+      then: ["an order is created with total {total: 100}"],
+    });
+
+    // The mutation direction, pinned: identical spec, one binding removed — the exact clause
+    // flips from pass to fail (never merely green-stays-green).
+    expect(floorFailuresFor(unbound.id, unbound).map((failure) => failure.clauseId)).toEqual([
+      "kind-evidence-complete",
+    ]);
+  });
+
+  it("caps a declaration-form slot in a used step the same way ({n:number} is not a binding)", () => {
+    const declared = exampleWith({
+      given: ["a customer has a cart with {n:number} line items"],
+      when: ["the customer submits the cart for order creation"],
+      then: ["an order is created with total {total: 100}"],
+    });
+
+    expect(floorFailuresFor(declared.id, declared).map((failure) => failure.clauseId)).toEqual([
+      "kind-evidence-complete",
+    ]);
+  });
+
+  it("keeps a partial point honest: an unused step binds nothing and fails nothing", () => {
+    const partial = exampleWith({
+      given: ["a customer has a cart with {n: 0} line items"],
+      when: ["the customer submits the cart for order creation"],
+      then: ['order creation is rejected because {reason: "empty cart"}'],
+    });
+
+    expect(floorFailuresFor(partial.id, partial)).toEqual([]);
+  });
+
+  it("derives the honest rung: the unbound-slot example structurally reaches scoped, never defined", () => {
+    const unbound = exampleWith({
+      given: ["a customer has a cart with {n} line items"],
+      when: ["the customer submits the cart for order creation"],
+      then: ["an order is created"],
+    });
+
+    expect(derivedReadinessFor(unbound.id, unbound)).toBe("scoped");
+  });
+});

@@ -11,26 +11,22 @@ export const createOrderInvalidCartSpec = spec({
     value:
       "The authored example captures the rejection path without adding invalid fixtures to the model.",
   },
+  // A PARTIAL bound point — the honest form: the example uses only the {n} step, binds n = 0,
+  // and constrains nothing else (an unused step binds nothing and fails nothing).
   behavior: {
     examples: [
       {
-        given: [
-          "A cart is empty or contains at least one item without available inventory.",
-          "The cart is submitted for order creation.",
-        ],
-        when: ["The create-order use case validates the cart."],
-        then: [
-          "No order is created.",
-          "The caller receives a validation error explaining why the cart is invalid.",
-        ],
+        given: ["a customer has a cart with {n: 0} line items"],
+        when: ["the customer submits the cart for order creation"],
+        then: ['order creation is rejected because {reason: "empty cart"}'],
       },
     ],
   },
   verification: {
     mode: "executable",
     criteria: [
-      "The use case throws when inventory is missing.",
       "The use case throws when the cart is empty.",
+      "The thrown error names the rejection reason.",
     ],
   },
   relations: [

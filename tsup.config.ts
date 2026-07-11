@@ -4,7 +4,7 @@ import { defineConfig } from "tsup";
 // shebang on an entry point, so `dist/cli/sdp.js` stays executable while `dist/index.js` (the
 // library entry, no shebang) stays clean. No banner / strip-plugin / post-build normalisation.
 export default defineConfig({
-  entry: ["src/index.ts", "src/cli/sdp.ts"],
+  entry: ["src/index.ts", "src/cli/sdp.ts", "src/runner/index.ts", "src/adapters/vitest.ts"],
   format: ["esm"],
   dts: true,
   platform: "node",

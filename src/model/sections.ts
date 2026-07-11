@@ -48,6 +48,21 @@ export interface GivenWhenThen {
 export type BehaviorExample = string | GivenWhenThen;
 
 /**
+ * The example space (the plan-12 ratification): the parent's parameterized step vocabulary — each
+ * entry is step text whose `{name:type}` groups declare typed slots (the slot micro-notation,
+ * `src/notation/slots.ts`). Child examples bind points in this space with `{name: value}` groups
+ * in their own Given/When/Then; the sibling set shares one vocabulary (the ubiquitous-language
+ * bet at the parameter level). `sdp build` derives the space contract (typed dimensions + every
+ * child's bound point + the Outcome union from the `then` vocabulary) from here — content only,
+ * never linkage (MD-10): which children bind is the `refines` relation's business.
+ */
+export interface ExampleSpaceVocabulary {
+  readonly given?: readonly string[];
+  readonly when?: readonly string[];
+  readonly then?: readonly string[];
+}
+
+/**
  * Content only, never refs (MD-10): rules are prose; promotion to a standalone `rule`/`example`
  * spec moves the content out, and the only linkage is the child's `refines`/`verifies` relation.
  */
@@ -55,6 +70,7 @@ export interface BehaviorSection {
   readonly rules?: readonly string[];
   readonly examples?: readonly BehaviorExample[];
   readonly flows?: readonly string[];
+  readonly exampleSpace?: ExampleSpaceVocabulary;
 }
 
 export interface ConstraintSection {

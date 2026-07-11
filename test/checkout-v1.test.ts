@@ -24,7 +24,7 @@ const extraction = extract({ root: exampleRoot });
 describe("checkout-v1 tracer bullet (extractor-fed)", () => {
   it("extracts the example with zero findings", () => {
     expect(extraction.report.findings).toEqual([]);
-    expect(extraction.counts).toEqual({ specs: 11, packs: 1, anchors: 4 });
+    expect(extraction.counts).toEqual({ specs: 11, packs: 1, anchors: 5 });
   });
 
   it("validates with zero errors and exactly the one surfaced absence: the unenabled invalid-cart verifier", () => {
@@ -62,7 +62,12 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
     const relationTypes = new Set<string>(authoredEdgeTypes);
 
     for (const edge of extraction.graph.edges) {
-      if (relationTypes.has(edge.type) || edge.type === "belongsTo" || edge.type === "satisfies") {
+      if (
+        relationTypes.has(edge.type) ||
+        edge.type === "belongsTo" ||
+        edge.type === "satisfies" ||
+        edge.type === "models"
+      ) {
         expect(nodeIds.has(edge.from)).toBe(true);
         expect(nodeIds.has(edge.to)).toBe(true);
       }
@@ -77,7 +82,7 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
     }
   });
 
-  it("extracts the pack and the four anchors (the anchored layer)", () => {
+  it("extracts the pack and the five anchors (the anchored layer)", () => {
     expect(
       extraction.graph.nodes.filter((node) => node.nodeType === "Pack").map((n) => n.id),
     ).toEqual(["pack:checkout-v1"]);
@@ -90,6 +95,7 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
       "api:orders.post",
       "impl:orders.create-order-use-case",
       "impl:orders.order-total",
+      "oracle:orders.create-order",
       "test:orders.create-order.valid-cart",
     ]);
 
@@ -120,9 +126,17 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
           to: "spec:orders.create-order.valid-cart",
           claim: "anchored",
         },
+        // The oracle anchor's binding edge: the graph records that an oracle exists — never what
+        // it says, and it confers no delivery fact (settlement 8; no has-oracle at MVP).
+        {
+          from: "oracle:orders.create-order",
+          type: "models",
+          to: "spec:orders.create-order",
+          claim: "anchored",
+        },
       ]),
     );
-    expect(anchoredEdges).toHaveLength(4);
+    expect(anchoredEdges).toHaveLength(5);
   });
 
   it("derives the delivery facts honestly: bound specs only, never the unenabled verifier", () => {

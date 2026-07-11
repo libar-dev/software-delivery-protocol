@@ -31,6 +31,7 @@ import type { IdReification, ProtocolBindings } from "./reify.js";
 const ANCHOR_BUILDER_TARGET_FIELDS = {
   codeAnchor: "satisfies",
   specTest: "verifies",
+  specOracle: "models",
 } as const;
 
 type AnchorBuilderName = keyof typeof ANCHOR_BUILDER_TARGET_FIELDS;
@@ -38,16 +39,24 @@ type AnchorBuilderName = keyof typeof ANCHOR_BUILDER_TARGET_FIELDS;
 const ANCHOR_ID_NAMESPACES: Record<AnchorBuilderName, readonly string[]> = {
   codeAnchor: CODE_ANCHOR_NAMESPACES,
   specTest: ["test"],
+  specOracle: ["oracle"],
 };
 
 /** Every protocol authoring builder, for the misplaced-call scan (§1.3 of the Slice-2 plan). */
-const AUTHORING_BUILDER_NAMES = new Set<string>(["spec", "pack", "codeAnchor", "specTest"]);
+const AUTHORING_BUILDER_NAMES = new Set<string>([
+  "spec",
+  "pack",
+  "codeAnchor",
+  "specTest",
+  "specOracle",
+]);
 
 export interface ReifiedAnchor {
-  /** Plain `CodeAnchor`/`SpecTestAnchor`-shaped data — built from the AST, never evaluated. */
+  /** Plain anchor-shaped data (`CodeAnchor`/`SpecTestAnchor`/`SpecOracleAnchor`) — built from the
+   *  AST, never evaluated. */
   readonly data: Record<string, unknown>;
   readonly id: string;
-  readonly flavor: "code" | "test";
+  readonly flavor: "code" | "test" | "oracle";
   readonly file: string;
   readonly line: number;
 }
@@ -285,7 +294,7 @@ function reifyAnchorCall(
   return {
     data,
     id: data.id as string,
-    flavor: builder === "codeAnchor" ? "code" : "test",
+    flavor: builder === "codeAnchor" ? "code" : builder === "specTest" ? "test" : "oracle",
     file,
     line: call.getStartLineNumber(),
   };

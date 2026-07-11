@@ -9,7 +9,7 @@ wrong — not the example.
 
 This walkthrough shows what is here and how to watch the trust model react. The concepts live in
 [`docs/concept/`](../../docs/concept/README.md); the vocabulary in the
-[ubiquitous language](../../docs/concept/ubiquitous-language.md). Nothing here is restated — only
+[ubiquitous language](../../CONTEXT.md). Nothing here is restated — only
 pointed at.
 
 ## The layout
@@ -117,7 +117,7 @@ with `git checkout -- examples/checkout-v1` afterwards.
 
 | Concept                                                | Read                                                                               |
 | ------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| the vocabulary (every term used above)                 | [ubiquitous language](../../docs/concept/ubiquitous-language.md)                   |
+| the vocabulary (every term used above)                 | [ubiquitous language](../../CONTEXT.md)                                            |
 | the `Spec` primitive, descriptors, sections, relations | [`02` core model](../../docs/concept/02-core-model.md)                             |
 | the one graph, determinism, the `claim` taxonomy       | [`03` the one graph](../../docs/concept/03-the-one-graph.md)                       |
 | the DSL and anchors (authoring & binding)              | [`04` authoring & binding](../../docs/concept/04-authoring-and-binding.md)         |

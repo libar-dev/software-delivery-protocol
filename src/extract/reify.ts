@@ -76,6 +76,7 @@ export const ID_UNWRAP_BUILDERS: ReadonlyMap<string, readonly string[]> = new Ma
   ["ref", ["spec"]],
   ["codeAnchorId", CODE_ANCHOR_NAMESPACES],
   ["testAnchorId", ["test"]],
+  ["oracleAnchorId", ["oracle"]],
 ]);
 
 const RELATION_BUILDER_NAMES = new Set<string>(SPEC_RELATION_TYPES);
@@ -101,6 +102,7 @@ const RESERVED_DERIVED_PROPERTIES = new Set<string>([
   "satisfies",
   "verifies",
   "belongsTo",
+  "models",
 ]);
 
 export interface ReifiedSpec {

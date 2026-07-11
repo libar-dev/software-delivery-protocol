@@ -596,9 +596,10 @@ export function createReader(graph: GraphSchema): Reader {
       }
 
       // A binding node at the path reaches the specs its binding edges name — recorded targets,
-      // resolution left to referential integrity.
+      // resolution left to referential integrity. `models` walks like its binding siblings: the
+      // oracle's file reaches the spec it models, or blast radius would go silently blind there.
       for (const edge of index.edgesByFrom.get(node.id) ?? []) {
-        if (edge.type === "satisfies" || edge.type === "verifies") {
+        if (edge.type === "satisfies" || edge.type === "verifies" || edge.type === "models") {
           specIds.add(edge.to);
         }
       }
@@ -649,7 +650,7 @@ export function createReader(graph: GraphSchema): Reader {
         }
 
         for (const edge of index.edgesByFrom.get(ref.id) ?? []) {
-          if (edge.type === "satisfies" || edge.type === "verifies") {
+          if (edge.type === "satisfies" || edge.type === "verifies" || edge.type === "models") {
             appendReason(impactedSpecReasons, edge.to, {
               file,
               throughBinding: { id: ref.id, edgeType: edge.type, claim: edge.claim },

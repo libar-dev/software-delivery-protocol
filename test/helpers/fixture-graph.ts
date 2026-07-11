@@ -34,7 +34,7 @@ export function deriveFixtureGraph(model: FixtureModel): GraphSchema {
   const anchors: ReifiedAnchor[] = (model.anchors ?? []).map((entry, position) => ({
     data: entry as unknown as Record<string, unknown>,
     id: entry.id,
-    flavor: "satisfies" in entry ? "code" : "test",
+    flavor: "satisfies" in entry ? "code" : "models" in entry ? "oracle" : "test",
     file: "src/fixture.ts",
     line: position + 1,
   }));

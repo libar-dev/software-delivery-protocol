@@ -22,7 +22,9 @@ export const authoredEdgeTypes = [
 ] as const;
 export type AuthoredEdgeType = (typeof authoredEdgeTypes)[number];
 
-export const derivedEdgeTypes = ["belongsTo", "satisfies"] as const;
+/** `models` is the oracle anchor's binding edge (Anchor → Primitive, anchored) — anchor-emitted
+ *  like `satisfies`, never authored; it confers no delivery fact (no `has-oracle` at MVP). */
+export const derivedEdgeTypes = ["belongsTo", "satisfies", "models"] as const;
 export type DerivedEdgeType = (typeof derivedEdgeTypes)[number];
 
 export const graphEdgeTypes = [...authoredEdgeTypes, ...derivedEdgeTypes] as const;

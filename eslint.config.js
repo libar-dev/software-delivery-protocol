@@ -20,7 +20,7 @@ export default tseslint.config(
     // never merely by falling outside the files globs.
     ignores: [
       "dist/**",
-      "generated/**",
+      "**/generated/**",
       ".sisyphus/evidence/**",
       "node_modules/**",
       "explorations/**",

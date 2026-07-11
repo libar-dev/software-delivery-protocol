@@ -3,6 +3,7 @@ import type { SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSectionName } from "../model/sections.js";
 import { authoredEdgeTypes } from "../graph/schema.js";
 import type { GraphEdge, PrimitiveNode } from "../graph/schema.js";
+import { hasUnboundSlot } from "../notation/slots.js";
 import type { GraphIndex } from "./graph-index.js";
 
 /**
@@ -204,6 +205,29 @@ function hasStructuredExampleEntry(node: PrimitiveNode): boolean {
   });
 }
 
+/**
+ * The concreteness law (the plan-12 ratification, settlement 7): an example is a bound point —
+ * a step it *uses* may not carry an unbound parameter slot (`{n}` or a `{n:number}` declaration
+ * form where a `{n: 2}` binding belongs). Partial points stay honest: a step the example never
+ * uses binds nothing and fails nothing. Prose entries carry no steps, so they are not read here
+ * (the structured-entry clause owns that absence).
+ */
+function usedStepsAreFullyBound(node: PrimitiveNode): boolean {
+  return (asArray(behaviorOf(node)?.examples) ?? []).every((entry) => {
+    const structured = asRecord(entry);
+
+    if (structured === undefined) {
+      return true;
+    }
+
+    return (["given", "when", "then"] as const).every((phase) =>
+      (asArray(structured[phase]) ?? []).every(
+        (step) => typeof step !== "string" || !hasUnboundSlot(step),
+      ),
+    );
+  });
+}
+
 function hasConstraintEntries(node: PrimitiveNode): boolean {
   return hasEntries(sectionOf(node, "constraints"));
 }
@@ -269,7 +293,9 @@ function dependsOnAndRefinesTargetsAreDefined(node: PrimitiveNode, index: GraphI
 function anchorsResolve(node: PrimitiveNode, index: GraphIndex): boolean {
   return (index.edgesByTo.get(node.id) ?? []).every((edge) => {
     const isBindingEdge =
-      edge.type === "satisfies" || (edge.type === "verifies" && edge.claim === "anchored");
+      edge.type === "satisfies" ||
+      edge.type === "models" ||
+      (edge.type === "verifies" && edge.claim === "anchored");
 
     return !isBindingEdge || index.nodesById.has(edge.from);
   });
@@ -304,8 +330,9 @@ export const kindEvidence = {
       predicate: (node) => hasEntries(behaviorOf(node)?.examples),
     },
     defined: {
-      description: "at least one structured { given, when, then } examples entry",
-      predicate: hasStructuredExampleEntry,
+      description:
+        "at least one structured { given, when, then } examples entry, with every used step fully bound (no unbound parameter slot — the concreteness law)",
+      predicate: (node) => hasStructuredExampleEntry(node) && usedStepsAreFullyBound(node),
     },
   },
   rule: {

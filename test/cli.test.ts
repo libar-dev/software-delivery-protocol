@@ -16,6 +16,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { SDP_HELP_TEXT, isCliEntrypoint, runSdpCli } from "../src/cli/sdp.js";
+import { generateContracts } from "../src/codegen/contracts.js";
 import { extract } from "../src/extract/index.js";
 import { renderDesignReview } from "../src/projections/design-review.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
@@ -49,6 +50,37 @@ function createCaptureOutput() {
   };
 }
 
+/**
+ * A working-tree copy of the example's authored surfaces at a temp root. Every CLI test that
+ * writes or deletes generated artifacts runs on a copy, never on the in-repo example: the
+ * example's own bound test imports generated/contracts at collection time, and a parallel test
+ * worker rewriting that tree mid-run would race it — the executable tracer made generated/ a
+ * live import target.
+ */
+function materializeExampleCopy(): string {
+  const root = mkdtempSync(join(tmpdir(), "sdp-example-copy-"));
+
+  for (const surface of ["specs", "src", "test"]) {
+    cpSync(join(exampleRoot, surface), join(root, surface), { recursive: true });
+  }
+
+  return root;
+}
+
+function readGeneratedTree(root: string): ReadonlyMap<string, string> {
+  const tree = new Map<string, string>();
+  const generatedRoot = join(root, "generated");
+
+  for (const entry of readdirSync(generatedRoot, { recursive: true, withFileTypes: true })) {
+    if (entry.isFile()) {
+      const absolute = join(entry.parentPath, entry.name);
+      tree.set(absolute.slice(generatedRoot.length + 1), readFileSync(absolute, "utf8"));
+    }
+  }
+
+  return tree;
+}
+
 describe("sdp cli", () => {
   it("prints the exact help text for no args", () => {
     const capture = createCaptureOutput();
@@ -70,16 +102,29 @@ describe("sdp cli", () => {
     expect(capture.readStderr()).toBe("");
   });
 
-  it("builds the checkout-v1 example: writes graph.json (and no temp leftover) and exits 0", () => {
-    rmSync(join(exampleRoot, "generated"), { recursive: true, force: true });
-    const capture = createCaptureOutput();
+  it("builds the checkout-v1 example: writes graph.json + contracts (and no temp leftover) and exits 0", () => {
+    const root = materializeExampleCopy();
 
-    const exitCode = runSdpCli(["build", exampleRoot], capture.output);
+    try {
+      const capture = createCaptureOutput();
 
-    expect(exitCode).toBe(0);
-    expect(capture.readStderr()).toBe("");
-    expect(capture.readStdout()).toContain("11 specs · 1 packs · 4 anchors → 16 nodes · 31 edges");
-    expect(readdirSync(join(exampleRoot, "generated"))).toEqual(["graph.json"]);
+      const exitCode = runSdpCli(["build", root], capture.output);
+
+      expect(exitCode).toBe(0);
+      expect(capture.readStderr()).toBe("");
+      expect(capture.readStdout()).toContain(
+        "11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges",
+      );
+      expect(capture.readStdout()).toContain("(3 modules)");
+      expect(readdirSync(join(root, "generated")).sort()).toEqual(["contracts", "graph.json"]);
+      expect(readdirSync(join(root, "generated", "contracts")).sort()).toEqual([
+        "orders.create-order.invalid-cart.contract.ts",
+        "orders.create-order.space.ts",
+        "orders.create-order.valid-cart.contract.ts",
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it("builds cleanly with no root argument from the repository root (the default-root path)", () => {
@@ -94,68 +139,64 @@ describe("sdp cli", () => {
 
     expect(exitCode).toBe(0);
     expect(capture.readStderr()).toBe("");
-    expect(capture.readStdout()).toContain("11 specs · 1 packs · 4 anchors → 16 nodes · 31 edges");
+    expect(capture.readStdout()).toContain("11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges");
     rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
   });
 
   it("passes --check-clean on the example (determinism self-check through the CLI)", () => {
-    const capture = createCaptureOutput();
+    const root = materializeExampleCopy();
 
-    const exitCode = runSdpCli(["build", exampleRoot, "--check-clean"], capture.output);
+    try {
+      const capture = createCaptureOutput();
 
-    expect(exitCode).toBe(0);
-    expect(capture.readStderr()).toBe("");
+      const exitCode = runSdpCli(["build", root, "--check-clean"], capture.output);
+
+      expect(exitCode).toBe(0);
+      expect(capture.readStderr()).toBe("");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it("clean-repo determinism: the full pipeline at a different absolute path is byte-identical", () => {
     // --check-clean runs the pipeline twice over the *same* root, and delete-generated/-and-rerun
     // reuses the same root too — neither can catch an absolute path leaking into artifact bytes.
-    // A working-tree copy of the authored surfaces (never `git archive`: an uncommitted example
-    // edit must not fail a determinism test) at a fresh absolute path pins the projection
-    // property: bytes are a function of the root's *content*, never its location or leftover
-    // local state.
-    const cleanRoot = mkdtempSync(join(tmpdir(), "sdp-clean-repo-"));
+    // Two working-tree copies of the authored surfaces (never `git archive`: an uncommitted
+    // example edit must not fail a determinism test) at two fresh absolute paths pin the
+    // projection property: bytes are a function of the root's *content*, never its location or
+    // leftover local state.
+    const firstRoot = materializeExampleCopy();
+    const secondRoot = materializeExampleCopy();
 
     try {
-      for (const surface of ["specs", "src", "test"]) {
-        cpSync(join(exampleRoot, surface), join(cleanRoot, surface), { recursive: true });
-      }
-
-      expect(runSdpCli(["view", exampleRoot, "--check-clean"], createCaptureOutput().output)).toBe(
+      expect(runSdpCli(["view", firstRoot, "--check-clean"], createCaptureOutput().output)).toBe(0);
+      expect(runSdpCli(["view", secondRoot, "--check-clean"], createCaptureOutput().output)).toBe(
         0,
       );
-      expect(runSdpCli(["view", cleanRoot, "--check-clean"], createCaptureOutput().output)).toBe(0);
 
-      const readArtifactTree = (root: string): ReadonlyMap<string, string> => {
-        const tree = new Map<string, string>();
-
-        for (const entry of readdirSync(root, { recursive: true, withFileTypes: true })) {
-          if (entry.isFile()) {
-            const absolute = join(entry.parentPath, entry.name);
-            tree.set(absolute.slice(root.length + 1), readFileSync(absolute, "utf8"));
-          }
-        }
-
-        return tree;
-      };
-
-      expect(readArtifactTree(join(cleanRoot, "generated"))).toEqual(
-        readArtifactTree(join(exampleRoot, "generated")),
-      );
+      expect(readGeneratedTree(secondRoot)).toEqual(readGeneratedTree(firstRoot));
     } finally {
-      rmSync(cleanRoot, { recursive: true, force: true });
+      rmSync(firstRoot, { recursive: true, force: true });
+      rmSync(secondRoot, { recursive: true, force: true });
     }
   });
 
   it("end-to-end determinism self-check: delete generated/, rebuild, byte-identical", () => {
-    const graphPath = join(exampleRoot, "generated", "graph.json");
-    expect(runSdpCli(["build", exampleRoot], createCaptureOutput().output)).toBe(0);
-    const firstBuild = readFileSync(graphPath, "utf8");
+    const root = materializeExampleCopy();
 
-    rmSync(join(exampleRoot, "generated"), { recursive: true, force: true });
-    expect(runSdpCli(["build", exampleRoot], createCaptureOutput().output)).toBe(0);
+    try {
+      expect(runSdpCli(["build", root], createCaptureOutput().output)).toBe(0);
+      const firstBuild = readGeneratedTree(root);
 
-    expect(readFileSync(graphPath, "utf8")).toBe(firstBuild);
+      rmSync(join(root, "generated"), { recursive: true, force: true });
+      expect(runSdpCli(["build", root], createCaptureOutput().output)).toBe(0);
+
+      // The whole generated tree — graph.json and every contract module — regenerates
+      // byte-identically.
+      expect(readGeneratedTree(root)).toEqual(firstBuild);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it("fails clean on a root that is not a directory: one line, exit 1, never a stack trace", () => {
@@ -287,6 +328,57 @@ describe("sdp cli", () => {
       );
       // The stale artifact is gone: nothing at this root reads as current.
       expect(existsSync(stalePath)).toBe(false);
+    } finally {
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("fails --check-clean on a diverging second contract generation: exit 1, no artifact survives", () => {
+    const root = materializeExampleCopy();
+
+    try {
+      // Contract generation is a pure function of the graph (deterministic), so the divergence
+      // branch is forced through the injection seam — same law as the extraction twin above.
+      let generations = 0;
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", root, "--check-clean"], capture.output, {
+        generateContracts: (graph) => {
+          generations += 1;
+          const result = generateContracts(graph);
+
+          return generations === 1
+            ? result
+            : { ...result, files: new Map([["diverged.contract.ts", "// diverged\n"]]) };
+        },
+      });
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toContain(
+        "sdp build --check-clean: two independent contract generations diverged — the build is not deterministic.\n",
+      );
+      // Nothing at this root reads as current: neither the graph nor a contracts tree.
+      expect(existsSync(join(root, "generated", "graph.json"))).toBe(false);
+      expect(existsSync(join(root, "generated", "contracts"))).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("owns the contracts tree wholesale: with nothing to generate, a stale contracts dir is removed", () => {
+    const corpusRoot = materializeExtractCorpus("anchored-binding");
+
+    try {
+      const staleContract = join(corpusRoot, "generated", "contracts", "orders.gone.contract.ts");
+      mkdirSync(join(corpusRoot, "generated", "contracts"), { recursive: true });
+      writeFileSync(staleContract, "// a contract from a previous run\n", "utf8");
+
+      const exitCode = runSdpCli(["build", corpusRoot], createCaptureOutput().output);
+
+      expect(exitCode).toBe(0);
+      // No example space and no bindable example in this corpus: nothing generates, and the
+      // stale tree from a previous run must not read as current.
+      expect(existsSync(join(corpusRoot, "generated", "contracts"))).toBe(false);
+      expect(existsSync(join(corpusRoot, "generated", "graph.json"))).toBe(true);
     } finally {
       removeMaterializedCorpus(corpusRoot);
     }
@@ -485,20 +577,28 @@ describe("sdp cli", () => {
   });
 
   it("validates the example: exit 0, the artifact written, and exactly the one surfaced warning", () => {
-    const capture = createCaptureOutput();
+    const root = materializeExampleCopy();
 
-    const exitCode = runSdpCli(["validate", exampleRoot, "--check-clean"], capture.output);
+    try {
+      const capture = createCaptureOutput();
 
-    expect(exitCode).toBe(0);
-    expect(capture.readStdout()).toContain("11 specs · 1 packs · 4 anchors → 16 nodes · 31 edges");
-    expect(capture.readStdout()).toContain(
-      "validate: 0 errors · 1 warnings (conformance + honesty over the one graph)",
-    );
-    // The standing warning is the invalid-cart example's unenabled verifier — informative, never
-    // a gate (it is the surfaced absence the check exists for, not noise to silence).
-    expect(capture.readStderr()).toContain("conformance/verifies-linkage");
-    expect(capture.readStderr()).not.toContain("[error]");
-    expect(existsSync(join(exampleRoot, "generated", "graph.json"))).toBe(true);
+      const exitCode = runSdpCli(["validate", root, "--check-clean"], capture.output);
+
+      expect(exitCode).toBe(0);
+      expect(capture.readStdout()).toContain(
+        "11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges",
+      );
+      expect(capture.readStdout()).toContain(
+        "validate: 0 errors · 1 warnings (conformance + honesty over the one graph)",
+      );
+      // The standing warning is the invalid-cart example's unenabled verifier — informative,
+      // never a gate (it is the surfaced absence the check exists for, not noise to silence).
+      expect(capture.readStderr()).toContain("conformance/verifies-linkage");
+      expect(capture.readStderr()).not.toContain("[error]");
+      expect(existsSync(join(root, "generated", "graph.json"))).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it("gates on the checks, not the build: a clean-building broken link validates to exit 1 with the artifact kept", () => {
@@ -549,52 +649,65 @@ describe("sdp cli", () => {
   });
 
   it("views the example: validate + the Design Review written, with the one standing warning", () => {
-    const capture = createCaptureOutput();
+    const root = materializeExampleCopy();
 
-    const exitCode = runSdpCli(["view", exampleRoot, "--check-clean"], capture.output);
+    try {
+      const capture = createCaptureOutput();
 
-    expect(exitCode).toBe(0);
-    expect(capture.readStdout()).toContain(
-      "validate: 0 errors · 1 warnings (conformance + honesty over the one graph)",
-    );
-    expect(capture.readStdout()).toContain("(13 pages)");
+      const exitCode = runSdpCli(["view", root, "--check-clean"], capture.output);
 
-    const viewRoot = join(exampleRoot, "generated", "design-review");
-    expect(readdirSync(viewRoot).sort()).toEqual(["index.md", "pack", "spec"]);
-    expect(existsSync(join(viewRoot, "spec", "orders.create-order.md"))).toBe(true);
-    // No temp leftover: the tree lands via temp-then-rename.
-    expect(readdirSync(join(exampleRoot, "generated")).sort()).toEqual([
-      "design-review",
-      "graph.json",
-    ]);
+      expect(exitCode).toBe(0);
+      expect(capture.readStdout()).toContain(
+        "validate: 0 errors · 1 warnings (conformance + honesty over the one graph)",
+      );
+      expect(capture.readStdout()).toContain("(13 pages)");
+
+      const viewRoot = join(root, "generated", "design-review");
+      expect(readdirSync(viewRoot).sort()).toEqual(["index.md", "pack", "spec"]);
+      expect(existsSync(join(viewRoot, "spec", "orders.create-order.md"))).toBe(true);
+      // No temp leftover: the trees land via temp-then-rename.
+      expect(readdirSync(join(root, "generated")).sort()).toEqual([
+        "contracts",
+        "design-review",
+        "graph.json",
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it("owns the view directory wholesale: a stale page does not survive a re-render", () => {
-    const stalePath = join(exampleRoot, "generated", "design-review", "spec", "orders.gone.md");
-    mkdirSync(join(exampleRoot, "generated", "design-review", "spec"), { recursive: true });
-    writeFileSync(stalePath, "# A spec deleted from the repo\n", "utf8");
+    const root = materializeExampleCopy();
 
-    const exitCode = runSdpCli(["view", exampleRoot], createCaptureOutput().output);
+    try {
+      const stalePath = join(root, "generated", "design-review", "spec", "orders.gone.md");
+      mkdirSync(join(root, "generated", "design-review", "spec"), { recursive: true });
+      writeFileSync(stalePath, "# A spec deleted from the repo\n", "utf8");
 
-    expect(exitCode).toBe(0);
-    expect(existsSync(stalePath)).toBe(false);
+      const exitCode = runSdpCli(["view", root], createCaptureOutput().output);
+
+      expect(exitCode).toBe(0);
+      expect(existsSync(stalePath)).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it("regenerates the view byte-identically: delete generated/, re-view, same bytes", () => {
-    const pagePath = join(
-      exampleRoot,
-      "generated",
-      "design-review",
-      "spec",
-      "orders.create-order.md",
-    );
-    expect(runSdpCli(["view", exampleRoot], createCaptureOutput().output)).toBe(0);
-    const firstRender = readFileSync(pagePath, "utf8");
+    const root = materializeExampleCopy();
 
-    rmSync(join(exampleRoot, "generated"), { recursive: true, force: true });
-    expect(runSdpCli(["view", exampleRoot], createCaptureOutput().output)).toBe(0);
+    try {
+      const pagePath = join(root, "generated", "design-review", "spec", "orders.create-order.md");
+      expect(runSdpCli(["view", root], createCaptureOutput().output)).toBe(0);
+      const firstRender = readFileSync(pagePath, "utf8");
 
-    expect(readFileSync(pagePath, "utf8")).toBe(firstRender);
+      rmSync(join(root, "generated"), { recursive: true, force: true });
+      expect(runSdpCli(["view", root], createCaptureOutput().output)).toBe(0);
+
+      expect(readFileSync(pagePath, "utf8")).toBe(firstRender);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it("writes the view even when checks fail: findings render in it, the exit code is validate's", () => {

@@ -21,13 +21,11 @@
 
 - Example:
   - **given**
-    - A cart is empty or contains at least one item without available inventory.
-    - The cart is submitted for order creation.
+    - a customer has a cart with {n: 0} line items
   - **when**
-    - The create-order use case validates the cart.
+    - the customer submits the cart for order creation
   - **then**
-    - No order is created.
-    - The caller receives a validation error explaining why the cart is invalid.
+    - order creation is rejected because {reason: "empty cart"}
 
 ## Verification intent
 
@@ -35,8 +33,8 @@
 
 ### Criteria
 
-- The use case throws when inventory is missing.
 - The use case throws when the cart is empty.
+- The thrown error names the rejection reason.
 
 ## Relations & impact (one hop)
 

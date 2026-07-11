@@ -26,6 +26,22 @@
 - **outcome:** Turn a valid cart into an order.
 - **value:** Customers can complete purchases without the example modeling the rest of checkout.
 
+## Behavior
+
+### Example space
+
+- Step vocabulary:
+  - **given**
+    - a customer has a cart with {n:number} line items
+    - every line item has quantity {q:number} and unit price {price:number}
+    - every cart item is {availability:"in stock"|"out of stock"}
+  - **when**
+    - the customer submits the cart for order creation
+  - **then**
+    - an order is created with total {total:number}
+    - the order contains the original cart lines
+    - order creation is rejected because {reason:"empty cart"|"out of stock"}
+
 ## Relations & impact (one hop)
 
 Every line is a one-hop neighbor over the curated graph: changing this spec touches this list plus the bindings above. Deeper reach is a script over the reader; symbol-level reach is the aspirational impact graph.

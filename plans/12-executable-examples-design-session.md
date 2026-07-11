@@ -1,8 +1,11 @@
 # Plan 12 — Executable examples: the design session (PLAN-ONLY)
 
-> **Status: 🔲 DRAFTED 2026-06-11 — not yet run.** A **PLAN-ONLY** session: it decides and
-> records; it edits no target files (a throwaway type-feasibility spike in an isolated scratch
-> directory is permitted, discarded before the session closes). The session exists because the
+> **Status: ✅ RUN 2026-07-11 — decisions recorded; §8 is the session record of record.** The
+> session ran with one owner restructure: **the carrier fork was deliberately not closed.** The
+> seven carrier-independent settlements ratified (plan 13 is unblocked); the carrier question
+> restructured from a single ruling into an **evidence competition** — four dedicated exploration
+> PRs against one exhibit bar, judged at a carrier ruling session. A **PLAN-ONLY** session as
+> drafted: it decided and recorded; it edited no target files. The session exists because the
 > product owner declared the pain the roadmap says orders the next phase (`07` §5): gen 2 gained
 > type safety by rejecting dual-source authoring, but lost the gen-1 DX of **executable specs** —
 > the spec itself driving test execution with immediate feedback. **Every route is on the table,
@@ -407,3 +410,88 @@ tables, escaping, formatter rules, grammar versioning) under C2, document design
 components, the prose ruling, the render discipline) under F, or both under the layered
 convergence — plus the per-kind partition law in every case. Each has enough surface area to
 deserve the grilling there, not here.
+
+## §8 — Session record (run 2026-07-11; every ruling an explicit product-owner choice in a grilling session)
+
+### The restructure: ratify the universals, open the carrier competition
+
+The owner's first ruling reshaped the session: **valid design forks are not cut off by argument —
+they are explored in dedicated PRs and judged on exhibits.** What is universal under every carrier
+ratifies now; what is carrier-scoped stays contested. Consequences:
+
+- **Ratified by name — the seven carrier-independent settlements** (FINDINGS §3): **1** (the
+  framing — executability was never the disease), **2** (A2 generated contracts over A1),
+  **4** (the notation ships as renderer before parser), **6** (mechanism defaults), **7** (the
+  example space / bound point + the concreteness law + explicit binding), **8** (the oracle),
+  **9** (coverage as equivalence-witnessing + placement). These are the whole executable
+  machinery — identical under every carrier, proven with the committed `tsc` transcripts —
+  so **plan 13 (execution) is unblocked and starts now**.
+- **Downgraded, not ratified — settlements 3 and 5** (C1 dies; TSX demoted): from *kills* to
+  **standing evidence on file**. Each may be overturned only by a carrier exploration PR that
+  produces a better exhibit against the same bar.
+
+### The carrier competition
+
+Four dedicated exploration PRs, each implementing the same worked material in its carrier,
+judged evidence-vs-evidence at a **carrier ruling session** (PLAN-ONLY, scheduled when the PRs
+land): **F2 — markdown carrier** · **C2 — own grammar file** · **Gherkin extension/fork** (must
+produce the exhibit that escapes the source-reread's reduction to tags-on-Gherkin or
+C2-on-a-forked-chassis) · **typed-markup / HTML document** (must beat settlement 5's
+interactivity-derives-from-the-graph finding across the arc).
+
+**The exhibit bar (every PR, identical):** (a) the **full in-place maturity arc** for
+`spec:orders.create-order` + `valid-cart` — one file enriched `idea → scoped → defined → ready`,
+executable at `ready` through plan 13's generated contracts; (b) **one prose-heavy kind**
+(`decision`) and **one structure-heavy kind** (`contract` or `model`); (c) the **table-sugar
+syntax** for multi-point examples (the point-per-example law, MD-17); (d) a self-scored §4
+scorecard row plus the differentiation test. During the competition the **TS DSL remains the
+sole canonical authoring surface** and the PRs live in `explorations/` as exhibits — no spec
+ever has two homes, so the dual-source ruling defers cleanly to the ruling session.
+
+### The rulings
+
+1. **Point-per-example; tables are carrier sugar (MD-17, new entry).** The graph model stays one
+   bound point per example; carriers may expand table syntax to N siblings statically; renderers
+   project sibling sets back as tables. Forced into the open by the consumer-corpus evidence
+   (the truth-table house style: 93 of 132 executable features in a production gen-1 corpus).
+2. **JS-B2.3 kept unchanged, no supersession.** A2 was ratified precisely because generated
+   contracts are the lawful generated-union route (JS-B2.6); the §2 collision existed only under
+   the dead A1.
+3. **MD-1's gloss refined** (dated note on the entry): positioning stands; executability itself
+   was never the rejected part; the executable half returns as a recovered surface under the
+   meta-model headline.
+4. **Dual-source letter-vs-spirit: deferred to the carrier ruling session** (see the competition
+   terms above). **MD-15 untouched**; it extends to the winning carrier's extension, ruled then.
+5. **Sequencing: plan 13 now, carriers in parallel.** The machinery is carrier-independent;
+   building it first lets every carrier exhibit run against real contracts instead of mockups.
+6. **`sdp import` splits:** the carrier-neutral parser half (vendored Gherkin → intermediate
+   model) may ride plan 13 or a small side PR; the document emitter is authored once, in the
+   winning carrier, immediately after the ruling — the migration wedge for the waiting gen-1
+   corpora.
+7. **Names ratified into the glossary** (referents ratified ⇒ names ratify): *step contract* ·
+   *space contract* · *example space* · *parameter slot* (short *slot*) · *bound point* ·
+   *oracle* · *witness* · *coverage gap* · *`sdp import`* — now in `CONTEXT.md` ("The executable
+   half" + the locked ledger). **Still flagged:** *notation* · *carrier* — they ratify or die at
+   the carrier ruling session.
+
+### New evidence entered this session
+
+A consumer-corpus reread of gen-1 usage in a production project (22 planning specs · 132
+executable test features), taken as **evidence about the problem, never the answer**: maturity
+there is a **migration across two file trees** (prose-heavy planning specs rewritten into
+prose-stripped executable features) and the rot lives exactly at the migration — stale
+cross-pointers on specs marked complete, invariants "transferred verbatim" by hand between the
+trees, quarantined always-throwing step stubs reading as coverage. Field confirmation of the
+enrich-in-place law and of exhibit-bar item (a): **the maturity arc must be one file maturing.**
+Markdown pseudo-fields dominate both populations (bold `**Invariant:**`-style fields ×723 in the
+executable tree alone) — carrier-relevant evidence the ruling session weighs. The truth-table
+house style entered as MD-17's context.
+
+### Exit criteria, settled against §6
+
+The ratified path: **plan 13 (A2 machinery, TS DSL, checkout-v1 tracer) now · four carrier
+exploration PRs in parallel · the carrier ruling session · then the surface-design session for
+the winner and the `sdp import` emitter.** Law rulings recorded (above + MD-17); naming
+candidates resolved into the glossary; plan 13 scoped (`plans/13`); the grammar/document design
+session is **replaced** by the competition + ruling session pair. The decision-spec fold keeps
+waiting for the carrier ruling (the registry's re-pointed trigger stands).

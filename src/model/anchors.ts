@@ -1,4 +1,4 @@
-import type { CodeAnchorId, SpecId, TestAnchorId } from "../ids.js";
+import type { CodeAnchorId, OracleAnchorId, SpecId, TestAnchorId } from "../ids.js";
 
 /**
  * The generic code anchor (MD-8, folded here): one builder over the implementation-flavored code
@@ -26,7 +26,22 @@ export interface SpecTestAnchor {
   readonly verifies: SpecId;
 }
 
-export type Anchor = CodeAnchor | SpecTestAnchor;
+/**
+ * The binding-only oracle anchor (the plan-12 ratification, settlement 8): identity plus the one
+ * `models` target — the authored `expected()` semantics live beside it as ordinary test-side
+ * code, implementation-side like step bindings. The graph records that an oracle *exists* (this
+ * anchor), never what it says: the oracle function is never extracted, never authoritative, and
+ * confers no delivery fact (no `has-oracle` until the second-caller bar) — discovery is an
+ * anchor query. Its outcome faithfulness stays human-reviewed, by law (checks police conformance
+ * and honesty, never content-quality).
+ */
+export interface SpecOracleAnchor {
+  readonly id: OracleAnchorId;
+  readonly label?: string;
+  readonly models: SpecId;
+}
+
+export type Anchor = CodeAnchor | SpecTestAnchor | SpecOracleAnchor;
 
 export function codeAnchor(anchor: CodeAnchor): CodeAnchor {
   return {
@@ -35,6 +50,12 @@ export function codeAnchor(anchor: CodeAnchor): CodeAnchor {
 }
 
 export function specTest(anchor: SpecTestAnchor): SpecTestAnchor {
+  return {
+    ...anchor,
+  };
+}
+
+export function specOracle(anchor: SpecOracleAnchor): SpecOracleAnchor {
   return {
     ...anchor,
   };

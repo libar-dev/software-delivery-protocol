@@ -69,6 +69,8 @@ function derivePackNode(entry: ReifiedPack): PackNode {
   };
 }
 
+/** Test and oracle anchors both ride the `Anchor` node type — the id namespace (`test:` /
+ *  `oracle:`) and the binding edge type (`verifies` / `models`) carry the flavor. */
 function deriveAnchorNode(entry: ReifiedAnchor): AnchorNode | CodeNode {
   const label = entry.data.label;
 
@@ -150,7 +152,8 @@ export function deriveGraph(
   for (const entry of anchors) {
     nodes.push(deriveAnchorNode(entry));
 
-    const targetField = entry.flavor === "code" ? "satisfies" : "verifies";
+    const targetField =
+      entry.flavor === "code" ? "satisfies" : entry.flavor === "test" ? "verifies" : "models";
     const target = entry.data[targetField];
 
     if (typeof target === "string") {
