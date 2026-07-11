@@ -1,9 +1,35 @@
 # Plan 13 — The executable machinery (A2): generated contracts, the typed example space, the oracle, the runner
 
-> **Status: 🔲 DRAFTED 2026-07-11 — scoped by the plan-12 session record (plan 12 §8); not yet
-> run.** An **execution** session (edits `src/`, `examples/`, `test/`). It builds the
+> **Status: ✅ EXECUTED 2026-07-11 (same day as scoping — plan 12 §8).** All five in-scope pieces
+> landed on `feature/anchors`; `npm run check` green end-to-end with the reordered chain
+> (build → `generate:example` → `typecheck:examples` → test — generated contracts became a live
+> import target, so generation precedes its consumers). The tracer proof runs live: editing the
+> spec's `{total: 100}` and rebuilding reddens the bound test with
+> `at step: Then an order is created with total 120 — expected 100 to be 120` — the failure in
+> the spec's own language, the value the spec's own. Every exploration-captured drift transcript
+> re-landed as one of **8 `@ts-expect-error` pins** (`examples/checkout-v1/test/orders/drift-pins.ts`)
+> that alarm via TS2578 if the compiler ever stops rejecting a case. The slot micro-notation
+> parses in `src/notation/slots.ts` (one skeleton identity; natural reading is the renderer's,
+> exercised by the `/vitest` adapter's failure lines). The Outcome union's variant kinds are the
+> Then-step **skeletons themselves** — the no-guessing rule; prettier outcome names are the
+> grammar session's sugar. The `models` edge earned its contract row (anchored, Anchor →
+> Primitive), the reader's binding walks include it (blast radius sees the oracle's file), and
+> the graph golden grew to 17 nodes · 32 edges · 5 anchors with the standing invalid-cart
+> warning intact. The concreteness clause is mutation-tested (bound → passes; the identical spec
+> with one binding removed fails exactly `kind-evidence-complete`).
+>
+> **Execution deviations, all recorded:** (1) codegen diagnostics landed as four pinned
+> `contracts/*` finding ids (undeclared-slot · off-dimension-value · conflicting-binding ·
+> conflicting-dimension), family `conformance`, warnings — loud L2/L3 degradation so the
+> generated artifact always compiles while the drift is named at build time; (2) the CLI test
+> suite moved every example-mutating test onto a temp working-tree copy — in-repo mutation of
+> `examples/checkout-v1/generated/` became a race once the bound test imported from it;
+> (3) the §2.6 import-parser rider did **not** ride — it splits to the side PR as the plan
+> permitted, keeping this slice single-purpose.
+>
+> An **execution** session (edits `src/`, `examples/`, `test/`). It built the
 > carrier-independent executable half the plan-12 session ratified — every line of it serves
-> whichever carrier wins the parallel competition, so nothing here waits on that ruling.
+> whichever carrier wins the parallel competition, so nothing here waited on that ruling.
 >
 > **Queue note:** the four carrier exploration PRs (plan 12 §8 — F2 markdown · C2 grammar ·
 > Gherkin extension/fork · typed-markup document) run **in parallel** with this plan and consume

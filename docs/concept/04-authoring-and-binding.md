@@ -1,6 +1,6 @@
 # 04 — Authoring & Binding
 
-How truth gets into the repo. The MVP has exactly two authoring surfaces, both framework-neutral: the **TypeScript Spec DSL** and **generic source anchors**. Richer surfaces (Gherkin, harnesses) are named here so the model accommodates them, but are clearly **ASPIRATIONAL**.
+How truth gets into the repo. The MVP has exactly two authoring surfaces, both framework-neutral: the **TypeScript Spec DSL** and **generic source anchors**. Richer surfaces (a Gherkin-like carrier, the interactive harness UI) are named in §4 so the model accommodates them — the carrier an open competition, the harness UI **ASPIRATIONAL** — while the carrier-independent executable machinery beneath them is landed (CORE).
 
 Realises **P5** (statically extractable), **P6** (ID-linked), **P9/P10** (anchors are anchored bindings, not intent), and the epistemic boundary from `01`.
 
@@ -92,7 +92,7 @@ field that are possible later Representations, not the landed signature.
 
 ### Anchors assert a binding — never intent (P9/P10)
 
-An anchor says exactly one thing: *"this code location is the implementation/test **binding** for this Spec ID"* — a binding assertion only, never system-truth content (DECISIONS R1). The landed contract is exactly that minimal: `id` · an optional display `label` · **one** binding target (`satisfies` on a code anchor, `verifies` on a test anchor). Any other field is an extraction **error** — the anchored-surface twin of authoring-shape honesty. Richer structural bindings (`component`, `implements`, `handles`/`emits`) are **ASPIRATIONAL** — possible later extensions (see the inline-vs-centralized open question, `07` §4), never the MVP contract. An anchor is **forbidden** from carrying anything spec-level: behavior, rationale, readiness, acceptance criteria, or delivery facts. This asymmetry is load-bearing:
+An anchor says exactly one thing: *"this code location is the implementation/test **binding** for this Spec ID"* — a binding assertion only, never system-truth content (DECISIONS R1). The landed contract is exactly that minimal: `id` · an optional display `label` · **one** binding target (`satisfies` on a code anchor, `verifies` on a test anchor, `models` on an oracle anchor). Any other field is an extraction **error** — the anchored-surface twin of authoring-shape honesty. Richer structural bindings (`component`, `implements`, `handles`/`emits`) are **ASPIRATIONAL** — possible later extensions (see the inline-vs-centralized open question, `07` §4), never the MVP contract. An anchor is **forbidden** from carrying anything spec-level: behavior, rationale, readiness, acceptance criteria, or delivery facts. This asymmetry is load-bearing:
 
 - **Intent stays centralized** in the spec files, never scattered through code comments.
 - Anchors produce **anchored**-`claim` edges, distinct from **declared** relations (P9).
@@ -119,6 +119,8 @@ export const createOrderValidCartTest = specTest({
 
 Here the test `verifies` the **example** it backs (`spec:orders.create-order.valid-cart`); that test anchor is exactly what makes the example an **enabled verifier**, so the example's own `verifies` edge can confer `has-verifier` on the parent it targets (the direct, per-spec, non-transitive rule in `02` §2, *Verifier semantics*). This produces the bidirectional spec↔test trace that is a core MVP deliverable: query "what verifies this spec?" and "what does this test cover?" from the graph. The test's *result and its runner status* (pass/fail, skipped, quarantined, glob-excluded) are operational — CI's, never in the graph; the graph records only that an enabled verifier — a **resolvable test binding** — *exists*, never that it ran (the derived `has-verifier` delivery fact, `02` §2).
 
+The third builder beside `codeAnchor` and `specTest` is **`specOracle`** (`oracle:` namespace), under the same binding-only law: identity plus one `models` target, emitted as an **anchored** Anchor → `Spec` edge. It records that an **oracle** — the authored expected-outcome semantics for a parent's example space (§4) — *exists*; the graph never records what the oracle says (the function beside the anchor is never extracted, never authoritative), and the anchor confers **no delivery fact** — discovery is an anchor query.
+
 ### An anchor-required lint (optional, CORE-adjacent)
 
 A lint rule can flag designated patterns (e.g. exported use-case classes, route handlers) that lack an anchor, so significant code does not silently fall out of the graph. Useful, not load-bearing.
@@ -135,17 +137,22 @@ The MVP records runtime bindings *generically*: **anchors** name routes/handlers
 
 ---
 
-## 4. Gherkin and harnesses — named, ASPIRATIONAL
+## 4. Gherkin and harnesses — the executable half landed, the surfaces named
 
-These are real future surfaces, kept here so the model is designed for them, but deliberately out of the MVP.
+The **carrier-independent executable machinery is landed (CORE)**; what stays deferred is named per surface below. The landed half — identical under whichever richer surface arrives, so none of it waits on one:
 
-### Annotated Gherkin (ASPIRATIONAL)
+- **Generated contracts.** `sdp build` emits a per-example **step contract** (the literal-union module a test binds handlers against — spec-side drift is a compile error naming the exact step) and a per-parent **space contract** (the typed dimensions of the example space · every child's bound point · the Outcome union derived from the parent's Then vocabulary). Both derive from the extracted graph, never the evaluated spec module (one validation path, MD-14), and a test may import them *because* they are projections — never the authored spec.
+- **The typed example space.** A parent `behavior` spec's `exampleSpace` declares the parameter-slot vocabulary its steps use; each `example` child binds one **point** (point-per-example, MD-17 — a table of cases is authoring-surface sugar). The **concreteness law** is one structural cell in the example kind's `defined` floor: an unbound slot in a used step caps the example below `defined`.
+- **The oracle.** The authored expected-outcome semantics for a parent's example space — implementation-side, beside the tests, bound by the `specOracle` anchor (§2), never extracted. Typed against the generated space contract on both sides: a renamed slot fails to compile, claiming an outcome the specs never stated is a `tsc` error, and `unspecified` is a first-class answer.
+- **The execution half.** The framework-neutral `/runner` core plus the `/vitest` adapter subpath (vitest an optional peer of the adapter alone); failure messages render in the spec's own language.
 
-`.feature` files with graph-aware tags (`@spec.orders.create-order`, `@readiness.defined`) as an equal-canonicity surface for behaviour specs, for teams that prefer BDD. Requires a Gherkin parser, a tag linter (tags are not type-safe by themselves), and round-trip export/import between Gherkin and the TS DSL. **Cut from the MVP** because it is a second authoring pipeline; the TS DSL already expresses everything Gherkin does via the `behavior` section's examples.
+### Annotated Gherkin (OPEN — the carrier competition)
 
-### Interactive harnesses (ASPIRATIONAL)
+`.feature`-style files with graph-aware tags (`@spec.orders.create-order`, `@readiness.defined`) as an equal-canonicity surface for behaviour specs, for teams that prefer BDD. This is one contender in **the carrier competition (the plan-12 session record)** — parallel exploration PRs judged on exhibits at a dedicated ruling session — and this document does not pre-rule it. Throughout the competition the TS DSL stays the sole canonical authoring surface, and whichever surface wins executes through the generated contracts above: the machinery is carrier-independent by construction.
 
-Modules that declare controls + an `expected()` model + `coverage()`, rendered as interactive panels for "what does this spec do under conditions X, Y, Z?" exploration and coverage-gap discovery. Explicitly *not* test runners and *not* authoritative truth. **Cut from the MVP** because it is a new authoring surface plus interactive UI, not needed to prove the core loop.
+### Interactive harnesses (ASPIRATIONAL — a projection plus one anchored oracle)
+
+Interactive panels for "what does this spec do under conditions X, Y, Z?" exploration and coverage-gap discovery. The harness is **a projection plus one anchored oracle**, not an authoring surface plus interactive UI: the panel renders wholly from the graph + the generated space contract — the dials are the example space's dimensions, the presets are the children's bound points — and its only authored half is the ~15-line oracle bound by `specOracle` (§2). Explicitly *not* a test runner and *not* authoritative truth. The UI itself stays **cut** as a named later slice; its rendered spec lives at `explorations/executable-examples/5-harness/render/`.
 
 ---
 
