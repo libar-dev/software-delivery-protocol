@@ -250,11 +250,12 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
       const exitCode = runSdpCli(["build", root], capture.output);
 
       // A codegen degradation warns and withholds — it never gates (warnings never do; gating
-      // is validateGraph's alone). The graph stays; the colliding modules are the only casualty,
-      // and with nothing left to write, no contracts tree appears at all.
+      // is validateGraph's alone). The graph stays; the contracts tree is withheld whole (the
+      // artifact is all-or-nothing — no partial tree may read as current), so no contracts
+      // directory appears at all.
       expect(exitCode).toBe(0);
       expect(capture.readStderr()).toMatch(/\[warning\] contracts\/case-colliding-path — /);
-      expect(capture.readStderr()).toContain("withheld");
+      expect(capture.readStderr()).toContain("the contracts tree is not written");
       expect(existsSync(join(root, "generated", "graph.json"))).toBe(true);
       expect(existsSync(join(root, "generated", "contracts"))).toBe(false);
     } finally {

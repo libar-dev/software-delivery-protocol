@@ -42,8 +42,9 @@ export const contractsFindingIds = {
   /** An example carries more than one structured entry — only the point entry is executable. */
   multiEntryExample: "contracts/multi-entry-example",
   /** Two contract paths differ only by letter case — they cannot coexist on a case-insensitive
-   *  filesystem, so the colliding modules are withheld (refusal is the honest behavior) and the
-   *  warning names them; gating stays `validateGraph`'s alone (MD-14). */
+   *  filesystem, so the contracts tree is withheld WHOLE (the emitted artifact is all-or-nothing
+   *  — a partial tree reading as current would be its own dishonesty) and the warning names the
+   *  colliding pair; gating stays `validateGraph`'s alone (MD-14). */
   caseCollidingPath: "contracts/case-colliding-path",
 } as const;
 
@@ -885,9 +886,11 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
 
   // Case-folded path collisions cannot coexist on a case-insensitive filesystem, where the
   // second write would silently clobber the first (P3: the artifact must be the same pure
-  // function of the repo on every OS). The colliding modules are withheld — refusing is the
-  // honest behavior, exactly as for a non-bindable example — and the warning names them;
-  // nothing here gates (warnings never do; gating is validateGraph's alone, MD-14).
+  // function of the repo on every OS). When one exists, the contracts tree is withheld WHOLE:
+  // the emitted artifact is all-or-nothing, and a partial tree missing two owed contracts while
+  // reading as current would be its own dishonesty. Nothing here gates (warnings never do;
+  // gating is validateGraph's alone, MD-14) — the warning names the colliding pair, and the CLI's
+  // empty-map path removes any stale tree so nothing reads as current.
   const byFoldedPath = new Map<string, string[]>();
 
   for (const path of files.keys()) {
@@ -895,19 +898,22 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
     byFoldedPath.set(folded, [...(byFoldedPath.get(folded) ?? []), path]);
   }
 
+  let treeWithheld = false;
+
   for (const colliding of byFoldedPath.values()) {
     if (colliding.length > 1) {
+      treeWithheld = true;
       findings.push({
         validatorId: contractsFindingIds.caseCollidingPath,
         family: "conformance",
         severity: "warning",
-        message: `contract paths ${colliding.map((path) => `"${path}"`).join(" · ")} differ only by letter case and cannot coexist on a case-insensitive filesystem — the colliding modules are withheld`,
+        message: `contract paths ${colliding.map((path) => `"${path}"`).join(" · ")} differ only by letter case and cannot coexist on a case-insensitive filesystem — the contracts tree is not written (the emitted artifact is all-or-nothing)`,
       });
-
-      for (const path of colliding) {
-        files.delete(path);
-      }
     }
+  }
+
+  if (treeWithheld) {
+    files.clear();
   }
 
   const sortedFiles = new Map(

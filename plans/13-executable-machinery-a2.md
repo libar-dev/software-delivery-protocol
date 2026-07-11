@@ -35,10 +35,12 @@
 > executes against the world it is handed — settlement 6 restored); the single-quoted-literal
 > vocabulary form is **not** interpreted (its reading belongs to the carrier/grammar ruling —
 > plan 12's scope ruling; until then it declares nothing and `untyped-vocabulary-slot` names it);
-> and the case-collision hard error became a **warning that withholds the colliding modules**
-> (refusal, the codegen's ratified posture — no second gate outside `validateGraph`). The oracle
-> decode in the reader/Design Review was reviewed against settlement 8 and stands: it is an
-> anchor query surfaced, no `has-oracle` fact exists.
+> and the case-collision hard error became a **warning that withholds the contracts tree whole**
+> (no second gate outside `validateGraph` — and no partial tree either: the emitted artifact is
+> all-or-nothing, so on a true conflict nothing is written and the warning says why; the CLI's
+> empty-map path removes any stale tree). The oracle decode in the reader/Design Review was
+> reviewed against settlement 8 and stands: it is an anchor query surfaced, no `has-oracle` fact
+> exists.
 >
 > An **execution** session (edits `src/`, `examples/`, `test/`). It built the
 > carrier-independent executable half the plan-12 session ratified — every line of it serves

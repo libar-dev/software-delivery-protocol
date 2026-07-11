@@ -387,7 +387,7 @@ describe("the contracts codegen stage", () => {
     expect(contract).not.toContain("n: 3");
   });
 
-  it("withholds case-colliding contract paths with a warning — refusal, never a second gate (MD-14)", () => {
+  it("withholds the contracts tree WHOLE on a case-colliding path — all-or-nothing, never a second gate", () => {
     const lower = child(BOUND_GWT, "spec:orders.create-order.same-case");
     const upper = child(BOUND_GWT, "spec:orders.create-order.same-Case");
     const graph = deriveFixtureGraph({ specs: [parent(VOCABULARY), lower, upper] });
@@ -399,8 +399,9 @@ describe("the contracts codegen stage", () => {
     expect(collisions).toHaveLength(1);
     expect(collisions[0]?.severity).toBe("warning");
     expect(collisions[0]?.message).toContain("orders.create-order.same-case.contract.ts");
-    // The colliding modules are withheld (a silent clobber on a case-insensitive filesystem is
-    // the alternative); the rest of the tree — the space contract — still emits.
-    expect([...generated.files.keys()]).toEqual(["orders.create-order.space.ts"]);
+    // Nothing emits: a partial tree missing two owed contracts while reading as current would be
+    // its own dishonesty — the artifact is all-or-nothing, and the warning (never a gate) says
+    // why it is nothing this build.
+    expect(generated.files.size).toBe(0);
   });
 });
