@@ -60,7 +60,10 @@ interface RawGroup {
 
 /**
  * Brace groups are found by a quote-aware scan (a quoted literal may contain `}` or `{`); groups
- * never nest. An unterminated `{` is prose to the end of the text.
+ * never nest. Degradation stays local (L2's spirit at the lexical level): an unquoted `{` inside
+ * an open group abandons the earlier brace as prose and restarts the group there, and an
+ * unterminated group is prose only up to the next candidate — a stray brace or quote earlier in
+ * the text must never swallow a well-formed binding after it.
  */
 function scanBraceGroups(text: string): readonly RawGroup[] {
   const groups: RawGroup[] = [];
@@ -76,6 +79,7 @@ function scanBraceGroups(text: string): readonly RawGroup[] {
     let cursor = index + 1;
     let inQuote = false;
     let end = -1;
+    let restart = -1;
 
     while (cursor < text.length) {
       const character = text[cursor];
@@ -85,13 +89,22 @@ function scanBraceGroups(text: string): readonly RawGroup[] {
       } else if (character === "}" && !inQuote) {
         end = cursor;
         break;
+      } else if (character === "{" && !inQuote) {
+        restart = cursor;
+        break;
       }
 
       cursor += 1;
     }
 
+    if (restart !== -1) {
+      index = restart;
+      continue;
+    }
+
     if (end === -1) {
-      break;
+      index = start + 1;
+      continue;
     }
 
     groups.push({
@@ -210,6 +223,14 @@ function parseGroup(group: RawGroup): SlotGroup | undefined {
 
   if (!IDENTIFIER_PATTERN.test(name)) {
     return undefined;
+  }
+
+  // `__proto__` in an object literal is the prototype setter, not a property (Annex B) — a slot
+  // by this name would generate a params/point literal that silently does the wrong thing at
+  // runtime. Malformed keeps it loud: an example using it fails the concreteness law, and no
+  // contract ever emits it.
+  if (name === "__proto__") {
+    return { form: "malformed", name, raw: group.raw };
   }
 
   if (colonIndex === -1) {

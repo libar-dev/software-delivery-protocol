@@ -8,6 +8,7 @@
 
 - Implementation binding: **present**
 - Verifier binding: **none**
+- Expected-outcome oracle: **none**
 - Runtime observation: **not tracked**
 
 ### Implementations

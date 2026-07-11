@@ -133,14 +133,135 @@ describe("sdp cli", () => {
     // the anchor sweep finds only the example's anchors (recognition is by import binding — this
     // repo's own tests import the protocol by relative path, so they bind nothing).
     rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
-    const capture = createCaptureOutput();
 
-    const exitCode = runSdpCli(["build"], capture.output);
+    try {
+      const capture = createCaptureOutput();
 
-    expect(exitCode).toBe(0);
-    expect(capture.readStderr()).toBe("");
-    expect(capture.readStdout()).toContain("11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges");
-    rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
+      const exitCode = runSdpCli(["build"], capture.output);
+
+      expect(exitCode).toBe(0);
+      expect(capture.readStderr()).toBe("");
+      expect(capture.readStdout()).toContain(
+        "11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges",
+      );
+    } finally {
+      rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
+    }
+  });
+
+  it("renders contracts warnings through the one formatter and counts them in the summary", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-contracts-warning-"));
+
+    try {
+      mkdirSync(join(root, "specs"), { recursive: true });
+      writeFileSync(
+        join(root, "specs", "parent.sdp.ts"),
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const parentSpec = spec({
+  id: specId("spec:orders.create-order"),
+  title: "Customer creates an order",
+  kind: "behavior",
+  altitude: "feature",
+  readiness: "idea",
+  intent: { outcome: "Turn a valid cart into an order." },
+  behavior: {
+    exampleSpace: {
+      given: ["a customer has a cart with {n:number} line items"],
+      when: ["the customer submits the cart for order creation"],
+      then: ["an order is created"],
+    },
+  },
+});
+`,
+        "utf8",
+      );
+      writeFileSync(
+        join(root, "specs", "child.sdp.ts"),
+        `import { refines, spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const childSpec = spec({
+  id: specId("spec:orders.create-order.stray"),
+  title: "A stray binding",
+  kind: "example",
+  altitude: "story",
+  readiness: "defined",
+  intent: { outcome: "Bind a slot the parent never declares." },
+  behavior: {
+    examples: [
+      {
+        given: ["a customer has a cart with {n: 2} line items", "the cart weighs {kg: 3}"],
+        when: ["the customer submits the cart for order creation"],
+        then: ["an order is created"],
+      },
+    ],
+  },
+  relations: [refines(specId("spec:orders.create-order"))],
+});
+`,
+        "utf8",
+      );
+
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", root], capture.output);
+
+      // A contracts warning never gates (exit 0), renders location-first through the one
+      // formatter, and counts into the build summary beside the extraction findings.
+      expect(exitCode).toBe(0);
+      expect(capture.readStderr()).toMatch(/\[warning\] contracts\/undeclared-slot — /);
+      expect(capture.readStdout()).toContain("(0 errors, 1 warnings)");
+      expect(existsSync(join(root, "generated", "contracts"))).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("fails the build on case-colliding contract paths: graph kept, contracts refused, exit 1", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-case-collision-"));
+
+    try {
+      mkdirSync(join(root, "specs"), { recursive: true });
+
+      const exampleSource = (idSegment: string): string =>
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
+  id: specId("spec:orders.${idSegment}"),
+  title: "Case twin ${idSegment}",
+  kind: "example",
+  altitude: "story",
+  readiness: "defined",
+  intent: { outcome: "Collide on a case-insensitive filesystem." },
+  behavior: {
+    examples: [
+      {
+        given: ["a cart with {n: 1} line items"],
+        when: ["the cart is submitted"],
+        then: ["an order is created"],
+      },
+    ],
+  },
+});
+`;
+      writeFileSync(join(root, "specs", "lower.sdp.ts"), exampleSource("case-twin"), "utf8");
+      writeFileSync(join(root, "specs", "upper.sdp.ts"), exampleSource("case-Twin"), "utf8");
+
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", root], capture.output);
+
+      // The graph is the faithful projection and stays; the contracts tree could not be written
+      // faithfully on every filesystem, so it is refused whole and the build fails.
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toMatch(/\[error\] contracts\/case-colliding-path — /);
+      expect(capture.readStderr()).toContain("contracts not written");
+      expect(existsSync(join(root, "generated", "graph.json"))).toBe(true);
+      expect(existsSync(join(root, "generated", "contracts"))).toBe(false);
+
+      // validate inherits the failed build stage: clean checks never override the worse exit.
+      expect(runSdpCli(["validate", root], createCaptureOutput().output)).toBe(1);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it("passes --check-clean on the example (determinism self-check through the CLI)", () => {
@@ -372,11 +493,14 @@ describe("sdp cli", () => {
       mkdirSync(join(corpusRoot, "generated", "contracts"), { recursive: true });
       writeFileSync(staleContract, "// a contract from a previous run\n", "utf8");
 
-      const exitCode = runSdpCli(["build", corpusRoot], createCaptureOutput().output);
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", corpusRoot], capture.output);
 
       expect(exitCode).toBe(0);
-      // No example space and no bindable example in this corpus: nothing generates, and the
-      // stale tree from a previous run must not read as current.
+      // No example space and no bindable example in this corpus: nothing generates, the "Wrote
+      // … contracts" line stays silent, and the stale tree from a previous run must not read as
+      // current.
+      expect(capture.readStdout()).not.toContain("modules");
       expect(existsSync(join(corpusRoot, "generated", "contracts"))).toBe(false);
       expect(existsSync(join(corpusRoot, "generated", "graph.json"))).toBe(true);
     } finally {

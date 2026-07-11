@@ -37,6 +37,13 @@ export const contractsFindingIds = {
   conflictingBinding: "contracts/conflicting-binding",
   /** Two vocabulary steps declare the same slot name at different types — first wins. */
   conflictingDimension: "contracts/conflicting-dimension",
+  /** A vocabulary slot group that declares no usable type (bare, malformed, non-string value). */
+  untypedVocabularySlot: "contracts/untyped-vocabulary-slot",
+  /** An example carries more than one structured entry — only the point entry is executable. */
+  multiEntryExample: "contracts/multi-entry-example",
+  /** Two contract paths differ only by letter case — they cannot coexist on a case-insensitive
+   *  filesystem, so the artifact could not be written faithfully (an error, not a warning). */
+  caseCollidingPath: "contracts/case-colliding-path",
 } as const;
 
 export interface GeneratedContracts {
@@ -105,12 +112,17 @@ function structuredEntriesOf(node: PrimitiveNode): readonly StructuredEntry[] {
 interface VocabularyEntry {
   readonly phase: StepPhase;
   readonly skeleton: string;
-  /** Slot name → declared type, authored order (typed slots only — a bare or value-form group
-   *  in a vocabulary declares nothing and reads as prose). */
+  /** Slot name → declared type, authored order. The consumer interpretation the notation module
+   *  documents: a typed group declares its type; a single quoted literal in a vocabulary
+   *  declares a one-value union. Every other identifier-led form declares nothing — and warns
+   *  (`contracts/untyped-vocabulary-slot`), never silently drops (L2). */
   readonly slots: ReadonlyMap<string, SlotDeclaredType>;
 }
 
-function vocabularyOf(node: PrimitiveNode): readonly VocabularyEntry[] | undefined {
+function vocabularyOf(
+  node: PrimitiveNode,
+  findings: Finding[],
+): readonly VocabularyEntry[] | undefined {
   const behavior = asRecord(node.sections?.behavior);
   const space = asRecord(behavior?.exampleSpace);
 
@@ -123,14 +135,38 @@ function vocabularyOf(node: PrimitiveNode): readonly VocabularyEntry[] | undefin
   for (const phase of STEP_PHASES) {
     for (const text of asStringArray(space[phase])) {
       const slots = new Map<string, SlotDeclaredType>();
+      const skeleton = stepSkeleton(text);
 
       for (const slot of parseSlots(text)) {
-        if (slot.form === "typed" && !slots.has(slot.name)) {
-          slots.set(slot.name, slot.type);
+        if (slot.form === "typed") {
+          if (!slots.has(slot.name)) {
+            slots.set(slot.name, slot.type);
+          }
+          continue;
         }
+
+        // The documented vocabulary reading of the ambiguous single-string form: a one-value
+        // union ({x: "only"} declares "only" as the slot's whole closed vocabulary).
+        if (slot.form === "bound" && typeof slot.value === "string") {
+          if (!slots.has(slot.name)) {
+            slots.set(slot.name, { kind: "enum", values: [slot.value] });
+          }
+          continue;
+        }
+
+        // A bare group, a malformed one, or a non-string value binding declares no type — an
+        // authored slot must never silently fall out of the space (L2), so the parent is named.
+        findings.push(
+          contractsFinding(
+            contractsFindingIds.untypedVocabularySlot,
+            `vocabulary step "${skeleton}" carries slot "{${slot.name}}" without a usable type declaration — a dimension declares number/string/boolean or a closed union of quoted literals; the slot declares nothing`,
+            node,
+            "behavior.exampleSpace",
+          ),
+        );
       }
 
-      entries.push({ phase, skeleton: stepSkeleton(text), slots });
+      entries.push({ phase, skeleton, slots });
     }
   }
 
@@ -286,9 +322,10 @@ interface ExamplePointModel {
 }
 
 /**
- * A child's bound point: the first binding per slot name across its structured entries, filtered
- * to the parent's declared dimensions — an undeclared or off-type binding warns and drops (the
- * generated artifact always compiles; the drift is named here instead).
+ * A child's bound point: the first binding per slot name from the child's point entry — the SAME
+ * entry the step contract derives from (`pointEntryOf`), so point and contract can never mix
+ * cases — filtered to the parent's declared dimensions. An undeclared or off-type binding warns
+ * and drops (the generated artifact always compiles; the drift is named here instead).
  */
 function bindPoint(
   space: SpaceModel,
@@ -298,8 +335,9 @@ function bindPoint(
   const bound = new Map<string, SlotScalar>();
   const flagged = new Set<string>();
   const dimensionByName = new Map(space.dimensions.map((dimension) => [dimension.name, dimension]));
+  const pointEntry = pointEntryOf(child);
 
-  for (const entry of structuredEntriesOf(child)) {
+  for (const entry of pointEntry === undefined ? [] : [pointEntry]) {
     for (const phase of STEP_PHASES) {
       for (const text of entry[phase]) {
         for (const slot of parseSlots(text)) {
@@ -484,22 +522,32 @@ interface ContractStepModel {
   readonly params: ReadonlyMap<string, SlotScalar>;
 }
 
+function isCompleteEntry(entry: StructuredEntry): boolean {
+  return entry.given.length > 0 && entry.when.length > 0 && entry.then.length > 0;
+}
+
 /**
- * Bindable = the `defined`-rung executable form: at least one structured entry, every used step
- * fully bound (the concreteness law, mirrored from the floor's example/defined cell). The
- * contract derives from the **first** structured entry — an example is one point (MD-17); a
- * sibling case is a sibling example.
+ * THE entry an example derives from — the first complete structured entry (falling back to the
+ * first structured entry when none is complete): the one place the step contract AND the bound
+ * point read, so the two artifacts can never mix cases across entries (one point per example,
+ * MD-17; entries beyond the first are the loud `multi-entry-example` degradation).
+ */
+function pointEntryOf(node: PrimitiveNode): StructuredEntry | undefined {
+  const entries = structuredEntriesOf(node);
+
+  return entries.find(isCompleteEntry) ?? entries[0];
+}
+
+/**
+ * Bindable = the `defined`-rung executable form: a complete structured entry, every used step
+ * across every entry fully bound (the concreteness law, mirroring the floor's example/defined
+ * cell — which also reads every entry).
  */
 function bindableScenario(node: PrimitiveNode): StructuredEntry | undefined {
   const entries = structuredEntriesOf(node);
-  const [first] = entries;
+  const scenario = pointEntryOf(node);
 
-  if (
-    first === undefined ||
-    first.given.length === 0 ||
-    first.when.length === 0 ||
-    first.then.length === 0
-  ) {
+  if (scenario === undefined || !isCompleteEntry(scenario)) {
     return undefined;
   }
 
@@ -513,7 +561,7 @@ function bindableScenario(node: PrimitiveNode): StructuredEntry | undefined {
     }
   }
 
-  return first;
+  return scenario;
 }
 
 function buildContractSteps(
@@ -532,8 +580,28 @@ function buildContractSteps(
       const params = new Map<string, SlotScalar>();
 
       for (const slot of parseSlots(text)) {
-        if (slot.form === "bound" && !params.has(slot.name)) {
+        if (slot.form !== "bound") {
+          continue;
+        }
+
+        const alreadyBound = params.get(slot.name);
+
+        if (alreadyBound === undefined) {
           params.set(slot.name, slot.value);
+          continue;
+        }
+
+        // A re-binding WITHIN one step text is the same ambiguity as across steps — loud,
+        // first wins (an example is one point, MD-17).
+        if (alreadyBound !== slot.value) {
+          findings.push(
+            contractsFinding(
+              contractsFindingIds.conflictingBinding,
+              `slot "{${slot.name}}" is bound to ${valueExpression(slot.value)} after ${valueExpression(alreadyBound)} within one step ("${skeleton}") — the first binding wins (an example is one point, MD-17)`,
+              node,
+              "behavior.examples",
+            ),
+          );
         }
       }
 
@@ -758,7 +826,7 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
       continue;
     }
 
-    const vocabulary = vocabularyOf(node);
+    const vocabulary = vocabularyOf(node, findings);
 
     if (vocabulary !== undefined) {
       spacesByParent.set(id, buildSpaceModel(node, vocabulary, findings));
@@ -791,6 +859,19 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
       continue;
     }
 
+    // MD-17 made loud: only the point entry is executable — entries beyond it are named, never
+    // silently inert (a sibling case is a sibling example).
+    if (structuredEntriesOf(node).length > 1) {
+      findings.push(
+        contractsFinding(
+          contractsFindingIds.multiEntryExample,
+          `example carries ${String(structuredEntriesOf(node).length)} structured entries — the step contract and the bound point derive from the first complete entry only; a sibling case is a sibling example (one point per example, MD-17)`,
+          node,
+          "behavior.examples",
+        ),
+      );
+    }
+
     const scenario = bindableScenario(node);
 
     if (scenario === undefined) {
@@ -805,6 +886,27 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
       `${idPath(id)}.contract.ts`,
       renderStepContract(node, steps, spacesByParent, parentIds),
     );
+  }
+
+  // Case-folded path collisions cannot coexist on a case-insensitive filesystem — the artifact
+  // could not be written faithfully anywhere, so this is the stage's one hard error (P3: the
+  // artifact is a pure function of the repo on every OS, or it is not written at all).
+  const byFoldedPath = new Map<string, string[]>();
+
+  for (const path of files.keys()) {
+    const folded = path.toLowerCase();
+    byFoldedPath.set(folded, [...(byFoldedPath.get(folded) ?? []), path]);
+  }
+
+  for (const colliding of byFoldedPath.values()) {
+    if (colliding.length > 1) {
+      findings.push({
+        validatorId: contractsFindingIds.caseCollidingPath,
+        family: "conformance",
+        severity: "error",
+        message: `contract paths ${colliding.map((path) => `"${path}"`).join(" · ")} differ only by letter case and cannot coexist on a case-insensitive filesystem — the contracts tree is not written`,
+      });
+    }
   }
 
   const sortedFiles = new Map(

@@ -54,6 +54,15 @@ describe("the slot micro-notation — the one owned piece of step-text syntax", 
     expect(parseSlots("{n: maybe}")).toEqual([{ form: "malformed", name: "n", raw: "{n: maybe}" }]);
   });
 
+  it("rejects __proto__ as a slot name — a generated object literal would set the prototype, not a property", () => {
+    expect(parseSlots("{__proto__: 5}")).toEqual([
+      { form: "malformed", name: "__proto__", raw: "{__proto__: 5}" },
+    ]);
+    // Malformed = unbound: the concreteness law holds an example using it below defined, and the
+    // codegen never emits it into a contract.
+    expect(hasUnboundSlot("{__proto__: 5}")).toBe(true);
+  });
+
   it("honors quotes during scanning: a brace inside a quoted literal does not close the group", () => {
     expect(parseSlots('{reason:"a}b"|"c"}')).toEqual([
       {
@@ -63,6 +72,19 @@ describe("the slot micro-notation — the one owned piece of step-text syntax", 
         raw: '{reason:"a}b"|"c"}',
       },
     ]);
+  });
+
+  it("keeps lexical degradation local: a stray brace or quote never swallows a later binding", () => {
+    // An unquoted "{" inside an open group abandons the earlier brace as prose and restarts.
+    expect(parseSlots("a stray { then {n: 2} line items")).toEqual([
+      { form: "bound", name: "n", value: 2, raw: "{n: 2}" },
+    ]);
+    // An unterminated quote makes its own group prose — but only up to the next candidate, so
+    // the well-formed binding after it still parses (and the concreteness law still sees it).
+    expect(parseSlots('{reason:"oops and {n: 2} items')).toEqual([
+      { form: "bound", name: "n", value: 2, raw: "{n: 2}" },
+    ]);
+    expect(hasUnboundSlot('{reason:"oops and {n} items')).toBe(true);
   });
 
   it("normalizes every slot form to the {name} skeleton — the step's identity", () => {

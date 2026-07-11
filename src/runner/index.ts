@@ -110,6 +110,41 @@ export function planExample<W, S extends string, PM extends Record<S, ParamShape
 }
 
 /**
+ * The framework-neutral execution loop the adapters share: a fresh world from the factory, every
+ * planned step in contract order, and the failure law — a red step names itself in the spec's
+ * own language (`at step: Then an order is created with total 100`) before the assertion detail.
+ * The original error is kept where possible (assertion renderers read their own fields off it);
+ * a frozen or getter-only error falls back to a wrapper carrying the original as `cause`, and a
+ * non-Error throw is wrapped so the step name never gets lost.
+ */
+export async function runExamplePlan<W>(plan: ExamplePlan<W>, world: () => W): Promise<void> {
+  const freshWorld = world();
+
+  for (const step of plan.steps) {
+    try {
+      await step.run(freshWorld);
+    } catch (error) {
+      throw prefixStepFailure(step.label, error);
+    }
+  }
+}
+
+function prefixStepFailure(label: string, error: unknown): unknown {
+  if (error instanceof Error) {
+    const prefixed = `at step: ${label}\n${error.message}`;
+
+    try {
+      error.message = prefixed;
+      return error;
+    } catch {
+      return new Error(prefixed, { cause: error });
+    }
+  }
+
+  return new Error(`at step: ${label}\n${String(error)}`);
+}
+
+/**
  * The one outcome no spec ever states — contributed by the runner core, first-class in every
  * generated Outcome union: the honest answer for a region of the example space the spec set does
  * not cover. An oracle returning it names a coverage gap, never an error.

@@ -163,6 +163,16 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
       });
     });
 
+    it("maps the oracle's file through its models binding to the spec it models — no blind spot", () => {
+      // The models edge walks like its binding siblings (satisfies/verifies): the oracle's file
+      // reaches the spec it models, or blast radius would go silently blind there.
+      expect(exampleReader().byFile("test/orders/create-order.oracle.ts")).toEqual({
+        path: "test/orders/create-order.oracle.ts",
+        nodes: [{ id: "oracle:orders.create-order", nodeType: "Anchor", line: 12 }],
+        specs: ["spec:orders.create-order"],
+      });
+    });
+
     it("maps a test file through its anchor to the example it verifies", () => {
       expect(exampleReader().byFile("test/orders/create-order.valid-cart.test.ts")).toEqual({
         path: "test/orders/create-order.valid-cart.test.ts",
@@ -373,6 +383,42 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
           line: 13,
         },
       ]);
+    });
+
+    it("decodes the oracle binding — existence with its source location, never content", () => {
+      const context = exampleReader().specContext("spec:orders.create-order");
+
+      expect(context?.oracles).toEqual([
+        {
+          anchorId: "oracle:orders.create-order",
+          claim: "anchored",
+          label: "expected create-order outcome over the example space",
+          file: "test/orders/create-order.oracle.ts",
+          line: 12,
+        },
+      ]);
+      // A spec no oracle models decodes an empty list, not an absence error.
+      expect(exampleReader().specContext("spec:orders.create-order.valid-cart")?.oracles).toEqual(
+        [],
+      );
+    });
+
+    it("carries the oracle's file into blast radius through the models binding", () => {
+      const radius = exampleReader().blastRadius(["test/orders/create-order.oracle.ts"]);
+
+      expect(radius.coverageUnknown).toEqual([]);
+      const impacted = radius.impactedSpecs.find(
+        (entry) => entry.id === "spec:orders.create-order",
+      );
+      expect(impacted).toBeDefined();
+      expect(
+        impacted?.reasons.some(
+          (reason) =>
+            reason.throughBinding?.id === "oracle:orders.create-order" &&
+            reason.throughBinding.edgeType === "models" &&
+            reason.throughBinding.claim === "anchored",
+        ),
+      ).toBe(true);
     });
 
     it("returns undefined for an id the graph does not hold", () => {

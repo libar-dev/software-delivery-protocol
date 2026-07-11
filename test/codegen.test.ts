@@ -251,6 +251,55 @@ describe("the contracts codegen stage", () => {
     expect(space).toContain("readonly n: number;");
   });
 
+  it("reads a single quoted literal in a vocabulary as a one-value union — the documented consumer interpretation", () => {
+    const oneValueVocabulary = parent({
+      given: ['the payment method is {method: "card"}'],
+      when: ["the customer submits the cart for order creation"],
+      then: ['order creation is rejected because {reason: "empty cart"}'],
+    });
+    const bound = child({
+      given: ['the payment method is {method: "card"}'],
+      when: ["the customer submits the cart for order creation"],
+      then: ['order creation is rejected because {reason: "empty cart"}'],
+    });
+    const graph = deriveFixtureGraph({ specs: [oneValueVocabulary, bound] });
+    const generated = generateContracts(graph);
+
+    // The Given-side declaration enters Conditions as a one-value union, the Then-side one
+    // becomes the Outcome variant's payload, the child's binding matches without any
+    // undeclared-slot misattribution — and nothing warns.
+    expect(generated.findings).toEqual([]);
+    const space = generated.files.get("orders.create-order.space.ts") ?? "";
+    expect(space).toContain('readonly method: "card";');
+    expect(space).toContain(
+      '{ readonly kind: "order creation is rejected because {reason}"; readonly reason: "empty cart" }',
+    );
+    expect(space).toContain('point: { method: "card" }');
+  });
+
+  it("warns on a vocabulary slot that declares no usable type — an authored slot never falls out silently (L2)", () => {
+    const untyped = parent({
+      given: ["a cart with {n} line items", "a batch of {count: 5} items"],
+      when: ["the customer submits the cart for order creation"],
+      then: ["an order is created"],
+    });
+    const graph = deriveFixtureGraph({ specs: [untyped] });
+    const generated = generateContracts(graph);
+    const warnings = generated.findings.filter(
+      (finding) => finding.validatorId === contractsFindingIds.untypedVocabularySlot,
+    );
+
+    // The bare {n} and the non-string value form {count: 5} each warn, naming the parent; no
+    // dimension enters the space for either.
+    expect(warnings).toHaveLength(2);
+    expect(warnings.every((finding) => finding.subjectId === "spec:orders.create-order")).toBe(
+      true,
+    );
+    const space = generated.files.get("orders.create-order.space.ts") ?? "";
+    expect(space).not.toContain('name: "n"');
+    expect(space).not.toContain('name: "count"');
+  });
+
   it("binding a Then-vocabulary slot is ordinary (the outcome point) — no undeclared-slot warning", () => {
     const graph = deriveFixtureGraph({ specs: [parent(VOCABULARY), child(BOUND_GWT)] });
     const generated = generateContracts(graph);
@@ -266,5 +315,91 @@ describe("the contracts codegen stage", () => {
     const graph = deriveFixtureGraph({ specs: [parent()] });
 
     expect(generateContracts(graph).files.size).toBe(0);
+  });
+
+  it("derives contract AND point from the first complete entry, and names extra entries (MD-17 made loud)", () => {
+    const multi = spec({
+      id: specId("spec:orders.create-order.multi"),
+      title: "Two cases in one example",
+      kind: "example",
+      altitude: "story",
+      readiness: "defined",
+      intent: { outcome: "Two cases smuggled into one example." },
+      behavior: {
+        examples: [
+          // Incomplete (no when): skipped as the point entry in favor of the first COMPLETE one —
+          // matching the floor, which also accepts any complete entry.
+          { given: ["a customer has a cart with {n: 9} line items"], when: [], then: [] },
+          {
+            given: ["a customer has a cart with {n: 2} line items"],
+            when: ["the customer submits the cart for order creation"],
+            then: ["an order is created with total {total: 100}"],
+          },
+          {
+            given: ['every cart item is {availability: "out of stock"}'],
+            when: ["the customer submits the cart for order creation"],
+            then: ["an order is created with total {total: 0}"],
+          },
+        ],
+      },
+      relations: [refines(specId("spec:orders.create-order"))],
+    });
+    const graph = deriveFixtureGraph({ specs: [parent(VOCABULARY), multi] });
+    const generated = generateContracts(graph);
+
+    expect(
+      generated.findings.some(
+        (finding) =>
+          finding.validatorId === contractsFindingIds.multiEntryExample &&
+          finding.subjectId === "spec:orders.create-order.multi",
+      ),
+    ).toBe(true);
+
+    // The contract derives from the first complete entry (n: 2)...
+    const contract = generated.files.get("orders.create-order.multi.contract.ts") ?? "";
+    expect(contract).toContain("params: { n: 2 }");
+    expect(contract).not.toContain("params: { n: 9 }");
+    // ...and the point derives from the SAME entry — the third entry's availability binding must
+    // not merge in (point and contract can never mix cases).
+    const space = generated.files.get("orders.create-order.space.ts") ?? "";
+    expect(space).toContain('{ spec: "spec:orders.create-order.multi", point: { n: 2 } }');
+  });
+
+  it("warns on a conflicting re-binding of one slot WITHIN a single step text — first wins", () => {
+    const withinStep = child(
+      {
+        given: ["a cart with {n: 2} items and later {n: 3} items in one step"],
+        when: ["the customer submits the cart for order creation"],
+        then: ["an order is created with total {total: 100}"],
+      },
+      "spec:orders.create-order.within-step",
+    );
+    const graph = deriveFixtureGraph({ specs: [parent(VOCABULARY), withinStep] });
+    const generated = generateContracts(graph);
+
+    expect(
+      generated.findings.some(
+        (finding) =>
+          finding.validatorId === contractsFindingIds.conflictingBinding &&
+          finding.message.includes("within one step"),
+      ),
+    ).toBe(true);
+    const contract = generated.files.get("orders.create-order.within-step.contract.ts") ?? "";
+    expect(contract).toContain("params: { n: 2 }");
+    expect(contract).not.toContain("n: 3");
+  });
+
+  it("rejects case-colliding contract paths with an error — they cannot coexist on every filesystem (P3)", () => {
+    const lower = child(BOUND_GWT, "spec:orders.create-order.same-case");
+    const upper = child(BOUND_GWT, "spec:orders.create-order.same-Case");
+    const graph = deriveFixtureGraph({ specs: [parent(VOCABULARY), lower, upper] });
+    const generated = generateContracts(graph);
+    const collisions = generated.findings.filter(
+      (finding) => finding.validatorId === contractsFindingIds.caseCollidingPath,
+    );
+
+    expect(collisions).toHaveLength(1);
+    expect(collisions[0]?.severity).toBe("error");
+    expect(collisions[0]?.message).toContain("orders.create-order.same-case.contract.ts");
   });
 });

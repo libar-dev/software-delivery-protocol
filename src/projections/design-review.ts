@@ -159,6 +159,10 @@ function renderBindings(context: SpecContext, page: string): readonly string[] {
     "",
     `- Implementation binding: **${present("implemented")}**`,
     `- Verifier binding: **${present("has-verifier")}**`,
+    // The oracle binding renders from the decode, never a delivery fact — the graph records that
+    // an expected-outcome oracle exists, nothing more (settlement 8; rendered surfaces say
+    // "expected outcome" per the glossary).
+    `- Expected-outcome oracle: **${context.oracles.length > 0 ? "present" : "none"}**`,
     "- Runtime observation: **not tracked**",
   ];
 
@@ -186,6 +190,21 @@ function renderBindings(context: SpecContext, page: string): readonly string[] {
           : ` ([${verifier.file}${verifier.line === undefined ? "" : `:${String(verifier.line)}`}](${sourceHref(page, verifier.file)}))`;
       lines.push(
         `- \`${verifier.verifierId}\`${label}${location} — ${describeVerifier(verifier)} \`[${verifier.claim}]\``,
+      );
+    }
+  }
+
+  if (context.oracles.length > 0) {
+    lines.push("", "### Expected-outcome oracles", "");
+
+    for (const oracle of context.oracles) {
+      const label = oracle.label === undefined ? "" : ` — ${oracle.label}`;
+      const location =
+        oracle.file === undefined
+          ? ""
+          : ` ([${oracle.file}${oracle.line === undefined ? "" : `:${String(oracle.line)}`}](${sourceHref(page, oracle.file)}))`;
+      lines.push(
+        `- \`${oracle.anchorId}\`${label}${location} — the authored expected-outcome semantics for this spec's example space; the graph records that it exists, never what it says \`[${oracle.claim}]\``,
       );
     }
   }

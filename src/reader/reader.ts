@@ -89,6 +89,17 @@ export interface VerifierBinding {
   readonly line?: number;
 }
 
+/** An oracle anchor's binding (`models`, anchored): the graph records that an expected-outcome
+ *  oracle for this spec's example space *exists* — never what it says (settlement 8; no
+ *  delivery fact rides this). */
+export interface OracleBinding {
+  readonly anchorId: string;
+  readonly claim: GraphClaim;
+  readonly label?: string;
+  readonly file?: string;
+  readonly line?: number;
+}
+
 /** The irreducible per-spec join — what a Design Review renders and an agent starts from. */
 export interface SpecContext extends SpecSummary {
   readonly sections?: SpecSections;
@@ -99,6 +110,7 @@ export interface SpecContext extends SpecSummary {
   readonly relationsIn: readonly RelationEnd[];
   readonly implementations: readonly ImplementationBinding[];
   readonly verifiers: readonly VerifierBinding[];
+  readonly oracles: readonly OracleBinding[];
   /** The graph findings naming this spec (as subject or related) — the holes beside the assertions. */
   readonly findings: readonly Finding[];
 }
@@ -441,6 +453,25 @@ export function createReader(graph: GraphSchema): Reader {
       })
       .sort((left, right) => compareCodeUnits(left.verifierId, right.verifierId));
 
+    // The oracle binding decode, mirroring implementations: `models` edges into the spec, each
+    // resolved to its Anchor node's location — existence only, never content (settlement 8).
+    const oracles = (index.edgesByTo.get(id) ?? [])
+      .filter((edge) => edge.type === "models")
+      .map((edge): OracleBinding => {
+        const source = index.nodesById.get(edge.from);
+        const location =
+          source?.nodeType === "Anchor"
+            ? {
+                ...(source.label === undefined ? {} : { label: source.label }),
+                file: source.file,
+                line: source.line,
+              }
+            : {};
+
+        return { anchorId: edge.from, claim: edge.claim, ...location };
+      })
+      .sort((left, right) => compareCodeUnits(left.anchorId, right.anchorId));
+
     return {
       ...summarize(node),
       ...(node.sections === undefined ? {} : { sections: node.sections }),
@@ -449,6 +480,7 @@ export function createReader(graph: GraphSchema): Reader {
       relationsIn,
       implementations,
       verifiers,
+      oracles,
       findings: findingsNaming(id),
     };
   };
