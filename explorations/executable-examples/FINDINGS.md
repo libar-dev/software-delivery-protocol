@@ -97,7 +97,13 @@ settlements** rather than reopening them. Two salvages worth keeping, both cheap
 
 1. **`sdp import`** — a one-way, one-time `.feature` → SDP converter built *on the vendored
    `@cucumber/gherkin` as a devtool dependency* (never the canonical parse path): the adoption
-   wedge for Cucumber shops, lawful because it is a converter, not a surface.
+   wedge for Cucumber shops, lawful because it is a converter, not a surface. **Proven at the
+   mapping level in `6-import/`:** Feature→behavior, Rule→`rule`-kind, Scenario→`example`,
+   Scenario Outline placeholders→**the example space** with types inferred from Examples
+   columns, rows→bound points, Background hoisted explicitly — plus the import report that
+   refuses to guess (tags, readiness above `scoped`, `verifies` edges, names, inferred types
+   all flagged for the human). The wedge composes with settlement 7: an imported Outline
+   corpus arrives already parameterized.
 2. **Cucumber's own `GherkinInMarkdownTokenMatcher`** (gen 1 already used it for `.feature.md`)
    is industrial prior art that *Cucumber itself* accepted markdown as a Gherkin carrier —
    direct evidence for the F2-layered finalist.

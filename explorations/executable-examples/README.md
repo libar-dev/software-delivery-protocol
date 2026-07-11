@@ -17,6 +17,7 @@
 | `3-typed-markup/` | the same spec as a TSX document with typed spec components; `render/valid-cart-review.html` is the **interactive Design Review with dials** — open it in a browser | **F1** (typed markup) |
 | `4-seam/` | the executable half — **identical under every surface above**: the generated step contract, the bound test (handler bodies only), and a drift demo with **real captured `tsc` errors** | **A2** (surface-independent) |
 | `5-harness/` | typed step parameters as the **example space**: the parent behavior spec owns the parameterized vocabulary, examples bind points, the harness dials derive from the generated space contract, and the authored `expected()` **oracle** is typed against it (Conditions in, generated Outcome union out) — with captured `tsc` proofs for parameter drift AND oracle drift | **params-as-dials** (surface-independent, extends A2; grilled 2026-07-11 — FINDINGS §3 settlements 7–9) |
+| `6-import/` | the adoption wedge: a realistic vanilla-Cucumber `.feature` (tags, Background, Rules, Scenario Outline + Examples) → the documents `sdp import` would emit (Feature→behavior, Rule→rule-kind, Scenario→example, **Outline placeholders→the example space, rows→bound points**) plus the import report listing everything the converter refuses to guess | **`sdp import`** (one-way devtool, never a canonical parse path) |
 
 ## Run the seam proof
 
