@@ -16,7 +16,15 @@ const typeCheckedConfigs = [
 
 export default tseslint.config(
   {
-    ignores: ["dist/**", "generated/**", ".sisyphus/evidence/**", "node_modules/**"],
+    // explorations/ holds verbatim exhibits, several broken by design — excluded explicitly,
+    // never merely by falling outside the files globs.
+    ignores: [
+      "dist/**",
+      "generated/**",
+      ".sisyphus/evidence/**",
+      "node_modules/**",
+      "explorations/**",
+    ],
   },
   js.configs.recommended,
   ...typeCheckedConfigs,
