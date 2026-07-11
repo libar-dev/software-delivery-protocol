@@ -104,6 +104,64 @@ register (text), while the *typed* experiences ride the derived layer.
    capability worth committing, syntax owned by the grammar session, first slice shippable
    without it.
 
+### Addendum — settlements 7–9 (the `5-harness/` exhibit; grilled with the product owner
+### 2026-07-11 — each branch settled by explicit choice; the design session still ratifies by name)
+
+7. **The two-level parameter structure: the parent owns the space, the example binds a point.**
+   Typed step parameters (`{n:number}`, closed unions like
+   `{availability:"in stock"|"out of stock"}`) live in the *parent behavior spec's* step
+   vocabulary — a new authored **example space** section (an MD-10-family content-section
+   extension; the sibling set shares one vocabulary, the ubiquitous-language bet at the
+   parameter level); an `example`-kind child instantiates the slots of the steps it uses (an
+   example is a point — partial points are honest: an empty cart binds only `n=0`).
+   **Settled: the concreteness law** — an example with an unbound slot in a step it uses does
+   not meet `defined`; one structural clause in the example kind's `defined` evidence cell
+   (the existing floor evaluator, MD-12/MD-13), never content-quality. **Settled: binding is
+   explicit** (`{n: 2}` in the authored step; sigils are the grammar session's) — natural
+   reading is the *renderer's* job everywhere humans review; Gherkin-style text-matching is
+   the rented-grammar trap re-imported (the matcher quirk catalog) and is rejected. `sdp
+   build` emits, per parent, a **space contract** (typed input dimensions + every child's
+   bound point + the generated Outcome union) alongside the per-example step contracts —
+   parameter values flow *from the spec into the bound test* (`valid-cart.test.ts`: the
+   Then's `total === p.total` asserts the authored value; 4-seam hardcoded the cart math
+   handler-side — editing the spec's `100` reddens the bound test with zero test edits).
+   Captured `tsc` proofs: renamed slot, out-of-union comparison, bag-shape misuse.
+8. **The `expected()` artifact is the ORACLE (the industry's noun, adopted per MD-2 — no
+   collision with the `model` kind), oracle-first, implementation-side, anchor-bound, never
+   extracted.** The harness's highest-value moment is readiness `defined` — *before* any
+   implementation or bound handlers exist — so bound handlers cannot be the primary
+   semantics. One oracle per parent behavior spec, beside the tests, bound by a `specOracle`
+   anchor sibling of `specTest`; the graph records that an oracle exists (the anchor), never
+   what it says; **settled: no new derived fact at MVP** (discovery is an anchor query;
+   `has-oracle` waits for the second-caller bar). The oracle is **typed against the generated
+   space contract** — vocabulary drift breaks it at `tsc` time (`oracle-drift-demo.ts`,
+   captured) — and its **return type is the generated Outcome union derived from the parent's
+   Then vocabulary**, so "the oracle may never claim more than the specs state" is a compile
+   error, not an honor-system rule; `unspecified` (contributed by the runner core) is the
+   honest first-class answer for an unstated region. Outcome *faithfulness* stays
+   human-reviewed, by law. **Named ASPIRATIONAL: the bound-handlers overlay** — at
+   `implemented`, the harness may run the real step handlers at a dial point beside the
+   oracle's answer; disagreement rendered inline is the drift alarm made interactive —
+   runner-side, never in the graph (MD-7 intact).
+9. **Coverage is equivalence-witnessing, derived — and it ships in slices.** The oracle
+   partitions the space into outcome classes; each sibling example's bound point witnesses
+   one class; the harness verdict is a computation (dials → outcome class → witness search),
+   with `unspecified`/unwitnessed rendered as a **coverage gap carrying a draft-example
+   affordance** (one click emits an `idea`-rung example refining the parent, the dial point
+   pre-bound — `idea` is exactly right: the point is bound but intent prose is missing, so
+   the floor holds it down honestly; the harness becomes a spec-authoring funnel). **Settled
+   placement:** the parameter machinery (slot vocabulary, space contract, `StepParams`,
+   concreteness clause) and the oracle *law + type surface* (`specOracle` anchor, generated
+   Conditions/Outcome) ride plan 13's A2 slice — same codegen stage, and shipping A2 without
+   slots would buy a later whole-corpus spec migration, the enrich-don't-migrate smell; the
+   interactive harness UI is a **named later slice** with `5-harness/render/` as its rendered
+   spec. This is the second capability for the differentiation test — Gherkin has Examples
+   *tables*; this has an example *space*.
+
+Names settled here for the language base to ratify: **example space** · **parameter slot**
+(short: *slot*) · **bound point** · **oracle** (`specOracle`, `oracle:` ID namespace;
+rendered surfaces say "expected outcome") · **witness** · **coverage gap**.
+
 ## 4. The contenders — pros and cons over the exhibits
 
 The seam (A2) is identical everywhere, so the surfaces compete on authoring alone. Personas

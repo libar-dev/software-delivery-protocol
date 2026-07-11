@@ -16,12 +16,16 @@
 | `2-document/` | the same spec as markdown + frontmatter + `gwt` fence; plus a `decision`-kind spec in the same format (all eight kinds, one document family — no partition law) | **F2-layered** (markdown carrier) |
 | `3-typed-markup/` | the same spec as a TSX document with typed spec components; `render/valid-cart-review.html` is the **interactive Design Review with dials** — open it in a browser | **F1** (typed markup) |
 | `4-seam/` | the executable half — **identical under every surface above**: the generated step contract, the bound test (handler bodies only), and a drift demo with **real captured `tsc` errors** | **A2** (surface-independent) |
+| `5-harness/` | typed step parameters as the **example space**: the parent behavior spec owns the parameterized vocabulary, examples bind points, the harness dials derive from the generated space contract, and the authored `expected()` **oracle** is typed against it (Conditions in, generated Outcome union out) — with captured `tsc` proofs for parameter drift AND oracle drift | **params-as-dials** (surface-independent, extends A2; grilled 2026-07-11 — FINDINGS §3 settlements 7–9) |
 
 ## Run the seam proof
 
 ```bash
 npx tsc -p explorations/executable-examples/4-seam   # errors appear ONLY in drift-demo.test.ts
 cat explorations/executable-examples/4-seam/TSC-OUTPUT.txt
+
+npx tsc -p explorations/executable-examples/5-harness   # errors ONLY in drift-demo.test.ts + oracle-drift-demo.ts
+cat explorations/executable-examples/5-harness/TSC-OUTPUT.txt
 ```
 
 `create-order.valid-cart.test.ts` (the correct binding) typechecks clean.

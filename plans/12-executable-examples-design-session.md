@@ -372,6 +372,32 @@ session must rule on narrows to **F2-layered (markdown carrier) vs C2-pure (own 
 same owned notation, different carrier — plus the envelope representation
 (syntax vs frontmatter) and the prose-in-graph ruling (an MD-10 extension).
 
+### The parameter exploration (recorded 2026-07-11; exhibits committed; owner-grilled)
+
+A second pre-session exploration deepened typed step parameters (the capability §3.6 of the
+exploration record committed with grammar-session syntax) into a full argued design —
+`explorations/executable-examples/5-harness/` + FINDINGS settlements 7–9, **each branch
+settled by explicit product-owner choice in a grilling session**, the session still ratifying
+by name: the **two-level structure** (the parent behavior spec owns a typed **example space**
+section; an `example` child binds a **point** — the concreteness law caps an unbound-slot
+example below `defined`, one structural clause in the existing floor evaluator); **explicit
+binding** (`{n: 2}` authored, natural reading is the renderer's job — text-matching rejected
+as the rented-grammar trap); the **oracle** (the industry's noun, MD-2) — the authored
+`expected()` semantics, implementation-side beside tests, bound by a `specOracle` anchor,
+never extracted, no new derived fact at MVP, **typed against the generated space contract**
+(vocabulary drift = `tsc` error, captured) with its **return type generated from the parent's
+Then vocabulary** (claiming an unstated outcome = `tsc` error; `unspecified` is first-class);
+**coverage as equivalence-witnessing** (dials → outcome class → witness search; gaps carry a
+draft-example affordance emitting an `idea`-rung child, the point pre-bound); the
+**bound-handlers overlay named ASPIRATIONAL** (oracle-vs-implementation diff at a dial point,
+runner-side, never in the graph). **Placement settled:** the parameter machinery and the
+oracle law/type surface ride plan 13's A2 slice (same codegen stage; shipping A2 slot-less
+buys a whole-corpus migration later); the interactive harness UI is a named later slice with
+`5-harness/render/` as its rendered spec — which revises `04` §4's harness cut from
+"new authoring surface plus UI" to "a projection plus one ~15-line anchored oracle" (doc
+repair for the winning route's bill). Names for the language base: *example space* ·
+*parameter slot* · *bound point* · *oracle* · *witness* · *coverage gap*.
+
 ### Scope ruling
 
 Plan 12 rules on **the path and the law rulings** — never on syntax, and never on *whether*.

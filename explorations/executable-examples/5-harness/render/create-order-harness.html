@@ -1,0 +1,138 @@
+<!doctype html>
+<!-- MOCK: the harness as a projection of the EXAMPLE SPACE. Contrast with
+     3-typed-markup/render/valid-cart-review.html, whose controls and outcome
+     logic were HAND-CODED: here the controls are rendered by looping over the
+     generated space contract's dimensions, the presets are the sibling
+     examples' bound points, and the outcome comes from the authored oracle
+     (bundled; badged; never authoritative). Nothing on this page is authored
+     twice — dials derive from slots, coverage derives from points + oracle. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Harness — spec:orders.create-order (example space)</title>
+<style>
+  :root { --bg:#0f1115; --panel:#161a22; --line:#262c38; --txt:#d7dce5; --dim:#8b93a3;
+          --green:#3ecf8e; --amber:#e8b339; --red:#e8606b; --blue:#6aa9ff; --mono:ui-monospace,SFMono-Regular,Menlo,monospace; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:15px/1.55 system-ui,sans-serif; }
+  .wrap { max-width:880px; margin:32px auto; padding:0 20px; }
+  .chip { display:inline-block; padding:1px 10px; border:1px solid var(--line); border-radius:999px;
+          font:12px var(--mono); color:var(--dim); margin-right:6px; }
+  .chip b { color:var(--txt); font-weight:600; }
+  .derived { border-color:#2c4a3c; color:var(--green); }
+  .derived::before { content:"derived · "; color:var(--dim); }
+  .oracle-badge { border-color:#4a3c2c; color:var(--amber); }
+  .oracle-badge::before { content:"oracle · "; color:var(--dim); }
+  h1 { font-size:22px; margin:10px 0 2px; }
+  .id { font:13px var(--mono); color:var(--dim); }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px 20px; margin:14px 0; }
+  .dials { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .dials label { display:block; font-size:13px; color:var(--dim); margin:10px 0 2px; }
+  .dials input[type=number], .dials select { background:#0c0e12; color:var(--txt); border:1px solid var(--line);
+          border-radius:6px; padding:3px 8px; font:13px var(--mono); }
+  .dials input[type=number] { width:72px; }
+  .out { font:14px var(--mono); padding:12px 14px; border-radius:8px; background:#0c0e12; border:1px solid var(--line); }
+  .ok { color:var(--green); } .warn { color:var(--amber); } .bad { color:var(--red); }
+  .small { font-size:12.5px; color:var(--dim); }
+  button { background:#1d2430; color:var(--txt); border:1px solid var(--line); border-radius:7px; padding:5px 12px; font-size:13px; cursor:pointer; margin:2px 4px 2px 0; }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:var(--dim); margin:0 0 10px; }
+  code { font:12.5px var(--mono); color:var(--blue); }
+</style>
+</head>
+<body><div class="wrap">
+
+  <div>
+    <span class="chip">kind <b>behavior</b></span>
+    <span class="chip">altitude <b>feature</b></span>
+    <span class="chip derived">example space <b>4 dimensions</b></span>
+    <span class="chip derived">examples <b>3 bound points</b></span>
+    <span class="chip oracle-badge">expected() <b>anchored, never authoritative</b></span>
+  </div>
+  <h1>Create order — explore the example space</h1>
+  <div class="id">spec:orders.create-order · dials = the space contract's dimensions · presets = the children's bound points</div>
+
+  <div class="panel">
+    <h2>Dials <span class="small">(rendered by looping the generated dimensions — zero hand-coded controls)</span></h2>
+    <div class="dials">
+      <div id="controls"></div>
+      <div>
+        <label>Expected outcome <span class="small">(the authored oracle's answer)</span></label>
+        <div class="out" id="out"></div>
+        <div class="small" id="cov" style="margin-top:8px"></div>
+        <label style="margin-top:14px">Jump to a sibling example's point</label>
+        <div id="presets"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="small" style="margin:18px 4px">
+    The dimensions and points are injected from the graph's generated space contract; the
+    <code>expected()</code> oracle is authored implementation-side, bundled here, and can never
+    claim more than the specs state — its honest "unspecified" IS the coverage-gap verdict.
+  </div>
+
+<script>
+  // ── injected from contracts/orders.create-order.space.ts (derived) ──
+  const space = {
+    dimensions: [
+      { name: "n",            type: "number", label: "line items in the cart" },
+      { name: "q",            type: "number", label: "quantity per line" },
+      { name: "price",        type: "number", label: "unit price per line" },
+      { name: "availability", type: "enum", values: ["in stock", "out of stock"], label: "stock availability" },
+    ],
+    examples: [
+      { spec: "spec:orders.create-order.valid-cart",   point: { n: 2, q: 1, price: 50, availability: "in stock" } },
+      { spec: "spec:orders.create-order.invalid-cart", point: { n: 0 } },
+      { spec: "spec:orders.create-order.out-of-stock", point: { n: 1, q: 1, price: 10, availability: "out of stock" } },
+    ],
+  };
+
+  // ── bundled from create-order.oracle.ts (authored, never authoritative) ──
+  function expected(c) {
+    if (c.n === 0) return { kind: "rejected", reason: "empty cart" };
+    if (c.availability === "out of stock") return { kind: "rejected", reason: "out of stock" };
+    if (c.q <= 0 || c.price <= 0) return { kind: "unspecified" };
+    return { kind: "order-created", total: c.n * c.q * c.price };
+  }
+
+  const dials = { n: 2, q: 1, price: 50, availability: "in stock" };
+
+  function renderControls() {
+    document.getElementById("controls").innerHTML = space.dimensions.map(d =>
+      d.type === "number"
+        ? `<label>${d.label} <span class="small">{${d.name}:number}</span></label>
+           <input type="number" value="${dials[d.name]}" onchange="setDial('${d.name}', Number(this.value))">`
+        : `<label>${d.label} <span class="small">{${d.name}:${d.values.map(v=>JSON.stringify(v)).join("|")}}</span></label>
+           <select onchange="setDial('${d.name}', this.value)">
+             ${d.values.map(v => `<option ${dials[d.name]===v?"selected":""}>${v}</option>`).join("")}
+           </select>`
+    ).join("");
+    document.getElementById("presets").innerHTML = space.examples.map((e,i) =>
+      `<button onclick="jump(${i})" title="${e.spec}">${e.spec.split(".").pop()}</button>`).join("");
+  }
+  function setDial(name, value) { dials[name] = value; update(); }
+  function jump(i) { Object.assign(dials, space.examples[i].point); renderControls(); update(); }
+
+  const classOf = o => o.kind + (o.reason ? ":" + o.reason : "");
+
+  function update() {
+    const o = expected(dials);
+    const out = document.getElementById("out"), cov = document.getElementById("cov");
+    // coverage: a sibling example WITNESSES this outcome class (its bound point,
+    // completed with the current dials on unbound dims, lands in the same class)
+    const witness = space.examples.find(e => classOf(expected({ ...dials, ...e.point })) === classOf(o));
+
+    if (o.kind === "unspecified" || !witness) {
+      out.innerHTML = '<span class="warn">⚠ the spec set does not state this outcome</span>';
+      cov.innerHTML = '<b class="warn">coverage gap</b> — no example witnesses this region. '
+        + `<button onclick="alert('mock: drafts a new example-kind spec at readiness idea, refining spec:orders.create-order, with this point PRE-BOUND: ${JSON.stringify(dials).replace(/"/g,"&quot;")}')">draft example from these dials</button>`;
+    } else {
+      out.innerHTML = o.kind === "order-created"
+        ? `<span class="ok">order created · total = ${o.total}</span>`
+        : `<span class="bad">cart rejected — ${o.reason}</span>`;
+      cov.innerHTML = `covered by <code>${witness.spec}</code> — its bound point witnesses this equivalence class`;
+    }
+  }
+  renderControls(); update();
+</script>
+</div></body>
+</html>

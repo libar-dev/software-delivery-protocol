@@ -1,0 +1,5 @@
+explorations/executable-examples/5-harness/drift-demo.test.ts(28,29): error TS2339: Property 'qty' does not exist on type '{ n: number; }'.
+explorations/executable-examples/5-harness/drift-demo.test.ts(34,25): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+explorations/executable-examples/5-harness/drift-demo.test.ts(43,11): error TS2367: This comparison appears to be unintentional because the types '"out of stock" | "in stock"' and '"backordered"' have no overlap.
+explorations/executable-examples/5-harness/oracle-drift-demo.ts(16,9): error TS2339: Property 'q' does not exist on type 'CreateOrderConditions'.
+explorations/executable-examples/5-harness/oracle-drift-demo.ts(17,50): error TS2339: Property 'q' does not exist on type 'CreateOrderConditions'.
