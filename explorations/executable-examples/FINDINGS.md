@@ -240,6 +240,17 @@ weighted per the recorded mandate: agents heaviest, then the whole delivery org,
 | Ownership cost | **own everything forever**: grammar, parser, formatter, highlighting, GitHub rendering, editor plugins, LSP | own only the GWT-fence grammar + envelope schema; **rent the page** (GitHub renders it today; one parser dep, same class as `ts-morph`) | component library — needed anyway, but at the projection layer | zero new |
 | Differentiation sentence | "a grammar for delivery state" — sharpest | "delivery state as a typed document — markdown that compiles to a delivery graph" | "typed spec documents" — weakest | — |
 | Standalone (no-toolchain) wedge | **yes — the strongest** | partial (readable everywhere; *validating* needs the CLI) | no | no |
+| Diff/merge ergonomics (PR review is the delivery org's daily surface) | strong — line-oriented by design: a step rename or an envelope line is a one-line diff; the raw text *is* the review surface, with no rich rendering behind it | **strong — a step rename is one fence line, an envelope change one YAML line, prose edits diff as prose, and GitHub renders the rich diff** | weak — JSX attribute and wrapping noise swamps the semantic change | moderate — per-field lines diff cleanly, but bracket/quote churn leaks into diffs |
+| Agent read-back token cost (agents *load* specs into context constantly, not only emit them — the ~⅕-tokens `playground/` figure cuts both ways) | densest raw text, but the grammar must ride along in context until any training distribution exists — the net cost is the syntax's, not the file's | **light — ceremony is thin (frontmatter + fences), prose carries no markup tax, and reading it needs zero schema context** | heaviest — JSX tags tax every line read back | moderate — import/builder ceremony re-read on every load |
+
+> The two rows above were added 2026-07-12 at the pre-competition review (plan 14 §2), before
+> any carrier PR cut. A third added axis — the **minimum-ceremony `idea` spec** ("how little
+> ceremony does the minimum honest spec require?" — the draft-example affordance of settlement 9
+> makes the two-line `idea` spec the highest-volume authoring event) — is judged from each PR's
+> arc `01-idea` snapshot rather than pre-scored here, because the seed exhibits do not all carry
+> an `idea` rung. One shared property the diff row deliberately excludes: under every carrier,
+> point-per-example (MD-17) keeps sibling examples in separate files, so concurrent example
+> edits merge structurally — the row scores the within-file cases.
 
 Bottom line under the stated priority order: **F2-layered and C2 are the genuine finalists**,
 and they share the same owned core — the GWT notation and the envelope semantics. F2-layered
@@ -248,6 +259,30 @@ heaviest personas on register; C2-pure maximizes identity and the standalone wed
 permanent cost. They are not mutually exclusive: one notation, designed once, can be carried by
 the markdown document now and by a standalone grammar file later if evidence demands (per-ID
 canonical-surface config is already designed-in, `04` §1).
+
+### Directions dismissed by name (added 2026-07-12 — the pre-competition review)
+
+The carrier space beyond the four competitors was walked deliberately, so the ruling session
+can dismiss each direction **by name, never by omission**. Every one is dominated by a scored
+contender or excluded by ratified law — none earns an exhibit:
+
+- **Pure-data carriers** (whole-spec YAML / JSON / TOML / CUE files): making the *entire* spec
+  data kills prose — the gen-1 truncated-docstrings lesson — and the envelope already lives
+  happily in frontmatter; the direction loses to the markdown carrier on every register row
+  above. CUE is the only interesting member (schema+data unification would type the envelope
+  natively), but it is a foreign toolchain with near-zero agent training distribution — the
+  exact C1 disease.
+- **Colocated specs** (doctest-style, the spec beside its implementation): violates the
+  intent/implementation split (JS-B1.4) and collapses the anchor design — dead on arrival.
+- **Alternative document dialects** (AsciiDoc, org-mode, Djot, Typst): each loses markdown's
+  single decisive property — the deepest agent training distribution there is — while adding
+  ownership or rendering cost; the F2 argument transfers against them wholesale.
+- **Notebook formats** (`.ipynb`, MyST): the JSON carrier is diff-hostile and agent-hostile,
+  and the "executable cells" appeal is already answered better by the A2 seam — execution
+  lives runner-side, below the anchor, never in the authored file.
+- **Projection / structured editing** (the spec stored as graph, edited through views):
+  contradicts git-is-the-event-log and text-first authoring; it is the aspirational Studio,
+  not a carrier.
 
 ## 5. What stays open for the session
 
@@ -265,7 +300,11 @@ canonical-surface config is already designed-in, `04` §1).
   extensions.
 - **The TS DSL's long-term role**: canonical surface for some kinds forever, vs the typed
   substrate documents reify onto (plus protocol self-hosting) — shapes the dual-source
-  letter-vs-spirit ruling.
+  letter-vs-spirit ruling. The **kind-partitioned dual carrier** is a named affirmative
+  candidate here, not a fallback (the winning carrier for the prose-natured kinds, the TS DSL
+  canonical for `contract`/`model`, lawful via the per-ID canonical-surface config) — docketed
+  as a first-class candidate ruling in plan 14 §4; the competition's structure-heavy exhibits
+  generate exactly the evidence it needs.
 - The **doc-repair bill** for whichever route wins (the cut table, the aspirational-surfaces
   section, the dual-source sentence, the executable-meta-model gloss (MD-1), the JTBD B-theme)
   — enumerated in the design-session plan.

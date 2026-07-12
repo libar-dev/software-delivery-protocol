@@ -18,6 +18,7 @@
 | `4-seam/` | the executable half — **identical under every surface above**: the generated step contract, the bound test (handler bodies only), and a drift demo with **real captured `tsc` errors** | **A2** (surface-independent) |
 | `5-harness/` | typed step parameters as the **example space**: the parent behavior spec owns the parameterized vocabulary, examples bind points, the harness dials derive from the generated space contract, and the authored `expected()` **oracle** is typed against it (Conditions in, generated Outcome union out) — with captured `tsc` proofs for parameter drift AND oracle drift | **params-as-dials** (surface-independent, extends A2; grilled 2026-07-11 — FINDINGS §3 settlements 7–9) |
 | `6-import/` | the adoption wedge: a realistic vanilla-Cucumber `.feature` (tags, Background, Rules, Scenario Outline + Examples) → the documents `sdp import` would emit (Feature→behavior, Rule→rule-kind, Scenario→example, **Outline placeholders→the example space, rows→bound points**) plus the import report listing everything the converter refuses to guess | **`sdp import`** (one-way devtool, never a canonical parse path) |
+| `7-typelevel-slots/` | the slot notation parsed **at the type level** (template-literal types): `declareExampleSpace`/`bindPoint` check every authored example step against the parent's vocabulary as-you-type — unknown slot, wrong value type, out-of-union literal, parent-side rename, and unbound slot all redden in the editor, zero codegen — with the captured `tsc` transcript | **TS-DSL DX spike** (carrier-orthogonal; added 2026-07-12 at the pre-competition review, plan 14) |
 
 ## Run the seam proof
 
@@ -27,6 +28,9 @@ cat explorations/executable-examples/4-seam/TSC-OUTPUT.txt
 
 npx tsc -p explorations/executable-examples/5-harness   # errors ONLY in drift-demo.test.ts + oracle-drift-demo.ts
 cat explorations/executable-examples/5-harness/TSC-OUTPUT.txt
+
+npx tsc -p explorations/executable-examples/7-typelevel-slots   # errors ONLY in drift-demo.ts
+cat explorations/executable-examples/7-typelevel-slots/TSC-OUTPUT.txt
 ```
 
 `create-order.valid-cart.test.ts` (the correct binding) typechecks clean.
