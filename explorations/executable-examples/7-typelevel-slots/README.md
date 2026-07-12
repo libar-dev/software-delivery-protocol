@@ -19,11 +19,16 @@ with zero codegen and zero new authoring surface**:
 - a **wrong value type** (`{n: "2"}`) and an **out-of-union literal**
   (`{availability: "in stok"}`) redden the step,
 - a **parent-side slot rename** reddens the child's untouched binding — spec-edit drift caught
-  before any build runs,
-- an **unbound slot** (`{n}`) reddens too — the concreteness law's shape, visible before the
-  readiness floor ever evaluates it.
+  before any build runs.
 
 Every error quotes the exact authored step string. `TSC-OUTPUT.txt` is the captured transcript.
+
+Equally important is what the surface **refuses to police**: an **unbound slot** (`{n}`)
+**compiles** (`partialPointStillAuthorable` in the demo). A partial point is legal authoring —
+the concreteness law holds it below `defined`, and that is the readiness floor's honesty check,
+never an authoring gate: checks police honesty, never workflow. The type surface rejects only
+steps that could never be honest (no such vocabulary step; a value no declared type accepts);
+readiness stays stated-and-checked, exactly as everywhere else in the protocol.
 
 ## Why it matters for the ruling
 
@@ -47,8 +52,9 @@ npx tsc -p explorations/executable-examples/7-typelevel-slots   # errors ONLY in
 cat explorations/executable-examples/7-typelevel-slots/TSC-OUTPUT.txt
 ```
 
-`valid-cart.demo.ts` (the real worked-example vocabulary and its bound point) typechecks clean;
-`drift-demo.ts` is broken by design — its five cases are the exhibit.
+`valid-cart.demo.ts` (the real worked-example vocabulary, its bound point, and the compiling
+unbound-slot partial point) typechecks clean; `drift-demo.ts` is broken by design — its four
+binding-error cases are the exhibit.
 
 ## Spike limits
 

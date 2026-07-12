@@ -54,3 +54,15 @@ export const validCartPoint = bindPoint(createOrderSpace)({
     "the order contains the original cart lines",
   ],
 });
+
+/**
+ * The law boundary, shown compiling: an UNBOUND slot (`{n}`) is legal authoring — a partial
+ * point held below `defined` by the readiness floor (the concreteness law), never rejected at
+ * the type surface. Checks police honesty, never workflow; a hard error here would gate
+ * authoring the protocol permits. The floor, not the compiler, owns this example's readiness.
+ */
+export const partialPointStillAuthorable = bindPoint(createOrderSpace)({
+  given: ["a customer has a cart with {n} line items"],
+  when: ["the customer submits the cart for order creation"],
+  then: ["the order contains the original cart lines"],
+});

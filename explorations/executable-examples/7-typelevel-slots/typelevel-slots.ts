@@ -9,9 +9,14 @@
  * step's identity here exactly as it is at runtime.
  *
  * What that buys: `bindPoint(space)({...})` checks, in the editor and with zero codegen, that
- * every authored example step binds a point in the parent's declared example space — an unknown
- * slot, a wrong value type, an out-of-union literal, a parent-side rename, or an unbound slot
- * (the concreteness law's shape) all redden the authored string itself.
+ * every authored example step uses a declared vocabulary step and that every value it binds is
+ * legal — an unknown slot, a wrong value type, an out-of-union literal, or a parent-side rename
+ * reddens the authored string itself.
+ *
+ * What it deliberately does NOT check: an unbound slot (`{n}`, or a type-form group) in an
+ * example step COMPILES. Unbound slots are legal authoring below `defined` — the concreteness
+ * law is the readiness floor's honesty check, and checks police honesty, never workflow. A type
+ * surface that hard-errored the unbound form would gate authoring the protocol permits.
  *
  * The law boundary (why this is DX, never truth): the one-validation-path law (MD-14) is
  * untouched. Nothing here is evaluated into the graph — the graph's truth stays what the
@@ -68,12 +73,12 @@ type BoundValueOf<Rhs extends string> = Trim<Rhs> extends infer R extends string
 /** The slots one vocabulary step declares: slot name → declared type. */
 export type SlotsOf<S extends string> = S extends `${string}{${infer Name}:${infer Rhs}}${infer Rest}`
   ? { readonly [K in Trim<Name>]: DeclaredTypeOf<Rhs> } & SlotsOf<Rest>
-  : unknown;
+  : {};
 
-/** The point one example step binds: slot name → bound literal type. */
+/** The point one example step binds: slot name → bound literal type. Unbound groups bind nothing. */
 export type BindsOf<S extends string> = S extends `${string}{${infer Name}:${infer Rhs}}${infer Rest}`
   ? { readonly [K in Trim<Name>]: BoundValueOf<Rhs> } & BindsOf<Rest>
-  : unknown;
+  : {};
 
 /** The step's identity — every slot group normalized to `{name}` (`stepSkeleton`, at the type level). */
 export type SkeletonOf<S extends string> = S extends `${infer Pre}{${infer Name}:${infer _Rhs}}${infer Rest}`
@@ -90,7 +95,7 @@ type SlotsOfAll<Steps extends readonly string[]> = Steps extends readonly [
   ...infer Tail extends string[],
 ]
   ? SlotsOf<Head> & SlotsOfAll<Tail>
-  : unknown;
+  : {};
 
 export interface ExampleSpaceShape {
   readonly given: readonly string[];
@@ -98,9 +103,15 @@ export interface ExampleSpaceShape {
   readonly then: readonly string[];
 }
 
-/** True when step `E`'s skeleton matches vocabulary step `V` and every used slot binds a legal value. */
+/**
+ * True when step `E`'s skeleton matches vocabulary step `V` and every value it DOES bind is
+ * legal for its declared slot. `Partial` is the law boundary: slots the example leaves unbound
+ * are permitted here — holding an unbound-slot example below `defined` is the readiness floor's
+ * job (the concreteness law), never an authoring gate. An unknown slot name never reaches this
+ * check: it already breaks the skeleton match.
+ */
 type BindsStep<E extends string, V extends string> = SkeletonOf<E> extends SkeletonOf<V>
-  ? BindsOf<E> extends SlotsOf<V>
+  ? BindsOf<E> extends Partial<SlotsOf<V>>
     ? true
     : false
   : false;

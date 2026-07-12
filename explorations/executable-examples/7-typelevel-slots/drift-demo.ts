@@ -3,6 +3,10 @@
  * authored step string. Captured verbatim in TSC-OUTPUT.txt. Compare `4-seam/drift-demo.test.ts`
  * (the same drift caught at the generated-contract seam): this spike catches it EARLIER — in the
  * editor, before any build runs — while the contracts remain the seam of record.
+ *
+ * Every case here is a BINDING error — a step that could never be honest. What is deliberately
+ * absent: the unbound-slot form (`{n}`), which compiles (see valid-cart.demo.ts) because it is
+ * legal authoring below `defined` — the readiness floor's concern, never the type surface's.
  */
 
 import { bindPoint, declareExampleSpace } from "./typelevel-slots.js";
@@ -48,15 +52,6 @@ export const createOrderSpaceAfterEdit = declareExampleSpace({
 
 export const staleAfterRename = bindPoint(createOrderSpaceAfterEdit)({
   given: ["a customer has a cart with {n: 2} line items"],
-  when: ["the customer submits the cart for order creation"],
-  then: ["the order contains the original cart lines"],
-});
-
-// CASE 4 — unbound slot: `{n}` binds nothing, so the step is no point at all — the concreteness
-// law's shape (an example with an unbound slot in a used step does not meet `defined`), visible
-// in the editor before the readiness floor ever evaluates it.
-export const unboundSlot = bindPoint(createOrderSpace)({
-  given: ["a customer has a cart with {n} line items"],
   when: ["the customer submits the cart for order creation"],
   then: ["the order contains the original cart lines"],
 });

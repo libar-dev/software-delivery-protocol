@@ -248,9 +248,11 @@ weighted per the recorded mandate: agents heaviest, then the whole delivery org,
 > ceremony does the minimum honest spec require?" — the draft-example affordance of settlement 9
 > makes the two-line `idea` spec the highest-volume authoring event) — is judged from each PR's
 > arc `01-idea` snapshot rather than pre-scored here, because the seed exhibits do not all carry
-> an `idea` rung. One shared property the diff row deliberately excludes: under every carrier,
-> point-per-example (MD-17) keeps sibling examples in separate files, so concurrent example
-> edits merge structurally — the row scores the within-file cases.
+> an `idea` rung. Note the MD-17 interaction the diff row must include, not exclude: sibling
+> examples authored as separate files merge structurally, but the table sugar exists precisely
+> so N points share **one authored file** (MD-17's own rationale: ten sibling files for a
+> ten-row table fights how authors demonstrably think) — so how a row edit reads in a diff and
+> how concurrent row edits merge is live scoring surface for every carrier's table syntax.
 
 Bottom line under the stated priority order: **F2-layered and C2 are the genuine finalists**,
 and they share the same owned core — the GWT notation and the envelope semantics. F2-layered
@@ -267,13 +269,15 @@ can dismiss each direction **by name, never by omission**. Every one is dominate
 contender or excluded by ratified law — none earns an exhibit:
 
 - **Pure-data carriers** (whole-spec YAML / JSON / TOML / CUE files): making the *entire* spec
-  data kills prose — the gen-1 truncated-docstrings lesson — and the envelope already lives
-  happily in frontmatter; the direction loses to the markdown carrier on every register row
-  above. CUE is the only interesting member (schema+data unification would type the envelope
-  natively), but it is a foreign toolchain with near-zero agent training distribution — the
-  exact C1 disease.
-- **Colocated specs** (doctest-style, the spec beside its implementation): violates the
-  intent/implementation split (JS-B1.4) and collapses the anchor design — dead on arrival.
+  data kills prose — the gen-1 truncated-docstrings lesson — and the envelope's data-shaped
+  part is the only part a data format serves, which the document exhibits already carry as
+  frontmatter; the direction loses to the markdown carrier on every register row above. CUE is
+  the only interesting member (schema+data unification would type the envelope natively), but
+  it is a foreign toolchain with near-zero agent training distribution — the exact C1 disease.
+- **Colocated specs** (doctest-style, authored intent living inside implementation files):
+  inverts the anchor's binding-only law — the in-code anchor is identity only, never intent
+  (`04`), exactly so intent has one home the code merely points at; colocating collapses that
+  design — dead on arrival.
 - **Alternative document dialects** (AsciiDoc, org-mode, Djot, Typst): each loses markdown's
   single decisive property — the deepest agent training distribution there is — while adding
   ownership or rendering cost; the F2 argument transfers against them wholesale.
