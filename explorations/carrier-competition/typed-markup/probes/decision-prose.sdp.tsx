@@ -14,8 +14,10 @@ export default (
   >
     {/* Faithful prose port: these sentences already exist in the carrier record. */}
     <Context>
-      <p>The valid-cart and invalid-cart paths need one stable lifecycle choice.</p>
-      <p>Persistence before validation would allow partial orders and enlarge the tracer bullet.</p>
+      <p>
+        The valid-cart and invalid-cart paths need one stable lifecycle choice. Persistence before
+        validation would allow partial orders and enlarge the tracer bullet.
+      </p>
     </Context>
 
     <Decision>

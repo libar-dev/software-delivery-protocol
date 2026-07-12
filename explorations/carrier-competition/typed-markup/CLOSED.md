@@ -3,7 +3,7 @@
 > **Ruling:** the escape test did not overturn settlement 5. Typed markup makes the minimum
 > `idea`-rung document pay TypeScript and JSX ceremony, ordinary decision prose needs markup or
 > explicit conventions, and its remaining unique authoring benefit is as-you-type envelope
-> typing. The graph-derived projection already supplies the interactive review experience.
+> typing. Interactive review belongs downstream of the graph and does not require TSX authoring.
 > Typed markup therefore concedes the carrier competition **as an authoring surface**; its
 > projection-layer value remains intact.
 
@@ -25,7 +25,7 @@ implements [Plan 15d](../../../plans/15d-carrier-typed-markup-closed.md) and ask
 authored document can beat the standing typed-markup evidence.
 
 This directory is evidence, not product. It adds no canonical authoring surface, markup package,
-extractor path, generated graph, runtime adapter, dependency, or product code. The TypeScript DSL
+extractor path, derived graph, runtime adapter, dependency, or product code. The TypeScript DSL
 remains the sole canonical authoring surface during the competition.
 
 ## Settlement 5
@@ -34,17 +34,23 @@ The source record already contains both halves of the typed-markup proposition:
 
 - The original [`.sdp.tsx` seed](../../executable-examples/3-typed-markup/create-order-valid-cart.sdp.tsx)
   shows a typed component tree carrying the envelope, sections, prose, and example steps.
-- The [interactive Design Review](../../executable-examples/3-typed-markup/render/valid-cart-review.html)
-  derives its envelope chips, readiness banner, verifier binding, Given/When/Then rendering,
-  expected outcome, coverage verdict, and draft-example affordance from the graph at render time.
+- The [interactive review mock](../../executable-examples/3-typed-markup/render/valid-cart-review.html)
+  illustrates the intended downstream surface: envelope chips, a readiness banner, verifier
+  binding, Given/When/Then rendering, expected outcomes, coverage verdicts, and a draft-example
+  affordance. It labels itself `MOCK` and hard-codes representative values; it is not an executable
+  graph consumer.
+- The shipped [Design Review projection](../../../src/projections/design-review.ts) and its
+  [determinism tests](../../../test/design-review.test.ts) supply the mechanical half: the current
+  Markdown view consumes the reader and regenerates purely from the one graph.
 
-That second artifact proved the decoupling: the interactive experience works over a graph produced
-from any authoring carrier. Typed markup is not required to obtain it. What TSX uniquely retains at
-authoring time is as-you-type typing of component props, while its prose and children structure pay
-the costs recorded in [FINDINGS settlement 5](../../executable-examples/FINDINGS.md): JSX is a poor
-prose medium, and children typing is too weak to make step text, ordering, and nesting fully typed.
-The component library survives as a projection-layer competency rather than an authoring-format
-requirement.
+Together they make the boundary explicit without pretending the mock proves a live integration:
+the real projection already reads the graph, while the mock places interactivity on that downstream
+surface. A graph produced from any authoring carrier can feed the same projection layer. What TSX
+uniquely retains at authoring time is as-you-type typing of component props, while its prose and
+children structure pay the costs recorded in
+[FINDINGS settlement 5](../../executable-examples/FINDINGS.md): JSX is a poor prose medium, and
+children typing is too weak to make step text, ordering, and nesting fully typed. The component
+library survives as a projection-layer competency rather than an authoring-format requirement.
 
 ## The escape test
 
@@ -89,7 +95,7 @@ The stress samples make three costs visible in source:
 
 | Prose need           | What the probe must write                    | Consequence                                                                                                                                             |
 | -------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Literal braces       | `{"{ id, lines, total }"}`                   | A natural brace group enters JSX expression syntax and needs an explicit string expression.                                                             |
+| Literal braces       | `{"{ id, lines, total }"}`                   | A natural brace group enters JSX expression syntax and needs JSX-specific escaping; the probe uses an explicit string expression.                       |
 | Paragraph separation | Explicit `<p>` elements in the faithful port | A blank source line inside one JSX text node is not an authored paragraph boundary; standard JSX transformation and HTML rendering join or collapse it. |
 | Emphasis and links   | `<strong>` and `<a>` elements                | Markdown spellings remain literal text unless another parser or component convention interprets them.                                                   |
 
@@ -107,26 +113,29 @@ The import used by both probes is hypothetical. The package currently exports th
 
 Consequently these probes do **not** typecheck, and this record claims no green `tsc` result. Making
 them typecheck would require designing and building the component library before the carrier can
-demonstrate its one unique promise. Spending that effort after the standing evidence has already
-reduced the authoring proposition would be exhibit theater, not additional information.
+demonstrate its one unique promise. Spending that effort after clauses (i) and (ii) have already
+failed would be exhibit theater, not additional information.
 
-Even if built, native prop typing would provide as-you-type envelope feedback to engineers. It
-would not type arbitrary step text or strongly enforce useful child ordering and nesting, and it
-would not provide the interactive review features: the graph-derived HTML projection already does
-that for every carrier. Clause (iii) fails.
+Native prop typing is nevertheless a credible authoring-time capability that a graph-derived
+projection or on-save extractor check does not provide. The seed does not demonstrate it
+mechanically because the component library is hypothetical, but the fair score is that clause
+(iii) **passes in principle**. Its reach remains narrow: it would not type arbitrary step text or
+strongly enforce useful child ordering and nesting, and interactive review still belongs at the
+carrier-independent projection layer.
 
 ## Concession ruling
 
-The escape test failed on all three clauses. The `idea` form adds host-language scaffold, the prose
-form needs markup and JSX-specific escaping, and the interactive value remains carrier-independent.
-Typed markup therefore concedes the carrier competition as an authored `Spec` format.
+The escape test requires all three clauses to hold. Clause (iii) passes in principle, but the
+`idea` form adds host-language scaffold and the prose form needs markup and JSX-specific escaping,
+so clauses (i) and (ii) fail. Typed markup therefore concedes the carrier competition as an authored
+`Spec` format.
 
 This is a positive evidence result. “Why not author Specs as TSX documents?” now has a falsifiable,
 artifact-backed answer rather than a preference. Reopening the carrier requires new evidence
-against a named probe: for example, a minimum form that removes the host-language scaffold, a
-prose-preserving JSX authoring mechanism that does not add another parser or convention, and an
-authoring-time capability that cannot be supplied by the graph-derived projection. All three escape
-clauses would still need to hold.
+against a named failed probe: a minimum form that removes the host-language scaffold and a
+prose-preserving JSX authoring mechanism that does not add another parser or convention, while
+retaining the as-you-type advantage already credited under clause (iii). All three escape clauses
+would still need to hold.
 
 ## What survives the concession
 
