@@ -1,0 +1,10 @@
+# Syntax illustrative only.
+spec orders.create-order
+  behavior · feature · scoped
+  refines orders.order-management
+
+Customer creates an order
+
+  intent
+    outcome: Turn a valid cart into an order.
+    value: Customers can complete purchases without the example modeling the rest of checkout.

@@ -1,0 +1,202 @@
+{
+  "schemaVersion": "0.3.0",
+  "nodes": [
+    {
+      "id": "spec:decisions.order-lifecycle",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "decision",
+      "altitude": "feature",
+      "readiness": "defined",
+      "title": "Order lifecycle keeps validation before creation",
+      "file": "specs/decisions.order-lifecycle.sdp",
+      "sections": {
+        "intent": {
+          "outcome": "Decide when checkout-v1 may create an order.",
+          "value": "The authored example has one stable lifecycle rule for success and rejection paths."
+        },
+        "decision": {
+          "decision": "Create orders only after cart validation confirms non-empty input and sufficient inventory.",
+          "rationale": [
+            "The valid-cart and invalid-cart examples need one consistent gate.",
+            "Rejecting before persistence keeps the tracer bullet small and internally consistent."
+          ],
+          "consequences": [
+            "Rejected carts never create partial orders."
+          ]
+        }
+      }
+    },
+    {
+      "id": "spec:orders.create-order",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "behavior",
+      "altitude": "feature",
+      "readiness": "ready",
+      "title": "Customer creates an order",
+      "file": "specs/orders.create-order.sdp",
+      "sections": {
+        "intent": {
+          "actor": "customer",
+          "outcome": "Turn a valid cart into an order.",
+          "value": "Customers can complete purchases without the example modeling the rest of checkout."
+        },
+        "behavior": {
+          "exampleSpace": {
+            "given": [
+              "a customer has a cart with {n:number} line items",
+              "every line item has quantity {q:number} and unit price {price:number}",
+              "every cart item is {availability:\"in stock\"|\"out of stock\"}"
+            ],
+            "when": [
+              "the customer submits the cart for order creation"
+            ],
+            "then": [
+              "an order is created with total {total:number}",
+              "the order contains the original cart lines",
+              "order creation is rejected because {reason:\"empty cart\"|\"out of stock\"}"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "spec:orders.create-order.api-contract",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "contract",
+      "altitude": "story",
+      "readiness": "idea",
+      "title": "Create-order API contract",
+      "file": "specs/orders.create-order.api-contract.sdp",
+      "sections": {
+        "intent": {
+          "outcome": "Pin the request and response shapes of POST /orders.",
+          "openQuestions": [
+            {
+              "question": "Does the response carry the inventory-snapshot version the order was validated against?",
+              "blocking": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "spec:orders.create-order.valid-cart",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "example",
+      "altitude": "story",
+      "readiness": "ready",
+      "title": "Valid cart creates an order",
+      "file": "specs/orders.create-order.valid-cart.sdp",
+      "sections": {
+        "intent": {
+          "outcome": "Show that a valid cart can become an order.",
+          "value": "The authored example demonstrates the happy path for create-order."
+        },
+        "behavior": {
+          "examples": [
+            {
+              "given": [
+                "a customer has a cart with {n: 2} line items",
+                "every line item has quantity {q: 1} and unit price {price: 50}",
+                "every cart item is {availability: \"in stock\"}"
+              ],
+              "when": [
+                "the customer submits the cart for order creation"
+              ],
+              "then": [
+                "an order is created with total {total: 100}",
+                "the order contains the original cart lines"
+              ]
+            }
+          ]
+        },
+        "verification": {
+          "mode": "executable",
+          "criteria": [
+            "The order result contains a stable id.",
+            "The returned total matches the authored total — the spec's value, never the test's."
+          ]
+        }
+      }
+    },
+    {
+      "id": "spec:orders.order-model",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "model",
+      "altitude": "story",
+      "readiness": "defined",
+      "title": "Order-management domain vocabulary",
+      "file": "specs/orders.order-model.sdp",
+      "sections": {
+        "intent": {
+          "outcome": "Define the core terms used by the checkout-v1 order-management slice.",
+          "value": "Specs, code, and tests use the same vocabulary for carts, orders, and inventory."
+        },
+        "model": {
+          "terms": {
+            "cart": "A customer-selected set of line items that has not yet become an order.",
+            "cartLine": "A requested product, quantity, and unit price inside a cart.",
+            "inventorySnapshot": "The available quantity for each product at validation time.",
+            "order": "The persisted result of accepting a valid cart.",
+            "orderTotal": "The sum of all accepted cart line subtotals."
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "spec:decisions.order-lifecycle",
+      "type": "refines",
+      "to": "spec:orders.create-order",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.create-order",
+      "type": "constrainedBy",
+      "to": "spec:orders.order-latency-constraint",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.create-order",
+      "type": "decidedBy",
+      "to": "spec:decisions.order-lifecycle",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.create-order",
+      "type": "refines",
+      "to": "spec:orders.order-management",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.create-order.api-contract",
+      "type": "refines",
+      "to": "spec:orders.create-order",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.create-order.valid-cart",
+      "type": "refines",
+      "to": "spec:orders.create-order",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.create-order.valid-cart",
+      "type": "verifies",
+      "to": "spec:orders.create-order",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.order-model",
+      "type": "refines",
+      "to": "spec:orders.order-management",
+      "claim": "declared"
+    }
+  ]
+}

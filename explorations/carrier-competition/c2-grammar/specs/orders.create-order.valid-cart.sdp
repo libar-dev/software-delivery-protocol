@@ -1,0 +1,24 @@
+# Syntax illustrative only: the winning carrier's surface-design session owns the grammar.
+spec orders.create-order.valid-cart
+  example · story · ready
+  refines orders.create-order
+  verifies orders.create-order
+
+Valid cart creates an order
+
+The happy path binds one point in the parent's example space.
+
+  intent
+    outcome: Show that a valid cart can become an order.
+    value: The authored example demonstrates the happy path for create-order.
+
+  Given a customer has a cart with {n: 2} line items
+    And every line item has quantity {q: 1} and unit price {price: 50}
+    And every cart item is {availability: "in stock"}
+  When the customer submits the cart for order creation
+  Then an order is created with total {total: 100}
+    And the order contains the original cart lines
+
+  verification executable
+    - The order result contains a stable id.
+    - The returned total matches the authored total — the spec's value, never the test's.

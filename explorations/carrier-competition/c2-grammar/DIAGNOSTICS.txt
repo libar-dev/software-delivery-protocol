@@ -1,0 +1,10 @@
+# Mock `sdp validate` transcript for the proposed own-grammar carrier.
+# The one-line rendering shape and validator ids below are pinned to today's CLI.
+# Grammar-specific wording and each "Did you mean" suggestion are illustrative; the shipped
+# TypeScript extractor does not parse `.sdp` files or produce these messages today.
+$ sdp validate typo-exhibit
+specs/orders.create-order.valid-cart.sdp:2 — [error] extract/non-static-envelope — descriptor kind "examle" is not one of behavior · workflow · example · rule · constraint · model · decision · contract. Did you mean "example"?
+specs/orders.create-order.valid-cart.sdp:3 — [error] conformance/referential-integrity — Reference from "spec:orders.create-order.valid-cart" via "refines" points to missing target "spec:orders.create-ordr". Did you mean "spec:orders.create-order"?
+specs/orders.create-order.valid-cart.sdp:2 — [error] extract/non-static-envelope — expected one descriptor line in the form "kind · altitude · readiness"; found "example · story".
+
+3 findings (3 errors); exit 1
