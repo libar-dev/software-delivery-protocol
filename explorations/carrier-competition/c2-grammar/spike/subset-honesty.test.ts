@@ -85,6 +85,15 @@ Demo parent
   });
 });
 
+test("a partial example space reports the vocabulary rule it actually violates", () => {
+  expect(() =>
+    parseGrammar(
+      `${base}\n  example space\n    Given a value is {n:number}\n`,
+      "partial-space.sdp",
+    ),
+  ).toThrow(/an example space needs at least one Given, When, and Then step/u);
+});
+
 test("cases must be final so later structural blocks cannot disappear", () => {
   expect(() =>
     parseGrammar(
@@ -118,6 +127,25 @@ test("a second spec declaration refuses instead of becoming prose", () => {
       "two-specs.sdp",
     ),
   ).toThrow(/one spec per file/u);
+});
+
+test("a second spec glued to prose refuses before the paragraph can absorb it", () => {
+  expect(() =>
+    parseGrammar(
+      `spec demo.first
+  example · story · idea
+  refines demo.parent
+
+First
+
+Some prose.
+spec demo.other
+  intent
+    outcome: This must not be attributed to the first Spec.
+`,
+      "glued-spec.sdp",
+    ),
+  ).toThrow(/one spec per file; a second spec declaration is not prose/u);
 });
 
 test("step phases refuse regression instead of canonicalizing malformed order", () => {

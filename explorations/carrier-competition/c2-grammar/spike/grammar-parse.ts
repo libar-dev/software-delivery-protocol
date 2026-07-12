@@ -64,6 +64,7 @@ function parseSteps(
   path: string,
   baseLine: number,
   baseIndent: number,
+  subject: "a structured example" | "an example space",
 ): Record<Phase, string[]> {
   const result: Record<Phase, string[]> = { given: [], when: [], then: [] };
   let current: Phase | undefined;
@@ -105,7 +106,7 @@ function parseSteps(
   }
 
   if (phases.some((phase) => result[phase].length === 0)) {
-    outside(path, baseLine, "a structured example needs at least one Given, When, and Then step");
+    outside(path, baseLine, `${subject} needs at least one Given, When, and Then step`);
   }
 
   return result;
@@ -210,6 +211,13 @@ export function parseGrammar(text: string, path: string): ParsedSdp {
       while (index < lines.length) {
         const proseLine = lines[index] ?? "";
         if (proseLine.trim().length === 0 || proseLine.startsWith("  ")) break;
+        if (/^spec\b/u.test(proseLine)) {
+          outside(
+            path,
+            index + 1,
+            "one spec per file; a second spec declaration is not prose",
+          );
+        }
         if (!proseLine.trimStart().startsWith("#")) paragraph.push(proseLine.trim());
         index += 1;
       }
@@ -316,7 +324,7 @@ export function parseGrammar(text: string, path: string): ParsedSdp {
     if (raw === "  example space") {
       markSeen("example space", index + 1);
       const block = childLines(lines, index + 1, path);
-      const steps = parseSteps(block.lines, path, index + 2, 4);
+      const steps = parseSteps(block.lines, path, index + 2, 4, "an example space");
       for (const step of phases.flatMap((phase) => steps[phase])) {
         for (const slot of parseSlots(step)) {
           if (slot.form !== "typed") {
@@ -370,7 +378,13 @@ export function parseGrammar(text: string, path: string): ParsedSdp {
         }
         break;
       }
-      const steps = parseSteps(stepLines, path, index - stepLines.length + 1, 2);
+      const steps = parseSteps(
+        stepLines,
+        path,
+        index - stepLines.length + 1,
+        2,
+        "a structured example",
+      );
       for (const step of phases.flatMap((phase) => steps[phase])) {
         if (hasUnboundSlot(step)) unboundUsedSteps.push(step);
       }
