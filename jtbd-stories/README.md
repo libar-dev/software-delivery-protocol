@@ -12,15 +12,7 @@ The consumers of this system are heterogeneous and evolving — domain engineers
 
 ## Founding Principle — One Graph
 
-Everything else is downstream of this. If a story ever conflicts with it, the principle wins.
-
-1. **No second graph, ever.** There is one graph. We do not stand up a parallel store that can disagree with the repo.
-2. **The repository is canonical; the graph is derived and regenerable.** Delete the graph and rebuild it byte-for-byte from the repo.
-3. **The `claim` is never silently collapsed or promoted.** A *declared* fact, an *anchored* binding, and an *inferred* guess stay distinguishable forever. Inference never quietly becomes truth.
-4. **Truth is authored as code in the repo.** Intent, structure, and relationships are authored as typed code committed alongside the implementation — not in an external tool. (The *graph* is derived from that authored code; see #2.)
-5. **Git history is the event log.** Specs and code are the events; the graph and every view are projections of the repo at a commit. No bespoke event store.
-
-> The graph is a *projection of the repository at a commit*. Change the repo, regenerate the projection. Nothing to sync, nothing to reconcile, nothing to trust beyond `git` and the code.
+Everything else is downstream of this. If a story ever conflicts with it, the principle wins. In one breath: there is **one graph**, derived and regenerable from the canonical repo; truth is authored as code; the `claim` is never silently collapsed or promoted; git history is the event log. The canonical five-point statement lives in the [concept README](../docs/concept/README.md#the-founding-principle--one-graph) — stated there, only pointed at from here.
 
 ---
 
@@ -78,7 +70,7 @@ The MVP target is one bounded context — Order Management, `pack:checkout-v1`, 
 
 ---
 
-## Out of scope for now (deliberately)
+## Out of the MVP (deliberately)
 
 To keep the essence clean, these are *not* in the MVP and are intentionally absent from the job stories above. The model accommodates the deferred ones without refactoring the core.
 

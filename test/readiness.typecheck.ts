@@ -1,46 +1,37 @@
-import {
-  anchorImplementation,
-  authoredEdgeTypes,
-  implAnchorId,
-  pack,
-  packId,
-  ref,
-  spec,
-  specId,
-} from "../src/index.js";
-import type { AuthoredModel, Finding, ValidationReport, Validator } from "../src/index.js";
+import { authoredEdgeTypes, schemaVersion } from "../src/index.js";
+import type { Finding, GraphEdge, GraphSchema, ValidationReport, Validator } from "../src/index.js";
 
-const model = {
-  specs: [
-    spec({
-      id: specId("spec:orders.create-order"),
-      title: "Create order",
-      kind: "behavior",
+const graph = {
+  schemaVersion,
+  nodes: [
+    {
+      id: "spec:orders.create-order",
+      nodeType: "Primitive",
+      claim: "declared",
+      specKind: "behavior",
       altitude: "feature",
       readiness: "idea",
-    }),
+      title: "Create order",
+      file: "specs/orders/create-order.sdp.ts",
+      sections: { intent: { outcome: "Turn a valid cart into an order." } },
+    },
   ],
-  packs: [
-    pack({
-      id: packId("pack:checkout-v1"),
-      title: "Checkout v1",
-      specs: [ref("spec:orders.create-order")],
-    }),
+  edges: [
+    {
+      from: "spec:orders.create-order",
+      type: "refines",
+      to: "spec:orders.order-management",
+      claim: "declared",
+    },
   ],
-  anchors: [
-    anchorImplementation({
-      id: implAnchorId("impl:orders.create-order-use-case"),
-      satisfies: ref("spec:orders.create-order"),
-    }),
-  ],
-} satisfies AuthoredModel;
+} satisfies GraphSchema;
 
 const finding = {
   validatorId: "honesty/readiness-floor",
   family: "honesty",
   severity: "error",
   message: "readiness floor is not satisfied",
-  subjectId: model.specs[0]?.id,
+  subjectId: graph.nodes[0]?.id,
   relatedId: authoredEdgeTypes[0],
   path: "readiness",
 } satisfies Finding;
@@ -51,26 +42,26 @@ const report = {
   findings: [finding],
 } satisfies ValidationReport;
 
-const validator: Validator<AuthoredModel> = {
+// The validator contract defaults to the one validation seam: input is the graph (MD-14).
+const validator: Validator = {
   id: "honesty/readiness-floor",
   family: "honesty",
-  validate(input) {
+  validate(input: GraphSchema) {
     void input;
     return report;
   },
 };
 
-void [model, finding, report, validator];
+void [graph, finding, report, validator];
 
-const invalidAuthoredModel: AuthoredModel = {
-  specs: [],
-  packs: [],
-  anchors: [],
-  // @ts-expect-error the pre-graph authored model is an in-memory DTO — it carries no source-file bookkeeping.
-  sourceFiles: [],
+// @ts-expect-error every edge records its claim (P9 — the taxonomy is never collapsed).
+const invalidEdge: GraphEdge = {
+  from: "spec:orders.create-order",
+  type: "refines",
+  to: "spec:orders.order-management",
 };
 
-void invalidAuthoredModel;
+void invalidEdge;
 
 const invalidFinding: Finding = {
   validatorId: "honesty/readiness-floor",

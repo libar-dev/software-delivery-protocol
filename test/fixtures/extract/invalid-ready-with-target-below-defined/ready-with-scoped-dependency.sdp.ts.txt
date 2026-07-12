@@ -1,0 +1,35 @@
+import { dependsOn, refines, spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const paymentHandlingSpec = spec({
+  id: specId("spec:payments.payment-handling"),
+  title: "Payment handling",
+  kind: "behavior",
+  altitude: "epic",
+  readiness: "idea",
+  intent: { outcome: "Own payment authorization for checkout." },
+});
+
+// The dependency clears its own scoped floor but states only scoped — below defined.
+export const authorizePaymentSpec = spec({
+  id: specId("spec:payments.authorize-payment"),
+  title: "Authorize payment",
+  kind: "behavior",
+  altitude: "feature",
+  readiness: "scoped",
+  intent: { outcome: "Authorize a payment before order creation." },
+  behavior: { examples: ["A valid card authorizes the cart total."] },
+  relations: [refines(specId("spec:payments.payment-handling"))],
+});
+
+// States ready while depending on a scoped target: every reference resolves, so the one floor
+// failure is depends-on-and-refines-targets-are-defined — the glossary's worked dialogue, pinned.
+export const createOrderSpec = spec({
+  id: specId("spec:orders.create-order"),
+  title: "Create order",
+  kind: "behavior",
+  altitude: "feature",
+  readiness: "ready",
+  intent: { outcome: "Turn a valid cart into an order." },
+  behavior: { rules: ["Only valid carts become orders."] },
+  relations: [dependsOn(specId("spec:payments.authorize-payment"))],
+});

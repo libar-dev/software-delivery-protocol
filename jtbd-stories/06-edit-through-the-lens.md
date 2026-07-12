@@ -7,7 +7,7 @@ The view is a lens, not an editor. The job here is to let people drive a change 
 ## JS-F1
 ### Drive a change as scoped intent, not a patch
 
-**Phase:** Iterate *(the underlying edit model — agent edits source → git → conformance checks — is MVP-true today; the in-view composer is the Iterate layer)*
+**Phase:** Iterate *(the underlying edit model — agent edits source → git → conformance checks — is MVP-true; the in-view composer is the Iterate layer)*
 **References:** [06 — Consumers & Projections](../docs/concept/06-consumers-and-projections.md)
 
 > **When** I'm exploring a spec in the view and want to change it — add an example, tighten a target, resolve a question — **I want to** select the scope and state my intent so the view hands a clean, token-budgeted prompt to an AI agent that edits the source, **so I can** edit comfortably while the repo stays canonical and conformance checks stay the gate.

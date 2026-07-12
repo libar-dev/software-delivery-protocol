@@ -1,0 +1,16 @@
+import { ref, spec, specId } from "@libar-dev/software-delivery-protocol";
+
+// Sections carry content, relations carry linkage (MD-10): an id builder in section content is
+// outside the static value grammar, so the owning property drops with a loud warning instead of
+// surviving as a smuggled reference no referential check ever sees.
+export const refInSectionSpec = spec({
+  id: specId("spec:orders.ref-in-section"),
+  title: "Spec smuggling a ref through section content",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  behavior: {
+    rules: ["A real rule survives beside the dropped property."],
+    examples: [ref("spec:orders.promoted-child")],
+  },
+});

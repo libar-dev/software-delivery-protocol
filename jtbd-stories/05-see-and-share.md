@@ -76,14 +76,14 @@ The graph is only valuable if humans and agents can actually consume it. The job
 **Phase:** MVP
 **References:** [06 — Consumers & Projections](../docs/concept/06-consumers-and-projections.md) (§5), [02 — Core Model](../docs/concept/02-core-model.md), [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md)
 
-> **When** a spec or `Pack` is mature enough to consider promoting, **I want to** review it in context — its neighbors, relations, `claim`/delivery badges, open questions, and gaps — **so I can** decide whether to state `ready`, with the structural floor visible but the judgment mine.
+> **When** a spec or `Pack` is mature enough to consider stating `ready`, **I want to** review it in context — its neighbors, relations, `claim`/delivery badges, open questions, and gaps — **so I can** decide whether to state `ready`, with the structural floor visible but the judgment mine.
 
-**Essence:** The **Design Review** is the flagship curated surface (`06` §5) and the human act it supports: reviewing a spec in its related set and *deciding* to state `ready`. It is **not** an automated gate — validators check only the structural readiness floor (`05` §3); promotion is a human's call, never a side effect of the review. This is where the "maturity gates implementation" discipline actually happens.
+**Essence:** The **Design Review** is the flagship curated surface (`06` §5) and the human act it supports: reviewing a spec in its related set and *deciding* to state `ready`. It is **not** an automated gate — validators check only the structural readiness floor (`05` §3); stating a rung is a human's call, never a side effect of the review. This is where the "maturity gates implementation" discipline actually happens.
 
 **Acceptance criteria:**
 1. A spec (or `Pack`) renders *in context* — neighbors, relations, `claim`/delivery badges — reusing the one generated view (JS-E1), so review needs no separate tool.
 2. The review surfaces exactly what stands between the spec and the next rung: blocking open questions, unresolved relations, `dependsOn`/`refines` targets below `defined`, and `gap`s (missing verifier, unmeasured NFR target).
-3. Stating `ready` is a deliberate human edit to the spec, checked against the `ready` floor (`05`) — the review **never** auto-promotes, and validators never adjudicate design quality.
+3. Stating `ready` is a deliberate human edit to the spec, checked against the `ready` floor (`05`) — the review **never** states a rung on the author's behalf, and validators never adjudicate design quality.
 4. A `Pack` can be reviewed as a unit, so coherence and cross-member tensions (shared terms, conflicting constraints) are visible at the group level, not just per spec.
 5. Findings (the auto-generated design questions + findings table) resolve through the edit loop (Theme F) — there is no stored `Finding` type and no second store; re-running the build regenerates them.
 6. The same review is reproducible from the graph at a commit, so two reviewers see the same context, and the decision is recorded as an ordinary git commit (the readiness change), not as review-tool state.

@@ -1,0 +1,14 @@
+# Stage 1 — the spec is born as an idea. Envelope-as-syntax: identity, kind,
+# altitude, readiness, and relations PARSE — they are not annotations.
+# (Syntax illustrative only; the grammar session owns the real design.)
+
+spec orders.create-order.valid-cart
+  example · story · idea
+  refines orders.create-order
+
+Valid cart creates an order
+
+  A customer with a stocked cart should be able to turn it into an order.
+
+  ? How do we treat a cart where only some items are in stock — reject the
+    whole cart, or split the order? [blocking]

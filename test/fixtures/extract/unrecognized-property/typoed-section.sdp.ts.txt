@@ -1,0 +1,15 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+// A typoed section name is outside the spec shape: that one property drops with a loud warning
+// and the spec survives — authored content must never silently fall out of the graph (L2).
+export const typoedSectionSpec = spec({
+  id: specId("spec:orders.typoed-section"),
+  title: "Spec with a typoed section name",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  intent: { outcome: "Warn loudly on a property outside the spec shape." },
+  behaviour: {
+    rules: ["Content under the typo would have vanished from the graph without a finding."],
+  },
+});

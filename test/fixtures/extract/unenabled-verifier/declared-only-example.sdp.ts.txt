@@ -1,0 +1,16 @@
+import { refines, spec, specId, verifies } from "@libar-dev/software-delivery-protocol";
+
+// Declares verifies(parent) but no test anchor backs it anywhere in the corpus: not an enabled
+// verifier, so the declared edge confers nothing (binding, never liveness — MD-7).
+export const declaredOnlyExampleSpec = spec({
+  id: specId("spec:orders.unverified-parent.example"),
+  title: "Example without a test binding",
+  kind: "example",
+  altitude: "story",
+  readiness: "idea",
+  intent: { outcome: "Show a declared verifies edge conferring no delivery fact." },
+  relations: [
+    refines(specId("spec:orders.unverified-parent")),
+    verifies(specId("spec:orders.unverified-parent")),
+  ],
+});

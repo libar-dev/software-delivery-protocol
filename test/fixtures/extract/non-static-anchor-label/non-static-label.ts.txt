@@ -1,0 +1,9 @@
+import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+
+// The label is degradable detail: it drops with a warning while the binding itself — identity
+// and target — survives whole.
+export const nonStaticLabelAnchor = codeAnchor({
+  id: codeAnchorId("impl:orders.non-static-label"),
+  label: `computed ${"label"}`,
+  satisfies: ref("spec:orders.labelled-target"),
+});

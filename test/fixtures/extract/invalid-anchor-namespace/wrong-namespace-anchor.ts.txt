@@ -1,0 +1,8 @@
+import { codeAnchor, ref } from "@libar-dev/software-delivery-protocol";
+
+// A code anchor carrying a test: id — a static id, but outside the slot's namespaces
+// (impl · api · component), so the graph is never keyed on it: extract/invalid-id.
+export const wrongNamespaceAnchor = codeAnchor({
+  id: "test:orders.smuggled-into-code-anchor",
+  satisfies: ref("spec:orders.anything"),
+});

@@ -1,0 +1,19 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+// The extraction-layer twin of authoring-shape honesty: a raw relations[] entry smuggling a
+// derived satisfies edge (and a foreign claim) is rejected at the envelope tier. This file is
+// deliberately not type-correct — like every extraction corpus it is committed with a .txt
+// suffix so the repo itself never carries an invalid *.sdp.ts (discovery would sweep it into any
+// build rooted above it); the corpus test materializes it back to its real name in a temp
+// directory before extraction.
+export const handAuthoredSatisfiesEdgeSpec = spec({
+  id: specId("spec:orders.hand-authored-satisfies-edge"),
+  title: "Spec smuggling a raw satisfies edge",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  intent: { outcome: "Pin the raw relations-entry envelope error." },
+  relations: [
+    { type: "satisfies", target: specId("spec:orders.static-sibling"), claim: "anchored" },
+  ],
+});

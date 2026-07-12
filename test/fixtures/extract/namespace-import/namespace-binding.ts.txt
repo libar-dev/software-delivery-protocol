@@ -1,0 +1,12 @@
+import * as sdp from "@libar-dev/software-delivery-protocol";
+
+export const namespaceBinding = sdp.codeAnchor({
+  id: sdp.codeAnchorId("impl:orders.namespace-binding"),
+  label: "namespaceBinding",
+  satisfies: sdp.ref("spec:orders.namespace-parent"),
+});
+
+export const namespaceTestBinding = sdp.specTest({
+  id: sdp.testAnchorId("test:orders.namespace-parent.example"),
+  verifies: sdp.ref("spec:orders.namespace-parent.example"),
+});

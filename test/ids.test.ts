@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   anchorId,
+  codeAnchorId,
   formatId,
-  implAnchorId,
   packId,
   parseId,
   ref,
@@ -44,13 +44,18 @@ describe("ids", () => {
 
   it("brands the required helper namespaces", () => {
     expect(packId("pack:checkout-v1")).toBe("pack:checkout-v1");
-    expect(implAnchorId("impl:orders.create-order-use-case")).toBe(
-      "impl:orders.create-order-use-case",
-    );
     expect(testAnchorId("test:orders.create-order.valid-cart")).toBe(
       "test:orders.create-order.valid-cart",
     );
     expect(anchorId("api:orders.post")).toBe("api:orders.post");
+  });
+
+  it("brands every implementation-flavored code namespace through the one codeAnchorId (MD-8)", () => {
+    expect(codeAnchorId("impl:orders.create-order-use-case")).toBe(
+      "impl:orders.create-order-use-case",
+    );
+    expect(codeAnchorId("api:orders.post")).toBe("api:orders.post");
+    expect(codeAnchorId("component:orders.domain")).toBe("component:orders.domain");
   });
 
   it.each(invalidIds)("rejects malformed IDs: %s", (value) => {
@@ -60,8 +65,8 @@ describe("ids", () => {
   it("rejects wrong namespaces in helper branding", () => {
     expect(() => specId("pack:checkout-v1")).toThrowError('expected namespace "spec"');
     expect(() => packId("spec:orders.create-order")).toThrowError('expected namespace "pack"');
-    expect(() => implAnchorId("test:orders.create-order.valid-cart")).toThrowError(
-      'expected namespace "impl"',
+    expect(() => codeAnchorId("test:orders.create-order.valid-cart")).toThrowError(
+      'expected one of the namespaces "impl" · "api" · "component"',
     );
     expect(() => testAnchorId("impl:orders.create-order-use-case")).toThrowError(
       'expected namespace "test"',

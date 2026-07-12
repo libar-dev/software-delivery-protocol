@@ -3,8 +3,8 @@
 > A why-focused log of hard-to-reverse decisions about **building the Protocol itself** — distinct from *in-system*
 > decision records (a project's own `kind:"decision"` instances). Its job is to **recapture rationale** so choices
 > stay visible and don't re-smooth into "false settledness." Entries are short and **status-tagged**
-> (`ACCEPTED` / `PROPOSED` / `SUPERSEDED`). Companion to `docs/concept/ubiquitous-language.md` (the ratified
-> glossary; the model exposition lives in `00`–`07`).
+> (`ACCEPTED` / `PROPOSED` / `SUPERSEDED`). Companion to `CONTEXT.md` (repo root; formerly
+> `docs/concept/ubiquitous-language.md` — the ratified glossary; the model exposition lives in `00`–`07`).
 >
 > **Decoding historical `base §n` references** (used by older entries below and the archived `reviews/`):
 > the restructured base's old sections map to —
@@ -19,7 +19,11 @@ The name is the primary handle; the ID is the breadcrumb. **In prose, lead with 
 typing law (MD-11)," never bare "MD-n."** (Generalizes MD-8's own footnote.) *Curation* records each
 entry's standing against the ADR three-part test (hard to reverse · surprising without context · a
 real trade-off — see the working discipline in `AGENTS.md`); *durable* entries become `kind:"decision"`
-specs at the post-Slice-1 fold, under the future spec id reserved here.
+specs at the decision-spec fold, under the future spec id reserved here. **Fold trigger re-pointed
+(2026-07-11):** originally "post-Slice-1"; slices 1–5 landed with no fold, and the executable-spec
+format decision (plan 12) will rule on the very authoring carrier decision specs would be written in —
+so the fold now waits for that ruling, and the decision specs are authored once, in the format that
+survives.
 
 | ID | Ratified name | Curation | Future spec id |
 |---|---|---|---|
@@ -28,7 +32,7 @@ specs at the post-Slice-1 fold, under the future spec id reserved here.
 | MD-4 | one primitive, named coordinates | durable | `spec:protocol.decisions.one-primitive` |
 | MD-5 | the protocol naming | durable | `spec:protocol.decisions.protocol-naming` |
 | MD-7 | binding, never liveness | durable | `spec:protocol.decisions.binding-not-liveness` |
-| MD-8 | the generic `codeAnchor` | folds at Slice 2 → doc-comment on the `codeAnchor` builder | — |
+| MD-8 | the generic `codeAnchor` | **folded** (Slice 2) → doc-comment on the `codeAnchor` builder (`src/model/anchors.ts`) | — |
 | MD-9 | the open-questions home | folds at the fold (lives in `sections.ts`, the floor, `02` §3) | — |
 | MD-10 | content-only sections | durable | `spec:protocol.decisions.content-only-sections` |
 | MD-11 | the typing law | durable | `spec:protocol.decisions.typing-law` |
@@ -37,6 +41,7 @@ specs at the post-Slice-1 fold, under the future spec id reserved here.
 | MD-14 | one validation path | durable | `spec:protocol.decisions.one-validation-path` |
 | MD-15 | the `.sdp.ts` extension | durable | `spec:protocol.decisions.sdp-ts-extension` |
 | MD-16 | carried evidence | durable | `spec:protocol.decisions.carried-evidence` |
+| MD-17 | point-per-example | durable | `spec:protocol.decisions.point-per-example` |
 
 ---
 
@@ -47,7 +52,7 @@ specs at the post-Slice-1 fold, under the future spec id reserved here.
 > descriptor enums locked; bounded-context → projection) is canonical in the base ledger + §2; its one unique
 > nugget — the **partial reversal of MD-4** — was folded into MD-4 below, and the entry deleted.
 
-### MD-1 — The Protocol is an executable, self-validating software-delivery meta-model  [ACCEPTED]
+### MD-1 — The Protocol is an executable, self-validating software-delivery meta-model  [ACCEPTED · gloss refined 2026-07-11 (the plan-12 session): "executable specs alone (BDD) is unremarkable" stands as *positioning*, never as a rejection of executability — the ratified framing is that gen 1's disease was a binding invisible to the type system (dual-source + runtime matching), not executable specs; the executable half returns as a **recovered surface under the meta-model headline** (generated step contracts, the typed example space, the oracle), never a pivot]
 **Decision.** We are building a *typed, executable meta-model of the software-delivery process*: teams author
 delivery intent as **`Spec` instances** — the Protocol's one authored truth-primitive — and author only two
 other non-truth constructs, **`Pack`** and **`anchor`**; the meta-model (code in the repo) deterministically
@@ -184,7 +189,7 @@ brief have since been **deleted** (consolidated); the **sole canonical base is
 > review artifacts into tracked `reviews/`. The grill (`plans/03`) now opens onto a lean base and only
 > genuinely-open decisions.
 
-### MD-8 — Generic-anchor DSL shape: one `codeAnchor` over the implementation-flavored code namespaces  [ACCEPTED 2026-06-10]
+### MD-8 — Generic-anchor DSL shape: one `codeAnchor` over the implementation-flavored code namespaces  [ACCEPTED 2026-06-10 · FOLDED at Slice 2 — the rationale lives on the `codeAnchor` builder doc-comment (`src/model/anchors.ts`); kept as the historical record]
 **Decision.** Generalize `anchorImplementation` into a **`codeAnchor`** builder (plus branded id) accepting the
 implementation-flavored code namespaces — **`impl` / `api` / `component`** — so a *generic* anchor can bind any
 code location (class, function, route, module) as the base requires.
@@ -284,7 +289,7 @@ is green. An AI author no longer learns to sprinkle `behavior.rules` onto decisi
 table-as-single-source collapse), de-pads the example, and re-authors the H8 fixture
 `invalid-defined-constraint-without-target` (which itself currently pads).
 
-### MD-13 — The floor table in code is the single source of truth; the evaluator is generic  [ACCEPTED 2026-06-10]
+### MD-13 — The floor table in code is the single source of truth; the evaluator is generic  [ACCEPTED 2026-06-10 · status 2026-07-11: the one-validation-path re-key (MD-14, executed) moved predicate signatures from `(spec, model)` to `(node: PrimitiveNode, index: GraphIndex)`; the table / derived clause-id union / generic evaluator all stand — `src/validate/readiness-floor.ts`]
 **Decision.** `readiness-floor.ts` becomes the one home of the floor: each row carries `{ clauseId,
 description, predicate }` (a named predicate from a small library, with paths as arguments where presence
 *is* the check); the per-kind evidence map (MD-12) lives beside the clauses; the clause-id union is
@@ -301,7 +306,7 @@ silent-skip failure mode survives).
 **Execution.** Wave B (plan 02 H5), together with the MD-12 floor rewrite — one change, since the table
 being rewritten is the table being collapsed.
 
-### MD-14 — One validation path, through the one graph; `AuthoredModel` retires as a public seam  [ACCEPTED 2026-06-10 · direction; executes Slice 1/3]
+### MD-14 — One validation path, through the one graph; `AuthoredModel` retires as a public seam  [ACCEPTED 2026-06-10 · EXECUTED — the extractor landed at Slice 1, the graph-validator re-key at Slice 3; `AuthoredModel` is deleted and `validateGraph` is the sole validation seam]
 **Decision.** When the extractor lands, validators consume **the extractor's output** — one path: source →
 extract (static reification, P5) → graph (in memory) → conformance + honesty checks; `sdp validate` =
 `sdp build` + checks. `AuthoredModel` is demoted to (at most) an extractor-internal intermediate — never a
@@ -367,6 +372,43 @@ than its scope.
    stays `spec:`-target-only until the external-ADR need arrives. F2 stays closed *as the doc-note it
    was scoped to be*; implementing a `DocId` target type now was rejected (no call site wants it, and
    the shape should be decided when `doc:`/pack-targeting actually arrive).
+
+**Status (2026-07-11).** Point 2 executed differently in detail once the one-validation-path re-key
+(MD-14) landed: the check is named **`checkAuthoringShape`** (not `validateAuthoringShape`) and lives
+on the graph inside `validateGraph` (`src/validate/validators.ts`) — the stand-in harness it was born
+on is deleted. It also **split**: the envelope/top-level delivery-fact rejection moved into the
+extractor (`extract/reserved-property`), so the validator scans section interiors only. Points 1 and 3
+landed as written.
+
+## 2026-07-11 — Session: plan 12 run (the universals ratified · the carrier competition opened)
+
+> The session's full record — the seven ratified settlements, the carrier-competition restructure,
+> the exhibit bar, sequencing, and the law rulings that needed no new entry (JS-B2.3 kept: A2 is the
+> generated-union route the base already designed in, so the collision existed only under the dead
+> A1; dual-source ruling deferred to the carrier ruling session; MD-15 untouched) — lives in
+> **plan 12 §8**. Only one ruling passed the three-part test and enters here.
+
+### MD-17 — One point per example; tables are surface sugar  [ACCEPTED 2026-07-11]
+**Context.** The ratified example-space design (plan 12 §7, settlements 7–9) has an `example`-kind
+child bind a **point** in its parent's typed example space, and the coverage machinery counts each
+example as the **witness** of one outcome class. A consumer-corpus reread of gen-1 usage in a
+production project surfaced a colliding house style: the dominant authoring pattern there (93 of 132
+executable features) is **one scenario asserting a whole truth-table** — many cases, one authored
+unit. Forcing one authored spec per case would make a 10-row table ten sibling files and fight how
+authors demonstrably think.
+**Decision.** The graph model stays **one bound point per `example`** — the concreteness law and
+one-witness-per-class coverage semantics stay unconditional. A table of cases is **authoring-surface
+sugar**: a carrier may offer table syntax that **statically expands to N sibling examples at
+extraction** (the same move the import mapping already proved for Scenario Outline `Examples` rows),
+and renderers may project a sibling set back as a table — so authors keep the compact view at both
+ends while the graph never holds a multi-point example.
+**Why / alternatives rejected.** *An example may bind a point set*: keeps file counts down on every
+surface but makes the concreteness law and witness semantics conditional everywhere — the machinery
+pays forever for an authoring convenience one layer can absorb. *Strictly one point, no sugar*:
+purest, but contradicts the observed house style and taxes the gen-1 migration corpus. The chosen
+shape repeats the base's settled pattern — the model keeps the honest shape; surface layers translate
+both directions statically (natural-language step reading is the renderer's job; table authoring is
+the carrier's expansion sugar).
 
 ## Structural-decision shorthand (D1–D6)  [ACCEPTED · relocated here when the cleanup plan was retired, 2026-06-07]
 

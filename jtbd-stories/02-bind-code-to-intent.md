@@ -12,13 +12,13 @@ The job here is to connect real implementation to the spec that justifies it —
 
 > **When** I write a class, function, route, or module that realises part of a spec, **I want to** anchor it to the spec's ID right where it lives, **so I can** make the implementation self-describing without maintaining a separate mapping table.
 
-**Essence:** An anchor is a one-way pointer from code to intent. It is the anchored layer of the graph — it carries identity and structural bindings, never intent.
+**Essence:** An anchor is a one-way pointer from code to intent. It is the anchored layer of the graph — it carries identity and a binding, never intent.
 
 **Acceptance criteria:**
-1. Any significant code construct can carry an anchor naming the spec(s) it `satisfies` and its `component` — regardless of the framework it is built on (no Effect/Awilix/Fastify knowledge required).
+1. Any significant code construct can carry an anchor naming the spec it `satisfies` (one binding target per anchor; two bindings are two anchors) — regardless of the framework it is built on (no Effect/Awilix/Fastify knowledge required).
 2. More than one interchangeable syntax is available (decorator on a class, JSDoc on a function, anchor-constant) so the anchor never fights the code's shape; a team picks one style.
 3. The anchor is metadata only: removing the extractor changes nothing about how the code runs.
-4. An anchor carries identity and structural bindings (`id`, `satisfies`, `component`, `implements`) — and is **forbidden** from carrying intent, readiness, behaviour, or verification, which live only on the spec.
+4. An anchor carries identity and its one binding (`id` · optional `label` · a `satisfies`/`verifies` target; richer structural bindings like `component`/`implements` are aspirational) — and is **forbidden** from carrying intent, readiness, behaviour, or verification, which live only on the spec.
 5. The anchor points one way: code → spec, never spec → code; it produces **anchored**-`claim` edges, kept distinct from the `declared` relations authored on specs.
 6. Adding an anchor is a small, local edit reviewable in the same diff as the code.
 7. A missing anchor on a designated "significant" construct is catchable as a lint signal, so meaningful code does not silently fall out of the graph — useful, not load-bearing.

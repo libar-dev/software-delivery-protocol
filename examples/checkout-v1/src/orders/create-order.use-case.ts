@@ -1,4 +1,4 @@
-import { anchorImplementation, implAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
 
 export interface CartLine {
   readonly productId: string;
@@ -20,10 +20,18 @@ export interface CreatedOrder {
   readonly lines: readonly CartLine[];
 }
 
-export const createOrderUseCaseAnchor = anchorImplementation({
-  id: implAnchorId("impl:orders.create-order-use-case"),
+export const createOrderUseCaseAnchor = codeAnchor({
+  id: codeAnchorId("impl:orders.create-order-use-case"),
   label: "createOrderFromCart",
   satisfies: ref("spec:orders.create-order"),
+});
+
+// A second binding in the same file: anchors bind per spec, never per file (MD-8) — the total
+// reduction below is where the order-total rule is implemented.
+export const orderTotalRuleAnchor = codeAnchor({
+  id: codeAnchorId("impl:orders.order-total"),
+  label: "cart-math order total",
+  satisfies: ref("spec:orders.order-total-rule"),
 });
 
 export function createOrderFromCart(cart: CartInput, inventory: InventorySnapshot): CreatedOrder {

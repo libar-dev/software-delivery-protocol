@@ -1,0 +1,21 @@
+import * as sdp from "@libar-dev/software-delivery-protocol";
+
+// The misplaced-authoring sweep must see the property-access spelling too: a buried namespace
+// anchor call warns exactly as the named-import form does — a binding the author believes exists
+// must never silently fall out of the graph (L2).
+export function registerNamespaceBinding() {
+  return sdp.codeAnchor({
+    id: sdp.codeAnchorId("impl:orders.namespace-buried-binding"),
+    satisfies: sdp.ref("spec:orders.create-order"),
+  });
+}
+
+// A namespace-authored spec() in a non-.sdp.ts source file is equally misplaced: specs are
+// extracted from *.sdp.ts files only (the .sdp.ts extension, MD-15).
+export const namespaceMisplacedSpec = sdp.spec({
+  id: sdp.specId("spec:orders.namespace-misplaced"),
+  title: "Spec authored through the namespace import outside the spec surface",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+});

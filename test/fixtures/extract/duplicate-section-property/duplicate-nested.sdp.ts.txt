@@ -1,0 +1,13 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+// The duplicate-property guard at the section tier: the repeat drops with a warning and the
+// first authored value survives — never a silent last-wins (tsc reports TS1117 to typechecking
+// authors; the extractor reads files standalone, so it is the backstop at every object tier).
+export const nestedDuplicate = spec({
+  id: specId("spec:orders.nested-duplicate"),
+  title: "Duplicate property inside section content",
+  kind: "behavior",
+  altitude: "feature",
+  readiness: "idea",
+  intent: { outcome: "first authored value", outcome: "silent last-wins would take this" },
+});

@@ -1,0 +1,23 @@
+import { spec } from "@libar-dev/software-delivery-protocol";
+
+const id = "spec:orders.shorthand-authored";
+
+// A shorthand entry still names its field: the carrier fails as non-static, but no field it
+// names may be reported missing on top of that (a non-static field is not an absent one).
+export const shorthandCarrier = spec({
+  id,
+  kind: "behavior",
+  altitude: "feature",
+  readiness: "idea",
+});
+
+const base = {
+  id: "spec:orders.spread-authored",
+  title: "Spread-authored carrier",
+} as const;
+
+// A spread is opaque — it could carry any field — so beside it nothing can honestly be called
+// missing: exactly one finding (the non-static entry), never a false absence report per field.
+export const spreadCarrier = spec({
+  ...base,
+});

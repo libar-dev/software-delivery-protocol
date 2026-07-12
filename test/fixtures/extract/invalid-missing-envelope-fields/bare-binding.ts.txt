@@ -1,0 +1,3 @@
+import { codeAnchor } from "@libar-dev/software-delivery-protocol";
+
+export const bareBinding = codeAnchor({});

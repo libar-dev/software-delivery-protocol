@@ -1,0 +1,16 @@
+import { dependsOn, spec, specId } from "@libar-dev/software-delivery-protocol";
+
+// States ready while its dependency target resolves nowhere in the graph. Two findings by design
+// (two families, two statements): the referential-integrity error names the broken reference, and
+// the floor clause all-relations-resolve names the unearned ready. The target-rung clause stays
+// silent — it evaluates resolving targets only.
+export const createOrderSpec = spec({
+  id: specId("spec:orders.create-order"),
+  title: "Create order",
+  kind: "behavior",
+  altitude: "feature",
+  readiness: "ready",
+  intent: { outcome: "Turn a valid cart into an order." },
+  behavior: { rules: ["Only valid carts become orders."] },
+  relations: [dependsOn(specId("spec:payments.authorize-payment"))],
+});

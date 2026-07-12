@@ -70,7 +70,7 @@ This is the `claim` taxonomy (P9) elevated to two consumable surfaces: the curat
 
 **Principle · CORE.** Structured graph context beats raw text for AI; the Protocol is a *producer* of structured context, not just another consumer. This is a genuine differentiator and it is a principle.
 
-The experiment settled *how* to expose it. The **agent surface** is a **visible, self-describing typed graph the agent *scripts*** via the CLI — deliberately **neither** of two failure modes:
+The agent-surface decision (D5) settled *how* to expose it. The **agent surface** is a **visible, self-describing typed graph the agent *scripts*** via the CLI — deliberately **neither** of two failure modes:
 
 - **not a 30-verb API** — that hides the shapes and rebuilds the pipeline we are deleting;
 - **not raw-JSON-you-rejoin** — that makes every agent re-derive the same joins and decode the same taxonomy quirks.
@@ -87,9 +87,9 @@ The **`reader`** is the *component* behind the surface: joins and `claim`/taxono
 - **Blast-radius** over a changeset (impact + at-risk specs). The **file-level** form (`git diff` → `byFile` → curated-graph walk) is **MVP**; **symbol-level** exhaustive reach rides the aspirational impact graph. The MVP form **reports uncovered (unanchored) changed files explicitly** (a `coverage-unknown` signal) — honest coverage, never a silently-small answer (§2).
 - **Irreducible joins** — e.g. the multi-hop `spec → satisfies → … → invariants/scenarios` bridge with maturity/`claim` decode. Freeze because it is a true cross-source join, not a thin walk.
 
-Everything else (single-field traversals, group-bys, the maturity ladder) stays a script. The discriminator is not "is it a traversal" but **"would an agent hand-rolling this get it wrong?"** Freeze a typed contract only when a **second machine consumer** appears.
+Everything else (single-field traversals, group-bys, the maturity ladder) stays a script. The discriminator is not "is it a traversal" but **"would an agent hand-rolling this get it wrong?"** Freeze a typed contract only when a **second machine consumer** appears — **the second-caller bar** (the name `00` §4 and `07` cite; §4 below applies it to writes).
 
-> Context efficiency is a measured win, not a hope: keeping the data in-process and returning only conclusions ran a multi-probe session at a measured fraction of the tokens of a grep/verb-API equivalent. Freezing answers is expensive both as bytes on disk and as tokens in context.
+> Context efficiency is a measured win, not a hope (the measured evidence, `DECISIONS.md`): keeping the data in-process and returning only conclusions runs a multi-probe agent session at a measured fraction of the tokens of a grep/verb-API equivalent. Freezing answers is expensive both as bytes on disk and as tokens in context.
 
 **Aspirational (named, deferred):** `bySymbol` and symbol-level / cross-package reach (they ride the exhaustive impact graph — §2 boundary); token-budgeted self-contained slices (`per-pack`, `change-impact-<id>`); the **MCP surface** (§7) exposing a read-only window; GraphRAG retrieval for very large graphs. All stay inside the read-only gate (§4).
 
@@ -131,7 +131,7 @@ Why patching dissolves:
 
 **Principle · CORE (concept).** The flagship curated surface is the **Design Review**: a `Spec` (or a `Pack`) rendered **in context** — its neighbors, relations, `claim`/delivery badges, auto-generated **design questions** (from blocking open questions + `gap`s), and a **findings** table. It adopts the recognized SDLC noun.
 
-- It is the context in which a human **decides** to state `ready`: a spec is reviewed *in context* (alone and in its related set / `Pack`), and stating `ready` is the human's call coming out of that review. The review is **never an automated gate** — validators check only the structural **readiness floor** (`05`); they do not adjudicate the review or promote a spec. This keeps the honesty guardrail from `00`/`05` (checks police conformance & honesty, never workflow) intact (`02` §2, `05`). So `ready` is an **authored `declared` statement** — its *checkable* content is the floor; that a review actually happened is **not a fact the graph records**, so where review provenance matters it rides **git** (authorship, commit, the baseline tag — `03` §5), never an authored approval primitive.
+- It is the context in which a human **decides** to state `ready`: a spec is reviewed *in context* (alone and in its related set / `Pack`), and stating `ready` is the human's call coming out of that review. The review is **never an automated gate** — validators check only the structural **readiness floor** (`05`); they do not adjudicate the review or state `ready` on the author's behalf. This keeps the honesty guardrail from `00`/`05` (checks police conformance & honesty, never workflow) intact (`02` §2, `05`). So `ready` is an **authored `declared` statement** — its *checkable* content is the floor; that a review actually happened is **not a fact the graph records**, so where review provenance matters it rides **git** (authorship, commit, the baseline tag — `03` §5), never an authored approval primitive.
 - It is a **pure projection** — findings resolve through the edit loop (§4); there is **no stored `Finding` type**, no second store.
 - *Concept is core; rich diagrams grow later* — the MVP renders the relationship slice; heatmaps and interactive trees are aspirational (Spec Studio, §8).
 
@@ -139,7 +139,7 @@ Why patching dissolves:
 
 The MVP human view *is* the Design Review's relationship slice: a single derived, regenerable human-readable projection — **fully derived** and reproducible (delete and rebuild identically). Per spec it shows: header (title, `kind`, `altitude`, `readiness`, and any stated-vs-derived divergence); intent and behaviour (rules/examples); relations; bindings (implementing code, tests, with source links, derived from anchors); verification status (does a linked, enabled verifier *exist* — the `has-verifier` delivery fact, not run results); an impact list; and `claim` cues (declared vs anchored vs inferred shown distinguishably, P9).
 
-**Form is a Representation.** Clean generated HTML (tree + per-spec pages) or high-quality generated Markdown — the MVP needs *one* read-only derived view. The dev-mode and CI surfaces are the *same* generated artifact (no drift-prone "dev view"). The rich interactive **Spec Studio**, and HTML-over-Markdown as a product thesis, are aspirational (§8).
+**Form is a Representation — settled for the MVP: generated Markdown.** An index plus one page per `Spec` and per `Pack` under `generated/design-review/` (`sdp view`), rewritten wholesale each run so no stale page survives; byte-exact regeneration is the same determinism discipline as the graph. The dev-mode and CI surfaces are the *same* generated artifact (no drift-prone "dev view"). The rich interactive **Spec Studio**, and HTML-over-Markdown as a product thesis, are aspirational (§8).
 
 ---
 

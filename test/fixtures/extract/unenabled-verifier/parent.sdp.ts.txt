@@ -1,0 +1,10 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const unverifiedParentSpec = spec({
+  id: specId("spec:orders.unverified-parent"),
+  title: "Parent whose only verifier is not enabled",
+  kind: "behavior",
+  altitude: "feature",
+  readiness: "idea",
+  intent: { outcome: "Stay honestly free of has-verifier." },
+});

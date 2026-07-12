@@ -1,0 +1,10 @@
+import { pack, packId, ref } from "@libar-dev/software-delivery-protocol";
+
+// modelRefs name the pack's model-kind vocabulary specs; this one targets a behavior spec —
+// the pack-coherence check fails the resolving-but-wrong-kind reference.
+export const wrongKindModelRefPack = pack({
+  id: packId("pack:checkout-v1"),
+  title: "Checkout v1",
+  specs: [ref("spec:orders.create-order")],
+  modelRefs: [ref("spec:orders.create-order")],
+});

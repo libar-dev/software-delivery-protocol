@@ -3,8 +3,9 @@ import { spawnSync } from "node:child_process";
 // The temporal-token guard: durable artifacts carry current truth, so calendar and session tokens
 // (session/wave/fold handles, ISO dates, numbered plan-file refs) are banned from every tracked
 // file. Only the temporal-by-genre artifacts are exempt: the dated decision diary, the per-session
-// plan done-records, the archived reviews — plus the machine-generated lockfile (derived, not
-// authored prose). `Slice N` / `Phase 0` (roadmap-relative capability names) and `MD-n` citations
+// plan done-records, the archived reviews, the dated exploration records (verbatim exhibits,
+// diary-dated like DECISIONS) — plus the machine-generated lockfile (derived, not authored
+// prose). `Slice N` / `Phase 0` (roadmap-relative capability names) and `MD-n` citations
 // are allowed.
 const pattern =
   "Session[ -][0-9]|Wave[- ][A-Z]|Fold-[A-Z]|deferredInSession|plans/[0-9]+|20[0-9]{2}-[0-9]{2}-[0-9]{2}";
@@ -13,6 +14,7 @@ const pathspecs = [
   ":(exclude)docs/concept/DECISIONS.md",
   ":(exclude)plans",
   ":(exclude)reviews",
+  ":(exclude)explorations",
   ":(exclude)package-lock.json",
 ];
 

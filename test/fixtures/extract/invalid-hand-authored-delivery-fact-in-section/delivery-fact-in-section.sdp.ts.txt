@@ -1,0 +1,15 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+// Hand-authors a delivery fact inside section content. Typed sections reject this shape at tsc
+// time for real authors (MD-11) — this corpus is committed defused and never typechecks, which is
+// exactly the path the graph-level authoring-shape honesty check closes (MD-16): the extractor
+// reifies section interiors as content, and the check fails the smuggled key over the graph.
+export const dishonestSpec = spec({
+  id: specId("spec:orders.dishonest-section"),
+  title: "Spec smuggling a delivery fact through a section",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  intent: { outcome: "Pretend to carry has-verifier without any binding." },
+  behavior: { rules: ["Only valid carts become orders."], "has-verifier": true },
+});

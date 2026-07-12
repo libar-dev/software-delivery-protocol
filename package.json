@@ -18,6 +18,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./runner": {
+      "types": "./dist/runner/index.d.ts",
+      "import": "./dist/runner/index.js"
+    },
+    "./vitest": {
+      "types": "./dist/adapters/vitest.d.ts",
+      "import": "./dist/adapters/vitest.js"
     }
   },
   "engines": {
@@ -33,7 +41,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:temporal": "node ./check-temporal.mjs",
-    "check": "npm run check:temporal && npm run typecheck && npm run typecheck:examples && npm run lint && npm run format:check && npm test && npm run build"
+    "generate:example": "node ./dist/cli/sdp.js build examples/checkout-v1",
+    "check:example": "node ./dist/cli/sdp.js view examples/checkout-v1 --check-clean",
+    "check": "npm run check:temporal && npm run typecheck && npm run lint && npm run format:check && npm run build && npm run generate:example && npm run typecheck:examples && npm test && npm run check:example"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
@@ -45,5 +55,16 @@
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.0.0",
     "vitest": "^2.0.0"
+  },
+  "peerDependencies": {
+    "vitest": ">=2"
+  },
+  "peerDependenciesMeta": {
+    "vitest": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "ts-morph": "~28.0.0"
   }
 }

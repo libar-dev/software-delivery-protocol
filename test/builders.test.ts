@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  anchorImplementation,
+  codeAnchor,
+  codeAnchorId,
   constrainedBy,
   decidedBy,
   dependsOn,
-  implAnchorId,
   pack,
   packId,
   ref,
@@ -121,12 +121,12 @@ describe("builders", () => {
 
   it("builds identity-only anchors as plain serializable objects", () => {
     const implementationSource = {
-      id: implAnchorId("impl:orders.create-order-use-case"),
+      id: codeAnchorId("impl:orders.create-order-use-case"),
       label: "CreateOrderUseCase",
       satisfies: ref("spec:orders.create-order"),
     };
 
-    const implementation = anchorImplementation(implementationSource);
+    const implementation = codeAnchor(implementationSource);
     const testBinding = specTest({
       id: testAnchorId("test:orders.create-order.valid-cart"),
       label: "valid cart creates order",

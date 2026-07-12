@@ -81,7 +81,7 @@ Once everything is one graph, the payoff is navigation: what does a change touch
 **Acceptance criteria:**
 1. The graph answers "which specs in this `Pack` (or across the graph) have no resolving `has-verifier`" directly, as a list, not a count.
 2. The answer reflects the structural fact only — a verifier *exists and is enabled* — never a pass/fail verdict, which stays CI's (`02` §2, JS-G2).
-3. `ready` specs missing a verifier are highlighted as the priority slice (the honest "designed, claimed done, but unverified" gap), distinct from low-readiness specs that are not expected to have one yet.
+3. `ready` specs missing a verifier are highlighted as the priority slice (the honest "designed, stated done, unverified" gap), distinct from low-readiness specs that are not expected to have one yet.
 4. Each gap is reachable to its spec in context (the Design Review, JS-E1/JS-E4), so planning a test starts from the spec, not a bare ID.
 5. The result is stable across refactors because it is keyed on stable IDs and `verifies` edges, not test file locations.
 6. The same query is available to an agent through the agent surface, so coverage planning can be handed to an agent as structured context.
