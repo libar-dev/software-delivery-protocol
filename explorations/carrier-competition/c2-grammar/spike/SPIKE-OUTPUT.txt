@@ -1,11 +1,11 @@
 
  RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol/explorations/carrier-competition/c2-grammar
 
- ✓ spike/subset-honesty.test.ts (16 tests) 9ms
- ✓ spike/table-expansion.test.ts (8 tests) 14ms
- ✓ spike/graph-shape.test.ts (9 tests) 26ms
+ ✓ spike/subset-honesty.test.ts (16 tests) 5ms
+ ✓ spike/table-expansion.test.ts (8 tests) 8ms
+ ✓ spike/graph-shape.test.ts (9 tests) 17ms
 
  Test Files  3 passed (3)
       Tests  33 passed (33)
-   Start at  10:24:55
-   Duration  1.38s (transform 376ms, setup 0ms, collect 2.26s, tests 49ms, environment 1ms, prepare 401ms)
+   Start at  10:48:03
+   Duration  725ms (transform 194ms, setup 0ms, collect 1.06s, tests 29ms, environment 0ms, prepare 345ms)

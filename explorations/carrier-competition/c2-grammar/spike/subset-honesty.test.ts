@@ -121,6 +121,13 @@ Demo rule
       "indented-example.sdp",
     ),
   ).toThrow(/structural keyword "Given" is indented as block content/u);
+
+  expect(() =>
+    parseGrammar(
+      `${rule}    verifies demo.parent\n`,
+      "indented-relation.sdp",
+    ),
+  ).toThrow(/structural keyword "verifies" is indented as block content/u);
 });
 
 test("cases must be final so later structural blocks cannot disappear", () => {

@@ -133,8 +133,9 @@ function childLines(
       /^(?:spec|intent|model|decision|rule|cases|verification)(?:\s|$)/u.test(content) ||
       /^example space(?:\s|$)/u.test(content);
     const beginsStepKeyword = /^(?:Given|When|Then|And)\b/u.test(content);
+    const beginsRelationKeyword = relationTypes.has(content.split(/\s+/u)[0] ?? "");
 
-    if (beginsBlockKeyword || (!allowSteps && beginsStepKeyword)) {
+    if (beginsBlockKeyword || beginsRelationKeyword || (!allowSteps && beginsStepKeyword)) {
       outside(
         path,
         start + offset + 1,
