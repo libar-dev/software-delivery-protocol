@@ -12,3 +12,7 @@ generated/
 
 # OmO plans and state
 .sisyphus/
+.omo/
+
+# Pi state (used by taskplane)
+.pi/
