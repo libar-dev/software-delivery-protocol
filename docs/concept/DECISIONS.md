@@ -23,7 +23,8 @@ specs at the decision-spec fold, under the future spec id reserved here. **Fold 
 (2026-07-11):** originally "post-Slice-1"; slices 1–5 landed with no fold, and the executable-spec
 format decision (plan 12) will rule on the very authoring carrier decision specs would be written in —
 so the fold now waits for that ruling, and the decision specs are authored once, in the format that
-survives.
+survives. **Format ruled (2026-07-12, the carrier ruling — MD-18):** the Markdown carrier; the fold
+itself rides with the self-hosting session (plan 16 §7).
 
 | ID | Ratified name | Curation | Future spec id |
 |---|---|---|---|
@@ -42,6 +43,8 @@ survives.
 | MD-15 | the `.sdp.ts` extension | durable | `spec:protocol.decisions.sdp-ts-extension` |
 | MD-16 | carried evidence | durable | `spec:protocol.decisions.carried-evidence` |
 | MD-17 | point-per-example | durable | `spec:protocol.decisions.point-per-example` |
+| MD-18 | the carrier ruling | durable | `spec:protocol.decisions.carrier-ruling` |
+| MD-19 | the prose-ownership law | durable | `spec:protocol.decisions.prose-ownership` |
 
 ---
 
@@ -409,6 +412,58 @@ purest, but contradicts the observed house style and taxes the gen-1 migration c
 shape repeats the base's settled pattern — the model keeps the honest shape; surface layers translate
 both directions statically (natural-language step reading is the renderer's job; table authoring is
 the carrier's expansion sugar).
+
+## 2026-07-12 — Session: plan 16 run (the carrier ruled · prose ownership ruled)
+
+> The session's full record — the evidence table, the grounds, the re-dismissals by name, the
+> doc-repair bill, and the scheduled sessions — lives in **plan 16** (the session record of
+> record). The flagged terms ***carrier*** and ***notation*** ratified into `CONTEXT.md` at this
+> session. Two rulings passed the three-part test and enter here.
+
+### MD-18 — The carrier ruling: Markdown, all eight kinds; the TS DSL becomes import source + per-ID option  [ACCEPTED 2026-07-12]
+**Context.** The carrier competition (plan 14) closed with four evidence PRs: two full exhibits
+(F2 Markdown, C2 own grammar) and two honest concessions (Gherkin extension/fork; typed markup).
+The docket required ruling the carrier, the kind-partition question, and the TS DSL's long-term
+role — evidence-vs-evidence on the recorded scorecards, never by preference.
+**Decision.** The **Markdown carrier (F2) is the authoring carrier for all eight `kind` values**:
+an authored `Spec` document is an `.sdp.md` file — YAML-frontmatter envelope, free prose body,
+the owned notation in fenced blocks — statically extracted into the one graph. The canonical
+default flips **when the product parser and `sdp import` land and the worked example migrates**;
+until then the TS DSL stays sole-canonical. After the flip the TS DSL survives as the import
+source and as a lawful per-ID option via the canonical-surface config (`04` §1) — the surviving
+law is **one canonical surface per ID, no mixing**, never TS-as-sole-surface.
+**Why / alternatives rejected.** *C2 own grammar*: strongest differentiation and diff/merge, but
+its own scorecard's ownership row is decisive — parser, formatter, highlighting, rendering,
+editor integrations, LSP owned forever, plus the agent grammar-context tax and no rendered page
+without our tooling. *Kind-partitioned dual carrier* (first-class per the docket, not a
+fallback): declined on the exhibit's own evidence — the structure-heavy `model` port was
+field-exact in Markdown, so a permanent two-surface partition buys nothing it can show; the
+per-ID config stays designed-in, retained not exercised. *Retiring the TS DSL outright*: burns a
+designed-in escape hatch for no honesty gain — the gen-1 disease (MD-1's gloss) was dual-source
+binding invisible to the type system, which the per-ID law already prevents. Hard to reverse:
+every authored spec, the parser, `sdp import`, and the doc corpus build on the ruled carrier.
+
+### MD-19 — The prose-ownership law: owned prose in the graph, on typed owners  [ACCEPTED 2026-07-12]
+**Context.** The F2 exhibit counted four prose paragraphs its spike deliberately dropped at the
+graph seam and named three MD-10-compatible homes (heading-path-keyed content section ·
+description on the owning typed section · file-only with a pointer). A document carrier winning
+made this ruling due, per the docket.
+**Decision.** Free prose enters the graph as **description values on typed owners** — the owning
+typed section, or the `Spec` itself (a spec-level narrative slot; epic-altitude navigational
+prose lives there beside `refines`). No parallel heading-keyed store; no file-only pointer. The
+deterministic ownership rule for edge text (before the first heading, between sections, under
+unrecognized headings) is a first-class deliverable of the surface-design session; until it
+lands, unowned prose is refused loudly (ambiguity-is-loud), never silently dropped.
+**Why / alternatives rejected.** *File-only + pointer*: consumers may link to source but never
+re-parse it (P2) — a pointer forces every prose-needing projection to re-parse or omit; dead on
+the graph law. *Heading-path keys*: gen-1 delivery experience (reviewed direction-level; no gen-1
+artifact cited durably) shows heading structure is what churns hardest across readiness
+promotions — sections born, renamed, killed — so heading-keyed content breaks identity exactly
+where enrich-in-place lives; and prose without a typed owner is where transcription bloat grew.
+Owned descriptions are MD-10-clean (content, never refs) and MD-11-aware: they land inside
+already-closed shapes, and any prose slot a floor clause ever reads gets pulled into the closed
+type as the typing law demands. Trade-off accepted: the ownership rule is real design work — paid
+once, at the surface-design session, instead of forever in an informal transfer checklist.
 
 ## Structural-decision shorthand (D1–D6)  [ACCEPTED · relocated here when the cleanup plan was retired, 2026-06-07]
 

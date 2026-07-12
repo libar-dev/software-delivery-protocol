@@ -1,7 +1,10 @@
 # Plan 14 — The carrier competition: four exploration PRs and the ruling session
 
-> **Status: 🔲 DRAFTED 2026-07-12 — the standing operational plan for the competition the plan-12
-> session opened (plan 12 §8) and plan 13 unblocked.** Each carrier runs as its own exploration
+> **Status: ✅ EXECUTED 2026-07-12 — exit criteria met: four carrier PRs landed (#4–#7), the ruling
+> session run and recorded (plan 16), the carrier ruled with its doc-repair bill enumerated, and the
+> surface-design + import-emitter sessions scheduled (plan 16 §7). Was the standing operational plan
+> for the competition the plan-12 session opened (plan 12 §8) and plan 13 unblocked.** Each carrier
+> ran as its own exploration
 > PR against the same exhibit bar; a dedicated PLAN-ONLY **carrier ruling session** judges them
 > evidence-vs-evidence and rules the authoring carrier. This plan records the branch/worktree
 > layout, the per-PR deliverable, the per-carrier posture, and the ruling session's docket — so
