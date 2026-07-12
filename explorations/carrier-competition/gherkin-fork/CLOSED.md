@@ -82,7 +82,9 @@ The compatible syntax works only in the shallowest sense: the stock matcher acce
 whitespace-free tag, and the document schema returns a `Tag` whose meaningful source field is a
 single string `name`. Neither the grammar nor the AST knows that `kind` is closed to eight values,
 that readiness is ordered, that `refines` targets a `Spec` ID, or that `qty` is a numeric slot.
-Recovering those facts requires parsing tag names again.
+Recovering those facts requires parsing tag names again. The
+[committed stock-parser run](probes/PARSE-RUN.txt) pins the compatible half mechanically: v41.0.0
+parses this exact probe into two Rules and three scenarios/outlines with exit code 0.
 
 The realistic table exposes a second boundary. Gherkin can tag an `Examples` block, but not an
 individual table row. Rows receive parser-generated AST IDs, not authored `Spec` identities. The
@@ -92,6 +94,15 @@ canonical carrier would instead have to choose among three non-escapes: treat th
 one multi-point example and violate the point-per-example law; split every row into a one-row
 `Examples` block; or invent a point/id column and parse that convention. Tags therefore fail both
 the typed-envelope and typed-slot parts of the escape test.
+
+This is also the gen-1 shape, not a new carrier. [FINDINGS §2](../../executable-examples/FINDINGS.md)
+records four formal-spec chapters — tag system, tag registry, spec evolution, and delivery
+lifecycle — plus silent-failure traps that existed because delivery state used exactly this
+encoding. A typo such as `@readines:scoped` still parses successfully as an opaque tag; nothing
+can diagnose it until the second convention parser exists. That is the recorded “annotation
+mistakes fail silently to zero” failure mode. The differentiation test has a direct answer:
+**what does this carrier know that Gherkin does not? — nothing; it is Gherkin plus conventions.**
+Clause (ii) fails.
 
 ## Probe 2 — envelope in descriptions
 
@@ -136,6 +147,21 @@ starting point:
 
 Every available content-bearing point reduces to tags, descriptions, comments, or string payloads.
 The released grammar contains no fourth first-class metadata surface and no authored slot type.
+
+### Named non-escape — a sidecar envelope
+
+A typed YAML sidecar beside an unchanged `.feature` file may look like a way around the grammar
+inventory: stock parsing still works, and no tag, description, or comment is reparsed. It does not
+satisfy the escape test. The envelope no longer belongs to the `.feature` file; one authored `Spec`
+is split across two source homes, and a join keyed by file path, scenario name, or source position
+becomes another attachment convention whose meaning stock Gherkin does not know. Renaming or
+moving the Gherkin node can silently detach its envelope. The Examples-row problem also remains:
+the sidecar must invent identities and attachment keys for rows that have no authored identity
+surface in Gherkin.
+
+The sidecar therefore abandons the single-carrier premise rather than creating a third horn. It is
+Probe 3's positional-attachment disease with a file boundary added, and it cannot reopen this
+carrier.
 
 ## Probe 5 — price the incompatible fork honestly
 
@@ -184,3 +210,9 @@ falsifiable probe?** It did. This entrant is not to be compared against the five
 deliverables after conceding; `CLOSED.md` is the planned alternative deliverable. Read this ruling
 first, then the [realistic tag probe](probes/envelope-in-tags.feature) for the compatible horn's
 authored shape.
+
+Plan 16 must also reconcile the build-state ledger: the status headers for plans 14, 15a, 15b, and
+15c still say `DRAFTED` although the first two carrier PRs have merged and this PR is open. This
+exploration PR does not edit plan files because its scope fence forbids that change; the ruling
+session should stamp the 15-family done-records or carry an explicit follow-up before relying on
+the highest-numbered status header for “what now.”
