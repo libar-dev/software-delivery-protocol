@@ -116,13 +116,30 @@ function childLines(
   lines: readonly string[],
   start: number,
   path: string,
+  allowSteps = false,
 ): { readonly lines: readonly string[]; readonly end: number } {
   const end = nextStructural(lines, start);
   const block = lines.slice(start, end);
 
   for (const [offset, line] of block.entries()) {
-    if (!isBlankOrComment(line) && !/^ {4}\S/u.test(line) && !/^ {6}\S/u.test(line)) {
+    if (isBlankOrComment(line)) continue;
+
+    if (!/^ {4}\S/u.test(line) && !/^ {6}\S/u.test(line)) {
       outside(path, start + offset + 1, "block content must remain indented beneath its keyword");
+    }
+
+    const content = line.trimStart();
+    const beginsBlockKeyword =
+      /^(?:spec|intent|model|decision|rule|cases|verification)(?:\s|$)/u.test(content) ||
+      /^example space(?:\s|$)/u.test(content);
+    const beginsStepKeyword = /^(?:Given|When|Then|And)\b/u.test(content);
+
+    if (beginsBlockKeyword || (!allowSteps && beginsStepKeyword)) {
+      outside(
+        path,
+        start + offset + 1,
+        `structural keyword ${JSON.stringify(content.split(/\s+/u)[0] ?? content)} is indented as block content`,
+      );
     }
   }
 
@@ -323,7 +340,7 @@ export function parseGrammar(text: string, path: string): ParsedSdp {
 
     if (raw === "  example space") {
       markSeen("example space", index + 1);
-      const block = childLines(lines, index + 1, path);
+      const block = childLines(lines, index + 1, path, true);
       const steps = parseSteps(block.lines, path, index + 2, 4, "an example space");
       for (const step of phases.flatMap((phase) => steps[phase])) {
         for (const slot of parseSlots(step)) {

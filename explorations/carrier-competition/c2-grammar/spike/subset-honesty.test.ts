@@ -94,6 +94,35 @@ test("a partial example space reports the vocabulary rule it actually violates",
   ).toThrow(/an example space needs at least one Given, When, and Then step/u);
 });
 
+test("structural keywords indented as rule content refuse instead of disappearing", () => {
+  const rule = `spec demo.rule
+  rule · story · defined
+  refines demo.parent
+
+Demo rule
+
+  intent
+    outcome: Refuse structural indentation slips.
+
+  rule
+    The first line is rule content.
+`;
+
+  expect(() =>
+    parseGrammar(
+      `${rule}    verification executable\n      - This block must not become rule text.\n`,
+      "indented-verification.sdp",
+    ),
+  ).toThrow(/structural keyword "verification" is indented as block content/u);
+
+  expect(() =>
+    parseGrammar(
+      `${rule}    Given a misplaced example step\n    When it runs\n    Then it must not become rule text\n`,
+      "indented-example.sdp",
+    ),
+  ).toThrow(/structural keyword "Given" is indented as block content/u);
+});
+
 test("cases must be final so later structural blocks cannot disappear", () => {
   expect(() =>
     parseGrammar(
