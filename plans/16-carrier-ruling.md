@@ -6,7 +6,9 @@
 > `DECISIONS.md` — **the carrier ruling (MD-18)** and **the prose-ownership law (MD-19)**; the
 > flagged terms ***carrier*** and ***notation*** ratified into `CONTEXT.md`; the plan-14/15
 > ledger stamped (§8). The doc-repair bill (§6) is **enumerated here, executed by the scheduled
-> sessions (§7)** — this session is PLAN-ONLY and touches no product source or concept doc.
+> sessions (§7)** — this session is PLAN-ONLY: it touches no product source and none of the
+> concept-model docs (`00`–`07`); its only edits outside `plans/` are the ruling's own records,
+> the decision diary (`docs/concept/DECISIONS.md`) and the glossary (`CONTEXT.md`).
 >
 > **Spec anchors:** plan 14 §4 (the docket of record) · the four exhibit/closure records under
 > `explorations/carrier-competition/` · FINDINGS §4–§5 (`explorations/executable-examples/`) ·
@@ -141,7 +143,7 @@ Per the docket, the standing dismissals are re-affirmed by name, not by omission
 The ruling makes the following places in the concept corpus stale. The bill is executed as one
 coherent repair with the self-hosting session (§7), never piecemeal:
 
-- **`README.md` (repo root)** — "MVP surfaces: the TypeScript DSL + generic source anchors,"
+- **`docs/concept/README.md`** — "MVP surfaces: the TypeScript DSL + generic source anchors,"
   "typed `Spec` DSL," "edit TypeScript + git" → the ruled carrier + the TS DSL's new role.
 - **`00`** — the MVP-boundary rows naming the TS DSL as sole canonical surface; the Gherkin cut
   row and the carrier-competition framing (rewrite as ruled); the "TypeScript-canonical"
