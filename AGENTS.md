@@ -13,15 +13,14 @@ concept docs explain design and still hold unsettled post-MVP detail. **Intended
 claims; **`src/` and tests** are authoritative evidence of current realization. A disagreement is
 **drift to resolve**, never permission to silently promote code behavior into intent.
 
-> **Status:** concept ratified · MVP slices 0–5 landed on `main` (plan 10, 2026-06-11) · post-MVP
-> executable machinery landed (plan 13) · authoring **carrier ruled** as `.sdp.md` (the carrier
-> ruling, MD-18; plan 16) — product Markdown parser and self-hosting are **next**, not done ·
-> **what now:** `plans/17-self-hosting-v1.md` (DRAFTED). Build state lives in **`plans/`** — read
-> the highest **primary-numbered** plan's status header, plus any **active subplans it (or its
-> parent family) explicitly designates as current**; ignore unnumbered files and letter-suffixed
-> plans only when no primary/active plan designates them. If that plan is DRAFTED, also read the
-> latest ✅ EXECUTED/RUN plan for settled ground. The historical slice roadmap is
-> **`docs/concept/07`**.
+> **Status:** concept ratified · MVP slices 0–5 landed on `main` (plan 10) · post-MVP executable
+> machinery landed (plan 13) · authoring **carrier ruled** as `.sdp.md` (the carrier ruling, MD-18;
+> plan 16) — product Markdown parser and self-hosting are **next**, not done · **what now:** the
+> self-hosting plan under `plans/` (DRAFTED). Build state lives in **`plans/`** — read the highest
+> **primary-numbered** plan's status header, plus any **active subplans it (or its parent family)
+> explicitly designates as current**; ignore unnumbered files and letter-suffixed plans only when
+> no primary/active plan designates them. If that plan is DRAFTED, also read the latest ✅
+> EXECUTED/RUN plan for settled ground. The historical slice roadmap is **`docs/concept/07`**.
 
 ## The frame
 
@@ -60,7 +59,7 @@ Progressive disclosure — start at the top, follow the pointers down.
 | `examples/checkout-v1` | **the worked MVP example** (TS DSL tracer bullet) — specs, anchors, untracked `generated/` (regenerated in-pipeline); walkthrough in its README | when proving the loop end-to-end |
 | `explorations/` | **evidence only** (carrier exhibits, executable-example findings) — mapping evidence for design; **never promote spike code into product** | when judging design evidence; not a source tree to ship |
 | `plans/` | **the build plan** — what each implementation session does, and why | before writing code — highest primary-numbered plan's status header, plus active subplans it designates; if DRAFTED, also the latest ✅ EXECUTED/RUN plan |
-| `npm run check` | **the green gate** — `check:temporal` → typecheck → lint → format:check → build → `generate:example` → `typecheck:examples` → test → `check:example` (plan 17 Session 4 updates this row when self-hosting legs land) | before claiming green / after engine edits |
+| `npm run check` | **the green gate** — `check:temporal` → typecheck → lint → format:check → build → `generate:example` → `typecheck:examples` → test → `check:example` (update this row when self-hosting check legs land) | before claiming green / after engine edits |
 | `reviews/` | **archived session reviews** (implementation, founding-ideation, adversarial + prompts) — durable findings already folded into plans/DECISIONS; read for provenance | rarely |
 
 > Concept docs still carry implementation detail (TS shapes, DSL, graph JSON) for **unsettled and
@@ -79,8 +78,8 @@ behavior + the pack); **not** the whole checkout flow. The worked example lives 
 foundation**. `docs/concept/07` is the slice roadmap; **`plans/` holds the live, canonical per-session plan** —
 read it before writing code.
 
-**MVP slices 0–5 are complete** (plan 10 executed 2026-06-11). The table below is provenance, not
-the live backlog — live work is the highest primary-numbered plan under `plans/` (currently plan 17).
+**MVP slices 0–5 are complete** (plan 10). The table below is provenance, not the live backlog —
+live work is the highest primary-numbered plan under `plans/` (currently the self-hosting plan).
 
 | Slice | Delivers |
 |---|---|
