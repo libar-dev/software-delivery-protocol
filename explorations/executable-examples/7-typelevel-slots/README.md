@@ -30,13 +30,17 @@ never an authoring gate: checks police honesty, never workflow.
 
 ## The promotion caveat (the tension this exhibit names, not hides)
 
-The four reddening cases are exactly the states the shipped codegen answers with **warnings and
-withheld contracts** (`contracts/undeclared-slot` · `contracts/off-dimension-value` ·
-`contracts/unmatched-vocabulary-step` — gating stays `validateGraph`'s alone), because each is
-**legal transitional authoring**: a child authored before its parent declares the space, a slot
-rename mid-flight across files. As-you-type visibility of that drift is the DX win — but
-authored spec files typecheck in CI, so promoting these checks as hard types would convert the
-codegen's deliberate warnings into gates on states the protocol keeps authorable. A promotion
+The four reddening cases are exactly the states the shipped codegen answers loudly without ever
+gating (gating stays `validateGraph`'s alone), each with its own recorded posture: an
+undeclared slot or an off-dimension value **warns and drops that one slot** while the generated
+artifact still emits and compiles (`contracts/undeclared-slot` ·
+`contracts/off-dimension-value`); a child step that no longer resolves against the parent's
+space — the rename case — **warns and withholds that child's step contract**
+(`contracts/unmatched-vocabulary-step`). Every one is **legal transitional authoring**: a child
+authored before its parent declares the space, a slot rename mid-flight across files.
+As-you-type visibility of that drift is the DX win — but authored spec files typecheck in CI,
+so promoting these checks as hard types would convert the codegen's deliberate
+warn-and-continue postures into gates on states the protocol keeps authorable. A promotion
 therefore needs an **advisory form** (editor-only feedback, or an opt-in assertion an author
 adds when a spec claims `defined`+) rather than mandatory types on the authoring surface — which
 form, if any, belongs to the winner's surface-design session (plan 14 §4).

@@ -52,9 +52,12 @@ early, not ground out for its own sake.
 
 ## §2 — The exhibit bar (identical for every PR; plan 12 §8 is the ruling text)
 
-A PR is judgeable only when it carries all five deliverables (1–4 are plan 12 §8's ruling text
-restated; deliverable 5 and the three starred scorecard axes were added at the pre-competition
-review, before any carrier PR cut — the bar never moved under a competitor):
+A PR **competing for the ruling** is judgeable only when it carries all five deliverables (1–4
+are plan 12 §8's ruling text restated; deliverable 5 and the three starred scorecard axes were
+added at the pre-competition review, before any carrier PR cut — the bar never moved under a
+competitor). The timeboxed carriers' honest CLOSED.md (§3) is the recorded alternative, not a
+bar failure: it concedes the carrier and enters the ruling docket as evidence, judged on
+whether its standing reduction held — never against these deliverables:
 
 1. **The full in-place maturity arc** for `spec:orders.create-order` + `valid-cart` — one file
    per spec, enriched in place `idea → scoped → defined → ready` (staged snapshots, e.g.
@@ -139,6 +142,7 @@ small side PR off any worktree, anytime — it is carrier-neutral); and the **de
 (the DECISIONS registry's re-pointed trigger: durables are authored once, in the carrier that
 survives).
 
-**Exit criteria for this plan:** four PRs (or their honest CLOSED.md exits) landed against the
-bar · the ruling session run and recorded (plan 15) · the carrier ruled with its doc-repair bill
-enumerated · the surface-design session and the import-emitter slice scheduled.
+**Exit criteria for this plan:** four PRs landed — against the bar, or closed via the honest
+CLOSED.md exit (§2) · the ruling session run and recorded (plan 15) · the carrier ruled with
+its doc-repair bill enumerated · the surface-design session and the import-emitter slice
+scheduled.

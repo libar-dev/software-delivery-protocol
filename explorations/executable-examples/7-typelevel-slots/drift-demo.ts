@@ -4,15 +4,19 @@
  * (the same drift caught at the generated-contract seam): this spike catches it EARLIER — in the
  * editor, before any build runs — while the contracts remain the seam of record.
  *
- * Honest framing: every case here is a state the SHIPPED pipeline answers with a WARNING and a
- * withheld contract, never a gate — `contracts/undeclared-slot`, `contracts/off-dimension-value`,
- * `contracts/unmatched-vocabulary-step` are warnings by ratified posture (gating stays
- * `validateGraph`'s alone), because each state is legal transitional authoring: a child authored
- * ahead of its parent's vocabulary, a rename mid-flight across files. The spike surfaces the
- * same drift as-you-type — earlier and louder than the codegen — but a hard `tsc` error is
- * STRICTER than the ratified posture; the promotion caveat is in the README. What is
- * deliberately absent: the unbound-slot form (`{n}`), which compiles (see valid-cart.demo.ts) —
- * legal authoring below `defined`, the readiness floor's concern.
+ * Honest framing: every case here is legal transitional authoring (a child authored ahead of
+ * its parent's vocabulary, a rename mid-flight across files) that the SHIPPED pipeline answers
+ * loudly but never gates — gating stays `validateGraph`'s alone — and its posture is per-case:
+ * an undeclared slot or an off-dimension value warns and DROPS THAT ONE SLOT while the
+ * generated artifact still emits and compiles (`contracts/undeclared-slot` ·
+ * `contracts/off-dimension-value`); a child step that no longer resolves against the parent's
+ * example space — the rename case — warns and WITHHOLDS that child's step contract
+ * (`contracts/unmatched-vocabulary-step`). The spike surfaces the same drift as-you-type —
+ * earlier and louder than the codegen — but a hard `tsc` error is STRICTER than every one of
+ * those postures; the promotion caveat is in the README. What is deliberately absent: the
+ * unbound-slot form (`{n}`), which compiles here (see valid-cart.demo.ts) — legal authoring
+ * below `defined` that at build time earns no step contract (the concreteness law: refusal is
+ * the honest behavior, and the floor owns the readiness verdict).
  */
 
 import { bindPoint, declareExampleSpace } from "./typelevel-slots.js";
