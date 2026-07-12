@@ -30,6 +30,7 @@ export function parseFrontmatter(text: string): ParsedFrontmatter {
   const envelope: Record<string, unknown> = {};
   const relations: Record<string, string> = {};
   let inRelations = false;
+  let relationsSeen = false;
 
   for (const [offset, line] of lines.slice(1, close).entries()) {
     const lineNumber = offset + 2;
@@ -39,6 +40,13 @@ export function parseFrontmatter(text: string): ParsedFrontmatter {
     }
 
     if (line === "relations:") {
+      if (relationsSeen) {
+        throw new Error(
+          `outside the frontmatter subset at line ${String(lineNumber)}: duplicate "relations" key`,
+        );
+      }
+
+      relationsSeen = true;
       inRelations = true;
       continue;
     }
@@ -58,7 +66,18 @@ export function parseFrontmatter(text: string): ParsedFrontmatter {
         );
       }
 
-      relations[match[1] ?? ""] = match[2] ?? "";
+      const type = match[1] ?? "";
+
+      // A repeated type must refuse, never last-wins: silently dropping a declared relation
+      // would lose graph edges. One target per type is the spike subset; the YAML list form is
+      // a named note (README), not built — a product parser would emit an extract/* finding.
+      if (type in relations) {
+        throw new Error(
+          `outside the frontmatter subset at line ${String(lineNumber)}: duplicate relation type "${type}" — one target per type; the list form is a named note, not part of the spike`,
+        );
+      }
+
+      relations[type] = match[2] ?? "";
       continue;
     }
 
@@ -71,7 +90,15 @@ export function parseFrontmatter(text: string): ParsedFrontmatter {
       );
     }
 
-    envelope[match[1] ?? ""] = match[2] ?? "";
+    const field = match[1] ?? "";
+
+    if (field in envelope) {
+      throw new Error(
+        `outside the frontmatter subset at line ${String(lineNumber)}: duplicate envelope field "${field}"`,
+      );
+    }
+
+    envelope[field] = match[2] ?? "";
   }
 
   envelope.relations = Object.entries(relations).map(([type, target]) => ({

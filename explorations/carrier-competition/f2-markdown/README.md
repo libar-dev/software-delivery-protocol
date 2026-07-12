@@ -54,7 +54,11 @@ The micro-parser is deliberately a subset with no recovery grammar and no depend
 frontmatter scalars, one nested relations map, the demonstrated section conventions, and the two
 step fences. It proves the carrier seam; it is not the document parser implementation. In
 particular, relation-list syntax is named but not built, and `deriveGraph` is reached through a
-relative deep import because that seam is not public today.
+relative deep import because that seam is not public today. Every multi-declaration form the
+subset does not carry — a repeated relation type, envelope field, section heading, or a second
+`gwt`/`gwt-vocabulary` fence — **refuses loudly instead of last-wins**, so the spike can never
+silently lose authored content (`spike/subset-honesty.test.ts` pins each refusal; a product
+parser would emit findings instead of throwing).
 
 ## Envelope typing posture
 

@@ -95,6 +95,13 @@ function h2Ranges(lines: readonly string[]): ReadonlyMap<string, readonly string
 
   for (const [position, heading] of headings.entries()) {
     const next = headings[position + 1]?.index ?? lines.length;
+
+    // A repeated heading must refuse, never shadow: keyed ranges would silently keep only one
+    // occurrence's content. A product parser would emit a finding.
+    if (result.has(heading.name)) {
+      throw new Error(`duplicate section heading "## ${heading.name}"`);
+    }
+
     result.set(heading.name, lines.slice(heading.index + 1, next));
   }
 
@@ -256,9 +263,17 @@ export function inspectMarkdown(text: string, relativePath: string): MarkdownIns
     sections.decision = decision;
   }
 
-  const verificationHeading = [...ranges.keys()].find((heading) =>
+  const verificationHeadings = [...ranges.keys()].filter((heading) =>
     heading.startsWith("Verification"),
   );
+
+  if (verificationHeadings.length > 1) {
+    throw new Error(
+      `${relativePath}: multiple Verification sections — the spike reifies exactly one`,
+    );
+  }
+
+  const verificationHeading = verificationHeadings[0];
 
   if (verificationHeading !== undefined) {
     const verification = parseVerification(
@@ -285,6 +300,12 @@ export function inspectMarkdown(text: string, relativePath: string): MarkdownIns
 
   const fences = fencesIn(lines);
   const unboundUsedSteps: string[] = [];
+  // Repeated fences must refuse, never last-wins: each fence assignment below replaces the
+  // section wholesale, so a second fence would silently drop the first's scenario. One example
+  // per document is the spike subset (point-per-example, MD-17 — sibling documents carry
+  // sibling examples); a product parser would emit a finding.
+  let gwtSeen = false;
+  let vocabularySeen = false;
 
   for (const fence of fences) {
     if (fence.language !== "gwt" && fence.language !== "gwt-vocabulary") {
@@ -294,6 +315,14 @@ export function inspectMarkdown(text: string, relativePath: string): MarkdownIns
     const steps = parseSteps(fence.content);
 
     if (fence.language === "gwt-vocabulary") {
+      if (vocabularySeen) {
+        throw new Error(
+          `${relativePath}: multiple gwt-vocabulary fences — one example space per parent`,
+        );
+      }
+
+      vocabularySeen = true;
+
       if (steps === undefined) {
         throw new Error(`${relativePath}: gwt-vocabulary must contain Given/When/Then steps`);
       }
@@ -308,6 +337,14 @@ export function inspectMarkdown(text: string, relativePath: string): MarkdownIns
       };
       continue;
     }
+
+    if (gwtSeen) {
+      throw new Error(
+        `${relativePath}: multiple gwt fences — an example binds exactly one point (point-per-example, MD-17); sibling documents carry sibling examples`,
+      );
+    }
+
+    gwtSeen = true;
 
     if (steps === undefined) {
       const prose = fence.content.map((line) => line.trim()).filter(Boolean).join(" ");
