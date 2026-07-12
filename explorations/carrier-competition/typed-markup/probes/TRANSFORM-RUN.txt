@@ -1,0 +1,17 @@
+# TypeScript JSX transform run — captured 2026-07-12
+# Run from the repository root against the committed probe.
+#
+# This is syntax transformation only. transpileModule does not resolve the
+# hypothetical /markup import and this transcript claims no typecheck.
+
+$ TARGET_FILE="explorations/carrier-competition/typed-markup/probes/decision-prose.sdp.tsx" node --input-type=module -e 'import fs from "node:fs"; import ts from "typescript"; const file=process.env.TARGET_FILE; const result=ts.transpileModule(fs.readFileSync(file,"utf8"),{reportDiagnostics:true,fileName:file,compilerOptions:{jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}); const errors=(result.diagnostics??[]).filter(d=>d.category===ts.DiagnosticCategory.Error); console.log(`TypeScript ${ts.version}`); console.log(`syntax errors: ${errors.length}`); console.log(result.outputText.trimEnd()); if(errors.length>0) process.exit(1);'
+TypeScript 5.9.3
+syntax errors: 0
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+// Illustrative evidence only: the markup export does not exist. The faithful port below
+// is kept separate from the synthetic syntax stress samples that follow it.
+import { Consequences, Context, Decision, Intent, Rationale, Spec, } from "@libar-dev/software-delivery-protocol/markup";
+export default (_jsxs(Spec, { id: "spec:decisions.order-lifecycle", kind: "decision", altitude: "feature", readiness: "defined", refines: "spec:orders.create-order", title: "Order lifecycle keeps validation before creation", children: [_jsx(Intent, { outcome: "Decide when checkout-v1 may create an order.", value: "The authored example has one stable lifecycle rule for success and rejection paths." }), _jsx(Context, { children: _jsx("p", { children: "The valid-cart and invalid-cart paths need one stable lifecycle choice. Persistence before validation would allow partial orders and enlarge the tracer bullet." }) }), _jsxs(Decision, { decision: "Create orders only after cart validation confirms non-empty input and sufficient inventory.", children: [_jsxs(Rationale, { children: [_jsx("p", { children: "The valid-cart and invalid-cart examples need one consistent gate." }), _jsx("p", { children: "Rejecting before persistence keeps the tracer bullet small and internally consistent." })] }), _jsx(Consequences, { children: _jsx("p", { children: "Rejected carts never create partial orders." }) })] }), _jsxs("section", { "aria-label": "JSX prose syntax stress samples", children: [_jsxs("div", { "data-probe": "braces", children: ["A prose shape such as ", "{ id, lines, total }", " needs a JSX expression to preserve its braces."] }), _jsx("div", { "data-probe": "whitespace", children: "This source line looks like one paragraph. This visually separated source line is still part of the same JSX text child." }), _jsx("div", { "data-probe": "markdown-literals", children: "**Validation before creation** and [the parent behavior](spec:orders.create-order) remain literal Markdown spelling in JSX text." }), _jsxs("div", { "data-probe": "markup-equivalents", children: [_jsx("strong", { children: "Validation before creation" }), " and", " ", _jsx("a", { href: "spec:orders.create-order", children: "the parent behavior" }), " require markup elements instead."] })] })] }));
+$ exit_code=$?
+$ printf 'exit %s\n' "$exit_code"
+exit 0

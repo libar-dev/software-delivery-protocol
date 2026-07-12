@@ -1,7 +1,14 @@
 // Illustrative evidence only: the markup export does not exist. The faithful port below
 // is kept separate from the synthetic syntax stress samples that follow it.
 
-import { Context, Decision, Spec } from "@libar-dev/software-delivery-protocol/markup";
+import {
+  Consequences,
+  Context,
+  Decision,
+  Intent,
+  Rationale,
+  Spec,
+} from "@libar-dev/software-delivery-protocol/markup";
 
 export default (
   <Spec
@@ -12,7 +19,12 @@ export default (
     refines="spec:orders.create-order"
     title="Order lifecycle keeps validation before creation"
   >
-    {/* Faithful prose port: these sentences already exist in the carrier record. */}
+    <Intent
+      outcome="Decide when checkout-v1 may create an order."
+      value="The authored example has one stable lifecycle rule for success and rejection paths."
+    />
+
+    {/* The canonical Spec has no Context field; this paragraph comes from the F2 port. */}
     <Context>
       <p>
         The valid-cart and invalid-cart paths need one stable lifecycle choice. Persistence before
@@ -20,13 +32,14 @@ export default (
       </p>
     </Context>
 
-    <Decision>
-      <p>
-        Create orders only after cart validation confirms non-empty input and sufficient inventory.
-      </p>
-      <p>The valid-cart and invalid-cart examples need one consistent gate.</p>
-      <p>Rejecting before persistence keeps the tracer bullet small and internally consistent.</p>
-      <p>Rejected carts never create partial orders.</p>
+    <Decision decision="Create orders only after cart validation confirms non-empty input and sufficient inventory.">
+      <Rationale>
+        <p>The valid-cart and invalid-cart examples need one consistent gate.</p>
+        <p>Rejecting before persistence keeps the tracer bullet small and internally consistent.</p>
+      </Rationale>
+      <Consequences>
+        <p>Rejected carts never create partial orders.</p>
+      </Consequences>
     </Decision>
 
     {/* Synthetic syntax stress samples: they are not attributed to the decision record. */}

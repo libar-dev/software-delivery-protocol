@@ -10,10 +10,9 @@
 ## What this record is
 
 The Libar Software Delivery Protocol models software-delivery intent as typed `Spec`s, derives one
-graph from the authored model, and generates validation, documentation, and executable contracts
-from that graph. Its executable machinery is already carrier-independent. The remaining
-competition asks which text format should carry the authored `Spec` envelope, prose, and owned step
-notation.
+graph from the authored model, and generates every consumer artifact from that graph. Its
+executable machinery is already carrier-independent. The remaining competition asks which text
+format should carry the authored `Spec` envelope, prose, and owned step notation.
 
 The first two entrants built full evidence exhibits: [F2 Markdown](../f2-markdown/README.md) in
 [PR #4](https://github.com/libar-dev/software-delivery-protocol/pull/4) and
@@ -30,27 +29,18 @@ remains the sole canonical authoring surface during the competition.
 
 ## Settlement 5
 
-The source record already contains both halves of the typed-markup proposition:
-
-- The original [`.sdp.tsx` seed](../../executable-examples/3-typed-markup/create-order-valid-cart.sdp.tsx)
-  shows a typed component tree carrying the envelope, sections, prose, and example steps.
-- The [interactive review mock](../../executable-examples/3-typed-markup/render/valid-cart-review.html)
-  illustrates the intended downstream surface: envelope chips, a readiness banner, verifier
-  binding, Given/When/Then rendering, expected outcomes, coverage verdicts, and a draft-example
-  affordance. It labels itself `MOCK` and hard-codes representative values; it is not an executable
-  graph consumer.
-- The shipped [Design Review projection](../../../src/projections/design-review.ts) and its
-  [determinism tests](../../../test/design-review.test.ts) supply the mechanical half: the current
-  Markdown view consumes the reader and regenerates purely from the one graph.
-
-Together they make the boundary explicit without pretending the mock proves a live integration:
-the real projection already reads the graph, while the mock places interactivity on that downstream
-surface. A graph produced from any authoring carrier can feed the same projection layer. What TSX
-uniquely retains at authoring time is as-you-type typing of component props, while its prose and
-children structure pay the costs recorded in
-[FINDINGS settlement 5](../../executable-examples/FINDINGS.md): JSX is a poor prose medium, and
-children typing is too weak to make step text, ordering, and nesting fully typed. The component
-library survives as a projection-layer competency rather than an authoring-format requirement.
+The original [`.sdp.tsx` seed](../../executable-examples/3-typed-markup/create-order-valid-cart.sdp.tsx)
+shows a typed component tree carrying the envelope, sections, prose, and example steps; the
+[interactive review mock](../../executable-examples/3-typed-markup/render/valid-cart-review.html)
+labels itself `MOCK` and hard-codes representative values while illustrating the intended
+downstream surface; and the shipped [Design Review projection](../../../src/projections/design-review.ts)
+with its [determinism tests](../../../test/design-review.test.ts) supplies the mechanical half by
+regenerating the current Markdown view purely from the one graph. Together they make the boundary
+explicit without pretending the mock proves a live integration: any authoring carrier can feed the
+same projection layer. [FINDINGS settlement 5](../../executable-examples/FINDINGS.md) therefore
+records that TSX uniquely retains as-you-type component-prop typing, while JSX remains a poor prose
+medium and children typing is too weak to make step text, ordering, and nesting fully typed; the
+component library survives as a projection-layer competency, not an authoring-format requirement.
 
 ## The escape test
 
@@ -76,20 +66,26 @@ contains **11 nonblank code lines**:
 |     5 | Host-language scaffold: the import, default-export wrapper, component opener, self-close, and expression close. |
 
 The carrier-neutral baseline in the escape test states the same six facts as a five-line envelope
-plus one heading. Physical line counts can be gamed by minification, so the decisive observation is
-not “11 beats 6” as a score: it is that TSX adds an import, export expression, and component-tree
-syntax before an `idea`-rung author can state the same facts. This is the format's largest relative
-tax at the highest-volume authoring event. Clause (i) fails.
+plus one heading. The committed
+[F2 `idea` snapshot](../f2-markdown/arc/01-idea/create-order.sdp.md) states the identical six facts in
+**9 physical lines**, including frontmatter delimiters and the nested relation, versus this probe's 11. Physical line counts can be gamed by minification, so the decisive observation is not “11 beats
+6” as a score: it is that TSX adds an import, export expression, and component-tree syntax before an
+`idea`-rung author can state the same facts. The real comparison still points the same way: 11 TSX
+lines versus 9 F2 lines, with the escape test's six authoring statements as the idealized baseline.
+The real `Spec` ID at `idea` is a staged, noncanonical maturity snapshot matching the F2 arc; this
+exploration tree is not extracted, so it creates no duplicate authored instance. Clause (i) fails.
 
 ## Probe 2 — decision prose
 
 [`probes/decision-prose.sdp.tsx`](probes/decision-prose.sdp.tsx) ports the existing order-lifecycle
-material. Its Context sentences come from the already-landed
-[decision carrier port](../f2-markdown/specs/decisions.order-lifecycle.sdp.md); its decision,
-rationale, and consequence sentences remain exact to the canonical
-[TypeScript decision Spec](../../../examples/checkout-v1/specs/decisions/order-lifecycle.sdp.ts).
-The probe labels that faithful material separately from synthetic syntax stress samples, so no
-example sentence is passed off as authored system truth.
+material. Plan 15d named Context paragraphs in the canonical
+[TypeScript decision Spec](../../../examples/checkout-v1/specs/decisions/order-lifecycle.sdp.ts), but
+that source has no Context field; the probe therefore uses the one Context paragraph introduced by
+the already-landed [F2 carrier port](../f2-markdown/specs/decisions.order-lifecycle.sdp.md) and marks
+that substitution in source. The canonical `intent`, `decision`, `rationale`, and `consequences`
+fields all remain present and structurally distinct, with their strings exact to the TypeScript
+Spec. Synthetic syntax stress samples stay separately labeled, so no example sentence is passed off
+as authored system truth.
 
 The stress samples make three costs visible in source:
 
@@ -98,6 +94,11 @@ The stress samples make three costs visible in source:
 | Literal braces       | `{"{ id, lines, total }"}`                   | A natural brace group enters JSX expression syntax and needs JSX-specific escaping; the probe uses an explicit string expression.                       |
 | Paragraph separation | Explicit `<p>` elements in the faithful port | A blank source line inside one JSX text node is not an authored paragraph boundary; standard JSX transformation and HTML rendering join or collapse it. |
 | Emphasis and links   | `<strong>` and `<a>` elements                | Markdown spellings remain literal text unless another parser or component convention interprets them.                                                   |
+
+[`probes/TRANSFORM-RUN.txt`](probes/TRANSFORM-RUN.txt) commits the syntax-only TypeScript transform
+that backs those mechanical claims: zero syntax diagnostics, one joined whitespace child string,
+an explicit brace string expression, and literal Markdown text in the emitted JavaScript. It does
+not resolve the hypothetical import or claim a typecheck.
 
 This is a boundary claim, not a claim that a static extractor must lose source bytes. A future
 extractor using `ts-morph` could read raw JSX trivia and invent whitespace-preservation rules.
@@ -122,6 +123,12 @@ mechanically because the component library is hypothetical, but the fair score i
 (iii) **passes in principle**. Its reach remains narrow: it would not type arbitrary step text or
 strongly enforce useful child ordering and nesting, and interactive review still belongs at the
 carrier-independent projection layer.
+
+This score deliberately corrects Plan 15d's gloss that settlement 5 made clause (iii) “empty.” The
+underlying [FINDINGS settlement](../../executable-examples/FINDINGS.md) says the opposite more
+precisely: TSX uniquely buys envelope typing as-you-type rather than on-save. The evidence takes
+precedence over the plan's summary, so the departure is explicit rather than silently folded into
+the ruling.
 
 ## Concession ruling
 
@@ -156,7 +163,8 @@ Plan 16 should judge this record on one question: **did settlement 5 survive a c
 probe?** It did. This entrant is not to be compared against the five full-exhibit deliverables after
 conceding; `CLOSED.md` is Plan 14's recorded alternative deliverable. Read this ruling first, then
 the [minimum-ceremony probe](probes/01-idea.create-order.sdp.tsx) and the
-[decision-prose probe](probes/decision-prose.sdp.tsx).
+[decision-prose probe](probes/decision-prose.sdp.tsx), followed by the committed
+[transform transcript](probes/TRANSFORM-RUN.txt).
 
 The build-state ledger also remains for Plan 16: plans 14 and 15a–15d retain `DRAFTED` status
 headers even though the carrier evidence has landed or is represented by this branch. This
