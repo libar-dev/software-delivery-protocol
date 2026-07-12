@@ -26,17 +26,28 @@ Every error quotes the exact authored step string. `TSC-OUTPUT.txt` is the captu
 Equally important is what the surface **refuses to police**: an **unbound slot** (`{n}`)
 **compiles** (`partialPointStillAuthorable` in the demo). A partial point is legal authoring —
 the concreteness law holds it below `defined`, and that is the readiness floor's honesty check,
-never an authoring gate: checks police honesty, never workflow. The type surface rejects only
-steps that could never be honest (no such vocabulary step; a value no declared type accepts);
-readiness stays stated-and-checked, exactly as everywhere else in the protocol.
+never an authoring gate: checks police honesty, never workflow.
+
+## The promotion caveat (the tension this exhibit names, not hides)
+
+The four reddening cases are exactly the states the shipped codegen answers with **warnings and
+withheld contracts** (`contracts/undeclared-slot` · `contracts/off-dimension-value` ·
+`contracts/unmatched-vocabulary-step` — gating stays `validateGraph`'s alone), because each is
+**legal transitional authoring**: a child authored before its parent declares the space, a slot
+rename mid-flight across files. As-you-type visibility of that drift is the DX win — but
+authored spec files typecheck in CI, so promoting these checks as hard types would convert the
+codegen's deliberate warnings into gates on states the protocol keeps authorable. A promotion
+therefore needs an **advisory form** (editor-only feedback, or an opt-in assertion an author
+adds when a spec claims `defined`+) rather than mandatory types on the authoring surface — which
+form, if any, belongs to the winner's surface-design session (plan 14 §4).
 
 ## Why it matters for the ruling
 
 If the ruling lands the kind-partitioned dual carrier (the named candidate in plan 14 §4 —
 a document carrier for the prose-natured kinds, the TS DSL canonical for `contract`/`model`),
-engineers keep living in the TS DSL for the structure-heavy kinds — and this is the DX that
-surface can have for free. It is equally compatible with every other outcome: the TS DSL as
-typed substrate keeps the same win.
+engineers keep living in the TS DSL for the structure-heavy kinds — and this is DX that surface
+can gain with zero codegen, in whatever advisory form the promotion caveat above allows. It is
+equally compatible with every other outcome: the TS DSL as typed substrate keeps the same win.
 
 ## The law boundary
 

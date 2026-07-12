@@ -18,6 +18,12 @@
  * law is the readiness floor's honesty check, and checks police honesty, never workflow. A type
  * surface that hard-errored the unbound form would gate authoring the protocol permits.
  *
+ * And the reddening cases carry their own caveat: the shipped codegen answers every one of them
+ * with a WARNING and a withheld contract (legal transitional authoring — a child ahead of its
+ * parent, a rename mid-flight), so the hard `tsc` error here is stricter than the ratified
+ * posture. The README's "promotion caveat" section names the advisory-form question this leaves
+ * for the surface-design session.
+ *
  * The law boundary (why this is DX, never truth): the one-validation-path law (MD-14) is
  * untouched. Nothing here is evaluated into the graph — the graph's truth stays what the
  * extractor statically reifies, and the generated contracts stay the binding seam of record.

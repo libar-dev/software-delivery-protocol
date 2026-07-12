@@ -274,10 +274,15 @@ contender or excluded by ratified law — none earns an exhibit:
   frontmatter; the direction loses to the markdown carrier on every register row above. CUE is
   the only interesting member (schema+data unification would type the envelope natively), but
   it is a foreign toolchain with near-zero agent training distribution — the exact C1 disease.
-- **Colocated specs** (doctest-style, authored intent living inside implementation files):
-  inverts the anchor's binding-only law — the in-code anchor is identity only, never intent
-  (`04`), exactly so intent has one home the code merely points at; colocating collapses that
-  design — dead on arrival.
+- **Embedded specs** (doctest-style: spec content authored *inside* implementation source, in
+  docstrings or comments): the intent would have no Spec file to carry its identity and
+  extension marker (the `.sdp.ts` law, MD-15), extraction would re-parse prose out of code —
+  the gen-1 bold-pseudo-field disease, a second bespoke micro-parser — and the in-code binding
+  the anchor design keeps identity-only would silently become the intent's home. Note the
+  boundary of this dismissal: it is the *embedding* that dies, never the *placement* — MD-15's
+  own record chose the tool-branded extension precisely so a future colocated layout
+  (`.sdp.ts` files living beside the code they specify) keeps its marker; where spec files sit
+  stays free.
 - **Alternative document dialects** (AsciiDoc, org-mode, Djot, Typst): each loses markdown's
   single decisive property — the deepest agent training distribution there is — while adding
   ownership or rendering cost; the F2 argument transfers against them wholesale.
