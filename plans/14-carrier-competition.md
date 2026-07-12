@@ -13,6 +13,14 @@
 > kind-partitioned dual carrier named as a candidate ruling and the dismissed directions
 > docketed by name (§4).
 >
+> **Amended 2026-07-12, after the F2 exhibit PR (#4) was cut:** the four carrier execution
+> plans are filed as the fork **`15a`–`15d`** (one plan family, only one carrier survives the
+> ruling), so the ruling session is renumbered to **plan 16**. The carriers run
+> **sequentially**, one dedicated session each, merging one PR at a time; each next branch cuts
+> from current `main`. Carrier PRs touch only `explorations/`, so the machinery stays the PR #3
+> snapshot throughout — kept honest by a pre-cut check, not by construction (see the
+> operational note in §1).
+>
 > **Spec anchors:** plan 12 §8 (the competition's terms of record: the exhibit bar, the
 > TS-DSL-stays-canonical rule, settlements 3 and 5 downgraded to standing evidence) · plan 13
 > (the executable machinery every exhibit must run against) · FINDINGS §4–§5
@@ -35,6 +43,18 @@ git worktree add ../sdp-carrier-c2      -b explore/carrier-c2-grammar    main
 git worktree add ../sdp-carrier-gherkin -b explore/carrier-gherkin-fork  main
 git worktree add ../sdp-carrier-tsx     -b explore/carrier-typed-markup  main
 ```
+
+> *Operational note (2026-07-12):* implementation runs **sequentially**, one session per
+> carrier — F2 already ran on `feature/markdown-carrier` (PR #4, its plan's recorded
+> deviation). Carrier PRs merge **one at a time**, and each next branch is cut from current
+> `main` (`git switch main && git pull && git switch -c explore/carrier-c2-grammar`), so the
+> exhibits and plans of earlier carriers ride along in the tree. Because carrier PRs touch only
+> `explorations/`, the machinery every exhibit binds stays the PR #3 snapshot — a discipline,
+> not a construction: **nothing under `src/` merges until the plan-16 ruling**, and every
+> carrier session verifies it before writing anything
+> (`git log --oneline 251736137f6baa9748abeebe0fbbfa03e4dfa300..main -- src/` must print
+> nothing; otherwise stop and flag). The worktree commands above stand for anyone running
+> carriers in parallel. The per-carrier execution plans are `plans/15a`–`15d`.
 
 All work lives under **`explorations/carrier-competition/<carrier>/`** — `explorations/` is
 already exempt from every toolchain gate (tsconfig, eslint, prettier, vitest, the temporal
@@ -143,6 +163,6 @@ small side PR off any worktree, anytime — it is carrier-neutral); and the **de
 survives).
 
 **Exit criteria for this plan:** four PRs landed — against the bar, or closed via the honest
-CLOSED.md exit (§2) · the ruling session run and recorded (plan 15) · the carrier ruled with
+CLOSED.md exit (§2) · the ruling session run and recorded (plan 16) · the carrier ruled with
 its doc-repair bill enumerated · the surface-design session and the import-emitter slice
 scheduled.

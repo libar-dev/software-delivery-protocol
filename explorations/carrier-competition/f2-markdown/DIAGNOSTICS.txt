@@ -1,0 +1,7 @@
+# Mock `sdp validate` transcript for the proposed Markdown carrier: the one-line shape and pinned validator ids match today's CLI; Markdown-specific extraction messages are illustrative.
+$ sdp validate typo-exhibit
+specs/orders.create-order.valid-cart.sdp.md:4 — [error] extract/non-static-envelope — envelope field "kind" reified to "examle", which is not one of behavior · workflow · example · rule · constraint · model · decision · contract — the typed envelope cannot carry it
+specs/orders.create-order.valid-cart.sdp.md — [error] conformance/referential-integrity — Reference from "spec:orders.create-order.valid-cart" via "refines" points to missing target "spec:orders.create-ordr". Did you mean "spec:orders.create-order"?
+specs/orders.create-order.valid-cart.sdp.md:14 — [warning] extract/unrecognized-property — section heading "Behavour" is outside the authored section shape and is dropped. Did you mean "Behavior"?
+
+3 findings (2 errors, 1 warning); exit 1

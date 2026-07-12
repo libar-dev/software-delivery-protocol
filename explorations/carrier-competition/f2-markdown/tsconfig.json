@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "skipLibCheck": true,
+    "baseUrl": "../../..",
+    "paths": {
+      "@libar-dev/software-delivery-protocol": ["src/index.ts"],
+      "@libar-dev/software-delivery-protocol/runner": ["src/runner/index.ts"],
+      "@libar-dev/software-delivery-protocol/vitest": ["src/adapters/vitest.ts"]
+    }
+  },
+  "include": ["**/*.ts"]
+}

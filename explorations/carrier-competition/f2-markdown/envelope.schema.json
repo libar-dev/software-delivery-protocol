@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://libar.dev/software-delivery-protocol/envelope.schema.json",
+  "title": "Libar Software Delivery Protocol Markdown envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "kind", "altitude", "readiness", "relations"],
+  "properties": {
+    "id": { "$ref": "#/$defs/specId" },
+    "kind": {
+      "enum": [
+        "behavior",
+        "workflow",
+        "example",
+        "rule",
+        "constraint",
+        "model",
+        "decision",
+        "contract"
+      ]
+    },
+    "altitude": { "enum": ["epic", "feature", "story"] },
+    "readiness": { "enum": ["idea", "scoped", "defined", "ready"] },
+    "relations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "refines": { "$ref": "#/$defs/specId" },
+        "dependsOn": { "$ref": "#/$defs/specId" },
+        "constrainedBy": { "$ref": "#/$defs/specId" },
+        "decidedBy": { "$ref": "#/$defs/specId" },
+        "verifies": { "$ref": "#/$defs/specId" },
+        "supersedes": { "$ref": "#/$defs/specId" }
+      }
+    }
+  },
+  "$defs": {
+    "graphNodeId": {
+      "enum": [
+        "api:orders.post",
+        "impl:orders.create-order-use-case",
+        "impl:orders.order-total",
+        "oracle:orders.create-order",
+        "pack:checkout-v1",
+        "spec:decisions.order-lifecycle",
+        "spec:orders.create-order",
+        "spec:orders.create-order.api-contract",
+        "spec:orders.create-order.invalid-cart",
+        "spec:orders.create-order.valid-cart",
+        "spec:orders.order-inventory-rule",
+        "spec:orders.order-latency-constraint",
+        "spec:orders.order-management",
+        "spec:orders.order-model",
+        "spec:orders.order-placement-flow",
+        "spec:orders.order-total-rule",
+        "test:orders.create-order.valid-cart"
+      ]
+    },
+    "specId": {
+      "enum": [
+        "spec:decisions.order-lifecycle",
+        "spec:orders.create-order",
+        "spec:orders.create-order.api-contract",
+        "spec:orders.create-order.invalid-cart",
+        "spec:orders.create-order.valid-cart",
+        "spec:orders.order-inventory-rule",
+        "spec:orders.order-latency-constraint",
+        "spec:orders.order-management",
+        "spec:orders.order-model",
+        "spec:orders.order-placement-flow",
+        "spec:orders.order-total-rule"
+      ]
+    },
+    "relationType": {
+      "enum": [
+        "refines",
+        "dependsOn",
+        "constrainedBy",
+        "decidedBy",
+        "verifies",
+        "supersedes"
+      ]
+    }
+  }
+}

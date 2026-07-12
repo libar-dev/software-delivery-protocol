@@ -1,0 +1,12 @@
+
+ RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol/explorations/carrier-competition/f2-markdown
+
+ ✓ spike/subset-honesty.test.ts (7 tests) 3ms
+ ✓ spike/table-expansion.test.ts (3 tests) 5ms
+ ✓ spike/graph-shape.test.ts (9 tests) 18ms
+
+ Test Files  3 passed (3)
+      Tests  19 passed (19)
+   Start at  07:13:26
+   Duration  737ms (transform 206ms, setup 0ms, collect 1.18s, tests 26ms, environment 0ms, prepare 380ms)
+
