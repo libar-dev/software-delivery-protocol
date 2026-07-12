@@ -5,12 +5,23 @@ the repo, derive **one graph** from it, and generate every other artifact off th
 take on `@libar-dev/architect` — a year of design thinking front-loaded, **zero back-compat, zero old sins
 carried over**.
 
-This repo is the **concept made right before the engine exists**. The concept synthesis, the ratified ubiquitous
-language, and the JTBD stories together **are the spec** — the product's own thesis (*the spec is the prompt is the
-design*) applied to itself: there is no separate PRD.
+The concept synthesis, the ratified ubiquitous language, and the JTBD stories together **are the
+spec** — the product's own thesis (*the spec is the prompt is the design*) applied to itself: there
+is no separate PRD. The engine is **implemented under `src/`** (MVP slices 0–5 landed on `main`);
+concept docs explain design and still hold unsettled post-MVP detail. **Intended truth**
+(authored specs, ratified decisions, concept material) is authoritative for what the Protocol
+claims; **`src/` and tests** are authoritative evidence of current realization. A disagreement is
+**drift to resolve**, never permission to silently promote code behavior into intent.
 
-> **Status:** concept ratified and locked. Build state and "what now" live in **`plans/`** — read the
-> highest-numbered plan's status header; the slice roadmap is **`docs/concept/07`**.
+> **Status:** concept ratified · MVP slices 0–5 landed on `main` (plan 10, 2026-06-11) · post-MVP
+> executable machinery landed (plan 13) · authoring **carrier ruled** as `.sdp.md` (the carrier
+> ruling, MD-18; plan 16) — product Markdown parser and self-hosting are **next**, not done ·
+> **what now:** `plans/17-self-hosting-v1.md` (DRAFTED). Build state lives in **`plans/`** — read
+> the highest **primary-numbered** plan's status header, plus any **active subplans it (or its
+> parent family) explicitly designates as current**; ignore unnumbered files and letter-suffixed
+> plans only when no primary/active plan designates them. If that plan is DRAFTED, also read the
+> latest ✅ EXECUTED/RUN plan for settled ground. The historical slice roadmap is
+> **`docs/concept/07`**.
 
 ## The frame
 
@@ -43,14 +54,21 @@ Progressive disclosure — start at the top, follow the pointers down.
 |---|---|---|
 | `CONTEXT.md` (repo root) | **the vocabulary** — the ratified lean glossary (terms · relations · a worked dialogue · flagged ambiguities); sole source of truth for terminology; the model exposition lives in `00`–`07` | **first, always** |
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
-| `docs/concept/00`–`07` (+ README) | **the technical design and the model** — 9 principle-led docs: vision & MVP boundary, founding principles (P1–P10), core model (`02` — the primitive, descriptors, sections, relations), the one graph, authoring & binding, validation & honesty, consumers, roadmap | to know *how* it works |
+| `docs/concept/00`–`07` (+ README) | **the technical design and the model** — 9 principle-led docs: vision & MVP boundary, founding principles (P1–P10), core model (`02` — the primitive, descriptors, sections, relations), the one graph, authoring & binding, validation & honesty, consumers, roadmap | to know *how* it is designed |
 | `docs/concept/DECISIONS.md` | **the why-log** for building the Protocol itself (the ratified-name registry + the MD-series, the R-series, the legacy D1–D6 shorthand, measured evidence) — rationale + open tensions | when a choice looks arbitrary |
-| `plans/` | **the build plan** — what each implementation session does, and why | before writing code |
+| `src/` | **the engine** — `model` (Spec/descriptors/pack/anchors) · `extract` · `graph` · `validate` · `reader` (agent surface) · `projections` (Design Review) · `cli` (`sdp`) · `runner` / `codegen` / `notation` / `adapters` | when implementing or verifying **current engine** behavior |
+| `examples/checkout-v1` | **the worked MVP example** (TS DSL tracer bullet) — specs, anchors, untracked `generated/` (regenerated in-pipeline); walkthrough in its README | when proving the loop end-to-end |
+| `explorations/` | **evidence only** (carrier exhibits, executable-example findings) — mapping evidence for design; **never promote spike code into product** | when judging design evidence; not a source tree to ship |
+| `plans/` | **the build plan** — what each implementation session does, and why | before writing code — highest primary-numbered plan's status header, plus active subplans it designates; if DRAFTED, also the latest ✅ EXECUTED/RUN plan |
+| `npm run check` | **the green gate** — `check:temporal` → typecheck → lint → format:check → build → `generate:example` → `typecheck:examples` → test → `check:example` (plan 17 Session 4 updates this row when self-hosting legs land) | before claiming green / after engine edits |
 | `reviews/` | **archived session reviews** (implementation, founding-ideation, adversarial + prompts) — durable findings already folded into plans/DECISIONS; read for provenance | rarely |
 
-> The concept docs intentionally carry implementation detail (TS shapes, DSL, graph JSON): they double as the
-> implementation spec until the code can hold it. A clean concept/representation split is a recorded future
-> direction, not done yet.
+> Concept docs still carry implementation detail (TS shapes, DSL, graph JSON) for **unsettled and
+> post-MVP** design. **Intended truth** (ratified decisions, concept material, and — once
+> authored — specs) is authoritative for design claims; **`src/` and the test suite** are
+> authoritative evidence of current realization. A disagreement is **drift to resolve** — fix the
+> stale side deliberately; do not invent a third behavior, and do not silently promote code into
+> intent. A clean concept/representation split remains a recorded future direction.
 
 ## The build path
 
@@ -60,6 +78,9 @@ behavior + the pack); **not** the whole checkout flow. The worked example lives 
 (documented walkthrough in its README). It is built as thin **end-to-end slices on the Phase 0
 foundation**. `docs/concept/07` is the slice roadmap; **`plans/` holds the live, canonical per-session plan** —
 read it before writing code.
+
+**MVP slices 0–5 are complete** (plan 10 executed 2026-06-11). The table below is provenance, not
+the live backlog — live work is the highest primary-numbered plan under `plans/` (currently plan 17).
 
 | Slice | Delivers |
 |---|---|
@@ -110,9 +131,9 @@ Every doc honours both — never mistake one half for the other:
   `libar-dev/software-delivery-protocol`. Namespaces: `@libar-dev/` (OSS) vs `@libar-ai/` (commercial).
 - **Plan vs execution.** Distinguish **PLAN-ONLY** work (designing, deciding) from **execution** (editing code or
   docs). For a plan under `plans/`, don't touch its target files unless the session is execution.
-- **Lineage is evidence, not template.** Prior art `@libar-dev/architect`
-  (`/Users/darkomijic/dev-projects/architect`) taught us the problem in production; treat its *shape* as evidence
-  about the problem, never as the answer.
+- **Lineage is evidence, not template.** Prior art **`@libar-dev/architect`** (local clone when
+  present, e.g. a sibling `architect` checkout) taught us the problem in production; treat its
+  *shape* as evidence about the problem, never as the answer.
 - **Git hygiene** follows the global rules (no `git stash`; commit early on a WIP branch; commit/push only when
   asked).
 
