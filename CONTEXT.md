@@ -204,7 +204,7 @@ artifact** — approval provenance is git-native, never an authored primitive).
   external `doc:` ADR is a **named deferral** (MD-16, stated in `02` §6); revisit when `doc:`-target
   relations or pack-targeting arrive.
 - ~~Candidate vocabulary from the executable-spec exploration: *notation* · *carrier*~~ — **ratified
-  2026-07-12 at the carrier ruling session (plan 16)**; see **The authoring carrier** above. The rest
+  by the carrier ruling (MD-18)**; see **The authoring carrier** above. The rest
   of the exploration's candidates ratified with their referents at the plan-12 session — see **The
   executable half** above.
 
