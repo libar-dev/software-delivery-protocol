@@ -16,9 +16,10 @@
 > **Amended 2026-07-12, after the F2 exhibit PR (#4) was cut:** the four carrier execution
 > plans are filed as the fork **`15a`–`15d`** (one plan family, only one carrier survives the
 > ruling), so the ruling session is renumbered to **plan 16**. The carriers run
-> **sequentially**, one dedicated session each, every branch cut from the pinned PR #3 merge
-> commit `251736137f6baa9748abeebe0fbbfa03e4dfa300` — the same fixed reference PR #4 was cut
-> from (see the operational note in §1).
+> **sequentially**, one dedicated session each, merging one PR at a time; each next branch cuts
+> from current `main`. Carrier PRs touch only `explorations/`, so the machinery stays the PR #3
+> snapshot throughout — kept honest by a pre-cut check, not by construction (see the
+> operational note in §1).
 >
 > **Spec anchors:** plan 12 §8 (the competition's terms of record: the exhibit bar, the
 > TS-DSL-stays-canonical rule, settlements 3 and 5 downgraded to standing evidence) · plan 13
@@ -45,12 +46,15 @@ git worktree add ../sdp-carrier-tsx     -b explore/carrier-typed-markup  main
 
 > *Operational note (2026-07-12):* implementation runs **sequentially**, one session per
 > carrier — F2 already ran on `feature/markdown-carrier` (PR #4, its plan's recorded
-> deviation). Each remaining branch is cut from the pinned PR #3 merge commit
-> `251736137f6baa9748abeebe0fbbfa03e4dfa300` rather than the moving `main` tip
-> (`git switch -c explore/carrier-c2-grammar 2517361…` from the main checkout), so every
-> exhibit binds the identical reference PR #4 used and every PR's merge-base diff stays clean.
-> The worktree commands above stand for anyone running carriers in parallel, with the pin
-> substituted for `main`. The per-carrier execution plans are `plans/15a`–`15d`.
+> deviation). Carrier PRs merge **one at a time**, and each next branch is cut from current
+> `main` (`git switch main && git pull && git switch -c explore/carrier-c2-grammar`), so the
+> exhibits and plans of earlier carriers ride along in the tree. Because carrier PRs touch only
+> `explorations/`, the machinery every exhibit binds stays the PR #3 snapshot — a discipline,
+> not a construction: **nothing under `src/` merges until the plan-16 ruling**, and every
+> carrier session verifies it before writing anything
+> (`git log --oneline 251736137f6baa9748abeebe0fbbfa03e4dfa300..main -- src/` must print
+> nothing; otherwise stop and flag). The worktree commands above stand for anyone running
+> carriers in parallel. The per-carrier execution plans are `plans/15a`–`15d`.
 
 All work lives under **`explorations/carrier-competition/<carrier>/`** — `explorations/` is
 already exempt from every toolchain gate (tsconfig, eslint, prettier, vitest, the temporal

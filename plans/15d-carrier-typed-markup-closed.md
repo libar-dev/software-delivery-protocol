@@ -10,7 +10,7 @@
 > **Spec anchors:** plan 14 §1–§3 as amended · plan 12 §8 (settlement 5 downgraded to standing
 > evidence a competitor must overturn) · FINDINGS §3 settlement 5 + §4 (the pre-scored F1
 > column) · `explorations/executable-examples/3-typed-markup/` (the seed and the settlement-5
-> evidence — on the branch at the pin) · CONTEXT.md (ratified vocabulary).
+> evidence — in the branch's tree) · CONTEXT.md (ratified vocabulary).
 
 ## §0 — Context: what this session is, and what it is not
 
@@ -38,19 +38,22 @@ permanently answers "why not typed JSX documents?". A concession PR is still an 
 
 **Branch and reference:**
 
-- Cut from the **pinned commit `251736137f6baa9748abeebe0fbbfa03e4dfa300`** (the PR #3 merge —
-  the same fixed reference every carrier binds), from the main checkout:
+- Cut from **current `main`, after the preceding carrier PRs have merged** (the competition
+  merges one carrier PR at a time; each next branch cuts from the tip):
 
   ```sh
-  git switch -c explore/carrier-typed-markup 251736137f6baa9748abeebe0fbbfa03e4dfa300
+  git switch main && git pull && git switch -c explore/carrier-typed-markup
   ```
 
-- **This plan file and the sibling 15-family plans/exhibits are not in the branch's tree** —
-  read this plan via `git show main:plans/15d-carrier-typed-markup-closed.md`. What *is* on the
-  branch and is this session's working material:
+  Carrier PRs touch only `explorations/`, so `main` moving between sessions never moves the
+  machinery — verify the discipline held before writing anything:
+  `git log --oneline 251736137f6baa9748abeebe0fbbfa03e4dfa300..main -- src/` (from the PR #3
+  merge) must print nothing; if it prints anything, stop and flag it to the owner.
+- This session's working material, all in the branch's tree:
   `explorations/executable-examples/3-typed-markup/` (the seed TSX document and the
   settlement-5 HTML page) and FINDINGS §3/§4. The real TS-DSL specs the probes port from are
-  under `examples/checkout-v1/specs/`.
+  under `examples/checkout-v1/specs/`. The 15-family plans and the earlier carrier exhibits
+  are in the tree too (they merged with their PRs).
 - No build/setup step is needed unless the escape succeeds (the probes are static files;
   nothing executes and nothing typechecks — see the honesty note in §2.3).
 

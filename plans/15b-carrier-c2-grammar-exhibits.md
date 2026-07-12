@@ -33,24 +33,27 @@ never assertions.
 
 **Branch and reference (read this before touching anything):**
 
-- Cut the branch from the **pinned commit `251736137f6baa9748abeebe0fbbfa03e4dfa300`** (the
-  PR #3 merge — the exact reference PR #4 was also cut from), *not* from wherever `main` sits
-  when this session runs. From the main checkout:
+- Cut the branch from **current `main`, after PR #4 (the F2 exhibit) has merged** — the
+  competition merges one carrier PR at a time, and each next branch cuts from the tip:
 
   ```sh
-  git switch -c explore/carrier-c2-grammar 251736137f6baa9748abeebe0fbbfa03e4dfa300
+  git switch main && git pull && git switch -c explore/carrier-c2-grammar
   ```
 
-  The pin keeps every exhibit bound to the identical machinery snapshot and every carrier PR's
-  merge-base diff clean, regardless of what has merged since.
-- **This plan file, the F2 exhibit (`explorations/carrier-competition/f2-markdown/`), and the
-  other 15-family plans are NOT in the branch's tree** — they postdate the pin. Read this plan
-  from the main checkout (`git show main:plans/15b-carrier-c2-grammar-exhibits.md`). Never copy
-  F2's exhibit files onto this branch; this plan restates every fact and recipe the session
-  needs.
+  Carrier PRs touch only `explorations/`, so `main` moving between carrier sessions never moves
+  the machinery — but that guarantee is discipline, not construction. **Before writing anything,
+  verify nothing under `src/` has merged since the PR #3 merge**:
+  `git log --oneline 251736137f6baa9748abeebe0fbbfa03e4dfa300..main -- src/` must print nothing.
+  If it prints anything, stop and flag it to the owner — every exhibit must bind the identical
+  machinery snapshot, or the ruling session ends up comparing machinery versions instead of
+  carriers.
+- **The F2 exhibit (`explorations/carrier-competition/f2-markdown/`) and the 15-family plans
+  are in the branch's tree** (they merged with PR #4). Read F2's exhibit for structural parity
+  when useful, but never copy its files — C2's evidence is authored fresh, and this plan
+  restates every fact and recipe the session needs either way.
 - **Setup before any executable exhibit:** `npm install && npm run build &&
   npm run generate:example` — `examples/checkout-v1/generated/` (the real contracts the exhibit
-  binds) is **not committed** at the pin; it is built output.
+  binds) is **not committed**; it is built output.
 
 **Owner choices recorded at planning (2026-07-12), mirrored from 15a for evidence parity:**
 1. The graph-shape proof of deliverable 1 is a **spike parser** inside the exploration
@@ -114,10 +117,11 @@ end-to-end; captured transcripts committed verbatim as the evidence they are.
 - **Prose-in-graph** (the MD-10 extension) is shared with F2 and already named there; C2 adds
   its dropped-prose count as corroborating data, never a second proposal.
 
-## §2 — Verified facts the implementing session must know (each checked against source at the pin)
+## §2 — Verified facts the implementing session must know (each checked against source)
 
-These were verified during 15a/15b planning against commit `2517361…` (nothing under `src/` has
-moved between the two plans); several correct plausible-but-wrong assumptions:
+These were verified during 15a/15b planning against the PR #3 merge (`2517361…`) — the
+machinery snapshot the branch-cut check in §0 guarantees is still current; several correct
+plausible-but-wrong assumptions:
 
 1. **`deriveGraph` is NOT exported from the package barrel.** `src/extract/index.ts` re-exports
    only `PROTOCOL_MODULE_SPECIFIER`, `extractFindingIds`, `serializeGraph`,
@@ -165,7 +169,7 @@ moved between the two plans); several correct plausible-but-wrong assumptions:
    `FileReification { specs, packs, findings }`, where `data` is the Spec-shaped record —
    envelope fields + section names from `SPEC_SECTION_NAMES`, `relations` as
    `[{type, target, claim: "declared"}]`.
-10. **`examples/checkout-v1/generated/` is not committed at the pin** — run
+10. **`examples/checkout-v1/generated/` is not committed** (it is built output) — run
     `npm run generate:example` (after `npm run build`) before the executable exhibit or the
     contract byte-diff can run.
 
@@ -577,7 +581,7 @@ the host, **and floor-checks every stated readiness in the family** (the F2-revi
 - `npx tsc -p explorations/carrier-competition/c2-grammar` — clean.
 - The red demo reds with the step naming itself in the spec's language; `RED-RUN.txt`
   committed.
-- `npm run check` at the repo root — green and byte-identical to the pin's behavior (the PR
+- `npm run check` at the repo root — green and byte-identical to `main`'s behavior (the PR
   adds nothing to any toolchain scope).
 - The five-deliverable checklist maps to files: (1) `arc/` + `specs/` + `executable/` +
   `spike/emitted/` + transcripts · (2) the three ports, each node-diffed · (3) `table-sugar/` +

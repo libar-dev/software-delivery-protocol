@@ -1,5 +1,14 @@
 # Plan — author the three remaining carrier-competition execution plans (15b · 15c · 15d)
 
+> **Amended 2026-07-12, same session, after the plans landed:** owner revised decision 3 —
+> carrier PRs merge **one at a time** and each next branch cuts from **current `main`**, not
+> from the pinned commit (carrier PRs touch only `explorations/`, so the machinery stays the
+> PR #3 snapshot; each session verifies `git log 2517361..main -- src/` is empty before
+> writing, and nothing under `src/` merges until the plan-16 ruling). The "consequence"
+> paragraph below is superseded accordingly: the plans and earlier exhibits *are* in each
+> branch's tree; the plans stay self-contained anyway. Plans 14 and 15b–15d were updated in
+> place.
+
 ## Context
 
 Plan 14 opened the carrier competition: four exploration PRs against one exhibit bar, judged at a

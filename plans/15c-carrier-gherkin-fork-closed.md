@@ -10,7 +10,7 @@
 > **Spec anchors:** plan 14 §1–§3 as amended · plan 12 §8 (the competition's terms) ·
 > FINDINGS §2, "The fork question" (the standing source-level reduction this session tests) ·
 > `explorations/executable-examples/6-import/` (the realistic `.feature` material and the
-> honest import mapping — on the branch at the pin) · CONTEXT.md (ratified vocabulary).
+> honest import mapping — in the branch's tree) · CONTEXT.md (ratified vocabulary).
 
 ## §0 — Context: what this session is, and what it is not
 
@@ -43,19 +43,23 @@ PR; that is the house method (arguments become committed records, even in defeat
 
 **Branch and reference:**
 
-- Cut from the **pinned commit `251736137f6baa9748abeebe0fbbfa03e4dfa300`** (the PR #3 merge —
-  the same fixed reference every carrier binds), from the main checkout:
+- Cut from **current `main`, after the preceding carrier PRs have merged** (the competition
+  merges one carrier PR at a time; each next branch cuts from the tip):
 
   ```sh
-  git switch -c explore/carrier-gherkin-fork 251736137f6baa9748abeebe0fbbfa03e4dfa300
+  git switch main && git pull && git switch -c explore/carrier-gherkin-fork
   ```
 
-- **This plan file and the sibling 15-family plans/exhibits are not in the branch's tree** —
-  read this plan via `git show main:plans/15c-carrier-gherkin-fork-closed.md`. What *is* on the
-  branch and is this session's working material: `explorations/executable-examples/FINDINGS.md`
-  ("The fork question") and `explorations/executable-examples/6-import/` (the deliberately
-  messy vanilla `.feature` input — tags, Background, Rule blocks, a Scenario Outline with an
-  Examples table — beside the seven honest imported documents and the import report).
+  Carrier PRs touch only `explorations/`, so `main` moving between sessions never moves the
+  machinery — verify the discipline held before writing anything:
+  `git log --oneline 251736137f6baa9748abeebe0fbbfa03e4dfa300..main -- src/` (from the PR #3
+  merge) must print nothing; if it prints anything, stop and flag it to the owner.
+- This session's working material, all in the branch's tree:
+  `explorations/executable-examples/FINDINGS.md` ("The fork question") and
+  `explorations/executable-examples/6-import/` (the deliberately messy vanilla `.feature`
+  input — tags, Background, Rule blocks, a Scenario Outline with an Examples table — beside
+  the seven honest imported documents and the import report). The 15-family plans and the
+  earlier carrier exhibits are in the tree too (they merged with their PRs).
 - No build/setup step is needed unless the escape succeeds (the probes are static files and
   argument; nothing executes).
 
