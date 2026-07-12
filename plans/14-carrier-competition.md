@@ -13,6 +13,13 @@
 > kind-partitioned dual carrier named as a candidate ruling and the dismissed directions
 > docketed by name (§4).
 >
+> **Amended 2026-07-12, after the F2 exhibit PR (#4) was cut:** the four carrier execution
+> plans are filed as the fork **`15a`–`15d`** (one plan family, only one carrier survives the
+> ruling), so the ruling session is renumbered to **plan 16**. The carriers run
+> **sequentially**, one dedicated session each, every branch cut from the pinned PR #3 merge
+> commit `251736137f6baa9748abeebe0fbbfa03e4dfa300` — the same fixed reference PR #4 was cut
+> from (see the operational note in §1).
+>
 > **Spec anchors:** plan 12 §8 (the competition's terms of record: the exhibit bar, the
 > TS-DSL-stays-canonical rule, settlements 3 and 5 downgraded to standing evidence) · plan 13
 > (the executable machinery every exhibit must run against) · FINDINGS §4–§5
@@ -35,6 +42,15 @@ git worktree add ../sdp-carrier-c2      -b explore/carrier-c2-grammar    main
 git worktree add ../sdp-carrier-gherkin -b explore/carrier-gherkin-fork  main
 git worktree add ../sdp-carrier-tsx     -b explore/carrier-typed-markup  main
 ```
+
+> *Operational note (2026-07-12):* implementation runs **sequentially**, one session per
+> carrier — F2 already ran on `feature/markdown-carrier` (PR #4, its plan's recorded
+> deviation). Each remaining branch is cut from the pinned PR #3 merge commit
+> `251736137f6baa9748abeebe0fbbfa03e4dfa300` rather than the moving `main` tip
+> (`git switch -c explore/carrier-c2-grammar 2517361…` from the main checkout), so every
+> exhibit binds the identical reference PR #4 used and every PR's merge-base diff stays clean.
+> The worktree commands above stand for anyone running carriers in parallel, with the pin
+> substituted for `main`. The per-carrier execution plans are `plans/15a`–`15d`.
 
 All work lives under **`explorations/carrier-competition/<carrier>/`** — `explorations/` is
 already exempt from every toolchain gate (tsconfig, eslint, prettier, vitest, the temporal
@@ -143,6 +159,6 @@ small side PR off any worktree, anytime — it is carrier-neutral); and the **de
 survives).
 
 **Exit criteria for this plan:** four PRs landed — against the bar, or closed via the honest
-CLOSED.md exit (§2) · the ruling session run and recorded (plan 15) · the carrier ruled with
+CLOSED.md exit (§2) · the ruling session run and recorded (plan 16) · the carrier ruled with
 its doc-repair bill enumerated · the surface-design session and the import-emitter slice
 scheduled.

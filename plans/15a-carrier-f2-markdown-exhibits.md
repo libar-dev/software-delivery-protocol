@@ -1,9 +1,8 @@
 # Plan — F2 markdown carrier: the exhibit PR (plan 14's first competitor)
 
 > **Status: 🔲 DRAFTED 2026-07-12 — execution plan for the F2 carrier exploration PR.**
-> Suggested filing name when adopted: `plans/15-carrier-f2-markdown-exhibits.md` (plan 14's exit
-> criteria reserve "plan 15" for the ruling-session record — renumber the ruling to 16, or file
-> this under a 14-suffixed name; owner's call, one rename).
+> Filed as **plan 15a** (owner ruling 2026-07-12): the four carrier plans share the number as a
+> fork — `15a`–`15d`, only one survives the ruling — and the ruling session is **plan 16**.
 >
 > **Spec anchors:** plan 14 §1–§3 (the operational competition plan — the exhibit bar of record,
 > the F2 posture, the scope fence) · plan 12 §8 (the ruling text the bar restates; MD-17
