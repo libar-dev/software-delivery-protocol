@@ -27,3 +27,15 @@ and connections of the authored model around them. Its other genuine wedge is in
 host language: a parser can consume `.sdp` without TypeScript, Markdown, or a test-runner grammar.
 The line-oriented surface makes that identity especially visible in review. The score must carry
 the other half of the claim with equal force: we own that language and its ecosystem forever.
+
+## Competition parity note
+
+The C2 review hardened its spike against malformed separators, short rows, empty or invalid scalar
+bindings, invalid or duplicate point ids, and duplicate headers. The already-landed F2 exhibit does
+not yet pin or refuse every equivalent malformed-table case. Plan 16 must treat that as an exhibit
+implementation asymmetry, not as evidence that one carrier inherently enables safer expansion.
+
+The relation subsets differ too: C2 preserves repeated relation types when their targets differ and
+refuses an exact duplicate `(type, target)` pair; F2's micro-parser refuses a repeated relation type
+entirely. Both are explicit subset choices, not a ruling on the product grammar. A like-for-like
+parser-hardening pass should precede any score derived from refusal coverage.

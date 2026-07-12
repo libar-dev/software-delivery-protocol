@@ -5,6 +5,11 @@ the parent readiness note, the child happy-path note, the decision context, and 
 note. `graph-shape.test.ts` pins that count. The loss is therefore measured evidence, never silent
 behavior.
 
+The `cases` block is different: it is structured pre-graph expansion input, not prose. Ordinary
+reification omits it from `Spec` section data but reports one named `droppedStructures` entry;
+`table-expansion.test.ts` pins that side channel. The expander consumes the same parsed block and
+pins its generated siblings byte-for-byte.
+
 The illustrative grammar uses one small delimitation law: keyword-led, indented lines are
 structure; unindented lines after the title are prose. That keeps ordinary paragraphs visually
 light, but the simplicity moves complexity into ownership:

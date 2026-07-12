@@ -97,8 +97,11 @@ test("the live arc pair is byte-identical to the final maturity snapshots", () =
 });
 
 test("free prose dropped at the spike seam is counted rather than silently forgotten", () => {
-  const dropped = livePaths.flatMap((path) => inspectSdp(read(path), path).droppedProse);
+  const inspections = livePaths.map((path) => inspectSdp(read(path), path));
+  const dropped = inspections.flatMap((inspection) => inspection.droppedProse);
   expect(dropped).toHaveLength(4);
+  expect(inspections.flatMap((inspection) => inspection.droppedStructures)).toEqual([]);
+  expect(inspections.flatMap((inspection) => inspection.unboundUsedSteps)).toEqual([]);
 });
 
 test("the three kind ports are field-exact against the real graph", () => {

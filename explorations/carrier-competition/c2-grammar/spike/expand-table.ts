@@ -35,6 +35,9 @@ export function expandTable(text: string, path = "table.sdp"): readonly Expanded
     .slice(0, separator)
     .filter((line) => line.trim().length > 0)
     .map((line) => line.slice(2));
+  if (templates.length === 0) {
+    throw new Error("cases requires at least one template step");
+  }
   const table = lines.slice(separator + 1).filter((line) => line.trim().length > 0);
   const headers = cells(table[0] ?? "");
   const separatorCells = cells(table[1] ?? "");
@@ -91,11 +94,19 @@ export function expandTable(text: string, path = "table.sdp"): readonly Expanded
         `{${name}: ${bindings.get(name) ?? ""}}`,
       ),
     );
+    for (const step of steps) {
+      if (parseSlots(step).some((slot) => slot.form !== "bound")) {
+        throw new Error(
+          `cases point ${JSON.stringify(point)} must bind every slot to a valid scalar`,
+        );
+      }
+    }
     const childId = `${parsed.id.slice("spec:".length)}.${point}`;
+    const hostName = parsed.id.slice("spec:".length).split(".").at(-1) ?? "host";
     return {
       point,
       filename: `${childId}.sdp`,
-      content: `# GENERATED from ${path}; never hand-edit.\nspec ${childId}\n  example · story · defined\n  refines ${parsed.id.slice("spec:".length)}\n\n${parsed.title}: ${point}\n\n  intent\n    outcome: Show the ${point} point in the order-total example space.\n    value: The cases block expands to one bound point per example.\n\n${steps.join("\n")}\n`,
+      content: `# GENERATED from ${path}; never hand-edit.\nspec ${childId}\n  example · story · defined\n  refines ${parsed.id.slice("spec:".length)}\n\n${parsed.title}: ${point}\n\n  intent\n    outcome: Show the ${point} point in the ${hostName} example space.\n    value: The cases block expands to one bound point per example.\n\n${steps.join("\n")}\n`,
     };
   });
 }

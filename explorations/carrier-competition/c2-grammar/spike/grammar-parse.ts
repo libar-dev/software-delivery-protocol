@@ -4,11 +4,13 @@ import {
   SPEC_READINESS,
   SPEC_RELATION_TYPES,
   hasUnboundSlot,
+  parseId,
   parseSlots,
 } from "@libar-dev/software-delivery-protocol";
 
 const phases = ["given", "when", "then"] as const;
 type Phase = (typeof phases)[number];
+const verificationModes = new Set(["manual", "reviewed", "contract", "executable"]);
 
 export interface ParsedRelation {
   readonly type: string;
@@ -65,6 +67,7 @@ function parseSteps(
 ): Record<Phase, string[]> {
   const result: Record<Phase, string[]> = { given: [], when: [], then: [] };
   let current: Phase | undefined;
+  let currentPhaseIndex = -1;
 
   for (const [offset, raw] of lines.entries()) {
     if (isBlankOrComment(raw)) {
@@ -75,7 +78,17 @@ function parseSteps(
       raw,
     );
     if (primary !== null) {
-      current = primary[1]?.toLowerCase() as Phase;
+      const next = primary[1]?.toLowerCase() as Phase;
+      const nextPhaseIndex = phases.indexOf(next);
+      if (nextPhaseIndex < currentPhaseIndex) {
+        outside(
+          path,
+          baseLine + offset,
+          `${primary[1] ?? "step"} may not appear after ${phases[currentPhaseIndex] ?? "a later phase"}`,
+        );
+      }
+      current = next;
+      currentPhaseIndex = nextPhaseIndex;
       result[current].push(primary[2] ?? "");
       continue;
     }
@@ -137,14 +150,30 @@ export function parseGrammar(text: string, path: string): ParsedSdp {
   index += 1;
 
   const relations: ParsedRelation[] = [];
+  const relationKeys = new Set<string>();
   while (index < lines.length) {
     const match = /^ {2}([A-Za-z]+) ([a-z0-9][a-z0-9.:-]*)$/u.exec(lines[index] ?? "");
     if (match === null) break;
     const type = match[1] ?? "";
     if (!relationTypes.has(type)) outside(path, index + 1, `unknown relation ${JSON.stringify(type)}`);
     const rawTarget = match[2] ?? "";
-    relations.push({ type, target: rawTarget.includes(":") ? rawTarget : `spec:${rawTarget}` });
+    const target = rawTarget.includes(":") ? rawTarget : `spec:${rawTarget}`;
+    try {
+      parseId(target);
+    } catch {
+      outside(path, index + 1, `invalid relation target ${JSON.stringify(target)}`);
+    }
+    const relationKey = `${type}\u0000${target}`;
+    if (relationKeys.has(relationKey)) {
+      outside(path, index + 1, `duplicate ${type} relation to ${JSON.stringify(target)}`);
+    }
+    relationKeys.add(relationKey);
+    relations.push({ type, target });
     index += 1;
+  }
+
+  if (/^ {2}[a-z]+ · [a-z]+(?: · [a-z]+)?$/u.test(lines[index] ?? "")) {
+    outside(path, index + 1, "the descriptor line may be declared only once");
   }
 
   while (index < lines.length && isBlankOrComment(lines[index] ?? "")) index += 1;
@@ -160,7 +189,7 @@ export function parseGrammar(text: string, path: string): ParsedSdp {
   const unboundUsedSteps: string[] = [];
   let cases: readonly string[] | undefined;
 
-  const claim = (name: string, line: number): void => {
+  const markSeen = (name: string, line: number): void => {
     if (seen.has(name)) outside(path, line, `duplicate ${name} block`);
     seen.add(name);
   };
@@ -170,6 +199,10 @@ export function parseGrammar(text: string, path: string): ParsedSdp {
     if (isBlankOrComment(raw)) {
       index += 1;
       continue;
+    }
+
+    if (/^spec\b/u.test(raw)) {
+      outside(path, index + 1, "one spec per file; a second spec declaration is not prose");
     }
 
     if (!raw.startsWith(" ")) {
@@ -185,7 +218,7 @@ export function parseGrammar(text: string, path: string): ParsedSdp {
     }
 
     if (raw === "  intent") {
-      claim("intent", index + 1);
+      markSeen("intent", index + 1);
       const block = childLines(lines, index + 1, path);
       const intent: Record<string, unknown> = {};
       for (const [offset, line] of block.lines.entries()) {
@@ -212,7 +245,7 @@ export function parseGrammar(text: string, path: string): ParsedSdp {
     }
 
     if (raw === "  model") {
-      claim("model", index + 1);
+      markSeen("model", index + 1);
       const block = childLines(lines, index + 1, path);
       const terms: Record<string, string> = {};
       for (const [offset, line] of block.lines.entries()) {
@@ -229,7 +262,7 @@ export function parseGrammar(text: string, path: string): ParsedSdp {
     }
 
     if (raw === "  decision") {
-      claim("decision", index + 1);
+      markSeen("decision", index + 1);
       const block = childLines(lines, index + 1, path);
       const decision: Record<string, unknown> = {};
       let listKey: "rationale" | "consequences" | undefined;
@@ -263,7 +296,11 @@ export function parseGrammar(text: string, path: string): ParsedSdp {
 
     const verification = /^ {2}verification ([a-z]+)$/u.exec(raw);
     if (verification !== null) {
-      claim("verification", index + 1);
+      markSeen("verification", index + 1);
+      const mode = verification[1] ?? "";
+      if (!verificationModes.has(mode)) {
+        outside(path, index + 1, `unknown verification mode ${JSON.stringify(mode)}`);
+      }
       const block = childLines(lines, index + 1, path);
       const criteria = block.lines.flatMap((line, offset) => {
         if (isBlankOrComment(line)) return [];
@@ -271,13 +308,13 @@ export function parseGrammar(text: string, path: string): ParsedSdp {
         if (item === null) outside(path, index + offset + 2, "verification criteria use - item");
         return [item[1] ?? ""];
       });
-      sections.verification = { mode: verification[1] ?? "", criteria };
+      sections.verification = { mode, criteria };
       index = block.end;
       continue;
     }
 
     if (raw === "  example space") {
-      claim("example space", index + 1);
+      markSeen("example space", index + 1);
       const block = childLines(lines, index + 1, path);
       const steps = parseSteps(block.lines, path, index + 2, 4);
       for (const step of phases.flatMap((phase) => steps[phase])) {
@@ -287,13 +324,16 @@ export function parseGrammar(text: string, path: string): ParsedSdp {
           }
         }
       }
-      sections.behavior = { exampleSpace: steps };
+      sections.behavior = {
+        ...(sections.behavior as object | undefined),
+        exampleSpace: steps,
+      };
       index = block.end;
       continue;
     }
 
     if (raw === "  rule") {
-      claim("rule", index + 1);
+      markSeen("rule", index + 1);
       const block = childLines(lines, index + 1, path);
       const rules = block.lines.map((line) => line.trim()).filter(Boolean);
       sections.behavior = { ...(sections.behavior as object | undefined), rules };
@@ -302,13 +342,24 @@ export function parseGrammar(text: string, path: string): ParsedSdp {
     }
 
     if (raw === "  cases") {
-      claim("cases", index + 1);
-      cases = lines.slice(index + 1);
+      markSeen("cases", index + 1);
+      const caseLines = lines.slice(index + 1);
+      for (const [offset, line] of caseLines.entries()) {
+        if (isBlankOrComment(line)) continue;
+        if (!/^ {4}\S/u.test(line) && !/^ {6}\S/u.test(line)) {
+          outside(
+            path,
+            index + offset + 2,
+            "cases must be the final structural block in its file",
+          );
+        }
+      }
+      cases = caseLines;
       break;
     }
 
     if (/^ {2}(Given|When|Then)\s+/u.test(raw)) {
-      claim("example", index + 1);
+      markSeen("example", index + 1);
       const stepLines: string[] = [];
       while (index < lines.length) {
         const line = lines[index] ?? "";

@@ -18,3 +18,8 @@ readiness floor, and refusals for malformed separators, short rows, and collidin
 The generated children state `defined`, not `ready`: the table provides structured, fully bound
 evidence but authors no test anchor. Readiness stays an author statement over the cumulative floor,
 never a reward for expansion.
+
+The expander's generated intent sentence derives the example-space label from the host id's final
+segment (`orders.create-order.order-total` → `order-total`); it carries no order-total-specific
+constant. The illustrative subset still fixes generated children at `example · story · defined`, as
+this exhibit's table shape requires.

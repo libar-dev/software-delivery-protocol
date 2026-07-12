@@ -19,6 +19,7 @@ directory:
 npm install && npm run build && npm run generate:example
 npx tsc -p explorations/carrier-competition/c2-grammar
 npx vitest --run -c explorations/carrier-competition/c2-grammar/vitest.config.ts
+npx vitest --run -c explorations/carrier-competition/c2-grammar/vitest.config.ts spike
 ```
 
 Run the deliberately failing drift proof separately:
@@ -63,6 +64,15 @@ of guessing or replacing earlier content. `subset-honesty.test.ts` pins that ref
 table tests pin malformed-separator, short-row, and point-collision refusal. A product parser would
 emit source-located findings and preserve independently valid declarations.
 
+`#` at the start of a trimmed line is reserved for comments throughout this illustrative subset;
+prose that must begin with a literal hash would need an escaping rule in a product grammar.
+
+The refusal suite also pins cross-block behavior preservation; exact duplicate relations; one Spec
+per file; monotonic Given/When/Then phase order; duplicate example-space, verification, and
+descriptor declarations; the closed verification-mode vocabulary; empty/invalid scalar bindings;
+duplicate headers; invalid point ids; and empty template blocks. A parsed `cases` block omitted by
+ordinary reification is named through `droppedStructures`, while the expander consumes and pins it.
+
 `deriveGraph` is reached through a relative deep import because the reified-input seam is not
 public today. Running a standalone `.mjs` file against `dist` was therefore considered and rejected;
 the local Vitest configuration supplies both that seam and the package aliases the executable proof
@@ -82,6 +92,8 @@ needs.
 - Three table rows become three one-point example nodes, and every stated readiness clears its
   floor.
 - Free prose omitted by the spike is counted, never silently forgotten.
+- Live examples carry no unbound used steps; `graph-shape.test.ts` consumes and pins that honesty
+  side channel.
 
 ## Named for the ruling, deliberately not ruled here
 
@@ -96,3 +108,11 @@ needs.
 
 Everything stays below this exploration directory. No product source, canonical example, concept
 document, dependency, or root configuration changes.
+
+## House rules
+
+The exhibit uses the ratified vocabulary from `CONTEXT.md`; *notation* and *carrier* appear only as
+the flagged candidates they remain until plan 16. It contains no gen-1 product names or lineage
+references. Generated-looking artifacts are mechanical evidence checked byte-for-byte, and
+`GREEN-RUN.txt`, `RED-RUN.txt`, and `SPIKE-OUTPUT.txt` are verbatim transcripts recaptured from the
+committed state.

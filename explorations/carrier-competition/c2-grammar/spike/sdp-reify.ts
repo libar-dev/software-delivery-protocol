@@ -6,6 +6,7 @@ import { parseGrammar } from "./grammar-parse.js";
 export interface SdpInspection {
   readonly reification: FileReification;
   readonly droppedProse: readonly string[];
+  readonly droppedStructures: readonly string[];
   readonly unboundUsedSteps: readonly string[];
 }
 
@@ -35,6 +36,8 @@ export function inspectSdp(text: string, relativePath: string): SdpInspection {
       findings: [],
     },
     droppedProse: parsed.droppedProse,
+    droppedStructures:
+      parsed.cases === undefined ? [] : ["cases block (pre-graph expansion input)"],
     unboundUsedSteps: parsed.unboundUsedSteps,
   };
 }

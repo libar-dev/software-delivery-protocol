@@ -10,7 +10,7 @@ import type { PrimitiveNode } from "@libar-dev/software-delivery-protocol";
 import { deriveGraph } from "../../../../src/extract/derive.js";
 
 import { expandTable } from "./expand-table.js";
-import { reifySdp } from "./sdp-reify.js";
+import { inspectSdp, reifySdp } from "./sdp-reify.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const hostPath = "table-sugar/orders.create-order.order-total.sdp";
@@ -83,4 +83,56 @@ test("malformed tables refuse before any point can silently disappear", () => {
   expect(() =>
     expandTable(host.replace("| multi-line  |", "| single-unit |"), hostPath),
   ).toThrow(/duplicate cases point/u);
+});
+
+test("every narrated table refusal is pinned", () => {
+  expect(() =>
+    expandTable(
+      host.replace(
+        "| point       | n | q | price | availability | total |",
+        "| point       | n | q | q     | availability | total |",
+      ),
+      hostPath,
+    ),
+  ).toThrow(/headers must be unique/u);
+  expect(() =>
+    expandTable(host.replace("| single-unit | 1", "| bad point   | 1"), hostPath),
+  ).toThrow(/not a stable id segment/u);
+  expect(() =>
+    expandTable(
+      host.replace(
+        '| single-unit | 1 | 1 | 50    | "in stock"   | 50    |',
+        '| single-unit | 1 | 1 | 50    | "in stock"   |       |',
+      ),
+      hostPath,
+    ),
+  ).toThrow(/empty binding/u);
+});
+
+test("bindings must be valid slot scalars before a child can be emitted", () => {
+  expect(() =>
+    expandTable(
+      host.replace(
+        '| single-unit | 1 | 1 | 50    | "in stock"   | 50    |',
+        '| single-unit | 1 | 1 | 50    | "in stock"   | yes   |',
+      ),
+      hostPath,
+    ),
+  ).toThrow(/bind every slot to a valid scalar/u);
+});
+
+test("a cases block without template steps refuses before emitting empty examples", () => {
+  const withoutTemplates = host.replace(
+    /  cases\n(?: {4,6}.+\n)+\n/u,
+    "  cases\n\n",
+  );
+  expect(() => expandTable(withoutTemplates, hostPath)).toThrow(
+    /at least one template step/u,
+  );
+});
+
+test("the cases side channel is named when ordinary reification omits it", () => {
+  expect(inspectSdp(host, hostPath).droppedStructures).toEqual([
+    "cases block (pre-graph expansion input)",
+  ]);
 });
