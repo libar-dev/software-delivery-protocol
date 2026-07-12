@@ -1,5 +1,9 @@
 # Pre-merge expansion of PR #3 — completing the competition spec before the carrier PRs cut
 
+> **Status: ✅ EXECUTED 2026-07-12 — landed as the pre-competition review's amendments (plan 14 §1–§4
+> and the FINDINGS scorecard-axes addendum) before the carrier PRs cut. This header was added
+> retroactively at the plan-16 ledger reconciliation (plan 16 §8).**
+
 ## Context
 
 PR #3 (`feature/anchors` → `main`) carries the MVP, the executable-spec exploration, and the

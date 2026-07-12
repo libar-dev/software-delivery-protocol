@@ -1,6 +1,8 @@
 # Plan 15b — C2 own grammar: the exhibit PR (plan 14's second full-bar competitor)
 
-> **Status: 🔲 DRAFTED 2026-07-12 — execution plan for the C2 carrier exploration PR.**
+> **Status: ✅ EXECUTED 2026-07-12 (PR #5) — the C2 exhibit landed; dismissed on its own evidence at
+> the plan-16 ruling (the carrier ruling, MD-18); its parity note carries into plan 18's hardening
+> baseline.**
 > Part of the plan-15 fork (`15a`–`15d`: one plan family, four carriers, only one survives the
 > ruling — plan 16 is the ruling session). 15a (F2 markdown) is implemented as PR #4; this plan
 > is deliberately parallel to 15a in structure and evidence so the ruling session compares like

@@ -1,6 +1,7 @@
 # Plan — F2 markdown carrier: the exhibit PR (plan 14's first competitor)
 
-> **Status: 🔲 DRAFTED 2026-07-12 — execution plan for the F2 carrier exploration PR.**
+> **Status: ✅ EXECUTED 2026-07-12 (PR #4) — the F2 exhibit landed; ruled the winning carrier at the
+> plan-16 session (the carrier ruling, MD-18).**
 > Filed as **plan 15a** (owner ruling 2026-07-12): the four carrier plans share the number as a
 > fork — `15a`–`15d`, only one survives the ruling — and the ruling session is **plan 16**.
 >

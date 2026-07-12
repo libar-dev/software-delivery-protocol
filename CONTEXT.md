@@ -153,6 +153,13 @@ validated," never "provably correct."**
 authoring-surface sugar that statically expands to N sibling examples at extraction, and renderers may project
 a sibling set back as a table — the graph never holds a multi-point example.
 
+## The authoring carrier  (ratified at the plan-16 ruling — the carrier ruling, MD-18)
+
+| Term | Definition | Aliases to avoid |
+|---|---|---|
+| **carrier** | the text format that carries the authored `Spec` document — the envelope, the prose, and the owned notation; **ruled: Markdown (`.sdp.md`) for all eight kinds**, the TS DSL remaining the import source and a lawful per-ID option (one canonical surface per ID, `04` §1) | "format"/"file type" (say which layer) · a carrier is never a second store |
+| **notation** | the Protocol-**owned** typed step language inside the carrier's fenced blocks — Given/When/Then step text and the slot vocabulary; owned by the Protocol whatever the carrier | "grammar" (the dismissed own-language direction) · "DSL" (reserved for the TS DSL) |
+
 ## Relations  (authored, typed, directed `Spec`→`Spec` edges — → `02` §6)
 
 | Relation | Direction | Means | Industry anchor |
@@ -196,11 +203,10 @@ artifact** — approval provenance is git-native, never an authored primitive).
   `pack:`/`doc:` targets) — documented on the export (`src/ids.ts`). Consequently `decidedBy` → an
   external `doc:` ADR is a **named deferral** (MD-16, stated in `02` §6); revisit when `doc:`-target
   relations or pack-targeting arrive.
-- **Candidate vocabulary still open from the executable-spec exploration** (`explorations/executable-examples/`):
-  *notation* · *carrier* — named here so they are flagged, not silently invented; they ratify or die
-  at the **carrier ruling session** (the plan-12 session record defines it) and are **not** ratified
-  terms of this glossary yet. The rest of the exploration's candidates ratified with their referents
-  at the plan-12 session — see **The executable half** above.
+- ~~Candidate vocabulary from the executable-spec exploration: *notation* · *carrier*~~ — **ratified
+  2026-07-12 at the carrier ruling session (plan 16)**; see **The authoring carrier** above. The rest
+  of the exploration's candidates ratified with their referents at the plan-12 session — see **The
+  executable half** above.
 
 ## Term ledger  (locked / rejected / resolved)
 
@@ -210,7 +216,8 @@ artifact** — approval provenance is git-native, never an authored primitive).
   `intent composition` / `scoped intent` · delivery facts `implemented`/`has-verifier`/`observed` ·
   `blast radius` / `coverage-unknown` / `at-risk` · `derived readiness` · `step contract` ·
   `space contract` · `example space` · `parameter slot` (short *slot*) · `bound point` · `oracle`
-  (`specOracle` anchor; rendered as "expected outcome") · `witness` · `coverage gap` · `sdp import`.
+  (`specOracle` anchor; rendered as "expected outcome") · `witness` · `coverage gap` · `sdp import` ·
+  `carrier` · `notation` (both ratified at the carrier ruling, MD-18).
 - **Descriptor values locked:** `kind` ∈ {`behavior`,`workflow`,`example`,`rule`,`constraint`,`model`,
   `decision`,`contract`} · `altitude` ∈ {`epic`,`feature`,`story`} · `readiness` ∈
   {`idea`,`scoped`,`defined`,`ready`}.
@@ -228,6 +235,14 @@ artifact** — approval provenance is git-native, never an authored primitive).
 - **Resolved (MD-15):** authored Spec files carry the **`.sdp.ts`** extension (never `.spec.ts`, which every
   JS test-runner default glob executes); the model name `Spec` itself was always settled — only the file
   serialization changed.
+- **Resolved (the carrier ruling, MD-18):** the authored `Spec` document is **`.sdp.md`** — the Markdown
+  carrier, all eight kinds — once the product parser and `sdp import` land and the worked example migrates;
+  until then the TS DSL stays sole-canonical. The surviving law is **one canonical surface per ID, no
+  mixing** (`04` §1); MD-15's rationale re-points to the `.sdp.md` sibling at the doc repair (plan 16 §6).
+- **Resolved (the prose-ownership law, MD-19):** free prose enters the graph as **description values on
+  typed owners** — the owning section or the `Spec` itself (the spec-level narrative slot); never a
+  heading-path store, never a file-only pointer; the edge-text ownership rule is the surface-design
+  session's named deliverable, and unowned prose refuses loudly until it lands.
 - **Naming (resolved — the protocol naming, MD-5):** product **Libar Software Delivery Protocol** (short form "the Protocol");
   CLI **`sdp`**; npm **`@libar-dev/software-delivery-protocol`** (single package); repo
   `libar-dev/software-delivery-protocol`; namespaces `@libar-dev/` (OSS) vs `@libar-ai/` (commercial).

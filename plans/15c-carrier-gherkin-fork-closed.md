@@ -1,6 +1,7 @@
 # Plan 15c — Gherkin extension/fork: the timeboxed session (CLOSED.md is the deliverable)
 
-> **Status: 🔲 DRAFTED 2026-07-12 — execution plan for the Gherkin-fork carrier session.**
+> **Status: ✅ EXECUTED 2026-07-12 (PR #6) — closed via the honest CLOSED.md; the concession stood at
+> the plan-16 ruling.**
 > Part of the plan-15 fork (`15a`–`15d`; plan 16 is the ruling session). This entrant is
 > **timeboxed** by plan 14 §1/§3: its *primary* deliverable is an honest `CLOSED.md` — the
 > recorded alternative to the exhibit bar (plan 14 §2), judged at the ruling session on whether
