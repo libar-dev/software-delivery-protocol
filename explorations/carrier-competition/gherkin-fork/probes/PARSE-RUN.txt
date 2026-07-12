@@ -1,0 +1,12 @@
+# Stock-parser run — captured 2026-07-12
+# Run from the repository root. npx installs only into its scratch cache;
+# package.json and the repository dependency graph remain unchanged.
+
+$ repo="$PWD"
+$ scratch="$(mktemp -d /tmp/sdp-gherkin-parse.XXXXXX)"
+$ cd "$scratch"
+$ TARGET_FILE="$repo/explorations/carrier-competition/gherkin-fork/probes/envelope-in-tags.feature" npx --yes --package=@cucumber/gherkin@41.0.0 --package=@cucumber/messages@33.0.4 --call 'NODE_PATH="$(dirname "$(printf %s "$PATH" | cut -d: -f1)")" node -e "const fs=require(\"node:fs\"); const g=require(\"@cucumber/gherkin\"); const m=require(\"@cucumber/messages\"); const doc=new g.Parser(new g.AstBuilder(m.IdGenerator.incrementing()),new g.GherkinClassicTokenMatcher()).parse(fs.readFileSync(process.env.TARGET_FILE,\"utf8\")); const rules=doc.feature.children.filter(c=>c.rule).length; const scenarios=doc.feature.children.reduce((n,c)=>n+(c.scenario?1:0)+(c.rule?.children.filter(x=>x.scenario).length??0),0); console.log(\"@cucumber/gherkin 41.0.0 parsed probe: \"+rules+\" rules, \"+scenarios+\" scenarios/outlines, \"+doc.comments.length+\" comments\")"'
+@cucumber/gherkin 41.0.0 parsed probe: 2 rules, 3 scenarios/outlines, 10 comments
+$ exit_code=$?
+$ printf 'exit %s\n' "$exit_code"
+exit 0
