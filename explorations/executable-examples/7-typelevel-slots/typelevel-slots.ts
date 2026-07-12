@@ -19,12 +19,13 @@
  * surface that hard-errored the unbound form would gate authoring the protocol permits.
  *
  * And the reddening cases carry their own caveat: the shipped codegen answers each loudly but
- * never gates — an undeclared slot or off-dimension value warns and drops that one slot (the
- * artifact still emits and compiles); an unresolvable child step (the rename) warns and
- * withholds that child's contract. All of it is legal transitional authoring — a child ahead of
- * its parent, a rename mid-flight — so the hard `tsc` error here is stricter than every ratified
- * posture. The README's "promotion caveat" section names the advisory-form question this leaves
- * for the surface-design session.
+ * never gates — an unresolvable step (unknown or renamed) withholds that child's step contract
+ * while the space contract emits with the foreign binding dropped; an off-dimension value on a
+ * resolving step withholds nothing (binding dropped from the point, the step param widened to
+ * its scalar kind — the artifacts always compile). All of it is legal transitional authoring —
+ * a child ahead of its parent, a rename mid-flight — so the hard `tsc` error here is stricter
+ * than every ratified posture. The README's "promotion caveat" section names the advisory-form
+ * question this leaves for the surface-design session.
  *
  * The law boundary (why this is DX, never truth): the one-validation-path law (MD-14) is
  * untouched. Nothing here is evaluated into the graph — the graph's truth stays what the

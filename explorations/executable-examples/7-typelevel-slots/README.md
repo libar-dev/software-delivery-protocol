@@ -30,17 +30,20 @@ never an authoring gate: checks police honesty, never workflow.
 
 ## The promotion caveat (the tension this exhibit names, not hides)
 
-The four reddening cases are exactly the states the shipped codegen answers loudly without ever
-gating (gating stays `validateGraph`'s alone), each with its own recorded posture: an
-undeclared slot or an off-dimension value **warns and drops that one slot** while the generated
-artifact still emits and compiles (`contracts/undeclared-slot` ·
-`contracts/off-dimension-value`); a child step that no longer resolves against the parent's
-space — the rename case — **warns and withholds that child's step contract**
-(`contracts/unmatched-vocabulary-step`). Every one is **legal transitional authoring**: a child
-authored before its parent declares the space, a slot rename mid-flight across files.
-As-you-type visibility of that drift is the DX win — but authored spec files typecheck in CI,
-so promoting these checks as hard types would convert the codegen's deliberate
-warn-and-continue postures into gates on states the protocol keeps authorable. A promotion
+The four reddening cases are states the shipped codegen answers loudly without ever gating
+(gating stays `validateGraph`'s alone), and its posture splits by whether the *step* resolves,
+not by which slot is wrong: a step skeleton the parent space never declares — or no longer
+declares, the rename — **withholds that child's step contract**
+(`contracts/unmatched-vocabulary-step`) while the parent's space contract still emits with the
+foreign binding dropped from the point (`contracts/undeclared-slot`); an off-dimension *value*
+on a resolving step withholds nothing — the space contract **drops the binding from the point**
+and the step contract **widens that param to its scalar kind**
+(`contracts/off-dimension-value`), the generated artifacts always compiling. Every one is
+**legal transitional authoring**: a child authored before its parent declares the space, a slot
+rename mid-flight across files. As-you-type visibility of that drift is the DX win — but
+authored spec files typecheck in CI, so promoting these checks as hard types would convert the
+codegen's deliberate warn-and-continue postures into gates on states the protocol keeps
+authorable. A promotion
 therefore needs an **advisory form** (editor-only feedback, or an opt-in assertion an author
 adds when a spec claims `defined`+) rather than mandatory types on the authoring surface — which
 form, if any, belongs to the winner's surface-design session (plan 14 §4).

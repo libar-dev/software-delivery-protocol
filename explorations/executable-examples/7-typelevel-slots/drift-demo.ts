@@ -6,17 +6,22 @@
  *
  * Honest framing: every case here is legal transitional authoring (a child authored ahead of
  * its parent's vocabulary, a rename mid-flight across files) that the SHIPPED pipeline answers
- * loudly but never gates — gating stays `validateGraph`'s alone — and its posture is per-case:
- * an undeclared slot or an off-dimension value warns and DROPS THAT ONE SLOT while the
- * generated artifact still emits and compiles (`contracts/undeclared-slot` ·
- * `contracts/off-dimension-value`); a child step that no longer resolves against the parent's
- * example space — the rename case — warns and WITHHOLDS that child's step contract
- * (`contracts/unmatched-vocabulary-step`). The spike surfaces the same drift as-you-type —
- * earlier and louder than the codegen — but a hard `tsc` error is STRICTER than every one of
- * those postures; the promotion caveat is in the README. What is deliberately absent: the
- * unbound-slot form (`{n}`), which compiles here (see valid-cart.demo.ts) — legal authoring
- * below `defined` that at build time earns no step contract (the concreteness law: refusal is
- * the honest behavior, and the floor owns the readiness verdict).
+ * loudly but never gates — gating stays `validateGraph`'s alone — and the posture splits by
+ * whether the STEP resolves, not by which slot is wrong (verified at source):
+ * - CASES 1 and 3 (a step skeleton the parent space never/no-longer declares): the child's
+ *   step contract is WITHHELD (`contracts/unmatched-vocabulary-step`), while the parent's
+ *   space contract still emits with the foreign binding dropped from the point
+ *   (`contracts/undeclared-slot`).
+ * - CASES 2a and 2b (the step resolves; the VALUE is off its declared type): nothing is
+ *   withheld — the space contract drops the binding from the point and the step contract
+ *   widens that param to its scalar kind (`contracts/off-dimension-value`), so the generated
+ *   artifacts always compile.
+ * The spike surfaces the same drift as-you-type — earlier and louder than the codegen — but a
+ * hard `tsc` error is STRICTER than every one of those postures; the promotion caveat is in
+ * the README. What is deliberately absent: the unbound-slot form (`{n}`), which compiles here
+ * (see valid-cart.demo.ts) — legal authoring below `defined` for which the codegen emits no
+ * step contract and no warning (refusal by design; the readiness floor owns the honesty via
+ * the concreteness law).
  */
 
 import { bindPoint, declareExampleSpace } from "./typelevel-slots.js";
