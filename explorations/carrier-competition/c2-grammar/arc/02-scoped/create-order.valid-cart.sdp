@@ -1,0 +1,15 @@
+# Syntax illustrative only.
+spec orders.create-order.valid-cart
+  example · story · scoped
+  refines orders.create-order
+  verifies orders.create-order
+
+Valid cart creates an order
+
+  intent
+    outcome: Show that a valid cart can become an order.
+    value: The authored example demonstrates the happy path for create-order.
+
+  Given a customer has a fully stocked cart
+  When the customer submits it for order creation
+  Then an order is created and its math holds

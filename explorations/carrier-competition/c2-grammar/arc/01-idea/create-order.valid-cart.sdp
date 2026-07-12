@@ -1,0 +1,8 @@
+# Syntax illustrative only.
+spec orders.create-order.valid-cart
+  example · story · idea
+  refines orders.create-order
+
+Valid cart creates an order
+
+A valid cart should become an order; details arrive as this same document matures.

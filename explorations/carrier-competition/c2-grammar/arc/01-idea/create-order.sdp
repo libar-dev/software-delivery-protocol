@@ -1,0 +1,6 @@
+# Syntax illustrative only.
+spec orders.create-order
+  behavior · feature · idea
+  refines orders.order-management
+
+Customer creates an order

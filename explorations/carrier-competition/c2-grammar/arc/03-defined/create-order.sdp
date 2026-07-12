@@ -1,0 +1,22 @@
+# Syntax illustrative only.
+spec orders.create-order
+  behavior · feature · defined
+  refines orders.order-management
+  constrainedBy orders.order-latency-constraint
+  decidedBy decisions.order-lifecycle
+
+Customer creates an order
+
+  intent
+    actor: customer
+    outcome: Turn a valid cart into an order.
+    value: Customers can complete purchases without the example modeling the rest of checkout.
+
+  example space
+    Given a customer has a cart with {n:number} line items
+      And every line item has quantity {q:number} and unit price {price:number}
+      And every cart item is {availability:"in stock"|"out of stock"}
+    When the customer submits the cart for order creation
+    Then an order is created with total {total:number}
+      And the order contains the original cart lines
+      And order creation is rejected because {reason:"empty cart"|"out of stock"}

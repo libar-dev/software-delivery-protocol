@@ -1,0 +1,23 @@
+# Mock `sdp validate` transcripts for the proposed own-grammar carrier.
+#
+# Pinned to today's CLI:
+# - the one-line `file[:line] — [severity] validatorId — message` rendering;
+# - both validator ids;
+# - graph-validator findings omit `:line` when the graph node has no source line;
+# - the referential-integrity wording and its did-you-mean suggestion;
+# - the `validate: N errors · N warnings (…)` graph-validation summary.
+#
+# Illustrative because `.sdp` extraction does not ship today:
+# - the two grammar-specific envelope messages and their source lines;
+# - the second run's aggregate after hard extraction errors.
+
+# Run 1 — a valid envelope with one dangling relation: real graph-validator shape and wording.
+$ sdp validate dangling-relation
+specs/orders.create-order.valid-cart.sdp — [error] conformance/referential-integrity — Reference from "spec:orders.create-order.valid-cart" via "refines" points to missing target "spec:orders.create-ordr". Did you mean "spec:orders.create-order"?
+validate: 1 errors · 0 warnings (conformance + honesty over the one graph)
+
+# Run 2 — two different malformed files: illustrative grammar-extraction wording.
+$ sdp validate typo-envelope
+specs/typo-kind.sdp:2 — [error] extract/non-static-envelope — descriptor kind "examle" is not one of behavior · workflow · example · rule · constraint · model · decision · contract. Did you mean "example"?
+specs/malformed-descriptor.sdp:2 — [error] extract/non-static-envelope — expected one descriptor line in the form "kind · altitude · readiness"; found "example · story".
+validate: 2 errors · 0 warnings (illustrative aggregate for the proposed grammar extractor)

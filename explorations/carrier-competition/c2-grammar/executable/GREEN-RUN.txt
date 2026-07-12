@@ -1,0 +1,12 @@
+
+ RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol/explorations/carrier-competition/c2-grammar
+
+ ✓ executable/create-order.valid-cart.test.ts (1 test) 8ms
+ ✓ spike/subset-honesty.test.ts (16 tests) 41ms
+ ✓ spike/table-expansion.test.ts (8 tests) 13ms
+ ✓ spike/graph-shape.test.ts (9 tests) 43ms
+
+ Test Files  4 passed (4)
+      Tests  34 passed (34)
+   Start at  10:48:01
+   Duration  1.10s (transform 344ms, setup 0ms, collect 1.87s, tests 105ms, environment 0ms, prepare 543ms)
