@@ -26,13 +26,13 @@
 
 - Example:
   - **given**
-    - a customer has a cart with {n: 2} line items
-    - every line item has quantity {q: 1} and unit price {price: 50}
-    - every cart item is {availability: "in stock"}
+    - a customer has a cart with 2 line items
+    - every line item has quantity 1 and unit price 50
+    - every cart item is in stock
   - **when**
     - the customer submits the cart for order creation
   - **then**
-    - an order is created with total {total: 100}
+    - an order is created with total 100
     - the order contains the original cart lines
 
 ## Verification intent

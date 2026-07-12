@@ -228,6 +228,7 @@ function runBuild(
   const recoveryRm = hooks.rmSync ?? rmSync;
   const graphPath = join(resolvedRoot, "generated", "graph.json");
   const contractsPath = join(resolvedRoot, "generated", "contracts");
+  const viewPath = join(resolvedRoot, "generated", "design-review");
 
   // A stale projection is as dishonest as a partial one: a failed build must not leave a previous
   // graph.json (or contracts tree) behind that downstream consumers could read as current — nor a
@@ -243,6 +244,19 @@ function runBuild(
     );
     return { exitCode: 1 };
   };
+
+  // Every build replaces the graph a Design Review derives from. Invalidate that downstream
+  // projection before extraction so neither success, failure, nor an interrupted later stage can
+  // leave an older view readable beside a newer (or missing) graph.
+  for (const staleViewPath of [viewPath, `${viewPath}.tmp`]) {
+    const failure = removeArtifact(staleViewPath, recoveryRm);
+
+    if (failure !== undefined) {
+      return failBuild(
+        `sdp ${command}: stale ${staleViewPath} could not be removed (${failure}) — build stopped so it cannot read as current.\n`,
+      );
+    }
+  }
 
   try {
     const result = runExtract({ root: resolvedRoot });

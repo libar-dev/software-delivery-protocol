@@ -1,6 +1,7 @@
 import { SPEC_KINDS, SPEC_READINESS } from "../model/descriptors.js";
 import type { SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSectionName } from "../model/sections.js";
+import { exampleMatchesParentVocabulary } from "../graph/example-space.js";
 import { authoredEdgeTypes } from "../graph/schema.js";
 import type { GraphEdge, PrimitiveNode } from "../graph/schema.js";
 import { hasUnboundSlot } from "../notation/slots.js";
@@ -331,8 +332,11 @@ export const kindEvidence = {
     },
     defined: {
       description:
-        "at least one structured { given, when, then } examples entry, with every used step fully bound (no unbound parameter slot — the concreteness law)",
-      predicate: (node) => hasStructuredExampleEntry(node) && usedStepsAreFullyBound(node),
+        "at least one structured { given, when, then } examples entry, with every used step fully bound and compatible with any parent example space",
+      predicate: (node, index) =>
+        hasStructuredExampleEntry(node) &&
+        usedStepsAreFullyBound(node) &&
+        exampleMatchesParentVocabulary(node, index),
     },
   },
   rule: {

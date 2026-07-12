@@ -474,6 +474,33 @@ describe("the concreteness law — an example is a bound point (the plan-12 rati
     expect(floorFailuresFor(bound.id, bound)).toEqual([]);
   });
 
+  it("caps a fully bound example below defined when a parent example space no longer owns its step", () => {
+    const parent = spec({
+      id: specId("spec:orders.create-order"),
+      title: "Create order",
+      kind: "behavior",
+      altitude: "feature",
+      readiness: "defined",
+      intent: { outcome: "Create an order from a cart." },
+      behavior: {
+        exampleSpace: {
+          given: ["a customer has a cart with {n:number} line items"],
+          when: ["the customer submits the cart"],
+          then: ["an order is created"],
+        },
+      },
+    });
+    const stale = exampleWith({
+      given: ["a customer has a basket with {n: 2} line items"],
+      when: ["the customer submits the cart"],
+      then: ["an order is created"],
+    });
+
+    expect(floorFailuresFor(stale.id, stale, parent).map((failure) => failure.clauseId)).toEqual([
+      "kind-evidence-complete",
+    ]);
+  });
+
   it("caps an example with a bare unbound slot in a used step below defined", () => {
     const unbound = exampleWith({
       given: ["a customer has a cart with {n} line items"],

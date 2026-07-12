@@ -1,4 +1,5 @@
 import { SPEC_READINESS } from "../model/descriptors.js";
+import { renderStepText } from "../notation/slots.js";
 import type { Finding } from "../validate/contracts.js";
 import type {
   PackContext,
@@ -162,7 +163,7 @@ function renderBindings(context: SpecContext, page: string): readonly string[] {
     // The oracle binding renders from the decode, never a delivery fact — the graph records that
     // an expected-outcome oracle exists, nothing more (settlement 8; rendered surfaces say
     // "expected outcome" per the glossary).
-    `- Expected-outcome oracle: **${context.oracles.length > 0 ? "present" : "none"}**`,
+    `- Expected-outcome oracle: **${context.oracle === undefined ? "none" : "present"}**`,
     "- Runtime observation: **not tracked**",
   ];
 
@@ -194,19 +195,17 @@ function renderBindings(context: SpecContext, page: string): readonly string[] {
     }
   }
 
-  if (context.oracles.length > 0) {
-    lines.push("", "### Expected-outcome oracles", "");
-
-    for (const oracle of context.oracles) {
-      const label = oracle.label === undefined ? "" : ` — ${oracle.label}`;
-      const location =
-        oracle.file === undefined
-          ? ""
-          : ` ([${oracle.file}${oracle.line === undefined ? "" : `:${String(oracle.line)}`}](${sourceHref(page, oracle.file)}))`;
-      lines.push(
-        `- \`${oracle.anchorId}\`${label}${location} — the authored expected-outcome semantics for this spec's example space; the graph records that it exists, never what it says \`[${oracle.claim}]\``,
-      );
-    }
+  if (context.oracle !== undefined) {
+    const oracle = context.oracle;
+    const label = oracle.label === undefined ? "" : ` — ${oracle.label}`;
+    const location =
+      oracle.file === undefined
+        ? ""
+        : ` ([${oracle.file}${oracle.line === undefined ? "" : `:${String(oracle.line)}`}](${sourceHref(page, oracle.file)}))`;
+    lines.push("", "### Expected-outcome oracle", "");
+    lines.push(
+      `- \`${oracle.anchorId}\`${label}${location} — the authored expected-outcome semantics for this spec's example space; the graph records that it exists, never what it says \`[${oracle.claim}]\``,
+    );
   }
 
   return lines;
@@ -291,7 +290,7 @@ function renderBehavior(behavior: Record<string, unknown>): readonly string[] {
 
         if (steps.length > 0) {
           lines.push(`  - **${phase}**`);
-          lines.push(...steps.map((step) => `    - ${step}`));
+          lines.push(...steps.map((step) => `    - ${renderStepText(step)}`));
         }
       }
     }

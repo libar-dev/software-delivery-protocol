@@ -18,9 +18,10 @@
 > warning intact. The concreteness clause is mutation-tested (bound → passes; the identical spec
 > with one binding removed fails exactly `kind-evidence-complete`).
 >
-> **Execution deviations, all recorded:** (1) codegen diagnostics landed as seven pinned
+> **Execution deviations, all recorded:** (1) codegen diagnostics landed as eight pinned
 > `contracts/*` finding ids (undeclared-slot · off-dimension-value · conflicting-binding ·
-> conflicting-dimension · untyped-vocabulary-slot · multi-entry-example · case-colliding-path),
+> conflicting-dimension · untyped-vocabulary-slot · multi-entry-example ·
+> unmatched-vocabulary-step · case-colliding-path),
 > family `conformance`, **all warnings** — loud L2/L3 degradation so the generated artifact
 > always compiles while the drift is named at build time, and nothing in the codegen stage ever
 > gates (gating stays `validateGraph`'s alone, MD-14); (2) the CLI test suite moved every
@@ -41,6 +42,16 @@
 > empty-map path removes any stale tree). The oracle decode in the reader/Design Review was
 > reviewed against settlement 8 and stands: it is an anchor query surfaced, no `has-oracle` fact
 > exists.
+>
+> **PR-review hardening (2026-07-12):** a parent-only vocabulary rename could previously leave a
+> child contract compile-green through scalar inference. The shared graph resolver now reserves
+> scalar inference for examples with no parent space; a stale/incompatible child step emits
+> `contracts/unmatched-vocabulary-step`, withholds that child contract, and fails the example's
+> `defined` evidence. Oracle linkage now enforces the ratified zero-or-one `oracle:` binding to a
+> behavior example space, with a singular fail-closed reader surface. Every build invalidates an
+> older Design Review before replacing its graph, and bound example steps render naturally through
+> the shared renderer. These are drift repairs against the ratified settlements, not new decisions;
+> plan 14's carrier competition remains unchanged.
 >
 > An **execution** session (edits `src/`, `examples/`, `test/`). It built the
 > carrier-independent executable half the plan-12 session ratified — every line of it serves

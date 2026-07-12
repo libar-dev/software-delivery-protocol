@@ -4,6 +4,7 @@ import type {
   ConceptMatch,
   FileEntry,
   PackContext,
+  OracleBinding,
   Reader,
   SpecContext,
   SpecSummary,
@@ -19,6 +20,7 @@ const fileEntry: FileEntry = reader.byFile("src/orders/create-order.use-case.ts"
 const radius: BlastRadius = reader.blastRadius(["src/orders/create-order.use-case.ts"]);
 const specContext: SpecContext | undefined = reader.specContext("spec:orders.create-order");
 const packContext: PackContext | undefined = reader.packContext("pack:checkout-v1");
+const oracle: OracleBinding | undefined = specContext?.oracle;
 
 // Coverage honesty is part of the type, not an optional extra (`06` §2).
 const unknown: readonly string[] = radius.coverageUnknown;
@@ -27,7 +29,13 @@ const unknown: readonly string[] = radius.coverageUnknown;
 const stated = summaries[0]?.statedReadiness;
 const derived = summaries[0]?.derivedReadiness;
 
-void [matches, fileEntry, specContext, packContext, unknown, stated, derived];
+void [matches, fileEntry, specContext, packContext, oracle, unknown, stated, derived];
+
+// The ratified zero-or-one cardinality is encoded in the public keys, not only at runtime.
+const singularOracleKey: "oracle" extends keyof SpecContext ? true : false = true;
+const pluralOracleKeyRemoved: "oracles" extends keyof SpecContext ? false : true = true;
+
+void [singularOracleKey, pluralOracleKeyRemoved];
 
 // @ts-expect-error bySymbol is aspirational — it rides the exhaustive impact graph and is not
 // stubbed: a method that throws would fake the capability its absence honestly hides (`06` §3).

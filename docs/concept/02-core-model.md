@@ -265,7 +265,7 @@ IDs are the load-bearing linkage of the entire graph. The grammar is a Represent
 <namespace>:<dotted.path>#<sub>     spec:orders.create-order#valid-cart   (optional sub-part)
 ```
 
-Namespaces in the MVP: `spec`, `pack`, `impl`, `api`, `test`, `component`, `doc`. Examples from the running domain:
+Namespaces in the MVP: `spec`, `pack`, `impl`, `api`, `test`, `oracle`, `component`, `doc`. Examples from the running domain:
 
 - `pack:checkout-v1`
 - `spec:orders.create-order`
@@ -274,6 +274,7 @@ Namespaces in the MVP: `spec`, `pack`, `impl`, `api`, `test`, `component`, `doc`
 - `impl:orders.create-order-use-case`
 - `api:orders.post`
 - `test:orders.create-order.valid-cart`
+- `oracle:orders.create-order`
 
 `doc:` is reserved for a genuinely *external* document linked from a decision spec (e.g. `doc:adr-order-lifecycle`) — never for an in-system decision, which is a `spec:decisions.*` spec.
 

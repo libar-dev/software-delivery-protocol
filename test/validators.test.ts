@@ -742,6 +742,13 @@ describe("the models edge — the oracle anchor's contract row", () => {
     altitude: "feature",
     readiness: "idea",
     intent: { outcome: "Turn a valid cart into an order." },
+    behavior: {
+      exampleSpace: {
+        given: ["a customer has a cart"],
+        when: ["the customer submits the cart"],
+        then: ["an order is created"],
+      },
+    },
   });
 
   const oracleGraph = () =>
@@ -785,6 +792,107 @@ describe("the models edge — the oracle anchor's contract row", () => {
     expect(claimErrors.length).toBeGreaterThan(0);
     expect(claimErrors[0]?.severity).toBe("error");
     expect(claimErrors[0]?.message).toContain("models");
+  });
+
+  it("rejects an oracle target that does not own a behavior example space", () => {
+    const withoutSpace = spec({
+      id: specId("spec:orders.order-policy"),
+      title: "Order policy",
+      kind: "behavior",
+      altitude: "feature",
+      readiness: "idea",
+      intent: { outcome: "State the order policy." },
+    });
+    const graph = deriveFixtureGraph({
+      specs: [withoutSpace],
+      anchors: [
+        specOracle({
+          id: oracleAnchorId("oracle:orders.order-policy"),
+          models: withoutSpace.id,
+        }),
+      ],
+    });
+
+    const findings = validateGraph(graph).findings.filter(
+      (finding) => finding.validatorId === graphValidatorIds.oracleLinkage,
+    );
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.severity).toBe("error");
+    expect(findings[0]?.message).toContain("behavior spec with an example space");
+  });
+
+  it("rejects competing oracle anchors for one parent example space", () => {
+    const graph = deriveFixtureGraph({
+      specs: [modeled],
+      anchors: [
+        specOracle({
+          id: oracleAnchorId("oracle:orders.create-order.primary"),
+          models: modeled.id,
+        }),
+        specOracle({
+          id: oracleAnchorId("oracle:orders.create-order.competing"),
+          models: modeled.id,
+        }),
+      ],
+    });
+
+    const findings = validateGraph(graph).findings.filter(
+      (finding) => finding.validatorId === graphValidatorIds.oracleLinkage,
+    );
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.subjectId).toBe("spec:orders.create-order");
+    expect(findings[0]?.message).toContain("at most one expected-outcome authority");
+  });
+
+  it("rejects a models edge whose Anchor does not use the oracle namespace", () => {
+    const graph = oracleGraph();
+    const foreign: GraphSchema = {
+      ...graph,
+      nodes: graph.nodes.map((node) =>
+        node.id === "oracle:orders.create-order"
+          ? { ...node, id: "test:orders.create-order-oracle" }
+          : node,
+      ),
+      edges: graph.edges.map((edge) =>
+        edge.type === "models" ? { ...edge, from: "test:orders.create-order-oracle" } : edge,
+      ),
+    };
+
+    const findings = validateGraph(foreign).findings.filter(
+      (finding) => finding.validatorId === graphValidatorIds.oracleLinkage,
+    );
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.message).toContain("oracle: anchor");
+  });
+
+  it("rejects a non-behavior oracle target even when it carries an example-space-shaped section", () => {
+    const decision = spec({
+      id: specId("spec:decisions.order-routing"),
+      title: "Order routing decision",
+      kind: "decision",
+      altitude: "feature",
+      readiness: "idea",
+      intent: { outcome: "Choose the routing policy." },
+      behavior: { exampleSpace: { then: ["the routing policy is chosen"] } },
+    });
+    const graph = deriveFixtureGraph({
+      specs: [decision],
+      anchors: [
+        specOracle({
+          id: oracleAnchorId("oracle:decisions.order-routing"),
+          models: decision.id,
+        }),
+      ],
+    });
+
+    expect(
+      validateGraph(graph).findings.some(
+        (finding) => finding.validatorId === graphValidatorIds.oracleLinkage,
+      ),
+    ).toBe(true);
   });
 
   it("rejects a models edge from a non-Anchor source — the endpoints are typed", () => {

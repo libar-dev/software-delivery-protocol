@@ -1,7 +1,9 @@
+import { resolveExampleVocabulary } from "../graph/example-space.js";
 import type { GraphSchema, PrimitiveNode } from "../graph/schema.js";
 import { parseSlots, stepSkeleton } from "../notation/slots.js";
 import type { SlotDeclaredType, SlotScalar } from "../notation/slots.js";
 import type { Finding } from "../validate/contracts.js";
+import { buildGraphIndex } from "../validate/graph-index.js";
 
 /**
  * The contracts codegen stage of `sdp build` (plan 13 §2.1) — the A2 mechanism: per-example
@@ -41,6 +43,8 @@ export const contractsFindingIds = {
   untypedVocabularySlot: "contracts/untyped-vocabulary-slot",
   /** An example carries more than one structured entry — only the point entry is executable. */
   multiEntryExample: "contracts/multi-entry-example",
+  /** A child step does not resolve compatibly against an existing parent example space. */
+  unmatchedVocabularyStep: "contracts/unmatched-vocabulary-step",
   /** Two contract paths differ only by letter case — they cannot coexist on a case-insensitive
    *  filesystem, so the contracts tree is withheld WHOLE (the emitted artifact is all-or-nothing
    *  — a partial tree reading as current would be its own dishonesty) and the warning names the
@@ -142,8 +146,19 @@ function vocabularyOf(
 
       for (const slot of parseSlots(text)) {
         if (slot.form === "typed") {
-          if (!slots.has(slot.name)) {
+          const existing = slots.get(slot.name);
+
+          if (existing === undefined) {
             slots.set(slot.name, slot.type);
+          } else if (!sameType(existing, slot.type)) {
+            findings.push(
+              contractsFinding(
+                contractsFindingIds.conflictingDimension,
+                `slot "{${slot.name}}" is declared at type ${typeExpression(slot.type)} after ${typeExpression(existing)} within one vocabulary step ("${skeleton}") — the first declaration wins (ambiguity is loud, L2)`,
+                node,
+                "behavior.exampleSpace",
+              ),
+            );
           }
           continue;
         }
@@ -786,6 +801,7 @@ function renderStepContract(
 
 export function generateContracts(graph: GraphSchema): GeneratedContracts {
   const findings: Finding[] = [];
+  const graphIndex = buildGraphIndex(graph);
   const primitives = new Map<string, PrimitiveNode>();
 
   for (const node of graph.nodes) {
@@ -871,6 +887,23 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
     const scenario = bindableScenario(node);
 
     if (scenario === undefined) {
+      continue;
+    }
+
+    const vocabularyResolution = resolveExampleVocabulary(node, graphIndex);
+
+    if (vocabularyResolution.issues.length > 0) {
+      for (const issue of vocabularyResolution.issues) {
+        findings.push(
+          contractsFinding(
+            contractsFindingIds.unmatchedVocabularyStep,
+            `example step "${issue.skeleton}" does not ${issue.kind === "unmatched" ? "exist in" : "bind compatibly against"} the parent example space${issue.parentIds.length === 1 ? "" : "s"} (${issue.parentIds.map((parentId) => `"${parentId}"`).join(" · ")}) — the child step contract is withheld until the shared vocabulary and bound point agree`,
+            node,
+            "behavior.examples",
+          ),
+        );
+      }
+
       continue;
     }
 

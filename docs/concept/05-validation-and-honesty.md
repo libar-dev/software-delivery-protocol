@@ -87,7 +87,7 @@ The floor has two parts: **kind-blind structural clauses** (the same for every k
 |---|---|---|
 | `behavior` / `workflow` | rules / examples / flows / constraints — inline, **or promoted** (a refining `rule`/`example` child, or a `constrainedBy` target) | rules and/or examples (inline or promoted children); constraints alone no longer suffice |
 | `rule` | its statement in `behavior.rules` | same — a rule's content *is* its statement |
-| `example` | an examples entry (prose fine) | ≥ 1 **structured** `{ given, when, then }` entry |
+| `example` | an examples entry (prose fine) | ≥ 1 **structured** `{ given, when, then }` entry; every used parameter slot is bound; when a refining parent owns an example space, every used step belongs compatibly to that shared vocabulary |
 | `constraint` | `constraints[]` non-empty | every entry has a machine-readable `target` |
 | `model` | `model.terms` non-empty | same — a vocabulary either has terms or it doesn't |
 | `decision` | `decision` section present (context / alternatives may precede the choice) | `decision.decision` — the chosen option — is written |

@@ -143,6 +143,67 @@ describe("the contracts codegen stage", () => {
     );
   });
 
+  it("withholds a child contract when its steps drift outside an existing parent vocabulary", () => {
+    const staleChild = child({
+      ...BOUND_GWT,
+      given: [
+        "a customer has a basket with {n: 2} line items",
+        'every cart item is {availability: "in stock"}',
+      ],
+    });
+    const graph = deriveFixtureGraph({ specs: [parent(VOCABULARY), staleChild] });
+    const generated = generateContracts(graph);
+    const mismatch = generated.findings.filter(
+      (finding) => finding.validatorId === contractsFindingIds.unmatchedVocabularyStep,
+    );
+
+    expect(mismatch).toHaveLength(1);
+    expect(mismatch[0]?.subjectId).toBe("spec:orders.create-order.valid-cart");
+    expect(mismatch[0]?.message).toContain('"a customer has a basket with {n} line items"');
+    expect(mismatch[0]?.message).toContain('"spec:orders.create-order"');
+    expect(generated.files.has("orders.create-order.space.ts")).toBe(true);
+    expect(generated.files.has("orders.create-order.valid-cart.contract.ts")).toBe(false);
+  });
+
+  it("withholds a child contract when multiple parent spaces type one skeleton incompatibly", () => {
+    const otherParent = spec({
+      id: specId("spec:orders.create-order-policy"),
+      title: "Create-order policy",
+      kind: "behavior",
+      altitude: "feature",
+      readiness: "defined",
+      intent: { outcome: "Constrain create-order examples." },
+      behavior: {
+        exampleSpace: {
+          ...VOCABULARY,
+          given: [
+            "a customer has a cart with {n:string} line items",
+            'every cart item is {availability:"in stock"|"out of stock"}',
+          ],
+        },
+      },
+    });
+    const multiParentChild = spec({
+      ...child(BOUND_GWT),
+      relations: [
+        refines(specId("spec:orders.create-order")),
+        refines(specId("spec:orders.create-order-policy")),
+      ],
+    });
+    const graph = deriveFixtureGraph({
+      specs: [parent(VOCABULARY), otherParent, multiParentChild],
+    });
+    const generated = generateContracts(graph);
+    const mismatch = generated.findings.filter(
+      (finding) => finding.validatorId === contractsFindingIds.unmatchedVocabularyStep,
+    );
+
+    expect(mismatch).toHaveLength(1);
+    expect(mismatch[0]?.message).toContain("bind compatibly against");
+    expect(mismatch[0]?.message).toContain('"spec:orders.create-order-policy"');
+    expect(generated.files.has("orders.create-order.valid-cart.contract.ts")).toBe(false);
+  });
+
   it("keeps a partial point honest: only the bound dimensions enter the point", () => {
     const partial = child(
       {
@@ -249,6 +310,23 @@ describe("the contracts codegen stage", () => {
     ).toBe(true);
     const space = generated.files.get("orders.create-order.space.ts") ?? "";
     expect(space).toContain("readonly n: number;");
+  });
+
+  it("warns on conflicting declarations of one dimension within a vocabulary step — first wins", () => {
+    const conflictingVocabulary = parent({
+      given: ["a cart starts with {n:number} items and ends with {n:string} items"],
+      when: ["the customer submits the cart for order creation"],
+      then: ["an order is created"],
+    });
+    const graph = deriveFixtureGraph({ specs: [conflictingVocabulary] });
+    const generated = generateContracts(graph);
+    const conflicts = generated.findings.filter(
+      (finding) => finding.validatorId === contractsFindingIds.conflictingDimension,
+    );
+
+    expect(conflicts).toHaveLength(1);
+    expect(conflicts[0]?.message).toContain("within one vocabulary step");
+    expect(generated.files.get("orders.create-order.space.ts")).toContain("readonly n: number;");
   });
 
   it("refuses to guess the single-quoted-literal vocabulary form — deferred to the grammar session, loudly", () => {
@@ -372,7 +450,11 @@ describe("the contracts codegen stage", () => {
       },
       "spec:orders.create-order.within-step",
     );
-    const graph = deriveFixtureGraph({ specs: [parent(VOCABULARY), withinStep] });
+    const matchingParent = parent({
+      ...VOCABULARY,
+      given: ["a cart with {n:number} items and later {n:number} items in one step"],
+    });
+    const graph = deriveFixtureGraph({ specs: [matchingParent, withinStep] });
     const generated = generateContracts(graph);
 
     expect(

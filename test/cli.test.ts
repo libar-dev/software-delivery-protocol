@@ -127,6 +127,24 @@ describe("sdp cli", () => {
     }
   });
 
+  it("invalidates an existing Design Review when build replaces its source graph", () => {
+    const root = materializeExampleCopy();
+
+    try {
+      expect(runSdpCli(["view", root], createCaptureOutput().output)).toBe(0);
+      const viewPath = join(root, "generated", "design-review");
+      expect(existsSync(viewPath)).toBe(true);
+
+      expect(runSdpCli(["build", root], createCaptureOutput().output)).toBe(0);
+
+      expect(existsSync(viewPath)).toBe(false);
+      expect(existsSync(join(root, "generated", "graph.json"))).toBe(true);
+      expect(existsSync(join(root, "generated", "contracts"))).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("builds cleanly with no root argument from the repository root (the default-root path)", () => {
     // The repo itself must stay a clean default root: corpora are committed defused
     // (*.sdp.ts.txt / *.ts.txt), so the only *.sdp.ts under the root is the example model, and
@@ -209,7 +227,8 @@ export const childSpec = spec({
       // formatter, and counts into the build summary beside the extraction findings.
       expect(exitCode).toBe(0);
       expect(capture.readStderr()).toMatch(/\[warning\] contracts\/undeclared-slot — /);
-      expect(capture.readStdout()).toContain("(0 errors, 1 warnings)");
+      expect(capture.readStderr()).toMatch(/\[warning\] contracts\/unmatched-vocabulary-step — /);
+      expect(capture.readStdout()).toContain("(0 errors, 2 warnings)");
       expect(existsSync(join(root, "generated", "contracts"))).toBe(true);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -404,8 +423,11 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
 
     try {
       const stalePath = join(corpusRoot, "generated", "graph.json");
+      const staleView = join(corpusRoot, "generated", "design-review", "index.md");
       mkdirSync(join(corpusRoot, "generated"), { recursive: true });
       writeFileSync(stalePath, '{ "stale": true }\n', "utf8");
+      mkdirSync(join(corpusRoot, "generated", "design-review"), { recursive: true });
+      writeFileSync(staleView, "# Previous review\n", "utf8");
 
       const capture = createCaptureOutput();
       const exitCode = runSdpCli(["build", corpusRoot], capture.output);
@@ -415,6 +437,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
       expect(capture.readStderr()).toContain("graph.json not written");
       // The stale artifact is gone: a failed build leaves no graph that could read as current.
       expect(existsSync(stalePath)).toBe(false);
+      expect(existsSync(join(corpusRoot, "generated", "design-review"))).toBe(false);
     } finally {
       removeMaterializedCorpus(corpusRoot);
     }
@@ -593,6 +616,36 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
       expect(capture.readStderr()).not.toContain("    at ");
       // The artifact genuinely survived — the survivor line told the truth.
       expect(existsSync(stalePath)).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("stops a build when an existing Design Review cannot be invalidated", () => {
+    const root = materializeExampleCopy();
+
+    try {
+      const staleView = join(root, "generated", "design-review", "index.md");
+      mkdirSync(join(root, "generated", "design-review"), { recursive: true });
+      writeFileSync(staleView, "# Previous review\n", "utf8");
+      const denyView: typeof rmSync = (path, options) => {
+        if (String(path).includes("design-review") && existsSync(path)) {
+          const denied: NodeJS.ErrnoException = new Error("EACCES: permission denied");
+          denied.code = "EACCES";
+          throw denied;
+        }
+
+        rmSync(path, options);
+      };
+      const capture = createCaptureOutput();
+
+      const exitCode = runSdpCli(["build", root], capture.output, { rmSync: denyView });
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toContain(`stale ${join(root, "generated", "design-review")}`);
+      expect(capture.readStderr()).toContain("build stopped so it cannot read as current");
+      expect(existsSync(staleView)).toBe(true);
+      expect(existsSync(join(root, "generated", "graph.json"))).toBe(false);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

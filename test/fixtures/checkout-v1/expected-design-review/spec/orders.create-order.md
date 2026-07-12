@@ -21,7 +21,7 @@
 - `spec:orders.create-order.invalid-cart` — Invalid cart is rejected ([specs/orders/create-order-invalid-cart.sdp.ts](../../../specs/orders/create-order-invalid-cart.sdp.ts)) — **not enabled** (no test anchor binds this example — it confers no verifier binding) `[declared]`
 - `spec:orders.create-order.valid-cart` — Valid cart creates an order ([specs/orders/create-order-valid-cart.sdp.ts](../../../specs/orders/create-order-valid-cart.sdp.ts)) — **enabled** (a resolving test anchor binds this example) `[declared]`
 
-### Expected-outcome oracles
+### Expected-outcome oracle
 
 - `oracle:orders.create-order` — expected create-order outcome over the example space ([test/orders/create-order.oracle.ts:12](../../../test/orders/create-order.oracle.ts)) — the authored expected-outcome semantics for this spec's example space; the graph records that it exists, never what it says `[anchored]`
 

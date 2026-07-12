@@ -388,18 +388,59 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
     it("decodes the oracle binding — existence with its source location, never content", () => {
       const context = exampleReader().specContext("spec:orders.create-order");
 
-      expect(context?.oracles).toEqual([
-        {
-          anchorId: "oracle:orders.create-order",
-          claim: "anchored",
-          label: "expected create-order outcome over the example space",
-          file: "test/orders/create-order.oracle.ts",
-          line: 12,
-        },
-      ]);
-      // A spec no oracle models decodes an empty list, not an absence error.
-      expect(exampleReader().specContext("spec:orders.create-order.valid-cart")?.oracles).toEqual(
-        [],
+      expect(context?.oracle).toEqual({
+        anchorId: "oracle:orders.create-order",
+        claim: "anchored",
+        label: "expected create-order outcome over the example space",
+        file: "test/orders/create-order.oracle.ts",
+        line: 12,
+      });
+      expect(
+        exampleReader().specContext("spec:orders.create-order.valid-cart")?.oracle,
+      ).toBeUndefined();
+    });
+
+    it("fails closed on off-contract or competing oracle edges", () => {
+      const offClaim: GraphSchema = {
+        ...exampleGraph,
+        edges: exampleGraph.edges.map((edge) =>
+          edge.type === "models" ? { ...edge, claim: "declared" as const } : edge,
+        ),
+      };
+      const offClaimReader = createReader(offClaim);
+      expect(offClaimReader.specContext("spec:orders.create-order")?.oracle).toBeUndefined();
+      expect(offClaimReader.byFile("test/orders/create-order.oracle.ts").specs).toEqual([]);
+      expect(
+        offClaimReader.blastRadius(["test/orders/create-order.oracle.ts"]).impactedSpecs,
+      ).toEqual([]);
+
+      const existingOracle = exampleGraph.nodes.find(
+        (node) => node.id === "oracle:orders.create-order",
+      );
+      if (existingOracle?.nodeType !== "Anchor") {
+        throw new Error("Fixture graph is missing its oracle anchor.");
+      }
+      const competing: GraphSchema = {
+        ...exampleGraph,
+        nodes: [
+          ...exampleGraph.nodes,
+          { ...existingOracle, id: "oracle:orders.create-order.competing", line: 99 },
+        ],
+        edges: [
+          ...exampleGraph.edges,
+          {
+            from: "oracle:orders.create-order.competing",
+            type: "models",
+            to: "spec:orders.create-order",
+            claim: "anchored",
+          },
+        ],
+      };
+      const competingReader = createReader(competing);
+
+      expect(competingReader.specContext("spec:orders.create-order")?.oracle).toBeUndefined();
+      expect(competingReader.findings().map((finding) => finding.validatorId)).toContain(
+        graphValidatorIds.oracleLinkage,
       );
     });
 

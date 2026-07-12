@@ -3,6 +3,7 @@ import {
   isEnabledExampleVerify,
   isResolvingTestAnchorVerify,
 } from "../graph/delivery-facts.js";
+import { isResolvingOracleModel } from "../graph/oracle-bindings.js";
 import { authoredEdgeTypes } from "../graph/schema.js";
 import type {
   DeliveryFactName,
@@ -110,7 +111,7 @@ export interface SpecContext extends SpecSummary {
   readonly relationsIn: readonly RelationEnd[];
   readonly implementations: readonly ImplementationBinding[];
   readonly verifiers: readonly VerifierBinding[];
-  readonly oracles: readonly OracleBinding[];
+  readonly oracle?: OracleBinding;
   /** The graph findings naming this spec (as subject or related) — the holes beside the assertions. */
   readonly findings: readonly Finding[];
 }
@@ -332,6 +333,21 @@ export function createReader(graph: GraphSchema): Reader {
   const index = buildGraphIndex(graph);
   const recomputedFacts = computeDeliveryFacts(graph.nodes, graph.edges);
   const allFindings = validateGraph(graph).findings;
+  const oracleEdgesByTarget = new Map<string, GraphEdge[]>();
+
+  for (const edge of graph.edges) {
+    if (isResolvingOracleModel(edge, index.nodesById)) {
+      oracleEdgesByTarget.set(edge.to, [...(oracleEdgesByTarget.get(edge.to) ?? []), edge]);
+    }
+  }
+
+  const usableOracleEdges = new Set(
+    [...oracleEdgesByTarget.values()].flatMap((edges) => (edges.length === 1 ? edges : [])),
+  );
+  const isTraversableBinding = (edge: GraphEdge): boolean =>
+    edge.type === "satisfies" ||
+    edge.type === "verifies" ||
+    (edge.type === "models" && usableOracleEdges.has(edge));
 
   const factsOf = (id: string): readonly DeliveryFactName[] => recomputedFacts.get(id) ?? [];
 
@@ -453,24 +469,28 @@ export function createReader(graph: GraphSchema): Reader {
       })
       .sort((left, right) => compareCodeUnits(left.verifierId, right.verifierId));
 
-    // The oracle binding decode, mirroring implementations: `models` edges into the spec, each
-    // resolved to its Anchor node's location — existence only, never content (settlement 8).
-    const oracles = (index.edgesByTo.get(id) ?? [])
-      .filter((edge) => edge.type === "models")
-      .map((edge): OracleBinding => {
-        const source = index.nodesById.get(edge.from);
-        const location =
-          source?.nodeType === "Anchor"
-            ? {
-                ...(source.label === undefined ? {} : { label: source.label }),
-                file: source.file,
-                line: source.line,
-              }
-            : {};
+    // Exactly one complete oracle contract decodes as presence. Off-contract or competing edges
+    // stay visible through findings, but never become an expected-outcome authority by accident.
+    const resolvingOracleEdges = (index.edgesByTo.get(id) ?? []).filter((edge) =>
+      usableOracleEdges.has(edge),
+    );
+    const oracleEdge = resolvingOracleEdges.length === 1 ? resolvingOracleEdges[0] : undefined;
+    const oracle =
+      oracleEdge === undefined
+        ? undefined
+        : (() => {
+            const source = index.nodesById.get(oracleEdge.from);
+            const location =
+              source?.nodeType === "Anchor"
+                ? {
+                    ...(source.label === undefined ? {} : { label: source.label }),
+                    file: source.file,
+                    line: source.line,
+                  }
+                : {};
 
-        return { anchorId: edge.from, claim: edge.claim, ...location };
-      })
-      .sort((left, right) => compareCodeUnits(left.anchorId, right.anchorId));
+            return { anchorId: oracleEdge.from, claim: oracleEdge.claim, ...location };
+          })();
 
     return {
       ...summarize(node),
@@ -480,7 +500,7 @@ export function createReader(graph: GraphSchema): Reader {
       relationsIn,
       implementations,
       verifiers,
-      oracles,
+      ...(oracle === undefined ? {} : { oracle }),
       findings: findingsNaming(id),
     };
   };
@@ -631,7 +651,7 @@ export function createReader(graph: GraphSchema): Reader {
       // resolution left to referential integrity. `models` walks like its binding siblings: the
       // oracle's file reaches the spec it models, or blast radius would go silently blind there.
       for (const edge of index.edgesByFrom.get(node.id) ?? []) {
-        if (edge.type === "satisfies" || edge.type === "verifies" || edge.type === "models") {
+        if (isTraversableBinding(edge)) {
           specIds.add(edge.to);
         }
       }
@@ -682,7 +702,7 @@ export function createReader(graph: GraphSchema): Reader {
         }
 
         for (const edge of index.edgesByFrom.get(ref.id) ?? []) {
-          if (edge.type === "satisfies" || edge.type === "verifies" || edge.type === "models") {
+          if (isTraversableBinding(edge)) {
             appendReason(impactedSpecReasons, edge.to, {
               file,
               throughBinding: { id: ref.id, edgeType: edge.type, claim: edge.claim },

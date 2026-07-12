@@ -23,7 +23,7 @@ Two pure steps: `graph = f(repo)` and `output = f(graph)`. The extractor is the 
 ### What the extractor reads
 
 - **Typed spec files** — every `*.sdp.ts` under the extraction root (conventionally `/specs/`; discovery is by suffix alone, outside tooling-output and dot-directories — the `.sdp.ts` extension, MD-15) — the declared layer: specs, packs, relations.
-- **Source-code anchors** — the anchored layer: an **anchor** binds a code location to a spec ID — identity, an optional label, and one `satisfies`/`verifies` target; richer structural facts are aspirational (`04` §2). Anchors carry *no* intent (see `04`).
+- **Source-code anchors** — the anchored layer: an **anchor** binds a code, test, or oracle location to a spec ID — identity, an optional label, and one `satisfies` / `verifies` / `models` target; richer structural facts are aspirational (`04` §2). Anchors carry *no* intent (see `04`).
 - **Structural facts** — the inferred layer: machine-derived structure (imports, calls, symbol identity). Designed-in — the `claim` value and the advisory edge row exist, and every consumer decodes them — but **empty in the MVP**: the entry adapters and file-level impact resolve off the curated layers (`06` §2), so nothing yet needs an inferred edge; the first producer is the aspirational impact graph.
 
 The graph is **flat**: arrays of nodes and arrays of edges. Hierarchy and containment are expressed as edges (`belongsTo`, `refines`), never by nesting nodes inside nodes. This is a Representation (chosen for uniform querying and cheap diffs), held as a hard rule.
@@ -57,6 +57,7 @@ Every edge in the graph has a fixed contract: where it comes from, what `claim` 
 | `verifies` | Primitive (`example`) **or** Anchor (test) → Primitive | authored | `declared` (from an example) / `anchored` (from a test anchor) | spec `relations[]` **or** `specTest` anchor | **error** if target missing | — | contributes `has-verifier` to the **target** (if the verifier is *enabled*) |
 | `supersedes` | Primitive (`decision`) → Primitive (`decision`) | authored | declared | spec `relations[]` | **error** if target missing | — | — |
 | `satisfies` | CodeNode → Primitive | derived (from an anchor) | anchored | source **anchor** | **error** if target missing | `ready` floor: present anchors must *resolve* | contributes `implemented` to the **target** |
+| `models` | Anchor (`oracle:`) → Primitive (`behavior`, with an example space) | derived (from an anchor) | anchored | `specOracle` anchor | **error** if target missing/ineligible or more than one oracle models the same space | — | — (existence is an anchor query, never a delivery fact) |
 | `belongsTo` | Primitive → Pack | derived (from the manifest) | declared (inherited) | `Pack` manifest `specs[]` | **error** if member missing/duplicate | — | — |
 | calls / imports | CodeNode → CodeNode | derived (analysis) | inferred | — (machine) | **advisory** — never errors on its own | — | feeds the impact graph only |
 

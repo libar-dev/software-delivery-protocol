@@ -130,6 +130,15 @@ describe("the Design Review — the one generated read-only view", () => {
     expect(validCart).toContain("test/orders/create-order.valid-cart.test.ts:13");
   });
 
+  it("renders bound example steps naturally while preserving typed parent vocabulary", () => {
+    const validCart = pageByPath(examplePages, "spec/orders.create-order.valid-cart.md");
+    const parent = pageByPath(examplePages, "spec/orders.create-order.md");
+
+    expect(validCart).toContain("a customer has a cart with 2 line items");
+    expect(validCart).not.toContain("a customer has a cart with {n: 2} line items");
+    expect(parent).toContain("a customer has a cart with {n:number} line items");
+  });
+
   it("renders a test-anchor verifier as the enabled binding only along its contract row", () => {
     // The enabled rendering, pinned over the example graph (a resolving test anchor)...
     const validCart = pageByPath(examplePages, "spec/orders.create-order.valid-cart.md");

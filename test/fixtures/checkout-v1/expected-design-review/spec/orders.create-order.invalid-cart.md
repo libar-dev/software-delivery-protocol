@@ -22,11 +22,11 @@
 
 - Example:
   - **given**
-    - a customer has a cart with {n: 0} line items
+    - a customer has a cart with 0 line items
   - **when**
     - the customer submits the cart for order creation
   - **then**
-    - order creation is rejected because {reason: "empty cart"}
+    - order creation is rejected because empty cart
 
 ## Verification intent
 

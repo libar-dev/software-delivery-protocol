@@ -1,4 +1,5 @@
 import { computeDeliveryFacts, isResolvingTestAnchorVerify } from "../graph/delivery-facts.js";
+import { isResolvingOracleModel, ownsExampleSpace } from "../graph/oracle-bindings.js";
 import { deliveryFactNames, graphClaims, graphEdgeTypes, graphNodeTypes } from "../graph/schema.js";
 import type {
   DeliveryFactName,
@@ -33,6 +34,7 @@ export const graphValidatorIds = {
   duplicateIds: "conformance/duplicate-ids",
   claimSeparation: "conformance/claim-separation",
   verifiesLinkage: "conformance/verifies-linkage",
+  oracleLinkage: "conformance/oracle-linkage",
   packCoherence: "conformance/pack-coherence",
   orphans: "conformance/orphans",
   authoringShape: "honesty/authoring-shape",
@@ -560,6 +562,67 @@ function checkVerifiesLinkage(graph: GraphSchema, index: GraphIndex): readonly F
   return findings;
 }
 
+function checkOracleLinkage(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
+  const findings: Finding[] = [];
+  const resolvingByTarget = new Map<string, GraphEdge[]>();
+
+  for (const edge of graph.edges) {
+    if (edge.type !== "models") {
+      continue;
+    }
+
+    const source = index.nodesById.get(edge.from);
+    const target = index.nodesById.get(edge.to);
+
+    // Referential integrity and the generic edge-contract row own unresolved/wrong-node cases.
+    if (
+      edge.claim !== "anchored" ||
+      source?.nodeType !== "Anchor" ||
+      target?.nodeType !== "Primitive"
+    ) {
+      continue;
+    }
+
+    if (!isResolvingOracleModel(edge, index.nodesById)) {
+      findings.push(
+        createFinding({
+          validatorId: graphValidatorIds.oracleLinkage,
+          family: "conformance",
+          severity: "error",
+          message: `Oracle binding "${edge.from}" → "${edge.to}" must use an oracle: anchor and target a behavior spec with an example space.`,
+          subjectId: edge.from,
+          relatedId: edge.to,
+          file: source.file,
+        }),
+      );
+      continue;
+    }
+
+    if (target.specKind === "behavior" && ownsExampleSpace(target)) {
+      resolvingByTarget.set(edge.to, [...(resolvingByTarget.get(edge.to) ?? []), edge]);
+    }
+  }
+
+  for (const [targetId, edges] of resolvingByTarget) {
+    if (edges.length <= 1) {
+      continue;
+    }
+
+    findings.push(
+      createFinding({
+        validatorId: graphValidatorIds.oracleLinkage,
+        family: "conformance",
+        severity: "error",
+        message: `Behavior spec "${targetId}" has ${String(edges.length)} resolving oracle bindings (${edges.map((edge) => `"${edge.from}"`).join(" · ")}) — at most one expected-outcome authority may model an example space.`,
+        subjectId: targetId,
+        file: fileOf(index, targetId),
+      }),
+    );
+  }
+
+  return findings;
+}
+
 /* ----- conformance/pack-coherence (`05` §4; F4) ----- */
 
 function checkPackMembers(pack: PackNode, index: GraphIndex, findings: Finding[]): void {
@@ -915,6 +978,7 @@ export function validateGraph(graph: GraphSchema): ValidationReport {
     ...checkDuplicateIds(graph),
     ...checkClaimSeparation(graph, index),
     ...checkVerifiesLinkage(graph, index),
+    ...checkOracleLinkage(graph, index),
     ...checkPackCoherence(graph, index),
     ...checkOrphans(graph, index),
     ...authoringShapeFindings,
