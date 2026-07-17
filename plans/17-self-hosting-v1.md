@@ -384,6 +384,13 @@ a disposition is never evidence of completion:
 | Extraction-root & exclusion policy (new — forced by self-hosting) | Address — §1.0 ruling | pending |
 | Graph schema-version policy for prose fields (new) | Address — §1.5 ruling | pending |
 | Carrier-ruling transition-clause amendment (new — forced by the interim story) | Address — MD-18 Decision text + CONTEXT resolved entry + AGENTS interim sentence (Session 1, before first MD-canonical ID) | pending |
+| Public/package API proof (new — forced by grounded review) | Address — installed-tarball declaration + runtime smoke beside the source and built-entry tests | pending |
+| Temporal-scan coverage (new — forced by grounded review) | Address — the temporal guard covers tracked plus nonignored untracked durable files, genre exclusions retained | pending |
+| Root generated-state isolation (new — forced by grounded review) | Address — isolate repo-root generated state from parallel tests; a dependency-aware preflight lands before the tracer | pending |
+| Clean-clone proof (new — forced by grounded review) | Address — clean-snapshot and authorized clean-clone runs of the full gate | pending |
+| JTBD carrier repair (new — drift found by grounded review) | Address — the logical/physical relations distinction lands in JS-A1 with the interim-rule records; the remaining `.sdp.ts`-era carrier claims ride Session 4's anti-misleading pass | pending |
+| MD-15 wording repair (new — forced by the carrier ruling) | Address — the extension law's wording re-points to the `.sdp.md` sibling beside the carrier-ruling amendment (Session 1) | pending |
+| Four-gate review ledger (new — forced by the owner-gate design) | Address — a durable ledger of the four owner Design Review gates, filled as each gate accepts | pending |
 
 ## §7 — Verification
 

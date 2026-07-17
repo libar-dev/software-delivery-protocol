@@ -22,6 +22,7 @@ The job here is to get a thought into the system and let it grow without ever fo
 5. The spec source is static, side-effect-free data (a "JSON file that TypeScript happens to validate"), so the extractor reifies it deterministically.
 6. Two people capturing two ideas never collide on identity, because each spec carries a stable, namespaced ID (e.g. `spec:orders.create-order`); a duplicate ID is a loud build error, never a silent merge.
 7. The captured spec appears in the next `sdp build` with no extra steps, and its stated readiness is checked against the `idea` floor.
+8. Relations are optional in the logical `Spec` model. A physical Markdown envelope writes `relations: {}` when the logical set is empty: honest carrier syntax, not a new logical relation requirement. A captured idea may therefore carry no relations at all; the explicit empty key belongs to the carrier, never to the model.
 
 ---
 

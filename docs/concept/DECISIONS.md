@@ -325,10 +325,15 @@ sufficient for self-validation. *Rejected:* a documented dual path (the disagree
 **Execution.** Slice 1 (extractor feeds the floor checks) / Slice 3 (the full gate); until then the Session-1
 harness stands in, honestly fenced (the `authored-model.ts` doc-comment already says so).
 
-### MD-15 — Authored Spec files carry the `.sdp.ts` extension  [ACCEPTED 2026-06-10]
+### MD-15 — Authored Spec files carry the `.sdp.ts` extension  [ACCEPTED 2026-06-10 · amended 2026-07-18 (plan 17) — re-pointed, not repealed]
 **Decision.** Spec files are `/specs/**/*.sdp.ts` (packs: `*.pack.sdp.ts`). The Protocol's own compound
 extension — the `.stories.tsx` pattern: tool-branded, collision-free, tooling-scopeable. The model name
 `Spec` is untouched (it was always settled); only the file serialization changes.
+**Amended 2026-07-18 (plan 17) — re-pointed, not repealed.** The rationale below (never `.spec.ts`;
+a tool-branded, collision-free compound extension; the filename itself carrying the marker for a
+colocated future) carries over to the ruled carrier: a Markdown-carrier Spec file is
+`/specs/**/*.sdp.md`. `.sdp.ts` remains the extension of the TS DSL carrier while that carrier
+survives — the import source and lawful per-ID option (the carrier ruling, MD-18).
 **Why / alternatives rejected.** `*.spec.ts` is *the* default test glob of the JS ecosystem (Vitest:
 `**/*.{test,spec}.?(c|m)[jt]s(x)`; Jest/Mocha conventions match). An adopter on runner defaults gets their
 runner executing Spec-primitive files — Vitest fails files with no test suites, so first contact with the
@@ -420,18 +425,20 @@ the carrier's expansion sugar).
 > record). The flagged terms ***carrier*** and ***notation*** ratified into `CONTEXT.md` at this
 > session. Two rulings passed the three-part test and enter here.
 
-### MD-18 — The carrier ruling: Markdown, all eight kinds; the TS DSL becomes import source + per-ID option  [ACCEPTED 2026-07-12]
+### MD-18 — The carrier ruling: Markdown, all eight kinds; the TS DSL becomes import source + per-ID option  [ACCEPTED 2026-07-12 · transition clause amended 2026-07-18 (plan 17)]
 **Context.** The carrier competition (plan 14) closed with four evidence PRs: two full exhibits
 (F2 Markdown, C2 own grammar) and two honest concessions (Gherkin extension/fork; typed markup).
 The docket required ruling the carrier, the kind-partition question, and the TS DSL's long-term
 role — evidence-vs-evidence on the recorded scorecards, never by preference.
 **Decision.** The **Markdown carrier (F2) is the authoring carrier for all eight `kind` values**:
 an authored `Spec` document is an `.sdp.md` file — YAML-frontmatter envelope, free prose body,
-the owned notation in fenced blocks — statically extracted into the one graph. The canonical
-default flips **when the product parser and `sdp import` land and the worked example migrates**;
-until then the TS DSL stays sole-canonical. After the flip the TS DSL survives as the import
-source and as a lawful per-ID option via the canonical-surface config (`04` §1) — the surviving
-law is **one canonical surface per ID, no mixing**, never TS-as-sole-surface.
+the owned notation in fenced blocks — statically extracted into the one graph. **Transition
+clause, amended 2026-07-18 (plan 17):** New spec IDs may be born Markdown-canonical once the
+product parser lands; pre-existing IDs and the worked example remain TS-canonical until the
+ruled flip (the product parser, `sdp import`, and the checkout-v1 migration). After the flip
+the TS DSL survives as the import source and as a lawful per-ID option via the canonical-surface
+config (`04` §1) — the surviving law is **one canonical surface per ID, no mixing**, never
+TS-as-sole-surface.
 **Why / alternatives rejected.** *C2 own grammar*: strongest differentiation and diff/merge, but
 its own scorecard's ownership row is decisive — parser, formatter, highlighting, rendering,
 editor integrations, LSP owned forever, plus the agent grammar-context tax and no rendered page

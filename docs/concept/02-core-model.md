@@ -34,6 +34,12 @@ type Spec = {
 
 The **envelope** — `id`, `title`, `kind`, `altitude`, `readiness`, `relations` — is intentionally minimal and stable; it changes almost never. Variability lives in the **sections**. New capability is added by adding sections or extending enums (a MINOR change), not by reshaping the envelope (L9).
 
+> **Carrier note (the carrier ruling, MD-18).** The envelope above is the *logical* shape; a carrier
+> serializes it physically. Relations are optional in the logical `Spec` model. A physical Markdown
+> envelope writes `relations: {}` when the logical set is empty: honest carrier syntax, not a new
+> logical relation requirement. The explicit physical key catches a truncated envelope at
+> reification — the model itself stays relation-optional exactly as this section states.
+
 The same shape serves an early idea, a semi-refined behavior, a business rule, an acceptance example, an NFR, an API contract, and an example with a verifier. There is no `Requirement` / `UnimplementedRequirement` / `ImplementedRequirement` split. Two *other* things are authored but are **not** truth-primitives — the **`Pack`** (§4) and the in-code **`anchor`** (§6, and `04`); everything the machine reports about realization is **derived** (§2).
 
 ---
