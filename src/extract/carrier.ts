@@ -1,7 +1,7 @@
 import { Project } from "ts-morph";
 
 import type { Finding } from "../validate/contracts.js";
-import { parseMarkdownFrontmatter } from "./markdown.js";
+export { reifyMarkdownCarrier } from "./markdown.js";
 import { extractFindingIds, reifySourceFile } from "./reify.js";
 import type { ReifiedPack, ReifiedSpec } from "./reify.js";
 
@@ -79,23 +79,4 @@ export const reifyTypeScriptCarrier: CarrierReifier = (sourceText, relativePath)
   } catch (error: unknown) {
     return reificationFailure(extractFindingIds.parseError, relativePath, error);
   }
-};
-
-export const reifyMarkdownCarrier: CarrierReifier = (sourceText, relativePath) => {
-  const parsed = parseMarkdownFrontmatter(sourceText, relativePath);
-
-  if (!parsed.ok) return { specs: [], packs: [], findings: parsed.findings };
-
-  return {
-    specs: [
-      {
-        data: parsed.frontmatter.data,
-        id: parsed.frontmatter.id,
-        file: relativePath,
-        line: parsed.frontmatter.line,
-      },
-    ],
-    packs: [],
-    findings: parsed.findings,
-  };
 };

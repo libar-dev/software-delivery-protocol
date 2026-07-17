@@ -1,7 +1,8 @@
 export * from "./ids.js";
 export * from "./codegen/contracts.js";
 export * from "./extract/index.js";
-export { reifyMarkdownCarrier, reifyTypeScriptCarrier } from "./extract/carrier.js";
+export { reifyTypeScriptCarrier } from "./extract/carrier.js";
+export { reifyMarkdownCarrier } from "./extract/markdown.js";
 export type { CarrierReification, CarrierReifier } from "./extract/carrier.js";
 export { deriveGraph } from "./extract/derive.js";
 export type { ReifiedAnchor } from "./extract/anchors.js";

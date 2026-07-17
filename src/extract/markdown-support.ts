@@ -23,11 +23,17 @@ export function addMarkdownFinding(findings: Finding[], entry: Finding): void {
 export function capMarkdownFindings(
   findings: readonly Finding[],
   file: string,
+  validatorId = invalidFrontmatterFindingId,
 ): readonly Finding[] {
   return findings.length < MAX_FINDINGS
     ? findings
     : [
         ...findings.slice(0, MAX_FINDINGS - 1),
-        markdownFinding(file, 1, "finding limit reached; additional findings suppressed"),
+        markdownFinding(
+          file,
+          1,
+          "finding limit reached; additional findings suppressed",
+          validatorId,
+        ),
       ];
 }

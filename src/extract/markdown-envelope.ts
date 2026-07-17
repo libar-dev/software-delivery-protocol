@@ -3,6 +3,8 @@ import { Buffer } from "node:buffer";
 export interface MarkdownEnvelope {
   readonly source: string;
   readonly baseLine: number;
+  readonly body: string;
+  readonly bodyBaseLine: number;
 }
 
 export function readMarkdownEnvelope(source: string): MarkdownEnvelope | string {
@@ -23,5 +25,10 @@ export function readMarkdownEnvelope(source: string): MarkdownEnvelope | string 
   const frontmatter = lines.slice(1, closing).join(newline);
   return Buffer.byteLength(frontmatter, "utf8") > 32 * 1024
     ? "frontmatter exceeds the 32 KiB byte limit"
-    : { source: frontmatter, baseLine: 2 };
+    : {
+        source: frontmatter,
+        baseLine: 2,
+        body: lines.slice(closing + 1).join(newline),
+        bodyBaseLine: closing + 2,
+      };
 }

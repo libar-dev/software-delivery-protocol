@@ -122,6 +122,33 @@ describe("readiness and validation contracts", () => {
     expect(kindEvidence.contract).toBe(kindEvidence.behavior);
   });
 
+  it("keeps a workflow with flows below defined until it carries a rule", () => {
+    const workflow = (behavior: NonNullable<Spec["behavior"]>): Spec =>
+      spec({
+        id: specId("spec:orders.order-workflow"),
+        title: "Create-order workflow",
+        kind: "workflow",
+        altitude: "story",
+        readiness: "defined",
+        intent: { outcome: "Make the create-order path explicit." },
+        behavior,
+        relations: [refines(specId("spec:orders.order-management"))],
+      });
+
+    expect(
+      floorFailuresFor(
+        workflow({ flows: ["Validate then create."] }).id,
+        workflow({ flows: ["Validate then create."] }),
+      ).map((failure) => failure.clauseId),
+    ).toEqual(["kind-evidence-complete"]);
+    expect(
+      floorFailuresFor(
+        workflow({ flows: ["Validate then create."], rules: ["Validation precedes creation."] }).id,
+        workflow({ flows: ["Validate then create."], rules: ["Validation precedes creation."] }),
+      ),
+    ).toEqual([]);
+  });
+
   it("counts promoted children as evidence — promotion never costs an earned rung (MD-10/MD-12)", () => {
     const parent = spec({
       id: specId("spec:orders.create-order"),

@@ -22,6 +22,17 @@ relations: {}
 ---
 # Deferred body parsing`;
 
+function carrierBody(body: string, kind = "behavior"): string {
+  return `---
+id: spec:carrier.body
+kind: ${kind}
+altitude: story
+readiness: idea
+relations: {}
+---
+${body}`;
+}
+
 function reify(sourceText: string) {
   return reifyMarkdownCarrier(sourceText, "carrier.sdp.md");
 }
@@ -41,6 +52,8 @@ describe("Markdown frontmatter reifier", () => {
       expect(result.findings).toEqual([]);
       expect(result.specs).toHaveLength(1);
       expect(result.specs[0]?.line).toBe(2);
+      expect(result.specs[0]?.data.title).toBeDefined();
+      expect(result.specs[0]?.data.intent).toHaveProperty("outcome");
     }
   });
 
@@ -166,5 +179,206 @@ relations:
         line: 1,
       });
     }
+  });
+
+  it("maps the ruled title, intent, and behavior lists from the body", () => {
+    const result = reify(
+      carrierBody(`# Carrier title
+Narrative first paragraph.
+
+Narrative second paragraph.
+
+## Intent
+Intent description.
+- actor: An author
+- outcome: Preserve one graph.
+- risk: A silent drop
+
+### Open questions
+- [blocking] Is the grammar sufficient?
+
+## Behavior
+Behavior description.
+- rule: The carrier is deterministic.
+- flow: Parse then derive.`),
+    );
+
+    expect(result.findings).toEqual([]);
+    expect(result.specs[0]?.data).toMatchObject({
+      title: "Carrier title",
+      narrative: "Narrative first paragraph.\n\nNarrative second paragraph.",
+      intent: {
+        description: "Intent description.",
+        actor: "An author",
+        outcome: "Preserve one graph.",
+        risks: ["A silent drop"],
+        openQuestions: [{ question: "Is the grammar sufficient?", blocking: true }],
+      },
+      behavior: {
+        description: "Behavior description.",
+        rules: ["The carrier is deterministic."],
+        flows: ["Parse then derive."],
+      },
+    });
+  });
+
+  it("maps the ruled fences and every remaining typed owner", () => {
+    const resultKey = ["t", "hen"].join("");
+    const result = reify(
+      carrierBody(
+        `# Example carrier
+## Intent
+- outcome: Bind one point.
+\`\`\`gwt
+Given a cart with {items: 2} entries
+When the cart is submitted
+Then an order is created
+\`\`\`
+
+## Example space
+\`\`\`gwt-vocabulary
+Given a cart with {items:number} entries
+When the cart is submitted
+Then an order is created
+\`\`\`
+
+## Constraints
+- statement: Respond within the budget.
+- target: latency.p95
+
+## Model
+- **Order** — An accepted cart.
+
+## Design
+- retryPolicy: Retry only transient failures.
+
+## Decision
+- context: The validation order was ambiguous.
+- decision: Validate before persistence.
+- rationale: It avoids invalid writes.
+
+## Verification — executable
+- The integration scenario exits zero.
+
+## UI
+- emptyState: Explain the next action.`,
+        "example",
+      ),
+    );
+
+    expect(result.findings).toEqual([]);
+    expect(result.specs[0]?.data).toMatchObject({
+      behavior: {
+        examples: [{ given: ["a cart with {items: 2} entries"], when: ["the cart is submitted"] }],
+        exampleSpace: {
+          given: ["a cart with {items:number} entries"],
+          when: ["the cart is submitted"],
+        },
+      },
+      constraints: [{ statement: "Respond within the budget.", target: "latency.p95" }],
+      model: { terms: { Order: "An accepted cart." } },
+      design: { retryPolicy: "Retry only transient failures." },
+      decision: {
+        context: "The validation order was ambiguous.",
+        decision: "Validate before persistence.",
+        rationale: ["It avoids invalid writes."],
+      },
+      verification: { mode: "executable", criteria: ["The integration scenario exits zero."] },
+      ui: { emptyState: "Explain the next action." },
+    });
+    expect(result.specs[0]?.data).toHaveProperty(
+      ["behavior", "examples", 0, resultKey],
+      ["an order is created"],
+    );
+    expect(result.specs[0]?.data).toHaveProperty(
+      ["behavior", "exampleSpace", resultKey],
+      ["an order is created"],
+    );
+  });
+
+  it("uses the first minimum heading suggestion within edit distance two", () => {
+    const result = reify(carrierBody("# Title\n## Intnet"));
+
+    expect(result.findings[0]).toMatchObject({
+      validatorId: "extract/unrecognized-heading",
+      line: 9,
+      message: 'heading "Intnet" is not recognized; did you mean "Intent"?',
+    });
+  });
+
+  it.each([
+    [
+      "frontmatter title",
+      validFrontmatter.replace("relations: {}\n---", "relations: {}\ntitle: forbidden\n---"),
+      "extract/invalid-frontmatter",
+      7,
+    ],
+    ["second H1", carrierBody("# First\n# Second"), "extract/invalid-markdown-structure", 9],
+    ["near-miss heading", carrierBody("# Title\n## Intnet"), "extract/unrecognized-heading", 9],
+    [
+      "indented list",
+      carrierBody("# Title\n## Rule\n  - text"),
+      "extract/invalid-markdown-structure",
+      10,
+    ],
+    ["empty list", carrierBody("# Title\n## Rule\n- "), "extract/invalid-markdown-structure", 10],
+    [
+      "nested list",
+      carrierBody("# Title\n## Rule\n- text\n  - nested"),
+      "extract/invalid-markdown-structure",
+      11,
+    ],
+    ["extra heading space", carrierBody("#  Title"), "extract/invalid-markdown-structure", 8],
+    [
+      "extra list space",
+      carrierBody("# Title\n## Rule\n-  text"),
+      "extract/invalid-markdown-structure",
+      10,
+    ],
+    [
+      "invalid GWT phase",
+      carrierBody(
+        "# Title\n## Intent\n- outcome: Bound point.\n```gwt\nWhen action\nThen result\n```",
+        "example",
+      ),
+      "extract/invalid-markdown-structure",
+      12,
+    ],
+    [
+      "late description",
+      carrierBody("# Title\n## Rule\n- text\nLater prose"),
+      "extract/unowned-prose",
+      11,
+    ],
+    ["raw HTML", carrierBody("# Title\n<div>no</div>"), "extract/invalid-markdown-structure", 9],
+    [
+      "inline raw HTML",
+      carrierBody("# Title\nA <b>raw</b> tag."),
+      "extract/invalid-markdown-structure",
+      9,
+    ],
+    [
+      "trailing prose",
+      carrierBody("# Title\n## Rule\n- text\n\nTrailing"),
+      "extract/unowned-prose",
+      12,
+    ],
+    [
+      "unsupported block",
+      carrierBody("# Title\n## Rule\n| a | b |"),
+      "extract/invalid-markdown-structure",
+      10,
+    ],
+    [
+      "reserved authored fact",
+      carrierBody("# Title\n## Behavior\n- implemented: yes"),
+      "extract/reserved-property",
+      10,
+    ],
+  ])("refuses %s through its ruled diagnostic", (_name, sourceText, validatorId, line) => {
+    const result = reify(sourceText);
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings[0]).toMatchObject({ validatorId, line });
   });
 });
