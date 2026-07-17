@@ -1,6 +1,11 @@
 export * from "./ids.js";
 export * from "./codegen/contracts.js";
 export * from "./extract/index.js";
+export { reifyMarkdownCarrier, reifyTypeScriptCarrier } from "./extract/carrier.js";
+export type { CarrierReification, CarrierReifier } from "./extract/carrier.js";
+export { deriveGraph } from "./extract/derive.js";
+export type { ReifiedAnchor } from "./extract/anchors.js";
+export type { ReifiedPack, ReifiedSpec } from "./extract/reify.js";
 export * from "./notation/slots.js";
 export * from "./graph/delivery-facts.js";
 export * from "./graph/schema.js";
