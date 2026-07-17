@@ -25,6 +25,8 @@ export interface ExtractOptions {
    * layer).
    */
   readonly root: string;
+  /** Root-relative POSIX path prefixes excluded from both discovery surfaces. */
+  readonly exclude?: readonly string[];
 }
 
 export interface ExtractionCounts {
@@ -152,7 +154,7 @@ function fileParses(program: Program, source: ParsedSourceFile, findings: Findin
  * producer is the aspirational impact graph.
  */
 export function extract(options: ExtractOptions): ExtractionResult {
-  const files = discoverFiles(options.root);
+  const files = discoverFiles(options.root, options.exclude);
   // The project only ever parses: reification is pure AST reading and the program exists solely
   // for syntactic diagnostics, so the default lib would never be read — `noLib` skips loading it.
   const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { noLib: true } });

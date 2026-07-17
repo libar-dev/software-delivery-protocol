@@ -1,4 +1,5 @@
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -21,6 +22,66 @@ const materializedRoots: string[] = [];
 function corpusRoot(name: string): string {
   const root = materializeExtractCorpus(name);
   materializedRoots.push(root);
+  return root;
+}
+
+function exclusionSpecSource(id: string): string {
+  return `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const declared = spec({
+  id: specId("${id}"),
+  title: "${id}",
+  kind: "behavior",
+  altitude: "feature",
+  readiness: "idea",
+  intent: { outcome: "Exercise extraction discovery." },
+});
+`;
+}
+
+function exclusionAnchorSource(id: string, target: string): string {
+  return `import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+
+export const binding = codeAnchor({
+  id: codeAnchorId("${id}"),
+  satisfies: ref("${target}"),
+});
+`;
+}
+
+function exclusionRoot(): string {
+  const root = mkdtempSync(join(tmpdir(), "sdp-exclusions-"));
+  materializedRoots.push(root);
+
+  mkdirSync(join(root, "explorations"));
+  mkdirSync(join(root, "dist"));
+  writeFileSync(join(root, "included.sdp.ts"), exclusionSpecSource("spec:orders.included"), "utf8");
+  writeFileSync(
+    join(root, "included.ts"),
+    exclusionAnchorSource("impl:orders.included", "spec:orders.included"),
+    "utf8",
+  );
+  writeFileSync(
+    join(root, "single.sdp.ts"),
+    exclusionSpecSource("spec:orders.file-prefix"),
+    "utf8",
+  );
+  writeFileSync(
+    join(root, "explorations", "hidden.sdp.ts"),
+    exclusionSpecSource("spec:orders.excluded"),
+    "utf8",
+  );
+  writeFileSync(
+    join(root, "explorations", "hidden.ts"),
+    exclusionAnchorSource("impl:orders.excluded", "spec:orders.excluded"),
+    "utf8",
+  );
+  writeFileSync(
+    join(root, "dist", "fixed.sdp.ts"),
+    exclusionSpecSource("spec:orders.fixed-exclude"),
+    "utf8",
+  );
+
   return root;
 }
 
@@ -585,6 +646,55 @@ describe("import-surface and discovery corpora", () => {
         claim: "anchored",
       },
     ]);
+  });
+
+  it("consumer exclusions are case-sensitive root-relative prefixes applied before either surface classifies", () => {
+    // Given: spec and anchor carriers below a consumer-selected directory, a file prefix, a
+    // nonexistent prefix, and a fixed tooling directory.
+    const root = exclusionRoot();
+
+    // When: the consumer excludes only the lower-case directory and exact file prefix.
+    const result = extract({
+      root,
+      exclude: ["explorations", "explorations", "single.sdp.ts", "does-not-exist"],
+    });
+
+    // Then: both excluded carrier classes are absent; fixed-directory behavior stays independent.
+    expect(result.report.findings).toEqual([]);
+    expect(result.counts).toEqual({ specs: 1, packs: 0, anchors: 1 });
+    expect(result.graph.nodes.map((node) => node.id)).toEqual([
+      "spec:orders.included",
+      "impl:orders.included",
+    ]);
+    expect(JSON.stringify(result.graph)).not.toContain("excluded");
+    expect(JSON.stringify(result.graph)).not.toContain("file-prefix");
+    expect(JSON.stringify(result.graph)).not.toContain("fixed-exclude");
+
+    // When: the exclusion's code units differ in case.
+    const caseVariant = extract({ root, exclude: ["EXPLORATIONS"] });
+
+    // Then: the lower-case path remains in scope.
+    expect(caseVariant.graph.nodes.map((node) => node.id)).toContain("spec:orders.excluded");
+  });
+
+  it.each([
+    "",
+    ".",
+    "./explorations",
+    "explorations/",
+    "/explorations",
+    "../x",
+    "a/../b",
+    "a//b",
+    "a\\b",
+  ])("rejects the invalid consumer exclusion %j", (exclude) => {
+    // Given: an extraction root.
+    const root = exclusionRoot();
+
+    // When / Then: malformed consumer scope is refused rather than broadened or normalized.
+    expect(() => extract({ root, exclude: [exclude] })).toThrow(
+      `invalid --exclude path "${exclude}"`,
+    );
   });
 });
 

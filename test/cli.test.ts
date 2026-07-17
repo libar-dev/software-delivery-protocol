@@ -365,6 +365,123 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
     expect(capture.readStderr()).toBe("sdp build: unknown option --bogus\n");
   });
 
+  it.each(["build", "validate", "view"] as const)(
+    "accepts repeatable --exclude paths for %s",
+    (command) => {
+      // Given: a disposable authored model and two valid consumer prefixes.
+      const root = materializeExtractCorpus("anchored-binding");
+
+      try {
+        const capture = createCaptureOutput();
+        const extractionOptions: Parameters<typeof extract>[0][] = [];
+
+        // When: each extraction command receives repeatable exclusions.
+        const exitCode = runSdpCli(
+          [command, root, "--exclude", "future", "--exclude", "also-future"],
+          capture.output,
+          {
+            extract: (options) => {
+              extractionOptions.push(options);
+              return extract(options);
+            },
+          },
+        );
+
+        // Then: parsing succeeds and the normalized options reach the extractor.
+        expect(exitCode).toBe(0);
+        expect(extractionOptions).toEqual([{ root, exclude: ["future", "also-future"] }]);
+      } finally {
+        removeMaterializedCorpus(root);
+      }
+    },
+  );
+
+  it("uses the identical normalized exclusions in both --check-clean extractions", () => {
+    // Given: a clean disposable corpus and duplicate consumer options.
+    const root = materializeExtractCorpus("anchored-binding");
+
+    try {
+      const extractionOptions: Parameters<typeof extract>[0][] = [];
+
+      // When: the clean-check reruns extraction.
+      const exitCode = runSdpCli(
+        ["build", root, "--exclude", "explorations", "--exclude", "explorations", "--check-clean"],
+        createCaptureOutput().output,
+        {
+          extract: (options) => {
+            extractionOptions.push(options);
+            return extract(options);
+          },
+        },
+      );
+
+      // Then: both passes receive the same deduplicated options object shape.
+      expect(exitCode).toBe(0);
+      expect(extractionOptions).toEqual([
+        { root, exclude: ["explorations"] },
+        { root, exclude: ["explorations"] },
+      ]);
+    } finally {
+      removeMaterializedCorpus(root);
+    }
+  });
+
+  it.each([
+    "",
+    ".",
+    "./explorations",
+    "explorations/",
+    "/explorations",
+    "../x",
+    "a/../b",
+    "a//b",
+    "a\\b",
+  ])("refuses invalid --exclude path %j before build writes", (exclude) => {
+    // Given: a writable empty root and an invalid consumer prefix.
+    const root = mkdtempSync(join(tmpdir(), "sdp-invalid-exclude-"));
+
+    try {
+      const capture = createCaptureOutput();
+
+      // When: build parses the option.
+      const exitCode = runSdpCli(["build", root, "--exclude", exclude], capture.output);
+
+      // Then: invocation fails in one line and no artifact directory is created.
+      expect(exitCode).toBe(1);
+      expect(capture.readStdout()).toBe("");
+      expect(capture.readStderr()).toBe(`sdp build: invalid --exclude path "${exclude}"\n`);
+      expect(capture.readStderr().trimEnd().split("\n")).toHaveLength(1);
+      expect(existsSync(join(root, "generated"))).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("refuses a missing --exclude operand before build writes", () => {
+    // Given: a writable empty root.
+    const root = mkdtempSync(join(tmpdir(), "sdp-missing-exclude-"));
+
+    try {
+      const capture = createCaptureOutput();
+
+      // When: the option has no following path.
+      const exitCode = runSdpCli(["build", root, "--exclude"], capture.output);
+
+      // Then: the error is one invocation line and no artifact directory is created.
+      expect(exitCode).toBe(1);
+      expect(capture.readStdout()).toBe("");
+      expect(capture.readStderr()).toBe("sdp build: --exclude requires a path.\n");
+      expect(capture.readStderr().trimEnd().split("\n")).toHaveLength(1);
+      expect(existsSync(join(root, "generated"))).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("documents repeatable --exclude paths in help", () => {
+    expect(SDP_HELP_TEXT).toContain("[--exclude PATH]...");
+  });
+
   it("rejects a second root argument: one line, exit 1, nothing runs", () => {
     const capture = createCaptureOutput();
 
