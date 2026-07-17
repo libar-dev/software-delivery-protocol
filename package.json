@@ -65,6 +65,7 @@
     }
   },
   "dependencies": {
-    "ts-morph": "~28.0.0"
+    "ts-morph": "~28.0.0",
+    "yaml": "2.9.0"
   }
 }

@@ -1,10 +1,9 @@
 import { Project } from "ts-morph";
 
 import type { Finding } from "../validate/contracts.js";
+import { parseMarkdownFrontmatter } from "./markdown.js";
 import { extractFindingIds, reifySourceFile } from "./reify.js";
 import type { ReifiedPack, ReifiedSpec } from "./reify.js";
-
-const invalidFrontmatterFindingId = "extract/invalid-frontmatter";
 
 export interface CarrierReification {
   readonly specs: readonly ReifiedSpec[];
@@ -82,21 +81,21 @@ export const reifyTypeScriptCarrier: CarrierReifier = (sourceText, relativePath)
   }
 };
 
-/**
- * The public Markdown carrier seam. The bounded grammar lands in the next parser slices; until
- * then every input refuses loudly rather than being silently ignored or misclassified.
- */
-export const reifyMarkdownCarrier: CarrierReifier = (sourceText, relativePath) => ({
-  specs: [],
-  packs: [],
-  findings: [
-    finding(
-      invalidFrontmatterFindingId,
-      sourceText.length === 0
-        ? "Markdown carrier reification is not available yet; an empty carrier cannot be mapped"
-        : "Markdown carrier reification is not available yet; carrier content cannot be mapped",
-      relativePath,
-      1,
-    ),
-  ],
-});
+export const reifyMarkdownCarrier: CarrierReifier = (sourceText, relativePath) => {
+  const parsed = parseMarkdownFrontmatter(sourceText, relativePath);
+
+  if (!parsed.ok) return { specs: [], packs: [], findings: parsed.findings };
+
+  return {
+    specs: [
+      {
+        data: parsed.frontmatter.data,
+        id: parsed.frontmatter.id,
+        file: relativePath,
+        line: parsed.frontmatter.line,
+      },
+    ],
+    packs: [],
+    findings: parsed.findings,
+  };
+};
