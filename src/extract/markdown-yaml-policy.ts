@@ -8,6 +8,20 @@ import type { Finding } from "../validate/contracts.js";
 import { addMarkdownFinding, markdownFinding, markdownLine } from "./markdown-support.js";
 
 const nonStringPlainScalars = /^(?:[-+]?\d+(?:\.\d+)?|\.inf|\.nan|true|false|null|~)$/iu;
+const reservedEnvelopeKeys = new Set([
+  "claim",
+  "deliveryFacts",
+  "nodeType",
+  "specKind",
+  "satisfies",
+  "verifies",
+  "belongsTo",
+  "models",
+]);
+
+export function isReservedEnvelopeKey(value: string): boolean {
+  return reservedEnvelopeKeys.has(value);
+}
 
 function isNode(value: unknown): value is Node {
   return isAlias(value) || isMap(value) || isScalar(value) || isSeq(value);

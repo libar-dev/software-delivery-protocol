@@ -10,6 +10,7 @@ export interface MarkdownLine {
 export interface MarkdownListItem {
   readonly text: string;
   readonly line: number;
+  readonly afterH3: boolean;
 }
 
 export interface MarkdownFence {
@@ -197,7 +198,7 @@ export function parseSectionContent(
       const text = line.text.slice(2);
       if (text.trim().length === 0 || /^[\t ]/u.test(text))
         addMarkdownFinding(findings, bodyFinding(file, line.line, "list text must not be empty"));
-      else items.push({ text, line: line.line });
+      else items.push({ text, line: line.line, afterH3: h3 !== undefined });
       continue;
     }
     if (/^[\t ]/u.test(line.text) || line.text.startsWith("|") || line.text.startsWith(">")) {

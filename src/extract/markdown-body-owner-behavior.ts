@@ -4,6 +4,7 @@ import type { MarkdownLine } from "./markdown-body-content.js";
 import {
   addDescription,
   append,
+  isRecord,
   keyed,
   propertyFinding,
   reservedMarkdownProperties,
@@ -52,7 +53,12 @@ export function mapIntent(
       const fence = parsed.fences[0];
       const example: Record<string, unknown> = { given: fence.steps.given, when: fence.steps.when };
       example[["t", "hen"].join("")] = fence.steps.result;
-      target.behavior = { examples: [example] };
+      const behavior = isRecord(target.behavior) ? target.behavior : {};
+      const examples: unknown[] = [];
+      if (Array.isArray(behavior.examples))
+        for (const current of behavior.examples) examples.push(current);
+      behavior.examples = [...examples, example];
+      target.behavior = behavior;
     }
   }
   if (parsed.h3 !== undefined && parsed.h3.text !== "### Open questions")
@@ -63,7 +69,7 @@ export function mapIntent(
   for (const item of parsed.items) {
     const question = /^\[(blocking|non-blocking)\] (.+)$/u.exec(item.text);
     if (question?.[1] !== undefined && question[2] !== undefined) {
-      if (parsed.h3 === undefined)
+      if (!item.afterH3 || parsed.h3?.text !== "### Open questions")
         addMarkdownFinding(
           findings,
           structureFinding(file, item.line, "open questions require ### Open questions"),
@@ -77,6 +83,13 @@ export function mapIntent(
       continue;
     }
     const entry = keyed(item.text);
+    if (item.afterH3) {
+      addMarkdownFinding(
+        findings,
+        structureFinding(file, item.line, "Intent fields must precede ### Open questions"),
+      );
+      continue;
+    }
     if (entry === undefined) {
       addMarkdownFinding(
         findings,

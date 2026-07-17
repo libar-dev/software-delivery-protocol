@@ -65,6 +65,10 @@ function ownerName(text: string): string | undefined {
   return mode === null ? undefined : text;
 }
 
+function ownerKey(name: string): string {
+  return name.startsWith("Verification — ") ? "Verification" : name;
+}
+
 function headingFinding(file: string, line: number, text: string): Finding {
   const lowercase = text.replace(/[A-Z]/gu, (letter) => letter.toLowerCase());
   let candidate: string | undefined;
@@ -184,13 +188,14 @@ export function parseMarkdownBody(
   const ownerNames = new Set<string>();
   let primarySeen = false;
   for (const owner of owners) {
-    if (ownerNames.has(owner.name) || (primaryOwners.has(owner.name) && primarySeen))
+    const name = ownerKey(owner.name);
+    if (ownerNames.has(name) || (primaryOwners.has(owner.name) && primarySeen))
       addMarkdownFinding(
         findings,
         structure(file, owner.line, "a single-valued Markdown owner is authored more than once"),
       );
     else {
-      ownerNames.add(owner.name);
+      ownerNames.add(name);
       if (primaryOwners.has(owner.name)) primarySeen = true;
       mapOwner(data, owner.name, owner.content, file, kind, findings);
     }

@@ -306,6 +306,71 @@ Then an order is created
     });
   });
 
+  it("refuses mixed-mode Verification headings instead of overwriting the first section", () => {
+    const result = reify(
+      carrierBody(
+        "# Title\n## Verification — manual\n- A reviewer checks it.\n## Verification — executable\n- The test exits zero.",
+      ),
+    );
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings[0]?.validatorId).toBe("extract/invalid-markdown-structure");
+  });
+
+  it("preserves Behavior rules when an example Intent appears after Behavior", () => {
+    const result = reify(
+      carrierBody(
+        "# Title\n## Behavior\n- rule: Preserve the rule.\n## Intent\n- outcome: Bind the example.\n```gwt\nGiven a valid input\nWhen it is processed\nThen an output exists\n```",
+        "example",
+      ),
+    );
+
+    expect(result.specs[0]?.data.behavior).toMatchObject({
+      rules: ["Preserve the rule."],
+      examples: [{ given: ["a valid input"], when: ["it is processed"] }],
+    });
+  });
+
+  it("refuses a GWT fence under Model", () => {
+    const result = reify(
+      carrierBody(
+        "# Title\n## Model\n```gwt\nGiven a model\nWhen it is parsed\nThen it is rejected\n```",
+      ),
+    );
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings[0]?.validatorId).toBe("extract/invalid-markdown-structure");
+  });
+
+  it("refuses an H3 under Design", () => {
+    const result = reify(carrierBody("# Title\n## Design\n### Detail\n- retryPolicy: Retry."));
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings[0]?.validatorId).toBe("extract/invalid-markdown-structure");
+  });
+
+  it("refuses an open question before its H3 owner", () => {
+    const result = reify(
+      carrierBody(
+        "# Title\n## Intent\n- [blocking] Must be owned.\n### Open questions\n- outcome: Must not cross the owner boundary.",
+      ),
+    );
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings[0]?.validatorId).toBe("extract/invalid-markdown-structure");
+  });
+
+  it("refuses an Intent field after the open-questions H3", () => {
+    const result = reify(
+      carrierBody(
+        "# Title\n## Intent\n### Open questions\n- outcome: Must not cross the owner boundary.",
+      ),
+    );
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings[0]?.validatorId).toBe("extract/invalid-markdown-structure");
+  });
+
   it.each([
     [
       "frontmatter title",

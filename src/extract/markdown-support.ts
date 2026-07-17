@@ -20,6 +20,16 @@ export function addMarkdownFinding(findings: Finding[], entry: Finding): void {
   if (findings.length < MAX_FINDINGS) findings.push(entry);
 }
 
+export function report(
+  findings: Finding[],
+  file: string,
+  line: number,
+  message: string,
+  validatorId?: string,
+): void {
+  addMarkdownFinding(findings, markdownFinding(file, line, message, validatorId));
+}
+
 export function capMarkdownFindings(
   findings: readonly Finding[],
   file: string,

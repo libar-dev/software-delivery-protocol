@@ -75,6 +75,15 @@ export function mapModel(
 ): void {
   const parsed = parseSectionContent(lines, file, findings);
   addDescription(section, parsed.description, file, lines[0]?.line ?? 1, findings);
+  if (parsed.h3 !== undefined || parsed.fences.length > 0)
+    addMarkdownFinding(
+      findings,
+      structureFinding(
+        file,
+        parsed.h3?.line ?? parsed.fences[0]?.line ?? 1,
+        "Model does not accept an H3 or fence",
+      ),
+    );
   const terms: Record<string, string> = {};
   for (const item of parsed.items) {
     const match = /^\*\*([^*]+)\*\* — (.+)$/u.exec(item.text);
@@ -98,6 +107,15 @@ export function mapOpen(
 ): void {
   const parsed = parseSectionContent(lines, file, findings);
   addDescription(section, parsed.description, file, lines[0]?.line ?? 1, findings);
+  if (parsed.h3 !== undefined || parsed.fences.length > 0)
+    addMarkdownFinding(
+      findings,
+      structureFinding(
+        file,
+        parsed.h3?.line ?? parsed.fences[0]?.line ?? 1,
+        "open sections do not accept an H3 or fence",
+      ),
+    );
   for (const item of parsed.items) {
     const entry = keyed(item.text);
     if (entry === undefined || !camelKey.test(entry.key))
@@ -124,6 +142,15 @@ export function mapDecision(
 ): void {
   const parsed = parseSectionContent(lines, file, findings);
   addDescription(section, parsed.description, file, lines[0]?.line ?? 1, findings);
+  if (parsed.h3 !== undefined || parsed.fences.length > 0)
+    addMarkdownFinding(
+      findings,
+      structureFinding(
+        file,
+        parsed.h3?.line ?? parsed.fences[0]?.line ?? 1,
+        "Decision does not accept an H3 or fence",
+      ),
+    );
   const arrays: Record<string, string> = {
     rationale: "rationale",
     alternative: "alternatives",
