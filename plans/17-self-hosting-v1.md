@@ -418,10 +418,14 @@ a clean clone.
 
 **Execution learning, todo 14 default-root substitution.** The shipped test retains a default-root
 regeneration case and now guards it with a post-suite sentinel, rather than moving that case to a
-disposable root as originally prescribed. `0ad4f44` restores regeneration and the sentinel; `4ee6136`
-extends the dedicated single-fork split to filtered runs. Together with filtered-run isolation, this
-still meets the intended no-race and idempotence contract. The substitution is recorded here as an
-execution learning, not as a silent rewrite of the original design.
+disposable root as originally prescribed. `0ad4f44` restores regeneration and the sentinel, and
+extends the dedicated single-fork split to filtered runs. `4ee6136` restores the build-prefixed
+recovery commands and matching Vitest substring filters. This still meets the intended no-race and
+idempotence contract. The substitution is recorded here as an execution learning, not as a silent
+rewrite of the original design.
+
+**F2 npm-audit disposition.** `npm audit` reports five development-chain advisories in Vitest and
+Vite, with zero production vulnerabilities. `yaml@2.9.0` is not among the advisories.
 
 **Sanctioned row-3 enrichment delta.** `spec:carrier.markdown-parser` gained `problem` and `value`
 Intent bullets during todo-9 enrichment. It was born `scoped` and matured to `defined`; this is the

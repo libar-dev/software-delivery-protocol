@@ -49,7 +49,7 @@ function isHtml(text: string): boolean {
 
 export function isUnsupportedCommonMarkBlock(text: string): boolean {
   return (
-    /^(?:[*+] |\d+[.)] |<)/u.test(text) ||
+    /^(?:[*+][\t ]|\d+[.)][\t ]|<)/u.test(text) ||
     /^(?:={3,}|(?:\*[\t ]*){3,}|(?:-[\t ]*){3,}|(?:_[\t ]*){3,})[\t ]*$/u.test(text)
   );
 }
