@@ -654,6 +654,171 @@ const expectedSpecs = [
     },
     deliveryFacts: ["implemented"],
   },
+  {
+    id: "spec:decisions.one-validation-path",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/one-validation-path.sdp.md",
+    title: "Validation follows one graph",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep conformance and honesty checks aligned with the source the graph actually represents.",
+      },
+      decision: {
+        context:
+          "Source can be statically reified without matching what an executing import would evaluate.",
+        decision:
+          "Validators consume the derived graph through one path: source, extraction, graph, then checks.",
+        rationale: [
+          "A parallel import-time validation path can approve values absent from the graph.",
+        ],
+        consequences: [
+          "Typed authoring feedback and extraction findings remain distinct from graph validation rather than becoming a second validator.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.sdp-ts-extension",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/sdp-ts-extension.sdp.md",
+    title: "Spec extensions identify the carrier without colliding with tests",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep authored Spec files recognizable to tools and safe beside ordinary test conventions.",
+      },
+      decision: {
+        context:
+          "A carrier filename must distinguish authored Specs from test files and remain useful when files are colocated.",
+        decision:
+          "Markdown Specs use `.sdp.md`; `.sdp.ts` names the surviving TypeScript DSL import source and lawful per-ID option.",
+        rationale: [
+          "Test-glob extensions and path-only conventions either misclassify Specs or hide their identity.",
+        ],
+        consequences: [
+          "Carrier-specific tooling can target the compound extension without changing the `Spec` model name.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.point-per-example",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/point-per-example.sdp.md",
+    title: "Each example binds one point",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep example-space coverage and outcome witnesses unambiguous while preserving compact authoring views.",
+      },
+      decision: {
+        context: "A single example must remain one witness in its parent's typed example space.",
+        decision:
+          "An example binds exactly one point; table syntax may expand statically into sibling examples and renderers may project siblings as a table.",
+        rationale: [
+          "Point sets make concreteness and witness semantics conditional, while banning table sugar taxes a surface layer that can translate honestly.",
+        ],
+        consequences: [
+          "The graph never stores multi-point examples even when a carrier offers tabular authoring.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.carrier-ruling",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/carrier-ruling.sdp.md",
+    title: "Markdown is the default Spec carrier",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give every Spec kind one readable canonical authoring surface without losing a lawful escape hatch.",
+      },
+      decision: {
+        context:
+          "The carrier must express all Spec kinds without creating an unbounded tooling obligation or a dual-source truth path.",
+        decision:
+          "Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option.",
+        rationale: [
+          "An owned grammar and a permanent kind split both add surface cost without a demonstrated expressive gain, while retiring the DSL removes a useful bounded option.",
+        ],
+        consequences: [
+          "Each ID has one canonical surface, and Markdown tooling is the default path for authored Specs.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.prose-ownership",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/prose-ownership.sdp.md",
+    title: "Prose belongs to typed graph owners",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Preserve free prose for projections without making its attachment ambiguous or forcing consumers to re-parse files.",
+      },
+      decision: {
+        context: "Document prose needs a stable graph home when section structure evolves.",
+        decision:
+          "Free prose is stored as a narrative or a description on its typed owner; unowned prose is refused.",
+        rationale: [
+          "File pointers force consumer re-parsing, while heading-path keys make churned document structure carry identity.",
+        ],
+        consequences: [
+          "Prose remains graph content inside typed shapes and ambiguous attachment fails loudly.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.envelope-grammar-posture",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/envelope-grammar-posture.sdp.md",
+    title: "The Protocol owns the envelope grammar",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep authored envelope meaning stable while retaining a replaceable parsing representation.",
+      },
+      decision: {
+        context: "YAML parsing behavior alone cannot define the Protocol's authored contract.",
+        decision:
+          "The Protocol owns a bounded envelope grammar and parser policy; the pinned YAML library is a swappable representation behind that contract.",
+        rationale: [
+          "Permissive parsing lets library behavior define meaning, while an owned YAML parser recreates the rejected grammar-maintenance burden.",
+        ],
+        consequences: [
+          "Unsupported YAML constructs are refused within explicit resource bounds instead of silently becoming carrier semantics.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
 ] as const;
 
 const expectedPackMembers = [
@@ -683,17 +848,27 @@ const expectedPackMembers = [
   "spec:validation.duplicate-ids.dual-carrier",
   "spec:decisions.plain-language-references",
   "spec:decisions.concept-docs-dissolve",
+  "spec:decisions.one-validation-path",
+  "spec:decisions.sdp-ts-extension",
+  "spec:decisions.point-per-example",
+  "spec:decisions.carrier-ruling",
+  "spec:decisions.prose-ownership",
+  "spec:decisions.envelope-grammar-posture",
 ] as const;
 
 const expectedDeclaredRelations = [
   ["spec:carrier.markdown-authoring", "dependsOn", "spec:carrier.markdown-parser"],
+  ["spec:carrier.markdown-authoring", "decidedBy", "spec:decisions.sdp-ts-extension"],
+  ["spec:carrier.markdown-authoring", "decidedBy", "spec:decisions.carrier-ruling"],
   ["spec:carrier.envelope-contract", "refines", "spec:carrier.markdown-authoring"],
+  ["spec:carrier.envelope-contract", "decidedBy", "spec:decisions.envelope-grammar-posture"],
   ["spec:carrier.markdown-parser", "refines", "spec:carrier.markdown-authoring"],
   ["spec:carrier.markdown-parser", "dependsOn", "spec:carrier.envelope-contract"],
   ["spec:carrier.sdp-import", "refines", "spec:carrier.markdown-authoring"],
   ["spec:carrier.sdp-import.round-trip", "refines", "spec:carrier.sdp-import"],
   ["spec:carrier.sdp-import.round-trip", "verifies", "spec:carrier.sdp-import"],
   ["spec:carrier.prose-ownership-rule", "refines", "spec:carrier.markdown-authoring"],
+  ["spec:carrier.prose-ownership-rule", "decidedBy", "spec:decisions.prose-ownership"],
   ["spec:protocol.self-hosting", "dependsOn", "spec:carrier.markdown-authoring"],
   ["spec:protocol.self-hosting", "dependsOn", "spec:model.protocol-domain"],
   ["spec:protocol.self-hosting", "decidedBy", "spec:decisions.concept-docs-dissolve"],
@@ -709,18 +884,26 @@ const expectedDeclaredRelations = [
   ["spec:validation.duplicate-ids.dual-carrier", "refines", "spec:validation.duplicate-ids"],
   ["spec:validation.duplicate-ids.dual-carrier", "verifies", "spec:validation.duplicate-ids"],
   ["spec:validation.two-check-families", "refines", "spec:protocol.self-hosting"],
+  ["spec:validation.two-check-families", "decidedBy", "spec:decisions.one-validation-path"],
   ["spec:consumers.projections-model", "refines", "spec:protocol.self-hosting"],
   ["spec:consumers.agent-surface", "refines", "spec:consumers.projections-model"],
   ["spec:consumers.design-review", "refines", "spec:consumers.projections-model"],
   ["spec:model.protocol-domain", "refines", "spec:protocol.self-hosting"],
   ["spec:model.core-model", "refines", "spec:protocol.self-hosting"],
   ["spec:model.spec-sections", "refines", "spec:model.core-model"],
+  ["spec:model.spec-sections", "decidedBy", "spec:decisions.point-per-example"],
   ["spec:model.relations", "refines", "spec:model.core-model"],
   ["spec:model.stable-ids", "refines", "spec:model.core-model"],
   ["spec:model.pack-aggregate", "refines", "spec:model.core-model"],
   ["spec:model.anchors", "refines", "spec:model.core-model"],
   ["spec:decisions.plain-language-references", "refines", "spec:protocol.self-hosting"],
   ["spec:decisions.concept-docs-dissolve", "refines", "spec:protocol.self-hosting"],
+  ["spec:decisions.one-validation-path", "refines", "spec:validation.two-check-families"],
+  ["spec:decisions.sdp-ts-extension", "refines", "spec:carrier.markdown-authoring"],
+  ["spec:decisions.point-per-example", "refines", "spec:model.spec-sections"],
+  ["spec:decisions.carrier-ruling", "refines", "spec:carrier.markdown-authoring"],
+  ["spec:decisions.prose-ownership", "refines", "spec:carrier.prose-ownership-rule"],
+  ["spec:decisions.envelope-grammar-posture", "refines", "spec:carrier.envelope-contract"],
 ] as const;
 
 const expectedWarnings = [] as const;
@@ -1047,7 +1230,7 @@ describe("the self-hosting corpus", () => {
         subjectId,
       })),
     ).toEqual(expectedWarnings);
-    expect(result.counts).toEqual({ specs: 26, packs: 1, anchors: 29 });
+    expect(result.counts).toEqual({ specs: 32, packs: 1, anchors: 29 });
     expect(nodeIds).toEqual(
       [
         "pack:self-hosting-v1",
@@ -1061,6 +1244,12 @@ describe("the self-hosting corpus", () => {
         "spec:consumers.design-review",
         "spec:consumers.projections-model",
         "spec:decisions.concept-docs-dissolve",
+        "spec:decisions.one-validation-path",
+        "spec:decisions.sdp-ts-extension",
+        "spec:decisions.point-per-example",
+        "spec:decisions.carrier-ruling",
+        "spec:decisions.prose-ownership",
+        "spec:decisions.envelope-grammar-posture",
         "spec:decisions.plain-language-references",
         "spec:extraction.build-pipeline",
         "spec:extraction.derive-graph",
@@ -1080,7 +1269,7 @@ describe("the self-hosting corpus", () => {
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
-    expect(result.graph.nodes).toHaveLength(56);
+    expect(result.graph.nodes).toHaveLength(62);
     expect(
       primitiveNodes
         .map((node) => ({
@@ -1124,7 +1313,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 19, ready: 7 });
+    ).toEqual({ defined: 25, ready: 7 });
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
@@ -1139,7 +1328,7 @@ describe("the self-hosting corpus", () => {
       modelRefs: ["spec:model.protocol-domain", "spec:model.core-model"],
       file: "specs/self-hosting.pack.sdp.ts",
     });
-    expect(result.graph.edges).toHaveLength(90);
+    expect(result.graph.edges).toHaveLength(108);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")

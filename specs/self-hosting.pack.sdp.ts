@@ -31,6 +31,12 @@ export const selfHostingV1Pack = pack({
     ref("spec:validation.duplicate-ids.dual-carrier"),
     ref("spec:decisions.plain-language-references"),
     ref("spec:decisions.concept-docs-dissolve"),
+    ref("spec:decisions.one-validation-path"),
+    ref("spec:decisions.sdp-ts-extension"),
+    ref("spec:decisions.point-per-example"),
+    ref("spec:decisions.carrier-ruling"),
+    ref("spec:decisions.prose-ownership"),
+    ref("spec:decisions.envelope-grammar-posture"),
   ],
   modelRefs: [ref("spec:model.protocol-domain"), ref("spec:model.core-model")],
 });

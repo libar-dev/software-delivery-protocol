@@ -5,6 +5,7 @@ altitude: story
 readiness: defined
 relations:
   refines: spec:carrier.markdown-authoring
+  decidedBy: spec:decisions.prose-ownership
 ---
 # Every prose edge has one owner
 

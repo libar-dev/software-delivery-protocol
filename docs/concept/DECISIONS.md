@@ -26,27 +26,27 @@ so the fold now waits for that ruling, and the decision specs are authored once,
 survives. **Format ruled (2026-07-12, the carrier ruling — MD-18):** the Markdown carrier; the fold
 itself rides with the self-hosting session (plan 16 §7).
 
-| ID | Ratified name | Curation | Future spec id |
-|---|---|---|---|
-| MD-1 | the executable meta-model | durable | `spec:decisions.executable-meta-model` |
-| MD-2 | adopt the nouns, reject the gates | durable | `spec:decisions.adopt-the-nouns` |
-| MD-4 | one primitive, named coordinates | durable | `spec:decisions.one-primitive` |
-| MD-5 | the protocol naming | durable | `spec:decisions.protocol-naming` |
-| MD-7 | binding, never liveness | durable | `spec:decisions.binding-not-liveness` |
-| MD-8 | the generic `codeAnchor` | **folded** (Slice 2) → doc-comment on the `codeAnchor` builder (`src/model/anchors.ts`) | — |
-| MD-9 | the open-questions home | folds at the fold (lives in `sections.ts`, the floor, `02` §3) | — |
-| MD-10 | content-only sections | durable | `spec:decisions.content-only-sections` |
-| MD-11 | the typing law | durable | `spec:decisions.typing-law` |
-| MD-12 | the kind-conditional floor | durable | `spec:decisions.kind-conditional-floor` |
-| MD-13 | floor-table-as-truth | folds (lives in `05` §3's Representation note + the `readiness-floor.ts` header) | — |
-| MD-14 | one validation path | durable | `spec:decisions.one-validation-path` |
-| MD-15 | the `.sdp.ts` extension | durable | `spec:decisions.sdp-ts-extension` |
-| MD-16 | carried evidence | durable | `spec:decisions.carried-evidence` |
-| MD-17 | point-per-example | durable | `spec:decisions.point-per-example` |
-| MD-18 | the carrier ruling | durable | `spec:decisions.carrier-ruling` |
-| MD-19 | the prose-ownership law | durable | `spec:decisions.prose-ownership` |
-| MD-20 | the strict consumer-exclusion contract | durable | `spec:decisions.exclusion-contract` |
-| MD-21 | the envelope-grammar ownership posture | durable | `spec:decisions.envelope-grammar-posture` |
+| ID | Ratified name | Curation | Gloss | Spec pointer or reservation |
+|---|---|---|---|---|
+| MD-1 | the executable meta-model | durable | Delivery intent conforms to a typed executable meta-model. | `spec:decisions.executable-meta-model` |
+| MD-2 | adopt the nouns, reject the gates | durable | Shared delivery nouns do not imply workflow gates. | `spec:decisions.adopt-the-nouns` |
+| MD-4 | one primitive, named coordinates | durable | One enrichable Spec carries independent coordinates. | `spec:decisions.one-primitive` |
+| MD-5 | the protocol naming | durable | The product and protocol names remain stable. | `spec:decisions.protocol-naming` |
+| MD-7 | binding, never liveness | durable | Anchors state bindings, never runtime truth. | `spec:decisions.binding-not-liveness` |
+| MD-8 | the generic `codeAnchor` | **folded** (Slice 2) → doc-comment on the `codeAnchor` builder (`src/model/anchors.ts`) | One generic binding form spans code locations. | — |
+| MD-9 | the open-questions home | folds at the fold (lives in `sections.ts`, the floor, `02` §3) | Unsettled durable questions live on their Spec. | — |
+| MD-10 | content-only sections | durable | Sections carry content while relations carry links. | `spec:decisions.content-only-sections` |
+| MD-11 | the typing law | durable | Floor-read sections have closed typed shapes. | `spec:decisions.typing-law` |
+| MD-12 | the kind-conditional floor | durable | Readiness evidence varies with the Spec kind. | `spec:decisions.kind-conditional-floor` |
+| MD-13 | floor-table-as-truth | folds (lives in `05` §3's Representation note + the `readiness-floor.ts` header) | The floor table is its code-level source of truth. | — |
+| MD-14 | one validation path | durable | Validation runs only through the derived graph. | [Spec](../../specs/decisions/one-validation-path.sdp.md) (`spec:decisions.one-validation-path`) |
+| MD-15 | the `.sdp.ts` extension | durable | The extension law is re-pointed, not repealed: carrier extensions identify Specs without test-glob collisions. | [Spec](../../specs/decisions/sdp-ts-extension.sdp.md) (`spec:decisions.sdp-ts-extension`) |
+| MD-16 | carried evidence | durable | Promoted evidence must carry the evidence it represents. | `spec:decisions.carried-evidence` |
+| MD-17 | point-per-example | durable | Each example is one bound point. | [Spec](../../specs/decisions/point-per-example.sdp.md) (`spec:decisions.point-per-example`) |
+| MD-18 | the carrier ruling | durable | Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option. The surviving law is one canonical surface per ID, no mixing. | [Spec](../../specs/decisions/carrier-ruling.sdp.md) (`spec:decisions.carrier-ruling`) |
+| MD-19 | the prose-ownership law | durable | Prose belongs to typed graph owners. | [Spec](../../specs/decisions/prose-ownership.sdp.md) (`spec:decisions.prose-ownership`) |
+| MD-20 | the strict consumer-exclusion contract | durable | Consumer exclusions are explicit root-relative paths. | `spec:decisions.exclusion-contract` |
+| MD-21 | the envelope-grammar ownership posture | durable | The Protocol owns the envelope contract, not the YAML library. | [Spec](../../specs/decisions/envelope-grammar-posture.sdp.md) (`spec:decisions.envelope-grammar-posture`) |
 
 ### Current executable decision-spec pointers
 
@@ -318,42 +318,6 @@ silent-skip failure mode survives).
 **Execution.** Wave B (plan 02 H5), together with the MD-12 floor rewrite — one change, since the table
 being rewritten is the table being collapsed.
 
-### MD-14 — One validation path, through the one graph; `AuthoredModel` retires as a public seam  [ACCEPTED 2026-06-10 · EXECUTED — the extractor landed at Slice 1, the graph-validator re-key at Slice 3; `AuthoredModel` is deleted and `validateGraph` is the sole validation seam]
-**Decision.** When the extractor lands, validators consume **the extractor's output** — one path: source →
-extract (static reification, P5) → graph (in memory) → conformance + honesty checks; `sdp validate` =
-`sdp build` + checks. `AuthoredModel` is demoted to (at most) an extractor-internal intermediate — never a
-second public validation seam, never a "pre-graph lint" mode. Authoring-time feedback is owned by typed
-sections + `tsc` (MD-11) and the `sdp/spec-static` lint, not by a parallel validator path.
-**Why / alternatives rejected.** Sharper than the "two paths drift" worry: the two ingestion modes can
-**disagree** — the Session-1 harness validates *imported, evaluated* spec objects, while the extractor
-*statically reifies without executing* (`04` §1). A non-static expression evaluates to a value on import but
-drops in reification, so import-path validation can pass a spec the graph doesn't hold — honesty checks
-validating a phantom. The protocol's truth is what source *statically states*, not what it *evaluates to*.
-This also makes the crippled-graph gap strategy's minimal slice ("extract → graph, no more," `plans/04` §2)
-sufficient for self-validation. *Rejected:* a documented dual path (the disagreement above, institutionalized).
-**Execution.** Slice 1 (extractor feeds the floor checks) / Slice 3 (the full gate); until then the Session-1
-harness stands in, honestly fenced (the `authored-model.ts` doc-comment already says so).
-
-### MD-15 — Authored Spec files carry the `.sdp.ts` extension  [ACCEPTED 2026-06-10 · amended 2026-07-18 (plan 17) — re-pointed, not repealed]
-**Decision.** Spec files are `/specs/**/*.sdp.ts` (packs: `*.pack.sdp.ts`). The Protocol's own compound
-extension — the `.stories.tsx` pattern: tool-branded, collision-free, tooling-scopeable. The model name
-`Spec` is untouched (it was always settled); only the file serialization changes.
-**Amended 2026-07-18 (plan 17) — re-pointed, not repealed.** The rationale below (never `.spec.ts`;
-a tool-branded, collision-free compound extension; the filename itself carrying the marker for a
-colocated future) carries over to the ruled carrier: a Markdown-carrier Spec file is
-`/specs/**/*.sdp.md`. `.sdp.ts` remains the extension of the TS DSL carrier while that carrier
-survives — the import source and lawful per-ID option (the carrier ruling, MD-18).
-**Why / alternatives rejected.** `*.spec.ts` is *the* default test glob of the JS ecosystem (Vitest:
-`**/*.{test,spec}.?(c|m)[jt]s(x)`; Jest/Mocha conventions match). An adopter on runner defaults gets their
-runner executing Spec-primitive files — Vitest fails files with no test suites, so first contact with the
-Protocol is a baffling CI failure. This repo's own narrowed `vitest.config.ts` was the dodge that proved the
-landmine. Decided now, while the rename costs nine example files and zero adopters. *Rejected:* keep +
-documented exclusion (pushes a config edit onto every adopter, and IDE test explorers keep mislisting spec
-files); `.spec.sdp.ts` (collision-free but verbose self-restatement); directory-convention-only (identity
-lives only in the path — future colocated specs would carry no marker).
-**Execution.** Wave B renames the example files and this repo's docs/globs; the extractor (Slice 1) ships
-reading `*.sdp.ts` from day one.
-
 ## 2026-06-10 — Session: Wave B execution + post-execution adversarial pass
 
 ### MD-16 — Honesty-sharpenings from the post-Wave-B adversarial pass: promoted evidence must be carried; authoring-shape gets its runtime stand-in; `doc:` targets are an explicit deferral  [ACCEPTED 2026-06-10]
@@ -405,78 +369,12 @@ landed as written.
 > A1; dual-source ruling deferred to the carrier ruling session; MD-15 untouched) — lives in
 > **plan 12 §8**. Only one ruling passed the three-part test and enters here.
 
-### MD-17 — One point per example; tables are surface sugar  [ACCEPTED 2026-07-11]
-**Context.** The ratified example-space design (plan 12 §7, settlements 7–9) has an `example`-kind
-child bind a **point** in its parent's typed example space, and the coverage machinery counts each
-example as the **witness** of one outcome class. A consumer-corpus reread of gen-1 usage in a
-production project surfaced a colliding house style: the dominant authoring pattern there (93 of 132
-executable features) is **one scenario asserting a whole truth-table** — many cases, one authored
-unit. Forcing one authored spec per case would make a 10-row table ten sibling files and fight how
-authors demonstrably think.
-**Decision.** The graph model stays **one bound point per `example`** — the concreteness law and
-one-witness-per-class coverage semantics stay unconditional. A table of cases is **authoring-surface
-sugar**: a carrier may offer table syntax that **statically expands to N sibling examples at
-extraction** (the same move the import mapping already proved for Scenario Outline `Examples` rows),
-and renderers may project a sibling set back as a table — so authors keep the compact view at both
-ends while the graph never holds a multi-point example.
-**Why / alternatives rejected.** *An example may bind a point set*: keeps file counts down on every
-surface but makes the concreteness law and witness semantics conditional everywhere — the machinery
-pays forever for an authoring convenience one layer can absorb. *Strictly one point, no sugar*:
-purest, but contradicts the observed house style and taxes the gen-1 migration corpus. The chosen
-shape repeats the base's settled pattern — the model keeps the honest shape; surface layers translate
-both directions statically (natural-language step reading is the renderer's job; table authoring is
-the carrier's expansion sugar).
-
 ## 2026-07-12 — Session: plan 16 run (the carrier ruled · prose ownership ruled)
 
 > The session's full record — the evidence table, the grounds, the re-dismissals by name, the
 > doc-repair bill, and the scheduled sessions — lives in **plan 16** (the session record of
 > record). The flagged terms ***carrier*** and ***notation*** ratified into `CONTEXT.md` at this
 > session. Two rulings passed the three-part test and enter here.
-
-### MD-18 — The carrier ruling: Markdown, all eight kinds; the TS DSL becomes import source + per-ID option  [ACCEPTED 2026-07-12]
-**Context.** The carrier competition (plan 14) closed with four evidence PRs: two full exhibits
-(F2 Markdown, C2 own grammar) and two honest concessions (Gherkin extension/fork; typed markup).
-The docket required ruling the carrier, the kind-partition question, and the TS DSL's long-term
-role — evidence-vs-evidence on the recorded scorecards, never by preference.
-**Decision.** The **Markdown carrier (F2) is the authoring carrier for all eight `kind` values**:
-an authored `Spec` document is an `.sdp.md` file — YAML-frontmatter envelope, free prose body,
-the owned notation in fenced blocks — statically extracted into the one graph. **Specs default to
-Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a
-lawful per-ID option.** The surviving law is **one canonical surface per ID, no mixing**, never
-TS-as-sole-surface.
-**Why / alternatives rejected.** *C2 own grammar*: strongest differentiation and diff/merge, but
-its own scorecard's ownership row is decisive — parser, formatter, highlighting, rendering,
-editor integrations, LSP owned forever, plus the agent grammar-context tax and no rendered page
-without our tooling. *Kind-partitioned dual carrier* (first-class per the docket, not a
-fallback): declined on the exhibit's own evidence — the structure-heavy `model` port was
-field-exact in Markdown, so a permanent two-surface partition buys nothing it can show; the
-per-ID config stays designed-in, retained not exercised. *Retiring the TS DSL outright*: burns a
-designed-in escape hatch for no honesty gain — the gen-1 disease (MD-1's gloss) was dual-source
-binding invisible to the type system, which the per-ID law already prevents. Hard to reverse:
-every authored spec, the parser, `sdp import`, and the doc corpus build on the ruled carrier.
-
-### MD-19 — The prose-ownership law: owned prose in the graph, on typed owners  [ACCEPTED 2026-07-12]
-**Context.** The F2 exhibit counted four prose paragraphs its spike deliberately dropped at the
-graph seam and named three MD-10-compatible homes (heading-path-keyed content section ·
-description on the owning typed section · file-only with a pointer). A document carrier winning
-made this ruling due, per the docket.
-**Decision.** Free prose enters the graph as **description values on typed owners** — the owning
-typed section, or the `Spec` itself (a spec-level narrative slot; epic-altitude navigational
-prose lives there beside `refines`). No parallel heading-keyed store; no file-only pointer. The
-deterministic ownership rule for edge text (before the first heading, between sections, under
-unrecognized headings) is a first-class deliverable of the surface-design session; until it
-lands, unowned prose is refused loudly (ambiguity-is-loud), never silently dropped.
-**Why / alternatives rejected.** *File-only + pointer*: consumers may link to source but never
-re-parse it (P2) — a pointer forces every prose-needing projection to re-parse or omit; dead on
-the graph law. *Heading-path keys*: gen-1 delivery experience (reviewed direction-level; no gen-1
-artifact cited durably) shows heading structure is what churns hardest across readiness
-promotions — sections born, renamed, killed — so heading-keyed content breaks identity exactly
-where enrich-in-place lives; and prose without a typed owner is where transcription bloat grew.
-Owned descriptions are MD-10-clean (content, never refs) and MD-11-aware: they land inside
-already-closed shapes, and any prose slot a floor clause ever reads gets pulled into the closed
-type as the typing law demands. Trade-off accepted: the ownership rule is real design work — paid
-once, at the surface-design session, instead of forever in an informal transfer checklist.
 
 ## 2026-07-18 — Session: plan 17 execution (the self-hosting phase's pre-Gate-4 docket close)
 
@@ -501,23 +399,6 @@ convenient, but it silently skips a future nested `src/examples/` — consumer e
 decisions, and scope deserves paths, not names. Hard to reverse: a public CLI/options surface
 consumers script against. Trade-off accepted: consumers must be explicit; precision beats
 convenience.
-
-### MD-21 — The envelope-grammar ownership posture: the contract is ours, the YAML library is a swappable representation (exact `yaml@2.9.0`)  [ACCEPTED 2026-07-18]
-**Context.** The Markdown envelope needed a YAML boundary, and the library's own current
-documentation no longer promises that parsing never throws — a permissive parse would make the
-envelope's meaning a library behavior rather than a Protocol-owned grammar.
-**Decision.** The Protocol owns the envelope grammar as an authored contract spec plus a bounded
-parser policy — failsafe schema, exactly one nonempty document, manual AST/CST mapping (never
-`toJS()` before policy validation), every warning/directive/tag/anchor/alias/merge/complex
-key/non-string scalar refused, byte/depth/node/scalar/finding caps — and pins the representation
-exactly: `yaml@2.9.0`, no semver range; the library stays a swappable representation behind the
-owned contract.
-**Why / alternatives rejected.** *Permissive parsing + a semver range*: broader YAML acceptance
-and free patch upgrades, but the grammar's meaning would drift with the library and adversarial
-input would meet an unbounded parser. *An own YAML parser*: total ownership, but it re-opens the
-dismissed own-grammar economics (the carrier ruling, MD-18). Hard to reverse: the corpus is
-authored against the owned contract and consumers see its finding IDs. Trade-off accepted:
-corpus-scoped strictness — full YAML/CommonMark parity is deliberately not claimed.
 
 ## Structural-decision shorthand (D1–D6)  [ACCEPTED · relocated here when the cleanup plan was retired, 2026-06-07]
 

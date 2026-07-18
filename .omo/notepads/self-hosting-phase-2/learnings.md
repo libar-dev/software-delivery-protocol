@@ -166,3 +166,10 @@
   the two born Specs retain their IDs and relations unchanged.
 - The fold ledger seeds every registry, D-table, measured-evidence, and born-spec disposition before
   any decision Spec is authored, so the next batches only fill pre-recorded destinations.
+
+## Todo 30 — carrier and extraction decision fold
+
+- Six decision Specs now distil the carrier and extraction cluster into current law, rejected
+  alternatives, and consequences; the diary bodies moved out while the lean registry retains links.
+- The carrier-rule pins now live in the MD-15 and MD-18 registry glosses as the bodies they guarded
+  were removed. The MD-18 post-flip sentence remains verbatim.

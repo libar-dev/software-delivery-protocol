@@ -5,6 +5,7 @@ altitude: feature
 readiness: defined
 relations:
   refines: spec:carrier.markdown-authoring
+  decidedBy: spec:decisions.envelope-grammar-posture
 ---
 # The Markdown envelope is explicit and bounded
 

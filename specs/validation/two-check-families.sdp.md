@@ -5,6 +5,7 @@ altitude: feature
 readiness: defined
 relations:
   refines: spec:protocol.self-hosting
+  decidedBy: spec:decisions.one-validation-path
 ---
 # Validation separates well-formedness from non-pretending
 

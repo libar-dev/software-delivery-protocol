@@ -183,14 +183,14 @@ parent merely because a more specific target is deferred.
 | MD-11 | decision spec — todo 31 | `spec:decisions.typing-law` | refines `spec:model.spec-sections`; `decidedBy` back-edge pending | typed-section law |
 | MD-12 | decision spec — todo 31 | `spec:decisions.kind-conditional-floor` | refines `spec:validation.readiness-floor`; `decidedBy` back-edge pending | floor law |
 | MD-13 | folds — verify at todo 32 | `05` §3 Representation note; `src/validate/readiness-floor.ts` header | n/a | floor-table representation, never re-author |
-| MD-14 | decision spec — todo 30 | `spec:decisions.one-validation-path` | refines `spec:validation.two-check-families`; `decidedBy` back-edge pending | one graph validation path |
-| MD-15 | decision spec — todo 30 | `spec:decisions.sdp-ts-extension` | refines `spec:carrier.markdown-authoring`; `decidedBy` back-edge pending | extension-law re-point |
+| MD-14 | decision spec | `spec:decisions.one-validation-path` | refines `spec:validation.two-check-families`; `decidedBy` back-edge landed | three-part test: one graph truth, no parallel seam |
+| MD-15 | decision spec | `spec:decisions.sdp-ts-extension` | refines `spec:carrier.markdown-authoring`; `decidedBy` back-edge landed | three-part test: carrier identity and test-glob trade-off |
 | MD-16 | decision spec — todo 31 | `spec:decisions.carried-evidence` | refines `spec:validation.readiness-floor`; `decidedBy` back-edge pending | floor implementation evidence |
-| MD-17 | decision spec — todo 30 | `spec:decisions.point-per-example` | refines `spec:model.spec-sections`; `decidedBy` back-edge pending | one point per example |
-| MD-18 | decision spec — todo 30 | `spec:decisions.carrier-ruling` | refines `spec:carrier.markdown-authoring`; `decidedBy` back-edge pending | post-flip sentence remains pinned |
-| MD-19 | decision spec — todo 30 | `spec:decisions.prose-ownership` | refines `spec:carrier.prose-ownership-rule`; `decidedBy` back-edge pending | prose ownership |
+| MD-17 | decision spec | `spec:decisions.point-per-example` | refines `spec:model.spec-sections`; `decidedBy` back-edge landed | three-part test: witness semantics and surface sugar trade-off |
+| MD-18 | decision spec | `spec:decisions.carrier-ruling` | refines `spec:carrier.markdown-authoring`; `decidedBy` back-edges landed | three-part test: all-kind carrier and owned-tooling trade-off |
+| MD-19 | decision spec | `spec:decisions.prose-ownership` | refines `spec:carrier.prose-ownership-rule`; `decidedBy` back-edge landed | three-part test: graph-owned prose and re-parse trade-off |
 | MD-20 | decision spec at S7 — todo 38 | `spec:decisions.exclusion-contract` | refines `spec:extraction.excludes`; `decidedBy` back-edge at S7 | waits for specific target |
-| MD-21 | decision spec — todo 30 | `spec:decisions.envelope-grammar-posture` | refines `spec:carrier.envelope-contract`; `decidedBy` back-edge pending | envelope ownership |
+| MD-21 | decision spec | `spec:decisions.envelope-grammar-posture` | refines `spec:carrier.envelope-contract`; `decidedBy` back-edge landed | three-part test: owned grammar and parser representation trade-off |
 | D1 | carried by ordinary spec — verify at todo 32 | `spec:model.core-model` | n/a | readiness distinct from delivery facts |
 | D2 | carried by ordinary spec — verify at todo 32 | `spec:model.spec-sections` | n/a | typed sections |
 | D3 | decision spec — todo 32 | `spec:decisions.pack-reified` | refines `spec:model.pack-aggregate`; `decidedBy` back-edge pending | Pack aggregate law |

@@ -5,6 +5,9 @@ altitude: feature
 readiness: defined
 relations:
   dependsOn: spec:carrier.markdown-parser
+  decidedBy:
+    - spec:decisions.sdp-ts-extension
+    - spec:decisions.carrier-ruling
 ---
 # Markdown authoring enters the one graph
 
