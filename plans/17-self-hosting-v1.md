@@ -1,6 +1,6 @@
 # Plan 17 — Self-hosting, first slice: the repo's own specs in the ruled Markdown carrier
 
-> **Status: ✅ LANDED — phase-1 implementation complete; final audit pending**
+> **Status: ✅ EXECUTED — phase-1 implementation complete; final audit passed**
 >
 > Work happened on a dedicated branch named for the effort
 > (e.g. `self-hosting/v1`) — never on `main`. Revised after an architecture review of the draft

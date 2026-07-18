@@ -198,14 +198,14 @@ if (ledgerStart === -1) {
 }
 
 // ---------------------------------------------------------------------------
-// 4. Status surfaces: progress in the plan + handbook only; semantics elsewhere.
+// 4. Status surfaces: the handbook stamps the executed phase; semantics stay elsewhere.
 // ---------------------------------------------------------------------------
 
 expectContains(
   agentsPath,
   agents,
-  "phase-1 owner-accepted; final audit pending",
-  "the handbook lost the accepted phase status",
+  "EXECUTED — phase-1 implementation complete; final audit passed",
+  "the handbook must stamp the executed phase status",
 );
 
 const gateRowLine = agents.split("\n").find((line) => line.includes("the green gate")) ?? "";
