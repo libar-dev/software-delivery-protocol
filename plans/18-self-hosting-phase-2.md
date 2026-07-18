@@ -184,11 +184,11 @@ where the verification loop is cheap.
 
 | Watch item | Trigger | Ruling rule | Current state |
 |---|---|---|---|
-| table-sugar syntax | checkout migration needs multi-point authoring | record syntax; preserve MD-17 static sibling expansion | watch — expected, never quota |
-| single-literal vocabulary form | emitted vocabulary cannot express a real slot cleanly | rule only with a concrete fixture | watch |
-| multi-entry constraint form | a real migrated constraint requires more than one entry | rule carrier syntax and parity evidence together | watch |
-| array-section prose sub-owner | prose ownership becomes ambiguous in an array section | record owner and rejection boundary | watch |
-| Markdown Pack syntax | a Pack needs Markdown authoring for a real caller | rule separately; Pack is not a kind | watch |
+| table-sugar syntax | checkout migration needs multi-point authoring | record syntax; preserve MD-17 static sibling expansion | watch — unfired: checkout models multi-case as sibling `example` Specs, not tables. |
+| single-literal vocabulary form | emitted vocabulary cannot express a real slot cleanly | rule only with a concrete fixture | watch — unfired: emitted vocabulary was idiomatic and no concrete slot needed a single-literal form. |
+| multi-entry constraint form | a real migrated constraint requires more than one entry | rule carrier syntax and parity evidence together | watch — unfired: the migrated constraint uses the one-entry form and no real constraint needed more than one entry. |
+| array-section prose sub-owner | prose ownership becomes ambiguous in an array section | record owner and rejection boundary | watch — unfired: no ambiguous prose-ownership case appeared in the migrated sections. |
+| Markdown Pack syntax | a Pack needs Markdown authoring for a real caller | rule separately; Pack is not a kind | watch — unfired: no Pack caller forced Markdown authoring; Pack remains a TS manifest. |
 
 Under fire, a ruling records the trigger, alternatives, outcome, three-part-test disposition, carrying
 Spec, and applicable matrix/ledger cells. Unfired items remain named here at phase close.
@@ -198,6 +198,9 @@ Spec, and applicable matrix/ledger cells. Unfired items remain named here at pha
 | Trigger | Alternatives considered | Owner outcome | Three-part-test disposition | Carrying Spec / ledger cells |
 |---|---|---|---|---|
 | Design Review dynamic-key ordering followed insertion order and escaping stopped at narrative/description prose slots (review-06) | (1) escape every rendered field uniformly and sort dynamic keys lexicographically at render; (2) escape prose slots only and sort keys; (3) accept trusted-authored rendering and change nothing | **Option 1 ruled.** Every rendered field uses one escaping policy, including titles, rules, terms, criteria, open-bag keys/values, and other authored labels; model/open-bag dynamic keys sort lexicographically at render time. Permuted graph insertion orders now render byte-identically. Ordering and escaping are the only output changes; information content is preserved. | Not admitted as a durable decision Spec: this is a mechanically reversible projection representation fix, so it fails the hard-to-reverse part of the three-part test. The regression suite is the execution record. | Planned carrier: `spec:consumers.design-review` (S5). §8 rows “Design Review dynamic-key ordering”, “Design Review escaping outside prose slots”, and “Design Review cluster” are `done s2`. |
+
+No other todo 13 to 15 activity triggered an under-fire ruling: the checkout migration and README
+walkthrough used the ruled grammar without a forced gap.
 
 ## (j) §7 Done-record and delta catalog
 
@@ -233,9 +236,9 @@ Planned disposition is not execution evidence. Every row starts pending and clos
 | Library-seam exclusion wording (review-06) | Adopt with exclude/CLI cluster | done s1 — `normalizeExcludes` owns library diagnostics; `parseBuildArgs` translates them into `sdp <cmd>` usage wording |
 | Design Review dynamic-key ordering (review-06) | Rule at migration/flip | done s2 — Option 1 sorts model/open-bag dynamic keys lexicographically at render; shuffled insertion orders produce byte-identical pages |
 | Design Review escaping outside prose slots (review-06) | Rule at migration/flip | done s2 — Option 1 applies one escaping policy to every rendered field, including titles, rules, terms, criteria, labels, and open-bag data |
-| Row-3 enrichment delta (review-06) | Record in delta catalog | pending |
-| Bound example reports only a count (review-06) | Verify during migration evidence | pending |
-| Fixture-to-live byte identity (review-06) | Preserve through migration regression | pending |
+| Row-3 enrichment delta (review-06) | Record in delta catalog | done s2: recorded in the migration/delta catalog for G2 close. |
+| Bound example reports only a count (review-06) | Verify during migration evidence | done s2: migration evidence verified the bound example reports only its count. |
+| Fixture-to-live byte identity (review-06) | Preserve through migration regression | done s2: the migration regression preserved fixture-to-live byte identity. |
 | No-reparse spy coverage (review-06) | Carry forward as deferred polish | pending |
 | Carrier-truth comment and temporal token assembly (review-06) | Records cluster adopts comment; token assembly deferred | pending |
 | Stale provenance wording and plan-16 evidence dispositions (review-06) | Adopt with records cluster | pending |
@@ -247,11 +250,11 @@ Planned disposition is not execution evidence. Every row starts pending and clos
 | Grammar-hardening cluster (brief §6) | Land with parity baseline | pending |
 | Design Review cluster (brief §6) | Rule at migration/flip | done s2 — owner ruled Option 1; deterministic ordering and uniform escaping landed RED-first with focused projection regressions |
 | Records cluster (brief §6) | Land with decision fold | pending |
-| Table-sugar syntax (watch item) | Rule only if checkout forces it | pending |
-| Single-literal vocabulary form (watch item) | Rule only if corpus forces it | pending |
-| Multi-entry constraint form (watch item) | Rule only if corpus forces it | pending |
-| Array-section prose sub-owner (watch item) | Rule only if corpus forces it | pending |
-| Markdown Pack syntax (watch item) | Rule only if a Pack caller forces it | pending |
+| Table-sugar syntax (watch item) | Rule only if checkout forces it | done s2: unfired, multi-case checkout behavior uses sibling `example` Specs, not tables. |
+| Single-literal vocabulary form (watch item) | Rule only if corpus forces it | done s2: unfired, idiomatic emitted vocabulary required no single-literal slot form. |
+| Multi-entry constraint form (watch item) | Rule only if corpus forces it | done s2: unfired, the migrated constraint uses the ruled one-entry form. |
+| Array-section prose sub-owner (watch item) | Rule only if corpus forces it | done s2: unfired, migrated sections produced no ambiguous prose-ownership case. |
+| Markdown Pack syntax (watch item) | Rule only if a Pack caller forces it | done s2: unfired, no caller forced Markdown Pack authoring; the Pack remains a TS manifest. |
 
 ## (l) §9 Commit strategy
 
