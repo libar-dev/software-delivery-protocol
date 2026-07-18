@@ -15,7 +15,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { generateContracts } from "../codegen/contracts.js";
-import { normalizeExcludes } from "../extract/discover.js";
+import { InvalidExcludePathError, normalizeExcludes } from "../extract/discover.js";
 import { extract } from "../extract/index.js";
 import { serializeGraph } from "../extract/serialize.js";
 import type { GraphSchema } from "../graph/schema.js";
@@ -275,8 +275,13 @@ function parseBuildArgs(
     if (argument === "--exclude") {
       const exclude = args[index + 1];
 
-      if (exclude === undefined || exclude.startsWith("--")) {
+      if (exclude === undefined) {
         writeStderr(output, `sdp ${command}: --exclude requires a path.\n`);
+        return undefined;
+      }
+
+      if (exclude.startsWith("--")) {
+        writeStderr(output, `sdp ${command}: --exclude expects a path, got ${exclude}\n`);
         return undefined;
       }
 
@@ -303,8 +308,8 @@ function parseBuildArgs(
   try {
     exclude = normalizeExcludes(rawExcludes);
   } catch (error) {
-    if (error instanceof Error) {
-      writeStderr(output, `sdp ${command}: ${error.message}\n`);
+    if (error instanceof InvalidExcludePathError) {
+      writeStderr(output, `sdp ${command}: invalid --exclude path "${error.path}"\n`);
       return undefined;
     }
 

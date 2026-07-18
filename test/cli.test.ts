@@ -472,6 +472,26 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
     }
   });
 
+  it("names a flag supplied as an --exclude operand before build writes", () => {
+    // Given: a writable empty root and a flag where an exclusion path is required.
+    const root = mkdtempSync(join(tmpdir(), "sdp-flag-exclude-"));
+
+    try {
+      const capture = createCaptureOutput();
+
+      // When: the option consumes another flag instead of a path.
+      const exitCode = runSdpCli(["build", root, "--exclude", "--foo"], capture.output);
+
+      // Then: the usage error identifies the offending flag and no artifact directory is created.
+      expect(exitCode).toBe(1);
+      expect(capture.readStdout()).toBe("");
+      expect(capture.readStderr()).toBe("sdp build: --exclude expects a path, got --foo\n");
+      expect(existsSync(join(root, "generated"))).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("documents repeatable --exclude paths in help", () => {
     expect(SDP_HELP_TEXT).toContain("[--exclude PATH]...");
     expect(SDP_HELP_TEXT).toContain("*.sdp.ts and *.sdp.md");

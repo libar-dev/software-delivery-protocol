@@ -222,9 +222,9 @@ Planned disposition is not execution evidence. Every row starts pending and clos
 | GWT fence placement in Intent (review-06) | Adopt with grammar hardening | pending |
 | Heading trailing whitespace and trailing `#` titles (review-06) | Adopt with grammar hardening | pending |
 | Duplicate `When` reporting and dead `mapOwner` branch (review-06) | Adopt with grammar hardening | pending |
-| Windows absolute excludes and `--exclude --foo` diagnostics (review-06) | Adopt with exclude/CLI cluster | pending |
-| Path-prefix matcher coverage (review-06) | Adopt with exclude/CLI cluster | pending |
-| Library-seam exclusion wording (review-06) | Adopt with exclude/CLI cluster | pending |
+| Windows absolute excludes and `--exclude --foo` diagnostics (review-06) | Adopt with exclude/CLI cluster | done s1 — reject Windows drive-letter absolutes as invalid rather than normalize them, preserving MD-20 root-relative POSIX scope; a flag operand names itself in the CLI usage error |
+| Path-prefix matcher coverage (review-06) | Adopt with exclude/CLI cluster | done s1 — focused regression proves `foo` excludes only `foo` and its slash-delimited descendants, never `foobar` |
+| Library-seam exclusion wording (review-06) | Adopt with exclude/CLI cluster | done s1 — `normalizeExcludes` owns library diagnostics; `parseBuildArgs` translates them into `sdp <cmd>` usage wording |
 | Design Review dynamic-key ordering (review-06) | Rule at migration/flip | pending |
 | Design Review escaping outside prose slots (review-06) | Rule at migration/flip | pending |
 | Row-3 enrichment delta (review-06) | Record in delta catalog | pending |
@@ -237,7 +237,7 @@ Planned disposition is not execution evidence. Every row starts pending and clos
 | Indirect assembly of the `then` graph key (review-06) | Verify remediation remains intact | pending |
 | Model term named `description` (review-06) | Verify remediation remains intact | pending |
 | Checkout duplicate-carrier fixture exemption (review-06) | Preserve as explicit fixture exception | pending |
-| Exclude/CLI cluster (brief §6) | Land in tranche 1 | pending |
+| Exclude/CLI cluster (brief §6) | Land in tranche 1 | done s1 — loud Windows absolute rejection, flag-operand usage diagnostics, segment-boundary coverage, and library/CLI wording separation landed |
 | Grammar-hardening cluster (brief §6) | Land with parity baseline | pending |
 | Design Review cluster (brief §6) | Rule at migration/flip | pending |
 | Records cluster (brief §6) | Land with decision fold | pending |

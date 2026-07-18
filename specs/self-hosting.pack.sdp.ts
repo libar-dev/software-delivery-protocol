@@ -9,6 +9,7 @@ export const selfHostingV1Pack = pack({
     ref("spec:carrier.envelope-contract"),
     ref("spec:carrier.markdown-parser"),
     ref("spec:carrier.sdp-import"),
+    ref("spec:carrier.sdp-import.round-trip"),
     ref("spec:carrier.prose-ownership-rule"),
     ref("spec:protocol.self-hosting"),
     ref("spec:extraction.derive-graph"),

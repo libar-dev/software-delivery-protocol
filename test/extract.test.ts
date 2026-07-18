@@ -979,6 +979,7 @@ describe("import-surface and discovery corpora", () => {
     "./explorations",
     "explorations/",
     "/explorations",
+    "C:/work/specs",
     "../x",
     "a/../b",
     "a//b",
@@ -989,7 +990,7 @@ describe("import-surface and discovery corpora", () => {
 
     // When / Then: malformed consumer scope is refused rather than broadened or normalized.
     expect(() => extract({ root, exclude: [exclude] })).toThrow(
-      `invalid --exclude path "${exclude}"`,
+      `normalizeExcludes: invalid exclusion path "${exclude}"`,
     );
   });
 });

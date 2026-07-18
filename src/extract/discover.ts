@@ -19,6 +19,15 @@ const DECLARATION_FILE_SUFFIX = ".d.ts";
  * adoption needs a configurable exclude.
  */
 const EXCLUDED_DIRECTORY_NAMES = new Set(["node_modules", "dist", "generated", "coverage"]);
+const WINDOWS_DRIVE_LETTER_ABSOLUTE_PATH = /^[A-Za-z]:\//;
+
+export class InvalidExcludePathError extends Error {
+  readonly name = "InvalidExcludePathError";
+
+  constructor(readonly path: string) {
+    super(`normalizeExcludes: invalid exclusion path "${path}"`);
+  }
+}
 
 export function normalizeExcludes(exclude: readonly string[] | undefined): readonly string[] {
   const normalized: string[] = [];
@@ -31,10 +40,11 @@ export function normalizeExcludes(exclude: readonly string[] | undefined): reado
       path.startsWith("./") ||
       path.endsWith("/") ||
       path.startsWith("/") ||
+      WINDOWS_DRIVE_LETTER_ABSOLUTE_PATH.test(path) ||
       path.includes("\\") ||
       path.split("/").some((segment) => segment === "" || segment === "..")
     ) {
-      throw new Error(`invalid --exclude path "${path}"`);
+      throw new InvalidExcludePathError(path);
     }
 
     if (!seen.has(path)) {
