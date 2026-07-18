@@ -161,13 +161,8 @@ describe("sdp cli", () => {
       );
 
       expect(exitCode).toBe(0);
-      // These warnings persist until todo 17 adds the duplicate-ID example test anchor.
-      expect(capture.readStderr().trimEnd().split("\n")).toEqual([
-        'specs/validation/duplicate-ids.dual-carrier.sdp.md — [warning] conformance/verifies-linkage — Example "spec:validation.duplicate-ids.dual-carrier" declares verifies → "spec:validation.duplicate-ids" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier.',
-        'specs/validation/duplicate-ids.dual-carrier.sdp.md — [warning] honesty/gaps — Spec "spec:validation.duplicate-ids.dual-carrier" states readiness "ready" with no resolving verifier — a gap, informative only (ready never requires delivery facts).',
-        'specs/validation/duplicate-ids.sdp.md — [warning] honesty/gaps — Spec "spec:validation.duplicate-ids" states readiness "ready" with no resolving verifier — a gap, informative only (ready never requires delivery facts).',
-      ]);
-      expect(capture.readStdout()).toContain("validate: 0 errors · 3 warnings");
+      expect(capture.readStderr().trimEnd()).toBe("");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 0 warnings");
       expect(readFileSync(join(repoRoot, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { afterEach, describe, expect, it } from "vitest";
 
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
 
 import { dualCarrierContract } from "../generated/contracts/validation.duplicate-ids.dual-carrier.contract.js";
@@ -100,22 +101,39 @@ describe("generated contract preflight", () => {
   });
 
   it("proceeds for the unfiltered invocation once both contract trees are generated", () => {
-    expect(runPreflight(repoRoot, []).status).toBe(0);
+    expect(runPreflight(preflightRoot([selfHostingContracts, checkoutContracts]), []).status).toBe(
+      0,
+    );
   });
 });
 
-it("keeps the duplicate-ID example unanchored while its executable binding passes", () => {
+it("derives the duplicate-ID verifier facts from the bound executable example", () => {
   const result = extract({ root: repoRoot, exclude: ["explorations", "examples"] });
   const child = result.graph.nodes.find(
     (node) => node.nodeType === "Primitive" && node.id === dualCarrierContract.spec,
+  );
+  const parent = result.graph.nodes.find(
+    (node) => node.nodeType === "Primitive" && node.id === "spec:validation.duplicate-ids",
   );
 
   if (child?.nodeType !== "Primitive") {
     throw new Error("The generated duplicate-ID contract must name a root graph primitive.");
   }
 
-  expect(child.deliveryFacts).toBeUndefined();
+  if (parent?.nodeType !== "Primitive") {
+    throw new Error("The duplicate-ID example must retain its parent root graph primitive.");
+  }
+
+  expect(child.deliveryFacts).toEqual(["has-verifier"]);
+  expect(parent.deliveryFacts).toEqual(["implemented", "has-verifier"]);
 });
+
+const dualCarrierDuplicateTestAnchor = specTest({
+  id: testAnchorId("test:protocol.duplicate-ids.dual-carrier"),
+  label: "dual-carrier duplicate-ID contract verifies carrier exclusion",
+  verifies: ref("spec:validation.duplicate-ids.dual-carrier"),
+});
+void dualCarrierDuplicateTestAnchor;
 
 bindExample(
   dualCarrierContract,

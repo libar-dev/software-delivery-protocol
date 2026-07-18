@@ -228,7 +228,7 @@ const expectedSpecs = [
         },
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.duplicate-ids.dual-carrier",
@@ -256,7 +256,7 @@ const expectedSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:model.protocol-domain",
@@ -320,26 +320,7 @@ const expectedDeclaredRelations = [
   ["spec:model.protocol-domain", "refines", "spec:protocol.self-hosting"],
 ] as const;
 
-const expectedWarnings = [
-  {
-    validatorId: "conformance/verifies-linkage",
-    family: "conformance",
-    severity: "warning",
-    subjectId: "spec:validation.duplicate-ids.dual-carrier",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
-    subjectId: "spec:validation.duplicate-ids.dual-carrier",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
-    subjectId: "spec:validation.duplicate-ids",
-  },
-] as const;
+const expectedWarnings = [] as const;
 
 const expectedAnchors = [
   {
@@ -482,6 +463,16 @@ const expectedAnchors = [
     constant: "duplicateIdExclusionAnchor",
     site: "function findDuplicatedIds",
   },
+  {
+    id: "test:protocol.duplicate-ids.dual-carrier",
+    nodeType: "Anchor",
+    label: "dual-carrier duplicate-ID contract verifies carrier exclusion",
+    type: "verifies",
+    target: "spec:validation.duplicate-ids.dual-carrier",
+    file: "test/self-hosting-duplicate-ids.test.ts",
+    constant: "dualCarrierDuplicateTestAnchor",
+    site: "bindExample(",
+  },
 ] as const;
 
 function lineContaining(source: string, token: string): number {
@@ -510,7 +501,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         subjectId,
       })),
     ).toEqual(expectedWarnings);
-    expect(result.counts).toEqual({ specs: 13, packs: 1, anchors: 14 });
+    expect(result.counts).toEqual({ specs: 13, packs: 1, anchors: 15 });
     expect(nodeIds).toEqual(
       [
         "pack:self-hosting-v1",
@@ -530,7 +521,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
-    expect(result.graph.nodes).toHaveLength(28);
+    expect(result.graph.nodes).toHaveLength(29);
     expect(
       primitiveNodes
         .map((node) => ({
@@ -589,7 +580,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
       modelRefs: ["spec:model.protocol-domain"],
       file: "specs/self-hosting.pack.sdp.ts",
     });
-    expect(result.graph.edges).toHaveLength(47);
+    expect(result.graph.edges).toHaveLength(48);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")
@@ -634,5 +625,55 @@ describe("the self-hosting phase-1 carrier corpus", () => {
       expect(Math.abs(anchorLine - siteLine), anchor.id).toBeLessThanOrEqual(20);
       expect(node).toMatchObject({ file: anchor.file, line: anchorLine, claim: "anchored" });
     }
+
+    const childId = "spec:validation.duplicate-ids.dual-carrier";
+    const parentId = "spec:validation.duplicate-ids";
+    const child = primitiveNodes.find((node) => node.id === childId);
+    const parent = primitiveNodes.find((node) => node.id === parentId);
+
+    expect(child?.deliveryFacts).toEqual(["has-verifier"]);
+    expect(parent?.deliveryFacts).toEqual(["implemented", "has-verifier"]);
+    expect(
+      result.graph.edges.filter(
+        (edge) =>
+          edge.from === "test:protocol.duplicate-ids.dual-carrier" &&
+          edge.type === "verifies" &&
+          edge.claim === "anchored",
+      ),
+    ).toEqual([
+      {
+        from: "test:protocol.duplicate-ids.dual-carrier",
+        type: "verifies",
+        to: childId,
+        claim: "anchored",
+      },
+    ]);
+    expect(
+      result.graph.edges.filter(
+        (edge) => edge.type === "verifies" && edge.claim === "anchored" && edge.to === parentId,
+      ),
+    ).toEqual([]);
+    expect(
+      result.graph.edges.filter(
+        (edge) => edge.from === childId && edge.type === "verifies" && edge.claim === "declared",
+      ),
+    ).toEqual([{ from: childId, type: "verifies", to: parentId, claim: "declared" }]);
+    expect(
+      result.graph.edges.filter(
+        (edge) => edge.from === childId && edge.type === "refines" && edge.claim === "declared",
+      ),
+    ).toEqual([{ from: childId, type: "refines", to: parentId, claim: "declared" }]);
+    expect(
+      result.graph.edges.filter(
+        (edge) => edge.from === "impl:protocol.duplicate-id-exclusion" && edge.type === "satisfies",
+      ),
+    ).toEqual([
+      {
+        from: "impl:protocol.duplicate-id-exclusion",
+        type: "satisfies",
+        to: parentId,
+        claim: "anchored",
+      },
+    ]);
   });
 });
