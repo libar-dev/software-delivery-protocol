@@ -5,6 +5,8 @@ import {
 } from "../graph/delivery-facts.js";
 import { isResolvingOracleModel } from "../graph/oracle-bindings.js";
 import { authoredEdgeTypes } from "../graph/schema.js";
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type {
   DeliveryFactName,
   GraphClaim,
@@ -336,6 +338,14 @@ function matchSections(sections: SpecSections | undefined, needle: string): read
 
   return matched.sort(compareCodeUnits);
 }
+
+const agentSurfaceAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.agent-surface"),
+  label: "typed graph reader and agent entry adapters",
+  satisfies: ref("spec:consumers.agent-surface"),
+});
+
+void agentSurfaceAnchor;
 
 export function createReader(graph: GraphSchema): Reader {
   const index = buildGraphIndex(graph);

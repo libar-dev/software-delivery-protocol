@@ -552,6 +552,108 @@ const expectedSpecs = [
     },
     deliveryFacts: ["implemented"],
   },
+  {
+    id: "spec:validation.two-check-families",
+    specKind: "rule",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/validation/two-check-families.sdp.md",
+    title: "Validation separates well-formedness from non-pretending",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep the graph trustworthy by checking conformance and honesty without judging content quality or enforcing workflow.",
+      },
+      behavior: {
+        rules: [
+          "Every validator belongs to either the conformance family, which checks meta-model well-formedness, or the honesty family, which rejects authored or overstated derived truth.",
+          "Validation errors fail the build; gaps and orphans remain informative signals rather than delivery-process gates.",
+          "Types enforce structural shape, schema validates graph payloads, and graph validators enforce cross-file conformance and honesty; no one layer substitutes for the others.",
+          "All graph validation runs through the one derived graph path: source, extraction, graph, then checks.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented"],
+  },
+  {
+    id: "spec:consumers.projections-model",
+    specKind: "model",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/consumers/projections-model.sdp.md",
+    title: "Projections fan out from one graph without becoming truth stores",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give agents and humans consumer-specific views while preserving the repository as the only canonical source.",
+      },
+      model: {
+        terms: {
+          "curated graph":
+            "The authored architectural read model of declared intent and anchored bindings, valued for editorial sparsity.",
+          curation:
+            "The deliberate difference between the sparse curated graph and the code-structure surface; it is not drift.",
+          "impact graph":
+            "A separately derived code-structure surface for exhaustive usage and blast-radius questions, valued for exhaustiveness and never promoted into architecture.",
+          projection:
+            "A pure, disposable, regenerable function of the graph that produces a consumer artifact without becoming a second source of truth.",
+          reader:
+            "The thin typed front door that decodes graph joins and taxonomy once, returns composable data, and persists nothing.",
+        },
+      },
+    },
+    deliveryFacts: ["implemented"],
+  },
+  {
+    id: "spec:consumers.agent-surface",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/consumers/agent-surface.sdp.md",
+    title: "Agents script a visible typed graph",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let an agent obtain and compose graph context without rebuilding joins or navigating a fixed verb wall.",
+      },
+      behavior: {
+        rules: [
+          "The agent surface exposes a visible, self-describing typed graph through the CLI; the schema is the contract and agents script the graph directly.",
+          "The reader constructs decoded joins and claim taxonomy once, then returns plain composable data without persisting graph state.",
+          "Entry adapters bridge strings, files, and changesets to curated graph context; file-level blast radius names coverage-unknown files rather than implying exhaustive reach.",
+          "Context efficiency is an empirical result: a measured comparison may show structured graph context uses fewer supplied tokens than a comparable raw-text workflow while preserving the task-relevant result.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented"],
+  },
+  {
+    id: "spec:consumers.design-review",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/consumers/design-review.sdp.md",
+    title: "Design Review renders graph context without becoming a gate",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give a human a regenerable, contextual view for deciding how to state readiness without recording approval as graph truth.",
+      },
+      behavior: {
+        rules: [
+          "Design Review renders a Spec or Pack in context with relations, bindings, delivery badges, design questions, and findings from the graph.",
+          "The review is a pure projection that resolves through ordinary source edits, git, and conformance checks; it stores no findings and writes no canonical source.",
+          "A human may use the review context when stating readiness, while validators check only the structural readiness floor and never record or require review approval.",
+          "The MVP view is deterministic generated Markdown with an index and pages for Specs and Packs; richer visual representations remain outside this behavior.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented"],
+  },
 ] as const;
 
 const expectedPackMembers = [
@@ -567,6 +669,10 @@ const expectedPackMembers = [
   "spec:extraction.build-pipeline",
   "spec:validation.readiness-floor",
   "spec:validation.duplicate-ids",
+  "spec:validation.two-check-families",
+  "spec:consumers.projections-model",
+  "spec:consumers.agent-surface",
+  "spec:consumers.design-review",
   "spec:model.protocol-domain",
   "spec:model.core-model",
   "spec:model.spec-sections",
@@ -602,6 +708,10 @@ const expectedDeclaredRelations = [
   ["spec:validation.duplicate-ids", "dependsOn", "spec:carrier.markdown-parser"],
   ["spec:validation.duplicate-ids.dual-carrier", "refines", "spec:validation.duplicate-ids"],
   ["spec:validation.duplicate-ids.dual-carrier", "verifies", "spec:validation.duplicate-ids"],
+  ["spec:validation.two-check-families", "refines", "spec:protocol.self-hosting"],
+  ["spec:consumers.projections-model", "refines", "spec:protocol.self-hosting"],
+  ["spec:consumers.agent-surface", "refines", "spec:consumers.projections-model"],
+  ["spec:consumers.design-review", "refines", "spec:consumers.projections-model"],
   ["spec:model.protocol-domain", "refines", "spec:protocol.self-hosting"],
   ["spec:model.core-model", "refines", "spec:protocol.self-hosting"],
   ["spec:model.spec-sections", "refines", "spec:model.core-model"],
@@ -866,6 +976,46 @@ const expectedAnchors = [
     constant: "verifierSemanticsAnchor",
     site: "export function evaluateReadinessFloor",
   },
+  {
+    id: "impl:protocol.validation-families",
+    nodeType: "CodeNode",
+    label: "conformance and honesty validator registry",
+    type: "satisfies",
+    target: "spec:validation.two-check-families",
+    file: "src/validate/validators.ts",
+    constant: "validationFamiliesAnchor",
+    site: "export const graphValidatorIds",
+  },
+  {
+    id: "impl:protocol.projections-model",
+    nodeType: "CodeNode",
+    label: "pure generated projection page contract",
+    type: "satisfies",
+    target: "spec:consumers.projections-model",
+    file: "src/projections/design-review.ts",
+    constant: "projectionModelAnchor",
+    site: "export interface DesignReviewPage",
+  },
+  {
+    id: "impl:protocol.agent-surface",
+    nodeType: "CodeNode",
+    label: "typed graph reader and agent entry adapters",
+    type: "satisfies",
+    target: "spec:consumers.agent-surface",
+    file: "src/reader/reader.ts",
+    constant: "agentSurfaceAnchor",
+    site: "export function createReader",
+  },
+  {
+    id: "impl:protocol.design-review",
+    nodeType: "CodeNode",
+    label: "renders the contextual Design Review projection",
+    type: "satisfies",
+    target: "spec:consumers.design-review",
+    file: "src/projections/design-review.ts",
+    constant: "designReviewAnchor",
+    site: "export function renderDesignReview",
+  },
 ] as const;
 
 function lineContaining(source: string, token: string): number {
@@ -897,7 +1047,7 @@ describe("the self-hosting corpus", () => {
         subjectId,
       })),
     ).toEqual(expectedWarnings);
-    expect(result.counts).toEqual({ specs: 22, packs: 1, anchors: 25 });
+    expect(result.counts).toEqual({ specs: 26, packs: 1, anchors: 29 });
     expect(nodeIds).toEqual(
       [
         "pack:self-hosting-v1",
@@ -907,6 +1057,9 @@ describe("the self-hosting corpus", () => {
         "spec:carrier.prose-ownership-rule",
         "spec:carrier.sdp-import",
         "spec:carrier.sdp-import.round-trip",
+        "spec:consumers.agent-surface",
+        "spec:consumers.design-review",
+        "spec:consumers.projections-model",
         "spec:decisions.concept-docs-dissolve",
         "spec:decisions.plain-language-references",
         "spec:extraction.build-pipeline",
@@ -923,10 +1076,11 @@ describe("the self-hosting corpus", () => {
         "spec:validation.duplicate-ids",
         "spec:validation.duplicate-ids.dual-carrier",
         "spec:validation.readiness-floor",
+        "spec:validation.two-check-families",
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
-    expect(result.graph.nodes).toHaveLength(48);
+    expect(result.graph.nodes).toHaveLength(56);
     expect(
       primitiveNodes
         .map((node) => ({
@@ -970,7 +1124,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 15, ready: 7 });
+    ).toEqual({ defined: 19, ready: 7 });
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
@@ -985,7 +1139,7 @@ describe("the self-hosting corpus", () => {
       modelRefs: ["spec:model.protocol-domain", "spec:model.core-model"],
       file: "specs/self-hosting.pack.sdp.ts",
     });
-    expect(result.graph.edges).toHaveLength(78);
+    expect(result.graph.edges).toHaveLength(90);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")

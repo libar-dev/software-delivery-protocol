@@ -138,3 +138,15 @@
   No wave-1a Spec claims a verifier or `ready` state.
 - G4 remains pending and its ledger row is unchanged. The OMO continuation directive and the
   explicit user `continue` instruction authorize this wave despite the pending owner acceptance.
+
+## Todo 26 — corpus wave 1b validation and consumers
+
+- Wave 1b adds four defined Specs: the two check families, the projections model, the agent
+  surface, and Design Review. Their rule/model evidence clears `defined`; none asserts `ready` or
+  a verifier.
+- The four realization bindings are deliberately narrow: `graphValidatorIds` for validation,
+  `DesignReviewPage` for the projection contract, `createReader` for the agent surface, and
+  `renderDesignReview` for the human projection. The projections model uses its own page-contract
+  binding so the Design Review anchor remains specific to the flagship behavior.
+- The generalized context-efficiency statement belongs to the agent-surface behavior as an
+  empirical comparison claim; the measurement figure and its disposition remain fold work.

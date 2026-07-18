@@ -1,6 +1,8 @@
 import { computeDeliveryFacts, isResolvingTestAnchorVerify } from "../graph/delivery-facts.js";
 import { isResolvingOracleModel, ownsExampleSpace } from "../graph/oracle-bindings.js";
 import { deliveryFactNames, graphClaims, graphEdgeTypes, graphNodeTypes } from "../graph/schema.js";
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type {
   DeliveryFactName,
   GraphClaim,
@@ -42,6 +44,14 @@ export const graphValidatorIds = {
   readinessFloor: "honesty/readiness-floor",
   gaps: "honesty/gaps",
 } as const;
+
+const validationFamiliesAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.validation-families"),
+  label: "conformance and honesty validator registry",
+  satisfies: ref("spec:validation.two-check-families"),
+});
+
+void validationFamiliesAnchor;
 
 /** The aggregate report id; it spans both check families, so it carries no single family. */
 export const graphReportId = "graph";

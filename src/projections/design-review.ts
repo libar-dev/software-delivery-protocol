@@ -1,4 +1,6 @@
 import { SPEC_READINESS } from "../model/descriptors.js";
+import { codeAnchor } from "../model/code-anchor.js";
+import { codeAnchorId, ref } from "../ids.js";
 import { renderStepText } from "../notation/slots.js";
 import type { Finding } from "../validate/contracts.js";
 import { escapeRenderedField, renderNarrative, sectionDescription } from "./owned-prose.js";
@@ -29,6 +31,14 @@ export interface DesignReviewPage {
   readonly path: string;
   readonly content: string;
 }
+
+const projectionModelAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.projections-model"),
+  label: "pure generated projection page contract",
+  satisfies: ref("spec:consumers.projections-model"),
+});
+
+void projectionModelAnchor;
 
 /* ----- deterministic Markdown plumbing ----- */
 
@@ -754,6 +764,14 @@ function renderIndexPage(reader: Reader, specs: readonly SpecSummary[]): DesignR
 
   return { path: page, content: `${lines.join("\n")}\n` };
 }
+
+const designReviewAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.design-review"),
+  label: "renders the contextual Design Review projection",
+  satisfies: ref("spec:consumers.design-review"),
+});
+
+void designReviewAnchor;
 
 /**
  * Renders the full Design Review off the reader. Pure and fs-free: the caller owns writing the

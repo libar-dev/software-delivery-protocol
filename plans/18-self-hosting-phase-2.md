@@ -162,10 +162,10 @@ where the verification loop is cheap.
 | `02 §5 stable identity` | `spec:model.stable-ids` | defined | `src/ids.ts` code anchor at `parseId`; no verifier | wave 1a stable-ID rule |
 | `02 §4 Pack` | `spec:model.pack-aggregate` | defined | `src/model/pack.ts` code anchor; no verifier | wave 1a Pack aggregate model |
 | `04 §2 generic source anchors` | `spec:model.anchors` | defined | `src/model/anchors.ts` and `src/extract/anchors.ts` code anchors; no verifier | wave 1a binding and extraction model |
-| `05 two check families` | `spec:validation.two-check-families` | pending | validator anchors to be named | target to create |
-| `06 projections` | `spec:consumers.projections-model` | pending | projection anchors to be named | target to create |
-| `06 agent surface` | `spec:consumers.agent-surface` | pending | agent-surface anchors to be named | target to create |
-| `06 Design Review` | `spec:consumers.design-review` | pending | projection anchors to be named | target to create |
+| `05 §1 two check families and layered enforcement` | `spec:validation.two-check-families` | defined | `src/validate/validators.ts` code anchor at `graphValidatorIds`; no verifier | wave 1b validation parent and MD-14 refine target |
+| `06 §1-2 projections taxonomy and two surfaces` | `spec:consumers.projections-model` | defined | `src/projections/design-review.ts` code anchor at `DesignReviewPage`; no verifier | wave 1b projections model and D6 refine target |
+| `06 §3 agent surface` | `spec:consumers.agent-surface` | defined | `src/reader/reader.ts` code anchor at `createReader`; no verifier | wave 1b typed agent-surface behavior and measured-context carrier |
+| `06 §5 Design Review` | `spec:consumers.design-review` | defined | `src/projections/design-review.ts` code anchor at `renderDesignReview`; no verifier | wave 1b flagship human projection and D4 carrying surface |
 | `05 referential integrity` | `spec:validation.referential-integrity` | pending | validator anchors to be named | target to create |
 | `05 claim separation` | `spec:validation.claim-separation` | pending | validator anchors to be named | target to create |
 | `05 verification linkage` | `spec:validation.verification-linkage` | pending | validator anchors to be named | target to create |
