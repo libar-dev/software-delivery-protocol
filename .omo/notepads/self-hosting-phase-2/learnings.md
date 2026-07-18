@@ -180,3 +180,5 @@
   the phase-level parent; every ruled-domain decision refines its specific model, anchor, or floor Spec.
 - The nine back-edges make the shaped Specs disclose the durable decisions that govern them while
   preserving their existing refinement and dependency relations.
+- Follow-up cleanup removed the nine diary bodies after their lean registry links and decision Specs
+  were confirmed; the MD-18 carrier-rule gloss remains the pinned source of its current law.
