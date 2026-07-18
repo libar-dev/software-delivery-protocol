@@ -5,6 +5,7 @@ altitude: feature
 readiness: defined
 relations:
   refines: spec:model.core-model
+  decidedBy: spec:decisions.binding-not-liveness
 ---
 # Source anchors bind code without carrying intent
 

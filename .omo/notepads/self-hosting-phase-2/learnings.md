@@ -173,3 +173,10 @@
   alternatives, and consequences; the diary bodies moved out while the lean registry retains links.
 - The carrier-rule pins now live in the MD-15 and MD-18 registry glosses as the bodies they guarded
   were removed. The MD-18 post-flip sentence remains verbatim.
+
+## Todo 31 — model and phase decision fold
+
+- The model/phase cluster keeps only executable meta-model, noun adoption, and protocol naming at
+  the phase-level parent; every ruled-domain decision refines its specific model, anchor, or floor Spec.
+- The nine back-edges make the shaped Specs disclose the durable decisions that govern them while
+  preserving their existing refinement and dependency relations.

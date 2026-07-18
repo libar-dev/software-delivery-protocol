@@ -28,20 +28,20 @@ itself rides with the self-hosting session (plan 16 §7).
 
 | ID | Ratified name | Curation | Gloss | Spec pointer or reservation |
 |---|---|---|---|---|
-| MD-1 | the executable meta-model | durable | Delivery intent conforms to a typed executable meta-model. | `spec:decisions.executable-meta-model` |
-| MD-2 | adopt the nouns, reject the gates | durable | Shared delivery nouns do not imply workflow gates. | `spec:decisions.adopt-the-nouns` |
-| MD-4 | one primitive, named coordinates | durable | One enrichable Spec carries independent coordinates. | `spec:decisions.one-primitive` |
-| MD-5 | the protocol naming | durable | The product and protocol names remain stable. | `spec:decisions.protocol-naming` |
-| MD-7 | binding, never liveness | durable | Anchors state bindings, never runtime truth. | `spec:decisions.binding-not-liveness` |
+| MD-1 | the executable meta-model | durable | Delivery intent conforms to a typed executable meta-model. | [Spec](../../specs/decisions/executable-meta-model.sdp.md) (`spec:decisions.executable-meta-model`) |
+| MD-2 | adopt the nouns, reject the gates | durable | Shared delivery nouns do not imply workflow gates. | [Spec](../../specs/decisions/adopt-the-nouns.sdp.md) (`spec:decisions.adopt-the-nouns`) |
+| MD-4 | one primitive, named coordinates | durable | One enrichable Spec carries independent coordinates. | [Spec](../../specs/decisions/one-primitive.sdp.md) (`spec:decisions.one-primitive`) |
+| MD-5 | the protocol naming | durable | The product and protocol names remain stable. | [Spec](../../specs/decisions/protocol-naming.sdp.md) (`spec:decisions.protocol-naming`) |
+| MD-7 | binding, never liveness | durable | Anchors state bindings, never runtime truth. | [Spec](../../specs/decisions/binding-not-liveness.sdp.md) (`spec:decisions.binding-not-liveness`) |
 | MD-8 | the generic `codeAnchor` | **folded** (Slice 2) → doc-comment on the `codeAnchor` builder (`src/model/anchors.ts`) | One generic binding form spans code locations. | — |
 | MD-9 | the open-questions home | folds at the fold (lives in `sections.ts`, the floor, `02` §3) | Unsettled durable questions live on their Spec. | — |
-| MD-10 | content-only sections | durable | Sections carry content while relations carry links. | `spec:decisions.content-only-sections` |
-| MD-11 | the typing law | durable | Floor-read sections have closed typed shapes. | `spec:decisions.typing-law` |
-| MD-12 | the kind-conditional floor | durable | Readiness evidence varies with the Spec kind. | `spec:decisions.kind-conditional-floor` |
+| MD-10 | content-only sections | durable | Sections carry content while relations carry links. | [Spec](../../specs/decisions/content-only-sections.sdp.md) (`spec:decisions.content-only-sections`) |
+| MD-11 | the typing law | durable | Floor-read sections have closed typed shapes. | [Spec](../../specs/decisions/typing-law.sdp.md) (`spec:decisions.typing-law`) |
+| MD-12 | the kind-conditional floor | durable | Readiness evidence varies with the Spec kind. | [Spec](../../specs/decisions/kind-conditional-floor.sdp.md) (`spec:decisions.kind-conditional-floor`) |
 | MD-13 | floor-table-as-truth | folds (lives in `05` §3's Representation note + the `readiness-floor.ts` header) | The floor table is its code-level source of truth. | — |
 | MD-14 | one validation path | durable | Validation runs only through the derived graph. | [Spec](../../specs/decisions/one-validation-path.sdp.md) (`spec:decisions.one-validation-path`) |
 | MD-15 | the `.sdp.ts` extension | durable | The extension law is re-pointed, not repealed: carrier extensions identify Specs without test-glob collisions. | [Spec](../../specs/decisions/sdp-ts-extension.sdp.md) (`spec:decisions.sdp-ts-extension`) |
-| MD-16 | carried evidence | durable | Promoted evidence must carry the evidence it represents. | `spec:decisions.carried-evidence` |
+| MD-16 | carried evidence | durable | Promoted evidence must carry the evidence it represents. | [Spec](../../specs/decisions/carried-evidence.sdp.md) (`spec:decisions.carried-evidence`) |
 | MD-17 | point-per-example | durable | Each example is one bound point. | [Spec](../../specs/decisions/point-per-example.sdp.md) (`spec:decisions.point-per-example`) |
 | MD-18 | the carrier ruling | durable | Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option. The surviving law is one canonical surface per ID, no mixing. | [Spec](../../specs/decisions/carrier-ruling.sdp.md) (`spec:decisions.carrier-ruling`) |
 | MD-19 | the prose-ownership law | durable | Prose belongs to typed graph owners. | [Spec](../../specs/decisions/prose-ownership.sdp.md) (`spec:decisions.prose-ownership`) |

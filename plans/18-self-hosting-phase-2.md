@@ -172,20 +172,20 @@ parent merely because a more specific target is deferred.
 
 | Source row | Disposition | Carrying spec or surface | Refine target / back-edges | Evidence / review note |
 |---|---|---|---|---|
-| MD-1 | decision spec — todo 31 | `spec:decisions.executable-meta-model` | refines `spec:protocol.self-hosting`; no back-edge | three-part test rechecked at authoring |
-| MD-2 | decision spec — todo 31 | `spec:decisions.adopt-the-nouns` | refines `spec:protocol.self-hosting`; no back-edge | genuinely phase-level |
-| MD-4 | decision spec — todo 31 | `spec:decisions.one-primitive` | refines `spec:model.core-model`; `decidedBy` back-edge pending | one primitive and named coordinates |
-| MD-5 | decision spec — todo 31 | `spec:decisions.protocol-naming` | refines `spec:protocol.self-hosting`; no back-edge | genuinely phase-level |
-| MD-7 | decision spec — todo 31 | `spec:decisions.binding-not-liveness` | refines `spec:model.anchors`; `decidedBy` back-edge pending | binding boundary |
+| MD-1 | decision spec | `spec:decisions.executable-meta-model` | refines `spec:protocol.self-hosting`; `decidedBy` back-edge landed | three-part test: executable contract, not workflow tooling |
+| MD-2 | decision spec | `spec:decisions.adopt-the-nouns` | refines `spec:protocol.self-hosting`; `decidedBy` back-edge landed | three-part test: familiar nouns without state gates |
+| MD-4 | decision spec | `spec:decisions.one-primitive` | refines `spec:model.core-model`; `decidedBy` back-edge landed | three-part test: one identity across coordinates |
+| MD-5 | decision spec | `spec:decisions.protocol-naming` | refines `spec:protocol.self-hosting`; `decidedBy` back-edge landed | three-part test: conformance contract naming |
+| MD-7 | decision spec | `spec:decisions.binding-not-liveness` | refines `spec:model.anchors`; `decidedBy` back-edge landed | three-part test: binding evidence stays honest |
 | MD-8 | folded — verify at todo 32 | `src/model/anchors.ts` `codeAnchor` builder doc-comment | n/a | generic anchor law, never re-author |
 | MD-9 | folds — verify at todo 32 | `src/model/sections.ts`; readiness floor; `02` §3 | n/a | open-questions home, never re-author |
-| MD-10 | decision spec — todo 31 | `spec:decisions.content-only-sections` | refines `spec:model.spec-sections`; `decidedBy` back-edge pending | promotion boundary |
-| MD-11 | decision spec — todo 31 | `spec:decisions.typing-law` | refines `spec:model.spec-sections`; `decidedBy` back-edge pending | typed-section law |
-| MD-12 | decision spec — todo 31 | `spec:decisions.kind-conditional-floor` | refines `spec:validation.readiness-floor`; `decidedBy` back-edge pending | floor law |
+| MD-10 | decision spec | `spec:decisions.content-only-sections` | refines `spec:model.spec-sections`; `decidedBy` back-edge landed | three-part test: content and relations remain exclusive |
+| MD-11 | decision spec | `spec:decisions.typing-law` | refines `spec:model.spec-sections`; `decidedBy` back-edge landed | three-part test: floor-read shape guardrails |
+| MD-12 | decision spec | `spec:decisions.kind-conditional-floor` | refines `spec:validation.readiness-floor`; `decidedBy` back-edge landed | three-part test: natural evidence by kind |
 | MD-13 | folds — verify at todo 32 | `05` §3 Representation note; `src/validate/readiness-floor.ts` header | n/a | floor-table representation, never re-author |
 | MD-14 | decision spec | `spec:decisions.one-validation-path` | refines `spec:validation.two-check-families`; `decidedBy` back-edge landed | three-part test: one graph truth, no parallel seam |
 | MD-15 | decision spec | `spec:decisions.sdp-ts-extension` | refines `spec:carrier.markdown-authoring`; `decidedBy` back-edge landed | three-part test: carrier identity and test-glob trade-off |
-| MD-16 | decision spec — todo 31 | `spec:decisions.carried-evidence` | refines `spec:validation.readiness-floor`; `decidedBy` back-edge pending | floor implementation evidence |
+| MD-16 | decision spec | `spec:decisions.carried-evidence` | refines `spec:validation.readiness-floor`; `decidedBy` back-edge landed | three-part test: promoted evidence cannot be empty |
 | MD-17 | decision spec | `spec:decisions.point-per-example` | refines `spec:model.spec-sections`; `decidedBy` back-edge landed | three-part test: witness semantics and surface sugar trade-off |
 | MD-18 | decision spec | `spec:decisions.carrier-ruling` | refines `spec:carrier.markdown-authoring`; `decidedBy` back-edges landed | three-part test: all-kind carrier and owned-tooling trade-off |
 | MD-19 | decision spec | `spec:decisions.prose-ownership` | refines `spec:carrier.prose-ownership-rule`; `decidedBy` back-edge landed | three-part test: graph-owned prose and re-parse trade-off |

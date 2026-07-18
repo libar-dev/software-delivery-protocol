@@ -5,6 +5,7 @@ altitude: feature
 readiness: defined
 relations:
   refines: spec:protocol.self-hosting
+  decidedBy: spec:decisions.one-primitive
 ---
 # The Protocol models delivery with one enrichable Spec
 

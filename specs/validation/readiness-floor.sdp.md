@@ -6,6 +6,9 @@ readiness: ready
 relations:
   refines: spec:protocol.self-hosting
   dependsOn: spec:model.protocol-domain
+  decidedBy:
+    - spec:decisions.kind-conditional-floor
+    - spec:decisions.carried-evidence
 ---
 # Stated readiness must clear its floor
 

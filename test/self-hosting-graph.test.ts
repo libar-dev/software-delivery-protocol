@@ -819,6 +819,244 @@ const expectedSpecs = [
     },
     deliveryFacts: [],
   },
+  {
+    id: "spec:decisions.executable-meta-model",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/executable-meta-model.sdp.md",
+    title: "The Protocol is an executable meta-model",
+    narrative: null,
+    sections: {
+      intent: { outcome: "Make delivery intent conform to one typed, self-validating contract." },
+      decision: {
+        context: "Delivery tools can describe work without making their model executable.",
+        decision:
+          "The Protocol models authored Specs, Packs, and anchors in typed code, derives one graph, and checks conformance and honesty.",
+        rationale: ["Executable specs alone and workflow tooling omit the meta-model contract."],
+        consequences: [
+          "The Protocol is deterministically validated without judging content quality or enforcing workflow.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.adopt-the-nouns",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/adopt-the-nouns.sdp.md",
+    title: "Delivery nouns remain familiar without workflow gates",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep the Protocol legible to delivery practitioners without adopting a lifecycle machine.",
+      },
+      decision: {
+        context:
+          "Shared delivery vocabulary is useful, but process-state language hides epistemic distinctions.",
+        decision:
+          "The Protocol adopts established delivery nouns and rejects process state-machine and lifecycle gating.",
+        rationale: [
+          "Invented terminology taxes users, while workflow states reverse the Protocol's conformance-only boundary.",
+        ],
+        consequences: [
+          "Terms must be concrete, unambiguous, and carry authored-versus-derived status where it matters.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.one-primitive",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/one-primitive.sdp.md",
+    title: "One Spec carries named delivery coordinates",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Preserve one durable authored primitive while making familiar delivery forms precise.",
+      },
+      decision: {
+        context:
+          "Delivery statements vary by truth category, scope, and maturity without needing separate artifact types.",
+        decision:
+          "A Spec is enriched in place with kind, altitude, and readiness; familiar delivery nouns are named coordinates on that primitive.",
+        rationale: [
+          "Separate types per coordinate combination multiply shapes and break enrich-in-place identity.",
+        ],
+        consequences: ["Domains and capabilities are projections or Packs, not extra altitudes."],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.protocol-naming",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/protocol-naming.sdp.md",
+    title: "The meta-model is a software delivery protocol",
+    narrative: null,
+    sections: {
+      intent: { outcome: "Name the product and its meta-layer without implying workflow control." },
+      decision: {
+        context:
+          "The meta-layer needs a name that communicates a conformance contract rather than a process engine.",
+        decision:
+          "The product is the Libar Software Delivery Protocol, shortened to the Protocol; `sdp` names its CLI.",
+        rationale: [
+          "Protocol names an executable conformance contract more honestly than process while retaining process for the modeled activity.",
+        ],
+        consequences: [
+          "Product, package, repository, and CLI names stay aligned around the Protocol.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.binding-not-liveness",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/binding-not-liveness.sdp.md",
+    title: "Bindings state existence, not liveness",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Make realization signals useful without overstating what source bindings prove.",
+      },
+      decision: {
+        context:
+          "Anchors can resolve code and tests without proving reachability, execution, or approval.",
+        decision:
+          "Delivery facts record bindings and enabled verifier existence; coverage gaps and human readiness practice remain explicit without becoming graph facts.",
+        rationale: [
+          "Renaming useful delivery facts or recording approval primitives either weakens drift signals or reverses the one-primitive boundary.",
+        ],
+        consequences: [
+          "Impact reports name coverage-unknown files and `ready` remains a declared statement above a structural floor.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.content-only-sections",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/content-only-sections.sdp.md",
+    title: "Sections carry content while relations carry links",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Keep inline detail and promoted Specs from representing the same fact twice.",
+      },
+      decision: {
+        context:
+          "Behavior content can mature from prose to structured evidence or into a standalone matching-kind Spec.",
+        decision:
+          "Sections contain local content only; promotion moves content exclusively and relations state the linkage.",
+        rationale: [
+          "Reference unions and duplicate parent lists force consumers to branch and leave double-linkage drift legal.",
+        ],
+        consequences: [
+          "Promoted children preserve readiness evidence through their own content and authored relations.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.typing-law",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/typing-law.sdp.md",
+    title: "Floor-read sections are closed typed shapes",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give authors guardrails exactly where readiness and honesty checks depend on section content.",
+      },
+      decision: {
+        context: "A fixed list of typed sections becomes stale when the readiness floor evolves.",
+        decision:
+          "Every section read by a floor clause has a closed typed shape; unsettled design and ui surfaces remain open.",
+        rationale: [
+          "Closed shapes block authored-fact smuggling and provide useful authoring guidance without prematurely fixing unsettled surfaces.",
+        ],
+        consequences: [
+          "A newly floor-read section becomes typed by the criterion, not by a frozen list.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.kind-conditional-floor",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/kind-conditional-floor.sdp.md",
+    title: "Readiness evidence follows the Spec kind",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Make stated readiness structurally honest without turning the floor into a quota.",
+      },
+      decision: {
+        context:
+          "Kinds have different natural evidence, while structural maturity clauses apply across every Spec.",
+        decision:
+          "The readiness floor combines cumulative kind-blind clauses with one kind-conditional evidence clause at each rung.",
+        rationale: [
+          "Defined-only evidence and uniform evidence rules either leave padding legal or erase meaningful kind distinctions.",
+        ],
+        consequences: [
+          "Floor rows are monotonic, promotion-neutral, and converge honestly where a kind has no stronger form.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.carried-evidence",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/carried-evidence.sdp.md",
+    title: "Promoted evidence must carry its own evidence",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Prevent empty promoted Specs and relation targets from satisfying an evidence floor.",
+      },
+      decision: {
+        context:
+          "Promotion and constraints preserve meaning only when the promoted target carries the matching kind evidence.",
+        decision:
+          "Promoted evidence counts only when the promoted Spec holds its natural evidence; authoring-shape honesty rejects authored delivery facts and external `doc:` targets remain deferred.",
+        rationale: [
+          "Counting empty children or wrong-kind constraints makes a structural floor pass without content, while readiness gates and premature external target types add the wrong contract.",
+        ],
+        consequences: [
+          "The floor checks resolved target shape, and unresolved external decision links stay outside the current relation grammar.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
 ] as const;
 
 const expectedPackMembers = [
@@ -854,6 +1092,15 @@ const expectedPackMembers = [
   "spec:decisions.carrier-ruling",
   "spec:decisions.prose-ownership",
   "spec:decisions.envelope-grammar-posture",
+  "spec:decisions.executable-meta-model",
+  "spec:decisions.adopt-the-nouns",
+  "spec:decisions.one-primitive",
+  "spec:decisions.protocol-naming",
+  "spec:decisions.binding-not-liveness",
+  "spec:decisions.content-only-sections",
+  "spec:decisions.typing-law",
+  "spec:decisions.kind-conditional-floor",
+  "spec:decisions.carried-evidence",
 ] as const;
 
 const expectedDeclaredRelations = [
@@ -872,6 +1119,9 @@ const expectedDeclaredRelations = [
   ["spec:protocol.self-hosting", "dependsOn", "spec:carrier.markdown-authoring"],
   ["spec:protocol.self-hosting", "dependsOn", "spec:model.protocol-domain"],
   ["spec:protocol.self-hosting", "decidedBy", "spec:decisions.concept-docs-dissolve"],
+  ["spec:protocol.self-hosting", "decidedBy", "spec:decisions.executable-meta-model"],
+  ["spec:protocol.self-hosting", "decidedBy", "spec:decisions.adopt-the-nouns"],
+  ["spec:protocol.self-hosting", "decidedBy", "spec:decisions.protocol-naming"],
   ["spec:extraction.derive-graph", "refines", "spec:protocol.self-hosting"],
   ["spec:extraction.derive-graph", "constrainedBy", "spec:extraction.determinism"],
   ["spec:extraction.determinism", "refines", "spec:protocol.self-hosting"],
@@ -879,6 +1129,8 @@ const expectedDeclaredRelations = [
   ["spec:extraction.build-pipeline", "dependsOn", "spec:extraction.derive-graph"],
   ["spec:validation.readiness-floor", "refines", "spec:protocol.self-hosting"],
   ["spec:validation.readiness-floor", "dependsOn", "spec:model.protocol-domain"],
+  ["spec:validation.readiness-floor", "decidedBy", "spec:decisions.kind-conditional-floor"],
+  ["spec:validation.readiness-floor", "decidedBy", "spec:decisions.carried-evidence"],
   ["spec:validation.duplicate-ids", "refines", "spec:protocol.self-hosting"],
   ["spec:validation.duplicate-ids", "dependsOn", "spec:carrier.markdown-parser"],
   ["spec:validation.duplicate-ids.dual-carrier", "refines", "spec:validation.duplicate-ids"],
@@ -890,12 +1142,16 @@ const expectedDeclaredRelations = [
   ["spec:consumers.design-review", "refines", "spec:consumers.projections-model"],
   ["spec:model.protocol-domain", "refines", "spec:protocol.self-hosting"],
   ["spec:model.core-model", "refines", "spec:protocol.self-hosting"],
+  ["spec:model.core-model", "decidedBy", "spec:decisions.one-primitive"],
   ["spec:model.spec-sections", "refines", "spec:model.core-model"],
   ["spec:model.spec-sections", "decidedBy", "spec:decisions.point-per-example"],
+  ["spec:model.spec-sections", "decidedBy", "spec:decisions.content-only-sections"],
+  ["spec:model.spec-sections", "decidedBy", "spec:decisions.typing-law"],
   ["spec:model.relations", "refines", "spec:model.core-model"],
   ["spec:model.stable-ids", "refines", "spec:model.core-model"],
   ["spec:model.pack-aggregate", "refines", "spec:model.core-model"],
   ["spec:model.anchors", "refines", "spec:model.core-model"],
+  ["spec:model.anchors", "decidedBy", "spec:decisions.binding-not-liveness"],
   ["spec:decisions.plain-language-references", "refines", "spec:protocol.self-hosting"],
   ["spec:decisions.concept-docs-dissolve", "refines", "spec:protocol.self-hosting"],
   ["spec:decisions.one-validation-path", "refines", "spec:validation.two-check-families"],
@@ -904,6 +1160,15 @@ const expectedDeclaredRelations = [
   ["spec:decisions.carrier-ruling", "refines", "spec:carrier.markdown-authoring"],
   ["spec:decisions.prose-ownership", "refines", "spec:carrier.prose-ownership-rule"],
   ["spec:decisions.envelope-grammar-posture", "refines", "spec:carrier.envelope-contract"],
+  ["spec:decisions.executable-meta-model", "refines", "spec:protocol.self-hosting"],
+  ["spec:decisions.adopt-the-nouns", "refines", "spec:protocol.self-hosting"],
+  ["spec:decisions.one-primitive", "refines", "spec:model.core-model"],
+  ["spec:decisions.protocol-naming", "refines", "spec:protocol.self-hosting"],
+  ["spec:decisions.binding-not-liveness", "refines", "spec:model.anchors"],
+  ["spec:decisions.content-only-sections", "refines", "spec:model.spec-sections"],
+  ["spec:decisions.typing-law", "refines", "spec:model.spec-sections"],
+  ["spec:decisions.kind-conditional-floor", "refines", "spec:validation.readiness-floor"],
+  ["spec:decisions.carried-evidence", "refines", "spec:validation.readiness-floor"],
 ] as const;
 
 const expectedWarnings = [] as const;
@@ -1230,7 +1495,7 @@ describe("the self-hosting corpus", () => {
         subjectId,
       })),
     ).toEqual(expectedWarnings);
-    expect(result.counts).toEqual({ specs: 32, packs: 1, anchors: 29 });
+    expect(result.counts).toEqual({ specs: 41, packs: 1, anchors: 29 });
     expect(nodeIds).toEqual(
       [
         "pack:self-hosting-v1",
@@ -1250,6 +1515,15 @@ describe("the self-hosting corpus", () => {
         "spec:decisions.carrier-ruling",
         "spec:decisions.prose-ownership",
         "spec:decisions.envelope-grammar-posture",
+        "spec:decisions.executable-meta-model",
+        "spec:decisions.adopt-the-nouns",
+        "spec:decisions.one-primitive",
+        "spec:decisions.protocol-naming",
+        "spec:decisions.binding-not-liveness",
+        "spec:decisions.content-only-sections",
+        "spec:decisions.typing-law",
+        "spec:decisions.kind-conditional-floor",
+        "spec:decisions.carried-evidence",
         "spec:decisions.plain-language-references",
         "spec:extraction.build-pipeline",
         "spec:extraction.derive-graph",
@@ -1269,7 +1543,7 @@ describe("the self-hosting corpus", () => {
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
-    expect(result.graph.nodes).toHaveLength(62);
+    expect(result.graph.nodes).toHaveLength(71);
     expect(
       primitiveNodes
         .map((node) => ({
@@ -1313,7 +1587,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 25, ready: 7 });
+    ).toEqual({ defined: 34, ready: 7 });
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
@@ -1328,7 +1602,7 @@ describe("the self-hosting corpus", () => {
       modelRefs: ["spec:model.protocol-domain", "spec:model.core-model"],
       file: "specs/self-hosting.pack.sdp.ts",
     });
-    expect(result.graph.edges).toHaveLength(108);
+    expect(result.graph.edges).toHaveLength(135);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")

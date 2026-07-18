@@ -5,7 +5,10 @@ altitude: feature
 readiness: defined
 relations:
   refines: spec:model.core-model
-  decidedBy: spec:decisions.point-per-example
+  decidedBy:
+    - spec:decisions.point-per-example
+    - spec:decisions.content-only-sections
+    - spec:decisions.typing-law
 ---
 # Spec sections carry typed detail and direct verifier semantics
 
