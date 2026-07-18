@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
@@ -84,6 +84,12 @@ function readGeneratedTree(root: string): ReadonlyMap<string, string> {
 }
 
 describe("sdp cli", () => {
+  afterAll(() => {
+    expect(existsSync(join(repoRoot, "generated", "graph.json"))).toBe(true);
+    expect(existsSync(join(repoRoot, "generated", "contracts"))).toBe(true);
+    expect(existsSync(join(repoRoot, "generated", "design-review"))).toBe(true);
+  });
+
   it("prints the exact help text for no args", () => {
     const capture = createCaptureOutput();
 
@@ -168,7 +174,12 @@ describe("sdp cli", () => {
       );
       expect(existsSync(join(repoRoot, "generated", "design-review"))).toBe(true);
     } finally {
-      rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
+      expect(
+        runSdpCli(
+          ["view", "--exclude", "explorations", "--exclude", "examples"],
+          createCaptureOutput().output,
+        ),
+      ).toBe(0);
     }
   });
 

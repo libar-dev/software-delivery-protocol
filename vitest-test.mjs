@@ -19,6 +19,8 @@ const contractDependencies = [
 
 const pathFilters = argv.filter((argument) => !argument.startsWith("-"));
 const hasPathFilter = pathFilters.length > 0;
+const cliTestPath = "test/cli.test.ts";
+const selectsCliTest = pathFilters.some((filter) => cliTestPath.includes(filter));
 const requiredContracts = hasPathFilter
   ? contractDependencies.filter((dependency) =>
       pathFilters.some((filter) => dependency.testPath.startsWith(filter)),
@@ -50,18 +52,35 @@ if (argv.includes("--help")) {
   process.exit(runVitest(vitestArgs));
 }
 
-if (hasPathFilter) {
+if (hasPathFilter && !selectsCliTest) {
   process.exit(runVitest(vitestArgs));
+}
+
+if (hasPathFilter) {
+  const parallelExitCode = runVitest([
+    ...vitestArgs,
+    "--exclude",
+    cliTestPath,
+    "--passWithNoTests",
+  ]);
+
+  if (parallelExitCode !== 0) {
+    process.exit(parallelExitCode);
+  }
+
+  process.exit(
+    runVitest(["--run", cliTestPath, "--pool", "forks", "--poolOptions.forks.singleFork"]),
+  );
 }
 
 // The default-root CLI case owns repository-root generated/. Keep its whole file in a dedicated
 // process; every other test file remains in Vitest's normal parallel pool.
-const parallelExitCode = runVitest([...vitestArgs, "--exclude", "test/cli.test.ts"]);
+const parallelExitCode = runVitest([...vitestArgs, "--exclude", cliTestPath]);
 
 if (parallelExitCode !== 0) {
   process.exit(parallelExitCode);
 }
 
 process.exit(
-  runVitest(["--run", "test/cli.test.ts", "--pool", "forks", "--poolOptions.forks.singleFork"]),
+  runVitest(["--run", cliTestPath, "--pool", "forks", "--poolOptions.forks.singleFork"]),
 );
