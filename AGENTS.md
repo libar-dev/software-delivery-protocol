@@ -63,7 +63,7 @@ Progressive disclosure — start at the top, follow the pointers down.
 | `examples/checkout-v1` | **the worked MVP example** (TS DSL tracer bullet) — specs, anchors, untracked `generated/` (regenerated in-pipeline); walkthrough in its README | when proving the loop end-to-end |
 | `explorations/` | **evidence only** (carrier exhibits, executable-example findings) — mapping evidence for design; **never promote spike code into product** | when judging design evidence; not a source tree to ship |
 | `plans/` | **the build plan** — what each implementation session does, and why | before writing code — highest primary-numbered plan's status header, plus active subplans it designates; if DRAFTED, also the latest ✅ EXECUTED/RUN plan |
-| `npm run check` | **the green gate** — `check:temporal` → typecheck → lint → format:check → build → `generate:example` → `typecheck:examples` → test → `check:example` (update this row when self-hosting check legs land) | before claiming green / after engine edits |
+| `npm run check` | **the green gate** — `check:temporal` → lint → format:check → build → `generate:self-hosting` → `generate:example` → typecheck → `typecheck:examples` → test → `check:self-hosting` → `check:example` → `preflight` | before claiming green / after engine edits |
 | `reviews/` | **archived session reviews** (implementation, founding-ideation, adversarial + prompts) — durable findings already folded into plans/DECISIONS; read for provenance | rarely |
 
 > Concept docs still carry implementation detail (TS shapes, DSL, graph JSON) for **unsettled and

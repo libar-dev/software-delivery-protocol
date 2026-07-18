@@ -45,6 +45,8 @@ itself rides with the self-hosting session (plan 16 §7).
 | MD-17 | point-per-example | durable | `spec:protocol.decisions.point-per-example` |
 | MD-18 | the carrier ruling | durable | `spec:protocol.decisions.carrier-ruling` |
 | MD-19 | the prose-ownership law | durable | `spec:protocol.decisions.prose-ownership` |
+| MD-20 | the strict consumer-exclusion contract | durable | `spec:protocol.decisions.exclusion-contract` |
+| MD-21 | the envelope-grammar ownership posture | durable | `spec:protocol.decisions.envelope-grammar-posture` |
 
 ### Current executable decision-spec pointers
 
@@ -478,6 +480,47 @@ Owned descriptions are MD-10-clean (content, never refs) and MD-11-aware: they l
 already-closed shapes, and any prose slot a floor clause ever reads gets pulled into the closed
 type as the typing law demands. Trade-off accepted: the ownership rule is real design work — paid
 once, at the surface-design session, instead of forever in an informal transfer checklist.
+
+## 2026-07-18 — Session: plan 17 execution (the self-hosting phase's pre-Gate-4 docket close)
+
+> The phase's full record — the corpus, the executable loop, the four owner gates, and the
+> docket — lives in **plan 17** and its execution branch. Plan 17 §3 flagged two rulings as
+> likely diary-worthy; both passed the three-part test at the pre-Gate-4 disposition and enter
+> here. The remaining §3 rulings stay in the corpus specs, the pinned tests, and the plan's
+> running log by deliberate omission.
+
+### MD-20 — The strict consumer-exclusion contract: root-relative POSIX path-prefix, never basename-anywhere  [ACCEPTED 2026-07-18]
+**Context.** Self-hosting forced the configurable extraction exclude the discovery code had
+deferred to external adoption: a root build must keep `explorations/` and `examples/` out of the
+Protocol's own graph. The fixed tooling excludes match basename-of-directory; the consumer rule
+was the open question.
+**Decision.** Consumer excludes (`--exclude` on `build`/`validate`/`view`;
+`ExtractOptions.exclude`) are strict, case-sensitive, root-relative POSIX path-prefixes —
+rejecting empty, `.`, leading `./`, terminal `/`, absolute, `..` segments, empty internal
+segments, and backslashes; deduplicated; nonexistent and file prefixes allowed; unioned with
+(never replacing) the fixed tooling excludes, which stay basename-of-directory.
+**Why / alternatives rejected.** *Basename-anywhere, for consistency with the tooling excludes*:
+convenient, but it silently skips a future nested `src/examples/` — consumer excludes are scope
+decisions, and scope deserves paths, not names. Hard to reverse: a public CLI/options surface
+consumers script against. Trade-off accepted: consumers must be explicit; precision beats
+convenience.
+
+### MD-21 — The envelope-grammar ownership posture: the contract is ours, the YAML library is a swappable representation (exact `yaml@2.9.0`)  [ACCEPTED 2026-07-18]
+**Context.** The Markdown envelope needed a YAML boundary, and the library's own current
+documentation no longer promises that parsing never throws — a permissive parse would make the
+envelope's meaning a library behavior rather than a Protocol-owned grammar.
+**Decision.** The Protocol owns the envelope grammar as an authored contract spec plus a bounded
+parser policy — failsafe schema, exactly one nonempty document, manual AST/CST mapping (never
+`toJS()` before policy validation), every warning/directive/tag/anchor/alias/merge/complex
+key/non-string scalar refused, byte/depth/node/scalar/finding caps — and pins the representation
+exactly: `yaml@2.9.0`, no semver range; the library stays a swappable representation behind the
+owned contract.
+**Why / alternatives rejected.** *Permissive parsing + a semver range*: broader YAML acceptance
+and free patch upgrades, but the grammar's meaning would drift with the library and adversarial
+input would meet an unbounded parser. *An own YAML parser*: total ownership, but it re-opens the
+dismissed own-grammar economics (the carrier ruling, MD-18). Hard to reverse: the corpus is
+authored against the owned contract and consumers see its finding IDs. Trade-off accepted:
+corpus-scoped strictness — full YAML/CommonMark parity is deliberately not claimed.
 
 ## Structural-decision shorthand (D1–D6)  [ACCEPTED · relocated here when the cleanup plan was retired, 2026-06-07]
 
