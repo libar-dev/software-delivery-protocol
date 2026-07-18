@@ -1,6 +1,16 @@
 #!/usr/bin/env node
 
-import { mkdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  realpathSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -9,6 +19,8 @@ import { normalizeExcludes } from "../extract/discover.js";
 import { extract } from "../extract/index.js";
 import { serializeGraph } from "../extract/serialize.js";
 import type { GraphSchema } from "../graph/schema.js";
+import { importFindingIds, importTypeScriptSpec } from "../index.js";
+import type { ImportResult } from "../index.js";
 import { renderDesignReview } from "../projections/design-review.js";
 import { createReader } from "../reader/reader.js";
 import type { Finding } from "../validate/contracts.js";
@@ -20,6 +32,7 @@ Usage:
   sdp build [root] [--exclude PATH]... [--check-clean]
   sdp validate [root] [--exclude PATH]... [--check-clean]
   sdp view [root] [--exclude PATH]... [--check-clean]
+  sdp import <path...> [--dry-run]
 
 Commands:
   build      Extract every *.sdp.ts and *.sdp.md under root (default: cwd), plus the anchor
@@ -35,11 +48,17 @@ Commands:
              graph.json is still written when the checks fail — the graph is the faithful
              projection; check errors describe the repo's conformance, not the artifact.
   view       validate, then generate the Design Review — the one read-only human view, a pure
-             projection of the graph — into <root>/generated/design-review/ (rewritten
-             wholesale, so no stale page survives). The view is written even when checks
-             fail: findings render in it, which is what a review surface is for. Exit code
-             follows validate. --check-clean additionally re-renders independently and fails
-             on any byte divergence.`;
+              projection of the graph — into <root>/generated/design-review/ (rewritten
+              wholesale, so no stale page survives). The view is written even when checks
+              fail: findings render in it, which is what a review surface is for. Exit code
+              follows validate. --check-clean additionally re-renders independently and fails
+              on any byte divergence.
+  import     Convert one or more *.sdp.ts files or recursively scanned roots to write-beside
+              *.sdp.md documents. The TypeScript source is never deleted. --dry-run writes
+              each would-be document to stdout, headed by its target path, without writing.
+              Existing Markdown siblings and non-emitting carrier refusals are rendered as
+              findings and never throw or overwrite. Exits 0 only when every requested source
+              emits (or would emit); any finding error or operational failure exits 1.`;
 
 interface CliOutput {
   stdout?: { write: (chunk: string) => void };
@@ -53,12 +72,20 @@ interface CliOutput {
  * `removeArtifact` rides the same seam: a denied recovery-path removal (EACCES/EPERM) is
  * deterministic only through injection — never a chmod trick in a test.
  */
+interface ImportHooks {
+  readonly readFileSync?: typeof readFileSync;
+  readonly writeFileSync?: typeof writeFileSync;
+  readonly existsSync?: typeof existsSync;
+  readonly importTypeScriptSpec?: typeof importTypeScriptSpec;
+}
+
 interface CliHooks {
   readonly extract?: typeof extract;
   readonly generateContracts?: typeof generateContracts;
   readonly renderDesignReview?: typeof renderDesignReview;
   readonly validateGraph?: typeof validateGraph;
   readonly rmSync?: typeof rmSync;
+  readonly import?: ImportHooks;
 }
 
 const defaultCliOutput: CliOutput = {
@@ -84,13 +111,137 @@ function writeStderr(output: CliOutput, text: string): void {
  * Graph-validator findings often carry `file` without `line` (`Primitive` nodes are line-free by
  * design), so each part renders only when known.
  */
-function formatFinding(finding: Finding): string {
+function formatFinding(finding: Finding | ImportResult["findings"][number]): string {
   const location =
     finding.file === undefined
       ? ""
       : `${finding.file}${finding.line === undefined ? "" : `:${String(finding.line)}`} — `;
 
   return `${location}[${finding.severity}] ${finding.validatorId} — ${finding.message}\n`;
+}
+
+interface ImportArgs {
+  readonly paths: readonly string[];
+  readonly dryRun: boolean;
+}
+
+function parseImportArgs(args: readonly string[], output: CliOutput): ImportArgs | undefined {
+  const paths: string[] = [];
+  let dryRun = false;
+
+  for (const argument of args) {
+    if (argument === "--dry-run") {
+      dryRun = true;
+      continue;
+    }
+
+    if (argument.startsWith("--")) {
+      writeStderr(output, `sdp import: unknown option ${argument}\n`);
+      return undefined;
+    }
+
+    paths.push(resolve(process.cwd(), argument));
+  }
+
+  if (paths.length === 0) {
+    writeStderr(output, "sdp import: requires at least one path.\n");
+    return undefined;
+  }
+
+  return { paths, dryRun };
+}
+
+function collectImportPaths(path: string, collected: string[]): void {
+  const entry = statSync(path);
+
+  if (entry.isFile()) {
+    if (path.endsWith(".sdp.ts")) {
+      collected.push(path);
+    }
+    return;
+  }
+
+  if (!entry.isDirectory()) {
+    return;
+  }
+
+  for (const child of readdirSync(path, { withFileTypes: true }).sort((first, second) =>
+    first.name.localeCompare(second.name),
+  )) {
+    collectImportPaths(join(path, child.name), collected);
+  }
+}
+
+function targetExistsFinding(targetPath: string): Finding {
+  return {
+    validatorId: importFindingIds.targetExists,
+    family: "conformance",
+    severity: "error",
+    message: `the Markdown target already exists and will not be overwritten: ${targetPath}`,
+    file: targetPath,
+    line: 1,
+  };
+}
+
+function runImport(parsed: ImportArgs, output: CliOutput, hooks: CliHooks): number {
+  const importHooks = hooks.import ?? {};
+  const read = importHooks.readFileSync ?? readFileSync;
+  const write = importHooks.writeFileSync ?? writeFileSync;
+  const targetExists = importHooks.existsSync ?? existsSync;
+  const runImportTypeScriptSpec = importHooks.importTypeScriptSpec ?? importTypeScriptSpec;
+  const sourcePaths: string[] = [];
+
+  try {
+    for (const path of parsed.paths) {
+      collectImportPaths(path, sourcePaths);
+    }
+  } catch (error) {
+    writeStderr(output, `sdp import: ${errorMessage(error)}\n`);
+    return 1;
+  }
+
+  let hasFailure = false;
+
+  for (const sourcePath of [...new Set(sourcePaths)].sort()) {
+    try {
+      const result = runImportTypeScriptSpec(read(sourcePath, "utf8"), sourcePath);
+      const findings = [...result.findings];
+      const targetPath = result.emitted?.path;
+
+      if (targetPath !== undefined && targetExists(targetPath)) {
+        findings.push(targetExistsFinding(targetPath));
+      }
+
+      for (const finding of findings) {
+        writeStderr(output, formatFinding(finding));
+      }
+
+      if (
+        findings.some((finding) => finding.severity === "error") ||
+        result.emitted === undefined
+      ) {
+        hasFailure = true;
+        continue;
+      }
+
+      if (targetPath === undefined) {
+        hasFailure = true;
+        continue;
+      }
+
+      if (parsed.dryRun) {
+        writeStdout(output, `=== ${targetPath} ===\n${result.emitted.content}`);
+      } else {
+        write(targetPath, result.emitted.content, "utf8");
+        writeStdout(output, `Wrote ${targetPath}\n`);
+      }
+    } catch (error) {
+      hasFailure = true;
+      writeStderr(output, `sdp import: ${errorMessage(error)}\n`);
+    }
+  }
+
+  return hasFailure ? 1 : 0;
 }
 
 interface BuildArgs {
@@ -523,9 +674,15 @@ export function runSdpCli(
     return 0;
   }
 
-  if (command !== "build" && command !== "validate" && command !== "view") {
+  if (command !== "build" && command !== "validate" && command !== "view" && command !== "import") {
     writeStderr(output, `${SDP_HELP_TEXT}\n\nUnknown command: ${command}\n`);
     return 1;
+  }
+
+  if (command === "import") {
+    const parsed = parseImportArgs(rest, output);
+
+    return parsed === undefined ? 1 : runImport(parsed, output, hooks);
   }
 
   const parsed = parseBuildArgs(rest, output, command);
