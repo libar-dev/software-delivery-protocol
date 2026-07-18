@@ -7,12 +7,12 @@ const vitestArgs = argv.includes("--run") ? argv : ["--run", ...argv];
 const contractDependencies = [
   {
     contracts: "generated/contracts",
-    recovery: "npm run generate:self-hosting",
+    generation: "npm run generate:self-hosting",
     testPath: "test/self-hosting-duplicate-ids.test.ts",
   },
   {
     contracts: "examples/checkout-v1/generated/contracts",
-    recovery: "npm run generate:example",
+    generation: "npm run generate:example",
     testPath: "examples/checkout-v1/test/orders/create-order.valid-cart.test.ts",
   },
 ];
@@ -20,10 +20,12 @@ const contractDependencies = [
 const pathFilters = argv.filter((argument) => !argument.startsWith("-"));
 const hasPathFilter = pathFilters.length > 0;
 const cliTestPath = "test/cli.test.ts";
-const selectsCliTest = pathFilters.some((filter) => cliTestPath.includes(filter));
+const matchesPathFilter = (testPath, filter) =>
+  testPath.toLowerCase().includes(filter.toLowerCase());
+const selectsCliTest = pathFilters.some((filter) => matchesPathFilter(cliTestPath, filter));
 const requiredContracts = hasPathFilter
   ? contractDependencies.filter((dependency) =>
-      pathFilters.some((filter) => dependency.testPath.startsWith(filter)),
+      pathFilters.some((filter) => matchesPathFilter(dependency.testPath, filter)),
     )
   : contractDependencies;
 const missingContracts = requiredContracts.filter(
@@ -31,7 +33,10 @@ const missingContracts = requiredContracts.filter(
 );
 
 if (missingContracts.length > 0) {
-  const recovery = missingContracts.map((dependency) => dependency.recovery).join(" && ");
+  const recovery = [
+    "npm run build",
+    ...missingContracts.map((dependency) => dependency.generation),
+  ].join(" && ");
   console.error(
     `Generated contracts required by the selected test suite are missing.\nRun \`${recovery}\` first.`,
   );

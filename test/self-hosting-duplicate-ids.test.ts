@@ -76,7 +76,7 @@ describe("generated contract preflight", () => {
     expect(result.status).toBe(1);
     expect(result.stdout).toBe("");
     expect(result.stderr).toBe(
-      "Generated contracts required by the selected test suite are missing.\nRun `npm run generate:self-hosting` first.\n",
+      "Generated contracts required by the selected test suite are missing.\nRun `npm run build && npm run generate:self-hosting` first.\n",
     );
   });
 
@@ -86,7 +86,7 @@ describe("generated contract preflight", () => {
     expect(result.status).toBe(1);
     expect(result.stdout).toBe("");
     expect(result.stderr).toBe(
-      "Generated contracts required by the selected test suite are missing.\nRun `npm run generate:example` first.\n",
+      "Generated contracts required by the selected test suite are missing.\nRun `npm run build && npm run generate:example` first.\n",
     );
   });
 
@@ -96,8 +96,22 @@ describe("generated contract preflight", () => {
     expect(result.status).toBe(1);
     expect(result.stdout).toBe("");
     expect(result.stderr).toBe(
-      "Generated contracts required by the selected test suite are missing.\nRun `npm run generate:self-hosting && npm run generate:example` first.\n",
+      "Generated contracts required by the selected test suite are missing.\nRun `npm run build && npm run generate:self-hosting && npm run generate:example` first.\n",
     );
+  });
+
+  it("matches a Vitest substring filter before collecting the self-hosting tracer", () => {
+    const result = runPreflight(preflightRoot([checkoutContracts]), ["duplicate-ids"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toBe(
+      "Generated contracts required by the selected test suite are missing.\nRun `npm run build && npm run generate:self-hosting` first.\n",
+    );
+  });
+
+  it("does not require contracts for an unrelated Vitest filter", () => {
+    expect(runPreflight(preflightRoot([]), ["test/bootstrap.test.ts"]).status).toBe(0);
   });
 
   it("proceeds for the unfiltered invocation once both contract trees are generated", () => {
@@ -160,7 +174,10 @@ bindExample(
         (finding) => finding.validatorId === params.findingId,
       );
 
-      expect(duplicateFindings).toHaveLength(2);
+      expect(duplicateFindings.map((finding) => finding.file).sort()).toEqual([
+        "first-site.sdp.ts",
+        "second-site.sdp.md",
+      ]);
     },
     "no graph node is emitted for {specId}": (world, params) => {
       const result = extractedResult(world);
