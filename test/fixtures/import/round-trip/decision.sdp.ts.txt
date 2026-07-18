@@ -1,0 +1,19 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const decisionRoundTripSpec = spec({
+  id: specId("spec:round-trip.decision"),
+  title: "Keep eligibility rules explicit",
+  kind: "decision",
+  altitude: "feature",
+  readiness: "defined",
+  relations: [],
+  intent: {
+    description: "A behavior needs a governing delivery decision.",
+  },
+  decision: {
+    context: "Eligibility must be reviewable without running code.",
+    decision: "Represent eligibility as authored behavior rules.",
+    rationale: ["The rules remain visible in every carrier."],
+    consequences: ["The behavior can state a precise relation to its decision."],
+  },
+});

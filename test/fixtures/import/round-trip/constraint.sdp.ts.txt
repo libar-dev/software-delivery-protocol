@@ -1,0 +1,21 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const constraintRoundTripSpec = spec({
+  id: specId("spec:round-trip.constraint"),
+  title: "Keep order acceptance deterministic",
+  kind: "constraint",
+  altitude: "story",
+  readiness: "defined",
+  relations: [],
+  intent: {
+    description: "An acceptance decision must be repeatable.",
+  },
+  constraints: [
+    {
+      statement: "The same order data produces the same acceptance result.",
+      flavor: "quality",
+      target: "order acceptance",
+      measurableBy: "a deterministic verifier",
+    },
+  ],
+});

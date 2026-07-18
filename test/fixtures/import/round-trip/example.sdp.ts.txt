@@ -1,0 +1,22 @@
+import { spec, specId, verifies } from "@libar-dev/software-delivery-protocol";
+
+export const exampleRoundTripSpec = spec({
+  id: specId("spec:round-trip.example"),
+  title: "Accept a positive order",
+  kind: "example",
+  altitude: "story",
+  readiness: "ready",
+  relations: [verifies(specId("spec:round-trip.behavior"))],
+  intent: {
+    description: "A verifier needs one executable order scenario.",
+  },
+  behavior: {
+    examples: [
+      {
+        given: ["an order has a positive total"],
+        when: ["the order is submitted"],
+        "th\u0065n": ["the order is accepted"],
+      },
+    ],
+  },
+});
