@@ -595,7 +595,10 @@ function lineContaining(source: string, token: string): number {
 describe("the self-hosting phase-1 carrier corpus", () => {
   it("derives the sixteen Markdown-canonical specs and their exact Pack checkpoint from the root", () => {
     // Given: the repository root with evidence and the worked example excluded from the authored model.
-    const result = extract({ root: repoRoot, exclude: ["explorations", "examples"] });
+    const result = extract({
+      root: repoRoot,
+      exclude: ["explorations", "examples", "test/fixtures/import/parity"],
+    });
 
     // When: the root corpus is reified through the public extractor.
     const nodeIds = result.graph.nodes.map((node) => node.id).sort();

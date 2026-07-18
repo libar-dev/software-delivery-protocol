@@ -162,7 +162,16 @@ describe("sdp cli", () => {
       const capture = createCaptureOutput();
 
       const exitCode = runSdpCli(
-        ["view", "--check-clean", "--exclude", "explorations", "--exclude", "examples"],
+        [
+          "view",
+          "--check-clean",
+          "--exclude",
+          "explorations",
+          "--exclude",
+          "examples",
+          "--exclude",
+          "test/fixtures/import/parity",
+        ],
         capture.output,
       );
 
@@ -176,7 +185,15 @@ describe("sdp cli", () => {
     } finally {
       expect(
         runSdpCli(
-          ["view", "--exclude", "explorations", "--exclude", "examples"],
+          [
+            "view",
+            "--exclude",
+            "explorations",
+            "--exclude",
+            "examples",
+            "--exclude",
+            "test/fixtures/import/parity",
+          ],
           createCaptureOutput().output,
         ),
       ).toBe(0);

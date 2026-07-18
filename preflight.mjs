@@ -22,7 +22,15 @@ const generationTargets = [
     name: "self-hosting",
     generatedPath: "generated",
     sourcePaths: ["specs", "src", "test"],
-    command: ["view", "--exclude", "explorations", "--exclude", "examples"],
+    command: [
+      "view",
+      "--exclude",
+      "explorations",
+      "--exclude",
+      "examples",
+      "--exclude",
+      "test/fixtures/import/parity",
+    ],
   },
   {
     name: "checkout-v1",
