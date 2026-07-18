@@ -315,3 +315,57 @@ specs live at `spec:decisions.*` while the DECISIONS registry reserves
 No finding in this review challenges the phase's central claims: one graph, one validation
 path, honest readiness, derived-never-authored facts, and a deterministic clean-clone gate all
 held under adversarial re-verification.
+
+---
+
+## Verification addendum — remediation confirmed
+
+**Verified at `107f3e5` (`docs(plan): mark self-hosting phase one executed`)**, after the
+remediation commits `cd735ae..ec88bcc` and the F1–F4 wave (all four APPROVE; evidence under the
+local final-audit directory). Every high and medium finding above is **addressed and was
+re-verified live**, not from the remediation report:
+
+- **H1/M3/M8:** the default-root CLI test now regenerates (`view` rerun) in its `finally`
+  instead of deleting; an `afterAll` sentinel asserts the three `generated/` paths survive; the
+  dedicated single-fork split now applies to filtered runs too; and the todo-14 design
+  substitution is recorded as an execution learning in plan 17. Live proof: the previously
+  deterministic failure pair (`npm test -- test/cli.test.ts` then
+  `npm test -- test/self-hosting-duplicate-ids.test.ts`) is green with `generated/contracts`
+  surviving, and the todo-17 filtered co-selection runs as two passes.
+- **H2:** `isUnsupportedCommonMarkBlock` plus the widened HTML matcher refuse ordered/star/
+  plus/dash-tab lists, setext underlines, thematic breaks, bare `<` openers, and HTML
+  comments/declarations/PIs in both prose zones. All five previously-accepted probe inputs now
+  refuse with `extract/invalid-markdown-structure` and zero specs.
+- **H3:** recovery commands carry the frozen `npm run build && ` prefix; the three pinned test
+  strings match the plan's exact commands.
+- **H4/M5/M7:** the coverage pass (`f8b26f5`) pins all five resource caps, the throw path at
+  the public boundary, a genuine YAML `document.warnings` case, the lone-CR refusal, the three
+  relation-uniqueness rules, pure-CRLF acceptance, missing/empty H1, suggestion distance/first-
+  minimum, fence blank/attribute/unclosed refusals, gwt-on-non-example, invalid and mixed
+  `Verification — MODE`, repeated identical headings, GWT/behavior permutation byte-equality,
+  and rows 1/2/4/5 fixture↔live byte identity.
+- **M1:** both cap paths now emit the frozen `extract/invalid-markdown-structure` as finding
+  100 (probe-verified) and the body-side cap is tested.
+- **M2:** unknown static in-section keys now warn with the exact path and the L2 wording and
+  are dropped consistently in both the in-memory graph and `graph.json` (probe-verified); a
+  model term named `description` is a hard reserved-property refusal.
+- **M4:** substring preflight matching plus the unrelated-filter and substring-filter tests.
+- **M6:** the Gate-4 ledger's Corrections cell names `24f9978`.
+- **Low/info tail:** six items fixed (`then` key named directly, GWT permutation coverage,
+  `description`-term collision, bound-example distinct carrier files, fixture byte-identity,
+  bare-`<` section refusal); every remaining item carries an explicit deferred /
+  pre-existing/phase-2 disposition in plan 17's remediation reconciliation table.
+
+`npm run check` is green at `107f3e5` (0 errors, the 1 known checkout warning, preflight
+clean, tree clean afterwards).
+
+**Residual notes — both subsequently fixed in a follow-up wrapper commit:**
+
+1. The existence-only, `cli.test.ts`-scoped sentinel is now backed by a wrapper-level
+   fingerprint: every pooled vitest run hashes the full repository-root `generated/` tree
+   before and after, and a pooled test that mutates it fails the run loudly — so a future
+   root-mutating test in any file is caught, not just deletions by the CLI suite. Pinned by a
+   shim-driven harness test (mutating and untouched control cases).
+2. `./`-prefixed and absolute-path vitest filter spellings are now normalized to the
+   repository-relative form before dependency matching and the `cli.test.ts` split, closing
+   the preflight bypass; both spellings are pinned by tests.
