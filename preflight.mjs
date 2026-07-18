@@ -21,7 +21,7 @@ const generationTargets = [
   {
     name: "self-hosting",
     generatedPath: "generated",
-    sourcePaths: ["specs"],
+    sourcePaths: ["specs", "src", "test"],
     command: ["view", "--exclude", "explorations", "--exclude", "examples"],
   },
   {
