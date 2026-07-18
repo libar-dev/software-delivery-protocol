@@ -1,6 +1,6 @@
 # Invalid cart is rejected
 
-`spec:orders.create-order.invalid-cart` · Example / Scenario (`example`) · altitude `story` · authored in [specs/orders/create-order-invalid-cart.sdp.ts](../../../specs/orders/create-order-invalid-cart.sdp.ts) `[declared]`
+`spec:orders.create-order.invalid-cart` · Example / Scenario (`example`) · altitude `story` · authored in [specs/orders/create-order-invalid-cart.sdp.md](../../../specs/orders/create-order-invalid-cart.sdp.md) `[declared]`
 
 **Readiness:** stated `defined` · structural floor reached: `ready`
 
@@ -49,7 +49,7 @@ Every line is a one-hop neighbor over the curated graph: changing this spec touc
 
 | Severity | Check | Message | Where |
 |---|---|---|---|
-| warning | `conformance/verifies-linkage` | Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier. | `specs/orders/create-order-invalid-cart.sdp.ts` |
+| warning | `conformance/verifies-linkage` | Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier. | `specs/orders/create-order-invalid-cart.sdp.md` |
 
 ---
 

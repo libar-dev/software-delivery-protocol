@@ -317,7 +317,7 @@ describe("the Design Review — the one generated read-only view", () => {
     expect(index).toContain("| Severity | Check | Message | Where |");
     // The standing warning's subject is a spec file: `file` known, no line (Primitive nodes are
     // line-free by design), and the location is never embedded in the message a second time.
-    expect(index).toContain("| `specs/orders/create-order-invalid-cart.sdp.ts` |");
+    expect(index).toContain("| `specs/orders/create-order-invalid-cart.sdp.md` |");
   });
 
   it("shows what a verifier covers on its own page (JS-G2: from the test back to the spec)", () => {

@@ -1,6 +1,6 @@
 # Create-order API contract
 
-`spec:orders.create-order.api-contract` · Contract (`contract`) · altitude `story` · authored in [specs/orders/create-order-api-contract.sdp.ts](../../../specs/orders/create-order-api-contract.sdp.ts) `[declared]`
+`spec:orders.create-order.api-contract` · Contract (`contract`) · altitude `story` · authored in [specs/orders/create-order-api-contract.sdp.md](../../../specs/orders/create-order-api-contract.sdp.md) `[declared]`
 
 **Readiness:** stated `idea` · structural floor reached: `idea`
 

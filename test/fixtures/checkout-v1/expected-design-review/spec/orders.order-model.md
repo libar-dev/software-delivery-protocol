@@ -1,6 +1,6 @@
 # Order-management domain vocabulary
 
-`spec:orders.order-model` · Domain Model (`model`) · altitude `story` · authored in [specs/orders/order-model.sdp.ts](../../../specs/orders/order-model.sdp.ts) `[declared]`
+`spec:orders.order-model` · Domain Model (`model`) · altitude `story` · authored in [specs/orders/order-model.sdp.md](../../../specs/orders/order-model.sdp.md) `[declared]`
 
 **Readiness:** stated `defined` · structural floor reached: `ready`
 

@@ -1,6 +1,6 @@
 # Order total matches cart math
 
-`spec:orders.order-total-rule` · Business Rule (`rule`) · altitude `story` · authored in [specs/orders/order-total-rule.sdp.ts](../../../specs/orders/order-total-rule.sdp.ts) `[declared]`
+`spec:orders.order-total-rule` · Business Rule (`rule`) · altitude `story` · authored in [specs/orders/order-total-rule.sdp.md](../../../specs/orders/order-total-rule.sdp.md) `[declared]`
 
 **Readiness:** stated `defined` · structural floor reached: `ready`
 

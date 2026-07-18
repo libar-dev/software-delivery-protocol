@@ -1,6 +1,6 @@
 # Order lifecycle keeps validation before creation
 
-`spec:decisions.order-lifecycle` · Decision Record (`decision`) · altitude `feature` · authored in [specs/decisions/order-lifecycle.sdp.ts](../../../specs/decisions/order-lifecycle.sdp.ts) `[declared]`
+`spec:decisions.order-lifecycle` · Decision Record (`decision`) · altitude `feature` · authored in [specs/decisions/order-lifecycle.sdp.md](../../../specs/decisions/order-lifecycle.sdp.md) `[declared]`
 
 **Readiness:** stated `defined` · structural floor reached: `ready`
 

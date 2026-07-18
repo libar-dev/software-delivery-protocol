@@ -1,6 +1,6 @@
 # Customer creates an order
 
-`spec:orders.create-order` · Use Case / Behavior (`behavior`) · altitude `feature` · authored in [specs/orders/create-order.sdp.ts](../../../specs/orders/create-order.sdp.ts) `[declared]`
+`spec:orders.create-order` · Use Case / Behavior (`behavior`) · altitude `feature` · authored in [specs/orders/create-order.sdp.md](../../../specs/orders/create-order.sdp.md) `[declared]`
 
 **Readiness:** stated `defined` · structural floor reached: `ready`
 
@@ -18,8 +18,8 @@
 
 ### Verifiers
 
-- `spec:orders.create-order.invalid-cart` — Invalid cart is rejected ([specs/orders/create-order-invalid-cart.sdp.ts](../../../specs/orders/create-order-invalid-cart.sdp.ts)) — **not enabled** (no test anchor binds this example — it confers no verifier binding) `[declared]`
-- `spec:orders.create-order.valid-cart` — Valid cart creates an order ([specs/orders/create-order-valid-cart.sdp.ts](../../../specs/orders/create-order-valid-cart.sdp.ts)) — **enabled** (a resolving test anchor binds this example) `[declared]`
+- `spec:orders.create-order.invalid-cart` — Invalid cart is rejected ([specs/orders/create-order-invalid-cart.sdp.md](../../../specs/orders/create-order-invalid-cart.sdp.md)) — **not enabled** (no test anchor binds this example — it confers no verifier binding) `[declared]`
+- `spec:orders.create-order.valid-cart` — Valid cart creates an order ([specs/orders/create-order-valid-cart.sdp.md](../../../specs/orders/create-order-valid-cart.sdp.md)) — **enabled** (a resolving test anchor binds this example) `[declared]`
 
 ### Expected-outcome oracle
 
@@ -68,7 +68,7 @@ Every line is a one-hop neighbor over the curated graph: changing this spec touc
 
 | Severity | Check | Message | Where |
 |---|---|---|---|
-| warning | `conformance/verifies-linkage` | Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier. | `specs/orders/create-order-invalid-cart.sdp.ts` |
+| warning | `conformance/verifies-linkage` | Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier. | `specs/orders/create-order-invalid-cart.sdp.md` |
 
 ---
 

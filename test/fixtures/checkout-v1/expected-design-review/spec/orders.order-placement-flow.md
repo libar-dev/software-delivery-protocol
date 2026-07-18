@@ -1,6 +1,6 @@
 # Order placement flow
 
-`spec:orders.order-placement-flow` · Workflow (`workflow`) · altitude `feature` · authored in [specs/orders/order-placement-flow.sdp.ts](../../../specs/orders/order-placement-flow.sdp.ts) `[declared]`
+`spec:orders.order-placement-flow` · Workflow (`workflow`) · altitude `feature` · authored in [specs/orders/order-placement-flow.sdp.md](../../../specs/orders/order-placement-flow.sdp.md) `[declared]`
 
 **Readiness:** stated `scoped` · structural floor reached: `scoped`
 

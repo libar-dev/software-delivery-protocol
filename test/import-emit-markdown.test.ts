@@ -5,21 +5,20 @@ import { describe, expect, it } from "vitest";
 
 import { reifyMarkdownCarrier } from "../src/extract/markdown.js";
 import { emitMarkdownSpec } from "../src/import/emit-markdown.js";
-import { reifyTypeScriptCarrier } from "../src/index.js";
 import type { ReifiedSpec } from "../src/extract/reify.js";
 
 const checkoutSpecPaths = [
-  "orders/create-order.sdp.ts",
-  "orders/order-placement-flow.sdp.ts",
-  "orders/create-order-valid-cart.sdp.ts",
-  "orders/create-order-invalid-cart.sdp.ts",
-  "orders/create-order-api-contract.sdp.ts",
-  "orders/order-model.sdp.ts",
-  "orders/order-total-rule.sdp.ts",
-  "orders/order-inventory-rule.sdp.ts",
-  "orders/order-latency-constraint.sdp.ts",
-  "orders/order-management.sdp.ts",
-  "decisions/order-lifecycle.sdp.ts",
+  "orders/create-order.sdp.md",
+  "orders/order-placement-flow.sdp.md",
+  "orders/create-order-valid-cart.sdp.md",
+  "orders/create-order-invalid-cart.sdp.md",
+  "orders/create-order-api-contract.sdp.md",
+  "orders/order-model.sdp.md",
+  "orders/order-total-rule.sdp.md",
+  "orders/order-inventory-rule.sdp.md",
+  "orders/order-latency-constraint.sdp.md",
+  "orders/order-management.sdp.md",
+  "decisions/order-lifecycle.sdp.md",
 ] as const;
 const checkoutSpecRoot = new URL("../examples/checkout-v1/specs/", import.meta.url);
 
@@ -101,7 +100,7 @@ relations: {}
     const emitted = expectMarkdownRoundTrip(source);
 
     expect(emitted).toContain("## Intent\n\nIntent prose belongs under Intent.");
-    expect(emitted).toContain("### Open questions\n- [blocking] Is the section complete?");
+    expect(emitted).toContain("### Open questions\n\n- [blocking] Is the section complete?");
   });
 
   it.each([
@@ -148,7 +147,7 @@ relations: {}
     });
     const example = reifiedSpec({
       kind: "example",
-      intent: {},
+      intent: { outcome: "Exercise one bound point." },
       behavior: {
         examples: [
           Object.fromEntries([
@@ -164,7 +163,7 @@ relations: {}
     const exampleEmitted = expectMarkdownRoundTrip(example);
 
     expect(spaceEmitted).toContain("## Example space\n\nVocabulary prose.\n\n```gwt-vocabulary");
-    expect(exampleEmitted).toContain("## Intent\n\n```gwt");
+    expect(exampleEmitted).toContain("- outcome: Exercise one bound point.\n\n```gwt");
     expect(exampleEmitted.match(/```gwt\n/gu)).toHaveLength(1);
   });
 
@@ -219,13 +218,13 @@ relations: {}
       expect(emitted).toContain(`## ${heading}`);
   });
 
-  it("round trips all eleven checkout authored Specs through Markdown", () => {
+  it("round trips all eleven migrated checkout Specs through the emitter", () => {
     for (const path of checkoutSpecPaths) {
       const source = readFileSync(fileURLToPath(new URL(path, checkoutSpecRoot)), "utf8");
-      const typeScript = reifyTypeScriptCarrier(source, path);
-      const spec = typeScript.specs[0];
+      const markdown = reifyMarkdownCarrier(source, path);
+      const spec = markdown.specs[0];
 
-      expect(typeScript.findings).toEqual([]);
+      expect(markdown.findings).toEqual([]);
       expect(spec).toBeDefined();
       if (spec !== undefined) expectMarkdownRoundTrip(spec);
     }

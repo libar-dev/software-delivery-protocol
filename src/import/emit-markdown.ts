@@ -98,13 +98,13 @@ function intentSection(intent: Data | undefined, example: string | undefined): s
           : [`- [${entry.blocking ? "blocking" : "non-blocking"}] ${value}`];
       })
     : [];
-  const items = [
-    ...fields,
-    ...repeated,
-    ...(questions.length > 0 ? ["### Open questions", ...questions] : []),
-    ...(example === undefined ? [] : [example]),
-  ];
-  return section("Intent", intent?.description, items);
+  const fieldBlock = [...fields, ...repeated].join("\n");
+  const questionBlock =
+    questions.length === 0 ? undefined : ["### Open questions", "", ...questions].join("\n");
+  const blocks = [fieldBlock.length === 0 ? undefined : fieldBlock, questionBlock, example].filter(
+    (block): block is string => block !== undefined,
+  );
+  return section("Intent", intent?.description, blocks.length === 0 ? [] : [blocks.join("\n\n")]);
 }
 
 function behaviorSection(data: Data, behavior: Data): string | undefined {
