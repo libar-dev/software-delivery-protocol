@@ -10,7 +10,8 @@ The graph is the heart of the trust model. This document defines how it is deriv
 
 ```
 repo (specs + source + structural facts)
-        │   ts-morph extractor  (pure: reads source, writes graph + report)
+        │   carrier extractors  (ts-morph for .sdp.ts · the ruled Markdown parser for .sdp.md;
+        │   pure: reads source, writes graph + report)
         ▼
 graph.json   (the single read model — P2)
         │   generators (pure: graph → output)
@@ -22,7 +23,7 @@ Two pure steps: `graph = f(repo)` and `output = f(graph)`. The extractor is the 
 
 ### What the extractor reads
 
-- **Typed spec files** — every `*.sdp.ts` under the extraction root (conventionally `/specs/`; discovery is by suffix alone, outside tooling-output and dot-directories — the `.sdp.ts` extension, MD-15) — the declared layer: specs, packs, relations.
+- **Authored spec documents** — every `*.sdp.ts` and `*.sdp.md` under the extraction root (conventionally `/specs/`; discovery is by suffix alone, outside tooling-output and dot-directories — the `.sdp.ts`/`.sdp.md` extension law, MD-15 re-pointed by the carrier ruling, MD-18) — the declared layer: specs, packs, relations.
 - **Source-code anchors** — the anchored layer: an **anchor** binds a code, test, or oracle location to a spec ID — identity, an optional label, and one `satisfies` / `verifies` / `models` target; richer structural facts are aspirational (`04` §2). Anchors carry *no* intent (see `04`).
 - **Structural facts** — the inferred layer: machine-derived structure (imports, calls, symbol identity). Designed-in — the `claim` value and the advisory edge row exist, and every consumer decodes them — but **empty in the MVP**: the entry adapters and file-level impact resolve off the curated layers (`06` §2), so nothing yet needs an inferred edge; the first producer is the aspirational impact graph.
 
@@ -77,7 +78,7 @@ Given the same repo at a commit, the extractor emits a **byte-identical** graph:
 
 Determinism is what makes "derived" *falsifiable*. Without it, the no-second-store rule (below) cannot be enforced, because you could not prove the graph is a function of the repo.
 
-A consequence: the authoring surface must be statically extractable (P5). A non-static expression in a spec file would make derivation non-deterministic, so the extractor responds in two tiers (`04` §1): a non-static **envelope** field (`id` · `kind` · `altitude` · `readiness` · any relation target) is a **hard error that fails the build** — the graph cannot be keyed or typed without it — while non-static **optional section** detail is dropped with a warning (graceful partial extraction, L3) rather than guessed.
+A consequence: the authoring surface must be statically extractable (P5). A non-static expression in a spec file would make derivation non-deterministic, so the extractor responds in two tiers (`04` §1): a non-static **envelope** field (`id` · `kind` · `altitude` · `readiness` · any relation target) is a **hard error that fails the build** — the graph cannot be keyed or typed without it — while non-static **optional section** detail is dropped with a warning (graceful partial extraction, L3) rather than guessed. Those tiers are the TS carrier's granularity; the Markdown carrier is deliberately all-or-nothing per document — the per-carrier asymmetry is named at `04` §1.
 
 ---
 

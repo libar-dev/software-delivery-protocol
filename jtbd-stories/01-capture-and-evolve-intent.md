@@ -16,10 +16,10 @@ The job here is to get a thought into the system and let it grow without ever fo
 
 **Acceptance criteria:**
 1. A spec can be created at `readiness: "idea"` with only `id`, `title`, `kind`, `altitude`, and either `intent.outcome` or a parent relation — nothing else is required.
-2. The new spec lives in a `*.sdp.ts` file under the extraction root (conventionally `/specs/`) as committed code, immediately part of the single source of truth — no status field, ticket, or external tool is needed for it to "exist."
+2. The new spec lives in a carrier document under the extraction root (conventionally `/specs/`) — `*.sdp.md` for a Markdown-canonical ID (new IDs may be born Markdown-canonical now that the product parser has landed — the interim carrier rule, MD-18), `*.sdp.ts` for a TS-canonical pre-existing ID — as committed content, immediately part of the single source of truth — no status field, ticket, or external tool is needed for it to "exist."
 3. Open questions can be attached (`intent.openQuestions`) without resolving them and without blocking capture; only questions explicitly marked `blocking` constrain stating `defined`/`ready` later.
 4. The spec is valid at its lowest readiness — the build never demands rules, anchors, or tests to accept an idea.
-5. The spec source is static, side-effect-free data (a "JSON file that TypeScript happens to validate"), so the extractor reifies it deterministically.
+5. The spec source is static, side-effect-free data in its carrier ("a JSON file that TypeScript happens to validate" in the TS carrier; bounded frontmatter and owned prose in the Markdown carrier), so the extractor reifies it deterministically.
 6. Two people capturing two ideas never collide on identity, because each spec carries a stable, namespaced ID (e.g. `spec:orders.create-order`); a duplicate ID is a loud build error, never a silent merge.
 7. The captured spec appears in the next `sdp build` with no extra steps, and its stated readiness is checked against the `idea` floor.
 8. Relations are optional in the logical `Spec` model. A physical Markdown envelope writes `relations: {}` when the logical set is empty: honest carrier syntax, not a new logical relation requirement. A captured idea may therefore carry no relations at all; the explicit empty key belongs to the carrier, never to the model.
@@ -41,7 +41,7 @@ The job here is to get a thought into the system and let it grow without ever fo
 2. There is exactly one object shape — the `Spec` envelope — for an idea, a rule, an NFR, a contract, and an example with a verifier; no `Requirement → ImplementedRequirement` split exists anywhere in the flow.
 3. Sections can be added in any order (a constraint before an example, a design note before a rule) without ceremony, because all sections are optional on the type.
 4. Sections that are not yet known stay **absent** rather than being faked with placeholders — completeness is decided by validators, not by stub values.
-5. Every enrichment is an ordinary TypeScript edit, reviewable as a normal git diff and committed alongside the implementation.
+5. Every enrichment is an ordinary edit to the spec's canonical carrier (Markdown or TypeScript), reviewable as a normal git diff and committed alongside the implementation.
 6. The original intent (the "why") remains visible alongside new detail; raising readiness is a deliberate authored assertion, checked against that level's floor (`05`).
 7. Re-running `sdp build` after enrichment yields an updated graph with the spec's new sections and readiness, with no migration step.
 
