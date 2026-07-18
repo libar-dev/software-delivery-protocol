@@ -136,6 +136,23 @@ Sessions are owner-gated (each closes with a Design Review and a gate-ledger row
 | 42 | 40 | 43 | 41 |
 | 43 | 41, 42 | F1–F4 | — |
 
+## §10 Gate ledger G1-G8
+
+This ledger is git process evidence, never graph content. It records owner gates and evidence;
+its rows are not validators and do not alter readiness. `check-self-hosting-gates.mjs` verifies
+the ledger's complete, non-empty G1-G8 structure while the repo plan exists.
+
+| Gate | Meaning | Entry condition | Evidence / owner disposition |
+|---|---|---|---|
+| G1 | emitter contract and grammar freeze | §2 matrix reviewed before emitter design | accepted — 2026-07-18 — `f06f14d` |
+| G2 | importer fidelity | imported fixture graph equals source under §7 catalog | accepted — 2026-07-18 — df444f2 |
+| G3 | hardening baseline | §3 classes have evidence or named non-claim | accepted — 2026-07-18 — 0bb200a |
+| G4 | canonical-default flip | operative records and post-flip truth pins agree | pending — one tight record series and audit map |
+| G5 | first corpus-wave targets | core model, validation, and consumers parents exist | pending — coverage ledger and generated Design Review |
+| G6 | decision fold | every fold source has one ledger disposition | pending — lean registry review and relation evidence |
+| G7 | corpus waves 2–4 + fold completion | coverage ledger complete and fold ledger terminal | pending — coverage audit, floor-honesty table, and generated Design Review |
+| G8 | whole-phase close | full gate, clean-clone proof, review remediation, owner acceptance | pending — final verification wave and accepted SHA |
+
 ## Todos
 > Implementation + Test = ONE todo. Never separate.
 <!-- APPEND TASK BATCHES BELOW THIS LINE WITH edit/apply_patch - never rewrite the headers above. -->
@@ -279,7 +296,7 @@ Sessions are owner-gated (each closes with a Design Review and a gate-ledger row
   Acceptance criteria: the parser spec carries the new claim text with the matrix reference; `npm run check` green (floor-honest); acceptance-3 wording satisfied (claim on the specs themselves).
   QA scenarios: happy — spec diff + check log (Evidence `.omo/evidence/self-hosting-phase-2/task-20-self-hosting-phase-2.claim.md`); failure — leave both old and new claim texts, catch the contradiction in review against acceptance 3, fix (Evidence `.../task-20-self-hosting-phase-2.review.log`).
   Commit: Y | `feat(specs): resolve the parser hardening non-claim with pinned parity evidence`
-- [ ] 21. Session 3 close — gate G3
+- [x] 21. Session 3 close — gate G3
   What to do / Must NOT do: Assemble the G3 evidence pack: the grammar-hardening RED→GREEN log, the executed parity matrix, the parser-spec claim text, and the generated Design Review view. Present to the owner; on acceptance, stamp G3 (owner disposition + date + SHA) in plan 18 §10 and the gates script's plan-18 block; stamp docket rows. Must NOT: start the flip before the owner's G3 disposition.
   Parallelization: Wave 4 | Blocked by: 20 | Blocks: 22
   References: gate mechanics (todo 12 references).

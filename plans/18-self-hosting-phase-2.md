@@ -297,11 +297,11 @@ the ledger's complete, non-empty G1-G8 structure while this plan exists.
 |---|---|---|---|
 | G1 | emitter contract and grammar freeze | §2 matrix reviewed before emitter design | accepted — 2026-07-18 — `f06f14d` |
 | G2 | importer fidelity | imported fixture graph equals source under §7 catalog | accepted — 2026-07-18 — df444f2 |
-| G3 | checkout migration | all eleven Specs Markdown-canonical with no dual IDs | pending — migration check and example walkthrough |
-| G4 | hardening baseline | §3 classes have evidence or named non-claim | pending — parity matrix and parser-Spec disposition |
-| G5 | canonical-default flip | operative records and post-flip truth pins agree | pending — one tight record series and audit map |
-| G6 | first corpus-wave targets | core model, validation, and consumers parents exist | pending — coverage ledger and generated Design Review |
-| G7 | decision fold | every fold source has one ledger disposition | pending — lean registry review and relation evidence |
+| G3 | hardening baseline | §3 classes have evidence or named non-claim | accepted — 2026-07-18 — 0bb200a |
+| G4 | canonical-default flip | operative records and post-flip truth pins agree | pending — one tight record series and audit map |
+| G5 | first corpus-wave targets | core model, validation, and consumers parents exist | pending — coverage ledger and generated Design Review |
+| G6 | decision fold | every fold source has one ledger disposition | pending — lean registry review and relation evidence |
+| G7 | corpus waves 2–4 + fold completion | coverage ledger complete and fold ledger terminal | pending — coverage audit, floor-honesty table, and generated Design Review |
 | G8 | whole-phase close | full gate, clean-clone proof, review remediation, owner acceptance | pending — final verification wave and accepted SHA |
 
 ## (n) Acceptance criteria and final verification wave
