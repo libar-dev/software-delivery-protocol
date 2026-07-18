@@ -197,17 +197,36 @@ describe("extraction corpora", () => {
     expect(result.graph.edges).toEqual([]);
   });
 
-  it("duplicate-id: both sites reported (L2); neither enters the graph; the counts record both", () => {
+  it("duplicate-id: TypeScript and Markdown sites are excluded before graph derivation; the healthy sibling remains", () => {
     const result = extract({ root: corpusRoot("duplicate-id") });
-    const errors = result.report.findings.filter(
+    const duplicateFindings = result.report.findings.filter(
       (finding) => finding.validatorId === extractFindingIds.duplicateId,
     );
 
-    expect(errors).toHaveLength(2);
-    expect(new Set(errors.map((finding) => finding.file)).size).toBe(2);
-    expect(errors.every((finding) => finding.subjectId === "spec:orders.duplicate")).toBe(true);
-    expect(result.graph.nodes).toEqual([]);
-    expect(result.counts.specs).toBe(2);
+    // This is the extraction boundary, not the `conformance/duplicate-ids` graph backstop: the
+    // ambiguous carriers never enter deriveGraph, so every later consumer sees only the sibling.
+    expect(duplicateFindings).toEqual([
+      expect.objectContaining({
+        file: "first-site.sdp.ts",
+        subjectId: "spec:fixture.duplicate",
+        validatorId: extractFindingIds.duplicateId,
+      }),
+      expect.objectContaining({
+        file: "second-site.sdp.md",
+        subjectId: "spec:fixture.duplicate",
+        validatorId: extractFindingIds.duplicateId,
+      }),
+    ]);
+    expect(result.report.findings).toHaveLength(2);
+    expect(result.graph.nodes.map((node) => node.id)).toEqual(["spec:fixture.healthy-sibling"]);
+    expect(result.graph.nodes.some((node) => node.id === "spec:fixture.duplicate")).toBe(false);
+    expect(
+      result.graph.edges.filter(
+        (edge) => edge.from === "spec:fixture.duplicate" || edge.to === "spec:fixture.duplicate",
+      ),
+    ).toEqual([]);
+    expect(serializeGraph(result.graph)).toContain("spec:fixture.healthy-sibling");
+    expect(result.counts.specs).toBe(3);
   });
 
   it("dangling-relation: the edge is emitted, not dropped; referential integrity flags it", () => {
