@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -110,6 +110,28 @@ describe("generated contract preflight", () => {
     );
   });
 
+  it("matches a ./-prefixed filter before collecting the self-hosting tracer", () => {
+    const result = runPreflight(preflightRoot([checkoutContracts]), [`./${selfHostingTest}`]);
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toBe(
+      "Generated contracts required by the selected test suite are missing.\nRun `npm run build && npm run generate:self-hosting` first.\n",
+    );
+  });
+
+  it("matches an absolute-path filter before collecting the self-hosting tracer", () => {
+    const result = runPreflight(preflightRoot([checkoutContracts]), [
+      join(repoRoot, selfHostingTest),
+    ]);
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toBe(
+      "Generated contracts required by the selected test suite are missing.\nRun `npm run build && npm run generate:self-hosting` first.\n",
+    );
+  });
+
   it("does not require contracts for an unrelated Vitest filter", () => {
     expect(runPreflight(preflightRoot([]), ["test/bootstrap.test.ts"]).status).toBe(0);
   });
@@ -118,6 +140,53 @@ describe("generated contract preflight", () => {
     expect(runPreflight(preflightRoot([selfHostingContracts, checkoutContracts]), []).status).toBe(
       0,
     );
+  });
+});
+
+function shimmedPoolRoot(shimBody: string): { root: string; environment: NodeJS.ProcessEnv } {
+  const root = preflightRoot([]);
+  mkdirSync(join(root, "generated"), { recursive: true });
+  writeFileSync(join(root, "generated", "sentinel.txt"), "before\n");
+
+  const binDirectory = join(root, "shim-bin");
+  mkdirSync(binDirectory);
+  const shim = join(binDirectory, "vitest");
+  writeFileSync(shim, `#!/usr/bin/env node\n${shimBody}\nprocess.exit(0);\n`);
+  chmodSync(shim, 0o755);
+
+  return {
+    root,
+    environment: { ...process.env, PATH: `${binDirectory}:${process.env.PATH ?? ""}` },
+  };
+}
+
+function runPooledWrapper(root: string, environment: NodeJS.ProcessEnv) {
+  return spawnSync(
+    process.execPath,
+    [join(repoRoot, "vitest-test.mjs"), "--run", "test/bootstrap.test.ts"],
+    { cwd: root, encoding: "utf8", env: environment },
+  );
+}
+
+describe("pooled root generated-state sentinel", () => {
+  it("fails a pooled run that mutates repository-root generated state", () => {
+    const { root, environment } = shimmedPoolRoot(
+      'require("node:fs").appendFileSync("generated/sentinel.txt", "mutated\\n");',
+    );
+    const result = runPooledWrapper(root, environment);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(
+      "A pooled test run mutated repository-root generated/ state; only the dedicated test/cli.test.ts pass may regenerate it.",
+    );
+  });
+
+  it("passes a pooled run that leaves repository-root generated state untouched", () => {
+    const { root, environment } = shimmedPoolRoot("");
+    const result = runPooledWrapper(root, environment);
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe("");
   });
 });
 
