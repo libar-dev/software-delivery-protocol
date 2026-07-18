@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -40,6 +40,7 @@ const defaultRoot = dirname(fileURLToPath(import.meta.url));
 const rootDir = process.argv[2] ?? defaultRoot;
 
 const planPath = ["plans", "17-self-hosting-v1.md"].join("/");
+const plan18Path = ["plans", "18-self-hosting-phase-2.md"].join("/");
 const plan16Path = ["plans", "16-carrier-ruling.md"].join("/");
 const agentsPath = "AGENTS.md";
 const decisionsPath = "docs/concept/DECISIONS.md";
@@ -79,6 +80,7 @@ const agents = read(agentsPath);
 const decisions = read(decisionsPath);
 const glossary = read(glossaryPath);
 const plan16 = read(plan16Path);
+const plan18 = existsSync(join(rootDir, plan18Path)) ? read(plan18Path) : null;
 
 // ---------------------------------------------------------------------------
 // 1. The docket: all 25 obligations are dispositioned.
@@ -275,6 +277,49 @@ for (const needle of ["three-part-test dispositions", "MD-20", "MD-21"]) {
 }
 
 // ---------------------------------------------------------------------------
+// 6. Phase-2 plan scaffold: the G1-G8 process ledger is present and usable.
+// ---------------------------------------------------------------------------
+
+if (plan18 !== null) {
+  const phase2LedgerStart = plan18.indexOf("## (m) §10 Gate ledger G1-G8");
+  const phase2LedgerEnd = plan18.indexOf("## (n)", phase2LedgerStart + 10);
+  const phase2Ledger =
+    phase2LedgerStart === -1
+      ? ""
+      : plan18.slice(phase2LedgerStart, phase2LedgerEnd === -1 ? undefined : phase2LedgerEnd);
+
+  if (phase2LedgerStart === -1) {
+    failures.push(`${plan18Path} — missing the G1-G8 gate ledger`);
+  } else {
+    expectContains(
+      plan18Path,
+      phase2Ledger,
+      "never graph content",
+      "the G1-G8 ledger must declare itself process evidence, never graph content",
+    );
+
+    for (const gate of Array.from({ length: 8 }, (_, index) => `G${index + 1}`)) {
+      const row = phase2Ledger.split("\n").find((line) => line.startsWith(`| ${gate} |`)) ?? "";
+      if (row === "") {
+        failures.push(`${plan18Path} — ledger row for ${gate} is missing`);
+        continue;
+      }
+
+      const cells = row
+        .split("|")
+        .map((cell) => cell.trim())
+        .slice(1, -1);
+      if (cells.length !== 4 || cells.some((cell) => cell === "")) {
+        failures.push(`${plan18Path} — ledger row for ${gate} is empty or malformed`);
+      }
+      if (!/(pending|planned|accepted|done|deferred|not started)/iu.test(cells[3] ?? "")) {
+        failures.push(`${plan18Path} — ledger row for ${gate} has no valid disposition state`);
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Temporal dry-run leg (default root only — a temp tree is not a git checkout).
 // ---------------------------------------------------------------------------
 
@@ -303,6 +348,7 @@ const report = {
     agents: agentsPath,
     decisions: decisionsPath,
     glossary: glossaryPath,
+    phase2Plan: plan18 === null ? null : plan18Path,
   },
   temporal,
   docket: {
@@ -323,6 +369,7 @@ const report = {
       { meaning, disposition: "accepted", date: GATE_DATE, sha, corrections },
     ]),
   ]),
+  phase2Ledger: plan18 === null ? "not present" : "G1-G8 scaffold checked",
 };
 console.log(JSON.stringify(report, null, 2));
 process.exit(0);
