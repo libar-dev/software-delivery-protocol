@@ -7,6 +7,7 @@ relations:
   dependsOn:
     - spec:carrier.markdown-authoring
     - spec:model.protocol-domain
+  decidedBy: spec:decisions.concept-docs-dissolve
 ---
 # The Protocol authors and validates itself
 

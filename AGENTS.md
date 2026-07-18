@@ -129,6 +129,9 @@ Every doc honours both — never mistake one half for the other:
   guidance only, never a validator (checks police conformance and honesty, never content-quality). In prose,
   lead with meaning: "the typing law (MD-11)," never bare MD-n (the registry at the top of `DECISIONS.md`
   holds the ratified names).
+- **Decision-spec pointers lead with names.** See [the plain-language references decision](specs/decisions/plain-language-references.sdp.md)
+  (`spec:decisions.plain-language-references`) and [the concept-documents dissolution decision](specs/decisions/concept-docs-dissolve.sdp.md)
+  (`spec:decisions.concept-docs-dissolve`).
 - **Naming is resolved — use these names.** Product **Libar Software Delivery Protocol** (short form "the
   Protocol"); CLI **`sdp`**; npm **`@libar-dev/software-delivery-protocol`** (single package); repo
   `libar-dev/software-delivery-protocol`. Namespaces: `@libar-dev/` (OSS) vs `@libar-ai/` (commercial).

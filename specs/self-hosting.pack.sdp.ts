@@ -18,6 +18,8 @@ export const selfHostingV1Pack = pack({
     ref("spec:validation.duplicate-ids"),
     ref("spec:model.protocol-domain"),
     ref("spec:validation.duplicate-ids.dual-carrier"),
+    ref("spec:decisions.plain-language-references"),
+    ref("spec:decisions.concept-docs-dissolve"),
   ],
   modelRefs: [ref("spec:model.protocol-domain")],
 });

@@ -46,6 +46,13 @@ itself rides with the self-hosting session (plan 16 §7).
 | MD-18 | the carrier ruling | durable | `spec:protocol.decisions.carrier-ruling` |
 | MD-19 | the prose-ownership law | durable | `spec:protocol.decisions.prose-ownership` |
 
+### Current executable decision-spec pointers
+
+- [The plain-language references decision](../../specs/decisions/plain-language-references.sdp.md)
+  (`spec:decisions.plain-language-references`).
+- [The concept-documents dissolution decision](../../specs/decisions/concept-docs-dissolve.sdp.md)
+  (`spec:decisions.concept-docs-dissolve`).
+
 ---
 
 ## 2026-06-06 — Session: reframe + language base

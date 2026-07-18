@@ -279,6 +279,50 @@ const expectedSpecs = [
     },
     deliveryFacts: [],
   },
+  {
+    id: "spec:decisions.plain-language-references",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/plain-language-references.sdp.md",
+    title: "Durable references lead with meaning",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Keep design rationale readable without decoding registries.",
+      },
+      decision: {
+        context: "Decision codes are useful lookup keys but poor standalone prose.",
+        decision:
+          "Durable references lead with plain-language meaning; decision codes follow parenthetically when useful.",
+        rationale: ["Meaning survives registry churn."],
+        consequences: ["AGENTS and plans lead with names."],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.concept-docs-dissolve",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/concept-docs-dissolve.sdp.md",
+    title: "Concept documents may dissolve after executable truth lands",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Keep intended truth authoritative while allowing exposition to shrink.",
+      },
+      decision: {
+        context: "Concept documents currently carry both laws and unsettled representation.",
+        decision:
+          "Concept documents may dissolve only after their semantic contract is carried by executable Specs and lean registries.",
+        rationale: ["Executable truth is easier to validate and consume."],
+        consequences: ["Deletion is later work, never part of phase 1."],
+      },
+    },
+    deliveryFacts: [],
+  },
 ] as const;
 
 const expectedPackMembers = [
@@ -295,6 +339,8 @@ const expectedPackMembers = [
   "spec:validation.duplicate-ids",
   "spec:model.protocol-domain",
   "spec:validation.duplicate-ids.dual-carrier",
+  "spec:decisions.plain-language-references",
+  "spec:decisions.concept-docs-dissolve",
 ] as const;
 
 const expectedDeclaredRelations = [
@@ -306,6 +352,7 @@ const expectedDeclaredRelations = [
   ["spec:carrier.prose-ownership-rule", "refines", "spec:carrier.markdown-authoring"],
   ["spec:protocol.self-hosting", "dependsOn", "spec:carrier.markdown-authoring"],
   ["spec:protocol.self-hosting", "dependsOn", "spec:model.protocol-domain"],
+  ["spec:protocol.self-hosting", "decidedBy", "spec:decisions.concept-docs-dissolve"],
   ["spec:extraction.derive-graph", "refines", "spec:protocol.self-hosting"],
   ["spec:extraction.derive-graph", "constrainedBy", "spec:extraction.determinism"],
   ["spec:extraction.determinism", "refines", "spec:protocol.self-hosting"],
@@ -318,6 +365,8 @@ const expectedDeclaredRelations = [
   ["spec:validation.duplicate-ids.dual-carrier", "refines", "spec:validation.duplicate-ids"],
   ["spec:validation.duplicate-ids.dual-carrier", "verifies", "spec:validation.duplicate-ids"],
   ["spec:model.protocol-domain", "refines", "spec:protocol.self-hosting"],
+  ["spec:decisions.plain-language-references", "refines", "spec:protocol.self-hosting"],
+  ["spec:decisions.concept-docs-dissolve", "refines", "spec:protocol.self-hosting"],
 ] as const;
 
 const expectedWarnings = [] as const;
@@ -482,7 +531,7 @@ function lineContaining(source: string, token: string): number {
 }
 
 describe("the self-hosting phase-1 carrier corpus", () => {
-  it("derives the thirteen Markdown-canonical specs and their exact Pack checkpoint from the root", () => {
+  it("derives the fifteen Markdown-canonical specs and their exact Pack checkpoint from the root", () => {
     // Given: the repository root with evidence and the worked example excluded from the authored model.
     const result = extract({ root: repoRoot, exclude: ["explorations", "examples"] });
 
@@ -501,7 +550,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         subjectId,
       })),
     ).toEqual(expectedWarnings);
-    expect(result.counts).toEqual({ specs: 13, packs: 1, anchors: 15 });
+    expect(result.counts).toEqual({ specs: 15, packs: 1, anchors: 15 });
     expect(nodeIds).toEqual(
       [
         "pack:self-hosting-v1",
@@ -510,6 +559,8 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         "spec:carrier.markdown-parser",
         "spec:carrier.prose-ownership-rule",
         "spec:carrier.sdp-import",
+        "spec:decisions.concept-docs-dissolve",
+        "spec:decisions.plain-language-references",
         "spec:extraction.build-pipeline",
         "spec:extraction.derive-graph",
         "spec:extraction.determinism",
@@ -521,7 +572,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
-    expect(result.graph.nodes).toHaveLength(29);
+    expect(result.graph.nodes).toHaveLength(31);
     expect(
       primitiveNodes
         .map((node) => ({
@@ -565,7 +616,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ idea: 1, defined: 7, ready: 5 });
+    ).toEqual({ idea: 1, defined: 9, ready: 5 });
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
@@ -580,7 +631,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
       modelRefs: ["spec:model.protocol-domain"],
       file: "specs/self-hosting.pack.sdp.ts",
     });
-    expect(result.graph.edges).toHaveLength(48);
+    expect(result.graph.edges).toHaveLength(53);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")
