@@ -383,6 +383,175 @@ const expectedSpecs = [
     },
     deliveryFacts: [],
   },
+  {
+    id: "spec:model.core-model",
+    specKind: "model",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/model/core-model.sdp.md",
+    title: "The Protocol models delivery with one enrichable Spec",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give every authored delivery statement one stable shape and independent coordinates.",
+      },
+      model: {
+        terms: {
+          Spec: "The one authored truth-primitive, enriched in place without changing artifact type.",
+          altitude: "The scope position `epic`, `feature`, or `story`.",
+          "delivery fact":
+            "A derived realization signal such as implemented or has-verifier; it is never authored readiness.",
+          envelope:
+            "The stable outer shape of id, title, kind, altitude, readiness, and relations; sections carry extension detail.",
+          kind: "The true subtype that categorizes a Spec's truth and changes its required detail and validation.",
+          readiness:
+            "The author-stated design-maturity position `idea`, `scoped`, `defined`, or `ready`, checked against a structural floor.",
+        },
+      },
+    },
+    deliveryFacts: ["implemented"],
+  },
+  {
+    id: "spec:model.spec-sections",
+    specKind: "model",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/model/spec-sections.sdp.md",
+    title: "Spec sections carry typed detail and direct verifier semantics",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Extend Specs with local detail without weakening their envelope or confusing binding evidence with intent.",
+      },
+      model: {
+        terms: {
+          "content-only section":
+            "A section carries local content, while relations carry links to promoted standalone Specs.",
+          "enabled verifier":
+            "An example or direct test with a linked, resolvable test anchor; runner execution and pass state remain outside the graph.",
+          promotion:
+            "Moving shared or independently reviewed content into a standalone Spec of the matching kind, exclusively rather than alongside inline content.",
+          section:
+            "An optional detail slice of a Spec: intent, behavior, constraints, model, design, decision, verification, or ui.",
+          "typing law":
+            "Every section read by a readiness-floor clause has a closed typed shape; unsettled design and ui surfaces remain open bags.",
+          verifies:
+            "A direct verifier-to-target relation whose enabled test binding can derive has-verifier only for that stated target.",
+        },
+      },
+    },
+    deliveryFacts: ["implemented"],
+  },
+  {
+    id: "spec:model.relations",
+    specKind: "model",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/model/relations.sdp.md",
+    title: "Specs declare typed directed relations",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Preserve the explicit intent links that make a delivery model navigable and queryable.",
+      },
+      model: {
+        terms: {
+          "authored relation": "A declared, directed Spec-to-Spec edge that records human intent.",
+          constrainedBy: "A bounded Spec points to its rule, constraint, or policy Spec.",
+          decidedBy: "A shaped Spec points to its Decision Record.",
+          dependsOn: "A dependent Spec points to the Spec it needs.",
+          refines: "A child points to its more precise parent.",
+          supersedes: "A current Decision Record points forward to the decision it replaces.",
+          verifies: "A verifier points to the Spec it verifies.",
+        },
+      },
+    },
+    deliveryFacts: ["implemented"],
+  },
+  {
+    id: "spec:model.stable-ids",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/model/stable-ids.sdp.md",
+    title: "Stable IDs are the Protocol's durable join key",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep intent, bindings, and graph nodes connected through names that survive code refactoring.",
+      },
+      behavior: {
+        rules: [
+          "A Protocol ID is stable, unique, namespaced, human-readable, and the only binding between intent and code.",
+          "An ID uses a lowercase namespace and dotted path, with an optional single `#` sub-part; referential-integrity checks reject malformed or unresolved references.",
+          "IDs carry no history: a rename is a repository edit recorded by git rather than graph-resident bookkeeping.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented"],
+  },
+  {
+    id: "spec:model.pack-aggregate",
+    specKind: "model",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/model/pack-aggregate.sdp.md",
+    title: "A Pack is a truth-free review aggregate",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let reviewers group related Specs without introducing a second truth-bearing artifact.",
+      },
+      model: {
+        terms: {
+          Pack: "An authored aggregate that groups related Specs for ideation and review while stating no system truth of its own.",
+          framing: "A plain descriptive note explaining why a Pack exists; it is not Spec intent.",
+          membership:
+            "A declared manifest reference that derives a belongsTo edge; a Spec may belong to many Packs.",
+          modelRefs:
+            "References from a Pack to standalone model Specs that carry shared vocabulary.",
+          refinement:
+            "A truth-bearing parent-child relation, distinct from the cross-cutting Pack aggregate.",
+        },
+      },
+    },
+    deliveryFacts: ["implemented"],
+  },
+  {
+    id: "spec:model.anchors",
+    specKind: "model",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/model/anchors.sdp.md",
+    title: "Source anchors bind code without carrying intent",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Connect implementation, tests, and oracles to Specs while keeping authored intent centralized in the carrier.",
+      },
+      model: {
+        terms: {
+          anchor:
+            "A human-written source binding from one code location to one Spec ID, carrying identity, an optional label, and one target only.",
+          "anchor-constant form":
+            "The top-level const builder call that the MVP extractor reifies; decorator and JSDoc forms remain unextracted representations.",
+          "code anchor":
+            "An implementation-flavored binding that derives an anchored satisfies edge.",
+          "oracle anchor":
+            "A binding that records an oracle's models target without deriving a delivery fact.",
+          "test anchor":
+            "A binding that derives an anchored verifies edge from a test to its target Spec.",
+        },
+      },
+    },
+    deliveryFacts: ["implemented"],
+  },
 ] as const;
 
 const expectedPackMembers = [
@@ -399,6 +568,12 @@ const expectedPackMembers = [
   "spec:validation.readiness-floor",
   "spec:validation.duplicate-ids",
   "spec:model.protocol-domain",
+  "spec:model.core-model",
+  "spec:model.spec-sections",
+  "spec:model.relations",
+  "spec:model.stable-ids",
+  "spec:model.pack-aggregate",
+  "spec:model.anchors",
   "spec:validation.duplicate-ids.dual-carrier",
   "spec:decisions.plain-language-references",
   "spec:decisions.concept-docs-dissolve",
@@ -428,6 +603,12 @@ const expectedDeclaredRelations = [
   ["spec:validation.duplicate-ids.dual-carrier", "refines", "spec:validation.duplicate-ids"],
   ["spec:validation.duplicate-ids.dual-carrier", "verifies", "spec:validation.duplicate-ids"],
   ["spec:model.protocol-domain", "refines", "spec:protocol.self-hosting"],
+  ["spec:model.core-model", "refines", "spec:protocol.self-hosting"],
+  ["spec:model.spec-sections", "refines", "spec:model.core-model"],
+  ["spec:model.relations", "refines", "spec:model.core-model"],
+  ["spec:model.stable-ids", "refines", "spec:model.core-model"],
+  ["spec:model.pack-aggregate", "refines", "spec:model.core-model"],
+  ["spec:model.anchors", "refines", "spec:model.core-model"],
   ["spec:decisions.plain-language-references", "refines", "spec:protocol.self-hosting"],
   ["spec:decisions.concept-docs-dissolve", "refines", "spec:protocol.self-hosting"],
 ] as const;
@@ -595,6 +776,96 @@ const expectedAnchors = [
     constant: "sdpImportRoundTripTestAnchor",
     site: "bindExample(",
   },
+  {
+    id: "impl:protocol.anchor-extraction",
+    nodeType: "CodeNode",
+    label: "anchor-constant reification seam",
+    type: "satisfies",
+    target: "spec:model.anchors",
+    file: "src/extract/anchors.ts",
+    constant: "anchorExtractionAnchor",
+    site: "const ANCHOR_BUILDER_TARGET_FIELDS",
+  },
+  {
+    id: "impl:protocol.anchor-model",
+    nodeType: "CodeNode",
+    label: "binding-only anchor model builders",
+    type: "satisfies",
+    target: "spec:model.anchors",
+    file: "src/model/anchors.ts",
+    constant: "anchorModelAnchor",
+    site: "export function specTest",
+  },
+  {
+    id: "impl:protocol.pack-aggregate",
+    nodeType: "CodeNode",
+    label: "Pack aggregate and model references",
+    type: "satisfies",
+    target: "spec:model.pack-aggregate",
+    file: "src/model/pack.ts",
+    constant: "packAggregateAnchor",
+    site: "export function pack",
+  },
+  {
+    id: "impl:protocol.spec-descriptors",
+    nodeType: "CodeNode",
+    label: "Spec kind, altitude, and readiness coordinates",
+    type: "satisfies",
+    target: "spec:model.core-model",
+    file: "src/model/descriptors.ts",
+    constant: "specDescriptorsAnchor",
+    site: "export const SPEC_KIND_DISPLAY_LABELS",
+  },
+  {
+    id: "impl:protocol.spec-primitive",
+    nodeType: "CodeNode",
+    label: "Spec envelope and enrich-in-place shape",
+    type: "satisfies",
+    target: "spec:model.core-model",
+    file: "src/model/spec.ts",
+    constant: "specPrimitiveAnchor",
+    site: "export function spec",
+  },
+  {
+    id: "impl:protocol.spec-relations",
+    nodeType: "CodeNode",
+    label: "declared Spec relation builders",
+    type: "satisfies",
+    target: "spec:model.relations",
+    file: "src/model/relations.ts",
+    constant: "specRelationsAnchor",
+    site: "export function supersedes",
+  },
+  {
+    id: "impl:protocol.spec-sections",
+    nodeType: "CodeNode",
+    label: "typed Spec section shapes",
+    type: "satisfies",
+    target: "spec:model.spec-sections",
+    file: "src/model/sections.ts",
+    constant: "specSectionsAnchor",
+    site: "export interface SpecSections",
+  },
+  {
+    id: "impl:protocol.stable-ids",
+    nodeType: "CodeNode",
+    label: "stable ID grammar parser",
+    type: "satisfies",
+    target: "spec:model.stable-ids",
+    file: "src/ids.ts",
+    constant: "stableIdsAnchor",
+    site: "export function parseId",
+  },
+  {
+    id: "impl:protocol.verifier-semantics",
+    nodeType: "CodeNode",
+    label: "readiness clauses over direct verification bindings",
+    type: "satisfies",
+    target: "spec:model.spec-sections",
+    file: "src/validate/readiness-floor.ts",
+    constant: "verifierSemanticsAnchor",
+    site: "export function evaluateReadinessFloor",
+  },
 ] as const;
 
 function lineContaining(source: string, token: string): number {
@@ -603,8 +874,8 @@ function lineContaining(source: string, token: string): number {
   return line + 1;
 }
 
-describe("the self-hosting phase-1 carrier corpus", () => {
-  it("derives the sixteen Markdown-canonical specs and their exact Pack checkpoint from the root", () => {
+describe("the self-hosting corpus", () => {
+  it("derives the Markdown-canonical specs and their exact Pack checkpoint from the root", () => {
     // Given: the repository root with evidence and the worked example excluded from the authored model.
     const result = extract({
       root: repoRoot,
@@ -626,7 +897,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         subjectId,
       })),
     ).toEqual(expectedWarnings);
-    expect(result.counts).toEqual({ specs: 16, packs: 1, anchors: 16 });
+    expect(result.counts).toEqual({ specs: 22, packs: 1, anchors: 25 });
     expect(nodeIds).toEqual(
       [
         "pack:self-hosting-v1",
@@ -641,7 +912,13 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         "spec:extraction.build-pipeline",
         "spec:extraction.derive-graph",
         "spec:extraction.determinism",
+        "spec:model.anchors",
+        "spec:model.core-model",
+        "spec:model.pack-aggregate",
         "spec:model.protocol-domain",
+        "spec:model.relations",
+        "spec:model.spec-sections",
+        "spec:model.stable-ids",
         "spec:protocol.self-hosting",
         "spec:validation.duplicate-ids",
         "spec:validation.duplicate-ids.dual-carrier",
@@ -649,7 +926,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
-    expect(result.graph.nodes).toHaveLength(33);
+    expect(result.graph.nodes).toHaveLength(48);
     expect(
       primitiveNodes
         .map((node) => ({
@@ -693,7 +970,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 9, ready: 7 });
+    ).toEqual({ defined: 15, ready: 7 });
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
@@ -705,10 +982,10 @@ describe("the self-hosting phase-1 carrier corpus", () => {
       claim: "declared",
       title: "Self-hosting phase 1",
       framing: "The Protocol authors and validates its own phase-1 delivery model.",
-      modelRefs: ["spec:model.protocol-domain"],
+      modelRefs: ["spec:model.protocol-domain", "spec:model.core-model"],
       file: "specs/self-hosting.pack.sdp.ts",
     });
-    expect(result.graph.edges).toHaveLength(57);
+    expect(result.graph.edges).toHaveLength(78);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")

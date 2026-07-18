@@ -156,12 +156,12 @@ where the verification loop is cheap.
 
 | Concept path | Spec ID | Readiness | Anchor/verifier status | Disposition note |
 |---|---|---|---|---|
-| `02 §1-2 primitive and descriptors` | `spec:model.core-model` | pending | target entrypoints not yet selected | earliest fold target |
-| `02 §3 sections` | `spec:model.spec-sections` | pending | target entrypoints not yet selected | target to create |
-| `02 §6 relations` | `spec:model.relations` | pending | target entrypoints not yet selected | target to create |
-| `02 stable identity` | `spec:model.stable-ids` | pending | target entrypoints not yet selected | target to create |
-| `02 §4 Pack` | `spec:model.pack-aggregate` | pending | target entrypoints not yet selected | target to create |
-| `04 anchors` | `spec:model.anchors` | pending | target entrypoints not yet selected | target to create |
+| `02 §1-2 primitive and descriptors` | `spec:model.core-model` | defined | `src/model/spec.ts` and `src/model/descriptors.ts` code anchors; no verifier | wave 1a refine target and shared vocabulary carrier |
+| `02 §3 sections` | `spec:model.spec-sections` | defined | `src/model/sections.ts` and `src/validate/readiness-floor.ts` code anchors; no verifier | wave 1a section, typing-law, and verifier-semantics model |
+| `02 §6 relations` | `spec:model.relations` | defined | `src/model/relations.ts` code anchor; no verifier | wave 1a relation vocabulary |
+| `02 §5 stable identity` | `spec:model.stable-ids` | defined | `src/ids.ts` code anchor at `parseId`; no verifier | wave 1a stable-ID rule |
+| `02 §4 Pack` | `spec:model.pack-aggregate` | defined | `src/model/pack.ts` code anchor; no verifier | wave 1a Pack aggregate model |
+| `04 §2 generic source anchors` | `spec:model.anchors` | defined | `src/model/anchors.ts` and `src/extract/anchors.ts` code anchors; no verifier | wave 1a binding and extraction model |
 | `05 two check families` | `spec:validation.two-check-families` | pending | validator anchors to be named | target to create |
 | `06 projections` | `spec:consumers.projections-model` | pending | projection anchors to be named | target to create |
 | `06 agent surface` | `spec:consumers.agent-surface` | pending | agent-surface anchors to be named | target to create |

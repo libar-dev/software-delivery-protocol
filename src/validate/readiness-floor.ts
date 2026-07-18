@@ -505,6 +505,14 @@ export const readinessFloorAnchor = codeAnchor({
   satisfies: ref("spec:validation.readiness-floor"),
 });
 
+const verifierSemanticsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.verifier-semantics"),
+  label: "readiness clauses over direct verification bindings",
+  satisfies: ref("spec:model.spec-sections"),
+});
+
+void verifierSemanticsAnchor;
+
 export function evaluateReadinessFloor(
   node: PrimitiveNode,
   index: GraphIndex,

@@ -106,7 +106,35 @@
 
 - The settled matrix supports a bounded like-for-like refusal-parity claim only: six classes share finding IDs, while four classes remain explicit named non-claims rather than a full-parity assertion.
 
+## Todo 21 — Gate G3 close
+
+- G3 was accepted at `0bb200a` after the hardening baseline's parity matrix and parser-Spec disposition passed the full green gate.
+- `check-temporal.mjs` now excludes `.omo/evidence/` alongside `.omo/plans/`, so temporal-by-genre evidence done-records do not block the self-hosting gate.
+
 ## Todo 22 — canonical-default carrier flip
 
 - The flip landed as one atomic operative-record change: Markdown is the default Spec carrier, Packs remain TS pending a Pack syntax ruling, and the TS DSL remains both import source and lawful per-ID option.
 - `check-carrier-rule.mjs`, `check-carrier-truth.mjs`, `check-self-hosting-gates.mjs`, the anti-misleading sweep, and `npm run check` all passed; the truth audit now pins the `sdp import` row's `many source adapters` amendment.
+
+## Todo 23 — clean-clone flip verification
+
+- A pristine clone of `feature/protocol-self-application-phase-2` at `dd19060` passed `npm ci && npm run check`; its full output is recorded in the task-23 clean-clone log.
+- No non-Pack `.sdp.ts` carrier remains under `specs/` or `examples/checkout-v1/specs/`; the two lawful Pack manifests and both duplicate-ID fixture carrier surfaces remain. Deleting the TypeScript fixture twin makes the fixture-intact assertion fail and restoring it returns the assertion to green.
+- The post-flip focused package smoke and an explicit packed-tarball consumer both exposed `sdp import --dry-run` and the package barrel; acceptance 1–3 and 8 evidence is assembled in `task-23-self-hosting-phase-2.acceptance.md`.
+
+## Todo 24 — Gate G4 re-presentation pending
+
+- The owner rejected the pre-written G4 acceptance: todo 22(f) had not repaired `04` §1, and the ledger stamp preceded the owner's disposition.
+- The amended flip `0a06882` makes the canonical-surface config explicitly designed-for and deferred (**ASPIRATIONAL**) and names file-existence-only as the current realization.
+- G4 remains pending owner acceptance; `check-carrier-rule.mjs`, `check-carrier-truth.mjs`, `check-self-hosting-gates.mjs`, and `npm run check` all passed after the amend.
+
+## Todo 25 — corpus wave 1a model subsystem
+
+- Wave 1a adds six defined model-subsystem Specs: the core primitive and descriptors, sections,
+  relations, stable IDs, Pack aggregate, and generic source anchors. `spec:model.core-model` is a
+  genuine shared vocabulary carrier, so the self-hosting Pack names it in `modelRefs`.
+- Each realization claim uses a binding-only code anchor at the named implementation surface; the
+  section and anchor Specs each use a second anchor for their readiness-floor and extraction seams.
+  No wave-1a Spec claims a verifier or `ready` state.
+- G4 remains pending and its ledger row is unchanged. The OMO continuation directive and the
+  explicit user `continue` instruction authorize this wave despite the pending owner acceptance.

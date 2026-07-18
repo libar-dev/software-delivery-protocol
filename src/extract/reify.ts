@@ -168,10 +168,10 @@ function staticFailure(node: Node, path: string, reason: string): StaticResult {
 }
 
 function describeNonStatic(node: Node): string {
-  return `${node.getKindName()} is outside the static value grammar (string/number/boolean literals, array and fresh object literals; \`as const\` and parentheses are transparent; id builders unwrap in id slots only)`;
+  return `${node.getKindName()} is outside the static value grammar (string/number/boolean literals, array and fresh object literals; TypeScript assertions and parentheses are transparent; id builders unwrap in id slots only)`;
 }
 
-/** `as const` and parentheses are transparent; every other wrapper is non-static. */
+/** TypeScript assertions and parentheses are transparent; every other wrapper is non-static. */
 export function unwrapTransparent(node: Node): Node {
   let current = node;
 
@@ -181,7 +181,7 @@ export function unwrapTransparent(node: Node): Node {
       continue;
     }
 
-    if (Node.isAsExpression(current) && current.getTypeNode()?.getText() === "const") {
+    if (Node.isAsExpression(current)) {
       current = current.getExpression();
       continue;
     }
@@ -201,12 +201,27 @@ export interface ProtocolBindings {
   readonly namespaceLocals: ReadonlySet<string>;
 }
 
+const protocolBuilderModuleSpecifiers = new Set([
+  PROTOCOL_MODULE_SPECIFIER,
+  "./ids.js",
+  "../ids.js",
+  "./model/code-anchor.js",
+  "../model/code-anchor.js",
+  "./code-anchor.js",
+]);
+
+export function hasProtocolBuilderImport(sourceText: string): boolean {
+  return [...protocolBuilderModuleSpecifiers].some((specifier) => sourceText.includes(specifier));
+}
+
 export function collectProtocolBindings(sourceFile: SourceFile): ProtocolBindings {
   const named = new Map<string, string>();
   const namespaceLocals = new Set<string>();
 
   for (const importDeclaration of sourceFile.getImportDeclarations()) {
-    if (importDeclaration.getModuleSpecifierValue() !== PROTOCOL_MODULE_SPECIFIER) {
+    const moduleSpecifier = importDeclaration.getModuleSpecifierValue();
+
+    if (!protocolBuilderModuleSpecifiers.has(moduleSpecifier)) {
       continue;
     }
 

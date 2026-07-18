@@ -7,13 +7,14 @@ import type { Program, SourceFile } from "ts-morph";
 import type { GraphSchema } from "../graph/schema.js";
 import type { Finding, ValidationReport } from "../validate/contracts.js";
 import { reifyAnchorSourceFile } from "./anchors.js";
+import { hasProtocolBuilderImport } from "./reify.js";
 import type { ReifiedAnchor } from "./anchors.js";
 import { reifyTypeScriptCarrier } from "./carrier.js";
 import { deriveGraph } from "./derive.js";
 import { discoverFiles } from "./discover.js";
 import type { DiscoveredSourceFile } from "./discover.js";
 import { reifyMarkdownCarrier } from "./markdown.js";
-import { PROTOCOL_MODULE_SPECIFIER, extractFindingIds } from "./reify.js";
+import { extractFindingIds } from "./reify.js";
 import type { ReifiedPack, ReifiedSpec } from "./reify.js";
 
 export { PROTOCOL_MODULE_SPECIFIER, extractFindingIds } from "./reify.js";
@@ -197,7 +198,7 @@ export function extract(options: ExtractOptions): ExtractionResult {
     // verbatim — so a raw text test skips the AST work for the bulk of source files. An
     // escape-spelled specifier (same cooked value, different raw text) sits outside the binding
     // contract here, exactly as `require` and re-aliased locals do.
-    if (!sourceText.includes(PROTOCOL_MODULE_SPECIFIER)) {
+    if (!hasProtocolBuilderImport(sourceText)) {
       continue;
     }
 

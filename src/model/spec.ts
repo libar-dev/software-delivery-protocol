@@ -1,3 +1,6 @@
+import { codeAnchor } from "./code-anchor.js";
+
+import { codeAnchorId, ref } from "../ids.js";
 import type { SpecId } from "../ids.js";
 import type { SpecAltitude, SpecKind, SpecReadiness } from "./descriptors.js";
 import type { SpecRelation } from "./relations.js";
@@ -13,6 +16,14 @@ export interface Spec extends SpecSections {
   readonly readiness: SpecReadiness;
   readonly relations?: readonly SpecRelation[];
 }
+
+const specPrimitiveAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.spec-primitive"),
+  label: "Spec envelope and enrich-in-place shape",
+  satisfies: ref("spec:model.core-model"),
+});
+
+void specPrimitiveAnchor;
 
 export function spec(definition: Spec): Spec {
   return {
