@@ -199,7 +199,7 @@ export function parseMarkdownFrontmatter(
     for (const required of ["id", "kind", "altitude", "readiness", "relations"])
       if (!names.has(required))
         report(findings, file, 1, `frontmatter field "${required}" is missing`);
-    const result = capMarkdownFindings(findings, file);
+    const result = capMarkdownFindings(findings, file, "extract/invalid-markdown-structure");
     const id = data.id;
     return result.length === 0 && typeof id === "string"
       ? { ok: true, frontmatter: { data, id, line: idLine }, findings: result }

@@ -47,6 +47,13 @@ function isHtml(text: string): boolean {
   return /<\/?[A-Za-z][^>]*>/u.test(text);
 }
 
+export function isUnsupportedCommonMarkBlock(text: string): boolean {
+  return (
+    /^(?:[*+] |\d+[.)] |<)/u.test(text) ||
+    /^(?:={3,}|(?:\*[\t ]*){3,}|(?:-[\t ]*){3,}|(?:_[\t ]*){3,})[\t ]*$/u.test(text)
+  );
+}
+
 function parseFence(
   lines: readonly MarkdownLine[],
   start: number,
@@ -170,6 +177,13 @@ export function parseSectionContent(
     }
     if (isHtml(line.text)) {
       addMarkdownFinding(findings, bodyFinding(file, line.line, "raw HTML is unsupported"));
+      continue;
+    }
+    if (isUnsupportedCommonMarkBlock(line.text)) {
+      addMarkdownFinding(
+        findings,
+        bodyFinding(file, line.line, "nested or unsupported Markdown structure"),
+      );
       continue;
     }
     if (line.text.startsWith("```")) {

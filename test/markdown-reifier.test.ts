@@ -191,7 +191,7 @@ relations:
     expect(malformed.specs).toEqual([]);
     expect(malformed.findings).toHaveLength(100);
     expect(malformed.findings[99]).toMatchObject({
-      validatorId: "extract/invalid-frontmatter",
+      validatorId: "extract/invalid-markdown-structure",
       line: 1,
       message: "finding limit reached; additional findings suppressed",
     });
@@ -499,6 +499,31 @@ export const invalid = spec({ id: specId("spec:carrier.invalid-prose"), title: "
       validatorId: "extract/unrecognized-heading",
       line: 9,
       message: 'heading "Intnet" is not recognized; did you mean "Intent"?',
+    });
+  });
+
+  it.each([
+    ["ordered dot list in narrative", "# Title\n1. first", 9],
+    ["ordered parenthesis list in narrative", "# Title\n1) first", 9],
+    ["star list in narrative", "# Title\n* first", 9],
+    ["plus list in narrative", "# Title\n+ first", 9],
+    ["setext equals underline in narrative", "# Title\nProse\n===", 10],
+    ["setext dash underline in narrative", "# Title\nProse\n- - -", 10],
+    ["star thematic break in narrative", "# Title\n***", 9],
+    ["underscore thematic break in narrative", "# Title\n___", 9],
+    ["ordered list in section prose", "# Title\n## Intent\n1. first", 10],
+    ["star list in section prose", "# Title\n## Intent\n* first", 10],
+    ["plus list in section prose", "# Title\n## Intent\n+ first", 10],
+    ["setext underline in section prose", "# Title\n## Intent\nProse\n===", 11],
+    ["thematic break in section prose", "# Title\n## Intent\n***", 10],
+    ["bare HTML opener in section prose", "# Title\n## Intent\n<div", 10],
+  ])("refuses %s", (_name, body, line) => {
+    const result = reify(carrierBody(body));
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings[0]).toMatchObject({
+      validatorId: "extract/invalid-markdown-structure",
+      line,
     });
   });
 

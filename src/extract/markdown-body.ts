@@ -1,7 +1,7 @@
 import type { Finding } from "../validate/contracts.js";
 import { addMarkdownFinding, capMarkdownFindings, markdownFinding } from "./markdown-support.js";
 import { mapOwner } from "./markdown-body-owners.js";
-import { normalizeProse } from "./markdown-body-content.js";
+import { isUnsupportedCommonMarkBlock, normalizeProse } from "./markdown-body-content.js";
 import type { MarkdownLine } from "./markdown-body-content.js";
 import type { MarkdownBodyResult } from "./markdown-types.js";
 
@@ -99,7 +99,11 @@ function narrative(lines: readonly MarkdownLine[], file: string, findings: Findi
       addMarkdownFinding(findings, structure(file, line.line, "raw HTML is unsupported"));
       continue;
     }
-    if (/^(?:-|```|\||>|<|#)/u.test(line.text) || /^[\t ]/u.test(line.text))
+    if (
+      /^(?:-|```|\||>|<|#)/u.test(line.text) ||
+      /^[\t ]/u.test(line.text) ||
+      isUnsupportedCommonMarkBlock(line.text)
+    )
       addMarkdownFinding(
         findings,
         structure(file, line.line, "narrative accepts CommonMark paragraphs only"),
