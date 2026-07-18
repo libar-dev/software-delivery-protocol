@@ -4,15 +4,34 @@ import { existsSync } from "node:fs";
 const argv = process.argv.slice(2);
 const vitestArgs = argv.includes("--run") ? argv : ["--run", ...argv];
 
-// Fresh-clone preflight: the example's bound test imports generated/contracts at collection
-// time, so a full-suite run without a prior generation fails with a bare module-resolution
-// error. Only the no-filter invocation collects the example suite, so only it is guarded.
-const hasPathFilter = argv.some((argument) => !argument.startsWith("-"));
+const contractDependencies = [
+  {
+    contracts: "generated/contracts",
+    recovery: "npm run generate:self-hosting",
+    testPath: "test/self-hosting-duplicate-ids.test.ts",
+  },
+  {
+    contracts: "examples/checkout-v1/generated/contracts",
+    recovery: "npm run generate:example",
+    testPath: "examples/checkout-v1/test/orders/create-order.valid-cart.test.ts",
+  },
+];
 
-if (!hasPathFilter && !existsSync("examples/checkout-v1/generated/contracts")) {
+const pathFilters = argv.filter((argument) => !argument.startsWith("-"));
+const hasPathFilter = pathFilters.length > 0;
+const requiredContracts = hasPathFilter
+  ? contractDependencies.filter((dependency) =>
+      pathFilters.some((filter) => dependency.testPath.startsWith(filter)),
+    )
+  : contractDependencies;
+const missingContracts = requiredContracts.filter(
+  (dependency) => !existsSync(dependency.contracts),
+);
+
+if (missingContracts.length > 0) {
+  const recovery = missingContracts.map((dependency) => dependency.recovery).join(" && ");
   console.error(
-    "examples/checkout-v1/generated/ is missing — the example's bound test imports the generated contracts.\n" +
-      "Run `npm run build && npm run generate:example` first, or `npm run check` for the full chain.",
+    `Generated contracts required by the selected test suite are missing.\nRun \`${recovery}\` first.`,
   );
   process.exit(1);
 }
@@ -25,6 +44,10 @@ function runVitest(args) {
   }
 
   return result.status ?? 1;
+}
+
+if (argv.includes("--help")) {
+  process.exit(runVitest(vitestArgs));
 }
 
 if (hasPathFilter) {
