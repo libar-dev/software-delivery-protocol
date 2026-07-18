@@ -1,8 +1,27 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 import { describe, expect, it } from "vitest";
 
 import { reifyMarkdownCarrier } from "../src/extract/markdown.js";
 import { emitMarkdownSpec } from "../src/import/emit-markdown.js";
+import { reifyTypeScriptCarrier } from "../src/index.js";
 import type { ReifiedSpec } from "../src/extract/reify.js";
+
+const checkoutSpecPaths = [
+  "orders/create-order.sdp.ts",
+  "orders/order-placement-flow.sdp.ts",
+  "orders/create-order-valid-cart.sdp.ts",
+  "orders/create-order-invalid-cart.sdp.ts",
+  "orders/create-order-api-contract.sdp.ts",
+  "orders/order-model.sdp.ts",
+  "orders/order-total-rule.sdp.ts",
+  "orders/order-inventory-rule.sdp.ts",
+  "orders/order-latency-constraint.sdp.ts",
+  "orders/order-management.sdp.ts",
+  "decisions/order-lifecycle.sdp.ts",
+] as const;
+const checkoutSpecRoot = new URL("../examples/checkout-v1/specs/", import.meta.url);
 
 function reifiedSpec(data: Record<string, unknown>): ReifiedSpec {
   return {
@@ -19,6 +38,15 @@ function reifiedSpec(data: Record<string, unknown>): ReifiedSpec {
     file: "source.sdp.ts",
     line: 1,
   };
+}
+
+function expectMarkdownRoundTrip(source: ReifiedSpec): string {
+  const emitted = emitMarkdownSpec(source);
+  const result = reifyMarkdownCarrier(emitted, "emitted.sdp.md");
+
+  expect(result.findings).toEqual([]);
+  expect(result.specs[0]?.data).toEqual(source.data);
+  return emitted;
 }
 
 describe("emitMarkdownSpec", () => {
@@ -53,18 +81,155 @@ relations: {}
     expect(emitted).not.toContain("narrative:");
   });
 
-  it.each(["refines", "dependsOn", "constrainedBy", "decidedBy", "verifies", "supersedes"])(
-    "emits %s as a scalar relation target",
-    (type) => {
-      const emitted = emitMarkdownSpec(
-        reifiedSpec({
-          relations: [{ type, target: `spec:import.${type}`, claim: "declared" }],
-        }),
-      );
+  it("emits Intent prose, fields, repeated entries, and owned open questions", () => {
+    const source = reifiedSpec({
+      intent: {
+        description: "Intent prose belongs under Intent.",
+        actor: "An author",
+        problem: "Prose lacks a home.",
+        outcome: "Each prose edge has an owner.",
+        value: "The graph stays unambiguous.",
+        risks: ["A dropped field.", "An ambiguous paragraph."],
+        assumptions: ["The parser owns validation."],
+        openQuestions: [
+          { question: "Is the section complete?", blocking: true },
+          { question: "Should we add another example?", blocking: false },
+        ],
+      },
+    });
 
-      expect(emitted).toContain(`  ${type}: spec:import.${type}\n`);
-    },
-  );
+    const emitted = expectMarkdownRoundTrip(source);
+
+    expect(emitted).toContain("## Intent\n\nIntent prose belongs under Intent.");
+    expect(emitted).toContain("### Open questions\n- [blocking] Is the section complete?");
+  });
+
+  it.each([
+    [
+      "Behavior",
+      {
+        behavior: {
+          description: "Behavior prose.",
+          rules: ["A behavior rule."],
+          flows: ["A behavior flow."],
+        },
+      },
+      "## Behavior\n\nBehavior prose.\n\n- rule: A behavior rule.\n- flow: A behavior flow.",
+    ],
+    [
+      "Rule",
+      { kind: "rule", behavior: { rules: ["A plain rule."] } },
+      "## Rule\n\n- A plain rule.",
+    ],
+    [
+      "Workflow",
+      { kind: "workflow", behavior: { rules: ["A workflow rule."], flows: ["A plain flow."] } },
+      "## Workflow\n\n- A plain flow.\n- rule: A workflow rule.",
+    ],
+    [
+      "Contract",
+      { kind: "contract", behavior: { rules: ["A contract entry."] } },
+      "## Contract\n\n- A contract entry.",
+    ],
+  ] as const)("emits the %s form in ruled list syntax", (_, data, expected) => {
+    expect(expectMarkdownRoundTrip(reifiedSpec(data))).toContain(expected);
+  });
+
+  it("emits example-space vocabulary and one immediately-owned example GWT fence", () => {
+    const space = reifiedSpec({
+      behavior: {
+        description: "Vocabulary prose.",
+        exampleSpace: Object.fromEntries([
+          ["given", ["a cart has {count:number} items"]],
+          ["when", ["the customer submits the cart"]],
+          ["t" + "hen", ["an order has {total:number}"]],
+        ]),
+      },
+    });
+    const example = reifiedSpec({
+      kind: "example",
+      intent: {},
+      behavior: {
+        examples: [
+          Object.fromEntries([
+            ["given", ["a cart has {count: 0} items"]],
+            ["when", ["the customer submits the cart"]],
+            ["t" + "hen", ["an order has {total: 0}"]],
+          ]),
+        ],
+      },
+    });
+
+    const spaceEmitted = expectMarkdownRoundTrip(space);
+    const exampleEmitted = expectMarkdownRoundTrip(example);
+
+    expect(spaceEmitted).toContain("## Example space\n\nVocabulary prose.\n\n```gwt-vocabulary");
+    expect(exampleEmitted).toContain("## Intent\n\n```gwt");
+    expect(exampleEmitted.match(/```gwt\n/gu)).toHaveLength(1);
+  });
+
+  it("emits the one-entry Constraints form and preserves parser refusal without its statement", () => {
+    const emitted = expectMarkdownRoundTrip(
+      reifiedSpec({
+        constraints: [
+          {
+            statement: "The output stays deterministic.",
+            flavor: "quality",
+            target: "bytes",
+            measurableBy: "a clean check",
+          },
+        ],
+      }),
+    );
+    const refused = reifyMarkdownCarrier(
+      emitted.replace("- statement: The output stays deterministic.\n", ""),
+      "refused.sdp.md",
+    );
+
+    expect(emitted).toContain("## Constraints\n\n- statement: The output stays deterministic.");
+    expect(refused.specs).toEqual([]);
+    expect(refused.findings).toContainEqual(
+      expect.objectContaining({ validatorId: "extract/invalid-markdown-structure" }),
+    );
+  });
+
+  it("emits Model, Design, UI, Decision, and Verification owners in authored order", () => {
+    const source = reifiedSpec({
+      model: { description: "Model prose.", terms: { Cart: "A cart.", Order: "An order." } },
+      design: { description: "Design prose.", firstChoice: "Start.", secondChoice: "Continue." },
+      ui: { description: "UI prose.", primaryAction: "Submit.", errorState: "Explain." },
+      decision: {
+        description: "Decision prose.",
+        context: "Owners are needed.",
+        decision: "Emit once.",
+        rationale: ["The grammar is frozen."],
+        alternatives: ["Invent a section."],
+        consequences: ["Output is deterministic."],
+      },
+      verification: {
+        description: "Verification prose.",
+        mode: "contract",
+        criteria: ["The document reifies."],
+      },
+    });
+
+    const emitted = expectMarkdownRoundTrip(source);
+
+    for (const heading of ["Model", "Design", "UI", "Decision", "Verification — contract"])
+      expect(emitted).toContain(`## ${heading}`);
+  });
+
+  it("round trips all eleven checkout authored Specs through Markdown", () => {
+    for (const path of checkoutSpecPaths) {
+      const source = readFileSync(fileURLToPath(new URL(path, checkoutSpecRoot)), "utf8");
+      const typeScript = reifyTypeScriptCarrier(source, path);
+      const spec = typeScript.specs[0];
+
+      expect(typeScript.findings).toEqual([]);
+      expect(spec).toBeDefined();
+      if (spec !== undefined) expectMarkdownRoundTrip(spec);
+    }
+  });
 
   it("groups relation records in ruled key order and emits multiple targets as a sequence", () => {
     const emitted = emitMarkdownSpec(
