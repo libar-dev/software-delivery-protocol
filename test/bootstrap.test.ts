@@ -64,9 +64,13 @@ describe("bootstrap package surface", () => {
     expect(packageJson.scripts["generate:self-hosting"]).toBe(
       "node ./dist/cli/sdp.js view . --exclude explorations --exclude examples",
     );
+    expect(packageJson.scripts["check:self-hosting"]).toBe(
+      "node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --check-clean",
+    );
     expect(packageJson.scripts.preflight).toBe("node ./preflight.mjs");
-    expect(packageJson.scripts.check).toContain("npm run generate:self-hosting");
-    expect(packageJson.scripts.check).toContain("npm run preflight");
+    expect(packageJson.scripts.check).toBe(
+      "npm run check:temporal && npm run lint && npm run format:check && npm run build && npm run generate:self-hosting && npm run generate:example && npm run typecheck && npm run typecheck:examples && npm test && npm run check:self-hosting && npm run check:example && npm run preflight",
+    );
   });
 
   it("reifies a TypeScript carrier and derives a graph through the public root", () => {
