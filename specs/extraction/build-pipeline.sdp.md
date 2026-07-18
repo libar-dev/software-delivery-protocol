@@ -12,10 +12,10 @@ relations:
 ## Intent
 - outcome: Turn authored carriers into validated derived artifacts.
 
-## Behavior
-- flow: Discover carriers.
-- flow: Reify carriers.
-- flow: Derive the graph.
-- flow: Validate the graph.
-- flow: Emit derived artifacts.
+## Workflow
+- Discover carriers.
+- Reify carriers.
+- Derive the graph.
+- Validate the graph.
+- Emit derived artifacts.
 - rule: Every command uses the same extracted graph and validation seam.
