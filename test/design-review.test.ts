@@ -1,8 +1,10 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import fs from "node:fs";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   createReader,
@@ -25,6 +27,10 @@ const goldenRoot = fileURLToPath(
 );
 
 const examplePages = renderDesignReview(createReader(extract({ root: exampleRoot }).graph));
+const selfHostingRoot = fileURLToPath(new URL("..", import.meta.url));
+const selfHostingPages = renderDesignReview(
+  createReader(extract({ root: selfHostingRoot, exclude: ["examples", "explorations"] }).graph),
+);
 
 function pageByPath(pages: readonly DesignReviewPage[], path: string): string {
   const page = pages.find((entry) => entry.path === path);
@@ -55,7 +61,199 @@ function readGoldenPages(directory: string, prefix = ""): Map<string, string> {
   return pages;
 }
 
+function copySelfHostingCorpus(root: string): void {
+  for (const directory of ["specs", "src", "test"]) {
+    cpSync(join(selfHostingRoot, directory), join(root, directory), { recursive: true });
+  }
+}
+
+function renderSelfHostingRoot(root: string): readonly DesignReviewPage[] {
+  return renderDesignReview(
+    createReader(extract({ root, exclude: ["examples", "explorations"] }).graph),
+  );
+}
+
+function assertNarrativeAndIntent(
+  page: string,
+  narrative: string,
+  intentDescription: string,
+): void {
+  expect(page).toContain(`## Narrative\n\n${narrative}\n\n**Readiness:**`);
+  expect(page).toContain(`## Intent\n\n${intentDescription}\n\n- **outcome:**`);
+}
+
 describe("the Design Review — the one generated read-only view", () => {
+  it("renders the self-hosting spec narrative from the graph", () => {
+    const page = pageByPath(selfHostingPages, "spec/protocol.self-hosting.md");
+    const index = pageByPath(selfHostingPages, "index.md");
+    const pack = pageByPath(selfHostingPages, "pack/self-hosting-v1.md");
+
+    expect(page).toContain(
+      "[specs/protocol/self-hosting.sdp.md](../../../specs/protocol/self-hosting.sdp.md)",
+    );
+    expect(page).toContain(
+      "## Narrative\n\nThe Protocol's own delivery model exercises the same carrier, graph, checks, and projections offered to consumers.\n\n**Readiness:",
+    );
+    expect(page).toContain("## Intent\n\n- **outcome:");
+    expect(index).toContain("schema `0.4.0`");
+    expect(pack).toContain(
+      "| [`spec:protocol.self-hosting`](../spec/protocol.self-hosting.md) The Protocol authors and validates itself | behavior | epic | defined | ready | none | none |",
+    );
+  });
+
+  it("renders every owned description as escaped prose and omits absent prose artifacts", () => {
+    const graph = deriveFixtureGraph({
+      specs: [
+        spec({
+          id: specId("spec:orders.prose-rendering"),
+          title: "Owned prose renders safely",
+          narrative: "Narrative stays plain.",
+          kind: "behavior",
+          altitude: "feature",
+          readiness: "idea",
+          intent: {
+            description: "Escaped `code` | # <tag> > quote",
+            outcome: "Render owned prose.",
+          },
+          behavior: { description: "Behavior description.", rules: ["Keep sections stable."] },
+          model: { description: "Model description.", terms: { Spec: "One primitive." } },
+          design: { description: "Design description.", layout: "linear" },
+          decision: {
+            description: "Decision description.",
+            context: "A choice needs context.",
+            decision: "Render prose from the graph.",
+          },
+          verification: {
+            description: "Verification description.",
+            mode: "reviewed",
+            criteria: ["Inspect the rendered page."],
+          },
+          ui: { description: "UI description.", surface: "review" },
+        }),
+        spec({
+          id: specId("spec:orders.without-prose"),
+          title: "Absent prose stays absent",
+          narrative: "   ",
+          kind: "behavior",
+          altitude: "story",
+          readiness: "idea",
+          intent: { outcome: "Render no empty prose artifact." },
+        }),
+      ],
+    });
+    const page = pageByPath(
+      renderDesignReview(createReader(graph)),
+      "spec/orders.prose-rendering.md",
+    );
+    const withoutProse = pageByPath(
+      renderDesignReview(createReader(graph)),
+      "spec/orders.without-prose.md",
+    );
+
+    expect(page).toContain("## Narrative\n\nNarrative stays plain.\n\n**Readiness:**");
+    expect(page).toContain("## Intent\n\nEscaped \\`code\\` \\| \\# &lt;tag&gt; &gt; quote");
+    expect(page).toContain("## Behavior\n\nBehavior description.\n\n### Rules");
+    expect(page).toContain("## Domain vocabulary\n\nModel description.\n\n| Term | Definition |");
+    expect(page).toContain("## Design\n\nDesign description.\n\n```json");
+    expect(page).toContain("## Decision\n\nDecision description.\n\n**Context.");
+    expect(page).toContain("## Verification intent\n\nVerification description.\n\n- **mode:");
+    expect(page).toContain("## Ui\n\nUI description.\n\n```json");
+    expect(page).not.toContain('"description"');
+    expect(withoutProse).not.toContain("## Narrative");
+    expect(withoutProse).not.toContain("\n\n\n\n");
+  });
+
+  it("reads no authored Markdown source while projecting graph and Reader values", () => {
+    const graph = deriveFixtureGraph({
+      specs: [
+        spec({
+          id: specId("spec:orders.graph-only-prose"),
+          title: "Graph-only prose",
+          narrative: "The reader owns this value.",
+          kind: "behavior",
+          altitude: "story",
+          readiness: "idea",
+          intent: { description: "The renderer must not reopen source.", outcome: "Stay pure." },
+        }),
+      ],
+    });
+    const readSpy = vi.spyOn(fs, "readFileSync");
+
+    try {
+      const page = pageByPath(
+        renderDesignReview(createReader(graph)),
+        "spec/orders.graph-only-prose.md",
+      );
+
+      expect(page).toContain("The reader owns this value.");
+      expect(readSpy.mock.calls.filter(([path]) => String(path).endsWith(".sdp.md"))).toEqual([]);
+    } finally {
+      readSpy.mockRestore();
+    }
+  });
+
+  it("renders the committed self-hosting corpus byte-identically at two absolute roots", () => {
+    const firstRoot = mkdtempSync(join(tmpdir(), "sdp-review-first-"));
+    const secondRoot = mkdtempSync(join(tmpdir(), "sdp-review-second-"));
+
+    try {
+      copySelfHostingCorpus(firstRoot);
+      copySelfHostingCorpus(secondRoot);
+
+      expect(renderSelfHostingRoot(firstRoot)).toEqual(renderSelfHostingRoot(secondRoot));
+    } finally {
+      rmSync(firstRoot, { recursive: true, force: true });
+      rmSync(secondRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects swapped prose semantically even when the wrong graph renders deterministically", () => {
+    const correct = deriveFixtureGraph({
+      specs: [
+        spec({
+          id: specId("spec:orders.semantic-prose"),
+          title: "Semantic prose",
+          narrative: "Narrative value.",
+          kind: "behavior",
+          altitude: "story",
+          readiness: "idea",
+          intent: { description: "Intent description.", outcome: "Preserve ownership." },
+        }),
+      ],
+    });
+    const swapped = deriveFixtureGraph({
+      specs: [
+        spec({
+          id: specId("spec:orders.semantic-prose"),
+          title: "Semantic prose",
+          narrative: "Intent description.",
+          kind: "behavior",
+          altitude: "story",
+          readiness: "idea",
+          intent: { description: "Narrative value.", outcome: "Preserve ownership." },
+        }),
+      ],
+    });
+    const correctPage = pageByPath(
+      renderDesignReview(createReader(correct)),
+      "spec/orders.semantic-prose.md",
+    );
+    const firstWrongPage = pageByPath(
+      renderDesignReview(createReader(swapped)),
+      "spec/orders.semantic-prose.md",
+    );
+    const secondWrongPage = pageByPath(
+      renderDesignReview(createReader(swapped)),
+      "spec/orders.semantic-prose.md",
+    );
+
+    assertNarrativeAndIntent(correctPage, "Narrative value.", "Intent description.");
+    expect(firstWrongPage).toBe(secondWrongPage);
+    expect(() => {
+      assertNarrativeAndIntent(firstWrongPage, "Narrative value.", "Intent description.");
+    }).toThrow();
+  });
+
   it("golden correctness oracle: the renderer produces the right view, page set and bytes", () => {
     const golden = readGoldenPages(goldenRoot);
 

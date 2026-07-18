@@ -1,3 +1,5 @@
+import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+
 import { computeDeliveryFacts } from "../graph/delivery-facts.js";
 import { schemaVersion } from "../graph/schema.js";
 import type {
@@ -38,6 +40,7 @@ function pickSections(data: Record<string, unknown>): SpecSections | undefined {
 
 function derivePrimitiveNode(entry: ReifiedSpec): PrimitiveNode {
   const title = entry.data.title;
+  const narrative = entry.data.narrative;
   const sections = pickSections(entry.data);
 
   return {
@@ -48,6 +51,7 @@ function derivePrimitiveNode(entry: ReifiedSpec): PrimitiveNode {
     altitude: entry.data.altitude as SpecAltitude,
     readiness: entry.data.readiness as SpecReadiness,
     ...(typeof title === "string" ? { title } : {}),
+    ...(typeof narrative === "string" ? { narrative } : {}),
     file: entry.file,
     ...(sections === undefined ? {} : { sections }),
   };
@@ -107,6 +111,12 @@ function deriveAnchorNode(entry: ReifiedAnchor): AnchorNode | CodeNode {
  * consumers (the reader's entry adapters and file-level impact) resolve off the curated layers
  * (`06` §2), so the first inferred producer is the aspirational impact graph.
  */
+export const deriveGraphAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.derive-graph"),
+  label: "derives the graph from reified carriers and bindings",
+  satisfies: ref("spec:extraction.derive-graph"),
+});
+
 export function deriveGraph(
   specs: readonly ReifiedSpec[],
   packs: readonly ReifiedPack[],

@@ -5,6 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { generateContracts } from "../codegen/contracts.js";
+import { normalizeExcludes } from "../extract/discover.js";
 import { extract } from "../extract/index.js";
 import { serializeGraph } from "../extract/serialize.js";
 import type { GraphSchema } from "../graph/schema.js";
@@ -16,18 +17,19 @@ import { validateGraph } from "../validate/validators.js";
 export const SDP_HELP_TEXT = `sdp — Libar Software Delivery Protocol
 Usage:
   sdp --help
-  sdp build [root] [--check-clean]
-  sdp validate [root] [--check-clean]
-  sdp view [root] [--check-clean]
+  sdp build [root] [--exclude PATH]... [--check-clean]
+  sdp validate [root] [--exclude PATH]... [--check-clean]
+  sdp view [root] [--exclude PATH]... [--check-clean]
 
 Commands:
-  build      Extract every *.sdp.ts under root (default: cwd), plus the anchor constants in the
-             other *.ts/*.tsx source files, into <root>/generated/graph.json — then derive the
+  build      Extract every *.sdp.ts and *.sdp.md under root (default: cwd), plus the anchor
+              constants in the other *.ts/*.tsx source files, into <root>/generated/graph.json — then derive the
              executable contracts (per-example step contracts + per-parent space contracts,
              the A2 mechanism) into <root>/generated/contracts/. Exits 1 and writes nothing on
              any hard error — the emitted artifacts are all-or-nothing. --check-clean
              additionally runs a second independent extraction + generation and fails on any
-             byte divergence (the determinism self-check).
+             byte divergence (the determinism self-check). Repeat --exclude PATH to omit exact
+             root-relative POSIX path prefixes from both extraction surfaces.
   validate   build, then run the conformance + honesty checks over the one graph (one
              validation path). A check error exits 1; gaps and orphans inform as warnings.
              graph.json is still written when the checks fail — the graph is the faithful
@@ -94,6 +96,7 @@ function formatFinding(finding: Finding): string {
 interface BuildArgs {
   /** The resolved extraction root. */
   readonly root: string;
+  readonly exclude: readonly string[];
   readonly checkClean: boolean;
 }
 
@@ -104,10 +107,30 @@ function parseBuildArgs(
 ): BuildArgs | undefined {
   let root: string | undefined;
   let checkClean = false;
+  const rawExcludes: string[] = [];
 
-  for (const argument of args) {
+  for (let index = 0; index < args.length; index += 1) {
+    const argument = args[index];
+
+    if (argument === undefined) {
+      continue;
+    }
+
     if (argument === "--check-clean") {
       checkClean = true;
+      continue;
+    }
+
+    if (argument === "--exclude") {
+      const exclude = args[index + 1];
+
+      if (exclude === undefined || exclude.startsWith("--")) {
+        writeStderr(output, `sdp ${command}: --exclude requires a path.\n`);
+        return undefined;
+      }
+
+      rawExcludes.push(exclude);
+      index += 1;
       continue;
     }
 
@@ -124,6 +147,19 @@ function parseBuildArgs(
     root = argument;
   }
 
+  let exclude: readonly string[];
+
+  try {
+    exclude = normalizeExcludes(rawExcludes);
+  } catch (error) {
+    if (error instanceof Error) {
+      writeStderr(output, `sdp ${command}: ${error.message}\n`);
+      return undefined;
+    }
+
+    throw error;
+  }
+
   const resolvedRoot = resolve(process.cwd(), root ?? ".");
 
   // First contact fails clean: a typo'd root is invocation feedback, never a Node stack trace.
@@ -132,7 +168,7 @@ function parseBuildArgs(
     return undefined;
   }
 
-  return { root: resolvedRoot, checkClean };
+  return { root: resolvedRoot, exclude, checkClean };
 }
 
 function isDirectory(path: string): boolean {
@@ -222,7 +258,8 @@ function runBuild(
   command: string,
   hooks: CliHooks,
 ): BuildOutcome {
-  const { root: resolvedRoot, checkClean } = parsed;
+  const { root: resolvedRoot, exclude, checkClean } = parsed;
+  const extractionOptions = { root: resolvedRoot, exclude };
   const runExtract = hooks.extract ?? extract;
   const runGenerateContracts = hooks.generateContracts ?? generateContracts;
   const recoveryRm = hooks.rmSync ?? rmSync;
@@ -259,7 +296,7 @@ function runBuild(
   }
 
   try {
-    const result = runExtract({ root: resolvedRoot });
+    const result = runExtract(extractionOptions);
     const findings = result.report.findings;
 
     for (const finding of findings) {
@@ -272,11 +309,14 @@ function runBuild(
     // note stays silent beside it.
     if (
       result.counts.specs === 0 &&
-      !findings.some((finding) => finding.file?.endsWith(".sdp.ts"))
+      !findings.some(
+        (finding) =>
+          finding.file?.endsWith(".sdp.ts") === true || finding.file?.endsWith(".sdp.md") === true,
+      )
     ) {
       writeStderr(
         output,
-        `note: no *.sdp.ts spec files found under ${resolvedRoot} — the authored model is empty. Is this the right extraction root?\n`,
+        `note: no *.sdp.ts or *.sdp.md spec files found under ${resolvedRoot} — the authored model is empty. Is this the right extraction root?\n`,
       );
     }
 
@@ -307,7 +347,7 @@ function runBuild(
     const summary = `${String(result.counts.specs)} specs · ${String(result.counts.packs)} packs · ${String(result.counts.anchors)} anchors → ${String(result.graph.nodes.length)} nodes · ${String(result.graph.edges.length)} edges (${String(errorCount)} errors, ${String(warningCount)} warnings)\n`;
 
     if (checkClean) {
-      const secondResult = runExtract({ root: resolvedRoot });
+      const secondResult = runExtract(extractionOptions);
       const second = serializeGraph(secondResult.graph);
 
       if (second !== serialized) {

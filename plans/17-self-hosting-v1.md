@@ -1,6 +1,8 @@
 # Plan 17 — Self-hosting, first slice: the repo's own specs in the ruled Markdown carrier
 
-> **Status: DRAFTED — execution plan.** Work happens on a dedicated branch named for the effort
+> **Status: ✅ EXECUTED — phase-1 implementation complete; final audit passed**
+>
+> Work happened on a dedicated branch named for the effort
 > (e.g. `self-hosting/v1`) — never on `main`. Revised after an architecture review of the draft
 > (findings folded in; the review's largest find — the extraction-root policy, §1.0 — is
 > load-bearing for every verification claim). Further revised for **execution-readiness**:
@@ -361,29 +363,138 @@ hardens them.
 
 Every item from the scheduled sessions (plan 16 §7) plus items this phase itself forced, tracked so
 nothing silently drops. **Planned disposition** is what this plan intends; **execution state**
-starts `pending` everywhere and is stamped (`done <session>` / `dropped <why>`) as sessions close —
-a disposition is never evidence of completion:
+starts `pending` everywhere and is stamped (`done <session>` / `deferred <why>` / `dropped <why>`)
+as sessions close — a disposition is never evidence of completion:
 
 | Docket item (origin) | Planned disposition | Execution state |
 |---|---|---|
-| Frontmatter envelope schema (17) | Address — envelope contract spec + strict gate (§1.3) | pending |
-| Editor-association gap (17) | Defer — named gap stands | pending |
-| Fence names (17) | Address — ratify as-is unless forced (§3.6) | pending |
-| Slot sigils (17) | Address — same | pending |
-| Single-literal vocabulary form (17) | Watch — rule only if forced | pending |
-| Table-sugar syntax (17) | Watch — rule only if forced | pending |
-| Prose edge-text ownership rule (17) | Address — §1.5 rulings (array-section sub-owner stays a watch item) | pending |
-| Diagnostics register (17) | Address — §1.6 | pending |
-| Carrier seam public API (18) | Address — two-seam shape (§1.1) | pending |
-| Product parser (18) | Partially address — corpus-scoped; hardening baseline deferred and pinned as a non-claim | pending |
-| `sdp import` emitter (18) | Defer | pending |
-| checkout-v1 migration + canonical flip (18) | Defer — checkout-v1 stays TS-canonical; interim sentence + recorded amendment | pending |
-| Self-hosting pack (19) | Start — first ~15 specs; grows next phases | pending |
-| Decision-spec fold (19) | Start — new decisions born as specs; back-catalog fold deferred | pending |
-| Doc-repair bill (19) | Re-scope — anti-misleading pass + status note; per-doc deletion later phases | pending |
-| Extraction-root & exclusion policy (new — forced by self-hosting) | Address — §1.0 ruling | pending |
-| Graph schema-version policy for prose fields (new) | Address — §1.5 ruling | pending |
-| Carrier-ruling transition-clause amendment (new — forced by the interim story) | Address — MD-18 Decision text + CONTEXT resolved entry + AGENTS interim sentence (Session 1, before first MD-canonical ID) | pending |
+| Frontmatter envelope schema (17) | Address — envelope contract spec + strict gate (§1.3) | done s1 — the bounded envelope and strict gate landed (todos 4–5, `5c33d2e`, `cf87a6b`); `spec:carrier.envelope-contract` authored and verified (todo 8, `aca7909`); the ownership posture dispositioned against the three-part test → the envelope-grammar ownership posture (MD-21) |
+| Editor-association gap (17) | Defer — named gap stands | deferred — the named gap stands; nothing in this phase forced it |
+| Fence names (17) | Address — ratify as-is unless forced (§3.6) | done s1–s3 — `gwt`/`gwt-vocabulary` ratified as-is from the exhibit; no authoring pain forced a change (three no-new-syntax gate dispositions; the tracer uses them verbatim, todo 15, `cfe1f67`) |
+| Slot sigils (17) | Address — same | done s1–s3 — `{slot:type}` sigils adopted as-is; bound string values use quoted carrier syntax (todo 15); no ruling fired |
+| Single-literal vocabulary form (17) | Watch — rule only if forced | dropped s1–s3 — the corpus never forced it; the watch item stands as a deferred syntax question |
+| Table-sugar syntax (17) | Watch — rule only if forced | dropped s1–s3 — one example point bound without sugar (todo 15); the watch item stands |
+| Prose edge-text ownership rule (17) | Address — §1.5 rulings (array-section sub-owner stays a watch item) | done s1 — the ownership rules landed with the parser and the graph prose slots (todos 5–6, `1a74fa8`); `spec:carrier.prose-ownership-rule` authored; the array-section sub-owner watch item never fired (the corpus/readiness gate's friction report) |
+| Diagnostics register (17) | Address — §1.6 | done s1 — the four hard finding IDs and the exact diagnostic matrix landed, pinned by tests (todos 4–5); near-miss headings are intentionally hard (`extract/unrecognized-heading`) |
+| Carrier seam public API (18) | Address — two-seam shape (§1.1) | done s1 — `CarrierReification`, both concrete reifiers, and the unchanged `deriveGraph` published at the package root (todo 3, `37e2845`) |
+| Product parser (18) | Partially address — corpus-scoped; hardening baseline deferred and pinned as a non-claim | done s1 (corpus-scoped) — the bounded parser landed (todos 4–7); the like-for-like hardening baseline stays deferred and pinned as a non-claim |
+| `sdp import` emitter (18) | Defer | deferred — `spec:carrier.sdp-import` honestly authored at `idea`; no emitter exists |
+| checkout-v1 migration + canonical flip (18) | Defer — checkout-v1 stays TS-canonical; interim sentence + recorded amendment | deferred — the interim amendment landed first (todo 1, `af7bd38`); checkout stays TS-canonical; the migration and the default flip are unstarted |
+| Self-hosting pack (19) | Start — first ~15 specs; grows next phases | done s1–s4 — exactly the frozen 15 specs plus `pack:self-hosting-v1` (todos 8 `aca7909`, 9 `d70f91e`, 11 `99bc103`, 15 `cfe1f67`, 19 `ba9f1f0`); growth rides later phases |
+| Decision-spec fold (19) | Start — new decisions born as specs; back-catalog fold deferred | done s4 (started) — the two phase-1 decisions born as `decision`-kind specs (todo 19, `ba9f1f0`); the back-catalog fold stays deferred |
+| Doc-repair bill (19) | Re-scope — anti-misleading pass + status note; per-doc deletion later phases | done s4 (re-scoped) — the anti-misleading pass repaired 30 active claims (todo 21, `82bf870`); the plan-16 §6 bill items dispositioned REPAIRED vs SUPERSEDED; per-doc deletion stays later-phase. The durable audit `check-carrier-truth.mjs` runs on demand — a deliberate non-wiring decision: consistency audits are not `npm run check` legs (the interim-check precedent) |
+| Extraction-root & exclusion policy (new — forced by self-hosting) | Address — §1.0 ruling | done s1 — the strict path-prefix contract landed end to end (todo 2, `f6644de`); dispositioned against the three-part test → the strict consumer-exclusion contract (MD-20) |
+| Graph schema-version policy for prose fields (new) | Address — §1.5 ruling | done s1 — schema `0.4.0` with fixed key positions (todo 6, `1a74fa8`); the checkout diff proved version-only lines |
+| Carrier-ruling transition-clause amendment (new — forced by the interim story) | Address — MD-18 Decision text + CONTEXT resolved entry + AGENTS interim sentence (Session 1, before first MD-canonical ID) | done s1 — all three operative surfaces landed before the first Markdown-canonical ID (todo 1, `af7bd38`), pinned by `check-carrier-interim.mjs` |
+| Public/package API proof (new — forced by grounded review) | Address — installed-tarball declaration + runtime smoke beside the source and built-entry tests | done s4 — installed-tarball declarations and runtime smoke passed (todo 23 Phase A, `6685a97`) |
+| Temporal-scan coverage (new — forced by grounded review) | Address — the temporal guard covers tracked plus nonignored untracked durable files, genre exclusions retained | done s4 — fail-closed enumeration of tracked plus nonignored untracked durable files (todo 22, `897fb64`) |
+| Root generated-state isolation (new — forced by grounded review) | Address — isolate repo-root generated state from parallel tests; a dependency-aware preflight lands before the tracer | done s2 — root generated state isolated from parallel tests; the dependency-aware preflight landed before the tracer (todo 14, `35620bf`; anchor-environment repair `cdb68fc`) |
+| Clean-clone proof (new — forced by grounded review) | Address — clean-snapshot and authorized clean-clone runs of the full gate | done s4 — clean snapshot and `git clone --no-local` full-gate runs passed; dirty-worktree preservation proved (todo 23 Phase B, `6685a97`) |
+| JTBD carrier repair (new — drift found by grounded review) | Address — the logical/physical relations distinction lands in JS-A1 with the interim-rule records; the remaining `.sdp.ts`-era carrier claims ride Session 4's anti-misleading pass | done s1+s4 — the JS-A1 logical/physical relations distinction landed with the interim records (todo 1, `af7bd38`); the remaining `.sdp.ts`-era JTBD claims repaired (todo 21, `82bf870`) |
+| MD-15 wording repair (new — forced by the carrier ruling) | Address — the extension law's wording re-points to the `.sdp.md` sibling beside the carrier-ruling amendment (Session 1) | done s1 — the `.sdp.ts` extension law (MD-15) re-pointed to the `.sdp.md` sibling beside the carrier-ruling amendment (todo 1, `af7bd38`) |
+| Four-gate review ledger (new — forced by the owner-gate design) | Address — a durable ledger of the four owner Design Review gates, filled as each gate accepts | done s4 — owner accepted Gate 4; the completed ledger below records the phase-2 disposition |
+
+### The four-gate review ledger
+
+Git process evidence, never a graph fact: the four owner Design Review gates are product
+practice, not validators, and nothing in this ledger enters `graph.json`. The local owner
+packets under the ignored evidence root remain the richer optional aids; this ledger is the
+durable plan-level record, filled as each gate accepts. Gate 4 now records the owner's acceptance
+and phase-2 disposition.
+
+| Gate | Meaning | Owner disposition | Date | Accepted SHA | Corrections | Rulings |
+|---|---|---|---|---|---|---|
+| 1 | Session 1 — the schema freeze: the frozen initial Markdown carrier corpus (five `spec:carrier.*` documents and the five-member Pack) | accepted | 2026-07-18 (~03:35 local) | `aca79090529c2f6625ceafc78f33e16da81bfcb1` | none | No recorded ruling fired — the frozen grammar stood. The effort-branch designation (`feature/protocol-self-application-phase-1`) stood confirmed: the owner was directly offered the `self-hosting/v1` rename and did not request it. |
+| 2 | Session 2 — corpus/readiness: the floor-honest 12-spec corpus and the 14 precise entrypoint anchors | accepted | 2026-07-18 (~05:30 local) | `cdb68fc1564c9167ebc0372ba8f8599a97df4393` | none | No-new-syntax disposition confirmed; no recorded ruling fired. |
+| 3 | Session 3 — the executable loop: Markdown → graph → generated contracts → the bound real-extractor test | accepted | 2026-07-18 (~06:40 local) | `1687885df7b1898c56e154ce2dbe4fa3c6c6c425` | none | No-new-syntax disposition confirmed. Owner directive carried to the final verification wave (F2): assess the 5 npm audit advisories, separating runtime-dependency risk (`yaml@2.9.0`) from dev-chain risk (`vitest`/`vite-node`). |
+| 4 | Session 4 — the whole-phase review and the phase-2 disposition | accepted | 2026-07-18 | `1d9f38c7a993f9cdc27cc4e178e211e33286758b` | 24f9978: docs(concept): record the landed prose projection in 06 | **Owner's phase-2 decision:** schedule the `sdp import` emitter, checkout-v1 migration, and canonical flip as one phase-2 effort, including the like-for-like parser-hardening baseline / C2-parity obligation; the table-sugar ruling is expected to fire under it. The editor-association gap stays deferred; revisit it after the flip. |
+
+### Review-06 remediation reconciliation
+
+The Gate-4 correction records the post-acceptance prose-projection repair at `24f9978`; it does
+not alter the accepted SHA or owner disposition. The corresponding review artifact is tracked in
+`reviews/06-self-hosting-phase-1-code-review.md` so the F1-F4 wave can inspect the same record on
+a clean clone.
+
+**Execution learning, todo 14 default-root substitution.** The shipped test retains a default-root
+regeneration case and now guards it with a post-suite sentinel, rather than moving that case to a
+disposable root as originally prescribed. `0ad4f44` restores regeneration and the sentinel, and
+extends the dedicated single-fork split to filtered runs. `4ee6136` restores the build-prefixed
+recovery commands and matching Vitest substring filters. This still meets the intended no-race and
+idempotence contract. The substitution is recorded here as an execution learning, not as a silent
+rewrite of the original design.
+
+**F2 npm-audit disposition.** `npm audit` reports five development-chain advisories in Vitest and
+Vite, with zero production vulnerabilities. `yaml@2.9.0` is not among the advisories.
+
+**Sanctioned row-3 enrichment delta.** `spec:carrier.markdown-parser` gained `problem` and `value`
+Intent bullets during todo-9 enrichment. It was born `scoped` and matured to `defined`; this is the
+only non-byte-exact corpus row relative to the frozen table, intentionally retained because the
+added evidence satisfies the `defined` floor.
+
+**Back-catalog notes.** Authored decision specs use `spec:decisions.*`, while the DECISIONS registry
+reserves `spec:protocol.decisions.*`; resolve that namespace divergence in the back-catalog fold,
+not in phase 1. The `npm run check` chain now has a twelfth `preflight` leg beyond todo-22's frozen
+eleven-leg order. This is a benign additive deviation, and `AGENTS.md` documents the current chain.
+
+**Low and information observation dispositions.** The review labels this tail as 24 observations;
+the compact grouping below retains every listed concern and its durable disposition.
+
+| Observation group | Disposition | Record |
+|---|---|---|
+| Markdown reifier catch-all totality | deferred | Totality remains by construction; retain the TypeScript reifier's wrapper as the cross-carrier backstop. |
+| YAML 1.2 scalar spellings | deferred | The current refusal-message classification is not phase-1 scope. |
+| YAML parser line-number mismatch | deferred | Rebased finding lines are correct; native message wording is follow-up polish. |
+| Frontmatter `...` document end | deferred | Acceptance before a later closer remains unpinned follow-up behavior. |
+| Non-mapping-root accumulated findings | deferred | Preserve as parser diagnostic aggregation debt. |
+| Depth and node cap finding flood | deferred | One-finding-per-offending-node behavior remains bounded by the cap. |
+| GWT fence placement in Intent | deferred | Exact immediate-placement enforcement is future grammar hardening. |
+| Heading trailing whitespace and trailing `#` titles | deferred | Preserve the current strict heading recognition pending grammar hardening. |
+| Duplicate `When` reporting and dead `mapOwner` branch | deferred | Small parser cleanup belongs with a later grammar pass. |
+| Windows absolute excludes and `--exclude --foo` diagnostics | pre-existing/phase-2 | Exclude UX refinements are outside phase-1 acceptance. |
+| Path-prefix matcher coverage | deferred | Add a focused regression when exclusion handling is next changed. |
+| Library-seam exclusion wording | deferred | Public library diagnostics can be separated from CLI wording later. |
+| Indirect assembly of the `then` graph key | fixed-by-remediation | `cd735ae` names the key directly. |
+| Design Review dynamic-key ordering | deferred | Re-parsed graph rendering determinism is a projection follow-up. |
+| Design Review escaping outside prose slots | pre-existing/phase-2 | TS-carrier authored HTML policy needs a scoped rendering decision. |
+| GWT, examples, flows, and example-space permutation coverage | fixed-by-remediation | `f8b26f5` adds byte-equality permutation coverage. |
+| Model term named `description` | fixed-by-remediation | `fb6b973` refuses the collision rather than dropping it silently. |
+| Row-3 enrichment delta | deferred | Sanctioned above as the intentional `scoped` to `defined` maturity record. |
+| Bound example reports only a count | fixed-by-remediation | `4ee6136` asserts the distinct TypeScript and Markdown carrier files. |
+| Fixture-to-live byte identity for rows 1, 2, 4, and 5 | fixed-by-remediation | `f8b26f5` pins the identities. |
+| No-reparse spy coverage | deferred | Named-import interception remains weaker than an injected read seam. |
+| Carrier-truth comment and temporal token assembly | deferred | The comment can be narrowed later; token assembly remains the sanctioned temporal-guard pattern. |
+| Stale provenance wording and plan-16 evidence-only dispositions | pre-existing/phase-2 | The glossary wording and archived per-item evidence are back-catalog work. |
+| Twelfth preflight leg and decision-spec namespace divergence | pre-existing/phase-2 | Both are recorded above: the chain delta is benign, and the namespace fold awaits phase 2. |
+
+### Owner's phase-2 decision
+
+This is a pointer for later planning, not phase-1 work. The owner scheduled the `sdp import`
+emitter, checkout-v1 migration, and canonical flip as **one phase-2 effort**. That effort includes
+the like-for-like parser-hardening baseline and C2-parity obligation; the table-sugar ruling is
+expected to fire under it. The editor-association gap remains deferred and is revisited after the
+flip.
+
+### The §3 three-part-test dispositions
+
+§3 flagged two rulings as likely `DECISIONS.md`-worthy. Each is dispositioned here against the
+ADR three-part test (hard to reverse · surprising without context · a real trade-off); the
+remaining §3 rulings stay in the corpus specs, the pinned tests, and this plan's running log
+by deliberate omission — an omission recorded as a decision, never a default:
+
+1. **The extraction-root & exclusion policy** (§1.0; landed in todo 2, `f6644de`) — **passes**:
+   a public CLI/options surface consumers script against (hard to reverse); the consumer
+   path-prefix rule beside the fixed basename tooling excludes reads as inconsistency without
+   the scope-decision rationale (surprising without context); basename-anywhere was the live
+   alternative, rejected so a future nested `src/examples/` is never silently skipped (a real
+   trade-off). Entered the diary as **the strict consumer-exclusion contract (MD-20)**.
+2. **The envelope-grammar ownership posture, including the exact `yaml@2.9.0` pin** (§1.3/§3.8;
+   landed in todo 4, `5c33d2e`) — **passes**: the corpus is authored against the owned contract
+   and consumers see its finding IDs (hard to reverse); owning the grammar while pinning one
+   exact library version and mapping the AST/CST by hand is stricter than common practice
+   (surprising without context); permissive parsing plus a semver range was rejected for
+   bounded, deterministic, adversary-safe behavior (a real trade-off). Entered the diary as
+   **the envelope-grammar ownership posture (MD-21)**.
 
 ## §7 — Verification
 

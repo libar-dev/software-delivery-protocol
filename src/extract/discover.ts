@@ -1,8 +1,8 @@
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 
-/** The `.sdp.ts` extension (MD-15): discovery reads spec files and pack manifests by suffix alone. */
-const SPEC_FILE_SUFFIX = ".sdp.ts";
+/** Spec carriers (MD-15): discovery reads spec files and pack manifests by suffix alone. */
+const SPEC_FILE_SUFFIXES = [".sdp.ts", ".sdp.md"] as const;
 
 /**
  * Anchor-candidate source files: the anchored layer lives in real product code (`04` §2), so any
@@ -20,6 +20,32 @@ const DECLARATION_FILE_SUFFIX = ".d.ts";
  */
 const EXCLUDED_DIRECTORY_NAMES = new Set(["node_modules", "dist", "generated", "coverage"]);
 
+export function normalizeExcludes(exclude: readonly string[] | undefined): readonly string[] {
+  const normalized: string[] = [];
+  const seen = new Set<string>();
+
+  for (const path of exclude ?? []) {
+    if (
+      path === "" ||
+      path === "." ||
+      path.startsWith("./") ||
+      path.endsWith("/") ||
+      path.startsWith("/") ||
+      path.includes("\\") ||
+      path.split("/").some((segment) => segment === "" || segment === "..")
+    ) {
+      throw new Error(`invalid --exclude path "${path}"`);
+    }
+
+    if (!seen.has(path)) {
+      normalized.push(path);
+      seen.add(path);
+    }
+  }
+
+  return normalized;
+}
+
 export interface DiscoveredSourceFile {
   readonly absolutePath: string;
   /** Extraction-root-relative, POSIX separators, no leading `./` (JS-C3). */
@@ -29,6 +55,12 @@ export interface DiscoveredSourceFile {
 export interface DiscoveredFiles {
   readonly specFiles: readonly DiscoveredSourceFile[];
   readonly anchorCandidateFiles: readonly DiscoveredSourceFile[];
+}
+
+interface DiscoveryState {
+  readonly excludes: readonly string[];
+  readonly specFiles: DiscoveredSourceFile[];
+  readonly anchorCandidateFiles: DiscoveredSourceFile[];
 }
 
 function compareCodeUnits(a: string, b: string): number {
@@ -50,15 +82,24 @@ function isSourceFileName(name: string): boolean {
   );
 }
 
+function isExcluded(relativePath: string, excludes: readonly string[]): boolean {
+  return excludes.some(
+    (exclude) => relativePath === exclude || relativePath.startsWith(`${exclude}/`),
+  );
+}
+
 function walkDirectory(
   absoluteDirectory: string,
   relativeDirectory: string,
-  specFiles: DiscoveredSourceFile[],
-  anchorCandidateFiles: DiscoveredSourceFile[],
+  state: DiscoveryState,
 ): void {
   for (const entry of readdirSync(absoluteDirectory, { withFileTypes: true })) {
     const relativePath =
       relativeDirectory === "" ? entry.name : `${relativeDirectory}/${entry.name}`;
+
+    if (isExcluded(relativePath, state.excludes)) {
+      continue;
+    }
 
     if (entry.isDirectory()) {
       // No authoring surface lives in a dot-directory: a stray source copy under one (`.git`, an
@@ -67,12 +108,7 @@ function walkDirectory(
         continue;
       }
 
-      walkDirectory(
-        join(absoluteDirectory, entry.name),
-        relativePath,
-        specFiles,
-        anchorCandidateFiles,
-      );
+      walkDirectory(join(absoluteDirectory, entry.name), relativePath, state);
       continue;
     }
 
@@ -80,13 +116,13 @@ function walkDirectory(
       continue;
     }
 
-    if (entry.name.endsWith(SPEC_FILE_SUFFIX)) {
-      specFiles.push({ absolutePath: join(absoluteDirectory, entry.name), relativePath });
+    if (SPEC_FILE_SUFFIXES.some((suffix) => entry.name.endsWith(suffix))) {
+      state.specFiles.push({ absolutePath: join(absoluteDirectory, entry.name), relativePath });
       continue;
     }
 
     if (isSourceFileName(entry.name)) {
-      anchorCandidateFiles.push({
+      state.anchorCandidateFiles.push({
         absolutePath: join(absoluteDirectory, entry.name),
         relativePath,
       });
@@ -95,19 +131,22 @@ function walkDirectory(
 }
 
 /**
- * One walk, two surfaces: every `*.sdp.ts` under the extraction root (the declared layer) and
- * every other `*.ts`/`*.tsx` source file (the anchor candidates), minus tooling-output
+ * One walk, two surfaces: every `*.sdp.ts` and `*.sdp.md` under the extraction root (the declared
+ * layer) and every other `*.ts`/`*.tsx` source file (the anchor candidates), minus tooling-output
  * directories and dot-directories. Both lists are sorted (code-unit, on the root-relative path)
  * so diagnostics never depend on filesystem enumeration order; output-byte ordering is owned by
  * the serializer regardless.
  */
-export function discoverFiles(root: string): DiscoveredFiles {
-  const specFiles: DiscoveredSourceFile[] = [];
-  const anchorCandidateFiles: DiscoveredSourceFile[] = [];
-  walkDirectory(root, "", specFiles, anchorCandidateFiles);
+export function discoverFiles(root: string, exclude?: readonly string[]): DiscoveredFiles {
+  const state: DiscoveryState = {
+    excludes: normalizeExcludes(exclude),
+    specFiles: [],
+    anchorCandidateFiles: [],
+  };
+  walkDirectory(root, "", state);
 
   return {
-    specFiles: specFiles.sort(byRelativePath),
-    anchorCandidateFiles: anchorCandidateFiles.sort(byRelativePath),
+    specFiles: state.specFiles.sort(byRelativePath),
+    anchorCandidateFiles: state.anchorCandidateFiles.sort(byRelativePath),
   };
 }

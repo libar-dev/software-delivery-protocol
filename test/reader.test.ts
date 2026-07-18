@@ -32,6 +32,30 @@ function exampleReader(): Reader {
 
 describe("the reader — the thin typed loader behind the agent surface", () => {
   describe("flat accessors", () => {
+    it("carries owned prose in spec summaries and contexts", () => {
+      const graph = deriveFixtureGraph({
+        specs: [
+          spec({
+            id: specId("spec:orders.prose"),
+            title: "Prose owner",
+            narrative: "Searchable narrative.",
+            kind: "behavior",
+            altitude: "story",
+            readiness: "idea",
+            intent: { description: "Searchable intent description.", outcome: "Expose prose." },
+          }),
+        ],
+      });
+      const reader = createReader(graph);
+
+      expect(reader.specs()[0]).toMatchObject({
+        narrative: "Searchable narrative.",
+      });
+      expect(reader.specContext("spec:orders.prose")).toMatchObject({
+        narrative: "Searchable narrative.",
+        sections: { intent: { description: "Searchable intent description." } },
+      });
+    });
     it("summarizes every spec with the decode done once: display label, recomputed facts, packs, derived readiness", () => {
       const summaries = exampleReader().specs();
 
@@ -89,6 +113,30 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
   });
 
   describe("findByConcept — the grep→graph bridge from a string", () => {
+    it("finds narrative and owned section descriptions", () => {
+      const graph = deriveFixtureGraph({
+        specs: [
+          spec({
+            id: specId("spec:orders.prose-search"),
+            title: "Prose search",
+            narrative: "Narrative sentinel.",
+            kind: "behavior",
+            altitude: "story",
+            readiness: "idea",
+            intent: { description: "Description sentinel.", outcome: "Search prose." },
+          }),
+        ],
+      });
+
+      expect(createReader(graph).findByConcept("sentinel")).toEqual([
+        {
+          id: "spec:orders.prose-search",
+          nodeType: "Primitive",
+          title: "Prose search",
+          matchedIn: ["narrative", "sections.intent"],
+        },
+      ]);
+    });
     it("matches ids first, then titles/labels, then section prose — deterministic, never fuzzy", () => {
       const matches = exampleReader().findByConcept("create-order");
 

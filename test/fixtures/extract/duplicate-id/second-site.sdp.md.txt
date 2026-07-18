@@ -1,0 +1,14 @@
+---
+id: spec:fixture.duplicate
+kind: behavior
+altitude: story
+readiness: idea
+relations: {}
+---
+# Markdown site of a duplicated id
+
+## Intent
+- outcome: Collide with the TypeScript carrier's id.
+
+## Behavior
+- rule: This carrier is valid in isolation.

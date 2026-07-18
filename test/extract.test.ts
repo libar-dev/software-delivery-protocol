@@ -1,13 +1,18 @@
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { afterAll, describe, expect, it } from "vitest";
 
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+
 import {
+  deriveGraph,
   extract,
   extractFindingIds,
   graphValidatorIds,
+  reifyTypeScriptCarrier,
   serializeGraph,
   validateGraph,
 } from "../src/index.js";
@@ -22,6 +27,106 @@ function corpusRoot(name: string): string {
   const root = materializeExtractCorpus(name);
   materializedRoots.push(root);
   return root;
+}
+
+function exclusionSpecSource(id: string): string {
+  return `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const declared = spec({
+  id: specId("${id}"),
+  title: "${id}",
+  kind: "behavior",
+  altitude: "feature",
+  readiness: "idea",
+  intent: { outcome: "Exercise extraction discovery." },
+});
+`;
+}
+
+function exclusionAnchorSource(id: string, target: string): string {
+  return `import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+
+export const binding = codeAnchor({
+  id: codeAnchorId("${id}"),
+  satisfies: ref("${target}"),
+});
+`;
+}
+
+function exclusionRoot(): string {
+  const root = mkdtempSync(join(tmpdir(), "sdp-exclusions-"));
+  materializedRoots.push(root);
+
+  mkdirSync(join(root, "explorations"));
+  mkdirSync(join(root, "dist"));
+  writeFileSync(join(root, "included.sdp.ts"), exclusionSpecSource("spec:orders.included"), "utf8");
+  writeFileSync(
+    join(root, "included.ts"),
+    exclusionAnchorSource("impl:orders.included", "spec:orders.included"),
+    "utf8",
+  );
+  writeFileSync(
+    join(root, "single.sdp.ts"),
+    exclusionSpecSource("spec:orders.file-prefix"),
+    "utf8",
+  );
+  writeFileSync(
+    join(root, "explorations", "hidden.sdp.ts"),
+    exclusionSpecSource("spec:orders.excluded"),
+    "utf8",
+  );
+  writeFileSync(
+    join(root, "explorations", "hidden.ts"),
+    exclusionAnchorSource("impl:orders.excluded", "spec:orders.excluded"),
+    "utf8",
+  );
+  writeFileSync(
+    join(root, "dist", "fixed.sdp.ts"),
+    exclusionSpecSource("spec:orders.fixed-exclude"),
+    "utf8",
+  );
+
+  return root;
+}
+
+function temporaryCorpusRoot(name: string): string {
+  const root = mkdtempSync(join(tmpdir(), `sdp-${name}-`));
+  materializedRoots.push(root);
+  mkdirSync(join(root, "specs"), { recursive: true });
+  return root;
+}
+
+function typeScriptCarrierSource(id: string, title: string): string {
+  return `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const carrier = spec({
+  id: specId("${id}"),
+  title: "${title}",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  intent: { outcome: "Exercise carrier routing." },
+  behavior: { rules: ["Both carriers derive one graph."] },
+});
+`;
+}
+
+function markdownCarrierSource(id: string, title: string): string {
+  return `---
+id: ${id}
+kind: behavior
+altitude: story
+readiness: idea
+relations: {}
+---
+# ${title}
+
+## Intent
+- outcome: Exercise carrier routing.
+
+## Behavior
+- rule: Both carriers derive one graph.
+`;
 }
 
 afterAll(() => {
@@ -94,17 +199,36 @@ describe("extraction corpora", () => {
     expect(result.graph.edges).toEqual([]);
   });
 
-  it("duplicate-id: both sites reported (L2); neither enters the graph; the counts record both", () => {
+  it("duplicate-id: TypeScript and Markdown sites are excluded before graph derivation; the healthy sibling remains", () => {
     const result = extract({ root: corpusRoot("duplicate-id") });
-    const errors = result.report.findings.filter(
+    const duplicateFindings = result.report.findings.filter(
       (finding) => finding.validatorId === extractFindingIds.duplicateId,
     );
 
-    expect(errors).toHaveLength(2);
-    expect(new Set(errors.map((finding) => finding.file)).size).toBe(2);
-    expect(errors.every((finding) => finding.subjectId === "spec:orders.duplicate")).toBe(true);
-    expect(result.graph.nodes).toEqual([]);
-    expect(result.counts.specs).toBe(2);
+    // This is the extraction boundary, not the `conformance/duplicate-ids` graph backstop: the
+    // ambiguous carriers never enter deriveGraph, so every later consumer sees only the sibling.
+    expect(duplicateFindings).toEqual([
+      expect.objectContaining({
+        file: "first-site.sdp.ts",
+        subjectId: "spec:fixture.duplicate",
+        validatorId: extractFindingIds.duplicateId,
+      }),
+      expect.objectContaining({
+        file: "second-site.sdp.md",
+        subjectId: "spec:fixture.duplicate",
+        validatorId: extractFindingIds.duplicateId,
+      }),
+    ]);
+    expect(result.report.findings).toHaveLength(2);
+    expect(result.graph.nodes.map((node) => node.id)).toEqual(["spec:fixture.healthy-sibling"]);
+    expect(result.graph.nodes.some((node) => node.id === "spec:fixture.duplicate")).toBe(false);
+    expect(
+      result.graph.edges.filter(
+        (edge) => edge.from === "spec:fixture.duplicate" || edge.to === "spec:fixture.duplicate",
+      ),
+    ).toEqual([]);
+    expect(serializeGraph(result.graph)).toContain("spec:fixture.healthy-sibling");
+    expect(result.counts.specs).toBe(3);
   });
 
   it("dangling-relation: the edge is emitted, not dropped; referential integrity flags it", () => {
@@ -161,6 +285,57 @@ describe("extraction corpora", () => {
     const node = primitiveNode(result.graph, "spec:orders.typoed-section");
     expect(node).toBeDefined();
     expect(JSON.stringify(node)).not.toContain("behaviour");
+  });
+
+  it("unrecognized in-section property: warns before canonical serialization drops it", () => {
+    const reified = reifyTypeScriptCarrier(
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:orders.unrecognized-section-property"),
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  behavior: { rules: ["Keep known content."], notes: "Must not disappear silently." },
+});`,
+      "unrecognized-section-property.sdp.ts",
+    );
+
+    const graph = deriveGraph(reified.specs, reified.packs, []);
+
+    expect(reified.findings).toMatchObject([
+      {
+        validatorId: extractFindingIds.unrecognizedProperty,
+        severity: "warning",
+        path: "behavior.notes",
+      },
+    ]);
+    expect(
+      primitiveNode(graph, "spec:orders.unrecognized-section-property")?.sections?.behavior,
+    ).toEqual({ rules: ["Keep known content."] });
+    expect(serializeGraph(graph)).not.toContain("Must not disappear silently.");
+  });
+
+  it("reserved model term: refuses a term key that collides with the section description field", () => {
+    const reified = reifyTypeScriptCarrier(
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:orders.reserved-description-term"),
+  kind: "model",
+  altitude: "story",
+  readiness: "idea",
+  model: { terms: { description: "A term that collides with section vocabulary." } },
+});`,
+      "reserved-description-term.sdp.ts",
+    );
+
+    expect(reified.specs).toEqual([]);
+    expect(reified.findings).toMatchObject([
+      {
+        validatorId: extractFindingIds.reservedProperty,
+        severity: "error",
+        path: "model.terms.description",
+      },
+    ]);
   });
 
   it("id-shaped-string-content: a raw id-shaped string in section content is prose — kept, edge-free, finding-free", () => {
@@ -317,10 +492,192 @@ describe("extraction corpora", () => {
   });
 });
 
+describe("Markdown carrier discovery", () => {
+  it("routes the five defused target documents through real discovery with their exact nodes", () => {
+    const result = extract({ root: corpusRoot("self-hosting-carrier") });
+
+    expect(result.report.findings).toEqual([]);
+    expect(result.counts).toEqual({ specs: 5, packs: 0, anchors: 0 });
+    expect(
+      result.graph.nodes.map((node) =>
+        node.nodeType === "Primitive"
+          ? {
+              id: node.id,
+              file: node.file,
+              specKind: node.specKind,
+              title: node.title,
+              sections: node.sections,
+            }
+          : node,
+      ),
+    ).toEqual([
+      {
+        id: "spec:carrier.envelope-contract",
+        file: "specs/carrier/envelope-contract.sdp.md",
+        specKind: "contract",
+        title: "The Markdown envelope is explicit and bounded",
+        sections: {
+          intent: {
+            outcome: "Make a Markdown Spec's identity and descriptors deterministic to reify.",
+          },
+          behavior: {
+            rules: [
+              "A Markdown Spec declares id, kind, altitude, readiness, and relations in bounded YAML frontmatter; its first H1 declares title.",
+            ],
+          },
+        },
+      },
+      {
+        id: "spec:carrier.markdown-authoring",
+        file: "specs/carrier/markdown-authoring.sdp.md",
+        specKind: "behavior",
+        title: "Markdown authoring enters the one graph",
+        sections: {
+          intent: {
+            outcome: "Author new Protocol Specs in Markdown without creating a second truth path.",
+          },
+          behavior: {
+            rules: [
+              "Markdown and TypeScript carriers feed the same reification and graph-derivation path.",
+            ],
+          },
+        },
+      },
+      {
+        id: "spec:carrier.markdown-parser",
+        file: "specs/carrier/markdown-parser.sdp.md",
+        specKind: "behavior",
+        title: "The product parser reifies the ruled Markdown subset",
+        sections: {
+          intent: { outcome: "Reify authored Markdown without a second graph or validation path." },
+          behavior: {
+            rules: [
+              "The parser accepts only the ruled heading grammar and excludes one malformed carrier while continuing healthy siblings.",
+            ],
+          },
+        },
+      },
+      {
+        id: "spec:carrier.prose-ownership-rule",
+        file: "specs/carrier/prose-ownership-rule.sdp.md",
+        specKind: "rule",
+        title: "Every prose edge has one owner",
+        sections: {
+          intent: { outcome: "Keep free prose in the graph without ambiguous attachment." },
+          behavior: {
+            rules: [
+              "Narrative lives before the first H2; descriptions live only under their owning singular sections; unowned prose is refused.",
+            ],
+          },
+        },
+      },
+      {
+        id: "spec:carrier.sdp-import",
+        file: "specs/carrier/sdp-import.sdp.md",
+        specKind: "behavior",
+        title: "Existing intent can later be imported into the ruled carrier",
+        sections: {
+          intent: { outcome: "Name import as deferred work without claiming an emitter exists." },
+        },
+      },
+    ]);
+  });
+
+  it("derives semantically equivalent accepted subsets through extract and serializeGraph", () => {
+    const markdownRoot = temporaryCorpusRoot("markdown-equivalence");
+    const typeScriptRoot = temporaryCorpusRoot("typescript-equivalence");
+    const id = "spec:carrier.accepted-subset";
+    const title = "Accepted carrier subset";
+
+    writeFileSync(
+      join(markdownRoot, "specs", "equivalent.sdp.md"),
+      markdownCarrierSource(id, title),
+      "utf8",
+    );
+    writeFileSync(
+      join(typeScriptRoot, "specs", "equivalent.sdp.ts"),
+      typeScriptCarrierSource(id, title),
+      "utf8",
+    );
+
+    const markdown = extract({ root: markdownRoot });
+    const typeScript = extract({ root: typeScriptRoot });
+    const markdownSerialized = serializeGraph(markdown.graph);
+    const typeScriptSerialized = serializeGraph(typeScript.graph);
+
+    // This is accepted-subset equivalence only; full Markdown/TS parity waits for multi-entry
+    // constraint syntax and the deferred hardening work.
+    expect(markdown.report.findings).toEqual([]);
+    expect(typeScript.report.findings).toEqual([]);
+    expect(markdown.graph.nodes[0]?.file).toBe("specs/equivalent.sdp.md");
+    expect(typeScript.graph.nodes[0]?.file).toBe("specs/equivalent.sdp.ts");
+    expect(markdownSerialized.replace("equivalent.sdp.md", "equivalent.sdp")).toBe(
+      typeScriptSerialized.replace("equivalent.sdp.ts", "equivalent.sdp"),
+    );
+  });
+
+  it("excludes a malformed Markdown carrier while retaining its healthy TypeScript sibling", () => {
+    const root = temporaryCorpusRoot("mixed-carrier-failure");
+    writeFileSync(join(root, "specs", "broken.sdp.md"), "not a Markdown carrier", "utf8");
+    writeFileSync(
+      join(root, "specs", "healthy.sdp.ts"),
+      typeScriptCarrierSource("spec:carrier.healthy-sibling", "Healthy sibling"),
+      "utf8",
+    );
+
+    const result = extract({ root });
+
+    expect(result.report.findings).toMatchObject([
+      {
+        validatorId: "extract/invalid-frontmatter",
+        file: "specs/broken.sdp.md",
+        line: 1,
+      },
+    ]);
+    expect(result.graph.nodes.map((node) => node.id)).toEqual(["spec:carrier.healthy-sibling"]);
+  });
+
+  it("reports same-ID TypeScript and Markdown carriers at both sites without deriving either", () => {
+    const root = temporaryCorpusRoot("cross-carrier-duplicate");
+    const id = "spec:carrier.cross-carrier-duplicate";
+    writeFileSync(
+      join(root, "specs", "duplicate.sdp.md"),
+      markdownCarrierSource(id, "Markdown"),
+      "utf8",
+    );
+    writeFileSync(
+      join(root, "specs", "duplicate.sdp.ts"),
+      typeScriptCarrierSource(id, "TypeScript"),
+      "utf8",
+    );
+
+    const result = extract({ root });
+    const duplicateFindings = result.report.findings.filter(
+      (finding) => finding.validatorId === extractFindingIds.duplicateId,
+    );
+
+    expect(duplicateFindings).toHaveLength(2);
+    expect(duplicateFindings.map((finding) => finding.file)).toEqual([
+      "specs/duplicate.sdp.md",
+      "specs/duplicate.sdp.ts",
+    ]);
+    expect(duplicateFindings.every((finding) => finding.subjectId === id)).toBe(true);
+    expect(result.counts.specs).toBe(2);
+    expect(result.graph.nodes).toEqual([]);
+  });
+});
+
 /**
  * The anchored-layer corpora: anchor constants in `*.ts` source files, committed defused as
  * `*.ts.txt`. Each pins one outcome, should-fail / should-pass style (`05` §5).
  */
+const extractContractTestAnchor = specTest({
+  id: testAnchorId("test:protocol.extract"),
+  label: "extraction contracts verify graph derivation",
+  verifies: ref("spec:extraction.derive-graph"),
+});
+void extractContractTestAnchor;
+
 describe("anchor extraction corpora", () => {
   it("anchored-binding: the full ladder — anchored edges and delivery facts per `02` §2", () => {
     const result = extract({ root: corpusRoot("anchored-binding") });
@@ -585,6 +942,55 @@ describe("import-surface and discovery corpora", () => {
         claim: "anchored",
       },
     ]);
+  });
+
+  it("consumer exclusions are case-sensitive root-relative prefixes applied before either surface classifies", () => {
+    // Given: spec and anchor carriers below a consumer-selected directory, a file prefix, a
+    // nonexistent prefix, and a fixed tooling directory.
+    const root = exclusionRoot();
+
+    // When: the consumer excludes only the lower-case directory and exact file prefix.
+    const result = extract({
+      root,
+      exclude: ["explorations", "explorations", "single.sdp.ts", "does-not-exist"],
+    });
+
+    // Then: both excluded carrier classes are absent; fixed-directory behavior stays independent.
+    expect(result.report.findings).toEqual([]);
+    expect(result.counts).toEqual({ specs: 1, packs: 0, anchors: 1 });
+    expect(result.graph.nodes.map((node) => node.id)).toEqual([
+      "spec:orders.included",
+      "impl:orders.included",
+    ]);
+    expect(JSON.stringify(result.graph)).not.toContain("excluded");
+    expect(JSON.stringify(result.graph)).not.toContain("file-prefix");
+    expect(JSON.stringify(result.graph)).not.toContain("fixed-exclude");
+
+    // When: the exclusion's code units differ in case.
+    const caseVariant = extract({ root, exclude: ["EXPLORATIONS"] });
+
+    // Then: the lower-case path remains in scope.
+    expect(caseVariant.graph.nodes.map((node) => node.id)).toContain("spec:orders.excluded");
+  });
+
+  it.each([
+    "",
+    ".",
+    "./explorations",
+    "explorations/",
+    "/explorations",
+    "../x",
+    "a/../b",
+    "a//b",
+    "a\\b",
+  ])("rejects the invalid consumer exclusion %j", (exclude) => {
+    // Given: an extraction root.
+    const root = exclusionRoot();
+
+    // When / Then: malformed consumer scope is refused rather than broadened or normalized.
+    expect(() => extract({ root, exclude: [exclude] })).toThrow(
+      `invalid --exclude path "${exclude}"`,
+    );
   });
 });
 

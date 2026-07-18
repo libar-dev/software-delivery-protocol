@@ -1,0 +1,10 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const healthySibling = spec({
+  id: specId("spec:fixture.healthy-sibling"),
+  title: "Healthy sibling",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  intent: { outcome: "Remain available when another identity is ambiguous." },
+});

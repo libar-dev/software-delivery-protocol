@@ -1,6 +1,7 @@
 import { SPEC_READINESS } from "../model/descriptors.js";
 import { renderStepText } from "../notation/slots.js";
 import type { Finding } from "../validate/contracts.js";
+import { renderNarrative, sectionDescription } from "./owned-prose.js";
 import type {
   PackContext,
   Reader,
@@ -214,7 +215,12 @@ function renderBindings(context: SpecContext, page: string): readonly string[] {
 /* ----- section content ----- */
 
 function renderIntent(intent: Record<string, unknown>): readonly string[] {
-  const lines: string[] = ["## Intent", ""];
+  const description = sectionDescription(intent);
+  const lines: string[] = ["## Intent", "", ...description];
+
+  if (description.length > 0) {
+    lines.push("");
+  }
 
   for (const field of ["actor", "problem", "outcome", "value"]) {
     const text = asText(intent[field]);
@@ -257,7 +263,13 @@ function renderIntent(intent: Record<string, unknown>): readonly string[] {
 }
 
 function renderBehavior(behavior: Record<string, unknown>): readonly string[] {
+  const description = sectionDescription(behavior);
   const lines: string[] = ["## Behavior"];
+
+  if (description.length > 0) {
+    lines.push("", ...description);
+  }
+
   const rules = textEntries(behavior.rules);
 
   if (rules.length > 0) {
@@ -348,12 +360,21 @@ function renderConstraints(entries: readonly unknown[]): readonly string[] {
 function renderModel(model: Record<string, unknown>): readonly string[] {
   const terms = asRecord(model.terms) ?? {};
   const names = Object.keys(terms);
+  const description = sectionDescription(model);
 
-  if (names.length === 0) {
+  if (names.length === 0 && description.length === 0) {
     return [];
   }
 
-  const lines = ["## Domain vocabulary", "", "| Term | Definition |", "|---|---|"];
+  const lines = ["## Domain vocabulary"];
+
+  if (description.length > 0) {
+    lines.push("", ...description);
+  }
+
+  if (names.length > 0) {
+    lines.push("", "| Term | Definition |", "|---|---|");
+  }
 
   for (const name of names) {
     lines.push(`| ${tableCell(name)} | ${tableCell(asText(terms[name]) ?? "—")} |`);
@@ -364,6 +385,12 @@ function renderModel(model: Record<string, unknown>): readonly string[] {
 
 function renderDecision(decision: Record<string, unknown>): readonly string[] {
   const lines: string[] = ["## Decision"];
+  const description = sectionDescription(decision);
+
+  if (description.length > 0) {
+    lines.push("", ...description);
+  }
+
   const context = asText(decision.context);
 
   if (context !== undefined) {
@@ -394,6 +421,12 @@ function renderDecision(decision: Record<string, unknown>): readonly string[] {
 
 function renderVerification(verification: Record<string, unknown>): readonly string[] {
   const lines: string[] = ["## Verification intent"];
+  const description = sectionDescription(verification);
+
+  if (description.length > 0) {
+    lines.push("", ...description);
+  }
+
   const mode = asText(verification.mode);
 
   if (mode !== undefined) {
@@ -411,17 +444,24 @@ function renderVerification(verification: Record<string, unknown>): readonly str
 
 /** The open bags (`design` / `ui`, L9): authored order preserved, rendered as data. */
 function renderOpenBag(name: string, content: Record<string, unknown>): readonly string[] {
-  if (Object.keys(content).length === 0) {
+  const description = sectionDescription(content);
+  const data = Object.fromEntries(Object.entries(content).filter(([key]) => key !== "description"));
+
+  if (Object.keys(data).length === 0 && description.length === 0) {
     return [];
   }
 
-  return [
-    `## ${name[0]?.toUpperCase() ?? ""}${name.slice(1)}`,
-    "",
-    "```json",
-    ...JSON.stringify(content, null, 2).split("\n"),
-    "```",
-  ];
+  const lines = [`## ${name[0]?.toUpperCase() ?? ""}${name.slice(1)}`];
+
+  if (description.length > 0) {
+    lines.push("", ...description);
+  }
+
+  if (Object.keys(data).length > 0) {
+    lines.push("", "```json", ...JSON.stringify(data, null, 2).split("\n"), "```");
+  }
+
+  return lines;
 }
 
 function renderSections(context: SpecContext): readonly string[] {
@@ -564,6 +604,7 @@ function renderSpecPage(context: SpecContext): DesignReviewPage {
     "",
     `\`${context.id}\` · ${kind} · altitude \`${context.altitude}\` · authored in [${context.file}](${sourceHref(page, context.file)}) \`[declared]\``,
     "",
+    ...renderNarrative(context.narrative),
     ...renderReadiness(context),
     "",
     ...renderBindings(context, page),

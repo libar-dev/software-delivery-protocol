@@ -45,6 +45,15 @@ itself rides with the self-hosting session (plan 16 §7).
 | MD-17 | point-per-example | durable | `spec:protocol.decisions.point-per-example` |
 | MD-18 | the carrier ruling | durable | `spec:protocol.decisions.carrier-ruling` |
 | MD-19 | the prose-ownership law | durable | `spec:protocol.decisions.prose-ownership` |
+| MD-20 | the strict consumer-exclusion contract | durable | `spec:protocol.decisions.exclusion-contract` |
+| MD-21 | the envelope-grammar ownership posture | durable | `spec:protocol.decisions.envelope-grammar-posture` |
+
+### Current executable decision-spec pointers
+
+- [The plain-language references decision](../../specs/decisions/plain-language-references.sdp.md)
+  (`spec:decisions.plain-language-references`).
+- [The concept-documents dissolution decision](../../specs/decisions/concept-docs-dissolve.sdp.md)
+  (`spec:decisions.concept-docs-dissolve`).
 
 ---
 
@@ -325,10 +334,15 @@ sufficient for self-validation. *Rejected:* a documented dual path (the disagree
 **Execution.** Slice 1 (extractor feeds the floor checks) / Slice 3 (the full gate); until then the Session-1
 harness stands in, honestly fenced (the `authored-model.ts` doc-comment already says so).
 
-### MD-15 — Authored Spec files carry the `.sdp.ts` extension  [ACCEPTED 2026-06-10]
+### MD-15 — Authored Spec files carry the `.sdp.ts` extension  [ACCEPTED 2026-06-10 · amended 2026-07-18 (plan 17) — re-pointed, not repealed]
 **Decision.** Spec files are `/specs/**/*.sdp.ts` (packs: `*.pack.sdp.ts`). The Protocol's own compound
 extension — the `.stories.tsx` pattern: tool-branded, collision-free, tooling-scopeable. The model name
 `Spec` is untouched (it was always settled); only the file serialization changes.
+**Amended 2026-07-18 (plan 17) — re-pointed, not repealed.** The rationale below (never `.spec.ts`;
+a tool-branded, collision-free compound extension; the filename itself carrying the marker for a
+colocated future) carries over to the ruled carrier: a Markdown-carrier Spec file is
+`/specs/**/*.sdp.md`. `.sdp.ts` remains the extension of the TS DSL carrier while that carrier
+survives — the import source and lawful per-ID option (the carrier ruling, MD-18).
 **Why / alternatives rejected.** `*.spec.ts` is *the* default test glob of the JS ecosystem (Vitest:
 `**/*.{test,spec}.?(c|m)[jt]s(x)`; Jest/Mocha conventions match). An adopter on runner defaults gets their
 runner executing Spec-primitive files — Vitest fails files with no test suites, so first contact with the
@@ -420,18 +434,20 @@ the carrier's expansion sugar).
 > record). The flagged terms ***carrier*** and ***notation*** ratified into `CONTEXT.md` at this
 > session. Two rulings passed the three-part test and enter here.
 
-### MD-18 — The carrier ruling: Markdown, all eight kinds; the TS DSL becomes import source + per-ID option  [ACCEPTED 2026-07-12]
+### MD-18 — The carrier ruling: Markdown, all eight kinds; the TS DSL becomes import source + per-ID option  [ACCEPTED 2026-07-12 · transition clause amended 2026-07-18 (plan 17)]
 **Context.** The carrier competition (plan 14) closed with four evidence PRs: two full exhibits
 (F2 Markdown, C2 own grammar) and two honest concessions (Gherkin extension/fork; typed markup).
 The docket required ruling the carrier, the kind-partition question, and the TS DSL's long-term
 role — evidence-vs-evidence on the recorded scorecards, never by preference.
 **Decision.** The **Markdown carrier (F2) is the authoring carrier for all eight `kind` values**:
 an authored `Spec` document is an `.sdp.md` file — YAML-frontmatter envelope, free prose body,
-the owned notation in fenced blocks — statically extracted into the one graph. The canonical
-default flips **when the product parser and `sdp import` land and the worked example migrates**;
-until then the TS DSL stays sole-canonical. After the flip the TS DSL survives as the import
-source and as a lawful per-ID option via the canonical-surface config (`04` §1) — the surviving
-law is **one canonical surface per ID, no mixing**, never TS-as-sole-surface.
+the owned notation in fenced blocks — statically extracted into the one graph. **Transition
+clause, amended 2026-07-18 (plan 17):** New spec IDs may be born Markdown-canonical once the
+product parser lands; pre-existing IDs and the worked example remain TS-canonical until the
+ruled flip (the product parser, `sdp import`, and the checkout-v1 migration). After the flip
+the TS DSL survives as the import source and as a lawful per-ID option via the canonical-surface
+config (`04` §1) — the surviving law is **one canonical surface per ID, no mixing**, never
+TS-as-sole-surface.
 **Why / alternatives rejected.** *C2 own grammar*: strongest differentiation and diff/merge, but
 its own scorecard's ownership row is decisive — parser, formatter, highlighting, rendering,
 editor integrations, LSP owned forever, plus the agent grammar-context tax and no rendered page
@@ -464,6 +480,47 @@ Owned descriptions are MD-10-clean (content, never refs) and MD-11-aware: they l
 already-closed shapes, and any prose slot a floor clause ever reads gets pulled into the closed
 type as the typing law demands. Trade-off accepted: the ownership rule is real design work — paid
 once, at the surface-design session, instead of forever in an informal transfer checklist.
+
+## 2026-07-18 — Session: plan 17 execution (the self-hosting phase's pre-Gate-4 docket close)
+
+> The phase's full record — the corpus, the executable loop, the four owner gates, and the
+> docket — lives in **plan 17** and its execution branch. Plan 17 §3 flagged two rulings as
+> likely diary-worthy; both passed the three-part test at the pre-Gate-4 disposition and enter
+> here. The remaining §3 rulings stay in the corpus specs, the pinned tests, and the plan's
+> running log by deliberate omission.
+
+### MD-20 — The strict consumer-exclusion contract: root-relative POSIX path-prefix, never basename-anywhere  [ACCEPTED 2026-07-18]
+**Context.** Self-hosting forced the configurable extraction exclude the discovery code had
+deferred to external adoption: a root build must keep `explorations/` and `examples/` out of the
+Protocol's own graph. The fixed tooling excludes match basename-of-directory; the consumer rule
+was the open question.
+**Decision.** Consumer excludes (`--exclude` on `build`/`validate`/`view`;
+`ExtractOptions.exclude`) are strict, case-sensitive, root-relative POSIX path-prefixes —
+rejecting empty, `.`, leading `./`, terminal `/`, absolute, `..` segments, empty internal
+segments, and backslashes; deduplicated; nonexistent and file prefixes allowed; unioned with
+(never replacing) the fixed tooling excludes, which stay basename-of-directory.
+**Why / alternatives rejected.** *Basename-anywhere, for consistency with the tooling excludes*:
+convenient, but it silently skips a future nested `src/examples/` — consumer excludes are scope
+decisions, and scope deserves paths, not names. Hard to reverse: a public CLI/options surface
+consumers script against. Trade-off accepted: consumers must be explicit; precision beats
+convenience.
+
+### MD-21 — The envelope-grammar ownership posture: the contract is ours, the YAML library is a swappable representation (exact `yaml@2.9.0`)  [ACCEPTED 2026-07-18]
+**Context.** The Markdown envelope needed a YAML boundary, and the library's own current
+documentation no longer promises that parsing never throws — a permissive parse would make the
+envelope's meaning a library behavior rather than a Protocol-owned grammar.
+**Decision.** The Protocol owns the envelope grammar as an authored contract spec plus a bounded
+parser policy — failsafe schema, exactly one nonempty document, manual AST/CST mapping (never
+`toJS()` before policy validation), every warning/directive/tag/anchor/alias/merge/complex
+key/non-string scalar refused, byte/depth/node/scalar/finding caps — and pins the representation
+exactly: `yaml@2.9.0`, no semver range; the library stays a swappable representation behind the
+owned contract.
+**Why / alternatives rejected.** *Permissive parsing + a semver range*: broader YAML acceptance
+and free patch upgrades, but the grammar's meaning would drift with the library and adversarial
+input would meet an unbounded parser. *An own YAML parser*: total ownership, but it re-opens the
+dismissed own-grammar economics (the carrier ruling, MD-18). Hard to reverse: the corpus is
+authored against the owned contract and consumers see its finding IDs. Trade-off accepted:
+corpus-scoped strictness — full YAML/CommonMark parity is deliberately not claimed.
 
 ## Structural-decision shorthand (D1–D6)  [ACCEPTED · relocated here when the cleanup plan was retired, 2026-06-07]
 

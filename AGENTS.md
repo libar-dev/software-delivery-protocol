@@ -15,8 +15,12 @@ claims; **`src/` and tests** are authoritative evidence of current realization. 
 
 > **Status:** concept ratified · MVP slices 0–5 landed on `main` (plan 10) · post-MVP executable
 > machinery landed (plan 13) · authoring **carrier ruled** as `.sdp.md` (the carrier ruling, MD-18;
-> plan 16) — product Markdown parser and self-hosting are **next**, not done · **what now:** the
-> self-hosting plan under `plans/` (DRAFTED). Build state lives in **`plans/`** — read the highest
+> plan 16) — product Markdown parser and self-hosting landed · **interim carrier
+> rule** (the carrier ruling (MD-18), transition clause amended by plan 17): New spec IDs may be
+> born Markdown-canonical once the product parser lands; pre-existing IDs and the worked example
+> remain TS-canonical until the ruled flip (the product parser, `sdp import`, and the checkout-v1
+> migration) · **what now:** ✅ EXECUTED — phase-1 implementation complete; final audit passed. Build state lives in
+> **`plans/`** — read the highest
 > **primary-numbered** plan's status header, plus any **active subplans it (or its parent family)
 > explicitly designates as current**; ignore unnumbered files and letter-suffixed plans only when
 > no primary/active plan designates them. If that plan is DRAFTED, also read the latest ✅
@@ -59,7 +63,7 @@ Progressive disclosure — start at the top, follow the pointers down.
 | `examples/checkout-v1` | **the worked MVP example** (TS DSL tracer bullet) — specs, anchors, untracked `generated/` (regenerated in-pipeline); walkthrough in its README | when proving the loop end-to-end |
 | `explorations/` | **evidence only** (carrier exhibits, executable-example findings) — mapping evidence for design; **never promote spike code into product** | when judging design evidence; not a source tree to ship |
 | `plans/` | **the build plan** — what each implementation session does, and why | before writing code — highest primary-numbered plan's status header, plus active subplans it designates; if DRAFTED, also the latest ✅ EXECUTED/RUN plan |
-| `npm run check` | **the green gate** — `check:temporal` → typecheck → lint → format:check → build → `generate:example` → `typecheck:examples` → test → `check:example` (update this row when self-hosting check legs land) | before claiming green / after engine edits |
+| `npm run check` | **the green gate** — `check:temporal` → lint → format:check → build → `generate:self-hosting` → `generate:example` → typecheck → `typecheck:examples` → test → `check:self-hosting` → `check:example` → `preflight` | before claiming green / after engine edits |
 | `reviews/` | **archived session reviews** (implementation, founding-ideation, adversarial + prompts) — durable findings already folded into plans/DECISIONS; read for provenance | rarely |
 
 > Concept docs still carry implementation detail (TS shapes, DSL, graph JSON) for **unsettled and
@@ -125,6 +129,9 @@ Every doc honours both — never mistake one half for the other:
   guidance only, never a validator (checks police conformance and honesty, never content-quality). In prose,
   lead with meaning: "the typing law (MD-11)," never bare MD-n (the registry at the top of `DECISIONS.md`
   holds the ratified names).
+- **Decision-spec pointers lead with names.** See [the plain-language references decision](specs/decisions/plain-language-references.sdp.md)
+  (`spec:decisions.plain-language-references`) and [the concept-documents dissolution decision](specs/decisions/concept-docs-dissolve.sdp.md)
+  (`spec:decisions.concept-docs-dissolve`).
 - **Naming is resolved — use these names.** Product **Libar Software Delivery Protocol** (short form "the
   Protocol"); CLI **`sdp`**; npm **`@libar-dev/software-delivery-protocol`** (single package); repo
   `libar-dev/software-delivery-protocol`. Namespaces: `@libar-dev/` (OSS) vs `@libar-ai/` (commercial).

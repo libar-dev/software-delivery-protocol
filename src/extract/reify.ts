@@ -57,6 +57,7 @@ export const extractFindingIds = {
   duplicateId: "extract/duplicate-id",
   reservedProperty: "extract/reserved-property",
   nonStaticSection: "extract/non-static-section",
+  unownedProse: "extract/unowned-prose",
   unrecognizedStatement: "extract/unrecognized-statement",
   unrecognizedProperty: "extract/unrecognized-property",
   misplacedAuthoring: "extract/misplaced-authoring",
@@ -610,6 +611,20 @@ function reifyStaticObject(
   return { ok: true, value };
 }
 
+function containsDescription(value: unknown): boolean {
+  if (Array.isArray(value)) {
+    return value.some(containsDescription);
+  }
+
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  return Object.entries(value as Record<string, unknown>).some(
+    ([name, entry]) => name === "description" || containsDescription(entry),
+  );
+}
+
 /* ----- lossy reification: the section tier ----- */
 
 interface LossyDrop {
@@ -625,6 +640,54 @@ interface LossyObjectResult {
   readonly value: Record<string, unknown>;
   readonly drops: readonly LossyDrop[];
 }
+
+interface SectionPropertyIssue {
+  readonly kind: "unrecognized" | "reserved";
+  readonly name: string;
+  readonly path: string;
+  readonly line: number;
+}
+
+interface SectionSanitization {
+  readonly value: unknown;
+  readonly issues: readonly SectionPropertyIssue[];
+}
+
+const GWT_PROPERTY_NAMES = new Set(["given", "when", "then"]);
+const RECOGNIZED_SECTION_PROPERTIES: ReadonlyMap<string, ReadonlySet<string>> = new Map([
+  [
+    "intent",
+    new Set([
+      "description",
+      "actor",
+      "problem",
+      "outcome",
+      "value",
+      "risks",
+      "assumptions",
+      "openQuestions",
+    ]),
+  ],
+  ["intent.openQuestions[]", new Set(["question", "blocking"])],
+  ["behavior", new Set(["description", "rules", "examples", "flows", "exampleSpace"])],
+  ["behavior.examples[]", GWT_PROPERTY_NAMES],
+  ["behavior.exampleSpace", GWT_PROPERTY_NAMES],
+  ["constraints[]", new Set(["flavor", "statement", "target", "measurableBy"])],
+  ["model", new Set(["description", "terms"])],
+  [
+    "decision",
+    new Set(["description", "context", "decision", "rationale", "alternatives", "consequences"]),
+  ],
+  ["verification", new Set(["description", "mode", "criteria"])],
+]);
+const AUTHORING_SHAPE_PATHS = new Set([
+  "intent",
+  "behavior",
+  "constraints[]",
+  "model",
+  "decision",
+  "verification",
+]);
 
 /**
  * Section content degrades property-by-property: a non-static property inside a section drops with
@@ -721,6 +784,135 @@ function reifyObjectLossy(
   }
 
   return { value, drops };
+}
+
+function isUnknownRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function sanitizeSectionValue(node: Node, value: unknown, path: string): SectionSanitization {
+  const unwrapped = unwrapTransparent(node);
+
+  if (Node.isArrayLiteralExpression(unwrapped) && Array.isArray(value)) {
+    const items: unknown[] = [];
+    const issues: SectionPropertyIssue[] = [];
+
+    for (const [index, element] of unwrapped.getElements().entries()) {
+      const sanitized = sanitizeSectionValue(element, value[index], `${path}[${String(index)}]`);
+      items.push(sanitized.value);
+      issues.push(...sanitized.issues);
+    }
+
+    return { value: items, issues };
+  }
+
+  if (!Node.isObjectLiteralExpression(unwrapped) || !isUnknownRecord(value)) {
+    return { value, issues: [] };
+  }
+
+  const shapePath = path.replace(/\[\d+\]/g, "[]");
+  const recognizedNames = RECOGNIZED_SECTION_PROPERTIES.get(shapePath);
+  const reservesDescription = shapePath === "model.terms";
+
+  if (recognizedNames === undefined && !reservesDescription) {
+    return { value, issues: [] };
+  }
+
+  const sanitized: Record<string, unknown> = {};
+  const issues: SectionPropertyIssue[] = [];
+  const seenNames = new Set<string>();
+
+  for (const property of unwrapped.getProperties()) {
+    if (!Node.isPropertyAssignment(property)) {
+      continue;
+    }
+
+    const name = readPropertyName(property);
+
+    if (name === undefined || seenNames.has(name) || !Object.hasOwn(value, name)) {
+      continue;
+    }
+
+    seenNames.add(name);
+    const propertyPath = `${path}.${name}`;
+
+    if (reservesDescription && name === "description") {
+      issues.push({
+        kind: "reserved",
+        name,
+        path: propertyPath,
+        line: property.getStartLineNumber(),
+      });
+      continue;
+    }
+
+    if (
+      recognizedNames !== undefined &&
+      !recognizedNames.has(name) &&
+      !(AUTHORING_SHAPE_PATHS.has(shapePath) && RESERVED_DERIVED_PROPERTIES.has(name))
+    ) {
+      issues.push({
+        kind: "unrecognized",
+        name,
+        path: propertyPath,
+        line: property.getStartLineNumber(),
+      });
+      continue;
+    }
+
+    const initializer = property.getInitializer();
+
+    if (initializer === undefined) {
+      continue;
+    }
+
+    const child = sanitizeSectionValue(initializer, value[name], propertyPath);
+    sanitized[name] = child.value;
+    issues.push(...child.issues);
+  }
+
+  return { value: sanitized, issues };
+}
+
+function appendSectionPropertyFindings(
+  issues: readonly SectionPropertyIssue[],
+  file: string,
+  subjectId: string | undefined,
+  findings: Finding[],
+): boolean {
+  let sectionOk = true;
+
+  for (const issue of issues) {
+    if (issue.kind === "unrecognized") {
+      findings.push(
+        createExtractFinding(
+          extractFindingIds.unrecognizedProperty,
+          "warning",
+          `property "${issue.path}" is outside the authored section shape and is dropped — authored content must never silently fall out of the graph (L2)`,
+          file,
+          issue.line,
+          subjectId,
+          issue.path,
+        ),
+      );
+      continue;
+    }
+
+    findings.push(
+      createExtractFinding(
+        extractFindingIds.reservedProperty,
+        "error",
+        `property "${issue.path}" collides with the section's reserved "${issue.name}" field — a model term and section description must remain distinct, so the spec is not extracted`,
+        file,
+        issue.line,
+        subjectId,
+        issue.path,
+      ),
+    );
+    sectionOk = false;
+  }
+
+  return sectionOk;
 }
 
 /* ----- spec() and pack() call reification ----- */
@@ -1085,6 +1277,46 @@ function reifySpecCall(
       continue;
     }
 
+    if (name === "narrative") {
+      const result = reifyStaticString(initializer, "narrative");
+
+      if (!result.ok) {
+        appendDropFindings(
+          [
+            {
+              droppedPath: "narrative",
+              failurePath: result.failure.path,
+              line: result.failure.line,
+              reason: result.failure.reason,
+            },
+          ],
+          file,
+          subjectId,
+          findings,
+        );
+        continue;
+      }
+
+      data.narrative = result.value;
+      continue;
+    }
+
+    if (name === "description") {
+      findings.push(
+        createExtractFinding(
+          extractFindingIds.unownedProse,
+          "error",
+          'prose field "description" has no owning section',
+          file,
+          property.getStartLineNumber(),
+          subjectId,
+          name,
+        ),
+      );
+      envelopeOk = false;
+      continue;
+    }
+
     if (RESERVED_DERIVED_PROPERTIES.has(name)) {
       findings.push(
         createExtractFinding(
@@ -1116,22 +1348,45 @@ function reifySpecCall(
       continue;
     }
 
-    // The section tier: the eight ratified sections reify lossily, so static content (including
-    // an in-section smuggled delivery fact, which the authoring-shape honesty check must get to
-    // see) survives and only the non-static parts drop, loudly.
+    // The section tier: the eight ratified sections reify lossily. Unknown static properties drop
+    // loudly; smuggled derived vocabulary survives for the harder authoring-shape honesty check.
     const inner = unwrapTransparent(initializer);
 
     if (Node.isObjectLiteralExpression(inner)) {
       const lossy = reifyObjectLossy(inner, name, bindings);
-      data[name] = lossy.value;
+      const sanitized = sanitizeSectionValue(inner, lossy.value, name);
+      data[name] = sanitized.value;
       appendDropFindings(lossy.drops, file, subjectId, findings);
+      if (!appendSectionPropertyFindings(sanitized.issues, file, subjectId, findings)) {
+        envelopeOk = false;
+      }
       continue;
     }
 
     const result = reifyStaticValue(initializer, name, bindings);
 
     if (result.ok) {
-      data[name] = result.value;
+      if (name === "constraints" && containsDescription(result.value)) {
+        findings.push(
+          createExtractFinding(
+            extractFindingIds.unownedProse,
+            "error",
+            'prose field "description" is not owned by constraints',
+            file,
+            property.getStartLineNumber(),
+            subjectId,
+            name,
+          ),
+        );
+        envelopeOk = false;
+        continue;
+      }
+
+      const sanitized = sanitizeSectionValue(inner, result.value, name);
+      data[name] = sanitized.value;
+      if (!appendSectionPropertyFindings(sanitized.issues, file, subjectId, findings)) {
+        envelopeOk = false;
+      }
       continue;
     }
 

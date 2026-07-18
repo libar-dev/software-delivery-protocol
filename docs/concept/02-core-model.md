@@ -17,6 +17,7 @@ type Spec = {
   kind: SpecKind;        // the category of truth — a true subtype
   altitude: SpecAltitude;  // size / scope
   readiness: SpecReadiness;      // design maturity
+  narrative?: string;            // prose owned by the Spec, outside the envelope
 
   // all sections optional — types describe shape, validators decide completeness (P7)
   intent?: IntentSection;
@@ -33,6 +34,12 @@ type Spec = {
 ```
 
 The **envelope** — `id`, `title`, `kind`, `altitude`, `readiness`, `relations` — is intentionally minimal and stable; it changes almost never. Variability lives in the **sections**. New capability is added by adding sections or extending enums (a MINOR change), not by reshaping the envelope (L9).
+
+> **Carrier note (the carrier ruling, MD-18).** The envelope above is the *logical* shape; a carrier
+> serializes it physically. Relations are optional in the logical `Spec` model. A physical Markdown
+> envelope writes `relations: {}` when the logical set is empty: honest carrier syntax, not a new
+> logical relation requirement. The explicit physical key catches a truncated envelope at
+> reification — the model itself stays relation-optional exactly as this section states.
 
 The same shape serves an early idea, a semi-refined behavior, a business rule, an acceptance example, an NFR, an API contract, and an example with a verifier. There is no `Requirement` / `UnimplementedRequirement` / `ImplementedRequirement` split. Two *other* things are authored but are **not** truth-primitives — the **`Pack`** (§4) and the in-code **`anchor`** (§6, and `04`); everything the machine reports about realization is **derived** (§2).
 
@@ -127,14 +134,16 @@ Sections carry the detail. They are the **extension surface**: the system grows 
 
 | Section | Carries | Notes |
 |---|---|---|
-| `intent` | actor, problem, outcome, value, risks, assumptions, open questions | `openQuestions` may be flagged `blocking` to prevent stating `defined` or `ready` (the open-questions home, MD-9). |
-| `behavior` | rules (prose), examples (prose or structured Given/When/Then), flows | **Content only — never refs** (the duality rule below). An example entry matures *in place*: prose → a structured `{ given, when, then }` entry → (promoted) a child `example` spec backed by a verifier. |
+| `intent` | optional description; actor, problem, outcome, value, risks, assumptions, open questions | `openQuestions` may be flagged `blocking` to prevent stating `defined` or `ready` (the open-questions home, MD-9). |
+| `behavior` | optional description; rules (prose), examples (prose or structured Given/When/Then), flows | **Content only — never refs** (the duality rule below). An example entry matures *in place*: prose → a structured `{ given, when, then }` entry → (promoted) a child `example` spec backed by a verifier. |
 | `constraints[]` | a `flavor` (quality / security / performance / compliance / operational / policy), a statement, an optional `target`, optional `measurableBy` | A `performance` constraint with a measurable `target` is an NFR. `target` must be machine-readable (`p95 < 300ms`, not "fast enough") to state `defined`+. |
-| `model` | domain terms (vocabulary only) — `terms: Record<term, definition>` | Used for pack-level coherence checks. Richer concept structures (typed concepts, attributes) are a **named deferral**; when one lands, the typing law below pulls it into the closed shape. |
-| `design` | components, ports, dependencies, decisions, tradeoffs | Referenced by ID; decision bodies are linked, not parsed for semantics. |
-| `decision` | context, chosen option, rationale, alternatives, consequences | The inline form of a decision; promote to a `kind:"decision"` spec when shared (see the duality rule below). |
-| `verification` | mode (manual / reviewed / contract / executable) + criteria | A verifying test *existing and enabled* is the derived `has-verifier` delivery fact (§2), not an authored field here. Pass/fail is **not** in the graph — it is CI's, operational. |
-| `ui` | references to component stories, design-tool nodes, visual baselines, accessibility status | **Aspirational.** Always links, never owns or renders. |
+| `model` | optional description; domain terms (vocabulary only) — `terms: Record<term, definition>` | Used for pack-level coherence checks. Richer concept structures (typed concepts, attributes) are a **named deferral**; when one lands, the typing law below pulls it into the closed shape. |
+| `design` | optional description; components, ports, dependencies, decisions, tradeoffs | Referenced by ID; decision bodies are linked, not parsed for semantics. |
+| `decision` | optional description; context, chosen option, rationale, alternatives, consequences | The inline form of a decision; promote to a `kind:"decision"` spec when shared (see the duality rule below). |
+| `verification` | optional description; mode (manual / reviewed / contract / executable) + criteria | A verifying test *existing and enabled* is the derived `has-verifier` delivery fact (§2), not an authored field here. Pass/fail is **not** in the graph — it is CI's, operational. |
+| `ui` | optional description; references to component stories, design-tool nodes, visual baselines, accessibility status | **Aspirational.** Always links, never owns or renders. |
+
+`narrative` is content owned directly by the `Spec`; it is not an envelope field. `description` is owned only by the seven singular sections named above. `constraints` remains a machine-readable array with no description owner; explanatory prose belongs in narrative or intent.
 
 The `decision` section carries **no `status` field** (rejected by the typing law, MD-11): a decision's adoption arc is the envelope's `readiness` (`idea` raised → `scoped` explored → `defined` written → `ready` ratified), checked against the floor like any spec; replacement is the `supersedes` relation; a *rejected* path is not a truth-spec at all — it lives in the chosen decision's `alternatives` / `consequences`. One concept, one place.
 

@@ -1,6 +1,6 @@
 # Libar Software Delivery Protocol — Concept
 
-> Libar Software Delivery Protocol is an **executable, self-validating meta-model of the software-delivery process**: teams author delivery intent as instances of one primitive — a `Spec` — and the meta-model (typed code in the repo) deterministically checks **conformance and honesty** and derives **one graph**. The familiar delivery nouns (Use Case, NFR, Decision Record; Epic, Feature, Story) are **named coordinates** on that one primitive, not separate artifact types. A `ts-morph` extractor derives the graph from the repo; the graph is never a second source of truth — it is a pure, regenerable projection. Conformance + honesty checks keep it honest in CI; every human- and AI-facing surface is a projection of the graph.
+> Libar Software Delivery Protocol is an **executable, self-validating meta-model of the software-delivery process**: teams author delivery intent as instances of one primitive — a `Spec` — and the meta-model (typed code in the repo) deterministically checks **conformance and honesty** and derives **one graph**. The familiar delivery nouns (Use Case, NFR, Decision Record; Epic, Feature, Story) are **named coordinates** on that one primitive, not separate artifact types. A static extractor derives the graph from the repo's authored carriers — `ts-morph` for the TS carrier (`.sdp.ts`), the ruled Markdown parser for the Markdown carrier (`.sdp.md`); the graph is never a second source of truth — it is a pure, regenerable projection. Conformance + honesty checks keep it honest in CI; every human- and AI-facing surface is a projection of the graph.
 
 **Slogan:** *Specs are code; the graph is derived; the `claim` stays honest; git is the event log.*
 
@@ -39,7 +39,7 @@ Every load-bearing claim is named as one or the other, on purpose — so a Repre
 | 01 | [Founding Principles & Invariants](./01-founding-principles-and-invariants.md) | The load-bearing laws, each tagged Principle/Representation and CORE/ASPIRATIONAL. Git-as-event-log. The `claim` epistemics. |
 | 02 | [Core Model](./02-core-model.md) | The `Spec` primitive, the three descriptors (`kind` · `altitude` · `readiness`), sections, delivery facts, stable IDs, relations. |
 | 03 | [The One Graph](./03-the-one-graph.md) | Derivation, determinism, the `claim` taxonomy, regenerability, git as the event log, the no-second-store rule. |
-| 04 | [Authoring & Binding](./04-authoring-and-binding.md) | MVP surfaces: the TypeScript DSL + generic source anchors (framework-neutral). Gherkin/harnesses named but deferred. |
+| 04 | [Authoring & Binding](./04-authoring-and-binding.md) | The two ruled authoring carriers — Markdown (`.sdp.md`, canonical for new IDs) and the TypeScript DSL (`.sdp.ts`, the worked example's carrier until the ruled flip) — plus generic source anchors (framework-neutral). Harnesses named but deferred; the carrier competition is ruled (MD-18). |
 | 05 | [Validation & Honesty](./05-validation-and-honesty.md) | Conformance + honesty checks and readiness floors; the MVP subset sharply separated from aspirational tiers. |
 | 06 | [Consumers & Projections](./06-consumers-and-projections.md) | MVP: the agent surface (a typed graph the agent scripts) + Design Review + reader; edits via intent→agent→git (no patch loop). Two surfaces (curated graph vs impact graph). Aspirational: Studio, exports, MCP surface. |
 | 07 | [MVP Roadmap & Open Questions](./07-mvp-roadmap-and-open-questions.md) | The vertical slice, the CORE/ASPIRATIONAL map, the cut list with rationale, and the residual open questions. |
@@ -67,10 +67,10 @@ Every statement in this set carries one of these tags so the boundary is never b
 
 The MVP is a tight vertical slice on **one** bounded context (Order Management, ~8–12 specs):
 
-- the typed `Spec` DSL + generic source anchors,
-- the `ts-morph` one-graph extractor,
+- the typed `Spec` DSL (the MVP's TS carrier, still supported) + generic source anchors,
+- the one-graph extractor over both carriers (`ts-morph` for `.sdp.ts`, the ruled Markdown parser for `.sdp.md`),
 - core conformance + honesty checks (referential integrity, duplicate IDs, honest readiness against the floor, orphan detection, `verifies` linkage),
 - one generated read-only view,
 - bidirectional spec↔test trace.
 
-The MVP write-path is simply **edit TypeScript + git** — no patch loop. Everything else is aspirational and labelled as such, with the rationale for cutting it in `07`.
+The write-path is simply **edit the canonical carrier + git** — no patch loop. Under the interim carrier rule (the carrier ruling, MD-18; transition clause amended by plan 17): new spec IDs may be born Markdown-canonical once the product parser lands; pre-existing IDs and the worked example remain TS-canonical until the ruled flip (the product parser, `sdp import`, and the checkout-v1 migration). The product parser has landed, so new IDs may be `.sdp.md` today; `sdp import`, the checkout-v1 migration, and the canonical-default flip are deferred. Everything else is aspirational and labelled as such, with the rationale for cutting it in `07`.

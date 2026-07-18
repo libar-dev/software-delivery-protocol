@@ -1,14 +1,14 @@
 # 04 — Authoring & Binding
 
-How truth gets into the repo. The MVP has exactly two authoring surfaces, both framework-neutral: the **TypeScript Spec DSL** and **generic source anchors**. Richer surfaces (a Gherkin-like carrier, the interactive harness UI) are named in §4 so the model accommodates them — the carrier an open competition, the harness UI **ASPIRATIONAL** — while the carrier-independent executable machinery beneath them is landed (CORE).
+How truth gets into the repo. Authoring has two ruled **carriers**, both framework-neutral: the **Markdown carrier (`.sdp.md`)** — ruled for all eight kinds (the carrier ruling, MD-18) and canonical for new IDs now that the product parser has landed — and the **TypeScript Spec DSL (`.sdp.ts`)**, the MVP's carrier, still canonical for pre-existing IDs and the worked example until the ruled flip. **Generic source anchors** bind code under either carrier. Richer surfaces (a Gherkin-like carrier, the interactive harness UI) are named in §4 so the model accommodates them — the harness UI **ASPIRATIONAL**, the carrier competition now ruled — while the carrier-independent executable machinery beneath them is landed (CORE).
 
 Realises **P5** (statically extractable), **P6** (ID-linked), **P9/P10** (anchors are anchored bindings, not intent), and the epistemic boundary from `01`.
 
 ---
 
-## 1. The TypeScript Spec DSL — canonical (CORE)
+## 1. The TypeScript Spec DSL — the TS carrier (CORE)
 
-Specs are authored as typed TypeScript in `*.sdp.ts` files, discovered by suffix anywhere under the extraction root (conventionally `/specs/`) — the Protocol's own compound extension (MD-15; the `.stories.tsx` pattern), deliberately **not** `.spec.ts`, which every JS test runner's default glob would try to execute. The DSL is a thin set of helpers (`spec`, `pack`, the branded-ID builders, relation builders) over the `Spec` shape from `02`.
+In the TS carrier, specs are authored as typed TypeScript in `*.sdp.ts` files, discovered by suffix anywhere under the extraction root (conventionally `/specs/`) — the Protocol's own compound extension (MD-15; the `.stories.tsx` pattern), deliberately **not** `.spec.ts`, which every JS test runner's default glob would try to execute. The DSL is a thin set of helpers (`spec`, `pack`, the branded-ID builders, relation builders) over the `Spec` shape from `02`.
 
 ```ts
 import { dependsOn, refines, spec, specId } from "@libar-dev/software-delivery-protocol";
@@ -36,7 +36,7 @@ export const CreateOrder = spec({
 
 ### The static-data constraint (P5)
 
-A spec file is **"a JSON file that TypeScript happens to validate."** The extractor must reify it deterministically, so spec source is restricted to static, side-effect-free literals:
+A spec file in this carrier is **"a JSON file that TypeScript happens to validate."** The extractor must reify it deterministically, so spec source is restricted to static, side-effect-free literals:
 
 - no loops, conditionals, or computed/interpolated IDs;
 - no IO, async, or imports of *product* code (only `@libar-dev/software-delivery-protocol` helpers);
@@ -49,6 +49,8 @@ If a non-static expression appears, the extractor responds in **two tiers**, dra
 
 A designed-for lint rule (`sdp/spec-static`) would flag both tiers earlier; the extractor is the backstop.
 
+**The two tiers above are the TS carrier's granularity — graceful degradation is per-carrier.** The TS carrier keeps L3's property-level graceful degradation: a non-static optional-section property drops with a warning, keeping the rest of the spec. The Markdown carrier is deliberately **all-or-nothing per document**: a malformed Markdown document refuses as a whole under one of the four hard finding IDs (`extract/invalid-frontmatter`, `extract/invalid-markdown-structure`, `extract/unrecognized-heading`, `extract/unowned-prose`) and is excluded while healthy sibling documents continue. This is an intentional corpus-scoped hardening, not a contradiction of the two-tier law — one L3 principle (one bad input never poisons the whole build) represented at different granularity per carrier.
+
 ### Enrichment in place, refinement into children
 
 Two sanctioned moves, both keeping the same IDs (P4):
@@ -58,7 +60,7 @@ Two sanctioned moves, both keeping the same IDs (P4):
 
 ### One canonical surface per ID
 
-For any given spec ID, exactly one surface is canonical. In the MVP that is always the TS DSL. (When Gherkin arrives, a per-ID config decides which surface is canonical for that spec; the other is a generated read-only view. No mixing per ID.)
+For any given spec ID, exactly one surface is canonical — no mixing per ID. New spec IDs may be born Markdown-canonical once the product parser lands; pre-existing IDs and the worked example remain TS-canonical until the ruled flip (the product parser, `sdp import`, and the checkout-v1 migration). The product parser has landed, so new IDs may be `.sdp.md` today; `sdp import`, the checkout-v1 migration, and the canonical-default flip remain deferred, and after the flip the TS DSL survives as the import source and a lawful per-ID option (the interim rule — the carrier ruling, MD-18, transition clause amended by plan 17). A per-ID canonical-surface config decides which surface is canonical for a spec; the other is a generated read-only view.
 
 ---
 
@@ -146,9 +148,9 @@ The **carrier-independent executable machinery is landed (CORE)**; what stays de
 - **The oracle.** The authored expected-outcome semantics for a parent's example space — implementation-side, beside the tests, bound by the `specOracle` anchor (§2), never extracted. Typed against the generated space contract on both sides: a renamed slot fails to compile, claiming an outcome the specs never stated is a `tsc` error, and `unspecified` is a first-class answer.
 - **The execution half.** The framework-neutral `/runner` core plus the `/vitest` adapter subpath (vitest an optional peer of the adapter alone); failure messages render in the spec's own language.
 
-### Annotated Gherkin (OPEN — the carrier competition)
+### Annotated Gherkin (a declined carrier contender)
 
-`.feature`-style files with graph-aware tags (`@spec.orders.create-order`, `@readiness.defined`) as an equal-canonicity surface for behaviour specs, for teams that prefer BDD. This is one contender in **the carrier competition (the plan-12 session record)** — parallel exploration PRs judged on exhibits at a dedicated ruling session — and this document does not pre-rule it. Throughout the competition the TS DSL stays the sole canonical authoring surface, and whichever surface wins executes through the generated contracts above: the machinery is carrier-independent by construction.
+`.feature`-style files with graph-aware tags (`@spec.orders.create-order`, `@readiness.defined`) as an equal-canonicity surface for behaviour specs, for teams that prefer BDD. The carrier competition is ruled (the carrier ruling, MD-18): the Markdown carrier won for all eight kinds, and this surface was a contender the ruling declined. Any richer surface that ever arrives executes through the generated contracts above: the machinery is carrier-independent by construction.
 
 ### Interactive harnesses (ASPIRATIONAL — a projection plus one anchored oracle)
 
@@ -174,4 +176,4 @@ Interactive panels for "what does this spec do under conditions X, Y, Z?" explor
   design-review/                   // the one generated read-only view
 ```
 
-Specs are not separate from code — they are part of the codebase, committed alongside it. That is the whole point: the repo is the single source of truth (P1), and authoring is editing TypeScript + git (the MVP write path).
+Specs are not separate from code — they are part of the codebase, committed alongside it. That is the whole point: the repo is the single source of truth (P1), and authoring is editing the canonical carrier + git — Markdown or TypeScript per ID (the MVP write path).

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+
 import {
   SPEC_KINDS,
   buildGraphIndex,
@@ -48,6 +50,13 @@ function derivedReadinessFor(subjectId: string, ...specs: readonly Spec[]) {
 
   return deriveReadiness(node, index);
 }
+
+const readinessFloorTestAnchor = specTest({
+  id: testAnchorId("test:protocol.readiness-floor"),
+  label: "readiness-floor contracts verify stated maturity",
+  verifies: ref("spec:validation.readiness-floor"),
+});
+void readinessFloorTestAnchor;
 
 describe("readiness and validation contracts", () => {
   it("exports the canonical validator families and severities", () => {
@@ -120,6 +129,33 @@ describe("readiness and validation contracts", () => {
     expect(kindEvidence.workflow).toBe(kindEvidence.behavior);
     // Documented interim: the contract row repoints when a dedicated contract section lands.
     expect(kindEvidence.contract).toBe(kindEvidence.behavior);
+  });
+
+  it("keeps a workflow with flows below defined until it carries a rule", () => {
+    const workflow = (behavior: NonNullable<Spec["behavior"]>): Spec =>
+      spec({
+        id: specId("spec:orders.order-workflow"),
+        title: "Create-order workflow",
+        kind: "workflow",
+        altitude: "story",
+        readiness: "defined",
+        intent: { outcome: "Make the create-order path explicit." },
+        behavior,
+        relations: [refines(specId("spec:orders.order-management"))],
+      });
+
+    expect(
+      floorFailuresFor(
+        workflow({ flows: ["Validate then create."] }).id,
+        workflow({ flows: ["Validate then create."] }),
+      ).map((failure) => failure.clauseId),
+    ).toEqual(["kind-evidence-complete"]);
+    expect(
+      floorFailuresFor(
+        workflow({ flows: ["Validate then create."], rules: ["Validation precedes creation."] }).id,
+        workflow({ flows: ["Validate then create."], rules: ["Validation precedes creation."] }),
+      ),
+    ).toEqual([]);
   });
 
   it("counts promoted children as evidence — promotion never costs an earned rung (MD-10/MD-12)", () => {

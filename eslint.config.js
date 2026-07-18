@@ -46,6 +46,19 @@ export default tseslint.config(
     },
   },
   {
+    // The root generated contract is intentionally absent until the later generate:self-hosting
+    // gate leg. Typecheck runs after that generation and checks this test's contract types; lint
+    // keeps all other rules enabled without making the required lint-before-generation order depend
+    // on ignored derived output.
+    files: ["test/self-hosting-duplicate-ids.test.ts"],
+    rules: {
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+    },
+  },
+  {
     files: typedTsFiles,
     languageOptions: {
       ecmaVersion: 2022,

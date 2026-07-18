@@ -30,7 +30,7 @@ If a successor kept only the essentials, the design stands or falls on these. Ea
 **Corollary — significance governs detail, not a tier.** Because refinement is enrichment of one object — not advancement through fixed readiness stages — a spec carries detail only where the work is *architecturally significant or genuinely novel*. The Nth instance of an established shape (a CRUD endpoint, a standard codec, a barrel) earns a **reference, not a re-derivation**; padding a spec to "fill a level" destroys signal and is pure cleanup debt. Readiness (P8) is **stated by the author and checked against a floor — never a quota of artifacts to produce.** Fixed tiers pressure an author to fill the tier rather than the need — AI authors especially, which replicate the prevailing detail level even where it does not fit. *Enrich what matters; reference what is standard; pad nothing.*
 
 ### P5 — Statically-extractable authoring
-**Principle · CORE.** Spec and anchor source is restricted to static, side-effect-free literals — no loops, conditionals, computed IDs, interpolated IDs, IO, async, or imports of product code — so a static analyzer reifies it deterministically. Treat a spec file as "a JSON file that TypeScript happens to validate." This is the precondition for P3 on the authoring side. *(The specific allowed grammar and the choice of `ts-morph` are Representation; the requirement to be statically extractable is the Principle.)*
+**Principle · CORE.** Spec and anchor source is restricted to static, side-effect-free literals — no loops, conditionals, computed IDs, interpolated IDs, IO, async, or imports of product code — so a static analyzer reifies it deterministically. Treat a spec document as static data its carrier validates: "a JSON file that TypeScript happens to validate" in the TS carrier; bounded YAML frontmatter plus the owned prose grammar in the Markdown carrier. This is the precondition for P3 on the authoring side. *(The specific allowed grammars and the carrier parsers — `ts-morph` for the TS carrier, the ruled Markdown parser for `.sdp.md` — are Representation; the requirement to be statically extractable is the Principle.)*
 
 ### P6 — Identity is the universal join key
 **Principle · CORE.** Every node has a globally-unique (within the repo), refactor-stable, namespaced, human-readable string ID. Specs and code are linked by **ID-in-strings**, never by TypeScript import edges — so either side can be refactored freely. Every reconciliation — merge, validate, query, trace — keys on that string ID. *(The ID grammar `<namespace>:<dotted.path>#<sub>` and the namespace list are Representation; ID-as-universal-key is the Principle.)*
@@ -109,7 +109,7 @@ These appear in the design and matter, but none is a Principle. Swapping any of 
 
 | Representation | The Principle it serves | Status |
 |---|---|---|
-| `ts-morph` as the extractor | P5 (statically extractable) | CORE |
+| The carrier extractors — `ts-morph` (the TS carrier) and the ruled Markdown parser (`.sdp.md`) | P5 (statically extractable) | CORE |
 | The ID grammar `<ns>:<path>#<sub>` and namespace list | P6 (identity is the join key) | CORE |
 | Specific anchor syntaxes (decorator / JSDoc / anchor const) | P9/P10 (declared vs anchored) | CORE |
 | Flat node/edge arrays (hierarchy as edges, not nesting) | P2 (one queryable read model) | CORE |

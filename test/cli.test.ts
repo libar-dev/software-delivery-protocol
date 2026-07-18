@@ -13,7 +13,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
+
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
 import { SDP_HELP_TEXT, isCliEntrypoint, runSdpCli } from "../src/cli/sdp.js";
 import { generateContracts } from "../src/codegen/contracts.js";
@@ -82,6 +84,12 @@ function readGeneratedTree(root: string): ReadonlyMap<string, string> {
 }
 
 describe("sdp cli", () => {
+  afterAll(() => {
+    expect(existsSync(join(repoRoot, "generated", "graph.json"))).toBe(true);
+    expect(existsSync(join(repoRoot, "generated", "contracts"))).toBe(true);
+    expect(existsSync(join(repoRoot, "generated", "design-review"))).toBe(true);
+  });
+
   it("prints the exact help text for no args", () => {
     const capture = createCaptureOutput();
 
@@ -145,25 +153,33 @@ describe("sdp cli", () => {
     }
   });
 
-  it("builds cleanly with no root argument from the repository root (the default-root path)", () => {
-    // The repo itself must stay a clean default root: corpora are committed defused
-    // (*.sdp.ts.txt / *.ts.txt), so the only *.sdp.ts under the root is the example model, and
-    // the anchor sweep finds only the example's anchors (recognition is by import binding — this
-    // repo's own tests import the protocol by relative path, so they bind nothing).
+  it("views the self-hosting corpus from the default repository root", () => {
+    // Exploration Markdown is evidence, not the authored model. The explicit consumer exclusion
+    // keeps suffix-only discovery honest without adding a hidden global exclusion.
     rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
 
     try {
       const capture = createCaptureOutput();
 
-      const exitCode = runSdpCli(["build"], capture.output);
+      const exitCode = runSdpCli(
+        ["view", "--check-clean", "--exclude", "explorations", "--exclude", "examples"],
+        capture.output,
+      );
 
       expect(exitCode).toBe(0);
-      expect(capture.readStderr()).toBe("");
-      expect(capture.readStdout()).toContain(
-        "11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges",
+      expect(capture.readStderr().trimEnd()).toBe("");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 0 warnings");
+      expect(readFileSync(join(repoRoot, "generated", "graph.json"), "utf8")).toContain(
+        '"id": "pack:self-hosting-v1"',
       );
+      expect(existsSync(join(repoRoot, "generated", "design-review"))).toBe(true);
     } finally {
-      rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
+      expect(
+        runSdpCli(
+          ["view", "--exclude", "explorations", "--exclude", "examples"],
+          createCaptureOutput().output,
+        ),
+      ).toBe(0);
     }
   });
 
@@ -191,6 +207,7 @@ export const parentSpec = spec({
     },
   },
 });
+
 `,
         "utf8",
       );
@@ -297,29 +314,6 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
     }
   });
 
-  it("clean-repo determinism: the full pipeline at a different absolute path is byte-identical", () => {
-    // --check-clean runs the pipeline twice over the *same* root, and delete-generated/-and-rerun
-    // reuses the same root too — neither can catch an absolute path leaking into artifact bytes.
-    // Two working-tree copies of the authored surfaces (never `git archive`: an uncommitted
-    // example edit must not fail a determinism test) at two fresh absolute paths pin the
-    // projection property: bytes are a function of the root's *content*, never its location or
-    // leftover local state.
-    const firstRoot = materializeExampleCopy();
-    const secondRoot = materializeExampleCopy();
-
-    try {
-      expect(runSdpCli(["view", firstRoot, "--check-clean"], createCaptureOutput().output)).toBe(0);
-      expect(runSdpCli(["view", secondRoot, "--check-clean"], createCaptureOutput().output)).toBe(
-        0,
-      );
-
-      expect(readGeneratedTree(secondRoot)).toEqual(readGeneratedTree(firstRoot));
-    } finally {
-      rmSync(firstRoot, { recursive: true, force: true });
-      rmSync(secondRoot, { recursive: true, force: true });
-    }
-  });
-
   it("end-to-end determinism self-check: delete generated/, rebuild, byte-identical", () => {
     const root = materializeExampleCopy();
 
@@ -365,6 +359,124 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
     expect(capture.readStderr()).toBe("sdp build: unknown option --bogus\n");
   });
 
+  it.each(["build", "validate", "view"] as const)(
+    "accepts repeatable --exclude paths for %s",
+    (command) => {
+      // Given: a disposable authored model and two valid consumer prefixes.
+      const root = materializeExtractCorpus("anchored-binding");
+
+      try {
+        const capture = createCaptureOutput();
+        const extractionOptions: Parameters<typeof extract>[0][] = [];
+
+        // When: each extraction command receives repeatable exclusions.
+        const exitCode = runSdpCli(
+          [command, root, "--exclude", "future", "--exclude", "also-future"],
+          capture.output,
+          {
+            extract: (options) => {
+              extractionOptions.push(options);
+              return extract(options);
+            },
+          },
+        );
+
+        // Then: parsing succeeds and the normalized options reach the extractor.
+        expect(exitCode).toBe(0);
+        expect(extractionOptions).toEqual([{ root, exclude: ["future", "also-future"] }]);
+      } finally {
+        removeMaterializedCorpus(root);
+      }
+    },
+  );
+
+  it("uses the identical normalized exclusions in both --check-clean extractions", () => {
+    // Given: a clean disposable corpus and duplicate consumer options.
+    const root = materializeExtractCorpus("anchored-binding");
+
+    try {
+      const extractionOptions: Parameters<typeof extract>[0][] = [];
+
+      // When: the clean-check reruns extraction.
+      const exitCode = runSdpCli(
+        ["build", root, "--exclude", "explorations", "--exclude", "explorations", "--check-clean"],
+        createCaptureOutput().output,
+        {
+          extract: (options) => {
+            extractionOptions.push(options);
+            return extract(options);
+          },
+        },
+      );
+
+      // Then: both passes receive the same deduplicated options object shape.
+      expect(exitCode).toBe(0);
+      expect(extractionOptions).toEqual([
+        { root, exclude: ["explorations"] },
+        { root, exclude: ["explorations"] },
+      ]);
+    } finally {
+      removeMaterializedCorpus(root);
+    }
+  });
+
+  it.each([
+    "",
+    ".",
+    "./explorations",
+    "explorations/",
+    "/explorations",
+    "../x",
+    "a/../b",
+    "a//b",
+    "a\\b",
+  ])("refuses invalid --exclude path %j before build writes", (exclude) => {
+    // Given: a writable empty root and an invalid consumer prefix.
+    const root = mkdtempSync(join(tmpdir(), "sdp-invalid-exclude-"));
+
+    try {
+      const capture = createCaptureOutput();
+
+      // When: build parses the option.
+      const exitCode = runSdpCli(["build", root, "--exclude", exclude], capture.output);
+
+      // Then: invocation fails in one line and no artifact directory is created.
+      expect(exitCode).toBe(1);
+      expect(capture.readStdout()).toBe("");
+      expect(capture.readStderr()).toBe(`sdp build: invalid --exclude path "${exclude}"\n`);
+      expect(capture.readStderr().trimEnd().split("\n")).toHaveLength(1);
+      expect(existsSync(join(root, "generated"))).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("refuses a missing --exclude operand before build writes", () => {
+    // Given: a writable empty root.
+    const root = mkdtempSync(join(tmpdir(), "sdp-missing-exclude-"));
+
+    try {
+      const capture = createCaptureOutput();
+
+      // When: the option has no following path.
+      const exitCode = runSdpCli(["build", root, "--exclude"], capture.output);
+
+      // Then: the error is one invocation line and no artifact directory is created.
+      expect(exitCode).toBe(1);
+      expect(capture.readStdout()).toBe("");
+      expect(capture.readStderr()).toBe("sdp build: --exclude requires a path.\n");
+      expect(capture.readStderr().trimEnd().split("\n")).toHaveLength(1);
+      expect(existsSync(join(root, "generated"))).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("documents repeatable --exclude paths in help", () => {
+    expect(SDP_HELP_TEXT).toContain("[--exclude PATH]...");
+    expect(SDP_HELP_TEXT).toContain("*.sdp.ts and *.sdp.md");
+  });
+
   it("rejects a second root argument: one line, exit 1, nothing runs", () => {
     const capture = createCaptureOutput();
 
@@ -387,7 +499,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
       expect(exitCode).toBe(0);
       expect(capture.readStdout()).toContain("0 specs · 0 packs · 0 anchors");
       expect(capture.readStderr()).toContain(
-        `note: no *.sdp.ts spec files found under ${emptyRoot}`,
+        `note: no *.sdp.ts or *.sdp.md spec files found under ${emptyRoot}`,
       );
       expect(existsSync(join(emptyRoot, "generated", "graph.json"))).toBe(true);
     } finally {
@@ -681,7 +793,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
 
       expect(exitCode).toBe(1);
       expect(capture.readStderr()).toContain("extract/invalid-id");
-      expect(capture.readStderr()).not.toContain("no *.sdp.ts spec files found");
+      expect(capture.readStderr()).not.toContain("no *.sdp.ts or *.sdp.md spec files found");
     } finally {
       removeMaterializedCorpus(corpusRoot);
     }
@@ -987,4 +1099,25 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
       removeMaterializedCorpus(corpusRoot);
     }
   });
+});
+
+const cleanRepoDeterminismTestAnchor = specTest({
+  id: testAnchorId("test:protocol.extraction-determinism"),
+  label: "clean-repo pipeline determinism verifies byte-identical output",
+  verifies: ref("spec:extraction.determinism"),
+});
+void cleanRepoDeterminismTestAnchor;
+
+it("clean-repo determinism: the full pipeline at a different absolute path is byte-identical", () => {
+  const firstRoot = materializeExampleCopy();
+  const secondRoot = materializeExampleCopy();
+
+  try {
+    expect(runSdpCli(["view", firstRoot, "--check-clean"], createCaptureOutput().output)).toBe(0);
+    expect(runSdpCli(["view", secondRoot, "--check-clean"], createCaptureOutput().output)).toBe(0);
+    expect(readGeneratedTree(secondRoot)).toEqual(readGeneratedTree(firstRoot));
+  } finally {
+    rmSync(firstRoot, { recursive: true, force: true });
+    rmSync(secondRoot, { recursive: true, force: true });
+  }
 });
