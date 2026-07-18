@@ -266,7 +266,7 @@ the ledger's complete, non-empty G1-G8 structure while this plan exists.
 
 | Gate | Meaning | Entry condition | Evidence / owner disposition |
 |---|---|---|---|
-| G1 | emitter contract and grammar freeze | §2 matrix reviewed before emitter design | pending — CLI, source-adapter, write-semantics ruling |
+| G1 | emitter contract and grammar freeze | §2 matrix reviewed before emitter design | accepted — 2026-07-18 — `f06f14d` |
 | G2 | importer fidelity | imported fixture graph equals source under §7 catalog | pending — fixture and Design Review packet |
 | G3 | checkout migration | all eleven Specs Markdown-canonical with no dual IDs | pending — migration check and example walkthrough |
 | G4 | hardening baseline | §3 classes have evidence or named non-claim | pending — parity matrix and parser-Spec disposition |
