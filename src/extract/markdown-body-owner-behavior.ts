@@ -51,8 +51,11 @@ export function mapIntent(
       );
     else {
       const fence = parsed.fences[0];
-      const example: Record<string, unknown> = { given: fence.steps.given, when: fence.steps.when };
-      example[["t", "hen"].join("")] = fence.steps.result;
+      const example: Record<string, unknown> = {
+        given: fence.steps.given,
+        when: fence.steps.when,
+        then: fence.steps.result,
+      };
       const behavior = isRecord(target.behavior) ? target.behavior : {};
       const examples: unknown[] = [];
       if (Array.isArray(behavior.examples))
@@ -169,7 +172,10 @@ export function mapExampleSpace(
     return;
   }
   const fence = parsed.fences[0];
-  const vocabulary: Record<string, unknown> = { given: fence.steps.given, when: fence.steps.when };
-  vocabulary[["t", "hen"].join("")] = fence.steps.result;
+  const vocabulary: Record<string, unknown> = {
+    given: fence.steps.given,
+    when: fence.steps.when,
+    then: fence.steps.result,
+  };
   section.exampleSpace = vocabulary;
 }
