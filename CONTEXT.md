@@ -179,7 +179,7 @@ manifest). **Dropped:** `exemplifies` (= `example` kind + `refines` + `verifies`
 **discipline** (a lens/filter over the graph, not a phase you pass through) · **phase / iteration /
 milestone** (descriptive vocabulary, optional roadmap projections, never gates) · **release** (a tagged set —
 a git-tag projection) · **baseline** (a named approved snapshot; the **signed git tag is the approval
-artifact** — approval provenance is git-native, never an authored primitive).
+artifact** — approval remains outside the model, never an authored primitive).
 
 ## A worked dialogue  (the language in use)
 

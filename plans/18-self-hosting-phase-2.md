@@ -197,10 +197,10 @@ parent merely because a more specific target is deferred.
 | D4 | carried by ordinary spec | `spec:consumers.design-review:15-18` | n/a | “renders a Spec or Pack in context”; “pure projection” |
 | D5 | decision spec | `spec:decisions.agent-surface-scripts-graph` | refines `spec:consumers.agent-surface`; `decidedBy` back-edge landed | three-part test: graph contract, not verb wall |
 | D6 | decision spec | `spec:decisions.mcp-deferred` | refines `spec:consumers.projections-model`; `decidedBy` back-edge landed | three-part test: caller-bound integration deferral |
-| measured: ~⅕ tokens | move at todo 33 | `spec:consumers.agent-surface` | n/a | measured context-efficiency figure |
-| measured: single-digit to ~25% | move at todo 33 | `spec:consumers.projections-model` | n/a | curated-selection figure |
-| measured: < ~50 specs | lands at S7 | `spec:extraction.regenerability` | n/a | full-rebuild comfort figure |
-| measured: ~10k+ nodes | lands at S7 | `spec:extraction.regenerability` | n/a | graph-DB deferral figure |
+| measured: ~⅕ tokens | landed at S5 | `spec:consumers.agent-surface` | n/a | measured multi-probe context-efficiency evidence |
+| measured: single-digit to ~25% | landed at S5 | `spec:consumers.projections-model` | n/a | measured curated-selection evidence |
+| measured: < ~50 specs | lands at S7 | `spec:extraction.regenerability` | n/a | retained in lean registry until S7 |
+| measured: ~10k+ nodes | lands at S7 | `spec:extraction.regenerability` | n/a | retained in lean registry until S7 |
 | born: plain-language references | keep | `spec:decisions.plain-language-references` | refines `spec:protocol.self-hosting` unchanged | genuinely phase-level; no owner override |
 | born: concept-documents dissolve | keep | `spec:decisions.concept-docs-dissolve` | refines `spec:protocol.self-hosting` unchanged | genuinely phase-level; no owner override |
 
@@ -321,8 +321,8 @@ Planned disposition is not execution evidence. Every row starts pending and clos
 | Bound example reports only a count (review-06) | Verify during migration evidence | done s2: migration evidence verified the bound example reports only its count. |
 | Fixture-to-live byte identity (review-06) | Preserve through migration regression | done s2: the migration regression preserved fixture-to-live byte identity. |
 | No-reparse spy coverage (review-06) | Carry forward as deferred polish | pending |
-| Carrier-truth comment and temporal token assembly (review-06) | Records cluster adopts comment; token assembly deferred | pending |
-| Stale provenance wording and plan-16 evidence dispositions (review-06) | Adopt with records cluster | pending |
+| Carrier-truth comment and temporal token assembly (review-06) | Records cluster adopts comment; token assembly deferred | REPAIRED — comment now states only blockquote stripping and whitespace collapse; token assembly remains deferred |
+| Stale provenance wording and plan-16 evidence dispositions (review-06) | Adopt with records cluster | REPAIRED — approval artifact wording aligns with CONTEXT; plan-16 repair items dispositioned below |
 | Twelfth preflight leg and decision-spec namespace divergence (review-06) | Verify preflight; resolve namespace in fold | pending |
 | Indirect assembly of the `then` graph key (review-06) | Verify remediation remains intact | pending |
 | Model term named `description` (review-06) | Verify remediation remains intact | pending |
@@ -330,7 +330,17 @@ Planned disposition is not execution evidence. Every row starts pending and clos
 | Exclude/CLI cluster (brief §6) | Land in tranche 1 | done s1 — loud Windows absolute rejection, flag-operand usage diagnostics, segment-boundary coverage, and library/CLI wording separation landed |
 | Grammar-hardening cluster (brief §6) | Land with parity baseline | done s3 — all eight RED→GREEN items landed with focused public-reifier regressions and stable finding IDs |
 | Design Review cluster (brief §6) | Rule at migration/flip | done s2 — owner ruled Option 1; deterministic ordering and uniform escaping landed RED-first with focused projection regressions |
-| Records cluster (brief §6) | Land with decision fold | pending |
+| Records cluster (brief §6) | Land with decision fold | REPAIRED — lean registry, measured evidence routing, record wording, and audit comment landed |
+| README (plan-16 §6) | Doc-repair disposition | REPAIRED — anti-misleading carrier pass |
+| `00` (plan-16 §6) | Doc-repair disposition | REPAIRED — anti-misleading carrier pass |
+| `01` (plan-16 §6) | Doc-repair disposition | REPAIRED — anti-misleading carrier pass |
+| `02` (plan-16 §6) | Doc-repair disposition | REPAIRED — anti-misleading carrier pass |
+| `03` (plan-16 §6) | Doc-repair disposition | REPAIRED — anti-misleading carrier pass |
+| `04` (plan-16 §6) | Doc-repair disposition | REPAIRED — anti-misleading carrier pass |
+| `05` (plan-16 §6) | Doc-repair disposition | REPAIRED — approval artifact wording and floor records cleanup |
+| `06` (plan-16 §6) | Doc-repair disposition | REPAIRED — consumer evidence routed to carrying Specs |
+| `07` (plan-16 §6) | Doc-repair disposition | SUPERSEDED — S7 extraction work owns remaining scale evidence |
+| CONTEXT/DECISIONS (plan-16 §6) | Doc-repair disposition | REPAIRED — glossary-consistent approval artifact and lean registry |
 | Table-sugar syntax (watch item) | Rule only if checkout forces it | done s2: unfired, multi-case checkout behavior uses sibling `example` Specs, not tables. |
 | Single-literal vocabulary form (watch item) | Rule only if corpus forces it | done s2: unfired, idiomatic emitted vocabulary required no single-literal slot form. |
 | Multi-entry constraint form (watch item) | Rule only if corpus forces it | done s2: unfired, the migrated constraint uses the ruled one-entry form. |

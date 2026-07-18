@@ -18,3 +18,4 @@ relations:
 - **impact graph** — A separately derived code-structure surface for exhaustive usage and blast-radius questions, valued for exhaustiveness and never promoted into architecture.
 - **reader** — The thin typed front door that decodes graph joins and taxonomy once, returns composable data, and persists nothing.
 - **curation** — The deliberate difference between the sparse curated graph and the code-structure surface; it is not drift.
+- **measured curation** — In a measured comparison, the curated graph selected from single-digit to about one quarter of the mechanical impact-graph surface.

@@ -189,3 +189,8 @@
   MD-13 remain folded into named code and concept evidence surfaces rather than being re-authored.
 - D3, D5, and D6 now disclose their Pack, agent-surface, and deferred-MCP laws through target-specific
   decision Specs and `decidedBy` back-edges.
+
+## Todo 33 — lean registry and records cluster
+
+- S5 measurements now live with their consumer claims; S7 scale figures remain explicitly deferred in the lean registry.
+- The decision diary now retains only registry, pointers, D-table, and measured-evidence records; approval is carried by the signed git-tag artifact outside the model.

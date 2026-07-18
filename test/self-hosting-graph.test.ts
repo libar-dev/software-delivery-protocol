@@ -595,6 +595,8 @@ const expectedSpecs = [
             "The authored architectural read model of declared intent and anchored bindings, valued for editorial sparsity.",
           curation:
             "The deliberate difference between the sparse curated graph and the code-structure surface; it is not drift.",
+          "measured curation":
+            "In a measured comparison, the curated graph selected from single-digit to about one quarter of the mechanical impact-graph surface.",
           "impact graph":
             "A separately derived code-structure surface for exhaustive usage and blast-radius questions, valued for exhaustiveness and never promoted into architecture.",
           projection:
@@ -625,6 +627,7 @@ const expectedSpecs = [
           "The reader constructs decoded joins and claim taxonomy once, then returns plain composable data without persisting graph state.",
           "Entry adapters bridge strings, files, and changesets to curated graph context; file-level blast radius names coverage-unknown files rather than implying exhaustive reach.",
           "Context efficiency is an empirical result: a measured comparison may show structured graph context uses fewer supplied tokens than a comparable raw-text workflow while preserving the task-relevant result.",
+          "Measured evidence: a multi-probe agent comparison used about one fifth of the tokens of a comparable grep or verb-API workflow while preserving task-relevant conclusions.",
         ],
       },
     },

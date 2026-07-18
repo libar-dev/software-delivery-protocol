@@ -37,8 +37,7 @@ import { fileURLToPath } from "node:url";
 
 const rootDir = process.argv[2] ?? dirname(fileURLToPath(import.meta.url));
 
-// Sameness is about WORDS: markdown quoting furniture is stripped and whitespace collapsed so a
-// sentence wrapped in a `>` blockquote or re-wrapped by a formatter still reads identically.
+// Sameness strips `>` blockquote markers and collapses whitespace before comparing text.
 const norm = (text) => text.replace(/^>\s?/gm, "").replace(/\s+/g, " ");
 
 const failures = [];
