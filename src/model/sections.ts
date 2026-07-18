@@ -28,6 +28,7 @@ export type IntentOpenQuestion =
   | { readonly question: string; readonly blocking?: boolean };
 
 export interface IntentSection {
+  readonly description?: string;
   readonly actor?: string;
   readonly problem?: string;
   readonly outcome?: string;
@@ -67,6 +68,7 @@ export interface ExampleSpaceVocabulary {
  * spec moves the content out, and the only linkage is the child's `refines`/`verifies` relation.
  */
 export interface BehaviorSection {
+  readonly description?: string;
   readonly rules?: readonly string[];
   readonly examples?: readonly BehaviorExample[];
   readonly flows?: readonly string[];
@@ -81,13 +83,15 @@ export interface ConstraintSection {
 }
 
 export interface ModelSection {
+  readonly description?: string;
   readonly terms?: Readonly<Record<string, string>>;
 }
 
-export type DesignSection = SpecSectionContent;
+export type DesignSection = SpecSectionContent & { readonly description?: string };
 
 /** No `status` field (MD-11): the adoption arc is the envelope's `readiness`; replacement is `supersedes`. */
 export interface DecisionSection {
+  readonly description?: string;
   readonly context?: string;
   readonly decision?: string;
   readonly rationale?: readonly string[];
@@ -98,11 +102,12 @@ export interface DecisionSection {
 export type VerificationMode = "manual" | "reviewed" | "contract" | "executable";
 
 export interface VerificationSection {
+  readonly description?: string;
   readonly mode?: VerificationMode;
   readonly criteria?: readonly string[];
 }
 
-export type UiSection = SpecSectionContent;
+export type UiSection = SpecSectionContent & { readonly description?: string };
 
 export interface SpecSections {
   readonly intent?: IntentSection;

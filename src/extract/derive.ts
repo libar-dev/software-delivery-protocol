@@ -38,6 +38,7 @@ function pickSections(data: Record<string, unknown>): SpecSections | undefined {
 
 function derivePrimitiveNode(entry: ReifiedSpec): PrimitiveNode {
   const title = entry.data.title;
+  const narrative = entry.data.narrative;
   const sections = pickSections(entry.data);
 
   return {
@@ -48,6 +49,7 @@ function derivePrimitiveNode(entry: ReifiedSpec): PrimitiveNode {
     altitude: entry.data.altitude as SpecAltitude,
     readiness: entry.data.readiness as SpecReadiness,
     ...(typeof title === "string" ? { title } : {}),
+    ...(typeof narrative === "string" ? { narrative } : {}),
     file: entry.file,
     ...(sections === undefined ? {} : { sections }),
   };

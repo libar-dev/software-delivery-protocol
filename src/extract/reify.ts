@@ -57,6 +57,7 @@ export const extractFindingIds = {
   duplicateId: "extract/duplicate-id",
   reservedProperty: "extract/reserved-property",
   nonStaticSection: "extract/non-static-section",
+  unownedProse: "extract/unowned-prose",
   unrecognizedStatement: "extract/unrecognized-statement",
   unrecognizedProperty: "extract/unrecognized-property",
   misplacedAuthoring: "extract/misplaced-authoring",
@@ -610,6 +611,20 @@ function reifyStaticObject(
   return { ok: true, value };
 }
 
+function containsDescription(value: unknown): boolean {
+  if (Array.isArray(value)) {
+    return value.some(containsDescription);
+  }
+
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  return Object.entries(value as Record<string, unknown>).some(
+    ([name, entry]) => name === "description" || containsDescription(entry),
+  );
+}
+
 /* ----- lossy reification: the section tier ----- */
 
 interface LossyDrop {
@@ -1085,6 +1100,46 @@ function reifySpecCall(
       continue;
     }
 
+    if (name === "narrative") {
+      const result = reifyStaticString(initializer, "narrative");
+
+      if (!result.ok) {
+        appendDropFindings(
+          [
+            {
+              droppedPath: "narrative",
+              failurePath: result.failure.path,
+              line: result.failure.line,
+              reason: result.failure.reason,
+            },
+          ],
+          file,
+          subjectId,
+          findings,
+        );
+        continue;
+      }
+
+      data.narrative = result.value;
+      continue;
+    }
+
+    if (name === "description") {
+      findings.push(
+        createExtractFinding(
+          extractFindingIds.unownedProse,
+          "error",
+          'prose field "description" has no owning section',
+          file,
+          property.getStartLineNumber(),
+          subjectId,
+          name,
+        ),
+      );
+      envelopeOk = false;
+      continue;
+    }
+
     if (RESERVED_DERIVED_PROPERTIES.has(name)) {
       findings.push(
         createExtractFinding(
@@ -1131,6 +1186,22 @@ function reifySpecCall(
     const result = reifyStaticValue(initializer, name, bindings);
 
     if (result.ok) {
+      if (name === "constraints" && containsDescription(result.value)) {
+        findings.push(
+          createExtractFinding(
+            extractFindingIds.unownedProse,
+            "error",
+            'prose field "description" is not owned by constraints',
+            file,
+            property.getStartLineNumber(),
+            subjectId,
+            name,
+          ),
+        );
+        envelopeOk = false;
+        continue;
+      }
+
       data[name] = result.value;
       continue;
     }

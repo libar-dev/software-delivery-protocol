@@ -30,9 +30,9 @@ The graph is **flat**: arrays of nodes and arrays of edges. Hierarchy and contai
 
 ```jsonc
 {
-  "schemaVersion": "0.3.0",
+  "schemaVersion": "0.4.0",
   "nodes": [
-    { "id": "spec:orders.create-order", "nodeType": "Primitive", "claim": "declared", "specKind": "behavior", "altitude": "feature", "readiness": "ready", "title": "Customer creates an order", "file": "specs/orders/create-order.sdp.ts", "deliveryFacts": ["implemented"] },
+    { "id": "spec:orders.create-order", "nodeType": "Primitive", "claim": "declared", "specKind": "behavior", "altitude": "feature", "readiness": "ready", "title": "Customer creates an order", "narrative": "A customer completes a valid cart.", "file": "specs/orders/create-order.sdp.ts", "sections": { "intent": { "description": "The customer needs a deterministic order outcome.", "outcome": "Create an order." } }, "deliveryFacts": ["implemented"] },
     { "id": "impl:orders.create-order-use-case", "nodeType": "CodeNode", "claim": "anchored", "file": "src/orders/create-order.use-case.ts", "line": 12 }
   ],
   "edges": [
@@ -43,6 +43,8 @@ The graph is **flat**: arrays of nodes and arrays of edges. Hierarchy and contai
 ```
 
 Node typing keeps concerns separate: every node carries `nodeType` (`Primitive` / `Pack` / `Anchor` / `CodeNode` / …), and `Primitive` nodes additionally carry `specKind` (the truth-category from `02`). This split prevents the old single `kind` field from colliding between structural class and domain truth-category. **Delivery facts** (`implemented` here) are **computed from edges** — the `satisfies` edge resolving to the spec — not authored on the node; readiness (`ready`) is the authored maturity, kept separate (`02` §2). The `satisfies` edge runs **code → spec** and is **anchored** (derived from an anchor), never hand-authored. The `verifies` edge runs **verifier → its direct target** — here the test verifies the *example* (`spec:orders.create-order.valid-cart`), not the parent; `has-verifier` is then computed per spec from the edges resolving to each, never propagated transitively up `refines` (`02` §2, *Verifier semantics*).
+
+Schema `0.4.0` carries authored prose in canonical payload fields: `Primitive.narrative` and `description` on the seven singular section owners. The serializer emits them in fixed recursive key order and omits absent fields; `constraints` has no description field.
 
 ### The edge contract — one row per edge type
 

@@ -1,7 +1,12 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 
-import { reifyMarkdownCarrier } from "../src/extract/carrier.js";
+import {
+  deriveGraph,
+  reifyMarkdownCarrier,
+  reifyTypeScriptCarrier,
+  serializeGraph,
+} from "../src/index.js";
 
 const fixtureRoot = new URL("./fixtures/extract/self-hosting-carrier/", import.meta.url);
 
@@ -35,6 +40,14 @@ ${body}`;
 
 function reify(sourceText: string) {
   return reifyMarkdownCarrier(sourceText, "carrier.sdp.md");
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isRecordArray(value: unknown): value is readonly Record<string, unknown>[] {
+  return Array.isArray(value) && value.every(isRecord);
 }
 
 describe("Markdown frontmatter reifier", () => {
@@ -294,6 +307,168 @@ Then an order is created
       ["behavior", "exampleSpace", resultKey],
       ["an order is created"],
     );
+  });
+
+  it("serializes owned prose canonically across both public carrier reifiers", () => {
+    const markdown = carrierBody(
+      `# Prose carrier
+Narrative owned by the Spec.
+
+## UI
+UI description.
+- zeta: Last UI field.
+- alpha: First UI field.
+
+## Verification — manual
+Verification description.
+- A reviewer reads the graph.
+
+## Decision
+Decision description.
+- decision: Keep ownership explicit.
+- context: Carrier prose needs a home.
+- rationale: Consumers read the graph.
+
+## Design
+Design description.
+- zeta: Last design field.
+- alpha: First design field.
+
+## Model
+Model description.
+- **Zeta** — Last term.
+- **Alpha** — First term.
+
+## Constraints
+- flavor: quality
+- statement: Output stays deterministic.
+- target: bytes
+- measurableBy: test
+
+## Rule
+Behavior description.
+- Preserve owned prose.
+
+## Intent
+Intent description.
+- value: Make prose searchable.
+- outcome: Carry prose through the graph.
+- actor: An author
+- problem: Prose lacks an owner.
+- assumption: The graph is canonical.
+- risk: A silent drop.
+
+### Open questions
+- [blocking] Is the owner explicit?`,
+      "rule",
+    ).replace("id: spec:carrier.body", "id: spec:carrier.prose");
+    const typeScript = `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const prose = spec({
+  ui: { zeta: "Last UI field.", description: "UI description.", alpha: "First UI field." },
+  verification: { criteria: ["A reviewer reads the graph."], description: "Verification description.", mode: "manual" },
+  decision: { rationale: ["Consumers read the graph."], description: "Decision description.", decision: "Keep ownership explicit.", context: "Carrier prose needs a home." },
+  design: { zeta: "Last design field.", description: "Design description.", alpha: "First design field." },
+  model: { terms: { Zeta: "Last term.", Alpha: "First term." }, description: "Model description." },
+  constraints: [{ measurableBy: "test", target: "bytes", statement: "Output stays deterministic.", flavor: "quality" }],
+  behavior: { rules: ["Preserve owned prose."], description: "Behavior description." },
+  intent: { openQuestions: [{ blocking: true, question: "Is the owner explicit?" }], risks: ["A silent drop."], assumptions: ["The graph is canonical."], description: "Intent description.", value: "Make prose searchable.", outcome: "Carry prose through the graph.", actor: "An author", problem: "Prose lacks an owner." },
+  narrative: "Narrative owned by the Spec.",
+  title: "Prose carrier",
+  readiness: "idea",
+  altitude: "story",
+  kind: "rule",
+  id: specId("spec:carrier.prose"),
+});`;
+
+    const markdownResult = reifyMarkdownCarrier(markdown, "carrier.sdp");
+    const typeScriptResult = reifyTypeScriptCarrier(typeScript, "carrier.sdp");
+    const markdownGraph = deriveGraph(markdownResult.specs, markdownResult.packs, []);
+    const typeScriptGraph = deriveGraph(typeScriptResult.specs, typeScriptResult.packs, []);
+    const markdownSerialized = serializeGraph(markdownGraph);
+    const typeScriptSerialized = serializeGraph(typeScriptGraph);
+
+    expect(markdownResult.findings).toEqual([]);
+    expect(typeScriptResult.findings).toEqual([]);
+    expect(markdownSerialized).toBe(typeScriptSerialized);
+
+    const serialized = JSON.parse(markdownSerialized) as unknown;
+
+    if (!isRecord(serialized) || !isRecordArray(serialized.nodes)) {
+      throw new Error("serialized graph must contain a primitive node");
+    }
+
+    const [primitive] = serialized.nodes;
+
+    if (!isRecord(primitive)) {
+      throw new Error("serialized graph must contain a primitive node");
+    }
+
+    const sections = primitive.sections;
+
+    if (!isRecord(sections) || !isRecord(sections.intent) || !isRecordArray(sections.constraints)) {
+      throw new Error("serialized primitive must contain canonical sections");
+    }
+
+    const constraint = sections.constraints[0];
+
+    if (!isRecord(constraint) || !isRecord(sections.model) || !isRecord(sections.model.terms)) {
+      throw new Error("serialized primitive must contain canonical section content");
+    }
+
+    expect(Object.keys(primitive)).toEqual([
+      "id",
+      "nodeType",
+      "claim",
+      "specKind",
+      "altitude",
+      "readiness",
+      "title",
+      "narrative",
+      "file",
+      "sections",
+    ]);
+    expect(Object.keys(sections)).toEqual([
+      "intent",
+      "behavior",
+      "constraints",
+      "model",
+      "design",
+      "decision",
+      "verification",
+      "ui",
+    ]);
+    expect(Object.keys(sections.intent)).toEqual([
+      "description",
+      "actor",
+      "problem",
+      "outcome",
+      "value",
+      "risks",
+      "assumptions",
+      "openQuestions",
+    ]);
+    expect(Object.keys(constraint)).toEqual(["flavor", "statement", "target", "measurableBy"]);
+    expect(Object.keys(sections.model)).toEqual(["description", "terms"]);
+    expect(Object.keys(sections.model.terms)).toEqual(["Alpha", "Zeta"]);
+  });
+
+  it("omits absent prose fields and rejects constraint-local prose from the TypeScript carrier", () => {
+    const withoutProse = reifyTypeScriptCarrier(
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const plain = spec({ id: specId("spec:carrier.plain"), title: "Plain", kind: "rule", altitude: "story", readiness: "idea", behavior: { rules: ["A rule."] } });`,
+      "plain.sdp.ts",
+    );
+    const constraintProse = reifyTypeScriptCarrier(
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const invalid = spec({ id: specId("spec:carrier.invalid-prose"), title: "Invalid", kind: "constraint", altitude: "story", readiness: "idea", constraints: [{ statement: "Stay deterministic.", description: "No owner." }] });`,
+      "invalid.sdp.ts",
+    );
+
+    expect(serializeGraph(deriveGraph(withoutProse.specs, withoutProse.packs, []))).not.toContain(
+      '"narrative"',
+    );
+    expect(constraintProse.specs).toEqual([]);
+    expect(constraintProse.findings[0]?.validatorId).toBe("extract/unowned-prose");
   });
 
   it("uses the first minimum heading suggestion within edit distance two", () => {

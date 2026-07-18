@@ -1,7 +1,7 @@
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSections } from "../model/sections.js";
 
-export const schemaVersion = "0.3.0" as const;
+export const schemaVersion = "0.4.0" as const;
 
 export const graphNodeTypes = ["Primitive", "Pack", "Anchor", "CodeNode"] as const;
 export type GraphNodeType = (typeof graphNodeTypes)[number];
@@ -43,6 +43,8 @@ export interface PrimitiveNode extends GraphNodeBase {
   readonly readiness: SpecReadiness;
   /** Degradable: a non-static title is dropped with a warning, never a hard error (`03` §2). */
   readonly title?: string;
+  /** Owned Spec prose; Markdown carries it between the H1 title and the first H2. */
+  readonly narrative?: string;
   /** Extraction-root-relative, POSIX separators, no leading `./` — never absolute (JS-C3). */
   readonly file: string;
   /**

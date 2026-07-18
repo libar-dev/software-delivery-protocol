@@ -6,6 +6,8 @@ import type { SpecSections } from "./sections.js";
 export interface Spec extends SpecSections {
   readonly id: SpecId;
   readonly title: string;
+  /** Free prose owned by the Spec itself; Markdown carries it between the H1 and first H2. */
+  readonly narrative?: string;
   readonly kind: SpecKind;
   readonly altitude: SpecAltitude;
   readonly readiness: SpecReadiness;

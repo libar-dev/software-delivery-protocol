@@ -31,6 +31,8 @@ import { validateGraph } from "../validate/validators.js";
 export interface SpecSummary {
   readonly id: string;
   readonly title?: string;
+  /** Authored prose owned by the Spec itself, distinct from section descriptions. */
+  readonly narrative?: string;
   readonly specKind: SpecKind;
   /** Present only for ratified kinds — the "adopt the nouns" display coordinate. */
   readonly kindDisplayLabel?: string;
@@ -142,7 +144,13 @@ export interface PackContext extends PackSummary {
   readonly findings: readonly Finding[];
 }
 
-export type ConceptMatchField = "id" | "title" | "label" | "framing" | `sections.${string}`;
+export type ConceptMatchField =
+  | "id"
+  | "title"
+  | "label"
+  | "framing"
+  | "narrative"
+  | `sections.${string}`;
 
 /** Where a concept search hit: the node plus the fields that matched. */
 export interface ConceptMatch {
@@ -364,6 +372,7 @@ export function createReader(graph: GraphSchema): Reader {
     return {
       id: node.id,
       ...(node.title === undefined ? {} : { title: node.title }),
+      ...(node.narrative === undefined ? {} : { narrative: node.narrative }),
       specKind: node.specKind,
       ...(displayLabel === undefined ? {} : { kindDisplayLabel: displayLabel }),
       altitude: node.altitude,
@@ -570,6 +579,7 @@ export function createReader(graph: GraphSchema): Reader {
       title: 1,
       label: 2,
       framing: 3,
+      narrative: 4,
     };
     const rankOf = (field: ConceptMatchField): number => fieldRank[field] ?? 4;
     const matches: { match: ConceptMatch; bestRank: number }[] = [];
@@ -596,6 +606,10 @@ export function createReader(graph: GraphSchema): Reader {
       }
 
       if (node.nodeType === "Primitive") {
+        if (node.narrative?.toLowerCase().includes(needle) === true) {
+          matchedIn.push("narrative");
+        }
+
         for (const section of matchSections(node.sections, needle)) {
           matchedIn.push(`sections.${section}`);
         }
