@@ -15,6 +15,19 @@ const expectedSpecs = [
     altitude: "feature",
     readiness: "defined",
     file: "specs/carrier/markdown-authoring.sdp.md",
+    title: "Markdown authoring enters the one graph",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Author new Protocol Specs in Markdown without creating a second truth path.",
+      },
+      behavior: {
+        rules: [
+          "Markdown and TypeScript carriers feed the same reification and graph-derivation path.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented"],
   },
   {
     id: "spec:carrier.envelope-contract",
@@ -22,6 +35,19 @@ const expectedSpecs = [
     altitude: "feature",
     readiness: "defined",
     file: "specs/carrier/envelope-contract.sdp.md",
+    title: "The Markdown envelope is explicit and bounded",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Make a Markdown Spec's identity and descriptors deterministic to reify.",
+      },
+      behavior: {
+        rules: [
+          "A Markdown Spec declares id, kind, altitude, readiness, and relations in bounded YAML frontmatter; its first H1 declares title.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:carrier.markdown-parser",
@@ -29,6 +55,21 @@ const expectedSpecs = [
     altitude: "feature",
     readiness: "defined",
     file: "specs/carrier/markdown-parser.sdp.md",
+    title: "The product parser reifies the ruled Markdown subset",
+    narrative: null,
+    sections: {
+      intent: {
+        problem: "Prevent carrier-specific graph and validation paths from diverging.",
+        outcome: "Reify authored Markdown without a second graph or validation path.",
+        value: "Markdown-carried intent remains subject to the Protocol's deterministic checks.",
+      },
+      behavior: {
+        rules: [
+          "The parser accepts only the ruled heading grammar and excludes one malformed carrier while continuing healthy siblings.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:carrier.sdp-import",
@@ -36,6 +77,12 @@ const expectedSpecs = [
     altitude: "feature",
     readiness: "idea",
     file: "specs/carrier/sdp-import.sdp.md",
+    title: "Existing intent can later be imported into the ruled carrier",
+    narrative: null,
+    sections: {
+      intent: { outcome: "Name import as deferred work without claiming an emitter exists." },
+    },
+    deliveryFacts: [],
   },
   {
     id: "spec:carrier.prose-ownership-rule",
@@ -43,6 +90,17 @@ const expectedSpecs = [
     altitude: "story",
     readiness: "defined",
     file: "specs/carrier/prose-ownership-rule.sdp.md",
+    title: "Every prose edge has one owner",
+    narrative: null,
+    sections: {
+      intent: { outcome: "Keep free prose in the graph without ambiguous attachment." },
+      behavior: {
+        rules: [
+          "Narrative lives before the first H2; descriptions live only under their owning singular sections; unowned prose is refused.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:protocol.self-hosting",
@@ -50,6 +108,19 @@ const expectedSpecs = [
     altitude: "epic",
     readiness: "defined",
     file: "specs/protocol/self-hosting.sdp.md",
+    title: "The Protocol authors and validates itself",
+    narrative:
+      "The Protocol's own delivery model exercises the same carrier, graph, checks, and projections offered to consumers.",
+    sections: {
+      intent: { outcome: "Prove the Protocol can carry its own intended truth honestly." },
+      behavior: {
+        rules: [
+          "All authored carriers derive one regenerable graph through one validation path.",
+          "Self-hosting remains deterministic in a clean clone.",
+        ],
+      },
+    },
+    deliveryFacts: [],
   },
   {
     id: "spec:extraction.derive-graph",
@@ -57,6 +128,15 @@ const expectedSpecs = [
     altitude: "feature",
     readiness: "ready",
     file: "specs/extraction/derive-graph.sdp.md",
+    title: "Carrier reification derives the one graph",
+    narrative: null,
+    sections: {
+      intent: { outcome: "Expose one carrier-neutral derivation seam." },
+      behavior: {
+        rules: ["Carrier reification feeds deriveGraph once; no consumer creates a second graph."],
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:extraction.determinism",
@@ -64,6 +144,21 @@ const expectedSpecs = [
     altitude: "feature",
     readiness: "ready",
     file: "specs/extraction/determinism.sdp.md",
+    title: "Committed source derives byte-identical output",
+    narrative: null,
+    sections: {
+      intent: { outcome: "Make regeneration independent of location and prior generated state." },
+      constraints: [
+        {
+          flavor: "quality",
+          statement:
+            "Two clean derivations of the same committed source produce byte-identical generated trees.",
+          target: "sha256(tree@run1) == sha256(tree@run2)",
+          measurableBy: "test/cli.test.ts clean-repo determinism",
+        },
+      ],
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:extraction.build-pipeline",
@@ -71,6 +166,22 @@ const expectedSpecs = [
     altitude: "feature",
     readiness: "defined",
     file: "specs/extraction/build-pipeline.sdp.md",
+    title: "The build pipeline has one ordered flow",
+    narrative: null,
+    sections: {
+      intent: { outcome: "Turn authored carriers into validated derived artifacts." },
+      behavior: {
+        rules: ["Every command uses the same extracted graph and validation seam."],
+        flows: [
+          "Discover carriers.",
+          "Reify carriers.",
+          "Derive the graph.",
+          "Validate the graph.",
+          "Emit derived artifacts.",
+        ],
+      },
+    },
+    deliveryFacts: [],
   },
   {
     id: "spec:validation.readiness-floor",
@@ -78,6 +189,17 @@ const expectedSpecs = [
     altitude: "feature",
     readiness: "ready",
     file: "specs/validation/readiness-floor.sdp.md",
+    title: "Stated readiness must clear its floor",
+    narrative: null,
+    sections: {
+      intent: { outcome: "Refuse maturity claims that their authored evidence does not support." },
+      behavior: {
+        rules: [
+          "A Spec may state a readiness only when every clause in that readiness floor passes.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.duplicate-ids",
@@ -85,6 +207,17 @@ const expectedSpecs = [
     altitude: "feature",
     readiness: "ready",
     file: "specs/validation/duplicate-ids.sdp.md",
+    title: "Duplicate carrier IDs are excluded loudly",
+    narrative: null,
+    sections: {
+      intent: { outcome: "Prevent ambiguous authored identity from entering the graph." },
+      behavior: {
+        rules: [
+          "If more than one carrier declares an ID, every duplicate site receives extract/duplicate-id and no ambiguous node is derived.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented"],
   },
   {
     id: "spec:model.protocol-domain",
@@ -92,8 +225,24 @@ const expectedSpecs = [
     altitude: "feature",
     readiness: "defined",
     file: "specs/model/protocol-domain.sdp.md",
+    title: "The Protocol domain uses one ratified language",
+    narrative: null,
+    sections: {
+      intent: { outcome: "Give self-hosting specs the same core vocabulary." },
+      model: {
+        terms: {
+          Pack: "A grouping and review aggregate that states no system truth.",
+          Spec: "The one authored truth-primitive.",
+          anchor: "An in-code identity binding that states no intent.",
+          "delivery fact": "A machine-derived realization signal.",
+        },
+      },
+    },
+    deliveryFacts: [],
   },
 ] as const;
+
+const expectedPackMembers = expectedSpecs.map((spec) => spec.id);
 
 const expectedDeclaredRelations = [
   ["spec:carrier.markdown-authoring", "dependsOn", "spec:carrier.markdown-parser"],
@@ -126,6 +275,8 @@ const expectedGapFindings = ["spec:validation.duplicate-ids"].map((subjectId) =>
 const expectedAnchors = [
   {
     id: "impl:protocol.extract",
+    nodeType: "CodeNode",
+    label: "extracts authored carriers and bindings into one graph",
     type: "satisfies",
     target: "spec:extraction.derive-graph",
     file: "src/extract/index.ts",
@@ -134,6 +285,8 @@ const expectedAnchors = [
   },
   {
     id: "impl:protocol.derive-graph",
+    nodeType: "CodeNode",
+    label: "derives the graph from reified carriers and bindings",
     type: "satisfies",
     target: "spec:extraction.derive-graph",
     file: "src/extract/derive.ts",
@@ -142,6 +295,8 @@ const expectedAnchors = [
   },
   {
     id: "test:protocol.extract",
+    nodeType: "Anchor",
+    label: "extraction contracts verify graph derivation",
     type: "verifies",
     target: "spec:extraction.derive-graph",
     file: "test/extract.test.ts",
@@ -150,6 +305,8 @@ const expectedAnchors = [
   },
   {
     id: "test:protocol.extraction-determinism",
+    nodeType: "Anchor",
+    label: "clean-repo pipeline determinism verifies byte-identical output",
     type: "verifies",
     target: "spec:extraction.determinism",
     file: "test/cli.test.ts",
@@ -158,6 +315,8 @@ const expectedAnchors = [
   },
   {
     id: "impl:protocol.readiness-floor",
+    nodeType: "CodeNode",
+    label: "evaluates the stated readiness floor against the graph",
     type: "satisfies",
     target: "spec:validation.readiness-floor",
     file: "src/validate/readiness-floor.ts",
@@ -166,6 +325,8 @@ const expectedAnchors = [
   },
   {
     id: "test:protocol.readiness-floor",
+    nodeType: "Anchor",
+    label: "readiness-floor contracts verify stated maturity",
     type: "verifies",
     target: "spec:validation.readiness-floor",
     file: "test/readiness.test.ts",
@@ -174,6 +335,8 @@ const expectedAnchors = [
   },
   {
     id: "impl:protocol.markdown-authoring",
+    nodeType: "CodeNode",
+    label: "reifies Markdown authoring into the one carrier path",
     type: "satisfies",
     target: "spec:carrier.markdown-authoring",
     file: "src/extract/markdown.ts",
@@ -182,6 +345,8 @@ const expectedAnchors = [
   },
   {
     id: "impl:protocol.markdown-parser",
+    nodeType: "CodeNode",
+    label: "reifies the ruled Markdown parser input",
     type: "satisfies",
     target: "spec:carrier.markdown-parser",
     file: "src/extract/markdown.ts",
@@ -190,6 +355,8 @@ const expectedAnchors = [
   },
   {
     id: "test:protocol.markdown-parser",
+    nodeType: "Anchor",
+    label: "Markdown reifier tests verify the ruled parser",
     type: "verifies",
     target: "spec:carrier.markdown-parser",
     file: "test/markdown-reifier.test.ts",
@@ -198,6 +365,8 @@ const expectedAnchors = [
   },
   {
     id: "impl:protocol.envelope-contract",
+    nodeType: "CodeNode",
+    label: "parses the bounded Markdown frontmatter envelope",
     type: "satisfies",
     target: "spec:carrier.envelope-contract",
     file: "src/extract/markdown.ts",
@@ -206,6 +375,8 @@ const expectedAnchors = [
   },
   {
     id: "test:protocol.envelope-contract",
+    nodeType: "Anchor",
+    label: "frontmatter contract tests verify the Markdown envelope",
     type: "verifies",
     target: "spec:carrier.envelope-contract",
     file: "test/markdown-reifier.test.ts",
@@ -214,6 +385,8 @@ const expectedAnchors = [
   },
   {
     id: "impl:protocol.prose-ownership",
+    nodeType: "CodeNode",
+    label: "reads Markdown body content through its prose owners",
     type: "satisfies",
     target: "spec:carrier.prose-ownership-rule",
     file: "src/extract/markdown.ts",
@@ -222,6 +395,8 @@ const expectedAnchors = [
   },
   {
     id: "test:protocol.prose-ownership",
+    nodeType: "Anchor",
+    label: "Markdown reifier tests verify prose ownership",
     type: "verifies",
     target: "spec:carrier.prose-ownership-rule",
     file: "test/markdown-reifier.test.ts",
@@ -230,6 +405,8 @@ const expectedAnchors = [
   },
   {
     id: "impl:protocol.duplicate-id-exclusion",
+    nodeType: "CodeNode",
+    label: "excludes duplicated carrier ids from the graph",
     type: "satisfies",
     target: "spec:validation.duplicate-ids",
     file: "src/extract/index.ts",
@@ -238,17 +415,6 @@ const expectedAnchors = [
   },
 ] as const;
 
-const expectedDeliveryFacts = new Map<string, readonly string[]>([
-  ["spec:carrier.envelope-contract", ["implemented", "has-verifier"]],
-  ["spec:carrier.markdown-authoring", ["implemented"]],
-  ["spec:carrier.markdown-parser", ["implemented", "has-verifier"]],
-  ["spec:carrier.prose-ownership-rule", ["implemented", "has-verifier"]],
-  ["spec:extraction.derive-graph", ["implemented", "has-verifier"]],
-  ["spec:extraction.determinism", ["has-verifier"]],
-  ["spec:validation.duplicate-ids", ["implemented"]],
-  ["spec:validation.readiness-floor", ["implemented", "has-verifier"]],
-]);
-
 function lineContaining(source: string, token: string): number {
   const line = source.split("\n").findIndex((entry) => entry.includes(token));
 
@@ -256,7 +422,7 @@ function lineContaining(source: string, token: string): number {
 }
 
 describe("the self-hosting phase-1 carrier corpus", () => {
-  it("derives the twelve Markdown-canonical specs and their exact five-member Pack checkpoint from the root", () => {
+  it("derives the twelve Markdown-canonical specs and their exact Pack checkpoint from the root", () => {
     // Given: the repository root with evidence and the worked example excluded from the authored model.
     const result = extract({ root: repoRoot, exclude: ["explorations", "examples"] });
 
@@ -294,24 +460,34 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
+    expect(result.graph.nodes).toHaveLength(27);
     expect(
       primitiveNodes.map((node) => ({
         id: node.id,
         specKind: node.specKind,
         altitude: node.altitude,
         readiness: node.readiness,
+        title: node.title,
+        narrative: node.narrative ?? null,
+        sections: node.sections,
+        deliveryFacts: node.deliveryFacts ?? [],
         file: node.file,
       })),
-    ).toEqual([...expectedSpecs].sort((left, right) => left.id.localeCompare(right.id)));
-    expect(packNode).toEqual({
-      id: "pack:self-hosting-v1",
-      nodeType: "Pack",
-      claim: "declared",
-      title: "Self-hosting phase 1",
-      framing: "The Protocol authors and validates its own phase-1 delivery model.",
-      modelRefs: [],
-      file: "specs/self-hosting.pack.sdp.ts",
-    });
+    ).toEqual(
+      [...expectedSpecs]
+        .sort((left, right) => left.id.localeCompare(right.id))
+        .map((spec) => ({
+          id: spec.id,
+          specKind: spec.specKind,
+          altitude: spec.altitude,
+          readiness: spec.readiness,
+          title: spec.title,
+          narrative: spec.narrative,
+          sections: spec.sections,
+          deliveryFacts: spec.deliveryFacts,
+          file: spec.file,
+        })),
+    );
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "declared" && edge.type !== "belongsTo")
@@ -330,28 +506,51 @@ describe("the self-hosting phase-1 carrier corpus", () => {
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
-        .map((edge) => [edge.from, edge.to, edge.claim])
-        .sort(),
-    ).toEqual(
-      expectedSpecs
-        .slice(0, 5)
-        .map((spec) => [spec.id, "pack:self-hosting-v1", "declared"])
-        .sort(),
-    );
+        .map((edge) => [edge.from, edge.to, edge.claim]),
+    ).toEqual(expectedPackMembers.map((id) => [id, "pack:self-hosting-v1", "declared"]));
+    expect(packNode).toEqual({
+      id: "pack:self-hosting-v1",
+      nodeType: "Pack",
+      claim: "declared",
+      title: "Self-hosting phase 1",
+      framing: "The Protocol authors and validates its own phase-1 delivery model.",
+      modelRefs: ["spec:model.protocol-domain"],
+      file: "specs/self-hosting.pack.sdp.ts",
+    });
+    expect(result.graph.edges).toHaveLength(44);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")
         .map((edge) => [edge.from, edge.type, edge.to])
         .sort(),
     ).toEqual(expectedAnchors.map((anchor) => [anchor.id, anchor.type, anchor.target]).sort());
-    const actualDeliveryFacts: [string, readonly string[]][] = primitiveNodes
-      .filter((node) => expectedDeliveryFacts.has(node.id))
-      .map((node) => [node.id, node.deliveryFacts ?? []]);
+    const expectedAnchorNodes = expectedAnchors
+      .map((anchor) => {
+        const source = readFileSync(join(repoRoot, anchor.file), "utf8");
 
-    expect(actualDeliveryFacts.sort(([left], [right]) => left.localeCompare(right))).toEqual(
-      [...expectedDeliveryFacts].sort(([left], [right]) => left.localeCompare(right)),
-    );
-
+        return {
+          id: anchor.id,
+          nodeType: anchor.nodeType,
+          claim: "anchored",
+          label: anchor.label,
+          file: anchor.file,
+          line: lineContaining(source, `const ${anchor.constant}`),
+        };
+      })
+      .sort((left, right) => left.id.localeCompare(right.id));
+    expect(
+      result.graph.nodes
+        .filter((node) => node.nodeType === "Anchor" || node.nodeType === "CodeNode")
+        .map((node) => ({
+          id: node.id,
+          nodeType: node.nodeType,
+          claim: node.claim,
+          label: node.label,
+          file: node.file,
+          line: node.line,
+        }))
+        .sort((left, right) => left.id.localeCompare(right.id)),
+    ).toEqual(expectedAnchorNodes);
     for (const anchor of expectedAnchors) {
       const source = readFileSync(join(repoRoot, anchor.file), "utf8");
       const anchorLine = lineContaining(source, `const ${anchor.constant}`);
