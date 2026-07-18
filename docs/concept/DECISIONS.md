@@ -28,25 +28,25 @@ itself rides with the self-hosting session (plan 16 §7).
 
 | ID | Ratified name | Curation | Future spec id |
 |---|---|---|---|
-| MD-1 | the executable meta-model | durable | `spec:protocol.decisions.executable-meta-model` |
-| MD-2 | adopt the nouns, reject the gates | durable | `spec:protocol.decisions.adopt-the-nouns` |
-| MD-4 | one primitive, named coordinates | durable | `spec:protocol.decisions.one-primitive` |
-| MD-5 | the protocol naming | durable | `spec:protocol.decisions.protocol-naming` |
-| MD-7 | binding, never liveness | durable | `spec:protocol.decisions.binding-not-liveness` |
+| MD-1 | the executable meta-model | durable | `spec:decisions.executable-meta-model` |
+| MD-2 | adopt the nouns, reject the gates | durable | `spec:decisions.adopt-the-nouns` |
+| MD-4 | one primitive, named coordinates | durable | `spec:decisions.one-primitive` |
+| MD-5 | the protocol naming | durable | `spec:decisions.protocol-naming` |
+| MD-7 | binding, never liveness | durable | `spec:decisions.binding-not-liveness` |
 | MD-8 | the generic `codeAnchor` | **folded** (Slice 2) → doc-comment on the `codeAnchor` builder (`src/model/anchors.ts`) | — |
 | MD-9 | the open-questions home | folds at the fold (lives in `sections.ts`, the floor, `02` §3) | — |
-| MD-10 | content-only sections | durable | `spec:protocol.decisions.content-only-sections` |
-| MD-11 | the typing law | durable | `spec:protocol.decisions.typing-law` |
-| MD-12 | the kind-conditional floor | durable | `spec:protocol.decisions.kind-conditional-floor` |
+| MD-10 | content-only sections | durable | `spec:decisions.content-only-sections` |
+| MD-11 | the typing law | durable | `spec:decisions.typing-law` |
+| MD-12 | the kind-conditional floor | durable | `spec:decisions.kind-conditional-floor` |
 | MD-13 | floor-table-as-truth | folds (lives in `05` §3's Representation note + the `readiness-floor.ts` header) | — |
-| MD-14 | one validation path | durable | `spec:protocol.decisions.one-validation-path` |
-| MD-15 | the `.sdp.ts` extension | durable | `spec:protocol.decisions.sdp-ts-extension` |
-| MD-16 | carried evidence | durable | `spec:protocol.decisions.carried-evidence` |
-| MD-17 | point-per-example | durable | `spec:protocol.decisions.point-per-example` |
-| MD-18 | the carrier ruling | durable | `spec:protocol.decisions.carrier-ruling` |
-| MD-19 | the prose-ownership law | durable | `spec:protocol.decisions.prose-ownership` |
-| MD-20 | the strict consumer-exclusion contract | durable | `spec:protocol.decisions.exclusion-contract` |
-| MD-21 | the envelope-grammar ownership posture | durable | `spec:protocol.decisions.envelope-grammar-posture` |
+| MD-14 | one validation path | durable | `spec:decisions.one-validation-path` |
+| MD-15 | the `.sdp.ts` extension | durable | `spec:decisions.sdp-ts-extension` |
+| MD-16 | carried evidence | durable | `spec:decisions.carried-evidence` |
+| MD-17 | point-per-example | durable | `spec:decisions.point-per-example` |
+| MD-18 | the carrier ruling | durable | `spec:decisions.carrier-ruling` |
+| MD-19 | the prose-ownership law | durable | `spec:decisions.prose-ownership` |
+| MD-20 | the strict consumer-exclusion contract | durable | `spec:decisions.exclusion-contract` |
+| MD-21 | the envelope-grammar ownership posture | durable | `spec:decisions.envelope-grammar-posture` |
 
 ### Current executable decision-spec pointers
 

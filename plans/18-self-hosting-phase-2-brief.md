@@ -49,9 +49,8 @@ docs while three carrier states coexist.
   one-canonical-surface law being per-ID). `spec:carrier.sdp-import` is honestly authored at
   `idea` and is tranche 1's spec to enrich in place.
 - **The fold seed**: the ratified-name registry (`docs/concept/DECISIONS.md` top) marks 16 rows
-  **durable** with reserved future IDs under `spec:protocol.decisions.*`; the two born decision
-  specs use `spec:decisions.*`. That namespace divergence is recorded (plan 17 §6, back-catalog
-  notes) and deliberately deferred **to this fold**. Rows marked *folded/folds* (MD-8, MD-9,
+  **durable** with reserved future IDs under `spec:decisions.*`, matching the two born decision
+  specs. The fold activates that ratified namespace. Rows marked *folded/folds* (MD-8, MD-9,
   MD-13) already have carrying surfaces (doc-comments, `sections.ts`, the floor table) — verify,
   don't re-fold.
 - **Open watch items** (rule only under fire, each ruling recorded): table-sugar syntax ·

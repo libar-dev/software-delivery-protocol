@@ -159,3 +159,10 @@
   `spec:protocol.self-hosting` unless the owner overrules at todo 32.
 - The Pack ID and membership remain stable; only its title and framing shed the completed phase-1
   wording so the aggregate describes the continuing self-hosting delivery model.
+
+## Todo 29 — namespace amendment and fold ledger
+
+- The 16 durable registry reservations now use the born two-segment `spec:decisions.*` namespace;
+  the two born Specs retain their IDs and relations unchanged.
+- The fold ledger seeds every registry, D-table, measured-evidence, and born-spec disposition before
+  any decision Spec is authored, so the next batches only fill pre-recorded destinations.
