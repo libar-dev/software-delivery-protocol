@@ -50,9 +50,7 @@ const glossaryPath = "CONTEXT.md";
 // ledger must agree with them field for field. The shared gate date is assembled in parts.
 const GATE_DATE = ["2026", "07", "18"].join("-");
 const GATE_4_CORRECTION = "24f9978: docs(concept): record the landed prose projection in 06";
-const PHASE2_GATES = [
-  { gate: "G1", sha: "f06f14d" },
-];
+const PHASE2_GATES = [{ gate: "G1", sha: "f06f14d" }];
 const GATES = [
   { gate: "1", meaning: "schema freeze", sha: "aca79090529c2f6625ceafc78f33e16da81bfcb1" },
   { gate: "2", meaning: "corpus/readiness", sha: "cdb68fc1564c9167ebc0372ba8f8599a97df4393" },
