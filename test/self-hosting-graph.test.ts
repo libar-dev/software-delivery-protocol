@@ -1134,8 +1134,8 @@ describe("the self-hosting corpus", () => {
       id: "pack:self-hosting-v1",
       nodeType: "Pack",
       claim: "declared",
-      title: "Self-hosting phase 1",
-      framing: "The Protocol authors and validates its own phase-1 delivery model.",
+      title: "Self-hosting",
+      framing: "The Protocol authors and validates its own delivery model.",
       modelRefs: ["spec:model.protocol-domain", "spec:model.core-model"],
       file: "specs/self-hosting.pack.sdp.ts",
     });

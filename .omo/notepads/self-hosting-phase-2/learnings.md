@@ -150,3 +150,12 @@
   binding so the Design Review anchor remains specific to the flagship behavior.
 - The generalized context-efficiency statement belongs to the agent-surface behavior as an
   empirical comparison claim; the measurement figure and its disposition remain fold work.
+
+## Todo 27 — fold-target verification and Pack framing
+
+- Eighteen of the nineteen pinned fold targets exist after wave 1; MD-20 alone lawfully waits for
+  `spec:extraction.excludes` at S7, so no decision needs a weaker fallback target.
+- Both born decision Specs remain genuinely phase-level and keep refining
+  `spec:protocol.self-hosting` unless the owner overrules at todo 32.
+- The Pack ID and membership remain stable; only its title and framing shed the completed phase-1
+  wording so the aggregate describes the continuing self-hosting delivery model.
