@@ -49,6 +49,7 @@ describe("bootstrap package surface", () => {
       type: string;
       bin: { sdp: string };
       exports: Record<string, { types: string; import: string }>;
+      scripts: Record<string, string>;
     };
     const rootExport = packageJson.exports["."];
 
@@ -60,6 +61,12 @@ describe("bootstrap package surface", () => {
     expect(packageJson.bin.sdp).toBe("./dist/cli/sdp.js");
     expect(rootExport.types).toBe("./dist/index.d.ts");
     expect(rootExport.import).toBe("./dist/index.js");
+    expect(packageJson.scripts["generate:self-hosting"]).toBe(
+      "node ./dist/cli/sdp.js view . --exclude explorations --exclude examples",
+    );
+    expect(packageJson.scripts.preflight).toBe("node ./preflight.mjs");
+    expect(packageJson.scripts.check).toContain("npm run generate:self-hosting");
+    expect(packageJson.scripts.check).toContain("npm run preflight");
   });
 
   it("reifies a TypeScript carrier and derives a graph through the public root", () => {

@@ -17,12 +17,28 @@ if (!hasPathFilter && !existsSync("examples/checkout-v1/generated/contracts")) {
   process.exit(1);
 }
 
-const result = spawnSync("vitest", vitestArgs, {
-  stdio: "inherit",
-});
+function runVitest(args) {
+  const result = spawnSync("vitest", args, { stdio: "inherit" });
 
-if (result.error !== undefined) {
-  throw result.error;
+  if (result.error !== undefined) {
+    throw result.error;
+  }
+
+  return result.status ?? 1;
 }
 
-process.exit(result.status ?? 1);
+if (hasPathFilter) {
+  process.exit(runVitest(vitestArgs));
+}
+
+// The default-root CLI case owns repository-root generated/. Keep its whole file in a dedicated
+// process; every other test file remains in Vitest's normal parallel pool.
+const parallelExitCode = runVitest([...vitestArgs, "--exclude", "test/cli.test.ts"]);
+
+if (parallelExitCode !== 0) {
+  process.exit(parallelExitCode);
+}
+
+process.exit(
+  runVitest(["--run", "test/cli.test.ts", "--pool", "forks", "--poolOptions.forks.singleFork"]),
+);

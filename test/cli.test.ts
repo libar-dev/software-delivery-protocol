@@ -145,7 +145,7 @@ describe("sdp cli", () => {
     }
   });
 
-  it("builds the self-hosting corpus from the repository root", () => {
+  it("views the self-hosting corpus from the default repository root", () => {
     // Exploration Markdown is evidence, not the authored model. The explicit consumer exclusion
     // keeps suffix-only discovery honest without adding a hidden global exclusion.
     rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
@@ -154,13 +154,17 @@ describe("sdp cli", () => {
       const capture = createCaptureOutput();
 
       const exitCode = runSdpCli(
-        ["build", "--exclude", "explorations", "--exclude", "examples"],
+        ["view", "--check-clean", "--exclude", "explorations", "--exclude", "examples"],
         capture.output,
       );
 
       expect(exitCode).toBe(0);
       expect(capture.readStderr()).toBe("");
-      expect(capture.readStdout()).toContain("5 specs · 1 packs · 0 anchors → 6 nodes · 11 edges");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 0 warnings");
+      expect(readFileSync(join(repoRoot, "generated", "graph.json"), "utf8")).toContain(
+        '"id": "pack:self-hosting-v1"',
+      );
+      expect(existsSync(join(repoRoot, "generated", "design-review"))).toBe(true);
     } finally {
       rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
     }
