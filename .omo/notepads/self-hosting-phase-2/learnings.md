@@ -105,3 +105,8 @@
 ## Todo 20 — parser hardening claim
 
 - The settled matrix supports a bounded like-for-like refusal-parity claim only: six classes share finding IDs, while four classes remain explicit named non-claims rather than a full-parity assertion.
+
+## Todo 22 — canonical-default carrier flip
+
+- The flip landed as one atomic operative-record change: Markdown is the default Spec carrier, Packs remain TS pending a Pack syntax ruling, and the TS DSL remains both import source and lawful per-ID option.
+- `check-carrier-rule.mjs`, `check-carrier-truth.mjs`, `check-self-hosting-gates.mjs`, the anti-misleading sweep, and `npm run check` all passed; the truth audit now pins the `sdp import` row's `many source adapters` amendment.

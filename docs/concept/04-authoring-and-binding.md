@@ -1,6 +1,6 @@
 # 04 — Authoring & Binding
 
-How truth gets into the repo. Authoring has two ruled **carriers**, both framework-neutral: the **Markdown carrier (`.sdp.md`)** — ruled for all eight kinds (the carrier ruling, MD-18) and canonical for new IDs now that the product parser has landed — and the **TypeScript Spec DSL (`.sdp.ts`)**, the MVP's carrier, still canonical for pre-existing IDs and the worked example until the ruled flip. **Generic source anchors** bind code under either carrier. Richer surfaces (a Gherkin-like carrier, the interactive harness UI) are named in §4 so the model accommodates them — the harness UI **ASPIRATIONAL**, the carrier competition now ruled — while the carrier-independent executable machinery beneath them is landed (CORE).
+How truth gets into the repo. Authoring has two ruled **carriers**, both framework-neutral: the **Markdown carrier (`.sdp.md`)** — the default for all eight kinds (the carrier ruling, MD-18) — and the **TypeScript Spec DSL (`.sdp.ts`)**, an import source and lawful per-ID option. Packs remain TS until a Pack syntax ruling. **Generic source anchors** bind code under either carrier. Richer surfaces (a Gherkin-like carrier, the interactive harness UI) are named in §4 so the model accommodates them — the harness UI **ASPIRATIONAL**, the carrier competition now ruled — while the carrier-independent executable machinery beneath them is landed (CORE).
 
 Realises **P5** (statically extractable), **P6** (ID-linked), **P9/P10** (anchors are anchored bindings, not intent), and the epistemic boundary from `01`.
 
@@ -60,7 +60,7 @@ Two sanctioned moves, both keeping the same IDs (P4):
 
 ### One canonical surface per ID
 
-For any given spec ID, exactly one surface is canonical — no mixing per ID. New spec IDs may be born Markdown-canonical once the product parser lands; pre-existing IDs and the worked example remain TS-canonical until the ruled flip (the product parser, `sdp import`, and the checkout-v1 migration). The product parser has landed, so new IDs may be `.sdp.md` today; `sdp import`, the checkout-v1 migration, and the canonical-default flip remain deferred, and after the flip the TS DSL survives as the import source and a lawful per-ID option (the interim rule — the carrier ruling, MD-18, transition clause amended by plan 17). A per-ID canonical-surface config decides which surface is canonical for a spec; the other is a generated read-only view.
+For any given spec ID, exactly one surface is canonical — no mixing per ID. Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option. A per-ID canonical-surface config is designed-for and deferred (ASPIRATIONAL); the current realization is file-existence-only: the surface that exists is canonical, and the other is a generated read-only view.
 
 ---
 

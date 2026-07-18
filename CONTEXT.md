@@ -235,12 +235,10 @@ artifact** — approval provenance is git-native, never an authored primitive).
 - **Resolved (MD-15):** authored Spec files carry the **`.sdp.ts`** extension (never `.spec.ts`, which every
   JS test-runner default glob executes); the model name `Spec` itself was always settled — only the file
   serialization changed.
-- **Resolved (the carrier ruling, MD-18; transition clause amended by plan 17):** the authored `Spec`
-  document is **`.sdp.md`** — the Markdown carrier, all eight kinds. New spec IDs may be born
-  Markdown-canonical once the product parser lands; pre-existing IDs and the worked example remain
-  TS-canonical until the ruled flip (the product parser, `sdp import`, and the checkout-v1 migration).
-  The surviving law is **one canonical surface per ID, no mixing** (`04` §1); the `.sdp.ts` extension
-  law (MD-15) is re-pointed, not repealed — its rationale carries to the `.sdp.md` sibling.
+- **Resolved (the carrier ruling, MD-18):** Specs default to Markdown; Packs remain TS until a Pack
+  syntax ruling; the TS DSL survives as import source and a lawful per-ID option. The surviving law
+  is **one canonical surface per ID, no mixing** (`04` §1); the `.sdp.ts` extension law (MD-15) is
+  re-pointed, not repealed — its rationale carries to the `.sdp.md` sibling.
 - **Resolved (the prose-ownership law, MD-19):** free prose enters the graph as **description values on
   typed owners** — the owning section or the `Spec` itself (the spec-level narrative slot); never a
   heading-path store, never a file-only pointer; the edge-text ownership rule is the surface-design

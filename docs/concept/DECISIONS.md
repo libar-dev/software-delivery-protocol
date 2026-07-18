@@ -434,19 +434,16 @@ the carrier's expansion sugar).
 > record). The flagged terms ***carrier*** and ***notation*** ratified into `CONTEXT.md` at this
 > session. Two rulings passed the three-part test and enter here.
 
-### MD-18 — The carrier ruling: Markdown, all eight kinds; the TS DSL becomes import source + per-ID option  [ACCEPTED 2026-07-12 · transition clause amended 2026-07-18 (plan 17)]
+### MD-18 — The carrier ruling: Markdown, all eight kinds; the TS DSL becomes import source + per-ID option  [ACCEPTED 2026-07-12]
 **Context.** The carrier competition (plan 14) closed with four evidence PRs: two full exhibits
 (F2 Markdown, C2 own grammar) and two honest concessions (Gherkin extension/fork; typed markup).
 The docket required ruling the carrier, the kind-partition question, and the TS DSL's long-term
 role — evidence-vs-evidence on the recorded scorecards, never by preference.
 **Decision.** The **Markdown carrier (F2) is the authoring carrier for all eight `kind` values**:
 an authored `Spec` document is an `.sdp.md` file — YAML-frontmatter envelope, free prose body,
-the owned notation in fenced blocks — statically extracted into the one graph. **Transition
-clause, amended 2026-07-18 (plan 17):** New spec IDs may be born Markdown-canonical once the
-product parser lands; pre-existing IDs and the worked example remain TS-canonical until the
-ruled flip (the product parser, `sdp import`, and the checkout-v1 migration). After the flip
-the TS DSL survives as the import source and as a lawful per-ID option via the canonical-surface
-config (`04` §1) — the surviving law is **one canonical surface per ID, no mixing**, never
+the owned notation in fenced blocks — statically extracted into the one graph. **Specs default to
+Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a
+lawful per-ID option.** The surviving law is **one canonical surface per ID, no mixing**, never
 TS-as-sole-surface.
 **Why / alternatives rejected.** *C2 own grammar*: strongest differentiation and diff/merge, but
 its own scorecard's ownership row is decisive — parser, formatter, highlighting, rendering,
