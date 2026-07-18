@@ -1,5 +1,6 @@
+import { Buffer } from "node:buffer";
 import { readFile } from "node:fs/promises";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
@@ -18,6 +19,13 @@ const fixturePaths = [
   "specs/carrier/markdown-parser.sdp.md.txt",
   "specs/carrier/sdp-import.sdp.md.txt",
   "specs/carrier/prose-ownership-rule.sdp.md.txt",
+] as const;
+
+const byteIdenticalFixturePaths = [
+  fixturePaths[0],
+  fixturePaths[1],
+  fixturePaths[3],
+  fixturePaths[4],
 ] as const;
 
 const validFrontmatter = `---
@@ -42,6 +50,33 @@ ${body}`;
 
 function reify(sourceText: string) {
   return reifyMarkdownCarrier(sourceText, "carrier.sdp.md");
+}
+
+function nestedRelation(levels: number): string {
+  return `---
+id: spec:carrier.depth
+kind: behavior
+altitude: story
+readiness: idea
+relations:
+  dependsOn:
+${Array.from({ length: levels }, (_, index) => `${" ".repeat(4 + index * 2)}-`).join("\n")}
+${" ".repeat(4 + levels * 2)}spec:carrier.target
+---
+# Title`;
+}
+
+function relationTargets(count: number): string {
+  return `---
+id: spec:carrier.nodes
+kind: behavior
+altitude: story
+readiness: idea
+relations:
+  dependsOn:
+${Array.from({ length: count }, (_, index) => `    - spec:${String(index)}`).join("\n")}
+---
+# Title`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -91,6 +126,16 @@ describe("Markdown frontmatter reifier", () => {
     }
   });
 
+  it.each(byteIdenticalFixturePaths)(
+    "keeps %s byte-identical to its live carrier",
+    async (path) => {
+      const fixtureBytes = await readFile(new URL(path, fixtureRoot));
+      const liveBytes = await readFile(new URL(path.slice(0, -4), new URL("../", import.meta.url)));
+
+      expect(liveBytes).toEqual(fixtureBytes);
+    },
+  );
+
   it("maps scalar and list relations in authored order", () => {
     const result = reify(`---
 id: spec:carrier.ordered-relations
@@ -131,7 +176,7 @@ relations:
   it.each([
     [
       "warning",
-      "---\n%YAML 1.2\nid: spec:carrier.invalid\nkind: behavior\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# title",
+      "---\nid: &a: spec:carrier.invalid\nkind: behavior\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# title",
       2,
     ],
     [
@@ -198,21 +243,218 @@ relations:
     expect(healthy.specs).toHaveLength(1);
   });
 
-  it("refuses byte and delimiter envelope violations", () => {
-    const cases = [
-      `\uFEFF${validFrontmatter}`,
-      ` ---\n${validFrontmatter.slice(4)}`,
-      validFrontmatter.replace("---\n#", "...\n#"),
-      validFrontmatter.replace(/\n/g, "\r"),
-      `---\r\nid: spec:carrier.crlf\r\nkind: behavior\r\naltitude: story\r\nreadiness: idea\r\nrelations: {}\r\n---\r\n# title\n`,
-    ];
+  it("caps body findings with the frozen structure finding ID", () => {
+    const invalidBody = Array.from(
+      { length: 100 },
+      (_, index) => `${String(index + 1)}. item`,
+    ).join("\n");
+    const result = reify(carrierBody(`# Title\n${invalidBody}`));
 
-    for (const sourceText of cases) {
-      expect(reify(sourceText).findings[0]).toMatchObject({
-        validatorId: "extract/invalid-frontmatter",
-        line: 1,
+    expect(result.specs).toEqual([]);
+    expect(result.findings).toHaveLength(100);
+    expect(result.findings[99]).toMatchObject({
+      validatorId: "extract/invalid-markdown-structure",
+      line: 1,
+      message: "finding limit reached; additional findings suppressed",
+    });
+  });
+
+  it("reports a genuine YAML document warning", () => {
+    const result = reify(
+      "---\nid: &a: spec:carrier.warning\nkind: behavior\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Title",
+    );
+
+    expect(result.findings[0]).toMatchObject({
+      validatorId: "extract/invalid-frontmatter",
+      line: 2,
+      message:
+        "Anchor ending in : is ambiguous at line 1, column 7:\n\nid: &a: spec:carrier.warning\n      ^\n",
+    });
+  });
+
+  it("contains the YAML parser's unknown throw at the public reifier boundary", async () => {
+    vi.resetModules();
+    vi.doMock("yaml", async (importOriginal) => {
+      const original = await importOriginal<typeof import("yaml")>();
+      return {
+        ...original,
+        parseAllDocuments: () => {
+          const thrownValue: unknown = null;
+          throw thrownValue;
+        },
+      };
+    });
+
+    try {
+      const dynamicApi = await import("../src/index.js");
+      const result = dynamicApi.reifyMarkdownCarrier(validFrontmatter, "carrier.sdp.md");
+
+      expect(result).toMatchObject({
+        specs: [],
+        findings: [
+          {
+            validatorId: "extract/invalid-frontmatter",
+            line: 1,
+            message: "frontmatter parser threw an unknown value",
+          },
+        ],
       });
+    } finally {
+      vi.doUnmock("yaml");
+      vi.resetModules();
     }
+  });
+
+  const carrierAtLimit = `${validFrontmatter}${" ".repeat(
+    256 * 1024 - Buffer.byteLength(validFrontmatter, "utf8"),
+  )}`;
+  const frontmatterCore =
+    "id: spec:carrier.valid\nkind: behavior\naltitude: story\nreadiness: idea\nrelations: {}\n";
+  const frontmatterAtLimit = `${frontmatterCore}${"#".repeat(
+    32 * 1024 - Buffer.byteLength(frontmatterCore, "utf8"),
+  )}`;
+  const scalarAtLimit = `spec:${"a".repeat(16 * 1024 - 5)}`;
+  it.each([
+    [
+      "256 KiB carrier byte limit",
+      carrierAtLimit,
+      `${carrierAtLimit}x`,
+      "carrier exceeds the 256 KiB byte limit",
+      1,
+    ],
+    [
+      "32 KiB frontmatter byte limit",
+      `---\n${frontmatterAtLimit}\n---\n# Title`,
+      `---\n${frontmatterAtLimit}#\n---\n# Title`,
+      "frontmatter exceeds the 32 KiB byte limit",
+      1,
+    ],
+    [
+      "16 KiB scalar byte limit",
+      validFrontmatter.replace("spec:carrier.valid", scalarAtLimit),
+      validFrontmatter.replace("spec:carrier.valid", `${scalarAtLimit}a`),
+      "scalar exceeds the 16 KiB byte limit",
+      2,
+    ],
+    [
+      "2,000 node limit",
+      relationTargets(1_987),
+      relationTargets(1_988),
+      "frontmatter exceeds the 2,000 node limit",
+      6,
+    ],
+    [
+      "depth limit of 16",
+      nestedRelation(13),
+      nestedRelation(14),
+      "frontmatter exceeds the depth limit of 16",
+      22,
+    ],
+  ])("enforces the %s at and immediately over its boundary", (_name, at, over, message, line) => {
+    const atResult = reify(at);
+    const overResult = reify(over);
+
+    expect(atResult.findings).not.toContainEqual(expect.objectContaining({ message }));
+    expect(overResult.findings).toContainEqual(
+      expect.objectContaining({
+        validatorId: "extract/invalid-frontmatter",
+        message,
+        line,
+      }),
+    );
+  });
+
+  it.each([
+    [
+      "duplicate relation keys",
+      "  dependsOn: spec:carrier.first\n  dependsOn: spec:carrier.second",
+      'relation "dependsOn" is authored more than once',
+      8,
+    ],
+    [
+      "duplicate targets within one relation list",
+      "  dependsOn:\n    - spec:carrier.same\n    - spec:carrier.same",
+      "duplicate target within one relation type",
+      9,
+    ],
+    ["an empty relation sequence", "  dependsOn: []", "relation values must not be empty", 7],
+    [
+      "a wrong-namespace relation target",
+      "  dependsOn: pack:carrier.wrong",
+      "relation target must use the spec namespace",
+      7,
+    ],
+  ])("refuses %s", (_name, relations, message, line) => {
+    const result = reify(
+      validFrontmatter
+        .replace("relations: {}", `relations:\n${relations}`)
+        .replace("# Deferred body parsing", "# Title"),
+    );
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({
+        validatorId: "extract/invalid-frontmatter",
+        message,
+        line,
+      }),
+    );
+  });
+
+  it("accepts distinct relation keys that share a target", () => {
+    const result = reify(
+      validFrontmatter.replace(
+        "relations: {}",
+        "relations:\n  dependsOn: spec:carrier.shared\n  refines: spec:carrier.shared",
+      ),
+    );
+
+    expect(result.findings).toEqual([]);
+    expect(result.specs[0]?.data.relations).toEqual([
+      { type: "dependsOn", target: "spec:carrier.shared", claim: "declared" },
+      { type: "refines", target: "spec:carrier.shared", claim: "declared" },
+    ]);
+  });
+
+  it("accepts a pure CRLF carrier", () => {
+    const result = reify(validFrontmatter.replaceAll("\n", "\r\n"));
+
+    expect(result.findings).toEqual([]);
+    expect(result.specs[0]).toMatchObject({ line: 2, data: { title: "Deferred body parsing" } });
+  });
+
+  it.each([
+    [
+      "a byte-order mark",
+      `\uFEFF${validFrontmatter}`,
+      "carrier must begin at byte zero with an exact --- line",
+    ],
+    [
+      "an indented opener",
+      ` ---\n${validFrontmatter.slice(4)}`,
+      "carrier must begin at byte zero with an exact --- line",
+    ],
+    [
+      "a document-end closer",
+      validFrontmatter.replace("---\n#", "...\n#"),
+      "carrier requires one exact closing --- line",
+    ],
+    [
+      "a lone CR after a valid LF carrier",
+      `${validFrontmatter}\r`,
+      "carrier contains a lone CR newline",
+    ],
+    [
+      "mixed CRLF and LF newlines",
+      `---\r\nid: spec:carrier.crlf\r\nkind: behavior\r\naltitude: story\r\nreadiness: idea\r\nrelations: {}\r\n---\r\n# title\n`,
+      "carrier mixes LF and CRLF newlines",
+    ],
+  ])("refuses %s", (_name, sourceText, message) => {
+    expect(reify(sourceText).findings[0]).toMatchObject({
+      validatorId: "extract/invalid-frontmatter",
+      line: 1,
+      message,
+    });
   });
 
   it("maps the ruled title, intent, and behavior lists from the body", () => {
@@ -473,6 +715,43 @@ export const prose = spec({
     expect(Object.keys(sections.model.terms)).toEqual(["Alpha", "Zeta"]);
   });
 
+  it("serializes GWT and behavior key permutations to identical bytes", () => {
+    const first = `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const permutation = spec({
+  id: specId("spec:carrier.permutation"),
+  title: "Permutation",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  behavior: {
+    examples: [{ given: ["given"], when: ["when"], then: ["then"] }],
+    flows: ["First then second."],
+    exampleSpace: { given: ["given"], when: ["when"], then: ["then"] },
+  },
+});`;
+    const second = `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const permutation = spec({
+  readiness: "idea",
+  behavior: {
+    exampleSpace: { then: ["then"], when: ["when"], given: ["given"] },
+    flows: ["First then second."],
+    examples: [{ then: ["then"], when: ["when"], given: ["given"] }],
+  },
+  altitude: "story",
+  kind: "behavior",
+  title: "Permutation",
+  id: specId("spec:carrier.permutation"),
+});`;
+    const firstResult = reifyTypeScriptCarrier(first, "permutation.sdp.ts");
+    const secondResult = reifyTypeScriptCarrier(second, "permutation.sdp.ts");
+
+    expect(firstResult.findings).toEqual([]);
+    expect(secondResult.findings).toEqual([]);
+    expect(serializeGraph(deriveGraph(firstResult.specs, firstResult.packs, []))).toBe(
+      serializeGraph(deriveGraph(secondResult.specs, secondResult.packs, [])),
+    );
+  });
+
   it("omits absent prose fields and rejects constraint-local prose from the TypeScript carrier", () => {
     const withoutProse = reifyTypeScriptCarrier(
       `import { spec, specId } from "@libar-dev/software-delivery-protocol";
@@ -501,6 +780,98 @@ export const invalid = spec({ id: specId("spec:carrier.invalid-prose"), title: "
       message: 'heading "Intnet" is not recognized; did you mean "Intent"?',
     });
   });
+
+  it.each([
+    [
+      "a missing H1",
+      carrierBody("Narrative"),
+      "extract/invalid-markdown-structure",
+      8,
+      "the first body line must be an H1 title",
+    ],
+    [
+      "an empty H1",
+      carrierBody("# "),
+      "extract/invalid-markdown-structure",
+      8,
+      "the H1 title must be nonempty and carry no closing marker",
+    ],
+    [
+      "a heading beyond suggestion distance two",
+      carrierBody("# Title\n## Unrelated"),
+      "extract/unrecognized-heading",
+      9,
+      'heading "Unrelated" is not recognized',
+    ],
+    [
+      "a tied heading using the first minimum",
+      carrierBody("# Title\n## Constrait"),
+      "extract/unrecognized-heading",
+      9,
+      'heading "Constrait" is not recognized; did you mean "Contract"?',
+    ],
+    [
+      "a blank line in a fence",
+      carrierBody(
+        "# Title\n## Intent\n```gwt\nGiven input\n\nWhen processed\nThen output\n```",
+        "example",
+      ),
+      "extract/invalid-markdown-structure",
+      12,
+      "fence bodies cannot contain blank or indented lines",
+    ],
+    [
+      "fence attributes",
+      carrierBody(
+        "# Title\n## Intent\n```gwt {name=value}\nGiven input\nWhen processed\nThen output\n```",
+        "example",
+      ),
+      "extract/invalid-markdown-structure",
+      10,
+      "fences must be exact gwt or gwt-vocabulary fences",
+    ],
+    [
+      "an unclosed fence",
+      carrierBody(
+        "# Title\n## Intent\n```gwt\nGiven input\nWhen processed\nThen output",
+        "example",
+      ),
+      "extract/invalid-markdown-structure",
+      10,
+      "fence must close with an exact ``` line",
+    ],
+    [
+      "a gwt fence on a non-example",
+      carrierBody("# Title\n## Intent\n```gwt\nGiven input\nWhen processed\nThen output\n```"),
+      "extract/invalid-markdown-structure",
+      10,
+      "only an example Intent may own one gwt fence",
+    ],
+    [
+      "an invalid Verification mode",
+      carrierBody("# Title\n## Verification — MODE"),
+      "extract/unrecognized-heading",
+      9,
+      'heading "Verification — MODE" is not recognized',
+    ],
+    [
+      "a repeated identical literal heading",
+      carrierBody("# Title\n## Intent\n## Intent"),
+      "extract/invalid-markdown-structure",
+      10,
+      "a single-valued Markdown owner is authored more than once",
+    ],
+  ])(
+    "refuses %s through the frozen body diagnostic",
+    (_name, sourceText, validatorId, line, message) => {
+      const result = reify(sourceText);
+
+      expect(result.specs).toEqual([]);
+      expect(result.findings).toContainEqual(
+        expect.objectContaining({ validatorId, line, message }),
+      );
+    },
+  );
 
   it.each([
     ["ordered dot list in narrative", "# Title\n1. first", 9],
