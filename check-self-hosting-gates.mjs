@@ -11,9 +11,10 @@ import { fileURLToPath } from "node:url";
 //   1. DOCKET — all obligations are non-pending (done/deferred/dropped with rationale), including
 //      the completed four-gate review ledger.
 //   2. LEDGER — the four-gate review ledger exists in the plan; Gates 1–3 carry meaning,
-//      owner disposition (accepted), date, accepted SHA, corrections (none), and rulings
-//      (including the Gate-3 owner directive on the npm audit advisories); Gate 4 carries the
-//      accepted state and the owner's phase-2 disposition.
+//      owner disposition (accepted), date, accepted SHA, corrections (none for Gates 1-3; the
+//      recorded post-acceptance repair for Gate 4), and rulings (including the Gate-3 owner
+//      directive on the npm audit advisories); Gate 4 carries the accepted state and the owner's
+//      phase-2 disposition.
 //   3. PACKET AGREEMENT — the ledger's fields agree with the owner-packet
 //      dispositions, embedded here as constants read from those packets.
 //   4. STATUS SURFACES — progress lives in the plan and the agent handbook only: the handbook
@@ -47,6 +48,7 @@ const glossaryPath = "CONTEXT.md";
 // Owner-packet dispositions, read from the three packets and embedded as constants: the
 // ledger must agree with them field for field. The shared gate date is assembled in parts.
 const GATE_DATE = ["2026", "07", "18"].join("-");
+const GATE_4_CORRECTION = "24f9978: docs(concept): record the landed prose projection in 06";
 const GATES = [
   { gate: "1", meaning: "schema freeze", sha: "aca79090529c2f6625ceafc78f33e16da81bfcb1" },
   { gate: "2", meaning: "corpus/readiness", sha: "cdb68fc1564c9167ebc0372ba8f8599a97df4393" },
@@ -56,7 +58,7 @@ const GATES = [
     meaning: "whole-phase review and the phase-2 disposition",
     sha: "1d9f38c7a993f9cdc27cc4e178e211e33286758b",
   },
-];
+].map((gate) => ({ ...gate, corrections: gate.gate === "4" ? GATE_4_CORRECTION : "none" }));
 const norm = (text) => text.replace(/\s+/g, " ");
 const read = (rel) => readFileSync(join(rootDir, rel), "utf8");
 
@@ -154,7 +156,7 @@ if (ledgerStart === -1) {
   const gateRow = (gate) =>
     ledgerSection.split("\n").find((line) => line.startsWith(`| ${gate} |`)) ?? "";
 
-  for (const { gate, meaning, sha } of GATES) {
+  for (const { gate, meaning, sha, corrections } of GATES) {
     const row = gateRow(gate);
     if (row === "") {
       failures.push(`${planPath} — ledger row for Gate ${gate} is missing`);
@@ -164,7 +166,12 @@ if (ledgerStart === -1) {
     expectContains(planPath, row, "accepted", `Gate ${gate} ledger row lost its owner disposition`);
     expectContains(planPath, row, GATE_DATE, `Gate ${gate} ledger row lost its acceptance date`);
     expectContains(planPath, row, sha, `Gate ${gate} ledger SHA disagrees with the owner packet`);
-    expectContains(planPath, row, "none", `Gate ${gate} ledger row lost its corrections field`);
+    expectContains(
+      planPath,
+      row,
+      corrections,
+      `Gate ${gate} ledger row lost its corrections field`,
+    );
   }
 
   const gate3 = gateRow("3");
@@ -311,20 +318,10 @@ const report = {
       "diary entry entered — three-part test passes",
   },
   ledger: Object.fromEntries([
-    ...GATES.map(({ gate, meaning, sha }) => [
+    ...GATES.map(({ gate, meaning, sha, corrections }) => [
       `gate${gate}`,
-      { meaning, disposition: "accepted", date: GATE_DATE, sha, corrections: "none" },
+      { meaning, disposition: "accepted", date: GATE_DATE, sha, corrections },
     ]),
-    [
-      "gate4",
-      {
-        meaning: "whole-phase review and the phase-2 disposition",
-        disposition: "accepted",
-        date: GATE_DATE,
-        sha: "1d9f38c7a993f9cdc27cc4e178e211e33286758b",
-        corrections: "none",
-      },
-    ],
   ]),
 };
 console.log(JSON.stringify(report, null, 2));

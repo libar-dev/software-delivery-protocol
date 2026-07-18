@@ -407,7 +407,61 @@ and phase-2 disposition.
 | 1 | Session 1 — the schema freeze: the frozen initial Markdown carrier corpus (five `spec:carrier.*` documents and the five-member Pack) | accepted | 2026-07-18 (~03:35 local) | `aca79090529c2f6625ceafc78f33e16da81bfcb1` | none | No recorded ruling fired — the frozen grammar stood. The effort-branch designation (`feature/protocol-self-application-phase-1`) stood confirmed: the owner was directly offered the `self-hosting/v1` rename and did not request it. |
 | 2 | Session 2 — corpus/readiness: the floor-honest 12-spec corpus and the 14 precise entrypoint anchors | accepted | 2026-07-18 (~05:30 local) | `cdb68fc1564c9167ebc0372ba8f8599a97df4393` | none | No-new-syntax disposition confirmed; no recorded ruling fired. |
 | 3 | Session 3 — the executable loop: Markdown → graph → generated contracts → the bound real-extractor test | accepted | 2026-07-18 (~06:40 local) | `1687885df7b1898c56e154ce2dbe4fa3c6c6c425` | none | No-new-syntax disposition confirmed. Owner directive carried to the final verification wave (F2): assess the 5 npm audit advisories, separating runtime-dependency risk (`yaml@2.9.0`) from dev-chain risk (`vitest`/`vite-node`). |
-| 4 | Session 4 — the whole-phase review and the phase-2 disposition | accepted | 2026-07-18 | `1d9f38c7a993f9cdc27cc4e178e211e33286758b` | none | **Owner's phase-2 decision:** schedule the `sdp import` emitter, checkout-v1 migration, and canonical flip as one phase-2 effort, including the like-for-like parser-hardening baseline / C2-parity obligation; the table-sugar ruling is expected to fire under it. The editor-association gap stays deferred; revisit it after the flip. |
+| 4 | Session 4 — the whole-phase review and the phase-2 disposition | accepted | 2026-07-18 | `1d9f38c7a993f9cdc27cc4e178e211e33286758b` | 24f9978: docs(concept): record the landed prose projection in 06 | **Owner's phase-2 decision:** schedule the `sdp import` emitter, checkout-v1 migration, and canonical flip as one phase-2 effort, including the like-for-like parser-hardening baseline / C2-parity obligation; the table-sugar ruling is expected to fire under it. The editor-association gap stays deferred; revisit it after the flip. |
+
+### Review-06 remediation reconciliation
+
+The Gate-4 correction records the post-acceptance prose-projection repair at `24f9978`; it does
+not alter the accepted SHA or owner disposition. The corresponding review artifact is tracked in
+`reviews/06-self-hosting-phase-1-code-review.md` so the F1-F4 wave can inspect the same record on
+a clean clone.
+
+**Execution learning, todo 14 default-root substitution.** The shipped test retains a default-root
+regeneration case and now guards it with a post-suite sentinel, rather than moving that case to a
+disposable root as originally prescribed. `0ad4f44` restores regeneration and the sentinel; `4ee6136`
+extends the dedicated single-fork split to filtered runs. Together with filtered-run isolation, this
+still meets the intended no-race and idempotence contract. The substitution is recorded here as an
+execution learning, not as a silent rewrite of the original design.
+
+**Sanctioned row-3 enrichment delta.** `spec:carrier.markdown-parser` gained `problem` and `value`
+Intent bullets during todo-9 enrichment. It was born `scoped` and matured to `defined`; this is the
+only non-byte-exact corpus row relative to the frozen table, intentionally retained because the
+added evidence satisfies the `defined` floor.
+
+**Back-catalog notes.** Authored decision specs use `spec:decisions.*`, while the DECISIONS registry
+reserves `spec:protocol.decisions.*`; resolve that namespace divergence in the back-catalog fold,
+not in phase 1. The `npm run check` chain now has a twelfth `preflight` leg beyond todo-22's frozen
+eleven-leg order. This is a benign additive deviation, and `AGENTS.md` documents the current chain.
+
+**Low and information observation dispositions.** The review labels this tail as 24 observations;
+the compact grouping below retains every listed concern and its durable disposition.
+
+| Observation group | Disposition | Record |
+|---|---|---|
+| Markdown reifier catch-all totality | deferred | Totality remains by construction; retain the TypeScript reifier's wrapper as the cross-carrier backstop. |
+| YAML 1.2 scalar spellings | deferred | The current refusal-message classification is not phase-1 scope. |
+| YAML parser line-number mismatch | deferred | Rebased finding lines are correct; native message wording is follow-up polish. |
+| Frontmatter `...` document end | deferred | Acceptance before a later closer remains unpinned follow-up behavior. |
+| Non-mapping-root accumulated findings | deferred | Preserve as parser diagnostic aggregation debt. |
+| Depth and node cap finding flood | deferred | One-finding-per-offending-node behavior remains bounded by the cap. |
+| GWT fence placement in Intent | deferred | Exact immediate-placement enforcement is future grammar hardening. |
+| Heading trailing whitespace and trailing `#` titles | deferred | Preserve the current strict heading recognition pending grammar hardening. |
+| Duplicate `When` reporting and dead `mapOwner` branch | deferred | Small parser cleanup belongs with a later grammar pass. |
+| Windows absolute excludes and `--exclude --foo` diagnostics | pre-existing/phase-2 | Exclude UX refinements are outside phase-1 acceptance. |
+| Path-prefix matcher coverage | deferred | Add a focused regression when exclusion handling is next changed. |
+| Library-seam exclusion wording | deferred | Public library diagnostics can be separated from CLI wording later. |
+| Indirect assembly of the `then` graph key | fixed-by-remediation | `cd735ae` names the key directly. |
+| Design Review dynamic-key ordering | deferred | Re-parsed graph rendering determinism is a projection follow-up. |
+| Design Review escaping outside prose slots | pre-existing/phase-2 | TS-carrier authored HTML policy needs a scoped rendering decision. |
+| GWT, examples, flows, and example-space permutation coverage | fixed-by-remediation | `f8b26f5` adds byte-equality permutation coverage. |
+| Model term named `description` | fixed-by-remediation | `fb6b973` refuses the collision rather than dropping it silently. |
+| Row-3 enrichment delta | deferred | Sanctioned above as the intentional `scoped` to `defined` maturity record. |
+| Bound example reports only a count | fixed-by-remediation | `4ee6136` asserts the distinct TypeScript and Markdown carrier files. |
+| Fixture-to-live byte identity for rows 1, 2, 4, and 5 | fixed-by-remediation | `f8b26f5` pins the identities. |
+| No-reparse spy coverage | deferred | Named-import interception remains weaker than an injected read seam. |
+| Carrier-truth comment and temporal token assembly | deferred | The comment can be narrowed later; token assembly remains the sanctioned temporal-guard pattern. |
+| Stale provenance wording and plan-16 evidence-only dispositions | pre-existing/phase-2 | The glossary wording and archived per-item evidence are back-catalog work. |
+| Twelfth preflight leg and decision-spec namespace divergence | pre-existing/phase-2 | Both are recorded above: the chain delta is benign, and the namespace fold awaits phase 2. |
 
 ### Owner's phase-2 decision
 
