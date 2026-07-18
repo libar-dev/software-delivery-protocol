@@ -66,6 +66,17 @@ const expectedSpecs = [
       behavior: {
         rules: [
           "The parser accepts only the ruled heading grammar and excludes one malformed carrier while continuing healthy siblings.",
+          "The ruled Markdown parser has a bounded refusal-parity claim with the TypeScript carrier for `extract/non-static-envelope`, `extract/invalid-id`, `extract/duplicate-id`, `extract/reserved-property`, `extract/unowned-prose`, and `extract/unrecognized-property`.",
+          "Named non-claim — `extract/parse-error` remains distinct because YAML/frontmatter parsing has no TypeScript parser-diagnostic analogue.",
+          "Named non-claim — `extract/non-static-section` remains distinct because TypeScript degrades optional section properties while Markdown refuses malformed documents whole.",
+          "Named non-claim — `extract/unrecognized-statement` remains distinct because Markdown owns prose and structures, not TypeScript statement recognition.",
+          "Named non-claim — `extract/misplaced-authoring` remains distinct because Markdown has no executable authoring-call surface.",
+        ],
+      },
+      verification: {
+        mode: "executable",
+        criteria: [
+          "`test/extract-parity.test.ts` executes the settled refusal-parity matrix, including the six same-class findings and four named non-claims.",
         ],
       },
     },

@@ -210,6 +210,18 @@ walkthrough used the ruled grammar without a forced gap.
 | Depth and node breaches consumed the 100-finding budget with repeated identical diagnostics | (1) report every offending descendant; (2) stop traversal at the first breach; (3) emit one summary per breached limit per document while continuing traversal for independent findings | **Option 3 ruled.** Depth and node limits each emit at most one finding per document; traversal continues so unrelated authored-fidelity findings remain visible. | Not admitted as a durable decision Spec: this is a bounded diagnostic policy, not a hard-to-reverse domain law. | `spec:carrier.envelope-contract`; §8 “Depth and node cap finding flood”. |
 | Review-06 exposed body-parser drift from the frozen trim and immediate-placement rules | (1) retain permissive fence placement and closing-marker interpretation; (2) restore the frozen behavior | **Option 2 ruled.** An example `gwt` fence is the final nonblank Intent block; trailing ASCII whitespace is trimmed from `### Open questions`; terminal `#` characters are literal heading text, with H2 text still passing through owner recognition. | Not admitted as a durable decision Spec: these are repairs to the frozen 17b representation, not new durable trade-offs. | `spec:carrier.markdown-parser`; §8 GWT and heading rows. |
 
+### Session 3 hardening-claim disposition
+
+**Option (a) ruled.** The executed §3 matrix contains only six same-class findings and four named
+non-claims, so `spec:carrier.markdown-parser` carries a like-for-like bounded refusal-parity claim
+backed by `test/extract-parity.test.ts` and the task-19 matrix evidence. It does not claim full
+parity. The named non-claims remain explicit:
+
+1. `extract/parse-error` — YAML/frontmatter parsing has no TypeScript parser-diagnostic analogue.
+2. `extract/non-static-section` — TypeScript degrades optional section properties; Markdown refuses malformed documents whole.
+3. `extract/unrecognized-statement` — Markdown owns prose and structures, not TypeScript statement recognition.
+4. `extract/misplaced-authoring` — Markdown has no executable authoring-call surface.
+
 ## (j) §7 Done-record and delta catalog
 
 The done-record is process evidence, never graph content. A session appends its commit SHA,
