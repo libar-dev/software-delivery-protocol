@@ -147,9 +147,7 @@ describe("importTypeScriptSpec", () => {
     const result = importTypeScriptSpec(source, relativePath);
 
     // Then
-    expect(result.emitted).toEqual(
-      expect.objectContaining({ path: "specs/mixed.sdp.md" }),
-    );
+    expect(result.emitted).toEqual(expect.objectContaining({ path: "specs/mixed.sdp.md" }));
     expect(result.findings).toContainEqual(
       expect.objectContaining({
         validatorId: importFindingIds.packUnsupported,
