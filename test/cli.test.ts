@@ -159,8 +159,14 @@ describe("sdp cli", () => {
       );
 
       expect(exitCode).toBe(0);
-      expect(capture.readStderr()).toBe("");
-      expect(capture.readStdout()).toContain("validate: 0 errors · 0 warnings");
+      // These pre-anchor gaps are expected until the inventory binds their implementation and test anchors.
+      expect(capture.readStderr().trimEnd().split("\n")).toEqual([
+        'specs/extraction/derive-graph.sdp.md — [warning] honesty/gaps — Spec "spec:extraction.derive-graph" states readiness "ready" with no resolving verifier — a gap, informative only (ready never requires delivery facts).',
+        'specs/extraction/determinism.sdp.md — [warning] honesty/gaps — Spec "spec:extraction.determinism" states readiness "ready" with no resolving verifier — a gap, informative only (ready never requires delivery facts).',
+        'specs/validation/duplicate-ids.sdp.md — [warning] honesty/gaps — Spec "spec:validation.duplicate-ids" states readiness "ready" with no resolving verifier — a gap, informative only (ready never requires delivery facts).',
+        'specs/validation/readiness-floor.sdp.md — [warning] honesty/gaps — Spec "spec:validation.readiness-floor" states readiness "ready" with no resolving verifier — a gap, informative only (ready never requires delivery facts).',
+      ]);
+      expect(capture.readStdout()).toContain("validate: 0 errors · 4 warnings");
       expect(readFileSync(join(repoRoot, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
