@@ -210,10 +210,10 @@ round-trip catalog is declared before implementation and may change only by an e
 
 | Delta | Comparison treatment | Why lawful | Evidence state |
 |---|---|---|---|
-| `.sdp.ts` to `.sdp.md` file suffix | normalize `file` path before graph comparison | physical carrier path is not semantic intent | pending |
-| physical Markdown envelope syntax | compare reified authored content, not formatting tokens | envelope representation differs lawfully | pending |
-| TS source comments | omit from graph comparison | comments are not graph content | pending |
-| delivery facts under the same anchor set | compare after both sides use identical anchors | facts remain derived from bindings | pending |
+| `.sdp.ts` to `.sdp.md` file suffix | normalize `file` path before graph comparison | physical carrier path is not semantic intent | done — migration round-trip evidence confirms normalized graph equality |
+| physical Markdown envelope syntax | compare reified authored content, not formatting tokens | envelope representation differs lawfully | done — migration round-trip evidence confirms reified authored equality |
+| TS source comments | omit from graph comparison | comments are not graph content | done — migration round-trip evidence confirms comments do not affect the graph |
+| delivery facts under the same anchor set | compare after both sides use identical anchors | facts remain derived from bindings | done — migration round-trip evidence confirms identical recomputed facts |
 
 ## (k) §8 Docket ledger
 
@@ -276,7 +276,7 @@ the ledger's complete, non-empty G1-G8 structure while this plan exists.
 | Gate | Meaning | Entry condition | Evidence / owner disposition |
 |---|---|---|---|
 | G1 | emitter contract and grammar freeze | §2 matrix reviewed before emitter design | accepted — 2026-07-18 — `f06f14d` |
-| G2 | importer fidelity | imported fixture graph equals source under §7 catalog | pending — fixture and Design Review packet |
+| G2 | importer fidelity | imported fixture graph equals source under §7 catalog | accepted — 2026-07-18 — df444f2 |
 | G3 | checkout migration | all eleven Specs Markdown-canonical with no dual IDs | pending — migration check and example walkthrough |
 | G4 | hardening baseline | §3 classes have evidence or named non-claim | pending — parity matrix and parser-Spec disposition |
 | G5 | canonical-default flip | operative records and post-flip truth pins agree | pending — one tight record series and audit map |
