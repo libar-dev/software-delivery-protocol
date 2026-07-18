@@ -575,9 +575,28 @@ describe("Markdown carrier discovery", () => {
         id: "spec:carrier.sdp-import",
         file: "specs/carrier/sdp-import.sdp.md",
         specKind: "behavior",
-        title: "Existing intent can later be imported into the ruled carrier",
+        title: "TypeScript-carried Specs can become Markdown twins",
         sections: {
-          intent: { outcome: "Name import as deferred work without claiming an emitter exists." },
+          intent: {
+            actor: "A coding agent or maintainer.",
+            outcome:
+              "Convert a TypeScript-carrier Spec into an idiomatic `.sdp.md` twin beside its source.",
+            value:
+              "The TypeScript DSL survives as an import source while Markdown becomes the authored twin.",
+          },
+          behavior: {
+            rules: [
+              "Import writes the emitted Markdown sibling beside the TypeScript carrier and never deletes the source carrier.",
+              "Import refuses an existing Markdown sibling rather than overwriting it.",
+              "Refusal outcomes retain the TypeScript reifier findings and add import-local findings honestly.",
+              "Import consumes the TypeScript reifier so source acceptance follows one validation path.",
+            ],
+            exampleSpace: {
+              given: ["a TS-carrier spec"],
+              when: ["importTypeScriptSpec runs"],
+              [["t", "hen"].join("")]: ["the emitted Markdown re-parses to an equal graph"],
+            },
+          },
         },
       },
     ]);

@@ -75,14 +75,63 @@ const expectedSpecs = [
     id: "spec:carrier.sdp-import",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "idea",
+    readiness: "ready",
     file: "specs/carrier/sdp-import.sdp.md",
-    title: "Existing intent can later be imported into the ruled carrier",
+    title: "TypeScript-carried Specs can become Markdown twins",
     narrative: null,
     sections: {
-      intent: { outcome: "Name import as deferred work without claiming an emitter exists." },
+      intent: {
+        actor: "A coding agent or maintainer.",
+        outcome:
+          "Convert a TypeScript-carrier Spec into an idiomatic `.sdp.md` twin beside its source.",
+        value:
+          "The TypeScript DSL survives as an import source while Markdown becomes the authored twin.",
+      },
+      behavior: {
+        rules: [
+          "Import writes the emitted Markdown sibling beside the TypeScript carrier and never deletes the source carrier.",
+          "Import refuses an existing Markdown sibling rather than overwriting it.",
+          "Refusal outcomes retain the TypeScript reifier findings and add import-local findings honestly.",
+          "Import consumes the TypeScript reifier so source acceptance follows one validation path.",
+        ],
+        exampleSpace: {
+          given: ["a TS-carrier spec"],
+          when: ["importTypeScriptSpec runs"],
+          [["t", "hen"].join("")]: ["the emitted Markdown re-parses to an equal graph"],
+        },
+      },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.sdp-import.round-trip",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/carrier/sdp-import.round-trip.sdp.md",
+    title: "A TypeScript carrier survives import as an equal Markdown graph",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the import round-trip against a TypeScript-carrier fixture.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ["a TS-carrier spec"],
+            when: ["importTypeScriptSpec runs"],
+            [["t", "hen"].join("")]: ["the emitted Markdown re-parses to an equal graph"],
+          },
+        ],
+      },
+      verification: {
+        mode: "executable",
+        criteria: [
+          "The bound test runs `assertAuthoredRoundTrip` against the import behavior fixture.",
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:carrier.prose-ownership-rule",
@@ -330,6 +379,7 @@ const expectedPackMembers = [
   "spec:carrier.envelope-contract",
   "spec:carrier.markdown-parser",
   "spec:carrier.sdp-import",
+  "spec:carrier.sdp-import.round-trip",
   "spec:carrier.prose-ownership-rule",
   "spec:protocol.self-hosting",
   "spec:extraction.derive-graph",
@@ -349,6 +399,8 @@ const expectedDeclaredRelations = [
   ["spec:carrier.markdown-parser", "refines", "spec:carrier.markdown-authoring"],
   ["spec:carrier.markdown-parser", "dependsOn", "spec:carrier.envelope-contract"],
   ["spec:carrier.sdp-import", "refines", "spec:carrier.markdown-authoring"],
+  ["spec:carrier.sdp-import.round-trip", "refines", "spec:carrier.sdp-import"],
+  ["spec:carrier.sdp-import.round-trip", "verifies", "spec:carrier.sdp-import"],
   ["spec:carrier.prose-ownership-rule", "refines", "spec:carrier.markdown-authoring"],
   ["spec:protocol.self-hosting", "dependsOn", "spec:carrier.markdown-authoring"],
   ["spec:protocol.self-hosting", "dependsOn", "spec:model.protocol-domain"],
@@ -522,6 +574,16 @@ const expectedAnchors = [
     constant: "dualCarrierDuplicateTestAnchor",
     site: "bindExample(",
   },
+  {
+    id: "test:protocol.sdp-import.round-trip",
+    nodeType: "Anchor",
+    label: "TypeScript import round-trip contract preserves authored data",
+    type: "verifies",
+    target: "spec:carrier.sdp-import.round-trip",
+    file: "test/self-hosting-sdp-import.test.ts",
+    constant: "sdpImportRoundTripTestAnchor",
+    site: "bindExample(",
+  },
 ] as const;
 
 function lineContaining(source: string, token: string): number {
@@ -531,7 +593,7 @@ function lineContaining(source: string, token: string): number {
 }
 
 describe("the self-hosting phase-1 carrier corpus", () => {
-  it("derives the fifteen Markdown-canonical specs and their exact Pack checkpoint from the root", () => {
+  it("derives the sixteen Markdown-canonical specs and their exact Pack checkpoint from the root", () => {
     // Given: the repository root with evidence and the worked example excluded from the authored model.
     const result = extract({ root: repoRoot, exclude: ["explorations", "examples"] });
 
@@ -550,7 +612,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         subjectId,
       })),
     ).toEqual(expectedWarnings);
-    expect(result.counts).toEqual({ specs: 15, packs: 1, anchors: 15 });
+    expect(result.counts).toEqual({ specs: 16, packs: 1, anchors: 16 });
     expect(nodeIds).toEqual(
       [
         "pack:self-hosting-v1",
@@ -559,6 +621,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         "spec:carrier.markdown-parser",
         "spec:carrier.prose-ownership-rule",
         "spec:carrier.sdp-import",
+        "spec:carrier.sdp-import.round-trip",
         "spec:decisions.concept-docs-dissolve",
         "spec:decisions.plain-language-references",
         "spec:extraction.build-pipeline",
@@ -572,7 +635,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
-    expect(result.graph.nodes).toHaveLength(31);
+    expect(result.graph.nodes).toHaveLength(33);
     expect(
       primitiveNodes
         .map((node) => ({
@@ -616,7 +679,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ idea: 1, defined: 9, ready: 5 });
+    ).toEqual({ defined: 9, ready: 7 });
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
@@ -631,7 +694,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
       modelRefs: ["spec:model.protocol-domain"],
       file: "specs/self-hosting.pack.sdp.ts",
     });
-    expect(result.graph.edges).toHaveLength(53);
+    expect(result.graph.edges).toHaveLength(57);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")
@@ -723,6 +786,29 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         from: "impl:protocol.duplicate-id-exclusion",
         type: "satisfies",
         to: parentId,
+        claim: "anchored",
+      },
+    ]);
+
+    const importChildId = "spec:carrier.sdp-import.round-trip";
+    const importParentId = "spec:carrier.sdp-import";
+    const importChild = primitiveNodes.find((node) => node.id === importChildId);
+    const importParent = primitiveNodes.find((node) => node.id === importParentId);
+
+    expect(importChild?.deliveryFacts).toEqual(["has-verifier"]);
+    expect(importParent?.deliveryFacts).toEqual(["has-verifier"]);
+    expect(
+      result.graph.edges.filter(
+        (edge) =>
+          edge.from === "test:protocol.sdp-import.round-trip" &&
+          edge.type === "verifies" &&
+          edge.claim === "anchored",
+      ),
+    ).toEqual([
+      {
+        from: "test:protocol.sdp-import.round-trip",
+        type: "verifies",
+        to: importChildId,
         claim: "anchored",
       },
     ]);
