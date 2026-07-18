@@ -8,9 +8,11 @@ import { afterAll, describe, expect, it } from "vitest";
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
 import {
+  deriveGraph,
   extract,
   extractFindingIds,
   graphValidatorIds,
+  reifyTypeScriptCarrier,
   serializeGraph,
   validateGraph,
 } from "../src/index.js";
@@ -283,6 +285,57 @@ describe("extraction corpora", () => {
     const node = primitiveNode(result.graph, "spec:orders.typoed-section");
     expect(node).toBeDefined();
     expect(JSON.stringify(node)).not.toContain("behaviour");
+  });
+
+  it("unrecognized in-section property: warns before canonical serialization drops it", () => {
+    const reified = reifyTypeScriptCarrier(
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:orders.unrecognized-section-property"),
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  behavior: { rules: ["Keep known content."], notes: "Must not disappear silently." },
+});`,
+      "unrecognized-section-property.sdp.ts",
+    );
+
+    const graph = deriveGraph(reified.specs, reified.packs, []);
+
+    expect(reified.findings).toMatchObject([
+      {
+        validatorId: extractFindingIds.unrecognizedProperty,
+        severity: "warning",
+        path: "behavior.notes",
+      },
+    ]);
+    expect(
+      primitiveNode(graph, "spec:orders.unrecognized-section-property")?.sections?.behavior,
+    ).toEqual({ rules: ["Keep known content."] });
+    expect(serializeGraph(graph)).not.toContain("Must not disappear silently.");
+  });
+
+  it("reserved model term: refuses a term key that collides with the section description field", () => {
+    const reified = reifyTypeScriptCarrier(
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:orders.reserved-description-term"),
+  kind: "model",
+  altitude: "story",
+  readiness: "idea",
+  model: { terms: { description: "A term that collides with section vocabulary." } },
+});`,
+      "reserved-description-term.sdp.ts",
+    );
+
+    expect(reified.specs).toEqual([]);
+    expect(reified.findings).toMatchObject([
+      {
+        validatorId: extractFindingIds.reservedProperty,
+        severity: "error",
+        path: "model.terms.description",
+      },
+    ]);
   });
 
   it("id-shaped-string-content: a raw id-shaped string in section content is prose — kept, edge-free, finding-free", () => {

@@ -57,13 +57,13 @@ function canonicalOpenQuestion(question: IntentOpenQuestion): Record<string, unk
 }
 
 function canonicalGwt(gwt: GivenWhenThen | ExampleSpaceVocabulary): Record<string, unknown> {
-  const thenKey = ["t", "hen"].join("");
+  const entries = [
+    ["given", gwt.given],
+    ["when", gwt.when],
+    ["then", gwt.then],
+  ] satisfies readonly (readonly [string, readonly string[] | undefined])[];
 
-  return {
-    ...(gwt.given === undefined ? {} : { given: gwt.given }),
-    ...(gwt.when === undefined ? {} : { when: gwt.when }),
-    ...(gwt.then === undefined ? {} : { [thenKey]: gwt.then }),
-  };
+  return Object.fromEntries<unknown>(entries.filter((entry) => entry[1] !== undefined));
 }
 
 function canonicalBehavior(
