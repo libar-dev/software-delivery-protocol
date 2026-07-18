@@ -7,10 +7,12 @@ import type { GraphSchema } from "../graph/schema.js";
 import type { Finding, ValidationReport } from "../validate/contracts.js";
 import { reifyAnchorSourceFile } from "./anchors.js";
 import type { ReifiedAnchor } from "./anchors.js";
+import { reifyTypeScriptCarrier } from "./carrier.js";
 import { deriveGraph } from "./derive.js";
 import { discoverFiles } from "./discover.js";
 import type { DiscoveredSourceFile } from "./discover.js";
-import { PROTOCOL_MODULE_SPECIFIER, extractFindingIds, reifySourceFile } from "./reify.js";
+import { reifyMarkdownCarrier } from "./markdown.js";
+import { PROTOCOL_MODULE_SPECIFIER, extractFindingIds } from "./reify.js";
 import type { ReifiedPack, ReifiedSpec } from "./reify.js";
 
 export { PROTOCOL_MODULE_SPECIFIER, extractFindingIds } from "./reify.js";
@@ -20,9 +22,9 @@ export const extractValidatorId = "extract";
 
 export interface ExtractOptions {
   /**
-   * The extraction root: every `*.sdp.ts` below it (minus tooling output) is read as the declared
-   * layer, and every other `*.ts`/`*.tsx` source file is swept for anchor constants (the anchored
-   * layer).
+   * The extraction root: every `*.sdp.ts` and `*.sdp.md` below it (minus tooling output) is read
+   * as the declared layer, and every other `*.ts`/`*.tsx` source file is swept for anchor
+   * constants (the anchored layer).
    */
   readonly root: string;
   /** Root-relative POSIX path prefixes excluded from both discovery surfaces. */
@@ -155,20 +157,25 @@ function fileParses(program: Program, source: ParsedSourceFile, findings: Findin
  */
 export function extract(options: ExtractOptions): ExtractionResult {
   const files = discoverFiles(options.root, options.exclude);
-  // The project only ever parses: reification is pure AST reading and the program exists solely
-  // for syntactic diagnostics, so the default lib would never be read — `noLib` skips loading it.
-  const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { noLib: true } });
   const specs: ReifiedSpec[] = [];
   const packs: ReifiedPack[] = [];
   const anchors: ReifiedAnchor[] = [];
   const findings: Finding[] = [];
-  const specSources: ParsedSourceFile[] = [];
-  const anchorSources: ParsedSourceFile[] = [];
 
   for (const file of files.specFiles) {
     const sourceText = readFileSync(file.absolutePath, "utf8");
-    specSources.push({ file, sourceFile: project.createSourceFile(file.relativePath, sourceText) });
+    const reified = file.relativePath.endsWith(".sdp.md")
+      ? reifyMarkdownCarrier(sourceText, file.relativePath)
+      : reifyTypeScriptCarrier(sourceText, file.relativePath);
+    specs.push(...reified.specs);
+    packs.push(...reified.packs);
+    findings.push(...reified.findings);
   }
+
+  // Anchors are TypeScript-only. The project exists solely for their syntactic diagnostics, so the
+  // default lib would never be read — `noLib` skips loading it.
+  const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { noLib: true } });
+  const anchorSources: ParsedSourceFile[] = [];
 
   for (const file of files.anchorCandidateFiles) {
     const sourceText = readFileSync(file.absolutePath, "utf8");
@@ -187,20 +194,9 @@ export function extract(options: ExtractOptions): ExtractionResult {
     });
   }
 
-  // One program, requested after every file is added: ts-morph rebuilds the program whenever a
-  // file lands, so asking per file would redo the work quadratically.
+  // One anchor program, requested after every file is added: ts-morph rebuilds the program whenever
+  // a file lands, so asking per file would redo the work quadratically.
   const program = project.getProgram();
-
-  for (const source of specSources) {
-    if (!fileParses(program, source, findings)) {
-      continue;
-    }
-
-    const reified = reifySourceFile(source.sourceFile, source.file.relativePath);
-    specs.push(...reified.specs);
-    packs.push(...reified.packs);
-    findings.push(...reified.findings);
-  }
 
   for (const source of anchorSources) {
     if (!fileParses(program, source, findings)) {

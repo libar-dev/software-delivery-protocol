@@ -85,6 +85,46 @@ function exclusionRoot(): string {
   return root;
 }
 
+function temporaryCorpusRoot(name: string): string {
+  const root = mkdtempSync(join(tmpdir(), `sdp-${name}-`));
+  materializedRoots.push(root);
+  mkdirSync(join(root, "specs"), { recursive: true });
+  return root;
+}
+
+function typeScriptCarrierSource(id: string, title: string): string {
+  return `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const carrier = spec({
+  id: specId("${id}"),
+  title: "${title}",
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  intent: { outcome: "Exercise carrier routing." },
+  behavior: { rules: ["Both carriers derive one graph."] },
+});
+`;
+}
+
+function markdownCarrierSource(id: string, title: string): string {
+  return `---
+id: ${id}
+kind: behavior
+altitude: story
+readiness: idea
+relations: {}
+---
+# ${title}
+
+## Intent
+- outcome: Exercise carrier routing.
+
+## Behavior
+- rule: Both carriers derive one graph.
+`;
+}
+
 afterAll(() => {
   for (const root of materializedRoots) {
     removeMaterializedCorpus(root);
@@ -375,6 +415,181 @@ describe("extraction corpora", () => {
 
     const node = primitiveNode(result.graph, "spec:orders.nested-duplicate");
     expect(node?.sections?.intent?.outcome).toBe("first authored value");
+  });
+});
+
+describe("Markdown carrier discovery", () => {
+  it("routes the five defused target documents through real discovery with their exact nodes", () => {
+    const result = extract({ root: corpusRoot("self-hosting-carrier") });
+
+    expect(result.report.findings).toEqual([]);
+    expect(result.counts).toEqual({ specs: 5, packs: 0, anchors: 0 });
+    expect(
+      result.graph.nodes.map((node) =>
+        node.nodeType === "Primitive"
+          ? {
+              id: node.id,
+              file: node.file,
+              specKind: node.specKind,
+              title: node.title,
+              sections: node.sections,
+            }
+          : node,
+      ),
+    ).toEqual([
+      {
+        id: "spec:carrier.envelope-contract",
+        file: "specs/carrier/envelope-contract.sdp.md",
+        specKind: "contract",
+        title: "The Markdown envelope is explicit and bounded",
+        sections: {
+          intent: {
+            outcome: "Make a Markdown Spec's identity and descriptors deterministic to reify.",
+          },
+          behavior: {
+            rules: [
+              "A Markdown Spec declares id, kind, altitude, readiness, and relations in bounded YAML frontmatter; its first H1 declares title.",
+            ],
+          },
+        },
+      },
+      {
+        id: "spec:carrier.markdown-authoring",
+        file: "specs/carrier/markdown-authoring.sdp.md",
+        specKind: "behavior",
+        title: "Markdown authoring enters the one graph",
+        sections: {
+          intent: {
+            outcome: "Author new Protocol Specs in Markdown without creating a second truth path.",
+          },
+          behavior: {
+            rules: [
+              "Markdown and TypeScript carriers feed the same reification and graph-derivation path.",
+            ],
+          },
+        },
+      },
+      {
+        id: "spec:carrier.markdown-parser",
+        file: "specs/carrier/markdown-parser.sdp.md",
+        specKind: "behavior",
+        title: "The product parser reifies the ruled Markdown subset",
+        sections: {
+          intent: { outcome: "Reify authored Markdown without a second graph or validation path." },
+          behavior: {
+            rules: [
+              "The parser accepts only the ruled heading grammar and excludes one malformed carrier while continuing healthy siblings.",
+            ],
+          },
+        },
+      },
+      {
+        id: "spec:carrier.prose-ownership-rule",
+        file: "specs/carrier/prose-ownership-rule.sdp.md",
+        specKind: "rule",
+        title: "Every prose edge has one owner",
+        sections: {
+          intent: { outcome: "Keep free prose in the graph without ambiguous attachment." },
+          behavior: {
+            rules: [
+              "Narrative lives before the first H2; descriptions live only under their owning singular sections; unowned prose is refused.",
+            ],
+          },
+        },
+      },
+      {
+        id: "spec:carrier.sdp-import",
+        file: "specs/carrier/sdp-import.sdp.md",
+        specKind: "behavior",
+        title: "Existing intent can later be imported into the ruled carrier",
+        sections: {
+          intent: { outcome: "Name import as deferred work without claiming an emitter exists." },
+        },
+      },
+    ]);
+  });
+
+  it("derives semantically equivalent accepted subsets through extract and serializeGraph", () => {
+    const markdownRoot = temporaryCorpusRoot("markdown-equivalence");
+    const typeScriptRoot = temporaryCorpusRoot("typescript-equivalence");
+    const id = "spec:carrier.accepted-subset";
+    const title = "Accepted carrier subset";
+
+    writeFileSync(
+      join(markdownRoot, "specs", "equivalent.sdp.md"),
+      markdownCarrierSource(id, title),
+      "utf8",
+    );
+    writeFileSync(
+      join(typeScriptRoot, "specs", "equivalent.sdp.ts"),
+      typeScriptCarrierSource(id, title),
+      "utf8",
+    );
+
+    const markdown = extract({ root: markdownRoot });
+    const typeScript = extract({ root: typeScriptRoot });
+    const markdownSerialized = serializeGraph(markdown.graph);
+    const typeScriptSerialized = serializeGraph(typeScript.graph);
+
+    // This is accepted-subset equivalence only; full Markdown/TS parity waits for multi-entry
+    // constraint syntax and the deferred hardening work.
+    expect(markdown.report.findings).toEqual([]);
+    expect(typeScript.report.findings).toEqual([]);
+    expect(markdown.graph.nodes[0]?.file).toBe("specs/equivalent.sdp.md");
+    expect(typeScript.graph.nodes[0]?.file).toBe("specs/equivalent.sdp.ts");
+    expect(markdownSerialized.replace("equivalent.sdp.md", "equivalent.sdp")).toBe(
+      typeScriptSerialized.replace("equivalent.sdp.ts", "equivalent.sdp"),
+    );
+  });
+
+  it("excludes a malformed Markdown carrier while retaining its healthy TypeScript sibling", () => {
+    const root = temporaryCorpusRoot("mixed-carrier-failure");
+    writeFileSync(join(root, "specs", "broken.sdp.md"), "not a Markdown carrier", "utf8");
+    writeFileSync(
+      join(root, "specs", "healthy.sdp.ts"),
+      typeScriptCarrierSource("spec:carrier.healthy-sibling", "Healthy sibling"),
+      "utf8",
+    );
+
+    const result = extract({ root });
+
+    expect(result.report.findings).toMatchObject([
+      {
+        validatorId: "extract/invalid-frontmatter",
+        file: "specs/broken.sdp.md",
+        line: 1,
+      },
+    ]);
+    expect(result.graph.nodes.map((node) => node.id)).toEqual(["spec:carrier.healthy-sibling"]);
+  });
+
+  it("reports same-ID TypeScript and Markdown carriers at both sites without deriving either", () => {
+    const root = temporaryCorpusRoot("cross-carrier-duplicate");
+    const id = "spec:carrier.cross-carrier-duplicate";
+    writeFileSync(
+      join(root, "specs", "duplicate.sdp.md"),
+      markdownCarrierSource(id, "Markdown"),
+      "utf8",
+    );
+    writeFileSync(
+      join(root, "specs", "duplicate.sdp.ts"),
+      typeScriptCarrierSource(id, "TypeScript"),
+      "utf8",
+    );
+
+    const result = extract({ root });
+    const duplicateFindings = result.report.findings.filter(
+      (finding) => finding.validatorId === extractFindingIds.duplicateId,
+    );
+
+    expect(duplicateFindings).toHaveLength(2);
+    expect(duplicateFindings.map((finding) => finding.file)).toEqual([
+      "specs/duplicate.sdp.md",
+      "specs/duplicate.sdp.ts",
+    ]);
+    expect(duplicateFindings.every((finding) => finding.subjectId === id)).toBe(true);
+    expect(result.counts.specs).toBe(2);
+    expect(result.graph.nodes).toEqual([]);
   });
 });
 

@@ -22,8 +22,8 @@ Usage:
   sdp view [root] [--exclude PATH]... [--check-clean]
 
 Commands:
-  build      Extract every *.sdp.ts under root (default: cwd), plus the anchor constants in the
-             other *.ts/*.tsx source files, into <root>/generated/graph.json — then derive the
+  build      Extract every *.sdp.ts and *.sdp.md under root (default: cwd), plus the anchor
+              constants in the other *.ts/*.tsx source files, into <root>/generated/graph.json — then derive the
              executable contracts (per-example step contracts + per-parent space contracts,
              the A2 mechanism) into <root>/generated/contracts/. Exits 1 and writes nothing on
              any hard error — the emitted artifacts are all-or-nothing. --check-clean
@@ -309,11 +309,14 @@ function runBuild(
     // note stays silent beside it.
     if (
       result.counts.specs === 0 &&
-      !findings.some((finding) => finding.file?.endsWith(".sdp.ts"))
+      !findings.some(
+        (finding) =>
+          finding.file?.endsWith(".sdp.ts") === true || finding.file?.endsWith(".sdp.md") === true,
+      )
     ) {
       writeStderr(
         output,
-        `note: no *.sdp.ts spec files found under ${resolvedRoot} — the authored model is empty. Is this the right extraction root?\n`,
+        `note: no *.sdp.ts or *.sdp.md spec files found under ${resolvedRoot} — the authored model is empty. Is this the right extraction root?\n`,
       );
     }
 

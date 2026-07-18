@@ -145,17 +145,15 @@ describe("sdp cli", () => {
     }
   });
 
-  it("builds cleanly with no root argument from the repository root (the default-root path)", () => {
-    // The repo itself must stay a clean default root: corpora are committed defused
-    // (*.sdp.ts.txt / *.ts.txt), so the only *.sdp.ts under the root is the example model, and
-    // the anchor sweep finds only the example's anchors (recognition is by import binding — this
-    // repo's own tests import the protocol by relative path, so they bind nothing).
+  it("builds cleanly from the repository root with exploratory carrier evidence excluded", () => {
+    // Exploration Markdown is evidence, not the authored model. The explicit consumer exclusion
+    // keeps suffix-only discovery honest without adding a hidden global exclusion.
     rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
 
     try {
       const capture = createCaptureOutput();
 
-      const exitCode = runSdpCli(["build"], capture.output);
+      const exitCode = runSdpCli(["build", "--exclude", "explorations"], capture.output);
 
       expect(exitCode).toBe(0);
       expect(capture.readStderr()).toBe("");
@@ -480,6 +478,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
 
   it("documents repeatable --exclude paths in help", () => {
     expect(SDP_HELP_TEXT).toContain("[--exclude PATH]...");
+    expect(SDP_HELP_TEXT).toContain("*.sdp.ts and *.sdp.md");
   });
 
   it("rejects a second root argument: one line, exit 1, nothing runs", () => {
@@ -504,7 +503,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
       expect(exitCode).toBe(0);
       expect(capture.readStdout()).toContain("0 specs · 0 packs · 0 anchors");
       expect(capture.readStderr()).toContain(
-        `note: no *.sdp.ts spec files found under ${emptyRoot}`,
+        `note: no *.sdp.ts or *.sdp.md spec files found under ${emptyRoot}`,
       );
       expect(existsSync(join(emptyRoot, "generated", "graph.json"))).toBe(true);
     } finally {
@@ -798,7 +797,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
 
       expect(exitCode).toBe(1);
       expect(capture.readStderr()).toContain("extract/invalid-id");
-      expect(capture.readStderr()).not.toContain("no *.sdp.ts spec files found");
+      expect(capture.readStderr()).not.toContain("no *.sdp.ts or *.sdp.md spec files found");
     } finally {
       removeMaterializedCorpus(corpusRoot);
     }
