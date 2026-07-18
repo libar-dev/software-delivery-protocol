@@ -67,17 +67,17 @@ marked unconfirmed until a concrete source inspection identifies a gap.
 
 | Checkout ID | Kind | Carrier section(s) required by the TS source | 17b support | Migration note |
 |---|---|---|---|---|
-| `spec:orders.order-management` | behavior | Intent; Behavior; relation envelope | confirmed — Intent and `## Behavior` map are frozen | parent behavior rules |
-| `spec:orders.create-order` | behavior | Intent; Example space; multi-relation envelope | confirmed — `## Example space` and ordered relation lists are frozen | parent `exampleSpace` forces vocabulary fence |
-| `spec:orders.create-order.valid-cart` | example | Intent; immediate `gwt`; Verification | confirmed — example fence and Verification owner are frozen | bound happy-path point |
-| `spec:orders.create-order.invalid-cart` | example | Intent; immediate `gwt`; Verification | confirmed — example fence and Verification owner are frozen | partial bound point remains lawful |
-| `spec:orders.create-order.api-contract` | contract | Intent with blocking open question | confirmed — Intent/Open questions owner is frozen | no contract body in current source |
-| `spec:orders.order-total-rule` | rule | Intent; Rule | confirmed — `## Rule` owner is frozen | promoted rule child |
-| `spec:orders.order-inventory-rule` | rule | Intent; Rule | confirmed — `## Rule` owner is frozen | promoted rule child |
-| `spec:orders.order-placement-flow` | workflow | Intent; Workflow | confirmed — `## Workflow` owner is frozen | scoped flow-only evidence |
-| `spec:orders.order-latency-constraint` | constraint | Intent; Constraints | confirmed — one-entry Constraints form is frozen | one constraint entry, no multi-entry claim |
-| `spec:orders.order-model` | model | Intent; Model | confirmed — `## Model` owner is frozen | domain vocabulary terms |
-| `spec:decisions.order-lifecycle` | decision | Intent; Decision | confirmed — `## Decision` owner is frozen | decision/rationale/consequences |
+| `spec:orders.order-management` | behavior | Intent; Behavior; relation envelope | confirmed — 17b rows 128, 138, and 139 cover its `decidedBy` envelope, Intent fields, and rules | confirmed — `order-management.sdp.ts:4-19` is epic/defined behavior with Intent and rules |
+| `spec:orders.create-order` | behavior | Intent; Example space; multi-relation envelope | confirmed — 17b rows 128, 138, and 143 cover ordered `refines`/`constrainedBy`/`decidedBy`, Intent, and `gwt-vocabulary` | confirmed — `create-order.sdp.ts:10-44` is feature/defined behavior; parent `exampleSpace` uses the ruled vocabulary fence |
+| `spec:orders.create-order.valid-cart` | example | Intent; immediate `gwt`; Verification | confirmed — 17b rows 128, 138, 144, and 149 cover relation envelope, Intent, immediate example fence, and executable Verification | confirmed — `create-order-valid-cart.sdp.ts:4-45` is story/ready with the bound happy-path point |
+| `spec:orders.create-order.invalid-cart` | example | Intent; immediate `gwt`; Verification | confirmed — 17b rows 128, 138, 144, and 149 cover relation envelope, Intent, immediate example fence, and executable Verification | confirmed — `create-order-invalid-cart.sdp.ts:4-35` is story/defined; its partial bound point is lawful |
+| `spec:orders.create-order.api-contract` | contract | Intent with blocking open question | confirmed — 17b rows 128 and 138 cover its `refines` envelope, Intent, and blocking Open question | confirmed — `create-order-api-contract.sdp.ts:4-22` is story/idea and uses no contract body |
+| `spec:orders.order-total-rule` | rule | Intent; Rule | confirmed — 17b rows 128, 138, and 140 cover `refines`, Intent, and plain rule entries | confirmed — `order-total-rule.sdp.ts:4-19` is story/defined with two promoted rules |
+| `spec:orders.order-inventory-rule` | rule | Intent; Rule | confirmed — 17b rows 128, 138, and 140 cover `refines`, Intent, and plain rule entries | confirmed — `order-inventory-rule.sdp.ts:4-19` is story/defined with two promoted rules |
+| `spec:orders.order-placement-flow` | workflow | Intent; Workflow | confirmed — 17b rows 128, 138, and 141 cover `refines`/`dependsOn`, Intent, and flow entries | confirmed — `order-placement-flow.sdp.ts:4-25` is feature/scoped with flow-only evidence |
+| `spec:orders.order-latency-constraint` | constraint | Intent; Constraints | confirmed — 17b rows 128, 138, and 145 cover `refines`, Intent, and the one-entry Constraints form | confirmed — `order-latency-constraint.sdp.ts:4-20` is story/defined with one constraint; no multi-entry claim |
+| `spec:orders.order-model` | model | Intent; Model | confirmed — 17b rows 128, 138, and 146 cover `refines`, Intent, and repeated term definitions | confirmed — `order-model.sdp.ts:4-22` is story/defined with five domain terms |
+| `spec:decisions.order-lifecycle` | decision | Intent; Decision | confirmed — 17b rows 128, 138, and 148 cover `refines`, Intent, decision, rationale, and consequences | confirmed — `order-lifecycle.sdp.ts:4-22` is feature/defined with one decision and its consequences |
 
 **Matrix review rule.** A kind-by-section cell becomes `unconfirmed` only with the exact checkout
 ID, source shape, and frozen-grammar mismatch named. The table-sugar watch item remains unfired
@@ -92,16 +92,16 @@ hardening session supplies a fixture and result.
 
 | TS refusal class | Same-class Markdown finding | Named non-claim | Checkout-forced cell | Evidence link |
 |---|---|---|---|---|
-| `extract/parse-error` | `extract/invalid-frontmatter` | parser syntax recovery is not TS parser parity | no checkout source forces it | pending fixture |
-| `extract/non-static-envelope` | `extract/invalid-frontmatter` | Markdown has no executable-expression analogue | no checkout source forces it | pending rationale |
-| `extract/invalid-id` | `extract/invalid-id` | exact message and token location are not yet parity claims | every checkout envelope ID | pending fixture |
-| `extract/duplicate-id` | `extract/duplicate-id` | cross-carrier duplicate reporting remains bounded by corpus roots | migration dual-carrier refusal | pending fixture |
-| `extract/reserved-property` | `extract/unrecognized-property` | derived-vocabulary wording is not parity-pinned | no checkout source forces it | pending fixture |
-| `extract/non-static-section` | `extract/invalid-markdown-structure` | Markdown structural refusal is not an expression-equivalence claim | no checkout source forces it | pending rationale |
-| `extract/unowned-prose` | `extract/invalid-markdown-structure` | prose-owner diagnostics need not share TS text | all emitted prose owners | pending fixture |
-| `extract/unrecognized-statement` | `extract/invalid-markdown-structure` | every TS statement class is not in scope | emitted structured lists and fences | pending fixture |
-| `extract/unrecognized-property` | `extract/unrecognized-property` | property spelling and location parity are not yet claimed | checkout envelopes and owner keys | pending fixture |
-| `extract/misplaced-authoring` | `extract/unrecognized-heading` | placement-refusal family is bounded, not full CommonMark parity | immediate example `gwt` placement | pending fixture |
+| `extract/parse-error` | `extract/invalid-frontmatter` | named non-claim — YAML/parser recovery is not TypeScript parser parity | confirmed — no checkout source forces malformed syntax | confirmed — `markdown-support.ts:3-12`; 17b diagnostic matrix row 170 |
+| `extract/non-static-envelope` | `extract/non-static-envelope` | named non-claim — Markdown has no executable-expression analogue | confirmed — all eleven checkout envelopes exercise static descriptor values | confirmed — `markdown.ts:173-196`; checkout evidence table |
+| `extract/invalid-id` | `extract/invalid-id` | named non-claim — exact message and token location remain unpinned | confirmed — every checkout envelope supplies a `spec:` ID | confirmed — `markdown.ts:158-171`; checkout evidence table |
+| `extract/duplicate-id` | `extract/duplicate-id` | named non-claim — cross-carrier reporting remains bounded by corpus roots | confirmed — migration's no-dual-ID atom is the forced duplicate case | confirmed — `reify.ts:53-64`; `validators.ts:204`; §1 ruling 4 |
+| `extract/reserved-property` | `extract/reserved-property` | named non-claim — derived-vocabulary wording is not parity-pinned | confirmed — no checkout source authors a reserved property | confirmed — `markdown.ts:100-110`; `markdown-body-owner-support.ts:26-35` |
+| `extract/non-static-section` | `extract/invalid-markdown-structure` | named non-claim — structural refusal is not expression-equivalence | confirmed — no checkout source contains executable section syntax | confirmed — `markdown-body.ts:35-37`; 17b diagnostic matrix row 171 |
+| `extract/unowned-prose` | `extract/unowned-prose` | named non-claim — diagnostic wording need not share TS text | confirmed — checkout uses only ruled Intent and section-owned content | confirmed — `markdown-body-content.ts:233-241`; 17b diagnostic matrix row 173 |
+| `extract/unrecognized-statement` | `extract/invalid-markdown-structure` | named non-claim — TS statement-class equivalence is out of scope | confirmed — checkout's rules, flows, lists, and fences are all ruled forms | confirmed — 17b rows 139-150 and diagnostic matrix row 171 |
+| `extract/unrecognized-property` | `extract/unrecognized-property` | named non-claim — spelling and location parity remain unpinned | confirmed — all envelope keys and section fields are recognized | confirmed — `markdown.ts:100-110`; `markdown-body-owner-support.ts:26-35` |
+| `extract/misplaced-authoring` | `extract/invalid-markdown-structure` | named non-claim — placement refusal is bounded, not CommonMark parity | confirmed — both example Specs force immediate `gwt` placement after Intent | confirmed — 17b row 144 and diagnostic matrix row 171; two example rows above |
 
 ## (g) §4 Tranche-2 fold design
 
