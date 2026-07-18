@@ -268,7 +268,7 @@ relations:
       validatorId: "extract/invalid-frontmatter",
       line: 2,
       message:
-        "Anchor ending in : is ambiguous at line 1, column 7:\n\nid: &a: spec:carrier.warning\n      ^\n",
+        "Anchor ending in : is ambiguous at line 2, column 7:\n\nid: &a: spec:carrier.warning\n      ^\n",
     });
   });
 
@@ -794,7 +794,7 @@ export const invalid = spec({ id: specId("spec:carrier.invalid-prose"), title: "
       carrierBody("# "),
       "extract/invalid-markdown-structure",
       8,
-      "the H1 title must be nonempty and carry no closing marker",
+      "the H1 title must be nonempty and start immediately after #",
     ],
     [
       "a heading beyond suggestion distance two",

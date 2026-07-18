@@ -20,6 +20,8 @@ export function readMarkdownEnvelope(source: string): MarkdownEnvelope | string 
   const lines = source.split(newline);
   const closing = lines.findIndex((line, index) => index > 0 && line === "---");
   if (closing === -1) return "carrier requires one exact closing --- line";
+  if (lines.slice(1, closing).includes("..."))
+    return "frontmatter does not accept an exact ... document-end line";
   if (lines.slice(closing + 1).includes("---"))
     return "an exact --- line in the body is unsupported Markdown";
   const frontmatter = lines.slice(1, closing).join(newline);

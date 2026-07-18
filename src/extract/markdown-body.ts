@@ -131,10 +131,10 @@ export function parseMarkdownBody(
     };
   }
   const title = asciiTrim(first.text.slice(2));
-  if (/^[\t ]/u.test(first.text.slice(2)) || title.length === 0 || title.endsWith("#"))
+  if (/^[\t ]/u.test(first.text.slice(2)) || title.length === 0)
     addMarkdownFinding(
       findings,
-      structure(file, first.line, "the H1 title must be nonempty and carry no closing marker"),
+      structure(file, first.line, "the H1 title must be nonempty and start immediately after #"),
     );
   const before: MarkdownLine[] = [];
   const owners: MarkdownOwner[] = [];
@@ -156,10 +156,10 @@ export function parseMarkdownBody(
     if (line.text.startsWith("## ")) {
       const rawHeading = line.text.slice(3);
       const heading = asciiTrim(rawHeading);
-      if (/^[\t ]/u.test(rawHeading) || heading.length === 0 || heading.endsWith("#")) {
+      if (/^[\t ]/u.test(rawHeading) || heading.length === 0) {
         addMarkdownFinding(
           findings,
-          structure(file, line.line, "H2 headings require text without closing markers"),
+          structure(file, line.line, "H2 headings require text immediately after ##"),
         );
         continue;
       }

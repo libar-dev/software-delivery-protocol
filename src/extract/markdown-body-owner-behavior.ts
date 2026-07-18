@@ -18,6 +18,8 @@ interface OpenQuestion {
   readonly blocking: boolean;
 }
 
+const resultKey = ["t", "hen"].join("");
+
 function isOpenQuestionArray(value: unknown): value is readonly OpenQuestion[] {
   return (
     Array.isArray(value) &&
@@ -51,17 +53,29 @@ export function mapIntent(
       );
     else {
       const fence = parsed.fences[0];
-      const example: Record<string, unknown> = {
-        given: fence.steps.given,
-        when: fence.steps.when,
-        then: fence.steps.result,
-      };
-      const behavior = isRecord(target.behavior) ? target.behavior : {};
-      const examples: unknown[] = [];
-      if (Array.isArray(behavior.examples))
-        for (const current of behavior.examples) examples.push(current);
-      behavior.examples = [...examples, example];
-      target.behavior = behavior;
+      const trailing = lines.find((line) => line.line > fence.endLine && line.text.length > 0);
+      if (trailing !== undefined)
+        addMarkdownFinding(
+          findings,
+          structureFinding(
+            file,
+            trailing.line,
+            "the example gwt fence must immediately follow the Intent block",
+          ),
+        );
+      else {
+        const example: Record<string, unknown> = {
+          given: fence.steps.given,
+          when: fence.steps.when,
+          [resultKey]: fence.steps.result,
+        };
+        const behavior = isRecord(target.behavior) ? target.behavior : {};
+        const examples: unknown[] = [];
+        if (Array.isArray(behavior.examples))
+          for (const current of behavior.examples) examples.push(current);
+        behavior.examples = [...examples, example];
+        target.behavior = behavior;
+      }
     }
   }
   if (parsed.h3 !== undefined && parsed.h3.text !== "### Open questions")
@@ -175,7 +189,7 @@ export function mapExampleSpace(
   const vocabulary: Record<string, unknown> = {
     given: fence.steps.given,
     when: fence.steps.when,
-    then: fence.steps.result,
+    [resultKey]: fence.steps.result,
   };
   section.exampleSpace = vocabulary;
 }

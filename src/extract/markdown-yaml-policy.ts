@@ -7,7 +7,8 @@ import { parseId } from "../ids.js";
 import type { Finding } from "../validate/contracts.js";
 import { addMarkdownFinding, markdownFinding, markdownLine } from "./markdown-support.js";
 
-const nonStringPlainScalars = /^(?:[-+]?\d+(?:\.\d+)?|\.inf|\.nan|true|false|null|~)$/iu;
+const nonStringPlainScalars =
+  /^(?:true|false|null|~|0o[0-7]+|0x[0-9a-f]+|[-+]?[0-9]+|[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)[eE][-+]?[0-9]+|[-+]?(?:\.[0-9]+|[0-9]+\.[0-9]*)|[-+]?\.inf|\.nan)$/iu;
 const reservedEnvelopeKeys = new Set([
   "claim",
   "deliveryFacts",
@@ -37,7 +38,7 @@ export function isMarkdownStringScalar(
   return (
     isScalar(node) &&
     typeof node.value === "string" &&
-    !nonStringPlainScalars.test(node.source ?? "")
+    (node.type !== "PLAIN" || !nonStringPlainScalars.test(node.source ?? ""))
   );
 }
 
@@ -50,21 +51,27 @@ export function inspectMarkdownNodes(
 ): void {
   const pending: { readonly node: Node; readonly depth: number }[] = [{ node: root, depth: 1 }];
   let count = 0;
+  let nodeLimitReported = false;
+  let depthLimitReported = false;
   while (pending.length > 0) {
     const current = pending.pop();
     if (current === undefined) break;
     count += 1;
     const line = markdownScalarLine(current.node, source, baseLine);
-    if (count > 2_000)
+    if (count > 2_000 && !nodeLimitReported) {
       addMarkdownFinding(
         findings,
         markdownFinding(file, line, "frontmatter exceeds the 2,000 node limit"),
       );
-    if (current.depth > 16)
+      nodeLimitReported = true;
+    }
+    if (current.depth > 16 && !depthLimitReported) {
       addMarkdownFinding(
         findings,
         markdownFinding(file, line, "frontmatter exceeds the depth limit of 16"),
       );
+      depthLimitReported = true;
+    }
     if (isAlias(current.node))
       addMarkdownFinding(findings, markdownFinding(file, line, "YAML aliases are not accepted"));
     if (current.node.tag !== undefined)

@@ -202,6 +202,14 @@ Spec, and applicable matrix/ledger cells. Unfired items remain named here at pha
 No other todo 13 to 15 activity triggered an under-fire ruling: the checkout migration and README
 walkthrough used the ruled grammar without a forced gap.
 
+### Session 3 rulings under fire
+
+| Trigger | Alternatives considered | Owner outcome | Three-part-test disposition | Carrying Spec / ledger cells |
+|---|---|---|---|---|
+| YAML accepted an exact `...` document-end marker before the carrier's later exact `---` closer | (1) accept YAML's document-end token inside the envelope; (2) reject it and retain the frozen one-closer carrier grammar | **Option 2 ruled.** An exact `...` line anywhere before the required closing `---` refuses. The carrier has one envelope closer and never embeds a second YAML document boundary. | Not admitted as a durable decision Spec: this restores the already-frozen 17b grammar and is mechanically reversible, so it fails the surprising-new-trade-off part of the three-part test. | `spec:carrier.envelope-contract`; §8 “Frontmatter `...` document end”. |
+| Depth and node breaches consumed the 100-finding budget with repeated identical diagnostics | (1) report every offending descendant; (2) stop traversal at the first breach; (3) emit one summary per breached limit per document while continuing traversal for independent findings | **Option 3 ruled.** Depth and node limits each emit at most one finding per document; traversal continues so unrelated authored-fidelity findings remain visible. | Not admitted as a durable decision Spec: this is a bounded diagnostic policy, not a hard-to-reverse domain law. | `spec:carrier.envelope-contract`; §8 “Depth and node cap finding flood”. |
+| Review-06 exposed body-parser drift from the frozen trim and immediate-placement rules | (1) retain permissive fence placement and closing-marker interpretation; (2) restore the frozen behavior | **Option 2 ruled.** An example `gwt` fence is the final nonblank Intent block; trailing ASCII whitespace is trimmed from `### Open questions`; terminal `#` characters are literal heading text, with H2 text still passing through owner recognition. | Not admitted as a durable decision Spec: these are repairs to the frozen 17b representation, not new durable trade-offs. | `spec:carrier.markdown-parser`; §8 GWT and heading rows. |
+
 ## (j) §7 Done-record and delta catalog
 
 The done-record is process evidence, never graph content. A session appends its commit SHA,
@@ -222,15 +230,15 @@ Planned disposition is not execution evidence. Every row starts pending and clos
 
 | Docket item (origin) | Planned disposition | Execution state |
 |---|---|---|
-| Markdown reifier catch-all totality (review-06) | Adopt with hardening baseline | pending |
-| YAML 1.2 scalar spellings (review-06) | Adopt with grammar hardening | pending |
-| YAML parser line-number mismatch (review-06) | Adopt with grammar hardening | pending |
-| Frontmatter `...` document end (review-06) | Adopt with grammar hardening | pending |
-| Non-mapping-root accumulated findings (review-06) | Adopt with grammar hardening | pending |
-| Depth and node cap finding flood (review-06) | Adopt with grammar hardening | pending |
-| GWT fence placement in Intent (review-06) | Adopt with grammar hardening | pending |
-| Heading trailing whitespace and trailing `#` titles (review-06) | Adopt with grammar hardening | pending |
-| Duplicate `When` reporting and dead `mapOwner` branch (review-06) | Adopt with grammar hardening | pending |
+| Markdown reifier catch-all totality (review-06) | Adopt with hardening baseline | done s3 — the public Markdown reifier now converts every unexpected throw into one `extract/invalid-frontmatter` finding, mirroring the TS boundary |
+| YAML 1.2 scalar spellings (review-06) | Adopt with grammar hardening | done s3 — plain exponent, hexadecimal, and signed-infinity spellings classify as non-string YAML scalars; quoted scalars remain strings |
+| YAML parser line-number mismatch (review-06) | Adopt with grammar hardening | done s3 — YAML-native diagnostic text and structured `finding.line` now share carrier-relative line numbers |
+| Frontmatter `...` document end (review-06) | Adopt with grammar hardening | done s3 — an exact document-end line before the required `---` closer refuses under the §6 stricter ruling |
+| Non-mapping-root accumulated findings (review-06) | Adopt with grammar hardening | done s3 — mapping-root refusal preserves prior parser, warning, and directive findings before capping |
+| Depth and node cap finding flood (review-06) | Adopt with grammar hardening | done s3 — the §6 bounded policy emits one summary per breached limit per document and preserves traversal |
+| GWT fence placement in Intent (review-06) | Adopt with grammar hardening | done s3 — example `gwt` is terminal within Intent, immediately following the authored Intent block |
+| Heading trailing whitespace and trailing `#` titles (review-06) | Adopt with grammar hardening | done s3 — H3 trailing ASCII whitespace trims; terminal `#` is literal H1/H2 text before owner recognition |
+| Duplicate `When` reporting and dead `mapOwner` branch (review-06) | Adopt with grammar hardening | done s3 — a duplicate `When` emits one finding and the unreachable owner fallback is removed |
 | Windows absolute excludes and `--exclude --foo` diagnostics (review-06) | Adopt with exclude/CLI cluster | done s1 — reject Windows drive-letter absolutes as invalid rather than normalize them, preserving MD-20 root-relative POSIX scope; a flag operand names itself in the CLI usage error |
 | Path-prefix matcher coverage (review-06) | Adopt with exclude/CLI cluster | done s1 — focused regression proves `foo` excludes only `foo` and its slash-delimited descendants, never `foobar` |
 | Library-seam exclusion wording (review-06) | Adopt with exclude/CLI cluster | done s1 — `normalizeExcludes` owns library diagnostics; `parseBuildArgs` translates them into `sdp <cmd>` usage wording |
@@ -247,7 +255,7 @@ Planned disposition is not execution evidence. Every row starts pending and clos
 | Model term named `description` (review-06) | Verify remediation remains intact | pending |
 | Checkout duplicate-carrier fixture exemption (review-06) | Preserve as explicit fixture exception | pending |
 | Exclude/CLI cluster (brief §6) | Land in tranche 1 | done s1 — loud Windows absolute rejection, flag-operand usage diagnostics, segment-boundary coverage, and library/CLI wording separation landed |
-| Grammar-hardening cluster (brief §6) | Land with parity baseline | pending |
+| Grammar-hardening cluster (brief §6) | Land with parity baseline | done s3 — all eight RED→GREEN items landed with focused public-reifier regressions and stable finding IDs |
 | Design Review cluster (brief §6) | Rule at migration/flip | done s2 — owner ruled Option 1; deterministic ordering and uniform escaping landed RED-first with focused projection regressions |
 | Records cluster (brief §6) | Land with decision fold | pending |
 | Table-sugar syntax (watch item) | Rule only if checkout forces it | done s2: unfired, multi-case checkout behavior uses sibling `example` Specs, not tables. |
