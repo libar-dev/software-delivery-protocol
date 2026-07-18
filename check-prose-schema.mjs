@@ -53,8 +53,8 @@ expectContains(
 );
 expectContains(
   "docs/concept/06-consumers-and-projections.md",
-  "Design Review does not yet render prose",
-  "missing deferred projection claim",
+  "Design Review now renders `Spec.narrative` and the seven approved section descriptions from those Reader/graph values (schema `0.4.0`), with no source reparse and stable omission when prose is absent.",
+  "missing landed prose projection claim",
 );
 
 if (failures.length > 0) {
