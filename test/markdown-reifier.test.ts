@@ -882,6 +882,7 @@ export const invalid = spec({ id: specId("spec:carrier.invalid-prose"), title: "
     ["ordered parenthesis tab list in narrative", "# Title\n1)\tfirst", 9],
     ["star tab list in narrative", "# Title\n*\tfirst", 9],
     ["plus tab list in narrative", "# Title\n+\tfirst", 9],
+    ["HTML comment in narrative", "# Title\nProse <!-- comment -->", 9],
     ["setext equals underline in narrative", "# Title\nProse\n===", 10],
     ["setext dash underline in narrative", "# Title\nProse\n- - -", 10],
     ["star thematic break in narrative", "# Title\n***", 9],
@@ -892,6 +893,10 @@ export const invalid = spec({ id: specId("spec:carrier.invalid-prose"), title: "
     ["setext underline in section prose", "# Title\n## Intent\nProse\n===", 11],
     ["thematic break in section prose", "# Title\n## Intent\n***", 10],
     ["bare HTML opener in section prose", "# Title\n## Intent\n<div", 10],
+    ["dash tab list in section prose", "# Title\n## Intent\n-\tfirst", 10],
+    ["HTML comment in section prose", "# Title\n## Intent\nProse <!-- comment -->", 10],
+    ["processing instruction in section prose", "# Title\n## Intent\nProse <?xml ?>", 10],
+    ["declaration in section prose", "# Title\n## Intent\nProse <!DOCTYPE html>", 10],
   ])("refuses %s", (_name, body, line) => {
     const result = reify(carrierBody(body));
 

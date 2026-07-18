@@ -95,7 +95,7 @@ function headingFinding(file: string, line: number, text: string): Finding {
 function narrative(lines: readonly MarkdownLine[], file: string, findings: Finding[]): string {
   for (const line of lines) {
     if (line.text === "") continue;
-    if (/<\/?[A-Za-z][^>]*>/u.test(line.text)) {
+    if (/<\/?[A-Za-z][^>]*>|<!--|-->|<![A-Za-z]|<\?/u.test(line.text)) {
       addMarkdownFinding(findings, structure(file, line.line, "raw HTML is unsupported"));
       continue;
     }

@@ -44,12 +44,12 @@ export function normalizeProse(lines: readonly MarkdownLine[]): string {
 }
 
 function isHtml(text: string): boolean {
-  return /<\/?[A-Za-z][^>]*>/u.test(text);
+  return /(<\/?[A-Za-z][^>]*>)|<!--|-->|<![A-Za-z]|<\?/u.test(text);
 }
 
 export function isUnsupportedCommonMarkBlock(text: string): boolean {
   return (
-    /^(?:[*+][\t ]|\d+[.)][\t ]|<)/u.test(text) ||
+    /^(?:[*+][\t ]|\d+[.)][\t ]|-[\t]|<)/u.test(text) ||
     /^(?:={3,}|(?:\*[\t ]*){3,}|(?:-[\t ]*){3,}|(?:_[\t ]*){3,})[\t ]*$/u.test(text)
   );
 }
@@ -223,6 +223,10 @@ export function parseSectionContent(
       continue;
     }
     if (!structured) {
+      if (isHtml(line.text)) {
+        addMarkdownFinding(findings, bodyFinding(file, line.line, "raw HTML is unsupported"));
+        continue;
+      }
       prose.push(line);
       continue;
     }
