@@ -15,67 +15,53 @@ pointed at.
 
 ## The layout
 
-- **`specs/`** — the **authored model**: one `Spec` per `*.sdp.ts` file, plus the pack manifest
-  (`checkout.pack.sdp.ts`). The familiar delivery nouns appear as **named coordinates on the one
-  primitive**, never separate types — all eight `kind`s are on disk: a `behavior` epic
-  (`order-management`), a `workflow` feature (`order-placement-flow`), a `behavior` feature
-  (`create-order`), two `example` stories (`valid-cart`, `invalid-cart`), a `contract` story
-  (`api-contract`), two `rule`s, one `constraint` (the latency NFR), one `model` (the domain
-  vocabulary), and one `decision` record. The `create-order` parent owns the **example space** —
-  the typed step vocabulary its steps declare (`{n:number}` ·
-  `{availability:"in stock"|"out of stock"}`) — and its two `example` children each bind a
-  **bound point** in that space: `valid-cart` binds every slot it uses (`{n: 2}` … `{total: 100}`),
-  `invalid-cart` binds the partial point `{n: 0}` — partial is honest, because an unused step
-  binds nothing and fails nothing. Every spec states its own `readiness`, and the stated rungs
-  span the ladder (`idea` · `scoped` · `defined` · `ready`); the checks only verify the stated
+- **`specs/`** contains the **authored model**. Each `Spec` is now one `*.sdp.md` file. The Pack
+  manifest remains `checkout.pack.sdp.ts`: a Pack is not a `kind`, and the carrier ruling covers
+  Spec IDs only.
+
+  All eight `kind`s appear here as named coordinates on one primitive. The `create-order` parent
+  owns the example space, and its child examples bind full or partial points in that space.
+
+  Every Spec states its `readiness`, from `idea` through `ready`. Checks verify that the stated
   rung is structurally earned.
-- **`src/`** — the implementation, carrying three **anchors**: `impl:orders.create-order-use-case`
-  and `impl:orders.order-total` on the use-case file (anchors bind per spec, never per file) and
-  `api:orders.post` on the route. An anchor is a binding only — "this code location is the
-  implementation binding for this Spec ID" — never intent; each yields a `satisfies` edge with
-  `claim: "anchored"`.
-- **`test/`** — the executable half, on three files. The bound test
-  (`create-order.valid-cart.test.ts`) carries the **test anchor** (`specTest`) that binds it to
-  `spec:orders.create-order.valid-cart` — the binding that makes the valid-cart example an
-  **enabled verifier** and confers the derived `has-verifier` delivery fact — and binds the
-  _generated_ **step contract** with `bindExample` (the `/vitest` adapter): handlers keyed by the
-  literal step text, parameter values flowing from the spec. The oracle
-  (`create-order.oracle.ts`) is the authored `expected()` semantics over the parent's example
-  space, typed against the generated **space contract** on both sides — Conditions in, the
-  Outcome union out, `unspecified` a first-class answer — with a **`specOracle` anchor**
-  (`oracle:orders.create-order`) recording only that the oracle _exists_ (a `models` edge,
-  `claim: "anchored"`); what it _says_ is implementation-side authored code, never extracted.
-  `drift-pins.ts` pins eight drift cases as `@ts-expect-error` tripwires — compile-time
-  regression tests for the drift alarm.
-- **`generated/`** — the derived artifacts (untracked; the walk below produces them): the one
-  graph (`graph.json`), the contracts (a step contract per `example` spec + the per-parent space
-  contract), and the Design Review — all regenerable, never edited.
+
+- **`src/`** holds three implementation anchors. Anchors bind a code location to a Spec ID, never
+  intent, so their `satisfies` edges carry `claim: "anchored"`.
+
+- **`test/`** holds the executable half. The valid-cart test anchor makes that example an enabled
+  verifier, while generated step and space contracts keep the test and oracle aligned with the
+  authored example space.
+
+- **`generated/`** is untracked output from the walk: `graph.json`, contracts, and the Design
+  Review. It is regenerable and never edited by hand.
 
 ## The walk
 
-Build the CLI once from the repo root, then run the pipeline (each command subsumes the previous
-stage):
+The checkout Markdown surface was produced by `sdp import` during the migration.
+
+`sdp import` remains the verb for any future per-ID TypeScript-to-Markdown move. It never retires
+the TypeScript DSL, which remains an import source and a lawful per-ID option.
+
+Build the CLI once from the repo root, then run the pipeline. Each command includes the stage
+before it:
 
 ```sh
 npm run build
-node ./dist/cli/sdp.js build    examples/checkout-v1   # extract → generated/graph.json + contracts
-node ./dist/cli/sdp.js validate examples/checkout-v1   # build + conformance & honesty checks
-node ./dist/cli/sdp.js view     examples/checkout-v1   # validate + the Design Review
+node ./dist/cli/sdp.js build    examples/checkout-v1   # extract, graph, and contracts
+node ./dist/cli/sdp.js validate examples/checkout-v1   # build, conformance, and honesty checks
+node ./dist/cli/sdp.js view     examples/checkout-v1   # validate and the Design Review
 ```
 
-`build` prints the extraction summary and writes the one graph — flat nodes and edges, every one
-carrying its `claim` (`declared` / `anchored` / `inferred`, never collapsed):
+`build` prints an extraction summary and writes the one graph. Its flat nodes and edges retain
+their `claim`, `declared`, `anchored`, or `inferred`, without collapsing them:
 
 ```
 11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
 ```
 
-Beside the graph it writes `generated/contracts/` (3 modules): a **step contract** per `example`
-spec — the union of that example's literal step strings and their typed parameters — and the
-per-parent **space contract** — the typed dimensions of the example space, every child's bound
-point, and the Outcome union derived from the parent's Then vocabulary. All three are derived
-from the graph, keyed by spec ID, importable _because_ they are projections — never the authored
-spec module.
+Beside the graph it writes three modules in `generated/contracts/`: a step contract for each
+`example` Spec and one parent space contract. They are graph projections, keyed by Spec ID, never
+authored modules.
 
 The executable half runs off those contracts:
 
@@ -84,91 +70,70 @@ npx vitest --run examples/checkout-v1/test   # the bound example passes
 npm run typecheck:examples                   # the drift pins hold
 ```
 
-Because the test binds the _generated_ valid-cart contract, the spec drives the assertion:
-`expect(world.order?.total).toBe(params.total)` asserts the spec's authored `100` — never a value
-the test states. Editing the spec's value reddens the test with zero test edits, and a spec-side
-step rename is a `tsc` error naming the stale handler key (both tripped below). The oracle
-compiles against the space on both sides: reading a slot the space no longer declares, or
-claiming an outcome the specs never stated, is a `tsc` error — while outcome _faithfulness_ stays
-human-reviewed, by law.
+The generated valid-cart contract drives the assertion. Changing a Markdown value or step can fail
+the test or reject a stale handler key without changing the test.
 
-`validate` runs the checks over that graph — one validation path — and reports **0 errors and
-exactly 1 warning**:
+The oracle is typed against the same space, while outcome faithfulness stays human-reviewed.
+
+`validate` runs one validation path over the graph. It reports **0 errors and exactly 1 warning**:
 
 ```
-specs/orders/create-order-invalid-cart.sdp.ts — [warning] conformance/verifies-linkage —
+specs/orders/create-order-invalid-cart.sdp.md — [warning] conformance/verifies-linkage —
 Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order"
-but is not an enabled verifier — no test anchor binds it …
+but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete
+and it confers no has-verifier.
+validate: 0 errors · 1 warnings (conformance + honesty over the one graph)
 ```
 
-The warning is **deliberately kept**. `invalid-cart` declares that it verifies its parent, but no
-test anchor binds it yet — the spec↔test trace is incomplete, and the graph says so instead of
-pretending. This is the honesty posture in one line: a surfaced absence is informative, never a
-gate (the exit code stays 0).
+The warning is deliberate. `invalid-cart` declares that it verifies its parent, but no test anchor
+binds it. The graph reports the incomplete trace, and the exit code stays 0 because this absence is
+informative rather than a gate.
 
-`view` regenerates `generated/design-review/` wholesale — an index plus one page per spec and
-pack (13 pages), all pure projections of the graph. Open
+`view` regenerates `generated/design-review/`: an index and one page per Spec and Pack. Open
 `generated/design-review/spec/orders.create-order.md` and look for:
 
-- **binding language, never liveness** — "Implementation binding: present · Verifier binding:
-  present · Runtime observation: not tracked";
-- **the example space, rendered** — the parent's Behavior section lists the typed step vocabulary
-  its children bind points in; each child page renders its bound point (`{n: 2}` …
-  `{total: 100}`; `{n: 0}` on the partial one);
-- **`claim` cues** — the implementation anchors' `satisfies` lines are `[anchored]` while every
-  example's own `verifies` is `[declared]`; the enabled verifier (`valid-cart`) is distinguished
-  from the unenabled one (`invalid-cart`); the test anchor's `[anchored]` verifier line renders
-  on the valid-cart page;
-- **stated vs derived readiness** — the rungs vary honestly: most specs state `defined` while
-  structurally clearing `ready` (stating less than you clear is the honest direction — plain
-  header information, no banner); `valid-cart` states `ready` and earns it through its test
-  binding; the placement flow states `scoped` because flows are scoped-rung evidence only; the
-  API contract is parked at `idea` with its blocking open question recorded in the spec;
-- **Relations & impact (one hop)** — the relation list read as the blast radius of changing this
-  spec.
+- **binding, never liveness**: implementation and verifier bindings are present, while runtime
+  observation is not tracked.
 
-Determinism is checkable, not promised: `--check-clean` on any command runs the pipeline twice
-independently and fails on a single divergent byte — across the graph, every contract module, and
-the review — and `npm run check:example` gates CI on exactly this over this example. Deleting
-`generated/` and rerunning reproduces the same bytes, and so does the pipeline run from a copy at
-a different absolute path — both pinned in the test suite, which CI also gates.
+- **the rendered example space**: each child page shows its full or partial bound point.
+
+- **`claim` cues**: implementation bindings are `[anchored]`; declared example verification stays
+  `[declared]`; valid-cart is enabled and invalid-cart is not.
+
+- **stated and derived readiness**: the rungs remain honest, including valid-cart at `ready` and
+  the API contract at `idea` with its blocking open question.
+
+- **relations and one-hop impact**: the relation list is the blast radius of changing this Spec.
+
+`--check-clean` runs the pipeline twice and rejects any divergent byte across the graph, contracts,
+and review. `npm run check:example` gates that determinism. Delete `generated/` and rerun to
+reproduce the same bytes.
 
 ## Break it on purpose
 
-The fastest way to understand the checks is to trip them. Each experiment is one edit; revert
-with `git checkout -- examples/checkout-v1` afterwards (the next `build` regenerates
-`generated/`).
+The fastest way to understand the checks is to trip them. Each experiment edits a `.sdp.md` Spec.
+Revert the edit afterwards. The next `build` regenerates `generated/`.
 
-- **Dangle a reference.** In `specs/orders/create-order.sdp.ts`, misspell the `refines` target
-  (e.g. `spec:orders.order-managment`). `validate` exits 1 with
-  `conformance/referential-integrity` — and suggests the id you meant.
-- **State readiness you haven't earned.** Add a blocking open question to `create-order`'s
-  intent — `openQuestions: [{ question: "Do guest carts create orders?", blocking: true }]` —
-  while it states `defined`. `validate` exits 1 with `honesty/readiness-floor`, naming the
-  failing clause (`no-blocking-open-questions`): readiness is stated by the author, checked
-  against the floor.
-- **Unbind the test.** Delete the `specTest` anchor from
-  `test/orders/create-order.valid-cart.test.ts`. The summary line drops to
-  `4 anchors → 16 nodes · 31 edges`, the valid-cart example stops being an enabled verifier, the
-  parent loses its verifier binding, and two more warnings appear: a second
-  `conformance/verifies-linkage` (valid-cart's own declared `verifies` no longer confers
-  anything) and `honesty/gaps` (valid-cart states `ready` with no resolving verifier) — still
-  exit 0, because a missing verifier is a surfaced gap, never a gate.
-- **Hand-author a delivery fact.** Add `"has-verifier": true` inside any section of a spec. The
-  closed section types reject it (`npm run typecheck:examples` fails), and even smuggled past the
-  types it fails `validate` with `honesty/authoring-shape` — delivery facts are derived, never
-  authored.
-- **Drift the authored value.** In `specs/orders/create-order-valid-cart.sdp.ts`, change
-  `{total: 100}` to `{total: 120}` and rerun `build`. The bound test fails with zero test edits —
-  `at step: Then an order is created with total 120` · `expected 100 to be 120` — because the
-  assertion reads `params.total` from the regenerated contract: the spec's value is the truth the
-  test enforces, and the failure speaks spec language. (Rename the step instead — in the parent's
-  vocabulary and the child's use — and `tsc` rejects the test's stale handler key by name.)
-- **Unbind a slot.** In the same spec, change `{n: 2}` to `{n}`. The **concreteness law** fires:
-  an unbound slot in a _used_ step caps the example below `defined`, and valid-cart states
-  `ready` — so `validate` exits 1 with `honesty/readiness-floor` (failing clause
-  `kind-evidence-complete`), and the contracts stage withholds the non-concrete example's step
-  contract (2 modules, not 3).
+- **Use an unknown heading.** In `specs/orders/order-total-rule.sdp.md`, change `## Rule` to
+  `## Rul`. `validate` exits 1 with `extract/unrecognized-heading` and suggests `Rule`.
+
+- **Dangle a reference.** In `specs/orders/create-order.sdp.md`, misspell the frontmatter
+  `refines` target, such as `spec:orders.order-managment`. `validate` exits 1 with
+  `conformance/referential-integrity` and suggests the intended ID.
+
+- **State readiness you have not earned.** In `specs/orders/create-order.sdp.md`, add a blocking
+  open question under `## Intent` while the Spec states `defined`.
+
+  `validate` exits 1 with `honesty/readiness-floor` and the `no-blocking-open-questions` clause.
+
+- **Drift an authored value.** In `specs/orders/create-order-valid-cart.sdp.md`, change
+  `{total: 100}` to `{total: 120}`, run `build`, then run the bound test.
+
+  It fails without a test edit because the generated contract supplies `params.total`.
+
+- **Unbind a slot.** In the same Markdown Spec, change `{n: 2}` to `{n}`. `validate` exits 1 with
+  `honesty/readiness-floor`, citing `kind-evidence-complete`, and contract generation withholds
+  that example's step contract.
 
 ## Where the concepts live
 
