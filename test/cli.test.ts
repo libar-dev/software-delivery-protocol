@@ -145,7 +145,7 @@ describe("sdp cli", () => {
     }
   });
 
-  it("builds cleanly from the repository root with exploratory carrier evidence excluded", () => {
+  it("builds the self-hosting corpus from the repository root", () => {
     // Exploration Markdown is evidence, not the authored model. The explicit consumer exclusion
     // keeps suffix-only discovery honest without adding a hidden global exclusion.
     rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
@@ -153,13 +153,14 @@ describe("sdp cli", () => {
     try {
       const capture = createCaptureOutput();
 
-      const exitCode = runSdpCli(["build", "--exclude", "explorations"], capture.output);
+      const exitCode = runSdpCli(
+        ["build", "--exclude", "explorations", "--exclude", "examples"],
+        capture.output,
+      );
 
       expect(exitCode).toBe(0);
       expect(capture.readStderr()).toBe("");
-      expect(capture.readStdout()).toContain(
-        "11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges",
-      );
+      expect(capture.readStdout()).toContain("5 specs · 1 packs · 0 anchors → 6 nodes · 11 edges");
     } finally {
       rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
     }
