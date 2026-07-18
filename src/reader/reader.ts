@@ -222,6 +222,14 @@ export interface BlastRadius {
   readonly coverageUnknown: readonly string[];
 }
 
+const readerImpactAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.reader-impact"),
+  label: "file-level reader blast-radius contract",
+  satisfies: ref("spec:consumers.reader"),
+});
+
+void readerImpactAnchor;
+
 /* ----- the reader ----- */
 
 /**
@@ -346,6 +354,14 @@ const agentSurfaceAnchor = codeAnchor({
 });
 
 void agentSurfaceAnchor;
+
+const readerAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.reader"),
+  label: "thin typed graph reader construction",
+  satisfies: ref("spec:consumers.reader"),
+});
+
+void readerAnchor;
 
 export function createReader(graph: GraphSchema): Reader {
   const index = buildGraphIndex(graph);

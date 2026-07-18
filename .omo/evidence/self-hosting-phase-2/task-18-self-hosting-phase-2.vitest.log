@@ -1,0 +1,20 @@
+# Task 18 full Vitest evidence
+
+Command:
+
+```text
+PATH="$PWD/node_modules/.bin:$PATH" node ./vitest-test.mjs
+```
+
+Result:
+
+```text
+Test Files  30 passed (30)
+Tests       416 passed (416)
+
+Test Files  1 passed (1)
+Tests       54 passed (54)
+```
+
+The pooled suite includes `test/markdown-grammar-hardening.test.ts` (14/14) and
+`test/markdown-reifier.test.ts` (96/96); the dedicated CLI process also passed.

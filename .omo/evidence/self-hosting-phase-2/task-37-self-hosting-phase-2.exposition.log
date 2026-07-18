@@ -1,0 +1,32 @@
+# Todo 37 - git event-log exposition probe
+
+Rejected candidate:
+
+```text
+spec:extraction.git-event-log
+```
+
+Probe question: does `03 §5` name an independently realizable engine law with a distinct source
+entrypoint, anchor, or verifier?
+
+Result: no. The section explains the repository's historical boundary: the graph holds current
+state, removed records leave the current projection, and history is recovered with git. The
+extractor and graph derivation already realize the current-state projection. A new Spec would only
+repeat that explanation without a distinct realization surface.
+
+Replacement disposition:
+
+```text
+03 §5 git as the event log -> spec:extraction.derive-graph narrative
+exposition-only content carried as derive-graph narrative; no standalone Spec authored
+```
+
+Evidence:
+
+```sh
+rg -n 'Git holds lifecycle history|exposition-only content carried|no standalone Spec authored' \
+  specs/extraction/derive-graph.sdp.md .omo/plans/self-hosting-phase-2.md
+```
+
+The probe finds the narrative on `derive-graph` and the coverage-ledger disposition, with no
+`spec:extraction.git-event-log` carrier created.

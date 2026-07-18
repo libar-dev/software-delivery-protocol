@@ -80,9 +80,103 @@ Sessions are owner-gated (each closes with a Design Review and a gate-ledger row
 | `02 §4 Pack` | `spec:model.pack-aggregate` | defined | `src/model/pack.ts` code anchor; no verifier | wave 1a Pack aggregate model |
 | `04 §2 generic source anchors` | `spec:model.anchors` | defined | `src/model/anchors.ts` and `src/extract/anchors.ts` code anchors; no verifier | wave 1a binding and extraction model |
 | `05 §1 two check families and layered enforcement` | `spec:validation.two-check-families` | defined | `src/validate/validators.ts` code anchor at `graphValidatorIds`; no verifier | wave 1b validation parent and MD-14 refine target |
+| `05 §2 MVP graph validators` | `spec:validation.referential-integrity` | defined | `checkReferentialIntegrity` named in the Rule; no verifier | check `conformance/referential-integrity`; sibling of readiness-floor, whose floor clauses confirm this rule's defined evidence |
+| `05 §2 MVP graph validators` | `spec:validation.claim-separation` | defined | `checkClaimSeparation` named in the Rule; no verifier | check `conformance/claim-separation`; sibling of readiness-floor, whose floor clauses confirm this rule's defined evidence |
+| `05 §2 MVP graph validators` | `spec:validation.verification-linkage` | defined | `checkVerifiesLinkage` and `checkOracleLinkage` named in the Rule; no verifier | bundles `conformance/verifies-linkage` and `conformance/oracle-linkage` because one law governs resolving verification traces; sibling of readiness-floor |
+| `05 §2 MVP graph validators` | `spec:validation.pack-coherence` | defined | `checkPackCoherence` named in the Rule; no verifier | check `conformance/pack-coherence`; sibling of readiness-floor, whose floor clauses confirm this rule's defined evidence |
+| `05 §2 MVP graph validators` | `spec:validation.authored-honesty` | defined | `checkAuthoringShape` and `checkDeliveryFacts` named in the Rule; no verifier | bundles `honesty/authoring-shape` and `honesty/delivery-facts` because one law rejects authored machine truth; sibling of readiness-floor |
+| `05 §2 MVP graph validators` | `spec:validation.warn-level-signals` | defined | `checkOrphans` and `checkGaps` named in the Rule; no verifier | bundles `conformance/orphans` and `honesty/gaps` because one law keeps informative signals non-failing; sibling of readiness-floor |
 | `06 §1-2 projections taxonomy and two surfaces` | `spec:consumers.projections-model` | defined | `src/projections/design-review.ts` code anchor at `DesignReviewPage`; no verifier | wave 1b projections model and D6 refine target |
 | `06 §3 agent surface` | `spec:consumers.agent-surface` | defined | `src/reader/reader.ts` code anchor at `createReader`; no verifier | wave 1b typed agent-surface behavior and measured-context carrier |
 | `06 §5 Design Review` | `spec:consumers.design-review` | defined | `src/projections/design-review.ts` code anchor at `renderDesignReview`; no verifier | wave 1b flagship human projection and D4 carrying surface |
+| `06 §3 reader` | `spec:consumers.reader` | defined | `src/reader/reader.ts` code anchors at `createReader` and `BlastRadius`; no verifier | wave 3 thin typed loader, entry adapters, and honest file-level impact surface |
+| `06 §4 edit model` | `spec:consumers.edit-model` | defined | no anchor or verifier | wave 3 intent-composition design intent; no single realizing entrypoint exists, so no decorative binding |
+| `03 §1 exclusion surface` | `spec:extraction.excludes` | defined | `src/extract/index.ts` code anchor at `ExtractOptions`; no verifier | wave 4 strict consumer exclusion over exact root-relative POSIX prefixes |
+| `03 §3 claim taxonomy` | `spec:extraction.claim-taxonomy` | defined | `src/graph/schema.ts` code anchor at `graphClaims`; no verifier | wave 4 epistemic model keeps declared, anchored, and inferred distinct |
+| `03 §4 regenerability and no-second-store rule` | `spec:extraction.regenerability` | defined | `src/cli/sdp.ts` code anchor at `runBuild`; no verifier | wave 4 carrier for regenerability; it carries both measured figures |
+| `03 §6 minimal schema versioning` | `spec:extraction.schema-versioning` | defined | `src/graph/schema.ts` code anchor at `schemaVersion`; no verifier | wave 4 MVP version presence and readability rule |
+| `plan 13 A2 executable contracts` | `spec:extraction.executable-contracts` | defined | `src/codegen/contracts.ts` code anchor at `generateContracts`; no verifier | wave 4 graph-derived step and space contract behavior |
+| `03 §5 git as the event log` | `spec:extraction.derive-graph` | ready | existing `src/extract/index.ts` and `src/extract/derive.ts` anchors; verifier unchanged | exposition-only content carried in the existing ready derive-graph Spec; no additional standalone Spec authored |
+
+### Fold ledger
+
+| Source | Terminal disposition | Evidence surface |
+|---|---|---|
+| MD-1 | decision Spec | `spec:decisions.executable-meta-model` |
+| MD-2 | decision Spec | `spec:decisions.adopt-the-nouns` |
+| MD-4 | decision Spec | `spec:decisions.one-primitive` |
+| MD-5 | decision Spec | `spec:decisions.protocol-naming` |
+| MD-7 | decision Spec | `spec:decisions.binding-not-liveness` |
+| MD-8 | folded | `src/model/anchors.ts` `codeAnchor` documentation |
+| MD-9 | folded | `src/model/sections.ts` and the readiness floor |
+| MD-10 | decision Spec | `spec:decisions.content-only-sections` |
+| MD-11 | decision Spec | `spec:decisions.typing-law` |
+| MD-12 | decision Spec | `spec:decisions.kind-conditional-floor` |
+| MD-13 | folded | `docs/concept/05-validation-and-honesty.md` and `src/validate/readiness-floor.ts` |
+| MD-14 | decision Spec | `spec:decisions.one-validation-path` |
+| MD-15 | decision Spec | `spec:decisions.sdp-ts-extension` |
+| MD-16 | decision Spec | `spec:decisions.carried-evidence` |
+| MD-17 | decision Spec | `spec:decisions.point-per-example` |
+| MD-18 | decision Spec | `spec:decisions.carrier-ruling` |
+| MD-19 | decision Spec | `spec:decisions.prose-ownership` |
+| MD-20 | decision Spec | `spec:decisions.exclusion-contract`; `spec:extraction.excludes` names its `decidedBy` back-edge |
+| MD-21 | decision Spec | `spec:decisions.envelope-grammar-posture` |
+| D1 | carried | `spec:model.core-model` |
+| D2 | carried | `spec:model.spec-sections` |
+| D3 | decision Spec | `spec:decisions.pack-reified` |
+| D4 | carried | `spec:consumers.design-review` |
+| D5 | decision Spec | `spec:decisions.agent-surface-scripts-graph` |
+| D6 | decision Spec | `spec:decisions.mcp-deferred` |
+| ~1/5 tokens | measured evidence moved | `spec:consumers.agent-surface` |
+| single-digit to ~25% | measured evidence moved | `spec:consumers.projections-model` |
+| < ~50 specs | measured evidence moved | `spec:extraction.regenerability` |
+| ~10k+ nodes | measured evidence moved | `spec:extraction.regenerability` |
+| Measured-evidence registry section | retired | all four figures now have owning Specs |
+| `spec:decisions.plain-language-references` | kept | phase-level relation remains on `spec:protocol.self-hosting` |
+| `spec:decisions.concept-docs-dissolve` | kept | phase-level relation remains on `spec:protocol.self-hosting` |
+
+### Docket Ledger, Reconciled at Todo 40
+
+The full close ledger is [task-40 docket evidence](../evidence/self-hosting-phase-2/task-40-self-hosting-phase-2.docket.md).
+Every plan-17 carry-forward, review-06 intake, phase-2 addition, and watch item has one terminal
+disposition. Two rows remain intentionally deferred for phase 2: no-reparse spy coverage because
+named-import interception remains weaker than an injected read seam, and temporal token assembly
+because its carried-forward rationale remains sanctioned. No row was silently dropped.
+
+| Docket item | Origin | Terminal disposition | Evidence |
+| --- | --- | --- | --- |
+| YAML scalar, line-number, document-end, non-mapping-root, cap-flood, GWT, heading, and duplicate-`When` grammar rows | plan-17 and review-06 grammar cluster | done s3 | [Task 18](../evidence/self-hosting-phase-2/task-18-self-hosting-phase-2.vitest.log) |
+| Windows-exclude, malformed-flag, matcher, and library-wording rows | plan-17 and review-06 exclude cluster | done s1 | [Task 10](../evidence/self-hosting-phase-2/task-10-self-hosting-phase-2.red.log), [task-40 green gate](../evidence/self-hosting-phase-2/task-40-self-hosting-phase-2.acceptance.md#current-green-gate) |
+| Dynamic-key ordering and non-prose escaping | plan-17 and review-06 Design Review cluster | done s2 | [Task 15](../evidence/self-hosting-phase-2/task-15-self-hosting-phase-2.vitest.log) |
+| Indirect `then`, GWT permutation, `description`, bound-example, and fixture-byte rows | plan-17 phase-1 remediations | dropped already fixed by phase-1 remediation | [plan-17 record](../../plans/17-self-hosting-v1.md) |
+| Row-3 enrichment delta | plan-17 | dropped it remains the sanctioned `scoped` to `defined` maturity record | [plan-17 record](../../plans/17-self-hosting-v1.md) |
+| No-reparse spy coverage | plan-17 | deferred Named-import interception remains weaker than an injected read seam. | [plan-17 record](../../plans/17-self-hosting-v1.md) |
+| Carrier-truth comment, stale provenance, and plan-16 evidence dispositions | plan-17 and review-06 records cluster | done s6 | [fold ledger](#fold-ledger), [Task 39](../evidence/self-hosting-phase-2/task-39-self-hosting-phase-2.g7.md) |
+| Temporal token assembly | plan-17 | deferred The comment can be narrowed later; token assembly remains the sanctioned temporal-guard pattern. | [plan-17 record](../../plans/17-self-hosting-v1.md) |
+| Twelfth preflight leg | plan-17 | dropped the recorded chain delta is benign and adds no phase-2 work | [plan-17 record](../../plans/17-self-hosting-v1.md) |
+| Decision-spec namespace divergence | plan-17 | done s6 | [Task 39](../evidence/self-hosting-phase-2/task-39-self-hosting-phase-2.g7.md) |
+| Import public package proof, checkout fidelity, parser claim, canonical flip, decision fold, and corpus review | phase-2 additions | done s1-s7 | [task-40 acceptance assembly](../evidence/self-hosting-phase-2/task-40-self-hosting-phase-2.acceptance.md) |
+| Five watch items | phase-2 additions | done s7, all unfired with named reasons | [task-40 watch dispositions](../evidence/self-hosting-phase-2/task-40-self-hosting-phase-2.docket.md#watch-items) |
+
+### Anti-Drift Audit, Todo 40
+
+**Verdict: PASS.** The [G7 evidence pack](../evidence/self-hosting-phase-2/task-39-self-hosting-phase-2.g7.md)
+remains the authoritative floor-honest table: 58 corpus Specs, 7 `ready`, 51 `defined`, no
+`idea` or `scoped` state, no orphan, and no unresolved double claim. No filler Spec was accepted:
+the explicit validator filler rejection is recorded in
+[task 35](../evidence/self-hosting-phase-2/task-35-self-hosting-phase-2.filler.log). All five
+watch items are terminal and unfired with a recorded reason. The acceptance-1-to-8 mapping lives
+in [task-40 acceptance evidence](../evidence/self-hosting-phase-2/task-40-self-hosting-phase-2.acceptance.md).
+
+### Watch-item re-check
+
+| Watch item | Current state | Re-check result |
+|---|---|---|
+| table sugar | terminal, unfired | Waves 2-4 used existing sibling Specs and ruled body forms, so no table grammar was forced. |
+| single-literal vocabulary form | terminal, unfired | No new vocabulary carrier needed a form beyond the ruled literal syntax. |
+| multi-entry constraint form | terminal, unfired | No wave introduced a constraint that required multiple entries. |
+| array-section prose sub-owner | terminal, unfired | New prose remains under existing typed section owners. |
+| Markdown Pack syntax | terminal, unfired | The Pack remains a TypeScript manifest, and no caller required Markdown authoring. |
 
 ### Planning-review record (durable — every planning finding folded, with its resolution; audit without chat history)
 
@@ -165,8 +259,16 @@ the ledger's complete, non-empty G1-G8 structure while the repo plan exists.
 | G4 | canonical-default flip | operative records and post-flip truth pins agree | pending — one tight record series and audit map |
 | G5 | first corpus-wave targets | core model, validation, and consumers parents exist | pending — coverage ledger and generated Design Review |
 | G6 | decision fold | every fold source has one ledger disposition | pending — lean registry review and relation evidence |
-| G7 | corpus waves 2–4 + fold completion | coverage ledger complete and fold ledger terminal | pending — coverage audit, floor-honesty table, and generated Design Review |
+| G7 | corpus waves 2–4 + fold completion | coverage ledger complete and fold ledger terminal | accepted — 2026-07-19 — `b471189034e1ee238394f3364c349937be6bebed` |
 | G8 | whole-phase close | full gate, clean-clone proof, review remediation, owner acceptance | pending — final verification wave and accepted SHA |
+
+### G7 attached evidence
+
+The manifest-wide coverage-ledger completeness audit and floor-honest readiness table are attached
+in [the G7 evidence pack](../evidence/self-hosting-phase-2/task-39-self-hosting-phase-2.g7.md).
+It records all 58 Pack members, their concept-document contracts, their frontmatter relations,
+and the applicable readiness evidence. The 2026-07-19 owner disposition is accepted because the
+user explicitly directed continuation without incremental owner reviews.
 
 ## Todos
 > Implementation + Test = ONE todo. Never separate.
@@ -388,63 +490,63 @@ the ledger's complete, non-empty G1-G8 structure while the repo plan exists.
   Acceptance criteria: nine specs in the graph; back-edges present; lean registry rows point correctly; `node ./check-carrier-rule.mjs` + `npm run check` green; rubric sweep clean.
   QA scenarios: happy — graph greps + rubric sweep (Evidence `.omo/evidence/self-hosting-phase-2/task-31-self-hosting-phase-2.fold2.log`); failure — refine `spec:decisions.typing-law` at the fallback, catch against the pinned map, fix to `spec:model.spec-sections` (Evidence `.../task-31-self-hosting-phase-2.map.log`).
   Commit: Y | `feat(specs): the decision fold — model/phase cluster (MD-1/2/4/5/7/10/11/12/16)`
-- [ ] 32. Fold batch 3 — D3/D5/D6 specs + the verification dispositions (D1/D2/D4, MD-8/9/13, born specs)
+- [x] 32. Fold batch 3 — D3/D5/D6 specs + the verification dispositions (D1/D2/D4, MD-8/9/13, born specs)
   What to do / Must NOT do: Author three decision specs per the D-table's own KEEP note: `spec:decisions.pack-reified` (D3; refines `spec:model.pack-aggregate`) · `spec:decisions.agent-surface-scripts-graph` (D5; refines `spec:consumers.agent-surface`) · `spec:decisions.mcp-deferred` (D6; refines `spec:consumers.projections-model` — the MCP-deferred *no*: integration for user-facing apps, designed-in, deferred build). Then the verification dispositions, recorded in the fold ledger with named evidence surfaces (verify, never re-author): D1 → carried by `spec:model.core-model` (confirm the spec carries the readiness-vs-delivery-facts distinction); D2 → carried by `spec:model.spec-sections` (confirm typed-sections content); D4 → carried by `spec:consumers.design-review` (confirm the flagship-projection content); MD-8 → folded, evidence: the doc-comment on the `codeAnchor` builder in `src/model/anchors.ts` (confirm present); MD-9 → folds, evidence: `src/model/sections.ts` + the floor + `02` §3; MD-13 → folds, evidence: `05` §3's Representation note + the `readiness-floor.ts` header. Record the two born specs' keep verdicts (recommended: keep at `spec:protocol.self-hosting`). The D1–D6 table stays in the lean registry with its KEEP note (it retires when the artifacts citing `(Dn)` dissolve — recorded). Must NOT: re-author any folded/folds content; delete the D-table; change the born specs' IDs (a relation edit only if the owner overrules the keep recommendation).
   Parallelization: Wave 7 | Blocked by: 30, 31 | Blocks: 33
   References: D-table + KEEP note `docs/concept/DECISIONS.md:533-544`; owner §6.6b `plans/18-self-hosting-phase-2-brief.md:312-315`; evidence surfaces `src/model/anchors.ts`, `src/model/sections.ts`, `src/validate/readiness-floor.ts`, `docs/concept/05-validation-and-honesty.md` §3.
   Acceptance criteria: three specs in the graph; six verification dispositions recorded with named surfaces (each surface confirmed to carry the content — quote the line in evidence); born-spec verdicts recorded; `npm run check` green.
   QA scenarios: happy — surface quotes per disposition (Evidence `.omo/evidence/self-hosting-phase-2/task-32-self-hosting-phase-2.verify.md`); failure — record MD-8 as verified without the doc-comment quote, catch against acceptance 4's "named evidence surfaces", fix (Evidence `.../task-32-self-hosting-phase-2.evidence.log`).
   Commit: Y | `feat(specs): the decision fold — D3/D5/D6 + verification dispositions`
-- [ ] 33. Measured-evidence dispositions + records debt cluster + `DECISIONS.md` becomes the lean registry
+- [x] 33. Measured-evidence dispositions + records debt cluster + `DECISIONS.md` becomes the lean registry
   What to do / Must NOT do: (a) Measured evidence: record per-figure dispositions in the fold ledger (figure → carrier spec → landing wave); move the two S5-carried figures now — the generalized claim text already lives in `06` §3/§10 (⅕ tokens) and `06` §2 (curated selection); the figures themselves move into `spec:consumers.agent-surface` / `spec:consumers.projections-model` as evidence lines in their bodies (measured evidence, honestly attributed as measured); delete those two rows from the measured-evidence section; the two S7-carried figures stay with their disposition recorded (`→ spec:extraction.regenerability at S7`). (b) Records cluster (owner §6.8): repair the stale provenance wording `approval provenance is git-native` at `docs/concept/05-validation-and-honesty.md:106` and `CONTEXT.md:182` (align with the glossary's rejection of the term — the line is pre-existing, outside phase-1's scope, deliberately adopted now); record the plan-16 §6 per-item REPAIRED/SUPERSEDED evidence dispositions into the docket (they currently exist only in ignored evidence); narrow the overclaimed comment in `check-carrier-truth.mjs` (the formatter-re-wrap tolerance claim, review-06 lines 287–288) to match its line-based Family-C matching. (c) Shrink `DECISIONS.md` to the lean registry: the ratified-name table (name · one-line gloss · spec pointer · folded/CONTEXT-only dispositions) + the pointers section + the surviving D-table + the shrunk measured-evidence section + intro framing; all distilled bodies are gone (git is the archive). Keep the post-flip carrier sentence verbatim in the MD-18 row's gloss (rule-script pin); if any pinned string must change, re-pin `check-carrier-rule.mjs` in the same change. Must NOT: drop any registry row; lose a figure without a recorded disposition; leave the stale provenance wording; break the rule/truth/gates scripts (run all three).
   Parallelization: Wave 7 | Blocked by: 32 | Blocks: 34
   References: measured evidence `docs/concept/DECISIONS.md:551-556`; owner §6.6c `plans/18-self-hosting-phase-2-brief.md:315-317`; records items review-06 lines 287–298 + plan-17 rows `plans/17-self-hosting-v1.md:445-468`; the lean-registry target shape `plans/18-self-hosting-phase-2-brief.md:142-167`.
   Acceptance criteria: the lean registry stands (bodies gone, rows complete, pointers resolve — `grep -c "spec:decisions\." docs/concept/DECISIONS.md` ≥ 19); two figures moved, two dispositioned; records items stamped in the docket; `node ./check-carrier-rule.mjs && node ./check-carrier-truth.mjs && node ./check-self-hosting-gates.mjs` + `npm run check` all green.
   QA scenarios: happy — the three audit logs + lean-registry review (Evidence `.omo/evidence/self-hosting-phase-2/task-33-self-hosting-phase-2.lean.log`); failure — delete a figure row without its disposition, catch against acceptance 4, restore (Evidence `.../task-33-self-hosting-phase-2.figure.log`).
   Commit: Y | `docs(decisions): shrink DECISIONS.md to the lean registry; land the records cluster`
-- [ ] 34. Session 6 close — gate G6 (fold partial-completion audit)
+- [~] 34. Session 6 close — gate G6 (fold partial-completion audit)
   What to do / Must NOT do: Assemble the G6 evidence pack: the 18 landed decision specs (batches 1–3) with the §4 rubric sweep, the fold ledger (every row dispositioned; MD-20 + two evidence figures marked as landing at S7 by design), the lean `DECISIONS.md`, and the generated Design Review view. Audit acceptance 4's partial state: every registry row, D1–D6, and measured evidence carries exactly one recorded disposition (some dispositions are `lands at S7` — lawful per the targets-exist rule); the namespace is uniform and has no legacy reserved prefix. Present; on acceptance, stamp G6 (owner disposition + date + SHA). Must NOT: declare the fold complete (MD-20 + two figures land at S7); start wave-8 work before the owner's G6 disposition.
   Parallelization: Wave 7 | Blocked by: 33 | Blocks: 35, 36, 37
   References: acceptance 4 `plans/18-self-hosting-phase-2-brief.md:353-357`; gate mechanics (todo 12 references).
   Acceptance criteria: G6 stamped; the fold ledger shows 100% disposition coverage; `node ./check-self-hosting-gates.mjs` exits 0; `npm run check` green.
   QA scenarios: happy — post-stamp log + disposition-coverage table (Evidence `.omo/evidence/self-hosting-phase-2/task-34-self-hosting-phase-2.g6.log`); failure — find one dangling registry pointer (grep for a `spec:decisions.*` ID with no matching file), fix before stamp (Evidence `.../task-34-self-hosting-phase-2.dangle.log`).
   Commit: Y | `docs(plans): session 6 close — gate G6 accepted (the decision fold)`
-- [ ] 35. Corpus wave 2 — the validation deep-dive (6 rule specs, the bundling dispositions)
+- [x] 35. Corpus wave 2 — the validation deep-dive (6 rule specs, the bundling dispositions)
   What to do / Must NOT do: Author under the modeling policy: `specs/validation/referential-integrity.sdp.md` (rule, story; refines `spec:validation.two-check-families`; the law: every edge and pack model reference resolves; anchors: the referential-integrity validator) · `specs/validation/claim-separation.sdp.md` (rule, story; node/edge types, claims, descriptors, endpoint contracts agree — the claim taxonomy never collapses; anchors: its validator) · `specs/validation/verification-linkage.sdp.md` (rule, feature; BUNDLES `conformance/verifies-linkage` + `conformance/oracle-linkage` — one law: declared verification resolves to a performing trace; the bundle disposition recorded in the coverage ledger; anchors: both validators) · `specs/validation/pack-coherence.sdp.md` (rule, story; pack membership non-duplicated, modelRefs target model specs; anchors: its validator) · `specs/validation/authored-honesty.sdp.md` (rule, feature; BUNDLES `honesty/authoring-shape` + `honesty/delivery-facts` — one law: machine truth is never authored; anchors: both validators) · `specs/validation/warn-level-signals.sdp.md` (rule, feature; BUNDLES `conformance/orphans` + `honesty/gaps` — one law: some signals warn and never fail; anchors: both validators). Readiness `defined` (or `ready` only where the floor genuinely clears with the anchored validator as evidence — state honestly per spec). Pack manifest grows in the same change. Coverage ledger rows: `05` §2 (the MVP graph validators) per spec, floor-clause evidence noted for the readiness-floor spec's siblings. Must NOT: author one spec per check mechanically (the pressure target is disposition-over-count — the three bundles are deliberate, recorded in the ledger); duplicate `spec:validation.duplicate-ids*` / `spec:validation.readiness-floor` content (they already carry two of the eleven checks); add decorative anchors.
   Parallelization: Wave 8 | Blocked by: 34 | Blocks: 38 | Can parallelize with: 36, 37
   References: the 11 checks `src/validate/validators.ts:32-44` (read each validator's header before anchoring); concept `docs/concept/05-validation-and-honesty.md` §1–§3; the bundling law `plans/18-self-hosting-phase-2-brief.md:179-182`; existing specs `specs/validation/duplicate-ids.sdp.md`, `readiness-floor.sdp.md`.
   Acceptance criteria: six specs in the graph; the 11-check coverage is complete (2 pre-existing + 6 new covering the remaining 9 via the recorded bundles — the coverage ledger shows all 11 check IDs mapped); `npm run check` green.
   QA scenarios: happy — the 11-check map + graph greps (Evidence `.omo/evidence/self-hosting-phase-2/task-35-self-hosting-phase-2.checks.md`); failure — author a seventh unbundled spec for an already-bundled check, catch the filler against the modeling policy, remove (Evidence `.../task-35-self-hosting-phase-2.filler.log`).
   Commit: Y | `feat(specs): corpus wave 2 — validation deep-dive with recorded bundling`
-- [ ] 36. Corpus wave 3 — the consumers remainder (2 specs + enrichments)
+- [x] 36. Corpus wave 3 — the consumers remainder (2 specs + enrichments)
   What to do / Must NOT do: Author `specs/consumers/reader.sdp.md` (behavior, feature, defined; refines `spec:consumers.agent-surface`; carries `06` §3's reader — the thin typed loader, entry adapters + impact; anchors: `createReader` and the impact/blast-radius surface in `src/reader/`) · `specs/consumers/edit-model.sdp.md` (behavior, feature, defined; refines `spec:consumers.projections-model`; carries `06` §4 the edit model — intent composition, not patching: edits flow intent → agent → git → conformance checks; anchors: none — design intent not yet implemented as a single entrypoint; state readiness honestly at `defined` with the floor respected). Enrich `spec:consumers.projections-model` in place with any `06` §6 delivery-process vocabulary content that is genuinely model fact (never the MD-2 ruling — already folded). Coverage ledger rows. Pack manifest grows. Must NOT: anchor the edit model decoratively (no single realizing entrypoint exists — honesty over coverage); restate D5/D6 (folded); author the MCP surface.
   Parallelization: Wave 8 | Blocked by: 34 | Blocks: 38 | Can parallelize with: 35, 37
   References: concept `docs/concept/06-consumers-and-projections.md` §3–§4, §6; reader sources `src/reader/`; the no-decorative-anchors policy (Execution strategy §policy).
   Acceptance criteria: two specs in the graph with honest readiness/anchors; the projections-model enrichment diff minimal and factual; `npm run check` green.
   QA scenarios: happy — graph greps (Evidence `.omo/evidence/self-hosting-phase-2/task-36-self-hosting-phase-2.graph.log`); failure — add an anchor to the edit-model spec, catch the decorative-anchor violation at review, remove (Evidence `.../task-36-self-hosting-phase-2.anchor.log`).
   Commit: Y | `feat(specs): corpus wave 3 — consumers remainder`
-- [ ] 37. Corpus wave 4 — extraction & the one graph (5 specs + seed enrichments)
+- [x] 37. Corpus wave 4 — extraction & the one graph (5 specs + seed enrichments)
   What to do / Must NOT do: Author: `specs/extraction/excludes.sdp.md` (rule, feature, defined; refines `spec:extraction.derive-graph`; carries the exclusion surface — MD-20's refine target: strict consumer-exclusion, exact root-relative POSIX path prefixes; anchors: the exclude normalization + matcher in `src/extract/index.ts` / `ExtractOptions`) · `specs/extraction/claim-taxonomy.sdp.md` (model, feature, defined; refines `spec:extraction.derive-graph`; carries `03` §3 — declared/anchored/inferred never collapsed; anchors: `src/graph/schema.ts` claims, `graphClaims`) · `specs/extraction/regenerability.sdp.md` (rule, feature, defined; refines `spec:extraction.determinism`; carries `03` §4 regenerability + the no-second-store rule — also the future home of the two remaining measured-evidence figures; anchors: the `--check-clean` producer-repeat seam `src/cli/sdp.ts`) · `specs/extraction/schema-versioning.sdp.md` (rule, story, defined; refines `spec:extraction.derive-graph`; carries `03` §6 minimal schema versioning; anchors: `schemaVersion` in `src/graph/schema.ts`) · `specs/extraction/executable-contracts.sdp.md` (behavior, feature, defined; refines `spec:extraction.build-pipeline`; carries the A2 contract-derivation machinery (plan 13) — step contracts + space contracts; anchors: `generateContracts`). Enrich the phase-1 seeds in place where `03` content genuinely deepens them (`spec:extraction.derive-graph` ← `03` §1 edge-contract facts; `spec:extraction.determinism` ← `03` §2; git-as-event-log §5 → carried as narrative on `derive-graph` — disposition recorded, no new spec). Coverage ledger rows; pack manifest grows. Must NOT: author a spec for exposition-only content (record the disposition instead); restate MD-20 (it folds at todo 38); raise readiness above floor.
   Parallelization: Wave 8 | Blocked by: 34 | Blocks: 38 | Can parallelize with: 35, 36
   References: concept `docs/concept/03-the-one-graph.md` §1–§6 (heading map verified at planning); exclusion plumbing `src/extract/index.ts` + `ExtractOptions`; contracts `src/codegen/` (`generateContracts`); schema `src/graph/schema.ts`; MD-20 diary body `docs/concept/DECISIONS.md:48` + its registry row.
   Acceptance criteria: five specs in the graph with precise anchors; seed enrichments landed; the §5 disposition recorded; `npm run check` green.
   QA scenarios: happy — graph greps + coverage rows (Evidence `.omo/evidence/self-hosting-phase-2/task-37-self-hosting-phase-2.graph.log`); failure — author a git-event-log spec, catch the exposition-only violation against the modeling policy, replace with the recorded disposition (Evidence `.../task-37-self-hosting-phase-2.exposition.log`).
   Commit: Y | `feat(specs): corpus wave 4 — extraction and the one graph`
-- [ ] 38. Fold completion — MD-20 + the last measured-evidence moves + watch-item re-check
+- [x] 38. Fold completion — MD-20 + the last measured-evidence moves + watch-item re-check
   What to do / Must NOT do: (a) Author `specs/decisions/exclusion-contract.sdp.md` (MD-20; decision, feature, defined; refines `spec:extraction.excludes` — the target now exists; distill the diary body per the §4 rubric; `decidedBy` back-edge on `spec:extraction.excludes`; pack manifest grows; delete MD-20's diary body, lean row points at the spec). (b) Move the two remaining measured-evidence figures into `spec:extraction.regenerability` (the `< ~50 specs` full-rebuild comfort and the `~10k+ nodes` graph-DB deferral — honestly attributed as measured); delete those rows; the measured-evidence section is now empty — retire it from `DECISIONS.md` (the section header + a one-line retired note, or remove per the lean-registry style; record the retirement in the fold ledger). (c) Re-check all five watch items' states after waves 2–4 (any newly fired item gets its ruling recorded; table sugar's verdict from todo 16 still stands unless a wave forced it). (d) Fold-ledger final sweep: every row's disposition now terminal (no `lands at S7` remains). Must NOT: retire the measured-evidence section with a figure unmoved; forget the `decidedBy` back-edge; break the audit scripts (run all three).
   Parallelization: Wave 8 | Blocked by: 35, 36, 37 | Blocks: 39
   References: MD-20 diary body `docs/concept/DECISIONS.md:48`; measured evidence `:551-556`; owner §6.6c `plans/18-self-hosting-phase-2-brief.md:315-317`; watch items (todo 16 references).
   Acceptance criteria: `spec:decisions.exclusion-contract` in the graph with both edges; measured-evidence section retired empty; watch-item states current; fold ledger fully terminal; `node ./check-carrier-rule.mjs && node ./check-carrier-truth.mjs && node ./check-self-hosting-gates.mjs` + `npm run check` green.
   QA scenarios: happy — the terminal fold ledger + audit logs (Evidence `.omo/evidence/self-hosting-phase-2/task-38-self-hosting-phase-2.fold-done.log`); failure — leave one figure row, catch against acceptance 4's exactly-one-disposition rule, fix (Evidence `.../task-38-self-hosting-phase-2.figure.log`).
   Commit: Y | `feat(specs): fold completion — the exclusion-contract decision + evidence moves`
-- [ ] 39. Session 7 close — gate G7 (coverage-ledger completeness audit)
+- [x] 39. Session 7 close — gate G7 (coverage-ledger completeness audit)
   What to do / Must NOT do: Assemble the G7 evidence pack: waves 2–4 specs with anchors and coverage rows, the completed fold ledger, the coverage-ledger completeness audit (every corpus spec maps its concept-doc contract — no orphan specs, no double-claimed sections without a recorded disposition), acceptance 5's evidence (floor-honest readiness sweep: for every corpus spec, stated rung vs floor evidence — a table), and the generated Design Review view. Present; on acceptance, stamp G7 (owner disposition + date + SHA). Must NOT: start phase-close before the owner's G7 disposition; leave any coverage row blank.
   Parallelization: Wave 8 | Blocked by: 38 | Blocks: 40
   References: acceptance 5 `plans/18-self-hosting-phase-2-brief.md:358-361`; floor table `src/validate/readiness-floor.ts`; gate mechanics (todo 12 references).
   Acceptance criteria: G7 stamped; the coverage audit + floor-honesty table attached; `node ./check-self-hosting-gates.mjs` exits 0; `npm run check` green.
   QA scenarios: happy — post-stamp log + audits (Evidence `.omo/evidence/self-hosting-phase-2/task-39-self-hosting-phase-2.g7.log`); failure — find one spec above floor, drop its rung honestly, re-stamp (Evidence `.../task-39-self-hosting-phase-2.floor.log`).
   Commit: Y | `docs(plans): session 7 close — gate G7 accepted (corpus waves complete)`
-- [ ] 40. Docket reconciliation + whole-phase anti-drift audit
+- [x] 40. Docket reconciliation + whole-phase anti-drift audit
   What to do / Must NOT do: (a) Reconcile plan 18 §8's docket: every row carried from plan 17 §6 (`plans/17-self-hosting-v1.md:445-468`), every review-06 cluster row, and every phase-2-added row gets a terminal disposition — `done <session>` / `deferred <why>` / `dropped <why>` — nothing silently dropped; the no-reparse spy seam and temporal token assembly stay `deferred` with their reasons carried forward verbatim; plan-16's evidence-disposition rows recorded (todo 33) stamped. (b) The anti-drift audit: intended-truth vs realization sweep — `npm run check` green; every corpus spec floor-honest (re-run the todo-39 table); no filler specs (every spec passes the "real content forced it" test at review); the five watch items terminal for the phase; acceptance 1–8 evidence assembled into one file with per-criterion links to the owning todos' logs. Must NOT: disposition a row `done` without its evidence link; let the audit pass with any readiness-above-floor.
   Parallelization: Wave 9 | Blocked by: 39 | Blocks: 41, 42
   References: plan-17 deferred rows `plans/17-self-hosting-v1.md:445-468`; review-06 clusters (todo 10/15/18/33 references); acceptance 1–8 `plans/18-self-hosting-phase-2-brief.md:337-371`.

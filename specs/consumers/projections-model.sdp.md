@@ -19,3 +19,7 @@ relations:
 - **reader** — The thin typed front door that decodes graph joins and taxonomy once, returns composable data, and persists nothing.
 - **curation** — The deliberate difference between the sparse curated graph and the code-structure surface; it is not drift.
 - **measured curation** — In a measured comparison, the curated graph selected from single-digit to about one quarter of the mechanical impact-graph surface.
+- **discipline** — A lens or projection that filters or groups Specs by kind or section; it is not a phase to pass through.
+- **release** — A tagged set surfaced as a git-tag projection.
+- **baseline** — A named approved snapshot whose signed git tag is the approval artifact, with approval remaining outside the authored model.
+- **phase / iteration / milestone** — Descriptive vocabulary for optional roadmap projections, never gates or enforced sequences.

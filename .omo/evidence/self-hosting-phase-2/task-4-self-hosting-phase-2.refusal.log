@@ -1,0 +1,10 @@
+
+ RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol
+
+ ✓ test/import-emit-markdown.test.ts (13 tests | 12 skipped) 7ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 12 skipped (13)
+   Start at  16:55:11
+   Duration  803ms (transform 226ms, setup 0ms, collect 508ms, tests 7ms, environment 0ms, prepare 76ms)
+

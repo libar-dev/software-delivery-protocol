@@ -1,0 +1,181 @@
+
+> @libar-dev/software-delivery-protocol@0.0.0 test
+> node ./vitest-test.mjs test/exclude-diagnostics.test.ts test/cli.test.ts
+
+
+ RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol
+
+ ❯ test/exclude-diagnostics.test.ts (3 tests | 2 failed) 10ms
+   × exclusion diagnostics > rejects a Windows drive-letter absolute path instead of accepting an unmatched prefix 5ms
+     → expected [Function] to throw an error
+   × exclusion diagnostics > keeps the library diagnostic distinct from CLI flag wording 2ms
+     → expected [Function] to throw error including 'normalizeExcludes: invalid exclusion …' but got 'invalid --exclude path "./specs"'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/exclude-diagnostics.test.ts > exclusion diagnostics > rejects a Windows drive-letter absolute path instead of accepting an unmatched prefix
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ test/exclude-diagnostics.test.ts:29:56
+     27| 
+     28|     // When / Then: the library boundary rejects it loudly.
+     29|     expect(() => normalizeExcludes([windowsAbsolute])).toThrow(
+       |                                                        ^
+     30|       'normalizeExcludes: invalid exclusion path "C:/work/specs"',
+     31|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/exclude-diagnostics.test.ts > exclusion diagnostics > keeps the library diagnostic distinct from CLI flag wording
+AssertionError: expected [Function] to throw error including 'normalizeExcludes: invalid exclusion …' but got 'invalid --exclude path "./specs"'
+
+Expected: "normalizeExcludes: invalid exclusion path "./specs""
+Received: "invalid --exclude path "./specs""
+
+ ❯ test/exclude-diagnostics.test.ts:39:52
+     37| 
+     38|     // When / Then: the reusable normalizer names its own boundary, no…
+     39|     expect(() => normalizeExcludes([invalidPath])).toThrow(
+       |                                                    ^
+     40|       'normalizeExcludes: invalid exclusion path "./specs"',
+     41|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  17:49:45
+   Duration  373ms (transform 31ms, setup 0ms, collect 28ms, tests 10ms, environment 0ms, prepare 60ms)
+
+
+> @libar-dev/software-delivery-protocol@0.0.0 test
+> node ./vitest-test.mjs test/cli.test.ts
+
+
+ RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol
+
+filter:  test/cli.test.ts
+include: test/**/*.test.ts, examples/**/*.test.ts
+exclude:  **/node_modules/**, **/dist/**, **/cypress/**, **/.{idea,git,cache,output,temp}/**, **/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*, test/cli.test.ts
+No test files found, exiting with code 0
+
+
+ RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol
+
+ ❯ test/cli.test.ts (54 tests | 1 failed) 935ms
+   ✓ sdp cli > views the self-hosting corpus from the default repository root 303ms
+   × sdp cli > names a flag supplied as an --exclude operand before build writes 6ms
+     → expected 'sdp build: --exclude requires a path.…' to be 'sdp build: --exclude expects a path, …' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/cli.test.ts > sdp cli > names a flag supplied as an --exclude operand before build writes
+AssertionError: expected 'sdp build: --exclude requires a path.…' to be 'sdp build: --exclude expects a path, …' // Object.is equality
+
+- Expected
++ Received
+
+- sdp build: --exclude expects a path, got --foo
++ sdp build: --exclude requires a path.
+
+
+ ❯ test/cli.test.ts:488:36
+    486|       expect(exitCode).toBe(1);
+    487|       expect(capture.readStdout()).toBe("");
+    488|       expect(capture.readStderr()).toBe("sdp build: --exclude expects …
+       |                                    ^
+    489|       expect(existsSync(join(root, "generated"))).toBe(false);
+    490|     } finally {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 53 passed (54)
+   Start at  17:49:54
+   Duration  1.66s (transform 235ms, setup 0ms, collect 544ms, tests 935ms, environment 0ms, prepare 41ms)
+
+
+> @libar-dev/software-delivery-protocol@0.0.0 test
+> node ./vitest-test.mjs test/exclude-diagnostics.test.ts
+
+
+ RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol
+
+ ❯ test/exclude-diagnostics.test.ts (3 tests | 3 failed) 13ms
+   × exclusion diagnostics > rejects a Windows drive-letter absolute path instead of accepting an unmatched prefix 5ms
+     → expected [Function] to throw an error
+   × exclusion diagnostics > keeps the library diagnostic distinct from CLI flag wording 2ms
+     → expected [Function] to throw error including 'normalizeExcludes: invalid exclusion …' but got 'invalid --exclude path "./specs"'
+   × exclusion diagnostics > excludes only an exact prefix or a path-segment descendant 6ms
+     → expected [] to deeply equal [ 'foobar/included.sdp.ts' ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/exclude-diagnostics.test.ts > exclusion diagnostics > rejects a Windows drive-letter absolute path instead of accepting an unmatched prefix
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ test/exclude-diagnostics.test.ts:29:56
+     27| 
+     28|     // When / Then: the library boundary rejects it loudly.
+     29|     expect(() => normalizeExcludes([windowsAbsolute])).toThrow(
+       |                                                        ^
+     30|       'normalizeExcludes: invalid exclusion path "C:/work/specs"',
+     31|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/exclude-diagnostics.test.ts > exclusion diagnostics > keeps the library diagnostic distinct from CLI flag wording
+AssertionError: expected [Function] to throw error including 'normalizeExcludes: invalid exclusion …' but got 'invalid --exclude path "./specs"'
+
+Expected: "normalizeExcludes: invalid exclusion path "./specs""
+Received: "invalid --exclude path "./specs""
+
+ ❯ test/exclude-diagnostics.test.ts:39:52
+     37| 
+     38|     // When / Then: the reusable normalizer names its own boundary, no…
+     39|     expect(() => normalizeExcludes([invalidPath])).toThrow(
+       |                                                    ^
+     40|       'normalizeExcludes: invalid exclusion path "./specs"',
+     41|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/exclude-diagnostics.test.ts > exclusion diagnostics > excludes only an exact prefix or a path-segment descendant
+AssertionError: expected [] to deeply equal [ 'foobar/included.sdp.ts' ]
+
+- Expected
++ Received
+
+- Array [
+-   "foobar/included.sdp.ts",
+- ]
++ Array []
+
+ ❯ test/exclude-diagnostics.test.ts:56:67
+     54| 
+     55|     // Then: `foo` is absent, while `foobar` remains because a slash s…
+     56|     expect(discovered.specFiles.map((file) => file.relativePath)).toEq…
+       |                                                                   ^
+     57|   });
+     58| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  17:50:26
+   Duration  367ms (transform 33ms, setup 0ms, collect 39ms, tests 13ms, environment 0ms, prepare 62ms)
+
+A pooled test run mutated repository-root generated/ state; only the dedicated test/cli.test.ts pass may regenerate it.

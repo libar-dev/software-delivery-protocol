@@ -1,0 +1,40 @@
+
+> @libar-dev/software-delivery-protocol@0.0.0 test
+> node ./vitest-test.mjs test/package-smoke.test.ts
+
+
+ RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol
+
+npm notice
+npm notice 📦  @libar-dev/software-delivery-protocol@0.0.0
+npm notice Tarball Contents
+npm notice 11.4kB LICENSE
+npm notice 1.0kB dist/adapters/vitest.d.ts
+npm notice 5.6kB dist/adapters/vitest.js
+npm notice 4.6kB dist/cli/sdp.d.ts
+npm notice 246.1kB dist/cli/sdp.js
+npm notice 47.7kB dist/index-CYKjjj2t.d.ts
+npm notice 236.7kB dist/index.cjs
+npm notice 17.2kB dist/index.d.ts
+npm notice 231.6kB dist/index.js
+npm notice 5.4kB dist/runner/index.d.ts
+npm notice 5.4kB dist/runner/index.js
+npm notice 2.5kB package.json
+npm notice Tarball Details
+npm notice name: @libar-dev/software-delivery-protocol
+npm notice version: 0.0.0
+npm notice filename: libar-dev-software-delivery-protocol-0.0.0.tgz
+npm notice package size: 178.3 kB
+npm notice unpacked size: 815.1 kB
+npm notice shasum: 77f2c07c24eecafb0eced4c0262038acbdb7da5b
+npm notice integrity: sha512-OaTzh70t/RW+a[...]wVIw9syIWWV9Q==
+npm notice total files: 12
+npm notice
+ ✓ test/package-smoke.test.ts (1 test) 11984ms
+   ✓ published package surface > proves the installed tarball lists import, dry-runs conversion without writes, and exposes the barrel 11983ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  17:54:37
+   Duration  12.27s (transform 46ms, setup 0ms, collect 24ms, tests 11.98s, environment 0ms, prepare 86ms)
+

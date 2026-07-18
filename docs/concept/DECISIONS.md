@@ -25,7 +25,7 @@ In prose, lead with meaning and use a code only as a parenthetical lookup key. C
 | MD-17 | point-per-example | durable | Each example is one bound point. | [Spec](../../specs/decisions/point-per-example.sdp.md) (`spec:decisions.point-per-example`) |
 | MD-18 | the carrier ruling | durable | Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option. The surviving law is one canonical surface per ID, no mixing. | [Spec](../../specs/decisions/carrier-ruling.sdp.md) (`spec:decisions.carrier-ruling`) |
 | MD-19 | the prose-ownership law | durable | Prose belongs to typed graph owners. | [Spec](../../specs/decisions/prose-ownership.sdp.md) (`spec:decisions.prose-ownership`) |
-| MD-20 | the strict consumer-exclusion contract | durable | Consumer exclusions are explicit root-relative paths. | `spec:decisions.exclusion-contract` |
+| MD-20 | the strict consumer-exclusion contract | durable | Consumer exclusions are explicit root-relative paths. | [Spec](../../specs/decisions/exclusion-contract.sdp.md) (`spec:decisions.exclusion-contract`) |
 | MD-21 | the envelope-grammar ownership posture | durable | The Protocol owns the envelope contract, not the YAML library. | [Spec](../../specs/decisions/envelope-grammar-posture.sdp.md) (`spec:decisions.envelope-grammar-posture`) |
 
 ### Current executable decision-spec pointers
@@ -47,10 +47,3 @@ In prose, lead with meaning and use a code only as a parenthetical lookup key. C
 | **D4** | Design Review is the flagship curated projection | `06` §5 |
 | **D5** | the agent surface is a visible graph the agent scripts | `06` §3 |
 | **D6** | MCP integration is designed-in and deferred | `06` §7 |
-
-## Measured evidence
-
-| Figure | Disposition |
-|---|---|
-| **< ~50 specs** | Lands at S7 in `spec:extraction.regenerability`. |
-| **~10k+ nodes** | Lands at S7 in `spec:extraction.regenerability`. |

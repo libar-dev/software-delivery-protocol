@@ -1,0 +1,24 @@
+# Task 19 refusal-parity RED evidence
+
+Command:
+
+```text
+PATH="$PWD/node_modules/.bin:$PATH" node ./vitest-test.mjs test/extract-parity.test.ts
+```
+
+The initial matrix deliberately required every Markdown twin to emit the TypeScript finding ID.
+The settled grammar refused four carrier-granularity non-claims under their own Markdown finding
+families:
+
+```text
+Test Files  1 failed (1)
+Tests       4 failed | 6 passed (10)
+
+parse-error: expected [ 'extract/invalid-frontmatter', …(1) ] to include 'extract/parse-error'
+non-static-section: expected [ Array(1) ] to include 'extract/non-static-section'
+unrecognized-statement: expected [ Array(1) ] to include 'extract/unrecognized-statement'
+misplaced-authoring: expected [ Array(1) ] to include 'extract/misplaced-authoring'
+```
+
+The green matrix records these four as named non-claims. The other six probes already emitted the
+same refusal class, including the cross-carrier duplicate pair.

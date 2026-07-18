@@ -1,0 +1,184 @@
+
+> @libar-dev/software-delivery-protocol@0.0.0 check
+> npm run check:temporal && npm run lint && npm run format:check && npm run build && npm run generate:self-hosting && npm run generate:example && npm run typecheck && npm run typecheck:examples && npm test && npm run check:self-hosting && npm run check:example && npm run preflight
+
+
+> @libar-dev/software-delivery-protocol@0.0.0 check:temporal
+> node ./check-temporal.mjs
+
+
+> @libar-dev/software-delivery-protocol@0.0.0 lint
+> eslint .
+
+
+> @libar-dev/software-delivery-protocol@0.0.0 format:check
+> prettier --check .
+
+Checking formatting...
+[warn] check-self-hosting-gates.mjs
+[warn] Code style issues found in the above file. Run Prettier with --write to fix.
+
+> @libar-dev/software-delivery-protocol@0.0.0 build
+> tsup
+
+CLI Building entry: src/index.ts
+CLI Using tsconfig: tsconfig.json
+CLI tsup v8.5.1
+CLI Using tsup config: /Users/darkomijic/dev-projects/libar-software-delivery-protocol/tsup.config.ts
+CLI Building entry: src/index.ts, src/cli/sdp.ts, src/adapters/vitest.ts, src/runner/index.ts
+CLI Using tsconfig: tsconfig.json
+CLI tsup v8.5.1
+CLI Using tsup config: /Users/darkomijic/dev-projects/libar-software-delivery-protocol/tsup.config.ts
+CLI Target: es2022
+CJS Build start
+CLI Target: es2022
+CLI Cleaning output folder
+ESM Build start
+CJS dist/index.cjs 231.28 KB
+CJS ⚡️ Build success in 119ms
+ESM dist/index.js           226.31 KB
+ESM dist/adapters/vitest.js 5.51 KB
+ESM dist/runner/index.js    5.25 KB
+ESM dist/cli/sdp.js         240.45 KB
+ESM ⚡️ Build success in 120ms
+DTS Build start
+DTS ⚡️ Build success in 3415ms
+DTS dist/adapters/vitest.d.ts 1004.00 B
+DTS dist/cli/sdp.d.ts         4.49 KB
+DTS dist/index.d.ts           16.74 KB
+DTS dist/runner/index.d.ts    5.23 KB
+DTS dist/index-CYKjjj2t.d.ts  46.37 KB
+
+> @libar-dev/software-delivery-protocol@0.0.0 generate:self-hosting
+> node ./dist/cli/sdp.js view . --exclude explorations --exclude examples
+
+16 specs · 1 packs · 16 anchors → 33 nodes · 57 edges (0 errors, 0 warnings)
+Wrote /Users/darkomijic/dev-projects/libar-software-delivery-protocol/generated/graph.json
+Wrote /Users/darkomijic/dev-projects/libar-software-delivery-protocol/generated/contracts (4 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /Users/darkomijic/dev-projects/libar-software-delivery-protocol/generated/design-review (18 pages)
+
+> @libar-dev/software-delivery-protocol@0.0.0 generate:example
+> node ./dist/cli/sdp.js build examples/checkout-v1
+
+11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
+Wrote /Users/darkomijic/dev-projects/libar-software-delivery-protocol/examples/checkout-v1/generated/graph.json
+Wrote /Users/darkomijic/dev-projects/libar-software-delivery-protocol/examples/checkout-v1/generated/contracts (3 modules)
+
+> @libar-dev/software-delivery-protocol@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @libar-dev/software-delivery-protocol@0.0.0 typecheck:examples
+> tsc --noEmit -p tsconfig.examples.json
+
+
+> @libar-dev/software-delivery-protocol@0.0.0 test
+> node ./vitest-test.mjs
+
+
+ RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol
+
+ ✓ test/readiness.test.ts (19 tests) 6ms
+ ✓ test/codegen.test.ts (19 tests) 10ms
+ ✓ test/validators.test.ts (25 tests) 34ms
+ ✓ test/import-emit-markdown.test.ts (13 tests) 85ms
+ ✓ test/reader.test.ts (35 tests) 89ms
+ ✓ test/self-hosting-graph.test.ts (1 test) 432ms
+   ✓ the self-hosting phase-1 carrier corpus > derives the sixteen Markdown-canonical specs and their exact Pack checkpoint from the root 432ms
+ ✓ test/extract.test.ts (56 tests) 535ms
+ ✓ test/runner.test.ts (6 tests) 7ms
+ ✓ test/markdown-reifier.test.ts (96 tests) 919ms
+   ✓ Markdown frontmatter reifier > enforces the 2,000 node limit at and immediately over its boundary 345ms
+ ✓ test/checkout-v1.test.ts (7 tests) 6ms
+ ✓ test/cli-import.test.ts (8 tests) 31ms
+ ✓ test/design-review.test.ts (18 tests) 767ms
+   ✓ the Design Review — the one generated read-only view > renders the committed self-hosting corpus byte-identically at two absolute roots 723ms
+ ✓ test/notation.test.ts (10 tests) 4ms
+ ✓ test/import.test.ts (7 tests) 270ms
+ ✓ test/builders.test.ts (3 tests) 2ms
+ ✓ test/exclude-diagnostics.test.ts (3 tests) 4ms
+ ✓ test/bootstrap.test.ts (5 tests) 42ms
+ ✓ test/import-round-trip.test.ts (3 tests) 168ms
+ ✓ examples/checkout-v1/test/orders/create-order.valid-cart.test.ts (1 test) 2ms
+ ✓ test/descriptors.test.ts (5 tests) 3ms
+ ✓ test/self-hosting-duplicate-ids.test.ts (12 tests) 1735ms
+   ✓ derives the duplicate-ID verifier facts from the bound executable example 451ms
+ ✓ test/ids.test.ts (15 tests) 5ms
+ ✓ test/self-hosting-contracts.test.ts (3 tests) 990ms
+   ✓ the self-hosting duplicate-ID example contracts > carries the exact duplicate-ID example-space vocabulary 579ms
+ ✓ test/self-hosting-sdp-import.test.ts (1 test) 26ms
+ ✓ test/fixtures.test.ts (15 tests) 4ms
+ ✓ test/graph-schema.test.ts (1 test) 2ms
+ ✓ test/check-temporal.test.ts (11 tests) 2551ms
+   ✓ check:temporal > does not scan ignored generated output 340ms
+ ✓ test/import-barrel.test.ts (1 test) 1ms
+npm notice
+npm notice 📦  @libar-dev/software-delivery-protocol@0.0.0
+npm notice Tarball Contents
+npm notice 11.4kB LICENSE
+npm notice 1.0kB dist/adapters/vitest.d.ts
+npm notice 5.6kB dist/adapters/vitest.js
+npm notice 4.6kB dist/cli/sdp.d.ts
+npm notice 246.2kB dist/cli/sdp.js
+npm notice 47.7kB dist/index-CYKjjj2t.d.ts
+npm notice 236.9kB dist/index.cjs
+npm notice 17.2kB dist/index.d.ts
+npm notice 231.8kB dist/index.js
+npm notice 5.4kB dist/runner/index.d.ts
+npm notice 5.4kB dist/runner/index.js
+npm notice 2.5kB package.json
+npm notice Tarball Details
+npm notice name: @libar-dev/software-delivery-protocol
+npm notice version: 0.0.0
+npm notice filename: libar-dev-software-delivery-protocol-0.0.0.tgz
+npm notice package size: 178.4 kB
+npm notice unpacked size: 815.7 kB
+npm notice shasum: 0e6a2513a2dd426df3b83fec857fe6ed19395c56
+npm notice integrity: sha512-/7+gQQJQeKL+N[...]6MROdGB8qlJxg==
+npm notice total files: 12
+npm notice
+ ✓ test/package-smoke.test.ts (1 test) 10835ms
+   ✓ published package surface > proves the installed tarball lists import, dry-runs conversion without writes, and exposes the barrel 10834ms
+
+ Test Files  29 passed (29)
+      Tests  400 passed (400)
+   Start at  18:30:35
+   Duration  12.87s (transform 1.49s, setup 0ms, collect 20.53s, tests 19.57s, environment 6ms, prepare 2.67s)
+
+
+ RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol
+
+ ✓ test/cli.test.ts (54 tests) 1049ms
+   ✓ sdp cli > views the self-hosting corpus from the default repository root 394ms
+
+ Test Files  1 passed (1)
+      Tests  54 passed (54)
+   Start at  18:30:48
+   Duration  2.55s (transform 579ms, setup 0ms, collect 1.15s, tests 1.05s, environment 0ms, prepare 70ms)
+
+
+> @libar-dev/software-delivery-protocol@0.0.0 check:self-hosting
+> node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --check-clean
+
+16 specs · 1 packs · 16 anchors → 33 nodes · 57 edges (0 errors, 0 warnings)
+Wrote /Users/darkomijic/dev-projects/libar-software-delivery-protocol/generated/graph.json
+Wrote /Users/darkomijic/dev-projects/libar-software-delivery-protocol/generated/contracts (4 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /Users/darkomijic/dev-projects/libar-software-delivery-protocol/generated/design-review (18 pages)
+
+> @libar-dev/software-delivery-protocol@0.0.0 check:example
+> node ./dist/cli/sdp.js view examples/checkout-v1 --check-clean
+
+11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
+Wrote /Users/darkomijic/dev-projects/libar-software-delivery-protocol/examples/checkout-v1/generated/graph.json
+Wrote /Users/darkomijic/dev-projects/libar-software-delivery-protocol/examples/checkout-v1/generated/contracts (3 modules)
+specs/orders/create-order-invalid-cart.sdp.md — [warning] conformance/verifies-linkage — Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier.
+validate: 0 errors · 1 warnings (conformance + honesty over the one graph)
+Wrote /Users/darkomijic/dev-projects/libar-software-delivery-protocol/examples/checkout-v1/generated/design-review (13 pages)
+
+> @libar-dev/software-delivery-protocol@0.0.0 preflight
+> node ./preflight.mjs
+
+preflight: semantic diff summary
+clean

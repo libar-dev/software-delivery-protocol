@@ -1,0 +1,19 @@
+
+ RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol
+
+ ✓ test/import-emit-markdown.test.ts > emitMarkdownSpec > emits the empty envelope and maps title to the H1
+ ✓ test/import-emit-markdown.test.ts > emitMarkdownSpec > round trips envelope data and narrative through the Markdown carrier
+ ✓ test/import-emit-markdown.test.ts > emitMarkdownSpec > emits refines as a scalar relation target
+ ✓ test/import-emit-markdown.test.ts > emitMarkdownSpec > emits dependsOn as a scalar relation target
+ ✓ test/import-emit-markdown.test.ts > emitMarkdownSpec > emits constrainedBy as a scalar relation target
+ ✓ test/import-emit-markdown.test.ts > emitMarkdownSpec > emits decidedBy as a scalar relation target
+ ✓ test/import-emit-markdown.test.ts > emitMarkdownSpec > emits verifies as a scalar relation target
+ ✓ test/import-emit-markdown.test.ts > emitMarkdownSpec > emits supersedes as a scalar relation target
+ ✓ test/import-emit-markdown.test.ts > emitMarkdownSpec > groups relation records in ruled key order and emits multiple targets as a sequence
+ ✓ test/import-emit-markdown.test.ts > emitMarkdownSpec > is refused when a valid emitted relation key is hand-corrupted
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  16:34:56
+   Duration  2.69s (transform 716ms, setup 0ms, collect 1.60s, tests 10ms, environment 0ms, prepare 233ms)
+

@@ -1,0 +1,10 @@
+
+ RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol
+
+ ✓ test/import-emit-markdown.test.ts > emitMarkdownSpec > is refused when a valid emitted relation key is hand-corrupted
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 9 skipped (10)
+   Start at  16:34:56
+   Duration  2.65s (transform 681ms, setup 0ms, collect 1.63s, tests 9ms, environment 0ms, prepare 209ms)
+

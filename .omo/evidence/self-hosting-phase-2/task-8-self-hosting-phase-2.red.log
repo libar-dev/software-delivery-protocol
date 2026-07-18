@@ -1,0 +1,22 @@
+
+> @libar-dev/software-delivery-protocol@0.0.0 test
+> node ./vitest-test.mjs import-round-trip.test.ts
+
+
+ RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol
+
+ ❯ test/import-round-trip.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/import-round-trip.test.ts [ test/import-round-trip.test.ts ]
+Error: Failed to load url ./import-round-trip.helpers.js (resolved id: ./import-round-trip.helpers.js) in /Users/darkomijic/dev-projects/libar-software-delivery-protocol/test/import-round-trip.test.ts. Does the file exist?
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  17:32:56
+   Duration  510ms (transform 34ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 113ms)
+

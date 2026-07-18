@@ -189,11 +189,18 @@ const expectedSpecs = [
     readiness: "ready",
     file: "specs/extraction/derive-graph.sdp.md",
     title: "Carrier reification derives the one graph",
-    narrative: null,
+    narrative:
+      "The graph is the current projection of the repository at a commit. Git holds lifecycle history, so removed records disappear from the current graph and a current `supersedes` relation is the only forward pointer between records that still exist.",
     sections: {
       intent: { outcome: "Expose one carrier-neutral derivation seam." },
       behavior: {
-        rules: ["Carrier reification feeds deriveGraph once; no consumer creates a second graph."],
+        rules: [
+          "Carrier reification feeds deriveGraph once; no consumer creates a second graph.",
+          "The graph is flat arrays of typed nodes and edges; hierarchy and containment are expressed by edges rather than nested nodes.",
+          "Declared relations resolve Primitive to Primitive, while `satisfies` and test `verifies` edges derive from anchors and run from their binding node to the direct Spec target.",
+          "Delivery facts are computed node facts: a resolving `satisfies` edge contributes `implemented`, and an enabled direct verifier contributes `has-verifier` only to its target.",
+          "Inferred structural edges are advisory inputs to impact analysis and never become authoritative graph truth.",
+        ],
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -217,8 +224,162 @@ const expectedSpecs = [
           measurableBy: "test/cli.test.ts clean-repo determinism",
         },
       ],
+      behavior: {
+        rules: [
+          "Nodes sort by ID, edges sort by from, type, and to, and semantically compared output excludes wall-clock timestamps and run-specific hashes.",
+          "`sdp build --check-clean` repeats extraction and contract generation independently, failing on any graph or generated-contract byte divergence.",
+          "Static envelope fields fail extraction when they cannot be reified; optional TypeScript section detail may warn and drop, while Markdown documents refuse as a whole.",
+        ],
+      },
     },
     deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:extraction.excludes",
+    specKind: "rule",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/extraction/excludes.sdp.md",
+    title: "Extraction exclusions are strict consumer input",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep consumer-selected omissions precise without changing the extractor's canonical discovery rules.",
+      },
+      behavior: {
+        rules: [
+          "An exclusion is a unique, exact root-relative POSIX path prefix applied to both declared-carrier and anchor-candidate discovery surfaces.",
+          "A prefix excludes itself and slash-delimited descendants only; it never excludes a merely similar sibling path.",
+          "Empty, dot-relative, absolute, Windows-drive, backslash, trailing-slash, and parent-traversal paths are refused rather than normalized into a different meaning.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented"],
+  },
+  {
+    id: "spec:decisions.exclusion-contract",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/exclusion-contract.sdp.md",
+    title: "Consumer exclusions stay exact",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Keep consumer-selected omissions precise and unsurprising.",
+      },
+      decision: {
+        context: "Exclusion input crosses from a consumer into canonical source discovery.",
+        decision: "Consumers declare exclusions as exact root-relative POSIX path prefixes.",
+        rationale: [
+          "Semantic globbing and path normalization are rejected because they make an omission broader or different from the path the consumer supplied.",
+        ],
+        consequences: [
+          "A prefix excludes only itself and slash-delimited descendants; malformed paths, including Windows-drive absolutes, are refused.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:extraction.claim-taxonomy",
+    specKind: "model",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/extraction/claim-taxonomy.sdp.md",
+    title: "Graph claims retain their epistemic source",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let every graph reader distinguish authored intent, human bindings, and machine-derived structure.",
+      },
+      model: {
+        terms: {
+          declared:
+            "Human intent explicitly authored in a Spec or Pack; it is authoritative intent.",
+          anchored:
+            "A human binding from a code, test, or oracle location to one Spec ID; it is authoritative binding and carries no intent.",
+          inferred:
+            "Machine-derived structural information; it is advisory and never authoritative.",
+          "claim inheritance":
+            "An edge computed from an authored source retains that source's declared claim; derivation is a mechanism, not a fourth claim.",
+          "delivery fact":
+            "A realization signal computed from resolving edges, never an authored claim or edge.",
+        },
+      },
+    },
+    deliveryFacts: ["implemented"],
+  },
+  {
+    id: "spec:extraction.regenerability",
+    specKind: "rule",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/extraction/regenerability.sdp.md",
+    title: "Generated artifacts are disposable projections",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep the repository canonical while allowing every graph and projection to be rebuilt safely.",
+      },
+      behavior: {
+        rules: [
+          "Generated artifacts are disposable: deleting them and rebuilding from the same committed repository produces the same bytes.",
+          "Consumers read the graph or link to source locations recorded in it; they never re-parse source or keep a parallel model.",
+          "The graph is a single JSON projection with in-memory query support; a graph database remains deferred until measured traversal pain establishes a real need.",
+          "Measured evidence from the self-hosting corpus keeps full rebuilds comfortable below roughly 50 Specs.",
+          "Measured evidence defers a graph database until the graph reaches roughly 10k+ nodes or traversal pain establishes a real need.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented"],
+  },
+  {
+    id: "spec:extraction.schema-versioning",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/extraction/schema-versioning.sdp.md",
+    title: "The graph declares its schema version",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let consumers identify the graph payload contract without premature migration machinery.",
+      },
+      behavior: {
+        rules: [
+          "Every graph declares its schemaVersion, and MVP consumers require that field to be present and readable.",
+          "Envelope-stable, section-extensible growth is normally additive; SemVer negotiation and a migration command remain deferred until a consumer needs them.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented"],
+  },
+  {
+    id: "spec:extraction.executable-contracts",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/extraction/executable-contracts.sdp.md",
+    title: "The build derives executable contracts from graph examples",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give bound tests typed step and example-space contracts without reading authored Specs directly.",
+      },
+      behavior: {
+        rules: [
+          "`generateContracts` derives per-example step contracts and per-parent space contracts solely from the extracted graph.",
+          "A generated contract is disposable, keyed by Spec ID, and becomes unavailable when its authored example cannot bind honestly to its shared vocabulary.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented"],
   },
   {
     id: "spec:extraction.build-pipeline",
@@ -577,6 +738,138 @@ const expectedSpecs = [
     deliveryFacts: ["implemented"],
   },
   {
+    id: "spec:validation.referential-integrity",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/referential-integrity.sdp.md",
+    title: "Every graph reference resolves",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep derived graph relationships trustworthy by refusing references to absent nodes.",
+      },
+      behavior: {
+        rules: [
+          "Every edge endpoint and every Pack model reference must resolve to a node in the derived graph; an unresolved reference is a conformance error.",
+          "The realizing validator entrypoint is `checkReferentialIntegrity` in `src/validate/validators.ts`.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.claim-separation",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/claim-separation.sdp.md",
+    title: "Graph claims and contracts stay distinct",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Preserve the graph's declared, anchored, and inferred distinctions while keeping its typed contracts lawful.",
+      },
+      behavior: {
+        rules: [
+          "Node and edge types, claims, descriptors, and relation endpoint contracts must use their ratified forms; the claim taxonomy never collapses.",
+          "The realizing validator entrypoint is `checkClaimSeparation` in `src/validate/validators.ts`.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.verification-linkage",
+    specKind: "rule",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/validation/verification-linkage.sdp.md",
+    title: "Declared verification resolves to a performing trace",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep verification relationships meaningful by requiring declared test and oracle traces to resolve to their enabled bindings.",
+      },
+      behavior: {
+        rules: [
+          "A declared verifies relation and an oracle model relation must resolve through their respective binding traces before either can stand as verification evidence.",
+          "The realizing validator entrypoints are `checkVerifiesLinkage` and `checkOracleLinkage` in `src/validate/validators.ts`.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.pack-coherence",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/pack-coherence.sdp.md",
+    title: "Packs are coherent aggregates",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep review aggregates coherent without treating them as truth-bearing delivery artifacts.",
+      },
+      behavior: {
+        rules: [
+          "Pack membership must not repeat a Spec, and every modelRef must resolve to a model-kind Spec.",
+          "The realizing validator entrypoint is `checkPackCoherence` in `src/validate/validators.ts`.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.authored-honesty",
+    specKind: "rule",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/validation/authored-honesty.sdp.md",
+    title: "Machine truth is never authored",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep derived graph truth trustworthy by rejecting any authored substitute for machine-derived claims or facts.",
+      },
+      behavior: {
+        rules: [
+          "Specs and Packs must not author derived edges, claims, or delivery facts, and any stated delivery facts must equal the graph's recomputed facts.",
+          "The realizing validator entrypoints are `checkAuthoringShape` and `checkDeliveryFacts` in `src/validate/validators.ts`.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.warn-level-signals",
+    specKind: "rule",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/validation/warn-level-signals.sdp.md",
+    title: "Missing connective evidence warns without failing",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Surface graph conditions that need attention without turning informative delivery signals into workflow gates.",
+      },
+      behavior: {
+        rules: [
+          "Orphaned Specs and ready Specs lacking a resolving verifier are warnings, not validation errors.",
+          "The realizing validator entrypoints are `checkOrphans` and `checkGaps` in `src/validate/validators.ts`.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
     id: "spec:consumers.projections-model",
     specKind: "model",
     altitude: "feature",
@@ -591,18 +884,25 @@ const expectedSpecs = [
       },
       model: {
         terms: {
+          baseline:
+            "A named approved snapshot whose signed git tag is the approval artifact, with approval remaining outside the authored model.",
           "curated graph":
             "The authored architectural read model of declared intent and anchored bindings, valued for editorial sparsity.",
           curation:
             "The deliberate difference between the sparse curated graph and the code-structure surface; it is not drift.",
+          discipline:
+            "A lens or projection that filters or groups Specs by kind or section; it is not a phase to pass through.",
           "measured curation":
             "In a measured comparison, the curated graph selected from single-digit to about one quarter of the mechanical impact-graph surface.",
           "impact graph":
             "A separately derived code-structure surface for exhaustive usage and blast-radius questions, valued for exhaustiveness and never promoted into architecture.",
+          "phase / iteration / milestone":
+            "Descriptive vocabulary for optional roadmap projections, never gates or enforced sequences.",
           projection:
             "A pure, disposable, regenerable function of the graph that produces a consumer artifact without becoming a second source of truth.",
           reader:
             "The thin typed front door that decodes graph joins and taxonomy once, returns composable data, and persists nothing.",
+          release: "A tagged set surfaced as a git-tag projection.",
         },
       },
     },
@@ -656,6 +956,54 @@ const expectedSpecs = [
       },
     },
     deliveryFacts: ["implemented"],
+  },
+  {
+    id: "spec:consumers.reader",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/consumers/reader.sdp.md",
+    title: "The reader bridges agent entry points to composable graph context",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let agents enter the curated graph from the strings, files, and changesets they already have without rebuilding its joins or taxonomy.",
+      },
+      behavior: {
+        rules: [
+          "`createReader` constructs a fresh thin typed loader that decodes graph joins, claims, delivery facts, derived readiness, and validation findings once, then returns plain composable data without persisting state.",
+          "`findByConcept` and `byFile` bridge strings and extraction-root-relative files to the graph's recorded context.",
+          "The reader's `blastRadius` surface maps changed files to directly impacted Specs and Packs, their explicit one-hop at-risk neighbors, and every coverage-unknown file.",
+          "File-level blast radius reports curated graph reach without claiming exhaustive symbol-level usage reach.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented"],
+  },
+  {
+    id: "spec:consumers.edit-model",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/consumers/edit-model.sdp.md",
+    title: "Views compose scoped intent instead of patching canonical source",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let a view frame a requested change without giving derived surfaces a direct write path to canonical source.",
+      },
+      behavior: {
+        rules: [
+          "A view composes scoped intent, bounded by a Spec, its neighbors, a Pack, or open questions, and hands that intent to an agent.",
+          "The agent edits source as a human would, git records the ordinary edit, and the same conformance and honesty checks evaluate it.",
+          "Lifecycle changes such as splitting, combining, refining, or deleting are ordinary source and git edits rather than structured patches from a derived view.",
+          "No single realizing entrypoint exists for intent composition; this defined behavior records design intent and has no code anchor or verifier.",
+        ],
+      },
+    },
+    deliveryFacts: [],
   },
   {
     id: "spec:decisions.one-validation-path",
@@ -1155,12 +1503,25 @@ const expectedPackMembers = [
   "spec:extraction.derive-graph",
   "spec:extraction.determinism",
   "spec:extraction.build-pipeline",
+  "spec:extraction.excludes",
+  "spec:extraction.claim-taxonomy",
+  "spec:extraction.regenerability",
+  "spec:extraction.schema-versioning",
+  "spec:extraction.executable-contracts",
   "spec:validation.readiness-floor",
   "spec:validation.duplicate-ids",
   "spec:validation.two-check-families",
+  "spec:validation.referential-integrity",
+  "spec:validation.claim-separation",
+  "spec:validation.verification-linkage",
+  "spec:validation.pack-coherence",
+  "spec:validation.authored-honesty",
+  "spec:validation.warn-level-signals",
   "spec:consumers.projections-model",
   "spec:consumers.agent-surface",
   "spec:consumers.design-review",
+  "spec:consumers.reader",
+  "spec:consumers.edit-model",
   "spec:model.protocol-domain",
   "spec:model.core-model",
   "spec:model.spec-sections",
@@ -1177,6 +1538,7 @@ const expectedPackMembers = [
   "spec:decisions.carrier-ruling",
   "spec:decisions.prose-ownership",
   "spec:decisions.envelope-grammar-posture",
+  "spec:decisions.exclusion-contract",
   "spec:decisions.executable-meta-model",
   "spec:decisions.adopt-the-nouns",
   "spec:decisions.one-primitive",
@@ -1215,6 +1577,12 @@ const expectedDeclaredRelations = [
   ["spec:extraction.determinism", "refines", "spec:protocol.self-hosting"],
   ["spec:extraction.build-pipeline", "refines", "spec:protocol.self-hosting"],
   ["spec:extraction.build-pipeline", "dependsOn", "spec:extraction.derive-graph"],
+  ["spec:extraction.excludes", "refines", "spec:extraction.derive-graph"],
+  ["spec:extraction.excludes", "decidedBy", "spec:decisions.exclusion-contract"],
+  ["spec:extraction.claim-taxonomy", "refines", "spec:extraction.derive-graph"],
+  ["spec:extraction.regenerability", "refines", "spec:extraction.determinism"],
+  ["spec:extraction.schema-versioning", "refines", "spec:extraction.derive-graph"],
+  ["spec:extraction.executable-contracts", "refines", "spec:extraction.build-pipeline"],
   ["spec:validation.readiness-floor", "refines", "spec:protocol.self-hosting"],
   ["spec:validation.readiness-floor", "dependsOn", "spec:model.protocol-domain"],
   ["spec:validation.readiness-floor", "decidedBy", "spec:decisions.kind-conditional-floor"],
@@ -1225,11 +1593,19 @@ const expectedDeclaredRelations = [
   ["spec:validation.duplicate-ids.dual-carrier", "verifies", "spec:validation.duplicate-ids"],
   ["spec:validation.two-check-families", "refines", "spec:protocol.self-hosting"],
   ["spec:validation.two-check-families", "decidedBy", "spec:decisions.one-validation-path"],
+  ["spec:validation.referential-integrity", "refines", "spec:validation.two-check-families"],
+  ["spec:validation.claim-separation", "refines", "spec:validation.two-check-families"],
+  ["spec:validation.verification-linkage", "refines", "spec:validation.two-check-families"],
+  ["spec:validation.pack-coherence", "refines", "spec:validation.two-check-families"],
+  ["spec:validation.authored-honesty", "refines", "spec:validation.two-check-families"],
+  ["spec:validation.warn-level-signals", "refines", "spec:validation.two-check-families"],
   ["spec:consumers.projections-model", "refines", "spec:protocol.self-hosting"],
   ["spec:consumers.projections-model", "decidedBy", "spec:decisions.mcp-deferred"],
   ["spec:consumers.agent-surface", "refines", "spec:consumers.projections-model"],
   ["spec:consumers.agent-surface", "decidedBy", "spec:decisions.agent-surface-scripts-graph"],
   ["spec:consumers.design-review", "refines", "spec:consumers.projections-model"],
+  ["spec:consumers.reader", "refines", "spec:consumers.agent-surface"],
+  ["spec:consumers.edit-model", "refines", "spec:consumers.projections-model"],
   ["spec:model.protocol-domain", "refines", "spec:protocol.self-hosting"],
   ["spec:model.core-model", "refines", "spec:protocol.self-hosting"],
   ["spec:model.core-model", "decidedBy", "spec:decisions.one-primitive"],
@@ -1251,6 +1627,7 @@ const expectedDeclaredRelations = [
   ["spec:decisions.carrier-ruling", "refines", "spec:carrier.markdown-authoring"],
   ["spec:decisions.prose-ownership", "refines", "spec:carrier.prose-ownership-rule"],
   ["spec:decisions.envelope-grammar-posture", "refines", "spec:carrier.envelope-contract"],
+  ["spec:decisions.exclusion-contract", "refines", "spec:extraction.excludes"],
   ["spec:decisions.executable-meta-model", "refines", "spec:protocol.self-hosting"],
   ["spec:decisions.adopt-the-nouns", "refines", "spec:protocol.self-hosting"],
   ["spec:decisions.one-primitive", "refines", "spec:model.core-model"],
@@ -1549,6 +1926,26 @@ const expectedAnchors = [
     site: "export function createReader",
   },
   {
+    id: "impl:protocol.reader-impact",
+    nodeType: "CodeNode",
+    label: "file-level reader blast-radius contract",
+    type: "satisfies",
+    target: "spec:consumers.reader",
+    file: "src/reader/reader.ts",
+    constant: "readerImpactAnchor",
+    site: "export interface BlastRadius",
+  },
+  {
+    id: "impl:protocol.reader",
+    nodeType: "CodeNode",
+    label: "thin typed graph reader construction",
+    type: "satisfies",
+    target: "spec:consumers.reader",
+    file: "src/reader/reader.ts",
+    constant: "readerAnchor",
+    site: "export function createReader",
+  },
+  {
     id: "impl:protocol.design-review",
     nodeType: "CodeNode",
     label: "renders the contextual Design Review projection",
@@ -1557,6 +1954,56 @@ const expectedAnchors = [
     file: "src/projections/design-review.ts",
     constant: "designReviewAnchor",
     site: "export function renderDesignReview",
+  },
+  {
+    id: "impl:protocol.exclusion-surface",
+    nodeType: "CodeNode",
+    label: "strict root-relative exclusion input for both extraction surfaces",
+    type: "satisfies",
+    target: "spec:extraction.excludes",
+    file: "src/extract/index.ts",
+    constant: "exclusionSurfaceAnchor",
+    site: "export interface ExtractOptions",
+  },
+  {
+    id: "impl:protocol.graph-claims",
+    nodeType: "CodeNode",
+    label: "declares the graph claim taxonomy",
+    type: "satisfies",
+    target: "spec:extraction.claim-taxonomy",
+    file: "src/graph/schema.ts",
+    constant: "graphClaimsAnchor",
+    site: "export const graphClaims",
+  },
+  {
+    id: "impl:protocol.regenerability",
+    nodeType: "CodeNode",
+    label: "repeats graph and contract producers for deterministic regeneration",
+    type: "satisfies",
+    target: "spec:extraction.regenerability",
+    file: "src/cli/sdp.ts",
+    constant: "regenerabilityAnchor",
+    site: "function runBuild",
+  },
+  {
+    id: "impl:protocol.schema-version",
+    nodeType: "CodeNode",
+    label: "declares the graph schema version",
+    type: "satisfies",
+    target: "spec:extraction.schema-versioning",
+    file: "src/graph/schema.ts",
+    constant: "schemaVersionAnchor",
+    site: "export const schemaVersion",
+  },
+  {
+    id: "impl:protocol.executable-contracts",
+    nodeType: "CodeNode",
+    label: "derives step and example-space contracts from the graph",
+    type: "satisfies",
+    target: "spec:extraction.executable-contracts",
+    file: "src/codegen/contracts.ts",
+    constant: "executableContractsAnchor",
+    site: "export function generateContracts",
   },
 ] as const;
 
@@ -1589,7 +2036,7 @@ describe("the self-hosting corpus", () => {
         subjectId,
       })),
     ).toEqual(expectedWarnings);
-    expect(result.counts).toEqual({ specs: 44, packs: 1, anchors: 29 });
+    expect(result.counts).toEqual({ specs: 58, packs: 1, anchors: 36 });
     expect(nodeIds).toEqual(
       [
         "pack:self-hosting-v1",
@@ -1601,7 +2048,9 @@ describe("the self-hosting corpus", () => {
         "spec:carrier.sdp-import.round-trip",
         "spec:consumers.agent-surface",
         "spec:consumers.design-review",
+        "spec:consumers.edit-model",
         "spec:consumers.projections-model",
+        "spec:consumers.reader",
         "spec:decisions.concept-docs-dissolve",
         "spec:decisions.one-validation-path",
         "spec:decisions.sdp-ts-extension",
@@ -1609,6 +2058,7 @@ describe("the self-hosting corpus", () => {
         "spec:decisions.carrier-ruling",
         "spec:decisions.prose-ownership",
         "spec:decisions.envelope-grammar-posture",
+        "spec:decisions.exclusion-contract",
         "spec:decisions.executable-meta-model",
         "spec:decisions.adopt-the-nouns",
         "spec:decisions.one-primitive",
@@ -1623,8 +2073,13 @@ describe("the self-hosting corpus", () => {
         "spec:decisions.mcp-deferred",
         "spec:decisions.plain-language-references",
         "spec:extraction.build-pipeline",
+        "spec:extraction.claim-taxonomy",
         "spec:extraction.derive-graph",
         "spec:extraction.determinism",
+        "spec:extraction.excludes",
+        "spec:extraction.executable-contracts",
+        "spec:extraction.regenerability",
+        "spec:extraction.schema-versioning",
         "spec:model.anchors",
         "spec:model.core-model",
         "spec:model.pack-aggregate",
@@ -1635,12 +2090,18 @@ describe("the self-hosting corpus", () => {
         "spec:protocol.self-hosting",
         "spec:validation.duplicate-ids",
         "spec:validation.duplicate-ids.dual-carrier",
+        "spec:validation.authored-honesty",
+        "spec:validation.claim-separation",
+        "spec:validation.pack-coherence",
         "spec:validation.readiness-floor",
+        "spec:validation.referential-integrity",
         "spec:validation.two-check-families",
+        "spec:validation.verification-linkage",
+        "spec:validation.warn-level-signals",
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
-    expect(result.graph.nodes).toHaveLength(74);
+    expect(result.graph.nodes).toHaveLength(95);
     expect(
       primitiveNodes
         .map((node) => ({
@@ -1684,7 +2145,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 37, ready: 7 });
+    ).toEqual({ defined: 51, ready: 7 });
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
@@ -1699,7 +2160,7 @@ describe("the self-hosting corpus", () => {
       modelRefs: ["spec:model.protocol-domain", "spec:model.core-model"],
       file: "specs/self-hosting.pack.sdp.ts",
     });
-    expect(result.graph.edges).toHaveLength(144);
+    expect(result.graph.edges).toHaveLength(180);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")

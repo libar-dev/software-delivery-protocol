@@ -1,3 +1,5 @@
+import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+
 import { resolveExampleVocabulary } from "../graph/example-space.js";
 import type { GraphSchema, PrimitiveNode } from "../graph/schema.js";
 import { parseSlots, stepSkeleton } from "../notation/slots.js";
@@ -798,6 +800,13 @@ function renderStepContract(
 }
 
 /* ----- the stage ----- */
+
+const executableContractsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.executable-contracts"),
+  label: "derives step and example-space contracts from the graph",
+  satisfies: ref("spec:extraction.executable-contracts"),
+});
+void executableContractsAnchor;
 
 export function generateContracts(graph: GraphSchema): GeneratedContracts {
   const findings: Finding[] = [];

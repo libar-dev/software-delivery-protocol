@@ -14,6 +14,8 @@ import {
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+
 import { generateContracts } from "../codegen/contracts.js";
 import { InvalidExcludePathError, normalizeExcludes } from "../extract/discover.js";
 import { extract } from "../extract/index.js";
@@ -407,6 +409,13 @@ function contractFilesEqual(
 
   return true;
 }
+
+const regenerabilityAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.regenerability"),
+  label: "repeats graph and contract producers for deterministic regeneration",
+  satisfies: ref("spec:extraction.regenerability"),
+});
+void regenerabilityAnchor;
 
 function runBuild(
   parsed: BuildArgs,

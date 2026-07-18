@@ -1,0 +1,37 @@
+
+> @libar-dev/software-delivery-protocol@0.0.0 test
+> node ./vitest-test.mjs import-round-trip.test.ts
+
+
+ RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol
+
+ ❯ test/import-round-trip.test.ts (3 tests | 1 failed) 185ms
+   × import round-trip harness > rejects a corrupted Markdown twin 66ms
+     → expected [Function roundTrip] to not throw an error but 'AssertionError: expected { nodes: [ {…' was thrown
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/import-round-trip.test.ts > import round-trip harness > rejects a corrupted Markdown twin
+AssertionError: expected [Function roundTrip] to not throw an error but 'AssertionError: expected { nodes: [ {…' was thrown
+
+- Expected: 
+undefined
+
++ Received: 
+"AssertionError: expected { nodes: [ { …(9) }, …(6) ], …(1) } to deeply equal { nodes: [ { …(9) }, …(6) ], …(1) }"
+
+ ❯ test/import-round-trip.test.ts:92:29
+     90|     // Then
+     91|     try {
+     92|       expect(roundTrip).not.toThrow();
+       |                             ^
+     93|     } finally {
+     94|       rmSync(dirname(corpus.tsRoot), { recursive: true, force: true });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  17:37:21
+   Duration  2.03s (transform 722ms, setup 0ms, collect 1.36s, tests 185ms, environment 0ms, prepare 91ms)
+

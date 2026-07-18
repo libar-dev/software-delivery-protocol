@@ -1,0 +1,12 @@
+Fixture-intact assertion before mutation:
+expected: first-site.sdp.ts.txt healthy-sibling.sdp.ts.txt second-site.sdp.md.txt
+actual:   first-site.sdp.ts.txt healthy-sibling.sdp.ts.txt second-site.sdp.md.txt
+baseline assertion exit: 0
+Deleting TypeScript fixture twin: first-site.sdp.ts.txt
+expected: first-site.sdp.ts.txt healthy-sibling.sdp.ts.txt second-site.sdp.md.txt
+actual:   healthy-sibling.sdp.ts.txt second-site.sdp.md.txt
+negative assertion exit: 1 (expected non-zero)
+Restoring fixture twin from git
+expected: first-site.sdp.ts.txt healthy-sibling.sdp.ts.txt second-site.sdp.md.txt
+actual:   first-site.sdp.ts.txt healthy-sibling.sdp.ts.txt second-site.sdp.md.txt
+restored assertion exit: 0

@@ -1,0 +1,10 @@
+
+ RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol
+
+ ✓ test/import.test.ts (7 tests | 6 skipped) 9ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 6 skipped (7)
+   Start at  17:04:50
+   Duration  923ms (transform 202ms, setup 0ms, collect 467ms, tests 9ms, environment 0ms, prepare 120ms)
+

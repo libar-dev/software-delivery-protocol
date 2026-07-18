@@ -33,6 +33,13 @@ export interface ExtractOptions {
   readonly exclude?: readonly string[];
 }
 
+const exclusionSurfaceAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.exclusion-surface"),
+  label: "strict root-relative exclusion input for both extraction surfaces",
+  satisfies: ref("spec:extraction.excludes"),
+});
+void exclusionSurfaceAnchor;
+
 export interface ExtractionCounts {
   readonly specs: number;
   readonly packs: number;

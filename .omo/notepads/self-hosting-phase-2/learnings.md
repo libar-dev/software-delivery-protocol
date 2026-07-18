@@ -194,3 +194,59 @@
 
 - S5 measurements now live with their consumer claims; S7 scale figures remain explicitly deferred in the lean registry.
 - The decision diary now retains only registry, pointers, D-table, and measured-evidence records; approval is carried by the signed git-tag artifact outside the model.
+
+## Todo 35 — validation deep-dive corpus
+
+- The eleven validator IDs form six new rule Specs alongside the pre-existing duplicate-ID and readiness-floor Specs: verification linkage, authored honesty, and warn-level signals each carry two mechanical checks because each pair realizes one law.
+- Rule-kind Markdown uses plain bullets under `## Rule`; `- rule:` belongs only to `## Behavior` and is refused in a rule carrier.
+- Every new Spec remains `defined`: its complete rule statement and its refining relation clear the rule floor, while no cheap verifier or derived implementation claim is asserted.
+
+## Todo 36 — consumers remainder
+
+- The reader needs two narrow code bindings: `createReader` realizes the thin typed loader, while the `BlastRadius` contract realizes the honest file-level impact surface.
+- Intent composition has no single realizing source entrypoint, so the edit-model Spec remains defined with no anchor or verifier instead of manufacturing implementation coverage.
+- Delivery-process vocabulary is model fact only when it describes graph projections or descriptive terms: discipline, release, baseline, and phase / iteration / milestone belong in the projections model without creating gates.
+
+## Todo 37 — extraction and the one graph
+
+- The five new extraction Specs remain defined: each has a narrow implementation binding, but none
+  claims an executable verifier or a readiness rung above its floor.
+- Private source anchor constants preserve the self-hosting bindings without widening the published
+  package barrel. The frozen checkpoint now records 57 Specs, 36 anchors, 94 nodes, and 177 edges.
+- Git-as-event-log content is explanatory rather than a separate realized engine boundary, so it
+  belongs as narrative on `spec:extraction.derive-graph` with a coverage-ledger disposition.
+
+## Todo 38 at 22:48 UTC - fold completion
+
+- MD-20 now refines `spec:extraction.excludes`, whose `decidedBy` relation closes the inverse link;
+  the decision record rejects semantic globbing and path normalization.
+- The full-rebuild and graph-database scale figures now live as measured evidence on
+  `spec:extraction.regenerability`, so the lean registry no longer needs a measured-evidence section.
+- Waves 2-4 did not force any of the five watched grammar forms; the fold ledger now records only
+  terminal dispositions.
+
+## Todo 39 at 23:02 UTC - G7 coverage-ledger completeness audit
+
+- The self-hosting Pack manifests 58 Specs, and every member resolves to one Markdown carrier and
+  one concept-document contract. The full coverage audit records no orphan Spec and no unresolved
+  double claim.
+- All stated readiness values clear the implemented cumulative floor. Seven ready Specs have
+  resolving direct test bindings or enabled example traces; every other Spec remains defined with
+  its complete natural evidence and no inflated verifier claim.
+- `npm run generate:self-hosting` regenerated 60 Design Review pages from a graph of 58 Specs,
+  1 Pack, and 36 anchors. The user instructed continuation without incremental owner reviews, so
+  G7 is recorded as accepted at `b471189034e1ee238394f3364c349937be6bebed`.
+
+## Todo 40 at 23:20 UTC - docket reconciliation and anti-drift audit
+
+- The close ledger accounts for every carried, review-06, phase-2-added, and watch-item row.
+  Only no-reparse spy coverage and temporal token assembly remain deferred, with their plan-17
+  reasons carried forward verbatim.
+- The G7 table remains the floor-honesty source: 58 Specs, 7 ready, 51 defined, no inflated
+  readiness, no filler Specs, and five terminal-unfired watch items. The task-40 acceptance
+  assembly maps all eight phase-close criteria to their owning evidence.
+
+## Wave-8 delivery commit
+
+- The phase-2 commit lands corpus waves 2-4, fold completion, G7 evidence, and docket
+  reconciliation; its SHA is recorded by the resulting Git commit.

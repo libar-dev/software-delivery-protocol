@@ -1,0 +1,71 @@
+# Task 18 grammar-hardening RED evidence
+
+Each excerpt is from the focused test after the regression was added and before its production fix.
+Commands used `PATH="$PWD/node_modules/.bin:$PATH" node ./vitest-test.mjs test/markdown-grammar-hardening.test.ts -t <item>`.
+
+## (a) YAML 1.2 scalar spellings
+
+```text
+test/markdown-grammar-hardening.test.ts (3 tests | 3 failed)
+Expected: extract/invalid-frontmatter — frontmatter field "readiness" must be a string scalar
+Received: extract/non-static-envelope — readiness is not a recognized spec readiness
+```
+
+## (b) YAML diagnostic line rebasing
+
+```text
+rebases YAML-native diagnostic line text with the structured finding line
+Expected substring: at line 2, column 7
+Received: Anchor ending in : is ambiguous at line 1, column 7
+```
+
+## (c) Exact `...` before the required closer
+
+```text
+refuses a YAML document-end marker before the required frontmatter closer
+expected [ { data: { ... }, file: "grammar-hardening.sdp.md", line: 2 } ] to deeply equal []
+```
+
+## (d) Non-mapping-root accumulated findings
+
+```text
+preserves accumulated YAML findings when the frontmatter root is not a mapping
+Expected findings: YAML directives are not accepted + frontmatter must be a mapping
+Received findings: frontmatter must be a mapping
+```
+
+## (e) Depth/node finding flood
+
+```text
+reports each frontmatter resource-limit breach once
+expected depth-limit findings to have length 1 but got 17
+expected node-limit findings to have length 1 but got 63
+```
+
+## (f) Heading and GWT strictness
+
+```text
+test/markdown-grammar-hardening.test.ts (12 tests | 4 failed)
+GWT-before-late-Intent-field: expected one refusal, received one reified Spec
+Open questions trailing whitespace: received two extract/invalid-markdown-structure findings
+H1 "Support for C#": received "the H1 title must be nonempty and carry no closing marker"
+H2 "Intent#": received extract/invalid-markdown-structure instead of extract/unrecognized-heading
+```
+
+## (g) Duplicate `When`
+
+```text
+item g reports a duplicate When step exactly once
+Expected one finding: a GWT fence has exactly one When step
+Received a second finding: a GWT fence requires Given, exactly one When, and Then steps
+```
+
+## (h) Markdown reifier catch-all totality
+
+```text
+item h converts an unexpected body-parser throw into a finding
+Error: unexpected body failure
+  at parseMarkdownBody
+  at readMarkdownBody
+  at reifyMarkdownCarrier
+```

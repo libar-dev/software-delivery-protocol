@@ -1,0 +1,311 @@
+
+ RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol
+
+ ❯ test/import-emit-markdown.test.ts (16 tests | 6 failed) 37ms
+   × emitMarkdownSpec > emits Intent prose, fields, repeated entries, and owned open questions 7ms
+     → expected { id: 'spec:import.emitter', …(5) } to deeply equal { id: 'spec:import.emitter', …(6) }
+   × emitMarkdownSpec > emits Behavior, Rule, Workflow, and Contract forms in their ruled list syntax 1ms
+     → expected { id: 'spec:import.emitter', …(5) } to deeply equal { id: 'spec:import.emitter', …(6) }
+   × emitMarkdownSpec > emits example-space vocabulary and one immediately-owned example GWT fence 1ms
+     → expected { id: 'spec:import.emitter', …(5) } to deeply equal { id: 'spec:import.emitter', …(6) }
+   × emitMarkdownSpec > emits the one-entry Constraints form and preserves parser refusal without its statement 1ms
+     → expected { id: 'spec:import.emitter', …(5) } to deeply equal { id: 'spec:import.emitter', …(6) }
+   × emitMarkdownSpec > emits Model, Design, UI, Decision, and Verification owners in authored order 1ms
+     → expected { id: 'spec:import.emitter', …(5) } to deeply equal { id: 'spec:import.emitter', …(10) }
+   × emitMarkdownSpec > round trips all eleven checkout authored Specs through Markdown 19ms
+     → expected { Object (id, kind, ...) } to deeply equal { Object (id, title, ...) }
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/import-emit-markdown.test.ts > emitMarkdownSpec > emits Intent prose, fields, repeated entries, and owned open questions
+AssertionError: expected { id: 'spec:import.emitter', …(5) } to deeply equal { id: 'spec:import.emitter', …(6) }
+
+- Expected
++ Received
+
+  Object {
+    "altitude": "story",
+    "id": "spec:import.emitter",
+-   "intent": Object {
+-     "actor": "An author",
+-     "assumptions": Array [
+-       "The parser owns validation.",
+-     ],
+-     "description": "Intent prose belongs under Intent.",
+-     "openQuestions": Array [
+-       Object {
+-         "blocking": true,
+-         "question": "Is the section complete?",
+-       },
+-       Object {
+-         "blocking": false,
+-         "question": "Should we add another example?",
+-       },
+-     ],
+-     "outcome": "Each prose edge has an owner.",
+-     "problem": "Prose lacks a home.",
+-     "risks": Array [
+-       "A dropped field.",
+-       "An ambiguous paragraph.",
+-     ],
+-     "value": "The graph stays unambiguous.",
+-   },
+    "kind": "behavior",
+    "readiness": "idea",
+    "relations": Array [],
+    "title": "Emit a Markdown carrier",
+  }
+
+ ❯ expectMarkdownRoundTrip test/import-emit-markdown.test.ts:48:33
+     46| 
+     47|   expect(result.findings).toEqual([]);
+     48|   expect(result.specs[0]?.data).toEqual(source.data);
+       |                                 ^
+     49|   return emitted;
+     50| }
+ ❯ test/import-emit-markdown.test.ts:101:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  test/import-emit-markdown.test.ts > emitMarkdownSpec > emits Behavior, Rule, Workflow, and Contract forms in their ruled list syntax
+AssertionError: expected { id: 'spec:import.emitter', …(5) } to deeply equal { id: 'spec:import.emitter', …(6) }
+
+- Expected
++ Received
+
+  Object {
+    "altitude": "story",
+-   "behavior": Object {
+-     "description": "Behavior prose.",
+-     "flows": Array [
+-       "A behavior flow.",
+-     ],
+-     "rules": Array [
+-       "A behavior rule.",
+-     ],
+-   },
+    "id": "spec:import.emitter",
+    "kind": "behavior",
+    "readiness": "idea",
+    "relations": Array [],
+    "title": "Emit a Markdown carrier",
+  }
+
+ ❯ expectMarkdownRoundTrip test/import-emit-markdown.test.ts:48:33
+     46| 
+     47|   expect(result.findings).toEqual([]);
+     48|   expect(result.specs[0]?.data).toEqual(source.data);
+       |                                 ^
+     49|   return emitted;
+     50| }
+ ❯ test/import-emit-markdown.test.ts:150:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  test/import-emit-markdown.test.ts > emitMarkdownSpec > emits example-space vocabulary and one immediately-owned example GWT fence
+AssertionError: expected { id: 'spec:import.emitter', …(5) } to deeply equal { id: 'spec:import.emitter', …(6) }
+
+- Expected
++ Received
+
+  Object {
+    "altitude": "story",
+-   "behavior": Object {
+-     "description": "Vocabulary prose.",
+-     "exampleSpace": Object {
+-       "given": Array [
+-         "a cart has {count:number} items",
+-       ],
+-       "then": Array [
+-         "an order has {total:number}",
+-       ],
+-       "when": Array [
+-         "the customer submits the cart",
+-       ],
+-     },
+-   },
+    "id": "spec:import.emitter",
+    "kind": "behavior",
+    "readiness": "idea",
+    "relations": Array [],
+    "title": "Emit a Markdown carrier",
+  }
+
+ ❯ expectMarkdownRoundTrip test/import-emit-markdown.test.ts:48:33
+     46| 
+     47|   expect(result.findings).toEqual([]);
+     48|   expect(result.specs[0]?.data).toEqual(source.data);
+       |                                 ^
+     49|   return emitted;
+     50| }
+ ❯ test/import-emit-markdown.test.ts:180:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  test/import-emit-markdown.test.ts > emitMarkdownSpec > emits the one-entry Constraints form and preserves parser refusal without its statement
+AssertionError: expected { id: 'spec:import.emitter', …(5) } to deeply equal { id: 'spec:import.emitter', …(6) }
+
+- Expected
++ Received
+
+  Object {
+    "altitude": "story",
+-   "constraints": Array [
+-     Object {
+-       "flavor": "quality",
+-       "measurableBy": "a clean check",
+-       "statement": "The output stays deterministic.",
+-       "target": "bytes",
+-     },
+-   ],
+    "id": "spec:import.emitter",
+    "kind": "behavior",
+    "readiness": "idea",
+    "relations": Array [],
+    "title": "Emit a Markdown carrier",
+  }
+
+ ❯ expectMarkdownRoundTrip test/import-emit-markdown.test.ts:48:33
+     46| 
+     47|   expect(result.findings).toEqual([]);
+     48|   expect(result.specs[0]?.data).toEqual(source.data);
+       |                                 ^
+     49|   return emitted;
+     50| }
+ ❯ test/import-emit-markdown.test.ts:203:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  test/import-emit-markdown.test.ts > emitMarkdownSpec > emits Model, Design, UI, Decision, and Verification owners in authored order
+AssertionError: expected { id: 'spec:import.emitter', …(5) } to deeply equal { id: 'spec:import.emitter', …(10) }
+
+- Expected
++ Received
+
+  Object {
+    "altitude": "story",
+-   "decision": Object {
+-     "alternatives": Array [
+-       "Invent a generic prose section.",
+-     ],
+-     "consequences": Array [
+-       "Emitters stay deterministic.",
+-     ],
+-     "context": "The carrier needs owners.",
+-     "decision": "Emit each owner once.",
+-     "description": "Decision prose.",
+-     "rationale": Array [
+-       "The grammar is frozen.",
+-     ],
+-   },
+-   "design": Object {
+-     "description": "Design prose.",
+-     "firstChoice": "Start here.",
+-     "secondChoice": "Continue here.",
+-   },
+    "id": "spec:import.emitter",
+    "kind": "behavior",
+-   "model": Object {
+-     "description": "Model prose.",
+-     "terms": Object {
+-       "Cart": "A selected set of lines.",
+-       "Order": "An accepted cart.",
+-     },
+-   },
+    "readiness": "idea",
+    "relations": Array [],
+    "title": "Emit a Markdown carrier",
+-   "ui": Object {
+-     "description": "UI prose.",
+-     "errorState": "Explain.",
+-     "primaryAction": "Submit.",
+-   },
+-   "verification": Object {
+-     "criteria": Array [
+-       "The document reifies.",
+-     ],
+-     "description": "Verification prose.",
+-     "mode": "contract",
+-   },
+  }
+
+ ❯ expectMarkdownRoundTrip test/import-emit-markdown.test.ts:48:33
+     46| 
+     47|   expect(result.findings).toEqual([]);
+     48|   expect(result.specs[0]?.data).toEqual(source.data);
+       |                                 ^
+     49|   return emitted;
+     50| }
+ ❯ test/import-emit-markdown.test.ts:259:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  test/import-emit-markdown.test.ts > emitMarkdownSpec > round trips all eleven checkout authored Specs through Markdown
+AssertionError: expected { Object (id, kind, ...) } to deeply equal { Object (id, title, ...) }
+
+- Expected
++ Received
+
+  Object {
+    "altitude": "feature",
+-   "behavior": Object {
+-     "exampleSpace": Object {
+-       "given": Array [
+-         "a customer has a cart with {n:number} line items",
+-         "every line item has quantity {q:number} and unit price {price:number}",
+-         "every cart item is {availability:\"in stock\"|\"out of stock\"}",
+-       ],
+-       "then": Array [
+-         "an order is created with total {total:number}",
+-         "the order contains the original cart lines",
+-         "order creation is rejected because {reason:\"empty cart\"|\"out of stock\"}",
+-       ],
+-       "when": Array [
+-         "the customer submits the cart for order creation",
+-       ],
+-     },
+-   },
+    "id": "spec:orders.create-order",
+-   "intent": Object {
+-     "actor": "customer",
+-     "outcome": "Turn a valid cart into an order.",
+-     "value": "Customers can complete purchases without the example modeling the rest of checkout.",
+-   },
+    "kind": "behavior",
+    "readiness": "defined",
+    "relations": Array [
+      Object {
+        "claim": "declared",
+        "target": "spec:orders.order-management",
+        "type": "refines",
+      },
+      Object {
+        "claim": "declared",
+        "target": "spec:orders.order-latency-constraint",
+        "type": "constrainedBy",
+      },
+      Object {
+        "claim": "declared",
+        "target": "spec:decisions.order-lifecycle",
+        "type": "decidedBy",
+      },
+    ],
+    "title": "Customer creates an order",
+  }
+
+ ❯ expectMarkdownRoundTrip test/import-emit-markdown.test.ts:48:33
+     46| 
+     47|   expect(result.findings).toEqual([]);
+     48|   expect(result.specs[0]?.data).toEqual(source.data);
+       |                                 ^
+     49|   return emitted;
+     50| }
+ ❯ test/import-emit-markdown.test.ts:276:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 10 passed (16)
+   Start at  16:44:22
+   Duration  779ms (transform 175ms, setup 0ms, collect 456ms, tests 37ms, environment 0ms, prepare 62ms)
+

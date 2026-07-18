@@ -1,0 +1,56 @@
+
+> @libar-dev/software-delivery-protocol@0.0.0 test
+> node ./vitest-test.mjs test/package-smoke.test.ts
+
+
+ RUN  v2.1.9 /Users/darkomijic/dev-projects/libar-software-delivery-protocol
+
+npm notice
+npm notice 📦  @libar-dev/software-delivery-protocol@0.0.0
+npm notice Tarball Contents
+npm notice 11.4kB LICENSE
+npm notice 1.0kB dist/adapters/vitest.d.ts
+npm notice 5.6kB dist/adapters/vitest.js
+npm notice 4.6kB dist/cli/sdp.d.ts
+npm notice 246.1kB dist/cli/sdp.js
+npm notice 47.7kB dist/index-CYKjjj2t.d.ts
+npm notice 236.6kB dist/index.cjs
+npm notice 17.2kB dist/index.d.ts
+npm notice 231.6kB dist/index.js
+npm notice 5.4kB dist/runner/index.d.ts
+npm notice 5.4kB dist/runner/index.js
+npm notice 2.5kB package.json
+npm notice Tarball Details
+npm notice name: @libar-dev/software-delivery-protocol
+npm notice version: 0.0.0
+npm notice filename: libar-dev-software-delivery-protocol-0.0.0.tgz
+npm notice package size: 178.3 kB
+npm notice unpacked size: 815.0 kB
+npm notice shasum: b622aa097534ba908e7cefe961048d82887b5de3
+npm notice integrity: sha512-ZYBFD6X9DYYkr[...]4N9TYzjCSZCmw==
+npm notice total files: 12
+npm notice
+ ❯ test/package-smoke.test.ts (1 test | 1 failed) 5121ms
+   × published package surface > resolves every public root export without the repository source alias 5120ms
+     → Command failed: /Users/darkomijic/dev-projects/libar-software-delivery-protocol/node_modules/.bin/tsc --module NodeNext --moduleResolution NodeNext --target ES2022 --strict --skipLibCheck --noEmit type-surface.mts
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/package-smoke.test.ts > published package surface > resolves every public root export without the repository source alias
+Error: Command failed: /Users/darkomijic/dev-projects/libar-software-delivery-protocol/node_modules/.bin/tsc --module NodeNext --moduleResolution NodeNext --target ES2022 --strict --skipLibCheck --noEmit type-surface.mts
+ ❯ run test/package-smoke.test.ts:96:10
+     94| 
+     95| function run(command: string, args: readonly string[], cwd: string): s…
+     96|   return execFileSync(command, args, { cwd, encoding: "utf8" });
+       |          ^
+     97| }
+     98| 
+ ❯ test/package-smoke.test.ts:184:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  17:53:28
+   Duration  5.44s (transform 54ms, setup 0ms, collect 35ms, tests 5.12s, environment 0ms, prepare 89ms)
+

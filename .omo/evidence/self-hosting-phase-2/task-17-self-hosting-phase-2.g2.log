@@ -1,0 +1,11 @@
+Task 17 G2 acceptance verification
+
+Command: node ./check-self-hosting-gates.mjs
+Result: exit 0
+Observed: phase2Ledger reports "G1-G8 scaffold checked" after the G2 accepted SHA pin.
+
+Command: npm run check
+Result: exit 0
+Observed: 29 test files and 402 tests passed; generated self-hosting and checkout-v1 graphs validate with 0 errors and 0 warnings.
+
+Owner disposition: accepted — 2026-07-18 — df444f2
