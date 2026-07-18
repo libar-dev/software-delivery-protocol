@@ -17,6 +17,7 @@ export const selfHostingV1Pack = pack({
     ref("spec:validation.readiness-floor"),
     ref("spec:validation.duplicate-ids"),
     ref("spec:model.protocol-domain"),
+    ref("spec:validation.duplicate-ids.dual-carrier"),
   ],
   modelRefs: [ref("spec:model.protocol-domain")],
 });

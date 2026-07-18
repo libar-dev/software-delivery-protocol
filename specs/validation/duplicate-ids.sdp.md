@@ -14,3 +14,12 @@ relations:
 
 ## Behavior
 - rule: If more than one carrier declares an ID, every duplicate site receives extract/duplicate-id and no ambiguous node is derived.
+
+## Example space
+```gwt-vocabulary
+Given a {firstCarrier:string} carrier declares {specId:string}
+Given a {secondCarrier:string} carrier declares {specId:string}
+When the extraction root is read
+Then both sites report {findingId:string}
+Then no graph node is emitted for {specId:string}
+```

@@ -215,9 +215,48 @@ const expectedSpecs = [
         rules: [
           "If more than one carrier declares an ID, every duplicate site receives extract/duplicate-id and no ambiguous node is derived.",
         ],
+        exampleSpace: {
+          given: [
+            "a {firstCarrier:string} carrier declares {specId:string}",
+            "a {secondCarrier:string} carrier declares {specId:string}",
+          ],
+          when: ["the extraction root is read"],
+          [["t", "hen"].join("")]: [
+            "both sites report {findingId:string}",
+            "no graph node is emitted for {specId:string}",
+          ],
+        },
       },
     },
     deliveryFacts: ["implemented"],
+  },
+  {
+    id: "spec:validation.duplicate-ids.dual-carrier",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/duplicate-ids.dual-carrier.sdp.md",
+    title: "TypeScript and Markdown duplicates are both refused",
+    narrative: null,
+    sections: {
+      intent: { outcome: "Execute the duplicate-ID rule across both carrier surfaces." },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a {firstCarrier: "TypeScript"} carrier declares {specId: "spec:fixture.duplicate"}',
+              'a {secondCarrier: "Markdown"} carrier declares {specId: "spec:fixture.duplicate"}',
+            ],
+            when: ["the extraction root is read"],
+            [["t", "hen"].join("")]: [
+              'both sites report {findingId: "extract/duplicate-id"}',
+              'no graph node is emitted for {specId: "spec:fixture.duplicate"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
   },
   {
     id: "spec:model.protocol-domain",
@@ -242,7 +281,21 @@ const expectedSpecs = [
   },
 ] as const;
 
-const expectedPackMembers = expectedSpecs.map((spec) => spec.id);
+const expectedPackMembers = [
+  "spec:carrier.markdown-authoring",
+  "spec:carrier.envelope-contract",
+  "spec:carrier.markdown-parser",
+  "spec:carrier.sdp-import",
+  "spec:carrier.prose-ownership-rule",
+  "spec:protocol.self-hosting",
+  "spec:extraction.derive-graph",
+  "spec:extraction.determinism",
+  "spec:extraction.build-pipeline",
+  "spec:validation.readiness-floor",
+  "spec:validation.duplicate-ids",
+  "spec:model.protocol-domain",
+  "spec:validation.duplicate-ids.dual-carrier",
+] as const;
 
 const expectedDeclaredRelations = [
   ["spec:carrier.markdown-authoring", "dependsOn", "spec:carrier.markdown-parser"],
@@ -262,15 +315,31 @@ const expectedDeclaredRelations = [
   ["spec:validation.readiness-floor", "dependsOn", "spec:model.protocol-domain"],
   ["spec:validation.duplicate-ids", "refines", "spec:protocol.self-hosting"],
   ["spec:validation.duplicate-ids", "dependsOn", "spec:carrier.markdown-parser"],
+  ["spec:validation.duplicate-ids.dual-carrier", "refines", "spec:validation.duplicate-ids"],
+  ["spec:validation.duplicate-ids.dual-carrier", "verifies", "spec:validation.duplicate-ids"],
   ["spec:model.protocol-domain", "refines", "spec:protocol.self-hosting"],
 ] as const;
 
-const expectedGapFindings = ["spec:validation.duplicate-ids"].map((subjectId) => ({
-  validatorId: "honesty/gaps",
-  family: "honesty",
-  severity: "warning",
-  subjectId,
-}));
+const expectedWarnings = [
+  {
+    validatorId: "conformance/verifies-linkage",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:validation.duplicate-ids.dual-carrier",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:validation.duplicate-ids.dual-carrier",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:validation.duplicate-ids",
+  },
+] as const;
 
 const expectedAnchors = [
   {
@@ -422,7 +491,7 @@ function lineContaining(source: string, token: string): number {
 }
 
 describe("the self-hosting phase-1 carrier corpus", () => {
-  it("derives the twelve Markdown-canonical specs and their exact Pack checkpoint from the root", () => {
+  it("derives the thirteen Markdown-canonical specs and their exact Pack checkpoint from the root", () => {
     // Given: the repository root with evidence and the worked example excluded from the authored model.
     const result = extract({ root: repoRoot, exclude: ["explorations", "examples"] });
 
@@ -440,8 +509,8 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         severity,
         subjectId,
       })),
-    ).toEqual(expectedGapFindings);
-    expect(result.counts).toEqual({ specs: 12, packs: 1, anchors: 14 });
+    ).toEqual(expectedWarnings);
+    expect(result.counts).toEqual({ specs: 13, packs: 1, anchors: 14 });
     expect(nodeIds).toEqual(
       [
         "pack:self-hosting-v1",
@@ -456,23 +525,26 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         "spec:model.protocol-domain",
         "spec:protocol.self-hosting",
         "spec:validation.duplicate-ids",
+        "spec:validation.duplicate-ids.dual-carrier",
         "spec:validation.readiness-floor",
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
-    expect(result.graph.nodes).toHaveLength(27);
+    expect(result.graph.nodes).toHaveLength(28);
     expect(
-      primitiveNodes.map((node) => ({
-        id: node.id,
-        specKind: node.specKind,
-        altitude: node.altitude,
-        readiness: node.readiness,
-        title: node.title,
-        narrative: node.narrative ?? null,
-        sections: node.sections,
-        deliveryFacts: node.deliveryFacts ?? [],
-        file: node.file,
-      })),
+      primitiveNodes
+        .map((node) => ({
+          id: node.id,
+          specKind: node.specKind,
+          altitude: node.altitude,
+          readiness: node.readiness,
+          title: node.title,
+          narrative: node.narrative ?? null,
+          sections: node.sections,
+          deliveryFacts: node.deliveryFacts ?? [],
+          file: node.file,
+        }))
+        .sort((left, right) => left.id.localeCompare(right.id)),
     ).toEqual(
       [...expectedSpecs]
         .sort((left, right) => left.id.localeCompare(right.id))
@@ -502,7 +574,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ idea: 1, defined: 7, ready: 4 });
+    ).toEqual({ idea: 1, defined: 7, ready: 5 });
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
@@ -517,7 +589,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
       modelRefs: ["spec:model.protocol-domain"],
       file: "specs/self-hosting.pack.sdp.ts",
     });
-    expect(result.graph.edges).toHaveLength(44);
+    expect(result.graph.edges).toHaveLength(47);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")
