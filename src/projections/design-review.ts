@@ -1,7 +1,7 @@
 import { SPEC_READINESS } from "../model/descriptors.js";
 import { renderStepText } from "../notation/slots.js";
 import type { Finding } from "../validate/contracts.js";
-import { renderNarrative, sectionDescription } from "./owned-prose.js";
+import { escapeRenderedField, renderNarrative, sectionDescription } from "./owned-prose.js";
 import type {
   PackContext,
   Reader,
@@ -62,13 +62,13 @@ function sourceHref(fromPage: string, file: string): string {
   return `${"../".repeat(directoryOf(fromPage).length + 2)}${file}`;
 }
 
-/** One-line table cell: pipes escaped, newlines collapsed — content never breaks the table. */
+/** One-line table cell: field escaping plus collapsed newlines keeps content inside the table. */
 function tableCell(text: string): string {
-  return text.replaceAll("|", "\\|").replaceAll(/\s+/gu, " ").trim();
+  return escapeRenderedField(text).replaceAll(/\s+/gu, " ").trim();
 }
 
 function heading(title: string | undefined, id: string): string {
-  return `# ${title ?? id}`;
+  return `# ${escapeRenderedField(title ?? id)}`;
 }
 
 const PAGE_FOOTER =
@@ -100,6 +100,30 @@ function textEntries(value: unknown): readonly string[] {
   });
 }
 
+function renderDynamicValue(value: unknown): unknown {
+  const record = asRecord(value);
+
+  if (record !== undefined) {
+    return renderDynamicRecord(record);
+  }
+
+  const entries = asArray(value);
+
+  if (entries !== undefined) {
+    return entries.map((entry) => renderDynamicValue(entry));
+  }
+
+  return typeof value === "string" ? escapeRenderedField(value) : value;
+}
+
+function renderDynamicRecord(content: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.keys(content)
+      .sort()
+      .map((key) => [escapeRenderedField(key), renderDynamicValue(content[key])]),
+  );
+}
+
 /* ----- the readiness header (`05` §3, `07` §6 ③) ----- */
 
 function renderReadiness(context: SpecContext): readonly string[] {
@@ -120,7 +144,7 @@ function renderReadiness(context: SpecContext): readonly string[] {
     const clause =
       firstUnmet === undefined
         ? ""
-        : ` First unmet clause: \`${firstUnmet.clauseId}\` — ${firstUnmet.description}`;
+        : ` First unmet clause: \`${firstUnmet.clauseId}\` — ${escapeRenderedField(firstUnmet.description)}`;
     lines.push(
       "",
       `> **Readiness divergence.** This spec states \`${context.statedReadiness}\` but the structural floor reached is ${
@@ -172,11 +196,11 @@ function renderBindings(context: SpecContext, page: string): readonly string[] {
     lines.push("", "### Implementations", "");
 
     for (const binding of context.implementations) {
-      const label = binding.label === undefined ? "" : ` — ${binding.label}`;
+      const label = binding.label === undefined ? "" : ` — ${escapeRenderedField(binding.label)}`;
       const location =
         binding.file === undefined
           ? ""
-          : ` ([${binding.file}${binding.line === undefined ? "" : `:${String(binding.line)}`}](${sourceHref(page, binding.file)}))`;
+          : ` ([${escapeRenderedField(binding.file)}${binding.line === undefined ? "" : `:${String(binding.line)}`}](${sourceHref(page, binding.file)}))`;
       lines.push(`- \`${binding.codeId}\`${label}${location} \`[${binding.claim}]\``);
     }
   }
@@ -185,11 +209,11 @@ function renderBindings(context: SpecContext, page: string): readonly string[] {
     lines.push("", "### Verifiers", "");
 
     for (const verifier of context.verifiers) {
-      const label = verifier.label === undefined ? "" : ` — ${verifier.label}`;
+      const label = verifier.label === undefined ? "" : ` — ${escapeRenderedField(verifier.label)}`;
       const location =
         verifier.file === undefined
           ? ""
-          : ` ([${verifier.file}${verifier.line === undefined ? "" : `:${String(verifier.line)}`}](${sourceHref(page, verifier.file)}))`;
+          : ` ([${escapeRenderedField(verifier.file)}${verifier.line === undefined ? "" : `:${String(verifier.line)}`}](${sourceHref(page, verifier.file)}))`;
       lines.push(
         `- \`${verifier.verifierId}\`${label}${location} — ${describeVerifier(verifier)} \`[${verifier.claim}]\``,
       );
@@ -198,11 +222,11 @@ function renderBindings(context: SpecContext, page: string): readonly string[] {
 
   if (context.oracle !== undefined) {
     const oracle = context.oracle;
-    const label = oracle.label === undefined ? "" : ` — ${oracle.label}`;
+    const label = oracle.label === undefined ? "" : ` — ${escapeRenderedField(oracle.label)}`;
     const location =
       oracle.file === undefined
         ? ""
-        : ` ([${oracle.file}${oracle.line === undefined ? "" : `:${String(oracle.line)}`}](${sourceHref(page, oracle.file)}))`;
+        : ` ([${escapeRenderedField(oracle.file)}${oracle.line === undefined ? "" : `:${String(oracle.line)}`}](${sourceHref(page, oracle.file)}))`;
     lines.push("", "### Expected-outcome oracle", "");
     lines.push(
       `- \`${oracle.anchorId}\`${label}${location} — the authored expected-outcome semantics for this spec's example space; the graph records that it exists, never what it says \`[${oracle.claim}]\``,
@@ -226,7 +250,7 @@ function renderIntent(intent: Record<string, unknown>): readonly string[] {
     const text = asText(intent[field]);
 
     if (text !== undefined) {
-      lines.push(`- **${field}:** ${text}`);
+      lines.push(`- **${field}:** ${escapeRenderedField(text)}`);
     }
   }
 
@@ -235,7 +259,7 @@ function renderIntent(intent: Record<string, unknown>): readonly string[] {
 
     if (entries.length > 0) {
       lines.push(`- **${field}:**`);
-      lines.push(...entries.map((entry) => `  - ${entry}`));
+      lines.push(...entries.map((entry) => `  - ${escapeRenderedField(entry)}`));
     }
   }
 
@@ -248,14 +272,14 @@ function renderIntent(intent: Record<string, unknown>): readonly string[] {
       const prose = asText(entry);
 
       if (prose !== undefined) {
-        lines.push(`- ${prose}`);
+        lines.push(`- ${escapeRenderedField(prose)}`);
         continue;
       }
 
       const structured = asRecord(entry);
       const question = asText(structured?.question) ?? "(malformed open-question entry)";
       const blocking = structured?.blocking === true ? " — **blocking**" : "";
-      lines.push(`- ${question}${blocking}`);
+      lines.push(`- ${escapeRenderedField(question)}${blocking}`);
     }
   }
 
@@ -273,7 +297,7 @@ function renderBehavior(behavior: Record<string, unknown>): readonly string[] {
   const rules = textEntries(behavior.rules);
 
   if (rules.length > 0) {
-    lines.push("", "### Rules", "", ...rules.map((rule) => `- ${rule}`));
+    lines.push("", "### Rules", "", ...rules.map((rule) => `- ${escapeRenderedField(rule)}`));
   }
 
   const examples = asArray(behavior.examples) ?? [];
@@ -285,7 +309,7 @@ function renderBehavior(behavior: Record<string, unknown>): readonly string[] {
       const prose = asText(entry);
 
       if (prose !== undefined) {
-        lines.push(`- ${prose}`);
+        lines.push(`- ${escapeRenderedField(prose)}`);
         continue;
       }
 
@@ -302,7 +326,7 @@ function renderBehavior(behavior: Record<string, unknown>): readonly string[] {
 
         if (steps.length > 0) {
           lines.push(`  - **${phase}**`);
-          lines.push(...steps.map((step) => `    - ${renderStepText(step)}`));
+          lines.push(...steps.map((step) => `    - ${escapeRenderedField(renderStepText(step))}`));
         }
       }
     }
@@ -311,7 +335,7 @@ function renderBehavior(behavior: Record<string, unknown>): readonly string[] {
   const flows = textEntries(behavior.flows);
 
   if (flows.length > 0) {
-    lines.push("", "### Flows", "", ...flows.map((flow) => `- ${flow}`));
+    lines.push("", "### Flows", "", ...flows.map((flow) => `- ${escapeRenderedField(flow)}`));
   }
 
   // The example space renders verbatim — the typed slot declarations ARE the reviewable content
@@ -326,7 +350,7 @@ function renderBehavior(behavior: Record<string, unknown>): readonly string[] {
 
       if (steps.length > 0) {
         spaceLines.push(`  - **${phase}**`);
-        spaceLines.push(...steps.map((step) => `    - ${step}`));
+        spaceLines.push(...steps.map((step) => `    - ${escapeRenderedField(step)}`));
       }
     }
 
@@ -359,7 +383,7 @@ function renderConstraints(entries: readonly unknown[]): readonly string[] {
 
 function renderModel(model: Record<string, unknown>): readonly string[] {
   const terms = asRecord(model.terms) ?? {};
-  const names = Object.keys(terms);
+  const names = Object.keys(terms).sort();
   const description = sectionDescription(model);
 
   if (names.length === 0 && description.length === 0) {
@@ -394,13 +418,13 @@ function renderDecision(decision: Record<string, unknown>): readonly string[] {
   const context = asText(decision.context);
 
   if (context !== undefined) {
-    lines.push("", `**Context.** ${context}`);
+    lines.push("", `**Context.** ${escapeRenderedField(context)}`);
   }
 
   const chosen = asText(decision.decision);
 
   if (chosen !== undefined) {
-    lines.push("", `**Decision.** ${chosen}`);
+    lines.push("", `**Decision.** ${escapeRenderedField(chosen)}`);
   }
 
   for (const field of ["rationale", "alternatives", "consequences"]) {
@@ -411,7 +435,7 @@ function renderDecision(decision: Record<string, unknown>): readonly string[] {
         "",
         `**${field[0]?.toUpperCase() ?? ""}${field.slice(1)}.**`,
         "",
-        ...entries.map((entry) => `- ${entry}`),
+        ...entries.map((entry) => `- ${escapeRenderedField(entry)}`),
       );
     }
   }
@@ -430,22 +454,29 @@ function renderVerification(verification: Record<string, unknown>): readonly str
   const mode = asText(verification.mode);
 
   if (mode !== undefined) {
-    lines.push("", `- **mode:** \`${mode}\``);
+    lines.push("", `- **mode:** \`${escapeRenderedField(mode)}\``);
   }
 
   const criteria = textEntries(verification.criteria);
 
   if (criteria.length > 0) {
-    lines.push("", "### Criteria", "", ...criteria.map((criterion) => `- ${criterion}`));
+    lines.push(
+      "",
+      "### Criteria",
+      "",
+      ...criteria.map((criterion) => `- ${escapeRenderedField(criterion)}`),
+    );
   }
 
   return lines.length === 1 ? [] : lines;
 }
 
-/** The open bags (`design` / `ui`, L9): authored order preserved, rendered as data. */
+/** The open bags (`design` / `ui`, L9): dynamic keys canonicalized, rendered as data. */
 function renderOpenBag(name: string, content: Record<string, unknown>): readonly string[] {
   const description = sectionDescription(content);
-  const data = Object.fromEntries(Object.entries(content).filter(([key]) => key !== "description"));
+  const data = renderDynamicRecord(
+    Object.fromEntries(Object.entries(content).filter(([key]) => key !== "description")),
+  );
 
   if (Object.keys(data).length === 0 && description.length === 0) {
     return [];
@@ -523,7 +554,7 @@ function renderSections(context: SpecContext): readonly string[] {
 /* ----- relations, impact, findings ----- */
 
 function linkTo(page: string, end: RelationEnd): string {
-  const display = end.otherTitle === undefined ? "" : ` — ${end.otherTitle}`;
+  const display = end.otherTitle === undefined ? "" : ` — ${escapeRenderedField(end.otherTitle)}`;
 
   if (end.resolved && (end.otherNodeType === "Primitive" || end.otherNodeType === "Pack")) {
     return `[\`${end.otherId}\`](${pageHref(page, pagePathOf(end.otherId))})${display}`;
@@ -582,9 +613,9 @@ function renderFindings(findings: readonly Finding[]): readonly string[] {
     const where =
       finding.file === undefined
         ? "—"
-        : `\`${finding.file}${finding.line === undefined ? "" : `:${String(finding.line)}`}\``;
+        : `\`${escapeRenderedField(finding.file)}${finding.line === undefined ? "" : `:${String(finding.line)}`}\``;
     lines.push(
-      `| ${finding.severity} | \`${finding.validatorId}\` | ${tableCell(finding.message)} | ${where} |`,
+      `| ${tableCell(finding.severity)} | \`${escapeRenderedField(finding.validatorId)}\` | ${tableCell(finding.message)} | ${where} |`,
     );
   }
 
@@ -598,11 +629,11 @@ function renderSpecPage(context: SpecContext): DesignReviewPage {
   const kind =
     context.kindDisplayLabel === undefined
       ? `\`${context.specKind}\``
-      : `${context.kindDisplayLabel} (\`${context.specKind}\`)`;
+      : `${escapeRenderedField(context.kindDisplayLabel)} (\`${context.specKind}\`)`;
   const lines = [
     heading(context.title, context.id),
     "",
-    `\`${context.id}\` · ${kind} · altitude \`${context.altitude}\` · authored in [${context.file}](${sourceHref(page, context.file)}) \`[declared]\``,
+    `\`${context.id}\` · ${kind} · altitude \`${context.altitude}\` · authored in [${escapeRenderedField(context.file)}](${sourceHref(page, context.file)}) \`[declared]\``,
     "",
     ...renderNarrative(context.narrative),
     ...renderReadiness(context),
@@ -627,11 +658,11 @@ function renderPackPage(context: PackContext, specLabel: (id: string) => string)
   const lines = [
     heading(context.title, context.id),
     "",
-    `\`${context.id}\` · Pack (the grouping / review aggregate — states no truth of its own) · authored in [${context.file}](${sourceHref(page, context.file)}) \`[declared]\``,
+    `\`${context.id}\` · Pack (the grouping / review aggregate — states no truth of its own) · authored in [${escapeRenderedField(context.file)}](${sourceHref(page, context.file)}) \`[declared]\``,
   ];
 
   if (context.framing !== undefined) {
-    lines.push("", `> ${context.framing}`);
+    lines.push("", `> ${escapeRenderedField(context.framing)}`);
   }
 
   lines.push(
@@ -712,9 +743,9 @@ function renderIndexPage(reader: Reader, specs: readonly SpecSummary[]): DesignR
     lines.push("", "## Packs", "");
 
     for (const pack of packs) {
-      const framing = pack.framing === undefined ? "" : ` — ${pack.framing}`;
+      const framing = pack.framing === undefined ? "" : ` — ${escapeRenderedField(pack.framing)}`;
       lines.push(
-        `- [\`${pack.id}\`](${pageHref(page, pagePathOf(pack.id))}) ${pack.title ?? ""}${framing}`,
+        `- [\`${pack.id}\`](${pageHref(page, pagePathOf(pack.id))}) ${escapeRenderedField(pack.title ?? "")}${framing}`,
       );
     }
   }
@@ -738,7 +769,7 @@ export function renderDesignReview(reader: Reader): readonly DesignReviewPage[] 
 
       return known === undefined
         ? `\`${id}\``
-        : `[\`${id}\`](${pageHref(page, pagePathOf(id))})${known.title === undefined ? "" : ` — ${known.title}`}`;
+        : `[\`${id}\`](${pageHref(page, pagePathOf(id))})${known.title === undefined ? "" : ` — ${escapeRenderedField(known.title)}`}`;
     };
   };
 

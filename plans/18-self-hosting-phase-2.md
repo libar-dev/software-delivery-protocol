@@ -193,6 +193,12 @@ where the verification loop is cheap.
 Under fire, a ruling records the trigger, alternatives, outcome, three-part-test disposition, carrying
 Spec, and applicable matrix/ledger cells. Unfired items remain named here at phase close.
 
+### Session 2 rulings under fire
+
+| Trigger | Alternatives considered | Owner outcome | Three-part-test disposition | Carrying Spec / ledger cells |
+|---|---|---|---|---|
+| Design Review dynamic-key ordering followed insertion order and escaping stopped at narrative/description prose slots (review-06) | (1) escape every rendered field uniformly and sort dynamic keys lexicographically at render; (2) escape prose slots only and sort keys; (3) accept trusted-authored rendering and change nothing | **Option 1 ruled.** Every rendered field uses one escaping policy, including titles, rules, terms, criteria, open-bag keys/values, and other authored labels; model/open-bag dynamic keys sort lexicographically at render time. Permuted graph insertion orders now render byte-identically. Ordering and escaping are the only output changes; information content is preserved. | Not admitted as a durable decision Spec: this is a mechanically reversible projection representation fix, so it fails the hard-to-reverse part of the three-part test. The regression suite is the execution record. | Planned carrier: `spec:consumers.design-review` (S5). §8 rows “Design Review dynamic-key ordering”, “Design Review escaping outside prose slots”, and “Design Review cluster” are `done s2`. |
+
 ## (j) §7 Done-record and delta catalog
 
 The done-record is process evidence, never graph content. A session appends its commit SHA,
@@ -225,8 +231,8 @@ Planned disposition is not execution evidence. Every row starts pending and clos
 | Windows absolute excludes and `--exclude --foo` diagnostics (review-06) | Adopt with exclude/CLI cluster | done s1 — reject Windows drive-letter absolutes as invalid rather than normalize them, preserving MD-20 root-relative POSIX scope; a flag operand names itself in the CLI usage error |
 | Path-prefix matcher coverage (review-06) | Adopt with exclude/CLI cluster | done s1 — focused regression proves `foo` excludes only `foo` and its slash-delimited descendants, never `foobar` |
 | Library-seam exclusion wording (review-06) | Adopt with exclude/CLI cluster | done s1 — `normalizeExcludes` owns library diagnostics; `parseBuildArgs` translates them into `sdp <cmd>` usage wording |
-| Design Review dynamic-key ordering (review-06) | Rule at migration/flip | pending |
-| Design Review escaping outside prose slots (review-06) | Rule at migration/flip | pending |
+| Design Review dynamic-key ordering (review-06) | Rule at migration/flip | done s2 — Option 1 sorts model/open-bag dynamic keys lexicographically at render; shuffled insertion orders produce byte-identical pages |
+| Design Review escaping outside prose slots (review-06) | Rule at migration/flip | done s2 — Option 1 applies one escaping policy to every rendered field, including titles, rules, terms, criteria, labels, and open-bag data |
 | Row-3 enrichment delta (review-06) | Record in delta catalog | pending |
 | Bound example reports only a count (review-06) | Verify during migration evidence | pending |
 | Fixture-to-live byte identity (review-06) | Preserve through migration regression | pending |
@@ -239,7 +245,7 @@ Planned disposition is not execution evidence. Every row starts pending and clos
 | Checkout duplicate-carrier fixture exemption (review-06) | Preserve as explicit fixture exception | pending |
 | Exclude/CLI cluster (brief §6) | Land in tranche 1 | done s1 — loud Windows absolute rejection, flag-operand usage diagnostics, segment-boundary coverage, and library/CLI wording separation landed |
 | Grammar-hardening cluster (brief §6) | Land with parity baseline | pending |
-| Design Review cluster (brief §6) | Rule at migration/flip | pending |
+| Design Review cluster (brief §6) | Rule at migration/flip | done s2 — owner ruled Option 1; deterministic ordering and uniform escaping landed RED-first with focused projection regressions |
 | Records cluster (brief §6) | Land with decision fold | pending |
 | Table-sugar syntax (watch item) | Rule only if checkout forces it | pending |
 | Single-literal vocabulary form (watch item) | Rule only if corpus forces it | pending |

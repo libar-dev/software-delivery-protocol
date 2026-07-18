@@ -1,15 +1,16 @@
-function renderProse(text: string): readonly string[] {
+export function escapeRenderedField(text: string): string {
   return text
-    .split("\n")
-    .map((line) =>
-      line
-        .replaceAll("\\", "\\\\")
-        .replaceAll("`", "\\`")
-        .replaceAll("|", "\\|")
-        .replaceAll("#", "\\#")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;"),
-    );
+    .replaceAll("\\", "\\\\")
+    .replaceAll("&", "&amp;")
+    .replaceAll("`", "\\`")
+    .replaceAll("|", "\\|")
+    .replaceAll("#", "\\#")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function renderProse(text: string): readonly string[] {
+  return text.split("\n").map((line) => escapeRenderedField(line));
 }
 
 export function sectionDescription(content: Record<string, unknown>): readonly string[] {
