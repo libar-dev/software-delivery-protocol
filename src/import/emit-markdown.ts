@@ -1,4 +1,5 @@
 import type { ReifiedSpec } from "../extract/reify.js";
+import { assertMarkdownEmissionFidelity } from "./markdown-fidelity.js";
 
 const relationTypes = [
   "refines",
@@ -246,5 +247,8 @@ export function emitMarkdownSpec(reified: ReifiedSpec): string {
     verificationSection(record(data.verification)),
     openSection("UI", record(data.ui)),
   ].filter((value): value is string => value !== undefined);
-  return sections.length === 0 ? `${envelope}\n` : `${envelope}\n\n${sections.join("\n\n")}\n`;
+  const document =
+    sections.length === 0 ? `${envelope}\n` : `${envelope}\n\n${sections.join("\n\n")}\n`;
+  assertMarkdownEmissionFidelity(reified, document);
+  return document;
 }

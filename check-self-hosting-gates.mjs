@@ -257,9 +257,7 @@ for (const [surface, text] of [
 // ---------------------------------------------------------------------------
 
 for (const needle of [
-  "### MD-20",
   "the strict consumer-exclusion contract",
-  "### MD-21",
   "the envelope-grammar ownership posture",
   "| MD-20 |",
   "| MD-21 |",

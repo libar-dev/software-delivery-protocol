@@ -397,7 +397,12 @@ const RULES = [
   { file: "CONTEXT.md", includes: '"DSL" (reserved for the TS DSL)', category: STILL_SUPPORTED },
   {
     file: "CONTEXT.md",
-    includes: "authored Spec files carry the **`.sdp.ts`** extension",
+    includes: "Markdown Spec files use the **`.sdp.md`** extension by default",
+    category: PLURAL,
+  },
+  {
+    file: "CONTEXT.md",
+    includes: "identifies the lawful TypeScript carrier",
     category: STILL_SUPPORTED,
   },
   {

@@ -14,6 +14,8 @@ describe("import barrel", () => {
       packUnsupported: "import/pack-unsupported",
       targetExists: "import/target-exists",
       unsupportedConstruct: "import/unsupported-construct",
+      invalidSourcePath: "import/invalid-source-path",
+      noSources: "import/no-sources",
       empty: "import/empty",
     });
     expect(result.findings).toEqual([]);

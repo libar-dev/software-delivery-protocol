@@ -2,10 +2,10 @@
 
 The MVP bounded context: **Order Management**, modeled as `pack:checkout-v1` — eleven `Spec`s, one
 `Pack`, five anchors. It exists to prove the loop end-to-end on one small, honest slice: author
-delivery intent as typed code, bind the implementing code, the test, and the oracle with anchors,
+delivery intent in its canonical carrier, bind the implementing code, the test, and the oracle with anchors,
 derive **the one graph**, generate the step and space contracts off it, run the conformance +
 honesty checks, execute the bound example, and read the generated Design Review. It is also the
-tracer bullet: if this example stops typechecking or extracting, the DSL or the extractor is
+tracer bullet: if this example stops extracting or validating, the carrier or the extractor is
 wrong — not the example.
 
 This walkthrough shows what is here and how to watch the trust model react. The concepts live in

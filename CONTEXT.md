@@ -232,9 +232,9 @@ artifact** — approval remains outside the model, never an authored primitive).
   checks are **conformance checks + honesty checks** · **pre-graph** = upstream of graph derivation in the
   one validation path (the authored layer before the extractor runs) — a layer checks never live in:
   validators consume the one graph only, never a second validation path (one validation path, MD-14).
-- **Resolved (MD-15):** authored Spec files carry the **`.sdp.ts`** extension (never `.spec.ts`, which every
-  JS test-runner default glob executes); the model name `Spec` itself was always settled — only the file
-  serialization changed.
+- **Resolved (MD-15):** Markdown Spec files use the **`.sdp.md`** extension by default; **`.sdp.ts`**
+  identifies the lawful TypeScript carrier without colliding with every JS test-runner's default glob.
+  The model name `Spec` itself was always settled — only the file serialization changed.
 - **Resolved (the carrier ruling, MD-18):** Specs default to Markdown; Packs remain TS until a Pack
   syntax ruling; the TS DSL survives as import source and a lawful per-ID option. The surviving law
   is **one canonical surface per ID, no mixing** (`04` §1); the `.sdp.ts` extension law (MD-15) is

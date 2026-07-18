@@ -78,6 +78,8 @@ interface ImportHooks {
   readonly readFileSync?: typeof readFileSync;
   readonly writeFileSync?: typeof writeFileSync;
   readonly existsSync?: typeof existsSync;
+  readonly renameSync?: typeof renameSync;
+  readonly rmSync?: typeof rmSync;
   readonly importTypeScriptSpec?: typeof importTypeScriptSpec;
 }
 
@@ -185,11 +187,34 @@ function targetExistsFinding(targetPath: string): Finding {
   };
 }
 
+function noSourcesFinding(path: string): ImportResult["findings"][number] {
+  return {
+    validatorId: importFindingIds.noSources,
+    family: "conformance",
+    severity: "info",
+    message: "the requested import path contains no .sdp.ts carrier",
+    file: path,
+    line: 1,
+  };
+}
+
+interface PlannedImport {
+  readonly sourcePath: string;
+  readonly targetPath: string;
+  readonly content: string;
+}
+
+interface PreparedImport extends PlannedImport {
+  readonly temporaryPath: string;
+}
+
 function runImport(parsed: ImportArgs, output: CliOutput, hooks: CliHooks): number {
   const importHooks = hooks.import ?? {};
   const read = importHooks.readFileSync ?? readFileSync;
   const write = importHooks.writeFileSync ?? writeFileSync;
   const targetExists = importHooks.existsSync ?? existsSync;
+  const rename = importHooks.renameSync ?? renameSync;
+  const remove = importHooks.rmSync ?? rmSync;
   const runImportTypeScriptSpec = importHooks.importTypeScriptSpec ?? importTypeScriptSpec;
   const sourcePaths: string[] = [];
 
@@ -202,7 +227,7 @@ function runImport(parsed: ImportArgs, output: CliOutput, hooks: CliHooks): numb
     return 1;
   }
 
-  let hasFailure = false;
+  const planned: PlannedImport[] = [];
 
   for (const sourcePath of [...new Set(sourcePaths)].sort()) {
     try {
@@ -218,32 +243,53 @@ function runImport(parsed: ImportArgs, output: CliOutput, hooks: CliHooks): numb
         writeStderr(output, formatFinding(finding));
       }
 
-      if (
-        findings.some((finding) => finding.severity === "error") ||
-        result.emitted === undefined
-      ) {
-        hasFailure = true;
-        continue;
-      }
+      if (findings.some((finding) => finding.severity === "error") || result.emitted === undefined)
+        return 1;
 
-      if (targetPath === undefined) {
-        hasFailure = true;
-        continue;
-      }
-
-      if (parsed.dryRun) {
-        writeStdout(output, `=== ${targetPath} ===\n${result.emitted.content}`);
-      } else {
-        write(targetPath, result.emitted.content, "utf8");
-        writeStdout(output, `Wrote ${targetPath}\n`);
-      }
+      if (targetPath === undefined) return 1;
+      planned.push({ sourcePath, targetPath, content: result.emitted.content });
     } catch (error) {
-      hasFailure = true;
       writeStderr(output, `sdp import: ${errorMessage(error)}\n`);
+      return 1;
     }
   }
 
-  return hasFailure ? 1 : 0;
+  if (planned.length === 0) {
+    for (const path of parsed.paths) writeStderr(output, formatFinding(noSourcesFinding(path)));
+    return 1;
+  }
+
+  if (parsed.dryRun) {
+    for (const entry of planned)
+      writeStdout(output, `=== ${entry.targetPath} ===\n${entry.content}`);
+    return 0;
+  }
+
+  const prepared: PreparedImport[] = planned.map((entry, index) => ({
+    ...entry,
+    temporaryPath: `${entry.targetPath}.sdp-import-${String(process.pid)}-${String(index)}.tmp`,
+  }));
+  const publishedPaths: string[] = [];
+
+  try {
+    for (const entry of prepared) {
+      write(entry.temporaryPath, entry.content, "utf8");
+    }
+    for (const entry of prepared) {
+      if (targetExists(entry.targetPath))
+        throw new Error(`Markdown target already exists: ${entry.targetPath}`);
+      rename(entry.temporaryPath, entry.targetPath);
+      publishedPaths.push(entry.targetPath);
+    }
+  } catch (error) {
+    for (const path of [...prepared.map((entry) => entry.temporaryPath), ...publishedPaths])
+      remove(path, { force: true });
+    writeStderr(output, `sdp import: ${errorMessage(error)}\n`);
+    return 1;
+  }
+
+  for (const entry of planned) writeStdout(output, `Wrote ${entry.targetPath}\n`);
+  return 0;
 }
 
 interface BuildArgs {

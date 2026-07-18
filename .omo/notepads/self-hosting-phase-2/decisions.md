@@ -3,7 +3,7 @@
 
 - The effort branch was already `feature/protocol-self-application-phase-2`; no branch creation
   was needed and no work was performed on `main`.
-- `plans/18-self-hosting-phase-2.md` was absent, so it was created from the owner brief rather
+- The phase-2 execution plan was absent, so the owner brief supplied its initial content
   than rewriting an existing draft. Its G1-G8 table is explicitly process evidence, never graph
   content.
 - `check-self-hosting-gates.mjs` conditionally validates plan 18 only when the plan exists, so

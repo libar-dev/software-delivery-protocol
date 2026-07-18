@@ -1,5 +1,6 @@
 import { reifyTypeScriptCarrier } from "../extract/carrier.js";
 import { emitMarkdownSpec } from "./emit-markdown.js";
+import { MarkdownEmissionError } from "./markdown-fidelity.js";
 import type { Finding } from "../validate/contracts.js";
 
 export const importFindingIds = {
@@ -7,6 +8,8 @@ export const importFindingIds = {
   packUnsupported: "import/pack-unsupported",
   targetExists: "import/target-exists",
   unsupportedConstruct: "import/unsupported-construct",
+  invalidSourcePath: "import/invalid-source-path",
+  noSources: "import/no-sources",
   empty: "import/empty",
 } as const;
 
@@ -43,6 +46,18 @@ function importFinding(
 }
 
 export function importTypeScriptSpec(sourceText: string, relativePath: string): ImportResult {
+  if (!relativePath.endsWith(".sdp.ts")) {
+    return {
+      findings: [
+        importFinding(
+          importFindingIds.invalidSourcePath,
+          `the TypeScript import source must end with .sdp.ts: ${relativePath}`,
+          relativePath,
+        ),
+      ],
+    };
+  }
+
   const reification = reifyTypeScriptCarrier(sourceText, relativePath);
 
   if (reification.findings.length > 0) {
@@ -97,11 +112,27 @@ export function importTypeScriptSpec(sourceText: string, relativePath: string): 
     };
   }
 
-  return {
-    emitted: {
-      path: relativePath.replace(/\.sdp\.ts$/u, ".sdp.md"),
-      content: emitMarkdownSpec(spec),
-    },
-    findings: packFindings,
-  };
+  try {
+    return {
+      emitted: {
+        path: relativePath.replace(/\.sdp\.ts$/u, ".sdp.md"),
+        content: emitMarkdownSpec(spec),
+      },
+      findings: packFindings,
+    };
+  } catch (error) {
+    if (error instanceof MarkdownEmissionError) {
+      return {
+        findings: [
+          ...packFindings,
+          importFinding(
+            importFindingIds.unsupportedConstruct,
+            `the TypeScript carrier at ${relativePath} cannot emit faithful Markdown: ${error.reason}`,
+            relativePath,
+          ),
+        ],
+      };
+    }
+    throw error;
+  }
 }

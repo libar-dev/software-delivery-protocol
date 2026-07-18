@@ -93,7 +93,7 @@ live work is the highest primary-numbered plan under `plans/` (currently the sel
 | **5** | Polish: the CLI surface resolved (`build` · `validate` · `view`; `explain`/`search` below the second-caller bar), one diagnostic rendering rule, the documented example walkthrough, the clean-repo determinism test. |
 
 > **Tracer-bullet discipline.** Author the example specs and anchored code *first*, so the DSL and extractor are
-> forced to be usable before they are finished. If the example doesn't typecheck, fix the DSL — not the example.
+> forced to be usable before they are finished. If the example stops extracting or validating, fix the carrier or extractor — not the example.
 
 ## Two reading conventions
 

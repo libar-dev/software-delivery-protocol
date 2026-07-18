@@ -33,10 +33,6 @@ In prose, lead with meaning and use a code only as a parenthetical lookup key. C
 - [The plain-language references decision](../../specs/decisions/plain-language-references.sdp.md) (`spec:decisions.plain-language-references`).
 - [The concept-documents dissolution decision](../../specs/decisions/concept-docs-dissolve.sdp.md) (`spec:decisions.concept-docs-dissolve`).
 
-### MD-20 — the strict consumer-exclusion contract
-
-### MD-21 — the envelope-grammar ownership posture
-
 ## Structural-decision shorthand (D1–D6)
 
 | Label | One line | Canonical in |

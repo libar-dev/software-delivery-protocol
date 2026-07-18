@@ -87,3 +87,10 @@
 
 - The owner rejected the pre-written G4 acceptance because `04` §1 still made the per-ID canonical-surface config a live claim and the stamp preceded owner disposition.
 - The amended flip is `0a06882`; it makes the config designed-for and deferred (**ASPIRATIONAL**) and names file-existence-only as the current realization. G4 remains pending until owner acceptance.
+
+## Todo 41 - adversarial review follow-ups
+
+- The final clean-clone and write-mode installed-package proof remain pending evidence work; they
+  are explicitly owned by the next final-proof todo and must run at the final audited SHA.
+- Gate-ledger disposition remains owner-controlled. This review records the scaffold result but
+  does not alter pending owner rows.

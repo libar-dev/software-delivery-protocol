@@ -176,4 +176,53 @@ describe("importTypeScriptSpec", () => {
       expect(unsupportedConstruct.message).toContain(relativePath);
     }
   });
+
+  it.each([
+    [
+      "multiple constraints",
+      `constraints: [{ statement: "First constraint." }, { statement: "Second constraint." }]`,
+    ],
+    ["a prose open question", `intent: { openQuestions: ["Must not disappear."] }`],
+    [
+      "multiple example actions",
+      `behavior: { examples: [{ given: ["a cart"], when: ["submit", "retry"], then: ["an order"] }] }`,
+    ],
+    ["a structural title", undefined],
+  ])("refuses %s when Markdown cannot preserve its authored data", (name, detail) => {
+    // Given: a TypeScript Spec shape the Markdown grammar cannot preserve exactly.
+    const source = `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const authoredSpec = spec({
+  id: specId("spec:import.lossy"),
+  title: ${JSON.stringify(name === "a structural title" ? "Import a Spec\n\n## Intent\n- outcome: injected" : "Import a lossy Spec")},
+  kind: "example",
+  altitude: "story",
+  readiness: "idea",
+  ${detail ?? ""}
+});
+`;
+
+    // When: the public import seam reifies the TypeScript carrier.
+    const result = importTypeScriptSpec(source, "specs/lossy.sdp.ts");
+
+    // Then: it refuses rather than emitting a changed Markdown document.
+    expect(result).not.toHaveProperty("emitted");
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({ validatorId: importFindingIds.unsupportedConstruct }),
+    );
+  });
+
+  it("refuses a path that cannot produce a Markdown sibling", () => {
+    // Given: valid TypeScript carrier text with a non-carrier path.
+    const source = specSource("spec:import.invalid-path", "Reject an invalid source path");
+
+    // When: a library consumer uses the public import seam.
+    const result = importTypeScriptSpec(source, "specs/invalid.ts");
+
+    // Then: it cannot return the source path as a write target.
+    expect(result).not.toHaveProperty("emitted");
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({ validatorId: importFindingIds.invalidSourcePath }),
+    );
+  });
 });

@@ -250,3 +250,12 @@
 
 - The phase-2 commit lands corpus waves 2-4, fold completion, G7 evidence, and docket
   reconciliation; its SHA is recorded by the resulting Git commit.
+
+## Todo 41 - adversarial review remediation
+
+- Import success now means exact authored-data round-trip through the ruled Markdown carrier; any
+  unrepresentable TS shape refuses instead of silently truncating content.
+- A multi-source import validates the full batch before publishing temporary files, so one refusal
+  cannot leave a partial Markdown migration behind.
+- Carrier guidance must distinguish Markdown Specs from TypeScript implementation and generated
+  contract code; "typecheck the example" is not a valid health claim for Markdown carriers.

@@ -112,7 +112,7 @@ describe("sdp import", () => {
     }
   });
 
-  it("refuses Pack carriers and continues with other files", () => {
+  it("leaves every target absent when one carrier is refused", () => {
     // Given: a Pack carrier followed by a valid Spec carrier.
     const root = mkdtempSync(join(tmpdir(), "sdp-import-pack-"));
     const packPath = join(root, "bundle.pack.sdp.ts");
@@ -144,10 +144,10 @@ describe("sdp import", () => {
         },
       });
 
-      // Then: the Pack is named, while the valid sibling still writes.
+      // Then: the Pack is named and no partial import is published.
       expect(exitCode).toBe(1);
       expect(capture.readStderr()).toContain("import/pack-unsupported");
-      expect(existsSync(join(root, "order.sdp.md"))).toBe(true);
+      expect(existsSync(join(root, "order.sdp.md"))).toBe(false);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -163,6 +163,26 @@ describe("sdp import", () => {
     // Then: invocation fails before any import work begins.
     expect(exitCode).toBe(1);
     expect(capture.readStderr()).toBe("sdp import: unknown option --exclude\n");
+  });
+
+  it("refuses a requested path with no TypeScript carriers", () => {
+    // Given: an explicitly requested ordinary file.
+    const root = mkdtempSync(join(tmpdir(), "sdp-import-no-sources-"));
+    const sourcePath = join(root, "README.md");
+    writeFileSync(sourcePath, "# Readme\n", "utf8");
+
+    try {
+      const capture = createCaptureOutput();
+
+      // When: import receives no carrier source.
+      const exitCode = runSdpCli(["import", sourcePath], capture.output);
+
+      // Then: it reports the failed request rather than claiming success.
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toContain("import/no-sources");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it("renders refusal findings and exits 1", () => {
