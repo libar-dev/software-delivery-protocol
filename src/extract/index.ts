@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 
+import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
 import { Project } from "ts-morph";
 import type { Program, SourceFile } from "ts-morph";
 
@@ -71,6 +72,12 @@ function sortFindings(findings: readonly Finding[]): readonly Finding[] {
       compareCodeUnits(left.validatorId, right.validatorId),
   );
 }
+
+export const duplicateIdExclusionAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.duplicate-id-exclusion"),
+  label: "excludes duplicated carrier ids from the graph",
+  satisfies: ref("spec:validation.duplicate-ids"),
+});
 
 function findDuplicatedIds(
   specs: readonly ReifiedSpec[],
@@ -155,6 +162,12 @@ function fileParses(program: Program, source: ParsedSourceFile, findings: Findin
  * adapters and file-level impact) resolve off the curated layers (`06` §2), so the first inferred
  * producer is the aspirational impact graph.
  */
+export const extractAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.extract"),
+  label: "extracts authored carriers and bindings into one graph",
+  satisfies: ref("spec:extraction.derive-graph"),
+});
+
 export function extract(options: ExtractOptions): ExtractionResult {
   const files = discoverFiles(options.root, options.exclude);
   const specs: ReifiedSpec[] = [];

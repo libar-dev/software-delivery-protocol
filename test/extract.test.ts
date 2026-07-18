@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 
 import { afterAll, describe, expect, it } from "vitest";
 
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+
 import {
   extract,
   extractFindingIds,
@@ -597,6 +599,13 @@ describe("Markdown carrier discovery", () => {
  * The anchored-layer corpora: anchor constants in `*.ts` source files, committed defused as
  * `*.ts.txt`. Each pins one outcome, should-fail / should-pass style (`05` §5).
  */
+const extractContractTestAnchor = specTest({
+  id: testAnchorId("test:protocol.extract"),
+  label: "extraction contracts verify graph derivation",
+  verifies: ref("spec:extraction.derive-graph"),
+});
+void extractContractTestAnchor;
+
 describe("anchor extraction corpora", () => {
   it("anchored-binding: the full ladder — anchored edges and delivery facts per `02` §2", () => {
     const result = extract({ root: corpusRoot("anchored-binding") });

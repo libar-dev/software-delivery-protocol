@@ -1,3 +1,4 @@
+import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
 import { isMap, LineCounter, parseAllDocuments } from "yaml";
 
 import { parseId } from "../ids.js";
@@ -33,6 +34,12 @@ const specReadiness = new Set<string>(SPEC_READINESS);
 function refusal(file: string, message: string): MarkdownFrontmatterResult {
   return { ok: false, findings: [markdownFinding(file, 1, message)] };
 }
+
+export const envelopeContractAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.envelope-contract"),
+  label: "parses the bounded Markdown frontmatter envelope",
+  satisfies: ref("spec:carrier.envelope-contract"),
+});
 
 export function parseMarkdownFrontmatter(
   sourceText: string,
@@ -207,6 +214,12 @@ export function parseMarkdownFrontmatter(
   }
 }
 
+export const proseOwnershipAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.prose-ownership"),
+  label: "reads Markdown body content through its prose owners",
+  satisfies: ref("spec:carrier.prose-ownership-rule"),
+});
+
 export function readMarkdownBody(
   sourceText: string,
   file: string,
@@ -217,6 +230,18 @@ export function readMarkdownBody(
     return { ok: false, findings: [markdownFinding(file, 1, envelope)] };
   return parseMarkdownBody(envelope.body, envelope.bodyBaseLine, file, kind);
 }
+
+export const markdownAuthoringAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.markdown-authoring"),
+  label: "reifies Markdown authoring into the one carrier path",
+  satisfies: ref("spec:carrier.markdown-authoring"),
+});
+
+export const markdownParserAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.markdown-parser"),
+  label: "reifies the ruled Markdown parser input",
+  satisfies: ref("spec:carrier.markdown-parser"),
+});
 
 export function reifyMarkdownCarrier(sourceText: string, relativePath: string): CarrierReification {
   const frontmatter = parseMarkdownFrontmatter(sourceText, relativePath);

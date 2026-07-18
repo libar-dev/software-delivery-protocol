@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+
 import {
   SPEC_KINDS,
   buildGraphIndex,
@@ -48,6 +50,13 @@ function derivedReadinessFor(subjectId: string, ...specs: readonly Spec[]) {
 
   return deriveReadiness(node, index);
 }
+
+const readinessFloorTestAnchor = specTest({
+  id: testAnchorId("test:protocol.readiness-floor"),
+  label: "readiness-floor contracts verify stated maturity",
+  verifies: ref("spec:validation.readiness-floor"),
+});
+void readinessFloorTestAnchor;
 
 describe("readiness and validation contracts", () => {
   it("exports the canonical validator families and severities", () => {

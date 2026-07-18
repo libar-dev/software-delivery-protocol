@@ -1,3 +1,5 @@
+import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+
 import { SPEC_KINDS, SPEC_READINESS } from "../model/descriptors.js";
 import type { SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSectionName } from "../model/sections.js";
@@ -497,6 +499,12 @@ const ratifiedReadiness: ReadonlySet<string> = new Set(SPEC_READINESS);
  * rung must hold. Evaluates a `Primitive` node against the indexed graph (one validation path,
  * MD-14).
  */
+export const readinessFloorAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.readiness-floor"),
+  label: "evaluates the stated readiness floor against the graph",
+  satisfies: ref("spec:validation.readiness-floor"),
+});
+
 export function evaluateReadinessFloor(
   node: PrimitiveNode,
   index: GraphIndex,

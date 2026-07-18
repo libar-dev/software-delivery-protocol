@@ -1,3 +1,5 @@
+import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+
 import { computeDeliveryFacts } from "../graph/delivery-facts.js";
 import { schemaVersion } from "../graph/schema.js";
 import type {
@@ -109,6 +111,12 @@ function deriveAnchorNode(entry: ReifiedAnchor): AnchorNode | CodeNode {
  * consumers (the reader's entry adapters and file-level impact) resolve off the curated layers
  * (`06` §2), so the first inferred producer is the aspirational impact graph.
  */
+export const deriveGraphAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.derive-graph"),
+  label: "derives the graph from reified carriers and bindings",
+  satisfies: ref("spec:extraction.derive-graph"),
+});
+
 export function deriveGraph(
   specs: readonly ReifiedSpec[],
   packs: readonly ReifiedPack[],

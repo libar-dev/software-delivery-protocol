@@ -1,6 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+
 import {
   deriveGraph,
   reifyMarkdownCarrier,
@@ -49,6 +51,25 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function isRecordArray(value: unknown): value is readonly Record<string, unknown>[] {
   return Array.isArray(value) && value.every(isRecord);
 }
+
+const proseOwnershipTestAnchor = specTest({
+  id: testAnchorId("test:protocol.prose-ownership"),
+  label: "Markdown reifier tests verify prose ownership",
+  verifies: ref("spec:carrier.prose-ownership-rule"),
+});
+
+const markdownParserTestAnchor = specTest({
+  id: testAnchorId("test:protocol.markdown-parser"),
+  label: "Markdown reifier tests verify the ruled parser",
+  verifies: ref("spec:carrier.markdown-parser"),
+});
+
+const envelopeContractTestAnchor = specTest({
+  id: testAnchorId("test:protocol.envelope-contract"),
+  label: "frontmatter contract tests verify the Markdown envelope",
+  verifies: ref("spec:carrier.envelope-contract"),
+});
+void [proseOwnershipTestAnchor, markdownParserTestAnchor, envelopeContractTestAnchor];
 
 describe("Markdown frontmatter reifier", () => {
   it("reifies the frozen corpus envelopes at their id token lines", async () => {

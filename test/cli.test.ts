@@ -15,6 +15,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+
 import { SDP_HELP_TEXT, isCliEntrypoint, runSdpCli } from "../src/cli/sdp.js";
 import { generateContracts } from "../src/codegen/contracts.js";
 import { extract } from "../src/extract/index.js";
@@ -159,14 +161,10 @@ describe("sdp cli", () => {
       );
 
       expect(exitCode).toBe(0);
-      // These pre-anchor gaps are expected until the inventory binds their implementation and test anchors.
       expect(capture.readStderr().trimEnd().split("\n")).toEqual([
-        'specs/extraction/derive-graph.sdp.md — [warning] honesty/gaps — Spec "spec:extraction.derive-graph" states readiness "ready" with no resolving verifier — a gap, informative only (ready never requires delivery facts).',
-        'specs/extraction/determinism.sdp.md — [warning] honesty/gaps — Spec "spec:extraction.determinism" states readiness "ready" with no resolving verifier — a gap, informative only (ready never requires delivery facts).',
         'specs/validation/duplicate-ids.sdp.md — [warning] honesty/gaps — Spec "spec:validation.duplicate-ids" states readiness "ready" with no resolving verifier — a gap, informative only (ready never requires delivery facts).',
-        'specs/validation/readiness-floor.sdp.md — [warning] honesty/gaps — Spec "spec:validation.readiness-floor" states readiness "ready" with no resolving verifier — a gap, informative only (ready never requires delivery facts).',
       ]);
-      expect(capture.readStdout()).toContain("validate: 0 errors · 4 warnings");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 1 warnings");
       expect(readFileSync(join(repoRoot, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
@@ -200,6 +198,7 @@ export const parentSpec = spec({
     },
   },
 });
+
 `,
         "utf8",
       );
@@ -303,29 +302,6 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
       expect(capture.readStderr()).toBe("");
     } finally {
       rmSync(root, { recursive: true, force: true });
-    }
-  });
-
-  it("clean-repo determinism: the full pipeline at a different absolute path is byte-identical", () => {
-    // --check-clean runs the pipeline twice over the *same* root, and delete-generated/-and-rerun
-    // reuses the same root too — neither can catch an absolute path leaking into artifact bytes.
-    // Two working-tree copies of the authored surfaces (never `git archive`: an uncommitted
-    // example edit must not fail a determinism test) at two fresh absolute paths pin the
-    // projection property: bytes are a function of the root's *content*, never its location or
-    // leftover local state.
-    const firstRoot = materializeExampleCopy();
-    const secondRoot = materializeExampleCopy();
-
-    try {
-      expect(runSdpCli(["view", firstRoot, "--check-clean"], createCaptureOutput().output)).toBe(0);
-      expect(runSdpCli(["view", secondRoot, "--check-clean"], createCaptureOutput().output)).toBe(
-        0,
-      );
-
-      expect(readGeneratedTree(secondRoot)).toEqual(readGeneratedTree(firstRoot));
-    } finally {
-      rmSync(firstRoot, { recursive: true, force: true });
-      rmSync(secondRoot, { recursive: true, force: true });
     }
   });
 
@@ -1114,4 +1090,25 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
       removeMaterializedCorpus(corpusRoot);
     }
   });
+});
+
+const cleanRepoDeterminismTestAnchor = specTest({
+  id: testAnchorId("test:protocol.extraction-determinism"),
+  label: "clean-repo pipeline determinism verifies byte-identical output",
+  verifies: ref("spec:extraction.determinism"),
+});
+void cleanRepoDeterminismTestAnchor;
+
+it("clean-repo determinism: the full pipeline at a different absolute path is byte-identical", () => {
+  const firstRoot = materializeExampleCopy();
+  const secondRoot = materializeExampleCopy();
+
+  try {
+    expect(runSdpCli(["view", firstRoot, "--check-clean"], createCaptureOutput().output)).toBe(0);
+    expect(runSdpCli(["view", secondRoot, "--check-clean"], createCaptureOutput().output)).toBe(0);
+    expect(readGeneratedTree(secondRoot)).toEqual(readGeneratedTree(firstRoot));
+  } finally {
+    rmSync(firstRoot, { recursive: true, force: true });
+    rmSync(secondRoot, { recursive: true, force: true });
+  }
 });

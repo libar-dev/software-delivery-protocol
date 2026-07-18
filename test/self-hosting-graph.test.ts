@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
@@ -114,17 +116,144 @@ const expectedDeclaredRelations = [
   ["spec:model.protocol-domain", "refines", "spec:protocol.self-hosting"],
 ] as const;
 
-const expectedGapFindings = [
-  "spec:extraction.derive-graph",
-  "spec:extraction.determinism",
-  "spec:validation.duplicate-ids",
-  "spec:validation.readiness-floor",
-].map((subjectId) => ({
+const expectedGapFindings = ["spec:validation.duplicate-ids"].map((subjectId) => ({
   validatorId: "honesty/gaps",
   family: "honesty",
   severity: "warning",
   subjectId,
 }));
+
+const expectedAnchors = [
+  {
+    id: "impl:protocol.extract",
+    type: "satisfies",
+    target: "spec:extraction.derive-graph",
+    file: "src/extract/index.ts",
+    constant: "extractAnchor",
+    site: "export function extract",
+  },
+  {
+    id: "impl:protocol.derive-graph",
+    type: "satisfies",
+    target: "spec:extraction.derive-graph",
+    file: "src/extract/derive.ts",
+    constant: "deriveGraphAnchor",
+    site: "export function deriveGraph",
+  },
+  {
+    id: "test:protocol.extract",
+    type: "verifies",
+    target: "spec:extraction.derive-graph",
+    file: "test/extract.test.ts",
+    constant: "extractContractTestAnchor",
+    site: 'describe("anchor extraction corpora",',
+  },
+  {
+    id: "test:protocol.extraction-determinism",
+    type: "verifies",
+    target: "spec:extraction.determinism",
+    file: "test/cli.test.ts",
+    constant: "cleanRepoDeterminismTestAnchor",
+    site: 'it("clean-repo determinism: the full pipeline at a different absolute path is byte-identical"',
+  },
+  {
+    id: "impl:protocol.readiness-floor",
+    type: "satisfies",
+    target: "spec:validation.readiness-floor",
+    file: "src/validate/readiness-floor.ts",
+    constant: "readinessFloorAnchor",
+    site: "export function evaluateReadinessFloor",
+  },
+  {
+    id: "test:protocol.readiness-floor",
+    type: "verifies",
+    target: "spec:validation.readiness-floor",
+    file: "test/readiness.test.ts",
+    constant: "readinessFloorTestAnchor",
+    site: 'describe("readiness and validation contracts",',
+  },
+  {
+    id: "impl:protocol.markdown-authoring",
+    type: "satisfies",
+    target: "spec:carrier.markdown-authoring",
+    file: "src/extract/markdown.ts",
+    constant: "markdownAuthoringAnchor",
+    site: "export function reifyMarkdownCarrier",
+  },
+  {
+    id: "impl:protocol.markdown-parser",
+    type: "satisfies",
+    target: "spec:carrier.markdown-parser",
+    file: "src/extract/markdown.ts",
+    constant: "markdownParserAnchor",
+    site: "export function reifyMarkdownCarrier",
+  },
+  {
+    id: "test:protocol.markdown-parser",
+    type: "verifies",
+    target: "spec:carrier.markdown-parser",
+    file: "test/markdown-reifier.test.ts",
+    constant: "markdownParserTestAnchor",
+    site: 'describe("Markdown frontmatter reifier",',
+  },
+  {
+    id: "impl:protocol.envelope-contract",
+    type: "satisfies",
+    target: "spec:carrier.envelope-contract",
+    file: "src/extract/markdown.ts",
+    constant: "envelopeContractAnchor",
+    site: "export function parseMarkdownFrontmatter",
+  },
+  {
+    id: "test:protocol.envelope-contract",
+    type: "verifies",
+    target: "spec:carrier.envelope-contract",
+    file: "test/markdown-reifier.test.ts",
+    constant: "envelopeContractTestAnchor",
+    site: 'describe("Markdown frontmatter reifier",',
+  },
+  {
+    id: "impl:protocol.prose-ownership",
+    type: "satisfies",
+    target: "spec:carrier.prose-ownership-rule",
+    file: "src/extract/markdown.ts",
+    constant: "proseOwnershipAnchor",
+    site: "export function readMarkdownBody",
+  },
+  {
+    id: "test:protocol.prose-ownership",
+    type: "verifies",
+    target: "spec:carrier.prose-ownership-rule",
+    file: "test/markdown-reifier.test.ts",
+    constant: "proseOwnershipTestAnchor",
+    site: 'describe("Markdown frontmatter reifier",',
+  },
+  {
+    id: "impl:protocol.duplicate-id-exclusion",
+    type: "satisfies",
+    target: "spec:validation.duplicate-ids",
+    file: "src/extract/index.ts",
+    constant: "duplicateIdExclusionAnchor",
+    site: "function findDuplicatedIds",
+  },
+] as const;
+
+const expectedDeliveryFacts = new Map<string, readonly string[]>([
+  ["spec:carrier.envelope-contract", ["implemented", "has-verifier"]],
+  ["spec:carrier.markdown-authoring", ["implemented"]],
+  ["spec:carrier.markdown-parser", ["implemented", "has-verifier"]],
+  ["spec:carrier.prose-ownership-rule", ["implemented", "has-verifier"]],
+  ["spec:extraction.derive-graph", ["implemented", "has-verifier"]],
+  ["spec:extraction.determinism", ["has-verifier"]],
+  ["spec:validation.duplicate-ids", ["implemented"]],
+  ["spec:validation.readiness-floor", ["implemented", "has-verifier"]],
+]);
+
+function lineContaining(source: string, token: string): number {
+  const line = source.split("\n").findIndex((entry) => entry.includes(token));
+
+  return line + 1;
+}
 
 describe("the self-hosting phase-1 carrier corpus", () => {
   it("derives the twelve Markdown-canonical specs and their exact five-member Pack checkpoint from the root", () => {
@@ -136,7 +265,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
     const primitiveNodes = result.graph.nodes.filter((node) => node.nodeType === "Primitive");
     const packNode = result.graph.nodes.find((node) => node.id === "pack:self-hosting-v1");
 
-    // Then: the frozen corpus enters one graph with exact descriptors, sources, and pre-anchor gaps.
+    // Then: the frozen corpus enters one graph with exact descriptors and its direct bindings.
     expect(result.report.findings).toEqual([]);
     expect(
       validateGraph(result.graph).findings.map(({ validatorId, family, severity, subjectId }) => ({
@@ -146,22 +275,25 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         subjectId,
       })),
     ).toEqual(expectedGapFindings);
-    expect(result.counts).toEqual({ specs: 12, packs: 1, anchors: 0 });
-    expect(nodeIds).toEqual([
-      "pack:self-hosting-v1",
-      "spec:carrier.envelope-contract",
-      "spec:carrier.markdown-authoring",
-      "spec:carrier.markdown-parser",
-      "spec:carrier.prose-ownership-rule",
-      "spec:carrier.sdp-import",
-      "spec:extraction.build-pipeline",
-      "spec:extraction.derive-graph",
-      "spec:extraction.determinism",
-      "spec:model.protocol-domain",
-      "spec:protocol.self-hosting",
-      "spec:validation.duplicate-ids",
-      "spec:validation.readiness-floor",
-    ]);
+    expect(result.counts).toEqual({ specs: 12, packs: 1, anchors: 14 });
+    expect(nodeIds).toEqual(
+      [
+        "pack:self-hosting-v1",
+        "spec:carrier.envelope-contract",
+        "spec:carrier.markdown-authoring",
+        "spec:carrier.markdown-parser",
+        "spec:carrier.prose-ownership-rule",
+        "spec:carrier.sdp-import",
+        "spec:extraction.build-pipeline",
+        "spec:extraction.derive-graph",
+        "spec:extraction.determinism",
+        "spec:model.protocol-domain",
+        "spec:protocol.self-hosting",
+        "spec:validation.duplicate-ids",
+        "spec:validation.readiness-floor",
+        ...expectedAnchors.map((anchor) => anchor.id),
+      ].sort(),
+    );
     expect(
       primitiveNodes.map((node) => ({
         id: node.id,
@@ -182,7 +314,7 @@ describe("the self-hosting phase-1 carrier corpus", () => {
     });
     expect(
       result.graph.edges
-        .filter((edge) => edge.type !== "belongsTo")
+        .filter((edge) => edge.claim === "declared" && edge.type !== "belongsTo")
         .map((edge) => [edge.from, edge.type, edge.to])
         .sort(),
     ).toEqual([...expectedDeclaredRelations].sort());
@@ -206,5 +338,30 @@ describe("the self-hosting phase-1 carrier corpus", () => {
         .map((spec) => [spec.id, "pack:self-hosting-v1", "declared"])
         .sort(),
     );
+    expect(
+      result.graph.edges
+        .filter((edge) => edge.claim === "anchored")
+        .map((edge) => [edge.from, edge.type, edge.to])
+        .sort(),
+    ).toEqual(expectedAnchors.map((anchor) => [anchor.id, anchor.type, anchor.target]).sort());
+    const actualDeliveryFacts: [string, readonly string[]][] = primitiveNodes
+      .filter((node) => expectedDeliveryFacts.has(node.id))
+      .map((node) => [node.id, node.deliveryFacts ?? []]);
+
+    expect(actualDeliveryFacts.sort(([left], [right]) => left.localeCompare(right))).toEqual(
+      [...expectedDeliveryFacts].sort(([left], [right]) => left.localeCompare(right)),
+    );
+
+    for (const anchor of expectedAnchors) {
+      const source = readFileSync(join(repoRoot, anchor.file), "utf8");
+      const anchorLine = lineContaining(source, `const ${anchor.constant}`);
+      const siteLine = lineContaining(source, anchor.site);
+      const node = result.graph.nodes.find((entry) => entry.id === anchor.id);
+
+      expect(anchorLine).toBeGreaterThan(0);
+      expect(siteLine, anchor.id).toBeGreaterThan(0);
+      expect(Math.abs(anchorLine - siteLine), anchor.id).toBeLessThanOrEqual(20);
+      expect(node).toMatchObject({ file: anchor.file, line: anchorLine, claim: "anchored" });
+    }
   });
 });
