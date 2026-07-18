@@ -113,25 +113,25 @@ the fold row can land.
 
 | Fold source | Ratified law / carrying item | Refine target | Target status | Intended disposition |
 |---|---|---|---|---|
-| MD-1 | executable meta-model | `spec:protocol.self-hosting` | existing fallback | decision spec |
-| MD-2 | adopt the nouns, reject the gates | `spec:protocol.core-model` | target to create | decision spec |
-| MD-4 | one primitive, named coordinates | `spec:protocol.core-model` | target to create | decision spec |
-| MD-5 | protocol naming | `spec:protocol.self-hosting` | existing fallback | decision spec |
-| MD-7 | binding, never liveness | `spec:protocol.consumers` | target to create | decision spec |
-| MD-10 | content-only sections | `spec:protocol.core-model` | target to create | decision spec |
-| MD-11 | typing law | `spec:protocol.core-model` | target to create | decision spec |
-| MD-12 | kind-conditional floor | `spec:protocol.validation` | target to create | decision spec |
-| MD-14 | one validation path | `spec:protocol.validation` | target to create | decision spec |
-| MD-15 | `.sdp.ts` extension | `spec:protocol.carrier` | existing phase-1 seed | decision spec |
-| MD-16 | carried evidence | `spec:protocol.validation` | target to create | decision spec |
-| MD-17 | point-per-example | `spec:protocol.carrier` | existing phase-1 seed | decision spec |
-| MD-18 | carrier ruling | `spec:protocol.carrier` | existing phase-1 seed | decision spec |
-| MD-19 | prose-ownership law | `spec:protocol.carrier` | existing phase-1 seed | decision spec |
-| MD-20 | strict consumer-exclusion contract | `spec:protocol.extraction` | target to create | decision spec |
-| MD-21 | envelope-grammar ownership posture | `spec:protocol.carrier` | existing phase-1 seed | decision spec |
-| D3 | Pack reified | `spec:protocol.core-model` | target to create | decision spec |
-| D5 | agent surface scripts the graph | `spec:protocol.consumers` | target to create | decision spec |
-| D6 | MCP-deferred no | `spec:protocol.consumers` | target to create | decision spec |
+| MD-1 | executable meta-model | `spec:protocol.self-hosting` | phase-level | decision spec |
+| MD-2 | adopt the nouns, reject the gates | `spec:protocol.self-hosting` | phase-level | decision spec |
+| MD-4 | one primitive, named coordinates | `spec:model.core-model` | S5 | decision spec |
+| MD-5 | protocol naming | `spec:protocol.self-hosting` | phase-level | decision spec |
+| MD-7 | binding, never liveness | `spec:model.anchors` | S5 | decision spec |
+| MD-10 | content-only sections | `spec:model.spec-sections` | S5 | decision spec |
+| MD-11 | typing law | `spec:model.spec-sections` | S5 | decision spec |
+| MD-12 | kind-conditional floor | `spec:validation.readiness-floor` | exists | decision spec |
+| MD-14 | one validation path | `spec:validation.two-check-families` | S5 | decision spec |
+| MD-15 | `.sdp.ts` extension | `spec:carrier.markdown-authoring` | exists | decision spec |
+| MD-16 | carried evidence | `spec:validation.readiness-floor` | exists | decision spec |
+| MD-17 | point-per-example | `spec:model.spec-sections` | S5 | decision spec |
+| MD-18 | carrier ruling | `spec:carrier.markdown-authoring` | exists | decision spec |
+| MD-19 | prose-ownership law | `spec:carrier.prose-ownership-rule` | exists | decision spec |
+| MD-20 | strict consumer-exclusion contract | `spec:extraction.excludes` | S7 | decision spec |
+| MD-21 | envelope-grammar ownership posture | `spec:carrier.envelope-contract` | exists | decision spec |
+| D3 | Pack reified | `spec:model.pack-aggregate` | S5 | decision spec |
+| D5 | agent surface scripts the graph | `spec:consumers.agent-surface` | S5 | decision spec |
+| D6 | MCP-deferred no | `spec:consumers.projections-model` | S5 | decision spec |
 
 ### Fold ledger template
 
@@ -156,10 +156,29 @@ where the verification loop is cheap.
 
 | Concept path | Spec ID | Readiness | Anchor/verifier status | Disposition note |
 |---|---|---|---|---|
-| `02 §1-2 primitive and descriptors` | `spec:protocol.core-model` | pending | target entrypoints not yet selected | earliest fold target |
-| `03 §1-3 extraction and one graph` | `spec:protocol.extraction` | pending | extractor entrypoint to be named | carries one-graph contract |
-| `05 validator registry` | `spec:protocol.validation` | pending | validator anchors to be named | earliest fold target |
-| `06 reader and projections` | `spec:protocol.consumers` | pending | reader/projection anchors to be named | earliest fold target |
+| `02 §1-2 primitive and descriptors` | `spec:model.core-model` | pending | target entrypoints not yet selected | earliest fold target |
+| `02 §3 sections` | `spec:model.spec-sections` | pending | target entrypoints not yet selected | target to create |
+| `02 §6 relations` | `spec:model.relations` | pending | target entrypoints not yet selected | target to create |
+| `02 stable identity` | `spec:model.stable-ids` | pending | target entrypoints not yet selected | target to create |
+| `02 §4 Pack` | `spec:model.pack-aggregate` | pending | target entrypoints not yet selected | target to create |
+| `04 anchors` | `spec:model.anchors` | pending | target entrypoints not yet selected | target to create |
+| `05 two check families` | `spec:validation.two-check-families` | pending | validator anchors to be named | target to create |
+| `06 projections` | `spec:consumers.projections-model` | pending | projection anchors to be named | target to create |
+| `06 agent surface` | `spec:consumers.agent-surface` | pending | agent-surface anchors to be named | target to create |
+| `06 Design Review` | `spec:consumers.design-review` | pending | projection anchors to be named | target to create |
+| `05 referential integrity` | `spec:validation.referential-integrity` | pending | validator anchors to be named | target to create |
+| `05 claim separation` | `spec:validation.claim-separation` | pending | validator anchors to be named | target to create |
+| `05 verification linkage` | `spec:validation.verification-linkage` | pending | validator anchors to be named | target to create |
+| `05 Pack coherence` | `spec:validation.pack-coherence` | pending | validator anchors to be named | target to create |
+| `05 authored honesty` | `spec:validation.authored-honesty` | pending | validator anchors to be named | target to create |
+| `05 warn-level signals` | `spec:validation.warn-level-signals` | pending | validator anchors to be named | target to create |
+| `06 reader` | `spec:consumers.reader` | pending | reader anchors to be named | target to create |
+| `06 edit model` | `spec:consumers.edit-model` | pending | consumer anchors to be named | target to create |
+| `03 extraction exclusions` | `spec:extraction.excludes` | pending | extractor entrypoints to be named | target to create |
+| `03 claim taxonomy` | `spec:extraction.claim-taxonomy` | pending | extractor entrypoints to be named | target to create |
+| `03 regenerability` | `spec:extraction.regenerability` | pending | extractor entrypoints to be named | target to create |
+| `03 schema versioning` | `spec:extraction.schema-versioning` | pending | extractor entrypoints to be named | target to create |
+| `03 executable contracts` | `spec:extraction.executable-contracts` | pending | extractor entrypoints to be named | target to create |
 
 ## (i) §6 Watch items and under-fire rulings
 
