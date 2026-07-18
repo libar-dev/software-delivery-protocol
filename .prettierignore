@@ -22,3 +22,7 @@ test/fixtures/checkout-v1/expected-graph.json
 # same rule for the generated artifacts themselves — derived output is never format-policed
 test/fixtures/checkout-v1/expected-design-review/
 generated/
+
+# The ruled carrier grammar owns these bytes; Prettier rewrites can break its grammar
+# and fixture↔live byte-parity
+*.sdp.md
