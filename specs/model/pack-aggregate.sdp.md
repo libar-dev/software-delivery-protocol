@@ -5,6 +5,7 @@ altitude: story
 readiness: defined
 relations:
   refines: spec:model.core-model
+  decidedBy: spec:decisions.pack-reified
 ---
 # A Pack is a truth-free review aggregate
 

@@ -5,6 +5,7 @@ altitude: feature
 readiness: defined
 relations:
   refines: spec:protocol.self-hosting
+  decidedBy: spec:decisions.mcp-deferred
 ---
 # Projections fan out from one graph without becoming truth stores
 

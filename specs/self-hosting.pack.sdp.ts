@@ -46,6 +46,9 @@ export const selfHostingV1Pack = pack({
     ref("spec:decisions.typing-law"),
     ref("spec:decisions.kind-conditional-floor"),
     ref("spec:decisions.carried-evidence"),
+    ref("spec:decisions.pack-reified"),
+    ref("spec:decisions.agent-surface-scripts-graph"),
+    ref("spec:decisions.mcp-deferred"),
   ],
   modelRefs: [ref("spec:model.protocol-domain"), ref("spec:model.core-model")],
 });

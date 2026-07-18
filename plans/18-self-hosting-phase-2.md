@@ -177,12 +177,12 @@ parent merely because a more specific target is deferred.
 | MD-4 | decision spec | `spec:decisions.one-primitive` | refines `spec:model.core-model`; `decidedBy` back-edge landed | three-part test: one identity across coordinates |
 | MD-5 | decision spec | `spec:decisions.protocol-naming` | refines `spec:protocol.self-hosting`; `decidedBy` back-edge landed | three-part test: conformance contract naming |
 | MD-7 | decision spec | `spec:decisions.binding-not-liveness` | refines `spec:model.anchors`; `decidedBy` back-edge landed | three-part test: binding evidence stays honest |
-| MD-8 | folded — verify at todo 32 | `src/model/anchors.ts` `codeAnchor` builder doc-comment | n/a | generic anchor law, never re-author |
-| MD-9 | folds — verify at todo 32 | `src/model/sections.ts`; readiness floor; `02` §3 | n/a | open-questions home, never re-author |
+| MD-8 | folded | `src/model/anchors.ts:7-13` | n/a | “one builder over the implementation-flavored code namespaces”; “binding only, never system-truth content” |
+| MD-9 | folds | `src/model/sections.ts:28-31`; `src/validate/readiness-floor.ts`; `02` §3 | n/a | “An open question is prose, or an object flaggable `blocking`”; floor and core-model relation retain its home |
 | MD-10 | decision spec | `spec:decisions.content-only-sections` | refines `spec:model.spec-sections`; `decidedBy` back-edge landed | three-part test: content and relations remain exclusive |
 | MD-11 | decision spec | `spec:decisions.typing-law` | refines `spec:model.spec-sections`; `decidedBy` back-edge landed | three-part test: floor-read shape guardrails |
 | MD-12 | decision spec | `spec:decisions.kind-conditional-floor` | refines `spec:validation.readiness-floor`; `decidedBy` back-edge landed | three-part test: natural evidence by kind |
-| MD-13 | folds — verify at todo 32 | `05` §3 Representation note; `src/validate/readiness-floor.ts` header | n/a | floor-table representation, never re-author |
+| MD-13 | folds | `05` §3 Representation note; `src/validate/readiness-floor.ts` header | n/a | table and generic evaluator remain representation evidence, never re-author |
 | MD-14 | decision spec | `spec:decisions.one-validation-path` | refines `spec:validation.two-check-families`; `decidedBy` back-edge landed | three-part test: one graph truth, no parallel seam |
 | MD-15 | decision spec | `spec:decisions.sdp-ts-extension` | refines `spec:carrier.markdown-authoring`; `decidedBy` back-edge landed | three-part test: carrier identity and test-glob trade-off |
 | MD-16 | decision spec | `spec:decisions.carried-evidence` | refines `spec:validation.readiness-floor`; `decidedBy` back-edge landed | three-part test: promoted evidence cannot be empty |
@@ -191,18 +191,18 @@ parent merely because a more specific target is deferred.
 | MD-19 | decision spec | `spec:decisions.prose-ownership` | refines `spec:carrier.prose-ownership-rule`; `decidedBy` back-edge landed | three-part test: graph-owned prose and re-parse trade-off |
 | MD-20 | decision spec at S7 — todo 38 | `spec:decisions.exclusion-contract` | refines `spec:extraction.excludes`; `decidedBy` back-edge at S7 | waits for specific target |
 | MD-21 | decision spec | `spec:decisions.envelope-grammar-posture` | refines `spec:carrier.envelope-contract`; `decidedBy` back-edge landed | three-part test: owned grammar and parser representation trade-off |
-| D1 | carried by ordinary spec — verify at todo 32 | `spec:model.core-model` | n/a | readiness distinct from delivery facts |
-| D2 | carried by ordinary spec — verify at todo 32 | `spec:model.spec-sections` | n/a | typed sections |
-| D3 | decision spec — todo 32 | `spec:decisions.pack-reified` | refines `spec:model.pack-aggregate`; `decidedBy` back-edge pending | Pack aggregate law |
-| D4 | carried by ordinary spec — verify at todo 32 | `spec:consumers.design-review` | n/a | flagship curated projection |
-| D5 | decision spec — todo 32 | `spec:decisions.agent-surface-scripts-graph` | refines `spec:consumers.agent-surface`; `decidedBy` back-edge pending | agent scripts the graph |
-| D6 | decision spec — todo 32 | `spec:decisions.mcp-deferred` | refines `spec:consumers.projections-model`; `decidedBy` back-edge pending | app integration remains deferred |
+| D1 | carried by ordinary spec | `spec:model.core-model:19` | n/a | “delivery fact … is never authored readiness” |
+| D2 | carried by ordinary spec | `spec:model.spec-sections:16` | n/a | “Every section read by a readiness-floor clause has a closed typed shape” |
+| D3 | decision spec | `spec:decisions.pack-reified` | refines `spec:model.pack-aggregate`; `decidedBy` back-edge landed | three-part test: truth-free aggregate distinct from refinement |
+| D4 | carried by ordinary spec | `spec:consumers.design-review:15-18` | n/a | “renders a Spec or Pack in context”; “pure projection” |
+| D5 | decision spec | `spec:decisions.agent-surface-scripts-graph` | refines `spec:consumers.agent-surface`; `decidedBy` back-edge landed | three-part test: graph contract, not verb wall |
+| D6 | decision spec | `spec:decisions.mcp-deferred` | refines `spec:consumers.projections-model`; `decidedBy` back-edge landed | three-part test: caller-bound integration deferral |
 | measured: ~⅕ tokens | move at todo 33 | `spec:consumers.agent-surface` | n/a | measured context-efficiency figure |
 | measured: single-digit to ~25% | move at todo 33 | `spec:consumers.projections-model` | n/a | curated-selection figure |
 | measured: < ~50 specs | lands at S7 | `spec:extraction.regenerability` | n/a | full-rebuild comfort figure |
 | measured: ~10k+ nodes | lands at S7 | `spec:extraction.regenerability` | n/a | graph-DB deferral figure |
-| born: plain-language references | keep — pre-verdict | `spec:decisions.plain-language-references` | refines `spec:protocol.self-hosting` unchanged | revisit only on owner override at todo 32 |
-| born: concept-documents dissolve | keep — pre-verdict | `spec:decisions.concept-docs-dissolve` | refines `spec:protocol.self-hosting` unchanged | revisit only on owner override at todo 32 |
+| born: plain-language references | keep | `spec:decisions.plain-language-references` | refines `spec:protocol.self-hosting` unchanged | genuinely phase-level; no owner override |
+| born: concept-documents dissolve | keep | `spec:decisions.concept-docs-dissolve` | refines `spec:protocol.self-hosting` unchanged | genuinely phase-level; no owner override |
 
 ## (h) §5 Tranche-3 wave design
 

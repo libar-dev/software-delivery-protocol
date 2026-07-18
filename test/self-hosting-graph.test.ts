@@ -1057,6 +1057,88 @@ const expectedSpecs = [
     },
     deliveryFacts: [],
   },
+  {
+    id: "spec:decisions.pack-reified",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/pack-reified.sdp.md",
+    title: "Packs group review context without becoming truth",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let related Specs be reviewed together without introducing another truth-bearing artifact.",
+      },
+      decision: {
+        context: "Delivery work needs a cross-cutting aggregate that is distinct from refinement.",
+        decision:
+          "A Pack declares membership and framing while stating no system truth; Specs may belong to many Packs.",
+        rationale: [
+          "Treating a Pack as a truth primitive or a refinement parent confuses grouping with authored intent.",
+        ],
+        consequences: [
+          "Review context remains disposable while Spec relations retain semantic hierarchy.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.agent-surface-scripts-graph",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/agent-surface-scripts-graph.sdp.md",
+    title: "Agents script the visible graph",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give agents composable graph context without a fixed command vocabulary becoming the model.",
+      },
+      decision: {
+        context: "Agents need decoded context and entry adapters without rebuilding graph joins.",
+        decision:
+          "The typed graph is the visible contract and agents script it directly through a thin reader surface.",
+        rationale: [
+          "A verb wall duplicates graph semantics and hides composable data behind commands.",
+        ],
+        consequences: [
+          "Entry adapters expose curated context while coverage gaps remain explicit rather than implied exhaustive.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.mcp-deferred",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/mcp-deferred.sdp.md",
+    title: "MCP integration remains deferred",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Preserve a clean projection model without prematurely fixing an application integration surface.",
+      },
+      decision: {
+        context:
+          "The graph already supports typed agent and human projections without an MCP transport.",
+        decision:
+          "MCP integration is deferred until a concrete caller establishes its boundary and contract.",
+        rationale: [
+          "Adding an MCP surface without a caller invents verbs and persistence choices outside the projection model.",
+        ],
+        consequences: [
+          "Consumers use the current graph and reader surfaces while MCP remains designed-in rather than claimed.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
 ] as const;
 
 const expectedPackMembers = [
@@ -1101,6 +1183,9 @@ const expectedPackMembers = [
   "spec:decisions.typing-law",
   "spec:decisions.kind-conditional-floor",
   "spec:decisions.carried-evidence",
+  "spec:decisions.pack-reified",
+  "spec:decisions.agent-surface-scripts-graph",
+  "spec:decisions.mcp-deferred",
 ] as const;
 
 const expectedDeclaredRelations = [
@@ -1138,7 +1223,9 @@ const expectedDeclaredRelations = [
   ["spec:validation.two-check-families", "refines", "spec:protocol.self-hosting"],
   ["spec:validation.two-check-families", "decidedBy", "spec:decisions.one-validation-path"],
   ["spec:consumers.projections-model", "refines", "spec:protocol.self-hosting"],
+  ["spec:consumers.projections-model", "decidedBy", "spec:decisions.mcp-deferred"],
   ["spec:consumers.agent-surface", "refines", "spec:consumers.projections-model"],
+  ["spec:consumers.agent-surface", "decidedBy", "spec:decisions.agent-surface-scripts-graph"],
   ["spec:consumers.design-review", "refines", "spec:consumers.projections-model"],
   ["spec:model.protocol-domain", "refines", "spec:protocol.self-hosting"],
   ["spec:model.core-model", "refines", "spec:protocol.self-hosting"],
@@ -1150,6 +1237,7 @@ const expectedDeclaredRelations = [
   ["spec:model.relations", "refines", "spec:model.core-model"],
   ["spec:model.stable-ids", "refines", "spec:model.core-model"],
   ["spec:model.pack-aggregate", "refines", "spec:model.core-model"],
+  ["spec:model.pack-aggregate", "decidedBy", "spec:decisions.pack-reified"],
   ["spec:model.anchors", "refines", "spec:model.core-model"],
   ["spec:model.anchors", "decidedBy", "spec:decisions.binding-not-liveness"],
   ["spec:decisions.plain-language-references", "refines", "spec:protocol.self-hosting"],
@@ -1169,6 +1257,9 @@ const expectedDeclaredRelations = [
   ["spec:decisions.typing-law", "refines", "spec:model.spec-sections"],
   ["spec:decisions.kind-conditional-floor", "refines", "spec:validation.readiness-floor"],
   ["spec:decisions.carried-evidence", "refines", "spec:validation.readiness-floor"],
+  ["spec:decisions.pack-reified", "refines", "spec:model.pack-aggregate"],
+  ["spec:decisions.agent-surface-scripts-graph", "refines", "spec:consumers.agent-surface"],
+  ["spec:decisions.mcp-deferred", "refines", "spec:consumers.projections-model"],
 ] as const;
 
 const expectedWarnings = [] as const;
@@ -1495,7 +1586,7 @@ describe("the self-hosting corpus", () => {
         subjectId,
       })),
     ).toEqual(expectedWarnings);
-    expect(result.counts).toEqual({ specs: 41, packs: 1, anchors: 29 });
+    expect(result.counts).toEqual({ specs: 44, packs: 1, anchors: 29 });
     expect(nodeIds).toEqual(
       [
         "pack:self-hosting-v1",
@@ -1524,6 +1615,9 @@ describe("the self-hosting corpus", () => {
         "spec:decisions.typing-law",
         "spec:decisions.kind-conditional-floor",
         "spec:decisions.carried-evidence",
+        "spec:decisions.pack-reified",
+        "spec:decisions.agent-surface-scripts-graph",
+        "spec:decisions.mcp-deferred",
         "spec:decisions.plain-language-references",
         "spec:extraction.build-pipeline",
         "spec:extraction.derive-graph",
@@ -1543,7 +1637,7 @@ describe("the self-hosting corpus", () => {
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
-    expect(result.graph.nodes).toHaveLength(71);
+    expect(result.graph.nodes).toHaveLength(74);
     expect(
       primitiveNodes
         .map((node) => ({
@@ -1587,7 +1681,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 34, ready: 7 });
+    ).toEqual({ defined: 37, ready: 7 });
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
@@ -1602,7 +1696,7 @@ describe("the self-hosting corpus", () => {
       modelRefs: ["spec:model.protocol-domain", "spec:model.core-model"],
       file: "specs/self-hosting.pack.sdp.ts",
     });
-    expect(result.graph.edges).toHaveLength(135);
+    expect(result.graph.edges).toHaveLength(144);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")

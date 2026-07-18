@@ -182,3 +182,10 @@
   preserving their existing refinement and dependency relations.
 - Follow-up cleanup removed the nine diary bodies after their lean registry links and decision Specs
   were confirmed; the MD-18 carrier-rule gloss remains the pinned source of its current law.
+
+## Todo 32 — D-table decisions and verification dispositions
+
+- D1, D2, and D4 remain carried by their ordinary model and Design Review Specs; MD-8, MD-9, and
+  MD-13 remain folded into named code and concept evidence surfaces rather than being re-authored.
+- D3, D5, and D6 now disclose their Pack, agent-surface, and deferred-MCP laws through target-specific
+  decision Specs and `decidedBy` back-edges.

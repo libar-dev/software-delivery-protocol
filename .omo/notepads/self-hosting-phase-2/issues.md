@@ -71,3 +71,19 @@
 ## Todo 20 — parser hardening claim
 
 - The Markdown body grammar accepts only `rule` or `flow` Behavior entries, so the claim and each bounded non-claim are recorded as rules. No unresolved issues remain.
+
+## Todo 20 verification — temporal guard blocker
+
+- The tracked `.omo/plans/self-hosting-phase-2.md` done-record contains numbered `plans/` references and is temporal-by-genre. `check-temporal.mjs` now exempts `.omo/plans/` narrowly, restoring the temporal guard and self-hosting gate without broadening the `.omo/` exclusion.
+
+## Todo 21 — G3 close blocked
+
+- Todo 21 is marked `- [~]` in the plan. G3 (hardening baseline) requires owner disposition.
+- Evidence pack is ready at `.omo/evidence/self-hosting-phase-2/task-21-self-hosting-phase-2.g3.md`.
+- Proposed acceptance SHA: `0bb200a` (includes the temporal fix needed for the green gate).
+- Cannot proceed to todo 22 (the flip) until the owner accepts or rejects G3.
+
+## Todo 24 — G4 rejection and re-presentation
+
+- The owner rejected the pre-written G4 acceptance because `04` §1 still made the per-ID canonical-surface config a live claim and the stamp preceded owner disposition.
+- The amended flip is `0a06882`; it makes the config designed-for and deferred (**ASPIRATIONAL**) and names file-existence-only as the current realization. G4 remains pending until owner acceptance.
