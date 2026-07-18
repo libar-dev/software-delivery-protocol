@@ -188,7 +188,10 @@ describe("the self-hosting phase-1 carrier corpus", () => {
     ).toEqual([...expectedDeclaredRelations].sort());
     expect(
       primitiveNodes.reduce<Record<string, number>>(
-        (histogram, node) => ({ ...histogram, [node.readiness]: (histogram[node.readiness] ?? 0) + 1 }),
+        (histogram, node) => ({
+          ...histogram,
+          [node.readiness]: (histogram[node.readiness] ?? 0) + 1,
+        }),
         {},
       ),
     ).toEqual({ idea: 1, defined: 7, ready: 4 });
