@@ -4,23 +4,22 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // check-self-hosting-gates — the structured consistency gate for the self-hosting phase's
-// pre-Gate-4 docket close and its four-gate review ledger (git process evidence, never a
+// accepted docket close and its four-gate review ledger (git process evidence, never a
 // graph fact).
 //
 // Asserts, and NAMES each disagreeing surface on failure:
-//   1. DOCKET — every obligation resolvable before the fourth owner gate is non-pending
-//      (done/deferred/dropped with rationale); exactly ONE row stays pending: the four-gate
-//      review ledger's own Gate-4 fill, owned by the final gate's post-acceptance work.
+//   1. DOCKET — all obligations are non-pending (done/deferred/dropped with rationale), including
+//      the completed four-gate review ledger.
 //   2. LEDGER — the four-gate review ledger exists in the plan; Gates 1–3 carry meaning,
 //      owner disposition (accepted), date, accepted SHA, corrections (none), and rulings
-//      (including the Gate-3 owner directive on the npm audit advisories); Gate 4 is an
-//      explicit pending row with meaning only — no disposition, date, SHA, or corrections.
-//   3. PACKET AGREEMENT — the ledger's Gate 1–3 fields agree with the owner-packet
+//      (including the Gate-3 owner directive on the npm audit advisories); Gate 4 carries the
+//      accepted state and the owner's phase-2 disposition.
+//   3. PACKET AGREEMENT — the ledger's fields agree with the owner-packet
 //      dispositions, embedded here as constants read from those packets.
 //   4. STATUS SURFACES — progress lives in the plan and the agent handbook only: the handbook
-//      still stamps the plan DRAFTED and its green-gate row names the current root+checkout
+//      stamps owner acceptance and final-audit pending, and its green-gate row names the current root+checkout
 //      chain; the handbook, the diary, and the glossary carry no plan-completion or
-//      owner-acceptance wording, and Gate-4 acceptance is pre-recorded nowhere.
+//      plan-completion wording.
 //   5. ADR DISPOSITIONS — both flagged §3 rulings carry explicit three-part-test outcomes:
 //      lean diary entries (the strict consumer-exclusion contract (MD-20); the
 //      envelope-grammar ownership posture (MD-21)) with registry rows, and the plan records
@@ -52,10 +51,12 @@ const GATES = [
   { gate: "1", meaning: "schema freeze", sha: "aca79090529c2f6625ceafc78f33e16da81bfcb1" },
   { gate: "2", meaning: "corpus/readiness", sha: "cdb68fc1564c9167ebc0372ba8f8599a97df4393" },
   { gate: "3", meaning: "executable loop", sha: "1687885df7b1898c56e154ce2dbe4fa3c6c6c425" },
+  {
+    gate: "4",
+    meaning: "whole-phase review and the phase-2 disposition",
+    sha: "1d9f38c7a993f9cdc27cc4e178e211e33286758b",
+  },
 ];
-const SHA_SHAPE = /[0-9a-f]{40}/u;
-const DATE_SHAPE = /20[0-9]{2}-[0-9]{2}-[0-9]{2}/u;
-
 const norm = (text) => text.replace(/\s+/g, " ");
 const read = (rel) => readFileSync(join(rootDir, rel), "utf8");
 
@@ -78,7 +79,7 @@ const glossary = read(glossaryPath);
 const plan16 = read(plan16Path);
 
 // ---------------------------------------------------------------------------
-// 1. The docket: 25 obligations, exactly one pending (the Gate-4 fill).
+// 1. The docket: all 25 obligations are dispositioned.
 // ---------------------------------------------------------------------------
 
 const docketStart = plan.indexOf("## §6");
@@ -99,16 +100,9 @@ if (docket.length !== 25) {
 }
 
 const pendingRows = docket.filter((row) => /pending/i.test(row.state));
-if (pendingRows.length !== 1 || !pendingRows[0]?.item.includes("Four-gate review ledger")) {
+if (pendingRows.length !== 0) {
   failures.push(
-    `${planPath} — expected exactly one pending docket row (the four-gate review ledger's Gate-4 fill); found ${pendingRows.length}: ${pendingRows.map((row) => row.item).join(" · ") || "none"}`,
-  );
-} else {
-  expectContains(
-    planPath,
-    pendingRows[0].state,
-    "Gate 4",
-    "the pending docket row must name Gate 4 as its remaining obligation",
+    `${planPath} — expected no pending docket rows after owner acceptance; found ${pendingRows.length}: ${pendingRows.map((row) => row.item).join(" · ")}`,
   );
 }
 
@@ -184,23 +178,15 @@ if (ledgerStart === -1) {
   }
 
   const gate4 = gateRow("4");
-  if (gate4 === "") {
-    failures.push(
-      `${planPath} — ledger row for Gate 4 is missing (it must be an explicit pending row)`,
-    );
-  } else {
-    expectContains(planPath, gate4, "pending", "Gate 4 must be an explicit pending row");
-    expectContains(planPath, gate4, "whole-phase", "Gate 4 ledger row lost its meaning");
-    if (/accepted/i.test(gate4)) {
-      failures.push(
-        `${planPath} — Gate 4 acceptance was pre-recorded; that is fabricated evidence`,
-      );
-    }
-    if (SHA_SHAPE.test(gate4) || DATE_SHAPE.test(gate4)) {
-      failures.push(
-        `${planPath} — Gate 4 carries a date or SHA before the owner disposes the gate`,
-      );
-    }
+  for (const needle of [
+    "sdp import",
+    "checkout-v1 migration",
+    "canonical flip",
+    "C2-parity",
+    "table-sugar",
+    "editor-association gap",
+  ]) {
+    expectContains(planPath, gate4, needle, "Gate 4 ledger row lost the owner phase-2 disposition");
   }
 }
 
@@ -208,7 +194,12 @@ if (ledgerStart === -1) {
 // 4. Status surfaces: progress in the plan + handbook only; semantics elsewhere.
 // ---------------------------------------------------------------------------
 
-expectContains(agentsPath, agents, "DRAFTED", "the handbook lost the plan's DRAFTED status");
+expectContains(
+  agentsPath,
+  agents,
+  "phase-1 owner-accepted; final audit pending",
+  "the handbook lost the accepted phase status",
+);
 
 const gateRowLine = agents.split("\n").find((line) => line.includes("the green gate")) ?? "";
 for (const needle of [
@@ -226,10 +217,10 @@ for (const needle of [
   );
 }
 
-// Numbered wording: the handbook must not record the plan's execution state.
+// Numbered-plan wording: the handbook must not record the plan's execution state.
 const numberedWording = /plan 17[^\n]{0,80}(landed|executed|accepted|completed|owner-accepted)/iu;
 if (numberedWording.test(agents)) {
-  failures.push(`${agentsPath} — carries numbered wording (a plan-completion claim) before Gate 4`);
+  failures.push(`${agentsPath} — carries numbered wording (a plan-completion claim)`);
 }
 
 // The diary and the glossary are inspected for semantics only: no status may be written into
@@ -324,7 +315,16 @@ const report = {
       `gate${gate}`,
       { meaning, disposition: "accepted", date: GATE_DATE, sha, corrections: "none" },
     ]),
-    ["gate4", { meaning: "whole-phase review and the phase-2 disposition", state: "pending" }],
+    [
+      "gate4",
+      {
+        meaning: "whole-phase review and the phase-2 disposition",
+        disposition: "accepted",
+        date: GATE_DATE,
+        sha: "1d9f38c7a993f9cdc27cc4e178e211e33286758b",
+        corrections: "none",
+      },
+    ],
   ]),
 };
 console.log(JSON.stringify(report, null, 2));

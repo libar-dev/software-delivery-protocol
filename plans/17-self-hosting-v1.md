@@ -1,6 +1,8 @@
 # Plan 17 — Self-hosting, first slice: the repo's own specs in the ruled Markdown carrier
 
-> **Status: DRAFTED — execution plan.** Work happens on a dedicated branch named for the effort
+> **Status: ✅ LANDED — phase-1 implementation complete; final audit pending**
+>
+> Work happened on a dedicated branch named for the effort
 > (e.g. `self-hosting/v1`) — never on `main`. Revised after an architecture review of the draft
 > (findings folded in; the review's largest find — the extraction-root policy, §1.0 — is
 > load-bearing for every verification claim). Further revised for **execution-readiness**:
@@ -390,22 +392,30 @@ as sessions close — a disposition is never evidence of completion:
 | Clean-clone proof (new — forced by grounded review) | Address — clean-snapshot and authorized clean-clone runs of the full gate | done s4 — clean snapshot and `git clone --no-local` full-gate runs passed; dirty-worktree preservation proved (todo 23 Phase B, `6685a97`) |
 | JTBD carrier repair (new — drift found by grounded review) | Address — the logical/physical relations distinction lands in JS-A1 with the interim-rule records; the remaining `.sdp.ts`-era carrier claims ride Session 4's anti-misleading pass | done s1+s4 — the JS-A1 logical/physical relations distinction landed with the interim records (todo 1, `af7bd38`); the remaining `.sdp.ts`-era JTBD claims repaired (todo 21, `82bf870`) |
 | MD-15 wording repair (new — forced by the carrier ruling) | Address — the extension law's wording re-points to the `.sdp.md` sibling beside the carrier-ruling amendment (Session 1) | done s1 — the `.sdp.ts` extension law (MD-15) re-pointed to the `.sdp.md` sibling beside the carrier-ruling amendment (todo 1, `af7bd38`) |
-| Four-gate review ledger (new — forced by the owner-gate design) | Address — a durable ledger of the four owner Design Review gates, filled as each gate accepts | **pending** — Gates 1–3 are filled in the ledger below; Gate 4's fill is the final session's post-acceptance work (the next todo owns it) |
+| Four-gate review ledger (new — forced by the owner-gate design) | Address — a durable ledger of the four owner Design Review gates, filled as each gate accepts | done s4 — owner accepted Gate 4; the completed ledger below records the phase-2 disposition |
 
 ### The four-gate review ledger
 
 Git process evidence, never a graph fact: the four owner Design Review gates are product
 practice, not validators, and nothing in this ledger enters `graph.json`. The local owner
 packets under the ignored evidence root remain the richer optional aids; this ledger is the
-durable plan-level record, filled as each gate accepts. Gate 4 is an explicit pending row: it
-carries its meaning only, and no acceptance fields exist until the owner disposes the gate.
+durable plan-level record, filled as each gate accepts. Gate 4 now records the owner's acceptance
+and phase-2 disposition.
 
 | Gate | Meaning | Owner disposition | Date | Accepted SHA | Corrections | Rulings |
 |---|---|---|---|---|---|---|
 | 1 | Session 1 — the schema freeze: the frozen initial Markdown carrier corpus (five `spec:carrier.*` documents and the five-member Pack) | accepted | 2026-07-18 (~03:35 local) | `aca79090529c2f6625ceafc78f33e16da81bfcb1` | none | No recorded ruling fired — the frozen grammar stood. The effort-branch designation (`feature/protocol-self-application-phase-1`) stood confirmed: the owner was directly offered the `self-hosting/v1` rename and did not request it. |
 | 2 | Session 2 — corpus/readiness: the floor-honest 12-spec corpus and the 14 precise entrypoint anchors | accepted | 2026-07-18 (~05:30 local) | `cdb68fc1564c9167ebc0372ba8f8599a97df4393` | none | No-new-syntax disposition confirmed; no recorded ruling fired. |
 | 3 | Session 3 — the executable loop: Markdown → graph → generated contracts → the bound real-extractor test | accepted | 2026-07-18 (~06:40 local) | `1687885df7b1898c56e154ce2dbe4fa3c6c6c425` | none | No-new-syntax disposition confirmed. Owner directive carried to the final verification wave (F2): assess the 5 npm audit advisories, separating runtime-dependency risk (`yaml@2.9.0`) from dev-chain risk (`vitest`/`vite-node`). |
-| 4 | Session 4 — the whole-phase review and the phase-2 disposition | **pending** — owner review not yet held | — | — | — | — |
+| 4 | Session 4 — the whole-phase review and the phase-2 disposition | accepted | 2026-07-18 | `1d9f38c7a993f9cdc27cc4e178e211e33286758b` | none | **Owner's phase-2 decision:** schedule the `sdp import` emitter, checkout-v1 migration, and canonical flip as one phase-2 effort, including the like-for-like parser-hardening baseline / C2-parity obligation; the table-sugar ruling is expected to fire under it. The editor-association gap stays deferred; revisit it after the flip. |
+
+### Owner's phase-2 decision
+
+This is a pointer for later planning, not phase-1 work. The owner scheduled the `sdp import`
+emitter, checkout-v1 migration, and canonical flip as **one phase-2 effort**. That effort includes
+the like-for-like parser-hardening baseline and C2-parity obligation; the table-sugar ruling is
+expected to fire under it. The editor-association gap remains deferred and is revisited after the
+flip.
 
 ### The §3 three-part-test dispositions
 

@@ -15,12 +15,12 @@ claims; **`src/` and tests** are authoritative evidence of current realization. 
 
 > **Status:** concept ratified · MVP slices 0–5 landed on `main` (plan 10) · post-MVP executable
 > machinery landed (plan 13) · authoring **carrier ruled** as `.sdp.md` (the carrier ruling, MD-18;
-> plan 16) — product Markdown parser and self-hosting are **next**, not done · **interim carrier
+> plan 16) — product Markdown parser and self-hosting landed · **interim carrier
 > rule** (the carrier ruling (MD-18), transition clause amended by plan 17): New spec IDs may be
 > born Markdown-canonical once the product parser lands; pre-existing IDs and the worked example
 > remain TS-canonical until the ruled flip (the product parser, `sdp import`, and the checkout-v1
-> migration) · **what now:** the
-> self-hosting plan under `plans/` (DRAFTED). Build state lives in **`plans/`** — read the highest
+> migration) · **what now:** phase-1 owner-accepted; final audit pending. Build state lives in
+> **`plans/`** — read the highest
 > **primary-numbered** plan's status header, plus any **active subplans it (or its parent family)
 > explicitly designates as current**; ignore unnumbered files and letter-suffixed plans only when
 > no primary/active plan designates them. If that plan is DRAFTED, also read the latest ✅
