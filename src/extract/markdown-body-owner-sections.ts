@@ -11,6 +11,7 @@ import {
   structureFinding,
 } from "./markdown-body-owner-support.js";
 import { addMarkdownFinding, markdownFinding } from "./markdown-support.js";
+import { setOwn } from "./set-own.js";
 
 const camelKey = /^[a-z][A-Za-z0-9]*$/u;
 
@@ -92,9 +93,9 @@ export function mapModel(
         findings,
         structureFinding(file, item.line, "Model entries require **TERM** — DEFINITION"),
       );
-    else if (terms[match[1]] !== undefined)
+    else if (Object.hasOwn(terms, match[1]))
       addMarkdownFinding(findings, structureFinding(file, item.line, "model terms must be unique"));
-    else terms[match[1]] = match[2];
+    else setOwn(terms, match[1], match[2]);
   }
   if (Object.keys(terms).length > 0) section.terms = terms;
 }
@@ -123,7 +124,7 @@ export function mapOpen(
         findings,
         structureFinding(file, item.line, "open section keys must be lower-camel ASCII"),
       );
-    else if (section[entry.key] !== undefined)
+    else if (Object.hasOwn(section, entry.key))
       addMarkdownFinding(
         findings,
         structureFinding(file, item.line, "open section keys must be unique"),
@@ -164,7 +165,7 @@ export function mapDecision(
     }
     if (entry?.key === "context" || entry?.key === "decision")
       single(section, entry.key, entry.value, file, item.line, findings);
-    else if (entry !== undefined && arrays[entry.key] !== undefined) {
+    else if (entry !== undefined && Object.hasOwn(arrays, entry.key)) {
       const name = arrays[entry.key];
       if (name !== undefined) append(section, name, entry.value);
     } else
