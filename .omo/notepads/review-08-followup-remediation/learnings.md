@@ -16,3 +16,6 @@
 ## 2026-07-19 Task 2
 - `statSync` must run before `realpathSync`: physical identity uses `dev+ino`, while the canonical path remains the first-wins display and import path.
 - `ino === 0` must key by canonical path so Windows and network mounts preserve existing realpath dedupe instead of collapsing unrelated files.
+
+## 2026-07-19 Task 3
+- The import batch gate must inspect `Finding.severity`: warnings still render, but only error findings and operational failures block publication; the existing empty-plan guard keeps a warning-only empty import at exit 1.

@@ -372,4 +372,85 @@ describe("review-08 import regressions", () => {
       rmSync(root, { force: true, recursive: true });
     }
   });
+
+  it("publishes valid sources when an empty directory produces only a warning", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-import-warning-batch-"));
+    const emptyDirectory = join(root, "empty");
+    const valid = join(root, "valid.sdp.ts");
+    mkdirSync(emptyDirectory);
+    writeFileSync(valid, "source\n");
+
+    try {
+      const capture = captureOutput();
+      const result = runSdpCli(["import", emptyDirectory, valid], capture.output, {
+        import: { importTypeScriptSpec: (_source, path) => emitted(path) },
+      });
+
+      expect(result).toBe(0);
+      expect(capture.stderr()).toContain("import/no-sources");
+      expect(readFileSync(join(root, "valid.sdp.md"), "utf8")).toBe("# Imported\n");
+    } finally {
+      rmSync(root, { force: true, recursive: true });
+    }
+  });
+
+  it("fails an empty directory because it produces no import plan", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-import-empty-plan-"));
+    const emptyDirectory = join(root, "empty");
+    mkdirSync(emptyDirectory);
+
+    try {
+      const capture = captureOutput();
+      const result = runSdpCli(["import", emptyDirectory], capture.output, {
+        import: { importTypeScriptSpec: (_source, path) => emitted(path) },
+      });
+
+      expect(result).toBe(1);
+      expect(capture.stderr()).toContain("import/no-sources");
+      expect(capture.stdout()).toBe("");
+    } finally {
+      rmSync(root, { force: true, recursive: true });
+    }
+  });
+
+  it("withholds valid sources when an explicit non-carrier operand is an error", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-import-error-batch-"));
+    const valid = join(root, "valid.sdp.ts");
+    const invalid = join(root, "invalid.ts");
+    writeFileSync(valid, "source\n");
+    writeFileSync(invalid, "invalid\n");
+
+    try {
+      const capture = captureOutput();
+      const result = runSdpCli(["import", valid, invalid], capture.output, {
+        import: { importTypeScriptSpec: (_source, path) => emitted(path) },
+      });
+
+      expect(result).toBe(1);
+      expect(capture.stderr()).toContain("import/invalid-source-path");
+      expect(existsSync(join(root, "valid.sdp.md"))).toBe(false);
+    } finally {
+      rmSync(root, { force: true, recursive: true });
+    }
+  });
+
+  it("withholds valid sources when an operand cannot be stat'ed", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-import-operational-batch-"));
+    const valid = join(root, "valid.sdp.ts");
+    const missing = join(root, "missing.sdp.ts");
+    writeFileSync(valid, "source\n");
+
+    try {
+      const capture = captureOutput();
+      const result = runSdpCli(["import", valid, missing], capture.output, {
+        import: { importTypeScriptSpec: (_source, path) => emitted(path) },
+      });
+
+      expect(result).toBe(1);
+      expect(capture.stderr()).toContain(missing);
+      expect(existsSync(join(root, "valid.sdp.md"))).toBe(false);
+    } finally {
+      rmSync(root, { force: true, recursive: true });
+    }
+  });
 });
