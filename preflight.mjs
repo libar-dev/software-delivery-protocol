@@ -1,18 +1,9 @@
 import { spawnSync } from "node:child_process";
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-} from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = fileURLToPath(new URL(".", import.meta.url));
-const scratchRoot = join(repoRoot, ".tmp-scratch");
 const sdpPath = join(repoRoot, "dist", "cli", "sdp.js");
 
 // The check pipeline owns precisely these outputs. Root dist/ is package assembly rather than
@@ -21,9 +12,9 @@ const generationTargets = [
   {
     name: "self-hosting",
     generatedPath: "generated",
-    sourcePaths: ["specs", "src", "test"],
     command: [
       "view",
+      ".",
       "--exclude",
       "explorations",
       "--exclude",
@@ -35,11 +26,6 @@ const generationTargets = [
   {
     name: "checkout-v1",
     generatedPath: "examples/checkout-v1/generated",
-    sourcePaths: [
-      "examples/checkout-v1/specs",
-      "examples/checkout-v1/src",
-      "examples/checkout-v1/test",
-    ],
     command: ["view", "examples/checkout-v1", "--check-clean"],
   },
 ];
@@ -81,9 +67,7 @@ function readTree(root) {
   return files;
 }
 
-function compareGeneratedTree(target, expectedRoot) {
-  const actual = readTree(join(repoRoot, target.generatedPath));
-  const expected = readTree(expectedRoot);
+function compareGeneratedTree(target, actual, expected) {
   const paths = new Set([...actual.keys(), ...expected.keys()]);
 
   return [...paths]
@@ -93,19 +77,15 @@ function compareGeneratedTree(target, expectedRoot) {
 }
 
 function regenerateExpectedTree(target) {
-  mkdirSync(scratchRoot, { recursive: true });
-  const temporaryRoot = mkdtempSync(join(scratchRoot, "preflight-"));
+  const actual = readTree(join(repoRoot, target.generatedPath));
 
-  try {
-    for (const sourcePath of target.sourcePaths) {
-      cpSync(join(repoRoot, sourcePath), join(temporaryRoot, sourcePath), { recursive: true });
-    }
+  // Relative builder imports are trusted only by physical identity to this checkout, so a copied
+  // scratch root lawfully loses anchors. Rerender here to compare two independent results under
+  // the same production binding authority.
+  run(process.execPath, [sdpPath, ...target.command], { cwd: repoRoot });
+  const expected = readTree(join(repoRoot, target.generatedPath));
 
-    run(process.execPath, [sdpPath, ...target.command], { cwd: temporaryRoot });
-    return compareGeneratedTree(target, join(temporaryRoot, target.generatedPath));
-  } finally {
-    rmSync(temporaryRoot, { recursive: true, force: true });
-  }
+  return compareGeneratedTree(target, actual, expected);
 }
 
 function isGeneratedPath(path) {
