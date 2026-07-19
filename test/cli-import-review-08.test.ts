@@ -453,4 +453,79 @@ describe("review-08 import regressions", () => {
       rmSync(root, { force: true, recursive: true });
     }
   });
+
+  it("keeps a published target when its temporary cleanup fails", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-import-temp-cleanup-"));
+    const source = join(root, "order.sdp.ts");
+    const canonicalRoot = realpathSync(root);
+    const target = join(canonicalRoot, "order.sdp.md");
+    const temporary = `${target}.sdp-import-${String(process.pid)}-0.tmp`;
+    writeFileSync(source, "source\n");
+
+    try {
+      const capture = captureOutput();
+      const result = runSdpCli(["import", source], capture.output, {
+        import: {
+          importTypeScriptSpec: (_source, path) => emitted(path),
+          rmSync: (path, options) => {
+            if (path === temporary) throw new Error("temporary removal denied");
+            rmSync(path, options);
+          },
+        },
+      });
+
+      expect(result).toBe(0);
+      expect(existsSync(target)).toBe(true);
+      expect(capture.stderr()).toMatch(/stale .* could not be removed/u);
+    } finally {
+      rmSync(root, { force: true, recursive: true });
+    }
+  });
+
+  it("reports unavailable hard-link support and rolls back publication", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-import-hard-link-support-"));
+    const first = join(root, "a.sdp.ts");
+    const second = join(root, "b.sdp.ts");
+    const canonicalRoot = realpathSync(root);
+    const firstTarget = join(canonicalRoot, "a.sdp.md");
+    const secondTarget = join(canonicalRoot, "b.sdp.md");
+    const firstTemporary = `${firstTarget}.sdp-import-${String(process.pid)}-0.tmp`;
+    const secondTemporary = `${secondTarget}.sdp-import-${String(process.pid)}-1.tmp`;
+    writeFileSync(first, "first\n");
+    writeFileSync(second, "second\n");
+    let attempts = 0;
+
+    try {
+      const capture = captureOutput();
+      const result = runSdpCli(["import", first, second], capture.output, {
+        import: {
+          importTypeScriptSpec: (_source, path) => emitted(path),
+          linkSync: (from, to) => {
+            attempts += 1;
+            if (attempts === 2) {
+              throw Object.assign(new Error("cross-device link"), { code: "EXDEV" });
+            }
+            linkSync(from, to);
+          },
+        },
+      });
+
+      expect(result).toBe(1);
+      expect(capture.stderr()).toContain("hard-link support");
+      expect(existsSync(firstTarget)).toBe(false);
+      expect(existsSync(secondTarget)).toBe(false);
+      expect(existsSync(firstTemporary)).toBe(false);
+      expect(existsSync(secondTemporary)).toBe(false);
+    } finally {
+      rmSync(root, { force: true, recursive: true });
+    }
+  });
+
+  it("documents the hard-link requirement in import help", () => {
+    const capture = captureOutput();
+    const result = runSdpCli(["--help"], capture.output);
+
+    expect(result).toBe(0);
+    expect(capture.stdout()).toContain("hard link");
+  });
 });

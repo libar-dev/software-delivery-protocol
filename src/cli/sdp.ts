@@ -60,7 +60,9 @@ Commands:
               each would-be document to stdout, headed by its target path, without writing.
               Existing Markdown siblings and non-emitting carrier refusals are rendered as
               findings and never throw or overwrite. Exits 0 only when every requested source
-              emits (or would emit); any finding error or operational failure exits 1.`;
+              emits (or would emit); any finding error or operational failure exits 1. Publication
+              creates atomic hard links; the target filesystem must support them (FAT/exFAT and
+              some network mounts do not).`;
 
 interface CliOutput {
   stdout?: { write: (chunk: string) => void };

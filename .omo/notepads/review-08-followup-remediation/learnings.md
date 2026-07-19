@@ -19,3 +19,7 @@
 
 ## 2026-07-19 Task 3
 - The import batch gate must inspect `Finding.severity`: warnings still render, but only error findings and operational failures block publication; the existing empty-plan guard keeps a warning-only empty import at exit 1.
+
+## 2026-07-19 Task 4
+- Publication is complete once the atomic hard link succeeds: temporary cleanup failures must use `removeArtifact`, warn about the stale temporary, and stay outside the rollback catch so the target remains current.
+- A hard-link failure is a filesystem capability error, not an ordinary publication detail; wrapping it preserves rollback while naming the no-fallback requirement in both stderr and help.
