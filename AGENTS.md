@@ -17,7 +17,7 @@ claims; **`src/` and tests** are authoritative evidence of current realization. 
 > machinery landed (plan 13) · authoring **carrier ruled** as `.sdp.md` (the carrier ruling, MD-18;
 > plan 16) — product Markdown parser and self-hosting landed · **canonical-default carrier
 > rule:** Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives
-> as import source and a lawful per-ID option. · **what now:** ✅ EXECUTED — phase-1 implementation complete; final audit passed. Build state lives in
+> as import source and a lawful per-ID option. · **what now:** ✅ EXECUTED — phase-2 implementation complete; final audit passed. The prior `EXECUTED — phase-1 implementation complete; final audit passed` status remains historic context. The remaining work is the systematic tests-to-executable-specs rewrite and per-doc concept deletion. Build state lives in
 > **`plans/`** — read the highest
 > **primary-numbered** plan's status header, plus any **active subplans it (or its parent family)
 > explicitly designates as current**; ignore unnumbered files and letter-suffixed plans only when

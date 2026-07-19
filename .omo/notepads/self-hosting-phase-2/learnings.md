@@ -250,6 +250,7 @@
 
 - The phase-2 commit lands corpus waves 2-4, fold completion, G7 evidence, and docket
   reconciliation; its SHA is recorded by the resulting Git commit.
+- Commit SHA: `8f5aabe` (wave-8 work).
 
 ## Todo 41 - adversarial review remediation
 
@@ -259,3 +260,10 @@
   cannot leave a partial Markdown migration behind.
 - Carrier guidance must distinguish Markdown Specs from TypeScript implementation and generated
   contract code; "typecheck the example" is not a valid health claim for Markdown carriers.
+
+## Todo 42 - final installed-package and clean-clone proofs
+
+- A fresh clone pinned to `67cfda7` passed `npm ci`, the complete `npm run check` chain, and all
+  three final carrier/gate audits. The clean chain includes both `--check-clean` determinism legs.
+- `test/package-smoke.test.ts` ran inside that chain and passed against the packed, installed
+  tarball, proving the `sdp import` verb and package-barrel surface at the phase-final SHA.

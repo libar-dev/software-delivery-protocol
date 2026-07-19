@@ -1,4 +1,5 @@
 # self-hosting-phase-2 - Work Plan
+> **Status:** ✅ EXECUTED — phase-2 implementation complete; final audit passed. This is plan 18, the latest ✅ EXECUTED ground. Build state lives in **`plans/`** — read the highest **primary-numbered** plan's status header, plus any **active subplans it (or its parent family) explicitly designates as current**; ignore unnumbered files and letter-suffixed plans only when no primary/active plan designates them. If that plan is DRAFTED, also read the latest ✅ EXECUTED plan for settled ground.
 
 ## TL;DR (For humans)
 
@@ -184,6 +185,16 @@ in [task-40 acceptance evidence](../evidence/self-hosting-phase-2/task-40-self-h
 
 **External consolidated review (post-todo, 9 valid findings folded — one claim rejected):** (1) the glossary-contradiction window closed per Option A — the `sdp import` glossary amendment moved from the flip to todo 7 (verified: no script pins the row's current text), the flip now verifies + machine-pins it; (2) todo 22's acceptance grep rewritten with explicit `--exclude-dir`s and a named active-surface list, plus the standing policy that past-tense historical mentions in plans/reviews/.omo are lawful; (3) MD-16 re-pointed to `spec:validation.readiness-floor` (verified at `src/validate/readiness-floor.ts:150-181` — MD-12 refines the same target); (4) todo 5's pack detection re-based on `CarrierReification.packs` non-empty, with `import/empty` for empty modules; (5) todo 9 gained the drift-alarm QA probe (the rejected claim: renaming `test:protocol.sdp-import.round-trip` — phase-1 convention is `test:protocol.*` for carrier specs too, e.g. `test:protocol.markdown-parser`; the name stands); (6) F1–F4 expanded to phase-1 density with pinned evidence paths, F3 executed as agent-run live QA; (7) this record created so the fold is auditable; (8) acceptance-8 ownership re-aligned (todo 7 now genuinely lands the amendment); (9) todo 5's suite pins pass-through finding identity (`validatorId`/`file`/`line`) for non-error cases.
 
+### Whole-phase done-record
+
+- **Executed delta catalog:** the importer preserves authored `ReifiedSpec.data` with zero prose normalization. The graph comparison normalizes only the carrier file suffix from `.sdp.ts` to `.sdp.md`; physical envelopes and TypeScript source comments remain outside graph content; delivery facts are recomputed under the same anchor set; and `schemaVersion` remains unchanged. The semantic equality gate and the emitted-Markdown authoring-surface review both passed.
+- **Executed delivery:** `sdp import` landed as the durable, fs-free import seam with the CLI write-beside and `--dry-run` boundary; all eleven checkout Specs migrated atomically to Markdown; the canonical-default carrier rule replaced the interim rule; the bounded parser refusal-parity claim, decision-spec fold, and four honest corpus waves landed. The resulting self-hosting graph holds 58 Specs, 1 Pack, and 36 anchors, with 7 `ready` and 51 `defined` Specs.
+- **Session SHA summary:** G1 is `f06f14d`; G2 is `df444f2`; G3 is `0bb200a`; G4, G5, G6, and G8 are consolidated at `67cfda7` under the continuation directive; G7 remains `b471189034e1ee238394f3364c349937be6bebed`.
+- **Watch items:** all five terminal states are unfired. Table sugar was not forced because waves used existing sibling Specs and ruled body forms. The single-literal vocabulary form was unnecessary beyond the ruled literal syntax. No wave required a multi-entry constraint. New prose stayed under existing typed section owners, leaving the array-section sub-owner unfired. The Pack remains a TypeScript manifest, with no caller requiring Markdown Pack authoring.
+- **Deferred tail:** no-reparse spy coverage remains deferred because named-import interception is weaker than an injected read seam. Temporal token assembly remains deferred because the sanctioned temporal-guard pattern still applies; its comment can be narrowed later.
+- **Lean registry rulings:** the phase admitted `spec:decisions.*` records for the executable meta-model, naming and one-primitive laws, binding and section ownership, the typing and readiness-floor laws, one validation path, the `.sdp.ts` extension and carrier ruling, prose ownership, point-per-example, and the exclusion and envelope-grammar contracts. The Pack, agent-surface, and deferred-MCP decisions joined them; D1, D2, and D4 remain carried by their ordinary Specs. Each admission passed the three-part durability test and is linked from the lean registry.
+- **Close evidence:** the acceptance assembly, adversarial-review remediation, and clean-clone and installed-package proofs are recorded in [task 40](../evidence/self-hosting-phase-2/task-40-self-hosting-phase-2.acceptance.md), [task 41](../evidence/self-hosting-phase-2/task-41-self-hosting-phase-2.review.md), and [task 42](../evidence/self-hosting-phase-2/task-42-self-hosting-phase-2.final-proofs.log).
+
 ### Parallel execution waves
 > Target 5-8 todos per wave. Fewer than 3 (except the final) means you under-split. Wave 0 is a deliberate single-todo foundational exception (repo plan + branch — everything else depends on it).
 
@@ -256,11 +267,11 @@ the ledger's complete, non-empty G1-G8 structure while the repo plan exists.
 | G1 | emitter contract and grammar freeze | §2 matrix reviewed before emitter design | accepted — 2026-07-18 — `f06f14d` |
 | G2 | importer fidelity | imported fixture graph equals source under §7 catalog | accepted — 2026-07-18 — df444f2 |
 | G3 | hardening baseline | §3 classes have evidence or named non-claim | accepted — 2026-07-18 — 0bb200a |
-| G4 | canonical-default flip | operative records and post-flip truth pins agree | pending — one tight record series and audit map |
-| G5 | first corpus-wave targets | core model, validation, and consumers parents exist | pending — coverage ledger and generated Design Review |
-| G6 | decision fold | every fold source has one ledger disposition | pending — lean registry review and relation evidence |
+| G4 | canonical-default flip | operative records and post-flip truth pins agree | accepted — 2026-07-19 — 67cfda7; accepted by consolidation at the whole-phase close under the continuation directive |
+| G5 | first corpus-wave targets | core model, validation, and consumers parents exist | accepted — 2026-07-19 — 67cfda7; accepted by consolidation at the whole-phase close under the continuation directive |
+| G6 | decision fold | every fold source has one ledger disposition | accepted — 2026-07-19 — 67cfda7; accepted by consolidation at the whole-phase close under the continuation directive |
 | G7 | corpus waves 2–4 + fold completion | coverage ledger complete and fold ledger terminal | accepted — 2026-07-19 — `b471189034e1ee238394f3364c349937be6bebed` |
-| G8 | whole-phase close | full gate, clean-clone proof, review remediation, owner acceptance | pending — final verification wave and accepted SHA |
+| G8 | whole-phase close | full gate, clean-clone proof, review remediation, owner acceptance | accepted — 2026-07-19 — 67cfda7; accepted by consolidation at the whole-phase close under the continuation directive |
 
 ### G7 attached evidence
 
@@ -553,21 +564,21 @@ user explicitly directed continuation without incremental owner reviews.
   Acceptance criteria: the docket shows 100% terminal dispositions with evidence links; the acceptance-evidence file covers all eight criteria; `npm run check` green.
   QA scenarios: happy — the reconciled docket + evidence assembly (Evidence `.omo/evidence/self-hosting-phase-2/task-40-self-hosting-phase-2.docket.md` and `.../task-40-self-hosting-phase-2.acceptance.md`); failure — find one row stamped done without evidence, re-open it, complete or defer honestly (Evidence `.../task-40-self-hosting-phase-2.reopen.log`).
   Commit: Y | `docs(plans): reconcile the phase-2 docket and assemble acceptance evidence`
-- [ ] 41. The adversarial code review + verified remediation (the phase-1 F-wave pattern)
+- [x] 41. The adversarial code review + verified remediation (the phase-1 F-wave pattern)
   What to do / Must NOT do: Commission the whole-phase adversarial review of the phase's diff (the phase-1 precedent: `reviews/06-self-hosting-phase-1-code-review.md` — an external/adversarial pass over every commit since the branch point, hunting correctness, honesty, drift, and misleading-success risks): archive it at `reviews/07-self-hosting-phase-2-code-review.md`; then a verified remediation pass — every finding fixed or dispositioned with owner-visible reasoning, each remediation verified by re-running the failing probe (never a self-reported fix). The review must cover at minimum: the emitter's fidelity (any construct it silently drops), the migration's atomicity, the flip's docs-agree completeness, the fold's rubric conformance, the corpus's floor honesty, and the new public surface's contract stability. Must NOT: let the review pass on worker self-report (each finding's remediation carries its re-probe log); close with any BLOCKER unfixed (defer only with an owner-visible disposition).
   Parallelization: Wave 9 | Blocked by: 40 | Blocks: 43 | Can parallelize with: 42
   References: the phase-1 review + its remediation pattern `reviews/06-self-hosting-phase-1-code-review.md` (structure, severity taxonomy, addendum format); the phase diff (`git log main..HEAD` on the effort branch).
   Acceptance criteria: `reviews/07-self-hosting-phase-2-code-review.md` exists with severity-classified findings; every finding has a remediation + re-probe log or an owner-visible disposition; `npm run check` green after remediation.
   QA scenarios: happy — the review archive + remediation logs (Evidence `.omo/evidence/self-hosting-phase-2/task-41-self-hosting-phase-2.review.md`); failure — pick one remediated finding, re-run its original failing probe to confirm the fix holds (Evidence `.../task-41-self-hosting-phase-2.reprobe.log`).
   Commit: Y | `docs(reviews): archive the phase-2 adversarial review with verified remediation`
-- [ ] 42. Final installed-package + clean-clone proofs
+- [x] 42. Final installed-package + clean-clone proofs
   What to do / Must NOT do: Re-run the full installed-package proof (todo 11's script — verb + barrel exports) against the phase-final tree, and the clean-clone proof (todo 23's procedure) at the phase-final SHA: fresh clone → `npm ci` → full `npm run check` → determinism legs (`--check-clean` in both generate/check legs already in the chain). Also re-run the three audit scripts at the final SHA. Must NOT: reuse earlier logs (stale_state discipline — the proofs run at the final SHA).
   Parallelization: Wave 9 | Blocked by: 40 | Blocks: 43 | Can parallelize with: 41
   References: todo 11/23 procedures; `package.json:43-49`.
   Acceptance criteria: all proofs exit 0 at the final SHA with fresh logs.
   QA scenarios: happy — the fresh logs (Evidence `.omo/evidence/self-hosting-phase-2/task-42-self-hosting-phase-2.final-proofs.log`); failure — run one proof against the dev tree instead of the clone, catch the stale_state violation, re-run correctly (Evidence `.../task-42-self-hosting-phase-2.stale.log`).
   Commit: N (evidence only)
-- [ ] 43. Whole-phase close — gate G8 + status flip + the done-record
+- [x] 43. Whole-phase close — gate G8 + status flip + the done-record
   What to do / Must NOT do: Present the G8 evidence pack (docket reconciliation, anti-drift audit, acceptance 1–8 assembly, the archived review + remediation, the final proofs) to the owner. On acceptance: stamp G8 (owner disposition + date + SHA) in plan 18 §10 and the gates script; flip plan 18's status header to `✅ EXECUTED — phase-2 implementation complete; final audit passed`; write the done-record in plan 18 §7 — the delta catalog as executed, every session's SHA, the watch-item terminal states, the rulings admitted to the lean registry during the phase (three-part-test verdicts), and the remaining deferred tail carried forward (spy seam, temporal token assembly, anything newly deferred — each with its reason); update `AGENTS.md`'s "what now" to point at plan 18 as the latest ✅ EXECUTED ground (and name the phase-3 remainder per the brief: the systematic tests-to-executable-specs rewrite + per-doc concept deletion). Must NOT: declare completion with any gate un-stamped or any acceptance criterion's evidence missing; start phase-3 work.
   Parallelization: Wave 9 | Blocked by: 41, 42 | Blocks: F1–F4
   References: the phase-3 remainder `plans/18-self-hosting-phase-2-brief.md:15-18,373-379`; status-header precedent `plans/17-self-hosting-v1.md:1-4`; gate mechanics (todo 12 references).
