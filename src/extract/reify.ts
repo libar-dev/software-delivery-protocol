@@ -97,6 +97,8 @@ const SPEC_SECTION_NAME_SET = new Set<string>(SPEC_SECTION_NAMES);
  */
 const RESERVED_DERIVED_PROPERTIES = new Set<string>([
   ...deliveryFactNames,
+  // camel `hasVerifier` joins the kebab delivery facts: every delivery-fact spelling is reserved in both carriers (R-6 parity).
+  "hasVerifier",
   "deliveryFacts",
   "claim",
   "nodeType",

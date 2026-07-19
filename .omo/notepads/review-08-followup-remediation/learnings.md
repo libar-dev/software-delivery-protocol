@@ -31,3 +31,6 @@
 ## 2026-07-19 Task 6
 - A code span does not protect a GFM table row from a pipe delimiter: findings-table code cells need a dedicated renderer that escapes `|` and collapses whitespace before applying delimiter-safe inline-code rendering.
 - CommonMark removes one matching pair of code-span boundary spaces, so literal edge spaces require an added padding pair; all-space values remain a documented display-only approximation.
+
+## 2026-07-19 Task 8
+- `deliveryFactNames` deliberately uses graph-facing kebab spellings; the TS carrier must explicitly reserve the authored camel `hasVerifier` spelling so every delivery fact is refused consistently across carriers.

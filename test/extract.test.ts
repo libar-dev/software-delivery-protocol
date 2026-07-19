@@ -340,6 +340,29 @@ export const carrier = spec({
     ]);
   });
 
+  it("reserved camel delivery fact: rejects hasVerifier at the TS carrier envelope (R-6 parity)", () => {
+    const reified = reifyTypeScriptCarrier(
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:orders.reserved-camel-verifier"),
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  hasVerifier: true,
+});`,
+      "reserved-camel-verifier.sdp.ts",
+    );
+
+    expect(reified.specs).toEqual([]);
+    expect(reified.findings).toMatchObject([
+      {
+        validatorId: extractFindingIds.reservedProperty,
+        severity: "error",
+        path: "hasVerifier",
+      },
+    ]);
+  });
+
   it("retains a nested __proto__ model term as own string content", () => {
     const reified = reifyTypeScriptCarrier(
       `import { spec, specId } from "@libar-dev/software-delivery-protocol";
