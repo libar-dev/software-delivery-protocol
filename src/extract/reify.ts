@@ -13,6 +13,8 @@ import { SPEC_ALTITUDES, SPEC_KINDS, SPEC_READINESS } from "../model/descriptors
 import { SPEC_RELATION_TYPES } from "../model/relations.js";
 import { SPEC_SECTION_NAMES } from "../model/sections.js";
 import type { Finding, Severity } from "../validate/contracts.js";
+import { collectProtocolBindings, isProtocolBuilderModuleSpecifier } from "./protocol-bindings.js";
+import type { ProtocolBindings, ProtocolBindingScope } from "./protocol-bindings.js";
 import { setOwn } from "./set-own.js";
 
 /**
@@ -26,8 +28,6 @@ import { setOwn } from "./set-own.js";
  * reached any other way (`require`, a re-aliased local, an element access) is out of contract and
  * stays out of the graph.
  */
-export const PROTOCOL_MODULE_SPECIFIER = "@libar-dev/software-delivery-protocol";
-
 /**
  * The extraction finding ids, pinned. Two tiers (`03` §2), covering both authored surfaces (spec
  * files and anchor constants): envelope failures (`non-static-envelope` · `invalid-id` ·
@@ -191,63 +191,6 @@ export function unwrapTransparent(node: Node): Node {
 
     return current;
   }
-}
-
-export interface ProtocolBindings {
-  /** Local name → exported builder name, from named imports. */
-  readonly named: ReadonlyMap<string, string>;
-  /**
-   * Locals bound by `import * as ns` — every protocol builder is reachable as a property — and by
-   * a default import (the package ships no default export, but an interop consumer can still
-   * author through one; treating it the same keeps the binding from silently falling out, L2).
-   */
-  readonly namespaceLocals: ReadonlySet<string>;
-}
-
-const protocolBuilderModuleSpecifiers = new Set([
-  PROTOCOL_MODULE_SPECIFIER,
-  "./ids.js",
-  "../ids.js",
-  "./model/code-anchor.js",
-  "../model/code-anchor.js",
-  "./code-anchor.js",
-]);
-
-export function hasProtocolBuilderImport(sourceText: string): boolean {
-  return [...protocolBuilderModuleSpecifiers].some((specifier) => sourceText.includes(specifier));
-}
-
-export function collectProtocolBindings(sourceFile: SourceFile): ProtocolBindings {
-  const named = new Map<string, string>();
-  const namespaceLocals = new Set<string>();
-
-  for (const importDeclaration of sourceFile.getImportDeclarations()) {
-    const moduleSpecifier = importDeclaration.getModuleSpecifierValue();
-
-    if (!protocolBuilderModuleSpecifiers.has(moduleSpecifier)) {
-      continue;
-    }
-
-    for (const namedImport of importDeclaration.getNamedImports()) {
-      const exportedName = namedImport.getName();
-      const localName = namedImport.getAliasNode()?.getText() ?? exportedName;
-      named.set(localName, exportedName);
-    }
-
-    const namespaceImport = importDeclaration.getNamespaceImport();
-
-    if (namespaceImport !== undefined) {
-      namespaceLocals.add(namespaceImport.getText());
-    }
-
-    const defaultImport = importDeclaration.getDefaultImport();
-
-    if (defaultImport !== undefined) {
-      namespaceLocals.add(defaultImport.getText());
-    }
-  }
-
-  return { named, namespaceLocals };
 }
 
 export interface ResolvedBuilderCall {
@@ -1684,7 +1627,7 @@ function unrecognizedStatement(file: string, line: number, message: string): Fin
   return createExtractFinding(
     extractFindingIds.unrecognizedStatement,
     "warning",
-    `${message}; the statement is ignored (the recognized set: imports from "${PROTOCOL_MODULE_SPECIFIER}" and const declarations initialized with spec(…)/pack(…))`,
+    `${message}; the statement is ignored (the recognized set: imports bound to Protocol builder modules and const declarations initialized with spec(…)/pack(…))`,
     file,
     line,
   );
@@ -1696,15 +1639,19 @@ function unrecognizedStatement(file: string, line: number, message: string): Fin
  * defines no hard-error class for foreign statements (the `sdp/spec-static` lint stays future
  * work).
  */
-export function reifySourceFile(sourceFile: SourceFile, relativePath: string): FileReification {
-  const bindings = collectProtocolBindings(sourceFile);
+export function reifySourceFile(
+  sourceFile: SourceFile,
+  relativePath: string,
+  bindingScope?: ProtocolBindingScope,
+): FileReification {
+  const bindings = collectProtocolBindings(sourceFile, bindingScope);
   const specs: ReifiedSpec[] = [];
   const packs: ReifiedPack[] = [];
   const findings: Finding[] = [];
 
   for (const statement of sourceFile.getStatements()) {
     if (Node.isImportDeclaration(statement)) {
-      if (statement.getModuleSpecifierValue() === PROTOCOL_MODULE_SPECIFIER) {
+      if (isProtocolBuilderModuleSpecifier(statement.getModuleSpecifierValue(), bindingScope)) {
         continue;
       }
 

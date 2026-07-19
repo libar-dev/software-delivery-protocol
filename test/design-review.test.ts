@@ -325,7 +325,7 @@ describe("the Design Review — the one generated read-only view", () => {
     expect(permutedPages).toEqual(firstPages);
   });
 
-  it("escapes every rendered authored field with one uniform policy", () => {
+  it("escapes Markdown text fields while preserving fenced JSON data", () => {
     const graph = deriveFixtureGraph({
       specs: [
         spec({
@@ -352,7 +352,7 @@ describe("the Design Review — the one generated read-only view", () => {
     expect(page).toContain("- **outcome:** Keep &lt;outcome&gt; &amp; visible.");
     expect(page).toContain("- Keep &lt;rule&gt; &amp; stable.");
     expect(page).toContain("| &lt;Term&gt; &amp; | Define &lt;term&gt; &amp; safely. |");
-    expect(page).toContain('"surface": "Review &lt;design&gt; &amp; safely."');
+    expect(page).toContain('"surface": "Review <design> & safely."');
     expect(page).toContain("- Inspect &lt;criterion&gt; &amp; output.");
   });
 

@@ -4,7 +4,6 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { afterAll, describe, expect, it } from "vitest";
-import { Project } from "ts-morph";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
@@ -18,7 +17,6 @@ import {
   validateGraph,
 } from "../src/index.js";
 import type { GraphSchema, PrimitiveNode } from "../src/index.js";
-import { reifyAnchorSourceFile } from "../src/extract/anchors.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 
 const exampleRoot = fileURLToPath(new URL("../examples/checkout-v1", import.meta.url));
@@ -663,6 +661,8 @@ describe("Markdown carrier discovery", () => {
               "Import refuses an existing Markdown sibling rather than overwriting it.",
               "Refusal outcomes retain the TypeScript reifier findings and add import-local findings honestly.",
               "Import consumes the TypeScript reifier so source acceptance follows one validation path.",
+              "A batch scans only bounded source directories, canonicalizes physical carrier identity, and computes every refusal and target collision before publishing any sibling.",
+              "Publication prepares exclusive temporary siblings and atomically creates targets without clobbering; rollback attempts every artifact, reports survivors, and never deletes a TypeScript source.",
             ],
             exampleSpace: {
               given: ["a TS-carrier spec"],
@@ -771,38 +771,6 @@ const extractContractTestAnchor = specTest({
 void extractContractTestAnchor;
 
 describe("anchor extraction corpora", () => {
-  it("recognizes a Protocol-internal anchor imported from the source builder modules", () => {
-    const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile(
-      "/repo/src/model/internal-anchor.ts",
-      `import { codeAnchor } from "./code-anchor.js";
-import { codeAnchorId, ref } from "../ids.js";
-
-const internalAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.internal-anchor"),
-  satisfies: ref("spec:orders.internal-anchor"),
-});
-void internalAnchor;
-`,
-    );
-
-    const result = reifyAnchorSourceFile(sourceFile, "src/model/internal-anchor.ts");
-
-    expect(result.findings).toEqual([]);
-    expect(result.anchors).toEqual([
-      {
-        data: {
-          id: "impl:protocol.internal-anchor",
-          satisfies: "spec:orders.internal-anchor",
-        },
-        id: "impl:protocol.internal-anchor",
-        flavor: "code",
-        file: "src/model/internal-anchor.ts",
-        line: 4,
-      },
-    ]);
-  });
-
   it("anchored-binding: the full ladder — anchored edges and delivery facts per `02` §2", () => {
     const result = extract({ root: corpusRoot("anchored-binding") });
 

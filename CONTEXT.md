@@ -4,7 +4,8 @@
 > bounded context's vocabulary: **one concept → one word**; the rest are *aliases to avoid*.
 >
 > This document carries **terms only**; the model exposition lives in the design docs
-> (`docs/concept/00`–`07`), rationale in `docs/concept/DECISIONS.md`.
+> (`docs/concept/00`–`07`). The lean decision registry points to carrying Specs; historical
+> rationale lives in git, plans, and those Specs.
 
 ## Governing rubric  [SETTLED]
 

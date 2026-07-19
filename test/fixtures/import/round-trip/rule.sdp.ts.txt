@@ -1,0 +1,18 @@
+import { dependsOn, refines, spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const ruleRoundTripSpec = spec({
+  id: specId("spec:round-trip.rule"),
+  title: "Keep the import rule explicit",
+  kind: "rule",
+  altitude: "story",
+  readiness: "idea",
+  relations: [
+    refines(specId("spec:round-trip.behavior")),
+    dependsOn(specId("spec:round-trip.decision")),
+    dependsOn(specId("spec:round-trip.constraint")),
+  ],
+  behavior: { rules: ["Every supported field survives the carrier change."] },
+  design: { importBoundary: "Reify before emitting." },
+  verification: { mode: "contract", criteria: ["The graphs are equal."] },
+  ui: { diagnostic: "Name the first divergent field." },
+});

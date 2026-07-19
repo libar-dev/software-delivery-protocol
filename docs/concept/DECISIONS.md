@@ -6,6 +6,9 @@
 
 In prose, lead with meaning and use a code only as a parenthetical lookup key. Curation records the ADR three-part test: hard to reverse, surprising without context, and a real trade-off.
 
+Numbering is append-only: absent identifiers such as MD-3 and MD-6 are retired or reserved historical
+positions and are never reused.
+
 | ID | Ratified name | Curation | Gloss | Spec pointer or reservation |
 |---|---|---|---|---|
 | MD-1 | the executable meta-model | durable | Delivery intent conforms to a typed executable meta-model. | [Spec](../../specs/decisions/executable-meta-model.sdp.md) (`spec:decisions.executable-meta-model`) |
@@ -42,7 +45,7 @@ In prose, lead with meaning and use a code only as a parenthetical lookup key. C
 |---|---|---|
 | **D1** | readiness is separate from delivery facts | `02` §2 |
 | **D2** | sections are typed to their evidence role | `02` §3 |
-| **D3** | Pack is a reified grouping/aggregate | `02` §4 |
+| **D3** | Pack is a reified grouping/aggregate | [Pack reified decision](../../specs/decisions/pack-reified.sdp.md) (`spec:decisions.pack-reified`) |
 | **D4** | Design Review is the flagship curated projection | `06` §5 |
-| **D5** | the agent surface is a visible graph the agent scripts | `06` §3 |
-| **D6** | MCP integration is designed-in and deferred | `06` §7 |
+| **D5** | the agent surface is a visible graph the agent scripts | [Agent surface scripts the graph decision](../../specs/decisions/agent-surface-scripts-graph.sdp.md) (`spec:decisions.agent-surface-scripts-graph`) |
+| **D6** | MCP integration is designed-in and deferred | [MCP-deferred decision](../../specs/decisions/mcp-deferred.sdp.md) (`spec:decisions.mcp-deferred`) |

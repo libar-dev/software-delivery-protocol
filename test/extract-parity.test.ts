@@ -194,4 +194,21 @@ describe("the bounded TypeScript and Markdown refusal-parity matrix", () => {
     expect(cell.markdownFinding).not.toBe(cell.typeScriptFinding);
     expect(cell.rationale).toBeDefined();
   });
+
+  it("records finding-class parity without claiming equal severity or extraction outcome", () => {
+    const pair = readProbePair("unrecognized-property");
+    const typeScript = reifyTypeScriptCarrier(pair.typeScript, "unrecognized-property.sdp.ts");
+    const markdown = reifyMarkdownCarrier(pair.markdown, "unrecognized-property.sdp.md");
+    const typeScriptFinding = typeScript.findings.find(
+      (finding) => finding.validatorId === extractFindingIds.unrecognizedProperty,
+    );
+    const markdownFinding = markdown.findings.find(
+      (finding) => finding.validatorId === extractFindingIds.unrecognizedProperty,
+    );
+
+    expect(typeScriptFinding?.severity).toBe("warning");
+    expect(typeScript.specs).toHaveLength(1);
+    expect(markdownFinding?.severity).toBe("error");
+    expect(markdown.specs).toEqual([]);
+  });
 });

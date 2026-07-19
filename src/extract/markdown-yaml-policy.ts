@@ -10,6 +10,10 @@ import { addMarkdownFinding, markdownFinding, markdownLine } from "./markdown-su
 const nonStringPlainScalars =
   /^(?:true|false|null|~|0o[0-7]+|0x[0-9a-f]+|[-+]?[0-9]+|[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)[eE][-+]?[0-9]+|[-+]?(?:\.[0-9]+|[0-9]+\.[0-9]*)|[-+]?\.inf|\.nan)$/iu;
 const reservedEnvelopeKeys = new Set([
+  "implemented",
+  "has-verifier",
+  "hasVerifier",
+  "observed",
   "claim",
   "deliveryFacts",
   "nodeType",

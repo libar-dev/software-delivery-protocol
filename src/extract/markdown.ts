@@ -1,5 +1,5 @@
-import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
-
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type { CarrierReification } from "./carrier.js";
 import { parseMarkdownBody } from "./markdown-body.js";
 import { readMarkdownEnvelope } from "./markdown-envelope.js";

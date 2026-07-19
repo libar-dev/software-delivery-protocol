@@ -1,7 +1,7 @@
-import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
-
 import { resolveExampleVocabulary } from "../graph/example-space.js";
 import type { GraphSchema, PrimitiveNode } from "../graph/schema.js";
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import { parseSlots, stepSkeleton } from "../notation/slots.js";
 import type { SlotDeclaredType, SlotScalar } from "../notation/slots.js";
 import type { Finding } from "../validate/contracts.js";

@@ -31,6 +31,9 @@ function materializeMarkdownCorpus(): { readonly tsRoot: string; readonly mdRoot
     "decision.sdp.ts",
     "constraint.sdp.ts",
     "model.sdp.ts",
+    "rule.sdp.ts",
+    "workflow.sdp.ts",
+    "contract.sdp.ts",
   ] as const;
   for (const relativePath of [...specPaths, "anchors.ts"]) {
     renameSync(join(tsRoot, `${relativePath}.txt`), join(tsRoot, relativePath));

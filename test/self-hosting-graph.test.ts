@@ -66,7 +66,7 @@ const expectedSpecs = [
       behavior: {
         rules: [
           "The parser accepts only the ruled heading grammar and excludes one malformed carrier while continuing healthy siblings.",
-          "The ruled Markdown parser has a bounded refusal-parity claim with the TypeScript carrier for `extract/non-static-envelope`, `extract/invalid-id`, `extract/duplicate-id`, `extract/reserved-property`, `extract/unowned-prose`, and `extract/unrecognized-property`.",
+          "The ruled Markdown parser has bounded finding-class parity with the TypeScript carrier for `extract/non-static-envelope`, `extract/invalid-id`, `extract/duplicate-id`, `extract/reserved-property`, `extract/unowned-prose`, and `extract/unrecognized-property`; the shared validator ID is the claim, while severity and extract-versus-refuse outcomes remain carrier-specific.",
           "Named non-claim — `extract/parse-error` remains distinct because YAML/frontmatter parsing has no TypeScript parser-diagnostic analogue.",
           "Named non-claim — `extract/non-static-section` remains distinct because TypeScript degrades optional section properties while Markdown refuses malformed documents whole.",
           "Named non-claim — `extract/unrecognized-statement` remains distinct because Markdown owns prose and structures, not TypeScript statement recognition.",
@@ -76,7 +76,7 @@ const expectedSpecs = [
       verification: {
         mode: "executable",
         criteria: [
-          "`test/extract-parity.test.ts` executes the settled refusal-parity matrix, including the six same-class findings and four named non-claims.",
+          "`test/extract-parity.test.ts` executes the settled finding-class parity matrix, including the six same-class findings, their carrier-specific outcomes, and four named non-claims.",
         ],
       },
     },
@@ -104,6 +104,8 @@ const expectedSpecs = [
           "Import refuses an existing Markdown sibling rather than overwriting it.",
           "Refusal outcomes retain the TypeScript reifier findings and add import-local findings honestly.",
           "Import consumes the TypeScript reifier so source acceptance follows one validation path.",
+          "A batch scans only bounded source directories, canonicalizes physical carrier identity, and computes every refusal and target collision before publishing any sibling.",
+          "Publication prepares exclusive temporary siblings and atomically creates targets without clobbering; rollback attempts every artifact, reports survivors, and never deletes a TypeScript source.",
         ],
         exampleSpace: {
           given: ["a TS-carrier spec"],
@@ -954,6 +956,7 @@ const expectedSpecs = [
           "The review is a pure projection that resolves through ordinary source edits, git, and conformance checks; it stores no findings and writes no canonical source.",
           "A human may use the review context when stating readiness, while validators check only the structural readiness floor and never record or require review approval.",
           "The MVP view is deterministic generated Markdown with an index and pages for Specs and Packs; richer visual representations remain outside this behavior.",
+          "Rendering encodes by Markdown syntax context: prose and table fields escape structural characters, fenced JSON preserves authored keys and values through JSON encoding, and inline code uses a delimiter that preserves literal backticks.",
         ],
       },
     },
@@ -1983,9 +1986,9 @@ const expectedAnchors = [
     label: "repeats graph and contract producers for deterministic regeneration",
     type: "satisfies",
     target: "spec:extraction.regenerability",
-    file: "src/cli/sdp.ts",
+    file: "src/cli/build-command.ts",
     constant: "regenerabilityAnchor",
-    site: "function runBuild",
+    site: "export function runBuild",
   },
   {
     id: "impl:protocol.schema-version",

@@ -1,5 +1,3 @@
-import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
-
 import { computeDeliveryFacts } from "../graph/delivery-facts.js";
 import { schemaVersion } from "../graph/schema.js";
 import type {
@@ -16,6 +14,8 @@ import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors
 import { SPEC_SECTION_NAMES } from "../model/sections.js";
 import type { SpecSections } from "../model/sections.js";
 import type { ReifiedAnchor } from "./anchors.js";
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type { ReifiedPack, ReifiedSpec } from "./reify.js";
 
 interface ReifiedRelation {

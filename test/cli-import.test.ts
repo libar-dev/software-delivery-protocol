@@ -1,4 +1,12 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -57,7 +65,7 @@ describe("sdp import", () => {
       // Then: it emits the document to stdout and leaves no sibling behind.
       expect(exitCode).toBe(0);
       expect(capture.readStdout()).toBe(
-        `=== ${join(root, "specs", "order.sdp.md")} ===\n# Imported Spec\n`,
+        `=== ${join(realpathSync(root), "specs", "order.sdp.md")} ===\n# Imported Spec\n`,
       );
       expect(existsSync(join(root, "specs", "order.sdp.md"))).toBe(false);
     } finally {
@@ -133,7 +141,7 @@ describe("sdp import", () => {
                     {
                       validatorId: "import/pack-unsupported",
                       family: "conformance",
-                      severity: "info" as const,
+                      severity: "error" as const,
                       message: "Pack remains TypeScript-authored.",
                       file: relativePath,
                       line: 1,
@@ -179,7 +187,7 @@ describe("sdp import", () => {
 
       // Then: it reports the failed request rather than claiming success.
       expect(exitCode).toBe(1);
-      expect(capture.readStderr()).toContain("import/no-sources");
+      expect(capture.readStderr()).toContain("import/invalid-source-path");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -202,7 +210,7 @@ describe("sdp import", () => {
               {
                 validatorId: "import/refusal",
                 family: "conformance",
-                severity: "info" as const,
+                severity: "error" as const,
                 message: "The source was refused.",
                 file: relativePath,
                 line: 1,
@@ -214,7 +222,7 @@ describe("sdp import", () => {
 
       // Then: the shared finding renderer names the refusal and the command fails.
       expect(exitCode).toBe(1);
-      expect(capture.readStderr()).toContain("[info] import/refusal");
+      expect(capture.readStderr()).toContain("[error] import/refusal");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

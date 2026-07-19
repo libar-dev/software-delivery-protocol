@@ -1,13 +1,13 @@
 import { readFileSync } from "node:fs";
 
-import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
 import { Project } from "ts-morph";
 import type { Program, SourceFile } from "ts-morph";
 
 import type { GraphSchema } from "../graph/schema.js";
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type { Finding, ValidationReport } from "../validate/contracts.js";
 import { reifyAnchorSourceFile } from "./anchors.js";
-import { hasProtocolBuilderImport } from "./reify.js";
 import type { ReifiedAnchor } from "./anchors.js";
 import { reifyTypeScriptCarrier } from "./carrier.js";
 import { deriveGraph } from "./derive.js";
@@ -16,8 +16,11 @@ import type { DiscoveredSourceFile } from "./discover.js";
 import { reifyMarkdownCarrier } from "./markdown.js";
 import { extractFindingIds } from "./reify.js";
 import type { ReifiedPack, ReifiedSpec } from "./reify.js";
+import { hasProtocolBuilderImport, protocolBindingScopeFor } from "./protocol-bindings.js";
+import type { ProtocolBindingScope } from "./protocol-bindings.js";
 
-export { PROTOCOL_MODULE_SPECIFIER, extractFindingIds } from "./reify.js";
+export { PROTOCOL_MODULE_SPECIFIER } from "./protocol-bindings.js";
+export { extractFindingIds } from "./reify.js";
 export { serializeGraph } from "./serialize.js";
 
 export const extractValidatorId = "extract";
@@ -129,6 +132,7 @@ function findDuplicatedIds(
 interface ParsedSourceFile {
   readonly file: DiscoveredSourceFile;
   readonly sourceFile: SourceFile;
+  readonly bindingScope: ProtocolBindingScope;
 }
 
 /**
@@ -187,7 +191,11 @@ export function extract(options: ExtractOptions): ExtractionResult {
     const sourceText = readFileSync(file.absolutePath, "utf8");
     const reified = file.relativePath.endsWith(".sdp.md")
       ? reifyMarkdownCarrier(sourceText, file.relativePath)
-      : reifyTypeScriptCarrier(sourceText, file.relativePath);
+      : reifyTypeScriptCarrier(
+          sourceText,
+          file.relativePath,
+          protocolBindingScopeFor(file.absolutePath),
+        );
     specs.push(...reified.specs);
     packs.push(...reified.packs);
     findings.push(...reified.findings);
@@ -200,6 +208,7 @@ export function extract(options: ExtractOptions): ExtractionResult {
 
   for (const file of files.anchorCandidateFiles) {
     const sourceText = readFileSync(file.absolutePath, "utf8");
+    const bindingScope = protocolBindingScopeFor(file.absolutePath);
 
     // Anchors are recognized by import binding; the contract takes the specifier written
     // verbatim. This raw text test gates AST work: it passes on a package-specifier hit, or on
@@ -207,13 +216,14 @@ export function extract(options: ExtractOptions): ExtractionResult {
     // checkout) — there it skips little; in consumer repos it still skips the bulk of source
     // files. Escape-spelled specifier, require, and re-aliased locals sit outside the binding
     // contract.
-    if (!hasProtocolBuilderImport(sourceText)) {
+    if (!hasProtocolBuilderImport(sourceText, bindingScope)) {
       continue;
     }
 
     anchorSources.push({
       file,
       sourceFile: project.createSourceFile(file.relativePath, sourceText),
+      bindingScope,
     });
   }
 
@@ -226,7 +236,11 @@ export function extract(options: ExtractOptions): ExtractionResult {
       continue;
     }
 
-    const reified = reifyAnchorSourceFile(source.sourceFile, source.file.relativePath);
+    const reified = reifyAnchorSourceFile(
+      source.sourceFile,
+      source.file.relativePath,
+      source.bindingScope,
+    );
     anchors.push(...reified.anchors);
     findings.push(...reified.findings);
   }

@@ -70,8 +70,8 @@ describe("importTypeScriptSpec", () => {
 
     expect(refusal).toBeDefined();
     if (refusal !== undefined) {
-      expect(refusal.severity).toBe("info");
-      expect(refusal.message).toContain(relativePath);
+      expect(refusal.severity).toBe("error");
+      expect(refusal.message).not.toContain(relativePath);
     }
   });
 
@@ -113,7 +113,7 @@ describe("importTypeScriptSpec", () => {
     expect(result.findings).toContainEqual(
       expect.objectContaining({
         validatorId: importFindingIds.packUnsupported,
-        severity: "info",
+        severity: "error",
       }),
     );
   });
@@ -133,12 +133,12 @@ describe("importTypeScriptSpec", () => {
 
     expect(emptyFinding).toBeDefined();
     if (emptyFinding !== undefined) {
-      expect(emptyFinding.severity).toBe("info");
-      expect(emptyFinding.message).toContain(relativePath);
+      expect(emptyFinding.severity).toBe("error");
+      expect(emptyFinding.message).not.toContain(relativePath);
     }
   });
 
-  it("emits a Spec but reports the Pack portion of a mixed module", () => {
+  it("refuses a mixed Spec and Pack module before publishing a duplicate carrier", () => {
     // Given
     const relativePath = "specs/mixed.sdp.ts";
     const source = `${specSource("spec:import.mixed", "Import a mixed module")}\n${packSource()}`;
@@ -147,11 +147,11 @@ describe("importTypeScriptSpec", () => {
     const result = importTypeScriptSpec(source, relativePath);
 
     // Then
-    expect(result.emitted).toEqual(expect.objectContaining({ path: "specs/mixed.sdp.md" }));
+    expect(result.emitted).toBeUndefined();
     expect(result.findings).toContainEqual(
       expect.objectContaining({
         validatorId: importFindingIds.packUnsupported,
-        severity: "info",
+        severity: "error",
       }),
     );
   });
@@ -172,8 +172,8 @@ describe("importTypeScriptSpec", () => {
 
     expect(unsupportedConstruct).toBeDefined();
     if (unsupportedConstruct !== undefined) {
-      expect(unsupportedConstruct.severity).toBe("info");
-      expect(unsupportedConstruct.message).toContain(relativePath);
+      expect(unsupportedConstruct.severity).toBe("error");
+      expect(unsupportedConstruct.message).not.toContain(relativePath);
     }
   });
 

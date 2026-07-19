@@ -55,6 +55,7 @@ const expectedRootExports = [
   "isEnabledExampleVerify",
   "isResolvingTestAnchorVerify",
   "kindEvidence",
+  "MarkdownEmissionError",
   "oracleAnchorId",
   "pack",
   "packId",
@@ -210,7 +211,7 @@ void [${expectedRootExports.join(", ")}];
         process.execPath,
         [
           "-e",
-          `const m=require("${packageName}"); if(typeof m.emitMarkdownSpec!=="function"||typeof m.importTypeScriptSpec!=="function"||typeof m.importFindingIds!=="object") process.exit(1); console.log("barrel imports available")`,
+          `const m=require("${packageName}"); if(typeof m.emitMarkdownSpec!=="function"||typeof m.importTypeScriptSpec!=="function"||typeof m.importFindingIds!=="object"||typeof m.MarkdownEmissionError!=="function") process.exit(1); console.log("barrel imports available")`,
         ],
         consumer,
       );

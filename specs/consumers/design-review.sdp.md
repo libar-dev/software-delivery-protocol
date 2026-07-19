@@ -16,3 +16,4 @@ relations:
 - rule: The review is a pure projection that resolves through ordinary source edits, git, and conformance checks; it stores no findings and writes no canonical source.
 - rule: A human may use the review context when stating readiness, while validators check only the structural readiness floor and never record or require review approval.
 - rule: The MVP view is deterministic generated Markdown with an index and pages for Specs and Packs; richer visual representations remain outside this behavior.
+- rule: Rendering encodes by Markdown syntax context: prose and table fields escape structural characters, fenced JSON preserves authored keys and values through JSON encoding, and inline code uses a delimiter that preserves literal backticks.

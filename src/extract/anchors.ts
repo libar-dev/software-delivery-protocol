@@ -6,7 +6,6 @@ import { codeAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { Finding, Severity } from "../validate/contracts.js";
 import {
-  collectProtocolBindings,
   duplicatePropertyMessage,
   extractFindingIds,
   peekId,
@@ -17,7 +16,9 @@ import {
   resolveProtocolCalleeBuilder,
   unwrapTransparent,
 } from "./reify.js";
-import type { IdReification, ProtocolBindings } from "./reify.js";
+import { collectProtocolBindings } from "./protocol-bindings.js";
+import type { ProtocolBindings, ProtocolBindingScope } from "./protocol-bindings.js";
+import type { IdReification } from "./reify.js";
 
 /**
  * Anchor reification — the anchored layer's producer half (`04` §2). Source files are real product
@@ -323,8 +324,9 @@ function reifyAnchorCall(
 export function reifyAnchorSourceFile(
   sourceFile: SourceFile,
   relativePath: string,
+  bindingScope?: ProtocolBindingScope,
 ): AnchorFileReification {
-  const bindings = collectProtocolBindings(sourceFile);
+  const bindings = collectProtocolBindings(sourceFile, bindingScope);
 
   if (bindings.named.size === 0 && bindings.namespaceLocals.size === 0) {
     return { anchors: [], findings: [] };

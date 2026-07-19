@@ -13,35 +13,25 @@ export const importFindingIds = {
   empty: "import/empty",
 } as const;
 
-interface ImportFinding {
-  readonly validatorId: (typeof importFindingIds)[keyof typeof importFindingIds];
-  readonly family: "conformance";
-  readonly severity: "info";
-  readonly message: string;
-  readonly file: string;
-  readonly line: number;
-}
-
 export interface ImportResult {
   readonly emitted?: {
     readonly path: string;
     readonly content: string;
   };
-  readonly findings: readonly (Finding | ImportFinding)[];
+  readonly findings: readonly Finding[];
 }
 
 function importFinding(
-  validatorId: ImportFinding["validatorId"],
+  validatorId: (typeof importFindingIds)[keyof typeof importFindingIds],
   message: string,
   file: string,
-): ImportFinding {
+): Finding {
   return {
     validatorId,
     family: "conformance",
-    severity: "info",
+    severity: "error",
     message,
     file,
-    line: 1,
   };
 }
 
@@ -51,7 +41,7 @@ export function importTypeScriptSpec(sourceText: string, relativePath: string): 
       findings: [
         importFinding(
           importFindingIds.invalidSourcePath,
-          `the TypeScript import source must end with .sdp.ts: ${relativePath}`,
+          "the TypeScript import source must end with .sdp.ts",
           relativePath,
         ),
       ],
@@ -66,23 +56,7 @@ export function importTypeScriptSpec(sourceText: string, relativePath: string): 
     return {
       findings: [
         ...reification.findings,
-        importFinding(
-          importFindingIds.refusal,
-          `the TypeScript carrier at ${relativePath} was refused`,
-          relativePath,
-        ),
-      ],
-    };
-  }
-
-  if (reification.specs.length > 1) {
-    return {
-      findings: [
-        importFinding(
-          importFindingIds.unsupportedConstruct,
-          `the TypeScript carrier at ${relativePath} reifies more than one Spec`,
-          relativePath,
-        ),
+        importFinding(importFindingIds.refusal, "the TypeScript carrier was refused", relativePath),
       ],
     };
   }
@@ -93,10 +67,23 @@ export function importTypeScriptSpec(sourceText: string, relativePath: string): 
       : [
           importFinding(
             importFindingIds.packUnsupported,
-            `the Pack portion of ${relativePath} remains TypeScript-authored`,
+            "the carrier contains a Pack; move the Spec to its own TypeScript carrier before importing because Packs remain TypeScript-authored",
             relativePath,
           ),
         ];
+
+  if (reification.specs.length > 1) {
+    return {
+      findings: [
+        ...packFindings,
+        importFinding(
+          importFindingIds.unsupportedConstruct,
+          "the TypeScript carrier reifies more than one Spec",
+          relativePath,
+        ),
+      ],
+    };
+  }
 
   const spec = reification.specs[0];
   if (spec === undefined) {
@@ -107,11 +94,15 @@ export function importTypeScriptSpec(sourceText: string, relativePath: string): 
           : [
               importFinding(
                 importFindingIds.empty,
-                `the TypeScript carrier at ${relativePath} contains no Specs or Packs`,
+                "the TypeScript carrier contains no Specs or Packs",
                 relativePath,
               ),
             ],
     };
+  }
+
+  if (packFindings.length > 0) {
+    return { findings: packFindings };
   }
 
   try {
@@ -120,16 +111,15 @@ export function importTypeScriptSpec(sourceText: string, relativePath: string): 
         path: relativePath.replace(/\.sdp\.ts$/u, ".sdp.md"),
         content: emitMarkdownSpec(spec),
       },
-      findings: packFindings,
+      findings: [],
     };
   } catch (error) {
     if (error instanceof MarkdownEmissionError) {
       return {
         findings: [
-          ...packFindings,
           importFinding(
             importFindingIds.unsupportedConstruct,
-            `the TypeScript carrier at ${relativePath} cannot emit faithful Markdown: ${error.reason}`,
+            `the TypeScript carrier cannot emit faithful Markdown: ${error.reason}`,
             relativePath,
           ),
         ],

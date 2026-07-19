@@ -1,5 +1,5 @@
-import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
-
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSections } from "../model/sections.js";
 

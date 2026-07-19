@@ -81,6 +81,10 @@ function compareCodeUnits(a: string, b: string): number {
   return a > b ? 1 : 0;
 }
 
+export function isExcludedDiscoveryDirectory(name: string): boolean {
+  return name.startsWith(".") || EXCLUDED_DIRECTORY_NAMES.has(name);
+}
+
 function byRelativePath(left: DiscoveredSourceFile, right: DiscoveredSourceFile): number {
   return compareCodeUnits(left.relativePath, right.relativePath);
 }
@@ -114,7 +118,7 @@ function walkDirectory(
     if (entry.isDirectory()) {
       // No authoring surface lives in a dot-directory: a stray source copy under one (`.git`, an
       // editor history cache) would reify into phantom carriers or duplicate-id hard errors.
-      if (entry.name.startsWith(".") || EXCLUDED_DIRECTORY_NAMES.has(entry.name)) {
+      if (isExcludedDiscoveryDirectory(entry.name)) {
         continue;
       }
 

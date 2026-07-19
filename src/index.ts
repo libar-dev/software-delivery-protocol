@@ -7,6 +7,7 @@ export { reifyMarkdownCarrier } from "./extract/markdown.js";
 export type { CarrierReification, CarrierReifier } from "./extract/carrier.js";
 export { deriveGraph } from "./extract/derive.js";
 export { emitMarkdownSpec } from "./import/emit-markdown.js";
+export { MarkdownEmissionError } from "./import/markdown-fidelity.js";
 export { importFindingIds, importTypeScriptSpec } from "./import/import.js";
 export type { ImportResult } from "./import/import.js";
 export type { ReifiedAnchor } from "./extract/anchors.js";
