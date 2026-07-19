@@ -1,6 +1,6 @@
 # Plan 18 — Self-hosting phase 2: carrier flip, decision fold, and corpus growth
 
-> 🧭 DRAFTED
+> **Status:** ✅ EXECUTED — phase-2 implementation complete; final audit passed. This is plan 18, the latest ✅ EXECUTED ground. Build state lives in **`plans/`** — read the highest **primary-numbered** plan's status header, plus any **active subplans it (or its parent family) explicitly designates as current**; ignore unnumbered files and letter-suffixed plans only when no primary/active plan designates them. If that plan is DRAFTED, also read the latest ✅ EXECUTED plan for settled ground.
 >
 > **Spec anchors:** [the phase-2 brief](18-self-hosting-phase-2-brief.md) · [plan 17](17-self-hosting-v1.md) · [the carrier ruling (MD-18)](../docs/concept/DECISIONS.md).
 
@@ -227,19 +227,19 @@ where the verification loop is cheap.
 | `06 §1-2 projections taxonomy and two surfaces` | `spec:consumers.projections-model` | defined | `src/projections/design-review.ts` code anchor at `DesignReviewPage`; no verifier | wave 1b projections model and D6 refine target |
 | `06 §3 agent surface` | `spec:consumers.agent-surface` | defined | `src/reader/reader.ts` code anchor at `createReader`; no verifier | wave 1b typed agent-surface behavior and measured-context carrier |
 | `06 §5 Design Review` | `spec:consumers.design-review` | defined | `src/projections/design-review.ts` code anchor at `renderDesignReview`; no verifier | wave 1b flagship human projection and D4 carrying surface |
-| `05 referential integrity` | `spec:validation.referential-integrity` | pending | validator anchors to be named | target to create |
-| `05 claim separation` | `spec:validation.claim-separation` | pending | validator anchors to be named | target to create |
-| `05 verification linkage` | `spec:validation.verification-linkage` | pending | validator anchors to be named | target to create |
-| `05 Pack coherence` | `spec:validation.pack-coherence` | pending | validator anchors to be named | target to create |
-| `05 authored honesty` | `spec:validation.authored-honesty` | pending | validator anchors to be named | target to create |
-| `05 warn-level signals` | `spec:validation.warn-level-signals` | pending | validator anchors to be named | target to create |
-| `06 reader` | `spec:consumers.reader` | pending | reader anchors to be named | target to create |
-| `06 edit model` | `spec:consumers.edit-model` | pending | consumer anchors to be named | target to create |
-| `03 extraction exclusions` | `spec:extraction.excludes` | pending | extractor entrypoints to be named | target to create |
-| `03 claim taxonomy` | `spec:extraction.claim-taxonomy` | pending | extractor entrypoints to be named | target to create |
-| `03 regenerability` | `spec:extraction.regenerability` | pending | extractor entrypoints to be named | target to create |
-| `03 schema versioning` | `spec:extraction.schema-versioning` | pending | extractor entrypoints to be named | target to create |
-| `03 executable contracts` | `spec:extraction.executable-contracts` | pending | extractor entrypoints to be named | target to create |
+| `05 §2 MVP graph validators` | `spec:validation.referential-integrity` | defined | `checkReferentialIntegrity` named in the Rule; no verifier | check `conformance/referential-integrity`; sibling of readiness-floor, whose floor clauses confirm this rule's defined evidence |
+| `05 §2 MVP graph validators` | `spec:validation.claim-separation` | defined | `checkClaimSeparation` named in the Rule; no verifier | check `conformance/claim-separation`; sibling of readiness-floor, whose floor clauses confirm this rule's defined evidence |
+| `05 §2 MVP graph validators` | `spec:validation.verification-linkage` | defined | `checkVerifiesLinkage` and `checkOracleLinkage` named in the Rule; no verifier | bundles `conformance/verifies-linkage` and `conformance/oracle-linkage` because one law governs resolving verification traces; sibling of readiness-floor |
+| `05 §2 MVP graph validators` | `spec:validation.pack-coherence` | defined | `checkPackCoherence` named in the Rule; no verifier | check `conformance/pack-coherence`; sibling of readiness-floor, whose floor clauses confirm this rule's defined evidence |
+| `05 §2 MVP graph validators` | `spec:validation.authored-honesty` | defined | `checkAuthoringShape` and `checkDeliveryFacts` named in the Rule; no verifier | bundles `honesty/authoring-shape` and `honesty/delivery-facts` because one law rejects authored machine truth; sibling of readiness-floor |
+| `05 §2 MVP graph validators` | `spec:validation.warn-level-signals` | defined | `checkOrphans` and `checkGaps` named in the Rule; no verifier | bundles `conformance/orphans` and `honesty/gaps` because one law keeps informative signals non-failing; sibling of readiness-floor |
+| `06 §3 reader` | `spec:consumers.reader` | defined | `src/reader/reader.ts` code anchors at `createReader` and `BlastRadius`; no verifier | wave 3 thin typed loader, entry adapters, and honest file-level impact surface |
+| `06 §4 edit model` | `spec:consumers.edit-model` | defined | no anchor or verifier | wave 3 intent-composition design intent; no single realizing entrypoint exists, so no decorative binding |
+| `03 §1 exclusion surface` | `spec:extraction.excludes` | defined | `src/extract/index.ts` code anchor at `ExtractOptions`; no verifier | wave 4 strict consumer exclusion over exact root-relative POSIX prefixes |
+| `03 §3 claim taxonomy` | `spec:extraction.claim-taxonomy` | defined | `src/graph/schema.ts` code anchor at `graphClaims`; no verifier | wave 4 epistemic model keeps declared, anchored, and inferred distinct |
+| `03 §4 regenerability and no-second-store rule` | `spec:extraction.regenerability` | defined | `src/cli/sdp.ts` code anchor at `runBuild`; no verifier | wave 4 carrier for regenerability; it carries both measured figures |
+| `03 §6 minimal schema versioning` | `spec:extraction.schema-versioning` | defined | `src/graph/schema.ts` code anchor at `schemaVersion`; no verifier | wave 4 MVP version presence and readability rule |
+| `plan 13 A2 executable contracts` | `spec:extraction.executable-contracts` | defined | `src/codegen/contracts.ts` code anchor at `generateContracts`; no verifier | wave 4 graph-derived step and space contract behavior |
 
 ## (i) §6 Watch items and under-fire rulings
 
@@ -296,6 +296,17 @@ round-trip catalog is declared before implementation and may change only by an e
 | TS source comments | omit from graph comparison | comments are not graph content | done — migration round-trip evidence confirms comments do not affect the graph |
 | delivery facts under the same anchor set | compare after both sides use identical anchors | facts remain derived from bindings | done — migration round-trip evidence confirms identical recomputed facts |
 
+### Whole-phase done-record
+
+- **Executed delta catalog:** the importer preserves authored `ReifiedSpec.data` with zero prose normalization. The graph comparison normalizes only the carrier file suffix from `.sdp.ts` to `.sdp.md`; physical envelopes and TypeScript source comments remain outside graph content; delivery facts are recomputed under the same anchor set; and `schemaVersion` remains unchanged. The semantic equality gate and the emitted-Markdown authoring-surface review both passed.
+- **Executed delivery:** `sdp import` landed as the durable, fs-free import seam with the CLI write-beside and `--dry-run` boundary; all eleven checkout Specs migrated atomically to Markdown; the canonical-default carrier rule replaced the interim rule; the bounded parser refusal-parity claim, decision-spec fold, and four honest corpus waves landed. The resulting self-hosting graph holds 58 Specs, 1 Pack, and 36 anchors, with 7 `ready` and 51 `defined` Specs.
+- **Session SHA summary:** G1 is `f06f14d`; G2 is `df444f2`; G3 is `0bb200a`; G4, G5, G6, and G8 are consolidated at `67cfda7` under the continuation directive; G7 remains `b471189034e1ee238394f3364c349937be6bebed` because its corpus and fold-completion evidence was accepted independently before the whole-phase close.
+- **Watch items:** all five terminal states are unfired. Table sugar was not forced because waves used existing sibling Specs and ruled body forms. The single-literal vocabulary form was unnecessary beyond the ruled literal syntax. No wave required a multi-entry constraint. New prose stayed under existing typed section owners, leaving the array-section sub-owner unfired. The Pack remains a TypeScript manifest, with no caller requiring Markdown Pack authoring.
+- **Docket close:** the twelfth preflight leg and decision-spec namespace divergence are done; the indirect `then` key and the Model term named `description` are verified; and the checkout duplicate-carrier fixture exemption remains an explicit preserved test-fixture exception.
+- **Deferred tail:** no-reparse spy coverage remains deferred because named-import interception is weaker than an injected read seam. Temporal token assembly remains deferred because the sanctioned temporal-guard pattern still applies; its comment can be narrowed later.
+- **Lean registry rulings:** the phase admitted `spec:decisions.*` records for the executable meta-model, naming and one-primitive laws, binding and section ownership, the typing and readiness-floor laws, one validation path, the `.sdp.ts` extension and carrier ruling, prose ownership, point-per-example, and the exclusion and envelope-grammar contracts. The Pack, agent-surface, and deferred-MCP decisions joined them; D1, D2, and D4 remain carried by their ordinary Specs. Each admission passed the three-part durability test and is linked from the lean registry.
+- **Close evidence:** the acceptance assembly, adversarial-review remediation, and clean-clone and installed-package proofs are recorded in [task 40](../.omo/evidence/self-hosting-phase-2/task-40-self-hosting-phase-2.acceptance.md), [task 41](../.omo/evidence/self-hosting-phase-2/task-41-self-hosting-phase-2.review.md), and [task 42](../.omo/evidence/self-hosting-phase-2/task-42-self-hosting-phase-2.final-proofs.log).
+
 ## (k) §8 Docket ledger
 
 Planned disposition is not execution evidence. Every row starts pending and closes as `done`,
@@ -320,13 +331,13 @@ Planned disposition is not execution evidence. Every row starts pending and clos
 | Row-3 enrichment delta (review-06) | Record in delta catalog | done s2: recorded in the migration/delta catalog for G2 close. |
 | Bound example reports only a count (review-06) | Verify during migration evidence | done s2: migration evidence verified the bound example reports only its count. |
 | Fixture-to-live byte identity (review-06) | Preserve through migration regression | done s2: the migration regression preserved fixture-to-live byte identity. |
-| No-reparse spy coverage (review-06) | Carry forward as deferred polish | pending |
-| Carrier-truth comment and temporal token assembly (review-06) | Records cluster adopts comment; token assembly deferred | REPAIRED — comment now states only blockquote stripping and whitespace collapse; token assembly remains deferred |
+| No-reparse spy coverage (review-06) | Carry forward as deferred polish | deferred — named-import interception remains weaker than an injected read seam |
+| Carrier-truth comment and temporal token assembly (review-06) | Records cluster adopts comment; token assembly deferred | done — comment now states only blockquote stripping and whitespace collapse; temporal token assembly remains deferred under the sanctioned temporal-guard pattern |
 | Stale provenance wording and plan-16 evidence dispositions (review-06) | Adopt with records cluster | REPAIRED — approval artifact wording aligns with CONTEXT; plan-16 repair items dispositioned below |
-| Twelfth preflight leg and decision-spec namespace divergence (review-06) | Verify preflight; resolve namespace in fold | pending |
-| Indirect assembly of the `then` graph key (review-06) | Verify remediation remains intact | pending |
-| Model term named `description` (review-06) | Verify remediation remains intact | pending |
-| Checkout duplicate-carrier fixture exemption (review-06) | Preserve as explicit fixture exception | pending |
+| Twelfth preflight leg and decision-spec namespace divergence (review-06) | Verify preflight; resolve namespace in fold | done — the recorded preflight chain delta is benign, and the `spec:decisions.*` namespace fold landed |
+| Indirect assembly of the `then` graph key (review-06) | Verify remediation remains intact | verified — phase-1 remediation names the `then` key directly |
+| Model term named `description` (review-06) | Verify remediation remains intact | verified — phase-1 remediation preserves the Model term named `description` |
+| Checkout duplicate-carrier fixture exemption (review-06) | Preserve as explicit fixture exception | preserved as explicit fixture exception — the deliberate dual-carrier fixture remains outside the one-canonical-surface product rule |
 | Exclude/CLI cluster (brief §6) | Land in tranche 1 | done s1 — loud Windows absolute rejection, flag-operand usage diagnostics, segment-boundary coverage, and library/CLI wording separation landed |
 | Grammar-hardening cluster (brief §6) | Land with parity baseline | done s3 — all eight RED→GREEN items landed with focused public-reifier regressions and stable finding IDs |
 | Design Review cluster (brief §6) | Rule at migration/flip | done s2 — owner ruled Option 1; deterministic ordering and uniform escaping landed RED-first with focused projection regressions |
@@ -369,11 +380,11 @@ the ledger's complete, non-empty G1-G8 structure while this plan exists.
 | G1 | emitter contract and grammar freeze | §2 matrix reviewed before emitter design | accepted — 2026-07-18 — `f06f14d` |
 | G2 | importer fidelity | imported fixture graph equals source under §7 catalog | accepted — 2026-07-18 — df444f2 |
 | G3 | hardening baseline | §3 classes have evidence or named non-claim | accepted — 2026-07-18 — 0bb200a |
-| G4 | canonical-default flip | operative records and post-flip truth pins agree | pending — one tight record series and audit map |
-| G5 | first corpus-wave targets | core model, validation, and consumers parents exist | pending — coverage ledger and generated Design Review |
-| G6 | decision fold | every fold source has one ledger disposition | pending — lean registry review and relation evidence |
-| G7 | corpus waves 2–4 + fold completion | coverage ledger complete and fold ledger terminal | pending — coverage audit, floor-honesty table, and generated Design Review |
-| G8 | whole-phase close | full gate, clean-clone proof, review remediation, owner acceptance | pending — final verification wave and accepted SHA |
+| G4 | canonical-default flip | operative records and post-flip truth pins agree | accepted — 2026-07-19 — 67cfda7; accepted by consolidation at the whole-phase close under the continuation directive |
+| G5 | first corpus-wave targets | core model, validation, and consumers parents exist | accepted — 2026-07-19 — 67cfda7; accepted by consolidation at the whole-phase close under the continuation directive |
+| G6 | decision fold | every fold source has one ledger disposition | accepted — 2026-07-19 — 67cfda7; accepted by consolidation at the whole-phase close under the continuation directive |
+| G7 | corpus waves 2–4 + fold completion | coverage ledger complete and fold ledger terminal | accepted — 2026-07-19 — `b471189034e1ee238394f3364c349937be6bebed` |
+| G8 | whole-phase close | full gate, clean-clone proof, review remediation, owner acceptance | accepted — 2026-07-19 — 67cfda7; accepted by consolidation at the whole-phase close under the continuation directive |
 
 ## (n) Acceptance criteria and final verification wave
 

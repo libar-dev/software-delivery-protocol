@@ -32,6 +32,9 @@ In prose, lead with meaning and use a code only as a parenthetical lookup key. C
 
 - [The plain-language references decision](../../specs/decisions/plain-language-references.sdp.md) (`spec:decisions.plain-language-references`).
 - [The concept-documents dissolution decision](../../specs/decisions/concept-docs-dissolve.sdp.md) (`spec:decisions.concept-docs-dissolve`).
+- [The Pack reified decision](../../specs/decisions/pack-reified.sdp.md) (`spec:decisions.pack-reified`).
+- [The agent surface scripts the graph decision](../../specs/decisions/agent-surface-scripts-graph.sdp.md) (`spec:decisions.agent-surface-scripts-graph`).
+- [The MCP-deferred decision](../../specs/decisions/mcp-deferred.sdp.md) (`spec:decisions.mcp-deferred`).
 
 ## Structural-decision shorthand (D1–D6)
 
