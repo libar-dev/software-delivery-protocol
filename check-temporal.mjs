@@ -2,12 +2,13 @@ import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
 // The temporal-token guard: durable artifacts carry current truth, so calendar and session tokens
-// (session/wave/fold handles, ISO dates, numbered plan-file refs) are banned from every tracked
-// and nonignored untracked file. Only the temporal-by-genre artifacts are exempt: the dated
-// decision diary, the per-session plan done-records, the archived reviews, the dated exploration
-// records (verbatim exhibits, diary-dated like DECISIONS) — plus the machine-generated lockfile
-// (derived, not authored prose). `Slice N` / `Phase 0` (roadmap-relative capability names) and
-// `MD-n` citations are allowed.
+// (session/wave/fold handles, ISO dates, numbered plan-file refs) are banned from every delivery
+// artifact: tracked files and nonignored untracked files. The ignored `.omo/` agent workspace is
+// never a delivery artifact, even if historical workspace entries remain tracked. Only the
+// temporal-by-genre artifacts are otherwise exempt: the dated decision diary, the per-session plan
+// done-records, the archived reviews, the dated exploration records (verbatim exhibits, diary-dated
+// like DECISIONS) — plus the machine-generated lockfile (derived, not authored prose). `Slice N` /
+// `Phase 0` (roadmap-relative capability names) and `MD-n` citations are allowed.
 const pattern =
   "Session[ -][0-9]|Wave[- ][A-Z]|Fold-[A-Z]|deferredInSession|plans/[0-9]+|20[0-9]{2}-[0-9]{2}-[0-9]{2}";
 const expression = new RegExp(pattern, "u");
@@ -16,8 +17,7 @@ const excludedDirectories = [
   "plans/",
   "reviews/",
   "explorations/",
-  ".omo/plans/",
-  ".omo/evidence/",
+  ".omo/",
 ];
 
 function isExcluded(path) {
