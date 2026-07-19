@@ -409,6 +409,32 @@ export const carrier = spec({
     expect(Object.keys(terms)).toContain("__proto__");
   });
 
+  it("retains a Markdown __proto__ Model term through extract and serializeGraph", () => {
+    const root = temporaryCorpusRoot("markdown-proto-term-serialization");
+    writeFileSync(
+      join(root, "specs", "proto-term.sdp.md"),
+      `---
+id: spec:orders.proto-term-serialization
+kind: model
+altitude: story
+readiness: idea
+relations: {}
+---
+# Proto term serialization
+
+## Model
+
+- **__proto__** — Something authored.
+`,
+      "utf8",
+    );
+
+    const result = extract({ root });
+
+    expect(result.report.findings).toEqual([]);
+    expect(serializeGraph(result.graph)).toContain('"__proto__": "Something authored."');
+  });
+
   it("id-shaped-string-content: a raw id-shaped string in section content is prose — kept, edge-free, finding-free", () => {
     const result = extract({ root: corpusRoot("id-shaped-string-content") });
 
