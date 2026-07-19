@@ -340,6 +340,54 @@ export const carrier = spec({
     ]);
   });
 
+  it("retains a nested __proto__ model term as own string content", () => {
+    const reified = reifyTypeScriptCarrier(
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:orders.proto-string-term"),
+  kind: "model",
+  altitude: "story",
+  readiness: "idea",
+  model: { terms: { "__proto__": "A string-authored domain term." } },
+});`,
+      "proto-string-term.sdp.ts",
+    );
+
+    const graph = deriveGraph(reified.specs, reified.packs, []);
+    const terms = primitiveNode(graph, "spec:orders.proto-string-term")?.sections?.model?.terms;
+
+    expect(reified.findings).toEqual([]);
+    expect(terms).toBeDefined();
+    if (terms === undefined) throw new Error("expected Model terms to reify as an object");
+    expect(Object.hasOwn(terms, "__proto__")).toBe(true);
+    expect(Object.getOwnPropertyDescriptor(terms, "__proto__")?.value).toBe(
+      "A string-authored domain term.",
+    );
+  });
+
+  it("retains an object-valued nested __proto__ term without prototype pollution", () => {
+    const reified = reifyTypeScriptCarrier(
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:orders.proto-object-term"),
+  kind: "model",
+  altitude: "story",
+  readiness: "idea",
+  model: { terms: { "__proto__": { detail: "An object-authored domain term." } } },
+});`,
+      "proto-object-term.sdp.ts",
+    );
+
+    const graph = deriveGraph(reified.specs, reified.packs, []);
+    const terms = primitiveNode(graph, "spec:orders.proto-object-term")?.sections?.model?.terms;
+
+    expect(reified.findings).toEqual([]);
+    expect(terms).toBeDefined();
+    if (terms === undefined) throw new Error("expected Model terms to reify as an object");
+    expect(Object.getPrototypeOf(terms)).toBe(Object.prototype);
+    expect(Object.keys(terms)).toContain("__proto__");
+  });
+
   it("id-shaped-string-content: a raw id-shaped string in section content is prose — kept, edge-free, finding-free", () => {
     const result = extract({ root: corpusRoot("id-shaped-string-content") });
 

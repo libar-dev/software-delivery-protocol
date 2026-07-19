@@ -13,6 +13,7 @@ import { SPEC_ALTITUDES, SPEC_KINDS, SPEC_READINESS } from "../model/descriptors
 import { SPEC_RELATION_TYPES } from "../model/relations.js";
 import { SPEC_SECTION_NAMES } from "../model/sections.js";
 import type { Finding, Severity } from "../validate/contracts.js";
+import { setOwn } from "./set-own.js";
 
 /**
  * Static reification (`04` §1): a spec file is a JSON file that TypeScript happens to validate
@@ -620,7 +621,7 @@ function reifyStaticObject(
       return result;
     }
 
-    value[name] = result.value;
+    setOwn(value, name, result.value);
   }
 
   return { ok: true, value };
@@ -778,7 +779,7 @@ function reifyObjectLossy(
 
     if (Node.isObjectLiteralExpression(inner)) {
       const nested = reifyObjectLossy(inner, propertyPath, bindings);
-      value[name] = nested.value;
+      setOwn(value, name, nested.value);
       drops.push(...nested.drops);
       continue;
     }
@@ -786,7 +787,7 @@ function reifyObjectLossy(
     const result = reifyStaticValue(initializer, propertyPath, bindings);
 
     if (result.ok) {
-      value[name] = result.value;
+      setOwn(value, name, result.value);
       continue;
     }
 
@@ -882,7 +883,7 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
     }
 
     const child = sanitizeSectionValue(initializer, value[name], propertyPath);
-    sanitized[name] = child.value;
+    setOwn(sanitized, name, child.value);
     issues.push(...child.issues);
   }
 
