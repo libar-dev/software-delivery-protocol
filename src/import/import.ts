@@ -58,6 +58,8 @@ export function importTypeScriptSpec(sourceText: string, relativePath: string): 
     };
   }
 
+  // No binding scope on purpose: imported carriers must use the public package specifier;
+  // relative builder imports are a source-checkout affordance and refuse here (fail-closed).
   const reification = reifyTypeScriptCarrier(sourceText, relativePath);
 
   if (reification.findings.length > 0) {

@@ -201,10 +201,12 @@ export function extract(options: ExtractOptions): ExtractionResult {
   for (const file of files.anchorCandidateFiles) {
     const sourceText = readFileSync(file.absolutePath, "utf8");
 
-    // Anchors are recognized by import binding, and the contract takes the specifier written
-    // verbatim — so a raw text test skips the AST work for the bulk of source files. An
-    // escape-spelled specifier (same cooked value, different raw text) sits outside the binding
-    // contract here, exactly as `require` and re-aliased locals do.
+    // Anchors are recognized by import binding; the contract takes the specifier written
+    // verbatim. This raw text test gates AST work: it passes on a package-specifier hit, or on
+    // any relative import when this runtime's trusted builder modules are known (Protocol source
+    // checkout) — there it skips little; in consumer repos it still skips the bulk of source
+    // files. Escape-spelled specifier, require, and re-aliased locals sit outside the binding
+    // contract.
     if (!hasProtocolBuilderImport(sourceText)) {
       continue;
     }
