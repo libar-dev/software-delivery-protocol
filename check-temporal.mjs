@@ -13,12 +13,7 @@ const pattern =
   "Session[ -][0-9]|Wave[- ][A-Z]|Fold-[A-Z]|deferredInSession|plans/[0-9]+|20[0-9]{2}-[0-9]{2}-[0-9]{2}";
 const expression = new RegExp(pattern, "u");
 const excludedFiles = ["docs/concept/DECISIONS.md", "package-lock.json"];
-const excludedDirectories = [
-  "plans/",
-  "reviews/",
-  "explorations/",
-  ".omo/",
-];
+const excludedDirectories = ["plans/", "reviews/", "explorations/", ".omo/"];
 
 function isExcluded(path) {
   return (
