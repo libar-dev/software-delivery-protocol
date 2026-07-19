@@ -267,3 +267,12 @@
   three final carrier/gate audits. The clean chain includes both `--check-clean` determinism legs.
 - `test/package-smoke.test.ts` ran inside that chain and passed against the packed, installed
   tarball, proving the `sdp import` verb and package-barrel surface at the phase-final SHA.
+
+## Final close
+
+- The final verification wave (F1–F4) was re-run in full after the failed F1/F4 gates.
+- F1 APPROVED after creating the plan-compliance evidence file under the continuation directive.
+- F2 and F3 APPROVED on their first run.
+- F4 APPROVED after reconciling the canonical phase-2 execution plan under `plans/` with the executed state and adding D3/D5/D6 pointers to `docs/concept/DECISIONS.md`.
+- All top-level checkboxes in `.omo/plans/self-hosting-phase-2.md` are now `[x]`; the final SHA is `f8648c4`.
+- No push to remote was performed.
