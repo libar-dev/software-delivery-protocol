@@ -1,10 +1,24 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+} from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = fileURLToPath(new URL(".", import.meta.url));
-const sdpPath = join(repoRoot, "dist", "cli", "sdp.js");
+const scratchRoot = join(repoRoot, ".tmp-scratch");
+
+// The relocated runtime: builder trust is physical identity to the *running* package's modules, so
+// the clean-room must carry its own `dist/` and `package.json` and execute those. Running the
+// repo's binary against a copied tree would lawfully lose every relative-import anchor and make the
+// comparison meaningless; running the copy's binary proves the regeneration is relocation-independent.
+const runtimePaths = ["dist", "package.json"];
 
 // The check pipeline owns precisely these outputs. Root dist/ is package assembly rather than
 // generated truth; broader ignored runtime garbage remains a manual inspection responsibility.
@@ -12,6 +26,7 @@ const generationTargets = [
   {
     name: "self-hosting",
     generatedPath: "generated",
+    sourcePaths: ["specs", "src", "test"],
     command: [
       "view",
       ".",
@@ -26,6 +41,11 @@ const generationTargets = [
   {
     name: "checkout-v1",
     generatedPath: "examples/checkout-v1/generated",
+    sourcePaths: [
+      "examples/checkout-v1/specs",
+      "examples/checkout-v1/src",
+      "examples/checkout-v1/test",
+    ],
     command: ["view", "examples/checkout-v1", "--check-clean"],
   },
 ];
@@ -77,15 +97,26 @@ function compareGeneratedTree(target, actual, expected) {
 }
 
 function regenerateExpectedTree(target) {
-  const actual = readTree(join(repoRoot, target.generatedPath));
+  mkdirSync(scratchRoot, { recursive: true });
+  const temporaryRoot = mkdtempSync(join(scratchRoot, "preflight-"));
 
-  // Relative builder imports are trusted only by physical identity to this checkout, so a copied
-  // scratch root lawfully loses anchors. Rerender here to compare two independent results under
-  // the same production binding authority.
-  run(process.execPath, [sdpPath, ...target.command], { cwd: repoRoot });
-  const expected = readTree(join(repoRoot, target.generatedPath));
+  try {
+    for (const sourcePath of [...runtimePaths, ...target.sourcePaths]) {
+      cpSync(join(repoRoot, sourcePath), join(temporaryRoot, sourcePath), { recursive: true });
+    }
 
-  return compareGeneratedTree(target, actual, expected);
+    run(process.execPath, [join(temporaryRoot, "dist", "cli", "sdp.js"), ...target.command], {
+      cwd: temporaryRoot,
+    });
+
+    return compareGeneratedTree(
+      target,
+      readTree(join(repoRoot, target.generatedPath)),
+      readTree(join(temporaryRoot, target.generatedPath)),
+    );
+  } finally {
+    rmSync(temporaryRoot, { recursive: true, force: true });
+  }
 }
 
 function isGeneratedPath(path) {
