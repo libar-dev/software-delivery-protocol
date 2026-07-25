@@ -128,3 +128,34 @@ backtick run in the value. No global escape or global exemption is lawful.
 - Live QA drove the built CLI through `--help`, dry-run with no target write, successful publication
   with source preservation, existing-target refusal, explicit invalid-operand refusal, and the
   public ESM barrel exports.
+
+### Closing wave — after the done record above
+
+Four repairs landed after that gate run, three of them fallout from the anchor-trust ruling and the
+`setOwn` cluster reaching surfaces the remediation waves had not swept:
+
+- **Serialization keeps author-controlled keys.** The `setOwn` law stopped at reification; an
+  authored `__proto__` key survived extraction and then vanished in the canonical section
+  serializer, which rebuilt sections with plain assignment. The serializer now uses `setOwn` too,
+  so the carrier-to-graph path is own-property throughout, with a regression pinning it.
+- **The agent workspace leaves the published tree.** `.gitignore` excludes `.omo/`, yet an
+  arbitrary slice of it had become tracked: the whole phase-2 workspace, but only five of the
+  remediation session's ~30 evidence files and one of its four notepads. That partial snapshot is
+  what forced a temporal-guard exemption for an ignored directory. The slice is untracked (the
+  files stay on disk), and the exemption is deleted with it — enumeration already honours
+  `.gitignore`, so the guard needed no carve-out once the tracking was honest. The durable
+  ledgers were archived into this directory for exactly this reason; the `.omo/…` evidence links
+  inside the archived phase plans stay session-local pointers, never published artifacts.
+- **Preflight regenerates at trusted package identity.** Builder trust is physical identity to the
+  *running* package's modules, so a clean-room copy driven by the repository's own binary lawfully
+  loses every relative-import anchor. The first repair dropped the clean room and re-ran in place —
+  which, sitting downstream of `generate:*` and both `--check-clean` legs in the same chain, proved
+  little beyond two consecutive runs agreeing.
+- **The clean room is restored, correctly this time.** The scratch root now carries `dist/` and
+  `package.json` beside the sources and executes *its own* `sdp`, so `nearestPackageRoot` lands
+  inside the copy and relative builder trust holds there. Preflight compares the committed tree
+  against a regeneration performed entirely outside this checkout: 58 Specs, 1 Pack, 36 anchors,
+  95 nodes, 180 edges, byte-identical. Relocation-independence is proven rather than assumed, and
+  the trust ruling is now something the gate exercises instead of something it had to concede to.
+- Gate at close: `npm run check` green end to end — 478 repository tests plus the isolated 54-test
+  CLI suite, both `--check-clean` legs, and the restored preflight clean room.

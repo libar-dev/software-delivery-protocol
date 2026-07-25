@@ -16,7 +16,9 @@ held — see "What held") and hunted for what that review missed.
 **Disposition:** compiled for a follow-up session. No product file was changed by this review.
 The one working-tree repair made alongside it (banned temporal tokens in the uncommitted
 `.omo` close notepad, which turned `check:temporal` red) is recorded as R-31 and was fixed
-before commit.
+before commit. **The follow-up session then ran on this same branch** — see the remediation
+addendum at the foot of this document and `plans/19-review-08-remediation.md` for the
+per-finding dispositions.
 
 ---
 
@@ -308,3 +310,25 @@ rationale and finds pointers, then may dig the deleted diary out of git and trea
 3. R-5 + R-20 + R-26 (the escaping-policy scope repair) — one ruled projection session.
 4. R-7, R-14, R-16, R-17 as a small hygiene batch; R-8, R-18, R-19, R-29 as one records sweep.
 5. The notes (R-21 … R-30) enter the docket for disposition, not necessarily for work.
+
+---
+
+## Remediation addendum — the docket closed on this branch
+
+The follow-up session ran before merge rather than after it, so the docket this review opened does
+not survive into `main`. The per-finding disposition table, the three architecture rulings it
+forced (anchor-builder trust, the import transaction, Markdown rendering contexts), and the
+verification record are `plans/19-review-08-remediation.md`.
+
+- **Fixed:** R-1 … R-23, R-25, R-26, R-27 (partial, with a named bootstrap exception), R-29.
+- **Recorded only, no invented policy:** R-24 (control-character latitude matches TS string
+  literals), R-28 (corpus-test granularity — owned by the named tests-to-executable-specs
+  program), R-30 (root and example corpora are separate extraction roots).
+- **Already resolved:** R-31.
+
+Three rulings are worth reading before touching those surfaces again, because each closed a
+finding by fixing a *contract* rather than a call site: builder trust is physical module identity,
+never a raw relative spelling (R-4); import is a scan → plan → prepare → publish transaction whose
+publication is an atomic hard link and whose rollback never throws (R-1, R-2, R-9 … R-13, R-23);
+and Markdown escaping follows syntactic context — prose escapes, fenced JSON and inline code carry
+literal data under their own encoders (R-5, R-20, R-26).
