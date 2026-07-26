@@ -122,10 +122,10 @@ example children; residual tests stay per ruling 1.
 | S1 | `test/validators.test.ts` claim cases | `spec:validation.claim-separation` | 1–2 | done — 2 points (`collapsed-edge-claim`, `unratified-descriptor`) |
 | S1 | `test/validators.test.ts` verifies/models cases | `spec:validation.verification-linkage` | 1–2 | done — 2 points (`unbound-example`, `unresolved-oracle`) |
 | S1 | `test/validators.test.ts` pack cases (coverage gap) | `spec:validation.pack-coherence` | 1 | done — 1 point (`incoherent-aggregate`) |
-| S2 | `test/exclude-diagnostics.test.ts` | `spec:extraction.excludes` | 1–2 | planned |
-| S2 | `test/graph-schema.test.ts` | `spec:extraction.schema-versioning` | 1 | planned |
-| S2 | `test/ids.test.ts` (representative points) | `spec:model.stable-ids` | 1–2 | planned |
-| S2 | `test/extract-parity.test.ts` (representative) | `spec:carrier.markdown-parser` | 1 | planned |
+| S2 | `test/exclude-diagnostics.test.ts` | `spec:extraction.excludes` | 1–2 | done — 2 points (`segment-boundary`, `refused-path`) |
+| S2 | `test/graph-schema.test.ts` | `spec:extraction.schema-versioning` | 1 | done — 1 point (`declared-version`) |
+| S2 | `test/ids.test.ts` (representative points) | `spec:model.stable-ids` | 1–2 | done — 2 points (`namespaced-round-trip`, `malformed-refusal`) |
+| S2 | `test/extract-parity.test.ts` (representative) | `spec:carrier.markdown-parser` | 1 | done — 1 point (`bounded-parity`) |
 | S3 | `test/codegen.test.ts` (representative laws) | `spec:extraction.executable-contracts` (enriched) | 2–3 | planned |
 | S3 | `test/runner.test.ts` | a new runner spec (§3) | 1–2 | planned |
 | S3 | `test/notation.test.ts` | a new slot-notation spec (§3) | 1–2 | planned |
@@ -231,6 +231,48 @@ Appended as waves execute; entries name the forcing material and the disposition
    their bound `specTest` anchors, the parents by the enabled-example rule), and introduces no
    `honesty/gaps` warning. The closing distribution is `defined: 45 / ready: 24` over 69 specs.
 
+### 2026-07-26 — S2 (the extraction, model, and carrier cheap wins)
+
+1. **Three dedicated suites, one per family, rather than one S2 suite.** *Forcing material:* the
+   four converted laws span three families whose worlds share nothing — a temporary filesystem
+   root, an in-memory derived payload, in-process ID parsing, and a fixture-pair reification.
+   *Disposition:* `test/self-hosting-extraction.test.ts` (excludes · schema-versioning),
+   `test/self-hosting-model.test.ts` (stable-ids), and `test/self-hosting-carrier.test.ts`
+   (markdown-parser). S1's per-tree wrapper row absorbed all three as `testPaths` entries with no
+   change to the pinned recovery messages, which is exactly what that restructuring was for. No
+   ADR test is met; it stays a plan record.
+2. **A behavior-kind parent owns an Example space beside a `Verification — executable` section.**
+   *Forcing material:* `spec:carrier.markdown-parser` already carried an anchored verifier
+   (`test:protocol.markdown-parser`) and its executable-verification criteria. Adding
+   `## Example space` between `## Behavior` and `## Verification — executable` routes into
+   `sections.behavior.exampleSpace` exactly as for a `rule` parent; the existing anchor and the
+   verification section are untouched. *Disposition:* the executable path now stands **beside**
+   the anchored one on the same spec — both bindings resolve, and the spec's bounded parity claim
+   is unchanged in wording.
+3. **Partial points are the honest shape for refusal-versus-success pairs.** *Forcing material:*
+   three of the four vocabularies branch on an outcome (discovery completes vs. is refused,
+   parsing resolves vs. is refused), so each sibling uses only the Then steps its branch reaches.
+   The concreteness law reads used steps only, so both siblings clear `defined` and each contract
+   carries exactly its own steps. *Disposition:* no new grammar; the table-sugar watch item stayed
+   unfired — two siblings per law were enough, and the ledger's 1–2 point budget was never
+   pressed.
+4. **No drift found between the four stated laws and engine behavior.** Every clause the points
+   exercise — exact-prefix exclusion across both discovery surfaces, refusal rather than
+   normalization, the payload-carried schema version, the lowercase-namespace and `#` sub-part
+   grammar, and the shared-validator-ID parity with carrier-specific severity and extraction
+   outcomes — held as authored. Four mechanism lines were added (`normalizeExcludes` /
+   `discoverFiles`, `schemaVersion` / `deriveGraph`, `parseId` / `formatId`) purely to name the
+   realizing entrypoints in the corpus's established style; **no code moved and no claim was
+   widened**.
+5. **Four parents and six children promoted to `ready` under §1 ruling 5.** Each parent's floor
+   clears (every `refines` / `dependsOn` target is at least `defined`), each child carries a
+   resolving verifier through its bound `specTest` anchor, and each parent earns `has-verifier`
+   from its enabled example — the promotion introduces no `honesty/gaps` warning.
+   `spec:carrier.markdown-parser` was judged acceptance-grade on its own terms: its parity claim
+   is explicitly bounded and its four named non-claims are stated exclusions, not open questions.
+   The closing distribution is `defined: 41 / ready: 34` over 75 specs; the corpus stays at 0
+   errors and 0 warnings.
+
 ## (j) §7 Done-record (execution — appended at close)
 
 Executed delivery, the conversion ledger's terminal states, the readiness sweep ledger, the
@@ -275,7 +317,7 @@ commit series on the effort branch. This ledger is git process evidence, never g
 | Session | Delivers | Gate discipline | State |
 |---|---|---|---|
 | S1 | validation-family conversions (§2) + promotions that honestly clear | orchestrator-verified green gate | done — 11 points bound across 6 parents; three green-gate commits |
-| S2 | extraction/model cheap wins (§2) | orchestrator-verified green gate | planned |
+| S2 | extraction/model cheap wins (§2) | orchestrator-verified green gate | done — 6 points bound across 4 parents; one green-gate conversion commit |
 | S3 | corpus additions (§3) + codegen/runner/notation conversions | orchestrator-verified green gate | planned |
 | S4 | readiness maturation sweep (ruling 5) | orchestrator-verified green gate | planned |
 | S5 | per-doc audits + first dissolutions (§4) | orchestrator-verified green gate over the regenerated Design Review | planned |
