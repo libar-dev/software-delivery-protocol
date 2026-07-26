@@ -1,0 +1,347 @@
+# Plan 22 — Self-hosting phase 5: the `05` dissolution and the agent front door
+
+> **Status:** DRAFTED — execution begins on `feature/protocol-self-application-phase-5`. This is
+> plan 22, the highest primary-numbered plan; the latest ✅ EXECUTED ground is plan 21 (the
+> phase-4 close, merged at PR #13). Build state lives in **`plans/`** — read the highest
+> **primary-numbered** plan's status header, plus any **active subplans it (or its parent
+> family) explicitly designates as current**; ignore unnumbered files and letter-suffixed plans
+> only when no primary/active plan designates them. If that plan is DRAFTED, also read the
+> latest ✅ EXECUTED plan for settled ground.
+>
+> **Spec anchors:** [plan 21 §6 done-record and §5a deletion-cost inventory](21-self-hosting-phase-4.md) ·
+> [the agent-surface ruling](../specs/decisions/agent-surface-scripts-graph.sdp.md)
+> (`spec:decisions.agent-surface-scripts-graph`) · [the dissolution decision]
+> (../specs/decisions/concept-docs-dissolve.sdp.md) (`spec:decisions.concept-docs-dissolve`) ·
+> [the MCP deferral](../specs/decisions/mcp-deferred.sdp.md) (`spec:decisions.mcp-deferred`).
+
+## (a) Status
+
+This is the executable phase plan for the two items the phase-4 close named as next work, in
+order: finish the `05` dissolution (the two uncarried clauses, then the one-session deletion
+plan 21 §5a already priced), and then **introduce the agent front door** — the CLI-facing
+realization of the agent surface, which is simultaneously the phase that builds the
+whole-pipeline worlds the consumer family (`spec:consumers.agent-surface` ·
+`spec:consumers.reader` · `spec:consumers.design-review`) has honestly refused promotion on
+for two consecutive sweeps. Execution happens only on
+`feature/protocol-self-application-phase-5`. Sessions run agent-executed and
+orchestrator-verified; **owner ratification of the whole phase happens at the phase PR
+review** — the gate ledger (§9) records that honestly and never claims a live owner
+acceptance that did not occur.
+
+## (b) Context
+
+Phase 4 closed at **108 Specs · 71 `ready` / 37 `defined` · 44 bound points across seven bound
+suites**, with the oracle split, the shared suite constant landed, the floor and view laws
+carried, and `docs/concept/05` staying exactly two clauses short of dissolution (gaps 13/14 —
+the per-team severity override and the team-overridable floor config, named nowhere else).
+
+The agent surface is the readiness tail's largest honest block. The ruling is settled
+(`spec:decisions.agent-surface-scripts-graph`: agents **script a visible typed graph** — no
+verb wall), the frozen joins exist (`src/reader/reader.ts`: `findByConcept` · `byFile` ·
+`blastRadius`, with `bySymbol` deliberately absent pending the impact graph), the reader is
+exported from the package, and the second-caller bar is on the record (`06` §3: freeze a typed
+contract only when a second machine consumer appears; the discriminator is "would an agent
+hand-rolling this get it wrong?"). What does not exist: an ergonomic front door an agent can
+call without authoring a TS module, a demand map and recipe corpus derived from what agents
+actually start from, a skill on-ramp, and — the readiness unlock — whole-pipeline verifiers
+over the full self-hosting graph.
+
+The gen-1 evidence (the prior art's playground, its skills, and its recorded review notes) is
+**evidence, never template**. Its transplantable lessons, re-derived here against the gen-2
+model: typed scripting beat the verb wall at a measured ~⅕ of the context; the frozen surface
+stayed tiny because a written freeze-vs-script bar was applied before every addition; recipes
+with runnable-as-written bodies were the release valve that kept the surface from growing; a
+skill — not a README — was the on-ramp a cold session actually used; under-typing hid real
+capability ("the type is the discovery surface"); output is pre-shaped by the scripting body,
+never truncated by the tool; and smoke checks assert shapes, never counts. Its
+non-transplants, equally deliberate: gen-1's live-rebuild-per-call freshness doctrine answered
+a silent-failure mode gen 2 already polices differently (deterministic regeneration,
+`--check-clean`, preflight), and gen-1's pattern-state semantics rejected the claim taxonomy
+this model is built on — so recipes and skill text are **re-derived, never transcribed**.
+
+The permanent guardrails stand unchanged: checks police conformance and honesty, never
+content-quality and never workflow; delivery facts are derived, never authored; the claim
+taxonomy is never collapsed; readiness is stated only where the floor honestly clears; one
+canonical surface per ID, no mixing; the one graph is the sole read model.
+
+## (c) Scope
+
+1. **S1 — the `05` dissolution.** Carry gaps 13/14 as one clause each on existing Specs, then
+   delete `docs/concept/05` per the plan-21 §5a inventory with the full re-pointing and
+   two-form sweep.
+2. **S2 — the front-door ruling and build.** Rule the front door's representation on the
+   record, then build it with the recorded constraints designed in; the freshness question is
+   ruled in the same session.
+3. **S3 — the demand map, the recipes, and the skill.** The authored on-ramp corpus: what
+   agents start from, the verified runnable recipe set, and the skill that teaches the
+   surface.
+4. **S4 — the whole-pipeline verifier wave.** Bound points over the full self-hosting graph
+   for the consumer family; promotions ride verifiers.
+5. **S5 — readiness sweep + `06`/`07` re-grade.** Per-spec dispositions; honest gap ledgers;
+   optionally a refreshed measured-context comparison through the new front door.
+6. **S6 — close.** Adversarial mutation-probing review, remediation, full gate plus
+   clean-clone proof, done-record, PR.
+
+**Out of scope, named deliberately:** the MCP surface (apps integrate, agents script — the
+deferral stands); `bySymbol` and the impact graph (aspirational; the substrate does not
+exist); any structured **write** contract (the second-caller bar applied to writes —
+`spec:consumers.edit-model`'s verifier is expected to stay an honest refusal); Spec Studio,
+the per-PR hosted preview, and the remaining `06`/`07` gap tail beyond what this phase's laws
+honestly carry (the assist roles, the discipline mapping, the distribution chart, the Mermaid
+surfaces, the open questions, measure-what-hurts); the gen-1 `.feature` adapter; new
+content-quality validators; bulk concept purges.
+
+## §1 Engineering rulings
+
+Rulings 1–9 of plan 20 and 10–14 of plan 21 carry forward verbatim (the law is the unit of
+conversion; the four-artifact template; the readiness promotion law; batch-green bookkeeping;
+temporal-guard discipline as amended; per-doc audited deletion ratified at the PR; drift
+discipline; oracle-split preservation; one source of truth for contract-dependent suites; the
+P-1 world-building lesson; mirror-faithful enrichment; no dangling registry surfaces). Phase 5
+adds:
+
+15. **The front door is ruled, never drifted into.** Its representation is decided on the
+    record before it is built — as a decision Spec if it passes the three-part test (it is
+    hard to reverse once agents script against it, surprising without context, and a real
+    trade-off), otherwise as a plan ruling. The candidates the session weighs, each against
+    the agent-surface ruling: (A) an `sdp q '<body>'` evaluation sink that derives the graph,
+    injects a reader handle, evaluates the supplied body, and prints the pre-shaped return;
+    (B) no new verb — a documented, skill-taught scripting pattern against the exported
+    `createReader`; (C) both, with the sink as the ergonomic wrapper over the same seam. A
+    wave never picks silently.
+16. **The frozen surface grows only through the recipe valve.** No query verbs are added in
+    this phase or any successor without passing the recorded bar: a join freezes into the
+    reader only when (a) a second machine consumer needs it AND (b) recipes show agents
+    hand-rolling it get it wrong. Everything else lives as a recipe. Growing the surface
+    uncritically rebuilds the verb wall the agent-surface ruling exists to forbid.
+17. **Recipes are runnable as written, and a machine checks that.** Every recipe body is
+    executable verbatim against the self-hosting graph; a test executes each one and asserts
+    **shape-level invariants, never frozen counts** (the corpus grows every phase; a count in
+    a recipe check is instant rot). A recipe that stops running is a gate failure, not a doc
+    bug.
+18. **Lineage is re-derivation, never transcription.** Gen-1 recipe and skill text speaks a
+    rejected model (no claim taxonomy, FSM state, bolt-on provenance). Every recipe, demand-map
+    row, and skill instruction is authored fresh in the ratified vocabulary against the gen-2
+    schema; gen-1 sources may be cited in the plan as evidence, never quoted into product or
+    corpus surfaces.
+19. **The front door consumes the one graph only.** Whatever S2 rules, the front door reads
+    derived graph data through the extractor's lawful output — it never re-parses carriers or
+    source itself (the extractor stays the only component that reads source). The freshness
+    choice — derive in-process per invocation vs read the committed `generated/graph.json` —
+    is a real trade-off the S2 ruling decides and records, weighing gen-1's
+    staleness-hides-failures evidence against gen-2's determinism gate. This session also
+    dispositions the long-carried **no-reparse read seam** docket row one way or the other.
+20. **Consumer promotions ride real whole-pipeline worlds.** The S4 refusal class ("whole
+    pipeline world, out of tranche") dissolves only through the real seams — the front door
+    and reader exercised over the full self-hosting graph (or an honest full-graph fixture),
+    never through narrowed probe worlds that would make the promotion decorative. Points
+    follow the P-1 discipline: only the named law can refuse, mutation-probed before recorded.
+21. **The trust boundary is resolved at the edge.** If the ruled front door evaluates supplied
+    bodies or takes references from untrusted strings, inputs are resolved to canonical
+    validated identities at the boundary (the gen-1 lesson: validate-then-use beats
+    sanitize-in-place); the evaluation surface is a local developer tool with the same trust
+    stance as `npx tsx`, and the plan records that stance explicitly rather than implying a
+    sandbox that does not exist.
+
+## §2 Session inventory
+
+### S1 — the `05` dissolution
+
+1. **Carry gap 13**: one clause on `spec:validation.warn-level-signals` — the per-team
+   severity override for the informative signals is designed-for and deferred (stated as a
+   deferral, the `doc:`-reservation precedent).
+2. **Carry gap 14**: one clause on `spec:validation.readiness-floor`, beside the MD-13 posture
+   it already states — the floor table is team-overridable by design, deferred (same
+   discipline). Per the phase-4 review guidance: clauses on existing Specs, never new Specs —
+   keep the dissolution cheap. Neither clause needs a bound point (deferrals have no
+   executable seam; stating one would be decorative — record the refusal).
+3. **Re-audit `05`** to the standing template over the regenerated Design Review; expected
+   verdict: fully carried. Then **delete** it per plan 21 §5a's deletion-cost inventory, in
+   the same change re-pointing every inbound surface (ruling 14): the DECISIONS registry rows
+   MD-13 and MD-9 (→ `spec:validation.readiness-floor` / `spec:validation.kind-evidence`),
+   `CONTEXT.md`'s "(→ `05`)" section pointer, `docs/concept/README.md`, the surviving concept
+   docs (`01` · `06` · `07`), the checkout-v1 README, the four JTBD story citations, the
+   source-comment citations (`src/validate/validators.ts` per-check comments,
+   `readiness-floor.ts` header, `contracts.ts`, `reader.ts`, `design-review.ts`,
+   `sections.ts`, `reify.ts`), the three test-file citations, and the **two pinned quotes in
+   `check-carrier-truth.mjs`** (re-pointed at the carrying Specs, the `check-prose-schema.mjs`
+   precedent). Then the two-form reference sweep (backticked/path forms AND bare `05 §`
+   citation forms) to zero hits outside `plans/` and `reviews/`, with commands and counts
+   recorded. If the audit finds any row honestly uncarried, `05` stays again and the residue
+   is recorded — a lawful close, not a failure.
+
+### S2 — the front-door ruling and build
+
+1. **The ruling** (ruling 15): weigh candidates A/B/C and land the decision on the record.
+   The evidence brief for the session: the agent-surface ruling (scripts-the-graph; the
+   schema is the contract), the second-caller bar, and the gen-1 findings — the eval sink was
+   the measured "agent sink" (~⅕ context, conclusions-only output), while its recorded
+   footguns are design inputs, not reasons to refuse: the runner owns module resolution so no
+   staleness flag exists to forget; stdin detection via `isatty`, never a TTY property probe;
+   anchoring to the extraction root, never the invoking directory; bodies are plain JS
+   function bodies (no imports, no TS-only syntax) with `return` as the output contract;
+   documented examples must run as written.
+2. **The freshness ruling** (ruling 19): derive-in-process vs committed-graph read, decided
+   and recorded with its reason; the no-reparse docket row dispositioned.
+3. **The build**: implement the ruled front door in `src/cli/` on the existing `sdp` surface;
+   output is the pre-shaped return of the body (bounded inspection depth; a `--json` mode if
+   ruled); failures render through the one diagnostic currency (`spec:validation.diagnostic-rendering`
+   applies — no second report shape). Engine tests in the residual style land with the build
+   (the bound points are S4's — do not double-author).
+4. **Bookkeeping**: the CLI surface list in `AGENTS.md`/`00` updates only if the ruling adds a
+   verb (drift discipline: fix the stale side deliberately); `npm run check` green.
+
+### S3 — the demand map, the recipes, and the skill
+
+1. **The demand map** enriches `spec:consumers.agent-surface`: the entry-point catalog — an
+   agent arrives holding a **string**, a **file**, or a **changeset**, never a spec id (the
+   symbol entry stays named-and-deferred with `bySymbol`). Each row names its frozen adapter
+   (`findByConcept` · `byFile` · `blastRadius`) or its recipe.
+2. **The recipe corpus**: an authored artifact (location the session records; suggested
+   `docs/agent-surface/recipes.md`) of verified runnable bodies, re-derived for the gen-2
+   model. The opening set, drawn from the demand map and the standing payoff queries — each a
+   candidate, none sacred: the build backlog (`ready ∧ ¬implemented`); the drift alarm
+   (`implemented ∧ ¬ready`); "what does this Spec guarantee and who verifies it" (context +
+   verifier bindings with claims decoded); "what breaks if I change these files" (blast
+   radius with `coverage-unknown` named, at-risk one-hop carried); "what is in this Pack and
+   at what readiness" (the review backbone); "where is this concept" (`findByConcept` over
+   ids, titles, narrative, sections); readiness divergence (stated vs derived, the first
+   unmet clause); orphans and gaps read from the validation report. Every recipe body is
+   checked per ruling 17.
+3. **The skill on-ramp**: a skill teaching the surface (location per this repo's consumer
+   conventions; content: load order, the bootstrap discipline — query the graph before
+   reading files for corpus questions; the anti-anecdote rule — the live graph outranks any
+   skill paraphrase; the output contract — pre-shape the return, never dump). The skill is a
+   consumer artifact, not corpus truth: it cites Specs, it never restates law the Specs carry
+   (prose-ownership discipline applied to the on-ramp).
+4. **Bookkeeping**: if the recipes check lands as a new test leg or suite, it enters the
+   shared constant / wrapper per ruling 11 mechanics; `npm run check` green.
+
+### S4 — the whole-pipeline verifier wave
+
+Bound points over the full self-hosting graph through the real seams (ruling 20), following
+the four-artifact template. Planned targets:
+
+| Parent | Law under verification | Planned points |
+|---|---|---|
+| `spec:consumers.agent-surface` | the front door end-to-end: a body scripted against the injected reader over the derived self-hosting graph returns pre-shaped, claim-decoded data | 1–2 |
+| `spec:consumers.reader` | the entry adapters over the full graph: `findByConcept` reaches recorded context; `byFile` bridges an extraction-root-relative file; `blastRadius` names impacted, at-risk (edge + claim carried), and `coverage-unknown` honestly | 2–3 |
+| `spec:consumers.design-review` | the parent's own law (the phase-4 review's named candidate): a Spec/Pack rendered in context as a pure projection — no stored finding, deterministic pages | 1 |
+
+Worlds may run the live self-hosting extraction (the corpus oracle precedent: derive in
+memory from the repo root) or an honest full-graph fixture — never a narrowed probe that
+makes the promotion decorative. Every point mutation-probed before recording (ruling 12).
+Promotions ride: the three parents promote only where the floor clears and the verifier
+resolves (ruling 5); `spec:consumers.edit-model` is expected to refuse again with its
+standing reason (no write surface this phase), and the refusal is recorded, not regretted.
+
+### S5 — readiness sweep + re-grades
+
+1. **Sweep**: every then-`defined` Spec dispositioned per-Spec (promote only under ruling 5;
+   named refusals otherwise; the 21 decisions expected to hold their standing refusal).
+2. **`06`/`07` re-grade** to the standing template: the rows this phase's laws touch (`06` §3
+   the agent surface and reader rows; any row the front door or recipes now carry) re-graded
+   honestly; the out-of-scope tail stays gapped by design. `06` and `07` are expected to
+   **stay**; if either audit surprises toward fully-carried, the deletion runs under ruling
+   14, not as a side-effect.
+3. **Optional, evidence-not-quota**: refresh the measured context-efficiency comparison
+   through the new front door (the agent-surface Spec already carries one measured line; a
+   second measurement is recorded only if honestly comparable — never manufactured).
+
+### S6 — close
+
+1. Adversarial review archived as `reviews/11-self-hosting-phase-5-pre-close-review.md`:
+   an independently designed mutation matrix over every new bound point; a records-honesty
+   recomputation of the headline numbers; the `05` deletion's reference sweep independently
+   re-run; the front door probed adversarially (malformed bodies, non-TTY stdin, off-root
+   invocation, oversized returns — the ruled constraints hold or the findings say so).
+2. Remediation with per-finding terminal dispositions.
+3. Full twelve-leg `npm run check` plus the clean-clone proof at the close tip.
+4. Done-record (§6), acceptance criteria graded (§5), watch items and docket terminal (§3–4),
+   `AGENTS.md` status update, PR description.
+
+## §3 Watch items
+
+| Item | Fires when | State |
+|---|---|---|
+| verb-wall creep | any second query verb (or reader accessor) is proposed without clearing ruling 16's bar | unfired |
+| recipe rot | a recipe body stops running as written (ruling 17's check is the alarm) | unfired |
+| skill anecdote drift | skill text restates or contradicts law a Spec carries instead of citing it | unfired |
+| eval trust boundary | the front door's input handling grows past the recorded local-tool trust stance | unfired |
+| oracle thrash | the corpus wave forces cross-family edits in the split oracle (per-family modules should localize) | unfired |
+| table sugar / single-literal vocabulary (carried) | real material forces the ruled-out forms | unfired |
+
+## §4 Docket ledger (carried in from plan 21)
+
+The Markdown Pack syntax ruling · the gen-1 `.feature` adapter · **the no-reparse read seam
+(owned by this phase — S2's freshness ruling dispositions it)** · temporal-guard token
+assembly · the editor-association gap · control-character latitude · the separate example-id
+namespace. Rows close only with reasons in the done-record.
+
+## §5 Acceptance criteria
+
+1. **`05` is dispositioned on its audit**: either deleted with gaps 13/14 carried first, the
+   full §5a re-pointing landed, and the two-form sweep at zero hits — or kept with the honest
+   residue recorded. No stretched verdicts.
+2. **The front door is ruled, then built**: the representation and freshness decisions are on
+   the record (decision Spec or plan ruling, per the three-part test) before the
+   implementation lands; the recorded constraints are designed in and adversarially probed at
+   S6; diagnostics flow through the one currency.
+3. **The on-ramp exists and is checked**: the demand map is authored on the agent-surface
+   Spec; every recipe runs as written under a machine check asserting shapes, never counts;
+   the skill cites Specs rather than restating them.
+4. **The consumer family earns its promotions**: every promotion carries a resolving
+   whole-pipeline verifier through the executable path, visible in the regenerated graph;
+   zero `honesty/gaps` warnings introduced; refusals (expected: `edit-model`, the decisions)
+   carry named reasons.
+5. **No surface creep**: the reader's frozen join set is unchanged unless ruling 16's bar was
+   cleared on the record; the verb count changed only by what S2 ruled.
+6. **The gate holds throughout**: `npm run check` green at every blessed commit; the close
+   runs the full chain plus the clean-clone proof at the tip.
+7. **Records continue**: ledgers terminal; docket rows dispositioned or carried with reasons;
+   the adversarial review archived with every finding in a terminal disposition before close.
+
+## §6 Done-record
+
+*(written at close)*
+
+## §7 Conversion / corpus ledger
+
+*(maintained by the waves; state values `planned` → `done` / `deferred` / `dropped` with
+reasons)*
+
+| Wave | Law / artifact | Carrier | Planned points | State |
+|---|---|---|---|---|
+| S1 | gap 13 — severity-override deferral | `spec:validation.warn-level-signals` (clause) | 0 (deferral, no seam) | planned |
+| S1 | gap 14 — floor-config deferral | `spec:validation.readiness-floor` (clause) | 0 (deferral, no seam) | planned |
+| S2 | the front-door ruling (+ freshness) | decision Spec or plan ruling — S2 records which | — | planned |
+| S2 | the front-door implementation | `src/cli/` on the `sdp` surface | 0 (points are S4's) | planned |
+| S3 | the demand map | `spec:consumers.agent-surface` (enrichment) | — | planned |
+| S3 | the recipe corpus + machine check | authored artifact + check per ruling 17 | — | planned |
+| S3 | the skill on-ramp | consumer artifact (location recorded) | — | planned |
+| S4 | agent-surface end-to-end | `spec:consumers.agent-surface` | 1–2 | planned |
+| S4 | reader entry adapters over the full graph | `spec:consumers.reader` | 2–3 | planned |
+| S4 | Design Review parent law | `spec:consumers.design-review` | 1 | planned |
+
+## §8 Readiness ledger
+
+*(maintained at S4 promotions and the S5 sweep; opening distribution `ready: 71 /
+defined: 37` over 108)*
+
+## §9 Session and gate ledger
+
+Sessions execute sequentially; each closes with a green twelve-leg gate, a regenerated Design
+Review where the wave touched the corpus, and a commit series on the effort branch. This
+ledger is git process evidence, never graph content.
+
+| Session | Delivers | Gate discipline | State |
+|---|---|---|---|
+| S1 | gaps 13/14 carried; the `05` audit and (expected) deletion with full re-pointing and the two-form sweep | orchestrator-verified green gate over the regenerated Design Review | planned |
+| S2 | the front-door and freshness rulings; the front-door build; the no-reparse docket disposition | orchestrator-verified green gate | planned |
+| S3 | demand map · verified recipes · the skill | orchestrator-verified green gate | planned |
+| S4 | whole-pipeline bound points; consumer-family promotions | orchestrator-verified green gate | planned |
+| S5 | readiness sweep; `06`/`07` re-grades; optional measured-context refresh | orchestrator-verified green gate | planned |
+| S6 | adversarial review, remediation, full close, done-record, PR | full chain + clean-clone; review archived | planned |
+
+Owner ratification of every gate above happens at the phase PR review; no live owner
+acceptance occurs during execution.
