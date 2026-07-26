@@ -33,7 +33,7 @@ export const validationSpecs = [
             'the spec {defect:"declares no relation"|"records a blocking open question"}',
           ],
           when: ["the graph is validated"],
-          [["t", "hen"].join("")]: [
+          then: [
             'the report names {findingId:string} at severity {severity:"warning"|"error"}',
             "the finding names the unmet floor clause {clauseId:string}",
             "the report holds {errorCount:number} errors",
@@ -63,7 +63,7 @@ export const validationSpecs = [
               'the spec {defect: "declares no relation"}',
             ],
             when: ["the graph is validated"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the report names {findingId: "honesty/readiness-floor"} at severity {severity: "error"}',
               'the finding names the unmet floor clause {clauseId: "at-least-one-relation"}',
               "the report holds {errorCount: 1} errors",
@@ -94,7 +94,7 @@ export const validationSpecs = [
               'the spec {defect: "records a blocking open question"}',
             ],
             when: ["the graph is validated"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the report names {findingId: "honesty/readiness-floor"} at severity {severity: "error"}',
               'the finding names the unmet floor clause {clauseId: "no-blocking-open-questions"}',
               "the report holds {errorCount: 1} errors",
@@ -138,7 +138,7 @@ export const validationSpecs = [
             'its only evidence is {evidence:"a constraints entry carrying a target"|"a constraints entry with no target"|"an empty promoted rule child"}',
           ],
           when: ["the graph is validated"],
-          [["t", "hen"].join("")]: [
+          then: [
             'the report names {findingId:string} at severity {severity:"warning"|"error"}',
             "the finding names the unmet floor clause {clauseId:string}",
             "the report holds {errorCount:number} errors",
@@ -169,7 +169,7 @@ export const validationSpecs = [
               'its only evidence is {evidence: "a constraints entry carrying a target"}',
             ],
             when: ["the graph is validated"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the report names {findingId: "honesty/readiness-floor"} at severity {severity: "error"}',
               'the finding names the unmet floor clause {clauseId: "kind-evidence-complete"}',
               "the report holds {errorCount: 1} errors",
@@ -201,7 +201,7 @@ export const validationSpecs = [
               'its only evidence is {evidence: "a constraints entry with no target"}',
             ],
             when: ["the graph is validated"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the report names {findingId: "honesty/readiness-floor"} at severity {severity: "error"}',
               'the finding names the unmet floor clause {clauseId: "kind-evidence-complete"}',
               "the report holds {errorCount: 1} errors",
@@ -233,7 +233,7 @@ export const validationSpecs = [
               'its only evidence is {evidence: "an empty promoted rule child"}',
             ],
             when: ["the graph is validated"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the report names {findingId: "honesty/readiness-floor"} at severity {severity: "error"}',
               'the finding names the unmet floor clause {clauseId: "kind-evidence-present"}',
               "the report holds {errorCount: 1} errors",
@@ -264,7 +264,7 @@ export const validationSpecs = [
             "a {secondCarrier:string} carrier declares {specId:string}",
           ],
           when: ["the extraction root is read"],
-          [["t", "hen"].join("")]: [
+          then: [
             "both sites report {findingId:string}",
             "no graph node is emitted for {specId:string}",
           ],
@@ -291,7 +291,7 @@ export const validationSpecs = [
               'a {secondCarrier: "Markdown"} carrier declares {specId: "spec:fixture.duplicate"}',
             ],
             when: ["the extraction root is read"],
-            [["t", "hen"].join("")]: [
+            then: [
               'both sites report {findingId: "extract/duplicate-id"}',
               'no graph node is emitted for {specId: "spec:fixture.duplicate"}',
             ],
@@ -329,7 +329,7 @@ export const validationSpecs = [
             "the spec declares a dependsOn relation to the absent target {targetId:string}",
           ],
           when: ["the graph is validated"],
-          [["t", "hen"].join("")]: [
+          then: [
             "the aggregate report states no family of its own",
             'the conformance family reports {conformanceId:string} at severity {conformanceSeverity:"warning"|"error"}',
             'the honesty family reports {honestyId:string} at severity {honestySeverity:"warning"|"error"}',
@@ -360,7 +360,7 @@ export const validationSpecs = [
               'the spec declares a dependsOn relation to the absent target {targetId: "spec:probe.absent-dependency"}',
             ],
             when: ["the graph is validated"],
-            [["t", "hen"].join("")]: [
+            then: [
               "the aggregate report states no family of its own",
               'the conformance family reports {conformanceId: "conformance/referential-integrity"} at severity {conformanceSeverity: "error"}',
               'the honesty family reports {honestyId: "honesty/gaps"} at severity {honestySeverity: "warning"}',
@@ -396,7 +396,7 @@ export const validationSpecs = [
             "the spec declares a dependsOn relation to {targetId:string}",
           ],
           when: ["the graph is validated"],
-          [["t", "hen"].join("")]: [
+          then: [
             'the report names {findingId:string} at severity {severity:"warning"|"error"}',
             "the finding offers the nearest-id suggestion: {suggested:boolean}",
           ],
@@ -425,7 +425,7 @@ export const validationSpecs = [
               'the spec declares a dependsOn relation to {targetId: "spec:probe.fulfilment-policy"}',
             ],
             when: ["the graph is validated"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the report names {findingId: "conformance/referential-integrity"} at severity {severity: "error"}',
               "the finding offers the nearest-id suggestion: {suggested: false}",
             ],
@@ -455,7 +455,7 @@ export const validationSpecs = [
               'the spec declares a dependsOn relation to {targetId: "spec:probe.create-ordr"}',
             ],
             when: ["the graph is validated"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the report names {findingId: "conformance/referential-integrity"} at severity {severity: "error"}',
               "the finding offers the nearest-id suggestion: {suggested: true}",
             ],
@@ -490,7 +490,7 @@ export const validationSpecs = [
             'the graph carries an off-contract {element:"edge claim"|"descriptor value"} spelled {value:string}',
           ],
           when: ["the graph is validated"],
-          [["t", "hen"].join("")]: [
+          then: [
             'the report names {findingId:string} at severity {severity:"warning"|"error"}',
             "the finding message states {phrase:string}",
             "the report holds {floorCount:number} readiness-floor findings",
@@ -520,7 +520,7 @@ export const validationSpecs = [
               'the graph carries an off-contract {element: "edge claim"} spelled {value: "declared"}',
             ],
             when: ["the graph is validated"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the report names {findingId: "conformance/claim-separation"} at severity {severity: "error"}',
               'the finding message states {phrase: "never collapsed"}',
               "the report holds {floorCount: 0} readiness-floor findings",
@@ -552,7 +552,7 @@ export const validationSpecs = [
               'the graph carries an off-contract {element: "descriptor value"} spelled {value: "saga"}',
             ],
             when: ["the graph is validated"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the report names {findingId: "conformance/claim-separation"} at severity {severity: "error"}',
               'the finding message states {phrase: "outside the ratified descriptor values"}',
               "the report holds {floorCount: 0} readiness-floor findings",
@@ -589,7 +589,7 @@ export const validationSpecs = [
             'a non-resolving {verifierKind:"example spec"|"oracle anchor"} named {verifierId:string} points at it',
           ],
           when: ["the graph is validated"],
-          [["t", "hen"].join("")]: [
+          then: [
             'the report names {findingId:string} at severity {severity:"warning"|"error"}',
             "the parent earns the delivery fact has-verifier: {conferred:boolean}",
           ],
@@ -619,7 +619,7 @@ export const validationSpecs = [
               'a non-resolving {verifierKind: "example spec"} named {verifierId: "spec:probe.create-order.valid-cart"} points at it',
             ],
             when: ["the graph is validated"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the report names {findingId: "conformance/verifies-linkage"} at severity {severity: "warning"}',
               "the parent earns the delivery fact has-verifier: {conferred: false}",
             ],
@@ -649,7 +649,7 @@ export const validationSpecs = [
               'a non-resolving {verifierKind: "oracle anchor"} named {verifierId: "oracle:probe.order-policy"} points at it',
             ],
             when: ["the graph is validated"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the report names {findingId: "conformance/oracle-linkage"} at severity {severity: "error"}',
               "the parent earns the delivery fact has-verifier: {conferred: false}",
             ],
@@ -684,7 +684,7 @@ export const validationSpecs = [
             "the pack also names that spec as a modelRef",
           ],
           when: ["the graph is validated"],
-          [["t", "hen"].join("")]: [
+          then: [
             'the report names {findingId:string} at severity {severity:"warning"|"error"}',
             "the report holds {findingCount:number} pack-coherence findings",
           ],
@@ -713,7 +713,7 @@ export const validationSpecs = [
               "the pack also names that spec as a modelRef",
             ],
             when: ["the graph is validated"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the report names {findingId: "conformance/pack-coherence"} at severity {severity: "error"}',
               "the report holds {findingCount: 2} pack-coherence findings",
             ],
@@ -747,7 +747,7 @@ export const validationSpecs = [
             'the spec hand-authors the delivery fact {factName:"implemented"|"has-verifier"} at {site:"a behavior section carrier"|"the node deliveryFacts array"}',
           ],
           when: ["the graph is validated"],
-          [["t", "hen"].join("")]: [
+          then: [
             'the report names {findingId:string} at severity {severity:"warning"|"error"}',
             "the finding names the fact {relatedId:string} and states {phrase:string}",
           ],
@@ -777,7 +777,7 @@ export const validationSpecs = [
               'the spec hand-authors the delivery fact {factName: "implemented"} at {site: "a behavior section carrier"}',
             ],
             when: ["the graph is validated"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the report names {findingId: "honesty/authoring-shape"} at severity {severity: "error"}',
               'the finding names the fact {relatedId: "implemented"} and states {phrase: "derived, never authored"}',
             ],
@@ -808,7 +808,7 @@ export const validationSpecs = [
               'the spec hand-authors the delivery fact {factName: "has-verifier"} at {site: "the node deliveryFacts array"}',
             ],
             when: ["the graph is validated"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the report names {findingId: "honesty/delivery-facts"} at severity {severity: "error"}',
               'the finding names the fact {relatedId: "has-verifier"} and states {phrase: "derived, never authored"}',
             ],
@@ -834,6 +834,7 @@ export const validationSpecs = [
       behavior: {
         rules: [
           "Orphaned Specs and ready Specs lacking a resolving verifier are warnings, not validation errors.",
+          "The gap signal reads the delivery facts the one derivation rule recomputes from the graph, never the facts a Spec states, so a hand-authored fact can never silence it.",
           "The realizing validator entrypoints are `checkOrphans` and `checkGaps` in `src/validate/validators.ts`.",
         ],
         exampleSpace: {
@@ -842,7 +843,7 @@ export const validationSpecs = [
             'the spec declares {relations:"no relation"|"a decidedBy decision"}',
           ],
           when: ["the graph is validated"],
-          [["t", "hen"].join("")]: [
+          then: [
             'the report names {findingId:string} at severity {severity:"warning"|"error"}',
             "the report holds {errorCount:number} errors",
           ],
@@ -869,7 +870,7 @@ export const validationSpecs = [
               'the spec declares {relations: "no relation"}',
             ],
             when: ["the graph is validated"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the report names {findingId: "conformance/orphans"} at severity {severity: "warning"}',
               "the report holds {errorCount: 0} errors",
             ],
@@ -899,7 +900,7 @@ export const validationSpecs = [
               'the spec declares {relations: "a decidedBy decision"}',
             ],
             when: ["the graph is validated"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the report names {findingId: "honesty/gaps"} at severity {severity: "warning"}',
               "the report holds {errorCount: 0} errors",
             ],
@@ -936,7 +937,7 @@ export const validationSpecs = [
             'a finding naming the validator {validatorId:string} at severity {severity:"warning"|"error"} carrying the message {message:string}',
           ],
           when: ["the command-line renderer formats that finding once per location shape"],
-          [["t", "hen"].join("")]: [
+          then: [
             "the finding carrying the file {file:string} and the line {line:number} renders {withLocation:string}",
             "the same finding carrying the file alone renders {fileOnly:string}",
             "the same finding carrying neither renders {bare:string}",
@@ -966,7 +967,7 @@ export const validationSpecs = [
               'a finding naming the validator {validatorId: "honesty/readiness-floor"} at severity {severity: "error"} carrying the message {message: "The stated rung is not earned."}',
             ],
             when: ["the command-line renderer formats that finding once per location shape"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the finding carrying the file {file: "specs/probe.sdp.md"} and the line {line: 7} renders {withLocation: "specs/probe.sdp.md:7 — [error] honesty/readiness-floor — The stated rung is not earned."}',
               'the same finding carrying the file alone renders {fileOnly: "specs/probe.sdp.md — [error] honesty/readiness-floor — The stated rung is not earned."}',
               'the same finding carrying neither renders {bare: "[error] honesty/readiness-floor — The stated rung is not earned."}',
