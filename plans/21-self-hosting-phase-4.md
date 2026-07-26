@@ -222,7 +222,7 @@ recorded (ruling 12). Promotions ride verifiers per ruling 5.
 | table sugar (ruling 4) | sibling authoring proves dishonest or unusable in a wave | unfired |
 | single-literal vocabulary form | real material forces it | unfired |
 | per-family oracle drift | a split family module regains cross-family assertions or a mega-assert | unfired |
-| shared-constant bypass | a new contract-dependent suite lands outside the constant | unfired |
+| shared-constant bypass | a new contract-dependent suite lands outside the constant | unfired — the constant landed at S2 with no surprise; the eslint side derives from the root row only, because the example tree's suite sits outside the typed-lint globs the exemption relaxes. S3's new suite is the first real test of the coupling |
 | separate example-id namespace | a collision or real pressure appears | unfired (watch continues from phase 3) |
 
 ## §4 Docket ledger (carried in from plan 20)
@@ -270,8 +270,8 @@ reasons)*
 
 | Wave | Law | Carrier Spec(s) | Planned points | State |
 |---|---|---|---|---|
-| S2 | lower floor rungs (`idea`/`scoped`/`defined` clauses) | `spec:validation.readiness-floor` (enriched) | 2–3 | planned |
-| S2 | per-kind evidence table + MD-16 promoted-evidence bound | new `spec:validation.kind-evidence` | 1–2 | planned |
+| S2 | lower floor rungs (`idea`/`scoped`/`defined` clauses) | `spec:validation.readiness-floor` (enriched) | 2–3 | done — 2 points (`at-least-one-relation` on a scoped probe · `no-blocking-open-questions` on a defined probe), both mutation-probed red |
+| S2 | per-kind evidence table + MD-16 promoted-evidence bound | new `spec:validation.kind-evidence` | 1–2 | done — 3 points (behavior-family complete cell · constraint target · the promoted-evidence bound); one over the planned ceiling, taken deliberately so the MD-16 bound the Spec states is not the only row left unbound |
 | S3 | derived-readiness banner (one direction · first unmet clause) | new Spec under `specs/consumers/` | 1–2 | planned |
 | S3 | `implemented` view-label (binding language) | same family | 1 | planned |
 | S3 | wholesale page rewrite (atomic swap · no stale page) | new Spec | 1 | planned |
@@ -283,6 +283,23 @@ reasons)*
 *(maintained at S2/S3 promotions and the S4 sweep; opening distribution `ready: 51 /
 defined: 36` over 87)*
 
+**S2 — the floor wave.** Six Specs enter the corpus, every one of them stated `ready` at
+authoring because the floor clears and a resolving verifier lands in the same change: the new
+rule Spec `spec:validation.kind-evidence`, its three `example` children
+(`constraints-alone`, `untargeted-constraint`, `empty-promoted-child`), and the two `example`
+children of `spec:validation.readiness-floor` (`unrelated-scoped-spec`,
+`blocking-open-question`). `spec:validation.readiness-floor` was already `ready` and stays
+`ready` and floor-clean after enrichment — its rule set grew, its descriptors did not move.
+
+Refusals on the record: `spec:decisions.kind-conditional-floor` stays `defined` — the phase-3
+decision precedent holds, a Decision Record's own maturity is not moved by a Spec citing it.
+`spec:validation.kind-evidence` carries `has-verifier` but not `implemented`: no code anchor was
+added for it, because the one anchor on the floor's evaluator already binds the realizing
+entrypoint and a second anchor on the same file would be decorative.
+
+Closing distribution: **`ready: 57 / defined: 36` over 93** (87 → 93 Specs · 65 → 70 anchors ·
+153 → 164 nodes · 294 → 317 edges), zero errors and zero warnings over the regenerated graph.
+
 ## §9 Session and gate ledger
 
 Sessions execute sequentially; each closes with a green twelve-leg gate, a regenerated Design
@@ -292,7 +309,7 @@ ledger is git process evidence, never graph content.
 | Session | Delivers | Gate discipline | State |
 |---|---|---|---|
 | S1 | the oracle split (§2 S1) | orchestrator-verified green gate | done — 21 `it()`s over one hoisted extraction; the frozen expectation moved to ten authored modules under `test/self-hosting-oracle/` (seven family files, pack manifest, declared relations, anchors) plus their aggregating index; zero assertion loss (every one of the 27 original `expect` sites survives, 5 added: three oracle-length cross-checks and the two-assertion "no Spec outside the families" law), the node-id roster derived from the authored arrays per ruling 10; counts unchanged at 87/1/65 · 153 · 294 · ready 51 / defined 36 |
-| S2 | shared constant + floor wave | orchestrator-verified green gate | planned |
+| S2 | shared constant + floor wave | orchestrator-verified green gate | done — `contract-dependent-suites.mjs` now states the per-tree rows once and both `vitest-test.mjs` and `eslint.config.js` read it (clean-room proof: lint passes with `generated/contracts` moved aside, the wrapper still fails fast with the same recovery text); the floor wave carried the `idea`/`scoped`/`defined` rungs into `spec:validation.readiness-floor` and the per-kind table into the new `spec:validation.kind-evidence`, with 5 bound points each mutation-probed red for the clause it names; corpus 87 → 93 Specs, `ready` 51 → 57 |
 | S3 | view wave + seventh bound suite | orchestrator-verified green gate | planned |
 | S4 | readiness sweep + re-audits (± the `05` deletion) | orchestrator-verified green gate over the regenerated Design Review | planned |
 | S5 | adversarial review, remediation, full close, done-record | full chain + clean-clone; review archived | planned |
