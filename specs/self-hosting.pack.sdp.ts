@@ -42,6 +42,8 @@ export const selfHostingV1Pack = pack({
     ref("spec:model.pack-aggregate"),
     ref("spec:model.anchors"),
     ref("spec:validation.duplicate-ids.dual-carrier"),
+    ref("spec:validation.warn-level-signals.orphan-signal"),
+    ref("spec:validation.warn-level-signals.ready-gap-signal"),
     ref("spec:decisions.plain-language-references"),
     ref("spec:decisions.concept-docs-dissolve"),
     ref("spec:decisions.one-validation-path"),

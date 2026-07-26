@@ -855,7 +855,7 @@ const expectedSpecs = [
     id: "spec:validation.warn-level-signals",
     specKind: "rule",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/warn-level-signals.sdp.md",
     title: "Missing connective evidence warns without failing",
     narrative: null,
@@ -869,9 +869,78 @@ const expectedSpecs = [
           "Orphaned Specs and ready Specs lacking a resolving verifier are warnings, not validation errors.",
           "The realizing validator entrypoints are `checkOrphans` and `checkGaps` in `src/validate/validators.ts`.",
         ],
+        exampleSpace: {
+          given: [
+            'the graph holds a spec {specId:string} at readiness {readiness:"idea"|"ready"}',
+            'the spec declares {relations:"no relation"|"a decidedBy decision"}',
+          ],
+          when: ["the graph is validated"],
+          [["t", "hen"].join("")]: [
+            'the report names {findingId:string} at severity {severity:"warning"|"error"}',
+            "the report holds {errorCount:number} errors",
+          ],
+        },
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.warn-level-signals.orphan-signal",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/warn-level-signals.orphan-signal.sdp.md",
+    title: "A disconnected spec warns and fails nothing",
+    narrative: null,
+    sections: {
+      intent: { outcome: "Execute the orphan signal on a spec no relation reaches." },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.orphan-signal"} at readiness {readiness: "idea"}',
+              'the spec declares {relations: "no relation"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "conformance/orphans"} at severity {severity: "warning"}',
+              "the report holds {errorCount: 0} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.warn-level-signals.ready-gap-signal",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/warn-level-signals.ready-gap-signal.sdp.md",
+    title: "A ready spec without a verifier warns and fails nothing",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the gap signal on a connected ready spec no verifier resolves.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.gap-signal"} at readiness {readiness: "ready"}',
+              'the spec declares {relations: "a decidedBy decision"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "honesty/gaps"} at severity {severity: "warning"}',
+              "the report holds {errorCount: 0} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:consumers.projections-model",
@@ -1535,6 +1604,8 @@ const expectedPackMembers = [
   "spec:model.pack-aggregate",
   "spec:model.anchors",
   "spec:validation.duplicate-ids.dual-carrier",
+  "spec:validation.warn-level-signals.orphan-signal",
+  "spec:validation.warn-level-signals.ready-gap-signal",
   "spec:decisions.plain-language-references",
   "spec:decisions.concept-docs-dissolve",
   "spec:decisions.one-validation-path",
@@ -1604,6 +1675,26 @@ const expectedDeclaredRelations = [
   ["spec:validation.pack-coherence", "refines", "spec:validation.two-check-families"],
   ["spec:validation.authored-honesty", "refines", "spec:validation.two-check-families"],
   ["spec:validation.warn-level-signals", "refines", "spec:validation.two-check-families"],
+  [
+    "spec:validation.warn-level-signals.orphan-signal",
+    "refines",
+    "spec:validation.warn-level-signals",
+  ],
+  [
+    "spec:validation.warn-level-signals.orphan-signal",
+    "verifies",
+    "spec:validation.warn-level-signals",
+  ],
+  [
+    "spec:validation.warn-level-signals.ready-gap-signal",
+    "refines",
+    "spec:validation.warn-level-signals",
+  ],
+  [
+    "spec:validation.warn-level-signals.ready-gap-signal",
+    "verifies",
+    "spec:validation.warn-level-signals",
+  ],
   ["spec:consumers.projections-model", "refines", "spec:protocol.self-hosting"],
   ["spec:consumers.projections-model", "decidedBy", "spec:decisions.mcp-deferred"],
   ["spec:consumers.agent-surface", "refines", "spec:consumers.projections-model"],
@@ -1799,6 +1890,26 @@ const expectedAnchors = [
     file: "test/self-hosting-duplicate-ids.test.ts",
     constant: "dualCarrierDuplicateTestAnchor",
     site: "bindExample(",
+  },
+  {
+    id: "test:protocol.warn-level-signals.orphan-signal",
+    nodeType: "Anchor",
+    label: "the orphan point verifies the disconnected-spec warning",
+    type: "verifies",
+    target: "spec:validation.warn-level-signals.orphan-signal",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "warnLevelOrphanTestAnchor",
+    site: "bindExample(orphanSignalContract",
+  },
+  {
+    id: "test:protocol.warn-level-signals.ready-gap-signal",
+    nodeType: "Anchor",
+    label: "the gap point verifies the unverified-ready warning",
+    type: "verifies",
+    target: "spec:validation.warn-level-signals.ready-gap-signal",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "warnLevelGapTestAnchor",
+    site: "bindExample(readyGapSignalContract",
   },
   {
     id: "test:protocol.sdp-import.round-trip",
@@ -2041,7 +2152,7 @@ describe("the self-hosting corpus", () => {
         subjectId,
       })),
     ).toEqual(expectedWarnings);
-    expect(result.counts).toEqual({ specs: 58, packs: 1, anchors: 36 });
+    expect(result.counts).toEqual({ specs: 60, packs: 1, anchors: 38 });
     expect(nodeIds).toEqual(
       [
         "pack:self-hosting-v1",
@@ -2103,10 +2214,12 @@ describe("the self-hosting corpus", () => {
         "spec:validation.two-check-families",
         "spec:validation.verification-linkage",
         "spec:validation.warn-level-signals",
+        "spec:validation.warn-level-signals.orphan-signal",
+        "spec:validation.warn-level-signals.ready-gap-signal",
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
-    expect(result.graph.nodes).toHaveLength(95);
+    expect(result.graph.nodes).toHaveLength(99);
     expect(
       primitiveNodes
         .map((node) => ({
@@ -2150,7 +2263,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 51, ready: 7 });
+    ).toEqual({ defined: 50, ready: 10 });
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
@@ -2165,7 +2278,7 @@ describe("the self-hosting corpus", () => {
       modelRefs: ["spec:model.protocol-domain", "spec:model.core-model"],
       file: "specs/self-hosting.pack.sdp.ts",
     });
-    expect(result.graph.edges).toHaveLength(180);
+    expect(result.graph.edges).toHaveLength(188);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")
