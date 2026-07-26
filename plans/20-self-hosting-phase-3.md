@@ -381,6 +381,48 @@ Appended as waves execute; entries name the forcing material and the disposition
    authored. The closing distribution is `defined: 36 / ready: 51` over 87 specs; the corpus stays
    at 0 errors and 0 warnings.
 
+### 2026-07-26 — S5 (the per-doc concept-dissolution audits)
+
+1. **An audit-script surface map follows its content to the carrying Spec; it is never blanket
+   disabled.** *Forcing material:* three standalone audit scripts pin concept-doc text.
+   `check-carrier-truth.mjs` enumerates `docs/concept/*.md` from disk, so a deleted doc drops out
+   of the scan by itself — but its CLAIMS entries would fail unreadable and its classification
+   RULES would fail as stale audit entries, so both sets are retired with the doc.
+   `check-prose-schema.mjs` and `check-carrier-rule.mjs` instead pin *laws*, and a law that moved
+   into a Spec is still pinnable. *Disposition:* the narrative-ownership and constraints-omission
+   pins re-point to `spec:carrier.prose-ownership-rule`; the schema-version pin re-points to
+   `spec:extraction.schema-versioning` (the version literal was already pinned independently on
+   `src/graph/schema.ts`, so nothing weakened); the logical/physical relations pin re-points to
+   `spec:carrier.envelope-contract`. That last one is the only case where a **verbatim-sameness**
+   assertion across two surfaces became one verbatim surface (JS-A1) plus one surface stating the
+   same law in its own authored words — recorded here because it is a real, deliberate change in
+   what that check proves, not a silent map edit. Two surfaces remain pinned; no check lost a leg.
+   No ADR test is met — the base already forced it — so it stays a plan record.
+2. **A doc-level law duplicated into a *surviving* concept doc is expository, not a gap.** *Forcing
+   material:* `03` §5 duplicates `01`'s git-is-the-event-log principle, and `07` §§1–4 duplicate
+   `00`'s MVP boundary and cut list. The §4 audit design already anticipated this shape for `03`
+   §5. *Disposition:* a row whose law is carried by a surviving surface reads `expository-only` and
+   names that surface; a row whose law is carried **nowhere** reads `gap`, whether or not the
+   prose is duplicated. Applied uniformly across all five audits.
+3. **The phase-2 prediction for `03` §5 was closed before this session, not by it.** The plan's §4
+   ranking expected §5 ("git is the event log") to be `03`'s one uncarried section. The audit found
+   it carried by the `spec:extraction.derive-graph` narrative — current projection, removed means
+   gone, `supersedes` the one forward pointer — landed during the phase's earlier corpus work and
+   visible on the regenerated Design Review page. Recorded so the ranking is reconciled rather than
+   quietly overtaken.
+4. **`07` is not deletable on supersession grounds.** The phase-2 docket's `SUPERSEDED` row is a
+   *doc-repair* disposition, not a statement about the document, and the dissolution decision
+   admits only one basis: the semantic contract is fully carried. Audited on content, `07` carries
+   five gaps (§4's two open questions, §5's prioritization heuristic, §6 ①'s diagnostic rendering
+   rule, §6 ③'s banner, §6 ④'s view-label rule), so it stays. Recorded because the plan named it
+   the likeliest deletion.
+5. **No drift found, and no Spec was edited.** Every law the audits traced agreed with its carrying
+   Spec; no concept-doc statement contradicted a Spec, so no drift finding was raised. Eleven gaps
+   are recorded in §7 as future corpus work; none was closed by rushing content into a Spec, per
+   the session's standing constraint. The registry pre-repair (D1/D2 re-pointed to
+   `spec:model.core-model` and `spec:model.spec-sections`) is the session's only non-sweep edit,
+   and `check-self-hosting-gates.mjs`'s DECISIONS.md pins were verified before it was committed.
+
 #### The S4 readiness-sweep ledger
 
 Every spec that stood at `defined` when S4 opened, with its disposition. "Stays `defined`,
@@ -417,6 +459,205 @@ honestly" is a first-class outcome; promotion is per-spec judgment, never a quot
 Executed delivery, the conversion ledger's terminal states, the readiness sweep ledger, the
 per-doc audit tables and deletion dispositions, watch-item terminal states, the docket close,
 and close-evidence pointers.
+
+### The per-doc concept-dissolution audits (S5)
+
+Five audits, one table per candidate doc, built to the §4 template and judged over the
+regenerated Design Review (`npm run build && npm run generate:self-hosting`, then the carrying
+specs' `generated/design-review/spec/*.md` pages read directly). The governing criterion is the
+dissolution decision (`spec:decisions.concept-docs-dissolve`): a doc may be deleted only once its
+semantic contract is fully carried by Specs and lean registries — never a bulk purge. A `gap` is a
+stated law or contract no Spec, registry, or code+test surface carries, and one gap blocks
+deletion. `expository-only` is restatement, motivation, or worked narrative whose law is carried
+elsewhere; where the elsewhere is a *surviving* concept doc, the row names it.
+
+**Terminal dispositions:** `02` **deleted** · `03` **deleted** · `05` **stays — gaps recorded** ·
+`06` **stays — gaps recorded** · `07` **stays — gaps recorded**.
+
+#### `02-core-model.md` — verdict: fully carried · **deleted**
+
+| Doc section | Carrying surface (spec / registry / code) | Verdict |
+|---|---|---|
+| §1 the `Spec` primitive — one authored truth-primitive, enrich in place, envelope minimal and stable, sections optional | `spec:model.core-model` (Spec · envelope) · `spec:decisions.one-primitive` · `src/model/spec.ts` | carried |
+| §1 carrier note — logical relations optional, physical Markdown writes `relations: {}` | `spec:carrier.envelope-contract` (the explicit-`relations: {}` clause) | carried |
+| §1 the two other authored things (`Pack`, `anchor`) | `spec:model.pack-aggregate` · `spec:model.anchors` | carried |
+| §1 the TS `Spec` type block | `src/model/spec.ts` | expository-only (representation of the typed shape) |
+| §2 the three descriptors and their value sets | `spec:model.core-model` (kind · altitude · readiness) · `CONTEXT.md` "Descriptor values locked" · `src/model/descriptors.ts` + `test/descriptors.test.ts` | carried |
+| §2 "why the enums look the way they do" (altitude is a clean ladder · no `quality` alias · capability/domain are projections · NFR and Scenario are labels) | `spec:decisions.one-primitive` (named coordinates; domains and capabilities are projections or Packs) · `CONTEXT.md` "named coordinates" table | carried |
+| §2 readiness vs delivery facts; the `implemented`/`has-verifier`/`observed` table and its does-**not**-mean column | `spec:model.core-model` (delivery fact) · `CONTEXT.md` "Delivery facts" table · `spec:extraction.derive-graph` (facts computed from resolving edges) · `spec:validation.authored-honesty` | carried |
+| §2 the payoff queries (`ready ∧ ¬implemented`, `implemented ∧ ¬ready`) | `CONTEXT.md` "The payoff queries" | carried |
+| §2 the liveness ladder (binding, never liveness; skip/quarantine is CI's) | `spec:decisions.binding-not-liveness` · `CONTEXT.md` "enabled verifier" | carried |
+| §3 the section list and each section's concern | `spec:model.spec-sections` (section) · `CONTEXT.md` "Sections" · `src/model/sections.ts` (the typed shapes) | carried |
+| §3 prose ownership — `narrative` on the Spec, `description` on the seven singular sections, `constraints` has no owner | `spec:carrier.prose-ownership-rule` · `spec:decisions.prose-ownership` | carried |
+| §3 the `decision` section carries no `status` field | `CONTEXT.md` term ledger, Rejected (`status` — adoption arc is `readiness`, replacement is `supersedes`) · `spec:decisions.typing-law` | carried |
+| §3 the typing law (floor-bearing sections are closed typed shapes; the criterion outlives the list) | `spec:decisions.typing-law` · `spec:model.spec-sections` (typing law term) | carried |
+| §3 section ⟷ kind duality; sections carry content, relations carry linkage; promotion is exclusive | `spec:decisions.content-only-sections` · `spec:model.spec-sections` (content-only section · promotion) · `CONTEXT.md` "section ⟷ kind duality" | carried |
+| §3 verifier semantics — direct, per-spec, never transitive; the enabled verifier is a resolving test binding | `spec:model.spec-sections` (`verifies` · enabled verifier) · `spec:extraction.derive-graph` (has-verifier only to its target) · `spec:validation.verification-linkage` + its two bound points | carried |
+| §3 the worked enrich-in-place examples | — | expository-only (worked narrative; the law is the rows above) |
+| §4 `Pack` — aggregate, states no truth, plain `framing`, many packs per spec, `belongsTo` derived, coherence not completeness | `spec:model.pack-aggregate` · `spec:decisions.pack-reified` · `spec:validation.pack-coherence` + its bound point | carried |
+| §4 refinement vs the aggregate kept distinct | `spec:model.pack-aggregate` (refinement term) · `CONTEXT.md` "Two grouping mechanisms" | carried |
+| §5 stable IDs — grammar, stability, uniqueness, string linkage, no history | `spec:model.stable-ids` (ready; `namespaced-round-trip` and `malformed-refusal` points) · `src/ids.ts` | carried |
+| §5 the MVP namespace set and the `doc:` reservation | `src/ids.ts` (the namespace set) · `CONTEXT.md` flagged ambiguities (`ref()` is spec-only; `doc:` deferral) | carried |
+| §6 the six authored relations, directions and meanings | `spec:model.relations` · `CONTEXT.md` "Relations" table (with the UML anchors) | carried |
+| §6 `supersedes` only on decision specs; the kind-typed endpoints | `spec:validation.claim-separation` (relation endpoint contracts) · `src/validate/validators.ts` | carried |
+| §6 the `doc:`-target named deferral (MD-16) | `spec:decisions.carried-evidence` ("external `doc:` targets remain deferred") · `CONTEXT.md` flagged ambiguities | carried |
+| §6 derived edges never authored (`satisfies`, `belongsTo`); every authored relation is `declared` | `spec:extraction.derive-graph` · `spec:extraction.claim-taxonomy` (claim inheritance) · `CONTEXT.md` "Derived, never authored" | carried |
+
+#### `03-the-one-graph.md` — verdict: fully carried · **deleted**
+
+| Doc section | Carrying surface (spec / registry / code) | Verdict |
+|---|---|---|
+| §1 two pure steps; the extractor is the only component that reads source | `spec:extraction.derive-graph` (one derivation seam, no second graph) · `spec:extraction.build-pipeline` | carried |
+| §1 what the extractor reads (declared carriers · anchors · the designed-in, MVP-empty inferred layer) | `spec:extraction.derive-graph` · `spec:model.anchors` · `spec:extraction.claim-taxonomy` (inferred advisory) · `spec:extraction.excludes` (discovery surfaces) | carried |
+| §1 the graph is flat; hierarchy is edges, never nested nodes | `spec:extraction.derive-graph` (flat typed arrays) | carried |
+| §1 the `graph.json` payload sample and the `nodeType`/`specKind` split | `src/graph/schema.ts` · `CONTEXT.md` "`nodeType` / `specKind`" | carried (sample itself expository) |
+| §1 schema `0.4.0` prose fields and fixed serializer key order | `spec:carrier.prose-ownership-rule` (owners) · `src/graph/schema.ts` · `spec:extraction.determinism` | carried |
+| §1 the edge contract — one row per edge type (source, claim, authoring surface, severity, readiness effect, delivery-fact effect) | `spec:extraction.derive-graph` (endpoints, anchor-derived edges, computed facts) · `spec:validation.claim-separation` (claims + endpoint contracts) · `spec:validation.referential-integrity` (missing target is an error) · `spec:validation.verification-linkage` (the `models` row and the enabled-verifier condition) · `spec:validation.pack-coherence` (`belongsTo`) · `spec:validation.readiness-floor` + `05` §3 (the readiness-effect column) | carried |
+| §1 delivery facts are node facts, not edges | `spec:extraction.derive-graph` ("computed node facts") · `spec:extraction.claim-taxonomy` | carried |
+| §2 determinism — byte-identical output, sort order, no wall-clock or run hashes, `--check-clean` | `spec:extraction.determinism` (all three rules) · `spec:extraction.regenerability` | carried |
+| §2 the static-extractability consequence and the two tiers, with the per-carrier asymmetry | `spec:extraction.determinism` (rule 3) · `spec:carrier.markdown-parser` (whole-document refusal) · `04` §1 (surviving) | carried |
+| §3 the `claim` table — declared / anchored / inferred | `spec:extraction.claim-taxonomy` (all three terms verbatim in law) | carried |
+| §3 inference is never authoritative; no 4th claim; computed-from-authored inherits its source's claim | `spec:extraction.claim-taxonomy` (claim inheritance) · `spec:validation.claim-separation` + its two bound points | carried |
+| §3 ambiguity is loud | `spec:validation.duplicate-ids` + its bound point · `spec:validation.referential-integrity` | carried |
+| §3 delivery facts derived, never declared | `spec:validation.authored-honesty` + its two bound points · `spec:extraction.claim-taxonomy` | carried |
+| §3 the doc-generator contrast blockquote | — | expository-only (motivation) |
+| §4 regenerability, no consumer re-parses source, single JSON, graph DB deferred | `spec:extraction.regenerability` (clause for clause, including both measured-evidence lines) | carried |
+| §5 git is the event log — current state only, history is a git operation, removed means gone, `supersedes` the one kept forward pointer | `spec:extraction.derive-graph` narrative (renders in the Design Review) · `spec:model.stable-ids` (IDs carry no history) · `01` founding principle 5 (surviving) · `CONTEXT.md` "git is the event log" | carried — the phase-2 prediction that §5 lacked a carrier was closed by the S-wave narrative enrichment |
+| §5 "a graph diff is just two projections" | `spec:extraction.determinism` + `spec:extraction.regenerability` (the diff is their consequence) | expository-only (consequence; the aspirational impact UI is named in `00`/`07`) |
+| §6 minimal schema versioning | `spec:extraction.schema-versioning` (ready; `declared-version` point) · `src/graph/schema.ts` | carried |
+
+#### `05-validation-and-honesty.md` — verdict: **gaps** · stays
+
+| Doc section | Carrying surface (spec / registry / code) | Verdict |
+|---|---|---|
+| §1 the two check families; errors fail the build, gaps inform; checked, never workflow-gated | `spec:validation.two-check-families` + its `split-report` point | carried |
+| §1 the layered-enforcement table (types · schema · graph validators; architecture and custom rules aspirational) | `spec:validation.two-check-families` (the layering rule) · `spec:decisions.typing-law` · aspirational rows carried by §6 below | carried |
+| §2 the one-validation-path paragraph (no pre-graph seam; per-carrier authoring feedback) | `spec:decisions.one-validation-path` · `spec:validation.two-check-families` | carried |
+| §2 checks 1–2 (referential integrity with did-you-mean · duplicate IDs) | `spec:validation.referential-integrity` + `dangling-target` and `did-you-mean` · `spec:validation.duplicate-ids` + `dual-carrier` | carried |
+| §2 check 3 (`claim` separation, endpoint contracts, fail-closed descriptors) | `spec:validation.claim-separation` + `collapsed-edge-claim` and `unratified-descriptor` | carried |
+| §2 check 4 (`verifies` linkage) | `spec:validation.verification-linkage` + `unbound-example` and `unresolved-oracle` | carried |
+| §2 checks 5–6 (authoring-shape and derived-facts honesty) | `spec:validation.authored-honesty` + `section-authored-fact` and `unearned-stated-fact` | carried |
+| §2 check 7 (honest readiness) | `spec:validation.readiness-floor` | carried |
+| §2 checks 8–9 (orphans · readiness/delivery gaps) | `spec:validation.warn-level-signals` + `orphan-signal` and `ready-gap-signal` | carried |
+| §2 partial failure stays local | `spec:carrier.markdown-parser` (excludes one malformed carrier, continues healthy siblings) · `spec:extraction.determinism` | carried |
+| §3 the kind-blind clause table (`idea`/`scoped`/`defined`/`ready` rungs) | none — `spec:validation.readiness-floor` states only "every clause in that readiness floor passes"; the clauses live in `src/validate/readiness-floor.ts`, which the registry rows MD-13 and MD-9 cite **together with `05` §3** as the mirror pair | **gap** |
+| §3 the per-kind evidence table (7 kinds × `scoped`/`defined`) | same as above — `spec:decisions.kind-conditional-floor` states *that* one clause is kind-conditional, never *which* evidence each kind names | **gap** |
+| §3 the three bounding laws (monotonic · promotion-neutral · convergence is honest) | `spec:decisions.kind-conditional-floor` (consequence line) · `spec:decisions.carried-evidence` (the promoted-evidence honesty bound) | carried |
+| §3 the MD-13 representation note (floor table as its own code-level source of truth) | `docs/concept/DECISIONS.md` MD-13 · `src/validate/readiness-floor.ts` | carried (registry row still cites `05` §3 as one of two mirrors) |
+| §3 `ready` is earned, not asserted, and is not a delivery fact | `spec:validation.readiness-floor` · `spec:decisions.binding-not-liveness` | carried |
+| §3 `ready` is the floor plus a human's declared statement; no review fact is stored | `spec:consumers.design-review` (rule 3) · `spec:decisions.binding-not-liveness` | carried |
+| §3 stated vs derived readiness — the banner fires only in the dishonest direction and names the first unmet clause | `CONTEXT.md` "derived readiness" carries *rendered beside, never overwriting*; nothing carries the one-direction rule or the first-unmet-clause rule | **gap** (shared with `06` §5 and `07` §6 ③) |
+| §4 pack coherence, not member completeness; no duplicated-intent check | `spec:validation.pack-coherence` + its point · `spec:model.pack-aggregate` · `spec:validation.two-check-families` (never judges content quality) | carried |
+| §5 validator self-testing (should-fail and should-pass fixtures per validator) | none — a stated practice with no Spec, registry, or pinned code surface | **gap** |
+| §6 aspirational tiers (architecture enforcement · custom team rules · NFR-to-`observed` · `--lenient` · incremental builds) | `00` §4 and `07` §2/§3 (surviving) name all five; the cache bound is `spec:extraction.regenerability` | expository-only against `00`/`07` |
+| §7 what CI guarantees at MVP | §2 rows above · `spec:extraction.determinism` | expository-only (summary) |
+
+#### `06-consumers-and-projections.md` — verdict: **gaps** · stays
+
+| Doc section | Carrying surface (spec / registry / code) | Verdict |
+|---|---|---|
+| §1 projections fan out from one graph; nothing is a second source | `spec:consumers.projections-model` (projection) | carried |
+| §1 the surfaces taxonomy table | `spec:consumers.projections-model` · `CONTEXT.md` "Surfaces & projections" | carried, except the Mermaid and reference-projection rows, which only `06` §8 names |
+| §2 curated graph vs impact graph; divergence is curation, not drift; never densify from imports | `spec:consumers.projections-model` (curated graph · impact graph · curation · measured curation) · `spec:extraction.claim-taxonomy` | carried |
+| §2 the impact graph's two assist roles (propose candidates · flag unambiguous drift) | none | **gap** |
+| §2 the MVP boundary blockquote (file-level impact rides the curated graph; `coverage-unknown` is explicit) | `spec:consumers.reader` (rules 3–4) | carried |
+| §3 the agent surface — a visible typed graph, the schema is the contract, no verb wall, neither failure mode | `spec:consumers.agent-surface` · `spec:decisions.agent-surface-scripts-graph` | carried |
+| §3 the reader — joins and claim decode once, persists nothing; entry adapters; blast radius; irreducible joins | `spec:consumers.reader` (all four rules) · `spec:consumers.agent-surface` (rules 2–3) | carried |
+| §3 the second-caller bar (freeze a typed contract only when a second machine consumer appears) | `00` §4 and `07` §1/§3 (surviving) | expository-only against `00`/`07` |
+| §3 `bySymbol` is frozen in shape but aspirational in build | none — `spec:consumers.reader` names `findByConcept` and `byFile` only | **gap** |
+| §3 measured context efficiency | `spec:consumers.agent-surface` (rules 4–5, measured evidence) | carried |
+| §4 the edit model — intent composition, no patch loop, lifecycle ops are git + edit | `spec:consumers.edit-model` (all four rules) | carried |
+| §5 Design Review renders a Spec/Pack in context; pure projection with no stored `Finding`; the human's call, never a gate; deterministic generated Markdown | `spec:consumers.design-review` (rules 1–5) | carried |
+| §5 the per-spec field list — the stated-vs-derived readiness divergence banner | none (see `05` §3 and `07` §6 ③) | **gap** |
+| §5 pages rewritten wholesale each run so no stale page survives | none — `spec:consumers.design-review` rule 4 names the index-and-pages shape and determinism, not the wholesale rewrite | **gap** |
+| §5 owned prose reaches Design Review through the graph and Reader with no source reparse | `spec:carrier.prose-ownership-rule` · `spec:consumers.design-review` · pinned by `check-prose-schema.mjs` | carried |
+| §6 delivery-process nouns as projections and vocabulary, never gates | `spec:consumers.projections-model` (discipline · release · baseline · phase/iteration/milestone) · `CONTEXT.md` "Delivery-process vocabulary" | carried |
+| §6 the discipline ≈ kind/section mapping (Requirements → `behavior`, Test → `example` + `verifies`, …) | none | **gap** |
+| §6 the disciplines × phases × iterations distribution chart as an analytical projection | none | **gap** |
+| §7 the MCP surface — designed-in, deferred, distinct from the agent surface | `spec:decisions.mcp-deferred` · `CONTEXT.md` "MCP surface" | carried |
+| §8 aspirational projections (Spec Studio · contract/model exports · AI slices · per-PR hosted preview) | `00` §4 and `07` §2 carry the first three; nothing carries the per-PR hosted preview | **gap** (per-PR preview only) |
+| §9 interop posture — the membrane, not a replacement | `00` §2/§5 (surviving) | expository-only against `00` |
+| §10 what the MVP consumer story proves | §§1–5 rows above | expository-only (summary) |
+
+#### `07-mvp-roadmap-and-open-questions.md` — verdict: **gaps** · stays
+
+The phase-2 docket recorded `07`'s *doc-repair* row as SUPERSEDED; that disposition is about the
+repair bill, not about the document, and it is not a deletion basis under the dissolution
+decision. The audit therefore ran on content, and found gaps.
+
+| Doc section | Carrying surface (spec / registry / code) | Verdict |
+|---|---|---|
+| §1 the MVP vertical slice, the slice table 0–5, the package line | `AGENTS.md` "The build path" (the same slice table) · `00` §3 | expository-only against `AGENTS.md`/`00` |
+| §1 what "done" looks like and the North Star | `00` §3 ("Done" for the MVP) · `spec:protocol.self-hosting` · `spec:extraction.build-pipeline` | expository-only against `00` |
+| §2 the CORE vs ASPIRATIONAL map, with the carrier addendum | `00` §3/§4 · `spec:decisions.carrier-ruling` | expository-only against `00` |
+| §3 the cut list, nine items with rationale | `00` §4 (the same nine, condensed, with per-item rationale) | expository-only against `00` |
+| §4 derived-readiness banner timing (recorded as resolved) | `05` §3 (surviving) — but see the banner gap recorded there | expository-only against `05` |
+| §4 impact-graph depth (recorded as resolved) | `06` §2 (surviving) · `spec:consumers.reader` | expository-only against `06` |
+| §4 inline-vs-centralized anchor semantics (open) | none — `spec:model.anchors` states the landed binding contract and the unextracted forms, not the open question about further structural semantics | **gap** |
+| §4 graph-DB timing (open, measured) | `spec:extraction.regenerability` (both measured-evidence lines) | carried |
+| §4 trace-link recovery — assistive suggestion only, never a declared edge | `01` P10 (surviving) · `spec:extraction.claim-taxonomy` (inferred is advisory, never authoritative) | expository-only against `01` |
+| §4 when (if ever) harnesses / evidence become CORE (open) | the Gherkin half is `spec:decisions.carrier-ruling`; the harness/evidence half has no carrier | **gap** |
+| §5 measure what actually hurts (the four pain-to-next-slice mappings) | none — a prioritization heuristic with no Spec or registry home | **gap** |
+| §6 ① authoring ergonomics — typed sections | `spec:decisions.typing-law` | carried |
+| §6 ① the one diagnostic rendering rule (location from the finding's structured fields; first contact fails clean) | none | **gap** |
+| §6 ② the golden correctness oracle kept distinct from the determinism self-checks | `spec:extraction.determinism` (the self-checks) · `test/fixtures/checkout-v1/expected-graph.json` + `expected-design-review/` (the oracle, a code+test surface) | carried |
+| §6 ③ the derived-readiness banner ships in the Design Review | none (the same gap as `05` §3 and `06` §5) | **gap** |
+| §6 ④ `implemented` is a UI hazard — the fact name stays, views render binding language | `spec:decisions.binding-not-liveness` carries the do-not-rename half; nothing carries the view-label rule the Design Review actually implements | **gap** |
+| §6 ⑤ `coverage-unknown` is acceptance, never a design note | `spec:consumers.reader` (rule 3) | carried |
+| §6 the MVP acceptance checklist and its three pinned sharpenings | the three sharpenings are pinned test surfaces (the blocking-open-question should-fail fixture · the drops-no-sections extraction test · the `api:` anchor assertion) | carried |
+
+#### Gaps carried out of S5 (future corpus work, not this session's)
+
+Recorded so they are not lost; each is a stated law or open question with no carrying Spec.
+None was rushed into a Spec — this session authored no Spec edits.
+
+1. The readiness-floor **clause tables** (kind-blind rungs and the per-kind evidence table) have
+   no carrying Spec; `spec:validation.readiness-floor` is a single sentence and the clauses live
+   only in `src/validate/readiness-floor.ts` and `05` §3.
+2. The **derived-readiness banner** rule — rendered beside stated, fires only in the dishonest
+   direction, names the first unmet clause — is stated in `05` §3, `06` §5, and `07` §6 ③ and in
+   no Spec.
+3. The **`implemented` view-label rule** (the fact name stays; views render binding language) is
+   stated only in `07` §6 ④, while the Design Review implements it.
+4. The **one diagnostic rendering rule** (location from the finding's structured fields; first
+   contact fails clean) is stated only in `07` §6 ①.
+5. **Validator self-testing** (should-fail and should-pass fixtures per validator) is stated only
+   in `05` §5.
+6. Design Review's **wholesale page rewrite** (no stale page survives a run) is stated only in
+   `06` §5.
+7. The **discipline ≈ kind/section mapping** and the disciplines × phases × iterations
+   distribution projection are stated only in `06` §6.
+8. The impact graph's two **assist roles** (propose candidates · flag unambiguous drift) and
+   `bySymbol`'s frozen-shape-but-aspirational status are stated only in `06` §2/§3.
+9. The **per-PR hosted preview** deferral is stated only in `06` §8.
+10. Two open questions have no Spec home: **inline-vs-centralized anchor semantics** and **when
+    harnesses / evidence become CORE** (`07` §4).
+11. The **measure-what-hurts** prioritization heuristic (`07` §5) has no Spec or registry home.
+
+#### Reference-sweep inventory (per deletion)
+
+`03` — `CONTEXT.md` (2 glossary pointers) · `AGENTS.md` (the where-to-look row) ·
+`docs/concept/README.md` (index row + reading path) · `01` · `05` (2) · `06` · `07` (3) ·
+`jtbd-stories/03-one-graph.md` (4) · `jtbd-stories/07-trace-and-impact.md` (5) ·
+`examples/checkout-v1/README.md` · `src/graph/schema.ts` (2) · `src/graph/delivery-facts.ts` (2) ·
+`src/validate/validators.ts` (2) · `src/extract/derive.ts` (2) · `src/extract/reify.ts` (2) ·
+`src/extract/index.ts` · `test/design-review.test.ts` · `test/validators.test.ts` ·
+`test/reader.test.ts` (2) · `check-carrier-truth.mjs` (3 claims + 5 classification rules retired
+with the doc) · `check-prose-schema.mjs` (2 pins re-pointed).
+
+`02` — `CONTEXT.md` (5 section pointers + the MD-16 note + the header's doc-range sentence) ·
+`AGENTS.md` (the where-to-look row and the glossary row) · `docs/concept/DECISIONS.md` (D1/D2,
+landed as the pre-repair commit) · `docs/concept/README.md` (index row + reading path) · `01` (3) ·
+`04` (4) · `05` (8) · `06` · six JTBD story files (14 reference lines) ·
+`examples/checkout-v1/README.md` · `src/validate/validators.ts` (3, two of them user-visible
+validator diagnostics) · `src/validate/readiness-floor.ts` · `src/graph/delivery-facts.ts` (2) ·
+`src/reader/reader.ts` · `src/model/relations.ts` · `test/checkout-v1.test.ts` ·
+`test/extract.test.ts` (a test title) · one extraction fixture comment ·
+`check-prose-schema.mjs` · `check-carrier-rule.mjs`.
+
+No dangling inbound reference survives either deletion: a repository-wide grep for `` `02` ``,
+`` `03` ``, `02-core-model`, and `03-the-one-graph` outside `plans/`, `reviews/`, and
+`explorations/` returns nothing.
 
 ## (k) §8 Docket ledger
 
@@ -459,7 +700,7 @@ commit series on the effort branch. This ledger is git process evidence, never g
 | S2 | extraction/model cheap wins (§2) | orchestrator-verified green gate | done — 6 points bound across 4 parents; one green-gate conversion commit |
 | S3 | corpus additions (§3) + codegen/runner/notation conversions | orchestrator-verified green gate | done — 2 new specs + 1 enrichment; 7 points bound across 3 parents; 2 new `impl:` anchors; one green-gate conversion commit |
 | S4 | readiness maturation sweep (ruling 5) | orchestrator-verified green gate | done — 40 `defined` specs swept; 4 promoted (2 enriched in place, 2 converted) + 3 new points at `ready`; 36 recorded as honest `defined`; one green-gate sweep commit |
-| S5 | per-doc audits + first dissolutions (§4) | orchestrator-verified green gate over the regenerated Design Review | planned |
+| S5 | per-doc audits + first dissolutions (§4) | orchestrator-verified green gate over the regenerated Design Review | done — five audits recorded (§7); `02` and `03` deleted with their full reference sweeps; `05`, `06`, `07` stay with 11 gaps recorded as future corpus work; D1/D2 re-pointed; three green-gate commits |
 | S6 | adversarial review, remediation, full close, done-record | full chain + clean-clone; review archived | planned |
 
 Owner ratification of every gate above happens at the phase PR review; no live owner acceptance
