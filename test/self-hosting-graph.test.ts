@@ -745,7 +745,7 @@ const expectedSpecs = [
     id: "spec:validation.referential-integrity",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/referential-integrity.sdp.md",
     title: "Every graph reference resolves",
     narrative: null,
@@ -757,11 +757,83 @@ const expectedSpecs = [
       behavior: {
         rules: [
           "Every edge endpoint and every Pack model reference must resolve to a node in the derived graph; an unresolved reference is a conformance error.",
+          "The finding names the unique nearest known id as a suggestion and stays silent when two candidates tie, because resolving ambiguity silently is never the check's job.",
           "The realizing validator entrypoint is `checkReferentialIntegrity` in `src/validate/validators.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            "the graph holds one spec {presentId:string}",
+            "the spec declares a dependsOn relation to {targetId:string}",
+          ],
+          when: ["the graph is validated"],
+          [["t", "hen"].join("")]: [
+            'the report names {findingId:string} at severity {severity:"warning"|"error"}',
+            "the finding offers the nearest-id suggestion: {suggested:boolean}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.referential-integrity.dangling-target",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/referential-integrity.dangling-target.sdp.md",
+    title: "An unrelated missing target is a bare conformance error",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the unresolved-reference law where no known id is near the missing one.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds one spec {presentId: "spec:probe.create-order"}',
+              'the spec declares a dependsOn relation to {targetId: "spec:probe.fulfilment-policy"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "conformance/referential-integrity"} at severity {severity: "error"}',
+              "the finding offers the nearest-id suggestion: {suggested: false}",
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.referential-integrity.did-you-mean",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/referential-integrity.did-you-mean.sdp.md",
+    title: "A unique near miss earns a did-you-mean suggestion",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the unresolved-reference law where exactly one known id is a near miss.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds one spec {presentId: "spec:probe.create-order"}',
+              'the spec declares a dependsOn relation to {targetId: "spec:probe.create-ordr"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "conformance/referential-integrity"} at severity {severity: "error"}',
+              "the finding offers the nearest-id suggestion: {suggested: true}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.claim-separation",
@@ -833,7 +905,7 @@ const expectedSpecs = [
     id: "spec:validation.authored-honesty",
     specKind: "rule",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/authored-honesty.sdp.md",
     title: "Machine truth is never authored",
     narrative: null,
@@ -847,9 +919,82 @@ const expectedSpecs = [
           "Specs and Packs must not author derived edges, claims, or delivery facts, and any stated delivery facts must equal the graph's recomputed facts.",
           "The realizing validator entrypoints are `checkAuthoringShape` and `checkDeliveryFacts` in `src/validate/validators.ts`.",
         ],
+        exampleSpace: {
+          given: [
+            "the graph holds a spec {specId:string}",
+            'the spec hand-authors the delivery fact {factName:"implemented"|"has-verifier"} at {site:"a behavior section carrier"|"the node deliveryFacts array"}',
+          ],
+          when: ["the graph is validated"],
+          [["t", "hen"].join("")]: [
+            'the report names {findingId:string} at severity {severity:"warning"|"error"}',
+            "the finding names the fact {relatedId:string} and states {phrase:string}",
+          ],
+        },
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.authored-honesty.section-authored-fact",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/authored-honesty.section-authored-fact.sdp.md",
+    title: "A delivery fact smuggled into a section is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the authoring-shape refusal on a section carrier that names a derived fact.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.smuggled-fact"}',
+              'the spec hand-authors the delivery fact {factName: "implemented"} at {site: "a behavior section carrier"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "honesty/authoring-shape"} at severity {severity: "error"}',
+              'the finding names the fact {relatedId: "implemented"} and states {phrase: "derived, never authored"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.authored-honesty.unearned-stated-fact",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/authored-honesty.unearned-stated-fact.sdp.md",
+    title: "A stated delivery fact no binding earns is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the delivery-fact refusal where the stated array outruns the recomputed facts.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.unearned-fact"}',
+              'the spec hand-authors the delivery fact {factName: "has-verifier"} at {site: "the node deliveryFacts array"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "honesty/delivery-facts"} at severity {severity: "error"}',
+              'the finding names the fact {relatedId: "has-verifier"} and states {phrase: "derived, never authored"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.warn-level-signals",
@@ -1606,6 +1751,10 @@ const expectedPackMembers = [
   "spec:validation.duplicate-ids.dual-carrier",
   "spec:validation.warn-level-signals.orphan-signal",
   "spec:validation.warn-level-signals.ready-gap-signal",
+  "spec:validation.referential-integrity.dangling-target",
+  "spec:validation.referential-integrity.did-you-mean",
+  "spec:validation.authored-honesty.section-authored-fact",
+  "spec:validation.authored-honesty.unearned-stated-fact",
   "spec:decisions.plain-language-references",
   "spec:decisions.concept-docs-dissolve",
   "spec:decisions.one-validation-path",
@@ -1670,10 +1819,50 @@ const expectedDeclaredRelations = [
   ["spec:validation.two-check-families", "refines", "spec:protocol.self-hosting"],
   ["spec:validation.two-check-families", "decidedBy", "spec:decisions.one-validation-path"],
   ["spec:validation.referential-integrity", "refines", "spec:validation.two-check-families"],
+  [
+    "spec:validation.referential-integrity.dangling-target",
+    "refines",
+    "spec:validation.referential-integrity",
+  ],
+  [
+    "spec:validation.referential-integrity.dangling-target",
+    "verifies",
+    "spec:validation.referential-integrity",
+  ],
+  [
+    "spec:validation.referential-integrity.did-you-mean",
+    "refines",
+    "spec:validation.referential-integrity",
+  ],
+  [
+    "spec:validation.referential-integrity.did-you-mean",
+    "verifies",
+    "spec:validation.referential-integrity",
+  ],
   ["spec:validation.claim-separation", "refines", "spec:validation.two-check-families"],
   ["spec:validation.verification-linkage", "refines", "spec:validation.two-check-families"],
   ["spec:validation.pack-coherence", "refines", "spec:validation.two-check-families"],
   ["spec:validation.authored-honesty", "refines", "spec:validation.two-check-families"],
+  [
+    "spec:validation.authored-honesty.section-authored-fact",
+    "refines",
+    "spec:validation.authored-honesty",
+  ],
+  [
+    "spec:validation.authored-honesty.section-authored-fact",
+    "verifies",
+    "spec:validation.authored-honesty",
+  ],
+  [
+    "spec:validation.authored-honesty.unearned-stated-fact",
+    "refines",
+    "spec:validation.authored-honesty",
+  ],
+  [
+    "spec:validation.authored-honesty.unearned-stated-fact",
+    "verifies",
+    "spec:validation.authored-honesty",
+  ],
   ["spec:validation.warn-level-signals", "refines", "spec:validation.two-check-families"],
   [
     "spec:validation.warn-level-signals.orphan-signal",
@@ -1910,6 +2099,46 @@ const expectedAnchors = [
     file: "test/self-hosting-validators.test.ts",
     constant: "warnLevelGapTestAnchor",
     site: "bindExample(readyGapSignalContract",
+  },
+  {
+    id: "test:protocol.referential-integrity.dangling-target",
+    nodeType: "Anchor",
+    label: "the dangling-target point verifies the unresolved-reference error",
+    type: "verifies",
+    target: "spec:validation.referential-integrity.dangling-target",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "danglingTargetTestAnchor",
+    site: "bindExample(danglingTargetContract",
+  },
+  {
+    id: "test:protocol.referential-integrity.did-you-mean",
+    nodeType: "Anchor",
+    label: "the near-miss point verifies the unique did-you-mean suggestion",
+    type: "verifies",
+    target: "spec:validation.referential-integrity.did-you-mean",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "didYouMeanTestAnchor",
+    site: "bindExample(didYouMeanContract",
+  },
+  {
+    id: "test:protocol.authored-honesty.section-authored-fact",
+    nodeType: "Anchor",
+    label: "the section point verifies the authoring-shape refusal",
+    type: "verifies",
+    target: "spec:validation.authored-honesty.section-authored-fact",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "sectionAuthoredFactTestAnchor",
+    site: "bindExample(sectionAuthoredFactContract",
+  },
+  {
+    id: "test:protocol.authored-honesty.unearned-stated-fact",
+    nodeType: "Anchor",
+    label: "the stated-fact point verifies the delivery-fact refusal",
+    type: "verifies",
+    target: "spec:validation.authored-honesty.unearned-stated-fact",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "unearnedStatedFactTestAnchor",
+    site: "bindExample(unearnedStatedFactContract",
   },
   {
     id: "test:protocol.sdp-import.round-trip",
@@ -2152,7 +2381,7 @@ describe("the self-hosting corpus", () => {
         subjectId,
       })),
     ).toEqual(expectedWarnings);
-    expect(result.counts).toEqual({ specs: 60, packs: 1, anchors: 38 });
+    expect(result.counts).toEqual({ specs: 64, packs: 1, anchors: 42 });
     expect(nodeIds).toEqual(
       [
         "pack:self-hosting-v1",
@@ -2216,10 +2445,14 @@ describe("the self-hosting corpus", () => {
         "spec:validation.warn-level-signals",
         "spec:validation.warn-level-signals.orphan-signal",
         "spec:validation.warn-level-signals.ready-gap-signal",
+        "spec:validation.referential-integrity.dangling-target",
+        "spec:validation.referential-integrity.did-you-mean",
+        "spec:validation.authored-honesty.section-authored-fact",
+        "spec:validation.authored-honesty.unearned-stated-fact",
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
-    expect(result.graph.nodes).toHaveLength(99);
+    expect(result.graph.nodes).toHaveLength(107);
     expect(
       primitiveNodes
         .map((node) => ({
@@ -2263,7 +2496,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 50, ready: 10 });
+    ).toEqual({ defined: 48, ready: 16 });
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
@@ -2278,7 +2511,7 @@ describe("the self-hosting corpus", () => {
       modelRefs: ["spec:model.protocol-domain", "spec:model.core-model"],
       file: "specs/self-hosting.pack.sdp.ts",
     });
-    expect(result.graph.edges).toHaveLength(188);
+    expect(result.graph.edges).toHaveLength(204);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")
