@@ -169,6 +169,8 @@ void binding;
 `,
     );
   },
+  // Declared in the parent's {builderSource} vocabulary but bound by no example point today —
+  // package-import trust is regression-covered by test/anchor-trust.test.ts.
   "the published Protocol package": (root) => {
     writeFileSync(
       join(root, "binding.ts"),

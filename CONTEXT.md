@@ -148,6 +148,8 @@ validated," never "provably correct."**
 | **oracle** | the authored expected-outcome semantics for a parent's example space — implementation-side, beside the tests, bound by the space's zero-or-one resolving `specOracle` anchor, never extracted; typed against the space contract on input and the derived Outcome union on output (`unspecified` is a first-class answer); rendered surfaces say **"expected outcome"** | a `model`-kind spec · a derived fact |
 | **witness** | an example whose bound point falls in an outcome class — the evidence that class is covered | — |
 | **coverage gap** | a region of the example space with no witness (or where the oracle answers `unspecified`) — an informative absence, never a gate | — |
+| **world** | the state a bound point's handlers construct and assert against — built by the Given steps, exercised by the When, read by the Then; created fresh per example by the test adapter (the runner core plans and runs steps, never owns world lifecycle) | "fixture" · "test context" |
+| **probe** | a synthetic spec, graph, or repository a world constructs so the law under test is the only thing that can refuse (`spec:probe.*` by convention); probes live inside bound suites and never enter the shipped corpus | "dummy" · "mock" |
 | **`sdp import`** | one import verb with many source adapters, sharing the document emitter authored once in the winning carrier; the TS→`.sdp.md` adapter landed, the gen-1 `.feature` adapter designed-in and deferred | round-trip sync |
 
 **Structural law (point-per-example, MD-17):** an `example` binds exactly **one** point; a table of cases is

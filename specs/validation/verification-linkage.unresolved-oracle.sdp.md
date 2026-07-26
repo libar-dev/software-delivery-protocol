@@ -10,7 +10,7 @@ relations:
 # An oracle with no example space to model confers nothing
 
 ## Intent
-- outcome: Execute the oracle-linkage law where the modelled spec owns no example space.
+- outcome: Execute the oracle-linkage law where the modeled spec owns no example space.
 
 ```gwt
 Given the graph holds a parent spec {parentId: "spec:probe.order-policy"}

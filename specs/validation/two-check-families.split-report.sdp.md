@@ -10,7 +10,7 @@ relations:
 # One report carries both families and claims neither as its own
 
 ## Intent
-- outcome: Execute the family split where one probe graph trips a conformance error and an informative honesty signal at once.
+- outcome: Execute the family split where one probe graph trips a conformance error and an informative honesty signal at once; the same dangling relation also fails the readiness floor on the ready probe, so the family assertions read by containment.
 
 ```gwt
 Given the graph holds a spec {specId: "spec:probe.two-check-families"} at readiness {readiness: "ready"}

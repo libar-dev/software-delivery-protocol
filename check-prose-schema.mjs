@@ -38,10 +38,17 @@ expectContains(
 );
 // The schema-version literal is pinned on its declaring surface above (`src/graph/schema.ts`);
 // the carrying Spec states the law that a graph declares its version, without a version literal.
+// Its bound example point does carry the literal as a slot value — pinned here too, so a
+// version bump names both authored surfaces instead of failing only at the bound point.
 expectContains(
   "specs/extraction/schema-versioning.sdp.md",
   "Every graph declares its schemaVersion",
   "missing schema-version declaration law",
+);
+expectContains(
+  "specs/extraction/schema-versioning.declared-version.sdp.md",
+  '{schemaVersion: "0.4.0"}',
+  "missing declared-version example literal",
 );
 expectContains(
   "specs/carrier/prose-ownership-rule.sdp.md",

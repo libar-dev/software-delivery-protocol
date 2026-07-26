@@ -1127,7 +1127,7 @@ const expectedSpecs = [
       behavior: {
         rules: [
           "A Protocol ID is stable, unique, namespaced, human-readable, and the only binding between intent and code.",
-          "An ID uses a lowercase namespace and dotted path, with an optional single `#` sub-part; referential-integrity checks reject malformed or unresolved references.",
+          "An ID uses a lowercase namespace and a dotted path whose segments admit mixed case (case binds only on the namespace), with an optional single `#` sub-part; referential-integrity checks reject malformed or unresolved references.",
           "IDs carry no history: a rename is a repository edit recorded by git rather than graph-resident bookkeeping.",
           "The builders reserve one namespace per binding direction — `spec:` for a Spec and for every Spec reference, `pack:` for the aggregate, `impl:` · `api:` · `component:` for a code anchor, `test:` for a verifying test anchor, and `oracle:` for an expected-outcome anchor — while the grammar itself admits any lowercase namespace, so the reserved set is the builders' law rather than the parser's.",
           "`doc:` is reserved for a genuinely external document a decision Spec links to, never for an in-system decision: in-system decisions are Specs under the `spec:decisions.*` convention. No builder mints a `doc:` identifier and the Spec-only reference builder refuses one, so the reservation is a named deferral rather than a landed namespace.",
@@ -1383,7 +1383,7 @@ const expectedSpecs = [
     sections: {
       intent: {
         outcome:
-          "Execute the family split where one probe graph trips a conformance error and an informative honesty signal at once.",
+          "Execute the family split where one probe graph trips a conformance error and an informative honesty signal at once; the same dangling relation also fails the readiness floor on the ready probe, so the family assertions read by containment.",
       },
       behavior: {
         examples: [
@@ -1613,7 +1613,7 @@ const expectedSpecs = [
         rules: [
           "A declared verifies relation and an oracle model relation must resolve through their respective binding traces before either can stand as verification evidence.",
           "A non-resolving trace is named loudly and confers no delivery fact, because silence would read as verification the graph never earned.",
-          "At most one expected-outcome authority may model an example space: a second resolving oracle binding on the same space is an error, because two authorities leave the modelled outcome ambiguous.",
+          "At most one expected-outcome authority may model an example space: a second resolving oracle binding on the same space is an error, because two authorities leave the modeled outcome ambiguous.",
           "The realizing validator entrypoints are `checkVerifiesLinkage` and `checkOracleLinkage` in `src/validate/validators.ts`.",
         ],
         exampleSpace: {
@@ -1672,7 +1672,7 @@ const expectedSpecs = [
     narrative: null,
     sections: {
       intent: {
-        outcome: "Execute the oracle-linkage law where the modelled spec owns no example space.",
+        outcome: "Execute the oracle-linkage law where the modeled spec owns no example space.",
       },
       behavior: {
         examples: [
