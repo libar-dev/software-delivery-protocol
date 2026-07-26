@@ -510,6 +510,22 @@ Appended as waves execute; entries name the forcing material and the disposition
    widen the guard and repair the sites, or narrow ruling 7's wording to what it enforces. Phase 3
    authored none of them, and inventing a guard rule at the close would be exactly the
    under-fire legislating this plan warns against.
+7. **The clean-clone proof earned its place: it caught a lint exemption the phase never
+   extended.** _Forcing material:_ the first close-time clone of this branch failed at the
+   **lint** leg with 27 `no-unsafe-*` errors across the five bound suites S1–S4 added. The cause
+   is order, not code: `lint` runs before `generate:self-hosting`, so in a room with no
+   `generated/` the contract imports resolve to nothing and every `bindExample` call reads as an
+   unsafe call. `eslint.config.js` already carried an exemption for exactly this — scoped by an
+   explicit two-file list written when only two bound suites existed. Every later wave added
+   suites without extending it, and no wave could see the omission, because a developed checkout
+   always has `generated/` present. _Disposition:_ the exemption list now names all six suites
+   that import `generated/contracts/` — the bound-suite half of `vitest-test.mjs`'s root
+   contract-dependency row — and says so, so the two lists are read as the pair they are. It is
+   deliberately still an explicit list rather than a `self-hosting-*` glob: the corpus oracle and
+   the contracts self-check derive their graphs in memory, need nothing generated, and must keep
+   full lint strength. This is a genuine gate hole the twelve-leg chain could not have found in
+   place — precisely what §9 criterion 6 asks the clean-clone leg to prove — and the phase-2 close
+   was not exposed to it, since both suites it had were listed.
 
 #### The S4 readiness-sweep ledger
 
