@@ -222,7 +222,7 @@ recorded (ruling 12). Promotions ride verifiers per ruling 5.
 | table sugar (ruling 4) | sibling authoring proves dishonest or unusable in a wave | unfired |
 | single-literal vocabulary form | real material forces it | unfired |
 | per-family oracle drift | a split family module regains cross-family assertions or a mega-assert | unfired |
-| shared-constant bypass | a new contract-dependent suite lands outside the constant | unfired — the constant landed at S2 with no surprise; the eslint side derives from the root row only, because the example tree's suite sits outside the typed-lint globs the exemption relaxes. S3's new suite is the first real test of the coupling |
+| shared-constant bypass | a new contract-dependent suite lands outside the constant | unfired — the constant landed at S2 with no surprise; the eslint side derives from the root row only, because the example tree's suite sits outside the typed-lint globs the exemption relaxes. **S3 proved it:** `test/self-hosting-projections.test.ts` (the seventh suite) entered through one edit to the root row and both surfaces followed. The negative control ran too — with the row removed and `generated/contracts` moved aside, clean-room lint fails with five `no-unsafe-argument` errors and the wrapper stops refusing fast, so the coupling is load-bearing on both sides rather than incidentally satisfied |
 | separate example-id namespace | a collision or real pressure appears | unfired (watch continues from phase 3) |
 
 ## §4 Docket ledger (carried in from plan 20)
@@ -272,11 +272,11 @@ reasons)*
 |---|---|---|---|---|
 | S2 | lower floor rungs (`idea`/`scoped`/`defined` clauses) | `spec:validation.readiness-floor` (enriched) | 2–3 | done — 2 points (`at-least-one-relation` on a scoped probe · `no-blocking-open-questions` on a defined probe), both mutation-probed red |
 | S2 | per-kind evidence table + MD-16 promoted-evidence bound | new `spec:validation.kind-evidence` | 1–2 | done — 3 points (behavior-family complete cell · constraint target · the promoted-evidence bound); one over the planned ceiling, taken deliberately so the MD-16 bound the Spec states is not the only row left unbound |
-| S3 | derived-readiness banner (one direction · first unmet clause) | new Spec under `specs/consumers/` | 1–2 | planned |
-| S3 | `implemented` view-label (binding language) | same family | 1 | planned |
-| S3 | wholesale page rewrite (atomic swap · no stale page) | new Spec | 1 | planned |
-| S3 | one diagnostic rendering rule | new Spec | 1 | planned |
-| S3 | validator self-testing | new Spec | 0–1 (may honestly stay `defined`) | planned |
+| S3 | derived-readiness banner (one direction · first unmet clause) | new `spec:consumers.derived-readiness-banner` | 1–2 | done — 2 points (`dishonest-divergence` names the first unmet clause · `honest-headroom` pairs the absent banner with the rendered stated-beside-derived line), both mutation-probed red |
+| S3 | `implemented` view-label (binding language) | new `spec:consumers.binding-language-views` | 1 | done — 1 point (`bound-spec-page`: the four binding lines, the index row repeating them, and the internal fact names absent from both surfaces), mutation-probed red |
+| S3 | wholesale page rewrite (atomic swap · no stale page) | new `spec:consumers.wholesale-view-rewrite` | 1 | done — 1 point (`stale-page-removed`, a temp-root world running the real `runView`), mutation-probed red; the law is realized at two sites (the up-front invalidation in `runBuild` plus the temp-and-rename in `runView`), so breaking one alone leaves the point green — recorded, and the Spec states both |
+| S3 | one diagnostic rendering rule | new `spec:validation.diagnostic-rendering` | 1 | done — 1 point (`composed-location`: the composed prefix plus both degradations on one finding), mutation-probed red. **Family call:** the carrier lives in `specs/validation/` and refines `spec:validation.two-check-families`, because the law's subject is the Finding currency — a validation concept whose shape law that parent already carries. The consumers family offered no honest parent: `spec:consumers.projections-model` is a `model`-kind vocabulary rather than a law a rule refines, and `spec:consumers.design-review` is only one of the two rendering surfaces. The Design Review half rides a `dependsOn` edge to that Spec instead |
+| S3 | validator self-testing | new `spec:validation.validator-self-testing` | 0–1 (may honestly stay `defined`) | done — 0 points, stated `defined`: the only mechanical verifier available would inspect the test corpus for should-fail/should-pass pairs, which polices the delivery process rather than conformance or honesty |
 
 ## §8 Readiness ledger
 
@@ -300,6 +300,25 @@ entrypoint and a second anchor on the same file would be decorative.
 Closing distribution: **`ready: 57 / defined: 36` over 93** (87 → 93 Specs · 65 → 70 anchors ·
 153 → 164 nodes · 294 → 317 edges), zero errors and zero warnings over the regenerated graph.
 
+**S3 — the view wave.** Ten Specs enter the corpus (opening distribution `ready: 57 /
+defined: 36` over 93). Nine are stated `ready` at authoring because the floor clears and a
+resolving verifier lands in the same change: the four new rule Specs
+(`spec:consumers.derived-readiness-banner`, `spec:consumers.binding-language-views`,
+`spec:consumers.wholesale-view-rewrite`, `spec:validation.diagnostic-rendering`) and their five
+`example` children (`dishonest-divergence`, `honest-headroom`, `bound-spec-page`,
+`stale-page-removed`, `composed-location`).
+
+Refusals on the record. `spec:validation.validator-self-testing` stays `defined`: its content is
+acceptance-grade and its floor clears, but no honest verifier exists — the only mechanical check
+would read the test corpus for should-fail/should-pass pairs, which is workflow policing, so the
+Spec carries no example child and no bound point. None of the four new rule Specs carries
+`implemented`: no code anchor was added, because the projection artifact is already bound at its
+entry (`impl:protocol.design-review`) and a second anchor per render helper on the same artifact
+would be decorative — the S2 precedent, applied to the view surface.
+
+Closing distribution: **`ready: 66 / defined: 37` over 103** (93 → 103 Specs · 70 → 75 anchors ·
+164 → 179 nodes · 317 → 351 edges), zero errors and zero warnings over the regenerated graph.
+
 ## §9 Session and gate ledger
 
 Sessions execute sequentially; each closes with a green twelve-leg gate, a regenerated Design
@@ -310,7 +329,7 @@ ledger is git process evidence, never graph content.
 |---|---|---|---|
 | S1 | the oracle split (§2 S1) | orchestrator-verified green gate | done — 21 `it()`s over one hoisted extraction; the frozen expectation moved to ten authored modules under `test/self-hosting-oracle/` (seven family files, pack manifest, declared relations, anchors) plus their aggregating index; zero assertion loss (every one of the 27 original `expect` sites survives, 5 added: three oracle-length cross-checks and the two-assertion "no Spec outside the families" law), the node-id roster derived from the authored arrays per ruling 10; counts unchanged at 87/1/65 · 153 · 294 · ready 51 / defined 36 |
 | S2 | shared constant + floor wave | orchestrator-verified green gate | done — `contract-dependent-suites.mjs` now states the per-tree rows once and both `vitest-test.mjs` and `eslint.config.js` read it (clean-room proof: lint passes with `generated/contracts` moved aside, the wrapper still fails fast with the same recovery text); the floor wave carried the `idea`/`scoped`/`defined` rungs into `spec:validation.readiness-floor` and the per-kind table into the new `spec:validation.kind-evidence`, with 5 bound points each mutation-probed red for the clause it names; corpus 87 → 93 Specs, `ready` 51 → 57 |
-| S3 | view wave + seventh bound suite | orchestrator-verified green gate | planned |
+| S3 | view wave + seventh bound suite | orchestrator-verified green gate | done — five laws carried (banner · view-label · wholesale rewrite · diagnostic rendering · validator self-testing), ten Specs added, five bound points in the new `test/self-hosting-projections.test.ts`, each mutation-probed red for the law it names; the suite entered the shared constant once and both surfaces followed (clean-room proof: with `generated/contracts` moved aside, lint passes with the row and fails with five unsafe-argument errors without it, while the wrapper refuses fast with the recovery text); corpus 93 → 103 Specs, `ready` 57 → 66 |
 | S4 | readiness sweep + re-audits (± the `05` deletion) | orchestrator-verified green gate over the regenerated Design Review | planned |
 | S5 | adversarial review, remediation, full close, done-record | full chain + clean-clone; review archived | planned |
 
