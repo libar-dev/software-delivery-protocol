@@ -555,7 +555,8 @@ describe("graph validators", () => {
         [parent, example, impostor],
         [
           { from: example.id, type: "verifies", to: parent.id, claim: "declared" },
-          // Off-contract: an anchored verifies edge resolves from an Anchor node only (`03` §1).
+          // Off-contract: an anchored verifies edge resolves from an Anchor node only
+          // (`spec:extraction.derive-graph`).
           { from: impostor.id, type: "verifies", to: example.id, claim: "anchored" },
         ],
       ),

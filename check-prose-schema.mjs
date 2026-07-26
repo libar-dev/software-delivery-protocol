@@ -32,18 +32,27 @@ expectContains(
   "narrative is not searchable",
 );
 expectContains(
-  "docs/concept/02-core-model.md",
-  "`narrative` is content owned directly",
+  "specs/carrier/prose-ownership-rule.sdp.md",
+  "owned directly by the Spec; it is Spec content, never an envelope field",
   "missing narrative model contract",
 );
+// The schema-version literal is pinned on its declaring surface above (`src/graph/schema.ts`);
+// the carrying Spec states the law that a graph declares its version, without a version literal.
+// Its bound example point does carry the literal as a slot value — pinned here too, so a
+// version bump names both authored surfaces instead of failing only at the bound point.
 expectContains(
-  "docs/concept/03-the-one-graph.md",
-  '"schemaVersion": "0.4.0"',
-  "missing 0.4.0 payload",
+  "specs/extraction/schema-versioning.sdp.md",
+  "Every graph declares its schemaVersion",
+  "missing schema-version declaration law",
 );
 expectContains(
-  "docs/concept/03-the-one-graph.md",
-  "`constraints` has no description field",
+  "specs/extraction/schema-versioning.declared-version.sdp.md",
+  '{schemaVersion: "0.4.0"}',
+  "missing declared-version example literal",
+);
+expectContains(
+  "specs/carrier/prose-ownership-rule.sdp.md",
+  "the array-shaped constraints section has no description owner",
   "missing constraint omission contract",
 );
 expectContains(

@@ -1,3 +1,5 @@
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import { renderStepText } from "../notation/slots.js";
 
 /**
@@ -86,6 +88,14 @@ function substituteParams(skeleton: string, params: ParamShape): string {
     name in params ? String(params[name]) : group,
   );
 }
+
+const exampleRunnerAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.example-runner"),
+  label: "plans and executes a bound example against the caller's world",
+  satisfies: ref("spec:extraction.example-runner"),
+});
+
+void exampleRunnerAnchor;
 
 /**
  * The framework-neutral core: pairs each contract step with its bound handler, in contract order.

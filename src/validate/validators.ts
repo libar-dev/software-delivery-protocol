@@ -245,7 +245,7 @@ function checkDuplicateIds(graph: GraphSchema): readonly Finding[] {
   return findings;
 }
 
-/* ----- conformance/claim-separation (`05` §2 check 3; the `03` §1 edge contract) ----- */
+/* ----- conformance/claim-separation (`05` §2 check 3; the `spec:extraction.derive-graph` edge contract) ----- */
 
 const nodeTypeSet: ReadonlySet<string> = new Set(graphNodeTypes);
 const claimSet: ReadonlySet<string> = new Set(graphClaims);
@@ -351,7 +351,7 @@ function checkEdgeContractRow(edge: GraphEdge, index: GraphIndex, findings: Find
     }
   };
 
-  // The kind-typed endpoint rows (`03` §1): evaluated only where the endpoint resolves to a
+  // The kind-typed endpoint rows (`spec:extraction.derive-graph`): evaluated only where the endpoint resolves to a
   // Primitive carrying a ratified kind — a non-Primitive endpoint is the endpoint row's finding,
   // and an unratified kind is the descriptor check's, never a second one here.
   const requireSpecKind = (
@@ -419,7 +419,7 @@ function checkEdgeContractRow(edge: GraphEdge, index: GraphIndex, findings: Find
         toNode,
         "targets",
         ["rule", "constraint"],
-        "constrainedBy bounds a spec by a rule- or constraint-kind spec (a typed dependency, `02` §6)",
+        "constrainedBy bounds a spec by a rule- or constraint-kind spec (a typed dependency, `spec:model.relations`)",
       );
       return;
     case "decidedBy":
@@ -439,7 +439,7 @@ function checkEdgeContractRow(edge: GraphEdge, index: GraphIndex, findings: Find
         fromNode,
         "originates from",
         ["decision"],
-        "supersedes is permitted only on decision specs (`02` §6)",
+        "supersedes is permitted only on decision specs (`spec:model.relations`)",
       );
       requireSpecKind(
         toNode,
@@ -808,7 +808,7 @@ function checkAuthoringShape(node: PrimitiveNode, findings: Finding[]): void {
 /* ----- honesty/delivery-facts (`05` §2 check 6) ----- */
 
 /**
- * Delivery facts are derived, never authored (`02` §2) — and on the public graph seam a
+ * Delivery facts are derived, never authored (`spec:model.core-model`) — and on the public graph seam a
  * `Primitive` node's stated `deliveryFacts` must equal what the one derivation rule recomputes
  * from the graph's resolving binding edges (`computeDeliveryFacts`, shared with the extractor —
  * one derivation path, never two). Extractor output holds by construction; the check has teeth

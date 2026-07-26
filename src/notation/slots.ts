@@ -22,6 +22,9 @@
  * dedupes ("same words, same meaning" — the ubiquitous-language bet at step level).
  */
 
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
+
 export type SlotScalar = string | number | boolean;
 
 export type SlotDeclaredType =
@@ -249,6 +252,14 @@ function parseGroup(group: RawGroup): SlotGroup | undefined {
     ? { form: "typed", name, type: parsed.type, raw: group.raw }
     : { form: "bound", name, value: parsed.value, raw: group.raw };
 }
+
+const slotNotationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.slot-notation"),
+  label: "parses slot groups and normalizes a step to its skeleton",
+  satisfies: ref("spec:carrier.slot-notation"),
+});
+
+void slotNotationAnchor;
 
 /** Every slot group in one step text, in authored order. Prose braces are not returned. */
 export function parseSlots(text: string): readonly SlotGroup[] {

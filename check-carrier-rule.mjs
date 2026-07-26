@@ -12,10 +12,13 @@ import { fileURLToPath } from "node:url";
 //   2. the obsolete sole-canonical-TS wording gone from the diary and the glossary, and the
 //      surviving law (one canonical surface per ID, no mixing) still present in the diary;
 //   3. the extension-law re-point (the `.sdp.ts` extension law, MD-15) present in the diary;
-//   4. the SAME logical/physical relations distinction in the core-model doc and JS-A1:
-//      relations stay OPTIONAL in the logical Spec; the physical Markdown envelope writes
-//      `relations: {}` when the logical set is empty — honest carrier syntax, never a new
-//      logical relation requirement.
+//   4. the logical/physical relations distinction present on BOTH surviving surfaces, each in its
+//      own words — the carrying Spec (the Markdown envelope contract) and JS-A1: relations stay
+//      OPTIONAL in the logical Spec; the physical Markdown envelope writes `relations: {}` when the
+//      logical set is empty — honest carrier syntax, never a new logical relation requirement. The
+//      concept doc that used to hold the JS-A1-verbatim twin dissolved into its carrying Specs, so
+//      this leg proves co-presence of the law, not verbatim sameness across the two surfaces:
+//      JS-A1 keeps the verbatim sentence, the Spec states the same law as it authored it.
 //
 // Usage: node check-carrier-rule.mjs [rootDir]
 //   rootDir  — tree holding the operative surfaces; defaults to this repo root. QA passes a
@@ -27,7 +30,7 @@ const SURFACES = {
   decisions: "docs/concept/DECISIONS.md",
   glossary: "CONTEXT.md",
   agents: "AGENTS.md",
-  coreModel: "docs/concept/02-core-model.md",
+  envelopeContract: "specs/carrier/envelope-contract.sdp.md",
   jsA1: "jtbd-stories/01-capture-and-evolve-intent.md",
 };
 
@@ -37,18 +40,21 @@ const SURFACES = {
 const CARRIER_RULE =
   "Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option";
 
-// The owner-confirmed logical/physical relations distinction. Verbatim in the core-model doc
-// and JS-A1.
+// The owner-confirmed logical/physical relations distinction. Verbatim in JS-A1.
 const RELATIONS_DISTINCTION =
   "Relations are optional in the logical `Spec` model. A physical Markdown envelope writes `relations: {}` when the logical set is empty: honest carrier syntax, not a new logical relation requirement.";
+
+// The same law in the carrying Spec's own authored words.
+const ENVELOPE_RELATIONS_CLAUSE =
+  "`relations: {}` is written explicitly when the logical relation set is empty — honest carrier syntax, not a new logical requirement: the physical key catches a truncated envelope at reification while the model itself stays relation-optional.";
 
 const SURVIVING_LAW = "one canonical surface per ID, no mixing";
 const OBSOLETE_SOLE_CANONICAL = "stays sole-canonical";
 const EXTENSION_LAW_REPAIR = "re-pointed, not repealed";
 
 // Sameness is about WORDS, so markdown quoting furniture is stripped before whitespace
-// normalization: a sentence wrapped inside a `>` blockquote (the AGENTS status row, the
-// core-model carrier note) must read identically to its plain-paragraph twins.
+// normalization: a sentence wrapped inside a `>` blockquote (the AGENTS status row) must read
+// identically to its plain-paragraph twins.
 const norm = (text) => text.replace(/^>\s?/gm, "").replace(/\s+/g, " ");
 const read = (rel) => norm(readFileSync(join(rootDir, rel), "utf8"));
 
@@ -88,8 +94,8 @@ expectContains(
   "missing the extension-law re-point (the `.sdp.ts` extension law, MD-15)",
 );
 expectContains(
-  SURFACES.coreModel,
-  RELATIONS_DISTINCTION,
+  SURFACES.envelopeContract,
+  ENVELOPE_RELATIONS_CLAUSE,
   "missing the logical/physical relations distinction",
 );
 expectContains(

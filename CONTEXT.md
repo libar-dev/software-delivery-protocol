@@ -3,9 +3,9 @@
 > **Status: RATIFIED · LEAN GLOSSARY.** The terminology base of the Libar Software Delivery Protocol — our
 > bounded context's vocabulary: **one concept → one word**; the rest are *aliases to avoid*.
 >
-> This document carries **terms only**; the model exposition lives in the design docs
-> (`docs/concept/00`–`07`). The lean decision registry points to carrying Specs; historical
-> rationale lives in git, plans, and those Specs.
+> This document carries **terms only**; the model exposition lives in the authored Specs under
+> `specs/` and in the surviving design docs under `docs/concept/`. The lean decision registry
+> points to carrying Specs; historical rationale lives in git, plans, and those Specs.
 
 ## Governing rubric  [SETTLED]
 
@@ -28,7 +28,7 @@
 Self-hosting — the Protocol's own repo conforming to its own meta-model — is a later milestone, never a
 Phase-0 claim (`00` §3).
 
-## The primitive & its descriptors  (→ `02` §1–§2)
+## The primitive & its descriptors  (→ `spec:model.core-model`)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
@@ -51,14 +51,14 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 | **Executable Spec** | an `example` that **has a verifier** (a delivery fact) | a readiness rung |
 | **capability / domain** | a **projection** (Capability Map over high-altitude `behavior` `Spec`s) and/or a **`Pack` grouping** | a kind or an altitude |
 
-## Sections  (→ `02` §3)
+## Sections  (→ `spec:model.spec-sections`)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
 | **section** | the typed, optional detail-slice of a `Spec` — the **extension surface**; one concern each: `intent` · `behavior` · `constraints` · `model` · `design` · `decision` · `verification` · `ui` | "Facet" · "aspect" |
 | **section ⟷ kind duality** | `constraints`/`model`/`decision` — and `behavior.rules`/`behavior.examples` vs the `rule`/`example` kinds — have a `kind` twin: keep **inline** when local detail; **promote** to a standalone `Spec` when shared or needing its own identity/lifecycle/review. **Sections carry content, relations carry linkage** (never a ref inside a section); **promotion is exclusive** (inline XOR promoted — content moves out, MD-10) | — |
 
-## The other authored things  (no system truth — → `02` §4, `04` §2)
+## The other authored things  (no system truth — → `spec:model.pack-aggregate`, `04` §2)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
@@ -68,7 +68,7 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 **Two grouping mechanisms, kept distinct:** *refinement* (parent `Spec` → children — authored truth with
 descendants) vs *the aggregate* (the `Pack` — a cross-cutting review collection, no truth of its own).
 
-## Claims & the authored/derived split  (→ `01`, `03` §3)
+## Claims & the authored/derived split  (→ `01`, `spec:extraction.claim-taxonomy`)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
@@ -81,7 +81,7 @@ descendants) vs *the aggregate* (the `Pack` — a cross-cutting review collectio
 No 4th `claim`: an edge computed deterministically from an authored source is a derivation **mechanism, not a
 claim category** — it **inherits** its source's `claim` (so `belongsTo` carries `declared`).
 
-## Delivery facts  (derived realization signals — → `02` §2)
+## Delivery facts  (derived realization signals — → `spec:model.core-model`)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
@@ -94,7 +94,7 @@ claim category** — it **inherits** its source's `claim` (so `belongsTo` carrie
 The payoff queries: `ready ∧ ¬implemented` = the **build backlog**; `implemented ∧ ¬ready` = the **drift
 alarm**.
 
-## The graph & extraction  (→ `03`)
+## The graph & extraction  (→ `spec:extraction.derive-graph`)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
@@ -141,13 +141,15 @@ validated," never "provably correct."**
 | Term | Definition | Aliases to avoid |
 |---|---|---|
 | **step contract** | a derived, regenerable typed module emitted per `example` spec from the graph (the generated-union pattern): the union of the example's literal step strings; tests bind handlers against it, so spec-side drift is a compile error — derived, never authored, importable *because* it is a projection | importing the authored spec |
-| **example space** | the typed parameter vocabulary a parent `behavior` spec's steps declare; the space its child examples bind points in — the sibling set shares one vocabulary | "variables" |
+| **example space** | the typed parameter vocabulary a parent spec's steps declare — typically a `behavior` spec; any kind may own the space when the vocabulary parameterizes its own law (`rule` and `model` parents are lawful); the space its child examples bind points in — the sibling set shares one vocabulary | "variables" |
 | **parameter slot** (short: **slot**) | one typed placeholder in a step's text | — |
 | **bound point** | the concrete slot values an `example` child binds for the steps it uses; partial points are honest — an unbound slot in a *used* step caps the example below `defined` (the **concreteness law**, one structural floor clause) | — |
 | **space contract** | the per-parent derived sibling of the step contract: the typed dimensions of the example space, every child's bound point, and the Outcome union derived from the parent's Then vocabulary | — |
 | **oracle** | the authored expected-outcome semantics for a parent's example space — implementation-side, beside the tests, bound by the space's zero-or-one resolving `specOracle` anchor, never extracted; typed against the space contract on input and the derived Outcome union on output (`unspecified` is a first-class answer); rendered surfaces say **"expected outcome"** | a `model`-kind spec · a derived fact |
 | **witness** | an example whose bound point falls in an outcome class — the evidence that class is covered | — |
 | **coverage gap** | a region of the example space with no witness (or where the oracle answers `unspecified`) — an informative absence, never a gate | — |
+| **world** | the state a bound point's handlers construct and assert against — built by the Given steps, exercised by the When, read by the Then; created fresh per example by the test adapter (the runner core plans and runs steps, never owns world lifecycle) | "fixture" · "test context" |
+| **probe** | a synthetic spec, graph, or repository a world constructs so the law under test is the only thing that can refuse (`spec:probe.*` by convention); probes live inside bound suites and never enter the shipped corpus | "dummy" · "mock" |
 | **`sdp import`** | one import verb with many source adapters, sharing the document emitter authored once in the winning carrier; the TS→`.sdp.md` adapter landed, the gen-1 `.feature` adapter designed-in and deferred | round-trip sync |
 
 **Structural law (point-per-example, MD-17):** an `example` binds exactly **one** point; a table of cases is
@@ -161,7 +163,7 @@ a sibling set back as a table — the graph never holds a multi-point example.
 | **carrier** | the text format that carries the authored `Spec` document — the envelope, the prose, and the owned notation; **ruled: Markdown (`.sdp.md`) for all eight kinds**, the TS DSL remaining the import source and a lawful per-ID option (one canonical surface per ID, `04` §1) | "format"/"file type" (say which layer) · a carrier is never a second store |
 | **notation** | the Protocol-**owned** typed step language inside the carrier's fenced blocks — Given/When/Then step text and the slot vocabulary; owned by the Protocol whatever the carrier | "grammar" (the dismissed own-language direction) · "DSL" (reserved for the TS DSL) |
 
-## Relations  (authored, typed, directed `Spec`→`Spec` edges — → `02` §6)
+## Relations  (authored, typed, directed `Spec`→`Spec` edges — → `spec:model.relations`)
 
 | Relation | Direction | Means | Industry anchor |
 |---|---|---|---|
@@ -202,7 +204,8 @@ artifact** — approval remains outside the model, never an authored primitive).
   division (`01`); a friendlier Studio-facing name is a minor open item.
 - **`ref()`** in the DSL is a **spec-only** reference builder wearing a generic name (it rejects
   `pack:`/`doc:` targets) — documented on the export (`src/ids.ts`). Consequently `decidedBy` → an
-  external `doc:` ADR is a **named deferral** (MD-16, stated in `02` §6); revisit when `doc:`-target
+  external `doc:` ADR is a **named deferral** (MD-16, stated in `spec:decisions.carried-evidence`);
+  revisit when `doc:`-target
   relations or pack-targeting arrive.
 - ~~Candidate vocabulary from the executable-spec exploration: *notation* · *carrier*~~ — **ratified
   by the carrier ruling (MD-18)**; see **The authoring carrier** above. The rest

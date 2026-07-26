@@ -33,7 +33,7 @@ const expectedSpecs = [
     id: "spec:carrier.envelope-contract",
     specKind: "contract",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/envelope-contract.sdp.md",
     title: "The Markdown envelope is explicit and bounded",
     narrative: null,
@@ -44,6 +44,11 @@ const expectedSpecs = [
       behavior: {
         rules: [
           "A Markdown Spec declares id, kind, altitude, readiness, and relations in bounded YAML frontmatter; its first H1 declares title.",
+          "The envelope key set is closed and every one of its five keys is required: a key outside the set is refused rather than absorbed, and a missing key refuses the document rather than being defaulted.",
+          "`relations: {}` is written explicitly when the logical relation set is empty — honest carrier syntax, not a new logical requirement: the physical key catches a truncated envelope at reification while the model itself stays relation-optional.",
+          "A derived name is never authorable in the envelope: a delivery-fact or graph-shape key is refused under its own finding class, because delivery facts are derived and never authored.",
+          "The Protocol owns the envelope grammar and the parser policy while the pinned YAML library stays a swappable representation behind that contract, so an unsupported YAML construct is refused within explicit byte bounds on the carrier and its frontmatter rather than silently becoming carrier semantics.",
+          "The realizing entrypoints are `readMarkdownEnvelope` in `src/extract/markdown-envelope.ts` and `parseMarkdownFrontmatter` in `src/extract/markdown-frontmatter.ts`.",
         ],
       },
     },
@@ -53,7 +58,7 @@ const expectedSpecs = [
     id: "spec:carrier.markdown-parser",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-parser.sdp.md",
     title: "The product parser reifies the ruled Markdown subset",
     narrative: null,
@@ -72,6 +77,15 @@ const expectedSpecs = [
           "Named non-claim — `extract/unrecognized-statement` remains distinct because Markdown owns prose and structures, not TypeScript statement recognition.",
           "Named non-claim — `extract/misplaced-authoring` remains distinct because Markdown has no executable authoring-call surface.",
         ],
+        exampleSpace: {
+          given: ["the paired carrier probes named {probe:string}"],
+          when: ["both carriers reify their probe"],
+          [["t", "hen"].join("")]: [
+            "both carriers report the finding class {findingId:string}",
+            'the TypeScript carrier reports severity {typeScriptSeverity:"warning"|"error"} and extracts {typeScriptSpecs:number} specs',
+            'the Markdown carrier reports severity {markdownSeverity:"warning"|"error"} and extracts {markdownSpecs:number} specs',
+          ],
+        },
       },
       verification: {
         mode: "executable",
@@ -81,6 +95,35 @@ const expectedSpecs = [
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-parser.bounded-parity",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/carrier/markdown-parser.bounded-parity.sdp.md",
+    title: "One finding class is shared while the carriers' outcomes stay their own",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute one same-class row of the parity matrix, including the outcomes it never claims.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the paired carrier probes named {probe: "unrecognized-property"}'],
+            when: ["both carriers reify their probe"],
+            [["t", "hen"].join("")]: [
+              'both carriers report the finding class {findingId: "extract/unrecognized-property"}',
+              'the TypeScript carrier reports severity {typeScriptSeverity: "warning"} and extracts {typeScriptSpecs: 1} specs',
+              'the Markdown carrier reports severity {markdownSeverity: "error"} and extracts {markdownSpecs: 0} specs',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:carrier.sdp-import",
@@ -150,7 +193,7 @@ const expectedSpecs = [
     id: "spec:carrier.prose-ownership-rule",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/prose-ownership-rule.sdp.md",
     title: "Every prose edge has one owner",
     narrative: null,
@@ -158,7 +201,11 @@ const expectedSpecs = [
       intent: { outcome: "Keep free prose in the graph without ambiguous attachment." },
       behavior: {
         rules: [
-          "Narrative lives before the first H2; descriptions live only under their owning singular sections; unowned prose is refused.",
+          "Narrative lives before the first H2 and is owned directly by the Spec; it is Spec content, never an envelope field.",
+          "A description is owned only by a singular section and lives under that section's own heading; the array-shaped constraints section has no description owner, so its explanatory prose belongs in narrative or intent instead.",
+          "Unowned prose — prose standing under no typed owner — is refused loudly rather than attached by guess or dropped in silence.",
+          "Prose is stored as graph content inside its typed owner, never as a file pointer or a heading-path key: a consumer reads prose from the graph without re-parsing the document, and churned document structure carries no identity.",
+          "The realizing entrypoints are `parseMarkdownBody` in `src/extract/markdown-body.ts` and `mapOwner` in `src/extract/markdown-body-owners.ts`.",
         ],
       },
     },
@@ -240,7 +287,7 @@ const expectedSpecs = [
     id: "spec:extraction.excludes",
     specKind: "rule",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/extraction/excludes.sdp.md",
     title: "Extraction exclusions are strict consumer input",
     narrative: null,
@@ -254,10 +301,84 @@ const expectedSpecs = [
           "An exclusion is a unique, exact root-relative POSIX path prefix applied to both declared-carrier and anchor-candidate discovery surfaces.",
           "A prefix excludes itself and slash-delimited descendants only; it never excludes a merely similar sibling path.",
           "Empty, dot-relative, absolute, Windows-drive, backslash, trailing-slash, and parent-traversal paths are refused rather than normalized into a different meaning.",
+          "The realizing entrypoints are `normalizeExcludes` and `discoverFiles` in `src/extract/discover.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            "the extraction root carries the tree {excludedTree:string} and the similar sibling {similarTree:string}",
+            "the consumer supplies the exclusion {exclusion:string}",
+          ],
+          when: ["the root is discovered"],
+          [["t", "hen"].join("")]: [
+            'the discovery attempt {outcome:"completes"|"is refused"}',
+            "the surviving spec carrier is {specCarrier:string} and the surviving anchor candidate is {anchorCandidate:string}",
+            "the refusal states {diagnostic:string} and names the offending path",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:extraction.excludes.segment-boundary",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/excludes.segment-boundary.sdp.md",
+    title: "A prefix excludes its own tree and leaves a similar sibling standing",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the segment-boundary rule across both discovery surfaces.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the extraction root carries the tree {excludedTree: "foo"} and the similar sibling {similarTree: "foobar"}',
+              'the consumer supplies the exclusion {exclusion: "foo"}',
+            ],
+            when: ["the root is discovered"],
+            [["t", "hen"].join("")]: [
+              'the discovery attempt {outcome: "completes"}',
+              'the surviving spec carrier is {specCarrier: "foobar/included.sdp.ts"} and the surviving anchor candidate is {anchorCandidate: "foobar/helper.ts"}',
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:extraction.excludes.refused-path",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/excludes.refused-path.sdp.md",
+    title: "A Windows-drive absolute path is refused rather than normalized",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the refusal rule on an exclusion that cannot name a root-relative prefix.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the extraction root carries the tree {excludedTree: "foo"} and the similar sibling {similarTree: "foobar"}',
+              'the consumer supplies the exclusion {exclusion: "C:/work/specs"}',
+            ],
+            when: ["the root is discovered"],
+            [["t", "hen"].join("")]: [
+              'the discovery attempt {outcome: "is refused"}',
+              'the refusal states {diagnostic: "normalizeExcludes: invalid exclusion path"} and names the offending path',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:decisions.exclusion-contract",
@@ -343,7 +464,7 @@ const expectedSpecs = [
     id: "spec:extraction.schema-versioning",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/extraction/schema-versioning.sdp.md",
     title: "The graph declares its schema version",
     narrative: null,
@@ -356,16 +477,52 @@ const expectedSpecs = [
         rules: [
           "Every graph declares its schemaVersion, and MVP consumers require that field to be present and readable.",
           "Envelope-stable, section-extensible growth is normally additive; SemVer negotiation and a migration command remain deferred until a consumer needs them.",
+          "The declaring entrypoint is `schemaVersion` in `src/graph/schema.ts`, carried onto every derived payload by `deriveGraph`.",
+        ],
+        exampleSpace: {
+          given: ["a graph derived from the authored spec {specId:string}"],
+          when: ["the graph payload is serialized"],
+          [["t", "hen"].join("")]: [
+            "the payload declares the schema version {schemaVersion:string}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:extraction.schema-versioning.declared-version",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/schema-versioning.declared-version.sdp.md",
+    title: "A derived payload carries a schema version its consumer can read",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the declared-version rule over a serialized graph payload.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a graph derived from the authored spec {specId: "spec:probe.schema-versioning"}',
+            ],
+            when: ["the graph payload is serialized"],
+            [["t", "hen"].join("")]: [
+              'the payload declares the schema version {schemaVersion: "0.4.0"}',
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:extraction.executable-contracts",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/extraction/executable-contracts.sdp.md",
     title: "The build derives executable contracts from graph examples",
     narrative: null,
@@ -378,10 +535,325 @@ const expectedSpecs = [
         rules: [
           "`generateContracts` derives per-example step contracts and per-parent space contracts solely from the extracted graph.",
           "A generated contract is disposable, keyed by Spec ID, and becomes unavailable when its authored example cannot bind honestly to its shared vocabulary.",
+          "The concreteness law is a refusal, never a guess — an example carrying an unbound slot in any used step of any entry is not the bindable form and receives no step contract, and a prose-only example receives none either.",
+          "The concreteness law reads the example's own form alone, so it refuses whether or not a parent declares a shared vocabulary; vocabulary resolution is a separate, later gate whose withholding names its own finding.",
+          "An example is one point, so the step contract and the bound point derive from the same first complete entry; a further structured entry is named rather than left silently inert.",
+          "Degradation is loud and local — an undeclared slot, a value outside its declared type, and a conflicting re-binding each name the drift and drop exactly that one slot, so the emitted module still compiles.",
+          "A vocabulary slot group that declares no usable type is named rather than dropped in silence, and no dimension enters the space for it.",
+          "Two contract paths differing only by letter case cannot coexist on a case-insensitive filesystem, so the contracts tree is withheld whole and the finding names the colliding pair.",
+          "Every generation finding is a warning that describes what did not emit; gating belongs to graph validation alone, so a withheld contract never fails the build by itself.",
+          "The realizing entrypoint is `generateContracts` in `src/codegen/contracts.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            "a parent spec whose example space declares the slot {dimension:string}",
+            "a parent spec that declares no shared vocabulary for the slot {dimension:string}",
+            'a refining example {exampleId:string} whose used step {binding:"binds"|"leaves unbound"} that slot',
+            "the example carries {entryCount:number} structured entries",
+            "a case-twin example {twinId:string} whose contract path differs only by letter case",
+          ],
+          when: ["the contracts are generated from the derived graph"],
+          [["t", "hen"].join("")]: [
+            "the generated tree holds {fileCount:number} files",
+            "the step contract for the example is emitted: {emitted:boolean}",
+            "the findings name {findingId:string}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:extraction.executable-contracts.concreteness-refusal",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/executable-contracts.concreteness-refusal.sdp.md",
+    title: "An unbound slot in a used step earns no step contract",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the concreteness law alone, where no shared vocabulary can withhold the contract in its place.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a parent spec that declares no shared vocabulary for the slot {dimension: "n"}',
+              'a refining example {exampleId: "spec:probe.create-order.unbound"} whose used step {binding: "leaves unbound"} that slot',
+            ],
+            when: ["the contracts are generated from the derived graph"],
+            [["t", "hen"].join("")]: [
+              "the generated tree holds {fileCount: 0} files",
+              "the step contract for the example is emitted: {emitted: false}",
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:extraction.executable-contracts.multi-entry-example",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/executable-contracts.multi-entry-example.sdp.md",
+    title: "A second structured entry is named, never left silently inert",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the one-point law where an example smuggles a second case into one document.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a parent spec whose example space declares the slot {dimension: "n"}',
+              'a refining example {exampleId: "spec:probe.create-order.multi"} whose used step {binding: "binds"} that slot',
+              "the example carries {entryCount: 2} structured entries",
+            ],
+            when: ["the contracts are generated from the derived graph"],
+            [["t", "hen"].join("")]: [
+              "the step contract for the example is emitted: {emitted: true}",
+              'the findings name {findingId: "contracts/multi-entry-example"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:extraction.executable-contracts.case-colliding-path",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/executable-contracts.case-colliding-path.sdp.md",
+    title: "A case-only path collision withholds the whole contracts tree",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the all-or-nothing rule where two examples claim one case-folded contract path.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a parent spec whose example space declares the slot {dimension: "n"}',
+              'a refining example {exampleId: "spec:probe.create-order.same-case"} whose used step {binding: "binds"} that slot',
+              'a case-twin example {twinId: "spec:probe.create-order.same-Case"} whose contract path differs only by letter case',
+            ],
+            when: ["the contracts are generated from the derived graph"],
+            [["t", "hen"].join("")]: [
+              "the generated tree holds {fileCount: 0} files",
+              'the findings name {findingId: "contracts/case-colliding-path"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:extraction.example-runner",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/extraction/example-runner.sdp.md",
+    title: "A bound example runs its contract steps against a fresh world",
+    narrative: null,
+    sections: {
+      intent: {
+        problem:
+          "A bound test must execute a Spec's own steps without the executing core learning any test framework.",
+        outcome:
+          "Run a generated contract's steps in authored order and make a red step name itself in the Spec's own words.",
+        value:
+          "A failing example reads as the Spec that failed rather than as an anonymous assertion.",
+      },
+      behavior: {
+        rules: [
+          "The core plans every contract step in authored order and runs it against the world the caller hands in; creating a fresh world per example is the adapter's lifecycle, never the core's.",
+          "Duplicate step text within one example binds one handler, and every occurrence runs that one handler with its own authored params.",
+          "A red step names itself before the assertion detail: the failure message leads with the step's natural reading — the Spec's own words with bound values inlined — and the original error is preserved, carried as `cause` when it cannot be re-messaged, and wrapped when the thrown value is not an error.",
+          "A missing or stale step handler is a compile-time refusal rather than a silent skip: the bindings type covers every step and only the steps, so spec-side drift fails the typecheck instead of the run.",
+          "The core contributes `unspecified`, the one outcome no Spec ever states, so an uncovered region of an example space has an honest answer rather than a manufactured one.",
+          "The realizing entrypoints are `planExample` and `runExamplePlan` in `src/runner/index.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            "a contract whose given step repeats {occurrences:number} times before one when step and one then step",
+            'the handler bound to the {failingPhase:"given"|"when"|"then"} step throws {thrown:string}',
+          ],
+          when: ["the bound plan runs against a fresh world"],
+          [["t", "hen"].join("")]: [
+            "the world records the handler trace {trace:string}",
+            'the run {outcome:"completes"|"fails"}',
+            "the failure names the step in the Spec's own words as {failureLabel:string}",
+            "the failure preserves the original detail {detail:string}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:extraction.example-runner.step-order",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/example-runner.step-order.sdp.md",
+    title: "A repeated step runs its one handler at each occurrence, in contract order",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the contract-order and one-handler-per-step laws over a repeating given step.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a contract whose given step repeats {occurrences: 2} times before one when step and one then step",
+            ],
+            when: ["the bound plan runs against a fresh world"],
+            [["t", "hen"].join("")]: [
+              'the world records the handler trace {trace: "given 2 | given 2 | when | then"}',
+              'the run {outcome: "completes"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:extraction.example-runner.red-step-naming",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/example-runner.red-step-naming.sdp.md",
+    title: "A red step names itself before the assertion detail",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the failure law where a bound handler throws inside the when step.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a contract whose given step repeats {occurrences: 2} times before one when step and one then step",
+              'the handler bound to the {failingPhase: "when"} step throws {thrown: "boom"}',
+            ],
+            when: ["the bound plan runs against a fresh world"],
+            [["t", "hen"].join("")]: [
+              'the run {outcome: "fails"}',
+              'the failure names the step in the Spec\'s own words as {failureLabel: "at step: When the cart is submitted"}',
+              'the failure preserves the original detail {detail: "boom"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.slot-notation",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/carrier/slot-notation.sdp.md",
+    title: "Slot notation declares, binds, and refuses to guess",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give step text one owned typed placeholder syntax whose normalized identity a generated contract can key on.",
+      },
+      behavior: {
+        rules: [
+          "A slot group opens with an identifier; a brace group that does not open with one is prose, and prose is never policed.",
+          "A vocabulary slot declares a type only in the ratified type form — `number`, `string`, `boolean`, or a closed union of two or more quoted literals — while an example binds one scalar literal in the same position.",
+          "The skeleton — every slot group normalized to `{name}` with prose braces left untouched — is the step's identity: it keys the generated step contract, matches an example step to its vocabulary entry, and makes a declaration and its binding the same step.",
+          "An identifier-led group whose remainder parses as neither a type nor a value stays a named but unusable slot: it declares nothing, binds nothing, and reads as unbound rather than being guessed into meaning.",
+          "The single-quoted-literal form parses as a binding, and what it would declare in a vocabulary is unruled — so a vocabulary consumer treats it as declaring nothing and says so rather than inventing a one-value dimension.",
+          "Lexical degradation stays local: a stray or unterminated brace group is prose only up to the next candidate, so it never swallows a well-formed binding that follows it.",
+          "The realizing entrypoints are `parseSlots` and `stepSkeleton` in `src/notation/slots.ts`.",
+        ],
+        exampleSpace: {
+          given: ["the step text {stepText:string}"],
+          when: ["the notation parses the step text"],
+          [["t", "hen"].join("")]: [
+            "the notation finds {slotCount:number} slot groups",
+            'the first group has the form {form:"bare"|"typed"|"bound"|"malformed"} and the name {slotName:string}',
+            "the step skeleton is {skeleton:string}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:carrier.slot-notation.typed-declaration",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/carrier/slot-notation.typed-declaration.sdp.md",
+    title: "A typed declaration normalizes to the skeleton its binding shares",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the declaration form and the skeleton identity on one vocabulary step.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the step text {stepText: "a cart with {n:number} line items"}'],
+            when: ["the notation parses the step text"],
+            [["t", "hen"].join("")]: [
+              "the notation finds {slotCount: 1} slot groups",
+              'the first group has the form {form: "typed"} and the name {slotName: "n"}',
+              'the step skeleton is {skeleton: "a cart with {n} line items"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.slot-notation.refused-guess",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/carrier/slot-notation.refused-guess.sdp.md",
+    title: "A stray brace stays prose while an unusable group stays a named slot",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the refuse-to-guess posture where a stray brace precedes an unparsable group.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the step text {stepText: "a stray { then {n: maybe} line items"}'],
+            when: ["the notation parses the step text"],
+            [["t", "hen"].join("")]: [
+              "the notation finds {slotCount: 1} slot groups",
+              'the first group has the form {form: "malformed"} and the name {slotName: "n"}',
+              'the step skeleton is {skeleton: "a stray { then {n} line items"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:extraction.build-pipeline",
@@ -419,6 +891,9 @@ const expectedSpecs = [
       behavior: {
         rules: [
           "A Spec may state a readiness only when every clause in that readiness floor passes.",
+          "The `ready` floor reads the Spec's own edges through three clauses: every authored relation resolves to a known target, every `refines` and `dependsOn` target itself stands at least `defined`, and every anchor bound to the Spec resolves.",
+          "The anchor clause reads the bindings that are present, so a Spec carrying no anchor clears it — the floor never demands a binding an author has not made.",
+          "The floor table in `src/validate/readiness-floor.ts` is the clause set's code-level source of truth and the realizing entrypoint; the clauses of the lower rungs are stated there and are not re-enumerated here.",
         ],
       },
     },
@@ -541,7 +1016,9 @@ const expectedSpecs = [
         decision:
           "Concept documents may dissolve only after their semantic contract is carried by executable Specs and lean registries.",
         rationale: ["Executable truth is easier to validate and consume."],
-        consequences: ["Deletion is later work, never part of phase 1."],
+        consequences: [
+          "Deletion follows the carrying work, per document, and is never bundled into the change that lands the carrier.",
+        ],
       },
     },
     deliveryFacts: [],
@@ -638,7 +1115,7 @@ const expectedSpecs = [
     id: "spec:model.stable-ids",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/model/stable-ids.sdp.md",
     title: "Stable IDs are the Protocol's durable join key",
     narrative: null,
@@ -650,12 +1127,78 @@ const expectedSpecs = [
       behavior: {
         rules: [
           "A Protocol ID is stable, unique, namespaced, human-readable, and the only binding between intent and code.",
-          "An ID uses a lowercase namespace and dotted path, with an optional single `#` sub-part; referential-integrity checks reject malformed or unresolved references.",
+          "An ID uses a lowercase namespace and a dotted path whose segments admit mixed case (case binds only on the namespace), with an optional single `#` sub-part; referential-integrity checks reject malformed or unresolved references.",
           "IDs carry no history: a rename is a repository edit recorded by git rather than graph-resident bookkeeping.",
+          "The builders reserve one namespace per binding direction — `spec:` for a Spec and for every Spec reference, `pack:` for the aggregate, `impl:` · `api:` · `component:` for a code anchor, `test:` for a verifying test anchor, and `oracle:` for an expected-outcome anchor — while the grammar itself admits any lowercase namespace, so the reserved set is the builders' law rather than the parser's.",
+          "`doc:` is reserved for a genuinely external document a decision Spec links to, never for an in-system decision: in-system decisions are Specs under the `spec:decisions.*` convention. No builder mints a `doc:` identifier and the Spec-only reference builder refuses one, so the reservation is a named deferral rather than a landed namespace.",
+          "The realizing entrypoints are `parseId` and `formatId` in `src/ids.ts`.",
+        ],
+        exampleSpace: {
+          given: ["the authored identifier {identifier:string}"],
+          when: ["the identifier is parsed"],
+          [["t", "hen"].join("")]: [
+            'parsing {outcome:"resolves"|"is refused"}',
+            "reformatting the parsed parts restores {restored:string}",
+            "the refusal names the reason {reason:string}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:model.stable-ids.namespaced-round-trip",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/model/stable-ids.namespaced-round-trip.sdp.md",
+    title: "A namespaced dotted path with a sub-part survives parsing unchanged",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the ID grammar on the fullest well-formed shape the model allows.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the authored identifier {identifier: "spec:orders.create-order#valid-cart"}'],
+            when: ["the identifier is parsed"],
+            [["t", "hen"].join("")]: [
+              'parsing {outcome: "resolves"}',
+              'reformatting the parsed parts restores {restored: "spec:orders.create-order#valid-cart"}',
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:model.stable-ids.malformed-refusal",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/model/stable-ids.malformed-refusal.sdp.md",
+    title: "An uppercase namespace is refused with its reason named",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the lowercase-namespace clause of the ID grammar.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the authored identifier {identifier: "Spec:orders.create-order"}'],
+            when: ["the identifier is parsed"],
+            [["t", "hen"].join("")]: [
+              'parsing {outcome: "is refused"}',
+              'the refusal names the reason {reason: "namespace must be lowercase"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:model.pack-aggregate",
@@ -689,7 +1232,7 @@ const expectedSpecs = [
     id: "spec:model.anchors",
     specKind: "model",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/model/anchors.sdp.md",
     title: "Source anchors bind code without carrying intent",
     narrative: null,
@@ -697,6 +1240,18 @@ const expectedSpecs = [
       intent: {
         outcome:
           "Connect implementation, tests, and oracles to Specs while keeping authored intent centralized in the carrier.",
+      },
+      behavior: {
+        exampleSpace: {
+          given: [
+            'a repository whose one source file builds an anchor through {builderSource:"a consumer-local lookalike module"|"a relative import resolving to the Protocol builder modules"|"the published Protocol package"}',
+          ],
+          when: ["the repository is extracted"],
+          [["t", "hen"].join("")]: [
+            "the extraction mints {anchorCount:number} anchors",
+            "the extraction reports {findingCount:number} findings",
+          ],
+        },
       },
       model: {
         terms: {
@@ -712,16 +1267,78 @@ const expectedSpecs = [
             "A binding that records an oracle's models target without deriving a delivery fact.",
           "test anchor":
             "A binding that derives an anchored verifies edge from a test to its target Spec.",
+          "untrusted builder":
+            "A builder call whose import is no Protocol builder binding: it mints nothing and reports nothing, because a source file that never bound to the Protocol is not authoring drift to report. The realizing entrypoints are `protocolBindingScopeFor` and `collectProtocolBindings` in `src/extract/protocol-bindings.ts`.",
         },
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:model.anchors.lookalike-refusal",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/model/anchors.lookalike-refusal.sdp.md",
+    title: "A consumer-local lookalike builder mints no anchor and no finding",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the builder-trust law where a repository's own module merely resembles the Protocol builders.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a repository whose one source file builds an anchor through {builderSource: "a consumer-local lookalike module"}',
+            ],
+            when: ["the repository is extracted"],
+            [["t", "hen"].join("")]: [
+              "the extraction mints {anchorCount: 0} anchors",
+              "the extraction reports {findingCount: 0} findings",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:model.anchors.physical-identity",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/model/anchors.physical-identity.sdp.md",
+    title: "A deep relative import that resolves to the Protocol builders is trusted",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the builder-trust law where trust turns on physical module identity rather than the import's spelling.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a repository whose one source file builds an anchor through {builderSource: "a relative import resolving to the Protocol builder modules"}',
+            ],
+            when: ["the repository is extracted"],
+            [["t", "hen"].join("")]: [
+              "the extraction mints {anchorCount: 1} anchors",
+              "the extraction reports {findingCount: 0} findings",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.two-check-families",
     specKind: "rule",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/two-check-families.sdp.md",
     title: "Validation separates well-formedness from non-pretending",
     narrative: null,
@@ -736,16 +1353,62 @@ const expectedSpecs = [
           "Validation errors fail the build; gaps and orphans remain informative signals rather than delivery-process gates.",
           "Types enforce structural shape, schema validates graph payloads, and graph validators enforce cross-file conformance and honesty; no one layer substitutes for the others.",
           "All graph validation runs through the one derived graph path: source, extraction, graph, then checks.",
+          "The two families are load-bearing, so an aggregate report spanning both states no family of its own while every finding names the family it came from.",
+          "The realizing entrypoints are `graphValidatorIds` and `validateGraph` in `src/validate/validators.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            'the graph holds a spec {specId:string} at readiness {readiness:"idea"|"ready"}',
+            "the spec declares a dependsOn relation to the absent target {targetId:string}",
+          ],
+          when: ["the graph is validated"],
+          [["t", "hen"].join("")]: [
+            "the aggregate report states no family of its own",
+            'the conformance family reports {conformanceId:string} at severity {conformanceSeverity:"warning"|"error"}',
+            'the honesty family reports {honestyId:string} at severity {honestySeverity:"warning"|"error"}',
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:validation.two-check-families.split-report",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/two-check-families.split-report.sdp.md",
+    title: "One report carries both families and claims neither as its own",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the family split where one probe graph trips a conformance error and an informative honesty signal at once; the same dangling relation also fails the readiness floor on the ready probe, so the family assertions read by containment.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.two-check-families"} at readiness {readiness: "ready"}',
+              'the spec declares a dependsOn relation to the absent target {targetId: "spec:probe.absent-dependency"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              "the aggregate report states no family of its own",
+              'the conformance family reports {conformanceId: "conformance/referential-integrity"} at severity {conformanceSeverity: "error"}',
+              'the honesty family reports {honestyId: "honesty/gaps"} at severity {honestySeverity: "warning"}',
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.referential-integrity",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/referential-integrity.sdp.md",
     title: "Every graph reference resolves",
     narrative: null,
@@ -757,17 +1420,89 @@ const expectedSpecs = [
       behavior: {
         rules: [
           "Every edge endpoint and every Pack model reference must resolve to a node in the derived graph; an unresolved reference is a conformance error.",
+          "The finding names the unique nearest known id as a suggestion and stays silent when two candidates tie, because resolving ambiguity silently is never the check's job.",
           "The realizing validator entrypoint is `checkReferentialIntegrity` in `src/validate/validators.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            "the graph holds one spec {presentId:string}",
+            "the spec declares a dependsOn relation to {targetId:string}",
+          ],
+          when: ["the graph is validated"],
+          [["t", "hen"].join("")]: [
+            'the report names {findingId:string} at severity {severity:"warning"|"error"}',
+            "the finding offers the nearest-id suggestion: {suggested:boolean}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.referential-integrity.dangling-target",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/referential-integrity.dangling-target.sdp.md",
+    title: "An unrelated missing target is a bare conformance error",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the unresolved-reference law where no known id is near the missing one.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds one spec {presentId: "spec:probe.create-order"}',
+              'the spec declares a dependsOn relation to {targetId: "spec:probe.fulfilment-policy"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "conformance/referential-integrity"} at severity {severity: "error"}',
+              "the finding offers the nearest-id suggestion: {suggested: false}",
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.referential-integrity.did-you-mean",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/referential-integrity.did-you-mean.sdp.md",
+    title: "A unique near miss earns a did-you-mean suggestion",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the unresolved-reference law where exactly one known id is a near miss.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds one spec {presentId: "spec:probe.create-order"}',
+              'the spec declares a dependsOn relation to {targetId: "spec:probe.create-ordr"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "conformance/referential-integrity"} at severity {severity: "error"}',
+              "the finding offers the nearest-id suggestion: {suggested: true}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.claim-separation",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/claim-separation.sdp.md",
     title: "Graph claims and contracts stay distinct",
     narrative: null,
@@ -779,17 +1514,93 @@ const expectedSpecs = [
       behavior: {
         rules: [
           "Node and edge types, claims, descriptors, and relation endpoint contracts must use their ratified forms; the claim taxonomy never collapses.",
+          "An unratified descriptor value fails closed: it is a conformance error, and no readiness floor is evaluated over it.",
           "The realizing validator entrypoint is `checkClaimSeparation` in `src/validate/validators.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            "the graph holds a spec {specId:string}",
+            'the graph carries an off-contract {element:"edge claim"|"descriptor value"} spelled {value:string}',
+          ],
+          when: ["the graph is validated"],
+          [["t", "hen"].join("")]: [
+            'the report names {findingId:string} at severity {severity:"warning"|"error"}',
+            "the finding message states {phrase:string}",
+            "the report holds {floorCount:number} readiness-floor findings",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.claim-separation.collapsed-edge-claim",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/claim-separation.collapsed-edge-claim.sdp.md",
+    title: "A binding edge cannot borrow the declared claim",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the edge-contract law where a satisfies edge carries the authored claim.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.create-order"}',
+              'the graph carries an off-contract {element: "edge claim"} spelled {value: "declared"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "conformance/claim-separation"} at severity {severity: "error"}',
+              'the finding message states {phrase: "never collapsed"}',
+              "the report holds {floorCount: 0} readiness-floor findings",
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.claim-separation.unratified-descriptor",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/claim-separation.unratified-descriptor.sdp.md",
+    title: "An unratified kind fails closed instead of reaching the floor",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the descriptor law where a foreign producer states a kind the model never ratified.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.create-order"}',
+              'the graph carries an off-contract {element: "descriptor value"} spelled {value: "saga"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "conformance/claim-separation"} at severity {severity: "error"}',
+              'the finding message states {phrase: "outside the ratified descriptor values"}',
+              "the report holds {floorCount: 0} readiness-floor findings",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.verification-linkage",
     specKind: "rule",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/verification-linkage.sdp.md",
     title: "Declared verification resolves to a performing trace",
     narrative: null,
@@ -801,17 +1612,91 @@ const expectedSpecs = [
       behavior: {
         rules: [
           "A declared verifies relation and an oracle model relation must resolve through their respective binding traces before either can stand as verification evidence.",
+          "A non-resolving trace is named loudly and confers no delivery fact, because silence would read as verification the graph never earned.",
+          "At most one expected-outcome authority may model an example space: a second resolving oracle binding on the same space is an error, because two authorities leave the modeled outcome ambiguous.",
           "The realizing validator entrypoints are `checkVerifiesLinkage` and `checkOracleLinkage` in `src/validate/validators.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            "the graph holds a parent spec {parentId:string}",
+            'a non-resolving {verifierKind:"example spec"|"oracle anchor"} named {verifierId:string} points at it',
+          ],
+          when: ["the graph is validated"],
+          [["t", "hen"].join("")]: [
+            'the report names {findingId:string} at severity {severity:"warning"|"error"}',
+            "the parent earns the delivery fact has-verifier: {conferred:boolean}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.verification-linkage.unbound-example",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/verification-linkage.unbound-example.sdp.md",
+    title: "A declared verifier no test binds confers nothing",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the verifies-linkage law where no test anchor completes the spec-to-test trace.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a parent spec {parentId: "spec:probe.create-order"}',
+              'a non-resolving {verifierKind: "example spec"} named {verifierId: "spec:probe.create-order.valid-cart"} points at it',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "conformance/verifies-linkage"} at severity {severity: "warning"}',
+              "the parent earns the delivery fact has-verifier: {conferred: false}",
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.verification-linkage.unresolved-oracle",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/verification-linkage.unresolved-oracle.sdp.md",
+    title: "An oracle with no example space to model confers nothing",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the oracle-linkage law where the modeled spec owns no example space.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a parent spec {parentId: "spec:probe.order-policy"}',
+              'a non-resolving {verifierKind: "oracle anchor"} named {verifierId: "oracle:probe.order-policy"} points at it',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "conformance/oracle-linkage"} at severity {severity: "error"}',
+              "the parent earns the delivery fact has-verifier: {conferred: false}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.pack-coherence",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/pack-coherence.sdp.md",
     title: "Packs are coherent aggregates",
     narrative: null,
@@ -823,17 +1708,59 @@ const expectedSpecs = [
       behavior: {
         rules: [
           "Pack membership must not repeat a Spec, and every modelRef must resolve to a model-kind Spec.",
+          "Membership is counted on the derived belongsTo edges the manifest re-expresses, so a repeated manifest entry is named once per repeated member.",
           "The realizing validator entrypoint is `checkPackCoherence` in `src/validate/validators.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            "a pack {packId:string} lists the spec {specId:string} {memberCount:number} times",
+            "the pack also names that spec as a modelRef",
+          ],
+          when: ["the graph is validated"],
+          [["t", "hen"].join("")]: [
+            'the report names {findingId:string} at severity {severity:"warning"|"error"}',
+            "the report holds {findingCount:number} pack-coherence findings",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.pack-coherence.incoherent-aggregate",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/pack-coherence.incoherent-aggregate.sdp.md",
+    title: "A repeated member and a non-model modelRef are both named",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute both halves of the pack law against one incoherent aggregate.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a pack {packId: "pack:probe.checkout"} lists the spec {specId: "spec:probe.create-order"} {memberCount: 2} times',
+              "the pack also names that spec as a modelRef",
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "conformance/pack-coherence"} at severity {severity: "error"}',
+              "the report holds {findingCount: 2} pack-coherence findings",
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.authored-honesty",
     specKind: "rule",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/authored-honesty.sdp.md",
     title: "Machine truth is never authored",
     narrative: null,
@@ -847,15 +1774,88 @@ const expectedSpecs = [
           "Specs and Packs must not author derived edges, claims, or delivery facts, and any stated delivery facts must equal the graph's recomputed facts.",
           "The realizing validator entrypoints are `checkAuthoringShape` and `checkDeliveryFacts` in `src/validate/validators.ts`.",
         ],
+        exampleSpace: {
+          given: [
+            "the graph holds a spec {specId:string}",
+            'the spec hand-authors the delivery fact {factName:"implemented"|"has-verifier"} at {site:"a behavior section carrier"|"the node deliveryFacts array"}',
+          ],
+          when: ["the graph is validated"],
+          [["t", "hen"].join("")]: [
+            'the report names {findingId:string} at severity {severity:"warning"|"error"}',
+            "the finding names the fact {relatedId:string} and states {phrase:string}",
+          ],
+        },
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.authored-honesty.section-authored-fact",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/authored-honesty.section-authored-fact.sdp.md",
+    title: "A delivery fact smuggled into a section is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the authoring-shape refusal on a section carrier that names a derived fact.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.smuggled-fact"}',
+              'the spec hand-authors the delivery fact {factName: "implemented"} at {site: "a behavior section carrier"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "honesty/authoring-shape"} at severity {severity: "error"}',
+              'the finding names the fact {relatedId: "implemented"} and states {phrase: "derived, never authored"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.authored-honesty.unearned-stated-fact",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/authored-honesty.unearned-stated-fact.sdp.md",
+    title: "A stated delivery fact no binding earns is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the delivery-fact refusal where the stated array outruns the recomputed facts.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.unearned-fact"}',
+              'the spec hand-authors the delivery fact {factName: "has-verifier"} at {site: "the node deliveryFacts array"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "honesty/delivery-facts"} at severity {severity: "error"}',
+              'the finding names the fact {relatedId: "has-verifier"} and states {phrase: "derived, never authored"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.warn-level-signals",
     specKind: "rule",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/warn-level-signals.sdp.md",
     title: "Missing connective evidence warns without failing",
     narrative: null,
@@ -869,9 +1869,78 @@ const expectedSpecs = [
           "Orphaned Specs and ready Specs lacking a resolving verifier are warnings, not validation errors.",
           "The realizing validator entrypoints are `checkOrphans` and `checkGaps` in `src/validate/validators.ts`.",
         ],
+        exampleSpace: {
+          given: [
+            'the graph holds a spec {specId:string} at readiness {readiness:"idea"|"ready"}',
+            'the spec declares {relations:"no relation"|"a decidedBy decision"}',
+          ],
+          when: ["the graph is validated"],
+          [["t", "hen"].join("")]: [
+            'the report names {findingId:string} at severity {severity:"warning"|"error"}',
+            "the report holds {errorCount:number} errors",
+          ],
+        },
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.warn-level-signals.orphan-signal",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/warn-level-signals.orphan-signal.sdp.md",
+    title: "A disconnected spec warns and fails nothing",
+    narrative: null,
+    sections: {
+      intent: { outcome: "Execute the orphan signal on a spec no relation reaches." },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.orphan-signal"} at readiness {readiness: "idea"}',
+              'the spec declares {relations: "no relation"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "conformance/orphans"} at severity {severity: "warning"}',
+              "the report holds {errorCount: 0} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.warn-level-signals.ready-gap-signal",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/warn-level-signals.ready-gap-signal.sdp.md",
+    title: "A ready spec without a verifier warns and fails nothing",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the gap signal on a connected ready spec no verifier resolves.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.gap-signal"} at readiness {readiness: "ready"}',
+              'the spec declares {relations: "a decidedBy decision"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "honesty/gaps"} at severity {severity: "warning"}',
+              "the report holds {errorCount: 0} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:consumers.projections-model",
@@ -1535,6 +2604,35 @@ const expectedPackMembers = [
   "spec:model.pack-aggregate",
   "spec:model.anchors",
   "spec:validation.duplicate-ids.dual-carrier",
+  "spec:validation.warn-level-signals.orphan-signal",
+  "spec:validation.warn-level-signals.ready-gap-signal",
+  "spec:validation.referential-integrity.dangling-target",
+  "spec:validation.referential-integrity.did-you-mean",
+  "spec:validation.authored-honesty.section-authored-fact",
+  "spec:validation.authored-honesty.unearned-stated-fact",
+  "spec:validation.claim-separation.collapsed-edge-claim",
+  "spec:validation.claim-separation.unratified-descriptor",
+  "spec:validation.verification-linkage.unbound-example",
+  "spec:validation.verification-linkage.unresolved-oracle",
+  "spec:validation.pack-coherence.incoherent-aggregate",
+  "spec:extraction.excludes.segment-boundary",
+  "spec:extraction.excludes.refused-path",
+  "spec:extraction.schema-versioning.declared-version",
+  "spec:model.stable-ids.namespaced-round-trip",
+  "spec:model.stable-ids.malformed-refusal",
+  "spec:carrier.markdown-parser.bounded-parity",
+  "spec:extraction.example-runner",
+  "spec:extraction.example-runner.step-order",
+  "spec:extraction.example-runner.red-step-naming",
+  "spec:extraction.executable-contracts.concreteness-refusal",
+  "spec:extraction.executable-contracts.multi-entry-example",
+  "spec:extraction.executable-contracts.case-colliding-path",
+  "spec:carrier.slot-notation",
+  "spec:carrier.slot-notation.typed-declaration",
+  "spec:carrier.slot-notation.refused-guess",
+  "spec:model.anchors.lookalike-refusal",
+  "spec:model.anchors.physical-identity",
+  "spec:validation.two-check-families.split-report",
   "spec:decisions.plain-language-references",
   "spec:decisions.concept-docs-dissolve",
   "spec:decisions.one-validation-path",
@@ -1566,6 +2664,8 @@ const expectedDeclaredRelations = [
   ["spec:carrier.envelope-contract", "decidedBy", "spec:decisions.envelope-grammar-posture"],
   ["spec:carrier.markdown-parser", "refines", "spec:carrier.markdown-authoring"],
   ["spec:carrier.markdown-parser", "dependsOn", "spec:carrier.envelope-contract"],
+  ["spec:carrier.markdown-parser.bounded-parity", "refines", "spec:carrier.markdown-parser"],
+  ["spec:carrier.markdown-parser.bounded-parity", "verifies", "spec:carrier.markdown-parser"],
   ["spec:carrier.sdp-import", "refines", "spec:carrier.markdown-authoring"],
   ["spec:carrier.sdp-import.round-trip", "refines", "spec:carrier.sdp-import"],
   ["spec:carrier.sdp-import.round-trip", "verifies", "spec:carrier.sdp-import"],
@@ -1584,10 +2684,64 @@ const expectedDeclaredRelations = [
   ["spec:extraction.build-pipeline", "dependsOn", "spec:extraction.derive-graph"],
   ["spec:extraction.excludes", "refines", "spec:extraction.derive-graph"],
   ["spec:extraction.excludes", "decidedBy", "spec:decisions.exclusion-contract"],
+  ["spec:extraction.excludes.segment-boundary", "refines", "spec:extraction.excludes"],
+  ["spec:extraction.excludes.segment-boundary", "verifies", "spec:extraction.excludes"],
+  ["spec:extraction.excludes.refused-path", "refines", "spec:extraction.excludes"],
+  ["spec:extraction.excludes.refused-path", "verifies", "spec:extraction.excludes"],
   ["spec:extraction.claim-taxonomy", "refines", "spec:extraction.derive-graph"],
   ["spec:extraction.regenerability", "refines", "spec:extraction.determinism"],
   ["spec:extraction.schema-versioning", "refines", "spec:extraction.derive-graph"],
+  [
+    "spec:extraction.schema-versioning.declared-version",
+    "refines",
+    "spec:extraction.schema-versioning",
+  ],
+  [
+    "spec:extraction.schema-versioning.declared-version",
+    "verifies",
+    "spec:extraction.schema-versioning",
+  ],
   ["spec:extraction.executable-contracts", "refines", "spec:extraction.build-pipeline"],
+  [
+    "spec:extraction.executable-contracts.concreteness-refusal",
+    "refines",
+    "spec:extraction.executable-contracts",
+  ],
+  [
+    "spec:extraction.executable-contracts.concreteness-refusal",
+    "verifies",
+    "spec:extraction.executable-contracts",
+  ],
+  [
+    "spec:extraction.executable-contracts.multi-entry-example",
+    "refines",
+    "spec:extraction.executable-contracts",
+  ],
+  [
+    "spec:extraction.executable-contracts.multi-entry-example",
+    "verifies",
+    "spec:extraction.executable-contracts",
+  ],
+  [
+    "spec:extraction.executable-contracts.case-colliding-path",
+    "refines",
+    "spec:extraction.executable-contracts",
+  ],
+  [
+    "spec:extraction.executable-contracts.case-colliding-path",
+    "verifies",
+    "spec:extraction.executable-contracts",
+  ],
+  ["spec:extraction.example-runner", "refines", "spec:extraction.executable-contracts"],
+  ["spec:extraction.example-runner.step-order", "refines", "spec:extraction.example-runner"],
+  ["spec:extraction.example-runner.step-order", "verifies", "spec:extraction.example-runner"],
+  ["spec:extraction.example-runner.red-step-naming", "refines", "spec:extraction.example-runner"],
+  ["spec:extraction.example-runner.red-step-naming", "verifies", "spec:extraction.example-runner"],
+  ["spec:carrier.slot-notation", "refines", "spec:carrier.markdown-authoring"],
+  ["spec:carrier.slot-notation.typed-declaration", "refines", "spec:carrier.slot-notation"],
+  ["spec:carrier.slot-notation.typed-declaration", "verifies", "spec:carrier.slot-notation"],
+  ["spec:carrier.slot-notation.refused-guess", "refines", "spec:carrier.slot-notation"],
+  ["spec:carrier.slot-notation.refused-guess", "verifies", "spec:carrier.slot-notation"],
   ["spec:validation.readiness-floor", "refines", "spec:protocol.self-hosting"],
   ["spec:validation.readiness-floor", "dependsOn", "spec:model.protocol-domain"],
   ["spec:validation.readiness-floor", "decidedBy", "spec:decisions.kind-conditional-floor"],
@@ -1599,11 +2753,121 @@ const expectedDeclaredRelations = [
   ["spec:validation.two-check-families", "refines", "spec:protocol.self-hosting"],
   ["spec:validation.two-check-families", "decidedBy", "spec:decisions.one-validation-path"],
   ["spec:validation.referential-integrity", "refines", "spec:validation.two-check-families"],
+  [
+    "spec:validation.referential-integrity.dangling-target",
+    "refines",
+    "spec:validation.referential-integrity",
+  ],
+  [
+    "spec:validation.referential-integrity.dangling-target",
+    "verifies",
+    "spec:validation.referential-integrity",
+  ],
+  [
+    "spec:validation.referential-integrity.did-you-mean",
+    "refines",
+    "spec:validation.referential-integrity",
+  ],
+  [
+    "spec:validation.referential-integrity.did-you-mean",
+    "verifies",
+    "spec:validation.referential-integrity",
+  ],
   ["spec:validation.claim-separation", "refines", "spec:validation.two-check-families"],
+  [
+    "spec:validation.claim-separation.collapsed-edge-claim",
+    "refines",
+    "spec:validation.claim-separation",
+  ],
+  [
+    "spec:validation.claim-separation.collapsed-edge-claim",
+    "verifies",
+    "spec:validation.claim-separation",
+  ],
+  [
+    "spec:validation.claim-separation.unratified-descriptor",
+    "refines",
+    "spec:validation.claim-separation",
+  ],
+  [
+    "spec:validation.claim-separation.unratified-descriptor",
+    "verifies",
+    "spec:validation.claim-separation",
+  ],
   ["spec:validation.verification-linkage", "refines", "spec:validation.two-check-families"],
+  [
+    "spec:validation.verification-linkage.unbound-example",
+    "refines",
+    "spec:validation.verification-linkage",
+  ],
+  [
+    "spec:validation.verification-linkage.unbound-example",
+    "verifies",
+    "spec:validation.verification-linkage",
+  ],
+  [
+    "spec:validation.verification-linkage.unresolved-oracle",
+    "refines",
+    "spec:validation.verification-linkage",
+  ],
+  [
+    "spec:validation.verification-linkage.unresolved-oracle",
+    "verifies",
+    "spec:validation.verification-linkage",
+  ],
   ["spec:validation.pack-coherence", "refines", "spec:validation.two-check-families"],
+  [
+    "spec:validation.pack-coherence.incoherent-aggregate",
+    "refines",
+    "spec:validation.pack-coherence",
+  ],
+  [
+    "spec:validation.pack-coherence.incoherent-aggregate",
+    "verifies",
+    "spec:validation.pack-coherence",
+  ],
   ["spec:validation.authored-honesty", "refines", "spec:validation.two-check-families"],
+  [
+    "spec:validation.authored-honesty.section-authored-fact",
+    "refines",
+    "spec:validation.authored-honesty",
+  ],
+  [
+    "spec:validation.authored-honesty.section-authored-fact",
+    "verifies",
+    "spec:validation.authored-honesty",
+  ],
+  [
+    "spec:validation.authored-honesty.unearned-stated-fact",
+    "refines",
+    "spec:validation.authored-honesty",
+  ],
+  [
+    "spec:validation.authored-honesty.unearned-stated-fact",
+    "verifies",
+    "spec:validation.authored-honesty",
+  ],
   ["spec:validation.warn-level-signals", "refines", "spec:validation.two-check-families"],
+  [
+    "spec:validation.warn-level-signals.orphan-signal",
+    "refines",
+    "spec:validation.warn-level-signals",
+  ],
+  [
+    "spec:validation.warn-level-signals.orphan-signal",
+    "verifies",
+    "spec:validation.warn-level-signals",
+  ],
+  [
+    "spec:validation.warn-level-signals.ready-gap-signal",
+    "refines",
+    "spec:validation.warn-level-signals",
+  ],
+  [
+    "spec:validation.warn-level-signals.ready-gap-signal",
+    "verifies",
+    "spec:validation.warn-level-signals",
+  ],
   ["spec:consumers.projections-model", "refines", "spec:protocol.self-hosting"],
   ["spec:consumers.projections-model", "decidedBy", "spec:decisions.mcp-deferred"],
   ["spec:consumers.agent-surface", "refines", "spec:consumers.projections-model"],
@@ -1620,6 +2884,10 @@ const expectedDeclaredRelations = [
   ["spec:model.spec-sections", "decidedBy", "spec:decisions.typing-law"],
   ["spec:model.relations", "refines", "spec:model.core-model"],
   ["spec:model.stable-ids", "refines", "spec:model.core-model"],
+  ["spec:model.stable-ids.namespaced-round-trip", "refines", "spec:model.stable-ids"],
+  ["spec:model.stable-ids.namespaced-round-trip", "verifies", "spec:model.stable-ids"],
+  ["spec:model.stable-ids.malformed-refusal", "refines", "spec:model.stable-ids"],
+  ["spec:model.stable-ids.malformed-refusal", "verifies", "spec:model.stable-ids"],
   ["spec:model.pack-aggregate", "refines", "spec:model.core-model"],
   ["spec:model.pack-aggregate", "decidedBy", "spec:decisions.pack-reified"],
   ["spec:model.anchors", "refines", "spec:model.core-model"],
@@ -1645,6 +2913,20 @@ const expectedDeclaredRelations = [
   ["spec:decisions.pack-reified", "refines", "spec:model.pack-aggregate"],
   ["spec:decisions.agent-surface-scripts-graph", "refines", "spec:consumers.agent-surface"],
   ["spec:decisions.mcp-deferred", "refines", "spec:consumers.projections-model"],
+  ["spec:model.anchors.lookalike-refusal", "refines", "spec:model.anchors"],
+  ["spec:model.anchors.lookalike-refusal", "verifies", "spec:model.anchors"],
+  ["spec:model.anchors.physical-identity", "refines", "spec:model.anchors"],
+  ["spec:model.anchors.physical-identity", "verifies", "spec:model.anchors"],
+  [
+    "spec:validation.two-check-families.split-report",
+    "refines",
+    "spec:validation.two-check-families",
+  ],
+  [
+    "spec:validation.two-check-families.split-report",
+    "verifies",
+    "spec:validation.two-check-families",
+  ],
 ] as const;
 
 const expectedWarnings = [] as const;
@@ -1799,6 +3081,176 @@ const expectedAnchors = [
     file: "test/self-hosting-duplicate-ids.test.ts",
     constant: "dualCarrierDuplicateTestAnchor",
     site: "bindExample(",
+  },
+  {
+    id: "test:protocol.warn-level-signals.orphan-signal",
+    nodeType: "Anchor",
+    label: "the orphan point verifies the disconnected-spec warning",
+    type: "verifies",
+    target: "spec:validation.warn-level-signals.orphan-signal",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "warnLevelOrphanTestAnchor",
+    site: "bindExample(orphanSignalContract",
+  },
+  {
+    id: "test:protocol.warn-level-signals.ready-gap-signal",
+    nodeType: "Anchor",
+    label: "the gap point verifies the unverified-ready warning",
+    type: "verifies",
+    target: "spec:validation.warn-level-signals.ready-gap-signal",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "warnLevelGapTestAnchor",
+    site: "bindExample(readyGapSignalContract",
+  },
+  {
+    id: "test:protocol.referential-integrity.dangling-target",
+    nodeType: "Anchor",
+    label: "the dangling-target point verifies the unresolved-reference error",
+    type: "verifies",
+    target: "spec:validation.referential-integrity.dangling-target",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "danglingTargetTestAnchor",
+    site: "bindExample(danglingTargetContract",
+  },
+  {
+    id: "test:protocol.referential-integrity.did-you-mean",
+    nodeType: "Anchor",
+    label: "the near-miss point verifies the unique did-you-mean suggestion",
+    type: "verifies",
+    target: "spec:validation.referential-integrity.did-you-mean",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "didYouMeanTestAnchor",
+    site: "bindExample(didYouMeanContract",
+  },
+  {
+    id: "test:protocol.authored-honesty.section-authored-fact",
+    nodeType: "Anchor",
+    label: "the section point verifies the authoring-shape refusal",
+    type: "verifies",
+    target: "spec:validation.authored-honesty.section-authored-fact",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "sectionAuthoredFactTestAnchor",
+    site: "bindExample(sectionAuthoredFactContract",
+  },
+  {
+    id: "test:protocol.authored-honesty.unearned-stated-fact",
+    nodeType: "Anchor",
+    label: "the stated-fact point verifies the delivery-fact refusal",
+    type: "verifies",
+    target: "spec:validation.authored-honesty.unearned-stated-fact",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "unearnedStatedFactTestAnchor",
+    site: "bindExample(unearnedStatedFactContract",
+  },
+  {
+    id: "test:protocol.claim-separation.collapsed-edge-claim",
+    nodeType: "Anchor",
+    label: "the collapsed-claim point verifies the binding-edge contract row",
+    type: "verifies",
+    target: "spec:validation.claim-separation.collapsed-edge-claim",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "collapsedEdgeClaimTestAnchor",
+    site: "bindExample(collapsedEdgeClaimContract",
+  },
+  {
+    id: "test:protocol.claim-separation.unratified-descriptor",
+    nodeType: "Anchor",
+    label: "the unratified-kind point verifies the fail-closed descriptor law",
+    type: "verifies",
+    target: "spec:validation.claim-separation.unratified-descriptor",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "unratifiedDescriptorTestAnchor",
+    site: "bindExample(unratifiedDescriptorContract",
+  },
+  {
+    id: "test:protocol.verification-linkage.unbound-example",
+    nodeType: "Anchor",
+    label: "the unbound-example point verifies the incomplete spec-to-test trace",
+    type: "verifies",
+    target: "spec:validation.verification-linkage.unbound-example",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "unboundExampleTestAnchor",
+    site: "bindExample(unboundExampleContract",
+  },
+  {
+    id: "test:protocol.verification-linkage.unresolved-oracle",
+    nodeType: "Anchor",
+    label: "the unresolved-oracle point verifies the oracle binding refusal",
+    type: "verifies",
+    target: "spec:validation.verification-linkage.unresolved-oracle",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "unresolvedOracleTestAnchor",
+    site: "bindExample(unresolvedOracleContract",
+  },
+  {
+    id: "test:protocol.pack-coherence.incoherent-aggregate",
+    nodeType: "Anchor",
+    label: "the incoherent-aggregate point verifies both halves of the pack law",
+    type: "verifies",
+    target: "spec:validation.pack-coherence.incoherent-aggregate",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "incoherentAggregateTestAnchor",
+    site: "bindExample(incoherentAggregateContract",
+  },
+  {
+    id: "test:protocol.excludes.segment-boundary",
+    nodeType: "Anchor",
+    label: "the segment-boundary point verifies the exact-prefix exclusion rule",
+    type: "verifies",
+    target: "spec:extraction.excludes.segment-boundary",
+    file: "test/self-hosting-extraction.test.ts",
+    constant: "excludesSegmentBoundaryTestAnchor",
+    site: "bindExample(segmentBoundaryContract",
+  },
+  {
+    id: "test:protocol.excludes.refused-path",
+    nodeType: "Anchor",
+    label: "the refused-path point verifies the malformed-exclusion refusal",
+    type: "verifies",
+    target: "spec:extraction.excludes.refused-path",
+    file: "test/self-hosting-extraction.test.ts",
+    constant: "excludesRefusedPathTestAnchor",
+    site: "bindExample(refusedPathContract",
+  },
+  {
+    id: "test:protocol.schema-versioning.declared-version",
+    nodeType: "Anchor",
+    label: "the declared-version point verifies the readable payload version",
+    type: "verifies",
+    target: "spec:extraction.schema-versioning.declared-version",
+    file: "test/self-hosting-extraction.test.ts",
+    constant: "schemaVersioningTestAnchor",
+    site: "bindExample(declaredVersionContract",
+  },
+  {
+    id: "test:protocol.stable-ids.namespaced-round-trip",
+    nodeType: "Anchor",
+    label: "the round-trip point verifies the namespaced dotted-path grammar",
+    type: "verifies",
+    target: "spec:model.stable-ids.namespaced-round-trip",
+    file: "test/self-hosting-model.test.ts",
+    constant: "namespacedRoundTripTestAnchor",
+    site: "bindExample(namespacedRoundTripContract",
+  },
+  {
+    id: "test:protocol.stable-ids.malformed-refusal",
+    nodeType: "Anchor",
+    label: "the malformed point verifies the lowercase-namespace refusal",
+    type: "verifies",
+    target: "spec:model.stable-ids.malformed-refusal",
+    file: "test/self-hosting-model.test.ts",
+    constant: "malformedRefusalTestAnchor",
+    site: "bindExample(malformedRefusalContract",
+  },
+  {
+    id: "test:protocol.markdown-parser.bounded-parity",
+    nodeType: "Anchor",
+    label: "the bounded-parity point verifies one shared finding class and its split outcomes",
+    type: "verifies",
+    target: "spec:carrier.markdown-parser.bounded-parity",
+    file: "test/self-hosting-carrier.test.ts",
+    constant: "boundedParityTestAnchor",
+    site: "bindExample(boundedParityContract",
   },
   {
     id: "test:protocol.sdp-import.round-trip",
@@ -2010,6 +3462,126 @@ const expectedAnchors = [
     constant: "executableContractsAnchor",
     site: "export function generateContracts",
   },
+  {
+    id: "impl:protocol.example-runner",
+    nodeType: "CodeNode",
+    label: "plans and executes a bound example against the caller's world",
+    type: "satisfies",
+    target: "spec:extraction.example-runner",
+    file: "src/runner/index.ts",
+    constant: "exampleRunnerAnchor",
+    site: "export function planExample",
+  },
+  {
+    id: "impl:protocol.slot-notation",
+    nodeType: "CodeNode",
+    label: "parses slot groups and normalizes a step to its skeleton",
+    type: "satisfies",
+    target: "spec:carrier.slot-notation",
+    file: "src/notation/slots.ts",
+    constant: "slotNotationAnchor",
+    site: "export function parseSlots",
+  },
+  {
+    id: "test:protocol.executable-contracts.concreteness-refusal",
+    nodeType: "Anchor",
+    label: "the concreteness point verifies the unbound-slot refusal",
+    type: "verifies",
+    target: "spec:extraction.executable-contracts.concreteness-refusal",
+    file: "test/self-hosting-extraction.test.ts",
+    constant: "concretenessRefusalTestAnchor",
+    site: "bindExample(concretenessRefusalContract",
+  },
+  {
+    id: "test:protocol.executable-contracts.multi-entry-example",
+    nodeType: "Anchor",
+    label: "the multi-entry point verifies the named second entry",
+    type: "verifies",
+    target: "spec:extraction.executable-contracts.multi-entry-example",
+    file: "test/self-hosting-extraction.test.ts",
+    constant: "multiEntryExampleTestAnchor",
+    site: "bindExample(multiEntryExampleContract",
+  },
+  {
+    id: "test:protocol.executable-contracts.case-colliding-path",
+    nodeType: "Anchor",
+    label: "the collision point verifies the all-or-nothing withholding",
+    type: "verifies",
+    target: "spec:extraction.executable-contracts.case-colliding-path",
+    file: "test/self-hosting-extraction.test.ts",
+    constant: "caseCollidingPathTestAnchor",
+    site: "bindExample(caseCollidingPathContract",
+  },
+  {
+    id: "test:protocol.example-runner.step-order",
+    nodeType: "Anchor",
+    label: "the step-order point verifies contract order and the one handler per step",
+    type: "verifies",
+    target: "spec:extraction.example-runner.step-order",
+    file: "test/self-hosting-extraction.test.ts",
+    constant: "exampleRunnerStepOrderTestAnchor",
+    site: "bindExample(stepOrderContract",
+  },
+  {
+    id: "test:protocol.example-runner.red-step-naming",
+    nodeType: "Anchor",
+    label: "the red-step point verifies the self-naming failure law",
+    type: "verifies",
+    target: "spec:extraction.example-runner.red-step-naming",
+    file: "test/self-hosting-extraction.test.ts",
+    constant: "exampleRunnerRedStepTestAnchor",
+    site: "bindExample(redStepNamingContract",
+  },
+  {
+    id: "test:protocol.slot-notation.typed-declaration",
+    nodeType: "Anchor",
+    label: "the declaration point verifies the typed form and its skeleton",
+    type: "verifies",
+    target: "spec:carrier.slot-notation.typed-declaration",
+    file: "test/self-hosting-carrier.test.ts",
+    constant: "slotNotationTypedTestAnchor",
+    site: "bindExample(typedDeclarationContract",
+  },
+  {
+    id: "test:protocol.slot-notation.refused-guess",
+    nodeType: "Anchor",
+    label: "the refusal point verifies prose braces and the unusable slot",
+    type: "verifies",
+    target: "spec:carrier.slot-notation.refused-guess",
+    file: "test/self-hosting-carrier.test.ts",
+    constant: "slotNotationRefusedTestAnchor",
+    site: "bindExample(refusedGuessContract",
+  },
+  {
+    id: "test:protocol.anchors.lookalike-refusal",
+    nodeType: "Anchor",
+    label: "the lookalike point verifies that a consumer-local builder mints nothing",
+    type: "verifies",
+    target: "spec:model.anchors.lookalike-refusal",
+    file: "test/self-hosting-model.test.ts",
+    constant: "lookalikeRefusalTestAnchor",
+    site: "bindExample(lookalikeRefusalContract",
+  },
+  {
+    id: "test:protocol.anchors.physical-identity",
+    nodeType: "Anchor",
+    label: "the physical-identity point verifies the resolved relative builder import",
+    type: "verifies",
+    target: "spec:model.anchors.physical-identity",
+    file: "test/self-hosting-model.test.ts",
+    constant: "physicalIdentityTestAnchor",
+    site: "bindExample(physicalIdentityContract",
+  },
+  {
+    id: "test:protocol.two-check-families.split-report",
+    nodeType: "Anchor",
+    label: "the split-report point verifies both families in one aggregate report",
+    type: "verifies",
+    target: "spec:validation.two-check-families.split-report",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "splitReportTestAnchor",
+    site: "bindExample(splitReportContract",
+  },
 ] as const;
 
 function lineContaining(source: string, token: string): number {
@@ -2041,7 +3613,7 @@ describe("the self-hosting corpus", () => {
         subjectId,
       })),
     ).toEqual(expectedWarnings);
-    expect(result.counts).toEqual({ specs: 58, packs: 1, anchors: 36 });
+    expect(result.counts).toEqual({ specs: 87, packs: 1, anchors: 65 });
     expect(nodeIds).toEqual(
       [
         "pack:self-hosting-v1",
@@ -2103,10 +3675,39 @@ describe("the self-hosting corpus", () => {
         "spec:validation.two-check-families",
         "spec:validation.verification-linkage",
         "spec:validation.warn-level-signals",
+        "spec:validation.warn-level-signals.orphan-signal",
+        "spec:validation.warn-level-signals.ready-gap-signal",
+        "spec:validation.referential-integrity.dangling-target",
+        "spec:validation.referential-integrity.did-you-mean",
+        "spec:validation.authored-honesty.section-authored-fact",
+        "spec:validation.authored-honesty.unearned-stated-fact",
+        "spec:validation.claim-separation.collapsed-edge-claim",
+        "spec:validation.claim-separation.unratified-descriptor",
+        "spec:validation.verification-linkage.unbound-example",
+        "spec:validation.verification-linkage.unresolved-oracle",
+        "spec:validation.pack-coherence.incoherent-aggregate",
+        "spec:extraction.excludes.segment-boundary",
+        "spec:extraction.excludes.refused-path",
+        "spec:extraction.schema-versioning.declared-version",
+        "spec:model.stable-ids.namespaced-round-trip",
+        "spec:model.stable-ids.malformed-refusal",
+        "spec:carrier.markdown-parser.bounded-parity",
+        "spec:extraction.example-runner",
+        "spec:extraction.example-runner.step-order",
+        "spec:extraction.example-runner.red-step-naming",
+        "spec:extraction.executable-contracts.concreteness-refusal",
+        "spec:extraction.executable-contracts.multi-entry-example",
+        "spec:extraction.executable-contracts.case-colliding-path",
+        "spec:carrier.slot-notation",
+        "spec:carrier.slot-notation.typed-declaration",
+        "spec:carrier.slot-notation.refused-guess",
+        "spec:model.anchors.lookalike-refusal",
+        "spec:model.anchors.physical-identity",
+        "spec:validation.two-check-families.split-report",
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
-    expect(result.graph.nodes).toHaveLength(95);
+    expect(result.graph.nodes).toHaveLength(153);
     expect(
       primitiveNodes
         .map((node) => ({
@@ -2150,7 +3751,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 51, ready: 7 });
+    ).toEqual({ defined: 36, ready: 51 });
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
@@ -2165,7 +3766,7 @@ describe("the self-hosting corpus", () => {
       modelRefs: ["spec:model.protocol-domain", "spec:model.core-model"],
       file: "specs/self-hosting.pack.sdp.ts",
     });
-    expect(result.graph.edges).toHaveLength(180);
+    expect(result.graph.edges).toHaveLength(294);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")

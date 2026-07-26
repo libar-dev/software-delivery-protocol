@@ -29,7 +29,7 @@ The job here is to connect real implementation to the spec that justifies it —
 ### Link by stable ID so specs and code survive refactors
 
 **Phase:** MVP
-**References:** [04 — Authoring & Binding](../docs/concept/04-authoring-and-binding.md), [02 — Core Model](../docs/concept/02-core-model.md)
+**References:** [04 — Authoring & Binding](../docs/concept/04-authoring-and-binding.md), [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`)
 
 > **When** I rename files, move modules, or reorganise spec folders, **I want to** keep the spec-to-code linkage intact because it is bound by stable IDs rather than file paths or imports, **so I can** refactor freely without breaking the graph.
 

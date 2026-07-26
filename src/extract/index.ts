@@ -164,7 +164,8 @@ function fileParses(program: Program, source: ParsedSourceFile, findings: Findin
 }
 
 /**
- * The extractor — the producer, the only component that reads source (`03` §1): the declared
+ * The extractor — the producer, the only component that reads source
+ * (`spec:extraction.derive-graph`): the declared
  * layer (spec files, pack manifests) plus the anchored layer (anchor constants in source files).
  * Files are reified standalone by pure AST reading (no type checker, no tsconfig dependence, no
  * import following — static reification without execution, MD-14); a file that does not parse is

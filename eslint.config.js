@@ -47,11 +47,21 @@ export default tseslint.config(
     },
   },
   {
-    // The root generated contract is intentionally absent until the later generate:self-hosting
-    // gate leg. Typecheck runs after that generation and checks this test's contract types; lint
+    // The root generated contracts are intentionally absent until the later generate:self-hosting
+    // gate leg. Typecheck runs after that generation and checks these tests' contract types; lint
     // keeps all other rules enabled without making the required lint-before-generation order depend
-    // on ignored derived output.
-    files: ["test/self-hosting-duplicate-ids.test.ts", "test/self-hosting-sdp-import.test.ts"],
+    // on ignored derived output. This list is the bound-suite half of `vitest-test.mjs`'s root
+    // contract-dependency row — every suite that imports `generated/contracts/` belongs here, and
+    // a suite that derives its graph in memory (the corpus oracle, the contracts self-check) must
+    // not, so lint keeps full strength where nothing is missing in a clean room.
+    files: [
+      "test/self-hosting-carrier.test.ts",
+      "test/self-hosting-duplicate-ids.test.ts",
+      "test/self-hosting-extraction.test.ts",
+      "test/self-hosting-model.test.ts",
+      "test/self-hosting-sdp-import.test.ts",
+      "test/self-hosting-validators.test.ts",
+    ],
     rules: {
       "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",

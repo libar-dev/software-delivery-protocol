@@ -137,12 +137,12 @@ Revert the edit afterwards. The next `build` regenerates `generated/`.
 
 ## Where the concepts live
 
-| Concept                                                  | Read                                                                               |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| the vocabulary (every term used above)                   | [ubiquitous language](../../CONTEXT.md)                                            |
-| the executable half (contracts · example space · oracle) | [ubiquitous language — "The executable half"](../../CONTEXT.md)                    |
-| the `Spec` primitive, descriptors, sections, relations   | [`02` core model](../../docs/concept/02-core-model.md)                             |
-| the one graph, determinism, the `claim` taxonomy         | [`03` the one graph](../../docs/concept/03-the-one-graph.md)                       |
-| the DSL and anchors (authoring & binding)                | [`04` authoring & binding](../../docs/concept/04-authoring-and-binding.md)         |
-| the checks and the readiness floor                       | [`05` validation & honesty](../../docs/concept/05-validation-and-honesty.md)       |
-| the reader, the Design Review, the agent surface         | [`06` consumers & projections](../../docs/concept/06-consumers-and-projections.md) |
+| Concept                                                  | Read                                                                                                                                                                                                     |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| the vocabulary (every term used above)                   | [ubiquitous language](../../CONTEXT.md)                                                                                                                                                                  |
+| the executable half (contracts · example space · oracle) | [ubiquitous language — "The executable half"](../../CONTEXT.md)                                                                                                                                          |
+| the `Spec` primitive, descriptors, sections, relations   | [`spec:model.core-model`](../../specs/model/core-model.sdp.md) and the model Specs beside it                                                                                                             |
+| the one graph, determinism, the `claim` taxonomy         | [`spec:extraction.derive-graph`](../../specs/extraction/derive-graph.sdp.md) · [determinism](../../specs/extraction/determinism.sdp.md) · [claim taxonomy](../../specs/extraction/claim-taxonomy.sdp.md) |
+| the DSL and anchors (authoring & binding)                | [`04` authoring & binding](../../docs/concept/04-authoring-and-binding.md)                                                                                                                               |
+| the checks and the readiness floor                       | [`05` validation & honesty](../../docs/concept/05-validation-and-honesty.md)                                                                                                                             |
+| the reader, the Design Review, the agent surface         | [`06` consumers & projections](../../docs/concept/06-consumers-and-projections.md)                                                                                                                       |

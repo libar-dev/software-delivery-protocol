@@ -338,7 +338,8 @@ function matchSections(sections: SpecSections | undefined, needle: string): read
 
   for (const [name, content] of Object.entries(sections as Record<string, unknown>)) {
     // String values are content everywhere; record keys are content only in `model.terms`, where
-    // the keys *are* the vocabulary (`02` §3) — structural keys (`given`, `outcome`) never match.
+    // the keys *are* the vocabulary (`spec:model.spec-sections`) — structural keys (`given`,
+    // `outcome`) never match.
     if (containsNeedle(content, name === "model")) {
       matched.push(name);
     }

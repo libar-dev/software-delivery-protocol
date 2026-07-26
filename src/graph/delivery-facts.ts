@@ -1,12 +1,13 @@
 import type { DeliveryFactName, GraphEdge, GraphNode, PrimitiveNode } from "./schema.js";
 
 /**
- * Delivery facts, computed exactly per `02` §2 — derived from edges, never authored. This is the
+ * Delivery facts, computed exactly per `spec:model.core-model` — derived from edges, never authored. This is the
  * one derivation rule, shared by the extractor (which decorates `Primitive` nodes with it) and
  * the delivery-facts honesty check (which recomputes it over the same graph and compares) — one
  * derivation path, never two:
  *
- * - `implemented` — ≥1 `satisfies` edge resolves to the spec along its `03` §1 contract row
+ * - `implemented` — ≥1 `satisfies` edge resolves to the spec along its
+ *   `spec:extraction.derive-graph` contract row
  *   (anchored, from a `CodeNode` present in the graph). A dangling or off-contract binding
  *   confers nothing.
  * - `has-verifier` — an **anchored** `verifies` edge resolves to the spec along its contract row
@@ -24,7 +25,8 @@ import type { DeliveryFactName, GraphEdge, GraphNode, PrimitiveNode } from "./sc
  * Facts are listed in ladder order (`implemented` → `has-verifier`).
  */
 /**
- * The one resolving-test-anchor rule: an anchored `verifies` edge counts only along its `03` §1
+ * The one resolving-test-anchor rule: an anchored `verifies` edge counts only along its
+ * `spec:extraction.derive-graph`
  * contract row — its source resolves to an `Anchor` node present in the graph. Shared by
  * delivery-fact derivation, the verifies-linkage check, and the reader's enabled decode so the
  * three surfaces can never disagree: on a malformed or foreign graph an off-contract edge (wrong
@@ -43,7 +45,7 @@ export function isResolvingTestAnchorVerify(
 
 /**
  * The one enabled-example rule — the declared twin of the resolving-test-anchor rule: a declared
- * `verifies` edge confers the binding only along its `02` §2 contract row — its source resolves,
+ * `verifies` edge confers the binding only along its `spec:model.spec-sections` contract row — its source resolves,
  * by first carrier exactly as the graph index keys, to an `example`-kind `Primitive` that a
  * resolving test anchor binds. Shared by delivery-fact derivation and the reader's enabled decode
  * so the two conferral surfaces can never disagree — including on a duplicate-id graph, where

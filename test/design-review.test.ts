@@ -426,7 +426,8 @@ describe("the Design Review — the one generated read-only view", () => {
     expect(validCart).toContain("the enabled verifying binding (a resolving test anchor)");
 
     // ...and the not-enabled one over a foreign graph: a declared-claim verifies edge from an
-    // Anchor node is off-contract (`03` §1: a test anchor's verifies edge is `anchored`) — it
+    // Anchor node is off-contract (`spec:extraction.derive-graph`: a test anchor's verifies edge
+    // is `anchored`) — it
     // confers no verifier binding, and the enabled-binding line must not render beside it.
     const graph = deriveFixtureGraph({
       specs: [

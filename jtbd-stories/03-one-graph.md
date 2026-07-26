@@ -8,7 +8,7 @@ This theme *is* the founding principle expressed as jobs. There is one graph; it
 ### Derive one canonical graph from the repo
 
 **Phase:** MVP
-**References:** [03 — The One Graph](../docs/concept/03-the-one-graph.md), [02 — Core Model](../docs/concept/02-core-model.md)
+**References:** [the derive-graph spec](../specs/extraction/derive-graph.sdp.md) (`spec:extraction.derive-graph`), [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`)
 
 > **When** I have authored specs and anchored code, **I want to** build one canonical graph of nodes and edges directly from the repo, **so I can** query the whole delivery state without standing up or syncing a second store.
 
@@ -29,7 +29,7 @@ This theme *is* the founding principle expressed as jobs. There is one graph; it
 ### Trust every edge's `claim`
 
 **Phase:** MVP
-**References:** [03 — The One Graph](../docs/concept/03-the-one-graph.md)
+**References:** [the derive-graph spec](../specs/extraction/derive-graph.sdp.md) (`spec:extraction.derive-graph`)
 
 > **When** I look at a relationship in the graph, **I want to** know whether it was **declared** by an author, **anchored** by an in-code pointer (an anchor), or **inferred** by structural analysis, **so I can** trust intentional facts and treat guesses as guesses.
 
@@ -50,7 +50,7 @@ This theme *is* the founding principle expressed as jobs. There is one graph; it
 ### Regenerate the graph as a pure function of the repo
 
 **Phase:** MVP
-**References:** [03 — The One Graph](../docs/concept/03-the-one-graph.md)
+**References:** [the derive-graph spec](../specs/extraction/derive-graph.sdp.md) (`spec:extraction.derive-graph`)
 
 > **When** I suspect the graph is stale or just want a clean slate, **I want to** delete it and rebuild it byte-identically from the repo, **so I can** treat the graph as disposable and never worry about it diverging from the code.
 
@@ -71,7 +71,7 @@ This theme *is* the founding principle expressed as jobs. There is one graph; it
 ### Reconstruct history from git, not a second store
 
 **Phase:** MVP
-**References:** [03 — The One Graph](../docs/concept/03-the-one-graph.md), [01 — Founding Principles & Invariants](../docs/concept/01-founding-principles-and-invariants.md)
+**References:** [the derive-graph spec](../specs/extraction/derive-graph.sdp.md) (`spec:extraction.derive-graph`), [01 — Founding Principles & Invariants](../docs/concept/01-founding-principles-and-invariants.md)
 
 > **When** I need to know how a spec or decision evolved, **I want to** reconstruct its history from git commits, **so I can** audit and time-travel with the tools I already have instead of a separate event store.
 

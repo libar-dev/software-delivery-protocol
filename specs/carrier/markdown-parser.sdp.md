@@ -2,7 +2,7 @@
 id: spec:carrier.markdown-parser
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.markdown-authoring
   dependsOn: spec:carrier.envelope-contract
@@ -21,6 +21,15 @@ relations:
 - rule: Named non-claim — `extract/non-static-section` remains distinct because TypeScript degrades optional section properties while Markdown refuses malformed documents whole.
 - rule: Named non-claim — `extract/unrecognized-statement` remains distinct because Markdown owns prose and structures, not TypeScript statement recognition.
 - rule: Named non-claim — `extract/misplaced-authoring` remains distinct because Markdown has no executable authoring-call surface.
+
+## Example space
+```gwt-vocabulary
+Given the paired carrier probes named {probe:string}
+When both carriers reify their probe
+Then both carriers report the finding class {findingId:string}
+Then the TypeScript carrier reports severity {typeScriptSeverity:"warning"|"error"} and extracts {typeScriptSpecs:number} specs
+Then the Markdown carrier reports severity {markdownSeverity:"warning"|"error"} and extracts {markdownSpecs:number} specs
+```
 
 ## Verification — executable
 - `test/extract-parity.test.ts` executes the settled finding-class parity matrix, including the six same-class findings, their carrier-specific outcomes, and four named non-claims.

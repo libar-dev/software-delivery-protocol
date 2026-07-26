@@ -30,7 +30,7 @@ A graph nobody trusts is worthless. The job here is to make the delivery state *
 ### Enforce completeness rules per readiness level
 
 **Phase:** MVP
-**References:** [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md), [02 — Core Model](../docs/concept/02-core-model.md)
+**References:** [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md), [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`)
 
 > **When** a spec states a readiness level, **I want to** have the system require the sections and links that level's floor demands, **so I can** rely on readiness as a real signal rather than a self-asserted label.
 

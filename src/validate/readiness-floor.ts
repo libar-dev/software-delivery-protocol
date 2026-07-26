@@ -176,7 +176,8 @@ function hasPromotedRuleOrExampleEvidence(node: PrimitiveNode, index: GraphIndex
 }
 
 /**
- * The constrainedBy evidence slot is the promoted twin of the inline `constraints` section (`02` §3
+ * The constrainedBy evidence slot is the promoted twin of the inline `constraints` section
+ * (`spec:model.spec-sections`
  * duality), so it counts only when the edge resolves in the graph to a `constraint`-kind spec that
  * carries its own evidence (MD-16). A dangling or wrong-kind target is not evidence.
  */

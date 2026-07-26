@@ -8,7 +8,7 @@ Once everything is one graph, the payoff is navigation: what does a change touch
 ### See what a change impacts before making it
 
 **Phase:** MVP
-**References:** [06 — Consumers & Projections](../docs/concept/06-consumers-and-projections.md), [03 — The One Graph](../docs/concept/03-the-one-graph.md)
+**References:** [06 — Consumers & Projections](../docs/concept/06-consumers-and-projections.md), [the derive-graph spec](../specs/extraction/derive-graph.sdp.md) (`spec:extraction.derive-graph`)
 
 > **When** I'm about to change a spec or a piece of code, **I want to** see what depends on it upstream and downstream, **so I can** refactor or re-scope with confidence instead of discovering the blast radius after the fact.
 
@@ -30,7 +30,7 @@ Once everything is one graph, the payoff is navigation: what does a change touch
 ### Trace a spec to its verification and back
 
 **Phase:** MVP
-**References:** [03 — The One Graph](../docs/concept/03-the-one-graph.md), [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md)
+**References:** [the derive-graph spec](../specs/extraction/derive-graph.sdp.md) (`spec:extraction.derive-graph`), [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md)
 
 > **When** I need to know whether a spec is actually backed by a test, **I want to** trace from the spec to the tests that verify it and back from any test to the specs it covers, **so I can** trust coverage as a structural fact instead of a filename convention or an act of faith.
 
@@ -72,15 +72,15 @@ Once everything is one graph, the payoff is navigation: what does a change touch
 ### Find the specs that still need a verifier
 
 **Phase:** MVP
-**References:** [02 — Core Model](../docs/concept/02-core-model.md) (§2 delivery facts), [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md)
+**References:** [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`), [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md)
 
 > **When** I'm planning verification coverage for a `Pack` or release, **I want to** list the specs that lack an enabled verifier (the `has-verifier` `gap`s), **so I can** target exactly what needs a test instead of guessing or auditing files by hand.
 
-**Essence:** Coverage is a structural fact in the one graph, not a spreadsheet. `has-verifier` is derived per spec (`02` §2); its absence on specs that warrant one is a surfaced `gap` — so "what is unverified" is a query, and a common QA situation is served without a second tool.
+**Essence:** Coverage is a structural fact in the one graph, not a spreadsheet. `has-verifier` is derived per spec (`spec:model.core-model`); its absence on specs that warrant one is a surfaced `gap` — so "what is unverified" is a query, and a common QA situation is served without a second tool.
 
 **Acceptance criteria:**
 1. The graph answers "which specs in this `Pack` (or across the graph) have no resolving `has-verifier`" directly, as a list, not a count.
-2. The answer reflects the structural fact only — a verifier *exists and is enabled* — never a pass/fail verdict, which stays CI's (`02` §2, JS-G2).
+2. The answer reflects the structural fact only — a verifier *exists and is enabled* — never a pass/fail verdict, which stays CI's (`spec:model.spec-sections`, JS-G2).
 3. `ready` specs missing a verifier are highlighted as the priority slice (the honest "designed, stated done, unverified" gap), distinct from low-readiness specs that are not expected to have one yet.
 4. Each gap is reachable to its spec in context (the Design Review, JS-E1/JS-E4), so planning a test starts from the spec, not a bare ID.
 5. The result is stable across refactors because it is keyed on stable IDs and `verifies` edges, not test file locations.
@@ -92,16 +92,16 @@ Once everything is one graph, the payoff is navigation: what does a change touch
 ### Trace a decision to what it shaped, for an audit trail
 
 **Phase:** Iterate
-**References:** [02 — Core Model](../docs/concept/02-core-model.md), [03 — The One Graph](../docs/concept/03-the-one-graph.md) (§5 git is the event log)
+**References:** [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`), [the derive-graph spec](../specs/extraction/derive-graph.sdp.md) (`spec:extraction.derive-graph` — git is the event log)
 
 > **When** I need to justify why the system is built the way it is, **I want to** trace a Decision Record to the specs and code it shaped — and back — **so I can** produce an audit trail from the graph and git instead of maintaining a separate compliance document.
 
-**Essence:** `decidedBy` is an explicit, queryable edge, and git is the event log (`03` §5). Together they answer "what decision shaped this, and what did that decision touch" without a bespoke audit store — an auditor/compliance situation served by the same one graph.
+**Essence:** `decidedBy` is an explicit, queryable edge, and git is the event log (`spec:extraction.derive-graph`). Together they answer "what decision shaped this, and what did that decision touch" without a bespoke audit store — an auditor/compliance situation served by the same one graph.
 
 **Acceptance criteria:**
 1. From a `kind:"decision"` spec, I can list every spec that declares `decidedBy` it; from any spec, I can see the decisions that shaped it — both directions, from the graph.
 2. The trace continues into code through the shaped specs' `satisfies` anchors, so a decision reaches the implementation it influenced.
 3. The `supersedes` forward-pointer between decisions is followable, so the *current* decision and the ones it replaced (both still in the repo) are both visible, with history left to git.
 4. Every step carries its `claim`, so an auditor can tell asserted intent (`declared`) from a binding (`anchored`) from machine-derived structure (`inferred`).
-5. The trail is reconstructable at any commit — `git` plus a deterministic rebuild — so "what did this look like when the decision was made" needs no second store (`03` §5).
+5. The trail is reconstructable at any commit — `git` plus a deterministic rebuild — so "what did this look like when the decision was made" needs no second store (`spec:extraction.derive-graph`).
 6. The trace is a pure projection: producing it never authors truth and never gives a write path to canonical source.

@@ -102,10 +102,10 @@ function deriveAnchorNode(entry: ReifiedAnchor): AnchorNode | CodeNode {
 /**
  * The declared + anchored layers of the one graph: one `Primitive` node per spec, one `Pack` node
  * per pack, one binding node per anchor (`CodeNode` for a code anchor, `Anchor` for a test anchor
- * — the `03` §1 edge contract), one edge per authored relation, one derived `belongsTo` per
+ * — the `spec:extraction.derive-graph` edge contract), one edge per authored relation, one derived `belongsTo` per
  * manifest entry, and one anchored `satisfies`/`verifies` edge per anchor. `belongsTo` is a
  * deterministic re-expression of the declared manifest, so it inherits its source's claim — there
- * is no 4th claim (`03` §3). A dangling target is emitted, not dropped: the unresolved id itself
+ * is no 4th claim (`spec:extraction.claim-taxonomy`). A dangling target is emitted, not dropped: the unresolved id itself
  * is the sentinel the referential-integrity check (`validateGraph`) flags — but resolution does
  * gate the delivery facts (see `computeDeliveryFacts`). Zero `inferred` claims by decision: the
  * consumers (the reader's entry adapters and file-level impact) resolve off the curated layers

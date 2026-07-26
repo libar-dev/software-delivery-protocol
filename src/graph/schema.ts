@@ -57,7 +57,8 @@ export interface PrimitiveNode extends GraphNodeBase {
   readonly specKind: SpecKind;
   readonly altitude: SpecAltitude;
   readonly readiness: SpecReadiness;
-  /** Degradable: a non-static title is dropped with a warning, never a hard error (`03` §2). */
+  /** Degradable: a non-static title is dropped with a warning, never a hard error
+   * (`spec:extraction.determinism`). */
   readonly title?: string;
   /** Owned Spec prose; Markdown carries it between the H1 title and the first H2. */
   readonly narrative?: string;
@@ -77,7 +78,7 @@ export interface PackNode extends GraphNodeBase {
   readonly title?: string;
   readonly framing?: string;
   /**
-   * Node data, not edges: the `03` edge contract has no `modelRefs` edge type — the
+   * Node data, not edges: the `spec:extraction.derive-graph` edge contract has no `modelRefs` edge type — the
    * pack-coherence check reads this (every entry resolves to a `model`-kind spec).
    */
   readonly modelRefs?: readonly string[];

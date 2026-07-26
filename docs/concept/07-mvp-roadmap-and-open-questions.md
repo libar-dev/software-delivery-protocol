@@ -71,7 +71,7 @@ Deferred deliberately; recorded so they are not lost. None blocks the MVP.
 - **Derived-readiness banner timing (resolved, recorded here for traceability).** Floor enforcement and the banner both ship in the MVP: the Design Review renders stated readiness beside the structurally-reached floor and names the first unmet clause — cheaply, because the floor evaluator reports which clause fails. *(`05` §3.)*
 - **Impact-graph depth (resolved, recorded here for traceability).** The boundary is decided, not open: **file-level** impact ships in the MVP (`git diff` → `byFile` → a curated-graph walk gives changeset blast-radius with no symbol index, surfacing an explicit `coverage-unknown` item for any changed file that has no anchor so a too-small set is never mistaken for complete), while the **exhaustive** impact graph — `bySymbol`, symbol-level identity, cross-package find-all-usages, drift/fan-in tooling — is deferred (Iterate). What remains genuinely open is only *when* the exhaustive graph earns its way in, driven by measured pain (§5), never the MVP boundary itself. *(`06` §2.)*
 - **Inline-vs-centralized anchor semantics.** Anchors carry no intent in the MVP. How much *structural* semantics an anchor may carry beyond the landed binding contract (`id` · optional `label` · one `satisfies`/`verifies` target) — e.g. a future `component`/`implements` — is left configurable later. *(`04` §2.)*
-- **Graph-DB timing.** File-based until measured traversal pain; the schema is designed to map to a property graph later. *(`03` §4.)*
+- **Graph-DB timing.** File-based until measured traversal pain; the schema is designed to map to a property graph later. *(`spec:extraction.regenerability`.)*
 - **Trace-link recovery.** Permitted later only as an assistive *suggestion* engine (the impact graph's "propose candidates" assist role), never a declared edge — bounded permanently by P10. *(`01`, `06` §2.)*
 - **When (if ever) harnesses / evidence become CORE** (the Gherkin half is answered — the carrier ruling, MD-18, declined a Gherkin-like surface). Driven by measured pain after the MVP loop holds, not by the roadmap.
 
@@ -107,11 +107,11 @@ the standing invariant plus where its protection lives.
   is the committed golden fixture: `test/fixtures/checkout-v1/expected-graph.json` plus the
   `expected-design-review/` golden tree (legitimate because it lives under `test/fixtures/`, never gitignored
   `generated/`, L8; paths repo-relative / POSIX; binding line numbers deliberately included — the line *is*
-  the binding location, `03` §1). The **determinism self-checks** — "is the output a pure function of the
+  the binding location, `spec:extraction.derive-graph`). The **determinism self-checks** — "is the output a pure function of the
   repo" — live separately in the CLI tests: `--check-clean` (two independent extractions, byte-identical),
   delete-`generated/`-and-rebuild, and the clean-repo determinism test (the full pipeline at a different
   absolute path is byte-identical) — each a self-comparison, **never** a diff against a committed
-  `generated/` artifact (`03` §2).
+  `generated/` artifact (`spec:extraction.determinism`).
 - **③ The derived-readiness banner ships in the Design Review.** The view renders stated readiness beside
   the structurally-reached floor and names the first unmet clause — cheap because the floor evaluator
   reports *which* clause fails (`05` §3, with the open-questions home, MD-9: the floor reads
