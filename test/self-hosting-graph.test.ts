@@ -53,7 +53,7 @@ const expectedSpecs = [
     id: "spec:carrier.markdown-parser",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-parser.sdp.md",
     title: "The product parser reifies the ruled Markdown subset",
     narrative: null,
@@ -72,6 +72,15 @@ const expectedSpecs = [
           "Named non-claim — `extract/unrecognized-statement` remains distinct because Markdown owns prose and structures, not TypeScript statement recognition.",
           "Named non-claim — `extract/misplaced-authoring` remains distinct because Markdown has no executable authoring-call surface.",
         ],
+        exampleSpace: {
+          given: ["the paired carrier probes named {probe:string}"],
+          when: ["both carriers reify their probe"],
+          [["t", "hen"].join("")]: [
+            "both carriers report the finding class {findingId:string}",
+            'the TypeScript carrier reports severity {typeScriptSeverity:"warning"|"error"} and extracts {typeScriptSpecs:number} specs',
+            'the Markdown carrier reports severity {markdownSeverity:"warning"|"error"} and extracts {markdownSpecs:number} specs',
+          ],
+        },
       },
       verification: {
         mode: "executable",
@@ -81,6 +90,35 @@ const expectedSpecs = [
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-parser.bounded-parity",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/carrier/markdown-parser.bounded-parity.sdp.md",
+    title: "One finding class is shared while the carriers' outcomes stay their own",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute one same-class row of the parity matrix, including the outcomes it never claims.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the paired carrier probes named {probe: "unrecognized-property"}'],
+            when: ["both carriers reify their probe"],
+            [["t", "hen"].join("")]: [
+              'both carriers report the finding class {findingId: "extract/unrecognized-property"}',
+              'the TypeScript carrier reports severity {typeScriptSeverity: "warning"} and extracts {typeScriptSpecs: 1} specs',
+              'the Markdown carrier reports severity {markdownSeverity: "error"} and extracts {markdownSpecs: 0} specs',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:carrier.sdp-import",
@@ -240,7 +278,7 @@ const expectedSpecs = [
     id: "spec:extraction.excludes",
     specKind: "rule",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/extraction/excludes.sdp.md",
     title: "Extraction exclusions are strict consumer input",
     narrative: null,
@@ -254,10 +292,84 @@ const expectedSpecs = [
           "An exclusion is a unique, exact root-relative POSIX path prefix applied to both declared-carrier and anchor-candidate discovery surfaces.",
           "A prefix excludes itself and slash-delimited descendants only; it never excludes a merely similar sibling path.",
           "Empty, dot-relative, absolute, Windows-drive, backslash, trailing-slash, and parent-traversal paths are refused rather than normalized into a different meaning.",
+          "The realizing entrypoints are `normalizeExcludes` and `discoverFiles` in `src/extract/discover.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            "the extraction root carries the tree {excludedTree:string} and the similar sibling {similarTree:string}",
+            "the consumer supplies the exclusion {exclusion:string}",
+          ],
+          when: ["the root is discovered"],
+          [["t", "hen"].join("")]: [
+            'the discovery attempt {outcome:"completes"|"is refused"}',
+            "the surviving spec carrier is {specCarrier:string} and the surviving anchor candidate is {anchorCandidate:string}",
+            "the refusal states {diagnostic:string} and names the offending path",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:extraction.excludes.segment-boundary",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/excludes.segment-boundary.sdp.md",
+    title: "A prefix excludes its own tree and leaves a similar sibling standing",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the segment-boundary rule across both discovery surfaces.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the extraction root carries the tree {excludedTree: "foo"} and the similar sibling {similarTree: "foobar"}',
+              'the consumer supplies the exclusion {exclusion: "foo"}',
+            ],
+            when: ["the root is discovered"],
+            [["t", "hen"].join("")]: [
+              'the discovery attempt {outcome: "completes"}',
+              'the surviving spec carrier is {specCarrier: "foobar/included.sdp.ts"} and the surviving anchor candidate is {anchorCandidate: "foobar/helper.ts"}',
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:extraction.excludes.refused-path",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/excludes.refused-path.sdp.md",
+    title: "A Windows-drive absolute path is refused rather than normalized",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the refusal rule on an exclusion that cannot name a root-relative prefix.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the extraction root carries the tree {excludedTree: "foo"} and the similar sibling {similarTree: "foobar"}',
+              'the consumer supplies the exclusion {exclusion: "C:/work/specs"}',
+            ],
+            when: ["the root is discovered"],
+            [["t", "hen"].join("")]: [
+              'the discovery attempt {outcome: "is refused"}',
+              'the refusal states {diagnostic: "normalizeExcludes: invalid exclusion path"} and names the offending path',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:decisions.exclusion-contract",
@@ -343,7 +455,7 @@ const expectedSpecs = [
     id: "spec:extraction.schema-versioning",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/extraction/schema-versioning.sdp.md",
     title: "The graph declares its schema version",
     narrative: null,
@@ -356,10 +468,48 @@ const expectedSpecs = [
         rules: [
           "Every graph declares its schemaVersion, and MVP consumers require that field to be present and readable.",
           "Envelope-stable, section-extensible growth is normally additive; SemVer negotiation and a migration command remain deferred until a consumer needs them.",
+          "The declaring entrypoint is `schemaVersion` in `src/graph/schema.ts`, carried onto every derived payload by `deriveGraph`.",
+        ],
+        exampleSpace: {
+          given: ["a graph derived from the authored spec {specId:string}"],
+          when: ["the graph payload is serialized"],
+          [["t", "hen"].join("")]: [
+            "the payload declares the schema version {schemaVersion:string}",
+            "the parsed payload agrees with the engine's declared version: {agrees:boolean}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:extraction.schema-versioning.declared-version",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/schema-versioning.declared-version.sdp.md",
+    title: "A derived payload carries a schema version its consumer can read",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the declared-version rule over a serialized graph payload.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a graph derived from the authored spec {specId: "spec:probe.schema-versioning"}',
+            ],
+            when: ["the graph payload is serialized"],
+            [["t", "hen"].join("")]: [
+              'the payload declares the schema version {schemaVersion: "0.4.0"}',
+              "the parsed payload agrees with the engine's declared version: {agrees: true}",
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:extraction.executable-contracts",
@@ -638,7 +788,7 @@ const expectedSpecs = [
     id: "spec:model.stable-ids",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/model/stable-ids.sdp.md",
     title: "Stable IDs are the Protocol's durable join key",
     narrative: null,
@@ -652,10 +802,74 @@ const expectedSpecs = [
           "A Protocol ID is stable, unique, namespaced, human-readable, and the only binding between intent and code.",
           "An ID uses a lowercase namespace and dotted path, with an optional single `#` sub-part; referential-integrity checks reject malformed or unresolved references.",
           "IDs carry no history: a rename is a repository edit recorded by git rather than graph-resident bookkeeping.",
+          "The realizing entrypoints are `parseId` and `formatId` in `src/ids.ts`.",
+        ],
+        exampleSpace: {
+          given: ["the authored identifier {identifier:string}"],
+          when: ["the identifier is parsed"],
+          [["t", "hen"].join("")]: [
+            'parsing {outcome:"resolves"|"is refused"}',
+            "reformatting the parsed parts restores {restored:string}",
+            "the refusal names the reason {reason:string}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:model.stable-ids.namespaced-round-trip",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/model/stable-ids.namespaced-round-trip.sdp.md",
+    title: "A namespaced dotted path with a sub-part survives parsing unchanged",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the ID grammar on the fullest well-formed shape the model allows.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the authored identifier {identifier: "spec:orders.create-order#valid-cart"}'],
+            when: ["the identifier is parsed"],
+            [["t", "hen"].join("")]: [
+              'parsing {outcome: "resolves"}',
+              'reformatting the parsed parts restores {restored: "spec:orders.create-order#valid-cart"}',
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:model.stable-ids.malformed-refusal",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/model/stable-ids.malformed-refusal.sdp.md",
+    title: "An uppercase namespace is refused with its reason named",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the lowercase-namespace clause of the ID grammar.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the authored identifier {identifier: "Spec:orders.create-order"}'],
+            when: ["the identifier is parsed"],
+            [["t", "hen"].join("")]: [
+              'parsing {outcome: "is refused"}',
+              'the refusal names the reason {reason: "namespace must be lowercase"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:model.pack-aggregate",
@@ -1951,6 +2165,12 @@ const expectedPackMembers = [
   "spec:validation.verification-linkage.unbound-example",
   "spec:validation.verification-linkage.unresolved-oracle",
   "spec:validation.pack-coherence.incoherent-aggregate",
+  "spec:extraction.excludes.segment-boundary",
+  "spec:extraction.excludes.refused-path",
+  "spec:extraction.schema-versioning.declared-version",
+  "spec:model.stable-ids.namespaced-round-trip",
+  "spec:model.stable-ids.malformed-refusal",
+  "spec:carrier.markdown-parser.bounded-parity",
   "spec:decisions.plain-language-references",
   "spec:decisions.concept-docs-dissolve",
   "spec:decisions.one-validation-path",
@@ -1982,6 +2202,8 @@ const expectedDeclaredRelations = [
   ["spec:carrier.envelope-contract", "decidedBy", "spec:decisions.envelope-grammar-posture"],
   ["spec:carrier.markdown-parser", "refines", "spec:carrier.markdown-authoring"],
   ["spec:carrier.markdown-parser", "dependsOn", "spec:carrier.envelope-contract"],
+  ["spec:carrier.markdown-parser.bounded-parity", "refines", "spec:carrier.markdown-parser"],
+  ["spec:carrier.markdown-parser.bounded-parity", "verifies", "spec:carrier.markdown-parser"],
   ["spec:carrier.sdp-import", "refines", "spec:carrier.markdown-authoring"],
   ["spec:carrier.sdp-import.round-trip", "refines", "spec:carrier.sdp-import"],
   ["spec:carrier.sdp-import.round-trip", "verifies", "spec:carrier.sdp-import"],
@@ -2000,9 +2222,23 @@ const expectedDeclaredRelations = [
   ["spec:extraction.build-pipeline", "dependsOn", "spec:extraction.derive-graph"],
   ["spec:extraction.excludes", "refines", "spec:extraction.derive-graph"],
   ["spec:extraction.excludes", "decidedBy", "spec:decisions.exclusion-contract"],
+  ["spec:extraction.excludes.segment-boundary", "refines", "spec:extraction.excludes"],
+  ["spec:extraction.excludes.segment-boundary", "verifies", "spec:extraction.excludes"],
+  ["spec:extraction.excludes.refused-path", "refines", "spec:extraction.excludes"],
+  ["spec:extraction.excludes.refused-path", "verifies", "spec:extraction.excludes"],
   ["spec:extraction.claim-taxonomy", "refines", "spec:extraction.derive-graph"],
   ["spec:extraction.regenerability", "refines", "spec:extraction.determinism"],
   ["spec:extraction.schema-versioning", "refines", "spec:extraction.derive-graph"],
+  [
+    "spec:extraction.schema-versioning.declared-version",
+    "refines",
+    "spec:extraction.schema-versioning",
+  ],
+  [
+    "spec:extraction.schema-versioning.declared-version",
+    "verifies",
+    "spec:extraction.schema-versioning",
+  ],
   ["spec:extraction.executable-contracts", "refines", "spec:extraction.build-pipeline"],
   ["spec:validation.readiness-floor", "refines", "spec:protocol.self-hosting"],
   ["spec:validation.readiness-floor", "dependsOn", "spec:model.protocol-domain"],
@@ -2146,6 +2382,10 @@ const expectedDeclaredRelations = [
   ["spec:model.spec-sections", "decidedBy", "spec:decisions.typing-law"],
   ["spec:model.relations", "refines", "spec:model.core-model"],
   ["spec:model.stable-ids", "refines", "spec:model.core-model"],
+  ["spec:model.stable-ids.namespaced-round-trip", "refines", "spec:model.stable-ids"],
+  ["spec:model.stable-ids.namespaced-round-trip", "verifies", "spec:model.stable-ids"],
+  ["spec:model.stable-ids.malformed-refusal", "refines", "spec:model.stable-ids"],
+  ["spec:model.stable-ids.malformed-refusal", "verifies", "spec:model.stable-ids"],
   ["spec:model.pack-aggregate", "refines", "spec:model.core-model"],
   ["spec:model.pack-aggregate", "decidedBy", "spec:decisions.pack-reified"],
   ["spec:model.anchors", "refines", "spec:model.core-model"],
@@ -2437,6 +2677,66 @@ const expectedAnchors = [
     site: "bindExample(incoherentAggregateContract",
   },
   {
+    id: "test:protocol.excludes.segment-boundary",
+    nodeType: "Anchor",
+    label: "the segment-boundary point verifies the exact-prefix exclusion rule",
+    type: "verifies",
+    target: "spec:extraction.excludes.segment-boundary",
+    file: "test/self-hosting-extraction.test.ts",
+    constant: "excludesSegmentBoundaryTestAnchor",
+    site: "bindExample(segmentBoundaryContract",
+  },
+  {
+    id: "test:protocol.excludes.refused-path",
+    nodeType: "Anchor",
+    label: "the refused-path point verifies the malformed-exclusion refusal",
+    type: "verifies",
+    target: "spec:extraction.excludes.refused-path",
+    file: "test/self-hosting-extraction.test.ts",
+    constant: "excludesRefusedPathTestAnchor",
+    site: "bindExample(refusedPathContract",
+  },
+  {
+    id: "test:protocol.schema-versioning.declared-version",
+    nodeType: "Anchor",
+    label: "the declared-version point verifies the readable payload version",
+    type: "verifies",
+    target: "spec:extraction.schema-versioning.declared-version",
+    file: "test/self-hosting-extraction.test.ts",
+    constant: "schemaVersioningTestAnchor",
+    site: "bindExample(declaredVersionContract",
+  },
+  {
+    id: "test:protocol.stable-ids.namespaced-round-trip",
+    nodeType: "Anchor",
+    label: "the round-trip point verifies the namespaced dotted-path grammar",
+    type: "verifies",
+    target: "spec:model.stable-ids.namespaced-round-trip",
+    file: "test/self-hosting-model.test.ts",
+    constant: "namespacedRoundTripTestAnchor",
+    site: "bindExample(namespacedRoundTripContract",
+  },
+  {
+    id: "test:protocol.stable-ids.malformed-refusal",
+    nodeType: "Anchor",
+    label: "the malformed point verifies the lowercase-namespace refusal",
+    type: "verifies",
+    target: "spec:model.stable-ids.malformed-refusal",
+    file: "test/self-hosting-model.test.ts",
+    constant: "malformedRefusalTestAnchor",
+    site: "bindExample(malformedRefusalContract",
+  },
+  {
+    id: "test:protocol.markdown-parser.bounded-parity",
+    nodeType: "Anchor",
+    label: "the bounded-parity point verifies one shared finding class and its split outcomes",
+    type: "verifies",
+    target: "spec:carrier.markdown-parser.bounded-parity",
+    file: "test/self-hosting-carrier.test.ts",
+    constant: "boundedParityTestAnchor",
+    site: "bindExample(boundedParityContract",
+  },
+  {
     id: "test:protocol.sdp-import.round-trip",
     nodeType: "Anchor",
     label: "TypeScript import round-trip contract preserves authored data",
@@ -2677,7 +2977,7 @@ describe("the self-hosting corpus", () => {
         subjectId,
       })),
     ).toEqual(expectedWarnings);
-    expect(result.counts).toEqual({ specs: 69, packs: 1, anchors: 47 });
+    expect(result.counts).toEqual({ specs: 75, packs: 1, anchors: 53 });
     expect(nodeIds).toEqual(
       [
         "pack:self-hosting-v1",
@@ -2750,10 +3050,16 @@ describe("the self-hosting corpus", () => {
         "spec:validation.verification-linkage.unbound-example",
         "spec:validation.verification-linkage.unresolved-oracle",
         "spec:validation.pack-coherence.incoherent-aggregate",
+        "spec:extraction.excludes.segment-boundary",
+        "spec:extraction.excludes.refused-path",
+        "spec:extraction.schema-versioning.declared-version",
+        "spec:model.stable-ids.namespaced-round-trip",
+        "spec:model.stable-ids.malformed-refusal",
+        "spec:carrier.markdown-parser.bounded-parity",
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
-    expect(result.graph.nodes).toHaveLength(117);
+    expect(result.graph.nodes).toHaveLength(129);
     expect(
       primitiveNodes
         .map((node) => ({
@@ -2797,7 +3103,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 45, ready: 24 });
+    ).toEqual({ defined: 41, ready: 34 });
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
@@ -2812,7 +3118,7 @@ describe("the self-hosting corpus", () => {
       modelRefs: ["spec:model.protocol-domain", "spec:model.core-model"],
       file: "specs/self-hosting.pack.sdp.ts",
     });
-    expect(result.graph.edges).toHaveLength(224);
+    expect(result.graph.edges).toHaveLength(248);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")
