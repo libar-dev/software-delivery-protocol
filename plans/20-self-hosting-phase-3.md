@@ -130,7 +130,8 @@ example children; residual tests stay per ruling 1.
 | S3 | `test/runner.test.ts` | `spec:extraction.example-runner` (new, §3 ID confirmed) | 1–2 | done — 2 points (`step-order`, `red-step-naming`) |
 | S3 | `test/notation.test.ts` | `spec:carrier.slot-notation` (new, §3 ID confirmed) | 1–2 | done — 2 points (`typed-declaration`, `refused-guess`) |
 
-The readiness sweep (S4) and the audit tranche (S5) carry their own ledgers in §4 and §7.
+The readiness sweep (S4) carries its own ledger in §6, beside the rulings that produced it; the
+audit tranche (S5) carries its tables in §4 and §7.
 
 ## (f) §3 Modeling policy for the S3 corpus additions
 
@@ -327,6 +328,90 @@ Appended as waves execute; entries name the forcing material and the disposition
    distribution is `defined: 40 / ready: 44` over 84 specs; the corpus stays at 0 errors and 0
    warnings.
 
+### 2026-07-26 — S4 (the readiness maturation sweep)
+
+1. **Enrichment precedes promotion, or the promotion does not happen.** *Forcing material:* the two
+   carrier specs that already carried anchored verifiers — `spec:carrier.envelope-contract` and
+   `spec:carrier.prose-ownership-rule` — were one-line stubs. Each cleared the `ready` floor
+   structurally and carried `has-verifier`, so both would have promoted silently; neither was
+   acceptance-grade. *Disposition:* the S3 precedent applied (`executable-contracts` was promoted
+   only after enrichment). The envelope contract gained the closed-key-set law, the explicit
+   `relations: {}` carrier rule (the carrier ruling's own carrier note), the derived-name refusal
+   (delivery facts are derived, never authored), and the owned-grammar bounded-refusal posture (the
+   envelope-grammar-posture decision's stated consequence); the prose rule gained the
+   singular-section description owner, the constraints-array exception, and the
+   graph-content-never-a-file-pointer clause (the prose-ownership decision's stated rationale).
+   **Every added clause came from ratified intent; no code moved and no claim was widened.**
+2. **A `model`-kind parent may own an Example space — ruling 2 exercised on a fourth kind.**
+   *Forcing material:* the anchor-trust law lives on `spec:model.anchors`, whose kind evidence is
+   `model.terms`, not `behavior`. Adding `## Example space` routed into `sections.behavior.exampleSpace`
+   beside an untouched `model` section exactly as for the `rule` and `behavior` parents, and the
+   floor read the terms as before. *Disposition:* no grammar change and no watch item fired; the
+   section/kind duality carried it, as ruling 2 predicted.
+3. **Two laws were converted, and both were chosen for law-shape rather than for cheapness.**
+   `spec:model.anchors` — builder trust is physical module identity — took two sibling points
+   (`lookalike-refusal`, `physical-identity`); `spec:validation.two-check-families` took one
+   (`split-report`), because the family split is one law and one probe graph exhibits both halves
+   at once. `test/anchor-trust.test.ts` and `test/validators.test.ts` survive whole as regression
+   evidence (ruling 1). The bound points joined the existing per-family suites per S3's ruling 1;
+   the wrapper's per-tree `testPaths` row and the pinned missing-tree stderr are untouched.
+4. **The second-tier model candidates were refused on ruling 1, not on budget.**
+   `spec:model.core-model` and `spec:model.spec-sections` were examined against
+   `test/descriptors.test.ts`: every assertion there is a literal-list equality over the ratified
+   enums, which is an assertion, not a law with an example space. Converting it would have been
+   row-for-row expansion wearing a contract, so both stay `defined` with their vocabularies intact.
+   The same reading kept `spec:model.relations`, `spec:model.pack-aggregate`,
+   `spec:model.protocol-domain`, and `spec:extraction.claim-taxonomy` at `defined`: each is a
+   vocabulary whose clauses are already exercised through a *different* spec's ready points.
+5. **The epic stays `defined`, deliberately.** `spec:protocol.self-hosting` has no resolving
+   verifier and no honestly cheap one — its two rules are whole-pipeline claims whose worlds
+   (the full build chain, the clean-clone rebuild) are named out of scope for this tranche. Its
+   children now carry heavy verification, but `has-verifier` is direct and never propagates up
+   `refines` (binding, never liveness), so promoting the epic would have introduced exactly the
+   `honesty/gaps` warning ruling 5 forbids. Recorded as an honest `defined`, not an oversight.
+6. **Decisions get no verifiers, and none was invented.** All 21 `decision`-kind specs stay
+   `defined`: a decision's truth is a ratified choice, not a runtime behavior, so no resolving
+   verifier can exist for it and any promotion would be a `honesty/gaps` warning by construction.
+   `spec:consumers.edit-model` stays `defined` on its own stated terms — it says in its own rules
+   that it has no realizing entrypoint and no verifier, which is the honest shape, not a gap.
+7. **Frozen-fixture bookkeeping moved with the enrichment.** Two of the five self-hosting carrier
+   fixtures are byte-identical copies of live carriers (`test/markdown-reifier.test.ts` pins that),
+   and `test/extract.test.ts` asserts their reified sections. Both were refreshed in the same
+   change, so the carrier specs' anchored verifiers keep verifying the text that is actually
+   authored. The closing distribution is `defined: 36 / ready: 51` over 87 specs; the corpus stays
+   at 0 errors and 0 warnings.
+
+#### The S4 readiness-sweep ledger
+
+Every spec that stood at `defined` when S4 opened, with its disposition. "Stays `defined`,
+honestly" is a first-class outcome; promotion is per-spec judgment, never a quota.
+
+| Spec | Readiness | Verifier basis | Disposition |
+|---|---|---|---|
+| `spec:carrier.envelope-contract` | defined → **ready** | anchored `test:protocol.envelope-contract` | enriched in place first — four clauses from ratified intent; floor clears, no gap |
+| `spec:carrier.prose-ownership-rule` | defined → **ready** | anchored `test:protocol.prose-ownership` | enriched in place first — three clauses from the prose-ownership decision; floor clears |
+| `spec:model.anchors` | defined → **ready** | enabled examples (both points below) | converted — Example space added; terms gain the untrusted-builder clause and its entrypoints |
+| `spec:model.anchors.lookalike-refusal` | **new — ready** | anchored `test:protocol.anchors.lookalike-refusal` | new point — a consumer-local lookalike mints nothing and reports nothing |
+| `spec:model.anchors.physical-identity` | **new — ready** | anchored `test:protocol.anchors.physical-identity` | new point — a deep relative import resolving to the builder modules is trusted |
+| `spec:validation.two-check-families` | defined → **ready** | enabled example (the point below) | converted — Example space added; two clauses added (aggregate family, entrypoints) |
+| `spec:validation.two-check-families.split-report` | **new — ready** | anchored `test:protocol.two-check-families.split-report` | new point — one report, both families, neither claimed as its own |
+| `spec:protocol.self-hosting` | defined | none | epic — whole-pipeline rules, no cheap verifier; promotion would add a gap warning |
+| `spec:carrier.markdown-authoring` | defined | none of its own | parent of four ready children; the executable path lives on them, not on it |
+| `spec:consumers.agent-surface` | defined | none | two of its rules are measured-evidence claims, not runtime laws; reader world not cheap |
+| `spec:consumers.reader` | defined | none | verifier world is a full graph fixture — outside this tranche's cheap boundary |
+| `spec:consumers.design-review` | defined | none | verifier world is projection rendering — outside this tranche |
+| `spec:consumers.edit-model` | defined | none, by its own rule | states in its own words that it has no entrypoint and no verifier — honest `defined` |
+| `spec:consumers.projections-model` | defined | none | vocabulary; its measured-curation terms are recorded evidence, not runtime law |
+| `spec:extraction.build-pipeline` | defined | none | the ordered flow's world is the CLI pipeline — a named out-of-scope giant |
+| `spec:extraction.regenerability` | defined | none | its law is the clean-room rebuild; that world is the close's, not a cheap point |
+| `spec:extraction.claim-taxonomy` | defined | none of its own | vocabulary; its clauses are exercised through `spec:validation.claim-separation`'s ready points |
+| `spec:model.core-model` | defined | none | second-tier candidate refused on ruling 1 — `test/descriptors.test.ts` is list equality, not a law |
+| `spec:model.spec-sections` | defined | none | same reading as `core-model`; the section-name list is an assertion, not an example space |
+| `spec:model.relations` | defined | none of its own | vocabulary; relation grammar is exercised by referential-integrity's ready points |
+| `spec:model.pack-aggregate` | defined | none of its own | vocabulary; the pack law is carried executably by `spec:validation.pack-coherence` |
+| `spec:model.protocol-domain` | defined | none | four-term vocabulary; no runtime law to bind |
+| 21 × `spec:decisions.*` | defined | none, by construction | a decision's truth is a ratified choice, not a runtime behavior — no verifier exists and none was invented |
+
 ## (j) §7 Done-record (execution — appended at close)
 
 Executed delivery, the conversion ledger's terminal states, the readiness sweep ledger, the
@@ -373,7 +458,7 @@ commit series on the effort branch. This ledger is git process evidence, never g
 | S1 | validation-family conversions (§2) + promotions that honestly clear | orchestrator-verified green gate | done — 11 points bound across 6 parents; three green-gate commits |
 | S2 | extraction/model cheap wins (§2) | orchestrator-verified green gate | done — 6 points bound across 4 parents; one green-gate conversion commit |
 | S3 | corpus additions (§3) + codegen/runner/notation conversions | orchestrator-verified green gate | done — 2 new specs + 1 enrichment; 7 points bound across 3 parents; 2 new `impl:` anchors; one green-gate conversion commit |
-| S4 | readiness maturation sweep (ruling 5) | orchestrator-verified green gate | planned |
+| S4 | readiness maturation sweep (ruling 5) | orchestrator-verified green gate | done — 40 `defined` specs swept; 4 promoted (2 enriched in place, 2 converted) + 3 new points at `ready`; 36 recorded as honest `defined`; one green-gate sweep commit |
 | S5 | per-doc audits + first dissolutions (§4) | orchestrator-verified green gate over the regenerated Design Review | planned |
 | S6 | adversarial review, remediation, full close, done-record | full chain + clean-clone; review archived | planned |
 
