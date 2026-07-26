@@ -423,6 +423,30 @@ Both surfaces are load-bearing on both sides. **CONFIRMED.**
 
 ---
 
+## Remediation addendum — what landed on this branch
+
+The remediation ran before the phase PR, so none of these findings survives into `main` as an open
+docket. The per-finding work sits in three commits plus the close:
+
+- **Fixed in product/corpus:** T-1 (`refactor(extract,tests): name the frozen then key directly` —
+  the one product site inlined, 65 test/oracle sites normalized, Prettier re-wrap taken) and A-1
+  (`docs(specs,tests): carry the gap signal's recomputed-facts reading` —
+  `spec:validation.warn-level-signals` enriched, the oracle transcription following).
+- **Records repaired, no product change:** R-1, R-2, and A-1's audit-row citation, in the close
+  commit.
+- **Records sharpened from the measurement:** P-1 and P-2 — plan 21 §7's two rows now state which
+  mutation classes each point kills and which it does not, and which clauses stand unverified.
+- **Declined with a reason:** S-1. **Carried with a reason:** S-2, on the §4 docket.
+
+Two things are worth reading before touching these surfaces again. First, **T-1's value is the
+history, not the diff**: a defect can be fixed, regressed inside the same remediation cluster, and
+then re-verified as intact by a later phase reading a plan rather than the file. The cheap guard
+against a repeat is to re-measure a docket row's condition at the moment it is verified, not to
+trust the row that closed it. Second, **A-1 was closed by enrichment rather than by argument**, the
+same way phase 3 closed D-2 and D-3: the `carried` verdict is now true on the dissolution
+decision's own terms — carried by a Spec — rather than defensible only on a plan ruling that
+widened the criterion to admit code surfaces.
+
 ## What the owner is asked to ratify at the PR
 
 Three things this review deliberately leaves to the owner rather than deciding by plan ruling:
