@@ -1,12 +1,13 @@
 # Plan 20 — Self-hosting phase 3: the executable-specs rewrite, readiness maturation, and the first concept-doc dissolutions
 
-> **Status:** 🧭 DRAFTED — execution begins on `feature/protocol-self-application-phase-3`, never on
-> `main`. This is plan 20, the highest primary-numbered plan. The latest ✅ EXECUTED ground is plan
-> 18 (with plan 19's remediation riding the same phase-2 close). Build state lives in **`plans/`** —
-> read the highest **primary-numbered** plan's status header, plus any **active subplans it (or its
-> parent family) explicitly designates as current**; ignore unnumbered files and letter-suffixed
-> plans only when no primary/active plan designates them. If that plan is DRAFTED, also read the
-> latest ✅ EXECUTED plan for settled ground.
+> **Status:** ✅ EXECUTED — phase-3 implementation complete; the pre-close adversarial review is
+> archived with every finding dispositioned and its four majors remediated. This is plan 20, the
+> highest primary-numbered plan and the latest ✅ EXECUTED ground (superseding plan 18, whose
+> phase-2 close carried plan 19's remediation). Build state lives in **`plans/`** — read the
+> highest **primary-numbered** plan's status header, plus any **active subplans it (or its parent
+> family) explicitly designates as current**; ignore unnumbered files and letter-suffixed plans
+> only when no primary/active plan designates them. If that plan is DRAFTED, also read the latest
+> ✅ EXECUTED plan for settled ground.
 >
 > **Spec anchors:** [plan 18 §7 done-record](18-self-hosting-phase-2.md) · [the phase-2 brief's
 > remaining-work enumeration](18-self-hosting-phase-2-brief.md) ·
@@ -181,13 +182,15 @@ sweeps inbound references (`AGENTS.md`, `README.md`, `CONTEXT.md` pointers, othe
 
 ## (h) §5 Watch items carried into phase 3
 
-| Watch item | Trigger | Ruling rule | Entry state |
-|---|---|---|---|
-| table-sugar syntax | sibling-point authoring proves dishonest for a real law | rule Markdown syntax; preserve static sibling expansion semantics | watch — unfired |
-| single-literal vocabulary form | a real vocabulary slot needs one literal | rule only with a concrete fixture | watch — unfired |
-| multi-entry constraint form | a real constraint needs more than one entry | rule carrier syntax + parity evidence together | watch — unfired |
-| array-section prose sub-owner | a real spec needs prose beside array entries | rule with the forcing spec | watch — unfired |
-| Markdown Pack syntax | a Pack needs Markdown authoring for a real caller | rule separately; Pack is not a kind | watch — unfired |
+Terminal states are recorded at the close; every entry survives with a reason, fired or not.
+
+| Watch item | Trigger | Ruling rule | Entry state | Terminal state (close) |
+|---|---|---|---|---|
+| table-sugar syntax | sibling-point authoring proves dishonest for a real law | rule Markdown syntax; preserve static sibling expansion semantics | watch — unfired | **unfired, survives** — 29 points were authored as siblings across fifteen laws and the 1–3 point budget was never pressed (S2 ruling 3, S3 ruling 4); no law needed more points than siblings gave it |
+| single-literal vocabulary form | a real vocabulary slot needs one literal | rule only with a concrete fixture | watch — unfired | **unfired, survives** — S3 met the closed-union boundary in `spec:carrier.slot-notation` and stated it as a refusal in authored words instead of ruling syntax under fire (S3 ruling 4) |
+| multi-entry constraint form | a real constraint needs more than one entry | rule carrier syntax + parity evidence together | watch — unfired | **unfired, survives** — no wave authored a constraint at all; the corpus holds one `constraint`-kind spec and it was untouched, so nothing forced the form |
+| array-section prose sub-owner | a real spec needs prose beside array entries | rule with the forcing spec | watch — unfired | **unfired, survives** — every enrichment this phase fitted the existing owners (rule lines, model terms, `## Example space`); the prose-ownership rule was stated, never stretched |
+| Markdown Pack syntax | a Pack needs Markdown authoring for a real caller | rule separately; Pack is not a kind | watch — unfired | **unfired, survives** — the pack manifest absorbed 29 new member ids as TS with no friction; no caller needed Markdown authoring, so the carrier rule's "Packs remain TS" default held on its own terms |
 
 ## (i) §6 Rulings-under-fire running log (execution)
 
@@ -445,6 +448,69 @@ Appended as waves execute; entries name the forcing material and the disposition
    `spec:model.core-model` and `spec:model.spec-sections`) is the session's only non-sweep edit,
    and `check-self-hosting-gates.mjs`'s DECISIONS.md pins were verified before it was committed.
 
+### S6 (the adversarial review, its remediation, and the close)
+
+1. **A point is made honest by removing the competing gate from its world, never by asserting
+   around it.** _Forcing material:_ review-09's P-1 — `concreteness-refusal` stayed green with the
+   concreteness law deleted, because its probe world ran under a parent owning an example space,
+   where `resolveExampleVocabulary` withholds the step contract for the same input. Two fixes were
+   available: add a Then step asserting that generation reports **no**
+   `contracts/unmatched-vocabulary-step` finding, or change the world so the second gate cannot
+   fire. The first was rejected: an absence assertion pinned to a finding id goes vacuous the day
+   that id is renamed, which is the same class of defect one rung down. _Disposition:_ the parent
+   offers a second Given — a parent that declares no shared vocabulary — and the point uses it. The
+   vocabulary gate is then structurally absent (the resolver returns no issues when no `refines`
+   parent owns a space), so the withheld contract can only be the concreteness law's doing.
+   Re-probed both ways: deleting the unbound-slot refusal turns that point red and no other test in
+   the suite; disabling the vocabulary gate leaves it green, which is honest, because the point does
+   not name that law. No ADR test is met — the base already forced it — so it stays a plan record.
+2. **The concreteness law's scope was stated, because the honest world depends on it.** The point
+   now runs under a parent with no vocabulary, so `spec:extraction.executable-contracts` says in its
+   own words that the concreteness law reads the example's own form alone and refuses with or
+   without a parent vocabulary, and that vocabulary resolution is a separate, later gate whose
+   withholding names its own finding. This is a scope clarification of a ratified law rather than a
+   new law — but it was written down deliberately, because a reader of the point should not have to
+   infer from code why the parent has no space.
+3. **A tautological Then step is coverage that does not exist, so it was removed rather than
+   ratified.** _Forcing material:_ review-09's P-2 — the schema-version point's second Then compared
+   the serialized payload against the engine's own exported constant, so both sides moved together
+   under every mutation. _Disposition:_ the step is gone from the parent vocabulary, the point, the
+   binding, and the oracle; the authored `"0.4.0"` literal remains and still dies when the constant
+   is bumped (re-probed). Removing a vocabulary step is not weakening coverage when the step could
+   not fail on its own — ruling 1's "conversion must never weaken coverage" is about *assertions
+   that can fail*, and this one could not.
+4. **Two audit rows were made true by enrichment, not by retraction.** _Forcing material:_
+   review-09's D-2 and D-3 — both rows carried a deletion-authorizing `carried` verdict while
+   resting on a surviving concept doc plus code (`05` §3 + `readiness-floor.ts`) or on a file that
+   does not hold what the row claimed (`src/ids.ts` has no namespace *set*). Retracting the
+   verdicts would have unpicked two clean deletions over a citation defect; widening the
+   dissolution criterion by plan ruling — which S5 had effectively done — substitutes a weaker test
+   than the decision states. _Disposition:_ the missing laws were authored onto their honest
+   carriers, in their own words and from intended truth: the `ready` floor's three clauses and the
+   vacuous-anchor reading onto `spec:validation.readiness-floor`, the one-oracle-per-space clause
+   onto `spec:validation.verification-linkage`, and the per-binding-direction reserved namespace
+   set plus the `doc:` reservation onto `spec:model.stable-ids`. The two deletions now stand on the
+   dissolution decision's own terms. What could **not** be honestly carried was not forced: the
+   three lower floor rungs and the per-kind evidence table remain uncarried and stay recorded as a
+   narrowed gap 1.
+5. **`doc:`'s status was stated as it is, not as the deleted doc described it.** `src/ids.ts` mints
+   no `doc:` identifier, `ref()` refuses one, and the grammar admits any lowercase namespace. The
+   new clause therefore says the reserved set is the *builders'* law rather than the parser's, and
+   that the `doc:` reservation is a named deferral rather than a landed namespace — with in-system
+   decisions living under the `spec:decisions.*` convention, which until now was de-facto corpus
+   practice stated by nothing.
+6. **Ruling 7 was enforced where it binds hardest — on a Spec — and carried where it does not
+   bind.** _Forcing material:_ review-09's R-1 found the temporal guard blind to `plan N`, `phase
+   N`, and bare wave handles, with seven pre-existing non-exempt sites and **one Spec**
+   (`spec:decisions.concept-docs-dissolve`, whose consequence read "never part of phase 1")
+   carrying such tokens. _Disposition:_ the Spec is repaired in timeless language, because a Spec
+   carrying a session-relative handle — visibly obsolete, since the deletion it defers has since
+   happened — is exactly the case ruling 7 exists for. The seven source and registry sites and the
+   guard's token list are carried on the standing temporal-guard docket row with the choice named:
+   widen the guard and repair the sites, or narrow ruling 7's wording to what it enforces. Phase 3
+   authored none of them, and inventing a guard rule at the close would be exactly the
+   under-fire legislating this plan warns against.
+
 #### The S4 readiness-sweep ledger
 
 Every spec that stood at `defined` when S4 opened, with its disposition. "Stays `defined`,
@@ -481,6 +547,103 @@ honestly" is a first-class outcome; promotion is per-spec judgment, never a quot
 Executed delivery, the conversion ledger's terminal states, the readiness sweep ledger, the
 per-doc audit tables and deletion dispositions, watch-item terminal states, the docket close,
 and close-evidence pointers.
+
+### Executed delivery
+
+The phase ran as six sequential sessions on `feature/protocol-self-application-phase-3`, each
+closing green. What it delivered, against what it planned:
+
+- **The executable-specs rewrite is systematic where the verify loop is honestly cheap.** Fifteen
+  laws were converted to bound points across three tranches — the whole validation family (S1),
+  the extraction / model / carrier cheap wins (S2), the three uncovered engine areas that first
+  needed corpus additions (S3), and two more laws the readiness sweep found worth converting on
+  law-shape rather than cheapness (S4). **29 new example specs**, each an immediate `gwt` point
+  bound through a generated contract to a `specTest` anchor; **27** of them from the conversion
+  ledger's thirteen rows plus **2** from S4.
+- **Three specs were added and three enriched to carry laws no spec held.**
+  `spec:extraction.example-runner` and `spec:carrier.slot-notation` are new (with the two new
+  `impl:` anchors that bind them); `spec:extraction.executable-contracts`,
+  `spec:carrier.envelope-contract`, and `spec:carrier.prose-ownership-rule` were enriched from
+  one- and two-rule stubs into acceptance-grade specs **before** any promotion. The corpus went
+  **58 → 87 specs**.
+- **Readiness matured only where a verifier landed.** `7 ready / 51 defined` at the draft became
+  **`51 ready / 36 defined`** at the close, in four steps that each rode their own wave's
+  verifiers (69: 24/45 → 75: 34/41 → 84: 44/40 → 87: 51/36). Every `ready` spec carries
+  `has-verifier`; the corpus reports **zero** `honesty/gaps` warnings.
+- **Two concept docs dissolved, three stayed on their own audit's evidence.** `02-core-model.md`
+  and `03-the-one-graph.md` were deleted with full reference sweeps; `05`, `06`, and `07` stay
+  with their gaps recorded rather than papered over.
+- **Nothing weakened.** No test file was deleted, no residual vitest suite lost a case, and the
+  golden oracle grew by transcription only — no assertion removed, no exact matcher loosened.
+
+**Ledger terminal states.**
+
+- **§2 conversion ledger:** all thirteen rows **done**; every delivered point count sits inside
+  its planned range. No row was deferred or dropped.
+- **§6 S4 readiness-sweep ledger:** terminal as recorded — 40 `defined` specs swept, 4 promoted
+  (2 enriched in place, 2 converted) plus 3 new points at `ready`, and 36 recorded as honest
+  `defined` with a per-spec reason. S6 promoted nothing: its enrichments landed laws on specs
+  already `ready`, so the readiness distribution is unchanged from S4's close.
+- **§4 / §7 audit ledger:** five audits recorded, terminal — `02` **deleted** · `03` **deleted** ·
+  `05` **stays, gaps recorded** · `06` **stays, gaps recorded** · `07` **stays, gaps recorded**.
+  Four audit-row citations were corrected at S6 and one row re-verdicted (see the disposition
+  table in `reviews/09-self-hosting-phase-3-pre-close-review.md`).
+
+### Recorded gaps carried out of the phase
+
+The eleven gaps S5 recorded stand, with two amendments made at S6: **gap 1 narrowed** (the `ready`
+rung's clauses now stand on `spec:validation.readiness-floor`; the three lower rungs and the
+per-kind evidence table remain uncarried) and **gap 12 added** (the Mermaid and reference-projection
+surfaces of `06` §1, conceded inside a `carried` row at S5 and re-verdicted at S6). Two further
+contracts entered no gap list because S5 graded them `carried` in error — the `03` §1 edge
+contract's readiness-effect and `models`-uniqueness clauses, and the `02` §5 namespace set with the
+`doc:` reservation. Both were **closed at S6 by enrichment**, so they neither survive as
+mis-gradings nor join the list. The full list is under "Gaps carried out of S5" below, as amended.
+
+### Adversarial review and remediation
+
+An adversarial review over the full branch diff is archived at
+`reviews/09-self-hosting-phase-3-pre-close-review.md`. Its central method was **mutation testing**,
+not code reading: a sandbox copy of the branch, its engine broken one law at a time across 37
+mutations, with the new bound points re-run after each. Verdict: sound to close once the four
+majors were dispositioned; **26 of 27** points were provably mutation-sensitive to the law they
+name.
+
+All fifteen findings carry an explicit disposition in that document's table. Ten were fixed, one
+record was corrected, one was accepted as stated, and three are carried with stated reasons (an
+immutable commit subject, the oracle-granularity docket row, and the temporal guard's token list).
+The four majors: **P-1** the concreteness point made discriminating and re-probed; **D-1** the last
+bare-form `02` citation repaired with the sweep re-run over both citation forms; **D-2** and **D-3**
+closed by enriching the honest carrying specs so the two deletions rest on executable Specs, as the
+dissolution decision requires, rather than on a plan ruling that widened the criterion.
+
+### The docket close
+
+| Docket row | Disposition at close |
+|---|---|
+| Markdown Pack syntax ruling | **carried** — the watch item never fired; the pack manifest absorbed 29 new members as TS with no friction, so no caller has yet needed Markdown Pack authoring |
+| the gen-1 `.feature` adapter | **carried** — untouched this phase; the deferred tail was never forced by a wave |
+| the no-reparse read seam | **carried** — untouched; `spec:extraction.regenerability` still carries the law and no consumer re-parses source today |
+| temporal-guard token assembly | **carried, with the choice now named** — review-09 R-1 measured the guard's blindness (`plan N`, `phase N`, month names, bare wave handles) and found seven pre-existing non-exempt sites. The one **Spec** instance was repaired at S6; the rest needs a deliberate call: widen the guard's token list and repair the sites, or narrow §1 ruling 7's wording to what the guard enforces. Not decided at a close, on purpose |
+| the editor-association gap | **carried** — named out of scope at the draft and never forced |
+| corpus-test granularity (review-08 R-28) | **carried, with a stated reason and a measurement** — review-09 R-3 is right that every wave reached this row and none dispositioned it, and that the condition worsened: `test/self-hosting-graph.test.ts` grew from 2,287 to **3,888** lines and is still a single `it()` with frozen absolute counts, so the first failure masks the rest. It is carried rather than closed because splitting the oracle is a single-purpose session over the one artifact every wave's correctness claim rested on; churning it mid-phase would have put the phase's own evidence under the knife. The row rolls forward **with this reason recorded**, which is the thing S5 failed to do |
+| control-character latitude | **carried** — recorded-only at review-08 and untouched since |
+| the separate example id namespace | **carried** — 29 example specs were authored under the existing two-segment convention with no collision and no pressure for a separate namespace; the row survives as a watch, not a want |
+
+### Close evidence
+
+- **Graph:** `87 specs · 1 pack · 65 anchors → 153 nodes · 294 edges`, **0 errors · 0 warnings**,
+  regenerated from a clean tree. Node mix: 87 `Primitive`, 1 `Pack`, 35 `Anchor`, 30 `CodeNode`.
+- **Readiness histogram:** `ready: 51 · defined: 36` over 87 specs (`idea: 0 · scoped: 0`). All 51
+  `ready` specs carry `has-verifier`; so do all 29 example points and all 15 converted parents.
+- **Kind mix:** `example: 29 · decision: 21 · rule: 14 · behavior: 12 · model: 8 · contract: 1 ·
+  workflow: 1 · constraint: 1`.
+- **Tests:** **559 passing** across 41 files under the wrapper's two legs (505 in the parallel pool,
+  54 in the dedicated CLI process); zero skipped, zero deleted this phase.
+- **Gate:** the full twelve-leg `npm run check` green at the close commit, plus the clean-clone
+  proof recorded in §10's S6 row.
+- **Review:** `reviews/09-self-hosting-phase-3-pre-close-review.md`, with its disposition table
+  filled and a remediation addendum.
 
 ### The per-doc concept-dissolution audits (S5)
 
@@ -694,33 +857,70 @@ tracked file outside `plans/`, `reviews/`, and `explorations/` — the bare-toke
 
 ## (k) §8 Docket ledger
 
-Carried in from phase 2 (all remain open unless a wave adopts them): the Markdown Pack syntax
-ruling · the gen-1 `.feature` adapter · the no-reparse read seam · temporal-guard token assembly
-· the editor-association gap · corpus-test granularity (owned by this program — dispositioned by
-the waves it reaches) · control-character latitude · the separate example id namespace. Rows
-close only with reasons in §7.
+Carried in from phase 2 (all remained open through S1–S5; none was adopted by a wave): the
+Markdown Pack syntax ruling · the gen-1 `.feature` adapter · the no-reparse read seam ·
+temporal-guard token assembly · the editor-association gap · corpus-test granularity (owned by
+this program — dispositioned by the waves it reaches) · control-character latitude · the separate
+example id namespace. Rows close only with reasons in §7.
+
+**Closed at S6:** every row is dispositioned in §7's docket-close table. All eight are **carried**
+into the next phase — none closed as done — but each now carries a stated reason rather than
+rolling forward silently, which is what review-09 R-3 caught. Two rows gained substance in the
+process: temporal-guard token assembly now names the decision it is waiting on, and corpus-test
+granularity carries the measurement (`test/self-hosting-graph.test.ts` at 3,888 lines in one
+`it()`) that will justify the session that finally splits it.
 
 ## (l) §9 Acceptance criteria
+
+Graded at the close, after remediation. Review-09 graded 1 / 2 / 3 / 6 **PASS** and 4 / 5 / 7
+**PARTIAL** pre-remediation; the partials are re-graded here against what actually landed.
 
 1. **Executable-path facts, not claims:** every converted law's parent and child earn
    `has-verifier` through the executable path (anchored `verifies` from a bound test), visible
    in `generated/graph.json`; zero validation errors; contract generation deterministic under
-   `--check-clean`.
+   `--check-clean`. — **PASS.** All 15 converted parents and all 29 example points carry
+   `has-verifier` in the regenerated graph; 0 errors; `check:self-hosting` and `check:example`
+   both clean under `--check-clean`. Independently mutation-tested: 27 of 27 points now go red
+   when the law they name is removed (26 confirmed by review-09, the 27th by S6's re-probe).
 2. **Honest readiness:** every promotion clears the floor and carries a resolving verifier; the
-   phase introduces no `honesty/gaps` warning; the closing readiness distribution is recorded.
+   phase introduces no `honesty/gaps` warning; the closing readiness distribution is recorded. —
+   **PASS.** 0 errors / 0 warnings — no `honesty/gaps` warning exists at all. All 51 `ready` specs
+   carry `has-verifier` and clear the `ready` floor. Closing distribution `ready: 51 / defined: 36`
+   over 87, recorded in §7 and re-measured off disk at the close.
 3. **Coverage never weakens:** residual tests are deleted only where a bound contract honestly
    carries the assertion; the suite's law coverage at close is a superset of its opening
-   coverage.
+   coverage. — **PASS.** Zero test files deleted; case counts unchanged across all fourteen
+   residual suites (verified against `main`); the only `test/` edits outside the new bound suites
+   are reference-sweep comments and two frozen-fixture refreshes. The one removal at S6 — the
+   schema-version point's tautological Then step — removed an assertion that could not fail, and
+   its authored-literal twin still dies under mutation.
 4. **Per-doc audits recorded for `02`, `03`, `05`, `06`, `07`;** deletions only where the audit
    verdict is fully-carried; no dangling inbound reference survives a deletion
-   (`check-carrier-truth.mjs` and the full gate stay green).
-5. **Watch items:** any fired ruling is recorded; every unfired item survives with a reason.
+   (`check-carrier-truth.mjs` and the full gate stay green). — **PASS after remediation**
+   (PARTIAL at review time). Five audits recorded; only the two fully-carried docs deleted; all
+   four standalone audit scripts and the full gate green. The two defects the review found are
+   closed rather than argued: the one surviving bare-form `02 §3` citation is repaired and the
+   sweep re-run over **both** citation forms with zero hits (D-1), and the two `carried` verdicts
+   that rested on a surviving doc or on a file that did not hold the claim are now carried by
+   enriched Specs (D-2, D-3) — so both deletions stand on the dissolution decision's own terms.
+5. **Watch items:** any fired ruling is recorded; every unfired item survives with a reason. —
+   **PASS after remediation** (PARTIAL at review time — the §5 table then carried entry states
+   only). No watch item fired in six sessions; §5 now carries a terminal-state column, and each of
+   the five items records *why* it stayed unfired rather than merely that it did.
 6. **The gate holds throughout:** `npm run check` green at every blessed commit; the close runs
    the full chain plus a clean-clone proof; the wrapper dependency table and preflight targets
-   are current.
+   are current. — **PASS.** The twelve-leg chain is green at the close; the pack manifest matched
+   the spec files at every commit of the phase; the wrapper's per-tree dependency table and the
+   preflight targets are current. The clean-clone proof is recorded in §10's S6 row.
 7. **Records continue:** the conversion/readiness/audit ledgers are terminal; the docket rows
    are dispositioned or carried with reasons; an adversarial review over the full branch diff is
-   archived under `reviews/` with remediation dispositions before close.
+   archived under `reviews/` with remediation dispositions before close. — **PASS after
+   remediation** (PARTIAL at review time). All three ledgers are terminal; all eight docket rows
+   are dispositioned in §7 with reasons; the adversarial review is archived with every one of its
+   fifteen findings dispositioned and a remediation addendum. The two record defects the review
+   itself raised are answered on the record: the overstating commit subject is corrected in prose
+   rather than by rewriting history (R-2), and the docket row that rolled forward five times now
+   carries its reason and its measurement (R-3).
 
 ## (m) §10 Session and gate ledger
 
@@ -734,7 +934,7 @@ commit series on the effort branch. This ledger is git process evidence, never g
 | S3 | corpus additions (§3) + codegen/runner/notation conversions | orchestrator-verified green gate | done — 2 new specs + 1 enrichment; 7 points bound across 3 parents; 2 new `impl:` anchors; one green-gate conversion commit |
 | S4 | readiness maturation sweep (ruling 5) | orchestrator-verified green gate | done — 40 `defined` specs swept; 4 promoted (2 enriched in place, 2 converted) + 3 new points at `ready`; 36 recorded as honest `defined`; one green-gate sweep commit |
 | S5 | per-doc audits + first dissolutions (§4) | orchestrator-verified green gate over the regenerated Design Review | done — five audits recorded (§7); `02` and `03` deleted with their full reference sweeps; `05`, `06`, `07` stay with 11 gaps recorded as future corpus work; D1/D2 re-pointed; three green-gate commits |
-| S6 | adversarial review, remediation, full close, done-record | full chain + clean-clone; review archived | planned |
+| S6 | adversarial review, remediation, full close, done-record | full chain + clean-clone; review archived | done — review archived and all 15 findings dispositioned; four majors and seven minors remediated across two green-gate commits; §5 / §7 / §8 / §9 terminal records written; full `npm run check` green and the clean-clone proof run at the close commit |
 
 Owner ratification of every gate above happens at the phase PR review; no live owner acceptance
 is claimed by this ledger.
