@@ -26,7 +26,7 @@ export const CreateOrder = spec({
     openQuestions: ["should stock reservation happen before or after order creation?"],
   },
   behavior: {
-    // content only — never refs (02 §3): a promoted example is a child spec that refines/verifies this one
+    // content only — never refs (`spec:model.spec-sections`): a promoted example is a child spec that refines/verifies this one
     rules: ["only valid carts can become orders", "creating an order emits OrderCreated"],
     examples: ["an expired payment card is declined before any order is created"],
   },

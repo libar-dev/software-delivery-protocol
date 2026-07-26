@@ -89,12 +89,6 @@ function substituteParams(skeleton: string, params: ParamShape): string {
   );
 }
 
-/**
- * The framework-neutral core: pairs each contract step with its bound handler, in contract order.
- * Duplicate step text within an example dedupes to one handler by construction — the bindings
- * object holds exactly one entry per step text ("same words, same meaning"), and every occurrence
- * in the scenario runs that one handler with its own authored params.
- */
 const exampleRunnerAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.example-runner"),
   label: "plans and executes a bound example against the caller's world",
@@ -103,6 +97,12 @@ const exampleRunnerAnchor = codeAnchor({
 
 void exampleRunnerAnchor;
 
+/**
+ * The framework-neutral core: pairs each contract step with its bound handler, in contract order.
+ * Duplicate step text within an example dedupes to one handler by construction — the bindings
+ * object holds exactly one entry per step text ("same words, same meaning"), and every occurrence
+ * in the scenario runs that one handler with its own authored params.
+ */
 export function planExample<W, S extends string, PM extends Record<S, ParamShape>>(
   contract: ExampleContract<S, PM>,
   bindings: StepBindings<W, S, PM>,

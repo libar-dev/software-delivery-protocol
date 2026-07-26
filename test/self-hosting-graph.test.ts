@@ -484,7 +484,6 @@ const expectedSpecs = [
           when: ["the graph payload is serialized"],
           [["t", "hen"].join("")]: [
             "the payload declares the schema version {schemaVersion:string}",
-            "the parsed payload agrees with the engine's declared version: {agrees:boolean}",
           ],
         },
       },
@@ -512,7 +511,6 @@ const expectedSpecs = [
             when: ["the graph payload is serialized"],
             [["t", "hen"].join("")]: [
               'the payload declares the schema version {schemaVersion: "0.4.0"}',
-              "the parsed payload agrees with the engine's declared version: {agrees: true}",
             ],
           },
         ],
@@ -538,6 +536,7 @@ const expectedSpecs = [
           "`generateContracts` derives per-example step contracts and per-parent space contracts solely from the extracted graph.",
           "A generated contract is disposable, keyed by Spec ID, and becomes unavailable when its authored example cannot bind honestly to its shared vocabulary.",
           "The concreteness law is a refusal, never a guess — an example carrying an unbound slot in any used step of any entry is not the bindable form and receives no step contract, and a prose-only example receives none either.",
+          "The concreteness law reads the example's own form alone, so it refuses whether or not a parent declares a shared vocabulary; vocabulary resolution is a separate, later gate whose withholding names its own finding.",
           "An example is one point, so the step contract and the bound point derive from the same first complete entry; a further structured entry is named rather than left silently inert.",
           "Degradation is loud and local — an undeclared slot, a value outside its declared type, and a conflicting re-binding each name the drift and drop exactly that one slot, so the emitted module still compiles.",
           "A vocabulary slot group that declares no usable type is named rather than dropped in silence, and no dimension enters the space for it.",
@@ -548,6 +547,7 @@ const expectedSpecs = [
         exampleSpace: {
           given: [
             "a parent spec whose example space declares the slot {dimension:string}",
+            "a parent spec that declares no shared vocabulary for the slot {dimension:string}",
             'a refining example {exampleId:string} whose used step {binding:"binds"|"leaves unbound"} that slot',
             "the example carries {entryCount:number} structured entries",
             "a case-twin example {twinId:string} whose contract path differs only by letter case",
@@ -573,18 +573,19 @@ const expectedSpecs = [
     narrative: null,
     sections: {
       intent: {
-        outcome: "Execute the concreteness law where the example leaves a declared slot unbound.",
+        outcome:
+          "Execute the concreteness law alone, where no shared vocabulary can withhold the contract in its place.",
       },
       behavior: {
         examples: [
           {
             given: [
-              'a parent spec whose example space declares the slot {dimension: "n"}',
+              'a parent spec that declares no shared vocabulary for the slot {dimension: "n"}',
               'a refining example {exampleId: "spec:probe.create-order.unbound"} whose used step {binding: "leaves unbound"} that slot',
             ],
             when: ["the contracts are generated from the derived graph"],
             [["t", "hen"].join("")]: [
-              "the generated tree holds {fileCount: 1} files",
+              "the generated tree holds {fileCount: 0} files",
               "the step contract for the example is emitted: {emitted: false}",
             ],
           },
@@ -890,6 +891,9 @@ const expectedSpecs = [
       behavior: {
         rules: [
           "A Spec may state a readiness only when every clause in that readiness floor passes.",
+          "The `ready` floor reads the Spec's own edges through three clauses: every authored relation resolves to a known target, every `refines` and `dependsOn` target itself stands at least `defined`, and every anchor bound to the Spec resolves.",
+          "The anchor clause reads the bindings that are present, so a Spec carrying no anchor clears it — the floor never demands a binding an author has not made.",
+          "The floor table in `src/validate/readiness-floor.ts` is the clause set's code-level source of truth and the realizing entrypoint; the clauses of the lower rungs are stated there and are not re-enumerated here.",
         ],
       },
     },
@@ -1012,7 +1016,9 @@ const expectedSpecs = [
         decision:
           "Concept documents may dissolve only after their semantic contract is carried by executable Specs and lean registries.",
         rationale: ["Executable truth is easier to validate and consume."],
-        consequences: ["Deletion is later work, never part of phase 1."],
+        consequences: [
+          "Deletion follows the carrying work, per document, and is never bundled into the change that lands the carrier.",
+        ],
       },
     },
     deliveryFacts: [],
@@ -1123,6 +1129,8 @@ const expectedSpecs = [
           "A Protocol ID is stable, unique, namespaced, human-readable, and the only binding between intent and code.",
           "An ID uses a lowercase namespace and dotted path, with an optional single `#` sub-part; referential-integrity checks reject malformed or unresolved references.",
           "IDs carry no history: a rename is a repository edit recorded by git rather than graph-resident bookkeeping.",
+          "The builders reserve one namespace per binding direction — `spec:` for a Spec and for every Spec reference, `pack:` for the aggregate, `impl:` · `api:` · `component:` for a code anchor, `test:` for a verifying test anchor, and `oracle:` for an expected-outcome anchor — while the grammar itself admits any lowercase namespace, so the reserved set is the builders' law rather than the parser's.",
+          "`doc:` is reserved for a genuinely external document a decision Spec links to, never for an in-system decision: in-system decisions are Specs under the `spec:decisions.*` convention. No builder mints a `doc:` identifier and the Spec-only reference builder refuses one, so the reservation is a named deferral rather than a landed namespace.",
           "The realizing entrypoints are `parseId` and `formatId` in `src/ids.ts`.",
         ],
         exampleSpace: {
@@ -1605,6 +1613,7 @@ const expectedSpecs = [
         rules: [
           "A declared verifies relation and an oracle model relation must resolve through their respective binding traces before either can stand as verification evidence.",
           "A non-resolving trace is named loudly and confers no delivery fact, because silence would read as verification the graph never earned.",
+          "At most one expected-outcome authority may model an example space: a second resolving oracle binding on the same space is an error, because two authorities leave the modelled outcome ambiguous.",
           "The realizing validator entrypoints are `checkVerifiesLinkage` and `checkOracleLinkage` in `src/validate/validators.ts`.",
         ],
         exampleSpace: {

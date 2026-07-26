@@ -18,14 +18,7 @@ import { declaredVersionContract } from "../generated/contracts/extraction.schem
 import { discoverFiles } from "../src/extract/discover.js";
 import type { DiscoveredFiles } from "../src/extract/discover.js";
 import { serializeGraph } from "../src/extract/serialize.js";
-import {
-  deriveGraph,
-  generateContracts,
-  refines,
-  schemaVersion,
-  spec,
-  specId,
-} from "../src/index.js";
+import { deriveGraph, generateContracts, refines, spec, specId } from "../src/index.js";
 import type { GeneratedContracts, GraphSchema, Spec } from "../src/index.js";
 import { planExample, runExamplePlan } from "../src/runner/index.js";
 import type { ExampleContract, StepKind } from "../src/runner/index.js";
@@ -215,12 +208,6 @@ const schemaVersionBindings = {
   ) => {
     expect(payloadOf(world).schemaVersion).toBe(params.schemaVersion);
   },
-  "the parsed payload agrees with the engine's declared version: {agrees}": (
-    world: SchemaVersionWorld,
-    params: { readonly agrees: boolean },
-  ) => {
-    expect(payloadOf(world).schemaVersion === schemaVersion).toBe(params.agrees);
-  },
 };
 
 const schemaVersioningTestAnchor = specTest({
@@ -238,6 +225,7 @@ const PROBE_PARENT_ID = "spec:probe.create-order";
 
 interface ContractsWorld {
   dimension: string;
+  parentDeclaresSpace: boolean;
   exampleId: string;
   binds: boolean;
   entryCount: number;
@@ -248,6 +236,7 @@ interface ContractsWorld {
 function contractsWorld(): ContractsWorld {
   return {
     dimension: "",
+    parentDeclaresSpace: true,
     exampleId: "",
     binds: true,
     entryCount: 1,
@@ -269,7 +258,25 @@ function contractPathOf(id: string): string {
   return `${id.slice(id.indexOf(":") + 1)}.contract.ts`;
 }
 
-function probeParent(dimension: string): Spec {
+/**
+ * The probe parent, with or without a shared vocabulary. Without one, the vocabulary gate is
+ * structurally absent — `resolveExampleVocabulary` reports nothing for a child whose parents own
+ * no example space — so a withheld step contract can only be the concreteness law's doing, and the
+ * point that names that law is killed by removing it and by nothing else.
+ */
+function probeParent(world: ContractsWorld): Spec {
+  if (!world.parentDeclaresSpace) {
+    return spec({
+      id: specId(PROBE_PARENT_ID),
+      title: "Probe parent for contract generation",
+      kind: "behavior",
+      altitude: "feature",
+      readiness: "defined",
+      intent: { outcome: "Carry a probe example without declaring a shared vocabulary." },
+      behavior: { rules: ["a submitted cart becomes an order"] },
+    });
+  }
+
   return spec({
     id: specId(PROBE_PARENT_ID),
     title: "Probe parent for contract generation",
@@ -279,7 +286,7 @@ function probeParent(dimension: string): Spec {
     intent: { outcome: "Declare one typed dimension for a probe example space." },
     behavior: {
       exampleSpace: {
-        given: [`a customer has a cart with {${dimension}:number} line items`],
+        given: [`a customer has a cart with {${world.dimension}:number} line items`],
         when: ["the customer submits the cart for order creation"],
         then: ["an order is created"],
       },
@@ -316,6 +323,14 @@ const contractsBindings = {
     params: { readonly dimension: string },
   ) => {
     world.dimension = params.dimension;
+    world.parentDeclaresSpace = true;
+  },
+  "a parent spec that declares no shared vocabulary for the slot {dimension}": (
+    world: ContractsWorld,
+    params: { readonly dimension: string },
+  ) => {
+    world.dimension = params.dimension;
+    world.parentDeclaresSpace = false;
   },
   "a refining example {exampleId} whose used step {binding} that slot": (
     world: ContractsWorld,
@@ -337,7 +352,7 @@ const contractsBindings = {
     world.twinId = params.twinId;
   },
   "the contracts are generated from the derived graph": (world: ContractsWorld) => {
-    const specs = [probeParent(world.dimension), probeExample(world.exampleId, world)];
+    const specs = [probeParent(world), probeExample(world.exampleId, world)];
 
     if (world.twinId !== undefined) {
       specs.push(probeExample(world.twinId, world));

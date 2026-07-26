@@ -12,12 +12,13 @@ import { fileURLToPath } from "node:url";
 //   2. the obsolete sole-canonical-TS wording gone from the diary and the glossary, and the
 //      surviving law (one canonical surface per ID, no mixing) still present in the diary;
 //   3. the extension-law re-point (the `.sdp.ts` extension law, MD-15) present in the diary;
-//   4. the SAME logical/physical relations distinction on both surviving surfaces — the carrying
-//      Spec (the Markdown envelope contract) and JS-A1: relations stay OPTIONAL in the logical
-//      Spec; the physical Markdown envelope writes `relations: {}` when the logical set is empty —
-//      honest carrier syntax, never a new logical relation requirement. The concept doc that used
-//      to hold the JS-A1-verbatim twin dissolved into its carrying Specs, so the Spec now states
-//      the law in its own authored words while JS-A1 keeps the verbatim sentence.
+//   4. the logical/physical relations distinction present on BOTH surviving surfaces, each in its
+//      own words — the carrying Spec (the Markdown envelope contract) and JS-A1: relations stay
+//      OPTIONAL in the logical Spec; the physical Markdown envelope writes `relations: {}` when the
+//      logical set is empty — honest carrier syntax, never a new logical relation requirement. The
+//      concept doc that used to hold the JS-A1-verbatim twin dissolved into its carrying Specs, so
+//      this leg proves co-presence of the law, not verbatim sameness across the two surfaces:
+//      JS-A1 keeps the verbatim sentence, the Spec states the same law as it authored it.
 //
 // Usage: node check-carrier-rule.mjs [rootDir]
 //   rootDir  — tree holding the operative surfaces; defaults to this repo root. QA passes a
@@ -52,8 +53,8 @@ const OBSOLETE_SOLE_CANONICAL = "stays sole-canonical";
 const EXTENSION_LAW_REPAIR = "re-pointed, not repealed";
 
 // Sameness is about WORDS, so markdown quoting furniture is stripped before whitespace
-// normalization: a sentence wrapped inside a `>` blockquote (the AGENTS status row, the
-// core-model carrier note) must read identically to its plain-paragraph twins.
+// normalization: a sentence wrapped inside a `>` blockquote (the AGENTS status row) must read
+// identically to its plain-paragraph twins.
 const norm = (text) => text.replace(/^>\s?/gm, "").replace(/\s+/g, " ");
 const read = (rel) => norm(readFileSync(join(rootDir, rel), "utf8"));
 

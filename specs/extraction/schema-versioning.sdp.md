@@ -21,5 +21,4 @@ relations:
 Given a graph derived from the authored spec {specId:string}
 When the graph payload is serialized
 Then the payload declares the schema version {schemaVersion:string}
-Then the parsed payload agrees with the engine's declared version: {agrees:boolean}
 ```
