@@ -116,12 +116,12 @@ example children; residual tests stay per ruling 1.
 
 | Wave | Source tests | Parent spec (vocabulary) | Planned points | State |
 |---|---|---|---|---|
-| S1 | `test/validators.test.ts` orphan/gap cases | `spec:validation.warn-level-signals` | 1–2 | planned |
-| S1 | `test/validators.test.ts` referential cases | `spec:validation.referential-integrity` | 1–2 | planned |
-| S1 | `test/validators.test.ts` + fixture rows | `spec:validation.authored-honesty` | 1–2 | planned |
-| S1 | `test/validators.test.ts` claim cases | `spec:validation.claim-separation` | 1–2 | planned |
-| S1 | `test/validators.test.ts` verifies/models cases | `spec:validation.verification-linkage` | 1–2 | planned |
-| S1 | `test/validators.test.ts` pack cases (coverage gap) | `spec:validation.pack-coherence` | 1 | planned |
+| S1 | `test/validators.test.ts` orphan/gap cases | `spec:validation.warn-level-signals` | 1–2 | done — 2 points (`orphan-signal`, `ready-gap-signal`) |
+| S1 | `test/validators.test.ts` referential cases | `spec:validation.referential-integrity` | 1–2 | done — 2 points (`dangling-target`, `did-you-mean`) |
+| S1 | `test/validators.test.ts` + fixture rows | `spec:validation.authored-honesty` | 1–2 | done — 2 points (`section-authored-fact`, `unearned-stated-fact`) |
+| S1 | `test/validators.test.ts` claim cases | `spec:validation.claim-separation` | 1–2 | done — 2 points (`collapsed-edge-claim`, `unratified-descriptor`) |
+| S1 | `test/validators.test.ts` verifies/models cases | `spec:validation.verification-linkage` | 1–2 | done — 2 points (`unbound-example`, `unresolved-oracle`) |
+| S1 | `test/validators.test.ts` pack cases (coverage gap) | `spec:validation.pack-coherence` | 1 | done — 1 point (`incoherent-aggregate`) |
 | S2 | `test/exclude-diagnostics.test.ts` | `spec:extraction.excludes` | 1–2 | planned |
 | S2 | `test/graph-schema.test.ts` | `spec:extraction.schema-versioning` | 1 | planned |
 | S2 | `test/ids.test.ts` (representative points) | `spec:model.stable-ids` | 1–2 | planned |
@@ -192,6 +192,45 @@ sweeps inbound references (`AGENTS.md`, `README.md`, `CONTEXT.md` pointers, othe
 
 Appended as waves execute; entries name the forcing material and the disposition.
 
+### 2026-07-26 — S1 (the validation family)
+
+1. **Bound handlers live in a dedicated `test/self-hosting-validators.test.ts`, not inside
+   `test/validators.test.ts`.** *Forcing material:* the anchor scanner's file-level gate. A
+   `specTest` anchor is extracted only from a file the scanner reads, and the scanner reads a file
+   only when it imports the package specifier (or a trusted relative builder module). Adding that
+   import to `test/validators.test.ts` turned the scan on for the whole file, and its two
+   pre-existing **inline** `specTest(…)` fixture calls — arguments to `deriveFixtureGraph`, not
+   anchor constants — immediately raised two `extract/misplaced-authoring` warnings the corpus must
+   not carry. The alternatives were both worse: hoisting those fixture calls to top level would
+   mint real graph anchors pointing at deliberately dangling ids, and leaving the warnings in place
+   would break the corpus's zero-finding oracle. *Disposition:* the wave's bound points go in a
+   dedicated suite, matching the repository's existing convention for bound self-hosting examples
+   (`test/self-hosting-duplicate-ids.test.ts`, `test/self-hosting-sdp-import.test.ts`); the
+   plain-vitest suite is untouched and survives whole as regression evidence (ruling 1). No ADR
+   test is met — the base already forced this — so it stays a plan record.
+2. **The wrapper's contract-dependency table becomes one row per generated tree.** *Forcing
+   material:* a second self-hosting suite. The old table keyed one row per test file, and a second
+   row for the same tree would have made the missing-tree stderr repeat
+   `npm run generate:self-hosting` — a message
+   `test/self-hosting-duplicate-ids.test.ts` pins byte-exactly. *Disposition:* rows now carry a
+   `testPaths` list, so the recovery command a missing tree names is stated once regardless of how
+   many suites depend on it; the pinned messages are unchanged.
+3. **Rule-kind parents own their Example space (§1 ruling 2, exercised).** All six S1 parents are
+   `rule` kind; the parser, codegen, and floor treated them exactly like the `behavior`-kind
+   tracer. No grammar change was needed and no watch item fired.
+4. **Three unstated laws were promoted into spec text — from intended truth, never from code.**
+   The did-you-mean suggestion (`05` §2 check 1), the fail-closed descriptor posture (`05` §2
+   check 3), and "a non-resolving trace confers nothing" (`02` §2, `04` §2) were all already
+   ratified in the concept material and merely absent from the carrying specs; each is now a rule
+   line on its parent so its bound point reads against stated intent. `pack-coherence` gained one
+   mechanism sentence (membership is counted on the derived `belongsTo` edges the manifest
+   re-expresses) so its `{memberCount}` dimension is readable; the validator's behavior was found
+   to agree with the stated law, so no code moved.
+5. **Six parents and eleven children promoted to `ready` under §1 ruling 5.** Every promotion
+   clears the floor, carries a resolving verifier through the executable path (the children by
+   their bound `specTest` anchors, the parents by the enabled-example rule), and introduces no
+   `honesty/gaps` warning. The closing distribution is `defined: 45 / ready: 24` over 69 specs.
+
 ## (j) §7 Done-record (execution — appended at close)
 
 Executed delivery, the conversion ledger's terminal states, the readiness sweep ledger, the
@@ -235,7 +274,7 @@ commit series on the effort branch. This ledger is git process evidence, never g
 
 | Session | Delivers | Gate discipline | State |
 |---|---|---|---|
-| S1 | validation-family conversions (§2) + promotions that honestly clear | orchestrator-verified green gate | planned |
+| S1 | validation-family conversions (§2) + promotions that honestly clear | orchestrator-verified green gate | done — 11 points bound across 6 parents; three green-gate commits |
 | S2 | extraction/model cheap wins (§2) | orchestrator-verified green gate | planned |
 | S3 | corpus additions (§3) + codegen/runner/notation conversions | orchestrator-verified green gate | planned |
 | S4 | readiness maturation sweep (ruling 5) | orchestrator-verified green gate | planned |
