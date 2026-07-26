@@ -43,8 +43,8 @@ positions and are never reused.
 
 | Label | One line | Canonical in |
 |---|---|---|
-| **D1** | readiness is separate from delivery facts | `02` §2 |
-| **D2** | sections are typed to their evidence role | `02` §3 |
+| **D1** | readiness is separate from delivery facts | [Core model spec](../../specs/model/core-model.sdp.md) (`spec:model.core-model`) |
+| **D2** | sections are typed to their evidence role | [Spec sections spec](../../specs/model/spec-sections.sdp.md) (`spec:model.spec-sections`) |
 | **D3** | Pack is a reified grouping/aggregate | [Pack reified decision](../../specs/decisions/pack-reified.sdp.md) (`spec:decisions.pack-reified`) |
 | **D4** | Design Review is the flagship curated projection | `06` §5 |
 | **D5** | the agent surface is a visible graph the agent scripts | [Agent surface scripts the graph decision](../../specs/decisions/agent-surface-scripts-graph.sdp.md) (`spec:decisions.agent-surface-scripts-graph`) |
