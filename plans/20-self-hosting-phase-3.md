@@ -98,9 +98,14 @@ validators; bulk concept purges.
    `npm run check` is green at every commit a wave blesses. No blessed commit holds a generated
    contract whose bound test is planned-but-missing unless the wave records the gap deliberately
    (the checkout `invalid-cart` precedent).
-7. **Temporal-guard discipline.** Specs, source, and tests never carry dates, plan references,
-   or wave handles; those live only in `plans/` and `reviews/`. Wave prompts must repeat this —
-   the guard enumerates untracked files too.
+7. **Temporal-guard discipline.** Specs never carry dates, plan references, or wave handles;
+   source and test surfaces never carry the guard's enforced tokens (ISO dates, `plans/<n>`
+   path references, session/wave/fold handles). Pre-existing prose provenance comments naming a
+   plan in source are lawful pointers into the process record — the guard's token list is the
+   law's boundary, deliberately. Wave prompts must repeat this — the guard enumerates untracked
+   files too. *(Amended at the post-close records sweep: the drafted wording claimed a broader
+   source/test ban than the guard enforces or the tree honors — see the docket's
+   temporal-guard row for the decided disposition.)*
 8. **Concept deletion is per-doc, audited, and ratified at the PR.** Each candidate doc gets an
    audit row (§4): every section mapped to its carrying surface or the doc is not deleted. The
    audit is judged over the regenerated Design Review; the deletion commit carries the audit
@@ -573,9 +578,10 @@ closing green. What it delivered, against what it planned:
   laws were converted to bound points across three tranches — the whole validation family (S1),
   the extraction / model / carrier cheap wins (S2), the three uncovered engine areas that first
   needed corpus additions (S3), and two more laws the readiness sweep found worth converting on
-  law-shape rather than cheapness (S4). **29 new example specs**, each an immediate `gwt` point
-  bound through a generated contract to a `specTest` anchor; **27** of them from the conversion
-  ledger's thirteen rows plus **2** from S4.
+  law-shape rather than cheapness (S4). **27 new example specs**, each an immediate `gwt` point
+  bound through a generated contract to a `specTest` anchor; **24** of them from the conversion
+  ledger's thirteen rows plus **3** from S4. The corpus now holds **29** example specs — these 27
+  plus the two phase-2 tracers.
 - **Three specs were added and three enriched to carry laws no spec held.**
   `spec:extraction.example-runner` and `spec:carrier.slot-notation` are new (with the two new
   `impl:` anchors that bind them); `spec:extraction.executable-contracts`,
@@ -640,11 +646,11 @@ dissolution decision requires, rather than on a plan ruling that widened the cri
 | Markdown Pack syntax ruling | **carried** — the watch item never fired; the pack manifest absorbed 29 new members as TS with no friction, so no caller has yet needed Markdown Pack authoring |
 | the gen-1 `.feature` adapter | **carried** — untouched this phase; the deferred tail was never forced by a wave |
 | the no-reparse read seam | **carried** — untouched; `spec:extraction.regenerability` still carries the law and no consumer re-parses source today |
-| temporal-guard token assembly | **carried, with the choice now named** — review-09 R-1 measured the guard's blindness (`plan N`, `phase N`, month names, bare wave handles) and found seven pre-existing non-exempt sites. The one **Spec** instance was repaired at S6; the rest needs a deliberate call: widen the guard's token list and repair the sites, or narrow §1 ruling 7's wording to what the guard enforces. Not decided at a close, on purpose |
+| temporal-guard token assembly | **carried; the ruling-vs-guard mismatch decided at the post-close records sweep** — review-09 R-1 measured the guard's blindness (`plan N`, `phase N`, month names, bare wave handles) and found the pre-existing non-exempt sites. The one **Spec** instance was repaired at S6. The standing call is now made: **§1 ruling 7 is narrowed to the guard's enforced token list**, and guard-widening is declined with a reason — the surviving sites are prose provenance comments in source that point into the process record (the content-routing rubric bans execution context from *specs*, never from code comments), and widening `plan N`-style tokens would trade real provenance pointers for false-positive churn. The *token-assembly* residue itself (split-string workarounds in audit scripts) still carries forward unchanged |
 | the editor-association gap | **carried** — named out of scope at the draft and never forced |
 | corpus-test granularity (review-08 R-28) | **carried, with a stated reason and a measurement** — review-09 R-3 is right that every wave reached this row and none dispositioned it, and that the condition worsened: `test/self-hosting-graph.test.ts` grew from 2,287 to **3,888** lines and is still a single `it()` with frozen absolute counts, so the first failure masks the rest. It is carried rather than closed because splitting the oracle is a single-purpose session over the one artifact every wave's correctness claim rested on; churning it mid-phase would have put the phase's own evidence under the knife. The row rolls forward **with this reason recorded**, which is the thing S5 failed to do |
 | control-character latitude | **carried** — recorded-only at review-08 and untouched since |
-| the separate example id namespace | **carried** — 29 example specs were authored under the existing two-segment convention with no collision and no pressure for a separate namespace; the row survives as a watch, not a want |
+| the separate example id namespace | **carried** — 27 example specs were authored this phase under the existing convention (29 now stand in the corpus) with no collision and no pressure for a separate namespace; the row survives as a watch, not a want |
 
 ### Close evidence
 
@@ -655,7 +661,11 @@ dissolution decision requires, rather than on a plan ruling that widened the cri
 - **Kind mix:** `example: 29 · decision: 21 · rule: 14 · behavior: 12 · model: 8 · contract: 1 ·
   workflow: 1 · constraint: 1`.
 - **Tests:** **559 passing** across 41 files under the wrapper's two legs (505 in the parallel pool,
-  54 in the dedicated CLI process); zero skipped, zero deleted this phase.
+  54 in the dedicated CLI process); zero skipped; no residual suite case was deleted this phase —
+  one non-discriminating bound `Then` step was removed at S6 (review-09 P-2).
+- **Tip inventory:** the §10 ledger names each session's green-gate commits — a subset, never the
+  branch inventory. The authoritative series is `git log main..HEAD`: **21 commits** at the close
+  proof, with the post-close records amendment below landing on top.
 - **Gate:** the full twelve-leg `npm run check` green in the working checkout, and green again in
   a **clean clone** — `git clone --no-local` of this repository into a scratch root outside it,
   `npm ci`, then the whole chain — at the close commit `268d1cb`. The clone reproduced the same
@@ -879,6 +889,53 @@ tracked file outside `plans/`, `reviews/`, and `explorations/` — the bare-toke
 (`` `02` ``, `` `03` ``, `02 §`, `03 §`, `concept/02`, `concept/03`, `02-core-model`,
 `03-the-one-graph`). Re-run at S6 over the repaired tree: **zero hits**.
 
+### Post-close records amendment (external review feedback, 2026-07-26)
+
+A second, independent read of the closed phase surfaced record defects; each accepted one is
+repaired in this amendment series (the product graph is untouched except where named):
+
+1. **The example-spec count corrected**: 27 new example specs this phase (24 from the conversion
+   ledger + 3 from S4); the corpus total is 29, including the two phase-2 tracers. The earlier
+   "29 new" sentence conflated the two.
+2. **The S5 gap count aligned**: the §10 S5 row now carries the S6 amendment (11 gaps at S5,
+   12 after review-09 D-7).
+3. **The glossary widened on the record**: `CONTEXT.md`'s *example space* entry said the space is
+   owned by a parent `behavior` spec; §1 ruling 2 and the landed corpus put spaces on `rule` and
+   `model` parents. The entry (and the matching sentence in `docs/concept/04`) now states the
+   practice: typically `behavior`, any kind lawful when the vocabulary parameterizes its own
+   law. This is the ruling-2 consequence carried onto a ratified surface instead of living only
+   in a closed plan.
+4. **Ruling 7 narrowed and the docket row decided**: the drafted wording banned more from
+   source/tests than the guard enforces or the tree honors; the ruling now states the enforced
+   law, and the widen-vs-narrow choice is recorded as decided on the temporal-guard docket row.
+5. **The tests claim made precise**: no residual suite case was deleted; one non-discriminating
+   bound `Then` step was removed at S6 (review-09 P-2).
+6. **The tip inventory stated**: the §10 green-gate commits are a subset; `git log main..HEAD`
+   is the branch's authoritative series (21 commits at the close proof, this amendment on top).
+
+Reviewer items declined or already standing, with reasons: the pack-manifest "29 new members"
+figures are correct as written (29 new spec IDs of all kinds landed this phase); the oracle-split
+and clean-room-exemption hardening items are successor-plan guidance (below), not phase-3
+records; the commit-subject correction (review-09 R-2) stands as recorded — history is not
+rewritten.
+
+### Guidance for the successor plan (recorded, not scheduled)
+
+1. **Split the golden oracle first.** `test/self-hosting-graph.test.ts` (3,888 lines, one `it()`,
+   frozen absolute counts) should get a single-purpose split session — by family or histogram
+   bucket, never one mega-assert — *before* any new conversion wave thrashes it again.
+2. **The conversion playbook inherits review-09 P-1's lesson**: build worlds where only the named
+   law can refuse; mutation-probe the named law before recording "exercises clause X"; never use
+   absence-of-a-finding-id as the sole discriminator (renames make it vacuous).
+3. **One source of truth for the contract-dependent suites**: the clean-room lint exemption list
+   and `vitest-test.mjs`'s dependency table name the same six files independently — derive both
+   from one shared constant, or the seventh suite will repeat the clean-clone lint surprise.
+4. **Gap order for the next corpus wave**: (a) the lower readiness-floor rungs and the per-kind
+   evidence table (narrows gap 1 and unblocks `05` pressure); (b) the derived-readiness banner
+   law (one gap shared by `05`/`06`/`07`); (c) the already-implemented-but-uncarried view rules
+   (the `implemented` view label, the one diagnostic rendering rule, the Design Review wholesale
+   rewrite). That order buys the most dissolution per spec authored.
+
 ## (k) §8 Docket ledger
 
 Carried in from phase 2 (all remained open through S1–S5; none was adopted by a wave): the
@@ -957,7 +1014,7 @@ commit series on the effort branch. This ledger is git process evidence, never g
 | S2 | extraction/model cheap wins (§2) | orchestrator-verified green gate | done — 6 points bound across 4 parents; one green-gate conversion commit |
 | S3 | corpus additions (§3) + codegen/runner/notation conversions | orchestrator-verified green gate | done — 2 new specs + 1 enrichment; 7 points bound across 3 parents; 2 new `impl:` anchors; one green-gate conversion commit |
 | S4 | readiness maturation sweep (ruling 5) | orchestrator-verified green gate | done — 40 `defined` specs swept; 4 promoted (2 enriched in place, 2 converted) + 3 new points at `ready`; 36 recorded as honest `defined`; one green-gate sweep commit |
-| S5 | per-doc audits + first dissolutions (§4) | orchestrator-verified green gate over the regenerated Design Review | done — five audits recorded (§7); `02` and `03` deleted with their full reference sweeps; `05`, `06`, `07` stay with 11 gaps recorded as future corpus work; D1/D2 re-pointed; three green-gate commits |
+| S5 | per-doc audits + first dissolutions (§4) | orchestrator-verified green gate over the regenerated Design Review | done — five audits recorded (§7); `02` and `03` deleted with their full reference sweeps; `05`, `06`, `07` stay with their gaps recorded as future corpus work (11 at S5, amended to 12 at S6); D1/D2 re-pointed; three green-gate commits |
 | S6 | adversarial review, remediation, full close, done-record | full chain + clean-clone; review archived | done — review archived and all 15 findings dispositioned; four majors and seven minors remediated across two green-gate commits; §5 / §7 / §8 / §9 terminal records written; the twelve-leg `npm run check` green in the checkout and again in a clean clone at `268d1cb` after that clone caught, and the phase fixed, a clean-room lint hole (S6 ruling 7) |
 
 Owner ratification of every gate above happens at the phase PR review; no live owner acceptance

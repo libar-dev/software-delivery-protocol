@@ -141,7 +141,7 @@ validated," never "provably correct."**
 | Term | Definition | Aliases to avoid |
 |---|---|---|
 | **step contract** | a derived, regenerable typed module emitted per `example` spec from the graph (the generated-union pattern): the union of the example's literal step strings; tests bind handlers against it, so spec-side drift is a compile error — derived, never authored, importable *because* it is a projection | importing the authored spec |
-| **example space** | the typed parameter vocabulary a parent `behavior` spec's steps declare; the space its child examples bind points in — the sibling set shares one vocabulary | "variables" |
+| **example space** | the typed parameter vocabulary a parent spec's steps declare — typically a `behavior` spec; any kind may own the space when the vocabulary parameterizes its own law (`rule` and `model` parents are lawful); the space its child examples bind points in — the sibling set shares one vocabulary | "variables" |
 | **parameter slot** (short: **slot**) | one typed placeholder in a step's text | — |
 | **bound point** | the concrete slot values an `example` child binds for the steps it uses; partial points are honest — an unbound slot in a *used* step caps the example below `defined` (the **concreteness law**, one structural floor clause) | — |
 | **space contract** | the per-parent derived sibling of the step contract: the typed dimensions of the example space, every child's bound point, and the Outcome union derived from the parent's Then vocabulary | — |
