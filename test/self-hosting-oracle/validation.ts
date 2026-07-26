@@ -16,13 +16,233 @@ export const validationSpecs = [
       behavior: {
         rules: [
           "A Spec may state a readiness only when every clause in that readiness floor passes.",
+          "Floors are cumulative: a stated rung is checked against its own clauses and every lower rung's, so a Spec that clears a higher rung has cleared each one beneath it.",
+          "The `idea` floor reads the envelope through five clauses: the Spec carries a stable id, a human-readable title, a stated kind, and a stated altitude, and it either states its intended outcome or declares a parent relation through `refines`.",
+          "The `scoped` floor adds three clauses: the intended outcome is stated, at least one authored relation is declared, and the kind's natural evidence is present.",
+          "The `defined` floor adds two clauses: the kind's natural evidence is complete, and no open question the Spec records is flagged as blocking.",
           "The `ready` floor reads the Spec's own edges through three clauses: every authored relation resolves to a known target, every `refines` and `dependsOn` target itself stands at least `defined`, and every anchor bound to the Spec resolves.",
           "The anchor clause reads the bindings that are present, so a Spec carrying no anchor clears it — the floor never demands a binding an author has not made.",
-          "The floor table in `src/validate/readiness-floor.ts` is the clause set's code-level source of truth and the realizing entrypoint; the clauses of the lower rungs are stated there and are not re-enumerated here.",
+          "Only relations the Spec itself declares count toward the relation clauses; membership of a Pack is derived from the manifest and never stands in for an authored relation.",
+          "Every clause stated here is kind-blind. The two evidence clauses are the one kind-conditional place in the floor, and what counts as a kind's natural evidence is stated in full by the refining Spec that carries the per-kind evidence table.",
+          "One clause table serves both readings: it checks the readiness an author states, and it yields derived readiness — the highest rung whose cumulative clauses all pass — which is read beside the stated rung and never overwrites it.",
+          "The floor table in `src/validate/readiness-floor.ts` is the clause set's code-level source of truth and the realizing entrypoint. The clauses stated here and the rows of that table are one law read twice, so any disagreement between them is drift to resolve on one side, never a second floor.",
         ],
+        exampleSpace: {
+          given: [
+            'the graph holds a spec {specId:string} stating readiness {readiness:"scoped"|"defined"}',
+            'the spec {defect:"declares no relation"|"records a blocking open question"}',
+          ],
+          when: ["the graph is validated"],
+          [["t", "hen"].join("")]: [
+            'the report names {findingId:string} at severity {severity:"warning"|"error"}',
+            "the finding names the unmet floor clause {clauseId:string}",
+            "the report holds {errorCount:number} errors",
+          ],
+        },
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:validation.readiness-floor.unrelated-scoped-spec",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/readiness-floor.unrelated-scoped-spec.sdp.md",
+    title: "A scoped spec with no relation names the relation clause",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the scoped rung where every clause but the relation clause is satisfied.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.unrelated-scoped"} stating readiness {readiness: "scoped"}',
+              'the spec {defect: "declares no relation"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "honesty/readiness-floor"} at severity {severity: "error"}',
+              'the finding names the unmet floor clause {clauseId: "at-least-one-relation"}',
+              "the report holds {errorCount: 1} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.readiness-floor.blocking-open-question",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/readiness-floor.blocking-open-question.sdp.md",
+    title: "A blocking open question holds a spec below defined",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the defined rung where a recorded open question is flagged as blocking.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.blocked-defined"} stating readiness {readiness: "defined"}',
+              'the spec {defect: "records a blocking open question"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "honesty/readiness-floor"} at severity {severity: "error"}',
+              'the finding names the unmet floor clause {clauseId: "no-blocking-open-questions"}',
+              "the report holds {errorCount: 1} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.kind-evidence",
+    specKind: "rule",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/validation/kind-evidence.sdp.md",
+    title: "Each kind carries its own evidence",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "State what a Spec of each kind must show before its readiness floor accepts the evidence clauses.",
+      },
+      behavior: {
+        rules: [
+          "Each kind names its natural evidence: the `scoped` rung requires that evidence present, and the `defined` rung requires it complete wherever the kind defines a stronger form. This table is the whole kind-aware story — there is no second overlay mechanism.",
+          "`behavior`, `workflow`, and `contract` share one row. Evidence is present with rules, examples, flows, or constraints — inline, or promoted onto a refining child or a `constrainedBy` constraint. Evidence is complete with rules and/or examples, inline or promoted; constraints alone no longer suffice.",
+          "A `rule` converges across the two rungs: its statement is its evidence, because a rule's content is its statement.",
+          "An `example` shows evidence present with an examples entry, prose acceptable. It shows evidence complete with at least one structured given/when/then entry whose every used step is fully bound and belongs compatibly to any example space its parent owns — the concreteness law.",
+          "A `constraint` shows evidence present with a non-empty constraints section, and complete when every entry carries a machine-readable target.",
+          "A `model` converges on non-empty terms: a vocabulary either has terms or it does not.",
+          "A `decision` shows evidence present once its decision section is there — context and alternatives may precede the choice — and complete once the chosen option is written.",
+          "The `contract` row stands on the behavior row as a named deferral: when a dedicated contract section lands, the typing law pulls it in and this row repoints to it.",
+          "Promoted evidence carries an honesty bound. A promoted child counts only when it is a `rule` or `example` Spec that itself clears its own kind's present cell, and a `constrainedBy` edge counts only when it resolves to a `constraint` Spec carrying its constraints — promotion moves content out, so an empty stub child is not a promotion and confers nothing.",
+          "The rows are monotonic, promotion-neutral, and converge honestly where a kind has no stronger form; those three bounds belong to the decision this Spec is shaped by and to the carried-evidence decision, and are not restated as law here.",
+          "The evidence table in `src/validate/readiness-floor.ts` is the row set's code-level source of truth and the realizing entrypoint; the rows stated here and that table are one law read twice, so any disagreement between them is drift to resolve on one side.",
+        ],
+        exampleSpace: {
+          given: [
+            'the graph holds a {kind:"behavior"|"constraint"} spec {specId:string} stating readiness {readiness:"scoped"|"defined"}',
+            'its only evidence is {evidence:"a constraints entry carrying a target"|"a constraints entry with no target"|"an empty promoted rule child"}',
+          ],
+          when: ["the graph is validated"],
+          [["t", "hen"].join("")]: [
+            'the report names {findingId:string} at severity {severity:"warning"|"error"}',
+            "the finding names the unmet floor clause {clauseId:string}",
+            "the report holds {errorCount:number} errors",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.kind-evidence.constraints-alone",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/kind-evidence.constraints-alone.sdp.md",
+    title: "Constraints alone stop short of complete behavior evidence",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the behavior-family row where the only evidence is the form that clears present but not complete.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a {kind: "behavior"} spec {specId: "spec:probe.constraints-alone"} stating readiness {readiness: "defined"}',
+              'its only evidence is {evidence: "a constraints entry carrying a target"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "honesty/readiness-floor"} at severity {severity: "error"}',
+              'the finding names the unmet floor clause {clauseId: "kind-evidence-complete"}',
+              "the report holds {errorCount: 1} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.kind-evidence.untargeted-constraint",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/kind-evidence.untargeted-constraint.sdp.md",
+    title: "A constraint without a machine-readable target is not complete",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the constraint row where the entry is present but carries no target a machine can read.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a {kind: "constraint"} spec {specId: "spec:probe.untargeted-constraint"} stating readiness {readiness: "defined"}',
+              'its only evidence is {evidence: "a constraints entry with no target"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "honesty/readiness-floor"} at severity {severity: "error"}',
+              'the finding names the unmet floor clause {clauseId: "kind-evidence-complete"}',
+              "the report holds {errorCount: 1} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.kind-evidence.empty-promoted-child",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/kind-evidence.empty-promoted-child.sdp.md",
+    title: "An empty promoted child confers no evidence",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the promoted-evidence bound where a refining child carries none of its own kind's evidence.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a {kind: "behavior"} spec {specId: "spec:probe.empty-promotion"} stating readiness {readiness: "scoped"}',
+              'its only evidence is {evidence: "an empty promoted rule child"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "honesty/readiness-floor"} at severity {severity: "error"}',
+              'the finding names the unmet floor clause {clauseId: "kind-evidence-present"}',
+              "the report holds {errorCount: 1} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.duplicate-ids",

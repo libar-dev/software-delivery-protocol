@@ -9,6 +9,11 @@ import { sectionAuthoredFactContract } from "../generated/contracts/validation.a
 import { unearnedStatedFactContract } from "../generated/contracts/validation.authored-honesty.unearned-stated-fact.contract.js";
 import { danglingTargetContract } from "../generated/contracts/validation.referential-integrity.dangling-target.contract.js";
 import { didYouMeanContract } from "../generated/contracts/validation.referential-integrity.did-you-mean.contract.js";
+import { blockingOpenQuestionContract } from "../generated/contracts/validation.readiness-floor.blocking-open-question.contract.js";
+import { unrelatedScopedSpecContract } from "../generated/contracts/validation.readiness-floor.unrelated-scoped-spec.contract.js";
+import { constraintsAloneContract } from "../generated/contracts/validation.kind-evidence.constraints-alone.contract.js";
+import { emptyPromotedChildContract } from "../generated/contracts/validation.kind-evidence.empty-promoted-child.contract.js";
+import { untargetedConstraintContract } from "../generated/contracts/validation.kind-evidence.untargeted-constraint.contract.js";
 import { collapsedEdgeClaimContract } from "../generated/contracts/validation.claim-separation.collapsed-edge-claim.contract.js";
 import { unratifiedDescriptorContract } from "../generated/contracts/validation.claim-separation.unratified-descriptor.contract.js";
 import { incoherentAggregateContract } from "../generated/contracts/validation.pack-coherence.incoherent-aggregate.contract.js";
@@ -97,6 +102,220 @@ function namesFinding(
   expect(findings.length).toBeGreaterThan(0);
   expect(findings.every((finding) => finding.severity === params.severity)).toBe(true);
 }
+
+/**
+ * A decision endpoint terminates the relation chain honestly: only the `ready` rung reads
+ * dependsOn and refines targets, so a decidedBy edge satisfies the relation clause without adding
+ * a second thing that could refuse below `ready`.
+ */
+function declareDecisionRelation(world: ValidatorWorld): void {
+  const decisionId = `${world.subjectId}-decider`;
+
+  world.nodes.push(probeSpec(decisionId, { kind: "decision" }));
+  world.edges.push({
+    from: world.subjectId,
+    type: "decidedBy",
+    to: decisionId,
+    claim: "declared",
+  });
+}
+
+/** Replaces the subject probe in place, so a step may enrich the node an earlier step pushed. */
+function reviseSubject(
+  world: ValidatorWorld,
+  revise: (node: PrimitiveNode) => PrimitiveNode,
+  failure: string,
+): void {
+  const index = world.nodes.findIndex((entry) => entry.id === world.subjectId);
+  const node = world.nodes[index];
+
+  if (node?.nodeType !== "Primitive") {
+    throw new Error(failure);
+  }
+
+  world.nodes[index] = revise(node);
+}
+
+/** The shared Then step of the floor family: exactly one clause refuses, and it is the named one. */
+function namesUnmetClause(world: ValidatorWorld, params: { readonly clauseId: string }): void {
+  const findings = findingsOf(world, "honesty/readiness-floor");
+
+  expect(findings.map((finding) => finding.relatedId)).toEqual([params.clauseId]);
+  expect(findings.map((finding) => finding.subjectId)).toEqual([world.subjectId]);
+  expect(findings.map((finding) => finding.path)).toEqual(["readiness"]);
+}
+
+function holdsErrorCount(world: ValidatorWorld, params: { readonly errorCount: number }): void {
+  expect(reportOf(world).findings.filter((finding) => finding.severity === "error")).toHaveLength(
+    params.errorCount,
+  );
+}
+
+/* ----- spec:validation.readiness-floor ----- */
+
+const readinessFloorBindings = {
+  "the graph holds a spec {specId} stating readiness {readiness}": (
+    world: ValidatorWorld,
+    params: { readonly specId: string; readonly readiness: "scoped" | "defined" },
+  ) => {
+    world.subjectId = params.specId;
+    world.nodes.push(probeSpec(params.specId, { readiness: params.readiness }));
+  },
+  "the spec {defect}": (
+    world: ValidatorWorld,
+    params: { readonly defect: "declares no relation" | "records a blocking open question" },
+  ) => {
+    if (params.defect === "declares no relation") {
+      return;
+    }
+
+    // Every other clause of the stated rung still passes: the blocked probe declares its relation
+    // and keeps its kind evidence, so the open-questions clause is the only one that can refuse.
+    reviseSubject(
+      world,
+      (node) => ({
+        ...node,
+        sections: {
+          ...node.sections,
+          intent: {
+            ...node.sections?.intent,
+            openQuestions: [
+              { question: "Which rung does the probe honestly stand at?", blocking: true },
+            ],
+          },
+        },
+      }),
+      "The spec step must run before its open question is recorded.",
+    );
+    declareDecisionRelation(world);
+  },
+  "the graph is validated": validate,
+  "the report names {findingId} at severity {severity}": namesFinding,
+  "the finding names the unmet floor clause {clauseId}": namesUnmetClause,
+  "the report holds {errorCount} errors": holdsErrorCount,
+};
+
+const unrelatedScopedSpecTestAnchor = specTest({
+  id: testAnchorId("test:protocol.readiness-floor.unrelated-scoped-spec"),
+  label: "the unrelated-scoped point verifies the relation clause of the scoped rung",
+  verifies: ref("spec:validation.readiness-floor.unrelated-scoped-spec"),
+});
+void unrelatedScopedSpecTestAnchor;
+
+bindExample(unrelatedScopedSpecContract, validatorWorld, readinessFloorBindings);
+
+const blockingOpenQuestionTestAnchor = specTest({
+  id: testAnchorId("test:protocol.readiness-floor.blocking-open-question"),
+  label: "the blocked-question point verifies the open-questions clause of the defined rung",
+  verifies: ref("spec:validation.readiness-floor.blocking-open-question"),
+});
+void blockingOpenQuestionTestAnchor;
+
+bindExample(blockingOpenQuestionContract, validatorWorld, readinessFloorBindings);
+
+/* ----- spec:validation.kind-evidence ----- */
+
+/** A probe carrying no kind evidence at all, so the evidence step alone decides what it shows. */
+function evidencelessProbe(id: string, kind: SpecKind, readiness: SpecReadiness): PrimitiveNode {
+  return {
+    id,
+    nodeType: "Primitive",
+    claim: "declared",
+    specKind: kind,
+    altitude: "feature",
+    readiness,
+    title: `Probe for ${id}`,
+    file: "specs/probe.sdp.md",
+    sections: { intent: { outcome: `Probe the per-kind evidence table at "${id}".` } },
+  };
+}
+
+const kindEvidenceBindings = {
+  "the graph holds a {kind} spec {specId} stating readiness {readiness}": (
+    world: ValidatorWorld,
+    params: {
+      readonly kind: "behavior" | "constraint";
+      readonly specId: string;
+      readonly readiness: "scoped" | "defined";
+    },
+  ) => {
+    world.subjectId = params.specId;
+    world.nodes.push(evidencelessProbe(params.specId, params.kind, params.readiness));
+    // The relation clause is not the law under test, so the probe always declares one.
+    declareDecisionRelation(world);
+  },
+  "its only evidence is {evidence}": (
+    world: ValidatorWorld,
+    params: {
+      readonly evidence:
+        | "a constraints entry carrying a target"
+        | "a constraints entry with no target"
+        | "an empty promoted rule child";
+    },
+  ) => {
+    if (params.evidence === "an empty promoted rule child") {
+      // Promotion moves content out, so a stub child carrying none of its own kind's evidence is
+      // not a promotion: it resolves, it refines, and it still confers nothing.
+      const childId = `${world.subjectId}.promoted-stub`;
+
+      world.nodes.push(evidencelessProbe(childId, "rule", "idea"));
+      world.edges.push({
+        from: childId,
+        type: "refines",
+        to: world.subjectId,
+        claim: "declared",
+      });
+      return;
+    }
+
+    reviseSubject(
+      world,
+      (node) => ({
+        ...node,
+        sections: {
+          ...node.sections,
+          constraints: [
+            params.evidence === "a constraints entry carrying a target"
+              ? { statement: "The probe answers within its budget.", target: "p95 < 200ms" }
+              : { statement: "The probe answers quickly enough." },
+          ],
+        },
+      }),
+      "The spec step must run before its evidence is placed.",
+    );
+  },
+  "the graph is validated": validate,
+  "the report names {findingId} at severity {severity}": namesFinding,
+  "the finding names the unmet floor clause {clauseId}": namesUnmetClause,
+  "the report holds {errorCount} errors": holdsErrorCount,
+};
+
+const constraintsAloneTestAnchor = specTest({
+  id: testAnchorId("test:protocol.kind-evidence.constraints-alone"),
+  label: "the constraints-alone point verifies the behavior-family complete cell",
+  verifies: ref("spec:validation.kind-evidence.constraints-alone"),
+});
+void constraintsAloneTestAnchor;
+
+bindExample(constraintsAloneContract, validatorWorld, kindEvidenceBindings);
+
+const untargetedConstraintTestAnchor = specTest({
+  id: testAnchorId("test:protocol.kind-evidence.untargeted-constraint"),
+  label: "the untargeted-constraint point verifies the constraint row's target requirement",
+  verifies: ref("spec:validation.kind-evidence.untargeted-constraint"),
+});
+void untargetedConstraintTestAnchor;
+
+bindExample(untargetedConstraintContract, validatorWorld, kindEvidenceBindings);
+
+const emptyPromotedChildTestAnchor = specTest({
+  id: testAnchorId("test:protocol.kind-evidence.empty-promoted-child"),
+  label: "the empty-promotion point verifies the promoted-evidence honesty bound",
+  verifies: ref("spec:validation.kind-evidence.empty-promoted-child"),
+});
+void emptyPromotedChildTestAnchor;
+
+bindExample(emptyPromotedChildContract, validatorWorld, kindEvidenceBindings);
 
 /* ----- spec:validation.warn-level-signals ----- */
 
