@@ -656,8 +656,16 @@ dissolution decision requires, rather than on a plan ruling that widened the cri
   workflow: 1 · constraint: 1`.
 - **Tests:** **559 passing** across 41 files under the wrapper's two legs (505 in the parallel pool,
   54 in the dedicated CLI process); zero skipped, zero deleted this phase.
-- **Gate:** the full twelve-leg `npm run check` green at the close commit, plus the clean-clone
-  proof recorded in §10's S6 row.
+- **Gate:** the full twelve-leg `npm run check` green in the working checkout, and green again in
+  a **clean clone** — `git clone --no-local` of this repository into a scratch root outside it,
+  `npm ci`, then the whole chain — at the close commit `268d1cb`. The clone reproduced the same
+  numbers (87 specs · 1 pack · 65 anchors → 153 nodes · 294 edges, 0 errors · 0 warnings; the
+  example corpus at 11 specs with its one recorded `invalid-cart` warning; 505 + 54 tests; a clean
+  `preflight` and an empty `git status`), which is the determinism claim proved rather than
+  asserted. The **first** clone run failed at the lint leg and found a real gate hole — the
+  clean-room contract exemption had never been extended past the two bound suites that existed
+  when it was written (S6 ruling 7). It was fixed, re-committed, and re-cloned; only the record of
+  the result follows the proven commit.
 - **Review:** `reviews/09-self-hosting-phase-3-pre-close-review.md`, with its disposition table
   filled and a remediation addendum.
 
@@ -950,7 +958,7 @@ commit series on the effort branch. This ledger is git process evidence, never g
 | S3 | corpus additions (§3) + codegen/runner/notation conversions | orchestrator-verified green gate | done — 2 new specs + 1 enrichment; 7 points bound across 3 parents; 2 new `impl:` anchors; one green-gate conversion commit |
 | S4 | readiness maturation sweep (ruling 5) | orchestrator-verified green gate | done — 40 `defined` specs swept; 4 promoted (2 enriched in place, 2 converted) + 3 new points at `ready`; 36 recorded as honest `defined`; one green-gate sweep commit |
 | S5 | per-doc audits + first dissolutions (§4) | orchestrator-verified green gate over the regenerated Design Review | done — five audits recorded (§7); `02` and `03` deleted with their full reference sweeps; `05`, `06`, `07` stay with 11 gaps recorded as future corpus work; D1/D2 re-pointed; three green-gate commits |
-| S6 | adversarial review, remediation, full close, done-record | full chain + clean-clone; review archived | done — review archived and all 15 findings dispositioned; four majors and seven minors remediated across two green-gate commits; §5 / §7 / §8 / §9 terminal records written; full `npm run check` green and the clean-clone proof run at the close commit |
+| S6 | adversarial review, remediation, full close, done-record | full chain + clean-clone; review archived | done — review archived and all 15 findings dispositioned; four majors and seven minors remediated across two green-gate commits; §5 / §7 / §8 / §9 terminal records written; the twelve-leg `npm run check` green in the checkout and again in a clean clone at `268d1cb` after that clone caught, and the phase fixed, a clean-room lint hole (S6 ruling 7) |
 
 Owner ratification of every gate above happens at the phase PR review; no live owner acceptance
 is claimed by this ledger.
