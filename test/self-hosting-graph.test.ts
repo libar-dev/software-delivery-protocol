@@ -839,7 +839,7 @@ const expectedSpecs = [
     id: "spec:validation.claim-separation",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/claim-separation.sdp.md",
     title: "Graph claims and contracts stay distinct",
     narrative: null,
@@ -851,17 +851,93 @@ const expectedSpecs = [
       behavior: {
         rules: [
           "Node and edge types, claims, descriptors, and relation endpoint contracts must use their ratified forms; the claim taxonomy never collapses.",
+          "An unratified descriptor value fails closed: it is a conformance error, and no readiness floor is evaluated over it.",
           "The realizing validator entrypoint is `checkClaimSeparation` in `src/validate/validators.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            "the graph holds a spec {specId:string}",
+            'the graph carries an off-contract {element:"edge claim"|"descriptor value"} spelled {value:string}',
+          ],
+          when: ["the graph is validated"],
+          [["t", "hen"].join("")]: [
+            'the report names {findingId:string} at severity {severity:"warning"|"error"}',
+            "the finding message states {phrase:string}",
+            "the report holds {floorCount:number} readiness-floor findings",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.claim-separation.collapsed-edge-claim",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/claim-separation.collapsed-edge-claim.sdp.md",
+    title: "A binding edge cannot borrow the declared claim",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the edge-contract law where a satisfies edge carries the authored claim.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.create-order"}',
+              'the graph carries an off-contract {element: "edge claim"} spelled {value: "declared"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "conformance/claim-separation"} at severity {severity: "error"}',
+              'the finding message states {phrase: "never collapsed"}',
+              "the report holds {floorCount: 0} readiness-floor findings",
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.claim-separation.unratified-descriptor",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/claim-separation.unratified-descriptor.sdp.md",
+    title: "An unratified kind fails closed instead of reaching the floor",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the descriptor law where a foreign producer states a kind the model never ratified.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.create-order"}',
+              'the graph carries an off-contract {element: "descriptor value"} spelled {value: "saga"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "conformance/claim-separation"} at severity {severity: "error"}',
+              'the finding message states {phrase: "outside the ratified descriptor values"}',
+              "the report holds {floorCount: 0} readiness-floor findings",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.verification-linkage",
     specKind: "rule",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/verification-linkage.sdp.md",
     title: "Declared verification resolves to a performing trace",
     narrative: null,
@@ -873,17 +949,90 @@ const expectedSpecs = [
       behavior: {
         rules: [
           "A declared verifies relation and an oracle model relation must resolve through their respective binding traces before either can stand as verification evidence.",
+          "A non-resolving trace is named loudly and confers no delivery fact, because silence would read as verification the graph never earned.",
           "The realizing validator entrypoints are `checkVerifiesLinkage` and `checkOracleLinkage` in `src/validate/validators.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            "the graph holds a parent spec {parentId:string}",
+            'a non-resolving {verifierKind:"example spec"|"oracle anchor"} named {verifierId:string} points at it',
+          ],
+          when: ["the graph is validated"],
+          [["t", "hen"].join("")]: [
+            'the report names {findingId:string} at severity {severity:"warning"|"error"}',
+            "the parent earns the delivery fact has-verifier: {conferred:boolean}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.verification-linkage.unbound-example",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/verification-linkage.unbound-example.sdp.md",
+    title: "A declared verifier no test binds confers nothing",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the verifies-linkage law where no test anchor completes the spec-to-test trace.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a parent spec {parentId: "spec:probe.create-order"}',
+              'a non-resolving {verifierKind: "example spec"} named {verifierId: "spec:probe.create-order.valid-cart"} points at it',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "conformance/verifies-linkage"} at severity {severity: "warning"}',
+              "the parent earns the delivery fact has-verifier: {conferred: false}",
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.verification-linkage.unresolved-oracle",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/verification-linkage.unresolved-oracle.sdp.md",
+    title: "An oracle with no example space to model confers nothing",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the oracle-linkage law where the modelled spec owns no example space.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a parent spec {parentId: "spec:probe.order-policy"}',
+              'a non-resolving {verifierKind: "oracle anchor"} named {verifierId: "oracle:probe.order-policy"} points at it',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "conformance/oracle-linkage"} at severity {severity: "error"}',
+              "the parent earns the delivery fact has-verifier: {conferred: false}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.pack-coherence",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/pack-coherence.sdp.md",
     title: "Packs are coherent aggregates",
     narrative: null,
@@ -895,11 +1044,53 @@ const expectedSpecs = [
       behavior: {
         rules: [
           "Pack membership must not repeat a Spec, and every modelRef must resolve to a model-kind Spec.",
+          "Membership is counted on the derived belongsTo edges the manifest re-expresses, so a repeated manifest entry is named once per repeated member.",
           "The realizing validator entrypoint is `checkPackCoherence` in `src/validate/validators.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            "a pack {packId:string} lists the spec {specId:string} {memberCount:number} times",
+            "the pack also names that spec as a modelRef",
+          ],
+          when: ["the graph is validated"],
+          [["t", "hen"].join("")]: [
+            'the report names {findingId:string} at severity {severity:"warning"|"error"}',
+            "the report holds {findingCount:number} pack-coherence findings",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.pack-coherence.incoherent-aggregate",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/pack-coherence.incoherent-aggregate.sdp.md",
+    title: "A repeated member and a non-model modelRef are both named",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute both halves of the pack law against one incoherent aggregate.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a pack {packId: "pack:probe.checkout"} lists the spec {specId: "spec:probe.create-order"} {memberCount: 2} times',
+              "the pack also names that spec as a modelRef",
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              'the report names {findingId: "conformance/pack-coherence"} at severity {severity: "error"}',
+              "the report holds {findingCount: 2} pack-coherence findings",
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.authored-honesty",
@@ -1755,6 +1946,11 @@ const expectedPackMembers = [
   "spec:validation.referential-integrity.did-you-mean",
   "spec:validation.authored-honesty.section-authored-fact",
   "spec:validation.authored-honesty.unearned-stated-fact",
+  "spec:validation.claim-separation.collapsed-edge-claim",
+  "spec:validation.claim-separation.unratified-descriptor",
+  "spec:validation.verification-linkage.unbound-example",
+  "spec:validation.verification-linkage.unresolved-oracle",
+  "spec:validation.pack-coherence.incoherent-aggregate",
   "spec:decisions.plain-language-references",
   "spec:decisions.concept-docs-dissolve",
   "spec:decisions.one-validation-path",
@@ -1840,8 +2036,58 @@ const expectedDeclaredRelations = [
     "spec:validation.referential-integrity",
   ],
   ["spec:validation.claim-separation", "refines", "spec:validation.two-check-families"],
+  [
+    "spec:validation.claim-separation.collapsed-edge-claim",
+    "refines",
+    "spec:validation.claim-separation",
+  ],
+  [
+    "spec:validation.claim-separation.collapsed-edge-claim",
+    "verifies",
+    "spec:validation.claim-separation",
+  ],
+  [
+    "spec:validation.claim-separation.unratified-descriptor",
+    "refines",
+    "spec:validation.claim-separation",
+  ],
+  [
+    "spec:validation.claim-separation.unratified-descriptor",
+    "verifies",
+    "spec:validation.claim-separation",
+  ],
   ["spec:validation.verification-linkage", "refines", "spec:validation.two-check-families"],
+  [
+    "spec:validation.verification-linkage.unbound-example",
+    "refines",
+    "spec:validation.verification-linkage",
+  ],
+  [
+    "spec:validation.verification-linkage.unbound-example",
+    "verifies",
+    "spec:validation.verification-linkage",
+  ],
+  [
+    "spec:validation.verification-linkage.unresolved-oracle",
+    "refines",
+    "spec:validation.verification-linkage",
+  ],
+  [
+    "spec:validation.verification-linkage.unresolved-oracle",
+    "verifies",
+    "spec:validation.verification-linkage",
+  ],
   ["spec:validation.pack-coherence", "refines", "spec:validation.two-check-families"],
+  [
+    "spec:validation.pack-coherence.incoherent-aggregate",
+    "refines",
+    "spec:validation.pack-coherence",
+  ],
+  [
+    "spec:validation.pack-coherence.incoherent-aggregate",
+    "verifies",
+    "spec:validation.pack-coherence",
+  ],
   ["spec:validation.authored-honesty", "refines", "spec:validation.two-check-families"],
   [
     "spec:validation.authored-honesty.section-authored-fact",
@@ -2141,6 +2387,56 @@ const expectedAnchors = [
     site: "bindExample(unearnedStatedFactContract",
   },
   {
+    id: "test:protocol.claim-separation.collapsed-edge-claim",
+    nodeType: "Anchor",
+    label: "the collapsed-claim point verifies the binding-edge contract row",
+    type: "verifies",
+    target: "spec:validation.claim-separation.collapsed-edge-claim",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "collapsedEdgeClaimTestAnchor",
+    site: "bindExample(collapsedEdgeClaimContract",
+  },
+  {
+    id: "test:protocol.claim-separation.unratified-descriptor",
+    nodeType: "Anchor",
+    label: "the unratified-kind point verifies the fail-closed descriptor law",
+    type: "verifies",
+    target: "spec:validation.claim-separation.unratified-descriptor",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "unratifiedDescriptorTestAnchor",
+    site: "bindExample(unratifiedDescriptorContract",
+  },
+  {
+    id: "test:protocol.verification-linkage.unbound-example",
+    nodeType: "Anchor",
+    label: "the unbound-example point verifies the incomplete spec-to-test trace",
+    type: "verifies",
+    target: "spec:validation.verification-linkage.unbound-example",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "unboundExampleTestAnchor",
+    site: "bindExample(unboundExampleContract",
+  },
+  {
+    id: "test:protocol.verification-linkage.unresolved-oracle",
+    nodeType: "Anchor",
+    label: "the unresolved-oracle point verifies the oracle binding refusal",
+    type: "verifies",
+    target: "spec:validation.verification-linkage.unresolved-oracle",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "unresolvedOracleTestAnchor",
+    site: "bindExample(unresolvedOracleContract",
+  },
+  {
+    id: "test:protocol.pack-coherence.incoherent-aggregate",
+    nodeType: "Anchor",
+    label: "the incoherent-aggregate point verifies both halves of the pack law",
+    type: "verifies",
+    target: "spec:validation.pack-coherence.incoherent-aggregate",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "incoherentAggregateTestAnchor",
+    site: "bindExample(incoherentAggregateContract",
+  },
+  {
     id: "test:protocol.sdp-import.round-trip",
     nodeType: "Anchor",
     label: "TypeScript import round-trip contract preserves authored data",
@@ -2381,7 +2677,7 @@ describe("the self-hosting corpus", () => {
         subjectId,
       })),
     ).toEqual(expectedWarnings);
-    expect(result.counts).toEqual({ specs: 64, packs: 1, anchors: 42 });
+    expect(result.counts).toEqual({ specs: 69, packs: 1, anchors: 47 });
     expect(nodeIds).toEqual(
       [
         "pack:self-hosting-v1",
@@ -2449,10 +2745,15 @@ describe("the self-hosting corpus", () => {
         "spec:validation.referential-integrity.did-you-mean",
         "spec:validation.authored-honesty.section-authored-fact",
         "spec:validation.authored-honesty.unearned-stated-fact",
+        "spec:validation.claim-separation.collapsed-edge-claim",
+        "spec:validation.claim-separation.unratified-descriptor",
+        "spec:validation.verification-linkage.unbound-example",
+        "spec:validation.verification-linkage.unresolved-oracle",
+        "spec:validation.pack-coherence.incoherent-aggregate",
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
-    expect(result.graph.nodes).toHaveLength(107);
+    expect(result.graph.nodes).toHaveLength(117);
     expect(
       primitiveNodes
         .map((node) => ({
@@ -2496,7 +2797,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 48, ready: 16 });
+    ).toEqual({ defined: 45, ready: 24 });
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
@@ -2511,7 +2812,7 @@ describe("the self-hosting corpus", () => {
       modelRefs: ["spec:model.protocol-domain", "spec:model.core-model"],
       file: "specs/self-hosting.pack.sdp.ts",
     });
-    expect(result.graph.edges).toHaveLength(204);
+    expect(result.graph.edges).toHaveLength(224);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")

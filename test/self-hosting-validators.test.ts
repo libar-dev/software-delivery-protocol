@@ -9,9 +9,15 @@ import { sectionAuthoredFactContract } from "../generated/contracts/validation.a
 import { unearnedStatedFactContract } from "../generated/contracts/validation.authored-honesty.unearned-stated-fact.contract.js";
 import { danglingTargetContract } from "../generated/contracts/validation.referential-integrity.dangling-target.contract.js";
 import { didYouMeanContract } from "../generated/contracts/validation.referential-integrity.did-you-mean.contract.js";
-import { schemaVersion, validateGraph } from "../src/index.js";
+import { collapsedEdgeClaimContract } from "../generated/contracts/validation.claim-separation.collapsed-edge-claim.contract.js";
+import { unratifiedDescriptorContract } from "../generated/contracts/validation.claim-separation.unratified-descriptor.contract.js";
+import { incoherentAggregateContract } from "../generated/contracts/validation.pack-coherence.incoherent-aggregate.contract.js";
+import { unboundExampleContract } from "../generated/contracts/validation.verification-linkage.unbound-example.contract.js";
+import { unresolvedOracleContract } from "../generated/contracts/validation.verification-linkage.unresolved-oracle.contract.js";
+import { computeDeliveryFacts, schemaVersion, validateGraph } from "../src/index.js";
 import type {
   Finding,
+  GraphClaim,
   GraphEdge,
   GraphNode,
   PrimitiveNode,
@@ -302,3 +308,220 @@ const unearnedStatedFactTestAnchor = specTest({
 void unearnedStatedFactTestAnchor;
 
 bindExample(unearnedStatedFactContract, validatorWorld, authoredHonestyBindings);
+
+/* ----- spec:validation.claim-separation ----- */
+
+const claimSeparationBindings = {
+  "the graph holds a spec {specId}": (
+    world: ValidatorWorld,
+    params: { readonly specId: string },
+  ) => {
+    world.subjectId = params.specId;
+    world.nodes.push(probeSpec(params.specId));
+  },
+  "the graph carries an off-contract {element} spelled {value}": (
+    world: ValidatorWorld,
+    params: {
+      readonly element: "edge claim" | "descriptor value";
+      readonly value: string;
+    },
+  ) => {
+    const node = world.nodes[world.nodes.length - 1];
+
+    if (node?.nodeType !== "Primitive") {
+      throw new Error("The spec step must run before the off-contract shape is placed.");
+    }
+
+    if (params.element === "descriptor value") {
+      world.nodes[world.nodes.length - 1] = { ...node, specKind: params.value as SpecKind };
+      return;
+    }
+
+    const binderId = "impl:probe.create-order-use-case";
+    world.nodes.push({
+      id: binderId,
+      nodeType: "CodeNode",
+      claim: "anchored",
+      file: "src/probe/create-order.use-case.ts",
+      line: 3,
+    });
+    world.edges.push({
+      from: binderId,
+      type: "satisfies",
+      to: world.subjectId,
+      claim: params.value as GraphClaim,
+    });
+  },
+  "the graph is validated": validate,
+  "the report names {findingId} at severity {severity}": namesFinding,
+  "the finding message states {phrase}": (
+    world: ValidatorWorld,
+    params: { readonly phrase: string },
+  ) => {
+    const messages = findingsOf(world, "conformance/claim-separation").map(
+      (finding) => finding.message,
+    );
+
+    expect(messages.filter((message) => message.includes(params.phrase))).toHaveLength(1);
+  },
+  "the report holds {floorCount} readiness-floor findings": (
+    world: ValidatorWorld,
+    params: { readonly floorCount: number },
+  ) => {
+    expect(findingsOf(world, "honesty/readiness-floor")).toHaveLength(params.floorCount);
+  },
+};
+
+const collapsedEdgeClaimTestAnchor = specTest({
+  id: testAnchorId("test:protocol.claim-separation.collapsed-edge-claim"),
+  label: "the collapsed-claim point verifies the binding-edge contract row",
+  verifies: ref("spec:validation.claim-separation.collapsed-edge-claim"),
+});
+void collapsedEdgeClaimTestAnchor;
+
+bindExample(collapsedEdgeClaimContract, validatorWorld, claimSeparationBindings);
+
+const unratifiedDescriptorTestAnchor = specTest({
+  id: testAnchorId("test:protocol.claim-separation.unratified-descriptor"),
+  label: "the unratified-kind point verifies the fail-closed descriptor law",
+  verifies: ref("spec:validation.claim-separation.unratified-descriptor"),
+});
+void unratifiedDescriptorTestAnchor;
+
+bindExample(unratifiedDescriptorContract, validatorWorld, claimSeparationBindings);
+
+/* ----- spec:validation.verification-linkage ----- */
+
+const verificationLinkageBindings = {
+  "the graph holds a parent spec {parentId}": (
+    world: ValidatorWorld,
+    params: { readonly parentId: string },
+  ) => {
+    world.subjectId = params.parentId;
+    world.nodes.push(probeSpec(params.parentId));
+  },
+  "a non-resolving {verifierKind} named {verifierId} points at it": (
+    world: ValidatorWorld,
+    params: {
+      readonly verifierKind: "example spec" | "oracle anchor";
+      readonly verifierId: string;
+    },
+  ) => {
+    if (params.verifierKind === "example spec") {
+      world.nodes.push(probeSpec(params.verifierId, { kind: "example" }));
+      world.edges.push({
+        from: params.verifierId,
+        type: "verifies",
+        to: world.subjectId,
+        claim: "declared",
+      });
+      return;
+    }
+
+    // The oracle anchor resolves as a node and rides its contract row; what it cannot resolve
+    // through is the modelled spec's example space, which the parent probe never owns.
+    world.nodes.push({
+      id: params.verifierId,
+      nodeType: "Anchor",
+      claim: "anchored",
+      file: "test/probe-oracle.test.ts",
+      line: 5,
+    });
+    world.edges.push({
+      from: params.verifierId,
+      type: "models",
+      to: world.subjectId,
+      claim: "anchored",
+    });
+  },
+  "the graph is validated": validate,
+  "the report names {findingId} at severity {severity}": namesFinding,
+  "the parent earns the delivery fact has-verifier: {conferred}": (
+    world: ValidatorWorld,
+    params: { readonly conferred: boolean },
+  ) => {
+    const derived = computeDeliveryFacts(world.nodes, world.edges).get(world.subjectId) ?? [];
+
+    expect(derived.includes("has-verifier")).toBe(params.conferred);
+  },
+};
+
+const unboundExampleTestAnchor = specTest({
+  id: testAnchorId("test:protocol.verification-linkage.unbound-example"),
+  label: "the unbound-example point verifies the incomplete spec-to-test trace",
+  verifies: ref("spec:validation.verification-linkage.unbound-example"),
+});
+void unboundExampleTestAnchor;
+
+bindExample(unboundExampleContract, validatorWorld, verificationLinkageBindings);
+
+const unresolvedOracleTestAnchor = specTest({
+  id: testAnchorId("test:protocol.verification-linkage.unresolved-oracle"),
+  label: "the unresolved-oracle point verifies the oracle binding refusal",
+  verifies: ref("spec:validation.verification-linkage.unresolved-oracle"),
+});
+void unresolvedOracleTestAnchor;
+
+bindExample(unresolvedOracleContract, validatorWorld, verificationLinkageBindings);
+
+/* ----- spec:validation.pack-coherence ----- */
+
+const packCoherenceBindings = {
+  "a pack {packId} lists the spec {specId} {memberCount} times": (
+    world: ValidatorWorld,
+    params: {
+      readonly packId: string;
+      readonly specId: string;
+      readonly memberCount: number;
+    },
+  ) => {
+    world.subjectId = params.packId;
+    world.nodes.push(probeSpec(params.specId));
+    world.nodes.push({
+      id: params.packId,
+      nodeType: "Pack",
+      claim: "declared",
+      title: "Probe aggregate",
+      file: "specs/probe.pack.sdp.ts",
+    });
+
+    // Membership is the manifest re-expressed as belongsTo edges, one per entry — a repeated
+    // manifest entry is a repeated edge, which is what the coherence check counts.
+    for (let entry = 0; entry < params.memberCount; entry += 1) {
+      world.edges.push({
+        from: params.specId,
+        type: "belongsTo",
+        to: params.packId,
+        claim: "declared",
+      });
+    }
+  },
+  "the pack also names that spec as a modelRef": (world: ValidatorWorld) => {
+    const memberId = world.edges.find((edge) => edge.type === "belongsTo")?.from;
+    const packIndex = world.nodes.findIndex((node) => node.id === world.subjectId);
+    const packNode = world.nodes[packIndex];
+
+    if (memberId === undefined || packNode?.nodeType !== "Pack") {
+      throw new Error("The pack step must run before its modelRefs are named.");
+    }
+
+    world.nodes[packIndex] = { ...packNode, modelRefs: [memberId] };
+  },
+  "the graph is validated": validate,
+  "the report names {findingId} at severity {severity}": namesFinding,
+  "the report holds {findingCount} pack-coherence findings": (
+    world: ValidatorWorld,
+    params: { readonly findingCount: number },
+  ) => {
+    expect(findingsOf(world, "conformance/pack-coherence")).toHaveLength(params.findingCount);
+  },
+};
+
+const incoherentAggregateTestAnchor = specTest({
+  id: testAnchorId("test:protocol.pack-coherence.incoherent-aggregate"),
+  label: "the incoherent-aggregate point verifies both halves of the pack law",
+  verifies: ref("spec:validation.pack-coherence.incoherent-aggregate"),
+});
+void incoherentAggregateTestAnchor;
+
+bindExample(incoherentAggregateContract, validatorWorld, packCoherenceBindings);
