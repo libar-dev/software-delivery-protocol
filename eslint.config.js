@@ -3,6 +3,8 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 import { fileURLToPath } from "node:url";
 
+import { rootContractDependentSuite } from "./contract-dependent-suites.mjs";
+
 const tsconfigRootDir = fileURLToPath(new URL(".", import.meta.url));
 const typedTsFiles = ["src/**/*.ts", "test/**/*.ts", "tsup.config.ts", "vitest.config.ts"];
 const exampleTsFiles = ["examples/**/*.ts"];
@@ -50,18 +52,14 @@ export default tseslint.config(
     // The root generated contracts are intentionally absent until the later generate:self-hosting
     // gate leg. Typecheck runs after that generation and checks these tests' contract types; lint
     // keeps all other rules enabled without making the required lint-before-generation order depend
-    // on ignored derived output. This list is the bound-suite half of `vitest-test.mjs`'s root
-    // contract-dependency row — every suite that imports `generated/contracts/` belongs here, and
-    // a suite that derives its graph in memory (the corpus oracle, the contracts self-check) must
-    // not, so lint keeps full strength where nothing is missing in a clean room.
-    files: [
-      "test/self-hosting-carrier.test.ts",
-      "test/self-hosting-duplicate-ids.test.ts",
-      "test/self-hosting-extraction.test.ts",
-      "test/self-hosting-model.test.ts",
-      "test/self-hosting-sdp-import.test.ts",
-      "test/self-hosting-validators.test.ts",
-    ],
+    // on ignored derived output. The file list is derived from the shared
+    // `contract-dependent-suites.mjs` root row — the same rows `vitest-test.mjs` reads, so the two
+    // surfaces can no longer drift apart. Every suite that imports `generated/contracts/` belongs
+    // in that row, and a suite that derives its graph in memory (the corpus oracle, the contracts
+    // self-check) must not, so lint keeps full strength where nothing is missing in a clean room.
+    // Only the root tree's suites appear here: the example tree lints under `exampleTsFiles`,
+    // outside the typed-lint globs these exemptions relax.
+    files: [...rootContractDependentSuite.testPaths],
     rules: {
       "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",

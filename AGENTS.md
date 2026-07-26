@@ -17,7 +17,7 @@ claims; **`src/` and tests** are authoritative evidence of current realization. 
 > machinery landed (plan 13) · authoring **carrier ruled** as `.sdp.md` (the carrier ruling, MD-18;
 > plan 16) — product Markdown parser and self-hosting landed · **canonical-default carrier
 > rule:** Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives
-> as import source and a lawful per-ID option. · **what now:** ✅ EXECUTED — phase-3 implementation complete; the pre-close adversarial review is archived with every finding dispositioned. The prior `EXECUTED — phase-1 implementation complete; final audit passed` and phase-2 statuses remain historic context. The systematic tests-to-executable-specs rewrite ran across the cheap laws and the core model dissolved into Specs; the remaining work is the recorded corpus gaps (the lower readiness-floor clause tables, the derived-readiness banner, and the rest) and the concept docs still standing on their own audits. Build state lives in
+> as import source and a lawful per-ID option. · **what now:** ✅ EXECUTED — phase-4 implementation complete; the pre-close adversarial review is archived with every finding dispositioned. The earlier phase-1 to phase-3 statuses remain historic context. The corpus oracle is split into per-law assertions over one hoisted extraction; one shared module now states the contract-dependent suites for both the test wrapper and the lint config; the floor wave and the view wave carried the readiness-floor clause tables and the projection laws, adding **10 new bound points, each mutation-probed red**. Corpus at **`ready: 66 / defined: 37`** over 103 Specs, 0 errors / 0 warnings. `docs/concept/05` **stays, two clauses short** — a per-team severity override and a team-overridable floor config (gaps 13/14), which are the named next work, beside the `06`/`07` gaps still standing. Build state lives in
 > **`plans/`** — read the highest
 > **primary-numbered** plan's status header, plus any **active subplans it (or its parent family)
 > explicitly designates as current**; ignore unnumbered files and letter-suffixed plans only when
@@ -138,6 +138,9 @@ Every doc honours both — never mistake one half for the other:
 - **Lineage is evidence, not template.** Prior art **`@libar-dev/architect`** (local clone when
   present, e.g. a sibling `architect` checkout) taught us the problem in production; treat its
   *shape* as evidence about the problem, never as the answer.
+- **A "verified" row is re-measured, never inherited.** A docket or ledger row claiming *fixed* or *verified*
+  is re-checked against the tree at the moment of verification, never trusted from the row that closed it —
+  the phase-4 close caught a "verified — intact" row that had been false since the commit after the one it cited.
 - **Git hygiene** follows the global rules (no `git stash`; commit early on a WIP branch; commit/push only when
   asked).
 

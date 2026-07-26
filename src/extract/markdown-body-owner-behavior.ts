@@ -18,8 +18,6 @@ interface OpenQuestion {
   readonly blocking: boolean;
 }
 
-const resultKey = ["t", "hen"].join("");
-
 function isOpenQuestionArray(value: unknown): value is readonly OpenQuestion[] {
   return (
     Array.isArray(value) &&
@@ -64,10 +62,13 @@ export function mapIntent(
           ),
         );
       else {
+        // The GWT result key is the literal word `then`, written directly here and at the
+        // vocabulary site below — never assembled from fragments; nothing in the toolchain
+        // requires or rewards indirection, and the frozen key set stays greppable.
         const example: Record<string, unknown> = {
           given: fence.steps.given,
           when: fence.steps.when,
-          [resultKey]: fence.steps.result,
+          then: fence.steps.result,
         };
         const behavior = isRecord(target.behavior) ? target.behavior : {};
         const examples: unknown[] = [];
@@ -189,7 +190,7 @@ export function mapExampleSpace(
   const vocabulary: Record<string, unknown> = {
     given: fence.steps.given,
     when: fence.steps.when,
-    [resultKey]: fence.steps.result,
+    then: fence.steps.result,
   };
   section.exampleSpace = vocabulary;
 }

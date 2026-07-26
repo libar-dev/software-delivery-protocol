@@ -499,7 +499,6 @@ Behavior description.
   });
 
   it("maps the ruled fences and every remaining typed owner", () => {
-    const resultKey = ["t", "hen"].join("");
     const result = reify(
       carrierBody(
         `# Example carrier
@@ -563,11 +562,11 @@ Then an order is created
       ui: { emptyState: "Explain the next action." },
     });
     expect(result.specs[0]?.data).toHaveProperty(
-      ["behavior", "examples", 0, resultKey],
+      ["behavior", "examples", 0, "then"],
       ["an order is created"],
     );
     expect(result.specs[0]?.data).toHaveProperty(
-      ["behavior", "exampleSpace", resultKey],
+      ["behavior", "exampleSpace", "then"],
       ["an order is created"],
     );
   });

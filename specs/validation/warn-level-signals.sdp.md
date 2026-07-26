@@ -13,6 +13,7 @@ relations:
 
 ## Rule
 - Orphaned Specs and ready Specs lacking a resolving verifier are warnings, not validation errors.
+- The gap signal reads the delivery facts the one derivation rule recomputes from the graph, never the facts a Spec states, so a hand-authored fact can never silence it.
 - The realizing validator entrypoints are `checkOrphans` and `checkGaps` in `src/validate/validators.ts`.
 
 ## Example space

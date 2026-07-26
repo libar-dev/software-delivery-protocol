@@ -4,31 +4,17 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, isAbsolute, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { contractDependentSuites } from "./contract-dependent-suites.mjs";
+
 const argv = process.argv.slice(2);
 const vitestArgs = argv.includes("--run") ? argv : ["--run", ...argv];
 const repositoryRoot = dirname(fileURLToPath(import.meta.url));
 
 // One row per generated contract tree, listing every test file that imports from it. Rows stay
 // per-tree so the recovery command a missing tree names is stated once, never repeated per suite.
-const contractDependencies = [
-  {
-    contracts: "generated/contracts",
-    generation: "npm run generate:self-hosting",
-    testPaths: [
-      "test/self-hosting-carrier.test.ts",
-      "test/self-hosting-duplicate-ids.test.ts",
-      "test/self-hosting-extraction.test.ts",
-      "test/self-hosting-model.test.ts",
-      "test/self-hosting-sdp-import.test.ts",
-      "test/self-hosting-validators.test.ts",
-    ],
-  },
-  {
-    contracts: "examples/checkout-v1/generated/contracts",
-    generation: "npm run generate:example",
-    testPaths: ["examples/checkout-v1/test/orders/create-order.valid-cart.test.ts"],
-  },
-];
+// The rows live in `contract-dependent-suites.mjs` — the shared module `eslint.config.js` reads
+// too, so a new bound suite is named once and both surfaces follow.
+const contractDependencies = contractDependentSuites;
 
 const pathFilters = argv.filter((argument) => !argument.startsWith("-"));
 const hasPathFilter = pathFilters.length > 0;

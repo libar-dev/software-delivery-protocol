@@ -141,7 +141,7 @@ relations: {}
         exampleSpace: Object.fromEntries([
           ["given", ["a cart has {count:number} items"]],
           ["when", ["the customer submits the cart"]],
-          ["t" + "hen", ["an order has {total:number}"]],
+          ["then", ["an order has {total:number}"]],
         ]),
       },
     });
@@ -153,7 +153,7 @@ relations: {}
           Object.fromEntries([
             ["given", ["a cart has {count: 0} items"]],
             ["when", ["the customer submits the cart"]],
-            ["t" + "hen", ["an order has {total: 0}"]],
+            ["then", ["an order has {total: 0}"]],
           ]),
         ],
       },

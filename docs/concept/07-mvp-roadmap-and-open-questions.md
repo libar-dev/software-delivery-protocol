@@ -121,7 +121,7 @@ the standing invariant plus where its protection lives.
 - **④ `implemented` is a UI hazard — view-label only.** Model semantics are settled (binding, never
   liveness — MD-7): the internal fact name stays `implemented` (it powers the `implemented ∧ ¬ready` drift
   query), and views render binding language instead: *"Implementation binding: present / Verifier binding:
-  present / Runtime observation: not tracked."*
+  present / Expected-outcome oracle: none / Runtime observation: not tracked."*
 - **⑤ `coverage-unknown` is acceptance, never a design note.** File-level blast-radius (the reader, `06` §2)
   reports a changed-but-unanchored file as an explicit `coverage-unknown` item, never silently
   under-reporting — test-pinned, so a too-small reach set is a caught regression, not a rendering choice.
