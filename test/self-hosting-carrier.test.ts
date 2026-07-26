@@ -6,17 +6,28 @@ import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protoc
 import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
 
 import { boundedParityContract } from "../generated/contracts/carrier.markdown-parser.bounded-parity.contract.js";
-import { reifyMarkdownCarrier, reifyTypeScriptCarrier } from "../src/index.js";
-import type { CarrierReification } from "../src/index.js";
+import { refusedGuessContract } from "../generated/contracts/carrier.slot-notation.refused-guess.contract.js";
+import { typedDeclarationContract } from "../generated/contracts/carrier.slot-notation.typed-declaration.contract.js";
+import {
+  parseSlots,
+  reifyMarkdownCarrier,
+  reifyTypeScriptCarrier,
+  stepSkeleton,
+} from "../src/index.js";
+import type { CarrierReification, SlotGroup } from "../src/index.js";
 
 /**
- * The bound executable point of the ruled Markdown parser: one same-class row of the bounded
- * parity matrix, read from the paired probe carriers the matrix already owns. The claim under test
- * is exactly the authored one — a shared validator ID, with severity and extract-versus-refuse
- * outcomes left carrier-specific — so the point asserts the agreement and the divergence together.
+ * The bound executable points of the carrier family: the ruled Markdown parser's bounded parity,
+ * and the slot micro-notation the carrier's fenced blocks own. The parity point reads one
+ * same-class row of the matrix from the paired probe carriers the matrix already owns — the claim
+ * under test is exactly the authored one, a shared validator ID with severity and
+ * extract-versus-refuse outcomes left carrier-specific, so the point asserts the agreement and the
+ * divergence together. The notation points parse one step text in process; no filesystem is
+ * involved.
  *
- * `test/extract-parity.test.ts` stays as regression evidence over the whole matrix, including the
- * four named non-claims; this point states the law, never every row.
+ * `test/extract-parity.test.ts` and `test/notation.test.ts` stay as regression evidence over the
+ * whole matrix, the four named non-claims, and every slot spelling; these points state the laws,
+ * never every row.
  */
 const fixtureRoot = new URL("./fixtures/import/parity/", import.meta.url);
 
@@ -106,3 +117,71 @@ const boundedParityTestAnchor = specTest({
 void boundedParityTestAnchor;
 
 bindExample(boundedParityContract, parityWorld, parityBindings);
+
+/* ----- spec:carrier.slot-notation ----- */
+
+interface SlotWorld {
+  stepText: string;
+  slots: readonly SlotGroup[] | undefined;
+}
+
+function slotWorld(): SlotWorld {
+  return { stepText: "", slots: undefined };
+}
+
+function slotsOf(world: SlotWorld): readonly SlotGroup[] {
+  if (world.slots === undefined) {
+    throw new Error("The parse step must run before the slot groups are asserted.");
+  }
+
+  return world.slots;
+}
+
+const slotNotationBindings = {
+  "the step text {stepText}": (world: SlotWorld, params: { readonly stepText: string }) => {
+    world.stepText = params.stepText;
+  },
+  "the notation parses the step text": (world: SlotWorld) => {
+    world.slots = parseSlots(world.stepText);
+  },
+  "the notation finds {slotCount} slot groups": (
+    world: SlotWorld,
+    params: { readonly slotCount: number },
+  ) => {
+    // Prose braces are absent by construction: the notation returns slots only.
+    expect(slotsOf(world)).toHaveLength(params.slotCount);
+  },
+  "the first group has the form {form} and the name {slotName}": (
+    world: SlotWorld,
+    params: {
+      readonly form: "bare" | "typed" | "bound" | "malformed";
+      readonly slotName: string;
+    },
+  ) => {
+    const first = slotsOf(world)[0];
+
+    expect(first?.form).toBe(params.form);
+    expect(first?.name).toBe(params.slotName);
+  },
+  "the step skeleton is {skeleton}": (world: SlotWorld, params: { readonly skeleton: string }) => {
+    expect(stepSkeleton(world.stepText)).toBe(params.skeleton);
+  },
+};
+
+const slotNotationTypedTestAnchor = specTest({
+  id: testAnchorId("test:protocol.slot-notation.typed-declaration"),
+  label: "the declaration point verifies the typed form and its skeleton",
+  verifies: ref("spec:carrier.slot-notation.typed-declaration"),
+});
+void slotNotationTypedTestAnchor;
+
+bindExample(typedDeclarationContract, slotWorld, slotNotationBindings);
+
+const slotNotationRefusedTestAnchor = specTest({
+  id: testAnchorId("test:protocol.slot-notation.refused-guess"),
+  label: "the refusal point verifies prose braces and the unusable slot",
+  verifies: ref("spec:carrier.slot-notation.refused-guess"),
+});
+void slotNotationRefusedTestAnchor;
+
+bindExample(refusedGuessContract, slotWorld, slotNotationBindings);

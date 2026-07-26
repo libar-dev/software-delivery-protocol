@@ -515,7 +515,7 @@ const expectedSpecs = [
     id: "spec:extraction.executable-contracts",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/extraction/executable-contracts.sdp.md",
     title: "The build derives executable contracts from graph examples",
     narrative: null,
@@ -528,10 +528,322 @@ const expectedSpecs = [
         rules: [
           "`generateContracts` derives per-example step contracts and per-parent space contracts solely from the extracted graph.",
           "A generated contract is disposable, keyed by Spec ID, and becomes unavailable when its authored example cannot bind honestly to its shared vocabulary.",
+          "The concreteness law is a refusal, never a guess — an example carrying an unbound slot in any used step of any entry is not the bindable form and receives no step contract, and a prose-only example receives none either.",
+          "An example is one point, so the step contract and the bound point derive from the same first complete entry; a further structured entry is named rather than left silently inert.",
+          "Degradation is loud and local — an undeclared slot, a value outside its declared type, and a conflicting re-binding each name the drift and drop exactly that one slot, so the emitted module still compiles.",
+          "A vocabulary slot group that declares no usable type is named rather than dropped in silence, and no dimension enters the space for it.",
+          "Two contract paths differing only by letter case cannot coexist on a case-insensitive filesystem, so the contracts tree is withheld whole and the finding names the colliding pair.",
+          "Every generation finding is a warning that describes what did not emit; gating belongs to graph validation alone, so a withheld contract never fails the build by itself.",
+          "The realizing entrypoint is `generateContracts` in `src/codegen/contracts.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            "a parent spec whose example space declares the slot {dimension:string}",
+            'a refining example {exampleId:string} whose used step {binding:"binds"|"leaves unbound"} that slot',
+            "the example carries {entryCount:number} structured entries",
+            "a case-twin example {twinId:string} whose contract path differs only by letter case",
+          ],
+          when: ["the contracts are generated from the derived graph"],
+          [["t", "hen"].join("")]: [
+            "the generated tree holds {fileCount:number} files",
+            "the step contract for the example is emitted: {emitted:boolean}",
+            "the findings name {findingId:string}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:extraction.executable-contracts.concreteness-refusal",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/executable-contracts.concreteness-refusal.sdp.md",
+    title: "An unbound slot in a used step earns no step contract",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the concreteness law where the example leaves a declared slot unbound.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a parent spec whose example space declares the slot {dimension: "n"}',
+              'a refining example {exampleId: "spec:probe.create-order.unbound"} whose used step {binding: "leaves unbound"} that slot',
+            ],
+            when: ["the contracts are generated from the derived graph"],
+            [["t", "hen"].join("")]: [
+              "the generated tree holds {fileCount: 1} files",
+              "the step contract for the example is emitted: {emitted: false}",
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:extraction.executable-contracts.multi-entry-example",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/executable-contracts.multi-entry-example.sdp.md",
+    title: "A second structured entry is named, never left silently inert",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the one-point law where an example smuggles a second case into one document.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a parent spec whose example space declares the slot {dimension: "n"}',
+              'a refining example {exampleId: "spec:probe.create-order.multi"} whose used step {binding: "binds"} that slot',
+              "the example carries {entryCount: 2} structured entries",
+            ],
+            when: ["the contracts are generated from the derived graph"],
+            [["t", "hen"].join("")]: [
+              "the step contract for the example is emitted: {emitted: true}",
+              'the findings name {findingId: "contracts/multi-entry-example"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:extraction.executable-contracts.case-colliding-path",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/executable-contracts.case-colliding-path.sdp.md",
+    title: "A case-only path collision withholds the whole contracts tree",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the all-or-nothing rule where two examples claim one case-folded contract path.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a parent spec whose example space declares the slot {dimension: "n"}',
+              'a refining example {exampleId: "spec:probe.create-order.same-case"} whose used step {binding: "binds"} that slot',
+              'a case-twin example {twinId: "spec:probe.create-order.same-Case"} whose contract path differs only by letter case',
+            ],
+            when: ["the contracts are generated from the derived graph"],
+            [["t", "hen"].join("")]: [
+              "the generated tree holds {fileCount: 0} files",
+              'the findings name {findingId: "contracts/case-colliding-path"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:extraction.example-runner",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/extraction/example-runner.sdp.md",
+    title: "A bound example runs its contract steps against a fresh world",
+    narrative: null,
+    sections: {
+      intent: {
+        problem:
+          "A bound test must execute a Spec's own steps without the executing core learning any test framework.",
+        outcome:
+          "Run a generated contract's steps in authored order and make a red step name itself in the Spec's own words.",
+        value:
+          "A failing example reads as the Spec that failed rather than as an anonymous assertion.",
+      },
+      behavior: {
+        rules: [
+          "The core plans every contract step in authored order and runs it against the world the caller hands in; creating a fresh world per example is the adapter's lifecycle, never the core's.",
+          "Duplicate step text within one example binds one handler, and every occurrence runs that one handler with its own authored params.",
+          "A red step names itself before the assertion detail: the failure message leads with the step's natural reading — the Spec's own words with bound values inlined — and the original error is preserved, carried as `cause` when it cannot be re-messaged, and wrapped when the thrown value is not an error.",
+          "A missing or stale step handler is a compile-time refusal rather than a silent skip: the bindings type covers every step and only the steps, so spec-side drift fails the typecheck instead of the run.",
+          "The core contributes `unspecified`, the one outcome no Spec ever states, so an uncovered region of an example space has an honest answer rather than a manufactured one.",
+          "The realizing entrypoints are `planExample` and `runExamplePlan` in `src/runner/index.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            "a contract whose given step repeats {occurrences:number} times before one when step and one then step",
+            'the handler bound to the {failingPhase:"given"|"when"|"then"} step throws {thrown:string}',
+          ],
+          when: ["the bound plan runs against a fresh world"],
+          [["t", "hen"].join("")]: [
+            "the world records the handler trace {trace:string}",
+            'the run {outcome:"completes"|"fails"}',
+            "the failure names the step in the Spec's own words as {failureLabel:string}",
+            "the failure preserves the original detail {detail:string}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:extraction.example-runner.step-order",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/example-runner.step-order.sdp.md",
+    title: "A repeated step runs its one handler at each occurrence, in contract order",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the contract-order and one-handler-per-step laws over a repeating given step.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a contract whose given step repeats {occurrences: 2} times before one when step and one then step",
+            ],
+            when: ["the bound plan runs against a fresh world"],
+            [["t", "hen"].join("")]: [
+              'the world records the handler trace {trace: "given 2 | given 2 | when | then"}',
+              'the run {outcome: "completes"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:extraction.example-runner.red-step-naming",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/example-runner.red-step-naming.sdp.md",
+    title: "A red step names itself before the assertion detail",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the failure law where a bound handler throws inside the when step.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a contract whose given step repeats {occurrences: 2} times before one when step and one then step",
+              'the handler bound to the {failingPhase: "when"} step throws {thrown: "boom"}',
+            ],
+            when: ["the bound plan runs against a fresh world"],
+            [["t", "hen"].join("")]: [
+              'the run {outcome: "fails"}',
+              'the failure names the step in the Spec\'s own words as {failureLabel: "at step: When the cart is submitted"}',
+              'the failure preserves the original detail {detail: "boom"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.slot-notation",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/carrier/slot-notation.sdp.md",
+    title: "Slot notation declares, binds, and refuses to guess",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give step text one owned typed placeholder syntax whose normalized identity a generated contract can key on.",
+      },
+      behavior: {
+        rules: [
+          "A slot group opens with an identifier; a brace group that does not open with one is prose, and prose is never policed.",
+          "A vocabulary slot declares a type only in the ratified type form — `number`, `string`, `boolean`, or a closed union of two or more quoted literals — while an example binds one scalar literal in the same position.",
+          "The skeleton — every slot group normalized to `{name}` with prose braces left untouched — is the step's identity: it keys the generated step contract, matches an example step to its vocabulary entry, and makes a declaration and its binding the same step.",
+          "An identifier-led group whose remainder parses as neither a type nor a value stays a named but unusable slot: it declares nothing, binds nothing, and reads as unbound rather than being guessed into meaning.",
+          "The single-quoted-literal form parses as a binding, and what it would declare in a vocabulary is unruled — so a vocabulary consumer treats it as declaring nothing and says so rather than inventing a one-value dimension.",
+          "Lexical degradation stays local: a stray or unterminated brace group is prose only up to the next candidate, so it never swallows a well-formed binding that follows it.",
+          "The realizing entrypoints are `parseSlots` and `stepSkeleton` in `src/notation/slots.ts`.",
+        ],
+        exampleSpace: {
+          given: ["the step text {stepText:string}"],
+          when: ["the notation parses the step text"],
+          [["t", "hen"].join("")]: [
+            "the notation finds {slotCount:number} slot groups",
+            'the first group has the form {form:"bare"|"typed"|"bound"|"malformed"} and the name {slotName:string}',
+            "the step skeleton is {skeleton:string}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:carrier.slot-notation.typed-declaration",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/carrier/slot-notation.typed-declaration.sdp.md",
+    title: "A typed declaration normalizes to the skeleton its binding shares",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the declaration form and the skeleton identity on one vocabulary step.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the step text {stepText: "a cart with {n:number} line items"}'],
+            when: ["the notation parses the step text"],
+            [["t", "hen"].join("")]: [
+              "the notation finds {slotCount: 1} slot groups",
+              'the first group has the form {form: "typed"} and the name {slotName: "n"}',
+              'the step skeleton is {skeleton: "a cart with {n} line items"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.slot-notation.refused-guess",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/carrier/slot-notation.refused-guess.sdp.md",
+    title: "A stray brace stays prose while an unusable group stays a named slot",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the refuse-to-guess posture where a stray brace precedes an unparsable group.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the step text {stepText: "a stray { then {n: maybe} line items"}'],
+            when: ["the notation parses the step text"],
+            [["t", "hen"].join("")]: [
+              "the notation finds {slotCount: 1} slot groups",
+              'the first group has the form {form: "malformed"} and the name {slotName: "n"}',
+              'the step skeleton is {skeleton: "a stray { then {n} line items"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:extraction.build-pipeline",
@@ -2171,6 +2483,15 @@ const expectedPackMembers = [
   "spec:model.stable-ids.namespaced-round-trip",
   "spec:model.stable-ids.malformed-refusal",
   "spec:carrier.markdown-parser.bounded-parity",
+  "spec:extraction.example-runner",
+  "spec:extraction.example-runner.step-order",
+  "spec:extraction.example-runner.red-step-naming",
+  "spec:extraction.executable-contracts.concreteness-refusal",
+  "spec:extraction.executable-contracts.multi-entry-example",
+  "spec:extraction.executable-contracts.case-colliding-path",
+  "spec:carrier.slot-notation",
+  "spec:carrier.slot-notation.typed-declaration",
+  "spec:carrier.slot-notation.refused-guess",
   "spec:decisions.plain-language-references",
   "spec:decisions.concept-docs-dissolve",
   "spec:decisions.one-validation-path",
@@ -2240,6 +2561,46 @@ const expectedDeclaredRelations = [
     "spec:extraction.schema-versioning",
   ],
   ["spec:extraction.executable-contracts", "refines", "spec:extraction.build-pipeline"],
+  [
+    "spec:extraction.executable-contracts.concreteness-refusal",
+    "refines",
+    "spec:extraction.executable-contracts",
+  ],
+  [
+    "spec:extraction.executable-contracts.concreteness-refusal",
+    "verifies",
+    "spec:extraction.executable-contracts",
+  ],
+  [
+    "spec:extraction.executable-contracts.multi-entry-example",
+    "refines",
+    "spec:extraction.executable-contracts",
+  ],
+  [
+    "spec:extraction.executable-contracts.multi-entry-example",
+    "verifies",
+    "spec:extraction.executable-contracts",
+  ],
+  [
+    "spec:extraction.executable-contracts.case-colliding-path",
+    "refines",
+    "spec:extraction.executable-contracts",
+  ],
+  [
+    "spec:extraction.executable-contracts.case-colliding-path",
+    "verifies",
+    "spec:extraction.executable-contracts",
+  ],
+  ["spec:extraction.example-runner", "refines", "spec:extraction.executable-contracts"],
+  ["spec:extraction.example-runner.step-order", "refines", "spec:extraction.example-runner"],
+  ["spec:extraction.example-runner.step-order", "verifies", "spec:extraction.example-runner"],
+  ["spec:extraction.example-runner.red-step-naming", "refines", "spec:extraction.example-runner"],
+  ["spec:extraction.example-runner.red-step-naming", "verifies", "spec:extraction.example-runner"],
+  ["spec:carrier.slot-notation", "refines", "spec:carrier.markdown-authoring"],
+  ["spec:carrier.slot-notation.typed-declaration", "refines", "spec:carrier.slot-notation"],
+  ["spec:carrier.slot-notation.typed-declaration", "verifies", "spec:carrier.slot-notation"],
+  ["spec:carrier.slot-notation.refused-guess", "refines", "spec:carrier.slot-notation"],
+  ["spec:carrier.slot-notation.refused-guess", "verifies", "spec:carrier.slot-notation"],
   ["spec:validation.readiness-floor", "refines", "spec:protocol.self-hosting"],
   ["spec:validation.readiness-floor", "dependsOn", "spec:model.protocol-domain"],
   ["spec:validation.readiness-floor", "decidedBy", "spec:decisions.kind-conditional-floor"],
@@ -2946,6 +3307,96 @@ const expectedAnchors = [
     constant: "executableContractsAnchor",
     site: "export function generateContracts",
   },
+  {
+    id: "impl:protocol.example-runner",
+    nodeType: "CodeNode",
+    label: "plans and executes a bound example against the caller's world",
+    type: "satisfies",
+    target: "spec:extraction.example-runner",
+    file: "src/runner/index.ts",
+    constant: "exampleRunnerAnchor",
+    site: "export function planExample",
+  },
+  {
+    id: "impl:protocol.slot-notation",
+    nodeType: "CodeNode",
+    label: "parses slot groups and normalizes a step to its skeleton",
+    type: "satisfies",
+    target: "spec:carrier.slot-notation",
+    file: "src/notation/slots.ts",
+    constant: "slotNotationAnchor",
+    site: "export function parseSlots",
+  },
+  {
+    id: "test:protocol.executable-contracts.concreteness-refusal",
+    nodeType: "Anchor",
+    label: "the concreteness point verifies the unbound-slot refusal",
+    type: "verifies",
+    target: "spec:extraction.executable-contracts.concreteness-refusal",
+    file: "test/self-hosting-extraction.test.ts",
+    constant: "concretenessRefusalTestAnchor",
+    site: "bindExample(concretenessRefusalContract",
+  },
+  {
+    id: "test:protocol.executable-contracts.multi-entry-example",
+    nodeType: "Anchor",
+    label: "the multi-entry point verifies the named second entry",
+    type: "verifies",
+    target: "spec:extraction.executable-contracts.multi-entry-example",
+    file: "test/self-hosting-extraction.test.ts",
+    constant: "multiEntryExampleTestAnchor",
+    site: "bindExample(multiEntryExampleContract",
+  },
+  {
+    id: "test:protocol.executable-contracts.case-colliding-path",
+    nodeType: "Anchor",
+    label: "the collision point verifies the all-or-nothing withholding",
+    type: "verifies",
+    target: "spec:extraction.executable-contracts.case-colliding-path",
+    file: "test/self-hosting-extraction.test.ts",
+    constant: "caseCollidingPathTestAnchor",
+    site: "bindExample(caseCollidingPathContract",
+  },
+  {
+    id: "test:protocol.example-runner.step-order",
+    nodeType: "Anchor",
+    label: "the step-order point verifies contract order and the one handler per step",
+    type: "verifies",
+    target: "spec:extraction.example-runner.step-order",
+    file: "test/self-hosting-extraction.test.ts",
+    constant: "exampleRunnerStepOrderTestAnchor",
+    site: "bindExample(stepOrderContract",
+  },
+  {
+    id: "test:protocol.example-runner.red-step-naming",
+    nodeType: "Anchor",
+    label: "the red-step point verifies the self-naming failure law",
+    type: "verifies",
+    target: "spec:extraction.example-runner.red-step-naming",
+    file: "test/self-hosting-extraction.test.ts",
+    constant: "exampleRunnerRedStepTestAnchor",
+    site: "bindExample(redStepNamingContract",
+  },
+  {
+    id: "test:protocol.slot-notation.typed-declaration",
+    nodeType: "Anchor",
+    label: "the declaration point verifies the typed form and its skeleton",
+    type: "verifies",
+    target: "spec:carrier.slot-notation.typed-declaration",
+    file: "test/self-hosting-carrier.test.ts",
+    constant: "slotNotationTypedTestAnchor",
+    site: "bindExample(typedDeclarationContract",
+  },
+  {
+    id: "test:protocol.slot-notation.refused-guess",
+    nodeType: "Anchor",
+    label: "the refusal point verifies prose braces and the unusable slot",
+    type: "verifies",
+    target: "spec:carrier.slot-notation.refused-guess",
+    file: "test/self-hosting-carrier.test.ts",
+    constant: "slotNotationRefusedTestAnchor",
+    site: "bindExample(refusedGuessContract",
+  },
 ] as const;
 
 function lineContaining(source: string, token: string): number {
@@ -2977,7 +3428,7 @@ describe("the self-hosting corpus", () => {
         subjectId,
       })),
     ).toEqual(expectedWarnings);
-    expect(result.counts).toEqual({ specs: 75, packs: 1, anchors: 53 });
+    expect(result.counts).toEqual({ specs: 84, packs: 1, anchors: 62 });
     expect(nodeIds).toEqual(
       [
         "pack:self-hosting-v1",
@@ -3056,10 +3507,19 @@ describe("the self-hosting corpus", () => {
         "spec:model.stable-ids.namespaced-round-trip",
         "spec:model.stable-ids.malformed-refusal",
         "spec:carrier.markdown-parser.bounded-parity",
+        "spec:extraction.example-runner",
+        "spec:extraction.example-runner.step-order",
+        "spec:extraction.example-runner.red-step-naming",
+        "spec:extraction.executable-contracts.concreteness-refusal",
+        "spec:extraction.executable-contracts.multi-entry-example",
+        "spec:extraction.executable-contracts.case-colliding-path",
+        "spec:carrier.slot-notation",
+        "spec:carrier.slot-notation.typed-declaration",
+        "spec:carrier.slot-notation.refused-guess",
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
-    expect(result.graph.nodes).toHaveLength(129);
+    expect(result.graph.nodes).toHaveLength(147);
     expect(
       primitiveNodes
         .map((node) => ({
@@ -3103,7 +3563,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 41, ready: 34 });
+    ).toEqual({ defined: 40, ready: 44 });
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
@@ -3118,7 +3578,7 @@ describe("the self-hosting corpus", () => {
       modelRefs: ["spec:model.protocol-domain", "spec:model.core-model"],
       file: "specs/self-hosting.pack.sdp.ts",
     });
-    expect(result.graph.edges).toHaveLength(248);
+    expect(result.graph.edges).toHaveLength(282);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")

@@ -1,3 +1,5 @@
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import { renderStepText } from "../notation/slots.js";
 
 /**
@@ -93,6 +95,14 @@ function substituteParams(skeleton: string, params: ParamShape): string {
  * object holds exactly one entry per step text ("same words, same meaning"), and every occurrence
  * in the scenario runs that one handler with its own authored params.
  */
+const exampleRunnerAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.example-runner"),
+  label: "plans and executes a bound example against the caller's world",
+  satisfies: ref("spec:extraction.example-runner"),
+});
+
+void exampleRunnerAnchor;
+
 export function planExample<W, S extends string, PM extends Record<S, ParamShape>>(
   contract: ExampleContract<S, PM>,
   bindings: StepBindings<W, S, PM>,
