@@ -806,7 +806,7 @@ const extractContractTestAnchor = specTest({
 void extractContractTestAnchor;
 
 describe("anchor extraction corpora", () => {
-  it("anchored-binding: the full ladder — anchored edges and delivery facts per `02` §2", () => {
+  it("anchored-binding: the full ladder — anchored edges and delivery facts per `spec:extraction.derive-graph`", () => {
     const result = extract({ root: corpusRoot("anchored-binding") });
 
     expect(result.report.findings).toEqual([]);

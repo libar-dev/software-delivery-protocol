@@ -32,8 +32,8 @@ expectContains(
   "narrative is not searchable",
 );
 expectContains(
-  "docs/concept/02-core-model.md",
-  "`narrative` is content owned directly",
+  "specs/carrier/prose-ownership-rule.sdp.md",
+  "owned directly by the Spec; it is Spec content, never an envelope field",
   "missing narrative model contract",
 );
 // The schema-version literal is pinned on its declaring surface above (`src/graph/schema.ts`);

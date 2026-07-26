@@ -8,7 +8,7 @@ This theme *is* the founding principle expressed as jobs. There is one graph; it
 ### Derive one canonical graph from the repo
 
 **Phase:** MVP
-**References:** [the derive-graph spec](../specs/extraction/derive-graph.sdp.md) (`spec:extraction.derive-graph`), [02 — Core Model](../docs/concept/02-core-model.md)
+**References:** [the derive-graph spec](../specs/extraction/derive-graph.sdp.md) (`spec:extraction.derive-graph`), [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`)
 
 > **When** I have authored specs and anchored code, **I want to** build one canonical graph of nodes and edges directly from the repo, **so I can** query the whole delivery state without standing up or syncing a second store.
 

@@ -8,7 +8,7 @@ The job here is to get a thought into the system and let it grow without ever fo
 ### Capture a rough idea with zero ceremony
 
 **Phase:** MVP
-**References:** [02 — Core Model](../docs/concept/02-core-model.md)
+**References:** [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`)
 
 > **When** a half-formed idea for a behaviour or capability shows up mid-work, **I want to** record it as a spec in seconds with only an `id`, a `title`, and a sentence of intent, **so I can** keep the thought in the canonical repo instead of losing it to a side channel.
 
@@ -30,7 +30,7 @@ The job here is to get a thought into the system and let it grow without ever fo
 ### Enrich a spec in place as it matures
 
 **Phase:** MVP
-**References:** [02 — Core Model](../docs/concept/02-core-model.md), [04 — Authoring & Binding](../docs/concept/04-authoring-and-binding.md)
+**References:** [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`), [04 — Authoring & Binding](../docs/concept/04-authoring-and-binding.md)
 
 > **When** an idea sharpens into rules, examples, constraints, and decisions, **I want to** add detail and raise readiness on the *same* spec object rather than convert it into a new "requirement" or "test" artifact, **so I can** avoid information loss, broken links, and duplicate sources of truth.
 
@@ -51,7 +51,7 @@ The job here is to get a thought into the system and let it grow without ever fo
 ### Refine a big idea into child specs without losing the parent
 
 **Phase:** MVP
-**References:** [02 — Core Model](../docs/concept/02-core-model.md)
+**References:** [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`)
 
 > **When** a large, coherent idea needs to be broken into concrete pieces, **I want to** author child specs that `refine` the parent, **so I can** drill into detail while the parent stays useful for roadmap, architecture, and shared understanding.
 
@@ -72,7 +72,7 @@ The job here is to get a thought into the system and let it grow without ever fo
 ### Position any spec on independent descriptors
 
 **Phase:** MVP
-**References:** [02 — Core Model](../docs/concept/02-core-model.md)
+**References:** [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`)
 
 > **When** I'm describing anything from a large epic down to a single example with a verifier, **I want to** use the same spec shape positioned by three authored descriptors — `kind` (category of truth), `altitude` (size / scope), and `readiness` (design maturity) — **so I can** model the whole delivery surface without a zoo of artifact types.
 
@@ -93,7 +93,7 @@ The job here is to get a thought into the system and let it grow without ever fo
 ### Group related specs into a coherent pack
 
 **Phase:** MVP
-**References:** [02 — Core Model](../docs/concept/02-core-model.md), [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md)
+**References:** [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`), [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md)
 
 > **When** I'm ideating a feature initiative or a bounded slice as a cluster of related specs, **I want to** group them in a `Pack` with shared model references, **so I can** hold a large coherent group of low-detail specs and reason at the group level before drilling into any single member.
 
@@ -114,7 +114,7 @@ The job here is to get a thought into the system and let it grow without ever fo
 ### Survey the landscape to decide where to invest next
 
 **Phase:** Iterate
-**References:** [02 — Core Model](../docs/concept/02-core-model.md), [06 — Consumers & Projections](../docs/concept/06-consumers-and-projections.md)
+**References:** [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`), [06 — Consumers & Projections](../docs/concept/06-consumers-and-projections.md)
 
 > **When** I'm scoping a new initiative and deciding where to put effort, **I want to** see the pack/capability landscape and where intent is still thin (specs at `idea`/`scoped`), **so I can** choose what to flesh out next instead of guessing from memory or scattered docs.
 

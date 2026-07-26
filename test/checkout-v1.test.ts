@@ -146,7 +146,8 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
         .map((node) => [node.id, node.deliveryFacts ?? []]),
     );
 
-    // Two satisfies bindings + the enabled valid-cart example verifying it (`02` §2).
+    // Two satisfies bindings + the enabled valid-cart example verifying it
+    // (`spec:model.spec-sections`).
     expect(factsById.get("spec:orders.create-order")).toEqual(["implemented", "has-verifier"]);
     // The test anchor verifies the example directly — the example earns its own has-verifier.
     expect(factsById.get("spec:orders.create-order.valid-cart")).toEqual(["has-verifier"]);

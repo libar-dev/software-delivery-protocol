@@ -3,9 +3,9 @@
 > **Status: RATIFIED · LEAN GLOSSARY.** The terminology base of the Libar Software Delivery Protocol — our
 > bounded context's vocabulary: **one concept → one word**; the rest are *aliases to avoid*.
 >
-> This document carries **terms only**; the model exposition lives in the design docs
-> (`docs/concept/00`–`07`). The lean decision registry points to carrying Specs; historical
-> rationale lives in git, plans, and those Specs.
+> This document carries **terms only**; the model exposition lives in the authored Specs under
+> `specs/` and in the surviving design docs under `docs/concept/`. The lean decision registry
+> points to carrying Specs; historical rationale lives in git, plans, and those Specs.
 
 ## Governing rubric  [SETTLED]
 
@@ -28,7 +28,7 @@
 Self-hosting — the Protocol's own repo conforming to its own meta-model — is a later milestone, never a
 Phase-0 claim (`00` §3).
 
-## The primitive & its descriptors  (→ `02` §1–§2)
+## The primitive & its descriptors  (→ `spec:model.core-model`)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
@@ -51,14 +51,14 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 | **Executable Spec** | an `example` that **has a verifier** (a delivery fact) | a readiness rung |
 | **capability / domain** | a **projection** (Capability Map over high-altitude `behavior` `Spec`s) and/or a **`Pack` grouping** | a kind or an altitude |
 
-## Sections  (→ `02` §3)
+## Sections  (→ `spec:model.spec-sections`)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
 | **section** | the typed, optional detail-slice of a `Spec` — the **extension surface**; one concern each: `intent` · `behavior` · `constraints` · `model` · `design` · `decision` · `verification` · `ui` | "Facet" · "aspect" |
 | **section ⟷ kind duality** | `constraints`/`model`/`decision` — and `behavior.rules`/`behavior.examples` vs the `rule`/`example` kinds — have a `kind` twin: keep **inline** when local detail; **promote** to a standalone `Spec` when shared or needing its own identity/lifecycle/review. **Sections carry content, relations carry linkage** (never a ref inside a section); **promotion is exclusive** (inline XOR promoted — content moves out, MD-10) | — |
 
-## The other authored things  (no system truth — → `02` §4, `04` §2)
+## The other authored things  (no system truth — → `spec:model.pack-aggregate`, `04` §2)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
@@ -81,7 +81,7 @@ descendants) vs *the aggregate* (the `Pack` — a cross-cutting review collectio
 No 4th `claim`: an edge computed deterministically from an authored source is a derivation **mechanism, not a
 claim category** — it **inherits** its source's `claim` (so `belongsTo` carries `declared`).
 
-## Delivery facts  (derived realization signals — → `02` §2)
+## Delivery facts  (derived realization signals — → `spec:model.core-model`)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
@@ -161,7 +161,7 @@ a sibling set back as a table — the graph never holds a multi-point example.
 | **carrier** | the text format that carries the authored `Spec` document — the envelope, the prose, and the owned notation; **ruled: Markdown (`.sdp.md`) for all eight kinds**, the TS DSL remaining the import source and a lawful per-ID option (one canonical surface per ID, `04` §1) | "format"/"file type" (say which layer) · a carrier is never a second store |
 | **notation** | the Protocol-**owned** typed step language inside the carrier's fenced blocks — Given/When/Then step text and the slot vocabulary; owned by the Protocol whatever the carrier | "grammar" (the dismissed own-language direction) · "DSL" (reserved for the TS DSL) |
 
-## Relations  (authored, typed, directed `Spec`→`Spec` edges — → `02` §6)
+## Relations  (authored, typed, directed `Spec`→`Spec` edges — → `spec:model.relations`)
 
 | Relation | Direction | Means | Industry anchor |
 |---|---|---|---|
@@ -202,7 +202,8 @@ artifact** — approval remains outside the model, never an authored primitive).
   division (`01`); a friendlier Studio-facing name is a minor open item.
 - **`ref()`** in the DSL is a **spec-only** reference builder wearing a generic name (it rejects
   `pack:`/`doc:` targets) — documented on the export (`src/ids.ts`). Consequently `decidedBy` → an
-  external `doc:` ADR is a **named deferral** (MD-16, stated in `02` §6); revisit when `doc:`-target
+  external `doc:` ADR is a **named deferral** (MD-16, stated in `spec:decisions.carried-evidence`);
+  revisit when `doc:`-target
   relations or pack-targeting arrive.
 - ~~Candidate vocabulary from the executable-spec exploration: *notation* · *carrier*~~ — **ratified
   by the carrier ruling (MD-18)**; see **The authoring carrier** above. The rest

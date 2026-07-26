@@ -74,7 +74,7 @@ The graph is only valuable if humans and agents can actually consume it. The job
 ### Conduct a Design Review and decide readiness
 
 **Phase:** MVP
-**References:** [06 — Consumers & Projections](../docs/concept/06-consumers-and-projections.md) (§5), [02 — Core Model](../docs/concept/02-core-model.md), [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md)
+**References:** [06 — Consumers & Projections](../docs/concept/06-consumers-and-projections.md) (§5), [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`), [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md)
 
 > **When** a spec or `Pack` is mature enough to consider stating `ready`, **I want to** review it in context — its neighbors, relations, `claim`/delivery badges, open questions, and gaps — **so I can** decide whether to state `ready`, with the structural floor visible but the judgment mine.
 

@@ -1,7 +1,7 @@
 import type { DeliveryFactName, GraphEdge, GraphNode, PrimitiveNode } from "./schema.js";
 
 /**
- * Delivery facts, computed exactly per `02` §2 — derived from edges, never authored. This is the
+ * Delivery facts, computed exactly per `spec:model.core-model` — derived from edges, never authored. This is the
  * one derivation rule, shared by the extractor (which decorates `Primitive` nodes with it) and
  * the delivery-facts honesty check (which recomputes it over the same graph and compares) — one
  * derivation path, never two:
@@ -45,7 +45,7 @@ export function isResolvingTestAnchorVerify(
 
 /**
  * The one enabled-example rule — the declared twin of the resolving-test-anchor rule: a declared
- * `verifies` edge confers the binding only along its `02` §2 contract row — its source resolves,
+ * `verifies` edge confers the binding only along its `spec:model.spec-sections` contract row — its source resolves,
  * by first carrier exactly as the graph index keys, to an `example`-kind `Primitive` that a
  * resolving test anchor binds. Shared by delivery-fact derivation and the reader's enabled decode
  * so the two conferral surfaces can never disagree — including on a duplicate-id graph, where

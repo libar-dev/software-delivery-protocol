@@ -27,7 +27,7 @@ An **error fails the build**; a **gap informs**. This is the one sense in which 
 
 | Layer | Checks | Status |
 |---|---|---|
-| Types | structural shape of `Spec` (all sections optional, branded IDs; floor-bearing sections closed-typed — the typing law, `02` §3 / MD-11) | CORE |
+| Types | structural shape of `Spec` (all sections optional, branded IDs; floor-bearing sections closed-typed — the typing law, `spec:model.spec-sections` / MD-11) | CORE |
 | Schema | the graph JSON validates against its schema | CORE |
 | Graph validators | cross-file conformance + honesty invariants (§2) | CORE |
 | Architecture rules | forbidden-dependency, layer boundaries, domain purity | ASPIRATIONAL |
@@ -41,13 +41,13 @@ Types describe **shape**; validators decide **completeness** (P7). Completeness 
 
 These are the non-negotiable core. CI fails on any error. They split across the two families.
 
-**They run over the one graph — there is exactly one validation path** (MD-14): source → extract (static reification, P5) → graph → checks; `sdp validate` is `sdp build` + checks, and `validateGraph` is the sole validation seam. Validating any *evaluated* form (importing spec modules and checking the resulting objects) would check a phantom — a non-static expression evaluates to a value on import but is dropped by static reification, so the checks could pass a spec the graph doesn't actually hold. For the same reason there is no pre-graph validation seam of any kind: a check that reads anything but the derived graph is a second validation path, forbidden. Authoring-time feedback is per-carrier: the type system's job in the TS carrier (typed sections, `02` §3), the ruled parser's hard diagnostics in the Markdown carrier — static reification (P5) is what rejects non-static authoring, and the `sdp/spec-static` lint is a designed-for earlier surfacing of the same tiers (`04` §1), never a parallel validator path.
+**They run over the one graph — there is exactly one validation path** (MD-14): source → extract (static reification, P5) → graph → checks; `sdp validate` is `sdp build` + checks, and `validateGraph` is the sole validation seam. Validating any *evaluated* form (importing spec modules and checking the resulting objects) would check a phantom — a non-static expression evaluates to a value on import but is dropped by static reification, so the checks could pass a spec the graph doesn't actually hold. For the same reason there is no pre-graph validation seam of any kind: a check that reads anything but the derived graph is a second validation path, forbidden. Authoring-time feedback is per-carrier: the type system's job in the TS carrier (typed sections, `spec:model.spec-sections`), the ruled parser's hard diagnostics in the Markdown carrier — static reification (P5) is what rejects non-static authoring, and the `sdp/spec-static` lint is a designed-for earlier surfacing of the same tiers (`04` §1), never a parallel validator path.
 
 **Conformance checks:**
 
 1. **Referential integrity.** Every ID referenced (in relations, `modelRefs`, anchors) resolves to a node that exists. A dangling reference is an error — with a "did you mean…?" suggestion where possible. *(This is the cost of string-ID linkage from P6, paid down at build time.)*
 2. **Duplicate-ID detection.** No two nodes share an ID. A duplicate is an error, never an auto-resolved merge (L2 — ambiguity is loud).
-3. **`claim` separation never collapsed.** A `declared` edge is never silently "satisfied" by an `inferred` one; node/edge typing stays valid and distinct (`spec:extraction.derive-graph`, `04`) — `nodeType` / `claim` / the edge-contract rows, and the three descriptors (`specKind` · `altitude` · `readiness`) carry their ratified values. The floor is never evaluated over an unratified descriptor (fail closed, never a crash or a silent skip). The edge-contract rows include the kind-typed endpoints (`spec:extraction.derive-graph`): `constrainedBy` → a `rule`/`constraint`-kind spec (`02` §6's "a rule / NFR / policy spec") · `decidedBy` → a `decision`-kind spec · `supersedes` only between `decision`-kind specs; the declared-`verifies`-from-an-example row stays check 4's informative warning (a wrong-kind verifier confers nothing rather than failing the build).
+3. **`claim` separation never collapsed.** A `declared` edge is never silently "satisfied" by an `inferred` one; node/edge typing stays valid and distinct (`spec:extraction.derive-graph`, `04`) — `nodeType` / `claim` / the edge-contract rows, and the three descriptors (`specKind` · `altitude` · `readiness`) carry their ratified values. The floor is never evaluated over an unratified descriptor (fail closed, never a crash or a silent skip). The edge-contract rows include the kind-typed endpoints (`spec:extraction.derive-graph`): `constrainedBy` → a `rule`/`constraint`-kind spec (`spec:model.relations`'s "a rule, constraint, or policy Spec") · `decidedBy` → a `decision`-kind spec · `supersedes` only between `decision`-kind specs; the declared-`verifies`-from-an-example row stays check 4's informative warning (a wrong-kind verifier confers nothing rather than failing the build).
 4. **`verifies` linkage.** The bidirectional spec↔test trace resolves: a test anchored `verifies: spec:X` must point at an existing spec.
 
 **Honesty checks:**
@@ -59,7 +59,7 @@ These are the non-negotiable core. CI fails on any error. They split across the 
 **Informative (a `gap` or `orphan`, not an error by default):**
 
 8. **Orphan detection.** A spec with no relations and nothing pointing at it is surfaced as a warning — it has fallen out of the graph's connective tissue. (A per-team severity override is designed-for, deferred.)
-9. **Readiness/delivery gaps.** A `ready` spec with no resolving verifier is a surfaced `gap` (the build backlog and drift-alarm queries, `02` §2), not an error.
+9. **Readiness/delivery gaps.** A `ready` spec with no resolving verifier is a surfaced `gap` (the build backlog and drift-alarm queries, `spec:model.core-model`), not an error.
 
 Two cross-cutting honesty rules apply to all validators:
 
@@ -91,17 +91,17 @@ The floor has two parts: **kind-blind structural clauses** (the same for every k
 | `constraint` | `constraints[]` non-empty | every entry has a machine-readable `target` |
 | `model` | `model.terms` non-empty | same — a vocabulary either has terms or it doesn't |
 | `decision` | `decision` section present (context / alternatives may precede the choice) | `decision.decision` — the chosen option — is written |
-| `contract` *(interim)* | as `behavior` (examples read naturally as sample payloads) | as `behavior` — **named deferral:** when a dedicated contract section lands, the typing law (`02` §3) pulls it in and this row repoints to it |
+| `contract` *(interim)* | as `behavior` (examples read naturally as sample payloads) | as `behavior` — **named deferral:** when a dedicated contract section lands, the typing law (`spec:model.spec-sections`) pulls it in and this row repoints to it |
 
 Three laws bound the table:
 
 - **Monotonic by construction.** Every `defined` cell implies its `scoped` cell — clearing the higher rung always clears the lower. (The pre-MD-12 floor failed this for `constraint`: its natural evidence stopped counting between `scoped` and `defined`.)
-- **Promotion-neutral.** Promoted forms count wherever one exists (`02` §3) — de-composing a spec into children never costs it its earned rung. The converse honesty bound (MD-16): a promoted form counts **only when it itself carries its kind's evidence** — promotion *moves content out* (`02` §3), so an empty stub child, or a `constrainedBy` edge that does not resolve to a `constraint`-kind spec carrying its constraints, is not evidence.
+- **Promotion-neutral.** Promoted forms count wherever one exists (`spec:model.spec-sections`) — de-composing a spec into children never costs it its earned rung. The converse honesty bound (MD-16): a promoted form counts **only when it itself carries its kind's evidence** — promotion *moves content out* (`spec:model.spec-sections`), so an empty stub child, or a `constrainedBy` edge that does not resolve to a `constraint`-kind spec carrying its constraints, is not evidence.
 - **Convergence is honest.** Where the rungs converge (`rule`, `model`), the floor refuses to become a quota ("more terms," "more rules" — the tier-filling P4 forbids); those rungs then differ only by the author's stated confidence plus the kind-blind clauses.
 
 > **Representation note (MD-13).** In code, the floor *table* is the single source of truth: rows carry the clause id, description, and a named predicate; the evaluator is one generic loop and the clause-id type is derived from the table. The tables above and the data in `readiness-floor.ts` are intended to be reviewable as mirror images.
 
-**The `ready` floor is earned, not asserted** — and it is **not** a delivery fact. The floor may require that anchors *resolve* (so `implemented` is *derivable*); it **never** requires the spec to *be* `implemented`. Readiness is a *stated position* about the design; delivery facts are observations about the code (`02` §2). Higher floors degrade gracefully if their structural inputs are absent.
+**The `ready` floor is earned, not asserted** — and it is **not** a delivery fact. The floor may require that anchors *resolve* (so `implemented` is *derivable*); it **never** requires the spec to *be* `implemented`. Readiness is a *stated position* about the design; delivery facts are observations about the code (`spec:model.core-model`). Higher floors degrade gracefully if their structural inputs are absent.
 
 **`ready` is the structural floor plus a human's `declared` statement — not a record that a review occurred.** The Design Review (`06` §5) is *where* a human typically decides, but the graph stores **no** review/approval fact, and the validator never checks one — that would be the workflow-gating the honesty guardrail forbids (§1). Where approval matters — a baseline — the signed git tag is the approval artifact (authorship + tag, `spec:extraction.derive-graph`), not an authored primitive (approval / RBAC stays outside the model, `07`).
 
@@ -111,7 +111,7 @@ Three laws bound the table:
 
 ## 4. Pack-level coherence (CORE-adjacent)
 
-A `Pack` is validated for **coherence**, not member completeness, and **deterministically only**: referenced terms and `modelRefs` resolve, membership resolves, no duplicate member IDs. There is **no** "duplicated intent" check — a `Pack` states no truth of its own (only a plain `framing` note, `02` §4), so there is nothing to duplicate; semantic duplication is a human/agent judgment, not a validator's. This lets a team hold "a large coherent group of low-detail specs" without the build demanding implementation. Coherence-vs-completeness is a distinct check from the readiness floors above.
+A `Pack` is validated for **coherence**, not member completeness, and **deterministically only**: referenced terms and `modelRefs` resolve, membership resolves, no duplicate member IDs. There is **no** "duplicated intent" check — a `Pack` states no truth of its own (only a plain `framing` note, `spec:model.pack-aggregate`), so there is nothing to duplicate; semantic duplication is a human/agent judgment, not a validator's. This lets a team hold "a large coherent group of low-detail specs" without the build demanding implementation. Coherence-vs-completeness is a distinct check from the readiness floors above.
 
 ---
 

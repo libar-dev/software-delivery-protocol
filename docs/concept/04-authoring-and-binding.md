@@ -8,7 +8,7 @@ Realises **P5** (statically extractable), **P6** (ID-linked), **P9/P10** (anchor
 
 ## 1. The TypeScript Spec DSL — the TS carrier (CORE)
 
-In the TS carrier, specs are authored as typed TypeScript in `*.sdp.ts` files, discovered by suffix anywhere under the extraction root (conventionally `/specs/`) — the Protocol's own compound extension (MD-15; the `.stories.tsx` pattern), deliberately **not** `.spec.ts`, which every JS test runner's default glob would try to execute. The DSL is a thin set of helpers (`spec`, `pack`, the branded-ID builders, relation builders) over the `Spec` shape from `02`.
+In the TS carrier, specs are authored as typed TypeScript in `*.sdp.ts` files, discovered by suffix anywhere under the extraction root (conventionally `/specs/`) — the Protocol's own compound extension (MD-15; the `.stories.tsx` pattern), deliberately **not** `.spec.ts`, which every JS test runner's default glob would try to execute. The DSL is a thin set of helpers (`spec`, `pack`, the branded-ID builders, relation builders) over the `Spec` shape from `spec:model.core-model`.
 
 ```ts
 import { dependsOn, refines, spec, specId } from "@libar-dev/software-delivery-protocol";
@@ -42,7 +42,7 @@ A spec file in this carrier is **"a JSON file that TypeScript happens to validat
 - no IO, async, or imports of *product* code (only `@libar-dev/software-delivery-protocol` helpers);
 - relation arguments are string-literal IDs, not expressions.
 
-If a non-static expression appears, the extractor responds in **two tiers**, drawn along the same envelope/section line the model is built on (`02` §2):
+If a non-static expression appears, the extractor responds in **two tiers**, drawn along the same envelope/section line the model is built on (`spec:model.core-model`):
 
 - **Envelope fields are hard errors.** A non-static `id`, `kind`, `altitude`, `readiness`, or any **relation target** **fails the build** — these are the keys the graph is built on, so the extractor must never guess, drop, or anonymise them. A spec whose identity or position cannot be reified deterministically is not extracted at all.
 - **Optional section detail degrades gracefully.** A non-static expression *inside an optional section* drops *that one property* with a warning, keeping the rest of the spec (graceful partial extraction, L3). It never aborts the build for section detail.
@@ -119,7 +119,7 @@ export const createOrderValidCartTest = specTest({
 // ... the real test (plain Vitest/Jest/etc.) lives alongside ...
 ```
 
-Here the test `verifies` the **example** it backs (`spec:orders.create-order.valid-cart`); that test anchor is exactly what makes the example an **enabled verifier**, so the example's own `verifies` edge can confer `has-verifier` on the parent it targets (the direct, per-spec, non-transitive rule in `02` §2, *Verifier semantics*). This produces the bidirectional spec↔test trace that is a core MVP deliverable: query "what verifies this spec?" and "what does this test cover?" from the graph. The test's *result and its runner status* (pass/fail, skipped, quarantined, glob-excluded) are operational — CI's, never in the graph; the graph records only that an enabled verifier — a **resolvable test binding** — *exists*, never that it ran (the derived `has-verifier` delivery fact, `02` §2).
+Here the test `verifies` the **example** it backs (`spec:orders.create-order.valid-cart`); that test anchor is exactly what makes the example an **enabled verifier**, so the example's own `verifies` edge can confer `has-verifier` on the parent it targets (the direct, per-spec, non-transitive rule in `spec:model.spec-sections`). This produces the bidirectional spec↔test trace that is a core MVP deliverable: query "what verifies this spec?" and "what does this test cover?" from the graph. The test's *result and its runner status* (pass/fail, skipped, quarantined, glob-excluded) are operational — CI's, never in the graph; the graph records only that an enabled verifier — a **resolvable test binding** — *exists*, never that it ran (the derived `has-verifier` delivery fact, `spec:model.core-model`).
 
 The third builder beside `codeAnchor` and `specTest` is **`specOracle`** (`oracle:` namespace), under the same binding-only law: identity plus one `models` target, emitted as an **anchored** Anchor → `Spec` edge. It records that an **oracle** — the authored expected-outcome semantics for a parent's example space (§4) — *exists*; the graph never records what the oracle says (the function beside the anchor is never extracted, never authoritative), and the anchor confers **no delivery fact** — discovery is an anchor query. A behavior example space has **zero or one** resolving oracle binding: a non-behavior/no-space target or competing oracle is a conformance error, and consumers fail closed rather than selecting an authority.
 

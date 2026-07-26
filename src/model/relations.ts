@@ -18,7 +18,7 @@ export interface SpecRelation<TType extends SpecRelationType = SpecRelationType>
   readonly type: TType;
   /**
    * Authored relation targets are `spec:`-only. The base reserves `decidedBy` → `doc:` for a
-   * genuinely external ADR (`02` §6), but that target type is a named deferral until the need
+   * genuinely external ADR (`spec:model.relations`), but that target type is a named deferral until the need
    * arrives (MD-16) — see also the `ref()` note in `ids.ts`.
    */
   readonly target: SpecId;
