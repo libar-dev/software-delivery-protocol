@@ -351,6 +351,16 @@ export const expectedDeclaredRelations = [
     "verifies",
     "spec:consumers.binding-language-views",
   ],
+  [
+    "spec:consumers.binding-language-views.pack-member-table",
+    "refines",
+    "spec:consumers.binding-language-views",
+  ],
+  [
+    "spec:consumers.binding-language-views.pack-member-table",
+    "verifies",
+    "spec:consumers.binding-language-views",
+  ],
   ["spec:consumers.wholesale-view-rewrite", "refines", "spec:consumers.design-review"],
   ["spec:consumers.wholesale-view-rewrite", "dependsOn", "spec:extraction.determinism"],
   [
@@ -363,6 +373,36 @@ export const expectedDeclaredRelations = [
     "verifies",
     "spec:consumers.wholesale-view-rewrite",
   ],
+  [
+    "spec:consumers.wholesale-view-rewrite.late-stale-page",
+    "refines",
+    "spec:consumers.wholesale-view-rewrite",
+  ],
+  [
+    "spec:consumers.wholesale-view-rewrite.late-stale-page",
+    "verifies",
+    "spec:consumers.wholesale-view-rewrite",
+  ],
+  [
+    "spec:consumers.wholesale-view-rewrite.failed-run-view-removed",
+    "refines",
+    "spec:consumers.wholesale-view-rewrite",
+  ],
+  [
+    "spec:consumers.wholesale-view-rewrite.failed-run-view-removed",
+    "verifies",
+    "spec:consumers.wholesale-view-rewrite",
+  ],
+  [
+    "spec:consumers.wholesale-view-rewrite.build-invalidates-view",
+    "refines",
+    "spec:consumers.wholesale-view-rewrite",
+  ],
+  [
+    "spec:consumers.wholesale-view-rewrite.build-invalidates-view",
+    "verifies",
+    "spec:consumers.wholesale-view-rewrite",
+  ],
   ["spec:validation.diagnostic-rendering", "refines", "spec:validation.two-check-families"],
   ["spec:validation.diagnostic-rendering", "dependsOn", "spec:consumers.design-review"],
   [
@@ -372,6 +412,16 @@ export const expectedDeclaredRelations = [
   ],
   [
     "spec:validation.diagnostic-rendering.composed-location",
+    "verifies",
+    "spec:validation.diagnostic-rendering",
+  ],
+  [
+    "spec:validation.diagnostic-rendering.table-cell-location",
+    "refines",
+    "spec:validation.diagnostic-rendering",
+  ],
+  [
+    "spec:validation.diagnostic-rendering.table-cell-location",
     "verifies",
     "spec:validation.diagnostic-rendering",
   ],

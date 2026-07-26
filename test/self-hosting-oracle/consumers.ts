@@ -268,6 +268,7 @@ export const consumersSpecs = [
         exampleSpace: {
           given: [
             'the graph holds a spec {specId:string} bound by {bindings:"an implementing code anchor and a verifying test anchor"|"no anchor at all"}',
+            "the graph holds a pack {packId:string} listing that spec beside an unbound member",
           ],
           when: ["the Design Review renders the graph"],
           then: [
@@ -275,6 +276,7 @@ export const consumersSpecs = [
             'the spec page renders the verifier binding as {verifier:"present"|"none"}',
             "the spec page renders the runtime observation as {observation:string}",
             "the index table repeats those binding values for the spec: {tableRepeats:boolean}",
+            "the pack member table repeats those binding values for the spec: {memberTableRepeats:boolean}",
             "the internal delivery-fact name {factName:string} appears as rendered label text: {factNameRendered:boolean}",
           ],
         },
@@ -316,6 +318,37 @@ export const consumersSpecs = [
     deliveryFacts: ["has-verifier"],
   },
   {
+    id: "spec:consumers.binding-language-views.pack-member-table",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/binding-language-views.pack-member-table.sdp.md",
+    title: "The pack member table speaks the page's binding language, not a shorthand",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the aggregate half of the rule on the surface a reviewer reads a whole pack from, where a two-column yes/no shorthand would be cheapest to reach for.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.bound-surface"} bound by {bindings: "an implementing code anchor and a verifying test anchor"}',
+              'the graph holds a pack {packId: "pack:probe.review-aggregate"} listing that spec beside an unbound member',
+            ],
+            when: ["the Design Review renders the graph"],
+            then: [
+              "the pack member table repeats those binding values for the spec: {memberTableRepeats: true}",
+              'the internal delivery-fact name {factName: "implemented"} appears as rendered label text: {factNameRendered: false}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
     id: "spec:consumers.wholesale-view-rewrite",
     specKind: "rule",
     altitude: "feature",
@@ -340,11 +373,13 @@ export const consumersSpecs = [
         ],
         exampleSpace: {
           given: [
-            "an extraction root holding {corpus:string} and a stale view page {stalePage:string}",
+            'an extraction root holding {corpus:"one authored spec"|"one authored spec the extractor refuses"} and a stale view page {stalePage:string}',
+            'the stale page is planted {planted:"before the run"|"after the build has invalidated the view"}',
           ],
-          when: ["the view is rendered at that root"],
+          when: ['the {command:"view"|"build"} command runs at that root'],
           then: [
             "the run exits {exitCode:number}",
+            "the view directory survives: {viewSurvives:boolean}",
             "the view holds the current page {currentPage:string}",
             "the stale page survives: {staleSurvives:boolean}",
             "a temporary view sibling survives: {temporarySurvives:boolean}",
@@ -372,11 +407,113 @@ export const consumersSpecs = [
           {
             given: [
               'an extraction root holding {corpus: "one authored spec"} and a stale view page {stalePage: "spec/probe.departed.md"}',
+              'the stale page is planted {planted: "before the run"}',
             ],
-            when: ["the view is rendered at that root"],
+            when: ['the {command: "view"} command runs at that root'],
             then: [
               "the run exits {exitCode: 0}",
+              "the view directory survives: {viewSurvives: true}",
               'the view holds the current page {currentPage: "index.md"}',
+              "the stale page survives: {staleSurvives: false}",
+              "a temporary view sibling survives: {temporarySurvives: false}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.wholesale-view-rewrite.late-stale-page",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/wholesale-view-rewrite.late-stale-page.sdp.md",
+    title: "A page the build's invalidation never saw still does not survive the swap",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the swap against a page the up-front invalidation cannot have removed, so the rename into place is what evicts it.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'an extraction root holding {corpus: "one authored spec"} and a stale view page {stalePage: "spec/probe.departed.md"}',
+              'the stale page is planted {planted: "after the build has invalidated the view"}',
+            ],
+            when: ['the {command: "view"} command runs at that root'],
+            then: [
+              "the run exits {exitCode: 0}",
+              "the view directory survives: {viewSurvives: true}",
+              'the view holds the current page {currentPage: "index.md"}',
+              "the stale page survives: {staleSurvives: false}",
+              "a temporary view sibling survives: {temporarySurvives: false}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.wholesale-view-rewrite.failed-run-view-removed",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/wholesale-view-rewrite.failed-run-view-removed.sdp.md",
+    title: "A run that cannot produce a current view leaves no view at all",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the honest-absence half of the law on a run that fails before it can render, where leaving the old view would read as current.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'an extraction root holding {corpus: "one authored spec the extractor refuses"} and a stale view page {stalePage: "spec/probe.departed.md"}',
+              'the stale page is planted {planted: "after the build has invalidated the view"}',
+            ],
+            when: ['the {command: "view"} command runs at that root'],
+            then: [
+              "the run exits {exitCode: 1}",
+              "the view directory survives: {viewSurvives: false}",
+              "the stale page survives: {staleSurvives: false}",
+              "a temporary view sibling survives: {temporarySurvives: false}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.wholesale-view-rewrite.build-invalidates-view",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/wholesale-view-rewrite.build-invalidates-view.sdp.md",
+    title: "A build that never renders still takes the old view down",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the up-front half of the invalidation on a command that writes no view, where a surviving directory would describe a graph that has moved.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'an extraction root holding {corpus: "one authored spec"} and a stale view page {stalePage: "spec/probe.departed.md"}',
+              'the stale page is planted {planted: "before the run"}',
+            ],
+            when: ['the {command: "build"} command runs at that root'],
+            then: [
+              "the run exits {exitCode: 0}",
+              "the view directory survives: {viewSurvives: false}",
               "the stale page survives: {staleSurvives: false}",
               "a temporary view sibling survives: {temporarySurvives: false}",
             ],

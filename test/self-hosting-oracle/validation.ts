@@ -936,11 +936,16 @@ export const validationSpecs = [
           given: [
             'a finding naming the validator {validatorId:string} at severity {severity:"warning"|"error"} carrying the message {message:string}',
           ],
-          when: ["the command-line renderer formats that finding once per location shape"],
+          when: [
+            'the {renderer:"command-line"|"Design Review"} renderer formats that finding once per location shape',
+          ],
           then: [
             "the finding carrying the file {file:string} and the line {line:number} renders {withLocation:string}",
             "the same finding carrying the file alone renders {fileOnly:string}",
             "the same finding carrying neither renders {bare:string}",
+            "the findings row carrying the file {file:string} and the line {line:number} renders {locationRow:string}",
+            "the same row carrying the file alone renders {fileOnlyRow:string}",
+            "the same row carrying neither renders {absentRow:string}",
           ],
         },
       },
@@ -966,11 +971,46 @@ export const validationSpecs = [
             given: [
               'a finding naming the validator {validatorId: "honesty/readiness-floor"} at severity {severity: "error"} carrying the message {message: "The stated rung is not earned."}',
             ],
-            when: ["the command-line renderer formats that finding once per location shape"],
+            when: [
+              'the {renderer: "command-line"} renderer formats that finding once per location shape',
+            ],
             then: [
               'the finding carrying the file {file: "specs/probe.sdp.md"} and the line {line: 7} renders {withLocation: "specs/probe.sdp.md:7 — [error] honesty/readiness-floor — The stated rung is not earned."}',
               'the same finding carrying the file alone renders {fileOnly: "specs/probe.sdp.md — [error] honesty/readiness-floor — The stated rung is not earned."}',
               'the same finding carrying neither renders {bare: "[error] honesty/readiness-floor — The stated rung is not earned."}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.diagnostic-rendering.table-cell-location",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/diagnostic-rendering.table-cell-location.sdp.md",
+    title: "The same three location shapes, rendered as table cells",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the one composition rule on the Design Review's findings table, where a cell cannot be absent and a message pipe would otherwise split the row.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a finding naming the validator {validatorId: "honesty/readiness-floor"} at severity {severity: "error"} carrying the message {message: "The stated rung is not earned | its floor refused it."}',
+            ],
+            when: [
+              'the {renderer: "Design Review"} renderer formats that finding once per location shape',
+            ],
+            then: [
+              'the findings row carrying the file {file: "specs/probe.sdp.md"} and the line {line: 7} renders {locationRow: "| error | `honesty/readiness-floor` | The stated rung is not earned \\| its floor refused it. | `specs/probe.sdp.md:7` |"}',
+              'the same row carrying the file alone renders {fileOnlyRow: "| error | `honesty/readiness-floor` | The stated rung is not earned \\| its floor refused it. | `specs/probe.sdp.md` |"}',
+              'the same row carrying neither renders {absentRow: "| error | `honesty/readiness-floor` | The stated rung is not earned \\| its floor refused it. | — |"}',
             ],
           },
         ],

@@ -8,14 +8,21 @@ import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protoc
 import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
 
 import { boundSpecPageContract } from "../generated/contracts/consumers.binding-language-views.bound-spec-page.contract.js";
+import { packMemberTableContract } from "../generated/contracts/consumers.binding-language-views.pack-member-table.contract.js";
 import { dishonestDivergenceContract } from "../generated/contracts/consumers.derived-readiness-banner.dishonest-divergence.contract.js";
 import { honestHeadroomContract } from "../generated/contracts/consumers.derived-readiness-banner.honest-headroom.contract.js";
+import { buildInvalidatesViewContract } from "../generated/contracts/consumers.wholesale-view-rewrite.build-invalidates-view.contract.js";
+import { failedRunViewRemovedContract } from "../generated/contracts/consumers.wholesale-view-rewrite.failed-run-view-removed.contract.js";
+import { lateStalePageContract } from "../generated/contracts/consumers.wholesale-view-rewrite.late-stale-page.contract.js";
 import { stalePageRemovedContract } from "../generated/contracts/consumers.wholesale-view-rewrite.stale-page-removed.contract.js";
 import { composedLocationContract } from "../generated/contracts/validation.diagnostic-rendering.composed-location.contract.js";
+import { tableCellLocationContract } from "../generated/contracts/validation.diagnostic-rendering.table-cell-location.contract.js";
 import {
   codeAnchor,
   codeAnchorId,
   createReader,
+  pack as probePack,
+  packId as probePackId,
   refines,
   renderDesignReview,
   spec,
@@ -24,8 +31,11 @@ import {
   testAnchorId as probeTestAnchorId,
 } from "../src/index.js";
 import type { DesignReviewPage, Finding, SpecReadiness } from "../src/index.js";
+import { runBuild } from "../src/cli/build-command.js";
 import { formatFinding } from "../src/cli/output.js";
 import { runView } from "../src/cli/validate-view-command.js";
+import { extract } from "../src/extract/index.js";
+import { renderFindings } from "../src/projections/design-review-context.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
 /**
@@ -205,11 +215,12 @@ const BINDING_PARENT_ID = "spec:probe.binding-parent";
 interface BindingWorld {
   specId: string;
   bound: boolean;
+  packId: string;
   pages: readonly DesignReviewPage[] | undefined;
 }
 
 function bindingWorld(): BindingWorld {
-  return { specId: "", bound: false, pages: undefined };
+  return { specId: "", bound: false, packId: "", pages: undefined };
 }
 
 function bindingPages(world: BindingWorld): readonly DesignReviewPage[] {
@@ -240,6 +251,27 @@ function indexRowOf(world: BindingWorld): string {
   return row;
 }
 
+/** A member's row in the pack member table — the other aggregate surface rule 5 names. */
+function memberRowOf(world: BindingWorld, memberId: string): string {
+  const packPage = `pack/${world.packId.slice(world.packId.indexOf(":") + 1)}.md`;
+  const row = pageOf(bindingPages(world), packPage)
+    .split("\n")
+    .find((line) => line.startsWith(`| [\`${memberId}\`]`));
+
+  if (row === undefined) {
+    throw new Error(`The pack member table is missing a row for "${memberId}".`);
+  }
+
+  return row;
+}
+
+/** Every aggregate surface the world actually rendered, beside the spec page itself. */
+function renderedSurfaces(world: BindingWorld): readonly string[] {
+  return world.packId === ""
+    ? [bindingPage(world), indexRowOf(world)]
+    : [bindingPage(world), indexRowOf(world), memberRowOf(world, world.specId)];
+}
+
 const bindingLanguageBindings = {
   "the graph holds a spec {specId} bound by {bindings}": (
     world: BindingWorld,
@@ -252,6 +284,12 @@ const bindingLanguageBindings = {
   ) => {
     world.specId = params.specId;
     world.bound = params.bindings === "an implementing code anchor and a verifying test anchor";
+  },
+  "the graph holds a pack {packId} listing that spec beside an unbound member": (
+    world: BindingWorld,
+    params: { readonly packId: string },
+  ) => {
+    world.packId = params.packId;
   },
   "the Design Review renders the graph": (world: BindingWorld) => {
     const parent = spec({
@@ -291,8 +329,22 @@ const bindingLanguageBindings = {
         ]
       : [];
 
+    // The pack lists the bound subject beside the unbound parent, so the member table has to
+    // render both binding values and a shorthand cannot pass by matching one of them.
+    const packs =
+      world.packId === ""
+        ? []
+        : [
+            probePack({
+              id: probePackId(world.packId),
+              title: "Probe aggregate for the rendered binding vocabulary",
+              framing: "One bound member and one unbound member, read as one review set.",
+              specs: [specId(world.specId), specId(BINDING_PARENT_ID)],
+            }),
+          ];
+
     world.pages = renderDesignReview(
-      createReader(deriveFixtureGraph({ specs: [parent, subject], anchors })),
+      createReader(deriveFixtureGraph({ specs: [parent, subject], packs, anchors })),
     );
   },
   "the spec page renders the implementation binding as {implementation}": (
@@ -323,12 +375,25 @@ const bindingLanguageBindings = {
 
     expect(columns).toBe(params.tableRepeats);
   },
+  "the pack member table repeats those binding values for the spec: {memberTableRepeats}": (
+    world: BindingWorld,
+    params: { readonly memberTableRepeats: boolean },
+  ) => {
+    expect(memberRowOf(world, world.specId).endsWith("| present | present |")).toBe(
+      params.memberTableRepeats,
+    );
+    // The negative beside the positive: the unbound member's cells read the other word of the
+    // same pair, so a table that hard-coded one value could not satisfy both rows.
+    expect(memberRowOf(world, BINDING_PARENT_ID).endsWith("| none | none |")).toBe(
+      params.memberTableRepeats,
+    );
+  },
   "the internal delivery-fact name {factName} appears as rendered label text: {factNameRendered}": (
     world: BindingWorld,
     params: { readonly factName: string; readonly factNameRendered: boolean },
   ) => {
     // The probe authors none of these words itself, so every occurrence would be the renderer's.
-    for (const surface of [bindingPage(world), indexRowOf(world)]) {
+    for (const surface of renderedSurfaces(world)) {
       expect(surface.includes(params.factName)).toBe(params.factNameRendered);
       expect(surface.includes("has-verifier")).toBe(params.factNameRendered);
     }
@@ -343,6 +408,15 @@ const boundSpecPageTestAnchor = specTest({
 void boundSpecPageTestAnchor;
 
 bindExample(boundSpecPageContract, bindingWorld, bindingLanguageBindings);
+
+const packMemberTableTestAnchor = specTest({
+  id: testAnchorId("test:protocol.binding-language-views.pack-member-table"),
+  label: "the pack-member point verifies the aggregate half of the rendered binding vocabulary",
+  verifies: ref("spec:consumers.binding-language-views.pack-member-table"),
+});
+void packMemberTableTestAnchor;
+
+bindExample(packMemberTableContract, bindingWorld, bindingLanguageBindings);
 
 /* ----- spec:consumers.wholesale-view-rewrite ----- */
 
@@ -359,9 +433,24 @@ relations: {}
 - outcome: Give the view one page to render over a temporary extraction root.
 `;
 
+/** The same shape, with an id the grammar refuses — one hard extraction error, nothing else. */
+const REFUSED_CARRIER = `---
+id: probe-view-subject
+kind: rule
+altitude: story
+readiness: idea
+relations: {}
+---
+# A carrier the extractor refuses
+
+## Intent
+- outcome: Fail extraction so the run cannot produce a current view.
+`;
+
 interface ViewWorld {
   readonly root: string;
   stalePage: string;
+  plantLate: boolean;
   exitCode: number | undefined;
 }
 
@@ -369,33 +458,82 @@ function viewWorld(): ViewWorld {
   const root = mkdtempSync(join(tmpdir(), "sdp-self-hosting-view-"));
   temporaryRoots.add(root);
 
-  return { root, stalePage: "", exitCode: undefined };
+  return { root, stalePage: "", plantLate: false, exitCode: undefined };
 }
 
 function viewPathOf(world: ViewWorld): string {
   return join(world.root, "generated", "design-review");
 }
 
+/**
+ * The planted page names a subject the corpus does not hold, so nothing the run writes can
+ * overwrite it: it survives only if a run is allowed to leave an earlier one's output behind.
+ */
+function plantStalePage(world: ViewWorld): void {
+  const stalePath = join(viewPathOf(world), ...world.stalePage.split("/"));
+  mkdirSync(dirname(stalePath), { recursive: true });
+  writeFileSync(stalePath, "# A spec the corpus no longer holds\n", "utf8");
+}
+
 const wholesaleRewriteBindings = {
   "an extraction root holding {corpus} and a stale view page {stalePage}": (
     world: ViewWorld,
-    params: { readonly corpus: string; readonly stalePage: string },
+    params: {
+      readonly corpus: "one authored spec" | "one authored spec the extractor refuses";
+      readonly stalePage: string;
+    },
   ) => {
     mkdirSync(join(world.root, "specs"), { recursive: true });
-    writeFileSync(join(world.root, "specs", "probe.sdp.md"), PROBE_CARRIER, "utf8");
-
-    // The planted page names a subject the corpus does not hold, so nothing the run writes can
-    // overwrite it: it survives only if a run is allowed to leave an earlier one's output behind.
+    writeFileSync(
+      join(world.root, "specs", "probe.sdp.md"),
+      params.corpus === "one authored spec" ? PROBE_CARRIER : REFUSED_CARRIER,
+      "utf8",
+    );
     world.stalePage = params.stalePage;
-    const stalePath = join(viewPathOf(world), ...params.stalePage.split("/"));
-    mkdirSync(dirname(stalePath), { recursive: true });
-    writeFileSync(stalePath, "# A spec the corpus no longer holds\n", "utf8");
   },
-  "the view is rendered at that root": (world: ViewWorld) => {
-    world.exitCode = runView({ root: world.root, exclude: [], checkClean: false }, {}, {});
+  "the stale page is planted {planted}": (
+    world: ViewWorld,
+    params: {
+      readonly planted: "before the run" | "after the build has invalidated the view";
+    },
+  ) => {
+    world.plantLate = params.planted === "after the build has invalidated the view";
+
+    if (!world.plantLate) {
+      plantStalePage(world);
+    }
+  },
+  "the {command} command runs at that root": (
+    world: ViewWorld,
+    params: { readonly command: "view" | "build" },
+  ) => {
+    const parsed = { root: world.root, exclude: [], checkClean: false };
+    // Late planting rides the extraction seam the build already declares, used here only as a
+    // clock: it runs *after* the build's up-front invalidation and delegates to the real
+    // extractor, so the page the run must evict is one that invalidation cannot have removed.
+    const hooks = world.plantLate
+      ? {
+          extract: (options: Parameters<typeof extract>[0]) => {
+            plantStalePage(world);
+
+            return extract(options);
+          },
+        }
+      : {};
+
+    world.exitCode =
+      params.command === "view"
+        ? runView(parsed, {}, hooks)
+        : runBuild(parsed, {}, "build", hooks).exitCode;
   },
   "the run exits {exitCode}": (world: ViewWorld, params: { readonly exitCode: number }) => {
     expect(world.exitCode).toBe(params.exitCode);
+  },
+  "the view directory survives: {viewSurvives}": (
+    world: ViewWorld,
+    params: { readonly viewSurvives: boolean },
+  ) => {
+    expect(existsSync(viewPathOf(world))).toBe(params.viewSurvives);
   },
   "the view holds the current page {currentPage}": (
     world: ViewWorld,
@@ -428,6 +566,33 @@ const stalePageRemovedTestAnchor = specTest({
 void stalePageRemovedTestAnchor;
 
 bindExample(stalePageRemovedContract, viewWorld, wholesaleRewriteBindings);
+
+const lateStalePageTestAnchor = specTest({
+  id: testAnchorId("test:protocol.wholesale-view-rewrite.late-stale-page"),
+  label: "the late-page point verifies that the swap itself evicts what invalidation missed",
+  verifies: ref("spec:consumers.wholesale-view-rewrite.late-stale-page"),
+});
+void lateStalePageTestAnchor;
+
+bindExample(lateStalePageContract, viewWorld, wholesaleRewriteBindings);
+
+const failedRunViewRemovedTestAnchor = specTest({
+  id: testAnchorId("test:protocol.wholesale-view-rewrite.failed-run-view-removed"),
+  label: "the failed-run point verifies that an uncertifiable view is removed, not left readable",
+  verifies: ref("spec:consumers.wholesale-view-rewrite.failed-run-view-removed"),
+});
+void failedRunViewRemovedTestAnchor;
+
+bindExample(failedRunViewRemovedContract, viewWorld, wholesaleRewriteBindings);
+
+const buildInvalidatesViewTestAnchor = specTest({
+  id: testAnchorId("test:protocol.wholesale-view-rewrite.build-invalidates-view"),
+  label: "the build point verifies the up-front invalidation on a command that renders no view",
+  verifies: ref("spec:consumers.wholesale-view-rewrite.build-invalidates-view"),
+});
+void buildInvalidatesViewTestAnchor;
+
+bindExample(buildInvalidatesViewContract, viewWorld, wholesaleRewriteBindings);
 
 /* ----- spec:validation.diagnostic-rendering ----- */
 
@@ -468,8 +633,9 @@ const diagnosticRenderingBindings = {
         message: params.message,
       };
     },
-  "the command-line renderer formats that finding once per location shape": (
+  "the {renderer} renderer formats that finding once per location shape": (
     world: DiagnosticWorld,
+    params: { readonly renderer: "command-line" | "Design Review" },
   ) => {
     const finding = world.finding;
 
@@ -478,8 +644,13 @@ const diagnosticRenderingBindings = {
     }
 
     // One finding, one renderer: each outcome step below supplies a location shape and reads what
-    // the real command-line renderer composed from those structured fields alone.
-    world.render = (location) => formatFinding({ ...finding, ...location });
+    // the real renderer composed from those structured fields alone. Both entrypoints the Spec
+    // names are called directly — `formatFinding` for the command line, `renderFindings` for the
+    // Design Review's table — because each is the seam its own surface renders through.
+    world.render =
+      params.renderer === "command-line"
+        ? (location) => formatFinding({ ...finding, ...location })
+        : (location) => renderFindings([{ ...finding, ...location }]).at(-1) ?? "";
   },
   "the finding carrying the file {file} and the line {line} renders {withLocation}": (
     world: DiagnosticWorld,
@@ -504,6 +675,29 @@ const diagnosticRenderingBindings = {
   ) => {
     expect(renderOf(world)({})).toBe(`${params.bare}\n`);
   },
+  "the findings row carrying the file {file} and the line {line} renders {locationRow}": (
+    world: DiagnosticWorld,
+    params: { readonly file: string; readonly line: number; readonly locationRow: string },
+  ) => {
+    const rendered = renderOf(world)({ file: params.file, line: params.line });
+
+    world.file = params.file;
+    expect(rendered).toBe(params.locationRow);
+    // The location cell is the only place the path appears — the message cell never carries it.
+    expect(rendered.indexOf(params.file)).toBe(rendered.lastIndexOf(params.file));
+  },
+  "the same row carrying the file alone renders {fileOnlyRow}": (
+    world: DiagnosticWorld,
+    params: { readonly fileOnlyRow: string },
+  ) => {
+    expect(renderOf(world)({ file: world.file })).toBe(params.fileOnlyRow);
+  },
+  "the same row carrying neither renders {absentRow}": (
+    world: DiagnosticWorld,
+    params: { readonly absentRow: string },
+  ) => {
+    expect(renderOf(world)({})).toBe(params.absentRow);
+  },
 };
 
 const composedLocationTestAnchor = specTest({
@@ -514,3 +708,12 @@ const composedLocationTestAnchor = specTest({
 void composedLocationTestAnchor;
 
 bindExample(composedLocationContract, diagnosticWorld, diagnosticRenderingBindings);
+
+const tableCellLocationTestAnchor = specTest({
+  id: testAnchorId("test:protocol.diagnostic-rendering.table-cell-location"),
+  label: "the table-cell point verifies the same composition rule on the Design Review's twin",
+  verifies: ref("spec:validation.diagnostic-rendering.table-cell-location"),
+});
+void tableCellLocationTestAnchor;
+
+bindExample(tableCellLocationContract, diagnosticWorld, diagnosticRenderingBindings);

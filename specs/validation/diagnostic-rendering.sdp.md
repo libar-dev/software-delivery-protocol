@@ -23,8 +23,11 @@ relations:
 ## Example space
 ```gwt-vocabulary
 Given a finding naming the validator {validatorId:string} at severity {severity:"warning"|"error"} carrying the message {message:string}
-When the command-line renderer formats that finding once per location shape
+When the {renderer:"command-line"|"Design Review"} renderer formats that finding once per location shape
 Then the finding carrying the file {file:string} and the line {line:number} renders {withLocation:string}
 Then the same finding carrying the file alone renders {fileOnly:string}
 Then the same finding carrying neither renders {bare:string}
+Then the findings row carrying the file {file:string} and the line {line:number} renders {locationRow:string}
+Then the same row carrying the file alone renders {fileOnlyRow:string}
+Then the same row carrying neither renders {absentRow:string}
 ```

@@ -24,10 +24,12 @@ relations:
 ## Example space
 ```gwt-vocabulary
 Given the graph holds a spec {specId:string} bound by {bindings:"an implementing code anchor and a verifying test anchor"|"no anchor at all"}
+Given the graph holds a pack {packId:string} listing that spec beside an unbound member
 When the Design Review renders the graph
 Then the spec page renders the implementation binding as {implementation:"present"|"none"}
 Then the spec page renders the verifier binding as {verifier:"present"|"none"}
 Then the spec page renders the runtime observation as {observation:string}
 Then the index table repeats those binding values for the spec: {tableRepeats:boolean}
+Then the pack member table repeats those binding values for the spec: {memberTableRepeats:boolean}
 Then the internal delivery-fact name {factName:string} appears as rendered label text: {factNameRendered:boolean}
 ```

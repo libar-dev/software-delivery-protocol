@@ -23,9 +23,11 @@ relations:
 
 ## Example space
 ```gwt-vocabulary
-Given an extraction root holding {corpus:string} and a stale view page {stalePage:string}
-When the view is rendered at that root
+Given an extraction root holding {corpus:"one authored spec"|"one authored spec the extractor refuses"} and a stale view page {stalePage:string}
+Given the stale page is planted {planted:"before the run"|"after the build has invalidated the view"}
+When the {command:"view"|"build"} command runs at that root
 Then the run exits {exitCode:number}
+Then the view directory survives: {viewSurvives:boolean}
 Then the view holds the current page {currentPage:string}
 Then the stale page survives: {staleSurvives:boolean}
 Then a temporary view sibling survives: {temporarySurvives:boolean}

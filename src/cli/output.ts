@@ -5,14 +5,6 @@ export interface CliOutput {
   readonly stderr?: { readonly write: (chunk: string) => void };
 }
 
-export interface RenderedFinding {
-  readonly validatorId: string;
-  readonly severity: string;
-  readonly message: string;
-  readonly file?: string;
-  readonly line?: number;
-}
-
 export const defaultCliOutput: CliOutput = {
   stdout: process.stdout,
   stderr: process.stderr,
@@ -26,7 +18,7 @@ export function writeStderr(output: CliOutput, text: string): void {
   output.stderr?.write(text);
 }
 
-export function formatFinding(finding: Finding | RenderedFinding): string {
+export function formatFinding(finding: Finding): string {
   const location =
     finding.file === undefined
       ? ""

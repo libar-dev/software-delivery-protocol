@@ -62,6 +62,9 @@ export function mapIntent(
           ),
         );
       else {
+        // The GWT result key is the literal word `then`, written directly here and at the
+        // vocabulary site below — never assembled from fragments; nothing in the toolchain
+        // requires or rewards indirection, and the frozen key set stays greppable.
         const example: Record<string, unknown> = {
           given: fence.steps.given,
           when: fence.steps.when,
