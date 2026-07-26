@@ -26,7 +26,7 @@ Stories are tagged so the backlog stays MVP-disciplined without capping ambition
 | **Iterate** | Adds real power once the MVP loop holds. The natural next layer. |
 | **Later** | Valuable and designed-for, but not soon. Kept here so the model doesn't paint us into a corner. |
 
-The MVP target is one bounded context — Order Management, `pack:checkout-v1`, ~8–12 specs — proving: the typed `Spec` envelope and its carriers (the TS DSL for the checkout worked example; the ruled Markdown carrier for new IDs) + generic anchors, the one-graph extractor over both carriers (`ts-morph` for `.sdp.ts`, the ruled Markdown parser for `.sdp.md`), core conformance + honesty checks, the Design Review / one read-only view, the agent surface (the `reader` — entry adapters + impact), and the bidirectional spec↔test trace. The write path is **edit the canonical carrier + git** — no patch subsystem.
+The MVP target is one bounded context — Order Management, `pack:checkout-v1`, ~8–12 specs — proving: the typed `Spec` envelope and its carriers (Markdown by default, with the TS DSL as an import source and lawful per-ID option; Packs remain TS until a Pack syntax ruling) + generic anchors, the one-graph extractor over both carriers (`ts-morph` for `.sdp.ts`, the ruled Markdown parser for `.sdp.md`), core conformance + honesty checks, the Design Review / one read-only view, the agent surface (the `reader` — entry adapters + impact), and the bidirectional spec↔test trace. Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option. The write path is **edit the canonical carrier + git** — no patch subsystem.
 
 ---
 

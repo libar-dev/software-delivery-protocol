@@ -5,6 +5,8 @@ import {
 } from "../graph/delivery-facts.js";
 import { isResolvingOracleModel } from "../graph/oracle-bindings.js";
 import { authoredEdgeTypes } from "../graph/schema.js";
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type {
   DeliveryFactName,
   GraphClaim,
@@ -220,6 +222,14 @@ export interface BlastRadius {
   readonly coverageUnknown: readonly string[];
 }
 
+const readerImpactAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.reader-impact"),
+  label: "file-level reader blast-radius contract",
+  satisfies: ref("spec:consumers.reader"),
+});
+
+void readerImpactAnchor;
+
 /* ----- the reader ----- */
 
 /**
@@ -336,6 +346,22 @@ function matchSections(sections: SpecSections | undefined, needle: string): read
 
   return matched.sort(compareCodeUnits);
 }
+
+const agentSurfaceAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.agent-surface"),
+  label: "typed graph reader and agent entry adapters",
+  satisfies: ref("spec:consumers.agent-surface"),
+});
+
+void agentSurfaceAnchor;
+
+const readerAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.reader"),
+  label: "thin typed graph reader construction",
+  satisfies: ref("spec:consumers.reader"),
+});
+
+void readerAnchor;
 
 export function createReader(graph: GraphSchema): Reader {
   const index = buildGraphIndex(graph);

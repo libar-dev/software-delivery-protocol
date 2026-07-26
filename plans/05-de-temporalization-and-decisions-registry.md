@@ -186,20 +186,20 @@ Future spec id**:
 
 | ID | Ratified name | Curation | Future spec id |
 |---|---|---|---|
-| MD-1 | the executable meta-model | durable | `spec:protocol.decisions.executable-meta-model` |
-| MD-2 | adopt the nouns, reject the gates | durable | `spec:protocol.decisions.adopt-the-nouns` |
-| MD-4 | one primitive, named coordinates | durable | `spec:protocol.decisions.one-primitive` |
-| MD-5 | the protocol naming | durable | `spec:protocol.decisions.protocol-naming` |
-| MD-7 | binding, never liveness | durable | `spec:protocol.decisions.binding-not-liveness` |
+| MD-1 | the executable meta-model | durable | `spec:decisions.executable-meta-model` |
+| MD-2 | adopt the nouns, reject the gates | durable | `spec:decisions.adopt-the-nouns` |
+| MD-4 | one primitive, named coordinates | durable | `spec:decisions.one-primitive` |
+| MD-5 | the protocol naming | durable | `spec:decisions.protocol-naming` |
+| MD-7 | binding, never liveness | durable | `spec:decisions.binding-not-liveness` |
 | MD-8 | the generic `codeAnchor` | folds at Slice 2 → doc-comment on the builder | — |
 | MD-9 | the open-questions home | folds at fold time (lives in `sections.ts`, the floor, `02` §3) | — |
-| MD-10 | content-only sections | durable | `spec:protocol.decisions.content-only-sections` |
-| MD-11 | the typing law | durable | `spec:protocol.decisions.typing-law` |
-| MD-12 | the kind-conditional floor | durable | `spec:protocol.decisions.kind-conditional-floor` |
+| MD-10 | content-only sections | durable | `spec:decisions.content-only-sections` |
+| MD-11 | the typing law | durable | `spec:decisions.typing-law` |
+| MD-12 | the kind-conditional floor | durable | `spec:decisions.kind-conditional-floor` |
 | MD-13 | floor-table-as-truth | folds (lives in `05` §3 Representation note + `readiness-floor.ts` header) | — |
-| MD-14 | one validation path | durable | `spec:protocol.decisions.one-validation-path` |
-| MD-15 | the `.sdp.ts` extension | durable | `spec:protocol.decisions.sdp-ts-extension` |
-| MD-16 | carried evidence | durable (classification added here — Report 2's gap) | `spec:protocol.decisions.carried-evidence` |
+| MD-14 | one validation path | durable | `spec:decisions.one-validation-path` |
+| MD-15 | the `.sdp.ts` extension | durable | `spec:decisions.sdp-ts-extension` |
+| MD-16 | carried evidence | durable (classification added here — Report 2's gap) | `spec:decisions.carried-evidence` |
 
 Below the table, the convention line: *"In prose, lead with meaning — write 'the typing law
 (MD-11),' never bare 'MD-n.' (Generalizes MD-8's own footnote.)"*

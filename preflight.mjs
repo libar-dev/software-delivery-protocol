@@ -13,7 +13,12 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = fileURLToPath(new URL(".", import.meta.url));
 const scratchRoot = join(repoRoot, ".tmp-scratch");
-const sdpPath = join(repoRoot, "dist", "cli", "sdp.js");
+
+// The relocated runtime: builder trust is physical identity to the *running* package's modules, so
+// the clean-room must carry its own `dist/` and `package.json` and execute those. Running the
+// repo's binary against a copied tree would lawfully lose every relative-import anchor and make the
+// comparison meaningless; running the copy's binary proves the regeneration is relocation-independent.
+const runtimePaths = ["dist", "package.json"];
 
 // The check pipeline owns precisely these outputs. Root dist/ is package assembly rather than
 // generated truth; broader ignored runtime garbage remains a manual inspection responsibility.
@@ -22,7 +27,16 @@ const generationTargets = [
     name: "self-hosting",
     generatedPath: "generated",
     sourcePaths: ["specs", "src", "test"],
-    command: ["view", "--exclude", "explorations", "--exclude", "examples"],
+    command: [
+      "view",
+      ".",
+      "--exclude",
+      "explorations",
+      "--exclude",
+      "examples",
+      "--exclude",
+      "test/fixtures/import/parity",
+    ],
   },
   {
     name: "checkout-v1",
@@ -73,9 +87,7 @@ function readTree(root) {
   return files;
 }
 
-function compareGeneratedTree(target, expectedRoot) {
-  const actual = readTree(join(repoRoot, target.generatedPath));
-  const expected = readTree(expectedRoot);
+function compareGeneratedTree(target, actual, expected) {
   const paths = new Set([...actual.keys(), ...expected.keys()]);
 
   return [...paths]
@@ -89,12 +101,19 @@ function regenerateExpectedTree(target) {
   const temporaryRoot = mkdtempSync(join(scratchRoot, "preflight-"));
 
   try {
-    for (const sourcePath of target.sourcePaths) {
+    for (const sourcePath of [...runtimePaths, ...target.sourcePaths]) {
       cpSync(join(repoRoot, sourcePath), join(temporaryRoot, sourcePath), { recursive: true });
     }
 
-    run(process.execPath, [sdpPath, ...target.command], { cwd: temporaryRoot });
-    return compareGeneratedTree(target, join(temporaryRoot, target.generatedPath));
+    run(process.execPath, [join(temporaryRoot, "dist", "cli", "sdp.js"), ...target.command], {
+      cwd: temporaryRoot,
+    });
+
+    return compareGeneratedTree(
+      target,
+      readTree(join(repoRoot, target.generatedPath)),
+      readTree(join(temporaryRoot, target.generatedPath)),
+    );
   } finally {
     rmSync(temporaryRoot, { recursive: true, force: true });
   }

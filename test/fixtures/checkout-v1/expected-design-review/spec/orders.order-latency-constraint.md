@@ -1,6 +1,6 @@
 # Create-order latency stays within checkout budget
 
-`spec:orders.order-latency-constraint` · Constraint (NFR) (`constraint`) · altitude `story` · authored in [specs/orders/order-latency-constraint.sdp.ts](../../../specs/orders/order-latency-constraint.sdp.ts) `[declared]`
+`spec:orders.order-latency-constraint` · Constraint (NFR) (`constraint`) · altitude `story` · authored in [specs/orders/order-latency-constraint.sdp.md](../../../specs/orders/order-latency-constraint.sdp.md) `[declared]`
 
 **Readiness:** stated `defined` · structural floor reached: `ready`
 

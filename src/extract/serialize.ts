@@ -9,6 +9,7 @@ import type {
   SpecSections,
   VerificationSection,
 } from "../model/sections.js";
+import { setOwn } from "./set-own.js";
 
 /**
  * Every output byte is owned here, so no `ts-morph` upgrade can change them silently: nodes sorted
@@ -108,7 +109,7 @@ function canonicalDynamicSection(
   for (const key of Object.keys(section)
     .filter((key) => key !== "description")
     .sort(compareCodeUnits)) {
-    result[key] = section[key];
+    setOwn(result, key, section[key]);
   }
 
   return result;

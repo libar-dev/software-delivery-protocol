@@ -1,6 +1,6 @@
 # Valid cart creates an order
 
-`spec:orders.create-order.valid-cart` · Example / Scenario (`example`) · altitude `story` · authored in [specs/orders/create-order-valid-cart.sdp.ts](../../../specs/orders/create-order-valid-cart.sdp.ts) `[declared]`
+`spec:orders.create-order.valid-cart` · Example / Scenario (`example`) · altitude `story` · authored in [specs/orders/create-order-valid-cart.sdp.md](../../../specs/orders/create-order-valid-cart.sdp.md) `[declared]`
 
 **Readiness:** stated `ready` · structural floor reached: `ready`
 

@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -40,6 +40,7 @@ const defaultRoot = dirname(fileURLToPath(import.meta.url));
 const rootDir = process.argv[2] ?? defaultRoot;
 
 const planPath = ["plans", "17-self-hosting-v1.md"].join("/");
+const plan18Path = ["plans", "18-self-hosting-phase-2.md"].join("/");
 const plan16Path = ["plans", "16-carrier-ruling.md"].join("/");
 const agentsPath = "AGENTS.md";
 const decisionsPath = "docs/concept/DECISIONS.md";
@@ -49,6 +50,10 @@ const glossaryPath = "CONTEXT.md";
 // ledger must agree with them field for field. The shared gate date is assembled in parts.
 const GATE_DATE = ["2026", "07", "18"].join("-");
 const GATE_4_CORRECTION = "24f9978: docs(concept): record the landed prose projection in 06";
+const PHASE2_GATES = [
+  { gate: "G1", sha: "f06f14d" },
+  { gate: "G2", sha: "df444f2" },
+];
 const GATES = [
   { gate: "1", meaning: "schema freeze", sha: "aca79090529c2f6625ceafc78f33e16da81bfcb1" },
   { gate: "2", meaning: "corpus/readiness", sha: "cdb68fc1564c9167ebc0372ba8f8599a97df4393" },
@@ -79,6 +84,7 @@ const agents = read(agentsPath);
 const decisions = read(decisionsPath);
 const glossary = read(glossaryPath);
 const plan16 = read(plan16Path);
+const plan18 = existsSync(join(rootDir, plan18Path)) ? read(plan18Path) : null;
 
 // ---------------------------------------------------------------------------
 // 1. The docket: all 25 obligations are dispositioned.
@@ -251,9 +257,7 @@ for (const [surface, text] of [
 // ---------------------------------------------------------------------------
 
 for (const needle of [
-  "### MD-20",
   "the strict consumer-exclusion contract",
-  "### MD-21",
   "the envelope-grammar ownership posture",
   "| MD-20 |",
   "| MD-21 |",
@@ -272,6 +276,56 @@ for (const needle of ["three-part-test dispositions", "MD-20", "MD-21"]) {
     needle,
     `the plan does not record the three-part-test disposition (${needle})`,
   );
+}
+
+// ---------------------------------------------------------------------------
+// 6. Phase-2 plan scaffold: the G1-G8 process ledger is present and usable.
+// ---------------------------------------------------------------------------
+
+if (plan18 !== null) {
+  const phase2LedgerStart = plan18.indexOf("## (m) §10 Gate ledger G1-G8");
+  const phase2LedgerEnd = plan18.indexOf("## (n)", phase2LedgerStart + 10);
+  const phase2Ledger =
+    phase2LedgerStart === -1
+      ? ""
+      : plan18.slice(phase2LedgerStart, phase2LedgerEnd === -1 ? undefined : phase2LedgerEnd);
+
+  if (phase2LedgerStart === -1) {
+    failures.push(`${plan18Path} — missing the G1-G8 gate ledger`);
+  } else {
+    expectContains(
+      plan18Path,
+      phase2Ledger,
+      "never graph content",
+      "the G1-G8 ledger must declare itself process evidence, never graph content",
+    );
+
+    for (const gate of Array.from({ length: 8 }, (_, index) => `G${index + 1}`)) {
+      const row = phase2Ledger.split("\n").find((line) => line.startsWith(`| ${gate} |`)) ?? "";
+      if (row === "") {
+        failures.push(`${plan18Path} — ledger row for ${gate} is missing`);
+        continue;
+      }
+
+      const cells = row
+        .split("|")
+        .map((cell) => cell.trim())
+        .slice(1, -1);
+      if (cells.length !== 4 || cells.some((cell) => cell === "")) {
+        failures.push(`${plan18Path} — ledger row for ${gate} is empty or malformed`);
+      }
+      if (!/(pending|planned|accepted|done|deferred|not started)/iu.test(cells[3] ?? "")) {
+        failures.push(`${plan18Path} — ledger row for ${gate} has no valid disposition state`);
+      }
+
+      const phase2Gate = PHASE2_GATES.find((entry) => entry.gate === gate);
+      if (phase2Gate !== undefined && !norm(row).includes(phase2Gate.sha)) {
+        failures.push(
+          `${plan18Path} — ledger row for ${gate} does not contain accepted SHA ${phase2Gate.sha}`,
+        );
+      }
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -303,6 +357,7 @@ const report = {
     agents: agentsPath,
     decisions: decisionsPath,
     glossary: glossaryPath,
+    phase2Plan: plan18 === null ? null : plan18Path,
   },
   temporal,
   docket: {
@@ -323,6 +378,7 @@ const report = {
       { meaning, disposition: "accepted", date: GATE_DATE, sha, corrections },
     ]),
   ]),
+  phase2Ledger: plan18 === null ? "not present" : "G1-G8 scaffold checked",
 };
 console.log(JSON.stringify(report, null, 2));
 process.exit(0);

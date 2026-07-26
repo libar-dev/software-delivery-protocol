@@ -1,0 +1,19 @@
+import {
+  codeAnchor,
+  codeAnchorId,
+  specId,
+  specTest,
+  testAnchorId,
+} from "@libar-dev/software-delivery-protocol";
+
+export const behaviorRoundTripAnchor = codeAnchor({
+  id: codeAnchorId("impl:round-trip.behavior"),
+  label: "implements the round-trip behavior fixture",
+  satisfies: specId("spec:round-trip.behavior"),
+});
+
+export const exampleRoundTripVerifier = specTest({
+  id: testAnchorId("test:round-trip.example"),
+  label: "verifies the round-trip example fixture",
+  verifies: specId("spec:round-trip.example"),
+});

@@ -4,6 +4,7 @@ import type { Finding } from "../validate/contracts.js";
 export { reifyMarkdownCarrier } from "./markdown.js";
 import { extractFindingIds, reifySourceFile } from "./reify.js";
 import type { ReifiedPack, ReifiedSpec } from "./reify.js";
+import type { ProtocolBindingScope } from "./protocol-bindings.js";
 
 export interface CarrierReification {
   readonly specs: readonly ReifiedSpec[];
@@ -52,7 +53,11 @@ function reificationFailure(
  * and AST mapping stay inside this total boundary; discovery and cross-file coordination stay in
  * `extract()`.
  */
-export const reifyTypeScriptCarrier: CarrierReifier = (sourceText, relativePath) => {
+export function reifyTypeScriptCarrier(
+  sourceText: string,
+  relativePath: string,
+  bindingScope?: ProtocolBindingScope,
+): CarrierReification {
   try {
     const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { noLib: true } });
     const sourceFile = project.createSourceFile(relativePath, sourceText);
@@ -75,8 +80,12 @@ export const reifyTypeScriptCarrier: CarrierReifier = (sourceText, relativePath)
       };
     }
 
-    return reifySourceFile(sourceFile, relativePath);
+    return reifySourceFile(sourceFile, relativePath, bindingScope);
   } catch (error: unknown) {
-    return reificationFailure(extractFindingIds.parseError, relativePath, error);
+    return reificationFailure(
+      extractFindingIds.parseError,
+      relativePath,
+      error instanceof Error ? error : String(error),
+    );
   }
-};
+}

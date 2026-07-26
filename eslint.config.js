@@ -24,6 +24,7 @@ export default tseslint.config(
       ".sisyphus/evidence/**",
       "node_modules/**",
       "explorations/**",
+      "test/fixtures/import/parity/**",
     ],
   },
   js.configs.recommended,
@@ -50,7 +51,7 @@ export default tseslint.config(
     // gate leg. Typecheck runs after that generation and checks this test's contract types; lint
     // keeps all other rules enabled without making the required lint-before-generation order depend
     // on ignored derived output.
-    files: ["test/self-hosting-duplicate-ids.test.ts"],
+    files: ["test/self-hosting-duplicate-ids.test.ts", "test/self-hosting-sdp-import.test.ts"],
     rules: {
       "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",

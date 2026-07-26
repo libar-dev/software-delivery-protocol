@@ -1,0 +1,21 @@
+import { constrainedBy, refines, spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const behaviorRoundTripSpec = spec({
+  id: specId("spec:round-trip.behavior"),
+  title: "Accept an order under its rules",
+  kind: "behavior",
+  altitude: "feature",
+  readiness: "defined",
+  relations: [
+    refines(specId("spec:round-trip.decision")),
+    constrainedBy(specId("spec:round-trip.constraint")),
+  ],
+  intent: {
+    description: "An author needs the behavior's governing rules to survive import.",
+    outcome: "The emitted carrier preserves the authored model.",
+  },
+  behavior: {
+    description: "The behavior decides whether an order is eligible.",
+    rules: ["An order is accepted only when its total is positive.", "A cancelled order is refused."],
+  },
+});

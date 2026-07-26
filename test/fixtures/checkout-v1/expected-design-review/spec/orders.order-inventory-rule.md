@@ -1,6 +1,6 @@
 # Order creation requires available inventory
 
-`spec:orders.order-inventory-rule` · Business Rule (`rule`) · altitude `story` · authored in [specs/orders/order-inventory-rule.sdp.ts](../../../specs/orders/order-inventory-rule.sdp.ts) `[declared]`
+`spec:orders.order-inventory-rule` · Business Rule (`rule`) · altitude `story` · authored in [specs/orders/order-inventory-rule.sdp.md](../../../specs/orders/order-inventory-rule.sdp.md) `[declared]`
 
 **Readiness:** stated `defined` · structural floor reached: `ready`
 

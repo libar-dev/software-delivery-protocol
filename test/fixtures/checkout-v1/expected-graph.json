@@ -52,7 +52,7 @@
       "altitude": "feature",
       "readiness": "defined",
       "title": "Order lifecycle keeps validation before creation",
-      "file": "specs/decisions/order-lifecycle.sdp.ts",
+      "file": "specs/decisions/order-lifecycle.sdp.md",
       "sections": {
         "intent": {
           "outcome": "Decide when checkout-v1 may create an order.",
@@ -78,7 +78,7 @@
       "altitude": "feature",
       "readiness": "defined",
       "title": "Customer creates an order",
-      "file": "specs/orders/create-order.sdp.ts",
+      "file": "specs/orders/create-order.sdp.md",
       "sections": {
         "intent": {
           "actor": "customer",
@@ -116,7 +116,7 @@
       "altitude": "story",
       "readiness": "idea",
       "title": "Create-order API contract",
-      "file": "specs/orders/create-order-api-contract.sdp.ts",
+      "file": "specs/orders/create-order-api-contract.sdp.md",
       "sections": {
         "intent": {
           "outcome": "Pin the request and response shapes of POST /orders.",
@@ -137,7 +137,7 @@
       "altitude": "story",
       "readiness": "defined",
       "title": "Invalid cart is rejected",
-      "file": "specs/orders/create-order-invalid-cart.sdp.ts",
+      "file": "specs/orders/create-order-invalid-cart.sdp.md",
       "sections": {
         "intent": {
           "outcome": "Show that an invalid cart does not become an order.",
@@ -175,7 +175,7 @@
       "altitude": "story",
       "readiness": "ready",
       "title": "Valid cart creates an order",
-      "file": "specs/orders/create-order-valid-cart.sdp.ts",
+      "file": "specs/orders/create-order-valid-cart.sdp.md",
       "sections": {
         "intent": {
           "outcome": "Show that a valid cart can become an order.",
@@ -219,7 +219,7 @@
       "altitude": "story",
       "readiness": "defined",
       "title": "Order creation requires available inventory",
-      "file": "specs/orders/order-inventory-rule.sdp.ts",
+      "file": "specs/orders/order-inventory-rule.sdp.md",
       "sections": {
         "intent": {
           "outcome": "Reject carts whose items are not fully available.",
@@ -241,7 +241,7 @@
       "altitude": "story",
       "readiness": "defined",
       "title": "Create-order latency stays within checkout budget",
-      "file": "specs/orders/order-latency-constraint.sdp.ts",
+      "file": "specs/orders/order-latency-constraint.sdp.md",
       "sections": {
         "intent": {
           "outcome": "Keep create-order fast enough for interactive checkout.",
@@ -264,7 +264,7 @@
       "altitude": "epic",
       "readiness": "defined",
       "title": "Order management",
-      "file": "specs/orders/order-management.sdp.ts",
+      "file": "specs/orders/order-management.sdp.md",
       "sections": {
         "intent": {
           "outcome": "Coordinate the authored order-management slice for checkout v1.",
@@ -286,7 +286,7 @@
       "altitude": "story",
       "readiness": "defined",
       "title": "Order-management domain vocabulary",
-      "file": "specs/orders/order-model.sdp.ts",
+      "file": "specs/orders/order-model.sdp.md",
       "sections": {
         "intent": {
           "outcome": "Define the core terms used by the checkout-v1 order-management slice.",
@@ -311,7 +311,7 @@
       "altitude": "feature",
       "readiness": "scoped",
       "title": "Order placement flow",
-      "file": "specs/orders/order-placement-flow.sdp.ts",
+      "file": "specs/orders/order-placement-flow.sdp.md",
       "sections": {
         "intent": {
           "outcome": "Sequence cart submission through validation to a created order.",
@@ -334,7 +334,7 @@
       "altitude": "story",
       "readiness": "defined",
       "title": "Order total matches cart math",
-      "file": "specs/orders/order-total-rule.sdp.ts",
+      "file": "specs/orders/order-total-rule.sdp.md",
       "sections": {
         "intent": {
           "outcome": "Keep the order total equal to the sum of cart line subtotals.",

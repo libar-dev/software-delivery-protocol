@@ -1,5 +1,7 @@
 import { resolveExampleVocabulary } from "../graph/example-space.js";
 import type { GraphSchema, PrimitiveNode } from "../graph/schema.js";
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import { parseSlots, stepSkeleton } from "../notation/slots.js";
 import type { SlotDeclaredType, SlotScalar } from "../notation/slots.js";
 import type { Finding } from "../validate/contracts.js";
@@ -798,6 +800,13 @@ function renderStepContract(
 }
 
 /* ----- the stage ----- */
+
+const executableContractsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.executable-contracts"),
+  label: "derives step and example-space contracts from the graph",
+  satisfies: ref("spec:extraction.executable-contracts"),
+});
+void executableContractsAnchor;
 
 export function generateContracts(graph: GraphSchema): GeneratedContracts {
   const findings: Finding[] = [];

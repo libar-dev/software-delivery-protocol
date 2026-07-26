@@ -3,13 +3,25 @@ import { defineConfig } from "tsup";
 // The CLI entry (`src/cli/sdp.ts`) carries its own source shebang; esbuild preserves a leading
 // shebang on an entry point, so `dist/cli/sdp.js` stays executable while `dist/index.js` (the
 // library entry, no shebang) stays clean. No banner / strip-plugin / post-build normalisation.
-export default defineConfig({
-  entry: ["src/index.ts", "src/cli/sdp.ts", "src/runner/index.ts", "src/adapters/vitest.ts"],
-  format: ["esm"],
-  dts: true,
-  platform: "node",
-  target: "es2022",
-  clean: true,
-  splitting: false,
-  outDir: "dist",
-});
+export default defineConfig([
+  {
+    entry: ["src/index.ts", "src/cli/sdp.ts", "src/runner/index.ts", "src/adapters/vitest.ts"],
+    format: ["esm"],
+    dts: true,
+    platform: "node",
+    target: "es2022",
+    clean: true,
+    splitting: false,
+    outDir: "dist",
+  },
+  {
+    entry: ["src/index.ts"],
+    format: ["cjs"],
+    dts: false,
+    platform: "node",
+    target: "es2022",
+    clean: false,
+    splitting: false,
+    outDir: "dist",
+  },
+]);

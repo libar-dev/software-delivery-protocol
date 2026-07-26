@@ -1,3 +1,6 @@
+import { codeAnchor } from "./code-anchor.js";
+
+import { codeAnchorId, ref } from "../ids.js";
 import type { SpecId } from "../ids.js";
 
 export const SPEC_RELATION_TYPES = [
@@ -56,3 +59,11 @@ export function verifies(target: SpecId): SpecRelation<"verifies"> {
 export function supersedes(target: SpecId): SpecRelation<"supersedes"> {
   return declaredRelation("supersedes", target);
 }
+
+const specRelationsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.spec-relations"),
+  label: "declared Spec relation builders",
+  satisfies: ref("spec:model.relations"),
+});
+
+void specRelationsAnchor;

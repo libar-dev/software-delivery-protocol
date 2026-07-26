@@ -2,9 +2,10 @@ import { Node, VariableDeclarationKind } from "ts-morph";
 import type { CallExpression, ObjectLiteralExpression, SourceFile } from "ts-morph";
 
 import { CODE_ANCHOR_NAMESPACES } from "../ids.js";
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type { Finding, Severity } from "../validate/contracts.js";
 import {
-  collectProtocolBindings,
   duplicatePropertyMessage,
   extractFindingIds,
   peekId,
@@ -15,7 +16,9 @@ import {
   resolveProtocolCalleeBuilder,
   unwrapTransparent,
 } from "./reify.js";
-import type { IdReification, ProtocolBindings } from "./reify.js";
+import { collectProtocolBindings } from "./protocol-bindings.js";
+import type { ProtocolBindings, ProtocolBindingScope } from "./protocol-bindings.js";
+import type { IdReification } from "./reify.js";
 
 /**
  * Anchor reification — the anchored layer's producer half (`04` §2). Source files are real product
@@ -33,6 +36,14 @@ const ANCHOR_BUILDER_TARGET_FIELDS = {
   specTest: "verifies",
   specOracle: "models",
 } as const;
+
+const anchorExtractionAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.anchor-extraction"),
+  label: "anchor-constant reification seam",
+  satisfies: ref("spec:model.anchors"),
+});
+
+void anchorExtractionAnchor;
 
 type AnchorBuilderName = keyof typeof ANCHOR_BUILDER_TARGET_FIELDS;
 
@@ -313,8 +324,9 @@ function reifyAnchorCall(
 export function reifyAnchorSourceFile(
   sourceFile: SourceFile,
   relativePath: string,
+  bindingScope?: ProtocolBindingScope,
 ): AnchorFileReification {
-  const bindings = collectProtocolBindings(sourceFile);
+  const bindings = collectProtocolBindings(sourceFile, bindingScope);
 
   if (bindings.named.size === 0 && bindings.namespaceLocals.size === 0) {
     return { anchors: [], findings: [] };

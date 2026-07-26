@@ -19,6 +19,15 @@ const DECLARATION_FILE_SUFFIX = ".d.ts";
  * adoption needs a configurable exclude.
  */
 const EXCLUDED_DIRECTORY_NAMES = new Set(["node_modules", "dist", "generated", "coverage"]);
+const WINDOWS_DRIVE_LETTER_ABSOLUTE_PATH = /^[A-Za-z]:\//;
+
+export class InvalidExcludePathError extends Error {
+  readonly name = "InvalidExcludePathError";
+
+  constructor(readonly path: string) {
+    super(`normalizeExcludes: invalid exclusion path "${path}"`);
+  }
+}
 
 export function normalizeExcludes(exclude: readonly string[] | undefined): readonly string[] {
   const normalized: string[] = [];
@@ -31,10 +40,11 @@ export function normalizeExcludes(exclude: readonly string[] | undefined): reado
       path.startsWith("./") ||
       path.endsWith("/") ||
       path.startsWith("/") ||
+      WINDOWS_DRIVE_LETTER_ABSOLUTE_PATH.test(path) ||
       path.includes("\\") ||
       path.split("/").some((segment) => segment === "" || segment === "..")
     ) {
-      throw new Error(`invalid --exclude path "${path}"`);
+      throw new InvalidExcludePathError(path);
     }
 
     if (!seen.has(path)) {
@@ -71,6 +81,10 @@ function compareCodeUnits(a: string, b: string): number {
   return a > b ? 1 : 0;
 }
 
+export function isExcludedDiscoveryDirectory(name: string): boolean {
+  return name.startsWith(".") || EXCLUDED_DIRECTORY_NAMES.has(name);
+}
+
 function byRelativePath(left: DiscoveredSourceFile, right: DiscoveredSourceFile): number {
   return compareCodeUnits(left.relativePath, right.relativePath);
 }
@@ -104,7 +118,7 @@ function walkDirectory(
     if (entry.isDirectory()) {
       // No authoring surface lives in a dot-directory: a stray source copy under one (`.git`, an
       // editor history cache) would reify into phantom carriers or duplicate-id hard errors.
-      if (entry.name.startsWith(".") || EXCLUDED_DIRECTORY_NAMES.has(entry.name)) {
+      if (isExcludedDiscoveryDirectory(entry.name)) {
         continue;
       }
 

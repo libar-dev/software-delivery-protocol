@@ -16,6 +16,7 @@ export interface MarkdownListItem {
 export interface MarkdownFence {
   readonly kind: "gwt" | "gwt-vocabulary";
   readonly line: number;
+  readonly endLine: number;
   readonly steps: {
     readonly given: readonly string[];
     readonly when: readonly string[];
@@ -132,11 +133,13 @@ function parseFence(
       addMarkdownFinding(findings, bodyFinding(file, line.line, "GWT phases cannot regress"));
       continue;
     }
-    if (next === "when" && steps.when.length > 0)
+    if (next === "when" && steps.when.length > 0) {
       addMarkdownFinding(
         findings,
         bodyFinding(file, line.line, "a GWT fence has exactly one When step"),
       );
+      continue;
+    }
     phase = next;
     parseSlots(text);
     steps[next].push(text);
@@ -150,7 +153,10 @@ function parseFence(
         "a GWT fence requires Given, exactly one When, and Then steps",
       ),
     );
-  return { fence: { kind, line: opening.line, steps }, end: end + 1 };
+  return {
+    fence: { kind, line: opening.line, endLine: lines[end]?.line ?? opening.line, steps },
+    end: end + 1,
+  };
 }
 
 export function parseSectionContent(
@@ -200,7 +206,7 @@ export function parseSectionContent(
           findings,
           bodyFinding(file, line.line, "an H3 owner is authored more than once"),
         );
-      else h3 = line;
+      else h3 = { text: line.text.replace(/[\t ]+$/gu, ""), line: line.line };
       continue;
     }
     if (line.text.startsWith("#")) {

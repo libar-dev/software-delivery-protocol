@@ -191,7 +191,10 @@ describe("pooled root generated-state sentinel", () => {
 });
 
 it("derives the duplicate-ID verifier facts from the bound executable example", () => {
-  const result = extract({ root: repoRoot, exclude: ["explorations", "examples"] });
+  const result = extract({
+    root: repoRoot,
+    exclude: ["explorations", "examples", "test/fixtures/import/parity"],
+  });
   const child = result.graph.nodes.find(
     (node) => node.nodeType === "Primitive" && node.id === dualCarrierContract.spec,
   );

@@ -9,12 +9,11 @@ import { fileURLToPath } from "node:url";
 //
 // Three assertion families, each NAMING the disagreeing surface on failure:
 //   A. CLAIMS — every changed claim and its intended state: the repaired wording present, the
-//      obsolete sole-TS-canonical wording gone, per file. The interim rule is mirrored exactly:
-//      new spec IDs may be born Markdown-canonical once the product parser lands (it has
-//      landed); pre-existing IDs and the worked example remain TS-canonical until the ruled
-//      flip; `sdp import`, the checkout-v1 migration, and the canonical-default flip are
-//      deferred. P5's static/side-effect-free principle and the one graph/one validation path
-//      are preserved while their carrier representations are plural, and concept 04 names the
+//      obsolete sole-TS-canonical and interim-transition wording gone, per file. The
+//      canonical-default rule is mirrored exactly: Specs default to Markdown; Packs remain TS
+//      until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID
+//      option. P5's static/side-effect-free principle and the one graph/one validation path are
+//      preserved while their carrier representations are plural, and concept 04 names the
 //      per-carrier degradation asymmetry (TS: property-level drop with warning; Markdown:
 //      all-or-nothing per document under the four hard finding IDs).
 //   B. OBSOLETE SWEEP — the scanned corpus carries NO active unqualified sole-TS claim at all,
@@ -27,8 +26,8 @@ import { fileURLToPath } from "node:url";
 //
 // Scan scope: docs/concept/*.md and jtbd-stories/*.md (enumerated from disk), plus CONTEXT.md.
 // Deliberately excluded: docs/concept/DECISIONS.md (the dated decision diary — historical
-// records by genre; its active carrier wording is pinned by check-carrier-interim.mjs),
-// AGENTS.md (same interim gate; owned by a parallel flight), plans/ + reviews/ + explorations/
+// records by genre; its active carrier wording is pinned by check-carrier-rule.mjs),
+// AGENTS.md (same carrier gate; owned by a parallel flight), plans/ + reviews/ + explorations/
 // (per-session records and exhibits, historical by genre), src/ + test/ (code, not concept/JTBD
 // prose; its TypeScript mentions are implementation, not authoring guidance).
 //
@@ -38,8 +37,7 @@ import { fileURLToPath } from "node:url";
 
 const rootDir = process.argv[2] ?? dirname(fileURLToPath(import.meta.url));
 
-// Sameness is about WORDS: markdown quoting furniture is stripped and whitespace collapsed so a
-// sentence wrapped in a `>` blockquote or re-wrapped by a formatter still reads identically.
+// Sameness strips `>` blockquote markers and collapses whitespace before comparing text.
 const norm = (text) => text.replace(/^>\s?/gm, "").replace(/\s+/g, " ");
 
 const failures = [];
@@ -65,14 +63,11 @@ const CLAIMS = [
   },
   {
     file: "docs/concept/00-vision-scope-and-mvp-boundary.md",
-    label:
-      "carrier status states the interim rule precisely (new IDs .sdp.md, checkout TS-canonical, import/migration/flip deferred)",
+    label: "carrier status states the canonical-default rule precisely",
     present: [
-      "new spec IDs may be born Markdown-canonical (`.sdp.md`) — the product parser has landed —",
-      "remain TS-canonical (`.sdp.ts`) until the ruled flip",
-      "`sdp import`, the checkout-v1 migration, and the canonical-default flip are deferred",
+      "Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option",
     ],
-    absent: [],
+    absent: ["until the ruled flip"],
   },
   {
     file: "docs/concept/00-vision-scope-and-mvp-boundary.md",
@@ -154,12 +149,15 @@ const CLAIMS = [
   },
   {
     file: "docs/concept/04-authoring-and-binding.md",
-    label: "one canonical surface per ID states the interim rule verbatim plus the deferrals",
+    label: "one canonical surface per ID states the canonical-default rule verbatim",
     present: [
-      "New spec IDs may be born Markdown-canonical once the product parser lands; pre-existing IDs and the worked example remain TS-canonical until the ruled flip (the product parser, `sdp import`, and the checkout-v1 migration)",
-      "the canonical-default flip remain deferred",
+      "Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option",
     ],
-    absent: ["In the MVP that is always the TS DSL", "When Gherkin arrives"],
+    absent: [
+      "In the MVP that is always the TS DSL",
+      "When Gherkin arrives",
+      "until the ruled flip",
+    ],
   },
   {
     file: "docs/concept/04-authoring-and-binding.md",
@@ -204,12 +202,12 @@ const CLAIMS = [
   },
   {
     file: "docs/concept/07-mvp-roadmap-and-open-questions.md",
-    label: "the carrier addendum reconciles the CORE map with the interim rule",
+    label: "the carrier addendum reconciles the CORE map with the canonical-default rule",
     present: [
       "Carrier addendum (post-MVP)",
-      "New spec IDs may be born Markdown-canonical once the product parser lands; pre-existing IDs and the worked example remain TS-canonical until the ruled flip",
+      "Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option",
     ],
-    absent: [],
+    absent: ["until the ruled flip"],
   },
   {
     file: "docs/concept/07-mvp-roadmap-and-open-questions.md",
@@ -231,13 +229,26 @@ const CLAIMS = [
   },
   {
     file: "docs/concept/README.md",
-    label: "the legend write-path states the interim rule verbatim plus the deferrals",
+    label: "the legend write-path states the canonical-default rule verbatim",
     present: [
       "edit the canonical carrier + git",
-      "new spec IDs may be born Markdown-canonical once the product parser lands; pre-existing IDs and the worked example remain TS-canonical until the ruled flip (the product parser, `sdp import`, and the checkout-v1 migration)",
-      "the canonical-default flip are deferred",
+      "Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option",
     ],
-    absent: ["The MVP write-path is simply **edit TypeScript + git**"],
+    absent: ["The MVP write-path is simply **edit TypeScript + git**", "until the ruled flip"],
+  },
+  {
+    file: "CONTEXT.md",
+    label: "the sdp import glossary definition retains its many-source-adapters amendment",
+    present: ["one import verb with many source adapters"],
+    absent: [],
+  },
+  {
+    file: "README.md",
+    label: "the package README carries the canonical-default rule",
+    present: [
+      "Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option",
+    ],
+    absent: [],
   },
   {
     file: "jtbd-stories/01-capture-and-evolve-intent.md",
@@ -345,6 +356,7 @@ const OBSOLETE = [
   "every `*.sdp.ts` under the extraction root",
   "ts-morph extractor",
   "lives in a `*.sdp.ts` file under the extraction root",
+  "New spec IDs may be born Markdown-canonical once the product parser lands; pre-existing IDs and the worked example remain TS-canonical until the ruled flip (the product parser, `sdp import`, and the checkout-v1 migration)",
 ];
 
 const normalizedBodies = new Map();
@@ -376,7 +388,7 @@ const PLURAL = "an explicitly plural carrier representation";
 // so the audit survives formatter re-wrapping. Every rule MUST classify at least one line — a
 // rule that matches nothing is a stale audit entry and fails.
 const RULES = [
-  // CONTEXT.md — the ratified glossary (repaired at the interim-rule task).
+  // CONTEXT.md — the ratified glossary (re-pinned at the canonical-default flip).
   {
     file: "CONTEXT.md",
     includes: "the TS DSL remaining the import source and a lawful per-ID option",
@@ -385,10 +397,29 @@ const RULES = [
   { file: "CONTEXT.md", includes: '"DSL" (reserved for the TS DSL)', category: STILL_SUPPORTED },
   {
     file: "CONTEXT.md",
-    includes: "authored Spec files carry the **`.sdp.ts`** extension",
+    includes: "Markdown Spec files use the **`.sdp.md`** extension by default",
+    category: PLURAL,
+  },
+  {
+    file: "CONTEXT.md",
+    includes: "identifies the lawful TypeScript carrier",
     category: STILL_SUPPORTED,
   },
-  { file: "CONTEXT.md", includes: "TS-canonical until the ruled flip", category: PLURAL },
+  {
+    file: "CONTEXT.md",
+    includes: "the TS DSL survives as import source and a lawful per-ID option",
+    category: PLURAL,
+  },
+  {
+    file: "CONTEXT.md",
+    includes: "many source adapters, sharing the document emitter",
+    category: PLURAL,
+  },
+  {
+    file: "CONTEXT.md",
+    includes: "Packs remain TS until a Pack",
+    category: PLURAL,
+  },
   { file: "CONTEXT.md", includes: "the `.sdp.ts` extension", category: STILL_SUPPORTED },
 
   // 00 — vision, scope, MVP boundary.
@@ -404,7 +435,7 @@ const RULES = [
   },
   {
     file: "docs/concept/00-vision-scope-and-mvp-boundary.md",
-    includes: "remain TS-canonical (`.sdp.ts`) until the ruled flip",
+    includes: "the TS DSL survives as import source and a lawful per-ID option",
     category: PLURAL,
   },
   {
@@ -414,18 +445,17 @@ const RULES = [
   },
   {
     file: "docs/concept/00-vision-scope-and-mvp-boundary.md",
-    includes: "`.sdp.md` or `.sdp.ts` per ID",
+    includes: "`.sdp.md` by default; `.sdp.ts` remains lawful per ID",
     category: PLURAL,
   },
   {
     file: "docs/concept/00-vision-scope-and-mvp-boundary.md",
-    includes: "TypeScript `.sdp.ts` for the worked example",
+    includes: "TypeScript `.sdp.ts` remains lawful per ID",
     category: PLURAL,
   },
   {
     file: "docs/concept/00-vision-scope-and-mvp-boundary.md",
-    includes:
-      "TypeScript (`.sdp.ts`) for pre-existing IDs and the worked example until the ruled flip",
+    includes: "TypeScript (`.sdp.ts`) a lawful per-ID option",
     category: PLURAL,
   },
 
@@ -482,8 +512,7 @@ const RULES = [
   // 04 — authoring & binding.
   {
     file: "docs/concept/04-authoring-and-binding.md",
-    includes:
-      "the **TypeScript Spec DSL (`.sdp.ts`)**, the MVP's carrier, still canonical for pre-existing IDs",
+    includes: "the **TypeScript Spec DSL (`.sdp.ts`)**, an import source and lawful per-ID option",
     category: PLURAL,
   },
   {
@@ -508,12 +537,7 @@ const RULES = [
   },
   {
     file: "docs/concept/04-authoring-and-binding.md",
-    includes: "New spec IDs may be born Markdown-canonical once the product parser lands",
-    category: PLURAL,
-  },
-  {
-    file: "docs/concept/04-authoring-and-binding.md",
-    includes: "TS DSL survives as the import source and a lawful per-ID option (the interim rule",
+    includes: "TS DSL survives as import source and a lawful per-ID option",
     category: STILL_SUPPORTED,
   },
   {
@@ -558,12 +582,12 @@ const RULES = [
   },
   {
     file: "docs/concept/07-mvp-roadmap-and-open-questions.md",
-    includes: "TypeScript `.sdp.ts` for the worked example",
+    includes: "TypeScript `.sdp.ts` remains lawful per ID",
     category: PLURAL,
   },
   {
     file: "docs/concept/07-mvp-roadmap-and-open-questions.md",
-    includes: "TypeScript for the checkout worked example",
+    includes: "TypeScript a lawful per-ID option",
     category: PLURAL,
   },
   {
@@ -573,7 +597,7 @@ const RULES = [
   },
   {
     file: "docs/concept/07-mvp-roadmap-and-open-questions.md",
-    includes: "New spec IDs may be born Markdown-canonical once the product parser lands",
+    includes: "the TS DSL survives as import source and a lawful per-ID option",
     category: PLURAL,
   },
   {
@@ -591,7 +615,7 @@ const RULES = [
   },
   {
     file: "docs/concept/README.md",
-    includes: "the TypeScript DSL (`.sdp.ts`, the worked example's carrier until the ruled flip)",
+    includes: "the TypeScript DSL (`.sdp.ts`, import source and lawful per-ID option)",
     category: PLURAL,
   },
   {
@@ -606,14 +630,14 @@ const RULES = [
   },
   {
     file: "docs/concept/README.md",
-    includes: "remain TS-canonical until the ruled flip",
+    includes: "the TS DSL survives as import source and a lawful per-ID option",
     category: PLURAL,
   },
 
   // JTBD stories.
   {
     file: "jtbd-stories/01-capture-and-evolve-intent.md",
-    includes: "`*.sdp.ts` for a TS-canonical pre-existing ID",
+    includes: "with `*.sdp.ts` lawful per ID",
     category: PLURAL,
   },
   {
@@ -628,7 +652,7 @@ const RULES = [
   },
   {
     file: "jtbd-stories/README.md",
-    includes: "the TS DSL for the checkout worked example; the ruled Markdown carrier for new IDs",
+    includes: "the TS DSL as an import source and lawful per-ID option",
     category: PLURAL,
   },
   {

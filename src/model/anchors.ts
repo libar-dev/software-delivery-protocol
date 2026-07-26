@@ -1,3 +1,6 @@
+import { codeAnchor as createCodeAnchor } from "./code-anchor.js";
+
+import { codeAnchorId, ref } from "../ids.js";
 import type { CodeAnchorId, OracleAnchorId, SpecId, TestAnchorId } from "../ids.js";
 
 /**
@@ -43,11 +46,7 @@ export interface SpecOracleAnchor {
 
 export type Anchor = CodeAnchor | SpecTestAnchor | SpecOracleAnchor;
 
-export function codeAnchor(anchor: CodeAnchor): CodeAnchor {
-  return {
-    ...anchor,
-  };
-}
+export { codeAnchor } from "./code-anchor.js";
 
 export function specTest(anchor: SpecTestAnchor): SpecTestAnchor {
   return {
@@ -60,3 +59,11 @@ export function specOracle(anchor: SpecOracleAnchor): SpecOracleAnchor {
     ...anchor,
   };
 }
+
+const anchorModelAnchor = createCodeAnchor({
+  id: codeAnchorId("impl:protocol.anchor-model"),
+  label: "binding-only anchor model builders",
+  satisfies: ref("spec:model.anchors"),
+});
+
+void anchorModelAnchor;

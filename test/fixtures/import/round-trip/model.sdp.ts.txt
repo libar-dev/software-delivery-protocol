@@ -1,0 +1,20 @@
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const modelRoundTripSpec = spec({
+  id: specId("spec:round-trip.model"),
+  title: "Describe the order vocabulary",
+  kind: "model",
+  altitude: "story",
+  readiness: "defined",
+  relations: [],
+  intent: {
+    description: "The behavior needs a shared vocabulary.",
+  },
+  model: {
+    description: "The minimal terms for order acceptance.",
+    terms: {
+      Order: "A submitted request for acceptance.",
+      Total: "The monetary amount the order presents.",
+    },
+  },
+});

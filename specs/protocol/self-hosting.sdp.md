@@ -7,7 +7,11 @@ relations:
   dependsOn:
     - spec:carrier.markdown-authoring
     - spec:model.protocol-domain
-  decidedBy: spec:decisions.concept-docs-dissolve
+  decidedBy:
+    - spec:decisions.concept-docs-dissolve
+    - spec:decisions.executable-meta-model
+    - spec:decisions.adopt-the-nouns
+    - spec:decisions.protocol-naming
 ---
 # The Protocol authors and validates itself
 

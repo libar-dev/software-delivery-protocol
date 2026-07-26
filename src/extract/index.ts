@@ -1,10 +1,11 @@
 import { readFileSync } from "node:fs";
 
-import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
 import { Project } from "ts-morph";
 import type { Program, SourceFile } from "ts-morph";
 
 import type { GraphSchema } from "../graph/schema.js";
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type { Finding, ValidationReport } from "../validate/contracts.js";
 import { reifyAnchorSourceFile } from "./anchors.js";
 import type { ReifiedAnchor } from "./anchors.js";
@@ -13,10 +14,13 @@ import { deriveGraph } from "./derive.js";
 import { discoverFiles } from "./discover.js";
 import type { DiscoveredSourceFile } from "./discover.js";
 import { reifyMarkdownCarrier } from "./markdown.js";
-import { PROTOCOL_MODULE_SPECIFIER, extractFindingIds } from "./reify.js";
+import { extractFindingIds } from "./reify.js";
 import type { ReifiedPack, ReifiedSpec } from "./reify.js";
+import { hasProtocolBuilderImport, protocolBindingScopeFor } from "./protocol-bindings.js";
+import type { ProtocolBindingScope } from "./protocol-bindings.js";
 
-export { PROTOCOL_MODULE_SPECIFIER, extractFindingIds } from "./reify.js";
+export { PROTOCOL_MODULE_SPECIFIER } from "./protocol-bindings.js";
+export { extractFindingIds } from "./reify.js";
 export { serializeGraph } from "./serialize.js";
 
 export const extractValidatorId = "extract";
@@ -31,6 +35,13 @@ export interface ExtractOptions {
   /** Root-relative POSIX path prefixes excluded from both discovery surfaces. */
   readonly exclude?: readonly string[];
 }
+
+const exclusionSurfaceAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.exclusion-surface"),
+  label: "strict root-relative exclusion input for both extraction surfaces",
+  satisfies: ref("spec:extraction.excludes"),
+});
+void exclusionSurfaceAnchor;
 
 export interface ExtractionCounts {
   readonly specs: number;
@@ -121,6 +132,7 @@ function findDuplicatedIds(
 interface ParsedSourceFile {
   readonly file: DiscoveredSourceFile;
   readonly sourceFile: SourceFile;
+  readonly bindingScope: ProtocolBindingScope;
 }
 
 /**
@@ -179,7 +191,11 @@ export function extract(options: ExtractOptions): ExtractionResult {
     const sourceText = readFileSync(file.absolutePath, "utf8");
     const reified = file.relativePath.endsWith(".sdp.md")
       ? reifyMarkdownCarrier(sourceText, file.relativePath)
-      : reifyTypeScriptCarrier(sourceText, file.relativePath);
+      : reifyTypeScriptCarrier(
+          sourceText,
+          file.relativePath,
+          protocolBindingScopeFor(file.absolutePath),
+        );
     specs.push(...reified.specs);
     packs.push(...reified.packs);
     findings.push(...reified.findings);
@@ -192,18 +208,22 @@ export function extract(options: ExtractOptions): ExtractionResult {
 
   for (const file of files.anchorCandidateFiles) {
     const sourceText = readFileSync(file.absolutePath, "utf8");
+    const bindingScope = protocolBindingScopeFor(file.absolutePath);
 
-    // Anchors are recognized by import binding, and the contract takes the specifier written
-    // verbatim — so a raw text test skips the AST work for the bulk of source files. An
-    // escape-spelled specifier (same cooked value, different raw text) sits outside the binding
-    // contract here, exactly as `require` and re-aliased locals do.
-    if (!sourceText.includes(PROTOCOL_MODULE_SPECIFIER)) {
+    // Anchors are recognized by import binding; the contract takes the specifier written
+    // verbatim. This raw text test gates AST work: it passes on a package-specifier hit, or on
+    // any relative import when this runtime's trusted builder modules are known (Protocol source
+    // checkout) — there it skips little; in consumer repos it still skips the bulk of source
+    // files. Escape-spelled specifier, require, and re-aliased locals sit outside the binding
+    // contract.
+    if (!hasProtocolBuilderImport(sourceText, bindingScope)) {
       continue;
     }
 
     anchorSources.push({
       file,
       sourceFile: project.createSourceFile(file.relativePath, sourceText),
+      bindingScope,
     });
   }
 
@@ -216,7 +236,11 @@ export function extract(options: ExtractOptions): ExtractionResult {
       continue;
     }
 
-    const reified = reifyAnchorSourceFile(source.sourceFile, source.file.relativePath);
+    const reified = reifyAnchorSourceFile(
+      source.sourceFile,
+      source.file.relativePath,
+      source.bindingScope,
+    );
     anchors.push(...reified.anchors);
     findings.push(...reified.findings);
   }

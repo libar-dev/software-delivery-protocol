@@ -1,13 +1,29 @@
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSections } from "../model/sections.js";
 
 export const schemaVersion = "0.4.0" as const;
+
+const schemaVersionAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.schema-version"),
+  label: "declares the graph schema version",
+  satisfies: ref("spec:extraction.schema-versioning"),
+});
+void schemaVersionAnchor;
 
 export const graphNodeTypes = ["Primitive", "Pack", "Anchor", "CodeNode"] as const;
 export type GraphNodeType = (typeof graphNodeTypes)[number];
 
 export const graphClaims = ["declared", "anchored", "inferred"] as const;
 export type GraphClaim = (typeof graphClaims)[number];
+
+const graphClaimsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.graph-claims"),
+  label: "declares the graph claim taxonomy",
+  satisfies: ref("spec:extraction.claim-taxonomy"),
+});
+void graphClaimsAnchor;
 
 export const deliveryFactNames = ["implemented", "has-verifier", "observed"] as const;
 export type DeliveryFactName = (typeof deliveryFactNames)[number];

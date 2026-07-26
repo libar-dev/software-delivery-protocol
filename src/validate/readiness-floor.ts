@@ -1,5 +1,5 @@
-import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
-
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import { SPEC_KINDS, SPEC_READINESS } from "../model/descriptors.js";
 import type { SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSectionName } from "../model/sections.js";
@@ -504,6 +504,14 @@ export const readinessFloorAnchor = codeAnchor({
   label: "evaluates the stated readiness floor against the graph",
   satisfies: ref("spec:validation.readiness-floor"),
 });
+
+const verifierSemanticsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.verifier-semantics"),
+  label: "readiness clauses over direct verification bindings",
+  satisfies: ref("spec:model.spec-sections"),
+});
+
+void verifierSemanticsAnchor;
 
 export function evaluateReadinessFloor(
   node: PrimitiveNode,

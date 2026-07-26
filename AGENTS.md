@@ -15,11 +15,9 @@ claims; **`src/` and tests** are authoritative evidence of current realization. 
 
 > **Status:** concept ratified · MVP slices 0–5 landed on `main` (plan 10) · post-MVP executable
 > machinery landed (plan 13) · authoring **carrier ruled** as `.sdp.md` (the carrier ruling, MD-18;
-> plan 16) — product Markdown parser and self-hosting landed · **interim carrier
-> rule** (the carrier ruling (MD-18), transition clause amended by plan 17): New spec IDs may be
-> born Markdown-canonical once the product parser lands; pre-existing IDs and the worked example
-> remain TS-canonical until the ruled flip (the product parser, `sdp import`, and the checkout-v1
-> migration) · **what now:** ✅ EXECUTED — phase-1 implementation complete; final audit passed. Build state lives in
+> plan 16) — product Markdown parser and self-hosting landed · **canonical-default carrier
+> rule:** Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives
+> as import source and a lawful per-ID option. · **what now:** ✅ EXECUTED — phase-2 implementation complete; final audit passed. The prior `EXECUTED — phase-1 implementation complete; final audit passed` status remains historic context. The remaining work is the systematic tests-to-executable-specs rewrite and per-doc concept deletion. Build state lives in
 > **`plans/`** — read the highest
 > **primary-numbered** plan's status header, plus any **active subplans it (or its parent family)
 > explicitly designates as current**; ignore unnumbered files and letter-suffixed plans only when
@@ -58,7 +56,7 @@ Progressive disclosure — start at the top, follow the pointers down.
 | `CONTEXT.md` (repo root) | **the vocabulary** — the ratified lean glossary (terms · relations · a worked dialogue · flagged ambiguities); sole source of truth for terminology; the model exposition lives in `00`–`07` | **first, always** |
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
 | `docs/concept/00`–`07` (+ README) | **the technical design and the model** — 9 principle-led docs: vision & MVP boundary, founding principles (P1–P10), core model (`02` — the primitive, descriptors, sections, relations), the one graph, authoring & binding, validation & honesty, consumers, roadmap | to know *how* it is designed |
-| `docs/concept/DECISIONS.md` | **the why-log** for building the Protocol itself (the ratified-name registry + the MD-series, the R-series, the legacy D1–D6 shorthand, measured evidence) — rationale + open tensions | when a choice looks arbitrary |
+| `docs/concept/DECISIONS.md` | **the lean decision registry** — ratified names, one-line glosses, carrying Specs, and the D1–D6 lookup; historical rationale lives in git, plans, and the Specs themselves | when resolving a decision name or following its canonical pointer |
 | `src/` | **the engine** — `model` (Spec/descriptors/pack/anchors) · `extract` · `graph` · `validate` · `reader` (agent surface) · `projections` (Design Review) · `cli` (`sdp`) · `runner` / `codegen` / `notation` / `adapters` | when implementing or verifying **current engine** behavior |
 | `examples/checkout-v1` | **the worked MVP example** (TS DSL tracer bullet) — specs, anchors, untracked `generated/` (regenerated in-pipeline); walkthrough in its README | when proving the loop end-to-end |
 | `explorations/` | **evidence only** (carrier exhibits, executable-example findings) — mapping evidence for design; **never promote spike code into product** | when judging design evidence; not a source tree to ship |
@@ -95,7 +93,7 @@ live work is the highest primary-numbered plan under `plans/` (currently the sel
 | **5** | Polish: the CLI surface resolved (`build` · `validate` · `view`; `explain`/`search` below the second-caller bar), one diagnostic rendering rule, the documented example walkthrough, the clean-repo determinism test. |
 
 > **Tracer-bullet discipline.** Author the example specs and anchored code *first*, so the DSL and extractor are
-> forced to be usable before they are finished. If the example doesn't typecheck, fix the DSL — not the example.
+> forced to be usable before they are finished. If the example stops extracting or validating, fix the carrier or extractor — not the example.
 
 ## Two reading conventions
 

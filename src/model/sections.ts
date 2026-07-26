@@ -1,3 +1,6 @@
+import { codeAnchor } from "./code-anchor.js";
+import { codeAnchorId, ref } from "../ids.js";
+
 export const SPEC_SECTION_NAMES = [
   "intent",
   "behavior",
@@ -119,3 +122,11 @@ export interface SpecSections {
   readonly verification?: VerificationSection;
   readonly ui?: UiSection;
 }
+
+const specSectionsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.spec-sections"),
+  label: "typed Spec section shapes",
+  satisfies: ref("spec:model.spec-sections"),
+});
+
+void specSectionsAnchor;

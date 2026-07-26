@@ -1,3 +1,6 @@
+import { codeAnchor } from "./code-anchor.js";
+import { codeAnchorId, ref } from "../ids.js";
+
 export const SPEC_KINDS = [
   "behavior",
   "workflow",
@@ -31,3 +34,11 @@ export const SPEC_KIND_DISPLAY_LABELS = {
 } as const satisfies Record<SpecKind, string>;
 
 export type SpecKindDisplayLabel = (typeof SPEC_KIND_DISPLAY_LABELS)[SpecKind];
+
+const specDescriptorsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.spec-descriptors"),
+  label: "Spec kind, altitude, and readiness coordinates",
+  satisfies: ref("spec:model.core-model"),
+});
+
+void specDescriptorsAnchor;

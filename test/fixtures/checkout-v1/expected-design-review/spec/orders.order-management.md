@@ -1,6 +1,6 @@
 # Order management
 
-`spec:orders.order-management` · Use Case / Behavior (`behavior`) · altitude `epic` · authored in [specs/orders/order-management.sdp.ts](../../../specs/orders/order-management.sdp.ts) `[declared]`
+`spec:orders.order-management` · Use Case / Behavior (`behavior`) · altitude `epic` · authored in [specs/orders/order-management.sdp.md](../../../specs/orders/order-management.sdp.md) `[declared]`
 
 **Readiness:** stated `defined` · structural floor reached: `ready`
 

@@ -338,6 +338,103 @@ export const carrier = spec({
     ]);
   });
 
+  it("reserved camel delivery fact: rejects hasVerifier at the TS carrier envelope (R-6 parity)", () => {
+    const reified = reifyTypeScriptCarrier(
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:orders.reserved-camel-verifier"),
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  hasVerifier: true,
+});`,
+      "reserved-camel-verifier.sdp.ts",
+    );
+
+    expect(reified.specs).toEqual([]);
+    expect(reified.findings).toMatchObject([
+      {
+        validatorId: extractFindingIds.reservedProperty,
+        severity: "error",
+        path: "hasVerifier",
+      },
+    ]);
+  });
+
+  it("retains a nested __proto__ model term as own string content", () => {
+    const reified = reifyTypeScriptCarrier(
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:orders.proto-string-term"),
+  kind: "model",
+  altitude: "story",
+  readiness: "idea",
+  model: { terms: { "__proto__": "A string-authored domain term." } },
+});`,
+      "proto-string-term.sdp.ts",
+    );
+
+    const graph = deriveGraph(reified.specs, reified.packs, []);
+    const terms = primitiveNode(graph, "spec:orders.proto-string-term")?.sections?.model?.terms;
+
+    expect(reified.findings).toEqual([]);
+    expect(terms).toBeDefined();
+    if (terms === undefined) throw new Error("expected Model terms to reify as an object");
+    expect(Object.hasOwn(terms, "__proto__")).toBe(true);
+    expect(Object.getOwnPropertyDescriptor(terms, "__proto__")?.value).toBe(
+      "A string-authored domain term.",
+    );
+  });
+
+  it("retains an object-valued nested __proto__ term without prototype pollution", () => {
+    const reified = reifyTypeScriptCarrier(
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:orders.proto-object-term"),
+  kind: "model",
+  altitude: "story",
+  readiness: "idea",
+  model: { terms: { "__proto__": { detail: "An object-authored domain term." } } },
+});`,
+      "proto-object-term.sdp.ts",
+    );
+
+    const graph = deriveGraph(reified.specs, reified.packs, []);
+    const terms = primitiveNode(graph, "spec:orders.proto-object-term")?.sections?.model?.terms;
+
+    expect(reified.findings).toEqual([]);
+    expect(terms).toBeDefined();
+    if (terms === undefined) throw new Error("expected Model terms to reify as an object");
+    expect(Object.getPrototypeOf(terms)).toBe(Object.prototype);
+    expect(Object.keys(terms)).toContain("__proto__");
+  });
+
+  it("retains a Markdown __proto__ Model term through extract and serializeGraph", () => {
+    const root = temporaryCorpusRoot("markdown-proto-term-serialization");
+    writeFileSync(
+      join(root, "specs", "proto-term.sdp.md"),
+      `---
+id: spec:orders.proto-term-serialization
+kind: model
+altitude: story
+readiness: idea
+relations: {}
+---
+# Proto term serialization
+
+## Model
+
+- **__proto__** — Something authored.
+`,
+      "utf8",
+    );
+
+    const result = extract({ root });
+
+    expect(result.report.findings).toEqual([]);
+    expect(serializeGraph(result.graph)).toContain('"__proto__": "Something authored."');
+  });
+
   it("id-shaped-string-content: a raw id-shaped string in section content is prose — kept, edge-free, finding-free", () => {
     const result = extract({ root: corpusRoot("id-shaped-string-content") });
 
@@ -575,9 +672,30 @@ describe("Markdown carrier discovery", () => {
         id: "spec:carrier.sdp-import",
         file: "specs/carrier/sdp-import.sdp.md",
         specKind: "behavior",
-        title: "Existing intent can later be imported into the ruled carrier",
+        title: "TypeScript-carried Specs can become Markdown twins",
         sections: {
-          intent: { outcome: "Name import as deferred work without claiming an emitter exists." },
+          intent: {
+            actor: "A coding agent or maintainer.",
+            outcome:
+              "Convert a TypeScript-carrier Spec into an idiomatic `.sdp.md` twin beside its source.",
+            value:
+              "The TypeScript DSL survives as an import source while Markdown becomes the authored twin.",
+          },
+          behavior: {
+            rules: [
+              "Import writes the emitted Markdown sibling beside the TypeScript carrier and never deletes the source carrier.",
+              "Import refuses an existing Markdown sibling rather than overwriting it.",
+              "Refusal outcomes retain the TypeScript reifier findings and add import-local findings honestly.",
+              "Import consumes the TypeScript reifier so source acceptance follows one validation path.",
+              "A batch scans only bounded source directories, canonicalizes physical carrier identity, and computes every refusal and target collision before publishing any sibling.",
+              "Publication prepares exclusive temporary siblings and atomically creates targets without clobbering; rollback attempts every artifact, reports survivors, and never deletes a TypeScript source.",
+            ],
+            exampleSpace: {
+              given: ["a TS-carrier spec"],
+              when: ["importTypeScriptSpec runs"],
+              [["t", "hen"].join("")]: ["the emitted Markdown re-parses to an equal graph"],
+            },
+          },
         },
       },
     ]);
@@ -979,6 +1097,7 @@ describe("import-surface and discovery corpora", () => {
     "./explorations",
     "explorations/",
     "/explorations",
+    "C:/work/specs",
     "../x",
     "a/../b",
     "a//b",
@@ -989,7 +1108,7 @@ describe("import-surface and discovery corpora", () => {
 
     // When / Then: malformed consumer scope is refused rather than broadened or normalized.
     expect(() => extract({ root, exclude: [exclude] })).toThrow(
-      `invalid --exclude path "${exclude}"`,
+      `normalizeExcludes: invalid exclusion path "${exclude}"`,
     );
   });
 });

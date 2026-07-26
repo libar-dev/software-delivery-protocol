@@ -14,7 +14,10 @@ const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 describe("the self-hosting duplicate-ID example contracts", () => {
   it("carries the exact duplicate-ID example-space vocabulary", () => {
     // Given: the root corpus with the duplicate-ID rule.
-    const result = extract({ root: repoRoot, exclude: ["explorations", "examples"] });
+    const result = extract({
+      root: repoRoot,
+      exclude: ["explorations", "examples", "test/fixtures/import/parity"],
+    });
     const index = buildGraphIndex(result.graph);
     const parent = index.primitivesById.get("spec:validation.duplicate-ids");
 
@@ -42,7 +45,10 @@ describe("the self-hosting duplicate-ID example contracts", () => {
 
   it("binds one ready point with distinct refines and verifies relations", () => {
     // Given: the root corpus and the parent vocabulary it owns.
-    const result = extract({ root: repoRoot, exclude: ["explorations", "examples"] });
+    const result = extract({
+      root: repoRoot,
+      exclude: ["explorations", "examples", "test/fixtures/import/parity"],
+    });
     const index = buildGraphIndex(result.graph);
     const point = index.primitivesById.get("spec:validation.duplicate-ids.dual-carrier");
 
@@ -68,7 +74,10 @@ describe("the self-hosting duplicate-ID example contracts", () => {
 
   it("derives the bound space and step contracts", () => {
     // Given: the root corpus carries the duplicate-ID vocabulary and its bound point.
-    const result = extract({ root: repoRoot, exclude: ["explorations", "examples"] });
+    const result = extract({
+      root: repoRoot,
+      exclude: ["explorations", "examples", "test/fixtures/import/parity"],
+    });
 
     // When: contracts are generated from the root graph.
     const generated = generateContracts(result.graph);

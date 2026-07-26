@@ -294,8 +294,8 @@ rejected (pre-existing lines, outside this plan's scope, but now inconsistent wi
 `npm run check` appends a twelfth `preflight` leg beyond todo 22's frozen eleven-leg order
 (AGENTS documents reality truthfully; benign additive deviation worth a docket note) · the
 plan-16 §6 per-item REPAIRED/SUPERSEDED dispositions exist only in ignored evidence · decision
-specs live at `spec:decisions.*` while the DECISIONS registry reserves
-`spec:protocol.decisions.*` — a namespace divergence the back-catalog fold will have to rule.
+specs and the DECISIONS registry use `spec:decisions.*` — the back-catalog fold activates the
+reserved IDs.
 
 ---
 

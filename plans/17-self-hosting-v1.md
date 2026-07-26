@@ -432,9 +432,8 @@ Intent bullets during todo-9 enrichment. It was born `scoped` and matured to `de
 only non-byte-exact corpus row relative to the frozen table, intentionally retained because the
 added evidence satisfies the `defined` floor.
 
-**Back-catalog notes.** Authored decision specs use `spec:decisions.*`, while the DECISIONS registry
-reserves `spec:protocol.decisions.*`; resolve that namespace divergence in the back-catalog fold,
-not in phase 1. The `npm run check` chain now has a twelfth `preflight` leg beyond todo-22's frozen
+**Back-catalog notes.** Authored decision specs and the DECISIONS registry use `spec:decisions.*`;
+the back-catalog fold activates the reserved IDs after phase 1. The `npm run check` chain now has a twelfth `preflight` leg beyond todo-22's frozen
 eleven-leg order. This is a benign additive deviation, and `AGENTS.md` documents the current chain.
 
 **Low and information observation dispositions.** The review labels this tail as 24 observations;

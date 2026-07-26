@@ -62,10 +62,10 @@ describe("bootstrap package surface", () => {
     expect(rootExport.types).toBe("./dist/index.d.ts");
     expect(rootExport.import).toBe("./dist/index.js");
     expect(packageJson.scripts["generate:self-hosting"]).toBe(
-      "node ./dist/cli/sdp.js view . --exclude explorations --exclude examples",
+      "node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --exclude test/fixtures/import/parity",
     );
     expect(packageJson.scripts["check:self-hosting"]).toBe(
-      "node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --check-clean",
+      "node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --check-clean",
     );
     expect(packageJson.scripts.preflight).toBe("node ./preflight.mjs");
     expect(packageJson.scripts.check).toBe(

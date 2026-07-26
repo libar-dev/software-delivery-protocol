@@ -1,3 +1,5 @@
+import { codeAnchor } from "./model/code-anchor.js";
+
 type Brand<TBrand extends string> = string & {
   readonly __brand: TBrand;
 };
@@ -127,6 +129,16 @@ function requireNamespace<TBrand extends string>(
 export function parseId(value: string): IdParts {
   return validateIdShape(value);
 }
+
+// R-27 bootstrap seam: these two casts stay because same-module local builder calls are
+// intentionally not recognized as imported Protocol bindings (plan 19, execution step 2).
+const stableIdsAnchor = codeAnchor({
+  id: "impl:protocol.stable-ids" as CodeAnchorId,
+  label: "stable ID grammar parser",
+  satisfies: "spec:model.stable-ids" as SpecId,
+});
+
+void stableIdsAnchor;
 
 export function formatId(parts: IdParts): string {
   return parts.subpath === undefined

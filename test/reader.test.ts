@@ -191,8 +191,8 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
 
   describe("byFile — the grep→graph bridge from a file", () => {
     it("maps a spec file to the spec authored there", () => {
-      expect(exampleReader().byFile("specs/orders/create-order.sdp.ts")).toEqual({
-        path: "specs/orders/create-order.sdp.ts",
+      expect(exampleReader().byFile("specs/orders/create-order.sdp.md")).toEqual({
+        path: "specs/orders/create-order.sdp.md",
         nodes: [{ id: "spec:orders.create-order", nodeType: "Primitive" }],
         specs: ["spec:orders.create-order"],
       });
@@ -293,12 +293,12 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
     });
 
     it("treats a changed spec file as direct impact (no binding in the reason)", () => {
-      const radius = exampleReader().blastRadius(["specs/orders/create-order.sdp.ts"]);
+      const radius = exampleReader().blastRadius(["specs/orders/create-order.sdp.md"]);
 
       expect(radius.impactedSpecs).toEqual([
         {
           id: "spec:orders.create-order",
-          reasons: [{ file: "specs/orders/create-order.sdp.ts" }],
+          reasons: [{ file: "specs/orders/create-order.sdp.md" }],
         },
       ]);
     });
@@ -328,13 +328,13 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
 
     it("normalizes, dedupes, and sorts the changed-file list", () => {
       const radius = exampleReader().blastRadius([
-        "./specs/orders/create-order.sdp.ts",
-        "specs/orders/create-order.sdp.ts",
+        "./specs/orders/create-order.sdp.md",
+        "specs/orders/create-order.sdp.md",
         "src/orders/pricing.ts",
       ]);
 
       expect(radius.changedFiles).toEqual([
-        "specs/orders/create-order.sdp.ts",
+        "specs/orders/create-order.sdp.md",
         "src/orders/pricing.ts",
       ]);
     });
@@ -398,7 +398,7 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
           claim: "declared",
           enabled: false,
           label: "Invalid cart is rejected",
-          file: "specs/orders/create-order-invalid-cart.sdp.ts",
+          file: "specs/orders/create-order-invalid-cart.sdp.md",
         },
         {
           verifierId: "spec:orders.create-order.valid-cart",
@@ -406,7 +406,7 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
           claim: "declared",
           enabled: true,
           label: "Valid cart creates an order",
-          file: "specs/orders/create-order-valid-cart.sdp.ts",
+          file: "specs/orders/create-order-valid-cart.sdp.md",
         },
       ]);
 

@@ -25,14 +25,14 @@ Package: a single **`@libar-dev/software-delivery-protocol`** (DSL + types, anch
 
 ### What "done" looks like
 
-- You write specs in the canonical carrier (Markdown `.sdp.md` for new IDs, TypeScript `.sdp.ts` for the worked example), anchor implementing code and tests with stable IDs, run `sdp build`, and get a valid graph.
+- You write specs in the canonical carrier (Markdown `.sdp.md` by default; TypeScript `.sdp.ts` remains lawful per ID), anchor implementing code and tests with stable IDs, run `sdp build`, and get a valid graph.
 - Conformance + honesty checks pass/fail with clear messages; CI rejects a PR that breaks links or states readiness the spec has not earned.
 - The agent surface (the `reader`) exposes the graph to an agent (entry adapters + impact); the Design Review / generated view shows linked specs + implementations + tests with correct readiness and impact lists.
 - Edits flow as *intent → agent edits source → git → conformance checks*; there is no patch subsystem.
 - Changing a spec or anchor and re-running produces an updated graph and view.
 - Delete `generated/` and rebuild — **byte-identical** (determinism, P3).
 
-**North Star (one sentence):** *On a small bounded context, an engineer writes specs in the ruled carrier (Markdown for new IDs, TypeScript for the checkout worked example), anchors the implementing code and tests with stable IDs, runs `sdp build`, gets a graph that passes the conformance + honesty checks and that an agent can read as the agent surface, and opens a generated view (the Design Review) that correctly shows intent, implementation links, verification presence, and impact — and CI rejects the PR if any of it is broken or incomplete.*
+**North Star (one sentence):** *On a small bounded context, an engineer writes specs in the ruled carrier (Markdown by default, TypeScript a lawful per-ID option), anchors the implementing code and tests with stable IDs, runs `sdp build`, gets a graph that passes the conformance + honesty checks and that an agent can read as the agent surface, and opens a generated view (the Design Review) that correctly shows intent, implementation links, verification presence, and impact — and CI rejects the PR if any of it is broken or incomplete.*
 
 ---
 
@@ -40,7 +40,7 @@ Package: a single **`@libar-dev/software-delivery-protocol`** (DSL + types, anch
 
 **CORE (MVP):** Phase 0 — the protocol as code; TS Spec DSL; the three descriptors (`kind` · `altitude` · `readiness`); sections (shape only); stable IDs; generic anchors; `ts-morph` one-graph extractor; honest `claim` (declared / anchored; the `inferred` category is designed-in, decoded by every consumer, and **ships empty** — its first producer is the aspirational impact graph, `06` §2); core conformance + honesty checks; readiness floors (through `ready`); delivery facts (`implemented` / `has-verifier`) derived, never authored; the agent surface (reader) + `graph.json` as AI context; the Design Review / one read-only view; bidirectional spec↔test trace; determinism + `--check-clean`. The **entire trust model** ships at MVP. The delivery-process **lenses** — discipline-as-filter, release/baseline as git-tag projections (`06` §6) — come essentially **for free** off the graph + git tags; they are not separate built features and get no dedicated slice.
 
-**Carrier addendum (post-MVP).** The CORE list above records what the MVP shipped — the TS DSL was then the only carrier. The carrier ruling (MD-18) has since ruled the Markdown carrier for all eight kinds: New spec IDs may be born Markdown-canonical once the product parser lands; pre-existing IDs and the worked example remain TS-canonical until the ruled flip (the product parser, `sdp import`, and the checkout-v1 migration). The product parser has landed — new IDs may be `.sdp.md` today — while import, migration, and the canonical-default flip remain deferred. New authoring reads the CORE list through this rule.
+**Carrier addendum (post-MVP).** The CORE list above records what the MVP shipped — the TS DSL was then the only carrier. The carrier ruling (MD-18) now governs new authoring: Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option. New authoring reads the CORE list through this rule.
 
 **ASPIRATIONAL:** runtime-observation overlay (the `observed` delivery fact; runtime observations, `Build`/`Deployment`/`Observation` nodes, `nfr-violated`); runtime-composition depth (Effect `R`, Awilix wiring, Fastify trees); Gherkin surface (a carrier contender the ruling declined, MD-18); harnesses + simulation; rich projections (LikeC4/OpenAPI/JSON-LD/SHACL); rich Spec Studio with scoped intent composition; AI slices + the **MCP surface** (designed-in, deferred build) + GraphRAG; architecture-enforcement checks; a fuller impact graph; incremental builds/caching; full CLI; `--lenient` ratchet; multi-tenant/multi-repo/polyglot.
 

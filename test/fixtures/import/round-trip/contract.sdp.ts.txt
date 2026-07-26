@@ -1,0 +1,11 @@
+import { refines, spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const contractRoundTripSpec = spec({
+  id: specId("spec:round-trip.contract"),
+  title: "Import a contract",
+  kind: "contract",
+  altitude: "story",
+  readiness: "idea",
+  relations: [refines(specId("spec:round-trip.behavior"))],
+  behavior: { rules: ["The emitted document reifies to the same authored data."] },
+});

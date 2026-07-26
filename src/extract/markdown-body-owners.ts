@@ -8,8 +8,7 @@ import {
   mapOpen,
   mapVerification,
 } from "./markdown-body-owner-sections.js";
-import { isRecord, structureFinding } from "./markdown-body-owner-support.js";
-import { addMarkdownFinding } from "./markdown-support.js";
+import { isRecord } from "./markdown-body-owner-support.js";
 
 export function mapOwner(
   target: Record<string, unknown>,
@@ -66,9 +65,4 @@ export function mapOwner(
     target.verification = verification;
     return;
   }
-  if (kind === "example")
-    addMarkdownFinding(
-      findings,
-      structureFinding(file, lines[0]?.line ?? 1, "example gwt placement is invalid"),
-    );
 }

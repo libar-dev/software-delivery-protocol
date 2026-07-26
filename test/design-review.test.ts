@@ -273,6 +273,89 @@ describe("the Design Review — the one generated read-only view", () => {
     expect(again).toEqual(examplePages);
   });
 
+  it("renders byte-identically when graph and dynamic-key insertion orders differ", () => {
+    const first = deriveFixtureGraph({
+      specs: [
+        spec({
+          id: specId("spec:orders.dynamic-order"),
+          title: "Dynamic order",
+          kind: "model",
+          altitude: "story",
+          readiness: "idea",
+          intent: { outcome: "Render dynamic fields deterministically." },
+          model: { terms: { Zebra: "Last term.", Alpha: "First term." } },
+          design: { zeta: "last value", alpha: "first value" },
+        }),
+        spec({
+          id: specId("spec:orders.peer"),
+          title: "Peer",
+          kind: "behavior",
+          altitude: "story",
+          readiness: "idea",
+          intent: { outcome: "Vary graph node insertion order." },
+        }),
+      ],
+    });
+    const permuted = deriveFixtureGraph({
+      specs: [
+        spec({
+          id: specId("spec:orders.peer"),
+          title: "Peer",
+          kind: "behavior",
+          altitude: "story",
+          readiness: "idea",
+          intent: { outcome: "Vary graph node insertion order." },
+        }),
+        spec({
+          id: specId("spec:orders.dynamic-order"),
+          title: "Dynamic order",
+          kind: "model",
+          altitude: "story",
+          readiness: "idea",
+          intent: { outcome: "Render dynamic fields deterministically." },
+          model: { terms: { Alpha: "First term.", Zebra: "Last term." } },
+          design: { alpha: "first value", zeta: "last value" },
+        }),
+      ],
+    });
+
+    const firstPages = renderDesignReview(createReader(first));
+    const permutedPages = renderDesignReview(createReader(permuted));
+
+    expect(permutedPages).toEqual(firstPages);
+  });
+
+  it("escapes Markdown text fields while preserving fenced JSON data", () => {
+    const graph = deriveFixtureGraph({
+      specs: [
+        spec({
+          id: specId("spec:orders.escaping"),
+          title: "Render <tag> & fields",
+          kind: "behavior",
+          altitude: "story",
+          readiness: "idea",
+          intent: { outcome: "Keep <outcome> & visible." },
+          behavior: { rules: ["Keep <rule> & stable."] },
+          model: { terms: { "<Term> &": "Define <term> & safely." } },
+          design: { surface: "Review <design> & safely." },
+          verification: {
+            mode: "reviewed",
+            criteria: ["Inspect <criterion> & output."],
+          },
+        }),
+      ],
+    });
+
+    const page = pageByPath(renderDesignReview(createReader(graph)), "spec/orders.escaping.md");
+
+    expect(page).toContain("# Render &lt;tag&gt; &amp; fields");
+    expect(page).toContain("- **outcome:** Keep &lt;outcome&gt; &amp; visible.");
+    expect(page).toContain("- Keep &lt;rule&gt; &amp; stable.");
+    expect(page).toContain("| &lt;Term&gt; &amp; | Define &lt;term&gt; &amp; safely. |");
+    expect(page).toContain('"surface": "Review <design> & safely."');
+    expect(page).toContain("- Inspect &lt;criterion&gt; &amp; output.");
+  });
+
   it("speaks binding language, never liveness: bindings present/none, observation not tracked", () => {
     const createOrder = pageByPath(examplePages, "spec/orders.create-order.md");
 
@@ -317,7 +400,7 @@ describe("the Design Review — the one generated read-only view", () => {
     expect(index).toContain("| Severity | Check | Message | Where |");
     // The standing warning's subject is a spec file: `file` known, no line (Primitive nodes are
     // line-free by design), and the location is never embedded in the message a second time.
-    expect(index).toContain("| `specs/orders/create-order-invalid-cart.sdp.ts` |");
+    expect(index).toContain("| `specs/orders/create-order-invalid-cart.sdp.md` |");
   });
 
   it("shows what a verifier covers on its own page (JS-G2: from the test back to the spec)", () => {

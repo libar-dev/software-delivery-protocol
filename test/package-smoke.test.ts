@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 
 const packageName = "@libar-dev/software-delivery-protocol";
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
+const importFixture = join(repositoryRoot, "test/fixtures/import/round-trip/behavior.sdp.ts.txt");
 
 const expectedRootExports = [
   "CODE_ANCHOR_NAMESPACES",
@@ -35,6 +36,7 @@ const expectedRootExports = [
   "deriveReadiness",
   "derivedEdgeTypes",
   "duplicateIdExclusionAnchor",
+  "emitMarkdownSpec",
   "evaluateReadinessFloor",
   "extract",
   "extractAnchor",
@@ -48,9 +50,12 @@ const expectedRootExports = [
   "graphReportId",
   "graphValidatorIds",
   "hasUnboundSlot",
+  "importFindingIds",
+  "importTypeScriptSpec",
   "isEnabledExampleVerify",
   "isResolvingTestAnchorVerify",
   "kindEvidence",
+  "MarkdownEmissionError",
   "oracleAnchorId",
   "pack",
   "packId",
@@ -82,6 +87,7 @@ const expectedRootExports = [
 const typeOnlyRootExports = [
   "CarrierReification",
   "CarrierReifier",
+  "ImportResult",
   "ReifiedAnchor",
   "ReifiedPack",
   "ReifiedSpec",
@@ -134,7 +140,7 @@ console.log(
 }
 
 describe("published package surface", () => {
-  it("resolves every public root export without the repository source alias", async () => {
+  it("proves the installed tarball lists import, dry-runs conversion without writes, and exposes the barrel", async () => {
     const packageRoot = await mkdtemp(join(tmpdir(), "sdp-package-smoke-"));
     const consumer = join(packageRoot, "consumer");
 
@@ -157,8 +163,15 @@ describe("published package surface", () => {
 
       run(
         "npm",
-        ["install", "--ignore-scripts", "--omit=dev", join(packageRoot, tarball)],
-        consumer,
+        [
+          "install",
+          "--ignore-scripts",
+          "--omit=dev",
+          join(packageRoot, tarball),
+          "--prefix",
+          consumer,
+        ],
+        repositoryRoot,
       );
       await writeFile(join(consumer, "consumer.mjs"), consumerDriver());
       await writeFile(
@@ -186,14 +199,31 @@ void [${expectedRootExports.join(", ")}];
         consumer,
       );
 
-      const driver = run(process.execPath, ["consumer.mjs"], consumer);
       const sdpHelp = run(join(consumer, "node_modules", ".bin", "sdp"), ["--help"], consumer);
+      await copyFile(importFixture, join(consumer, "behavior.sdp.ts"));
+      const sdpImportDryRun = run(
+        join(consumer, "node_modules", ".bin", "sdp"),
+        ["import", "--dry-run", "behavior.sdp.ts"],
+        consumer,
+      );
+      const driver = run(process.execPath, ["consumer.mjs"], consumer);
+      const barrelCheck = run(
+        process.execPath,
+        [
+          "-e",
+          `const m=require("${packageName}"); if(typeof m.emitMarkdownSpec!=="function"||typeof m.importTypeScriptSpec!=="function"||typeof m.importFindingIds!=="object"||typeof m.MarkdownEmissionError!=="function") process.exit(1); console.log("barrel imports available")`,
+        ],
+        consumer,
+      );
 
       expect(JSON.parse(driver)).toEqual({
         exports: [...expectedRootExports].sort(),
         nodes: ["spec:package.typescript", "spec:package.markdown"],
       });
-      expect(sdpHelp).toContain("Usage:");
+      expect(sdpHelp).toContain("sdp import");
+      expect(sdpImportDryRun).toContain("id: spec:round-trip.behavior");
+      expect(await readdir(consumer)).not.toContain("behavior.sdp.md");
+      expect(barrelCheck).toBe("barrel imports available\n");
     } finally {
       await rm(packageRoot, { force: true, recursive: true });
     }

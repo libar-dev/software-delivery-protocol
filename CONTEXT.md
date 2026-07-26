@@ -4,7 +4,8 @@
 > bounded context's vocabulary: **one concept → one word**; the rest are *aliases to avoid*.
 >
 > This document carries **terms only**; the model exposition lives in the design docs
-> (`docs/concept/00`–`07`), rationale in `docs/concept/DECISIONS.md`.
+> (`docs/concept/00`–`07`). The lean decision registry points to carrying Specs; historical
+> rationale lives in git, plans, and those Specs.
 
 ## Governing rubric  [SETTLED]
 
@@ -147,7 +148,7 @@ validated," never "provably correct."**
 | **oracle** | the authored expected-outcome semantics for a parent's example space — implementation-side, beside the tests, bound by the space's zero-or-one resolving `specOracle` anchor, never extracted; typed against the space contract on input and the derived Outcome union on output (`unspecified` is a first-class answer); rendered surfaces say **"expected outcome"** | a `model`-kind spec · a derived fact |
 | **witness** | an example whose bound point falls in an outcome class — the evidence that class is covered | — |
 | **coverage gap** | a region of the example space with no witness (or where the oracle answers `unspecified`) — an informative absence, never a gate | — |
-| **`sdp import`** | the one-way gen-1 `.feature` converter: parser half carrier-neutral, document emitter authored once in the winning carrier | round-trip sync |
+| **`sdp import`** | one import verb with many source adapters, sharing the document emitter authored once in the winning carrier; the TS→`.sdp.md` adapter landed, the gen-1 `.feature` adapter designed-in and deferred | round-trip sync |
 
 **Structural law (point-per-example, MD-17):** an `example` binds exactly **one** point; a table of cases is
 authoring-surface sugar that statically expands to N sibling examples at extraction, and renderers may project
@@ -179,7 +180,7 @@ manifest). **Dropped:** `exemplifies` (= `example` kind + `refines` + `verifies`
 **discipline** (a lens/filter over the graph, not a phase you pass through) · **phase / iteration /
 milestone** (descriptive vocabulary, optional roadmap projections, never gates) · **release** (a tagged set —
 a git-tag projection) · **baseline** (a named approved snapshot; the **signed git tag is the approval
-artifact** — approval provenance is git-native, never an authored primitive).
+artifact** — approval remains outside the model, never an authored primitive).
 
 ## A worked dialogue  (the language in use)
 
@@ -232,15 +233,13 @@ artifact** — approval provenance is git-native, never an authored primitive).
   checks are **conformance checks + honesty checks** · **pre-graph** = upstream of graph derivation in the
   one validation path (the authored layer before the extractor runs) — a layer checks never live in:
   validators consume the one graph only, never a second validation path (one validation path, MD-14).
-- **Resolved (MD-15):** authored Spec files carry the **`.sdp.ts`** extension (never `.spec.ts`, which every
-  JS test-runner default glob executes); the model name `Spec` itself was always settled — only the file
-  serialization changed.
-- **Resolved (the carrier ruling, MD-18; transition clause amended by plan 17):** the authored `Spec`
-  document is **`.sdp.md`** — the Markdown carrier, all eight kinds. New spec IDs may be born
-  Markdown-canonical once the product parser lands; pre-existing IDs and the worked example remain
-  TS-canonical until the ruled flip (the product parser, `sdp import`, and the checkout-v1 migration).
-  The surviving law is **one canonical surface per ID, no mixing** (`04` §1); the `.sdp.ts` extension
-  law (MD-15) is re-pointed, not repealed — its rationale carries to the `.sdp.md` sibling.
+- **Resolved (MD-15):** Markdown Spec files use the **`.sdp.md`** extension by default; **`.sdp.ts`**
+  identifies the lawful TypeScript carrier without colliding with every JS test-runner's default glob.
+  The model name `Spec` itself was always settled — only the file serialization changed.
+- **Resolved (the carrier ruling, MD-18):** Specs default to Markdown; Packs remain TS until a Pack
+  syntax ruling; the TS DSL survives as import source and a lawful per-ID option. The surviving law
+  is **one canonical surface per ID, no mixing** (`04` §1); the `.sdp.ts` extension law (MD-15) is
+  re-pointed, not repealed — its rationale carries to the `.sdp.md` sibling.
 - **Resolved (the prose-ownership law, MD-19):** free prose enters the graph as **description values on
   typed owners** — the owning section or the `Spec` itself (the spec-level narrative slot); never a
   heading-path store, never a file-only pointer; the edge-text ownership rule is the surface-design
