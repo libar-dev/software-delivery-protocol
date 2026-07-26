@@ -223,7 +223,15 @@ Appended as waves execute; entries name the forcing material and the disposition
    The did-you-mean suggestion (`05` §2 check 1), the fail-closed descriptor posture (`05` §2
    check 3), and "a non-resolving trace confers nothing" (`02` §2, `04` §2) were all already
    ratified in the concept material and merely absent from the carrying specs; each is now a rule
-   line on its parent so its bound point reads against stated intent. `pack-coherence` gained one
+   line on its parent so its bound point reads against stated intent. **Corrected at S6 (review-09
+   S-2):** that sentence over-claims for one of the three. The did-you-mean *suggestion* is
+   ratified verbatim (`05` §2 check 1, "where possible"), but the **tie rule** the spec line adds
+   ("names the unique nearest known id … and stays silent when two candidates tie") is not stated
+   anywhere in the concept material; it is a legitimate reading of `05` §2's cross-cutting
+   ambiguity-is-loud rule, and the spec line states that rationale, but it was authored here
+   rather than carried in. Recorded as a derivation from a ratified principle, not as
+   pre-ratified text; the clause stands and `suggestNearestId` already agreed with it.
+   `pack-coherence` gained one
    mechanism sentence (membership is counted on the derived `belongsTo` edges the manifest
    re-expresses) so its `{memberCount}` dimension is readable; the validator's behavior was found
    to agree with the stated law, so no code moved.
@@ -317,6 +325,17 @@ Appended as waves execute; entries name the forcing material and the disposition
    form, the loud local degradations — the clause is authored from intended truth (the runner and
    codegen module contracts and the ratified executable-half vocabulary) and the plain-vitest
    suites remain its evidence. **No code moved and no claim was widened.**
+
+   **Corrected at S6 (review-09 P-1).** One item in that list was not true as written: the
+   concreteness refusal was *not* among the clauses the S3 points exercised. Mutation testing
+   showed `concreteness-refusal` stayed green with the unbound-slot refusal deleted, because its
+   world ran under a parent owning an example space, where vocabulary resolution withholds the
+   step contract for the same input — the point verified a disjunction of two gates and could not
+   name which one fired. The honest statement for S3 is: the drift sweep confirmed the *other*
+   four clauses; the concreteness clause was carried by `test/codegen.test.ts` alone, so no
+   coverage was ever lost, but the executable claim was over-stated. Remediated in S6 by running
+   the point under a parent that declares no shared vocabulary, which removes the second gate
+   structurally rather than asserting around it — re-probed both ways (see the S6 log).
 6. **Three parents and seven children promoted to `ready` under §1 ruling 5.** Each parent's floor
    clears (`spec:extraction.executable-contracts` → `spec:extraction.build-pipeline`,
    `spec:extraction.example-runner` → `spec:extraction.executable-contracts`,
@@ -407,9 +426,12 @@ Appended as waves execute; entries name the forcing material and the disposition
 3. **The phase-2 prediction for `03` §5 was closed before this session, not by it.** The plan's §4
    ranking expected §5 ("git is the event log") to be `03`'s one uncarried section. The audit found
    it carried by the `spec:extraction.derive-graph` narrative — current projection, removed means
-   gone, `supersedes` the one forward pointer — landed during the phase's earlier corpus work and
-   visible on the regenerated Design Review page. Recorded so the ranking is reconciled rather than
-   quietly overtaken.
+   gone, `supersedes` the one forward pointer — **landed in phase 2 on `main`** and visible on the
+   regenerated Design Review page. Recorded so the ranking is reconciled rather than quietly
+   overtaken. (**Corrected at S6, review-09 D-6:** this entry first read "the phase's earlier
+   corpus work," which in a phase-3 plan reads as phase 3. This branch never edited
+   `specs/extraction/derive-graph.sdp.md`; the carriage predates it. The headline — closed before
+   this session, not by it — was and remains accurate.)
 4. **`07` is not deletable on supersession grounds.** The phase-2 docket's `SUPERSEDED` row is a
    *doc-repair* disposition, not a statement about the document, and the dissolution decision
    admits only one basis: the semantic contract is fully carried. Audited on content, `07` carries
@@ -497,9 +519,9 @@ elsewhere; where the elsewhere is a *surviving* concept doc, the row names it.
 | §4 `Pack` — aggregate, states no truth, plain `framing`, many packs per spec, `belongsTo` derived, coherence not completeness | `spec:model.pack-aggregate` · `spec:decisions.pack-reified` · `spec:validation.pack-coherence` + its bound point | carried |
 | §4 refinement vs the aggregate kept distinct | `spec:model.pack-aggregate` (refinement term) · `CONTEXT.md` "Two grouping mechanisms" | carried |
 | §5 stable IDs — grammar, stability, uniqueness, string linkage, no history | `spec:model.stable-ids` (ready; `namespaced-round-trip` and `malformed-refusal` points) · `src/ids.ts` | carried |
-| §5 the MVP namespace set and the `doc:` reservation | `src/ids.ts` (the namespace set) · `CONTEXT.md` flagged ambiguities (`ref()` is spec-only; `doc:` deferral) | carried |
+| §5 the MVP namespace set and the `doc:` reservation | `spec:model.stable-ids` (**since S6**: the per-binding-direction reserved set — `spec:` · `pack:` · `impl:` · `api:` · `component:` · `test:` · `oracle:` — and the `doc:` reservation with its actual status) · `src/ids.ts` (`CODE_ANCHOR_NAMESPACES` and the per-builder singletons) · `CONTEXT.md` flagged ambiguities (`ref()` is spec-only; `doc:` deferral) | carried — **citation corrected at S6 (review-09 D-3)**: `src/ids.ts` holds no namespace *set* (one three-member code-anchor subset, four per-builder singletons, and a grammar admitting any lowercase namespace), and nothing carried the positive half of the `doc:` reservation or the `spec:decisions.*` convention. Both now stand on the Spec. |
 | §6 the six authored relations, directions and meanings | `spec:model.relations` · `CONTEXT.md` "Relations" table (with the UML anchors) | carried |
-| §6 `supersedes` only on decision specs; the kind-typed endpoints | `spec:validation.claim-separation` (relation endpoint contracts) · `src/validate/validators.ts` | carried |
+| §6 `supersedes` only on decision specs; the kind-typed endpoints | `spec:model.relations` ("A current Decision Record points forward to the decision it replaces") · `CONTEXT.md` "Relations" table · `spec:extraction.derive-graph` narrative · `spec:validation.claim-separation` (the generic endpoint-contract rule) · `src/validate/validators.ts` | carried — **citation corrected at S6 (review-09 D-4)**: the contract was always carried, but the row named only the generic endpoint sentence and the validator source; the surfaces that actually state the kind-typed endpoints are now named first. |
 | §6 the `doc:`-target named deferral (MD-16) | `spec:decisions.carried-evidence` ("external `doc:` targets remain deferred") · `CONTEXT.md` flagged ambiguities | carried |
 | §6 derived edges never authored (`satisfies`, `belongsTo`); every authored relation is `declared` | `spec:extraction.derive-graph` · `spec:extraction.claim-taxonomy` (claim inheritance) · `CONTEXT.md` "Derived, never authored" | carried |
 
@@ -512,7 +534,7 @@ elsewhere; where the elsewhere is a *surviving* concept doc, the row names it.
 | §1 the graph is flat; hierarchy is edges, never nested nodes | `spec:extraction.derive-graph` (flat typed arrays) | carried |
 | §1 the `graph.json` payload sample and the `nodeType`/`specKind` split | `src/graph/schema.ts` · `CONTEXT.md` "`nodeType` / `specKind`" | carried (sample itself expository) |
 | §1 schema `0.4.0` prose fields and fixed serializer key order | `spec:carrier.prose-ownership-rule` (owners) · `src/graph/schema.ts` · `spec:extraction.determinism` | carried |
-| §1 the edge contract — one row per edge type (source, claim, authoring surface, severity, readiness effect, delivery-fact effect) | `spec:extraction.derive-graph` (endpoints, anchor-derived edges, computed facts) · `spec:validation.claim-separation` (claims + endpoint contracts) · `spec:validation.referential-integrity` (missing target is an error) · `spec:validation.verification-linkage` (the `models` row and the enabled-verifier condition) · `spec:validation.pack-coherence` (`belongsTo`) · `spec:validation.readiness-floor` + `05` §3 (the readiness-effect column) | carried |
+| §1 the edge contract — one row per edge type (source, claim, authoring surface, severity, readiness effect, delivery-fact effect) | `spec:extraction.derive-graph` (endpoints, anchor-derived edges, computed facts) · `spec:validation.claim-separation` (claims + endpoint contracts) · `spec:validation.referential-integrity` (missing target is an error) · `spec:validation.verification-linkage` (the enabled-verifier condition **and, since S6, the one-oracle-per-space clause**) · `spec:validation.pack-coherence` (`belongsTo`) · `spec:validation.readiness-floor` (**since S6**, the three `ready`-floor clauses in its own authored words — the readiness-effect column) | carried — **citation corrected at S6 (review-09 D-2)**: the row first cited `spec:validation.readiness-floor` **+ `05` §3**, and the floor Spec was then a single clause-free sentence, so the readiness-effect column rested on a surviving concept doc plus `readiness-floor.ts` rather than on a Spec. The two clauses now stand on the Spec, and the `models` uniqueness clause — previously only a validator message — stands on `spec:validation.verification-linkage`. |
 | §1 delivery facts are node facts, not edges | `spec:extraction.derive-graph` ("computed node facts") · `spec:extraction.claim-taxonomy` | carried |
 | §2 determinism — byte-identical output, sort order, no wall-clock or run hashes, `--check-clean` | `spec:extraction.determinism` (all three rules) · `spec:extraction.regenerability` | carried |
 | §2 the static-extractability consequence and the two tiers, with the per-carrier asymmetry | `spec:extraction.determinism` (rule 3) · `spec:carrier.markdown-parser` (whole-document refusal) · `04` §1 (surviving) | carried |
@@ -522,7 +544,7 @@ elsewhere; where the elsewhere is a *surviving* concept doc, the row names it.
 | §3 delivery facts derived, never declared | `spec:validation.authored-honesty` + its two bound points · `spec:extraction.claim-taxonomy` | carried |
 | §3 the doc-generator contrast blockquote | — | expository-only (motivation) |
 | §4 regenerability, no consumer re-parses source, single JSON, graph DB deferred | `spec:extraction.regenerability` (clause for clause, including both measured-evidence lines) | carried |
-| §5 git is the event log — current state only, history is a git operation, removed means gone, `supersedes` the one kept forward pointer | `spec:extraction.derive-graph` narrative (renders in the Design Review) · `spec:model.stable-ids` (IDs carry no history) · `01` founding principle 5 (surviving) · `CONTEXT.md` "git is the event log" | carried — the phase-2 prediction that §5 lacked a carrier was closed by the S-wave narrative enrichment |
+| §5 git is the event log — current state only, history is a git operation, removed means gone, `supersedes` the one kept forward pointer | `spec:extraction.derive-graph` narrative (renders in the Design Review) · `spec:model.stable-ids` (IDs carry no history) · `01` founding principle 5 (surviving) · `CONTEXT.md` "git is the event log" | carried — the phase-2 prediction that §5 lacked a carrier was already closed by the narrative enrichment that landed in phase 2 on `main` (corrected at S6, review-09 D-6) |
 | §5 "a graph diff is just two projections" | `spec:extraction.determinism` + `spec:extraction.regenerability` (the diff is their consequence) | expository-only (consequence; the aspirational impact UI is named in `00`/`07`) |
 | §6 minimal schema versioning | `spec:extraction.schema-versioning` (ready; `declared-version` point) · `src/graph/schema.ts` | carried |
 
@@ -540,7 +562,7 @@ elsewhere; where the elsewhere is a *surviving* concept doc, the row names it.
 | §2 check 7 (honest readiness) | `spec:validation.readiness-floor` | carried |
 | §2 checks 8–9 (orphans · readiness/delivery gaps) | `spec:validation.warn-level-signals` + `orphan-signal` and `ready-gap-signal` | carried |
 | §2 partial failure stays local | `spec:carrier.markdown-parser` (excludes one malformed carrier, continues healthy siblings) · `spec:extraction.determinism` | carried |
-| §3 the kind-blind clause table (`idea`/`scoped`/`defined`/`ready` rungs) | none — `spec:validation.readiness-floor` states only "every clause in that readiness floor passes"; the clauses live in `src/validate/readiness-floor.ts`, which the registry rows MD-13 and MD-9 cite **together with `05` §3** as the mirror pair | **gap** |
+| §3 the kind-blind clause table (`idea`/`scoped`/`defined`/`ready` rungs) | the `ready` rung: `spec:validation.readiness-floor` (**since S6** — its three clauses in authored words) · the `idea`/`scoped`/`defined` rungs: none — their clauses live in `src/validate/readiness-floor.ts`, which the registry rows MD-13 and MD-9 cite **together with `05` §3** as the mirror pair | **gap** (narrowed at S6 to the three lower rungs) |
 | §3 the per-kind evidence table (7 kinds × `scoped`/`defined`) | same as above — `spec:decisions.kind-conditional-floor` states *that* one clause is kind-conditional, never *which* evidence each kind names | **gap** |
 | §3 the three bounding laws (monotonic · promotion-neutral · convergence is honest) | `spec:decisions.kind-conditional-floor` (consequence line) · `spec:decisions.carried-evidence` (the promoted-evidence honesty bound) | carried |
 | §3 the MD-13 representation note (floor table as its own code-level source of truth) | `docs/concept/DECISIONS.md` MD-13 · `src/validate/readiness-floor.ts` | carried (registry row still cites `05` §3 as one of two mirrors) |
@@ -557,7 +579,7 @@ elsewhere; where the elsewhere is a *surviving* concept doc, the row names it.
 | Doc section | Carrying surface (spec / registry / code) | Verdict |
 |---|---|---|
 | §1 projections fan out from one graph; nothing is a second source | `spec:consumers.projections-model` (projection) | carried |
-| §1 the surfaces taxonomy table | `spec:consumers.projections-model` · `CONTEXT.md` "Surfaces & projections" | carried, except the Mermaid and reference-projection rows, which only `06` §8 names |
+| §1 the surfaces taxonomy table | `spec:consumers.projections-model` · `CONTEXT.md` "Surfaces & projections" | **gap** (partial) — the taxonomy is carried except the Mermaid and reference-projection rows, which only `06` §8 names. **Re-verdicted at S6 (review-09 D-7)**: a row conceding an uncarried surface may not read `carried`; `06` stays either way, and the conceded surface now enters the gap list as item 12. |
 | §2 curated graph vs impact graph; divergence is curation, not drift; never densify from imports | `spec:consumers.projections-model` (curated graph · impact graph · curation · measured curation) · `spec:extraction.claim-taxonomy` | carried |
 | §2 the impact graph's two assist roles (propose candidates · flag unambiguous drift) | none | **gap** |
 | §2 the MVP boundary blockquote (file-level impact rides the curated graph; `coverage-unknown` is explicit) | `spec:consumers.reader` (rules 3–4) | carried |
@@ -612,8 +634,10 @@ Recorded so they are not lost; each is a stated law or open question with no car
 None was rushed into a Spec — this session authored no Spec edits.
 
 1. The readiness-floor **clause tables** (kind-blind rungs and the per-kind evidence table) have
-   no carrying Spec; `spec:validation.readiness-floor` is a single sentence and the clauses live
-   only in `src/validate/readiness-floor.ts` and `05` §3.
+   no carrying Spec; the clauses live only in `src/validate/readiness-floor.ts` and `05` §3.
+   **Narrowed at S6 (review-09 D-2):** the `ready` rung's three clauses now stand on
+   `spec:validation.readiness-floor` in its own authored words. The `idea` / `scoped` / `defined`
+   rungs and the per-kind evidence table remain uncarried — that residue is the standing gap.
 2. The **derived-readiness banner** rule — rendered beside stated, fires only in the dishonest
    direction, names the first unmet clause — is stated in `05` §3, `06` §5, and `07` §6 ③ and in
    no Spec.
@@ -633,6 +657,9 @@ None was rushed into a Spec — this session authored no Spec edits.
 10. Two open questions have no Spec home: **inline-vs-centralized anchor semantics** and **when
     harnesses / evidence become CORE** (`07` §4).
 11. The **measure-what-hurts** prioritization heuristic (`07` §5) has no Spec or registry home.
+12. The **Mermaid and reference-projection surfaces** of `06` §1's taxonomy table are named only
+    by `06` §8. **Added at S6 (review-09 D-7):** S5 conceded them inside a `carried` row instead
+    of recording them, so the row is re-verdicted and the surface enters the list here.
 
 #### Reference-sweep inventory (per deletion)
 
@@ -655,9 +682,15 @@ validator diagnostics) · `src/validate/readiness-floor.ts` · `src/graph/delive
 `test/extract.test.ts` (a test title) · one extraction fixture comment ·
 `check-prose-schema.mjs` · `check-carrier-rule.mjs`.
 
-No dangling inbound reference survives either deletion: a repository-wide grep for `` `02` ``,
-`` `03` ``, `02-core-model`, and `03-the-one-graph` outside `plans/`, `reviews/`, and
-`explorations/` returns nothing.
+No dangling inbound reference survives either deletion. **Amended at S6 (review-09 D-1):** the
+S5 sweep ran only the *backticked* citation form (`` `02` ``, `` `03` ``, `02-core-model`,
+`03-the-one-graph`), and the repository uses two forms — the repo also cites bare, unbackticked
+`02 §3` inside fenced code. One such line survived in `docs/concept/04`'s TS-carrier worked
+example and is repaired. The sweep is now stated as it must be run: **both** forms, over every
+tracked file outside `plans/`, `reviews/`, and `explorations/` — the bare-token pattern
+`(^|[^0-9A-Za-z._/-])0[23]([^0-9A-Za-z._-]|$)` plus the backticked and path spellings
+(`` `02` ``, `` `03` ``, `02 §`, `03 §`, `concept/02`, `concept/03`, `02-core-model`,
+`03-the-one-graph`). Re-run at S6 over the repaired tree: **zero hits**.
 
 ## (k) §8 Docket ledger
 

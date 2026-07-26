@@ -487,22 +487,46 @@ silently. **CONFIRMED.**
 
 ## Disposition table
 
-_Left open for the remediation session._
+Filled by the S6 remediation-and-close session (see the addendum below). Every one of the fifteen
+findings carries an explicit disposition; nothing rolled forward silently.
 
 | # | Severity | Finding | Disposition |
 |---|---|---|---|
-| P-1 | major | Concreteness point is over-determined; stays green with its own law deleted | |
-| P-2 | minor | Decorative Then step on the schema-version point | |
-| S-1 | minor | Pack-coherence mechanism line authored test-first | |
-| S-2 | minor | Did-you-mean tie rule recorded as pre-ratified | |
-| B-1 | minor | Runner anchor orphans `planExample`'s JSDoc | |
-| D-1 | major | Dangling `02 §3` reference at `docs/concept/04-authoring-and-binding.md:29` | |
-| D-2 | major | `03` §1 row graded `carried` on a surviving concept doc + validator source | |
-| D-3 | major | `02` §5 row cites `src/ids.ts` for a namespace set it does not hold | |
-| D-4 | minor | `02` §6 row names the wrong carriers | |
-| D-5 | minor | Two stale / overstating consistency-script comments; sweep never reaches `specs/` | |
-| D-6 | minor | `03` §5 provenance attributed to the wrong phase | |
-| D-7 | minor | `06` §1 row concedes an uncarried surface under a `carried` verdict | |
-| R-1 | minor | Ruling 7 unenforced: 7 files and one Spec carry plan/phase handles the guard cannot see | |
-| R-2 | minor | Commit `a989b14` subject claims a docket close that did not happen | |
-| R-3 | minor | Corpus-test-granularity docket row rolled forward undispositioned; oracle grew to 3,879 lines in one `it()` | |
+| P-1 | major | Concreteness point is over-determined; stays green with its own law deleted | **FIXED** — the point now runs under a parent that declares no shared vocabulary, removing the second gate structurally. Re-probed both ways: deleting the unbound-slot refusal turns it red (and only it); disabling the vocabulary gate leaves it green. §6 S3 ruling 5's "no drift found" sentence corrected. |
+| P-2 | minor | Decorative Then step on the schema-version point | **FIXED** — the step is removed from the parent vocabulary, the point, the binding, and the oracle. The authored `"0.4.0"` literal remains, and still dies when the constant is bumped (re-probed). |
+| S-1 | minor | Pack-coherence mechanism line authored test-first | **ACCEPTED AS STATED** — the sentence is true of `checkPackMembers` and states a derivation mechanism (`belongsTo` re-expresses the declared manifest) that `spec:model.pack-aggregate` and the claim-inheritance law already ratify. The authorship direction is recorded rather than reversed; no reword invented. |
+| S-2 | minor | Did-you-mean tie rule recorded as pre-ratified | **RECORD CORRECTED** — §6 S1 ruling 4 now separates the ratified suggestion (`05` §2 check 1) from the tie rule, which is a derivation from the ambiguity-is-loud principle authored in this phase. The clause itself stands. |
+| B-1 | minor | Runner anchor orphans `planExample`'s JSDoc | **FIXED** — the anchor constant moved above the doc comment; the comment documents `planExample` again and the anchor stays inside the enforced proximity window. |
+| D-1 | major | Dangling `02 §3` reference at `docs/concept/04-authoring-and-binding.md:29` | **FIXED** — repaired to `` `spec:model.spec-sections` ``. The wider sweep (bare-token pattern plus the backticked and path spellings, over every tracked file outside `plans/`, `reviews/`, `explorations/`) returns zero hits. The plan's sweep sentence now names both citation forms. |
+| D-2 | major | `03` §1 row graded `carried` on a surviving concept doc + validator source | **FIXED BY ENRICHMENT** — `spec:validation.readiness-floor` gains the `ready` floor's three clauses and the vacuous-anchor reading; `spec:validation.verification-linkage` gains the one-oracle-per-space clause. The audit row's citation is corrected to name them. The lower rungs and the per-kind evidence table stay uncarried and remain gap 1, now narrowed. |
+| D-3 | major | `02` §5 row cites `src/ids.ts` for a namespace set it does not hold | **FIXED BY ENRICHMENT** — `spec:model.stable-ids` gains the per-binding-direction reserved set (`spec:` · `pack:` · `impl:` · `api:` · `component:` · `test:` · `oracle:`), the fact that the grammar itself admits any lowercase namespace, and the `doc:` reservation with its actual status: a named deferral no builder mints and `ref()` refuses, with in-system decisions living under `spec:decisions.*`. Row corrected. |
+| D-4 | minor | `02` §6 row names the wrong carriers | **FIXED** — the row now names `spec:model.relations`, `CONTEXT.md`'s relations table, and the `derive-graph` narrative first, with the generic endpoint rule and the validator behind them. |
+| D-5 | minor | Two stale / overstating consistency-script comments; sweep never reaches `specs/` | **PARTLY FIXED, REST CARRIED** — both comments repaired: the relations leg now states that it proves co-presence of the law across two independently authored surfaces, not verbatim sameness, and the dissolved doc is no longer named. The structural halves are carried with reasons: the four scripts stay unwired from `npm run check` (a recorded plan-17 decision), and extending `check-carrier-truth.mjs`'s obsolete-sweep to `specs/` is corpus-scope work — both ride the docket into the next phase. |
+| D-6 | minor | `03` §5 provenance attributed to the wrong phase | **FIXED** — §6 S5 ruling 3 and the `03` §5 audit row now say the carriage landed in phase 2 on `main`; the headline claim was already accurate. |
+| D-7 | minor | `06` §1 row concedes an uncarried surface under a `carried` verdict | **FIXED** — the row is re-verdicted **gap (partial)** and the Mermaid / reference-projection surfaces enter the carried-gap list as item 12. `06` stays either way. |
+| R-1 | minor | Ruling 7 unenforced: 7 files and one Spec carry plan/phase handles the guard cannot see | **SPLIT: SPEC FIXED, GUARD CARRIED** — the one Spec instance is repaired (`spec:decisions.concept-docs-dissolve`'s consequence is restated in timeless language, oracle updated), because a Spec carrying a session-relative handle is the case ruling 7 exists for. The seven pre-existing non-exempt sites and the guard's token list are carried on the standing **temporal-guard token assembly** docket row, which now states the choice explicitly: widen the guard and repair the sites, or narrow ruling 7's wording to what the guard enforces. Phase 3 authored none of them. |
+| R-2 | minor | Commit `a989b14` subject claims a docket close that did not happen | **ACCEPTED, CARRIED** — history is not rewritten. The overstatement is corrected on the record here and in the close: no docket row was dispositioned before S6; the §8 rows are dispositioned at this close. |
+| R-3 | minor | Corpus-test-granularity docket row rolled forward undispositioned; oracle grew to 3,879 lines in one `it()` | **DISPOSITIONED AT CLOSE** — carried forward with a stated reason and the measured datum, not silently: splitting the golden oracle is a single-purpose session over a file the phase deliberately kept out of scope, and doing it mid-phase would have churned the one artifact every wave's correctness claim rested on. Recorded in the plan's §7 docket close. |
+
+---
+
+## Remediation addendum — the dispositions landed on this branch
+
+The remediation session ran before the phase PR rather than after it, so this review's findings do
+not survive into `main` as an open docket. Every finding above carries a disposition; the
+per-finding work, the re-probes, and the terminal ledgers are `plans/20-self-hosting-phase-3.md`
+§6 (the S6 rulings log) and §7 (the done-record).
+
+- **Fixed:** P-1, P-2, B-1, D-1, D-2, D-3, D-4, D-6, D-7, D-5 (comments), R-1 (the Spec instance).
+- **Record corrected, no product change:** S-2, and the two plan sentences P-1 and D-6 falsified.
+- **Accepted as stated:** S-1.
+- **Carried with reasons:** R-2 (immutable history), R-3 (oracle granularity), R-1's guard half and
+  D-5's structural half (both on named docket rows).
+
+Two things are worth reading before touching these surfaces again. First, **P-1's fix is
+structural, not assertive**: the point was made honest by removing the competing gate from its
+world (a parent with no example space) rather than by asserting the absence of the other gate's
+finding — an absence assertion would have gone vacuous the day that finding id was renamed. Second,
+**D-2 and D-3 were closed by enrichment, not by retraction**: the two deletions are now defensible
+on the dissolution decision's own terms — carried by executable Specs — rather than on a plan
+ruling that widened the criterion to include surviving docs and code.
