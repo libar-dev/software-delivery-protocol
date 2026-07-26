@@ -137,7 +137,7 @@ export const modelSpecs = [
         exampleSpace: {
           given: ["the authored identifier {identifier:string}"],
           when: ["the identifier is parsed"],
-          [["t", "hen"].join("")]: [
+          then: [
             'parsing {outcome:"resolves"|"is refused"}',
             "reformatting the parsed parts restores {restored:string}",
             "the refusal names the reason {reason:string}",
@@ -164,7 +164,7 @@ export const modelSpecs = [
           {
             given: ['the authored identifier {identifier: "spec:orders.create-order#valid-cart"}'],
             when: ["the identifier is parsed"],
-            [["t", "hen"].join("")]: [
+            then: [
               'parsing {outcome: "resolves"}',
               'reformatting the parsed parts restores {restored: "spec:orders.create-order#valid-cart"}',
             ],
@@ -191,7 +191,7 @@ export const modelSpecs = [
           {
             given: ['the authored identifier {identifier: "Spec:orders.create-order"}'],
             when: ["the identifier is parsed"],
-            [["t", "hen"].join("")]: [
+            then: [
               'parsing {outcome: "is refused"}',
               'the refusal names the reason {reason: "namespace must be lowercase"}',
             ],
@@ -248,7 +248,7 @@ export const modelSpecs = [
             'a repository whose one source file builds an anchor through {builderSource:"a consumer-local lookalike module"|"a relative import resolving to the Protocol builder modules"|"the published Protocol package"}',
           ],
           when: ["the repository is extracted"],
-          [["t", "hen"].join("")]: [
+          then: [
             "the extraction mints {anchorCount:number} anchors",
             "the extraction reports {findingCount:number} findings",
           ],
@@ -295,7 +295,7 @@ export const modelSpecs = [
               'a repository whose one source file builds an anchor through {builderSource: "a consumer-local lookalike module"}',
             ],
             when: ["the repository is extracted"],
-            [["t", "hen"].join("")]: [
+            then: [
               "the extraction mints {anchorCount: 0} anchors",
               "the extraction reports {findingCount: 0} findings",
             ],
@@ -325,7 +325,7 @@ export const modelSpecs = [
               'a repository whose one source file builds an anchor through {builderSource: "a relative import resolving to the Protocol builder modules"}',
             ],
             when: ["the repository is extracted"],
-            [["t", "hen"].join("")]: [
+            then: [
               "the extraction mints {anchorCount: 1} anchors",
               "the extraction reports {findingCount: 0} findings",
             ],

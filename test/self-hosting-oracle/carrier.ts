@@ -74,7 +74,7 @@ export const carrierSpecs = [
         exampleSpace: {
           given: ["the paired carrier probes named {probe:string}"],
           when: ["both carriers reify their probe"],
-          [["t", "hen"].join("")]: [
+          then: [
             "both carriers report the finding class {findingId:string}",
             'the TypeScript carrier reports severity {typeScriptSeverity:"warning"|"error"} and extracts {typeScriptSpecs:number} specs',
             'the Markdown carrier reports severity {markdownSeverity:"warning"|"error"} and extracts {markdownSpecs:number} specs',
@@ -108,7 +108,7 @@ export const carrierSpecs = [
           {
             given: ['the paired carrier probes named {probe: "unrecognized-property"}'],
             when: ["both carriers reify their probe"],
-            [["t", "hen"].join("")]: [
+            then: [
               'both carriers report the finding class {findingId: "extract/unrecognized-property"}',
               'the TypeScript carrier reports severity {typeScriptSeverity: "warning"} and extracts {typeScriptSpecs: 1} specs',
               'the Markdown carrier reports severity {markdownSeverity: "error"} and extracts {markdownSpecs: 0} specs',
@@ -147,7 +147,7 @@ export const carrierSpecs = [
         exampleSpace: {
           given: ["a TS-carrier spec"],
           when: ["importTypeScriptSpec runs"],
-          [["t", "hen"].join("")]: ["the emitted Markdown re-parses to an equal graph"],
+          then: ["the emitted Markdown re-parses to an equal graph"],
         },
       },
     },
@@ -170,7 +170,7 @@ export const carrierSpecs = [
           {
             given: ["a TS-carrier spec"],
             when: ["importTypeScriptSpec runs"],
-            [["t", "hen"].join("")]: ["the emitted Markdown re-parses to an equal graph"],
+            then: ["the emitted Markdown re-parses to an equal graph"],
           },
         ],
       },
@@ -231,7 +231,7 @@ export const carrierSpecs = [
         exampleSpace: {
           given: ["the step text {stepText:string}"],
           when: ["the notation parses the step text"],
-          [["t", "hen"].join("")]: [
+          then: [
             "the notation finds {slotCount:number} slot groups",
             'the first group has the form {form:"bare"|"typed"|"bound"|"malformed"} and the name {slotName:string}',
             "the step skeleton is {skeleton:string}",
@@ -258,7 +258,7 @@ export const carrierSpecs = [
           {
             given: ['the step text {stepText: "a cart with {n:number} line items"}'],
             when: ["the notation parses the step text"],
-            [["t", "hen"].join("")]: [
+            then: [
               "the notation finds {slotCount: 1} slot groups",
               'the first group has the form {form: "typed"} and the name {slotName: "n"}',
               'the step skeleton is {skeleton: "a cart with {n} line items"}',
@@ -287,7 +287,7 @@ export const carrierSpecs = [
           {
             given: ['the step text {stepText: "a stray { then {n: maybe} line items"}'],
             when: ["the notation parses the step text"],
-            [["t", "hen"].join("")]: [
+            then: [
               "the notation finds {slotCount: 1} slot groups",
               'the first group has the form {form: "malformed"} and the name {slotName: "n"}',
               'the step skeleton is {skeleton: "a stray { then {n} line items"}',

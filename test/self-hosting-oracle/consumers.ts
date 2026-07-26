@@ -169,7 +169,7 @@ export const consumersSpecs = [
             'the spec {structure:"clears every floor clause"|"records a blocking open question"}',
           ],
           when: ["the Design Review renders the graph"],
-          [["t", "hen"].join("")]: [
+          then: [
             'the spec page renders the floor reached {floorReached:"scoped"|"ready"}',
             "the divergence banner is raised: {bannerRaised:boolean}",
             "the banner names the first unmet clause {clauseId:string}",
@@ -200,7 +200,7 @@ export const consumersSpecs = [
               'the spec {structure: "records a blocking open question"}',
             ],
             when: ["the Design Review renders the graph"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the spec page renders the floor reached {floorReached: "scoped"}',
               "the divergence banner is raised: {bannerRaised: true}",
               'the banner names the first unmet clause {clauseId: "no-blocking-open-questions"}',
@@ -232,7 +232,7 @@ export const consumersSpecs = [
               'the spec {structure: "clears every floor clause"}',
             ],
             when: ["the Design Review renders the graph"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the spec page renders the floor reached {floorReached: "ready"}',
               "the divergence banner is raised: {bannerRaised: false}",
             ],
@@ -270,7 +270,7 @@ export const consumersSpecs = [
             'the graph holds a spec {specId:string} bound by {bindings:"an implementing code anchor and a verifying test anchor"|"no anchor at all"}',
           ],
           when: ["the Design Review renders the graph"],
-          [["t", "hen"].join("")]: [
+          then: [
             'the spec page renders the implementation binding as {implementation:"present"|"none"}',
             'the spec page renders the verifier binding as {verifier:"present"|"none"}',
             "the spec page renders the runtime observation as {observation:string}",
@@ -302,7 +302,7 @@ export const consumersSpecs = [
               'the graph holds a spec {specId: "spec:probe.bound-surface"} bound by {bindings: "an implementing code anchor and a verifying test anchor"}',
             ],
             when: ["the Design Review renders the graph"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the spec page renders the implementation binding as {implementation: "present"}',
               'the spec page renders the verifier binding as {verifier: "present"}',
               'the spec page renders the runtime observation as {observation: "not tracked"}',
@@ -343,7 +343,7 @@ export const consumersSpecs = [
             "an extraction root holding {corpus:string} and a stale view page {stalePage:string}",
           ],
           when: ["the view is rendered at that root"],
-          [["t", "hen"].join("")]: [
+          then: [
             "the run exits {exitCode:number}",
             "the view holds the current page {currentPage:string}",
             "the stale page survives: {staleSurvives:boolean}",
@@ -374,7 +374,7 @@ export const consumersSpecs = [
               'an extraction root holding {corpus: "one authored spec"} and a stale view page {stalePage: "spec/probe.departed.md"}',
             ],
             when: ["the view is rendered at that root"],
-            [["t", "hen"].join("")]: [
+            then: [
               "the run exits {exitCode: 0}",
               'the view holds the current page {currentPage: "index.md"}',
               "the stale page survives: {staleSurvives: false}",

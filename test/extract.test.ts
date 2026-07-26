@@ -702,7 +702,7 @@ describe("Markdown carrier discovery", () => {
             exampleSpace: {
               given: ["a TS-carrier spec"],
               when: ["importTypeScriptSpec runs"],
-              [["t", "hen"].join("")]: ["the emitted Markdown re-parses to an equal graph"],
+              then: ["the emitted Markdown re-parses to an equal graph"],
             },
           },
         },

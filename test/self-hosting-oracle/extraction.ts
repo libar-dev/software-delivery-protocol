@@ -81,7 +81,7 @@ export const extractionSpecs = [
             "the consumer supplies the exclusion {exclusion:string}",
           ],
           when: ["the root is discovered"],
-          [["t", "hen"].join("")]: [
+          then: [
             'the discovery attempt {outcome:"completes"|"is refused"}',
             "the surviving spec carrier is {specCarrier:string} and the surviving anchor candidate is {anchorCandidate:string}",
             "the refusal states {diagnostic:string} and names the offending path",
@@ -111,7 +111,7 @@ export const extractionSpecs = [
               'the consumer supplies the exclusion {exclusion: "foo"}',
             ],
             when: ["the root is discovered"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the discovery attempt {outcome: "completes"}',
               'the surviving spec carrier is {specCarrier: "foobar/included.sdp.ts"} and the surviving anchor candidate is {anchorCandidate: "foobar/helper.ts"}',
             ],
@@ -142,7 +142,7 @@ export const extractionSpecs = [
               'the consumer supplies the exclusion {exclusion: "C:/work/specs"}',
             ],
             when: ["the root is discovered"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the discovery attempt {outcome: "is refused"}',
               'the refusal states {diagnostic: "normalizeExcludes: invalid exclusion path"} and names the offending path',
             ],
@@ -229,9 +229,7 @@ export const extractionSpecs = [
         exampleSpace: {
           given: ["a graph derived from the authored spec {specId:string}"],
           when: ["the graph payload is serialized"],
-          [["t", "hen"].join("")]: [
-            "the payload declares the schema version {schemaVersion:string}",
-          ],
+          then: ["the payload declares the schema version {schemaVersion:string}"],
         },
       },
     },
@@ -256,9 +254,7 @@ export const extractionSpecs = [
               'a graph derived from the authored spec {specId: "spec:probe.schema-versioning"}',
             ],
             when: ["the graph payload is serialized"],
-            [["t", "hen"].join("")]: [
-              'the payload declares the schema version {schemaVersion: "0.4.0"}',
-            ],
+            then: ['the payload declares the schema version {schemaVersion: "0.4.0"}'],
           },
         ],
       },
@@ -300,7 +296,7 @@ export const extractionSpecs = [
             "a case-twin example {twinId:string} whose contract path differs only by letter case",
           ],
           when: ["the contracts are generated from the derived graph"],
-          [["t", "hen"].join("")]: [
+          then: [
             "the generated tree holds {fileCount:number} files",
             "the step contract for the example is emitted: {emitted:boolean}",
             "the findings name {findingId:string}",
@@ -331,7 +327,7 @@ export const extractionSpecs = [
               'a refining example {exampleId: "spec:probe.create-order.unbound"} whose used step {binding: "leaves unbound"} that slot',
             ],
             when: ["the contracts are generated from the derived graph"],
-            [["t", "hen"].join("")]: [
+            then: [
               "the generated tree holds {fileCount: 0} files",
               "the step contract for the example is emitted: {emitted: false}",
             ],
@@ -363,7 +359,7 @@ export const extractionSpecs = [
               "the example carries {entryCount: 2} structured entries",
             ],
             when: ["the contracts are generated from the derived graph"],
-            [["t", "hen"].join("")]: [
+            then: [
               "the step contract for the example is emitted: {emitted: true}",
               'the findings name {findingId: "contracts/multi-entry-example"}',
             ],
@@ -395,7 +391,7 @@ export const extractionSpecs = [
               'a case-twin example {twinId: "spec:probe.create-order.same-Case"} whose contract path differs only by letter case',
             ],
             when: ["the contracts are generated from the derived graph"],
-            [["t", "hen"].join("")]: [
+            then: [
               "the generated tree holds {fileCount: 0} files",
               'the findings name {findingId: "contracts/case-colliding-path"}',
             ],
@@ -437,7 +433,7 @@ export const extractionSpecs = [
             'the handler bound to the {failingPhase:"given"|"when"|"then"} step throws {thrown:string}',
           ],
           when: ["the bound plan runs against a fresh world"],
-          [["t", "hen"].join("")]: [
+          then: [
             "the world records the handler trace {trace:string}",
             'the run {outcome:"completes"|"fails"}',
             "the failure names the step in the Spec's own words as {failureLabel:string}",
@@ -468,7 +464,7 @@ export const extractionSpecs = [
               "a contract whose given step repeats {occurrences: 2} times before one when step and one then step",
             ],
             when: ["the bound plan runs against a fresh world"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the world records the handler trace {trace: "given 2 | given 2 | when | then"}',
               'the run {outcome: "completes"}',
             ],
@@ -498,7 +494,7 @@ export const extractionSpecs = [
               'the handler bound to the {failingPhase: "when"} step throws {thrown: "boom"}',
             ],
             when: ["the bound plan runs against a fresh world"],
-            [["t", "hen"].join("")]: [
+            then: [
               'the run {outcome: "fails"}',
               'the failure names the step in the Spec\'s own words as {failureLabel: "at step: When the cart is submitted"}',
               'the failure preserves the original detail {detail: "boom"}',
