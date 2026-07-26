@@ -1,7 +1,21 @@
 # Plan 21 — Self-hosting phase 4: the oracle split, the floor and view corpus waves, and the `05` dissolution attempt
 
-> **Status:** DRAFTED — execution begins on `feature/protocol-self-application-phase-4`. This is
-> plan 21, the highest primary-numbered plan; the latest ✅ EXECUTED ground is plan 20 (the
+> **Status:** ✅ EXECUTED — the whole phase landed on `feature/protocol-self-application-phase-4`.
+> The oracle split the corpus checkpoint into 21 `it()`s over one hoisted extraction with zero
+> assertion loss; one shared module now states the contract-dependent suites for both the test
+> wrapper and the lint config, and the seventh bound suite entered through it; the floor wave
+> carried the lower readiness-floor rungs and the per-kind evidence table, and the view wave
+> carried the derived-readiness banner, the binding-language rule, the wholesale view rewrite,
+> the one diagnostic rendering rule, and validator self-testing — **16 Specs added, 10 new bound
+> points, every one mutation-probed red for the law it names and re-probed independently at the
+> close**. The readiness sweep dispositioned all 37 `defined` Specs with zero promotions and 37
+> named refusals. `docs/concept/05` **stays**, two clauses short: the re-audit closed all three of
+> its phase-3 gaps and surfaced two new ones — a per-team severity override and a team-overridable
+> floor config, both designed-for deferrals named nowhere else (gaps 13/14, the named next work);
+> `06` and `07` were re-graded and stay. Closing corpus **103 Specs · 1 Pack · 75 anchors → 179
+> nodes · 351 edges · `ready: 66 / defined: 37`, 0 errors / 0 warnings**, with the full twelve-leg
+> gate and a clean-clone proof green at the close. This is
+> plan 21, the highest primary-numbered plan; the previous ✅ EXECUTED ground is plan 20 (the
 > phase-3 close). Build state lives in **`plans/`** — read the highest **primary-numbered**
 > plan's status header, plus any **active subplans it (or its parent family) explicitly
 > designates as current**; ignore unnumbered files and letter-suffixed plans only when no
@@ -29,8 +43,10 @@ not occur.
 
 ## (b) Context
 
-Phase 3 closed at **87 Specs · 51 `ready` / 36 `defined` · 29 bound points across five bound
-suites**, with `02` and `03` deleted and twelve gaps recorded against `05`/`06`/`07`. Three
+Phase 3 closed at **87 Specs · 51 `ready` / 36 `defined` · 29 bound points across six bound
+suites** (the draft said five; the S5 recount found six — `carrier` 3 · `duplicate-ids` 1 ·
+`extraction` 8 · `model` 4 · `sdp-import` 1 · `validators` 12 — which is also the six paths the
+pre-branch root dependency row listed, so the projections suite is the **seventh**), with `02` and `03` deleted and twelve gaps recorded against `05`/`06`/`07`. Three
 debts are on record. First, `test/self-hosting-graph.test.ts` stands at 3,888 lines in a single
 `it()` with frozen absolute counts — the first failure masks the rest, and every conversion
 wave thrashes it. Second, the clean-room lint exemption (`eslint.config.js`) and the wrapper's
@@ -118,11 +134,13 @@ ratified at the PR; drift discipline). Phase 4 adds:
 `test/self-hosting-graph.test.ts` today: one `describe`/one `it()` (lines 3593–3886) over
 module-level frozen data — `expectedSpecs` (87 entries, ~2,558 lines), `expectedPackMembers`,
 `expectedDeclaredRelations`, `expectedWarnings`, `expectedAnchors` (65 entries) — asserting in
-order: clean extraction · no warn-level findings · frozen counts (87/1/65) · a redundant
-151-item node-id roster · per-spec descriptor equality · declared relations · the readiness
-histogram (51/36) · pack membership · the pack node · edge count (294) · anchored edges ·
-anchor nodes (with file I/O line resolution) · anchor-site proximity · two derived-fact case
-studies.
+order: clean extraction · no warn-level findings · frozen counts (87/1/65) · a node-id roster
+whose 88 literal ids (the Pack plus all 87 spec ids) duplicate `expectedSpecs`, with the anchor
+half already derived by spread, compared against all 153 node ids (the draft said "151-item";
+corrected at S5 from the measurement) · per-spec descriptor equality · declared relations · the
+readiness histogram (51/36) · pack membership · the pack node · edge count (294) · anchored
+edges · anchor nodes (with file I/O line resolution) · anchor-site proximity · two derived-fact
+case studies.
 
 Deliverables:
 
@@ -219,20 +237,27 @@ recorded (ruling 12). Promotions ride verifiers per ruling 5.
 
 | Item | Fires when | State |
 |---|---|---|
-| table sugar (ruling 4) | sibling authoring proves dishonest or unusable in a wave | unfired |
-| single-literal vocabulary form | real material forces it | unfired |
-| per-family oracle drift | a split family module regains cross-family assertions or a mega-assert | unfired |
-| shared-constant bypass | a new contract-dependent suite lands outside the constant | unfired — the constant landed at S2 with no surprise; the eslint side derives from the root row only, because the example tree's suite sits outside the typed-lint globs the exemption relaxes. **S3 proved it:** `test/self-hosting-projections.test.ts` (the seventh suite) entered through one edit to the root row and both surfaces followed. The negative control ran too — with the row removed and `generated/contracts` moved aside, clean-room lint fails with five `no-unsafe-argument` errors and the wrapper stops refusing fast, so the coupling is load-bearing on both sides rather than incidentally satisfied |
-| separate example-id namespace | a collision or real pressure appears | unfired (watch continues from phase 3) |
+| table sugar (ruling 4) | sibling authoring proves dishonest or unusable in a wave | **terminal — unfired.** Both waves authored their example spaces as sibling `gwt`/`gwt-vocabulary` fences without pressure for a table form; ten new points landed with no authoring complaint. Carried to the next phase unchanged |
+| single-literal vocabulary form | real material forces it | **terminal — unfired.** Every new example space took two or more parameters; no single-parameter vocabulary appeared, so the question was never posed. Carried unchanged |
+| per-family oracle drift | a split family module regains cross-family assertions or a mega-assert | **terminal — unfired, and probed rather than assumed.** At the close, a wrong descriptor in one family module reddens exactly that family's `it()`, and a wrong *id* reddens that family plus the two identity laws that read the union — which is the designed coupling, not drift. No family module holds an assertion; they hold data only |
+| shared-constant bypass | a new contract-dependent suite lands outside the constant | **terminal — unfired**, and the coupling is proved load-bearing on both sides (the negative control below was re-run from scratch at the close). Carried to the next phase. The constant landed at S2 with no surprise; the eslint side derives from the root row only, because the example tree's suite sits outside the typed-lint globs the exemption relaxes. **S3 proved it:** `test/self-hosting-projections.test.ts` (the seventh suite) entered through one edit to the root row and both surfaces followed. The negative control ran too — with the row removed and `generated/contracts` moved aside, clean-room lint fails with five `no-unsafe-argument` errors and the wrapper stops refusing fast, so the coupling is load-bearing on both sides rather than incidentally satisfied |
+| separate example-id namespace | a collision or real pressure appears | **terminal — unfired.** The ten new example ids all took the `spec:<family>.<parent>.<point>` form under their parent's namespace; no collision appeared and the corpus reports zero duplicate-id findings. Carried to the next phase (the watch continues from phase 3) |
 
 ## §4 Docket ledger (carried in from plan 20)
 
-Markdown Pack syntax ruling · the gen-1 `.feature` adapter · the no-reparse read seam ·
-temporal-guard token assembly · the editor-association gap · corpus-test granularity (owned by
-this phase — S1 is the session that dispositions it; **dispositioned at S1** — the corpus oracle
-split into 21 `it()`s over one hoisted extraction, with the frozen expectation moved to authored
-per-family modules under `test/self-hosting-oracle/`) · control-character latitude · the
-separate example id namespace. Rows close only with reasons in the done-record.
+Rows close only with reasons. Terminal state at this close:
+
+| Row | Disposition |
+|---|---|
+| **corpus-test granularity** | **DONE at S1** — the row this phase owned, and the one that had rolled since review-08. The corpus oracle is 21 `it()`s over one hoisted extraction; the frozen expectation lives in ten authored per-family modules under `test/self-hosting-oracle/`; the first failure no longer masks the rest, and a conversion wave touches one family file. Proved at the close by corruption probes rather than by inspection. **Closed.** |
+| Markdown Pack syntax ruling | **carried** — no wave forced an entry under fire; the one Pack carrier stayed `.sdp.ts` and nothing about the two waves pressed on Pack authoring. Still open, still ruled by the canonical-default carrier rule |
+| the gen-1 `.feature` adapter | **carried** — out of scope by §(c); untouched, no pressure appeared |
+| the no-reparse read seam | **carried** — out of scope by §(c); the projections suite renders from an in-memory graph and never re-parses, so the seam was never pressed |
+| temporal-guard token assembly | **carried** — the standing choice (widen the guard and repair the sites, or narrow ruling 7's wording) is unchanged. Phase 4 authored **no** new violation: an independent sweep of every branch-added file under `specs/` and `test/`, using a wider token set than the guard's own pattern, returns zero hits |
+| the editor-association gap | **carried** — out of scope by §(c); untouched |
+| control-character latitude | **carried** — out of scope by §(c); no new material exercised it |
+| the separate example id namespace | **carried** — the watch item above stayed unfired; ten new example ids landed under their parents' namespaces with no collision |
+| **dead `RenderedFinding` shape** *(new — review-10 S-2)* | **entered carried** — `src/cli/output.ts` declares and exports a second finding shape with no producer anywhere in `src/`, `test/`, or `examples/`, and no barrel export, inside the very file `spec:validation.diagnostic-rendering` names as an entrypoint while stating that no surface introduces a parallel report shape. Dead internal surface, not a live parallel path; removing an internal type is engine hygiene outside a review-and-close session |
 
 ## §5 Acceptance criteria
 
@@ -300,7 +325,7 @@ stretched into `carried`, per the D-2/D-3 lesson.
 | §2 checks 1–2 (referential integrity with did-you-mean · duplicate IDs) | `spec:validation.referential-integrity` + `dangling-target` and `did-you-mean` · `spec:validation.duplicate-ids` + `dual-carrier` | carried |
 | §2 check 3 (`claim` separation, endpoint contracts, fail-closed descriptors, the kind-typed endpoints) | `spec:validation.claim-separation` + `collapsed-edge-claim` and `unratified-descriptor` · `spec:model.relations` (the per-relation endpoint kinds in its vocabulary) | carried |
 | §2 check 4 (`verifies` linkage; a wrong-kind verifier confers nothing rather than failing) | `spec:validation.verification-linkage` + `unbound-example` and `unresolved-oracle` ("a non-resolving trace is named loudly and confers no delivery fact") | carried |
-| §2 checks 5–6 (authoring-shape honesty · derived-facts honesty, including `observed`; the gap check reads recomputed facts) | `spec:validation.authored-honesty` + `section-authored-fact` and `unearned-stated-fact` · `src/validate/validators.ts` `checkGaps` (reads the recomputed facts, pinned by the two points) | carried |
+| §2 checks 5–6 (authoring-shape honesty · derived-facts honesty, including `observed`; the gap check reads recomputed facts) | `spec:validation.authored-honesty` + `section-authored-fact` and `unearned-stated-fact` (the stated-equals-recomputed law) · `spec:validation.warn-level-signals` (the coupling clause: the gap signal reads the recomputed facts, never a Spec's stated ones, so a hand-authored fact can never silence it) — **enriched at S5**, because the coupling sentence previously stood only on `src/validate/validators.ts` `checkGaps`, which is a code surface under a deletion-authorizing verdict (the phase-3 D-2 shape, repaired the same way: by enrichment) | carried |
 | §2 check 7 (honest readiness — a stated rung is checked against the floor) | `spec:validation.readiness-floor` (**all four rungs now in authored words**, cumulative evaluation stated) | carried |
 | §2 check 8 (orphan detection) | `spec:validation.warn-level-signals` + `orphan-signal` · `CONTEXT.md` "`orphan`" | carried |
 | §2 check 8 parenthetical — **a per-team severity override is designed-for, deferred** | none — no Spec, registry, code+test surface, or surviving doc names this deferral; `00` §4 and `07` §2/§3 do not list it | **gap** (new — recorded as gap 13) |
@@ -413,7 +438,101 @@ prioritization heuristic (§5). All three are named out of scope by §(c); `07` 
 
 ## §6 Done-record
 
-*(written at close)*
+The phase ran in five sessions on `feature/protocol-self-application-phase-4`, each closing with a
+green twelve-leg gate. What it delivered, against §(c):
+
+1. **The oracle split (S1).** `test/self-hosting-graph.test.ts` went from one `it()` over 3,888
+   lines to **21 `it()`s over a single hoisted extraction** — the corpus walk runs once per suite
+   run, never once per assertion. The frozen expectation moved to **ten authored transcription
+   modules** under `test/self-hosting-oracle/` (seven Spec-family files, the Pack manifest, the
+   declared relations, the anchors) plus an aggregating index; nothing there is computed from the
+   graph it judges. Zero assertion loss: **27 original `expect` sites → 32**, with three
+   oracle-length cross-checks and the two-assertion no-Spec-outside-the-families law added, and
+   the redundant node-id roster derived from the authored arrays per ruling 10.
+2. **One source of truth for the contract-dependent suites (S2).** `contract-dependent-suites.mjs`
+   states the per-tree rows once; `vitest-test.mjs` and `eslint.config.js` both read it. S3 proved
+   the coupling under fire — one edit admitted the seventh suite and both surfaces followed.
+3. **The floor wave (S2).** `spec:validation.readiness-floor` enriched to state all four rungs in
+   authored words, and the new `spec:validation.kind-evidence` carrying the per-kind evidence
+   table row for row, with 5 bound points.
+4. **The view wave (S3).** Four new rule Specs — `spec:consumers.derived-readiness-banner`,
+   `spec:consumers.binding-language-views`, `spec:consumers.wholesale-view-rewrite`,
+   `spec:validation.diagnostic-rendering` — plus `spec:validation.validator-self-testing` at an
+   honest `defined`, with 5 bound points in the new `test/self-hosting-projections.test.ts`.
+5. **The sweep and the re-audits (S4).** All 37 `defined` Specs dispositioned, zero promotions,
+   37 named refusals; `05` re-audited and kept on two new gap rows; `06` and `07` re-graded.
+6. **The adversarial close (S5).** `reviews/10-self-hosting-phase-4-pre-close-review.md`, with
+   every finding dispositioned, and its accepted findings landed on the branch.
+
+### The S5 rulings log
+
+1. **The mutation set was designed independently, not replayed.** Twenty-two mutations —
+   eighteen against the ten points, eight against the oracle split — none of them a repeat of a
+   wave's own probe. All ten points went red for the law they name; seventeen of the eighteen
+   point-directed mutations killed **exactly one** point, and the eighteenth killed exactly the
+   two whose Spec text names the same floor clause. §7's two loosest rows were sharpened from the
+   measurement rather than left as written.
+2. **The `then`-key curiosity is closed, and it was a regression, not a convention.** The
+   indirect key was raised by review-06, fixed by the phase-1 remediation, **silently reintroduced
+   hours later by the grammar-hardening commit in the same cluster**, and then recorded by the
+   phase-2 docket as *"verified — phase-1 remediation names the `then` key directly."* That
+   sentence was false when written, and this close makes it true: every one of the 66 sites now
+   writes the plain key. Nothing required the indirection — no ESLint rule or plugin, no gate leg,
+   none of the five check scripts, and no scanner over test files (the extractor reifies only
+   `.sdp.ts` and `.sdp.md` carriers). Recorded here rather than in the docket, because a defect
+   that a docket row already claimed to have verified deserves the correction beside the claim.
+3. **One `carried` verdict was repaired by enrichment, not by argument.** The derived-facts
+   honesty row rested its coupling clause — the gap check reads the recomputed facts, so a faked
+   fact never silences it — on `src/validate/validators.ts` alone. That is the phase-3 D-2 shape
+   under a deletion-authorizing verdict, so `spec:validation.warn-level-signals` now states it and
+   the row's citation names the Spec first.
+4. **Two record slips corrected from measurement.** §(b)'s "five bound suites" is six, and §2 S1's
+   "151-item node-id roster" was an 88-item literal whose anchor half was already derived. Both
+   were draft-time descriptions, neither load-bearing for a verdict; both now state what was
+   measured.
+5. **Two findings were declined or carried with reasons rather than argued away.** The floor
+   Spec's silence on the clause attribution for an unresolved relation target states nothing
+   false and produces an identical rendered outcome, so no clause was invented for it. The dead
+   `RenderedFinding` type in `src/cli/output.ts` is internal surface with no producer and no
+   barrel export, so no parallel report path exists in substance; it rides the docket.
+
+### Closing numbers
+
+| | Opening (`main`) | Closing |
+|---|---|---|
+| Specs | 87 | **103** |
+| anchors | 65 | **75** |
+| nodes · edges | 153 · 294 | **179 · 351** |
+| stated readiness | `ready: 51 / defined: 36` | **`ready: 66 / defined: 37`** |
+| bound points · bound suites | 29 · 6 | **39 · 7** |
+| findings over the corpus | 0 errors / 0 warnings | **0 errors / 0 warnings** |
+
+Every one of the 66 `ready` Specs carries `has-verifier` through the executable path; not one of
+the 37 `defined` Specs carries it, which is the sweep's uniform refusal reason.
+
+### §5 acceptance criteria, graded
+
+| # | Criterion | Grade | Evidence |
+|---|---|---|---|
+| 1 | The oracle is split with zero assertion loss | **PASS** | 21 `it()`s over one hoisted extraction; ten authored transcription modules; 27 → 32 `expect` sites, and **no file under `test/` lost one** (1313 → 1342 across the tree, every per-file delta non-negative). Law coverage at close is a superset: the no-Spec-outside-the-families law and the three length cross-checks are new. Corpus-test granularity dispositioned at S1 (§4). Probed at S5: a wrong descriptor in one family module reddens exactly that family's `it()`; a deleted entry is caught by the length cross-check rather than certifying itself. |
+| 2 | One source of truth for contract-dependent suites | **PASS** | Both consumers import `contract-dependent-suites.mjs`. Re-run at S5 from a clean room: lint passes with the projections row and fails with **exactly five `no-unsafe-argument` errors** without it, while the wrapper refuses fast with the recovery text with the row and spawns straight into the missing tree without it. Load-bearing on both sides. |
+| 3 | Executable-path facts, not claims | **PASS** | 66/66 `ready` Specs carry `has-verifier`; zero validation errors; `--check-clean` clean on both trees; **all ten new points mutation-probed red for the law they name**, independently at S5 as well as in their own wave. |
+| 4 | Honest readiness | **PASS** | Zero warnings — no `honesty/gaps` finding exists at all. Closing distribution `ready: 66 / defined: 37` recomputed off the graph and off disk. Every promotion carried a resolving verifier in the same change; all 37 refusals carry named reasons (§8), and all 37 pages read "structural floor reached: `ready`", so the refusals are about evidence, never structure. |
+| 5 | The `05` disposition is audit-grounded | **PASS** | `05` **stays** — the criterion asks for an audit-grounded disposition, not a deletion. All three phase-3 gaps closed; two new rows recorded precisely rather than stretched into `carried`, and independently re-verified at S5: a repository-wide sweep for either deferral returns hits only inside `05` itself and inside this plan's audit rows. Ruling 14's re-pointing and two-form sweep correctly did not run, and the deletion-cost inventory is written so the next attempt is one session. `06` and `07` re-graded with honest ledgers; one row's citation corrected at S5 (rulings log 3). |
+| 6 | The gate holds throughout | **PASS** | `npm run check` green at every blessed commit, and the full twelve-leg chain plus the clean-clone proof green at the close SHA (§9). |
+| 7 | Records continue | **PASS** | §3 watch items terminal, §4 docket rows dispositioned or carried with stated reasons, §7 and §8 terminal, §9 terminal, and the adversarial review archived with every finding in a terminal disposition before close. |
+
+### What the owner ratifies at the PR
+
+Three calls this phase records rather than makes:
+
+1. **`05` stays, two clauses short.** Gaps 13 and 14 are the named next work.
+2. **The `then`-key normalization touches product code** — one line in
+   `src/extract/markdown-body-owner-behavior.ts` and 65 test/oracle sites. Byte-neutral at
+   runtime and gate-proven, but it reverses a shape that survived three phases.
+3. **`spec:validation.validator-self-testing` ships at `defined` with no verifier** and is still
+   graded `carried` by the `05` audit — the dissolution criterion asks that a law be carried by a
+   Spec, not that the Spec be `ready`. This is the first time the corpus leans on that reading.
 
 ## §7 Conversion / corpus ledger
 
@@ -425,8 +544,8 @@ reasons)*
 | S2 | lower floor rungs (`idea`/`scoped`/`defined` clauses) | `spec:validation.readiness-floor` (enriched) | 2–3 | done — 2 points (`at-least-one-relation` on a scoped probe · `no-blocking-open-questions` on a defined probe), both mutation-probed red |
 | S2 | per-kind evidence table + MD-16 promoted-evidence bound | new `spec:validation.kind-evidence` | 1–2 | done — 3 points (behavior-family complete cell · constraint target · the promoted-evidence bound); one over the planned ceiling, taken deliberately so the MD-16 bound the Spec states is not the only row left unbound |
 | S3 | derived-readiness banner (one direction · first unmet clause) | new `spec:consumers.derived-readiness-banner` | 1–2 | done — 2 points (`dishonest-divergence` names the first unmet clause · `honest-headroom` pairs the absent banner with the rendered stated-beside-derived line), both mutation-probed red |
-| S3 | `implemented` view-label (binding language) | new `spec:consumers.binding-language-views` | 1 | done — 1 point (`bound-spec-page`: the four binding lines, the index row repeating them, and the internal fact names absent from both surfaces), mutation-probed red |
-| S3 | wholesale page rewrite (atomic swap · no stale page) | new `spec:consumers.wholesale-view-rewrite` | 1 | done — 1 point (`stale-page-removed`, a temp-root world running the real `runView`), mutation-probed red; the law is realized at two sites (the up-front invalidation in `runBuild` plus the temp-and-rename in `runView`), so breaking one alone leaves the point green — recorded, and the Spec states both |
+| S3 | `implemented` view-label (binding language) | new `spec:consumers.binding-language-views` | 1 | done — 1 point (`bound-spec-page`: the four binding lines, the index row repeating them, and the internal fact names absent from both surfaces), mutation-probed red. **Residue measured at S5:** the Spec's rule names *both* aggregate surfaces, but the probe graph holds no Pack, so only the index half is exercised — changing the index row's cells to `yes`/`no` kills the point, the identical change to the pack member table's cells does not. The pack-member half of that rule stands unbound |
+| S3 | wholesale page rewrite (atomic swap · no stale page) | new `spec:consumers.wholesale-view-rewrite` | 1 | done — 1 point (`stale-page-removed`, a temp-root world running the real `runView`), mutation-probed red; the law is realized at two sites (the up-front invalidation in `runBuild` plus the temp-and-rename in `runView`), so breaking one alone leaves the point green — recorded, and the Spec states both. **Sharpened at S5 from the measurement:** deleting either site alone survives; deleting both kills; replacing the rename with a copy so the temporary sibling is left behind also kills, so the point does discriminate the swap in that one direction. It does *not* discriminate the swap's absence — `temporarySurvives: false` is satisfied both when the temporary ran and was cleaned up and when no temporary exists at all. Three of the Spec's rule lines have no verifier: the "no half-written view is ever readable" reading of the one-rename clause, the failed-run removal, and the `--check-clean` double render with its refusal |
 | S3 | one diagnostic rendering rule | new `spec:validation.diagnostic-rendering` | 1 | done — 1 point (`composed-location`: the composed prefix plus both degradations on one finding), mutation-probed red. **Family call:** the carrier lives in `specs/validation/` and refines `spec:validation.two-check-families`, because the law's subject is the Finding currency — a validation concept whose shape law that parent already carries. The consumers family offered no honest parent: `spec:consumers.projections-model` is a `model`-kind vocabulary rather than a law a rule refines, and `spec:consumers.design-review` is only one of the two rendering surfaces. The Design Review half rides a `dependsOn` edge to that Spec instead |
 | S3 | validator self-testing | new `spec:validation.validator-self-testing` | 0–1 (may honestly stay `defined`) | done — 0 points, stated `defined`: the only mechanical verifier available would inspect the test corpus for should-fail/should-pass pairs, which polices the delivery process rather than conformance or honesty |
 
@@ -524,7 +643,22 @@ ledger is git process evidence, never graph content.
 | S2 | shared constant + floor wave | orchestrator-verified green gate | done — `contract-dependent-suites.mjs` now states the per-tree rows once and both `vitest-test.mjs` and `eslint.config.js` read it (clean-room proof: lint passes with `generated/contracts` moved aside, the wrapper still fails fast with the same recovery text); the floor wave carried the `idea`/`scoped`/`defined` rungs into `spec:validation.readiness-floor` and the per-kind table into the new `spec:validation.kind-evidence`, with 5 bound points each mutation-probed red for the clause it names; corpus 87 → 93 Specs, `ready` 51 → 57 |
 | S3 | view wave + seventh bound suite | orchestrator-verified green gate | done — five laws carried (banner · view-label · wholesale rewrite · diagnostic rendering · validator self-testing), ten Specs added, five bound points in the new `test/self-hosting-projections.test.ts`, each mutation-probed red for the law it names; the suite entered the shared constant once and both surfaces followed (clean-room proof: with `generated/contracts` moved aside, lint passes with the row and fails with five unsafe-argument errors without it, while the wrapper refuses fast with the recovery text); corpus 93 → 103 Specs, `ready` 57 → 66 |
 | S4 | readiness sweep + re-audits (± the `05` deletion) | orchestrator-verified green gate over the regenerated Design Review | done — the sweep dispositioned all 37 `defined` Specs with zero promotions and 37 named refusals (§8): none carries `has-verifier`, so every promotion would have added an `honesty/gaps` warning, and no verifier was invented to enable one. The `05` re-audit closed all three of its phase-3 gaps (S2's floor wave, S3's banner and validator-self-testing carriers) and surfaced **two new gap rows** — the per-team severity override and the team-overridable floor config, both designed-for deferrals named nowhere else — so **`05` stays** and its residue plus a deletion-cost inventory are recorded (§5a). `06` and `07` re-graded: six of the twelve phase-3 gaps closed, both docs stay. Records-only session — no product surface changed, graph numbers unmoved at 103/1/75 · 179 · 351 · `ready` 66 / `defined` 37 |
-| S5 | adversarial review, remediation, full close, done-record | full chain + clean-clone; review archived | planned |
+| S5 | adversarial review, remediation, full close, done-record | full chain + clean-clone; review archived | done — the review is archived at `reviews/10-self-hosting-phase-4-pre-close-review.md` with **ten findings, every one terminal**: one major fixed (the indirect `then` key, normalized at all 66 sites), one minor fixed by enrichment (`spec:validation.warn-level-signals` now carries the gap signal's recomputed-facts reading), two records repaired (§(b)'s suite count, §2 S1's roster description), two §7 rows sharpened from the measurement, one declined with a reason, one carried to the docket, and two informational verifications recorded. Twenty-two independently designed mutations were run; all ten new points went red for the law they name. The full twelve-leg gate and the clean-clone proof are green at the close SHA |
 
 Owner ratification of every gate above happens at the phase PR review; no live owner
 acceptance occurs during execution.
+
+### The close proof
+
+The twelve-leg `npm run check` is green at the close commit, and the clean-clone proof
+(`git clone --no-local . <scratch>/clone-proof` → `npm ci` → the full chain) reproduces it from a
+fresh checkout with no build state carried over. Reproduced numbers, both trees:
+
+- root corpus: **103 specs · 1 pack · 75 anchors → 179 nodes · 351 edges**, 0 errors / 0 warnings,
+  62 generated contract modules, 105 Design Review pages, `--check-clean` clean.
+- worked example: **11 specs · 1 pack · 5 anchors → 17 nodes · 32 edges**, 0 errors / 1 warning
+  (the frozen unbound-example warning the tracer bullet exists to show), 3 contract modules,
+  13 pages, `--check-clean` clean.
+- tests: **589 green** — 535 in the parallel pool plus the 54-test dedicated `test/cli.test.ts`
+  pass.
+- preflight clean; `git status --porcelain` empty after the whole chain.
