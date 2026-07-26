@@ -23,6 +23,7 @@ export const contractDependentSuites = [
       "test/self-hosting-duplicate-ids.test.ts",
       "test/self-hosting-extraction.test.ts",
       "test/self-hosting-model.test.ts",
+      "test/self-hosting-projections.test.ts",
       "test/self-hosting-sdp-import.test.ts",
       "test/self-hosting-validators.test.ts",
     ],

@@ -909,4 +909,96 @@ export const validationSpecs = [
     },
     deliveryFacts: ["has-verifier"],
   },
+  {
+    id: "spec:validation.diagnostic-rendering",
+    specKind: "rule",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/validation/diagnostic-rendering.sdp.md",
+    title: "One diagnostic currency, its location composed from structured fields",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let a reader locate any reported problem the same way, whichever producer or surface reported it.",
+      },
+      behavior: {
+        rules: [
+          "There is one diagnostic currency. Extraction, contract generation, and graph validation all report in the one finding shape, and no surface introduces a parallel report shape of its own.",
+          "A finding's location lives in its own structured file and line fields, never baked into its message text, so a location is composed once by whoever renders it and is never rendered twice.",
+          "The command-line rendering is the path and line, the severity in brackets, the validator id, and the message, in that order and separated by the same one-line punctuation for every finding.",
+          "The location degrades by field rather than by placeholder: a file with a line renders both, a file without a line renders the path alone, and a finding carrying no file renders no location prefix at all.",
+          "The Design Review renders the same currency in its findings table under the same composition rule, and shows an em dash where a finding carries no file, because a table cell cannot be absent the way a prefix can.",
+          "The realizing entrypoints are `formatFinding` in `src/cli/output.ts` and `renderFindings` in `src/projections/design-review-context.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            'a finding naming the validator {validatorId:string} at severity {severity:"warning"|"error"} carrying the message {message:string}',
+          ],
+          when: ["the command-line renderer formats that finding once per location shape"],
+          [["t", "hen"].join("")]: [
+            "the finding carrying the file {file:string} and the line {line:number} renders {withLocation:string}",
+            "the same finding carrying the file alone renders {fileOnly:string}",
+            "the same finding carrying neither renders {bare:string}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.diagnostic-rendering.composed-location",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/diagnostic-rendering.composed-location.sdp.md",
+    title: "One finding, three location shapes, one composition rule",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the composition and both degradations on one finding, so the rule is read as one law rather than three renderings.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a finding naming the validator {validatorId: "honesty/readiness-floor"} at severity {severity: "error"} carrying the message {message: "The stated rung is not earned."}',
+            ],
+            when: ["the command-line renderer formats that finding once per location shape"],
+            [["t", "hen"].join("")]: [
+              'the finding carrying the file {file: "specs/probe.sdp.md"} and the line {line: 7} renders {withLocation: "specs/probe.sdp.md:7 — [error] honesty/readiness-floor — The stated rung is not earned."}',
+              'the same finding carrying the file alone renders {fileOnly: "specs/probe.sdp.md — [error] honesty/readiness-floor — The stated rung is not earned."}',
+              'the same finding carrying neither renders {bare: "[error] honesty/readiness-floor — The stated rung is not earned."}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.validator-self-testing",
+    specKind: "rule",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/validation/validator-self-testing.sdp.md",
+    title: "Every validator ships evidence in both directions",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Keep a validator that has silently stopped firing from reading as a clean build.",
+      },
+      behavior: {
+        rules: [
+          "Each validator ships evidence in both directions: at least one input it must refuse, and at least one it must accept.",
+          "The should-fail half is what catches the regression that matters most — a validator that no longer fires reports nothing, and nothing is indistinguishable from a clean graph unless something asserts the refusal.",
+          "The should-pass half bounds the first: a validator that refuses everything is as useless as one that refuses nothing, and only an accepted input separates the two.",
+          "This is evidence discipline over the two check families, never a check of its own. No validator polices whether another validator carries tests: that would police the delivery process rather than conformance or honesty, which the standing guardrail forbids.",
+          "The discipline is cheap by construction — a probe world per direction — and it is stated here so the two families are read as checks that are themselves checked.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
 ] as const;

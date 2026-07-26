@@ -140,4 +140,250 @@ export const consumersSpecs = [
     },
     deliveryFacts: [],
   },
+  {
+    id: "spec:consumers.derived-readiness-banner",
+    specKind: "rule",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/consumers/derived-readiness-banner.sdp.md",
+    title: "Derived readiness renders beside the stated rung and warns in one direction",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Show a reader where a Spec's stated maturity stands against the structure it earns, without turning a floor into a quota.",
+      },
+      behavior: {
+        rules: [
+          "Derived readiness is the highest rung whose cumulative floor clauses pass. It is computed from the graph, rendered beside the author's statement, and never overwrites it.",
+          "Every spec page renders the stated rung beside the floor reached, on one line, whether or not the two agree; the index and the pack member table carry the same pair as two columns.",
+          "The divergence banner is raised only in the dishonest direction — the floor reached standing below the stated rung. A floor reached at or above the stated rung raises nothing, because a floor is a floor and never a quota that nags upward.",
+          "A raised banner names the first unmet clause by its clause id and its description, so the reader is told which clause to satisfy rather than only that something is wrong.",
+          "When even the `idea` floor is unmet, the floor reached renders as none rather than as a rung, and a raised banner states that the floor stands below `idea`.",
+          "The banner is rendering, never a check: the same divergence is already the readiness floor's own finding, and the page shows it in context rather than gating on it.",
+          "The realizing entrypoint is `renderReadiness` in `src/projections/design-review-context.ts`; the rung it renders is the derived readiness the one clause table yields.",
+        ],
+        exampleSpace: {
+          given: [
+            'the graph holds a rule spec {specId:string} whose stated readiness is {statedReadiness:"scoped"|"ready"}',
+            'the spec {structure:"clears every floor clause"|"records a blocking open question"}',
+          ],
+          when: ["the Design Review renders the graph"],
+          [["t", "hen"].join("")]: [
+            'the spec page renders the floor reached {floorReached:"scoped"|"ready"}',
+            "the divergence banner is raised: {bannerRaised:boolean}",
+            "the banner names the first unmet clause {clauseId:string}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.derived-readiness-banner.dishonest-divergence",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/derived-readiness-banner.dishonest-divergence.sdp.md",
+    title: "An overstated rung raises the banner and names the clause that refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the dishonest direction, where the page must name the first clause the structure leaves unmet.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a rule spec {specId: "spec:probe.overstated-rung"} whose stated readiness is {statedReadiness: "ready"}',
+              'the spec {structure: "records a blocking open question"}',
+            ],
+            when: ["the Design Review renders the graph"],
+            [["t", "hen"].join("")]: [
+              'the spec page renders the floor reached {floorReached: "scoped"}',
+              "the divergence banner is raised: {bannerRaised: true}",
+              'the banner names the first unmet clause {clauseId: "no-blocking-open-questions"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.derived-readiness-banner.honest-headroom",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/derived-readiness-banner.honest-headroom.sdp.md",
+    title: "A rung the structure overshoots renders as information, not as a banner",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the honest direction, where the line still renders both rungs and nothing nags the author upward.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a rule spec {specId: "spec:probe.understated-rung"} whose stated readiness is {statedReadiness: "scoped"}',
+              'the spec {structure: "clears every floor clause"}',
+            ],
+            when: ["the Design Review renders the graph"],
+            [["t", "hen"].join("")]: [
+              'the spec page renders the floor reached {floorReached: "ready"}',
+              "the divergence banner is raised: {bannerRaised: false}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.binding-language-views",
+    specKind: "rule",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/consumers/binding-language-views.sdp.md",
+    title: "Views speak binding language, never the internal fact name",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep a reader from reading a delivery fact as a liveness claim the graph never made.",
+      },
+      behavior: {
+        rules: [
+          "The delivery-fact names stay internal. They are the graph's own vocabulary and the drift queries read them; no rendered surface shows one as user-facing label text.",
+          "A spec page's bindings block renders four labelled lines — implementation binding, verifier binding, expected-outcome oracle, and runtime observation.",
+          "The three binding lines read present or none, and nothing else: what a binding says is that a resolving anchor exists, so the reader is offered existence rather than a degree.",
+          "Runtime observation always reads not tracked. No delivery fact records it, and the view states the absence instead of leaving a reader to infer it from a missing line.",
+          "The pack member table and the index table carry the same two binding columns, with the same present and none values, so the aggregate surfaces speak the page's language rather than a shorthand of their own.",
+          "The model half of this rule — that a binding states existence and never liveness — belongs to the decision this Spec is shaped by; what is stated here is only what the views render.",
+          "The realizing entrypoints are `renderBindings` in `src/projections/design-review-context.ts` and the member and index tables in `src/projections/design-review-pages.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            'the graph holds a spec {specId:string} bound by {bindings:"an implementing code anchor and a verifying test anchor"|"no anchor at all"}',
+          ],
+          when: ["the Design Review renders the graph"],
+          [["t", "hen"].join("")]: [
+            'the spec page renders the implementation binding as {implementation:"present"|"none"}',
+            'the spec page renders the verifier binding as {verifier:"present"|"none"}',
+            "the spec page renders the runtime observation as {observation:string}",
+            "the index table repeats those binding values for the spec: {tableRepeats:boolean}",
+            "the internal delivery-fact name {factName:string} appears as rendered label text: {factNameRendered:boolean}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.binding-language-views.bound-spec-page",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/binding-language-views.bound-spec-page.sdp.md",
+    title: "A fully bound spec renders binding language on the page and in the index",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the rendered vocabulary on a spec both anchors reach, where the internal fact name would be easiest to leak.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.bound-surface"} bound by {bindings: "an implementing code anchor and a verifying test anchor"}',
+            ],
+            when: ["the Design Review renders the graph"],
+            [["t", "hen"].join("")]: [
+              'the spec page renders the implementation binding as {implementation: "present"}',
+              'the spec page renders the verifier binding as {verifier: "present"}',
+              'the spec page renders the runtime observation as {observation: "not tracked"}',
+              "the index table repeats those binding values for the spec: {tableRepeats: true}",
+              'the internal delivery-fact name {factName: "implemented"} appears as rendered label text: {factNameRendered: false}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.wholesale-view-rewrite",
+    specKind: "rule",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/consumers/wholesale-view-rewrite.sdp.md",
+    title: "Every view run rewrites the view wholesale",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Guarantee that whatever a reader finds in the view directory was produced by the last run over the current source.",
+      },
+      behavior: {
+        rules: [
+          "A view run rewrites the view wholesale: no page written by an earlier run survives a later one, so a spec that left the corpus leaves no page behind.",
+          "Pages are written to a temporary sibling of the view directory, the previous directory is removed, and the temporary is renamed into place — one rename, so no half-written view is ever readable and no temporary survives a completed run.",
+          "A run that cannot produce a current view removes the stale one instead of leaving it readable as current: an absent view is honest, a stale view is not.",
+          "The invalidation happens before rendering as well as after it: the build the run passes through removes any existing view up front, so a run that fails before rendering leaves nothing behind either.",
+          "Under `--check-clean` the view is rendered twice from the same graph and the run refuses when the two renders diverge, removing the view it could not certify.",
+          "Findings never withhold the view. A run whose checks report findings still writes the current view and returns the checks' own exit code, because the view is where those findings are read in context.",
+          "The realizing entrypoint is `runView` in `src/cli/validate-view-command.ts`, with the up-front invalidation in `runBuild` in `src/cli/build-command.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            "an extraction root holding {corpus:string} and a stale view page {stalePage:string}",
+          ],
+          when: ["the view is rendered at that root"],
+          [["t", "hen"].join("")]: [
+            "the run exits {exitCode:number}",
+            "the view holds the current page {currentPage:string}",
+            "the stale page survives: {staleSurvives:boolean}",
+            "a temporary view sibling survives: {temporarySurvives:boolean}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.wholesale-view-rewrite.stale-page-removed",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/wholesale-view-rewrite.stale-page-removed.sdp.md",
+    title: "A page from an earlier run does not survive the next one",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the wholesale rewrite against the case it exists for — a page whose subject the current source no longer holds.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'an extraction root holding {corpus: "one authored spec"} and a stale view page {stalePage: "spec/probe.departed.md"}',
+            ],
+            when: ["the view is rendered at that root"],
+            [["t", "hen"].join("")]: [
+              "the run exits {exitCode: 0}",
+              'the view holds the current page {currentPage: "index.md"}',
+              "the stale page survives: {staleSurvives: false}",
+              "a temporary view sibling survives: {temporarySurvives: false}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
 ] as const;

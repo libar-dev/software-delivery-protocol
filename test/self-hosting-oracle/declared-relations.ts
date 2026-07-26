@@ -317,4 +317,63 @@ export const expectedDeclaredRelations = [
     "verifies",
     "spec:validation.two-check-families",
   ],
+  ["spec:consumers.derived-readiness-banner", "refines", "spec:consumers.design-review"],
+  ["spec:consumers.derived-readiness-banner", "dependsOn", "spec:validation.readiness-floor"],
+  [
+    "spec:consumers.derived-readiness-banner.dishonest-divergence",
+    "refines",
+    "spec:consumers.derived-readiness-banner",
+  ],
+  [
+    "spec:consumers.derived-readiness-banner.dishonest-divergence",
+    "verifies",
+    "spec:consumers.derived-readiness-banner",
+  ],
+  [
+    "spec:consumers.derived-readiness-banner.honest-headroom",
+    "refines",
+    "spec:consumers.derived-readiness-banner",
+  ],
+  [
+    "spec:consumers.derived-readiness-banner.honest-headroom",
+    "verifies",
+    "spec:consumers.derived-readiness-banner",
+  ],
+  ["spec:consumers.binding-language-views", "refines", "spec:consumers.design-review"],
+  ["spec:consumers.binding-language-views", "decidedBy", "spec:decisions.binding-not-liveness"],
+  [
+    "spec:consumers.binding-language-views.bound-spec-page",
+    "refines",
+    "spec:consumers.binding-language-views",
+  ],
+  [
+    "spec:consumers.binding-language-views.bound-spec-page",
+    "verifies",
+    "spec:consumers.binding-language-views",
+  ],
+  ["spec:consumers.wholesale-view-rewrite", "refines", "spec:consumers.design-review"],
+  ["spec:consumers.wholesale-view-rewrite", "dependsOn", "spec:extraction.determinism"],
+  [
+    "spec:consumers.wholesale-view-rewrite.stale-page-removed",
+    "refines",
+    "spec:consumers.wholesale-view-rewrite",
+  ],
+  [
+    "spec:consumers.wholesale-view-rewrite.stale-page-removed",
+    "verifies",
+    "spec:consumers.wholesale-view-rewrite",
+  ],
+  ["spec:validation.diagnostic-rendering", "refines", "spec:validation.two-check-families"],
+  ["spec:validation.diagnostic-rendering", "dependsOn", "spec:consumers.design-review"],
+  [
+    "spec:validation.diagnostic-rendering.composed-location",
+    "refines",
+    "spec:validation.diagnostic-rendering",
+  ],
+  [
+    "spec:validation.diagnostic-rendering.composed-location",
+    "verifies",
+    "spec:validation.diagnostic-rendering",
+  ],
+  ["spec:validation.validator-self-testing", "refines", "spec:validation.two-check-families"],
 ] as const;
