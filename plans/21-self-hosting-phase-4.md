@@ -229,7 +229,9 @@ recorded (ruling 12). Promotions ride verifiers per ruling 5.
 
 Markdown Pack syntax ruling · the gen-1 `.feature` adapter · the no-reparse read seam ·
 temporal-guard token assembly · the editor-association gap · corpus-test granularity (owned by
-this phase — S1 is the session that dispositions it) · control-character latitude · the
+this phase — S1 is the session that dispositions it; **dispositioned at S1** — the corpus oracle
+split into 21 `it()`s over one hoisted extraction, with the frozen expectation moved to authored
+per-family modules under `test/self-hosting-oracle/`) · control-character latitude · the
 separate example id namespace. Rows close only with reasons in the done-record.
 
 ## §5 Acceptance criteria
@@ -289,7 +291,7 @@ ledger is git process evidence, never graph content.
 
 | Session | Delivers | Gate discipline | State |
 |---|---|---|---|
-| S1 | the oracle split (§2 S1) | orchestrator-verified green gate | planned |
+| S1 | the oracle split (§2 S1) | orchestrator-verified green gate | done — 21 `it()`s over one hoisted extraction; the frozen expectation moved to ten authored modules under `test/self-hosting-oracle/` (seven family files, pack manifest, declared relations, anchors) plus their aggregating index; zero assertion loss (every one of the 27 original `expect` sites survives, 5 added: three oracle-length cross-checks and the two-assertion "no Spec outside the families" law), the node-id roster derived from the authored arrays per ruling 10; counts unchanged at 87/1/65 · 153 · 294 · ready 51 / defined 36 |
 | S2 | shared constant + floor wave | orchestrator-verified green gate | planned |
 | S3 | view wave + seventh bound suite | orchestrator-verified green gate | planned |
 | S4 | readiness sweep + re-audits (± the `05` deletion) | orchestrator-verified green gate over the regenerated Design Review | planned |
