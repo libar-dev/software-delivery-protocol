@@ -699,3 +699,9 @@ fresh checkout with no build state carried over. Reproduced numbers, both trees:
 - tests: **589 green** — 535 in the parallel pool plus the 54-test dedicated `test/cli.test.ts`
   pass.
 - preflight clean; `git status --porcelain` empty after the whole chain.
+
+The S6 remediation wave landed after that proof, so the clone proof was **re-run at the S6
+tip** before the PR: `git clone --no-local` → `npm ci` → the full chain, green end-to-end
+(exit 0), reproducing the post-S6 numbers — root corpus **108 specs · 1 pack · 80 anchors →
+189 nodes · 371 edges**, 0 errors / 0 warnings; the worked example unchanged at 11 · 1 · 5 →
+17 · 32 with its one frozen warning; **594 tests green** (540 + 54); preflight clean.
