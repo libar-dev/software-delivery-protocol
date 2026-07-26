@@ -126,9 +126,9 @@ example children; residual tests stay per ruling 1.
 | S2 | `test/graph-schema.test.ts` | `spec:extraction.schema-versioning` | 1 | done — 1 point (`declared-version`) |
 | S2 | `test/ids.test.ts` (representative points) | `spec:model.stable-ids` | 1–2 | done — 2 points (`namespaced-round-trip`, `malformed-refusal`) |
 | S2 | `test/extract-parity.test.ts` (representative) | `spec:carrier.markdown-parser` | 1 | done — 1 point (`bounded-parity`) |
-| S3 | `test/codegen.test.ts` (representative laws) | `spec:extraction.executable-contracts` (enriched) | 2–3 | planned |
-| S3 | `test/runner.test.ts` | a new runner spec (§3) | 1–2 | planned |
-| S3 | `test/notation.test.ts` | a new slot-notation spec (§3) | 1–2 | planned |
+| S3 | `test/codegen.test.ts` (representative laws) | `spec:extraction.executable-contracts` (enriched) | 2–3 | done — 3 points (`concreteness-refusal`, `multi-entry-example`, `case-colliding-path`) |
+| S3 | `test/runner.test.ts` | `spec:extraction.example-runner` (new, §3 ID confirmed) | 1–2 | done — 2 points (`step-order`, `red-step-naming`) |
+| S3 | `test/notation.test.ts` | `spec:carrier.slot-notation` (new, §3 ID confirmed) | 1–2 | done — 2 points (`typed-declaration`, `refused-guess`) |
 
 The readiness sweep (S4) and the audit tranche (S5) carry their own ledgers in §4 and §7.
 
@@ -273,6 +273,60 @@ Appended as waves execute; entries name the forcing material and the disposition
    The closing distribution is `defined: 41 / ready: 34` over 75 specs; the corpus stays at 0
    errors and 0 warnings.
 
+### 2026-07-26 — S3 (the corpus additions: codegen, the runner core, slot notation)
+
+1. **The bound points join the existing per-family suites rather than three new files.**
+   *Forcing material:* S2's ruling 1 settled the convention as one dedicated suite **per family**,
+   and all three S3 laws fall inside families that already own one — extraction
+   (`spec:extraction.executable-contracts`, `spec:extraction.example-runner`) and carrier
+   (`spec:carrier.slot-notation`). Their worlds share nothing with the suites' existing worlds, but
+   that was already true inside `test/self-hosting-extraction.test.ts` (a temporary filesystem root
+   beside an in-memory derived payload), so world-sharing was never the criterion the convention
+   turned on. *Disposition:* `test/self-hosting-extraction.test.ts` absorbs the codegen and runner
+   points, `test/self-hosting-carrier.test.ts` the notation points; the wrapper's per-tree
+   `testPaths` row and the pinned missing-tree stderr are untouched, which is exactly what S1's
+   restructuring was for. No ADR test is met — it stays a plan record.
+2. **Two new `impl:` anchors landed in source, in the canonical anchor-constant form.**
+   `impl:protocol.example-runner` (`src/runner/index.ts`, beside `planExample`) and
+   `impl:protocol.slot-notation` (`src/notation/slots.ts`, beside `parseSlots`) each import their
+   builders from this package's canonical `ids` / `model/code-anchor` modules, so the anchor-trust
+   rule holds. Both modules are leaves in the import graph, so the added imports introduce no cycle
+   and the `/runner` subpath keeps its dependency-light shape.
+3. **Inline authoring builders in a bound suite stay silent, so the codegen world is honest.**
+   *Forcing material:* the codegen law needs probe graphs, and the natural way to build one is the
+   typed `spec(…)` builder inside a step handler — the exact shape S1 had to relocate for
+   `specTest(…)`. *Disposition:* the misplaced-authoring scan resolves builders through **protocol
+   bindings only** (the package specifier, or a relative import canonicalizing to this package's
+   `ids` / `model/code-anchor`), and the probe helpers import `spec` / `specId` / `refines` from
+   `../src/index.js`, which is neither. The scan is on for the file (the `specTest` anchors need
+   it) and reports nothing; the corpus keeps its zero-finding oracle. No grammar or code moved.
+4. **Two vocabulary shapes were bounded by the notation itself, and the boundary was recorded, not
+   worked around.** A bound slot value is one double-quoted literal with no interior quote, so a
+   step text carrying a closed union (`{a:"x"|"y"}`) cannot itself be bound as a slot value. The
+   closed-union clause therefore stays a stated rule with `test/notation.test.ts` as its regression
+   evidence, and the two bound points cover the typed form, the skeleton identity, the prose brace,
+   and the unusable group. The single-literal vocabulary form is stated as a refusal in
+   `spec:carrier.slot-notation` **without ruling new syntax** — the watch item stays unfired.
+5. **No drift found between the three stated laws and engine behavior.** Every clause the points
+   exercise held as authored: contract order with one handler per repeated step, the `at step:`
+   failure prefix with the original error preserved by identity, the concreteness refusal (space
+   contract emitted, step contract withheld), the named second entry, and the whole-tree
+   withholding on a case-folded collision with a warning that never gates. Where the specs state
+   more than the points exercise — the compile-time bindings law, the closed-union declaration
+   form, the loud local degradations — the clause is authored from intended truth (the runner and
+   codegen module contracts and the ratified executable-half vocabulary) and the plain-vitest
+   suites remain its evidence. **No code moved and no claim was widened.**
+6. **Three parents and seven children promoted to `ready` under §1 ruling 5.** Each parent's floor
+   clears (`spec:extraction.executable-contracts` → `spec:extraction.build-pipeline`,
+   `spec:extraction.example-runner` → `spec:extraction.executable-contracts`,
+   `spec:carrier.slot-notation` → `spec:carrier.markdown-authoring`, every target at least
+   `defined`), each child carries a resolving verifier through its bound `specTest` anchor, and
+   each parent earns `has-verifier` from its enabled examples — the promotions introduce no
+   `honesty/gaps` warning. `spec:extraction.executable-contracts` was judged acceptance-grade only
+   after the enrichment: the two-rule stub it was could not honestly carry `ready`. The closing
+   distribution is `defined: 40 / ready: 44` over 84 specs; the corpus stays at 0 errors and 0
+   warnings.
+
 ## (j) §7 Done-record (execution — appended at close)
 
 Executed delivery, the conversion ledger's terminal states, the readiness sweep ledger, the
@@ -318,7 +372,7 @@ commit series on the effort branch. This ledger is git process evidence, never g
 |---|---|---|---|
 | S1 | validation-family conversions (§2) + promotions that honestly clear | orchestrator-verified green gate | done — 11 points bound across 6 parents; three green-gate commits |
 | S2 | extraction/model cheap wins (§2) | orchestrator-verified green gate | done — 6 points bound across 4 parents; one green-gate conversion commit |
-| S3 | corpus additions (§3) + codegen/runner/notation conversions | orchestrator-verified green gate | planned |
+| S3 | corpus additions (§3) + codegen/runner/notation conversions | orchestrator-verified green gate | done — 2 new specs + 1 enrichment; 7 points bound across 3 parents; 2 new `impl:` anchors; one green-gate conversion commit |
 | S4 | readiness maturation sweep (ruling 5) | orchestrator-verified green gate | planned |
 | S5 | per-doc audits + first dissolutions (§4) | orchestrator-verified green gate over the regenerated Design Review | planned |
 | S6 | adversarial review, remediation, full close, done-record | full chain + clean-clone; review archived | planned |
