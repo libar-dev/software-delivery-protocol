@@ -620,6 +620,11 @@ describe("Markdown carrier discovery", () => {
           behavior: {
             rules: [
               "A Markdown Spec declares id, kind, altitude, readiness, and relations in bounded YAML frontmatter; its first H1 declares title.",
+              "The envelope key set is closed and every one of its five keys is required: a key outside the set is refused rather than absorbed, and a missing key refuses the document rather than being defaulted.",
+              "`relations: {}` is written explicitly when the logical relation set is empty — honest carrier syntax, not a new logical requirement: the physical key catches a truncated envelope at reification while the model itself stays relation-optional.",
+              "A derived name is never authorable in the envelope: a delivery-fact or graph-shape key is refused under its own finding class, because delivery facts are derived and never authored.",
+              "The Protocol owns the envelope grammar and the parser policy while the pinned YAML library stays a swappable representation behind that contract, so an unsupported YAML construct is refused within explicit byte bounds on the carrier and its frontmatter rather than silently becoming carrier semantics.",
+              "The realizing entrypoints are `readMarkdownEnvelope` in `src/extract/markdown-envelope.ts` and `parseMarkdownFrontmatter` in `src/extract/markdown-frontmatter.ts`.",
             ],
           },
         },
@@ -663,7 +668,11 @@ describe("Markdown carrier discovery", () => {
           intent: { outcome: "Keep free prose in the graph without ambiguous attachment." },
           behavior: {
             rules: [
-              "Narrative lives before the first H2; descriptions live only under their owning singular sections; unowned prose is refused.",
+              "Narrative lives before the first H2 and is owned directly by the Spec; it is Spec content, never an envelope field.",
+              "A description is owned only by a singular section and lives under that section's own heading; the array-shaped constraints section has no description owner, so its explanatory prose belongs in narrative or intent instead.",
+              "Unowned prose — prose standing under no typed owner — is refused loudly rather than attached by guess or dropped in silence.",
+              "Prose is stored as graph content inside its typed owner, never as a file pointer or a heading-path key: a consumer reads prose from the graph without re-parsing the document, and churned document structure carries no identity.",
+              "The realizing entrypoints are `parseMarkdownBody` in `src/extract/markdown-body.ts` and `mapOwner` in `src/extract/markdown-body-owners.ts`.",
             ],
           },
         },

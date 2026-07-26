@@ -12,6 +12,7 @@ import { didYouMeanContract } from "../generated/contracts/validation.referentia
 import { collapsedEdgeClaimContract } from "../generated/contracts/validation.claim-separation.collapsed-edge-claim.contract.js";
 import { unratifiedDescriptorContract } from "../generated/contracts/validation.claim-separation.unratified-descriptor.contract.js";
 import { incoherentAggregateContract } from "../generated/contracts/validation.pack-coherence.incoherent-aggregate.contract.js";
+import { splitReportContract } from "../generated/contracts/validation.two-check-families.split-report.contract.js";
 import { unboundExampleContract } from "../generated/contracts/validation.verification-linkage.unbound-example.contract.js";
 import { unresolvedOracleContract } from "../generated/contracts/validation.verification-linkage.unresolved-oracle.contract.js";
 import { computeDeliveryFacts, schemaVersion, validateGraph } from "../src/index.js";
@@ -525,3 +526,79 @@ const incoherentAggregateTestAnchor = specTest({
 void incoherentAggregateTestAnchor;
 
 bindExample(incoherentAggregateContract, validatorWorld, packCoherenceBindings);
+
+/* ----- spec:validation.two-check-families ----- */
+
+/** The family a finding names, read from the finding itself rather than from its id spelling. */
+function familyReports(
+  world: ValidatorWorld,
+  family: "conformance" | "honesty",
+  params: { readonly findingId: string; readonly severity: "warning" | "error" },
+): void {
+  const findings = findingsOf(world, params.findingId);
+
+  expect(findings.length).toBeGreaterThan(0);
+  expect(findings.every((finding) => finding.family === family)).toBe(true);
+  expect(findings.every((finding) => finding.severity === params.severity)).toBe(true);
+}
+
+const twoCheckFamilyBindings = {
+  "the graph holds a spec {specId} at readiness {readiness}": (
+    world: ValidatorWorld,
+    params: { readonly specId: string; readonly readiness: "idea" | "ready" },
+  ) => {
+    world.subjectId = params.specId;
+    world.nodes.push(probeSpec(params.specId, { readiness: params.readiness }));
+  },
+  "the spec declares a dependsOn relation to the absent target {targetId}": (
+    world: ValidatorWorld,
+    params: { readonly targetId: string },
+  ) => {
+    world.edges.push({
+      from: world.subjectId,
+      type: "dependsOn",
+      to: params.targetId,
+      claim: "declared",
+    });
+  },
+  "the graph is validated": validate,
+  "the aggregate report states no family of its own": (world: ValidatorWorld) => {
+    // The aggregate spans both families, so it never mislabels itself with a single one; each
+    // finding names its own family, and only ever one of the two ratified ones.
+    expect(reportOf(world).family).toBeUndefined();
+    expect([...new Set(reportOf(world).findings.map((finding) => finding.family))].sort()).toEqual([
+      "conformance",
+      "honesty",
+    ]);
+  },
+  "the conformance family reports {conformanceId} at severity {conformanceSeverity}": (
+    world: ValidatorWorld,
+    params: {
+      readonly conformanceId: string;
+      readonly conformanceSeverity: "warning" | "error";
+    },
+  ) => {
+    familyReports(world, "conformance", {
+      findingId: params.conformanceId,
+      severity: params.conformanceSeverity,
+    });
+  },
+  "the honesty family reports {honestyId} at severity {honestySeverity}": (
+    world: ValidatorWorld,
+    params: { readonly honestyId: string; readonly honestySeverity: "warning" | "error" },
+  ) => {
+    familyReports(world, "honesty", {
+      findingId: params.honestyId,
+      severity: params.honestySeverity,
+    });
+  },
+};
+
+const splitReportTestAnchor = specTest({
+  id: testAnchorId("test:protocol.two-check-families.split-report"),
+  label: "the split-report point verifies both families in one aggregate report",
+  verifies: ref("spec:validation.two-check-families.split-report"),
+});
+void splitReportTestAnchor;
+
+bindExample(splitReportContract, validatorWorld, twoCheckFamilyBindings);

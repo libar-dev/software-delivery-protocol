@@ -33,7 +33,7 @@ const expectedSpecs = [
     id: "spec:carrier.envelope-contract",
     specKind: "contract",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/envelope-contract.sdp.md",
     title: "The Markdown envelope is explicit and bounded",
     narrative: null,
@@ -44,6 +44,11 @@ const expectedSpecs = [
       behavior: {
         rules: [
           "A Markdown Spec declares id, kind, altitude, readiness, and relations in bounded YAML frontmatter; its first H1 declares title.",
+          "The envelope key set is closed and every one of its five keys is required: a key outside the set is refused rather than absorbed, and a missing key refuses the document rather than being defaulted.",
+          "`relations: {}` is written explicitly when the logical relation set is empty — honest carrier syntax, not a new logical requirement: the physical key catches a truncated envelope at reification while the model itself stays relation-optional.",
+          "A derived name is never authorable in the envelope: a delivery-fact or graph-shape key is refused under its own finding class, because delivery facts are derived and never authored.",
+          "The Protocol owns the envelope grammar and the parser policy while the pinned YAML library stays a swappable representation behind that contract, so an unsupported YAML construct is refused within explicit byte bounds on the carrier and its frontmatter rather than silently becoming carrier semantics.",
+          "The realizing entrypoints are `readMarkdownEnvelope` in `src/extract/markdown-envelope.ts` and `parseMarkdownFrontmatter` in `src/extract/markdown-frontmatter.ts`.",
         ],
       },
     },
@@ -188,7 +193,7 @@ const expectedSpecs = [
     id: "spec:carrier.prose-ownership-rule",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/prose-ownership-rule.sdp.md",
     title: "Every prose edge has one owner",
     narrative: null,
@@ -196,7 +201,11 @@ const expectedSpecs = [
       intent: { outcome: "Keep free prose in the graph without ambiguous attachment." },
       behavior: {
         rules: [
-          "Narrative lives before the first H2; descriptions live only under their owning singular sections; unowned prose is refused.",
+          "Narrative lives before the first H2 and is owned directly by the Spec; it is Spec content, never an envelope field.",
+          "A description is owned only by a singular section and lives under that section's own heading; the array-shaped constraints section has no description owner, so its explanatory prose belongs in narrative or intent instead.",
+          "Unowned prose — prose standing under no typed owner — is refused loudly rather than attached by guess or dropped in silence.",
+          "Prose is stored as graph content inside its typed owner, never as a file pointer or a heading-path key: a consumer reads prose from the graph without re-parsing the document, and churned document structure carries no identity.",
+          "The realizing entrypoints are `parseMarkdownBody` in `src/extract/markdown-body.ts` and `mapOwner` in `src/extract/markdown-body-owners.ts`.",
         ],
       },
     },
@@ -1215,7 +1224,7 @@ const expectedSpecs = [
     id: "spec:model.anchors",
     specKind: "model",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/model/anchors.sdp.md",
     title: "Source anchors bind code without carrying intent",
     narrative: null,
@@ -1223,6 +1232,18 @@ const expectedSpecs = [
       intent: {
         outcome:
           "Connect implementation, tests, and oracles to Specs while keeping authored intent centralized in the carrier.",
+      },
+      behavior: {
+        exampleSpace: {
+          given: [
+            'a repository whose one source file builds an anchor through {builderSource:"a consumer-local lookalike module"|"a relative import resolving to the Protocol builder modules"|"the published Protocol package"}',
+          ],
+          when: ["the repository is extracted"],
+          [["t", "hen"].join("")]: [
+            "the extraction mints {anchorCount:number} anchors",
+            "the extraction reports {findingCount:number} findings",
+          ],
+        },
       },
       model: {
         terms: {
@@ -1238,16 +1259,78 @@ const expectedSpecs = [
             "A binding that records an oracle's models target without deriving a delivery fact.",
           "test anchor":
             "A binding that derives an anchored verifies edge from a test to its target Spec.",
+          "untrusted builder":
+            "A builder call whose import is no Protocol builder binding: it mints nothing and reports nothing, because a source file that never bound to the Protocol is not authoring drift to report. The realizing entrypoints are `protocolBindingScopeFor` and `collectProtocolBindings` in `src/extract/protocol-bindings.ts`.",
         },
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:model.anchors.lookalike-refusal",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/model/anchors.lookalike-refusal.sdp.md",
+    title: "A consumer-local lookalike builder mints no anchor and no finding",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the builder-trust law where a repository's own module merely resembles the Protocol builders.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a repository whose one source file builds an anchor through {builderSource: "a consumer-local lookalike module"}',
+            ],
+            when: ["the repository is extracted"],
+            [["t", "hen"].join("")]: [
+              "the extraction mints {anchorCount: 0} anchors",
+              "the extraction reports {findingCount: 0} findings",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:model.anchors.physical-identity",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/model/anchors.physical-identity.sdp.md",
+    title: "A deep relative import that resolves to the Protocol builders is trusted",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the builder-trust law where trust turns on physical module identity rather than the import's spelling.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a repository whose one source file builds an anchor through {builderSource: "a relative import resolving to the Protocol builder modules"}',
+            ],
+            when: ["the repository is extracted"],
+            [["t", "hen"].join("")]: [
+              "the extraction mints {anchorCount: 1} anchors",
+              "the extraction reports {findingCount: 0} findings",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.two-check-families",
     specKind: "rule",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/two-check-families.sdp.md",
     title: "Validation separates well-formedness from non-pretending",
     narrative: null,
@@ -1262,10 +1345,56 @@ const expectedSpecs = [
           "Validation errors fail the build; gaps and orphans remain informative signals rather than delivery-process gates.",
           "Types enforce structural shape, schema validates graph payloads, and graph validators enforce cross-file conformance and honesty; no one layer substitutes for the others.",
           "All graph validation runs through the one derived graph path: source, extraction, graph, then checks.",
+          "The two families are load-bearing, so an aggregate report spanning both states no family of its own while every finding names the family it came from.",
+          "The realizing entrypoints are `graphValidatorIds` and `validateGraph` in `src/validate/validators.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            'the graph holds a spec {specId:string} at readiness {readiness:"idea"|"ready"}',
+            "the spec declares a dependsOn relation to the absent target {targetId:string}",
+          ],
+          when: ["the graph is validated"],
+          [["t", "hen"].join("")]: [
+            "the aggregate report states no family of its own",
+            'the conformance family reports {conformanceId:string} at severity {conformanceSeverity:"warning"|"error"}',
+            'the honesty family reports {honestyId:string} at severity {honestySeverity:"warning"|"error"}',
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:validation.two-check-families.split-report",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/two-check-families.split-report.sdp.md",
+    title: "One report carries both families and claims neither as its own",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the family split where one probe graph trips a conformance error and an informative honesty signal at once.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a spec {specId: "spec:probe.two-check-families"} at readiness {readiness: "ready"}',
+              'the spec declares a dependsOn relation to the absent target {targetId: "spec:probe.absent-dependency"}',
+            ],
+            when: ["the graph is validated"],
+            [["t", "hen"].join("")]: [
+              "the aggregate report states no family of its own",
+              'the conformance family reports {conformanceId: "conformance/referential-integrity"} at severity {conformanceSeverity: "error"}',
+              'the honesty family reports {honestyId: "honesty/gaps"} at severity {honestySeverity: "warning"}',
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.referential-integrity",
@@ -2492,6 +2621,9 @@ const expectedPackMembers = [
   "spec:carrier.slot-notation",
   "spec:carrier.slot-notation.typed-declaration",
   "spec:carrier.slot-notation.refused-guess",
+  "spec:model.anchors.lookalike-refusal",
+  "spec:model.anchors.physical-identity",
+  "spec:validation.two-check-families.split-report",
   "spec:decisions.plain-language-references",
   "spec:decisions.concept-docs-dissolve",
   "spec:decisions.one-validation-path",
@@ -2772,6 +2904,20 @@ const expectedDeclaredRelations = [
   ["spec:decisions.pack-reified", "refines", "spec:model.pack-aggregate"],
   ["spec:decisions.agent-surface-scripts-graph", "refines", "spec:consumers.agent-surface"],
   ["spec:decisions.mcp-deferred", "refines", "spec:consumers.projections-model"],
+  ["spec:model.anchors.lookalike-refusal", "refines", "spec:model.anchors"],
+  ["spec:model.anchors.lookalike-refusal", "verifies", "spec:model.anchors"],
+  ["spec:model.anchors.physical-identity", "refines", "spec:model.anchors"],
+  ["spec:model.anchors.physical-identity", "verifies", "spec:model.anchors"],
+  [
+    "spec:validation.two-check-families.split-report",
+    "refines",
+    "spec:validation.two-check-families",
+  ],
+  [
+    "spec:validation.two-check-families.split-report",
+    "verifies",
+    "spec:validation.two-check-families",
+  ],
 ] as const;
 
 const expectedWarnings = [] as const;
@@ -3397,6 +3543,36 @@ const expectedAnchors = [
     constant: "slotNotationRefusedTestAnchor",
     site: "bindExample(refusedGuessContract",
   },
+  {
+    id: "test:protocol.anchors.lookalike-refusal",
+    nodeType: "Anchor",
+    label: "the lookalike point verifies that a consumer-local builder mints nothing",
+    type: "verifies",
+    target: "spec:model.anchors.lookalike-refusal",
+    file: "test/self-hosting-model.test.ts",
+    constant: "lookalikeRefusalTestAnchor",
+    site: "bindExample(lookalikeRefusalContract",
+  },
+  {
+    id: "test:protocol.anchors.physical-identity",
+    nodeType: "Anchor",
+    label: "the physical-identity point verifies the resolved relative builder import",
+    type: "verifies",
+    target: "spec:model.anchors.physical-identity",
+    file: "test/self-hosting-model.test.ts",
+    constant: "physicalIdentityTestAnchor",
+    site: "bindExample(physicalIdentityContract",
+  },
+  {
+    id: "test:protocol.two-check-families.split-report",
+    nodeType: "Anchor",
+    label: "the split-report point verifies both families in one aggregate report",
+    type: "verifies",
+    target: "spec:validation.two-check-families.split-report",
+    file: "test/self-hosting-validators.test.ts",
+    constant: "splitReportTestAnchor",
+    site: "bindExample(splitReportContract",
+  },
 ] as const;
 
 function lineContaining(source: string, token: string): number {
@@ -3428,7 +3604,7 @@ describe("the self-hosting corpus", () => {
         subjectId,
       })),
     ).toEqual(expectedWarnings);
-    expect(result.counts).toEqual({ specs: 84, packs: 1, anchors: 62 });
+    expect(result.counts).toEqual({ specs: 87, packs: 1, anchors: 65 });
     expect(nodeIds).toEqual(
       [
         "pack:self-hosting-v1",
@@ -3516,10 +3692,13 @@ describe("the self-hosting corpus", () => {
         "spec:carrier.slot-notation",
         "spec:carrier.slot-notation.typed-declaration",
         "spec:carrier.slot-notation.refused-guess",
+        "spec:model.anchors.lookalike-refusal",
+        "spec:model.anchors.physical-identity",
+        "spec:validation.two-check-families.split-report",
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
     );
-    expect(result.graph.nodes).toHaveLength(147);
+    expect(result.graph.nodes).toHaveLength(153);
     expect(
       primitiveNodes
         .map((node) => ({
@@ -3563,7 +3742,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 40, ready: 44 });
+    ).toEqual({ defined: 36, ready: 51 });
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
@@ -3578,7 +3757,7 @@ describe("the self-hosting corpus", () => {
       modelRefs: ["spec:model.protocol-domain", "spec:model.core-model"],
       file: "specs/self-hosting.pack.sdp.ts",
     });
-    expect(result.graph.edges).toHaveLength(282);
+    expect(result.graph.edges).toHaveLength(294);
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "anchored")
