@@ -138,6 +138,9 @@ Every doc honours both — never mistake one half for the other:
 - **Lineage is evidence, not template.** Prior art **`@libar-dev/architect`** (local clone when
   present, e.g. a sibling `architect` checkout) taught us the problem in production; treat its
   *shape* as evidence about the problem, never as the answer.
+- **A "verified" row is re-measured, never inherited.** A docket or ledger row claiming *fixed* or *verified*
+  is re-checked against the tree at the moment of verification, never trusted from the row that closed it —
+  the phase-4 close caught a "verified — intact" row that had been false since the commit after the one it cited.
 - **Git hygiene** follows the global rules (no `git stash`; commit early on a WIP branch; commit/push only when
   asked).
 

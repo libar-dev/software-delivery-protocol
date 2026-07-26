@@ -447,6 +447,49 @@ same way phase 3 closed D-2 and D-3: the `carried` verdict is now true on the di
 decision's own terms — carried by a Spec — rather than defensible only on a plan ruling that
 widened the criterion to admit code surfaces.
 
+### Post-review remediation (added after the owner's review of this branch)
+
+The owner's review of the branch accepted the close and ordered a further wave of fixes before the
+PR. It ran as S6 on the same branch. **The findings above are not rewritten** — what follows updates
+their dispositions:
+
+- **P-1 → FIXED (was RECORD SHARPENED).** The two realizing sites are now separately discriminated,
+  by moving the *world* rather than the engine. The Spec's example space gained *when* the stale page
+  is planted and *which command* runs, and three sibling points landed:
+  `wholesale-view-rewrite.late-stale-page` (planted after the build has already invalidated the view,
+  so only the temp-and-rename swap can evict it), `.failed-run-view-removed` (the same late plant over
+  a carrier the extractor refuses, so only `runView`'s failed-run removal can take the view down), and
+  `.build-invalidates-view` (`runBuild` alone, which renders no view, so only the up-front
+  invalidation can). Re-measured one site at a time: **M9a — deleting the temp-and-rename path alone —
+  now reddens exactly `late-stale-page`; M9b — deleting the up-front invalidation alone — now reddens
+  exactly `build-invalidates-view`;** deleting `runView`'s failed-run removal alone reddens exactly
+  `failed-run-view-removed`; M9c still reddens three. Two of the three rule lines this review named as
+  unverified are now bound. **The `--check-clean` double render stays unbound with a stated reason:**
+  divergence is not honestly inducible, because the renderer is deterministic by
+  `spec:extraction.determinism` — the only world producing two diverging renders is one where the
+  world itself supplies a lying renderer, which asserts nothing about the engine. Faking it through the
+  declared render hook was refused rather than counted. The "no half-written view is ever readable"
+  reading also stays unbound: observing it needs a concurrent reader mid-write.
+- **P-2 → FIXED (was RECORD SHARPENED).** `binding-language-views.pack-member-table` builds a probe
+  Pack holding the bound subject beside the unbound parent and reads the member table's cells for both.
+  Re-measured: **M16/M18 — the `yes`/`no` shorthand on the pack member table — now redden exactly this
+  point** and leave `bound-spec-page` green, while M17 on the index row still reddens exactly
+  `bound-spec-page`.
+- **S-2 → FIXED (was CARRIED WITH REASON).** `RenderedFinding` is deleted and `formatFinding` narrows
+  to `Finding`. The no-producer verdict was re-measured over the whole tree, the barrel, and the CLI's
+  JSON paths rather than inherited from the docket row. Plan 21 §4's row closes DONE.
+
+Landed in the same wave, outside this review's findings: a bound Design Review twin for
+`spec:validation.diagnostic-rendering` through `renderFindings` (the second entrypoint the Spec names,
+covering the em-dash cell and the table-escaped message pipe); a one-line comment beside the product
+site stating the plain-`then`-key constraint T-1 restored; errata beside the two false historical rows
+in plans 17, 18, and 18a; an `AGENTS.md` bullet requiring a "verified" row to be re-measured rather
+than inherited — T-1's own lesson, made standing discipline; and the correction of `07` §6 ④'s
+three-line quote of the rendered binding language to the four lines the view renders.
+
+Branch tip after the wave: **108 Specs · 1 Pack · 80 anchors → 189 nodes · 371 edges ·
+`ready: 71 / defined: 37`**, 0 errors / 0 warnings, full twelve-leg gate green.
+
 ## What the owner is asked to ratify at the PR
 
 Three things this review deliberately leaves to the owner rather than deciding by plan ruling:

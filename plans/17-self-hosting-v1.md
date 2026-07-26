@@ -453,7 +453,7 @@ the compact grouping below retains every listed concern and its durable disposit
 | Windows absolute excludes and `--exclude --foo` diagnostics | pre-existing/phase-2 | Exclude UX refinements are outside phase-1 acceptance. |
 | Path-prefix matcher coverage | deferred | Add a focused regression when exclusion handling is next changed. |
 | Library-seam exclusion wording | deferred | Public library diagnostics can be separated from CLI wording later. |
-| Indirect assembly of the `then` graph key | fixed-by-remediation | `cd735ae` names the key directly. |
+| Indirect assembly of the `then` graph key | fixed-by-remediation | `cd735ae` names the key directly. [Erratum, recorded at the phase-4 close: this row was false shortly after it was written — `fcd5cef`, a same-cluster grammar-hardening commit nine hours later, silently reintroduced the indirection, and it stood for three phases. Normalized for real at the phase-4 close; see plan 21 §6 and reviews/10 T-1.] |
 | Design Review dynamic-key ordering | deferred | Re-parsed graph rendering determinism is a projection follow-up. |
 | Design Review escaping outside prose slots | pre-existing/phase-2 | TS-carrier authored HTML policy needs a scoped rendering decision. |
 | GWT, examples, flows, and example-space permutation coverage | fixed-by-remediation | `f8b26f5` adds byte-equality permutation coverage. |
