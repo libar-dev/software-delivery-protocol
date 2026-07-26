@@ -36,14 +36,16 @@ expectContains(
   "`narrative` is content owned directly",
   "missing narrative model contract",
 );
+// The schema-version literal is pinned on its declaring surface above (`src/graph/schema.ts`);
+// the carrying Spec states the law that a graph declares its version, without a version literal.
 expectContains(
-  "docs/concept/03-the-one-graph.md",
-  '"schemaVersion": "0.4.0"',
-  "missing 0.4.0 payload",
+  "specs/extraction/schema-versioning.sdp.md",
+  "Every graph declares its schemaVersion",
+  "missing schema-version declaration law",
 );
 expectContains(
-  "docs/concept/03-the-one-graph.md",
-  "`constraints` has no description field",
+  "specs/carrier/prose-ownership-rule.sdp.md",
+  "the array-shaped constraints section has no description owner",
   "missing constraint omission contract",
 );
 expectContains(

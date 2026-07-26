@@ -68,7 +68,7 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 **Two grouping mechanisms, kept distinct:** *refinement* (parent `Spec` → children — authored truth with
 descendants) vs *the aggregate* (the `Pack` — a cross-cutting review collection, no truth of its own).
 
-## Claims & the authored/derived split  (→ `01`, `03` §3)
+## Claims & the authored/derived split  (→ `01`, `spec:extraction.claim-taxonomy`)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
@@ -94,7 +94,7 @@ claim category** — it **inherits** its source's `claim` (so `belongsTo` carrie
 The payoff queries: `ready ∧ ¬implemented` = the **build backlog**; `implemented ∧ ¬ready` = the **drift
 alarm**.
 
-## The graph & extraction  (→ `03`)
+## The graph & extraction  (→ `spec:extraction.derive-graph`)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|

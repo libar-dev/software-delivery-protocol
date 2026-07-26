@@ -104,24 +104,6 @@ const CLAIMS = [
     absent: ["| `ts-morph` as the extractor |"],
   },
   {
-    file: "docs/concept/03-the-one-graph.md",
-    label: "derivation diagram names the carrier extractors",
-    present: ["carrier extractors"],
-    absent: ["ts-morph extractor"],
-  },
-  {
-    file: "docs/concept/03-the-one-graph.md",
-    label: "spec discovery covers both carrier suffixes",
-    present: ["every `*.sdp.ts` and `*.sdp.md` under the extraction root"],
-    absent: ["every `*.sdp.ts` under the extraction root"],
-  },
-  {
-    file: "docs/concept/03-the-one-graph.md",
-    label: "the two-tier echo points at the per-carrier asymmetry",
-    present: ["the per-carrier asymmetry is named at `04` §1"],
-    absent: [],
-  },
-  {
     file: "docs/concept/04-authoring-and-binding.md",
     label: "intro names two ruled carriers, not exactly two surfaces with an open competition",
     present: ["Authoring has two ruled **carriers**", "the carrier competition now ruled"],
@@ -480,33 +462,6 @@ const RULES = [
     file: "docs/concept/01-founding-principles-and-invariants.md",
     includes: "`ts-morph` (the TS carrier) and the ruled Markdown parser (`.sdp.md`)",
     category: PLURAL,
-  },
-
-  // 03 — the one graph.
-  {
-    file: "docs/concept/03-the-one-graph.md",
-    includes: "ts-morph for .sdp.ts · the ruled Markdown parser for .sdp.md",
-    category: PLURAL,
-  },
-  {
-    file: "docs/concept/03-the-one-graph.md",
-    includes: "every `*.sdp.ts` and `*.sdp.md` under the extraction root",
-    category: PLURAL,
-  },
-  {
-    file: "docs/concept/03-the-one-graph.md",
-    includes: '"file": "specs/orders/create-order.sdp.ts"',
-    category: CHECKOUT_HISTORY,
-  },
-  {
-    file: "docs/concept/03-the-one-graph.md",
-    includes: "the TS carrier's granularity",
-    category: STILL_SUPPORTED,
-  },
-  {
-    file: "docs/concept/03-the-one-graph.md",
-    includes: "(from `ts-morph`)",
-    category: CODE_LINKAGE,
   },
 
   // 04 — authoring & binding.

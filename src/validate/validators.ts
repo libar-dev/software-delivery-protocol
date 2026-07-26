@@ -245,7 +245,7 @@ function checkDuplicateIds(graph: GraphSchema): readonly Finding[] {
   return findings;
 }
 
-/* ----- conformance/claim-separation (`05` §2 check 3; the `03` §1 edge contract) ----- */
+/* ----- conformance/claim-separation (`05` §2 check 3; the `spec:extraction.derive-graph` edge contract) ----- */
 
 const nodeTypeSet: ReadonlySet<string> = new Set(graphNodeTypes);
 const claimSet: ReadonlySet<string> = new Set(graphClaims);
@@ -351,7 +351,7 @@ function checkEdgeContractRow(edge: GraphEdge, index: GraphIndex, findings: Find
     }
   };
 
-  // The kind-typed endpoint rows (`03` §1): evaluated only where the endpoint resolves to a
+  // The kind-typed endpoint rows (`spec:extraction.derive-graph`): evaluated only where the endpoint resolves to a
   // Primitive carrying a ratified kind — a non-Primitive endpoint is the endpoint row's finding,
   // and an unratified kind is the descriptor check's, never a second one here.
   const requireSpecKind = (

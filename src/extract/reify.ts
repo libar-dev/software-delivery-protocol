@@ -29,7 +29,7 @@ import { setOwn } from "./set-own.js";
  * stays out of the graph.
  */
 /**
- * The extraction finding ids, pinned. Two tiers (`03` §2), covering both authored surfaces (spec
+ * The extraction finding ids, pinned. Two tiers (`spec:extraction.determinism`), covering both authored surfaces (spec
  * files and anchor constants): envelope failures (`non-static-envelope` · `invalid-id` ·
  * `duplicate-id` · `reserved-property`) are hard errors — the carrier is not extracted and the
  * build fails; content failures (`non-static-section` · `unrecognized-statement` ·
@@ -589,7 +589,8 @@ function containsDescription(value: unknown): boolean {
 /* ----- lossy reification: the section tier ----- */
 
 interface LossyDrop {
-  /** The property removed — the drop unit (`03` §2: that one property, the rest survives). */
+  /** The property removed — the drop unit (`spec:extraction.determinism`: that one property, the
+   * rest survives). */
   readonly droppedPath: string;
   /** The deepest failing node, for the message. */
   readonly failurePath: string;
