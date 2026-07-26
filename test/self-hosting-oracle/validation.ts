@@ -25,6 +25,7 @@ export const validationSpecs = [
           "Only relations the Spec itself declares count toward the relation clauses; membership of a Pack is derived from the manifest and never stands in for an authored relation.",
           "Every clause stated here is kind-blind. The two evidence clauses are the one kind-conditional place in the floor, and what counts as a kind's natural evidence is stated in full by the refining Spec that carries the per-kind evidence table.",
           "One clause table serves both readings: it checks the readiness an author states, and it yields derived readiness — the highest rung whose cumulative clauses all pass — which is read beside the stated rung and never overwrites it.",
+          "The floor is the mechanism while the specific clause thresholds are one chosen representation, so a team-overridable floor configuration is a designed-for deferral rather than a landed capability: no validator reads a per-team floor setting, and the shipped clause table is the only floor any Spec is checked against.",
           "The floor table in `src/validate/readiness-floor.ts` is the clause set's code-level source of truth and the realizing entrypoint. The clauses stated here and the rows of that table are one law read twice, so any disagreement between them is drift to resolve on one side, never a second floor.",
         ],
         exampleSpace: {
@@ -835,6 +836,7 @@ export const validationSpecs = [
         rules: [
           "Orphaned Specs and ready Specs lacking a resolving verifier are warnings, not validation errors.",
           "The gap signal reads the delivery facts the one derivation rule recomputes from the graph, never the facts a Spec states, so a hand-authored fact can never silence it.",
+          "The severity these informative signals carry is fixed by the Protocol and no validator reads a per-team setting, so a per-team severity override is a designed-for deferral rather than a landed capability.",
           "The realizing validator entrypoints are `checkOrphans` and `checkGaps` in `src/validate/validators.ts`.",
         ],
         exampleSpace: {
