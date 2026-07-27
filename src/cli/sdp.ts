@@ -52,8 +52,8 @@ Commands:
              some network mounts do not).
   q          The agent front door: derive the graph under --root (default: cwd) in process, then
              evaluate the supplied body and print what it returns. The body is the single
-             positional argument, or stdin when stdin is not a terminal; with neither, q prints
-             this refusal and exits 1 rather than waiting. It is a plain JavaScript async function
+             positional argument, or stdin when stdin is not a terminal; with neither, q refuses
+             with a usage note and exits 1 rather than waiting. It is a plain JavaScript async function
              body — no import/export, no TypeScript-only syntax — and \`return\` is the output
              contract. Three bindings are injected: \`g\`, the reader over the derived graph (the
              same createReader the package exports); \`graph\`, the raw graph schema object; and
