@@ -22,7 +22,7 @@ sdp q 'return g.specContext("spec:consumers.reader")' --exclude explorations --e
 
 Those three exclusions are this repository's own and they are **required here**: the corpus carries
 deliberate duplicate-id and carrier-parity fixtures, so without them the graph does not derive and
-the sink refuses to run the body.
+the sink refuses to run the body. They are the same list `npm run generate:self-hosting` passes.
 
 The catalog of ready-made bodies is `docs/agent-surface/recipes.md` — build backlog, drift alarm,
 per-Spec guarantees and verifiers, blast radius, Pack review backbone, concept search, readiness
@@ -46,9 +46,7 @@ syntax; `await` is fine. `return` is the output contract — nothing else is pri
 return**: return counts, ids, and decoded reasons, not whole nodes. Default output is bounded
 `util.inspect`; `--json` is the machine form.
 
-`--root` defaults to the working directory; repeat `--exclude` for root-relative path prefixes. At
-this repository's root the project's own three exclusions above are required, not merely tidy —
-they are the same list `npm run generate:self-hosting` passes.
+`--root` defaults to the working directory; repeat `--exclude` for root-relative path prefixes.
 
 The graph is derived on every invocation, so a Spec you just authored is queryable immediately and
 no committed artifact answers in the graph's name. The sink writes nothing. It evaluates local

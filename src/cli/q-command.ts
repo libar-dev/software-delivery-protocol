@@ -52,7 +52,6 @@ export interface QueryArgs {
 
 export interface QueryHooks {
   readonly extract?: typeof extract;
-  readonly validateGraph?: typeof validateGraph;
   readonly isStdinTty?: () => boolean;
   readonly readStdin?: () => string;
 }
@@ -228,18 +227,33 @@ export async function runQuery(
 
   // Findings are data, never a gate: the sink hands the report to the body as `report` and runs it.
   // Checks police conformance and honesty; they have never gated the read path.
-  const report = (hooks.validateGraph ?? validateGraph)(graph);
   let value: unknown;
 
   try {
+    const report = validateGraph(graph);
     value = await compileBody(body)(createReader(graph), graph, report);
   } catch (error) {
     writeStderr(output, `sdp q: ${errorMessage(error)}\n`);
     return 1;
   }
 
-  return writeReturnValue(value, parsed.json, output);
+  // Rendering the return can throw too (a hostile custom-inspect method, a poisoned getter); it
+  // reports through the one currency rather than escaping the sink as an unhandled rejection.
+  try {
+    return writeReturnValue(value, parsed.json, output);
+  } catch (error) {
+    writeStderr(output, `sdp q: ${errorMessage(error)}\n`);
+    return 1;
+  }
 }
+
+/**
+ * `JSON.stringify` under its honest type: the lib says `string`, but a `toJSON` yielding
+ * `undefined` really answers `undefined` — the case the `--json` path must refuse rather than
+ * interpolate onto stdout.
+ */
+const stringifyValue: (value: unknown, replacer: undefined, space: number) => string | undefined =
+  JSON.stringify;
 
 function writeReturnValue(value: unknown, json: boolean, output: CliOutput): number {
   if (value === undefined) {
@@ -257,8 +271,10 @@ function writeReturnValue(value: unknown, json: boolean, output: CliOutput): num
     return 1;
   }
 
+  let serialized: string | undefined;
+
   try {
-    writeStdout(output, `${JSON.stringify(value, undefined, 2)}\n`);
+    serialized = stringifyValue(value, undefined, 2);
   } catch (error) {
     writeStderr(
       output,
@@ -267,5 +283,13 @@ function writeReturnValue(value: unknown, json: boolean, output: CliOutput): num
     return 1;
   }
 
+  // `JSON.stringify` answers `undefined` (not a throw) when a `toJSON` yields no JSON form;
+  // interpolating that would put the literal text `undefined` on stdout under a success exit.
+  if (serialized === undefined) {
+    writeStderr(output, "sdp q: the return value has no JSON form.\n");
+    return 1;
+  }
+
+  writeStdout(output, `${serialized}\n`);
   return 0;
 }

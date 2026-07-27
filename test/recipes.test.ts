@@ -5,7 +5,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { runSdpCli } from "../src/cli/sdp.js";
-import { extract } from "../src/index.js";
+import { createReader, extract } from "../src/index.js";
+import { createCaptureOutput } from "./helpers/cli-capture.js";
 
 // The recipe corpus is executable documentation: every fenced `js` body in the catalog must run
 // verbatim through the real front door, or the catalog is lying about what an agent can paste.
@@ -36,6 +37,11 @@ const primitivesById = new Map(
     .filter((node) => node.nodeType === "Primitive")
     .map((node) => [node.id, node] as const),
 );
+
+// The reader over the same derivation: completeness expectations below are computed from the
+// graph, never frozen, so the corpus can grow without rotting the check while an under-reporting
+// recipe body still reddens.
+const reader = createReader(derived.graph);
 
 interface Recipe {
   readonly ordinal: number;
@@ -87,36 +93,9 @@ function parseRecipes(markdown: string): readonly Recipe[] {
 
 const source = readFileSync(join(repoRoot, recipesPath), "utf8");
 const recipes = parseRecipes(source);
-const documentedHeadings = source
+const documentedHeadingCount = source
   .split("\n")
-  .filter((line) => headingPattern.test(line))
-  .map((line) => line);
-
-function createCaptureOutput() {
-  const stdoutChunks: string[] = [];
-  const stderrChunks: string[] = [];
-
-  return {
-    output: {
-      stdout: {
-        write(chunk: string) {
-          stdoutChunks.push(chunk);
-        },
-      },
-      stderr: {
-        write(chunk: string) {
-          stderrChunks.push(chunk);
-        },
-      },
-    },
-    readStdout() {
-      return stdoutChunks.join("");
-    },
-    readStderr() {
-      return stderrChunks.join("");
-    },
-  };
-}
+  .filter((line) => headingPattern.test(line)).length;
 
 const queryHooks = {
   query: {
@@ -138,11 +117,13 @@ async function runRecipe(recipe: Recipe): Promise<unknown> {
     queryHooks,
   );
 
+  // The expected stderr is the empty string, not a self-comparison: a recipe run over the green
+  // corpus has nothing to say on stderr, and the object shape keeps the actual output in the
+  // failure diff when it does.
   expect(
     { recipe: recipe.title, exitCode, stderr: capture.readStderr() },
     `recipe ${String(recipe.ordinal)} must run as written`,
-  ).toEqual({ recipe: recipe.title, exitCode: 0, stderr: capture.readStderr() });
-  expect(capture.readStderr()).not.toContain("sdp q:");
+  ).toEqual({ recipe: recipe.title, exitCode: 0, stderr: "" });
 
   return JSON.parse(capture.readStdout()) as unknown;
 }
@@ -200,7 +181,7 @@ describe("the agent-surface recipe corpus", () => {
   // Given: the catalog as authored. When: its structure is read. Then: every documented recipe
   // carries exactly one runnable body, so a new recipe cannot dodge the check by omitting one.
   it("pairs every documented recipe with exactly one fenced body", () => {
-    expect(recipes.length).toBe(documentedHeadings.length);
+    expect(recipes.length).toBe(documentedHeadingCount);
     expect(recipes.filter((recipe) => recipe.ordinal === -1)).toEqual([]);
     expect(recipes.map((recipe) => recipe.ordinal)).toEqual(
       recipes.map((_recipe, index) => index + 1),
@@ -214,19 +195,28 @@ describe("the agent-surface recipe corpus", () => {
     const onRampSources = [recipesPath, ".claude/skills/sdp-agent-surface/SKILL.md"];
 
     for (const source of onRampSources) {
+      const lines = readFileSync(join(repoRoot, source), "utf8").split("\n");
       // A concrete invocation is one that carries a quoted body; the bare `sdp q [...]` usage
       // grammar states the option shapes rather than a command to run, so it is not one.
-      const commandLines = readFileSync(join(repoRoot, source), "utf8")
-        .split("\n")
-        .filter((line) => line.includes("sdp q '"));
+      const commandLines = lines.filter((line) => line.includes("sdp q '"));
 
       expect({ source, documented: commandLines.length > 0 }).toEqual({ source, documented: true });
+      // The guard parses the single-quoted spelling only, so any other quoting would carry a
+      // documented invocation it cannot see — no other quoting may exist in the on-ramp files.
+      expect({ source, otherQuoting: lines.filter((line) => line.includes('sdp q "')) }).toEqual({
+        source,
+        otherQuoting: [],
+      });
 
       for (const line of commandLines) {
         expect({
           source,
           line,
-          names: standardExcludes.filter((path) => line.includes(`--exclude ${path}`)).length,
+          // A word boundary, not a substring: `--exclude examples/checkout` must not count as
+          // naming `examples`.
+          names: standardExcludes.filter((path) =>
+            new RegExp(`--exclude ${path}(?=[\\s'"]|$)`, "u").test(line),
+          ).length,
         }).toEqual({ source, line, names: standardExcludes.length });
       }
     }
@@ -263,16 +253,16 @@ describe("the agent-surface recipe corpus", () => {
 
     expect(numberAt(result, "total")).toBe(entries.length);
 
-    for (const entry of entries) {
-      const row = asRecord(entry);
-      const node = primitivesById.get(stringAt(row, "id"));
+    // Completeness, not just soundness: the rows must be exactly the graph's `ready ∧ ¬implemented`
+    // set, so a body that under-reports — an empty backlog over a corpus that has one — reddens.
+    const expected = [...primitivesById.values()]
+      .filter(
+        (node) => node.readiness === "ready" && !(node.deliveryFacts ?? []).includes("implemented"),
+      )
+      .map((node) => node.id)
+      .sort();
 
-      expect({ id: row.id, stated: node?.readiness }).toEqual({
-        id: row.id,
-        stated: "ready",
-      });
-      expect(node?.deliveryFacts ?? []).not.toContain("implemented");
-    }
+    expect(entries.map((entry) => stringAt(asRecord(entry), "id")).sort()).toEqual(expected);
   });
 
   it("returns a drift alarm of code-bound specs below ready, with the floor named", async () => {
@@ -281,12 +271,21 @@ describe("the agent-surface recipe corpus", () => {
 
     expect(numberAt(result, "total")).toBe(alarms.length);
 
+    // Completeness, not just soundness: the alarm must name exactly the graph's
+    // `implemented ∧ ¬ready` set — a silently shortened alarm is the lie this catalog exists
+    // to prevent.
+    const expected = [...primitivesById.values()]
+      .filter(
+        (node) => (node.deliveryFacts ?? []).includes("implemented") && node.readiness !== "ready",
+      )
+      .map((node) => node.id)
+      .sort();
+
+    expect(alarms.map((alarm) => stringAt(asRecord(alarm), "id")).sort()).toEqual(expected);
+
     for (const alarm of alarms) {
       const row = asRecord(alarm);
-      const node = primitivesById.get(stringAt(row, "id"));
 
-      expect(node?.deliveryFacts ?? []).toContain("implemented");
-      expect(stringAt(row, "statedReadiness")).not.toBe("ready");
       expect([...rungs, "none"]).toContain(stringAt(row, "floorReached"));
       expect(Object.keys(row)).toContain("firstUnmetClause");
     }
@@ -379,6 +378,19 @@ describe("the agent-surface recipe corpus", () => {
 
   it("returns readiness divergence as an array, where empty is lawful", async () => {
     const rows = asArray(await runRecipe(recipeByOrdinal(7)));
+
+    // Empty is lawful only when the corpus really diverges nowhere: the expectation re-runs the
+    // stated-versus-derived comparison over the reader, so a body that drops rows reddens even on
+    // the healthy corpus where the honest answer is [].
+    const rank = (rung: string | undefined): number =>
+      rung === undefined ? -1 : rungs.indexOf(rung);
+    const expected = reader
+      .specs()
+      .filter((spec) => rank(spec.derivedReadiness) < rank(spec.statedReadiness))
+      .map((spec) => spec.id)
+      .sort();
+
+    expect(rows.map((entry) => stringAt(asRecord(entry), "id")).sort()).toEqual(expected);
 
     for (const entry of rows) {
       const row = asRecord(entry);

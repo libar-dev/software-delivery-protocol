@@ -15,6 +15,7 @@ import { runSdpCli } from "../src/cli/sdp.js";
 import { extract } from "../src/extract/index.js";
 import { createReader } from "../src/reader/reader.js";
 import type { BlastRadius, ConceptMatch, FileEntry, Reader } from "../src/reader/reader.js";
+import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 
 /**
@@ -49,28 +50,6 @@ const terminalStdin = {
     },
   },
 };
-
-function createCaptureOutput() {
-  const stdoutChunks: string[] = [];
-  const stderrChunks: string[] = [];
-
-  return {
-    output: {
-      stdout: {
-        write(chunk: string) {
-          stdoutChunks.push(chunk);
-        },
-      },
-      stderr: {
-        write(chunk: string) {
-          stderrChunks.push(chunk);
-        },
-      },
-    },
-    readStdout: () => stdoutChunks.join(""),
-    readStderr: () => stderrChunks.join(""),
-  };
-}
 
 /* ----- spec:consumers.agent-surface ----- */
 

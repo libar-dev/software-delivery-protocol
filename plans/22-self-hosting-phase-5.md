@@ -590,7 +590,10 @@ statement is false — both are historical statements about what the MVP slice d
 the first slice cut — and `00` §4 already carries the current five-verb surface with `q`'s
 rationale. This session is an audit and a sweep, so the enumeration is recorded for the successor
 rather than edited under a records-only charter (the phase-4 precedent for `07` §6 ④'s three-line
-quote, which S6 then repaired deliberately). **Flagged for S6.**
+quote, which S6 then repaired deliberately). **Flagged for S6.** S6 dispositioned it terminally —
+the pre-close review (reviews/11, Dimension 4) re-judged both enumerations as lawful
+history and upheld declining the edit; this closure line was added at the post-close review (§10),
+which found the flag itself left unmarked.
 
 **`07`'s surviving gaps — three rows, unchanged**: inline-vs-centralized anchor semantics (§4,
 open) · when harnesses / evidence become CORE (§4, open, the non-Gherkin half) · the
@@ -642,7 +645,12 @@ eight runnable recipes at `docs/agent-surface/recipes.md` under a machine check 
 body through the production seam on shape-level invariants, and the skill at
 `.claude/skills/sdp-agent-surface/SKILL.md` (a repository convention this phase set). Six
 **whole-pipeline bound points** over one materialized extraction root ended the consumer family's
-two-sweep refusal class and promoted all three parents to `ready`.
+two-sweep refusals and promoted all three parents to `ready`. Phase 4's three refusal reasons were
+distinct, not one class (phrasing sharpened at the post-close review, §10): `reader` refused on its
+verifier world being a full graph fixture, `design-review` stayed `defined` on evidence with its
+world already built at S3, and `agent-surface` refused on two measured-evidence rules beside the
+world question — what S4 resolved in each case is the verifier half, a real whole-pipeline point
+now riding each parent (the measured-evidence residue is dispositioned at its §8 row).
 
 **What was refused, and recorded as refused.** Two S1 bound points (a deferral has no executable
 seam). `spec:consumers.edit-model` again, on its own stated fourth rule — this phase landed no
@@ -652,7 +660,9 @@ two-arm trial was constructed, run, and **refused** with its numbers recorded as
 rather than as evidence of a ratio.
 
 **Close state.** `115 specs · 1 packs · 86 anchors → 202 nodes · 397 edges (0 errors, 0 warnings)`,
-`ready: 80 / defined: 35`. Full twelve-leg `npm run check` green, plus the clean-clone proof.
+`ready: 80 / defined: 35` · **50 bound points across 8 bound suites** (chaining from phase 4's
+closing `44 · 7` by this phase's six points and one suite). Full twelve-leg `npm run check` green,
+plus the clean-clone proof.
 
 ### §5 acceptance criteria, graded
 
@@ -708,7 +718,7 @@ and three parents promote, moving the distribution to **`ready: 80 / defined: 35
 
 | Spec | Disposition | Evidence |
 |---|---|---|
-| `spec:consumers.agent-surface` | `defined` → **`ready`** | Floor: `refines` → `spec:consumers.projections-model` stands at `defined` (clause cleared, and it was checked rather than assumed — nothing was promoted to make this work); `decidedBy` → `spec:decisions.agent-surface-scripts-graph` resolves; both bound anchors resolve. Verifiers: two enabled example children, each bound by a resolving test anchor in `test/self-hosting-consumers.test.ts`. Content judged acceptance-grade as it stood — nine rules covering the surface, the demand map, the deferral, and the recipe valve — so only the example space was added |
+| `spec:consumers.agent-surface` | `defined` → **`ready`** | Floor: `refines` → `spec:consumers.projections-model` stands at `defined` (clause cleared, and it was checked rather than assumed — nothing was promoted to make this work); `decidedBy` → `spec:decisions.agent-surface-scripts-graph` resolves; both bound anchors resolve. Verifiers: two enabled example children, each bound by a resolving test anchor in `test/self-hosting-consumers.test.ts`. Content judged acceptance-grade as it stood — nine rules covering the surface, the demand map, the deferral, and the recipe valve — so only the example space was added. The phase-3/4 refusal reason ("two of its rules are measured-evidence claims, not runtime laws; reader world not cheap") is retired here by name (added at the post-close review, §10): it was a verifier-feasibility disposition whose bindable half this world resolved, and the promotion law asks for a resolving verifier and acceptance-grade content, never full-rule binding — rules 4–5 stand as carried recorded evidence, and `projections-model`'s continuing refusal rests on zero `has-verifier`, not on carrying a measured line |
 | `spec:consumers.reader` | `defined` → **`ready`** | Floor: `refines` → `spec:consumers.agent-surface`, itself now `ready`; anchors resolve. Verifiers: three enabled example children. Content was **enriched first** (ruling 13, mirror-faithful): rule 2 stated the two adapters as one line where the code answers two different questions, so `findByConcept`'s field-naming and `byFile`'s two halves are now stated, the reason-carrying law is stated, and the realizing entrypoint is named. Nothing was invented — every added clause mirrors `src/reader/reader.ts` |
 | `spec:consumers.design-review` | `defined` → **`ready`** | Floor: `refines` → `spec:consumers.projections-model` at `defined`; anchors resolve. Verifier: the pure-projection child. Content enriched with the graph-only page-identity clause (the byte-identical guarantee the renderer's header already claimed but the Spec did not state) and the realizing entrypoint |
 | the six new `example` children | authored at **`ready`** | Each binds a complete point in its parent's space (every used slot bound, so the concreteness law clears `defined`), declares `refines` + `verifies` at a `ready` parent, and carries its own resolving test anchor — `has-verifier` on the graph, not on assertion |
@@ -794,7 +804,31 @@ ledger is git process evidence, never graph content.
 | S3 | demand map · verified recipes · the skill | orchestrator-verified green gate | **done** — the demand map authored as four clauses on `spec:consumers.agent-surface` with the oracle transcribed; `docs/agent-surface/recipes.md` landed with eight runnable bodies and `test/recipes.test.ts` executing every one through the production `sdp q` seam on shape-level invariants (mutation-probed three ways); the skill on-ramp landed at `.claude/skills/sdp-agent-surface/SKILL.md`, setting this repo's skill convention. `docs/concept/06` §3 picked up the demand map and the catalog pointer in the same change (drift discipline). Corpus unmoved at 109 Specs · 1 Pack · 80 anchors → 190 nodes · 373 edges, `ready: 71 / defined: 38`, 0 errors / 0 warnings; full twelve-leg `npm run check` green |
 | S4 | whole-pipeline bound points; consumer-family promotions | orchestrator-verified green gate | **done** — six bound points over one materialized whole-pipeline root (§7), each mutation-probed before recording and each probe leaving `src/` clean; all three consumer parents promoted to `ready` with `spec:consumers.edit-model`'s standing refusal recorded (§8). The new bound suite `test/self-hosting-consumers.test.ts` entered through the shared `contract-dependent-suites.mjs` row and both surfaces followed — clean-room verified with the contracts tree set aside: `npm run lint` exits 0, and `node ./vitest-test.mjs test/self-hosting-consumers.test.ts` refuses fast with *"Generated contracts required by the selected test suite are missing. Run `npm run build && npm run generate:self-hosting` first."* Corpus moves to 115 Specs · 1 Pack · 86 anchors → 202 nodes · 397 edges, `ready: 80 / defined: 35`, 0 errors / 0 warnings; full twelve-leg `npm run check` green |
 | S5 | readiness sweep; `06`/`07` re-grades; optional measured-context refresh | orchestrator-verified green gate over the regenerated Design Review | **done** — the sweep dispositioned all **35** `defined` Specs with **zero promotions and 35 named refusals** (§8): none carries `has-verifier` in the regenerated graph, so every promotion would have added an `honesty/gaps` warning, and no verifier was invented to enable one. Both charter checks answered on the record — `spec:decisions.agent-front-door` landed and holds at `defined` as the decision class's 22nd member, and no Spec whose verifier landed in S2–S4 was left behind (S2's and S3's suites are engine and corpus checks that author no points; S4's six all landed on parents that promoted in the same wave). Two refusal reasons **moved**: `spec:consumers.projections-model` (its family's points are now one hop away, not two — refusal upheld on direct-only linkage, and its evidence posture re-judged against the S4 worlds and found unchanged) and `spec:extraction.build-pipeline` (`sdp q` gives its rule 6 a real world for the first time — recorded as the successor's strongest candidate, not converted, because this session authors no points). The `06`/`07` re-grades ran to the standing template (§5c): **`06` closes one gap** (`bySymbol`'s frozen-shape-but-aspirational status, carried by S3's deferral clause and bound by `demand-map-entries`), moves the second-caller bar off `00`/`07` onto a Spec, and grades this phase's two new §3 paragraphs fully carried — five gaps stand, `06` **stays**; **`07` moves no row** and its three gaps stand, `07` **stays**. Neither audit surprised toward fully-carried, so ruling 14 did not run. The optional measured-context refresh was **refused with the attempt and its numbers recorded** (§7) rather than manufactured. Records-only session — no product surface changed, graph numbers unmoved at 115/1/86 · 202 · 397 · `ready` 80 / `defined` 35, 0 errors / 0 warnings; full twelve-leg `npm run check` green |
-| S6 | adversarial review, remediation, full close, done-record, PR | full chain + clean-clone; review archived | **done** — the review is archived at `reviews/11-self-hosting-phase-5-pre-close-review.md`: an independently designed matrix of **eleven engine mutations** (none replaying a probe §7 recorded) run against the whole 630-test tree so discrimination was measured rather than assumed, plus three mutations aimed at the recipe check and **31 adversarial probes against the built CLI**. Five of the six S4 points discriminate to exactly one point; the two overlaps are the corpus agreeing with itself. Every headline number was recomputed from scratch at all six blessed commits by re-deriving the graph — **zero corrections**. **Eleven findings, all terminal:** five fixed (the on-ramp's documented invocations did not run as written at this root; three ruled boundary behaviours — a warning-level extraction finding gating the body, terminal detection by stream property rather than descriptor, and `--exclude` bypassing the strict contract — each survived mutation with the whole tree green and now has a test that kills it; the stale `AGENTS.md` stamp that had left `check-self-hosting-gates.mjs` failing since the phase-4 close; plus two records repairs), three carried with reasons, one declined with a reason, two informational. Full twelve-leg `npm run check` green at the close tip, and the clean-clone proof reproduced both trees end to end |
+| S6 | adversarial review, remediation, full close, done-record, PR | full chain + clean-clone; review archived | **done** — the review is archived at `reviews/11-self-hosting-phase-5-pre-close-review.md`: an independently designed matrix of **eleven engine mutations** (none replaying a probe §7 recorded) run against the whole 630-test tree so discrimination was measured rather than assumed, plus three mutations aimed at the recipe check and **31 adversarial probes against the built CLI**. Five of the six S4 points discriminate to exactly one point; the two overlaps are the corpus agreeing with itself. Every headline number was recomputed from scratch at all six blessed commits by re-deriving the graph — **zero corrections**. **Eleven findings, all terminal:** seven fixed (the on-ramp's documented invocations did not run as written at this root; three ruled boundary behaviours — a warning-level extraction finding gating the body, terminal detection by stream property rather than descriptor, and `--exclude` bypassing the strict contract — each survived mutation with the whole tree green and now has a test that kills it; the stale `AGENTS.md` stamp that had left `check-self-hosting-gates.mjs` failing since the phase-4 close; plus two records repairs), three carried with reasons, and one declined with a reason — two of the eleven (F-10, F-11) are informational in severity, already inside the declined and carried counts (tally re-counted at the post-close review, §10; the archived table was always right). Full twelve-leg `npm run check` green at the close tip, and the clean-clone proof reproduced both trees end to end |
 
 Owner ratification of every gate above happens at the phase PR review; no live owner
 acceptance occurs during execution.
+
+## §10 Post-close review corrections (2026-07-27)
+
+A second adversarial review ran after the close, at the owner's request, over the PR description
+and the plans and PR descriptions of all five self-hosting phases — six review dimensions, every
+finding independently re-measured by an adversarial verifier before being acted on. The full
+findings table, dispositions included, is archived at
+`reviews/12-self-hosting-phase-5-post-close-review.md`.
+
+Its **record corrections were folded in place above**, each edit marked with a pointer to this
+section: the S6 findings tally re-counted (**seven** fixed, not five — the archived table in
+`reviews/11` was always right; the summary sentence miscounted), the S4 consumer-promotion framing
+sharpened in §6 and §8 (phase 4 recorded three distinct refusal reasons, not one uniform
+"whole-pipeline world" class, and the `agent-surface` measured-evidence reason is now retired by
+name at its row), the `07` enumeration flag in §5c closed (its substance was judged at reviews/11
+Dimension 4; the flag itself had been left unmarked), and the bound-point series restored to the
+close state (**50 points across 8 bound suites**, re-measured from the regenerated graph, chaining
+from phase 4's `44 · 7`).
+
+Engine and test defects the review found — an EPIPE crash escaping the diagnostic currency, an
+empty `--root` silently reinterpreted as cwd, the rendering path outside every try/catch, a
+`--json` non-JSON hole, and a set of soundness-only recipe assertions — are fixed with regression
+tests and dispositioned finding-by-finding in the review document. The graph numbers above were
+unaffected: `115 · 1 · 86 → 202 · 397`, `ready: 80 / defined: 35`, 0 errors / 0 warnings.

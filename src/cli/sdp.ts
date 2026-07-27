@@ -7,7 +7,7 @@ import { parseBuildArgs } from "./build-args.js";
 import { runBuild } from "./build-command.js";
 import { parseImportArgs, runImport } from "./import-command.js";
 import type { ImportHooks } from "./import-command.js";
-import { defaultCliOutput, writeStderr, writeStdout } from "./output.js";
+import { defaultCliOutput, errorMessage, writeStderr, writeStdout } from "./output.js";
 import type { CliOutput } from "./output.js";
 import { parseQueryArgs, runQuery } from "./q-command.js";
 import type { QueryHooks } from "./q-command.js";
@@ -138,14 +138,46 @@ export function isCliEntrypoint(executedPath: string | undefined, moduleUrl: str
   }
 }
 
+/**
+ * The stdout error handler the entrypoint installs. A downstream reader closing early
+ * (`sdp q '…' --json | head`) surfaces as an asynchronous 'error' event on the stdout socket,
+ * which no try/catch inside a command can reach — and nobody is listening for output any more, so
+ * the honest answer is a quiet successful exit, not an engine stack trace. Anything other than
+ * EPIPE stays fatal.
+ */
+export function onStdoutError(error: NodeJS.ErrnoException, exit: (code: number) => void): void {
+  if (error.code === "EPIPE") {
+    exit(0);
+    return;
+  }
+
+  throw error;
+}
+
 if (isCliEntrypoint(process.argv[1], import.meta.url)) {
+  process.stdout.on("error", (error: NodeJS.ErrnoException) => {
+    onStdoutError(error, (code) => {
+      // A hard exit, not `process.exitCode`: pending writes would re-emit the same error.
+      process.exit(code);
+    });
+  });
+
   const outcome = runSdpCli(process.argv.slice(2));
 
   if (typeof outcome === "number") {
     process.exitCode = outcome;
   } else {
-    void outcome.then((exitCode) => {
-      process.exitCode = exitCode;
-    });
+    void outcome.then(
+      (exitCode) => {
+        process.exitCode = exitCode;
+      },
+      // A rejection here is an engine defect escaping every command-level catch (the commands
+      // render their own failures); it still reports through the diagnostic currency and exits 1
+      // instead of dying as an unhandled rejection.
+      (error: unknown) => {
+        writeStderr(defaultCliOutput, `sdp: ${errorMessage(error)}\n`);
+        process.exitCode = 1;
+      },
+    );
   }
 }

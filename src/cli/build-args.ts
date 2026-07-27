@@ -91,6 +91,14 @@ export function resolveExtractionRoot(
   output: CliOutput,
   command: string,
 ): string | undefined {
+  // A supplied-but-empty root is an operator mistake (an unset shell variable), not a request for
+  // the working directory: `resolve` would collapse it to cwd and answer about a corpus the
+  // operator never named, at exit 0 — the same input the exclusion contract refuses by name.
+  if (root?.trim() === "") {
+    writeStderr(output, `sdp ${command}: --root requires a path.\n`);
+    return undefined;
+  }
+
   const resolvedRoot = resolve(process.cwd(), root ?? ".");
 
   if (!isDirectory(resolvedRoot)) {

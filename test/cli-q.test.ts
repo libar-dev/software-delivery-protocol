@@ -1,4 +1,5 @@
-import { existsSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { isatty } from "node:tty";
 import { fileURLToPath } from "node:url";
@@ -6,34 +7,42 @@ import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
 
 import { runSdpCli } from "../src/cli/sdp.js";
+import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 
-function createCaptureOutput() {
-  const stdoutChunks: string[] = [];
-  const stderrChunks: string[] = [];
+/**
+ * A content fingerprint of a tree, `"absent"` when it does not exist: the "writes nothing" case
+ * compares before and after, so it detects a write at the invoking root without requiring the
+ * gitignored `generated/` tree to exist (both reads are `"absent"` in a clean clone).
+ */
+function fingerprintTree(root: string): string {
+  if (!existsSync(root)) {
+    return "absent";
+  }
 
-  return {
-    output: {
-      stdout: {
-        write(chunk: string) {
-          stdoutChunks.push(chunk);
-        },
-      },
-      stderr: {
-        write(chunk: string) {
-          stderrChunks.push(chunk);
-        },
-      },
-    },
-    readStdout() {
-      return stdoutChunks.join("");
-    },
-    readStderr() {
-      return stderrChunks.join("");
-    },
+  const hash = createHash("sha256");
+
+  const walk = (directory: string): void => {
+    const entries = readdirSync(directory, { withFileTypes: true }).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+
+    for (const entry of entries) {
+      const path = join(directory, entry.name);
+
+      if (entry.isDirectory()) {
+        walk(path);
+      } else {
+        hash.update(path);
+        hash.update(readFileSync(path));
+      }
+    }
   };
+
+  walk(root);
+  return hash.digest("hex");
 }
 
 // A committed corpus root, materialized per suite: the sink derives the graph in process from real
@@ -319,6 +328,18 @@ describe("sdp q — the agent front door", () => {
     expect(missingRoot.readStderr()).toContain("--root requires a path");
   });
 
+  it("refuses an empty --root instead of reinterpreting it as the working directory", async () => {
+    // An unset shell variable must not become "answer about cwd at exit 0" — the wrong-corpus
+    // answer is the one failure mode an agent cannot detect from the output.
+    const capture = createCaptureOutput();
+
+    const exitCode = await runQ(["return 1", "--root", ""], capture, terminalStdin);
+
+    expect(exitCode).toBe(1);
+    expect(capture.readStdout()).toBe("");
+    expect(capture.readStderr()).toContain("--root requires a path");
+  });
+
   it("refuses a root that is not a directory, naming the resolved absolute path", async () => {
     const capture = createCaptureOutput();
 
@@ -422,7 +443,45 @@ describe("sdp q — the agent front door", () => {
     }
   });
 
+  it("reports a throw from rendering the return value through the one diagnostic currency", async () => {
+    // The rendering path runs after the body's own try/catch; a hostile custom-inspect method (or
+    // a poisoned getter) must still exit 1 as `sdp q: …`, never escape as an unhandled rejection.
+    const capture = createCaptureOutput();
+
+    const exitCode = await runQ(
+      [
+        "const custom = Symbol.for('nodejs.util.inspect.custom'); return { [custom]() { throw new Error('rendering refused'); } };",
+        "--root",
+        corpusRoot,
+      ],
+      capture,
+      terminalStdin,
+    );
+
+    expect(exitCode).toBe(1);
+    expect(capture.readStdout()).toBe("");
+    expect(capture.readStderr()).toContain("sdp q: rendering refused");
+  });
+
+  it("refuses a --json return value whose toJSON yields no JSON form", async () => {
+    // `JSON.stringify` answers `undefined` here rather than throwing; printing that would put the
+    // literal text `undefined` on stdout under a success exit — non-JSON on the JSON contract.
+    const capture = createCaptureOutput();
+
+    const exitCode = await runQ(
+      ["return { toJSON: () => undefined }", "--root", corpusRoot, "--json"],
+      capture,
+      terminalStdin,
+    );
+
+    expect(exitCode).toBe(1);
+    expect(capture.readStdout()).toBe("");
+    expect(capture.readStderr()).toContain("has no JSON form");
+  });
+
   it("writes nothing: the sink is a pure read tool", async () => {
+    const rootGenerated = join(repoRoot, "generated");
+    const before = fingerprintTree(rootGenerated);
     const capture = createCaptureOutput();
 
     const exitCode = await runQ(["return g.specs().length", "--root", corpusRoot], capture, {
@@ -431,6 +490,8 @@ describe("sdp q — the agent front door", () => {
 
     expect(exitCode).toBe(0);
     expect(existsSync(join(corpusRoot, "generated"))).toBe(false);
-    expect(existsSync(join(repoRoot, "generated", "graph.json"))).toBe(true);
+    // cwd is the repository root under the pooled runner, so an unchanged fingerprint pins "no
+    // write at the invoking root" in the direction the test name claims.
+    expect(fingerprintTree(rootGenerated)).toBe(before);
   });
 });
