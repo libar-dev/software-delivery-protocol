@@ -79,6 +79,8 @@ The agent-surface decision (D5) settled *how* to expose it. The **agent surface*
 
 **The front door — two entrances, one seam.** The package exports the reader constructor, and the CLI carries `sdp q`: one evaluation sink that derives the graph in process, injects that same reader plus the raw graph and the validation report, and prints what the supplied body returns (the agent front door, `spec:decisions.agent-front-door`). A single sink is the *anti*-verb-wall — it adds no query vocabulary, so the schema stays the contract and the body does the composing. Derivation runs per invocation, so a just-authored Spec is queryable immediately and no committed artifact answers in the graph's name; the sink never re-parses carriers and never writes. It evaluates local operator-supplied code with the trust stance of any local developer tool — no sandbox is claimed.
 
+**The demand map and the recipe valve.** An agent arrives holding a **string**, a **file**, or a **changeset** — not the Spec id it is looking for — which is why the frozen adapters below are exactly those three entries (`bySymbol`, the fourth, stays named-and-deferred). Everything past them is a **recipe**, not a verb: runnable bodies catalogued at `docs/agent-surface/recipes.md`, each checked to run as written. That catalog is the release valve that keeps the frozen surface small — a question the recipes already answer is never a reason to mint a verb.
+
 ### The reader — the thin typed loader
 
 The **`reader`** is the *component* behind the surface: joins and `claim`/taxonomy-decode are done **once at construction**; accessors return plain, composable data; it persists nothing and is rebuilt fresh each load (a front door, not a store). *Needs drive the surface, not storage.*
