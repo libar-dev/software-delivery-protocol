@@ -303,6 +303,7 @@ export const expectedDeclaredRelations = [
   ["spec:decisions.pack-reified", "refines", "spec:model.pack-aggregate"],
   ["spec:decisions.agent-surface-scripts-graph", "refines", "spec:consumers.agent-surface"],
   ["spec:decisions.mcp-deferred", "refines", "spec:consumers.projections-model"],
+  ["spec:decisions.agent-front-door", "refines", "spec:consumers.agent-surface"],
   ["spec:model.anchors.lookalike-refusal", "refines", "spec:model.anchors"],
   ["spec:model.anchors.lookalike-refusal", "verifies", "spec:model.anchors"],
   ["spec:model.anchors.physical-identity", "refines", "spec:model.anchors"],

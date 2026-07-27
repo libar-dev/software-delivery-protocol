@@ -110,4 +110,5 @@ export const expectedPackMembers = [
   "spec:decisions.pack-reified",
   "spec:decisions.agent-surface-scripts-graph",
   "spec:decisions.mcp-deferred",
+  "spec:decisions.agent-front-door",
 ] as const;

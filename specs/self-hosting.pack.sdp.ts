@@ -113,6 +113,7 @@ export const selfHostingV1Pack = pack({
     ref("spec:decisions.pack-reified"),
     ref("spec:decisions.agent-surface-scripts-graph"),
     ref("spec:decisions.mcp-deferred"),
+    ref("spec:decisions.agent-front-door"),
   ],
   modelRefs: [ref("spec:model.protocol-domain"), ref("spec:model.core-model")],
 });
