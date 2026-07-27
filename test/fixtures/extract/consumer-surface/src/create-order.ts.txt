@@ -1,0 +1,7 @@
+import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+
+export const createOrderAnchor = codeAnchor({
+  id: codeAnchorId("impl:orders.create-order"),
+  label: "creates an order from a cart",
+  satisfies: ref("spec:orders.create-order"),
+});

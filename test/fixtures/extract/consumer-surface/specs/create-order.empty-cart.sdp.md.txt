@@ -1,0 +1,13 @@
+---
+id: spec:orders.create-order.empty-cart
+kind: example
+altitude: story
+readiness: idea
+relations:
+  refines: spec:orders.create-order
+  verifies: spec:orders.create-order
+---
+# An empty cart is refused
+
+## Intent
+- outcome: Stand as a declared verifier no test anchor binds, so the decode has both answers to give.

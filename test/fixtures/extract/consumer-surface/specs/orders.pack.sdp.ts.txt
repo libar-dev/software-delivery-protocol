@@ -1,0 +1,13 @@
+import { pack, packId, ref } from "@libar-dev/software-delivery-protocol";
+
+export const ordersPack = pack({
+  id: packId("pack:orders-v1"),
+  title: "Orders",
+  framing: "The placement specs read as one review set.",
+  specs: [
+    ref("spec:orders.order-management"),
+    ref("spec:orders.create-order"),
+    ref("spec:orders.create-order.valid-cart"),
+    ref("spec:orders.create-order.empty-cart"),
+  ],
+});

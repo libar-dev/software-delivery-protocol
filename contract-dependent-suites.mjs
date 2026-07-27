@@ -20,6 +20,7 @@ export const contractDependentSuites = [
     generation: "npm run generate:self-hosting",
     testPaths: [
       "test/self-hosting-carrier.test.ts",
+      "test/self-hosting-consumers.test.ts",
       "test/self-hosting-duplicate-ids.test.ts",
       "test/self-hosting-extraction.test.ts",
       "test/self-hosting-model.test.ts",

@@ -1,0 +1,7 @@
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+
+export const validCartTestAnchor = specTest({
+  id: testAnchorId("test:orders.create-order.valid-cart"),
+  label: "binds the valid-cart example to a test entrypoint",
+  verifies: ref("spec:orders.create-order.valid-cart"),
+});

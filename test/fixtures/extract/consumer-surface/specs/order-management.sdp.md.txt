@@ -1,0 +1,14 @@
+---
+id: spec:orders.order-management
+kind: behavior
+altitude: feature
+readiness: idea
+relations: {}
+---
+# Orders are managed as one bounded context
+
+## Intent
+- outcome: Give the consumer probes a parent the placement specs refine.
+
+## Behavior
+- rule: A backorder never leaves the placement flow without a recorded reason.
