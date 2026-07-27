@@ -267,16 +267,28 @@ standing reason (no write surface this phase), and the refusal is recorded, not 
 | verb-wall creep | any second query verb (or reader accessor) is proposed without clearing ruling 16's bar | unfired |
 | recipe rot | a recipe body stops running as written (ruling 17's check is the alarm) | unfired |
 | skill anecdote drift | skill text restates or contradicts law a Spec carries instead of citing it | unfired |
-| eval trust boundary | the front door's input handling grows past the recorded local-tool trust stance | unfired |
+| eval trust boundary | the front door's input handling grows past the recorded local-tool trust stance | unfired — the stance is now recorded (ruling 21, §5b and `spec:decisions.agent-front-door`): local developer tool, no sandbox claimed, root resolved to a canonical validated directory at the edge. The item fires if the sink ever takes input from a non-operator source or starts implying containment |
 | oracle thrash | the corpus wave forces cross-family edits in the split oracle (per-family modules should localize) | unfired |
 | table sugar / single-literal vocabulary (carried) | real material forces the ruled-out forms | unfired |
 
 ## §4 Docket ledger (carried in from plan 21)
 
-The Markdown Pack syntax ruling · the gen-1 `.feature` adapter · **the no-reparse read seam
-(owned by this phase — S2's freshness ruling dispositions it)** · temporal-guard token
-assembly · the editor-association gap · control-character latitude · the separate example-id
-namespace. Rows close only with reasons in the done-record.
+The Markdown Pack syntax ruling · the gen-1 `.feature` adapter · **the no-reparse read seam —
+CLOSED at S2** · temporal-guard token assembly · the editor-association gap ·
+control-character latitude · the separate example-id namespace. Rows close only with reasons in
+the done-record.
+
+**No-reparse read seam — closed, with the reason.** The row asked whether a read-side consumer
+may ever obtain graph data by any route other than the extractor's output. S2's freshness ruling
+answers it for the front door and, by the same argument, for every read consumer: the sink
+**re-derives through the extractor in process on every invocation** and consumes the derived
+result in memory. That is not a second parse and never was the thing the row feared — re-running
+the one lawful producer *is* the one graph's production path, and the extractor remains the only
+component that reads source. The alternative the row was really guarding against — a consumer
+opening carrier files itself to answer faster or fresher — is refused permanently and is now
+stated on a Spec (`spec:decisions.agent-front-door`, the read-only consequence) rather than
+carried as a docket question. The committed `generated/graph.json` stays a published artifact for
+downstream consumers and the determinism gate, never the agent path's source of truth.
 
 ## §5 Acceptance criteria
 
@@ -428,6 +440,56 @@ without the `05` token so neither sweep form can hit them, and both would be fal
 defined: 37` — identical to the opening state, as expected: two clauses on existing Specs create no
 nodes and no edges. Full twelve-leg `npm run check` green.
 
+## §5b The S2 front-door ruling, on the record
+
+Ruling 15 forbids drifting into the front door, so the three candidates were weighed before any
+implementation code was written. **Terminal disposition: candidate (C) — both entrances over one
+seam — carried as a decision Spec, `spec:decisions.agent-front-door`, registered as MD-22.**
+
+### The weighing
+
+| Candidate | Judged against the agent-surface ruling · the second-caller bar · the gen-1 evidence | Verdict |
+|---|---|---|
+| **(A) the sink alone** | Satisfies the ergonomics finding (the measured "agent sink" at roughly a fifth of the context) but makes the CLI the only entrance, so a second machine consumer — a projection, an adapter, a test — would have to shell out and parse text to reach joins it can already import. It also leaves the exported reader looking incidental when it is the actual contract. | rejected |
+| **(B) scripting only, no verb** | Keeps the surface at zero and preserves full static typing of the body, and it is what the package already supports. But it taxes every question with an authored TypeScript module, a compile, and a run — exactly the friction the gen-1 evidence recorded the sink removing. The second-caller bar argues *for* the sink here rather than against it: the bar governs freezing **query vocabulary**, and a single evaluation sink freezes none. | rejected |
+| **(C) both, sink over the exported seam** | One law, two entrances. The CLI sink derives the graph and injects the very `createReader` the package exports, so a body scripted at the terminal and a module scripted in a repo compose the same data through the same joins. No query verb is minted, so the verb wall the agent-surface ruling forbids stays forbidden — a single sink is its opposite: it adds an evaluation entrance and zero vocabulary. | **ruled** |
+
+### The three-part test — passed, so it is a decision Spec
+
+- **Hard to reverse.** The injected binding names (`g` · `graph` · `report`) become a scripted
+  contract the moment recipes and a skill are authored against them; renaming one breaks every
+  body already written. Reversal is not a code edit, it is a corpus edit.
+- **Surprising without context.** A CLI whose founding ruling is "no verb wall" adding an
+  evaluation verb reads as a contradiction until one sees that a *single* sink adds no query
+  vocabulary at all.
+- **A real trade-off.** The sink buys ergonomics and pays in the body's static typing (a string
+  body is not typechecked) and in an evaluation surface; the scripting entrance buys typing and
+  pays a module per question. Neither dominates, which is why both are kept.
+
+### The freshness ruling (ruling 19) — derive in process
+
+The sink runs the extractor on every invocation rather than reading the committed
+`generated/graph.json`. The reasons, weighed both ways: a committed-artifact read is faster and
+gen-2 does police staleness with deterministic regeneration, `--check-clean`, and preflight — but
+those gates run at commit time, not at query time, so between an author's edit and the next
+regeneration the artifact would answer confidently about a corpus that no longer exists, and a
+*just-authored* Spec would be invisible to the surface whose whole job is to make it findable.
+Gen-1's staleness-hides-failures evidence points the same way. The cost is one extraction per
+invocation (seconds on this corpus), which the corpus-oracle precedent already pays in the test
+suite. This does **not** breach the no-reparse law: the sink never parses a carrier — it consumes
+the extractor's derived output in memory, and re-running the one lawful producer is the one
+graph's lawful production path (§4 closes the docket row on exactly that reasoning).
+
+### The trust stance (ruling 21) — recorded, not implied
+
+`sdp q` evaluates local operator-supplied JavaScript with the same trust as running a local script
+through the package's own runner. **No sandbox is claimed and none exists**; the body has the
+process's full authority. What the boundary does police is identity: a supplied root resolves to a
+canonical absolute path and is validated as a directory before extraction sees it (the shared
+`resolveExtractionRoot` seam, validate-then-use), and `--exclude` paths go through the strict
+consumer-exclusion contract unchanged. The stance is stated in the decision Spec's consequences
+and in the module header, so no later reader can mistake the sink for a security boundary.
+
 ## §6 Done-record
 
 *(written at close)*
@@ -441,8 +503,8 @@ reasons)*
 |---|---|---|---|---|
 | S1 | gap 13 — severity-override deferral | `spec:validation.warn-level-signals` (clause) | 0 (deferral, no seam) | **done** — one Rule clause on the carrying Spec, placed before the realizing-entrypoint clause on the `doc:`-reservation precedent (`spec:model.stable-ids`): state the deferral *and* its actual status in one breath. **Point refused, with reason:** a deferral names a capability that does not exist, so there is no executable seam a bound point could resolve against — an example would assert either nothing or an absence, and the mutation-probe discipline (ruling 12) has nothing to turn red. Recording a decorative point would inflate the bound-point count without adding verification. |
 | S1 | gap 14 — floor-config deferral | `spec:validation.readiness-floor` (clause) | 0 (deferral, no seam) | **done** — one Rule clause beside the floor-table-as-truth posture (MD-13) the Spec already states, same placement discipline. **Point refused, same reason:** no per-team floor configuration exists to exercise; the clause's positive half (the shipped table is the only floor) is already carried by every existing floor point, so a new point would duplicate coverage rather than add it. |
-| S2 | the front-door ruling (+ freshness) | decision Spec or plan ruling — S2 records which | — | planned |
-| S2 | the front-door implementation | `src/cli/` on the `sdp` surface | 0 (points are S4's) | planned |
+| S2 | the front-door ruling (+ freshness) | decision Spec — `spec:decisions.agent-front-door` (`specs/decisions/agent-front-door.sdp.md`), registry row MD-22 | — | **done** — candidate (C) ruled: the CLI sink and the exported reader are two entrances over one seam; freshness ruled derive-in-process; the local-tool trust stance recorded in the Spec's consequences. The weighing, the three-part test, and both sub-rulings are on the record at §5b; the no-reparse docket row is closed at §4 |
+| S2 | the front-door implementation | `src/cli/q-command.ts` + the `sdp q` dispatch | 0 (points are S4's) | **done** — `sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--json]`; bindings `g` · `graph` · `report`; body from argv or non-terminal stdin, refusing at a terminal rather than hanging; bounded `util.inspect` by default with `--json` as the exact escape; findings render through `formatFinding` only when the graph refuses to derive, never as a gate on the body; writes nothing anywhere. Nineteen residual-style tests in `test/cli-q.test.ts`, pooled leg, no wrapper change. **No implementation anchor added, with reason:** `spec:consumers.agent-surface` already carries one at `src/reader/reader.ts`, and no anchor in this corpus targets a `decision` Spec — minting one here would be a new binding convention smuggled in on a build session |
 | S3 | the demand map | `spec:consumers.agent-surface` (enrichment) | — | planned |
 | S3 | the recipe corpus + machine check | authored artifact + check per ruling 17 | — | planned |
 | S3 | the skill on-ramp | consumer artifact (location recorded) | — | planned |
@@ -454,6 +516,11 @@ reasons)*
 
 *(maintained at S4 promotions and the S5 sweep; opening distribution `ready: 71 /
 defined: 37` over 108)*
+
+**S2**: one new `decision` Spec at `defined` (`spec:decisions.agent-front-door`) — the distribution
+moves to `ready: 71 / defined: 38` over 109. No existing Spec's readiness moved; the new Spec is
+stated at `defined` on the standing decision-family posture (a decision states its choice; the
+`ready` rung waits on the S5 sweep like its siblings).
 
 **Opening distribution confirmed at S1** against the regenerated graph: 108 `Primitive` nodes,
 `ready: 71 / defined: 37`, no other rung present. S1 moved no readiness — it enriched two
@@ -469,7 +536,7 @@ ledger is git process evidence, never graph content.
 | Session | Delivers | Gate discipline | State |
 |---|---|---|---|
 | S1 | gaps 13/14 carried; the `05` audit and (expected) deletion with full re-pointing and the two-form sweep | orchestrator-verified green gate over the regenerated Design Review | **done** — both deferrals carried as one clause each (no new Specs, both points refused with reasons, §7); the re-audit graded **fully carried** over the regenerated Design Review (§5a below); `docs/concept/05-validation-and-honesty.md` **deleted** with 24 inbound surfaces re-pointed in the same change and both sweep forms at **zero hits**. Corpus unmoved at 108 Specs · 1 Pack · 80 anchors → 189 nodes · 371 edges, `ready: 71 / defined: 37`, 0 errors / 0 warnings; full twelve-leg `npm run check` green |
-| S2 | the front-door and freshness rulings; the front-door build; the no-reparse docket disposition | orchestrator-verified green gate | planned |
+| S2 | the front-door and freshness rulings; the front-door build; the no-reparse docket disposition | orchestrator-verified green gate | **done** — candidate (C) ruled and carried as `spec:decisions.agent-front-door` (MD-22) with the weighing at §5b; freshness ruled derive-in-process and the no-reparse docket row closed (§4); the trust stance recorded. `sdp q` landed in `src/cli/q-command.ts` with 19 tests in `test/cli-q.test.ts`; the CLI surface list in `docs/concept/00` §4 and the agent-surface exposition in `06` §3 re-pointed (the slice-5 provenance rows in `AGENTS.md` and `07` left as history). Corpus moves to 109 Specs · 1 Pack · 80 anchors → 190 nodes · 373 edges, `ready: 71 / defined: 38`, 0 errors / 0 warnings; full twelve-leg `npm run check` green |
 | S3 | demand map · verified recipes · the skill | orchestrator-verified green gate | planned |
 | S4 | whole-pipeline bound points; consumer-family promotions | orchestrator-verified green gate | planned |
 | S5 | readiness sweep; `06`/`07` re-grades; optional measured-context refresh | orchestrator-verified green gate | planned |

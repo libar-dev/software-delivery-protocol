@@ -549,7 +549,9 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
 
     try {
       const capture = createCaptureOutput();
-      runSdpCli(["build", corpusRoot], capture.output);
+      // `build` resolves synchronously; only `q` returns a promise from the dispatcher, so the
+      // discarded result here is a number and the `void` states that rather than hiding a wait.
+      void runSdpCli(["build", corpusRoot], capture.output);
 
       expect(capture.readStderr()).toMatch(
         /non-static-id\.sdp\.ts:\d+ — \[error\] extract\/non-static-envelope — /,

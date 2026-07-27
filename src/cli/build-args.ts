@@ -76,6 +76,21 @@ export function parseBuildArgs(
     throw error;
   }
 
+  const resolvedRoot = resolveExtractionRoot(root, output, command);
+
+  return resolvedRoot === undefined ? undefined : { root: resolvedRoot, exclude, checkClean };
+}
+
+/**
+ * The one root-resolution rule every verb shares: a supplied root is resolved against the invoking
+ * directory into an absolute path and validated as a directory before any consumer sees it, so what
+ * reaches extraction is a canonical validated identity rather than the operator's string.
+ */
+export function resolveExtractionRoot(
+  root: string | undefined,
+  output: CliOutput,
+  command: string,
+): string | undefined {
   const resolvedRoot = resolve(process.cwd(), root ?? ".");
 
   if (!isDirectory(resolvedRoot)) {
@@ -83,7 +98,7 @@ export function parseBuildArgs(
     return undefined;
   }
 
-  return { root: resolvedRoot, exclude, checkClean };
+  return resolvedRoot;
 }
 
 function isDirectory(path: string): boolean {
