@@ -1,8 +1,19 @@
 # Plan 22 — Self-hosting phase 5: the `05` dissolution and the agent front door
 
-> **Status:** DRAFTED — execution begins on `feature/protocol-self-application-phase-5`. This is
-> plan 22, the highest primary-numbered plan; the latest ✅ EXECUTED ground is plan 21 (the
-> phase-4 close, merged at PR #13). Build state lives in **`plans/`** — read the highest
+> **Status:** ✅ EXECUTED — the whole phase landed on `feature/protocol-self-application-phase-5`
+> across six sessions. **What the phase did:** finished the `05` dissolution (both remaining
+> deferrals carried as clauses, the document deleted with 24 inbound surfaces re-pointed, both
+> sweep forms at zero) and **shipped the agent front door** — `sdp q` ruled on the record as
+> `spec:decisions.agent-front-door` (MD-22), built as one evaluation sink over the exported
+> reader, with the runnable recipe catalog and the skill on-ramp beside it. The consumer family's
+> two-sweep refusal class ended on **six whole-pipeline bound points**, promoting all three
+> parents. The readiness sweep promoted nothing further and named all 35 refusals; the optional
+> measured-context refresh was refused with its numbers on the record. Corpus closes at
+> **115 Specs · 1 Pack · 86 anchors → 202 nodes · 397 edges · `ready: 80 / defined: 35`,
+> 0 errors / 0 warnings**. The pre-close adversarial review is archived at
+> `reviews/11-self-hosting-phase-5-pre-close-review.md` with every finding in a terminal
+> disposition. This is plan 22, the highest primary-numbered plan; the prior ✅ EXECUTED ground is
+> plan 21 (the phase-4 close, merged at PR #13). Build state lives in **`plans/`** — read the highest
 > **primary-numbered** plan's status header, plus any **active subplans it (or its parent
 > family) explicitly designates as current**; ignore unnumbered files and letter-suffixed plans
 > only when no primary/active plan designates them. If that plan is DRAFTED, also read the
@@ -264,12 +275,12 @@ standing reason (no write surface this phase), and the refusal is recorded, not 
 
 | Item | Fires when | State |
 |---|---|---|
-| verb-wall creep | any second query verb (or reader accessor) is proposed without clearing ruling 16's bar | unfired |
-| recipe rot | a recipe body stops running as written (ruling 17's check is the alarm) | unfired — the alarm now exists: `test/recipes.test.ts` executes every fenced body in `docs/agent-surface/recipes.md` through the real front-door seam on each gate run, so a body that stops running is a red leg rather than a doc nobody re-read. The pairing assertion extends the alarm to omission: a documented recipe with no body fails the same suite |
-| skill anecdote drift | skill text restates or contradicts law a Spec carries instead of citing it | unfired — the **anti-anecdote rule** shipped in `.claude/skills/sdp-agent-surface/SKILL.md`: the derived graph outranks the skill and any cached session summary, and on disagreement the skill is named the bug. The skill cites `spec:consumers.agent-surface` · `spec:decisions.agent-front-door` and the glossary rather than restating them. The item still fires if skill text ever states law in its own words |
-| eval trust boundary | the front door's input handling grows past the recorded local-tool trust stance | unfired — the stance is now recorded (ruling 21, §5b and `spec:decisions.agent-front-door`): local developer tool, no sandbox claimed, root resolved to a canonical validated directory at the edge. The item fires if the sink ever takes input from a non-operator source or starts implying containment |
-| oracle thrash | the corpus wave forces cross-family edits in the split oracle (per-family modules should localize) | unfired — S4 added six Specs and six anchors and touched exactly one per-family module (`consumers.ts`) plus the three modules that are cross-family **by construction** (`anchors.ts` · `declared-relations.ts` · `pack-members.ts`, each a single corpus-wide list). No sibling family module moved. The related risk the wave was warned about — **bound literals freezing corpus state** — was avoided by design: every literal in the six points names the S4 fixture corpus (`spec:orders.*` · `impl:orders.create-order` · `src/create-order.ts`), whose contents this repository controls and no corpus wave touches, so a future Spec, anchor, or readiness change cannot rewrite a bound point. The only self-hosting counts these points freeze are the ones the corpus oracle already owns |
-| table sugar / single-literal vocabulary (carried) | real material forces the ruled-out forms | unfired |
+| verb-wall creep | any second query verb (or reader accessor) is proposed without clearing ruling 16's bar | **unfired — terminal for this phase.** Exactly one verb was added, the one S2 ruled, and it mints no query vocabulary. S6 re-verified the frozen join set against the built product: `findByConcept` · `byFile` · `blastRadius`, with `bySymbol` absent and *asserted* absent by a bound point. No accessor was added. The item carries forward unchanged |
+| recipe rot | a recipe body stops running as written (ruling 17's check is the alarm) | unfired — the alarm now exists: `test/recipes.test.ts` executes every fenced body in `docs/agent-surface/recipes.md` through the real front-door seam on each gate run, so a body that stops running is a red leg rather than a doc nobody re-read. The pairing assertion extends the alarm to omission: a documented recipe with no body fails the same suite. **Terminal at S6, with the alarm widened.** The review mutation-probed the check three ways it had not been probed: two engine lies that make a recipe body's law false without touching the recipe (a derived rung off the ladder; at-risk reasons losing their claim) were both caught, and a heading with no body reddened the pairing assertion and only it. It also found the alarm's blind spot — the check ran the *bodies* but never the *invocations*, and the documented command lines did not run as written at this root (review F-1). The check now also pins every documented `sdp q '…'` invocation to the same exclusion set it derives with |
+| skill anecdote drift | skill text restates or contradicts law a Spec carries instead of citing it | unfired — the **anti-anecdote rule** shipped in `.claude/skills/sdp-agent-surface/SKILL.md`: the derived graph outranks the skill and any cached session summary, and on disagreement the skill is named the bug. The skill cites `spec:consumers.agent-surface` · `spec:decisions.agent-front-door` and the glossary rather than restating them. The item still fires if skill text ever states law in its own words. **Terminal at S6:** the review read the skill and the catalog word-for-word against the tree and found no restated law and no false claim about the model — the one thing false in them was their own invocation lines (F-1), now fixed and machine-checked |
+| eval trust boundary | the front door's input handling grows past the recorded local-tool trust stance | unfired — the stance is now recorded (ruling 21, §5b and `spec:decisions.agent-front-door`): local developer tool, no sandbox claimed, root resolved to a canonical validated directory at the edge. The item fires if the sink ever takes input from a non-operator source or starts implying containment. **Terminal at S6, and probed rather than assumed.** Thirty-one adversarial probes against the built CLI confirmed the stance is exactly what the records claim and nothing stronger: the tool writes nothing anywhere (`git status` byte-identical across an invocation, no `generated/` under the root), while a body *can* write — which is what "no sandbox is claimed and none exists" means. Roots outside the repository derive without complaint, because no containment was ever claimed. The boundary's identity half was the one thing unpinned (review F-4) and now has a test |
+| oracle thrash | the corpus wave forces cross-family edits in the split oracle (per-family modules should localize) | unfired — S4 added six Specs and six anchors and touched exactly one per-family module (`consumers.ts`) plus the three modules that are cross-family **by construction** (`anchors.ts` · `declared-relations.ts` · `pack-members.ts`, each a single corpus-wide list). No sibling family module moved. The related risk the wave was warned about — **bound literals freezing corpus state** — was avoided by design: every literal in the six points names the S4 fixture corpus (`spec:orders.*` · `impl:orders.create-order` · `src/create-order.ts`), whose contents this repository controls and no corpus wave touches, so a future Spec, anchor, or readiness change cannot rewrite a bound point. The only self-hosting counts these points freeze are the ones the corpus oracle already owns. **Terminal at S6:** the review's independent mutation matrix confirmed the localization — every one of the eleven engine mutations reddened suites within the family it targeted, and none forced a cross-family oracle edit |
+| table sugar / single-literal vocabulary (carried) | real material forces the ruled-out forms | **unfired — terminal for this phase.** No new material forced either ruled-out form; the item carries forward |
 
 ## §4 Docket ledger (carried in from plan 21)
 
@@ -289,6 +300,19 @@ opening carrier files itself to answer faster or fresher — is refused permanen
 stated on a Spec (`spec:decisions.agent-front-door`, the read-only consequence) rather than
 carried as a docket question. The committed `generated/graph.json` stays a published artifact for
 downstream consumers and the determinism gate, never the agent path's source of truth.
+
+### Terminal dispositions at the close
+
+| Row | Disposition |
+|---|---|
+| the no-reparse read seam | **CLOSED at S2**, with the reason above; the read-only consequence now stands on `spec:decisions.agent-front-door` rather than as a docket question. S6 confirmed the code: the sink consumes the extractor's derived output in memory and opens no carrier |
+| the Markdown Pack syntax ruling | **carried.** Packs remain TS by the canonical-default carrier rule; this phase authored no Pack material that forces the question |
+| the gen-1 `.feature` adapter | **carried.** Named out of scope by §(c) and untouched; the lineage-is-evidence rule (ruling 18) kept gen-1 text out of every product surface this phase |
+| temporal-guard token assembly | **carried.** `check:temporal` ran green on every session's gate; no new material stressed the assembly |
+| the editor-association gap | **carried.** No editor surface landed this phase |
+| control-character latitude | **carried.** The Markdown grammar was not touched |
+| the separate example-id namespace | **carried.** The six new `example` Specs used the standing `parent.child` id form; nothing forced the question |
+| **new at S6 — the audit script outside the gate** | **carried, with reason.** `check-self-hosting-gates.mjs` is not a leg of `npm run check`, which is why a stale `AGENTS.md` stamp went undetected from the phase-4 close to this review (F-5/F-6). Adding a thirteenth gate leg, or re-pointing the script's phase-1 needle, is a gate change no ruling in this phase authorizes. Named for the successor |
 
 ## §5 Acceptance criteria
 
@@ -599,7 +623,55 @@ than a discovery.
 
 ## §6 Done-record
 
-*(written at close)*
+**Terminal. Six sessions, twelve commits, `main...HEAD` at 65 files / +3746 / −236 before the
+close series.** The phase did the two things plan 21 named as next work, in order, and then earned
+its promotions on real seams rather than narrowed ones.
+
+**What landed.** `docs/concept/05-validation-and-honesty.md` is **dissolved and deleted** — its two
+remaining uncarried deferrals carried first as one clause each on
+`spec:validation.warn-level-signals` and `spec:validation.readiness-floor` (both stating the
+reservation *and* its actual status, the `doc:`-reservation precedent), then the document removed
+with **24 inbound surfaces re-pointed in the same change** and both sweep forms plus a widened
+residue sweep at **zero hits**. The surviving concept docs are `00` · `01` · `04` · `06` · `07`.
+The **agent front door** was ruled before it was built (ruling 15 honoured): candidate (C) — two
+entrances over one seam — carried as `spec:decisions.agent-front-door`, registered **MD-22**, with
+freshness ruled derive-in-process and the local-developer-tool trust stance recorded rather than
+implied. `sdp q` shipped in `src/cli/q-command.ts`, adding **one verb and zero query vocabulary**.
+The on-ramp shipped beside it: the demand map as four clauses on `spec:consumers.agent-surface`,
+eight runnable recipes at `docs/agent-surface/recipes.md` under a machine check that executes every
+body through the production seam on shape-level invariants, and the skill at
+`.claude/skills/sdp-agent-surface/SKILL.md` (a repository convention this phase set). Six
+**whole-pipeline bound points** over one materialized extraction root ended the consumer family's
+two-sweep refusal class and promoted all three parents to `ready`.
+
+**What was refused, and recorded as refused.** Two S1 bound points (a deferral has no executable
+seam). `spec:consumers.edit-model` again, on its own stated fourth rule — this phase landed no
+write surface. All **35** `defined` Specs at the S5 sweep, because not one carries `has-verifier`
+and no verifier was invented to enable a promotion. And the optional measured-context refresh: a
+two-arm trial was constructed, run, and **refused** with its numbers recorded as design input
+rather than as evidence of a ratio.
+
+**Close state.** `115 specs · 1 packs · 86 anchors → 202 nodes · 397 edges (0 errors, 0 warnings)`,
+`ready: 80 / defined: 35`. Full twelve-leg `npm run check` green, plus the clean-clone proof.
+
+### §5 acceptance criteria, graded
+
+| # | Criterion | Grade | Evidence |
+|---|---|---|---|
+| 1 | `05` dispositioned on its audit | **met** | Fully carried on the re-audit over the regenerated Design Review, then deleted with the full re-pointing (§5a). Both sweep forms **0 hits**, widened residue **0**, independently re-run at S6; the two judged-lawful use–mentions are exactly the two recorded. S6 spot-checked **14** carrying surfaces on an independently regenerated view — no stretched verdict — and proved the re-pointed `check-carrier-truth.mjs` pin still bites under four separate mutations |
+| 2 | The front door ruled, then built | **met** | The ruling landed at `343ff10`, the build at `b09bffa` — decision before implementation, on the record with the three-part test worked (§5b). S6 ran **31 adversarial probes** against the built CLI: malformed bodies, undefined/cyclic/huge/non-serializable returns, empty-stdin (no hang), TTY refusal, off-root and hostile `--root`, `--exclude` abuse, and the write probe. Every behaviour matches the ruled contract; diagnostics flow through `formatFinding` only |
+| 3 | The on-ramp exists and is checked | **met after remediation** | The demand map is on the Spec; eight recipes run as written under a shape-only check (S6 mutation-probed the check three fresh ways — two engine lies and one omission — all caught). The gap S6 found was that the *invocations* were unchecked and did not run at this root (review **F-1**); both surfaces are fixed and the check now pins them |
+| 4 | The consumer family earns its promotions | **met** | Three parents and six children carry `has-verifier` in the regenerated graph; **0 errors / 0 warnings**, so zero `honesty/gaps`. Refusals named: `edit-model` on its own rule, the 22 decisions on the standing class reason |
+| 5 | No surface creep | **met** | The frozen join set is unchanged and `bySymbol` is *asserted* absent by a bound point. Exactly one verb was added — the one S2 ruled — and it mints no query vocabulary |
+| 6 | The gate holds throughout | **met** | Green twelve-leg at every blessed commit (§9); the close runs the full chain plus the clean-clone proof at the tip |
+| 7 | Records continue | **met** | §3 watch items terminal, §4 docket dispositioned or carried with reasons (the no-reparse row closed at S2), §7/§8/§9 terminal, and `reviews/11-self-hosting-phase-5-pre-close-review.md` archived with **11 findings, all terminal** — 5 fixed, 3 carried with reasons, 1 declined with reason, 2 informational |
+
+### The adversarial review, in one line
+
+Eleven engine mutations plus three corpus/recipe mutations and 31 CLI probes; five of six bound
+points discriminate to exactly one point; **every** headline number reproduced from scratch at all
+six blessed commits with **zero corrections**; four defects fixed on the branch, each re-verified
+to kill the mutation that found it.
 
 ## §7 Conversion / corpus ledger
 
@@ -641,7 +713,7 @@ and three parents promote, moving the distribution to **`ready: 80 / defined: 35
 | `spec:consumers.design-review` | `defined` → **`ready`** | Floor: `refines` → `spec:consumers.projections-model` at `defined`; anchors resolve. Verifier: the pure-projection child. Content enriched with the graph-only page-identity clause (the byte-identical guarantee the renderer's header already claimed but the Spec did not state) and the realizing entrypoint |
 | the six new `example` children | authored at **`ready`** | Each binds a complete point in its parent's space (every used slot bound, so the concreteness law clears `defined`), declares `refines` + `verifies` at a `ready` parent, and carries its own resolving test anchor — `has-verifier` on the graph, not on assertion |
 | `spec:consumers.edit-model` | **refuses again**, recorded not regretted | Its own fourth rule is the reason and has not changed: *"No single realizing entrypoint exists for intent composition; this defined behavior records design intent and has no code anchor or verifier."* Phase 5 lands no write surface (scope, §c), so there is nothing new to bind; a point here would assert an absence and the mutation-probe discipline would have nothing to turn red |
-| `spec:consumers.projections-model` | untouched at `defined` | Not this wave's target; it is the family's `model` parent and the S5 sweep owns its disposition. It cleared the dependency clause for all three promotions as it stands, so nothing was promoted to unblock anything |
+| `spec:consumers.projections-model` | untouched at `defined` | Not this wave's target; it is the family's `model` parent and the S5 sweep owns its disposition. It cleared the dependency clause as it stands — directly for the two parents that `refines` it (`agent-surface` · `design-review`) and transitively behind `agent-surface` for `reader` — so nothing was promoted to unblock anything (wording sharpened at S6; the phase-4 phrasing said "all three" of a relation that is direct for two) |
 
 **S5 — the readiness sweep.** Every one of the **35** Specs standing at `defined` when S5 opened,
 dispositioned per-Spec under ruling 5. **Zero promotions, 35 named refusals.** The distribution
@@ -722,7 +794,7 @@ ledger is git process evidence, never graph content.
 | S3 | demand map · verified recipes · the skill | orchestrator-verified green gate | **done** — the demand map authored as four clauses on `spec:consumers.agent-surface` with the oracle transcribed; `docs/agent-surface/recipes.md` landed with eight runnable bodies and `test/recipes.test.ts` executing every one through the production `sdp q` seam on shape-level invariants (mutation-probed three ways); the skill on-ramp landed at `.claude/skills/sdp-agent-surface/SKILL.md`, setting this repo's skill convention. `docs/concept/06` §3 picked up the demand map and the catalog pointer in the same change (drift discipline). Corpus unmoved at 109 Specs · 1 Pack · 80 anchors → 190 nodes · 373 edges, `ready: 71 / defined: 38`, 0 errors / 0 warnings; full twelve-leg `npm run check` green |
 | S4 | whole-pipeline bound points; consumer-family promotions | orchestrator-verified green gate | **done** — six bound points over one materialized whole-pipeline root (§7), each mutation-probed before recording and each probe leaving `src/` clean; all three consumer parents promoted to `ready` with `spec:consumers.edit-model`'s standing refusal recorded (§8). The new bound suite `test/self-hosting-consumers.test.ts` entered through the shared `contract-dependent-suites.mjs` row and both surfaces followed — clean-room verified with the contracts tree set aside: `npm run lint` exits 0, and `node ./vitest-test.mjs test/self-hosting-consumers.test.ts` refuses fast with *"Generated contracts required by the selected test suite are missing. Run `npm run build && npm run generate:self-hosting` first."* Corpus moves to 115 Specs · 1 Pack · 86 anchors → 202 nodes · 397 edges, `ready: 80 / defined: 35`, 0 errors / 0 warnings; full twelve-leg `npm run check` green |
 | S5 | readiness sweep; `06`/`07` re-grades; optional measured-context refresh | orchestrator-verified green gate over the regenerated Design Review | **done** — the sweep dispositioned all **35** `defined` Specs with **zero promotions and 35 named refusals** (§8): none carries `has-verifier` in the regenerated graph, so every promotion would have added an `honesty/gaps` warning, and no verifier was invented to enable one. Both charter checks answered on the record — `spec:decisions.agent-front-door` landed and holds at `defined` as the decision class's 22nd member, and no Spec whose verifier landed in S2–S4 was left behind (S2's and S3's suites are engine and corpus checks that author no points; S4's six all landed on parents that promoted in the same wave). Two refusal reasons **moved**: `spec:consumers.projections-model` (its family's points are now one hop away, not two — refusal upheld on direct-only linkage, and its evidence posture re-judged against the S4 worlds and found unchanged) and `spec:extraction.build-pipeline` (`sdp q` gives its rule 6 a real world for the first time — recorded as the successor's strongest candidate, not converted, because this session authors no points). The `06`/`07` re-grades ran to the standing template (§5c): **`06` closes one gap** (`bySymbol`'s frozen-shape-but-aspirational status, carried by S3's deferral clause and bound by `demand-map-entries`), moves the second-caller bar off `00`/`07` onto a Spec, and grades this phase's two new §3 paragraphs fully carried — five gaps stand, `06` **stays**; **`07` moves no row** and its three gaps stand, `07` **stays**. Neither audit surprised toward fully-carried, so ruling 14 did not run. The optional measured-context refresh was **refused with the attempt and its numbers recorded** (§7) rather than manufactured. Records-only session — no product surface changed, graph numbers unmoved at 115/1/86 · 202 · 397 · `ready` 80 / `defined` 35, 0 errors / 0 warnings; full twelve-leg `npm run check` green |
-| S6 | adversarial review, remediation, full close, done-record, PR | full chain + clean-clone; review archived | planned |
+| S6 | adversarial review, remediation, full close, done-record, PR | full chain + clean-clone; review archived | **done** — the review is archived at `reviews/11-self-hosting-phase-5-pre-close-review.md`: an independently designed matrix of **eleven engine mutations** (none replaying a probe §7 recorded) run against the whole 630-test tree so discrimination was measured rather than assumed, plus three mutations aimed at the recipe check and **31 adversarial probes against the built CLI**. Five of the six S4 points discriminate to exactly one point; the two overlaps are the corpus agreeing with itself. Every headline number was recomputed from scratch at all six blessed commits by re-deriving the graph — **zero corrections**. **Eleven findings, all terminal:** five fixed (the on-ramp's documented invocations did not run as written at this root; three ruled boundary behaviours — a warning-level extraction finding gating the body, terminal detection by stream property rather than descriptor, and `--exclude` bypassing the strict contract — each survived mutation with the whole tree green and now has a test that kills it; the stale `AGENTS.md` stamp that had left `check-self-hosting-gates.mjs` failing since the phase-4 close; plus two records repairs), three carried with reasons, one declined with a reason, two informational. Full twelve-leg `npm run check` green at the close tip, and the clean-clone proof reproduced both trees end to end |
 
 Owner ratification of every gate above happens at the phase PR review; no live owner
 acceptance occurs during execution.
