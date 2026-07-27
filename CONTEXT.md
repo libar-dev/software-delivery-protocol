@@ -103,7 +103,7 @@ alarm**.
 | **`nodeType` / `specKind`** | structural class (`Primitive`/`Pack`/`Anchor`/`CodeNode`/…) vs the truth-category on `Primitive` nodes — kept split so they never collide | a single `kind` field |
 | **git is the event log** | history and prior states live in git; the graph carries only current state | audit tables / lifecycle bookkeeping in the graph |
 
-## Validation & honesty  (→ `05`)
+## Validation & honesty  (→ `spec:validation.two-check-families`, `spec:validation.readiness-floor`)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|

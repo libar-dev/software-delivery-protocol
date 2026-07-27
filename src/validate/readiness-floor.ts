@@ -10,7 +10,8 @@ import { hasUnboundSlot } from "../notation/slots.js";
 import type { GraphIndex } from "./graph-index.js";
 
 /**
- * The readiness floor — the single source of truth (MD-13), mirroring `05` §3 row-for-row:
+ * The readiness floor — the single source of truth (MD-13), mirroring `spec:validation.readiness-floor`
+ * and `spec:validation.kind-evidence` clause-for-clause:
  * kind-blind structural clauses (`readinessFloors`) plus one kind-conditional evidence clause read
  * from the per-kind evidence table (`kindEvidence`, MD-12) — `scoped` requires the kind's natural
  * evidence *present* (prose acceptable), `defined` requires it *complete* where the kind defines a
@@ -305,7 +306,7 @@ function anchorsResolve(node: PrimitiveNode, index: GraphIndex): boolean {
   });
 }
 
-/* ----- the per-kind evidence table (MD-12; mirrors `05` §3) ----- */
+/* ----- the per-kind evidence table (MD-12; mirrors `spec:validation.kind-evidence`) ----- */
 
 const behaviorFamilyEvidence: KindEvidenceRow = {
   scoped: {
@@ -394,7 +395,7 @@ const kindEvidencePresent: ReadinessPredicate = (node, index) =>
 const kindEvidenceComplete: ReadinessPredicate = (node, index) =>
   evidenceCell(node.specKind, "defined").predicate(node, index);
 
-/* ----- the kind-blind structural clauses (mirrors `05` §3) ----- */
+/* ----- the kind-blind structural clauses (mirrors `spec:validation.readiness-floor`) ----- */
 
 export const readinessFloors = {
   idea: {
@@ -519,7 +520,7 @@ export function evaluateReadinessFloor(
   index: GraphIndex,
 ): readonly ReadinessFloorFailure[] {
   // Foreign graph data can carry unratified strings in the typed descriptor slots; those are the
-  // descriptor conformance errors (`05` §2 check 3 — validateGraph fails closed), and the
+  // descriptor conformance errors (`spec:validation.claim-separation` — validateGraph fails closed), and the
   // evaluator stays total: over an unratified kind or readiness it evaluates no clauses rather
   // than dereferencing the evidence table into a throw or guessing a rung.
   if (!ratifiedKinds.has(node.specKind) || !ratifiedReadiness.has(node.readiness)) {
@@ -543,7 +544,7 @@ export function evaluateReadinessFloor(
 }
 
 /**
- * Derived readiness (`05` §3): the highest rung whose cumulative clauses all pass — what the spec
+ * Derived readiness (`spec:validation.readiness-floor`): the highest rung whose cumulative clauses all pass — what the spec
  * structurally *is*, beside what the author *states*. Same table, same predicates, no second
  * floor (MD-13); the stated rung is never consulted. Returns `undefined` when even the `idea`
  * clauses fail. Total over foreign data: an unratified `specKind` cannot dereference the evidence

@@ -27,7 +27,7 @@ export interface ValidationReport {
   readonly validatorId: string;
   /**
    * One individual validator belongs to exactly one family. An aggregate report that composes both
-   * families omits this — the two families are load-bearing (`05` §1), so an aggregate never
+   * families omits this — the two families are load-bearing (`spec:validation.two-check-families`), so an aggregate never
    * mislabels itself with a single one; each finding carries its own.
    */
   readonly family?: ValidatorFamily;

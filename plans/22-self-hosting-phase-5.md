@@ -301,6 +301,133 @@ namespace. Rows close only with reasons in the done-record.
 7. **Records continue**: ledgers terminal; docket rows dispositioned or carried with reasons;
    the adversarial review archived with every finding in a terminal disposition before close.
 
+## §5a The S1 `05` re-audit, deletion, and reference sweep
+
+Run to the standing per-doc template (plan 20 §7; plan 21 §5a), judged over the **regenerated**
+Design Review — `npm run build && npm run generate:self-hosting`, then the carrying Specs'
+`generated/design-review/spec/*.md` pages read directly, because the criterion is what the graph
+carries, not what a raw spec file says. Governing criterion unchanged (the dissolution decision,
+`spec:decisions.concept-docs-dissolve`): a document may be deleted only once its semantic contract
+is **fully** carried by Specs and lean registries; **one gap blocks deletion**; an
+`expository-only` row never blocks, provided its law is carried elsewhere — a Spec, a lean
+registry, a pinned code+test surface, or a **surviving** document, named in the row.
+
+**Terminal disposition: `05-validation-and-honesty.md` — fully carried · deleted.**
+
+### The re-audit
+
+The phase-4 table's 32 carried / expository-only rows were re-judged and **all stand as graded**:
+every carrying surface named in them was re-verified present in the regenerated graph (32 Spec ids
+and point children resolved; the surviving documents `00`, `01`, `04`, `06`, `07` all survive), and
+nothing in the corpus moved between the phase-4 close and this session except the two clauses
+below. The two blocking rows flip:
+
+| Doc section | Phase-4 verdict | Carrying surface now | Re-graded |
+|---|---|---|---|
+| §2 check 8 parenthetical — a per-team severity override is designed-for, deferred | **gap 13** | `spec:validation.warn-level-signals`, new clause: *"The severity these informative signals carry is fixed by the Protocol and no validator reads a per-team setting, so a per-team severity override is a designed-for deferral rather than a landed capability."* Visible on the regenerated page `generated/design-review/spec/validation.warn-level-signals.md` | **carried** |
+| §3 opening ¶ tail — the thresholds are a Representation and a team-overridable floor config is designed-for, deferred | **gap 14** | `spec:validation.readiness-floor`, new clause: *"The floor is the mechanism while the specific clause thresholds are one chosen representation, so a team-overridable floor configuration is a designed-for deferral rather than a landed capability: no validator reads a per-team floor setting, and the shipped clause table is the only floor any Spec is checked against."* Visible on `generated/design-review/spec/validation.readiness-floor.md` | **carried** |
+
+Both clauses follow the `doc:`-reservation precedent (`spec:model.stable-ids`): they state the
+reservation **and** its actual status, so the Spec never reads as if the capability shipped. Both
+were authored in the prior commit, per the dissolution decision's rule that the carrying change is
+never bundled with the deletion.
+
+**Rows that needed judgment.** One, and it is a correction to the inventory rather than to the
+audit: plan 21's deletion-cost inventory paired the registry re-points as "MD-13 and MD-9 → 
+`spec:validation.readiness-floor` / `spec:validation.kind-evidence`". Read against the actual
+text, MD-9's `05` §3 mirror is the **`defined`-rung clause that reads a blocking open question**,
+which `spec:validation.readiness-floor` states and `spec:validation.kind-evidence` does not
+mention at all. MD-9 was therefore re-pointed at `spec:validation.readiness-floor` (with the
+clause named in the row), not at `kind-evidence`. Following the inventory literally would have
+minted a citation to a Spec that does not carry the law.
+
+### The deletion and the re-pointing (same change)
+
+`docs/concept/05-validation-and-honesty.md` deleted; **24 inbound surfaces re-pointed**, verified
+against the tree rather than trusted from the inventory:
+
+| Surface | Re-point |
+|---|---|
+| `CONTEXT.md` | the section header `## Validation & honesty  (→ `05`)` → `(→ `spec:validation.two-check-families`, `spec:validation.readiness-floor`)`, following how the dissolved core-model and one-graph pointers were re-pointed at phase 3. No other hit in the file |
+| `AGENTS.md` | the status header's "`05` stays, two clauses short" replaced by the dissolution statement; the "Where to look" concept row now names validation & honesty among the dissolved families with its carrying Specs, beside the model and extraction families |
+| `docs/concept/DECISIONS.md` | MD-13 → `spec:validation.readiness-floor` (beside the surviving `src/validate/readiness-floor.ts` mirror); MD-9 → `spec:validation.readiness-floor`, naming the `defined` clause (see the judgment note above) |
+| `docs/concept/README.md` | the `05` index row removed (the `03` precedent); the "Building the MVP" reading path re-pointed at the validation Specs |
+| `docs/concept/01` | the Representation table's validation-layer row → `spec:validation.two-check-families` |
+| `docs/concept/06` | intent composition's gate citation → `spec:validation.two-check-families`; the Design Review readiness paragraph → `spec:validation.readiness-floor`, with the `00`/`05` guardrail pair rewritten as `00` + `spec:validation.two-check-families` |
+| `docs/concept/07` | §4 banner-timing row → `spec:consumers.derived-readiness-banner` + `spec:validation.readiness-floor`; §6 ③ → `spec:validation.readiness-floor` |
+| `jtbd-stories/01` | two inline floor citations → `spec:validation.readiness-floor`; JS-A5's reference → `spec:validation.pack-coherence` |
+| `jtbd-stories/04` | JS-D1's reference → `spec:validation.two-check-families` + `spec:validation.readiness-floor`; JS-D2's → `spec:validation.readiness-floor` + `spec:validation.kind-evidence` |
+| `jtbd-stories/05` | JS-E4's reference and two inline floor citations → `spec:validation.readiness-floor` |
+| `jtbd-stories/07` | the trace story's reference → `spec:validation.verification-linkage`; the coverage story's → `spec:validation.warn-level-signals` |
+| `examples/checkout-v1/README.md` | the concept-map row → the three validation Specs |
+| `src/validate/validators.ts` | 13 citations: the module header → `spec:validation.two-check-families`; the deferred-families note → `00` §4 / `07` §3; each per-check banner → its carrying Spec (`referential-integrity` · `duplicate-ids` · `claim-separation` ×2 · `verification-linkage` · `pack-coherence` · `warn-level-signals` ×2 · `authored-honesty` ×2 · `readiness-floor` + `kind-evidence`). Every comment's law statement kept intact |
+| `src/validate/readiness-floor.ts` | 5 citations: the header's "mirroring `05` §3 row-for-row" → "mirroring `spec:validation.readiness-floor` and `spec:validation.kind-evidence` clause-for-clause"; the two table banners; the fail-closed note → `spec:validation.claim-separation`; the derived-readiness header → `spec:validation.readiness-floor` |
+| `src/validate/contracts.ts` · `src/reader/reader.ts` · `src/projections/design-review.ts` · `src/model/sections.ts` · `src/extract/reify.ts` | one citation each → `spec:validation.two-check-families` · `spec:validation.readiness-floor` · `spec:consumers.derived-readiness-banner` · `spec:validation.kind-evidence` · `spec:validation.authored-honesty` |
+| `test/readiness.test.ts` · `test/extract.test.ts` · `test/fixtures/graph-validator.fixtures.ts` | the three citations → `spec:validation.readiness-floor` and `spec:validation.validator-self-testing` (×2) |
+| `check-carrier-truth.mjs` | the two pinned quotes — see below |
+
+**The two pinned quotes, handled differently and deliberately.** The Family A *claim* pin ("the one
+validation path keeps its law with per-carrier authoring-time feedback") was **re-pointed** at
+`specs/decisions/one-validation-path.sdp.md`, with its two `present` needles re-derived from the
+Spec's own words (the decision line and the consequence line, which is the per-carrier half stated
+as "typed authoring feedback and extraction findings remain distinct from graph validation"). The
+`absent` needle is kept unchanged, so the obsolete sole-TS phrasing cannot drift onto the carrier.
+Family A reads any path directly, so the pin now enforces the content on a living surface — the
+`check-prose-schema.mjs` precedent.
+
+The Family C *classification* rule (pinning "the type system's job in the TS carrier") was
+**retired with the document, not re-pointed** — the one departure from the brief's expectation,
+with reasons. Family C's contract is "every retained TypeScript mention **inside the scanned
+concept/JTBD corpus** is classified by an explicit rule", and the scan corpus is enumerated from
+`docs/concept/*.md`, `jtbd-stories/*.md`, and `CONTEXT.md`. A rule aimed at a `specs/` file would
+match no scanned line and fail as a *stale audit entry*; widening the scan to `specs/` to
+accommodate it would re-scope an unrelated audit over 108 Spec files and surface a wave of
+unclassified mentions. The mention itself no longer exists anywhere, so there is nothing left to
+classify — precisely the phase-3 `03` precedent for this script ("5 classification rules retired
+with the doc"). The law the rule guarded survives on the Family A pin above. `node
+check-carrier-truth.mjs` **passes**: *29 repaired claims hold; 16 corpus files scanned; 47 retained
+mentions classified.*
+
+### The two-form reference sweep — zero hits
+
+Run from the repo root, excluding `plans/`, `reviews/`, `explorations/`, `node_modules`, `.git`,
+`generated/`, `dist/`, `coverage/` (historical references inside `plans/` and `reviews/` stay
+untouched — git is the event log).
+
+```sh
+# form 1 — path and backtick forms
+grep -rnE 'docs/concept/05|`05`|05-validation-and-honesty' . \
+  --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=plans --exclude-dir=reviews \
+  --exclude-dir=explorations --exclude-dir=generated --exclude-dir=dist --exclude-dir=coverage
+# → 0 hits
+
+# form 2 — the bare citation form
+grep -rn '05 §' . \
+  --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=plans --exclude-dir=reviews \
+  --exclude-dir=explorations --exclude-dir=generated --exclude-dir=dist --exclude-dir=coverage
+# → 0 hits
+
+# widened residue check — any bare `05` token at word boundaries
+grep -rnE '(^|[^0-9A-Za-z._/-])05([^0-9A-Za-z._-]|$)' . \
+  --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=plans --exclude-dir=reviews \
+  --exclude-dir=explorations --exclude-dir=generated --exclude-dir=dist --exclude-dir=coverage \
+  --include='*.md' --include='*.ts' --include='*.mjs' --include='*.json' --include='*.yml'
+# → 0 hits
+```
+
+**Judged-lawful residue: 2 hits, both use–mention, neither a reference.** A fourth sweep on the
+bare string `validation-and-honesty` returns two lines that name the dissolved document in prose
+while pointing at nothing: the `AGENTS.md` status sentence recording the dissolution, and the
+`check-carrier-truth.mjs` comment explaining why its pin moved. Both were deliberately phrased
+without the `05` token so neither sweep form can hit them, and both would be false positives to
+"repair" — a deletion record has to be able to name what it deleted.
+
+### Close state
+
+`108 specs · 1 packs · 80 anchors → 189 nodes · 371 edges (0 errors, 0 warnings)`, `ready: 71 /
+defined: 37` — identical to the opening state, as expected: two clauses on existing Specs create no
+nodes and no edges. Full twelve-leg `npm run check` green.
+
 ## §6 Done-record
 
 *(written at close)*
@@ -312,8 +439,8 @@ reasons)*
 
 | Wave | Law / artifact | Carrier | Planned points | State |
 |---|---|---|---|---|
-| S1 | gap 13 — severity-override deferral | `spec:validation.warn-level-signals` (clause) | 0 (deferral, no seam) | planned |
-| S1 | gap 14 — floor-config deferral | `spec:validation.readiness-floor` (clause) | 0 (deferral, no seam) | planned |
+| S1 | gap 13 — severity-override deferral | `spec:validation.warn-level-signals` (clause) | 0 (deferral, no seam) | **done** — one Rule clause on the carrying Spec, placed before the realizing-entrypoint clause on the `doc:`-reservation precedent (`spec:model.stable-ids`): state the deferral *and* its actual status in one breath. **Point refused, with reason:** a deferral names a capability that does not exist, so there is no executable seam a bound point could resolve against — an example would assert either nothing or an absence, and the mutation-probe discipline (ruling 12) has nothing to turn red. Recording a decorative point would inflate the bound-point count without adding verification. |
+| S1 | gap 14 — floor-config deferral | `spec:validation.readiness-floor` (clause) | 0 (deferral, no seam) | **done** — one Rule clause beside the floor-table-as-truth posture (MD-13) the Spec already states, same placement discipline. **Point refused, same reason:** no per-team floor configuration exists to exercise; the clause's positive half (the shipped table is the only floor) is already carried by every existing floor point, so a new point would duplicate coverage rather than add it. |
 | S2 | the front-door ruling (+ freshness) | decision Spec or plan ruling — S2 records which | — | planned |
 | S2 | the front-door implementation | `src/cli/` on the `sdp` surface | 0 (points are S4's) | planned |
 | S3 | the demand map | `spec:consumers.agent-surface` (enrichment) | — | planned |
@@ -328,6 +455,11 @@ reasons)*
 *(maintained at S4 promotions and the S5 sweep; opening distribution `ready: 71 /
 defined: 37` over 108)*
 
+**Opening distribution confirmed at S1** against the regenerated graph: 108 `Primitive` nodes,
+`ready: 71 / defined: 37`, no other rung present. S1 moved no readiness — it enriched two
+already-`ready` Specs with one clause each, and both stayed floor-clean (the `rule` kind's
+evidence is its statement, so an added clause can only strengthen it).
+
 ## §9 Session and gate ledger
 
 Sessions execute sequentially; each closes with a green twelve-leg gate, a regenerated Design
@@ -336,7 +468,7 @@ ledger is git process evidence, never graph content.
 
 | Session | Delivers | Gate discipline | State |
 |---|---|---|---|
-| S1 | gaps 13/14 carried; the `05` audit and (expected) deletion with full re-pointing and the two-form sweep | orchestrator-verified green gate over the regenerated Design Review | planned |
+| S1 | gaps 13/14 carried; the `05` audit and (expected) deletion with full re-pointing and the two-form sweep | orchestrator-verified green gate over the regenerated Design Review | **done** — both deferrals carried as one clause each (no new Specs, both points refused with reasons, §7); the re-audit graded **fully carried** over the regenerated Design Review (§5a below); `docs/concept/05-validation-and-honesty.md` **deleted** with 24 inbound surfaces re-pointed in the same change and both sweep forms at **zero hits**. Corpus unmoved at 108 Specs · 1 Pack · 80 anchors → 189 nodes · 371 edges, `ready: 71 / defined: 37`, 0 errors / 0 warnings; full twelve-leg `npm run check` green |
 | S2 | the front-door and freshness rulings; the front-door build; the no-reparse docket disposition | orchestrator-verified green gate | planned |
 | S3 | demand map · verified recipes · the skill | orchestrator-verified green gate | planned |
 | S4 | whole-pipeline bound points; consumer-family promotions | orchestrator-verified green gate | planned |

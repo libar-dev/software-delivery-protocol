@@ -90,7 +90,7 @@ const SPEC_SECTION_NAME_SET = new Set<string>(SPEC_SECTION_NAMES);
 /**
  * Derived graph vocabulary an authored carrier must never state: the delivery facts plus the
  * graph's own node and edge fields. Hand-authoring one impersonates machine truth, so it is an
- * envelope-tier hard error — the extraction-layer twin of authoring-shape honesty (`05` §2,
+ * envelope-tier hard error — the extraction-layer twin of authoring-shape honesty (`spec:validation.authored-honesty`,
  * check 5) on the top-level authored shape, exactly as raw `relations[]` entries and foreign
  * anchor fields are on theirs. In-section content stays the honesty checks' jurisdiction: it
  * reifies through and the `honesty/authoring-shape` validator sees it in the model.

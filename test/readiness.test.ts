@@ -409,7 +409,7 @@ describe("readiness and validation contracts", () => {
     expect(floorFailuresFor(structured.id, structured)).toEqual([]);
   });
 
-  describe("derived readiness (the stated-vs-derived split, `05` §3)", () => {
+  describe("derived readiness (the stated-vs-derived split, `spec:validation.readiness-floor`)", () => {
     const parent = spec({
       id: specId("spec:orders.order-management"),
       title: "Order management",

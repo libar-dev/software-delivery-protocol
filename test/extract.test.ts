@@ -796,7 +796,8 @@ describe("Markdown carrier discovery", () => {
 
 /**
  * The anchored-layer corpora: anchor constants in `*.ts` source files, committed defused as
- * `*.ts.txt`. Each pins one outcome, should-fail / should-pass style (`05` §5).
+ * `*.ts.txt`. Each pins one outcome, should-fail / should-pass style
+ * (`spec:validation.validator-self-testing`).
  */
 const extractContractTestAnchor = specTest({
   id: testAnchorId("test:protocol.extract"),

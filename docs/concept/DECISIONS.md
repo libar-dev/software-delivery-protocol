@@ -17,11 +17,11 @@ positions and are never reused.
 | MD-5 | the protocol naming | durable | The product and protocol names remain stable. | [Spec](../../specs/decisions/protocol-naming.sdp.md) (`spec:decisions.protocol-naming`) |
 | MD-7 | binding, never liveness | durable | Anchors state bindings, never runtime truth. | [Spec](../../specs/decisions/binding-not-liveness.sdp.md) (`spec:decisions.binding-not-liveness`) |
 | MD-8 | the generic `codeAnchor` | folded | One generic binding form spans code locations. | `src/model/anchors.ts` |
-| MD-9 | the open-questions home | folds | Unsettled durable questions live on their Spec. | `src/model/sections.ts`, `05` §3 |
+| MD-9 | the open-questions home | folds | Unsettled durable questions live on their Spec. | `src/model/sections.ts`, [Spec](../../specs/validation/readiness-floor.sdp.md) (`spec:validation.readiness-floor`) — the `defined` clause that reads a blocking open question |
 | MD-10 | content-only sections | durable | Sections carry content while relations carry links. | [Spec](../../specs/decisions/content-only-sections.sdp.md) (`spec:decisions.content-only-sections`) |
 | MD-11 | the typing law | durable | Floor-read sections have closed typed shapes. | [Spec](../../specs/decisions/typing-law.sdp.md) (`spec:decisions.typing-law`) |
 | MD-12 | the kind-conditional floor | durable | Readiness evidence varies with the Spec kind. | [Spec](../../specs/decisions/kind-conditional-floor.sdp.md) (`spec:decisions.kind-conditional-floor`) |
-| MD-13 | floor-table-as-truth | folds | The floor table is its code-level source of truth. | `05` §3, `src/validate/readiness-floor.ts` |
+| MD-13 | floor-table-as-truth | folds | The floor table is its code-level source of truth. | [Spec](../../specs/validation/readiness-floor.sdp.md) (`spec:validation.readiness-floor`), `src/validate/readiness-floor.ts` |
 | MD-14 | one validation path | durable | Validation runs only through the derived graph. | [Spec](../../specs/decisions/one-validation-path.sdp.md) (`spec:decisions.one-validation-path`) |
 | MD-15 | the `.sdp.ts` extension | durable | The extension law is re-pointed, not repealed: carrier extensions identify Specs without test-glob collisions. | [Spec](../../specs/decisions/sdp-ts-extension.sdp.md) (`spec:decisions.sdp-ts-extension`) |
 | MD-16 | carried evidence | durable | Promoted evidence must carry the evidence it represents. | [Spec](../../specs/decisions/carried-evidence.sdp.md) (`spec:decisions.carried-evidence`) |

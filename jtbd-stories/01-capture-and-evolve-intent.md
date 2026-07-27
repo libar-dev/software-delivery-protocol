@@ -42,7 +42,7 @@ The job here is to get a thought into the system and let it grow without ever fo
 3. Sections can be added in any order (a constraint before an example, a design note before a rule) without ceremony, because all sections are optional on the type.
 4. Sections that are not yet known stay **absent** rather than being faked with placeholders — completeness is decided by validators, not by stub values.
 5. Every enrichment is an ordinary edit to the spec's canonical carrier (Markdown or TypeScript), reviewable as a normal git diff and committed alongside the implementation.
-6. The original intent (the "why") remains visible alongside new detail; raising readiness is a deliberate authored assertion, checked against that level's floor (`05`).
+6. The original intent (the "why") remains visible alongside new detail; raising readiness is a deliberate authored assertion, checked against that level's floor (`spec:validation.readiness-floor`).
 7. Re-running `sdp build` after enrichment yields an updated graph with the spec's new sections and readiness, with no migration step.
 
 ---
@@ -61,7 +61,7 @@ The job here is to get a thought into the system and let it grow without ever fo
 1. A parent spec can spawn child specs that explicitly declare `refines(parent)`, producing a declared edge in the graph.
 2. The parent stays a first-class node after refinement — it is retained as long as it expresses current truth, and is present-or-absent in the repo rather than carrying "superseded" ghost state.
 3. Children can sit at a finer `altitude` (e.g. a Feature refined into Stories) while sharing the parent's vocabulary and constraints; a Scenario is a low-altitude `example`-kind child that `verifies` a Story, not an altitude of its own.
-4. A child can be *more mature* than its parent without contradiction — e.g. a `defined` example, or an example *with a verifier*, under a still-`scoped` feature. (Reaching `ready` is the one exception: the `ready` floor requires the child's `refines`/`dependsOn` targets to be ≥ `defined`, so a `ready` child cannot sit under a `scoped` parent — `05`.)
+4. A child can be *more mature* than its parent without contradiction — e.g. a `defined` example, or an example *with a verifier*, under a still-`scoped` feature. (Reaching `ready` is the one exception: the `ready` floor requires the child's `refines`/`dependsOn` targets to be ≥ `defined`, so a `ready` child cannot sit under a `scoped` parent — `spec:validation.readiness-floor`.)
 5. The relationship is queryable in both directions — parent → children and child → parent — from the graph.
 6. Removing a child is an ordinary repo edit; any reference that would dangle as a result is caught by referential-integrity checks, never silently orphaned.
 7. The parent and its children can be reasoned about together as a cluster, so group-level questions (shared terms, contradictory constraints) are answerable across the whole subtree, not just per spec.
@@ -93,7 +93,7 @@ The job here is to get a thought into the system and let it grow without ever fo
 ### Group related specs into a coherent pack
 
 **Phase:** MVP
-**References:** [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`), [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md)
+**References:** [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`), [the pack-coherence spec](../specs/validation/pack-coherence.sdp.md) (`spec:validation.pack-coherence`)
 
 > **When** I'm ideating a feature initiative or a bounded slice as a cluster of related specs, **I want to** group them in a `Pack` with shared model references, **so I can** hold a large coherent group of low-detail specs and reason at the group level before drilling into any single member.
 
