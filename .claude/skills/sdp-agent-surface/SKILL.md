@@ -16,9 +16,13 @@ evaluation sink. There is no verb wall — you script the graph.
 For any corpus question, **query the graph before reading spec files**.
 
 ```sh
-sdp q 'return g.specs().length'
-sdp q 'return g.specContext("spec:consumers.reader")' --json
+sdp q 'return g.specs().length' --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+sdp q 'return g.specContext("spec:consumers.reader")' --exclude explorations --exclude examples --exclude test/fixtures/import/parity --json
 ```
+
+Those three exclusions are this repository's own and they are **required here**: the corpus carries
+deliberate duplicate-id and carrier-parity fixtures, so without them the graph does not derive and
+the sink refuses to run the body.
 
 The catalog of ready-made bodies is `docs/agent-surface/recipes.md` — build backlog, drift alarm,
 per-Spec guarantees and verifiers, blast radius, Pack review backbone, concept search, readiness
@@ -43,8 +47,8 @@ return**: return counts, ids, and decoded reasons, not whole nodes. Default outp
 `util.inspect`; `--json` is the machine form.
 
 `--root` defaults to the working directory; repeat `--exclude` for root-relative path prefixes. At
-this repository's root, mirror the project's own exclusions:
-`--exclude explorations --exclude examples --exclude test/fixtures/import/parity`.
+this repository's root the project's own three exclusions above are required, not merely tidy —
+they are the same list `npm run generate:self-hosting` passes.
 
 The graph is derived on every invocation, so a Spec you just authored is queryable immediately and
 no committed artifact answers in the graph's name. The sink writes nothing. It evaluates local

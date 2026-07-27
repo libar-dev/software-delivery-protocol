@@ -4,10 +4,17 @@ Runnable bodies for the agent front door. Each recipe below is a body you can pa
 `sdp q`, unchanged:
 
 ```sh
-sdp q '<body>'
-sdp q '<body>' --root . --exclude explorations --exclude examples
-sdp q '<body>' --json
+sdp q '<body>' --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+sdp q '<body>' --exclude explorations --exclude examples --exclude test/fixtures/import/parity --json
 ```
+
+**At this repository's root the exclusions are not optional.** The corpus carries deliberate
+duplicate-id and carrier-parity fixtures under `examples/`, `explorations/`, and
+`test/fixtures/import/parity/`; without those three exclusions the extractor reports errors, the
+graph does not derive, and the sink refuses to run the body at all. The three above are exactly the
+project's own — the same list `npm run generate:self-hosting` passes and the same list the recipe
+check derives with. Elsewhere, `--root PATH` picks the extraction root (default: the working
+directory) and `--exclude` is repeatable for root-relative path prefixes.
 
 **The contract, in one place.** The front door derives the graph in process and evaluates the body
 you supply; `return` is the output contract. Three bindings are injected:

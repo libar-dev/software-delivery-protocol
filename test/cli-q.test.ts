@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { isatty } from "node:tty";
 import { fileURLToPath } from "node:url";
 
 import { afterAll, describe, expect, it } from "vitest";
@@ -349,6 +350,76 @@ describe("sdp q — the agent front door", () => {
 
     expect(exitCode).toBe(0);
     expect(capture.readStdout()).toBe(`[ '${parentId}' ]\n`);
+  });
+
+  it("runs the body when extraction itself only warns — the warning is data, never a gate", async () => {
+    const warningRoot = materializeExtractCorpus("unrecognized-statement");
+    const capture = createCaptureOutput();
+
+    try {
+      const exitCode = await runQ(
+        ["return g.specs().map((spec) => spec.id)", "--root", warningRoot, "--json"],
+        capture,
+        terminalStdin,
+      );
+
+      // The refusal is keyed to a graph that did not derive, never to a graph that merely had
+      // something to say: a warning-level extraction finding leaves the body running.
+      expect(exitCode).toBe(0);
+      expect(JSON.parse(capture.readStdout())).toEqual(["spec:orders.recognized"]);
+      // And it still reaches the operator, through the one diagnostic currency, beside the
+      // answer rather than instead of it.
+      expect(capture.readStderr()).toContain("[warning] extract/unrecognized-statement");
+    } finally {
+      removeMaterializedCorpus(warningRoot);
+    }
+  });
+
+  it("detects a terminal from the file descriptor, never from a stream property", async () => {
+    const forged = !isatty(0);
+    const descriptor = Object.getOwnPropertyDescriptor(process.stdin, "isTTY");
+    const capture = createCaptureOutput();
+
+    // The gen-1 footgun the front-door ruling named by name: `process.stdin.isTTY` is a stream
+    // property that can be absent, stale, or — as here — simply wrong, while `isatty(0)` asks the
+    // descriptor itself. Forging the property must not move the answer. The forgery is this
+    // process's own property rather than its descriptors, and it is restored below.
+    Object.defineProperty(process.stdin, "isTTY", { value: forged, configurable: true });
+
+    try {
+      const exitCode = await runQ(["--root", corpusRoot], capture, {
+        query: { readStdin: () => "return g.specs().length" },
+      });
+
+      if (isatty(0)) {
+        expect(exitCode).toBe(1);
+        expect(capture.readStderr()).toContain("stdin is a terminal");
+      } else {
+        expect(exitCode).toBe(0);
+        expect(capture.readStdout()).toBe("2\n");
+      }
+    } finally {
+      if (descriptor === undefined) {
+        delete (process.stdin as { isTTY?: boolean }).isTTY;
+      } else {
+        Object.defineProperty(process.stdin, "isTTY", descriptor);
+      }
+    }
+  });
+
+  it("puts --exclude through the strict exclusion contract before deriving anything", async () => {
+    // The trust boundary the ruling records is identity, not containment: an exclusion path is
+    // resolved and validated at the edge, so an absolute path, a traversal, the empty string, and
+    // the root itself are refused by name rather than quietly reinterpreted.
+    for (const path of ["/etc", "../outside", "", "."]) {
+      const capture = createCaptureOutput();
+
+      expect(
+        await runQ(["return 1", "--root", corpusRoot, "--exclude", path], capture, terminalStdin),
+      ).toBe(1);
+      expect(capture.readStderr()).toContain(`invalid --exclude path "${path}"`);
+      expect(capture.readStdout()).toBe("");
+    }
   });
 
   it("writes nothing: the sink is a pure read tool", async () => {

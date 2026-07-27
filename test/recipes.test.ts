@@ -19,9 +19,16 @@ const recipesPath = "docs/agent-surface/recipes.md";
 // memoized — derived once from the repository root with the standard exclude list (the corpus-oracle
 // derivation pattern), because deriving the whole corpus once per recipe buys nothing the single
 // derivation does not already prove. Nothing here names a write path, so the suite stays pooled.
+// The project's own exclusions, stated once. Every documented `sdp q` invocation that names any
+// exclusion at this root must name all of them: without the full set the corpus reports extraction
+// errors and the sink refuses the body outright, so a shorter list in a doc is an invocation that
+// cannot run as written — the one failure mode running the bodies through an injected extraction
+// cannot see.
+const standardExcludes = ["explorations", "examples", "test/fixtures/import/parity"] as const;
+
 const derived = extract({
   root: repoRoot,
-  exclude: ["explorations", "examples", "test/fixtures/import/parity"],
+  exclude: [...standardExcludes],
 });
 
 const primitivesById = new Map(
@@ -198,6 +205,31 @@ describe("the agent-surface recipe corpus", () => {
     expect(recipes.map((recipe) => recipe.ordinal)).toEqual(
       recipes.map((_recipe, index) => index + 1),
     );
+  });
+
+  // Given: the on-ramp surfaces that document how to invoke the sink at this root. When: their
+  // `sdp q` command lines are read. Then: each names the project's whole exclusion set, because a
+  // partial set does not derive here and the documented command would fail as written.
+  it("documents the invocation with the same exclusions the check derives with", () => {
+    const onRampSources = [recipesPath, ".claude/skills/sdp-agent-surface/SKILL.md"];
+
+    for (const source of onRampSources) {
+      // A concrete invocation is one that carries a quoted body; the bare `sdp q [...]` usage
+      // grammar states the option shapes rather than a command to run, so it is not one.
+      const commandLines = readFileSync(join(repoRoot, source), "utf8")
+        .split("\n")
+        .filter((line) => line.includes("sdp q '"));
+
+      expect({ source, documented: commandLines.length > 0 }).toEqual({ source, documented: true });
+
+      for (const line of commandLines) {
+        expect({
+          source,
+          line,
+          names: standardExcludes.filter((path) => line.includes(`--exclude ${path}`)).length,
+        }).toEqual({ source, line, names: standardExcludes.length });
+      }
+    }
   });
 
   it("keeps every body plain JavaScript with a return", () => {

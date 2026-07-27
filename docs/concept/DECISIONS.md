@@ -30,7 +30,7 @@ positions and are never reused.
 | MD-19 | the prose-ownership law | durable | Prose belongs to typed graph owners. | [Spec](../../specs/decisions/prose-ownership.sdp.md) (`spec:decisions.prose-ownership`) |
 | MD-20 | the strict consumer-exclusion contract | durable | Consumer exclusions are explicit root-relative paths. | [Spec](../../specs/decisions/exclusion-contract.sdp.md) (`spec:decisions.exclusion-contract`) |
 | MD-21 | the envelope-grammar ownership posture | durable | The Protocol owns the envelope contract, not the YAML library. | [Spec](../../specs/decisions/envelope-grammar-posture.sdp.md) (`spec:decisions.envelope-grammar-posture`) |
-| MD-22 | the agent front door | durable | One evaluation sink on the CLI and the exported reader are two entrances over one seam; the sink derives the graph in process on every invocation. Hard to reverse once recipes and skills script the injected binding names; surprising without context, because a verbless CLI adding an evaluation verb reads as a contradiction until one sees that a single sink adds no query vocabulary; a real trade-off, since the sink buys ergonomics with an evaluation surface and loses the body's static typing, and in-process derivation buys freshness with extraction cost on every call. | [Spec](../../specs/decisions/agent-front-door.sdp.md) (`spec:decisions.agent-front-door`) |
+| MD-22 | the agent front door | durable | The CLI's one evaluation sink and the exported reader are two entrances over one seam, deriving the graph in process on every invocation. | [Spec](../../specs/decisions/agent-front-door.sdp.md) (`spec:decisions.agent-front-door`) |
 
 ### Current executable decision-spec pointers
 
@@ -39,7 +39,6 @@ positions and are never reused.
 - [The Pack reified decision](../../specs/decisions/pack-reified.sdp.md) (`spec:decisions.pack-reified`).
 - [The agent surface scripts the graph decision](../../specs/decisions/agent-surface-scripts-graph.sdp.md) (`spec:decisions.agent-surface-scripts-graph`).
 - [The MCP-deferred decision](../../specs/decisions/mcp-deferred.sdp.md) (`spec:decisions.mcp-deferred`).
-- [The agent front door decision](../../specs/decisions/agent-front-door.sdp.md) (`spec:decisions.agent-front-door`).
 
 ## Structural-decision shorthand (D1–D6)
 
