@@ -664,7 +664,7 @@ export const validationSpecs = [
     id: "spec:validation.oracle-target-eligibility",
     specKind: "rule",
     altitude: "story",
-    readiness: "scoped",
+    readiness: "defined",
     file: "specs/validation/oracle-target-eligibility.sdp.md",
     title: "Oracle eligibility follows example-space ownership",
     narrative: null,
@@ -672,13 +672,6 @@ export const validationSpecs = [
       intent: {
         outcome:
           "Let an expected-outcome oracle model any Spec whose own law defines an example space, regardless of Spec kind.",
-        openQuestions: [
-          {
-            question:
-              "Which shared resolution predicate and diagnostic seam must change so validator and reader consumers stay fail-closed together?",
-            blocking: true,
-          },
-        ],
       },
       behavior: {
         rules: [
@@ -691,10 +684,21 @@ export const validationSpecs = [
           ],
           when: ["oracle linkage is resolved"],
           then: [
-            "the report contains {findingCount:number} oracle-linkage findings",
-            "a resolving oracle is present: {oraclePresent:boolean}",
+            "oracle linkage reports {findingCount:number} findings and resolving presence {oraclePresent:boolean}",
           ],
         },
+      },
+      design: {
+        description:
+          "The validator and reader must continue to share one fail-closed definition of a resolving oracle.",
+        eligibilityPredicate:
+          "`isResolvingOracleModel` accepts an anchored `models` edge from an `oracle:` Anchor to any Primitive that owns `behavior.exampleSpace`; Spec kind does not participate.",
+        resolutionFlow:
+          "`checkOracleLinkage`, delivery-fact derivation, `specContext`, `byFile`, and blast-radius traversal consume the shared predicate rather than restating eligibility.",
+        failureDiagnostic:
+          "A non-resolving candidate says that the target must be a Spec owning an example space; competing-oracle diagnostics name the target as a Spec.",
+        executableSeams:
+          "Validator regressions cover rule-with-space acceptance and missing-space refusal; reader regressions prove the same rule-kind binding resolves through the shared predicate.",
       },
     },
     deliveryFacts: [],
