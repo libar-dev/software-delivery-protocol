@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { copyFile, mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -146,6 +146,26 @@ describe("published package surface", () => {
 
     try {
       run("npm", ["run", "build"], repositoryRoot);
+      const dryRun = JSON.parse(
+        run("npm", ["pack", "--dry-run", "--json"], repositoryRoot),
+      ) as readonly [{ readonly files: readonly { readonly path: string }[] }];
+      const dryRunPaths = dryRun[0].files.map((file) => file.path);
+      const adopterAssets = [
+        ".claude/skills/sdp-agent-surface/SKILL.md",
+        ".claude/skills/sdp-authoring/SKILL.md",
+        "docs/agent-surface/recipes.md",
+      ];
+
+      expect(dryRunPaths).toEqual(expect.arrayContaining(adopterAssets));
+      expect(
+        dryRunPaths.filter(
+          (path) =>
+            !["LICENSE", "README.md", "package.json", ...adopterAssets].includes(path) &&
+            !path.startsWith("dist/"),
+        ),
+      ).toEqual([]);
+      expect(dryRunPaths.some((path) => path.endsWith(".sdp.md"))).toBe(false);
+
       run("npm", ["pack", "--pack-destination", packageRoot], repositoryRoot);
 
       const tarballs = await readdir(packageRoot);
@@ -215,6 +235,26 @@ void [${expectedRootExports.join(", ")}];
         ],
         consumer,
       );
+      const installedAgentSkill = await readFile(
+        join(
+          consumer,
+          "node_modules",
+          "@libar-dev",
+          "software-delivery-protocol",
+          ".claude/skills/sdp-agent-surface/SKILL.md",
+        ),
+        "utf8",
+      );
+      const installedAuthoringSkill = await readFile(
+        join(
+          consumer,
+          "node_modules",
+          "@libar-dev",
+          "software-delivery-protocol",
+          ".claude/skills/sdp-authoring/SKILL.md",
+        ),
+        "utf8",
+      );
 
       expect(JSON.parse(driver)).toEqual({
         exports: [...expectedRootExports].sort(),
@@ -224,6 +264,8 @@ void [${expectedRootExports.join(", ")}];
       expect(sdpImportDryRun).toContain("id: spec:round-trip.behavior");
       expect(await readdir(consumer)).not.toContain("behavior.sdp.md");
       expect(barrelCheck).toBe("barrel imports available\n");
+      expect(installedAgentSkill).toContain("name: sdp-agent-surface");
+      expect(installedAuthoringSkill).toContain("name: sdp-authoring");
     } finally {
       await rm(packageRoot, { force: true, recursive: true });
     }

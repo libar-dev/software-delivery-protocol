@@ -16,13 +16,15 @@ evaluation sink. There is no verb wall — you script the graph.
 For any corpus question, **query the graph before reading spec files**.
 
 ```sh
-sdp q 'return g.specs().length' --exclude explorations --exclude examples --exclude test/fixtures/import/parity
-sdp q 'return g.specContext("spec:consumers.reader")' --exclude explorations --exclude examples --exclude test/fixtures/import/parity --json
+node ./dist/cli/sdp.js q 'return g.specs().length' --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+node ./dist/cli/sdp.js q 'return g.specContext("spec:consumers.reader")' --exclude explorations --exclude examples --exclude test/fixtures/import/parity --json
 ```
 
 Those three exclusions are this repository's own and they are **required here**: the corpus carries
 deliberate duplicate-id and carrier-parity fixtures, so without them the graph does not derive and
 the sink refuses to run the body. They are the same list `npm run generate:self-hosting` passes.
+Run `npm run build` first if `dist/` is absent. Do not invoke a global `sdp`: macOS also ships an
+unrelated binary with that name. In an adopter, use its package runner, such as `pnpm exec sdp`.
 
 The catalog of ready-made bodies is `docs/agent-surface/recipes.md` — build backlog, drift alarm,
 per-Spec guarantees and verifiers, blast radius, Pack review backbone, concept search, readiness

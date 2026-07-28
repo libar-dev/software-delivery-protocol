@@ -788,4 +788,74 @@ export const consumersSpecs = [
     },
     deliveryFacts: ["has-verifier"],
   },
+  {
+    id: "spec:consumers.authoring-on-ramp",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/consumers/authoring-on-ramp.sdp.md",
+    title: "Authors move one Spec from intent to reviewed evidence",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give an agent or human one graph-first path for creating, enriching, binding, and reviewing a Spec without inventing a parallel workflow.",
+      },
+      behavior: {
+        rules: [
+          "An author starts from the build-backlog and drift-alarm recipes, reads carrying Specs for law, and edits the canonical carrier.",
+          "The executable transition is taught as parent example space, child bound point, generated contracts, colocated `bindExample` and `specTest`, and a mutation-probed red result before the human states `ready`.",
+          "Contract-generation refusals are diagnosed through `sdp build`; query-time validation does not claim to report codegen findings.",
+          "Verifier-binding queries report graph-visible anchors and cannot detect a suite whose generated contract is never bound.",
+          "Implementation anchors state identity-only bindings, and Design Review supplies context for the human readiness statement without becoming a workflow gate.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.agent-surface.authoring-recipes",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/agent-surface.authoring-recipes.sdp.md",
+    title: "Authoring questions stay executable graph recipes",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Answer recurring maturity and verifier questions by scripting the graph rather than adding query verbs.",
+      },
+      behavior: {
+        rules: [
+          "Promotion preflight reports the Spec's stated rung, floor reached, and any current unmet floor clause.",
+          "The verifier audit keeps declared example relations distinct from enabled verifier bindings.",
+          "The lower-ladder view groups non-ready Specs by family and reports their next graph-visible unmet clause without treating an empty failure list as automatic promotion.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.intent-composition",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/consumers/intent-composition.sdp.md",
+    title: "Intent composition needs a realizing surface",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Realize the absent user and agent surface that composes scoped intent before ordinary source edits.",
+      },
+      behavior: {
+        rules: [
+          "`spec:consumers.edit-model` owns the settled intent → agent → git law; this child owns only the future composing interaction that does not yet exist.",
+          "No entrypoint, persistence path, or structured patch contract is implied at the idea rung.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
 ] as const;

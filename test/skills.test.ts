@@ -1,0 +1,179 @@
+import { readFileSync } from "node:fs";
+import { basename, dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { parse } from "yaml";
+import { describe, expect, it } from "vitest";
+
+import {
+  codeAnchor,
+  codeAnchorId,
+  ref,
+  specTest,
+  testAnchorId,
+} from "@libar-dev/software-delivery-protocol";
+
+const repoRoot = fileURLToPath(new URL("..", import.meta.url));
+const skillPaths = [
+  ".claude/skills/sdp-agent-surface/SKILL.md",
+  ".claude/skills/sdp-authoring/SKILL.md",
+] as const;
+
+const authoringOnRampImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.authoring-on-ramp"),
+  label: "validates the shipped graph-first authoring on-ramp",
+  satisfies: ref("spec:consumers.authoring-on-ramp"),
+});
+void authoringOnRampImplementationAnchor;
+
+function readSkill(path: string) {
+  const source = readFileSync(join(repoRoot, path), "utf8");
+  const match = /^---\n(?<frontmatter>[\s\S]*?)\n---\n(?<body>[\s\S]+)$/u.exec(source);
+
+  if (match?.groups?.frontmatter === undefined || match.groups.body === undefined) {
+    throw new Error(`${path} does not carry one YAML frontmatter block`);
+  }
+
+  return {
+    source,
+    body: match.groups.body,
+    frontmatter: parse(match.groups.frontmatter) as Record<string, unknown>,
+  };
+}
+
+const authoringRecipesImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.authoring-recipes"),
+  label: "validates the shipped authoring recipe surface",
+  satisfies: ref("spec:consumers.agent-surface.authoring-recipes"),
+});
+void authoringRecipesImplementationAnchor;
+
+function documentedCommands(body: string): readonly string[] {
+  const commands: string[] = [];
+  let inShellFence = false;
+
+  for (const line of body.split("\n")) {
+    if (line === "```sh") {
+      inShellFence = true;
+      continue;
+    }
+    if (line === "```") {
+      inShellFence = false;
+      continue;
+    }
+    if (
+      inShellFence &&
+      (line.startsWith("node ./dist/cli/sdp.js ") || line.startsWith("pnpm exec sdp "))
+    ) {
+      commands.push(line);
+    }
+  }
+
+  return commands;
+}
+
+const authoringOnRampTestAnchor = specTest({
+  id: testAnchorId("test:protocol.authoring-on-ramp"),
+  label: "skill-asset checks verify the authoring on-ramp",
+  verifies: ref("spec:consumers.authoring-on-ramp"),
+});
+void authoringOnRampTestAnchor;
+
+const authoringRecipesTestAnchor = specTest({
+  id: testAnchorId("test:protocol.authoring-recipes"),
+  label: "skill-asset checks verify the authoring recipes",
+  verifies: ref("spec:consumers.agent-surface.authoring-recipes"),
+});
+void authoringRecipesTestAnchor;
+
+describe("Protocol skill assets", () => {
+  it("uses the repository's two-field single-file convention", () => {
+    for (const path of skillPaths) {
+      const skill = readSkill(path);
+      const folder = basename(dirname(path));
+
+      expect(Object.keys(skill.frontmatter).sort()).toEqual(["description", "name"]);
+      expect(skill.frontmatter.name).toBe(folder);
+      expect(typeof skill.frontmatter.description).toBe("string");
+      expect(String(skill.frontmatter.description).length).toBeGreaterThan(40);
+    }
+  });
+
+  it("keeps both skills graph-first and the authoring law linked to carrying Specs", () => {
+    for (const path of skillPaths) {
+      const { source } = readSkill(path);
+
+      expect(source).toContain("sdp q");
+      expect(source).toContain("docs/agent-surface/recipes.md");
+      expect(source).toContain("spec:");
+    }
+
+    const authoring = readSkill(".claude/skills/sdp-authoring/SKILL.md").source;
+    for (const required of [
+      "spec:validation.readiness-floor",
+      "spec:validation.kind-evidence",
+      "spec:decisions.content-only-sections",
+      "spec:decisions.point-per-example",
+      "spec:decisions.binding-not-liveness",
+      "sdp build",
+      "bindExample",
+      "specTest",
+      "mutation",
+      "cannot detect",
+    ]) {
+      expect(authoring).toContain(required);
+    }
+  });
+
+  it("documents only valid CLI verbs and keeps root-specific exclusions intact", () => {
+    const knownVerbs = new Set(["build", "q"]);
+
+    for (const path of skillPaths) {
+      const commands = documentedCommands(readSkill(path).body);
+      expect(commands.length).toBeGreaterThan(0);
+
+      for (const command of commands) {
+        const verb = /(?:sdp\.js|exec sdp) (?<verb>[\w-]+)/u.exec(command)?.groups?.verb;
+        expect(verb === undefined ? false : knownVerbs.has(verb)).toBe(true);
+
+        if (verb === "q" && !command.includes("--root PATH")) {
+          for (const exclusion of ["explorations", "examples", "test/fixtures/import/parity"]) {
+            expect(command).toContain(`--exclude ${exclusion}`);
+          }
+        }
+      }
+    }
+  });
+
+  it("uses the local runtime or package runner instead of a colliding global binary", () => {
+    const agentSurface = readSkill(".claude/skills/sdp-agent-surface/SKILL.md");
+    const authoring = readSkill(".claude/skills/sdp-authoring/SKILL.md");
+
+    expect(documentedCommands(agentSurface.body).every((line) => line.startsWith("node "))).toBe(
+      true,
+    );
+    expect(
+      documentedCommands(authoring.body).every(
+        (line) => line.startsWith("node ") || line.startsWith("pnpm exec "),
+      ),
+    ).toBe(true);
+  });
+
+  it("contains no contradictory shortcuts for readiness or verifier realization", () => {
+    const forbidden = [
+      "has-verifier means tests pass",
+      "ready is conferred by tooling",
+      "ready is derived from the floor",
+      "bindExample call sites are extracted",
+      "verification mode proves a verifier exists",
+    ];
+
+    for (const path of skillPaths) {
+      const source = readSkill(path).source.toLowerCase();
+
+      for (const claim of forbidden) {
+        expect(source).not.toContain(claim);
+      }
+    }
+  });
+});

@@ -1,0 +1,75 @@
+---
+name: sdp-authoring
+description: Author and mature Protocol Specs through the graph-first workflow. Use when creating or editing `.sdp.md` carriers, deciding the honest readiness rung, promoting inline content, generating executable contracts, binding examples or implementation anchors, mutation-probing evidence, or preparing a Spec for human review and a `ready` statement.
+---
+
+# Author Specs through the graph
+
+Treat the canonical carrier as the write surface and the derived graph as the read model. Start every
+session with the build-backlog and drift-alarm recipes in `docs/agent-surface/recipes.md`.
+
+At this repository root, use the exact self-hosting exclusions:
+
+```sh
+node ./dist/cli/sdp.js q 'return g.specs().filter((spec) => spec.statedReadiness === "ready" && !spec.deliveryFacts.includes("implemented")).map((spec) => spec.id)' --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+node ./dist/cli/sdp.js q 'return g.specs().filter((spec) => spec.deliveryFacts.includes("implemented") && spec.statedReadiness !== "ready").map((spec) => spec.id)' --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+```
+
+For an adopter, select its root and exclusions explicitly:
+
+```sh
+pnpm exec sdp q 'return g.specs().map((spec) => spec.id)' --root PATH
+pnpm exec sdp q 'return g.specs().map((spec) => spec.id)' --root PATH --exclude PATH --exclude PATH
+```
+
+Build this repository before using its local CLI. Never rely on a global `sdp`: macOS also ships an
+unrelated binary with that name. Adopters should use their chosen package runner.
+
+## Create and enrich
+
+1. Read `CONTEXT.md`, then query nearby Specs with recipe 3 or 6. Do not parse the corpus by hand.
+2. Create the Markdown carrier with one stable `spec:` id, title, kind, altitude, readiness, and
+   relations. The carrier law is `spec:decisions.carrier-ruling`; the envelope and section law is
+   `spec:model.spec-sections`.
+3. State only the rung the structure clears. Use recipe 9 for the current floor, recipe 11 for the
+   lower ladder, and read `spec:validation.readiness-floor` plus
+   `spec:validation.kind-evidence` for the clauses.
+4. Keep local detail inline. Promote it only when it needs shared identity, binding, or independent
+   review; follow `spec:decisions.content-only-sections`.
+5. Put unresolved durable questions under Intent. A blocking question honestly keeps the Spec
+   below `defined`.
+
+## Make an example executable
+
+1. Put the typed `gwt-vocabulary` example space on the parent.
+2. Put one concrete `gwt` bound point on each example child, following
+   `spec:decisions.point-per-example`.
+3. Generate contracts from the adopter root:
+
+   ```sh
+   pnpm exec sdp build .
+   ```
+
+   Diagnose contract refusals from `sdp build`; `sdp q` receives graph-validation findings, not
+   codegen findings.
+
+4. In the verifier suite, colocate `bindExample(generatedContract, world, bindings)` with a
+   `specTest` anchor targeting that example.
+5. Mutate one expected result and prove the new point goes red, then restore it. Keep runner
+   execution and pass state outside the graph.
+
+The graph can report a resolving `specTest` binding. It cannot detect a generated contract that no
+suite binds because `bindExample` call sites are not extracted graph data.
+
+## Bind implementation and review
+
+Add a `codeAnchor` beside the code that realizes the Spec, following
+`spec:decisions.binding-not-liveness` and `spec:model.anchors`. An anchor states identity and one
+target only; it never carries intent, readiness, or runtime truth.
+
+Regenerate the Design Review, inspect the Spec in context, and run recipes 7–11. Tooling never
+confers `ready`: after the floor clears and the evidence is reviewed, a human may state it by
+editing the canonical carrier.
+
+The graph outranks this skill. If a recipe or instruction disagrees with current graph data or a
+carrying Spec, report the skill as drift and follow the graph and Spec.

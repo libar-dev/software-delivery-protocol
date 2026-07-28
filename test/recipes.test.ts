@@ -188,27 +188,32 @@ describe("the agent-surface recipe corpus", () => {
     );
   });
 
-  // Given: the on-ramp surfaces that document how to invoke the sink at this root. When: their
-  // `sdp q` command lines are read. Then: each names the project's whole exclusion set, because a
-  // partial set does not derive here and the documented command would fail as written.
-  it("documents the invocation with the same exclusions the check derives with", () => {
-    const onRampSources = [recipesPath, ".claude/skills/sdp-agent-surface/SKILL.md"];
+  // The self-hosting form pins this root's mandatory exclusions, while the adopter form keeps
+  // root and repeatable exclusions project-selected. The two contracts are checked separately so
+  // portability cannot weaken the root's real invocation.
+  it("keeps self-hosting and adopter invocation forms distinct", () => {
+    const onRampSources = [
+      recipesPath,
+      ".claude/skills/sdp-agent-surface/SKILL.md",
+      ".claude/skills/sdp-authoring/SKILL.md",
+    ];
 
     for (const source of onRampSources) {
       const lines = readFileSync(join(repoRoot, source), "utf8").split("\n");
-      // A concrete invocation is one that carries a quoted body; the bare `sdp q [...]` usage
-      // grammar states the option shapes rather than a command to run, so it is not one.
-      const commandLines = lines.filter((line) => line.includes("sdp q '"));
+      const commandLines = lines.filter((line) => line.includes(" q '") && line.includes("sdp"));
+      const selfHostingLines = commandLines.filter((line) => !line.includes("--root PATH"));
+      const adopterLines = commandLines.filter((line) => line.includes("--root PATH"));
 
-      expect({ source, documented: commandLines.length > 0 }).toEqual({ source, documented: true });
-      // The guard parses the single-quoted spelling only, so any other quoting would carry a
-      // documented invocation it cannot see — no other quoting may exist in the on-ramp files.
-      expect({ source, otherQuoting: lines.filter((line) => line.includes('sdp q "')) }).toEqual({
+      expect({ source, selfHosting: selfHostingLines.length > 0 }).toEqual({
         source,
-        otherQuoting: [],
+        selfHosting: true,
       });
+      expect({
+        source,
+        otherQuoting: lines.filter((line) => line.includes(' q "') && line.includes("sdp")),
+      }).toEqual({ source, otherQuoting: [] });
 
-      for (const line of commandLines) {
+      for (const line of selfHostingLines) {
         expect({
           source,
           line,
@@ -218,6 +223,20 @@ describe("the agent-surface recipe corpus", () => {
             new RegExp(`--exclude ${path}(?=[\\s'"]|$)`, "u").test(line),
           ).length,
         }).toEqual({ source, line, names: standardExcludes.length });
+      }
+
+      if (source === ".claude/skills/sdp-agent-surface/SKILL.md") {
+        expect(adopterLines).toEqual([]);
+        continue;
+      }
+
+      expect({ source, adopterForms: adopterLines.length }).toEqual({
+        source,
+        adopterForms: 2,
+      });
+      for (const line of adopterLines) {
+        expect(standardExcludes.some((path) => line.includes(`--exclude ${path}`))).toBe(false);
+        expect(line.match(/--exclude PATH/gu)?.length ?? 0).toBeLessThanOrEqual(2);
       }
     }
   });
@@ -414,5 +433,47 @@ describe("the agent-surface recipe corpus", () => {
       expect(["conformance", "honesty"]).toContain(stringAt(row, "family"));
       expect(stringAt(row, "message").length).toBeGreaterThan(0);
     }
+  });
+
+  it("returns promotion preflight without conferring a readiness edit", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(9)));
+
+    expect(result.found).toBe(true);
+    expect(primitivesById.has(stringAt(result, "id"))).toBe(true);
+    expect(rungs).toContain(stringAt(result, "statedReadiness"));
+    expect([...rungs, "none"]).toContain(stringAt(result, "floorReached"));
+    expect(result.promotionRequiresHumanStatement).toBe(true);
+    expect(Array.isArray(result.currentFloorFailures)).toBe(true);
+  });
+
+  it("keeps declared examples distinct from enabled verifier bindings", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(10)));
+    const rows = asArray(result.rows);
+    const expected = reader
+      .specs()
+      .filter((spec) => (reader.specContext(spec.id)?.verifiers.length ?? 0) > 0)
+      .map((spec) => spec.id)
+      .sort();
+
+    expect(numberAt(result, "total")).toBe(rows.length);
+    expect(rows.map((row) => stringAt(asRecord(row), "id")).sort()).toEqual(expected);
+
+    for (const row of rows) {
+      expect(Array.isArray(asRecord(row).declared)).toBe(true);
+      expect(Array.isArray(asRecord(row).enabled)).toBe(true);
+    }
+  });
+
+  it("returns the complete non-ready ladder grouped by family", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(11)));
+    const rows = Object.values(asRecord(result.byFamily)).flatMap((family) => asArray(family));
+    const expected = reader
+      .specs()
+      .filter((spec) => spec.statedReadiness !== "ready")
+      .map((spec) => spec.id)
+      .sort();
+
+    expect(numberAt(result, "total")).toBe(rows.length);
+    expect(rows.map((row) => stringAt(asRecord(row), "id")).sort()).toEqual(expected);
   });
 });

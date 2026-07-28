@@ -13,8 +13,17 @@ duplicate-id and carrier-parity fixtures under `examples/`, `explorations/`, and
 `test/fixtures/import/parity/`; without those three exclusions the extractor reports errors, the
 graph does not derive, and the sink refuses to run the body at all. The three above are exactly the
 project's own — the same list `npm run generate:self-hosting` passes and the same list the recipe
-check derives with. Elsewhere, `--root PATH` picks the extraction root (default: the working
-directory) and `--exclude` is repeatable for root-relative path prefixes.
+check derives with.
+
+For adopters, the portable form keeps root and exclusions project-selected:
+
+```sh
+sdp q '<body>' --root PATH
+sdp q '<body>' --root PATH --exclude PATH --exclude PATH
+```
+
+`--root PATH` picks the extraction root (default: the working directory) and `--exclude` is
+repeatable for root-relative path prefixes. `PATH` is a placeholder, not a literal directory.
 
 **The contract, in one place.** The front door derives the graph in process and evaluates the body
 you supply; `return` is the output contract. Three bindings are injected:
@@ -339,3 +348,103 @@ return {
 one. Gaps and orphans are warn-level by design: a `ready` Spec with no verifier and a Spec nothing
 points at are both worth surfacing and neither is a failure. Errors are the conformance and honesty
 refusals; on a green corpus both counts read zero.
+
+## 9. Promotion preflight
+
+*When you need this: you are considering a readiness edit and want the current graph-visible floor
+evidence before touching the carrier.*
+
+```js
+const id = "spec:model.enrichment-lifecycle";
+const context = g.specContext(id);
+
+if (context === undefined) {
+  return { id, found: false };
+}
+
+const rungs = ["idea", "scoped", "defined", "ready"];
+const reached = context.derivedReadiness ?? "none";
+const reachedIndex = reached === "none" ? -1 : rungs.indexOf(reached);
+
+return {
+  id,
+  found: true,
+  statedReadiness: context.statedReadiness,
+  floorReached: reached,
+  nextRung: rungs[reachedIndex + 1] ?? null,
+  currentFloorFailures: context.floorFailures.map((failure) => ({
+    clauseId: failure.clauseId,
+    description: failure.description,
+  })),
+  firstUnmetClause: context.floorFailures[0]?.clauseId ?? null,
+  promotionRequiresHumanStatement: true,
+};
+```
+
+An empty `currentFloorFailures` list says the stated rung is honest. It does not confer the next
+rung, and `floorReached` above the stated rung is information rather than an automatic edit.
+
+## 10. Declared versus enabled verifiers
+
+*When you need this: you want example intent and graph-visible verifier realization kept distinct.*
+
+```js
+const rows = [];
+
+for (const spec of g.specs()) {
+  const context = g.specContext(spec.id);
+  if (context === undefined) continue;
+
+  const declared = context.verifiers
+    .filter((binding) => binding.via === "example")
+    .map((binding) => binding.verifierId);
+  const enabled = context.verifiers
+    .filter((binding) => binding.enabled)
+    .map((binding) => binding.verifierId);
+
+  if (declared.length > 0 || enabled.length > 0) {
+    rows.push({ id: spec.id, declared, enabled });
+  }
+}
+
+return {
+  total: rows.length,
+  withDeclaredOnly: rows.filter((row) =>
+    row.declared.some((id) => !row.enabled.includes(id)),
+  ).length,
+  rows,
+};
+```
+
+Enabled means a resolving graph-visible test binding exists. This recipe cannot detect a generated
+contract no suite binds, and it never reports runner pass or fail.
+
+## 11. The lower ladder
+
+*When you need this: you want every non-ready Spec grouped by family, with current floor evidence
+visible instead of hidden in plan prose.*
+
+```js
+const lower = g.specs().filter((spec) => spec.statedReadiness !== "ready");
+const byFamily = {};
+
+for (const spec of lower) {
+  const family = spec.id.slice("spec:".length).split(".")[0];
+  const context = g.specContext(spec.id);
+  const failures = context?.floorFailures ?? [];
+
+  byFamily[family] = byFamily[family] ?? [];
+  byFamily[family].push({
+    id: spec.id,
+    statedReadiness: spec.statedReadiness,
+    floorReached: spec.derivedReadiness ?? "none",
+    nextUnmetClause: failures[0]?.clauseId ?? null,
+  });
+}
+
+return { total: lower.length, byFamily };
+```
+
+`nextUnmetClause: null` means the current stated floor has no failure. It is not permission to
+promote: the next rung may require evidence the current-floor evaluator was not asked to police,
+and `ready` always remains a human statement.

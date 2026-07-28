@@ -335,30 +335,43 @@ The skill obeys the anti-anecdote rule (the derived graph outranks the skill) an
 gen 1's session-typed skills as evidence of shape, never as template. It is drafted in W,
 then **revised from S1's friction log** — the origin tracer is its first foreign user.
 
-**W3 — the authoring recipes.** Appended to the one catalog (`docs/agent-surface/recipes.md`),
-each body executed verbatim by the recipe check, all read-only over `g` / `graph` / `report`:
+**W3 — the authoring recipes.** Three bodies extend the catalog from eight to eleven, each
+executed verbatim by the recipe check and read-only over `g` / `graph` / `report`:
 
-1. **The promotion preflight** — for a Spec id: stated rung, derived rung, and the first
-   unmet clause per rung above it ("what would `ready` require here"), from
-   `specContext(id).floorFailures` and the floor table's clause ids.
-2. **The contract ledger** — which `example` Specs were refused step contracts and by which
-   `contracts/*` finding; which parents own spaces with zero bindable children.
-3. **The verifier-binding audit** — enabled vs declared verifiers per Spec, and the
-   anchored-but-unbound set (§d-6's join, shipped as a recipe first).
-4. **The lower-ladder view** — the corpus below `defined`, grouped by family, with each
-   Spec's distance-to-next-rung (first unmet clause) — the working surface for W1 and S3.
+1. **The promotion preflight** — for a Spec id: stated rung, floor reached, current floor
+   failures, and an explicit human-statement reminder.
+2. **The declared-versus-enabled verifier audit** — keeps authored example relations distinct
+   from resolving graph-visible verifier bindings.
+3. **The lower-ladder view** — every non-ready Spec grouped by family with its current first
+   graph-visible unmet clause.
+
+There is no query-time contract ledger: `contracts/*` findings are emitted only by `sdp build`.
+There is no anchored-but-unbound recipe: `bindExample` call sites are not extracted graph data.
+The authoring skill teaches both limits instead of shipping a body that cannot compute its claim.
 
 The freeze rule stands: these are recipes; a join moves into the `reader` only at the
 second-caller bar with evidence agents hand-roll it wrong.
 
-**W4 — the friction instrument, widened.** Revision 1's inline-carrier tally (§i) stands and
-widens to four columns, kept per converted or authored Spec across W, S1, and S2: **anchor
-friction** (binding placement, the builder forms, the import-binding boundary) · **ladder
-friction** (floor clauses fought, rungs mis-entered) · **executable-transition friction**
-(vocabulary resolution, contract refusals, the two-file seam) · **CLI friction** (exclusion
-ergonomics, body ergonomics, missing joins). One log, four tallies — feeding respectively the
-inline-carrier gate (§i), the on-ramp revision, any §d-5/6 ruling, and the edit-model
-evidence base.
+**W4 — the friction instrument, widened.** One row per converted or authored Spec records source
+and target ids/files; anchor, ladder, executable-transition, and CLI friction; and three measured
+booleans — `leafAltitude`, `singleModule`, `under30Lines` — plus their combined inline-candidate
+result and disposition. W rows begin below; S1 imports them verbatim into the origin ledger with
+`sourceRepo`, and that file becomes canonical. S2 reports numerator, denominator, and percentage
+without turning the result into a carrier ruling.
+
+| sourceRepo | source id/file | target id/file | anchor friction | ladder friction | executable-transition friction | CLI friction | leafAltitude | singleModule | under30Lines | inline candidate | disposition |
+|---|---|---|---|---|---|---|---:|---:|---:|---:|---|
+| Protocol | `specs/consumers/authoring-on-ramp.sdp.md` | `spec:consumers.authoring-on-ramp` / same file | a Markdown skill cannot carry an extracted anchor, so validating code owns the binding | entered low and matured only after the shipped asset and verifier existed | taught, not itself a bound example | the first fresh-context run invoked macOS `/usr/bin/sdp`; the skill now requires the repository-local CLI or an adopter package runner, and root-specific versus portable invocations have separate checks | false | true | true | false | keep standalone: feature-sized workflow |
+| Protocol | `specs/consumers/agent-surface.authoring-recipes.sdp.md` | `spec:consumers.agent-surface.authoring-recipes` / same file | in-tree recipe/skill checks own both bindings | matured after all three bodies returned complete graph-derived sets | not applicable | portable wording initially competed with mandatory exclusions; parameterized tests resolved it | true | false | true | false | keep standalone: multiple recipe and test modules |
+| Protocol | `specs/consumers/intent-composition.sdp.md` | `spec:consumers.intent-composition` / same file | none while the realizing surface is absent | deliberately states `idea` even though its minimal structure clears higher floors | deferred with the absent surface | none | true | true | true | true | measure only; no carrier ruling follows |
+
+**W close evidence (2026-07-28).** A fresh, ephemeral, read-only `codex exec` context followed
+the corrected authoring skill and reported `spec:model.enrichment-lifecycle` as stated
+`scoped`, floor `scoped`, blocked by its authored post-implementation slimming question, with
+`spec:model.enrichment-lifecycle` as the carrier. The first attempt had resolved bare `sdp` to
+macOS `/usr/bin/sdp`; that observed friction produced the repository-local/package-runner rule
+now checked for both shipped skills. The package smoke test additionally installs the packed
+snapshot and reads both exact skill paths from the installed package.
 
 ## (f) S1 — the tracer bullet on foreign soil (origin repo)
 
@@ -370,8 +383,8 @@ over the derived graph. **Tracer-bullet discipline applies unchanged:** if the o
 stops extracting or validating, fix the carrier or extractor here — never fork the grammar in
 the consumer.
 
-Deliverables: the converted cluster extracting at 0 errors; the recipes (the eight standing
-plus W3's four) returning honest answers about it (the 17 planning stubs must surface as
+Deliverables: the converted cluster extracting at 0 errors; all eleven recipes returning honest
+answers about it (the 17 planning stubs must surface as
 declared-not-enabled, not as coverage); the friction log per W4. **Usage acceptance, added at
 revision 2:** the converted cluster spans **all four rungs** honestly (the origin's four-tier
 ladder guarantees candidates for each — no rung is manufactured, and none is skipped by
