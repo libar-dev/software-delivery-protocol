@@ -1,6 +1,6 @@
 # Plan 24 — The inward turn: self-hosting as the standing practice
 
-> **Status:** EXECUTING — revision 3. Phase 7 is the inward turn: the Protocol's own forward
+> **Status:** EXECUTED — revision 3. Phase 7 is the inward turn: the Protocol's own forward
 > work is carried as Specs, sessions open from graph recipes, implementation bindings are
 > audited rather than assumed, expected-outcome oracles bind inward, and one real engine slice
 > runs the complete spec-first loop through post-implementation slimming. Settled phase-6
@@ -183,15 +183,42 @@ Close requires: every backlog and drift row deliberate; two inward `models` edge
 spec-first engine slice slimmed after implementation; the friction ledger complete; zero findings;
 no readiness sweep; and plan/AGENTS status synchronized.
 
-The owner authorized deletion of the superseded plan-23 file after plan 24 lands. Before deletion,
-replace this plan's and AGENTS' live plan-23 pointers with carrying Specs, commit evidence, and PR
-references; verify no live link depends on the file. Historical evidence remains in git and origin
-PR #181.
+The owner authorized deletion of the superseded phase-6 execution plan after this plan landed.
+Before deletion, replace live pointers with carrying Specs, commit evidence, and PR references;
+verify no live link depends on the file. Historical evidence remains in git and origin PR #181.
 
 Execution expands PR #15. At close its title becomes
 `feat: make self-hosting the standing delivery practice (phases 6–7)` and its body names both the
 phase-6 usage layer and phase-7 inward evidence. No origin-repo work occurs.
 
-After the phase closes, Vitest 2→4 runs as a separate mechanical commit. The session inspects the
-actual v4 configuration and help before replacing the removed single-fork option, changes no
-Specs or graph semantics, re-measures advisories, and stops if derived graph output moves.
+## Close record
+
+The inward phase closed on 2026-07-28 with:
+
+- 128 Specs · 1 Pack · 116 anchors → 245 nodes · 462 edges, zero findings;
+- stated readiness `ready: 86 / defined: 37 / scoped: 1 / idea: 4`;
+- delivery facts `implemented: 41 / has-verifier: 87 / observed: 0`;
+- recipe 1 returning zero operational backlog rows, with 53 excluded ready examples and none
+  lacking a verifier;
+- the same eight freshly argued drift rows, each at `defined` with floor `ready`;
+- exactly two inward `models` edges:
+  `oracle:protocol.reader-entry-map → spec:consumers.reader` and
+  `oracle:protocol.oracle-target-eligibility → spec:validation.oracle-target-eligibility`;
+- no repeated friction category, so neither agent skill needed a speculative revision.
+
+The genuine enrichment datum is the sequence `019d063` (implementing Design),
+`341ead6` (implementation and executable seams), and `7ae8087` (post-green slimming).
+The final Spec retains the observable eligibility, refusal, uniqueness, and shared-consumer laws;
+only symbol placement, implementation sequencing, and test-placement scaffolding left. One datum
+does not establish a general enrichment lifecycle, so `spec:model.enrichment-lifecycle` remains
+`scoped`.
+
+The owner explicitly authorized deletion of the superseded phase-6 plan after this plan landed.
+Before deletion, live references were replaced by carrying Specs, commits `b6f123c` through
+`7ae8087`, PR #15, and origin PR `libar-ai/convex-event-sourcing#181`; a repository-wide search
+found no remaining live dependency on that file. Its evidence remains recoverable from git.
+
+The phase-close thirteen-leg gate passed over the committed checkpoints. A separate clean-worktree
+run is recorded after the close commit. Vitest 2→4 follows as a separate mechanical commit: inspect
+the installed v4 help and actual configuration, change no Specs or graph semantics, re-measure
+advisories, and stop if derived graph output moves.
