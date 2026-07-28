@@ -17,40 +17,15 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
-import { SDP_HELP_TEXT, isCliEntrypoint, runSdpCli } from "../src/cli/sdp.js";
+import { SDP_HELP_TEXT, isCliEntrypoint, onStdoutError, runSdpCli } from "../src/cli/sdp.js";
 import { generateContracts } from "../src/codegen/contracts.js";
 import { extract } from "../src/extract/index.js";
 import { renderDesignReview } from "../src/projections/design-review.js";
+import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const exampleRoot = join(repoRoot, "examples", "checkout-v1");
-
-function createCaptureOutput() {
-  const stdoutChunks: string[] = [];
-  const stderrChunks: string[] = [];
-
-  return {
-    output: {
-      stdout: {
-        write(chunk: string) {
-          stdoutChunks.push(chunk);
-        },
-      },
-      stderr: {
-        write(chunk: string) {
-          stderrChunks.push(chunk);
-        },
-      },
-    },
-    readStdout() {
-      return stdoutChunks.join("");
-    },
-    readStderr() {
-      return stderrChunks.join("");
-    },
-  };
-}
 
 /**
  * A working-tree copy of the example's authored surfaces at a temp root. Every CLI test that
@@ -549,7 +524,9 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
 
     try {
       const capture = createCaptureOutput();
-      runSdpCli(["build", corpusRoot], capture.output);
+      // `build` resolves synchronously; only `q` returns a promise from the dispatcher, so the
+      // discarded result here is a number and the `void` states that rather than hiding a wait.
+      void runSdpCli(["build", corpusRoot], capture.output);
 
       expect(capture.readStderr()).toMatch(
         /non-static-id\.sdp\.ts:\d+ — \[error\] extract\/non-static-envelope — /,
@@ -899,6 +876,22 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
+  });
+
+  it("exits 0 quietly on a stdout EPIPE and stays fatal for any other stream error", () => {
+    // The entrypoint installs this handler on process.stdout: a downstream reader closing early
+    // (`sdp q '…' --json | head`) must end the process quietly at 0, never as an engine stack.
+    const exits: number[] = [];
+    const epipe = Object.assign(new Error("write EPIPE"), { code: "EPIPE" });
+
+    onStdoutError(epipe, (code) => exits.push(code));
+    expect(exits).toEqual([0]);
+
+    const foreign = Object.assign(new Error("write EACCES"), { code: "EACCES" });
+    expect(() => {
+      onStdoutError(foreign, (code) => exits.push(code));
+    }).toThrow("write EACCES");
+    expect(exits).toEqual([0]);
   });
 
   it("validates the example: exit 0, the artifact written, and exactly the one surfaced warning", () => {

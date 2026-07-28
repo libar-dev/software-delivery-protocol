@@ -77,6 +77,10 @@ The agent-surface decision (D5) settled *how* to expose it. The **agent surface*
 
 **The schema file is the contract:** read it, then script freely. **Under-typing a shape hides a capability** — an agent reading the contract cannot use a field that isn't typed. There is no verb wall. The harness **pushes** a Design-Review slice for the task (D4); the agent **pulls** the long tail by scripting the graph (D5). **The coding agent never goes through MCP** — MCP is the *user-facing-app* integration surface (§7), a different consumer.
 
+**The front door — two entrances, one seam.** The package exports the reader constructor, and the CLI carries `sdp q`: one evaluation sink that derives the graph in process, injects that same reader plus the raw graph and the validation report, and prints what the supplied body returns (the agent front door, `spec:decisions.agent-front-door`). A single sink is the *anti*-verb-wall — it adds no query vocabulary, so the schema stays the contract and the body does the composing. Derivation runs per invocation, so a just-authored Spec is queryable immediately and no committed artifact answers in the graph's name; the sink never re-parses carriers and never writes. It evaluates local operator-supplied code with the trust stance of any local developer tool — no sandbox is claimed.
+
+**The demand map and the recipe valve.** An agent arrives holding a **string**, a **file**, or a **changeset** — not the Spec id it is looking for — which is why the frozen adapters below are exactly those three entries (`bySymbol`, the fourth, stays named-and-deferred). Everything past them is a **recipe**, not a verb: runnable bodies catalogued at `docs/agent-surface/recipes.md`, each checked to run as written. That catalog is the release valve that keeps the frozen surface small — a question the recipes already answer is never a reason to mint a verb.
+
 ### The reader — the thin typed loader
 
 The **`reader`** is the *component* behind the surface: joins and `claim`/taxonomy-decode are done **once at construction**; accessors return plain, composable data; it persists nothing and is rebuilt fresh each load (a front door, not a store). *Needs drive the surface, not storage.*
@@ -115,7 +119,7 @@ git records it · conformance + honesty checks are the gate ← the same gate ev
 
 Two locked terms name the affordance:
 
-- **intent composition** — the write-affordance: compose **scoped intent**, hand it to an agent that edits source exactly as a human would; git records it; conformance checks (`05`) gate. The view is a process-orchestrator, not an editor.
+- **intent composition** — the write-affordance: compose **scoped intent**, hand it to an agent that edits source exactly as a human would; git records it; conformance checks (`spec:validation.two-check-families`) gate. The view is a process-orchestrator, not an editor.
 - **scoped intent** — *what* is composed: an explicit change bounded by a `Spec` / its neighbors / a `Pack` / open questions.
 
 Why patching dissolves:
@@ -131,7 +135,7 @@ Why patching dissolves:
 
 **Principle · CORE (concept).** The flagship curated surface is the **Design Review**: a `Spec` (or a `Pack`) rendered **in context** — its neighbors, relations, `claim`/delivery badges, auto-generated **design questions** (from blocking open questions + `gap`s), and a **findings** table. It adopts the recognized SDLC noun.
 
-- It is the context in which a human **decides** to state `ready`: a spec is reviewed *in context* (alone and in its related set / `Pack`), and stating `ready` is the human's call coming out of that review. The review is **never an automated gate** — validators check only the structural **readiness floor** (`05`); they do not adjudicate the review or state `ready` on the author's behalf. This keeps the honesty guardrail from `00`/`05` (checks police conformance & honesty, never workflow) intact (`spec:model.core-model`, `05`). So `ready` is an **authored `declared` statement** — its *checkable* content is the floor; that a review actually happened is **not a fact the graph records**, so where review evidence matters it rides **git** (authorship, commit, the baseline tag — `spec:extraction.derive-graph`), never an authored approval primitive.
+- It is the context in which a human **decides** to state `ready`: a spec is reviewed *in context* (alone and in its related set / `Pack`), and stating `ready` is the human's call coming out of that review. The review is **never an automated gate** — validators check only the structural **readiness floor** (`spec:validation.readiness-floor`); they do not adjudicate the review or state `ready` on the author's behalf. This keeps the honesty guardrail from `00` and `spec:validation.two-check-families` (checks police conformance & honesty, never workflow) intact (`spec:model.core-model`). So `ready` is an **authored `declared` statement** — its *checkable* content is the floor; that a review actually happened is **not a fact the graph records**, so where review evidence matters it rides **git** (authorship, commit, the baseline tag — `spec:extraction.derive-graph`), never an authored approval primitive.
 - It is a **pure projection** — findings resolve through the edit loop (§4); there is **no stored `Finding` type**, no second store.
 - *Concept is core; rich diagrams grow later* — the MVP renders the relationship slice; heatmaps and interactive trees are aspirational (Spec Studio, §8).
 

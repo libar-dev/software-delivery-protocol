@@ -119,7 +119,7 @@ These appear in the design and matter, but none is a Principle. Swapping any of 
 | HTML / Web Components for the rich view | "rich, shareable read surface from the graph" | ASPIRATIONAL |
 | Impact graph (derived import/symbol graph) | P10 corollary (impact + curation-assist) | ASPIRATIONAL (thin version may be MVP — `07`) |
 | The **agent surface** (a visible typed graph the agent scripts) + the **reader** (thin typed loader) | P2/P6 (one read model, agent-facing) | CORE |
-| Validation layer *count* and per-layer tooling | "conformance + honesty, layered by mechanism" | partly CORE, partly ASPIRATIONAL (`05`) |
+| Validation layer *count* and per-layer tooling | "conformance + honesty, layered by mechanism" | partly CORE, partly ASPIRATIONAL (`spec:validation.two-check-families`) |
 | Runtime-evidence overlay (the `observed` delivery fact; observations as pointers, not payloads) | design intent vs observed reality | ASPIRATIONAL |
 | File-based graph (until traversal scale forces a DB) | "defer scale infra until measured pain" | CORE |
 

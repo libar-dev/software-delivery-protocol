@@ -38,13 +38,12 @@ Every load-bearing claim is named as one or the other, on purpose — so a Repre
 | 00 | [Vision, Scope & MVP Boundary](./00-vision-scope-and-mvp-boundary.md) | The honest full ambition **and** the sharp MVP line, in one place. |
 | 01 | [Founding Principles & Invariants](./01-founding-principles-and-invariants.md) | The load-bearing laws, each tagged Principle/Representation and CORE/ASPIRATIONAL. Git-as-event-log. The `claim` epistemics. |
 | 04 | [Authoring & Binding](./04-authoring-and-binding.md) | The two ruled authoring carriers — Markdown (`.sdp.md`, the default) and the TypeScript DSL (`.sdp.ts`, import source and lawful per-ID option) — plus generic source anchors (framework-neutral). Packs remain TS until a Pack syntax ruling; harnesses named but deferred; the carrier competition is ruled (MD-18). |
-| 05 | [Validation & Honesty](./05-validation-and-honesty.md) | Conformance + honesty checks and readiness floors; the MVP subset sharply separated from aspirational tiers. |
 | 06 | [Consumers & Projections](./06-consumers-and-projections.md) | MVP: the agent surface (a typed graph the agent scripts) + Design Review + reader; edits via intent→agent→git (no patch loop). Two surfaces (curated graph vs impact graph). Aspirational: Studio, exports, MCP surface. |
 | 07 | [MVP Roadmap & Open Questions](./07-mvp-roadmap-and-open-questions.md) | The vertical slice, the CORE/ASPIRATIONAL map, the cut list with rationale, and the residual open questions. |
 
 **Reading paths:**
 - Evaluating the idea → `00`, then `01`.
-- Building the MVP → `07`, then the model Specs (`spec:model.core-model` and siblings), `04`, `05`.
+- Building the MVP → `07`, then the model Specs (`spec:model.core-model` and siblings), `04`, then the validation Specs (`spec:validation.two-check-families`, `spec:validation.readiness-floor`, `spec:validation.kind-evidence` and siblings).
 - Understanding the trust model → `01`, then the extraction Specs (`spec:extraction.derive-graph`, `spec:extraction.determinism`, `spec:extraction.claim-taxonomy`, `spec:extraction.regenerability`).
 - Reasoning about the long-term shape → `00`, `06`.
 

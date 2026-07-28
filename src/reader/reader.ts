@@ -41,7 +41,7 @@ export interface SpecSummary {
   readonly altitude: SpecAltitude;
   /** The author's statement (the envelope's `readiness`) — stated, never "claimed". */
   readonly statedReadiness: SpecReadiness;
-  /** The highest structurally-cleared rung (`05` §3); `undefined` when even `idea`'s clauses fail. */
+  /** The highest structurally-cleared rung (`spec:validation.readiness-floor`); `undefined` when even `idea`'s clauses fail. */
   readonly derivedReadiness?: SpecReadiness;
   /** Recomputed by the one derivation rule — identical to the node's stated facts on extractor output, fail-closed otherwise. */
   readonly deliveryFacts: readonly DeliveryFactName[];

@@ -16,7 +16,7 @@ import { renderIndexPage, renderPackPage, renderSpecPage } from "./design-review
  * Views speak binding language (MD-7): the delivery-fact names stay internal; what renders is
  * "Implementation binding / Verifier binding / Runtime observation: not tracked" — bindings,
  * never liveness. Stated readiness renders beside the structurally-reached floor, and the
- * divergence banner fires only in the dishonest direction (`05` §3).
+ * divergence banner fires only in the dishonest direction (`spec:consumers.derived-readiness-banner`).
  */
 export interface DesignReviewPage {
   /** POSIX path under the view root (`generated/design-review/`), e.g. `spec/orders.create-order.md`. */

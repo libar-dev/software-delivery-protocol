@@ -30,7 +30,7 @@ Once everything is one graph, the payoff is navigation: what does a change touch
 ### Trace a spec to its verification and back
 
 **Phase:** MVP
-**References:** [the derive-graph spec](../specs/extraction/derive-graph.sdp.md) (`spec:extraction.derive-graph`), [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md)
+**References:** [the derive-graph spec](../specs/extraction/derive-graph.sdp.md) (`spec:extraction.derive-graph`), [the verification-linkage spec](../specs/validation/verification-linkage.sdp.md) (`spec:validation.verification-linkage`)
 
 > **When** I need to know whether a spec is actually backed by a test, **I want to** trace from the spec to the tests that verify it and back from any test to the specs it covers, **so I can** trust coverage as a structural fact instead of a filename convention or an act of faith.
 
@@ -72,7 +72,7 @@ Once everything is one graph, the payoff is navigation: what does a change touch
 ### Find the specs that still need a verifier
 
 **Phase:** MVP
-**References:** [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`), [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md)
+**References:** [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`), [the warn-level-signals spec](../specs/validation/warn-level-signals.sdp.md) (`spec:validation.warn-level-signals`)
 
 > **When** I'm planning verification coverage for a `Pack` or release, **I want to** list the specs that lack an enabled verifier (the `has-verifier` `gap`s), **so I can** target exactly what needs a test instead of guessing or auditing files by hand.
 

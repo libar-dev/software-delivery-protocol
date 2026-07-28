@@ -46,7 +46,7 @@ export const consumersSpecs = [
     id: "spec:consumers.agent-surface",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/agent-surface.sdp.md",
     title: "Agents script a visible typed graph",
     narrative: null,
@@ -62,16 +62,39 @@ export const consumersSpecs = [
           "Entry adapters bridge strings, files, and changesets to curated graph context; file-level blast radius names coverage-unknown files rather than implying exhaustive reach.",
           "Context efficiency is an empirical result: a measured comparison may show structured graph context uses fewer supplied tokens than a comparable raw-text workflow while preserving the task-relevant result.",
           "Measured evidence: a multi-probe agent comparison used about one fifth of the tokens of a comparable grep or verb-API workflow while preserving task-relevant conclusions.",
+          "An agent arrives holding a concept string, a file it is editing, or the changeset a diff touches, and not the Spec id it is looking for, so the surface is designed around those entry points rather than around lookup by id.",
+          "The string entry is `findByConcept`, the file entry is `byFile`, and the changeset entry is `blastRadius`, whose answer names every coverage-unknown changed file rather than dropping it into silence.",
+          "The symbol entry is designed for and deferred: `bySymbol` would resolve through the aspirational impact graph, no such substrate exists, and the adapter is absent rather than stubbed so its absence cannot read as a landed capability.",
+          "Past those entry adapters the surface grows by recipe and not by verb: a join is frozen into the reader only when a second machine consumer needs it and hand-rolled attempts get it wrong, and every other question stays a body an agent scripts.",
         ],
+        exampleSpace: {
+          given: [
+            "an extraction root the front door derives in process on the invocation",
+            "the corpus binds the spec {specId:string} to one anchored verifier and one declared-only verifier",
+            "the agent holds the concept {concept:string}, the file {file:string}, and a changeset that also touches the unrecorded file {unrecordedFile:string}",
+          ],
+          when: [
+            'the agent scripts a body {body:"composing that spec\'s verifier bindings"|"reaching every entry point the demand map names"} through the front door',
+          ],
+          then: [
+            "the front door exits {exitCode:number} with an empty error stream",
+            "the printed answer is exactly the body's pre-shaped return {printedAnswer:string}",
+            "the anchored verifier {anchoredVerifierId:string} decodes as enabled while the declared-only verifier {declaredVerifierId:string} does not",
+            "the concept entry answers with the spec {conceptSpecId:string}",
+            "the file entry answers with the spec {fileSpecId:string}",
+            "the changeset entry answers with the impacted spec {changesetSpecId:string}",
+            "the surface offers a symbol entry: {symbolEntry:boolean}",
+          ],
+        },
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.design-review",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/design-review.sdp.md",
     title: "Design Review renders graph context without becoming a gate",
     narrative: null,
@@ -86,17 +109,32 @@ export const consumersSpecs = [
           "The review is a pure projection that resolves through ordinary source edits, git, and conformance checks; it stores no findings and writes no canonical source.",
           "A human may use the review context when stating readiness, while validators check only the structural readiness floor and never record or require review approval.",
           "The MVP view is deterministic generated Markdown with an index and pages for Specs and Packs; richer visual representations remain outside this behavior.",
+          "The page set is a function of the graph alone — it carries no timestamp, no commit, and no run identity — so two renders of the same corpus are byte-identical.",
           "Rendering encodes by Markdown syntax context: prose and table fields escape structural characters, fenced JSON preserves authored keys and values through JSON encoding, and inline code uses a delimiter that preserves literal backticks.",
+          "The realizing entrypoint is `renderDesignReview` in `src/projections/design-review.ts`, which reads the reader and returns pages; writing them is the caller's job.",
         ],
+        exampleSpace: {
+          given: [
+            "an extraction root holding a Pack, its member Specs, and one member the checks warn about",
+          ],
+          when: ["the Design Review renders the graph derived from that root"],
+          then: [
+            "the page set holds the index page {indexPage:string}, one page per Spec, and one page per Pack",
+            "the page {packPage:string} renders its members in context",
+            "the page {specPage:string} renders the finding {findingId:string} as data",
+            "a second render from a freshly derived graph is byte-identical: {byteIdentical:boolean}",
+            "the render leaves the extraction root byte-identical: {rootUntouched:boolean}",
+          ],
+        },
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.reader",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/reader.sdp.md",
     title: "The reader bridges agent entry points to composable graph context",
     narrative: null,
@@ -109,12 +147,37 @@ export const consumersSpecs = [
         rules: [
           "`createReader` constructs a fresh thin typed loader that decodes graph joins, claims, delivery facts, derived readiness, and validation findings once, then returns plain composable data without persisting state.",
           "`findByConcept` and `byFile` bridge strings and extraction-root-relative files to the graph's recorded context.",
+          "`findByConcept` matches a string against every field the graph records — ids, titles, anchor labels, Pack framing, narrative, and reified section content — and names the fields a node matched on rather than returning a bare hit.",
+          "`byFile` answers with the nodes the graph records at the path and with the Specs those nodes reach, so a source file carrying a binding names the Spec it binds and a carrier file names the Spec authored in it.",
           "The reader's `blastRadius` surface maps changed files to directly impacted Specs and Packs, their explicit one-hop at-risk neighbors, and every coverage-unknown file.",
+          "Every impact and at-risk answer carries its reason as data — the changed file, the binding it travelled through, the connecting edge, and that edge's claim — so nothing about the reach is left to the caller's inference.",
           "File-level blast radius reports curated graph reach without claiming exhaustive symbol-level usage reach.",
+          "The realizing entrypoint is `createReader` in `src/reader/reader.ts`.",
         ],
+        exampleSpace: {
+          given: [
+            "a reader built over the graph a real extraction derives from the probe root",
+            "the concept {concept:string} appears in the corpus only inside the recorded context of {conceptSpecId:string}",
+            "the source file {boundFile:string} carries the binding {bindingId:string}",
+            "the changeset also holds the file {unrecordedFile:string} the graph records nothing at",
+          ],
+          when: ['the reader answers the {entry:"concept"|"file"|"changeset"} entry'],
+          then: [
+            "the reader names {matchedId:string} as a match on the field {matchedField:string}",
+            "the reader names {matchCount:number} matches in all",
+            "the file entry names the node {nodeId:string} the graph records at that path",
+            "the file entry reaches the spec {reachedSpecId:string} that binding names",
+            "the spec carrier {carrierFile:string} answers with its own spec {carrierSpecId:string}",
+            "the impacted specs name {impactedSpecId:string} through the binding {impactBindingId:string} at claim {impactClaim:string}",
+            "the one-hop at-risk neighbors name {atRiskId:string} through the edge {atRiskEdge:string} at claim {atRiskClaim:string}",
+            "the at-risk neighbors number {atRiskCount:number}",
+            "the coverage-unknown files name {coverageUnknownFile:string}",
+            "the coverage-unknown files number {coverageUnknownCount:number}",
+          ],
+        },
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.edit-model",
@@ -516,6 +579,208 @@ export const consumersSpecs = [
               "the view directory survives: {viewSurvives: false}",
               "the stale page survives: {staleSurvives: false}",
               "a temporary view sibling survives: {temporarySurvives: false}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.agent-surface.scripted-context-body",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/agent-surface.scripted-context-body.sdp.md",
+    title: "A scripted body returns claim-decoded context, pre-shaped by the body",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the whole path an agent uses — a root, the extractor, the graph, the injected reader, one scripted body — and read back the decode a hand-rolled join gets wrong.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "an extraction root the front door derives in process on the invocation",
+              'the corpus binds the spec {specId: "spec:orders.create-order"} to one anchored verifier and one declared-only verifier',
+            ],
+            when: [
+              'the agent scripts a body {body: "composing that spec\'s verifier bindings"} through the front door',
+            ],
+            then: [
+              "the front door exits {exitCode: 0} with an empty error stream",
+              'the printed answer is exactly the body\'s pre-shaped return {printedAnswer: "spec:orders.create-order.empty-cart is a declared verifier · spec:orders.create-order.valid-cart is an enabled verifier"}',
+              'the anchored verifier {anchoredVerifierId: "spec:orders.create-order.valid-cart"} decodes as enabled while the declared-only verifier {declaredVerifierId: "spec:orders.create-order.empty-cart"} does not',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.agent-surface.demand-map-entries",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/agent-surface.demand-map-entries.sdp.md",
+    title: "One body reaches every entry point the demand map names, and no symbol entry",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the demand map end to end — a string, a file, and a changeset each answered through the front door — and read the deferred symbol entry as honestly absent.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "an extraction root the front door derives in process on the invocation",
+              'the agent holds the concept {concept: "backorder"}, the file {file: "src/create-order.ts"}, and a changeset that also touches the unrecorded file {unrecordedFile: "src/price-book.ts"}',
+            ],
+            when: [
+              'the agent scripts a body {body: "reaching every entry point the demand map names"} through the front door',
+            ],
+            then: [
+              "the front door exits {exitCode: 0} with an empty error stream",
+              'the concept entry answers with the spec {conceptSpecId: "spec:orders.order-management"}',
+              'the file entry answers with the spec {fileSpecId: "spec:orders.create-order"}',
+              'the changeset entry answers with the impacted spec {changesetSpecId: "spec:orders.create-order"}',
+              "the surface offers a symbol entry: {symbolEntry: false}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.reader.concept-entry",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/reader.concept-entry.sdp.md",
+    title:
+      "A concept recorded only inside a Spec's sections is still reached, and the field is named",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the string entry against the case a title-and-id lookup would miss, and read back the field the match was recorded in.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a reader built over the graph a real extraction derives from the probe root",
+              'the concept {concept: "backorder"} appears in the corpus only inside the recorded context of {conceptSpecId: "spec:orders.order-management"}',
+            ],
+            when: ['the reader answers the {entry: "concept"} entry'],
+            then: [
+              'the reader names {matchedId: "spec:orders.order-management"} as a match on the field {matchedField: "sections.behavior"}',
+              "the reader names {matchCount: 1} matches in all",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.reader.file-entry",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/reader.file-entry.sdp.md",
+    title: "A source file reaches the Spec its binding names, and a carrier reaches its own Spec",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the file entry on both halves it has to bridge — a source file the graph records only a binding at, and the carrier a Spec is authored in.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a reader built over the graph a real extraction derives from the probe root",
+              'the source file {boundFile: "src/create-order.ts"} carries the binding {bindingId: "impl:orders.create-order"}',
+            ],
+            when: ['the reader answers the {entry: "file"} entry'],
+            then: [
+              'the file entry names the node {nodeId: "impl:orders.create-order"} the graph records at that path',
+              'the file entry reaches the spec {reachedSpecId: "spec:orders.create-order"} that binding names',
+              'the spec carrier {carrierFile: "specs/create-order.sdp.md"} answers with its own spec {carrierSpecId: "spec:orders.create-order"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.reader.changeset-entry",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/reader.changeset-entry.sdp.md",
+    title: "A changeset names what it reaches, why, and what it cannot see",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the changeset entry on a mixed changeset, so the impacted reason, the one-hop at-risk edge with its claim, and the coverage-unknown file are all read from one answer.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a reader built over the graph a real extraction derives from the probe root",
+              'the source file {boundFile: "src/create-order.ts"} carries the binding {bindingId: "impl:orders.create-order"}',
+              'the changeset also holds the file {unrecordedFile: "src/price-book.ts"} the graph records nothing at',
+            ],
+            when: ['the reader answers the {entry: "changeset"} entry'],
+            then: [
+              'the impacted specs name {impactedSpecId: "spec:orders.create-order"} through the binding {impactBindingId: "impl:orders.create-order"} at claim {impactClaim: "anchored"}',
+              'the one-hop at-risk neighbors name {atRiskId: "spec:orders.order-management"} through the edge {atRiskEdge: "refines"} at claim {atRiskClaim: "declared"}',
+              "the at-risk neighbors number {atRiskCount: 4}",
+              'the coverage-unknown files name {coverageUnknownFile: "src/price-book.ts"}',
+              "the coverage-unknown files number {coverageUnknownCount: 1}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.design-review.pure-projection",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/design-review.pure-projection.sdp.md",
+    title: "The view is the graph read twice, and the corpus is untouched by reading it",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the parent's own law — an index beside a page per Spec and per Pack, a finding rendered as data, byte-identical repeat renders, and nothing written anywhere.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "an extraction root holding a Pack, its member Specs, and one member the checks warn about",
+            ],
+            when: ["the Design Review renders the graph derived from that root"],
+            then: [
+              'the page set holds the index page {indexPage: "index.md"}, one page per Spec, and one page per Pack',
+              'the page {packPage: "pack/orders-v1.md"} renders its members in context',
+              'the page {specPage: "spec/orders.create-order.empty-cart.md"} renders the finding {findingId: "conformance/verifies-linkage"} as data',
+              "a second render from a freshly derived graph is byte-identical: {byteIdentical: true}",
+              "the render leaves the extraction root byte-identical: {rootUntouched: true}",
             ],
           },
         ],

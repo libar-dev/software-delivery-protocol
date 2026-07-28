@@ -89,6 +89,12 @@ export const expectedPackMembers = [
   "spec:consumers.wholesale-view-rewrite.late-stale-page",
   "spec:consumers.wholesale-view-rewrite.failed-run-view-removed",
   "spec:consumers.wholesale-view-rewrite.build-invalidates-view",
+  "spec:consumers.agent-surface.scripted-context-body",
+  "spec:consumers.agent-surface.demand-map-entries",
+  "spec:consumers.reader.concept-entry",
+  "spec:consumers.reader.file-entry",
+  "spec:consumers.reader.changeset-entry",
+  "spec:consumers.design-review.pure-projection",
   "spec:decisions.plain-language-references",
   "spec:decisions.concept-docs-dissolve",
   "spec:decisions.one-validation-path",
@@ -110,4 +116,5 @@ export const expectedPackMembers = [
   "spec:decisions.pack-reified",
   "spec:decisions.agent-surface-scripts-graph",
   "spec:decisions.mcp-deferred",
+  "spec:decisions.agent-front-door",
 ] as const;

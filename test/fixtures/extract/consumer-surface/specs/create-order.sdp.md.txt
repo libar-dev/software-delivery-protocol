@@ -1,0 +1,15 @@
+---
+id: spec:orders.create-order
+kind: behavior
+altitude: story
+readiness: defined
+relations:
+  refines: spec:orders.order-management
+---
+# An order is created from a cart
+
+## Intent
+- outcome: Carry one implementation binding and two verifiers, one of them enabled and one not.
+
+## Behavior
+- rule: A cart holding at least one line becomes an order.

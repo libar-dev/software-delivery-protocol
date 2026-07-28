@@ -68,7 +68,7 @@ These are out of the first slice. Each is genuinely deferred, and the model in `
 
 Deferred deliberately; recorded so they are not lost. None blocks the MVP.
 
-- **Derived-readiness banner timing (resolved, recorded here for traceability).** Floor enforcement and the banner both ship in the MVP: the Design Review renders stated readiness beside the structurally-reached floor and names the first unmet clause — cheaply, because the floor evaluator reports which clause fails. *(`05` §3.)*
+- **Derived-readiness banner timing (resolved, recorded here for traceability).** Floor enforcement and the banner both ship in the MVP: the Design Review renders stated readiness beside the structurally-reached floor and names the first unmet clause — cheaply, because the floor evaluator reports which clause fails. *(`spec:consumers.derived-readiness-banner`, `spec:validation.readiness-floor`.)*
 - **Impact-graph depth (resolved, recorded here for traceability).** The boundary is decided, not open: **file-level** impact ships in the MVP (`git diff` → `byFile` → a curated-graph walk gives changeset blast-radius with no symbol index, surfacing an explicit `coverage-unknown` item for any changed file that has no anchor so a too-small set is never mistaken for complete), while the **exhaustive** impact graph — `bySymbol`, symbol-level identity, cross-package find-all-usages, drift/fan-in tooling — is deferred (Iterate). What remains genuinely open is only *when* the exhaustive graph earns its way in, driven by measured pain (§5), never the MVP boundary itself. *(`06` §2.)*
 - **Inline-vs-centralized anchor semantics.** Anchors carry no intent in the MVP. How much *structural* semantics an anchor may carry beyond the landed binding contract (`id` · optional `label` · one `satisfies`/`verifies` target) — e.g. a future `component`/`implements` — is left configurable later. *(`04` §2.)*
 - **Graph-DB timing.** File-based until measured traversal pain; the schema is designed to map to a property graph later. *(`spec:extraction.regenerability`.)*
@@ -114,7 +114,7 @@ the standing invariant plus where its protection lives.
   `generated/` artifact (`spec:extraction.determinism`).
 - **③ The derived-readiness banner ships in the Design Review.** The view renders stated readiness beside
   the structurally-reached floor and names the first unmet clause — cheap because the floor evaluator
-  reports *which* clause fails (`05` §3, with the open-questions home, MD-9: the floor reads
+  reports *which* clause fails (`spec:validation.readiness-floor`, with the open-questions home, MD-9: the floor reads
   `intent.openQuestions`). The banner fires only in the dishonest direction — derived at-or-above stated is
   ordinary information, because the floor is a floor, never a quota that nags upward. It teaches the core
   honesty concept: stated, then checked.

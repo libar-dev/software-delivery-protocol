@@ -16,7 +16,7 @@ export type SpecSectionName = (typeof SPEC_SECTION_NAMES)[number];
 
 /**
  * The typing law (MD-11): every floor-bearing section — one a readiness-floor clause reads as
- * evidence (`05` §3) — gets a closed typed shape (no index signature). Closed shapes are what reject
+ * evidence (`spec:validation.kind-evidence`) — gets a closed typed shape (no index signature). Closed shapes are what reject
  * the in-section honesty bypass (`behavior: { "has-verifier": true }`) at the type level. The
  * genuinely-unsettled surfaces (`design`, `ui`) stay open bags so they keep breathing (L9). The
  * criterion outlives the list: a section becomes typed when a floor clause starts reading it.

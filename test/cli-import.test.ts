@@ -14,20 +14,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ImportResult } from "../src/index.js";
 import { SDP_HELP_TEXT, runSdpCli } from "../src/cli/sdp.js";
-
-function createCaptureOutput() {
-  const stdoutChunks: string[] = [];
-  const stderrChunks: string[] = [];
-
-  return {
-    output: {
-      stdout: { write: (chunk: string) => stdoutChunks.push(chunk) },
-      stderr: { write: (chunk: string) => stderrChunks.push(chunk) },
-    },
-    readStdout: () => stdoutChunks.join(""),
-    readStderr: () => stderrChunks.join(""),
-  };
-}
+import { createCaptureOutput } from "./helpers/cli-capture.js";
 
 function emittedImport(relativePath: string): ImportResult {
   return {

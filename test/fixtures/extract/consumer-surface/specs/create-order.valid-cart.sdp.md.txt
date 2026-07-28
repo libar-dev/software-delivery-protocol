@@ -1,0 +1,13 @@
+---
+id: spec:orders.create-order.valid-cart
+kind: example
+altitude: story
+readiness: idea
+relations:
+  refines: spec:orders.create-order
+  verifies: spec:orders.create-order
+---
+# A cart holding one line becomes an order
+
+## Intent
+- outcome: Stand as the enabled verifier, bound by a resolving test anchor.

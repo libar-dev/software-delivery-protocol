@@ -21,12 +21,12 @@ import type { Finding, Severity, ValidationReport, ValidatorFamily } from "./con
 import { evaluateReadinessFloor } from "./readiness-floor.js";
 
 /**
- * The MVP graph validators (`05` §2), keyed to the one graph — the sole public validation seam
+ * The MVP graph validators (`spec:validation.two-check-families` and its refining family), keyed to the one graph — the sole public validation seam
  * (one validation path, MD-14): source → extract → graph → checks. Errors fail the build; a
  * `gap` or `orphan` informs as a warning, never a gate. Ids are referenced typo-safely, mirroring
  * `extractFindingIds`.
  *
- * The deferred check families are named (`05` §6) so a future validator never collides here:
+ * The deferred check families are named (`00` §4, `07` §3) so a future validator never collides here:
  * architecture enforcement, custom team rules, and the runtime NFR check (`nfr-violated`, gated
  * on the `observed` fact's producer). Each lands by extending this registry under its own new
  * id — a landed id is never reused or repurposed.
@@ -145,7 +145,7 @@ function describeMissingTarget(missingId: string, index: GraphIndex): string {
   return suggestion === undefined ? "" : ` Did you mean "${suggestion}"?`;
 }
 
-/* ----- conformance/referential-integrity (`05` §2 check 1) ----- */
+/* ----- conformance/referential-integrity (`spec:validation.referential-integrity`) ----- */
 
 function checkReferentialIntegrity(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
   const findings: Finding[] = [];
@@ -207,7 +207,7 @@ function checkReferentialIntegrity(graph: GraphSchema, index: GraphIndex): reado
   return findings;
 }
 
-/* ----- conformance/duplicate-ids (`05` §2 check 2) ----- */
+/* ----- conformance/duplicate-ids (`spec:validation.duplicate-ids`) ----- */
 
 /**
  * The graph backstop for L2: the extractor reports duplicate authored ids per site
@@ -245,7 +245,7 @@ function checkDuplicateIds(graph: GraphSchema): readonly Finding[] {
   return findings;
 }
 
-/* ----- conformance/claim-separation (`05` §2 check 3; the `spec:extraction.derive-graph` edge contract) ----- */
+/* ----- conformance/claim-separation (`spec:validation.claim-separation`; the `spec:extraction.derive-graph` edge contract) ----- */
 
 const nodeTypeSet: ReadonlySet<string> = new Set(graphNodeTypes);
 const claimSet: ReadonlySet<string> = new Set(graphClaims);
@@ -273,7 +273,7 @@ function claimSeparationFinding(message: string, subjectId: string, file?: strin
 }
 
 /**
- * The descriptor half of "node typing valid" (`05` §2 check 3): the graph is the public seam, and
+ * The descriptor half of "node typing valid" (`spec:validation.claim-separation`): the graph is the public seam, and
  * a foreign producer can carry any string in a descriptor slot the types promise is an enum. The
  * floor dereferences `specKind` and `readiness`, so an unratified value fails closed here as a
  * conformance error — and `evaluateReadinessFloor` evaluates no clauses over it (the same
@@ -506,7 +506,7 @@ function checkClaimSeparation(graph: GraphSchema, index: GraphIndex): readonly F
   return findings;
 }
 
-/* ----- conformance/verifies-linkage (`05` §2 check 4 — the surfaced half) ----- */
+/* ----- conformance/verifies-linkage (`spec:validation.verification-linkage` — the surfaced half) ----- */
 
 /**
  * The missing-target half of the check is referential integrity's (it is reference resolution).
@@ -633,7 +633,7 @@ function checkOracleLinkage(graph: GraphSchema, index: GraphIndex): readonly Fin
   return findings;
 }
 
-/* ----- conformance/pack-coherence (`05` §4; F4) ----- */
+/* ----- conformance/pack-coherence (`spec:validation.pack-coherence`; F4) ----- */
 
 function checkPackMembers(pack: PackNode, index: GraphIndex, findings: Finding[]): void {
   const memberCounts = new Map<string, number>();
@@ -711,7 +711,7 @@ function checkPackCoherence(graph: GraphSchema, index: GraphIndex): readonly Fin
   return findings;
 }
 
-/* ----- conformance/orphans (`05` §2 check 8 — informative) ----- */
+/* ----- conformance/orphans (`spec:validation.warn-level-signals` — informative) ----- */
 
 function checkOrphans(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
   const findings: Finding[] = [];
@@ -743,7 +743,7 @@ function checkOrphans(graph: GraphSchema, index: GraphIndex): readonly Finding[]
   return findings;
 }
 
-/* ----- honesty/authoring-shape (`05` §2 check 5) ----- */
+/* ----- honesty/authoring-shape (`spec:validation.authored-honesty`) ----- */
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -805,7 +805,7 @@ function checkAuthoringShape(node: PrimitiveNode, findings: Finding[]): void {
   }
 }
 
-/* ----- honesty/delivery-facts (`05` §2 check 6) ----- */
+/* ----- honesty/delivery-facts (`spec:validation.authored-honesty`) ----- */
 
 /**
  * Delivery facts are derived, never authored (`spec:model.core-model`) — and on the public graph seam a
@@ -880,7 +880,7 @@ function checkDeliveryFacts(
   return findings;
 }
 
-/* ----- honesty/readiness-floor (`05` §2 check 7, §3) ----- */
+/* ----- honesty/readiness-floor (`spec:validation.readiness-floor`, `spec:validation.kind-evidence`) ----- */
 
 function checkReadinessFloors(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
   const findings: Finding[] = [];
@@ -909,7 +909,7 @@ function checkReadinessFloors(graph: GraphSchema, index: GraphIndex): readonly F
   return findings;
 }
 
-/* ----- honesty/gaps (`05` §2 check 9 — informative) ----- */
+/* ----- honesty/gaps (`spec:validation.warn-level-signals` — informative) ----- */
 
 /**
  * Reads the *recomputed* facts, never the node's stated array — a stated `has-verifier` no

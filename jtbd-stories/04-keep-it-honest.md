@@ -8,7 +8,7 @@ A graph nobody trusts is worthless. The job here is to make the delivery state *
 ### Fail CI on broken links and false stated readiness
 
 **Phase:** MVP
-**References:** [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md)
+**References:** [the two-check-families spec](../specs/validation/two-check-families.sdp.md) (`spec:validation.two-check-families`), [the readiness-floor spec](../specs/validation/readiness-floor.sdp.md) (`spec:validation.readiness-floor`)
 
 > **When** I open a pull request, **I want to** have CI reject dangling references, duplicate IDs, broken `verifies` links, and a stated readiness the spec doesn't back up — and surface orphans and missing verifiers as `gap`s — **so I can** trust that a green build means the delivery state is actually coherent.
 
@@ -30,7 +30,7 @@ A graph nobody trusts is worthless. The job here is to make the delivery state *
 ### Enforce completeness rules per readiness level
 
 **Phase:** MVP
-**References:** [05 — Validation & Honesty](../docs/concept/05-validation-and-honesty.md), [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`)
+**References:** [the readiness-floor spec](../specs/validation/readiness-floor.sdp.md) (`spec:validation.readiness-floor`), [the kind-evidence spec](../specs/validation/kind-evidence.sdp.md) (`spec:validation.kind-evidence`), [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`)
 
 > **When** a spec states a readiness level, **I want to** have the system require the sections and links that level's floor demands, **so I can** rely on readiness as a real signal rather than a self-asserted label.
 

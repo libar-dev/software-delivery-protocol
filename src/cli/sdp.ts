@@ -7,8 +7,10 @@ import { parseBuildArgs } from "./build-args.js";
 import { runBuild } from "./build-command.js";
 import { parseImportArgs, runImport } from "./import-command.js";
 import type { ImportHooks } from "./import-command.js";
-import { defaultCliOutput, writeStderr, writeStdout } from "./output.js";
+import { defaultCliOutput, errorMessage, writeStderr, writeStdout } from "./output.js";
 import type { CliOutput } from "./output.js";
+import { parseQueryArgs, runQuery } from "./q-command.js";
+import type { QueryHooks } from "./q-command.js";
 import { runValidate, runView } from "./validate-view-command.js";
 import type { ValidationViewHooks } from "./validate-view-command.js";
 
@@ -19,6 +21,7 @@ Usage:
   sdp validate [root] [--exclude PATH]... [--check-clean]
   sdp view [root] [--exclude PATH]... [--check-clean]
   sdp import <path...> [--dry-run]
+  sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--json]
 
 Commands:
   build      Extract every *.sdp.ts and *.sdp.md under root (default: cwd), plus the anchor
@@ -46,17 +49,36 @@ Commands:
              findings and never throw or overwrite. Exits 0 only when every requested source
              emits (or would emit); any finding error or operational failure exits 1. Publication
              creates atomic hard links; the target filesystem must support them (FAT/exFAT and
-             some network mounts do not).`;
+             some network mounts do not).
+  q          The agent front door: derive the graph under --root (default: cwd) in process, then
+             evaluate the supplied body and print what it returns. The body is the single
+             positional argument, or stdin when stdin is not a terminal; with neither, q refuses
+             with a usage note and exits 1 rather than waiting. It is a plain JavaScript async function
+             body — no import/export, no TypeScript-only syntax — and \`return\` is the output
+             contract. Three bindings are injected: \`g\`, the reader over the derived graph (the
+             same createReader the package exports); \`graph\`, the raw graph schema object; and
+             \`report\`, the validation report, so honesty findings are queryable data rather than a
+             gate — checks never gate the read path. The graph is derived on every invocation, so a
+             just-authored Spec is queryable immediately and no committed artifact answers in the
+             graph's name; nothing is written anywhere. Output is bounded util.inspect (depth 4);
+             --json prints JSON.stringify instead, unbounded. A body that throws exits 1, as does a
+             graph that fails to derive.`;
 
 interface CliHooks extends ValidationViewHooks {
   readonly import?: ImportHooks;
+  readonly query?: QueryHooks;
 }
 
+/**
+ * Every verb but `q` completes synchronously; `q` awaits an operator-supplied async body, so the
+ * dispatcher's return type carries that one asynchronous branch rather than making every caller of
+ * a synchronous verb await a resolved promise.
+ */
 export function runSdpCli(
   args: readonly string[],
   output: CliOutput = defaultCliOutput,
   hooks: CliHooks = {},
-): number {
+): number | Promise<number> {
   const [command, ...rest] = args;
 
   if (command === undefined || command === "--help") {
@@ -64,7 +86,13 @@ export function runSdpCli(
     return 0;
   }
 
-  if (command !== "build" && command !== "validate" && command !== "view" && command !== "import") {
+  if (
+    command !== "build" &&
+    command !== "validate" &&
+    command !== "view" &&
+    command !== "import" &&
+    command !== "q"
+  ) {
     writeStderr(output, `${SDP_HELP_TEXT}\n\nUnknown command: ${command}\n`);
     return 1;
   }
@@ -73,6 +101,12 @@ export function runSdpCli(
     const parsed = parseImportArgs(rest, output);
 
     return parsed === undefined ? 1 : runImport(parsed, output, hooks.import);
+  }
+
+  if (command === "q") {
+    const parsed = parseQueryArgs(rest, output);
+
+    return parsed === undefined ? 1 : runQuery(parsed, output, hooks.query);
   }
 
   const parsed = parseBuildArgs(rest, output, command);
@@ -104,6 +138,46 @@ export function isCliEntrypoint(executedPath: string | undefined, moduleUrl: str
   }
 }
 
+/**
+ * The stdout error handler the entrypoint installs. A downstream reader closing early
+ * (`sdp q '…' --json | head`) surfaces as an asynchronous 'error' event on the stdout socket,
+ * which no try/catch inside a command can reach — and nobody is listening for output any more, so
+ * the honest answer is a quiet successful exit, not an engine stack trace. Anything other than
+ * EPIPE stays fatal.
+ */
+export function onStdoutError(error: NodeJS.ErrnoException, exit: (code: number) => void): void {
+  if (error.code === "EPIPE") {
+    exit(0);
+    return;
+  }
+
+  throw error;
+}
+
 if (isCliEntrypoint(process.argv[1], import.meta.url)) {
-  process.exitCode = runSdpCli(process.argv.slice(2));
+  process.stdout.on("error", (error: NodeJS.ErrnoException) => {
+    onStdoutError(error, (code) => {
+      // A hard exit, not `process.exitCode`: pending writes would re-emit the same error.
+      process.exit(code);
+    });
+  });
+
+  const outcome = runSdpCli(process.argv.slice(2));
+
+  if (typeof outcome === "number") {
+    process.exitCode = outcome;
+  } else {
+    void outcome.then(
+      (exitCode) => {
+        process.exitCode = exitCode;
+      },
+      // A rejection here is an engine defect escaping every command-level catch (the commands
+      // render their own failures); it still reports through the diagnostic currency and exits 1
+      // instead of dying as an unhandled rejection.
+      (error: unknown) => {
+        writeStderr(defaultCliOutput, `sdp: ${errorMessage(error)}\n`);
+        process.exitCode = 1;
+      },
+    );
+  }
 }

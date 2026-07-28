@@ -103,7 +103,7 @@ alarm**.
 | **`nodeType` / `specKind`** | structural class (`Primitive`/`Pack`/`Anchor`/`CodeNode`/…) vs the truth-category on `Primitive` nodes — kept split so they never collide | a single `kind` field |
 | **git is the event log** | history and prior states live in git; the graph carries only current state | audit tables / lifecycle bookkeeping in the graph |
 
-## Validation & honesty  (→ `05`)
+## Validation & honesty  (→ `spec:validation.two-check-families`, `spec:validation.readiness-floor`)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
@@ -127,6 +127,10 @@ validated," never "provably correct."**
 | **Design Review** | the flagship curated review: a `Spec`/`Pack` rendered *in context* — the context in which a human decides to state `ready`; human practice, never a recorded fact or gate | — |
 | **agent surface** | a **visible typed graph the agent *scripts*** via the typed CLI — no verb wall; the schema *is* the contract (under-typing hides a capability) | a 30-verb API · raw-JSON-you-rejoin |
 | **`reader`** | the thin typed loader: joins + `claim` decode done once, returns composable data; authors/persists nothing — a front door, not a store | "handle" |
+| **agent front door** | the CLI-facing realization of the agent surface (MD-22): **two entrances over one seam** — the package exports the `reader` constructor, and the CLI carries the evaluation sink; a composite naming both entrances, distinct from the `reader`'s own "front door, not a store" gloss above, which names the reader's role over the graph | a query API · a verb wall |
+| **evaluation sink** | the front door's CLI entrance, the verb `sdp q`: derives the graph in process on every invocation, injects `g` / `graph` / `report`, evaluates the operator-supplied async body, prints its `return`; writes nothing and mints no query vocabulary | a REPL · a second read model |
+| **demand map** | the ruled statement of how agents actually arrive — holding a **string**, a **file**, or a **changeset**, never the Spec id they are looking for — carried as clauses on `spec:consumers.agent-surface`; the reason the frozen entry adapters are `findByConcept` · `byFile` · `blastRadius` | — |
+| **recipe** | a runnable, documented `sdp q` body composing the frozen adapters — the growth valve past them: when a question is not answered, script it, and a join freezes into the `reader` only at the second-caller bar; catalog at `docs/agent-surface/recipes.md`, every body executed as written by the recipe check | a new query verb |
 | **blast radius** | the reader's file-level impact query: a changeset → the directly impacted `Spec`s/`Pack`s (authored at, or bound to, the changed files) + the explicit one-hop neighborhood; never claims exhaustive reach | — |
 | **coverage-unknown** | the honest blind spot of file-level impact: a changed file the graph records nothing at, **named in the result** — never silently dropped | — |
 | **at-risk** | a node one explicit hop from an impacted node (the connecting edge + its `claim` carried), itself neither impacted nor at a changed file | — |
@@ -221,7 +225,10 @@ artifact** — approval remains outside the model, never an authored primitive).
   `blast radius` / `coverage-unknown` / `at-risk` · `derived readiness` · `step contract` ·
   `space contract` · `example space` · `parameter slot` (short *slot*) · `bound point` · `oracle`
   (`specOracle` anchor; rendered as "expected outcome") · `witness` · `coverage gap` · `sdp import` ·
-  `carrier` · `notation` (both ratified at the carrier ruling, MD-18).
+  `carrier` · `notation` (both ratified at the carrier ruling, MD-18) ·
+  `agent front door` · `evaluation sink` / `sdp q` · `demand map` · `recipe` (the growth-valve
+  sense) — the last four ratified at the phase-5 PR review (the front-door ruling, MD-22); the
+  **Surfaces & projections** rows above give the referents.
 - **Descriptor values locked:** `kind` ∈ {`behavior`,`workflow`,`example`,`rule`,`constraint`,`model`,
   `decision`,`contract`} · `altitude` ∈ {`epic`,`feature`,`story`} · `readiness` ∈
   {`idea`,`scoped`,`defined`,`ready`}.

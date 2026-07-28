@@ -1,4 +1,13 @@
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
@@ -10,6 +19,7 @@ import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
 import { boundSpecPageContract } from "../generated/contracts/consumers.binding-language-views.bound-spec-page.contract.js";
 import { packMemberTableContract } from "../generated/contracts/consumers.binding-language-views.pack-member-table.contract.js";
 import { dishonestDivergenceContract } from "../generated/contracts/consumers.derived-readiness-banner.dishonest-divergence.contract.js";
+import { pureProjectionContract } from "../generated/contracts/consumers.design-review.pure-projection.contract.js";
 import { honestHeadroomContract } from "../generated/contracts/consumers.derived-readiness-banner.honest-headroom.contract.js";
 import { buildInvalidatesViewContract } from "../generated/contracts/consumers.wholesale-view-rewrite.build-invalidates-view.contract.js";
 import { failedRunViewRemovedContract } from "../generated/contracts/consumers.wholesale-view-rewrite.failed-run-view-removed.contract.js";
@@ -36,6 +46,8 @@ import { formatFinding } from "../src/cli/output.js";
 import { runView } from "../src/cli/validate-view-command.js";
 import { extract } from "../src/extract/index.js";
 import { renderFindings } from "../src/projections/design-review-context.js";
+import { validateGraph } from "../src/validate/validators.js";
+import { materializeExtractCorpus } from "./helpers/extract-corpus.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
 /**
@@ -70,6 +82,189 @@ function pageOf(pages: readonly DesignReviewPage[], path: string): string {
 
   return page.content;
 }
+
+/* ----- spec:consumers.design-review ----- */
+
+/** Path-and-content digest of a whole tree — the evidence that reading the graph wrote nothing. */
+function fingerprintTree(root: string): string {
+  const hash = createHash("sha256");
+  const walk = (directory: string): void => {
+    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((left, right) =>
+      left.name < right.name ? -1 : left.name > right.name ? 1 : 0,
+    )) {
+      const path = join(directory, entry.name);
+      hash.update(path);
+      hash.update("\0");
+
+      if (entry.isDirectory()) {
+        walk(path);
+      } else {
+        hash.update(readFileSync(path));
+        hash.update("\0");
+      }
+    }
+  };
+  walk(root);
+
+  return hash.digest("hex");
+}
+
+interface ProjectionWorld {
+  readonly root: string;
+  fingerprintBefore: string;
+  fingerprintAfter: string;
+  specIds: readonly string[];
+  packIds: readonly string[];
+  warning: Finding | undefined;
+  pages: readonly DesignReviewPage[] | undefined;
+  secondPages: readonly DesignReviewPage[] | undefined;
+}
+
+function projectionWorld(): ProjectionWorld {
+  // The whole pipeline over a real on-disk root: nothing here hands the projection a hand-built
+  // graph, because a page that is a pure function of the graph can only be read as one when the
+  // graph came from the extractor the way it does in production.
+  const root = materializeExtractCorpus("consumer-surface");
+  temporaryRoots.add(root);
+
+  return {
+    root,
+    fingerprintBefore: "",
+    fingerprintAfter: "",
+    specIds: [],
+    packIds: [],
+    warning: undefined,
+    pages: undefined,
+    secondPages: undefined,
+  };
+}
+
+function renderedPagesOf(world: ProjectionWorld): readonly DesignReviewPage[] {
+  if (world.pages === undefined) {
+    throw new Error("The rendering step must run before the page set is read.");
+  }
+
+  return world.pages;
+}
+
+function localOf(id: string): string {
+  return id.slice(id.indexOf(":") + 1);
+}
+
+const pureProjectionBindings = {
+  "an extraction root holding a Pack, its member Specs, and one member the checks warn about": (
+    world: ProjectionWorld,
+  ) => {
+    const derived = extract({ root: world.root });
+
+    expect(derived.report.findings).toEqual([]);
+    world.specIds = derived.graph.nodes
+      .filter((node) => node.nodeType === "Primitive")
+      .map((node) => node.id);
+    world.packIds = derived.graph.nodes
+      .filter((node) => node.nodeType === "Pack")
+      .map((node) => node.id);
+    expect(world.specIds.length).toBeGreaterThan(1);
+    expect(world.packIds).toHaveLength(1);
+
+    const findings = validateGraph(derived.graph).findings;
+
+    expect(findings.filter((finding) => finding.severity === "error")).toEqual([]);
+    expect(findings).toHaveLength(1);
+    world.warning = findings[0];
+  },
+  "the Design Review renders the graph derived from that root": (world: ProjectionWorld) => {
+    world.fingerprintBefore = fingerprintTree(world.root);
+    world.pages = renderDesignReview(createReader(extract({ root: world.root }).graph));
+    // The second run derives its own graph from the same source rather than re-using the first
+    // one: a renderer that carried a timestamp, a run id, or a cached handle would diverge here
+    // where a re-render off one graph object could still agree.
+    world.secondPages = renderDesignReview(createReader(extract({ root: world.root }).graph));
+    world.fingerprintAfter = fingerprintTree(world.root);
+  },
+  "the page set holds the index page {indexPage}, one page per Spec, and one page per Pack": (
+    world: ProjectionWorld,
+    params: { readonly indexPage: string },
+  ) => {
+    expect(renderedPagesOf(world).map((page) => page.path)).toEqual(
+      [
+        params.indexPage,
+        ...world.specIds.map((id) => `spec/${localOf(id)}.md`),
+        ...world.packIds.map((id) => `pack/${localOf(id)}.md`),
+      ].sort(),
+    );
+    // The index is a page of the graph too, not a stub: every Spec is reachable from it.
+    for (const id of world.specIds) {
+      expect(pageOf(renderedPagesOf(world), params.indexPage)).toContain(`\`${id}\``);
+    }
+  },
+  "the page {packPage} renders its members in context": (
+    world: ProjectionWorld,
+    params: { readonly packPage: string },
+  ) => {
+    const rendered = pageOf(renderedPagesOf(world), params.packPage);
+
+    // In context means the aggregate reads as a review set: every member, linked, with the
+    // descriptors and binding words the review is conducted in.
+    for (const id of world.specIds) {
+      expect(rendered).toContain(`[\`${id}\`](../spec/${localOf(id)}.md)`);
+    }
+    expect(rendered).toContain("| Spec | Kind | Altitude | Stated | Floor reached |");
+  },
+  "the page {specPage} renders the finding {findingId} as data": (
+    world: ProjectionWorld,
+    params: { readonly specPage: string; readonly findingId: string },
+  ) => {
+    const rendered = pageOf(renderedPagesOf(world), params.specPage);
+    const warning = world.warning;
+
+    expect(warning?.validatorId).toBe(params.findingId);
+    expect(rendered).toContain(`\`${params.findingId}\``);
+    expect(rendered).toContain(warning?.severity ?? "");
+    // Rendered in context and nowhere else: the finding appears beside every node it names and
+    // beside no node it does not. It is the report's data placed where it is read, never a verdict
+    // the view attaches to the corpus. (The index is the whole report's aggregate, lawfully.)
+    expect(warning?.subjectId).toBe(`spec:${params.specPage.slice("spec/".length, -".md".length)}`);
+    const named = new Set([warning?.subjectId, warning?.relatedId]);
+
+    for (const page of renderedPagesOf(world)) {
+      if (page.path === "index.md") {
+        continue;
+      }
+
+      const [directory, file] = page.path.split("/");
+      const subject = `${directory === "spec" ? "spec" : "pack"}:${(file ?? "").slice(0, -".md".length)}`;
+
+      expect(page.content.includes(`\`${params.findingId}\``), page.path).toBe(named.has(subject));
+    }
+  },
+  "a second render from a freshly derived graph is byte-identical: {byteIdentical}": (
+    world: ProjectionWorld,
+    params: { readonly byteIdentical: boolean },
+  ) => {
+    expect(JSON.stringify(world.secondPages) === JSON.stringify(world.pages)).toBe(
+      params.byteIdentical,
+    );
+  },
+  "the render leaves the extraction root byte-identical: {rootUntouched}": (
+    world: ProjectionWorld,
+    params: { readonly rootUntouched: boolean },
+  ) => {
+    // Stores no finding, writes no canonical source: two renders later the corpus is the file
+    // tree it was, with no view directory, no report, and no approval recorded anywhere.
+    expect(world.fingerprintAfter === world.fingerprintBefore).toBe(params.rootUntouched);
+    expect(existsSync(join(world.root, "generated"))).toBe(!params.rootUntouched);
+  },
+};
+
+const pureProjectionTestAnchor = specTest({
+  id: testAnchorId("test:protocol.design-review.pure-projection"),
+  label: "the pure-projection point verifies the view's own law over a whole-pipeline root",
+  verifies: ref("spec:consumers.design-review.pure-projection"),
+});
+void pureProjectionTestAnchor;
+
+bindExample(pureProjectionContract, projectionWorld, pureProjectionBindings);
 
 /* ----- spec:consumers.derived-readiness-banner ----- */
 

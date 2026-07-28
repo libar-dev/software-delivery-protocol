@@ -2,8 +2,9 @@ import { constrainedBy, pack, packId, refines, spec, specId } from "../../src/in
 import type { FixtureModel } from "../helpers/fixture-graph.js";
 
 /**
- * Systematic should-pass / should-fail fixtures for the graph validators (`05` §5 "Validator
- * self-testing"). Each fixture pins a single validator outcome so a regression that silently stops
+ * Systematic should-pass / should-fail fixtures for the graph validators
+ * (`spec:validation.validator-self-testing`). Each fixture pins a single validator outcome so a
+ * regression that silently stops
  * a validator firing is itself caught. Fixtures are authored with the DSL builders and derived
  * through the real `deriveGraph` (see `helpers/fixture-graph.ts`); `validateGraph` consumes the
  * result — the same seam every consumer uses (one validation path, MD-14).

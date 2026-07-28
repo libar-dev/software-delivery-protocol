@@ -157,9 +157,15 @@ const CLAIMS = [
     absent: ["editing TypeScript + git"],
   },
   {
-    file: "docs/concept/05-validation-and-honesty.md",
+    // Re-pointed from the dissolved validation-and-honesty document at the Spec that carries the
+    // law: the claim outlives the exposition, so the pin follows the carrier rather than dying
+    // with the document.
+    file: "specs/decisions/one-validation-path.sdp.md",
     label: "the one validation path keeps its law with per-carrier authoring-time feedback",
-    present: ["Authoring-time feedback is per-carrier", "there is exactly one validation path"],
+    present: [
+      "Validators consume the derived graph through one path: source, extraction, graph, then checks",
+      "Typed authoring feedback and extraction findings remain distinct from graph validation rather than becoming a second validator",
+    ],
     absent: ["Authoring-time feedback is the type system's job"],
   },
   {
@@ -516,12 +522,11 @@ const RULES = [
     category: PLURAL,
   },
 
-  // 05 — validation & honesty.
-  {
-    file: "docs/concept/05-validation-and-honesty.md",
-    includes: "the type system's job in the TS carrier",
-    category: STILL_SUPPORTED,
-  },
+  // Validation & honesty: the document dissolved into the validation Specs, and its single
+  // classified TypeScript mention went with it. Family C classifies mentions *within the scanned
+  // concept/JTBD corpus*, so this rule is retired rather than re-pointed — a rule aimed at a file
+  // outside the scan would match nothing and fail as stale. The law it guarded is pinned on the
+  // carrying Spec by the Family A claim above.
 
   // 07 — roadmap & open questions.
   {
