@@ -619,4 +619,34 @@ export const decisionsSpecs = [
     },
     deliveryFacts: [],
   },
+  {
+    id: "spec:decisions.example-realization-posture",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/example-realization-posture.sdp.md",
+    title: "Example realization stays evidence, not backlog work",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep implementation bindings direct while making the operational build backlog name work that can own a realization.",
+      },
+      decision: {
+        context:
+          "The raw `ready ∧ ¬implemented` query includes every ready example whose bound suite verifies its parent even though the example usually owns no implementation site distinct from that parent.",
+        decision:
+          "Ready example Specs are verification evidence and are excluded from the canonical build-backlog recipe; `implemented` remains a direct, anchor-derived delivery fact with no propagation through refinement.",
+        rationale: [
+          "Deriving an example's implementation through its parent would introduce an inferred realization claim that no source binding asserted, while adding one anchor per example would turn evidence points into ceremonial implementation sites. Keeping the fact direct preserves the claim boundary and leaves a rare example that genuinely owns a distinct realization free to carry its own code anchor.",
+        ],
+        consequences: [
+          "The unqualified raw `ready ∧ ¬implemented` expression remains literally true but is not the operational backlog definition because it includes example evidence.",
+          "The canonical backlog recipe and adopter guidance filter out examples and report both the excluded count and any excluded ready example missing verifier evidence.",
+          "Consumers that hand-roll the raw expression must opt into the example posture explicitly rather than assuming refinement confers implementation.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
 ] as const;

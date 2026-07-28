@@ -13,7 +13,7 @@ session with the build-backlog and drift-alarm recipes. In the Protocol reposito
 At this repository root, use the exact self-hosting exclusions:
 
 ```sh
-node ./dist/cli/sdp.js q 'return g.specs().filter((spec) => spec.statedReadiness === "ready" && !spec.deliveryFacts.includes("implemented")).map((spec) => spec.id)' --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+node ./dist/cli/sdp.js q 'const ready = g.specs().filter((spec) => spec.statedReadiness === "ready"); const backlog = ready.filter((spec) => spec.specKind !== "example" && !spec.deliveryFacts.includes("implemented")); const excludedExamples = ready.filter((spec) => spec.specKind === "example" && !spec.deliveryFacts.includes("implemented")); return {backlog: backlog.map((spec) => spec.id), excludedReadyExamples: excludedExamples.length, excludedWithoutVerifier: excludedExamples.filter((spec) => !spec.deliveryFacts.includes("has-verifier")).map((spec) => spec.id)}' --exclude explorations --exclude examples --exclude test/fixtures/import/parity
 node ./dist/cli/sdp.js q 'return g.specs().filter((spec) => spec.deliveryFacts.includes("implemented") && spec.statedReadiness !== "ready").map((spec) => spec.id)' --exclude explorations --exclude examples --exclude test/fixtures/import/parity
 ```
 
@@ -62,6 +62,10 @@ unrelated binary with that name. Adopters should use their chosen package runner
 
 The graph can report a resolving `specTest` binding. It cannot detect a generated contract that no
 suite binds because `bindExample` call sites are not extracted graph data.
+
+Ready examples normally carry verification evidence rather than build-backlog work. The canonical
+backlog recipe excludes them while reporting their count and any missing verifier binding; it does
+not infer `implemented` through their parent.
 
 ## Bind implementation and review
 

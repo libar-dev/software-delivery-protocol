@@ -661,6 +661,45 @@ export const validationSpecs = [
     deliveryFacts: ["has-verifier"],
   },
   {
+    id: "spec:validation.oracle-target-eligibility",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "scoped",
+    file: "specs/validation/oracle-target-eligibility.sdp.md",
+    title: "Oracle eligibility follows example-space ownership",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let an expected-outcome oracle model any Spec whose own law defines an example space, regardless of Spec kind.",
+        openQuestions: [
+          {
+            question:
+              "Which shared resolution predicate and diagnostic seam must change so validator and reader consumers stay fail-closed together?",
+            blocking: true,
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "Oracle target eligibility follows ownership of an example space, not a behavior-kind check.",
+        ],
+        exampleSpace: {
+          given: [
+            'the oracle targets a {targetKind:"behavior"|"rule"} spec',
+            "the target owns an example space: {ownsExampleSpace:boolean}",
+          ],
+          when: ["oracle linkage is resolved"],
+          then: [
+            "the report contains {findingCount:number} oracle-linkage findings",
+            "a resolving oracle is present: {oraclePresent:boolean}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
     id: "spec:validation.pack-coherence",
     specKind: "rule",
     altitude: "story",

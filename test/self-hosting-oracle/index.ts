@@ -9,6 +9,7 @@ import { consumersSpecs } from "./consumers.js";
 import { decisionsSpecs } from "./decisions.js";
 import { extractionSpecs } from "./extraction.js";
 import { modelSpecs } from "./model.js";
+import { observationSpecs } from "./observation.js";
 import { protocolSpecs } from "./protocol.js";
 import { validationSpecs } from "./validation.js";
 
@@ -39,6 +40,7 @@ export const specFamilies: readonly SpecFamily[] = [
   { name: "extraction", prefix: "spec:extraction.", specs: extractionSpecs },
   { name: "validation", prefix: "spec:validation.", specs: validationSpecs },
   { name: "model", prefix: "spec:model.", specs: modelSpecs },
+  { name: "observation", prefix: "spec:observation.", specs: observationSpecs },
   { name: "consumers", prefix: "spec:consumers.", specs: consumersSpecs },
   { name: "decisions", prefix: "spec:decisions.", specs: decisionsSpecs },
 ];

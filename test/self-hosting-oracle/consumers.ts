@@ -837,6 +837,35 @@ export const consumersSpecs = [
     deliveryFacts: ["implemented", "has-verifier"],
   },
   {
+    id: "spec:consumers.impact-graph",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    file: "specs/consumers/impact-graph.sdp.md",
+    title: "An impact graph can answer exhaustive code-structure questions",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give symbol and import impact questions an exhaustive derived substrate without promoting mechanical structure into curated intent.",
+        openQuestions: [
+          {
+            question:
+              "Which language-neutral identity and extraction boundary can support exhaustive symbol reach without freezing a single compiler's representation into the Protocol?",
+            blocking: true,
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "Mechanical import and symbol structure is inferred and remains distinct from the sparse curated graph.",
+          "Candidate relationship suggestions and unambiguous-drift flags are assistive outputs; neither authors intent or silently rewrites the curated graph.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
     id: "spec:consumers.intent-composition",
     specKind: "behavior",
     altitude: "story",

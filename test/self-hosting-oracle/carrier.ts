@@ -49,6 +49,34 @@ export const carrierSpecs = [
     deliveryFacts: ["implemented", "has-verifier"],
   },
   {
+    id: "spec:carrier.markdown-pack-authoring",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    file: "specs/carrier/markdown-pack-authoring.sdp.md",
+    title: "Packs may gain a Markdown authoring carrier",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let a Markdown Pack manifest carry the same grouping identity, framing, membership, and model references as the TypeScript form.",
+        openQuestions: [
+          {
+            question:
+              "What Pack-specific Markdown syntax preserves one canonical surface per Pack without pretending the Spec carrier ruling already chose it?",
+            blocking: true,
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "A future Markdown Pack carrier must preserve parity with the Pack aggregate and duplicate-ID laws before it can replace the TypeScript default.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
     id: "spec:carrier.markdown-parser",
     specKind: "behavior",
     altitude: "feature",

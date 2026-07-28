@@ -19,3 +19,4 @@ relations:
 - **altitude** — The scope position `epic`, `feature`, or `story`.
 - **readiness** — The author-stated design-maturity position `idea`, `scoped`, `defined`, or `ready`, checked against a structural floor.
 - **delivery fact** — A derived realization signal such as implemented or has-verifier; it is never authored readiness.
+- **direct realization** — `implemented` follows a resolving implementation binding and never propagates through refinement; examples normally provide verification evidence rather than implementation work.

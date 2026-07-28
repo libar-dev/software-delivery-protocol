@@ -43,6 +43,8 @@ export const modelSpecs = [
           altitude: "The scope position `epic`, `feature`, or `story`.",
           "delivery fact":
             "A derived realization signal such as implemented or has-verifier; it is never authored readiness.",
+          "direct realization":
+            "`implemented` follows a resolving implementation binding and never propagates through refinement; examples normally provide verification evidence rather than implementation work.",
           envelope:
             "The stable outer shape of id, title, kind, altitude, readiness, and relations; sections carry extension detail.",
           kind: "The true subtype that categorizes a Spec's truth and changes its required detail and validation.",
@@ -299,6 +301,8 @@ export const modelSpecs = [
             "An implementation-flavored binding that derives an anchored satisfies edge.",
           "document-realization binding":
             "When the realizing artifact is authored Markdown that cannot carry an extracted in-code anchor, the executable suite that asserts the shipped document may carry its code anchor. Its label must name the document realization rather than imply the test body is the product, and file-level blast radius remains coverage-unknown for the Markdown artifact.",
+          "executable binding boundary":
+            "A resolving `specTest` anchor can establish verifier realization; a `bindExample` call executes a generated contract but is not extracted graph data, so the graph cannot claim from that call alone that the contract is bound.",
           "oracle anchor":
             "A binding that records an oracle's models target without deriving a delivery fact.",
           "test anchor":

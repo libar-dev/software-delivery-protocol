@@ -92,6 +92,9 @@ read the carrying Spec.
   Pass, fail, skip, and quarantine are CI's.
 - **Do not read `implemented` as "it is live."** It says a code anchor binds to the Spec. Runtime
   evidence would be `observed`, which is not tracked.
+- **Do not use raw `ready ∧ ¬implemented` as the operational backlog.** Under the example realization
+  posture it also includes ready example evidence; recipe 1 excludes examples and reports their
+  verifier health without inventing inherited implementation.
 - **Do not collapse the claim taxonomy.** `declared` is authored intent, `anchored` is a human
   binding from source, `inferred` is machine-derived structure. Carry the claim into your answer.
 - **Do not treat stated readiness as derived readiness.** `statedReadiness` is the author's

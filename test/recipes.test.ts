@@ -260,23 +260,51 @@ describe("the agent-surface recipe corpus", () => {
     }
   });
 
-  it("returns a build backlog of stated-ready specs no code binds", async () => {
+  it("returns the non-example build backlog and audits excluded example evidence", async () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(1)));
     const byFamily = asRecord(result.byFamily);
     const entries = Object.values(byFamily).flatMap((family) => asArray(family));
 
     expect(numberAt(result, "total")).toBe(entries.length);
 
-    // Completeness, not just soundness: the rows must be exactly the graph's `ready ∧ ¬implemented`
-    // set, so a body that under-reports — an empty backlog over a corpus that has one — reddens.
+    // Completeness, not just soundness: the rows must be exactly the operational
+    // `ready ∧ kind≠example ∧ ¬implemented` set. The excluded example set is checked separately,
+    // so filtering it from backlog work cannot hide missing verification evidence.
     const expected = [...primitivesById.values()]
       .filter(
-        (node) => node.readiness === "ready" && !(node.deliveryFacts ?? []).includes("implemented"),
+        (node) =>
+          node.readiness === "ready" &&
+          node.specKind !== "example" &&
+          !(node.deliveryFacts ?? []).includes("implemented"),
       )
       .map((node) => node.id)
       .sort();
 
     expect(entries.map((entry) => stringAt(asRecord(entry), "id")).sort()).toEqual(expected);
+
+    const excluded = [...primitivesById.values()].filter(
+      (node) =>
+        node.readiness === "ready" &&
+        node.specKind === "example" &&
+        !(node.deliveryFacts ?? []).includes("implemented"),
+    );
+    const excludedWithoutVerifier = excluded
+      .filter((node) => !(node.deliveryFacts ?? []).includes("has-verifier"))
+      .map((node) => node.id)
+      .sort();
+
+    expect(numberAt(result, "excludedReadyExamples")).toBe(excluded.length);
+    expect(
+      asArray(result.excludedWithoutVerifier)
+        .map((id) => {
+          if (typeof id !== "string") {
+            throw new Error(`expected an excluded example id, got ${JSON.stringify(id)}`);
+          }
+
+          return id;
+        })
+        .sort(),
+    ).toEqual(excludedWithoutVerifier);
   });
 
   it("returns a drift alarm of code-bound specs below ready, with the floor named", async () => {

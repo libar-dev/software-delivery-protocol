@@ -86,13 +86,15 @@ claim category** — it **inherits** its source's `claim` (so `belongsTo` carrie
 | Term | Definition | Aliases to avoid |
 |---|---|---|
 | **delivery fact** | a derived truth about a `Spec`'s *realization*, computed from edges, shown as a badge — **never authored** (authoring one is an honesty violation) | a readiness rung |
-| **`implemented`** | ≥1 `satisfies` edge resolves to the Spec — code **claims** to realise it, *not* that it works or is live | — |
+| **`implemented`** | ≥1 `satisfies` edge resolves directly to the Spec — code **claims** to realise it, *not* that it works or is live; the fact never propagates through refinement | — |
 | **`has-verifier`** | ≥1 `verifies` edge from an **enabled verifier** resolves to the Spec — a verifier *exists*, *not* that it passed | — |
 | **`observed`** *(aspirational)* | runtime evidence links to the Spec's target — the liveness rung | — |
 | **enabled verifier** | a verifying `example`/scenario backed by a **linked, resolvable test anchor** — *structurally bound*, not runner-executed (skip/quarantine is CI's, exactly as pass/fail is) | — |
 
-The payoff queries: `ready ∧ ¬implemented` = the **build backlog**; `implemented ∧ ¬ready` = the **drift
-alarm**.
+The payoff queries: `ready ∧ kind≠example ∧ ¬implemented` = the operational **build backlog**;
+`implemented ∧ ¬ready` = the **drift alarm**. The raw `ready ∧ ¬implemented` expression also names
+ready example evidence; the example realization posture (MD-24) deliberately keeps that literal
+fact while the canonical recipe excludes examples and audits their verifier bindings.
 
 ## The graph & extraction  (→ `spec:extraction.derive-graph`)
 
