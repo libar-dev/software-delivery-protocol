@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { lstatSync, readFileSync, realpathSync, statSync } from "node:fs";
-import { isAbsolute, relative, resolve, sep } from "node:path";
+import { dirname, isAbsolute, join, relative, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 
 // The temporal-token guard: durable artifacts carry current truth, so calendar and session tokens
 // (session/wave/fold handles, ISO dates, numbered plan-file refs) are banned from every delivery
@@ -34,10 +35,15 @@ function fail(message, detail = "") {
   process.exit(1);
 }
 
+// The root is the guard's own directory, never the caller's working directory: the sweep must
+// reach the same files no matter where the invocation starts.
+const repositoryRoot = realpathSync(dirname(fileURLToPath(import.meta.url)));
+
 const enumerated = spawnSync(
   "git",
   ["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
   {
+    cwd: repositoryRoot,
     encoding: "utf8",
   },
 );
@@ -46,8 +52,8 @@ if (enumerated.error !== undefined || enumerated.status !== 0) {
   fail("file enumeration failed", enumerated.stderr);
 }
 
-const paths = enumerated.stdout.split("\0").filter((path) => path !== "" && !isExcluded(path));
-const repositoryRoot = realpathSync(resolve("."));
+const allEnumerated = new Set(enumerated.stdout.split("\0").filter((path) => path !== ""));
+const paths = [...allEnumerated].filter((path) => !isExcluded(path));
 
 // This file is swept like every other; its single allowance is line-level use–mention: the guard
 // must name the tokens it bans, so exactly one line — the pattern literal, alone on its line — is
@@ -59,11 +65,12 @@ let selfAllowanceUsed = false;
 const violations = [];
 
 for (const path of paths) {
+  const absolute = join(repositoryRoot, path);
   let source;
 
   try {
-    if (lstatSync(path).isSymbolicLink()) {
-      const target = realpathSync(path);
+    if (lstatSync(absolute).isSymbolicLink()) {
+      const target = realpathSync(absolute);
       const targetFromRoot = relative(repositoryRoot, target);
       const escapesRepository =
         isAbsolute(targetFromRoot) ||
@@ -77,12 +84,19 @@ for (const path of paths) {
       // Git enumerates a tracked directory symlink as one entry. Its canonical in-repository files
       // are enumerated independently, so reading the directory as text would both duplicate the
       // sweep and fail with EISDIR.
-      if (statSync(path).isDirectory()) {
+      if (statSync(absolute).isDirectory()) {
+        continue;
+      }
+
+      // The same holds for a file symlink whose canonical file git enumerates on its own: that
+      // entry is swept — or genre-exempt — under its canonical path, and reading through the link
+      // would either duplicate the sweep or un-exempt an excluded genre.
+      if (allEnumerated.has(targetFromRoot)) {
         continue;
       }
     }
 
-    source = readFileSync(path, "utf8");
+    source = readFileSync(absolute, "utf8");
   } catch (error) {
     fail(`could not read ${path}`, error instanceof Error ? error.message : String(error));
   }
