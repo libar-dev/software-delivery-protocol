@@ -1,4 +1,5 @@
-import { parseId } from "../ids.js";
+import { codeAnchorId, parseId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type { GraphEdge, GraphNode, PrimitiveNode } from "./schema.js";
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
@@ -21,6 +22,13 @@ function hasOracleNamespace(id: string): boolean {
 }
 
 /** The complete, fail-closed oracle binding contract shared by validators and consumers. */
+const oracleTargetEligibilityAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.oracle-target-eligibility"),
+  label: "resolves oracle targets by example-space ownership across Spec kinds",
+  satisfies: ref("spec:validation.oracle-target-eligibility"),
+});
+void oracleTargetEligibilityAnchor;
+
 export function isResolvingOracleModel(
   edge: GraphEdge,
   nodesById: ReadonlyMap<string, GraphNode>,
@@ -34,7 +42,6 @@ export function isResolvingOracleModel(
     source?.nodeType === "Anchor" &&
     hasOracleNamespace(source.id) &&
     target?.nodeType === "Primitive" &&
-    target.specKind === "behavior" &&
     ownsExampleSpace(target)
   );
 }

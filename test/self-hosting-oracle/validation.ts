@@ -664,7 +664,7 @@ export const validationSpecs = [
     id: "spec:validation.oracle-target-eligibility",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/oracle-target-eligibility.sdp.md",
     title: "Oracle eligibility follows example-space ownership",
     narrative: null,
@@ -701,7 +701,67 @@ export const validationSpecs = [
           "Validator regressions cover rule-with-space acceptance and missing-space refusal; reader regressions prove the same rule-kind binding resolves through the shared predicate.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:validation.oracle-target-eligibility.rule-space-accepted",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/oracle-target-eligibility.rule-space-accepted.sdp.md",
+    title: "A rule owning an example space accepts an oracle",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute kind-neutral oracle resolution for a rule that owns the vocabulary its oracle models.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the oracle targets a {targetKind: "rule"} spec',
+              "the target owns an example space: {ownsExampleSpace: true}",
+            ],
+            when: ["oracle linkage is resolved"],
+            then: [
+              "oracle linkage reports {findingCount: 0} findings and resolving presence {oraclePresent: true}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.oracle-target-eligibility.missing-space-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/oracle-target-eligibility.missing-space-refused.sdp.md",
+    title: "A target without an example space refuses an oracle",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the fail-closed refusal when an otherwise valid Spec target owns no example space.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the oracle targets a {targetKind: "behavior"} spec',
+              "the target owns an example space: {ownsExampleSpace: false}",
+            ],
+            when: ["oracle linkage is resolved"],
+            then: [
+              "oracle linkage reports {findingCount: 1} findings and resolving presence {oraclePresent: false}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.pack-coherence",

@@ -20,7 +20,9 @@ import { incoherentAggregateContract } from "../generated/contracts/validation.p
 import { splitReportContract } from "../generated/contracts/validation.two-check-families.split-report.contract.js";
 import { unboundExampleContract } from "../generated/contracts/validation.verification-linkage.unbound-example.contract.js";
 import { unresolvedOracleContract } from "../generated/contracts/validation.verification-linkage.unresolved-oracle.contract.js";
-import { computeDeliveryFacts, schemaVersion, validateGraph } from "../src/index.js";
+import { missingSpaceRefusedContract } from "../generated/contracts/validation.oracle-target-eligibility.missing-space-refused.contract.js";
+import { ruleSpaceAcceptedContract } from "../generated/contracts/validation.oracle-target-eligibility.rule-space-accepted.contract.js";
+import { computeDeliveryFacts, createReader, schemaVersion, validateGraph } from "../src/index.js";
 import type {
   Finding,
   GraphClaim,
@@ -683,6 +685,84 @@ const unresolvedOracleTestAnchor = specTest({
 void unresolvedOracleTestAnchor;
 
 bindExample(unresolvedOracleContract, validatorWorld, verificationLinkageBindings);
+
+/* ----- spec:validation.oracle-target-eligibility ----- */
+
+const oracleTargetEligibilityBindings = {
+  "the oracle targets a {targetKind} spec": (
+    world: ValidatorWorld,
+    params: { readonly targetKind: "behavior" | "rule" },
+  ) => {
+    world.subjectId = "spec:probe.oracle-target";
+    world.nodes.push(probeSpec(world.subjectId, { kind: params.targetKind }));
+    world.nodes.push({
+      id: "oracle:probe.oracle-target",
+      nodeType: "Anchor",
+      claim: "anchored",
+      label: "probe expected outcome",
+      file: "test/probe-oracle.test.ts",
+      line: 5,
+    });
+    world.edges.push({
+      from: "oracle:probe.oracle-target",
+      type: "models",
+      to: world.subjectId,
+      claim: "anchored",
+    });
+  },
+  "the target owns an example space: {ownsExampleSpace}": (
+    world: ValidatorWorld,
+    params: { readonly ownsExampleSpace: boolean },
+  ) => {
+    if (!params.ownsExampleSpace) {
+      return;
+    }
+
+    reviseSubject(
+      world,
+      (node) => ({
+        ...node,
+        sections: {
+          ...node.sections,
+          behavior: {
+            ...node.sections?.behavior,
+            exampleSpace: { then: ["the probe resolves"] },
+          },
+        },
+      }),
+      "The target-kind step must run before example-space ownership is recorded.",
+    );
+  },
+  "oracle linkage is resolved": validate,
+  "oracle linkage reports {findingCount} findings and resolving presence {oraclePresent}": (
+    world: ValidatorWorld,
+    params: { readonly findingCount: number; readonly oraclePresent: boolean },
+  ) => {
+    expect(findingsOf(world, "conformance/oracle-linkage")).toHaveLength(params.findingCount);
+    const graph = { schemaVersion, nodes: world.nodes, edges: world.edges };
+    expect(createReader(graph).specContext(world.subjectId)?.oracle !== undefined).toBe(
+      params.oraclePresent,
+    );
+  },
+};
+
+const ruleSpaceAcceptedTestAnchor = specTest({
+  id: testAnchorId("test:protocol.oracle-target-eligibility.rule-space-accepted"),
+  label: "the rule-space point verifies kind-neutral oracle resolution",
+  verifies: ref("spec:validation.oracle-target-eligibility.rule-space-accepted"),
+});
+void ruleSpaceAcceptedTestAnchor;
+
+bindExample(ruleSpaceAcceptedContract, validatorWorld, oracleTargetEligibilityBindings);
+
+const missingSpaceRefusedTestAnchor = specTest({
+  id: testAnchorId("test:protocol.oracle-target-eligibility.missing-space-refused"),
+  label: "the missing-space point verifies fail-closed oracle resolution",
+  verifies: ref("spec:validation.oracle-target-eligibility.missing-space-refused"),
+});
+void missingSpaceRefusedTestAnchor;
+
+bindExample(missingSpaceRefusedContract, validatorWorld, oracleTargetEligibilityBindings);
 
 /* ----- spec:validation.pack-coherence ----- */
 

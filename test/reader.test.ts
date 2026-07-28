@@ -9,11 +9,13 @@ import {
   createReader,
   extract,
   graphValidatorIds,
+  oracleAnchorId,
   pack,
   packId,
   refines,
   spec,
   specId,
+  specOracle,
   specTest,
   testAnchorId,
   verifies,
@@ -446,6 +448,38 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
       expect(
         exampleReader().specContext("spec:orders.create-order.valid-cart")?.oracle,
       ).toBeUndefined();
+    });
+
+    it("decodes a rule-kind oracle through the shared example-space predicate", () => {
+      const rule = spec({
+        id: specId("spec:orders.order-routing"),
+        title: "Order routing rule",
+        kind: "rule",
+        altitude: "story",
+        readiness: "idea",
+        intent: { outcome: "Rule the routing policy." },
+        behavior: {
+          rules: ["A route is selected."],
+          exampleSpace: { then: ["the route is selected"] },
+        },
+      });
+      const reader = createReader(
+        deriveFixtureGraph({
+          specs: [rule],
+          anchors: [
+            specOracle({
+              id: oracleAnchorId("oracle:orders.order-routing"),
+              label: "expected routing outcome",
+              models: rule.id,
+            }),
+          ],
+        }),
+      );
+
+      expect(reader.specContext(rule.id)?.oracle).toMatchObject({
+        anchorId: "oracle:orders.order-routing",
+        claim: "anchored",
+      });
     });
 
     it("fails closed on off-contract or competing oracle edges", () => {

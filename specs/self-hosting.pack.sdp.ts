@@ -30,6 +30,8 @@ export const selfHostingV1Pack = pack({
     ref("spec:validation.claim-separation"),
     ref("spec:validation.verification-linkage"),
     ref("spec:validation.oracle-target-eligibility"),
+    ref("spec:validation.oracle-target-eligibility.rule-space-accepted"),
+    ref("spec:validation.oracle-target-eligibility.missing-space-refused"),
     ref("spec:validation.pack-coherence"),
     ref("spec:validation.authored-honesty"),
     ref("spec:validation.warn-level-signals"),

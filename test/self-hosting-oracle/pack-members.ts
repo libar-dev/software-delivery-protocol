@@ -27,6 +27,8 @@ export const expectedPackMembers = [
   "spec:validation.claim-separation",
   "spec:validation.verification-linkage",
   "spec:validation.oracle-target-eligibility",
+  "spec:validation.oracle-target-eligibility.rule-space-accepted",
+  "spec:validation.oracle-target-eligibility.missing-space-refused",
   "spec:validation.pack-coherence",
   "spec:validation.authored-honesty",
   "spec:validation.warn-level-signals",

@@ -461,4 +461,24 @@ export const expectedDeclaredRelations = [
   ["spec:carrier.markdown-pack-authoring", "dependsOn", "spec:decisions.carrier-ruling"],
   ["spec:validation.oracle-target-eligibility", "refines", "spec:validation.verification-linkage"],
   ["spec:validation.oracle-target-eligibility", "dependsOn", "spec:model.anchors"],
+  [
+    "spec:validation.oracle-target-eligibility.rule-space-accepted",
+    "refines",
+    "spec:validation.oracle-target-eligibility",
+  ],
+  [
+    "spec:validation.oracle-target-eligibility.rule-space-accepted",
+    "verifies",
+    "spec:validation.oracle-target-eligibility",
+  ],
+  [
+    "spec:validation.oracle-target-eligibility.missing-space-refused",
+    "refines",
+    "spec:validation.oracle-target-eligibility",
+  ],
+  [
+    "spec:validation.oracle-target-eligibility.missing-space-refused",
+    "verifies",
+    "spec:validation.oracle-target-eligibility",
+  ],
 ] as const;

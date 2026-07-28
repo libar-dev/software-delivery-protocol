@@ -820,7 +820,7 @@ describe("the models edge — the oracle anchor's contract row", () => {
 
     expect(findings).toHaveLength(1);
     expect(findings[0]?.severity).toBe("error");
-    expect(findings[0]?.message).toContain("behavior spec with an example space");
+    expect(findings[0]?.message).toContain("Spec that owns an example space");
   });
 
   it("rejects competing oracle anchors for one parent example space", () => {
@@ -869,22 +869,22 @@ describe("the models edge — the oracle anchor's contract row", () => {
     expect(findings[0]?.message).toContain("oracle: anchor");
   });
 
-  it("rejects a non-behavior oracle target even when it carries an example-space-shaped section", () => {
-    const decision = spec({
-      id: specId("spec:decisions.order-routing"),
-      title: "Order routing decision",
-      kind: "decision",
+  it("accepts a rule-kind oracle target when the rule owns an example space", () => {
+    const rule = spec({
+      id: specId("spec:orders.order-routing"),
+      title: "Order routing rule",
+      kind: "rule",
       altitude: "feature",
       readiness: "idea",
-      intent: { outcome: "Choose the routing policy." },
+      intent: { outcome: "Rule the routing policy." },
       behavior: { exampleSpace: { then: ["the routing policy is chosen"] } },
     });
     const graph = deriveFixtureGraph({
-      specs: [decision],
+      specs: [rule],
       anchors: [
         specOracle({
-          id: oracleAnchorId("oracle:decisions.order-routing"),
-          models: decision.id,
+          id: oracleAnchorId("oracle:orders.order-routing"),
+          models: rule.id,
         }),
       ],
     });
@@ -893,7 +893,7 @@ describe("the models edge — the oracle anchor's contract row", () => {
       validateGraph(graph).findings.some(
         (finding) => finding.validatorId === graphValidatorIds.oracleLinkage,
       ),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("rejects a models edge from a non-Anchor source — the endpoints are typed", () => {

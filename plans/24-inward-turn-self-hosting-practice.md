@@ -54,6 +54,12 @@ rule Specs, most owning example spaces, while the shared fail-closed predicate a
 targets only. S2 reruns the lower-ladder and backlog recipes to confirm that no newer prerequisite
 outranks the slice; it does not pretend to choose an already planted winner.
 
+S2 opened from the regenerated graph at 126 Specs · 1 Pack · 112 anchors → 239 nodes · 452
+edges, zero findings. The lower ladder held 43 entries; the named slice stated `scoped`, reached
+that floor with no failures, and had `defined` as its next rung. Recipe 1 returned no operational
+backlog, while the drift recipe returned the same eight freshly argued rows. No new prerequisite
+or higher-severity evidence displaced the planning-time selection.
+
 ## Charter and sequence
 
 ### S0 — standing intent and working-surface semantics
@@ -92,6 +98,20 @@ outranks the slice; it does not pretend to choose an already planted winner.
 - After green implementation, remove only Design detail whose implementation-time purpose is over.
   Keep durable behavior and trade-offs, and record the before/after commits as one datum without
   promoting the enrichment-lifecycle Spec.
+
+The implementing Design was committed independently at `019d063`: it named the shared predicate,
+resolution flow, diagnostic language, and validator/reader seams before any engine code changed.
+The owner's explicit implementation request is the fresh human readiness statement; after the
+blocking question was answered by that Design, the rule's complete evidence and resolving
+relations passed the floor and Design Review before promotion. The two generated child contracts
+bind the rule-with-space acceptance and missing-space refusal points directly.
+
+Both mutation probes reddened as intended before restoration:
+
+- restoring `target.specKind === "behavior"` in `isResolvingOracleModel` failed the focused
+  validator regression, reader regression, and bound rule-space example;
+- reversing the expected `findingCount` branch failed the self-referential oracle assertion across
+  both generated points.
 
 ## Disposition ledgers
 
@@ -136,7 +156,7 @@ changes only when the same friction recurs twice.
 | `spec:observation.runtime-overlay` | none observed | blocking producer boundary keeps `idea` honest | none observed | none observed |
 | `spec:consumers.impact-graph` | none observed | language-neutral identity question keeps `idea` honest | none observed | none observed |
 | `spec:carrier.markdown-pack-authoring` | none observed | unresolved syntax keeps `idea` honest | none observed | none observed |
-| `spec:validation.oracle-target-eligibility` | pending S2 | blocking implementation seam supports `scoped` | pending S2 | graph exposed rule-kind demand directly |
+| `spec:validation.oracle-target-eligibility` | one shared-predicate anchor; none observed | Design resolved the blocker; fresh statement plus floor/Review earned `ready` | two generated points bound without friction | lower ladder confirmed the preselected slice; no competing evidence |
 | `spec:carrier.sdp-import` | concrete entrypoint; no friction | already ready | existing point; no friction | backlog recipe led directly to the missing binding |
 | `spec:consumers.binding-language-views` | three honest sites required | already ready | existing points; no friction | guarantee recipe named all renderers |
 | `spec:consumers.derived-readiness-banner` | one honest site | already ready | existing points; no friction | none observed |

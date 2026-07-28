@@ -627,7 +627,7 @@ function checkOracleLinkage(graph: GraphSchema, index: GraphIndex): readonly Fin
           validatorId: graphValidatorIds.oracleLinkage,
           family: "conformance",
           severity: "error",
-          message: `Oracle binding "${edge.from}" → "${edge.to}" must use an oracle: anchor and target a behavior spec with an example space.`,
+          message: `Oracle binding "${edge.from}" → "${edge.to}" must use an oracle: anchor and target a Spec that owns an example space.`,
           subjectId: edge.from,
           relatedId: edge.to,
           file: source.file,
@@ -636,7 +636,7 @@ function checkOracleLinkage(graph: GraphSchema, index: GraphIndex): readonly Fin
       continue;
     }
 
-    if (target.specKind === "behavior" && ownsExampleSpace(target)) {
+    if (ownsExampleSpace(target)) {
       resolvingByTarget.set(edge.to, [...(resolvingByTarget.get(edge.to) ?? []), edge]);
     }
   }
@@ -651,7 +651,7 @@ function checkOracleLinkage(graph: GraphSchema, index: GraphIndex): readonly Fin
         validatorId: graphValidatorIds.oracleLinkage,
         family: "conformance",
         severity: "error",
-        message: `Behavior spec "${targetId}" has ${String(edges.length)} resolving oracle bindings (${edges.map((edge) => `"${edge.from}"`).join(" · ")}) — at most one expected-outcome authority may model an example space.`,
+        message: `Spec "${targetId}" has ${String(edges.length)} resolving oracle bindings (${edges.map((edge) => `"${edge.from}"`).join(" · ")}) — at most one expected-outcome authority may model an example space.`,
         subjectId: targetId,
         file: fileOf(index, targetId),
       }),

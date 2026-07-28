@@ -2,7 +2,7 @@
 id: spec:validation.oracle-target-eligibility
 kind: rule
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.verification-linkage
   dependsOn: spec:model.anchors
