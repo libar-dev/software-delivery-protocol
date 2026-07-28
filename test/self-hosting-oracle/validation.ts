@@ -676,6 +676,9 @@ export const validationSpecs = [
       behavior: {
         rules: [
           "Oracle target eligibility follows ownership of an example space, not a behavior-kind check.",
+          "A resolving binding is an anchored `models` edge from an `oracle:` Anchor to a Spec that owns an example space.",
+          "Missing targets, wrong namespaces, absent example spaces, and competing oracles remain fail-closed refusals.",
+          "Validators and graph readers consume the same eligibility result.",
         ],
         exampleSpace: {
           given: [
@@ -687,18 +690,6 @@ export const validationSpecs = [
             "oracle linkage reports {findingCount:number} findings and resolving presence {oraclePresent:boolean}",
           ],
         },
-      },
-      design: {
-        description:
-          "The validator and reader must continue to share one fail-closed definition of a resolving oracle.",
-        eligibilityPredicate:
-          "`isResolvingOracleModel` accepts an anchored `models` edge from an `oracle:` Anchor to any Primitive that owns `behavior.exampleSpace`; Spec kind does not participate.",
-        resolutionFlow:
-          "`checkOracleLinkage`, delivery-fact derivation, `specContext`, `byFile`, and blast-radius traversal consume the shared predicate rather than restating eligibility.",
-        failureDiagnostic:
-          "A non-resolving candidate says that the target must be a Spec owning an example space; competing-oracle diagnostics name the target as a Spec.",
-        executableSeams:
-          "Validator regressions cover rule-with-space acceptance and missing-space refusal; reader regressions prove the same rule-kind binding resolves through the shared predicate.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
