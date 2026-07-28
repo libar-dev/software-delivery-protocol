@@ -71,7 +71,7 @@ describe("the self-hosting records gate", () => {
     const root = copyRecordTree();
     const path = join(root, "AGENTS.md");
     const source = readFileSync(path, "utf8");
-    writeFileSync(path, source.replace("plan 23 is EXECUTING", "plan 22 is EXECUTED"));
+    writeFileSync(path, source.replace("plan 23 is EXECUTED", "plan 22 is DRAFTED"));
 
     const result = runGuard(root);
 

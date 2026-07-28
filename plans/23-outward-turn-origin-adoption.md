@@ -1,15 +1,13 @@
 # Plan 23 — The outward turn, refined: origin adoption, the usage layer, and the working ladder
 
-> **Status:** EXECUTING — **revision 3** (2026-07-28 reviewed execution). Full S0–S4 execution,
-> atomic cutover after parity, and local checkpoint/stage commits are authorized. The latest ✅ EXECUTED ground is
-> **plan 22** (self-hosting phase 5: the `05` dissolution and the agent front door; corpus at
-> 115 Specs · 1 Pack · 86 anchors → 202 nodes · 397 edges · `ready: 80 / defined: 35`,
-> 0 errors / 0 warnings). This plan executes **phase 6 as the usage turn**: the outward turn onto
-> the origin project (`new-convex-es` / `libar-platform`) — unchanged from revision 1 — **plus the
-> usage layer this repo owes any adopter**, promoted into scope by the refinement session. Four
-> usage goals govern the phase (§a); a new workstream **W** (this repo) carries the authoring
-> on-ramp, the authoring recipes, and the first honest use of the ladder's lower rungs; stages
-> S1–S4 execute in the origin repo with `@libar-dev/software-delivery-protocol` as a dependency.
+> **Status:** ✅ EXECUTED — **phase-6 implementation complete; final clean-copy audit passed**
+> (2026-07-28). S0–W landed in this repo; S1–S4 landed in the origin project
+> (`new-convex-es` / `libar-platform`). The Protocol corpus closes at 121 Specs · 1 Pack ·
+> 91 anchors → 213 nodes · 416 edges, with `ready: 83 / defined: 36 / scoped: 1 / idea: 1`
+> and zero findings. The origin closes at 57 Specs · 1 Pack · 11 anchors → 69 nodes ·
+> 111 edges, with `ready: 2 / defined: 50 / scoped: 2 / idea: 3` and zero findings. Architect
+> carriers, the vendored package, process guards, annotations, release machinery, planning
+> plugin, CI legs, and 333 committed projections are retired behind the committed parity ledger.
 >
 > **What revision 2 changed:** (1) the charter gains the four usage goals and the workstream W;
 > (2) the authoring-workflow on-ramp moves from "named successor artifact" (§j of revision 1) to
@@ -284,7 +282,7 @@ workflow. The enrichment-lifecycle question enters at `scoped` and remains block
 
 **S0 gate evidence.** The generalized records audit accepts the current plan without imposing the
 historical ledger shape. A mutated plan-17 owner-packet SHA fails with the historical surface
-named; a handbook changed from `plan 23 is EXECUTING` to the stale plan-22 status fails both current
+named; a handbook changed from `plan 23 is EXECUTED` to the stale plan-22 status fails both current
 status invariants. The query-seam point passes through the real CLI/extractor, and replacing its
 validation subjects with an empty result reddens exactly that point. The complete thirteen-leg
 Protocol gate passes with `spec:extraction.build-pipeline` still stated `defined`.
@@ -480,6 +478,31 @@ tracks only what changes here) — S1 gates S2; S2 gates S3 and S4's latency arm
 can run any time after S1. W2's skill is revised from S1's friction log as a small follow-up
 session here.
 
-The phase closes when S0 and W have landed here, S1's tracer extracts green in the origin
-with its usage acceptance met, and the friction log exists with all four tallies live — the
-rest is the origin's delivery, run under the Protocol it just adopted.
+### Phase-6 close record
+
+- **S0:** the records audit is a required universal gate with frozen plan-17/18 history checks;
+  the verification-posture decision is ratified; the build-pipeline rule-6 point is bound and
+  mutation-probed while its parent remains `defined`; anchored-but-unbound detection stays
+  explicitly deferred.
+- **W:** both single-file skills ship in the exact package contract; eleven recipes execute
+  verbatim; fresh-context forward tests corrected the macOS binary collision and adopter catalog
+  path; the package tarball contains no Protocol corpus.
+- **S1:** origin commit `59827121d` installs the package snapshot and lands the green foreign
+  tracer. The reactive-projection point calls the production API through its generated contract,
+  reddens under mutation, and re-earns `ready` without changing vitest-cucumber.
+- **S2:** origin commit `dad63f1f4` freezes 1,319 exact source dispositions before deletion;
+  `0c3d79d0d` performs the atomic cutover. The measured inline-carrier population is
+  **1 / 57 (1.75%)**, recorded without a carrier ruling.
+- **S3:** origin commit `ad02746a2` adds `pack:restart-horizon`, scoped test-reporting intent,
+  and idea-level dynamic-projection and generative-UI intent without encoding schedule.
+- **S4:** origin commit `e698e0a2a` retains matched raw logs, structured outputs, hashes, rubric,
+  and latency. Treatment scores 12/12 versus control 11/12 and uses 987,559 versus 3,671,422
+  completion-event tokens (**73.1% fewer**) without worse quality. Ten fresh derivations measure
+  **432.27 ms median / 444.19 ms p95** after one warm-up.
+- **Close audit:** both repositories pass their complete gates from detached clean worktrees;
+  the origin frozen installs reproduce from both workspace views, all existing suites pass, the
+  graph has zero findings, and active-surface sweeps find no predecessor dependency, hook, CI leg,
+  carrier, annotation, or committed generated projection.
+
+Phase debt disposition and execution order remain in this record, not in ceremonial Specs. The
+origin now runs under the Protocol it adopted.

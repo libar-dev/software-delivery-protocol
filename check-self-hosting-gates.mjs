@@ -250,7 +250,7 @@ if (currentStatus !== undefined) {
   expectContains(
     agentsPath,
     agents,
-    currentStatus,
+    `plan ${String(currentPlan?.number)} is ${currentStatus}`,
     "the handbook status disagrees with the current primary plan",
   );
 }
