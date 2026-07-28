@@ -371,7 +371,10 @@ the corrected authoring skill and reported `spec:model.enrichment-lifecycle` as 
 `spec:model.enrichment-lifecycle` as the carrier. The first attempt had resolved bare `sdp` to
 macOS `/usr/bin/sdp`; that observed friction produced the repository-local/package-runner rule
 now checked for both shipped skills. The package smoke test additionally installs the packed
-snapshot and reads both exact skill paths from the installed package.
+snapshot and reads both exact skill paths from the installed package. The S1 fresh-context run
+then found that a copied skill could not resolve the repository-root recipe path from an adopter;
+both skills now name the Protocol-root and installed-package catalog paths explicitly, and the
+in-tree check pins both forms.
 
 ## (f) S1 — the tracer bullet on foreign soil (origin repo)
 

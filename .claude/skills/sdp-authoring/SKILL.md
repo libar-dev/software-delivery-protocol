@@ -6,7 +6,9 @@ description: Author and mature Protocol Specs through the graph-first workflow. 
 # Author Specs through the graph
 
 Treat the canonical carrier as the write surface and the derived graph as the read model. Start every
-session with the build-backlog and drift-alarm recipes in `docs/agent-surface/recipes.md`.
+session with the build-backlog and drift-alarm recipes. In the Protocol repository the catalog is
+`docs/agent-surface/recipes.md`; in an adopter, read the same shipped catalog at
+`node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md`.
 
 At this repository root, use the exact self-hosting exclusions:
 

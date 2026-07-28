@@ -26,10 +26,11 @@ the sink refuses to run the body. They are the same list `npm run generate:self-
 Run `npm run build` first if `dist/` is absent. Do not invoke a global `sdp`: macOS also ships an
 unrelated binary with that name. In an adopter, use its package runner, such as `pnpm exec sdp`.
 
-The catalog of ready-made bodies is `docs/agent-surface/recipes.md` — build backlog, drift alarm,
-per-Spec guarantees and verifiers, blast radius, Pack review backbone, concept search, readiness
-divergence, warn-level signals. Every body there runs verbatim and a test proves it. Start from a
-recipe; adapt it in place.
+The catalog of ready-made bodies is `docs/agent-surface/recipes.md` in the Protocol repository and
+`node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an adopter —
+build backlog, drift alarm, per-Spec guarantees and verifiers, blast radius, Pack review backbone,
+concept search, readiness divergence, and warn-level signals. Every body there runs verbatim and a
+test proves it. Start from a recipe; adapt it in place.
 
 Reach for the files only when you need the authored prose itself — the exact words to edit.
 

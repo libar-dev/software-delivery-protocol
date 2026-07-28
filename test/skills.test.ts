@@ -105,6 +105,9 @@ describe("Protocol skill assets", () => {
 
       expect(source).toContain("sdp q");
       expect(source).toContain("docs/agent-surface/recipes.md");
+      expect(source).toContain(
+        "node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md",
+      );
       expect(source).toContain("spec:");
     }
 
