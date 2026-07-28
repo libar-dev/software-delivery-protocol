@@ -1,25 +1,28 @@
 # Agent-surface recipes
 
 Runnable bodies for the agent front door. Each recipe below is a body you can pass verbatim to
-`sdp q`, unchanged:
+`sdp q`, unchanged. In the Protocol source checkout, pass one to the repository wrapper:
 
 ```sh
-sdp q '<body>' --exclude explorations --exclude examples --exclude test/fixtures/import/parity
-sdp q '<body>' --exclude explorations --exclude examples --exclude test/fixtures/import/parity --json
+pnpm --silent sdp:q '<body>'
+pnpm --silent sdp:q '<body>' --json
 ```
 
 **At this repository's root the exclusions are not optional.** The corpus carries deliberate
 duplicate-id and carrier-parity fixtures under `examples/`, `explorations/`, and
 `test/fixtures/import/parity/`; without those three exclusions the extractor reports errors, the
 graph does not derive, and the sink refuses to run the body at all. The three above are exactly the
-project's own — the same list `npm run generate:self-hosting` passes and the same list the recipe
-check derives with.
+project's own — the `sdp:q` wrapper owns the same list `npm run generate:self-hosting` passes and
+the recipe check derives with. Run `npm run build` first if `dist/` is absent. Do not substitute
+`pnpm exec` in this source checkout: `exec` resolves dependency binaries, while a package does not
+link itself into its own `node_modules/.bin`; an unresolved `sdp` can select macOS's unrelated
+binary.
 
 For adopters, the portable form keeps root and exclusions project-selected:
 
 ```sh
-sdp q '<body>' --root PATH
-sdp q '<body>' --root PATH --exclude PATH --exclude PATH
+pnpm exec sdp q '<body>' --root PATH
+pnpm exec sdp q '<body>' --root PATH --exclude PATH --exclude PATH
 ```
 
 `--root PATH` picks the extraction root (default: the working directory) and `--exclude` is

@@ -13,8 +13,8 @@ session with the build-backlog and drift-alarm recipes. In the Protocol reposito
 At this repository root, use the exact self-hosting exclusions:
 
 ```sh
-node ./dist/cli/sdp.js q 'const ready = g.specs().filter((spec) => spec.statedReadiness === "ready"); const backlog = ready.filter((spec) => spec.specKind !== "example" && !spec.deliveryFacts.includes("implemented")); const excludedExamples = ready.filter((spec) => spec.specKind === "example" && !spec.deliveryFacts.includes("implemented")); return {backlog: backlog.map((spec) => spec.id), excludedReadyExamples: excludedExamples.length, excludedWithoutVerifier: excludedExamples.filter((spec) => !spec.deliveryFacts.includes("has-verifier")).map((spec) => spec.id)}' --exclude explorations --exclude examples --exclude test/fixtures/import/parity
-node ./dist/cli/sdp.js q 'return g.specs().filter((spec) => spec.deliveryFacts.includes("implemented") && spec.statedReadiness !== "ready").map((spec) => spec.id)' --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+pnpm --silent sdp:q 'const ready = g.specs().filter((spec) => spec.statedReadiness === "ready"); const backlog = ready.filter((spec) => spec.specKind !== "example" && !spec.deliveryFacts.includes("implemented")); const excludedExamples = ready.filter((spec) => spec.specKind === "example" && !spec.deliveryFacts.includes("implemented")); return {backlog: backlog.map((spec) => spec.id), excludedReadyExamples: excludedExamples.length, excludedWithoutVerifier: excludedExamples.filter((spec) => !spec.deliveryFacts.includes("has-verifier")).map((spec) => spec.id)}'
+pnpm --silent sdp:q 'return g.specs().filter((spec) => spec.deliveryFacts.includes("implemented") && spec.statedReadiness !== "ready").map((spec) => spec.id)'
 ```
 
 For an adopter, select its root and exclusions explicitly:
@@ -24,8 +24,11 @@ pnpm exec sdp q 'return g.specs().map((spec) => spec.id)' --root PATH
 pnpm exec sdp q 'return g.specs().map((spec) => spec.id)' --root PATH --exclude PATH --exclude PATH
 ```
 
-Build this repository before using its local CLI. Never rely on a global `sdp`: macOS also ships an
-unrelated binary with that name. Adopters should use their chosen package runner.
+The Protocol wrapper supplies the root's three exclusions; run `npm run build` first if `dist/` is
+absent. Do not use `pnpm exec` in this source checkout: `exec` resolves dependency binaries, while
+the package does not link itself into its own `node_modules/.bin`; an unresolved `sdp` can select
+macOS's unrelated binary. Never rely on a global `sdp`. Adopters should use their chosen package
+runner.
 
 ## Create and enrich
 

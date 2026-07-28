@@ -26,18 +26,20 @@ pnpm exec sdp q 'return g.specContext("spec:example.id")' --root PATH --exclude 
 `PATH` is a placeholder, not a universal exclusion. For example, the origin adopter uses its
 `pnpm sdp:q` wrapper and excludes only `deps-packages`.
 
-When working in the **Protocol source checkout itself**, use the built local CLI and its exact
-three fixture exclusions:
+When working in the **Protocol source checkout itself**, use its repository script, which supplies
+the exact three fixture exclusions:
 
 ```sh
-node ./dist/cli/sdp.js q 'return g.specs().length' --exclude explorations --exclude examples --exclude test/fixtures/import/parity
-node ./dist/cli/sdp.js q 'return g.specContext("spec:consumers.reader")' --exclude explorations --exclude examples --exclude test/fixtures/import/parity --json
+pnpm --silent sdp:q 'return g.specs().length'
+pnpm --silent sdp:q 'return g.specContext("spec:consumers.reader")' --json
 ```
 
 Those exclusions are required only for the Protocol source tree: it carries deliberate
 duplicate-id and carrier-parity fixtures. They are the same list `npm run generate:self-hosting`
-passes. Run `npm run build` first if `dist/` is absent. Do not invoke a global `sdp`: macOS also
-ships an unrelated binary with that name.
+passes. Run `npm run build` first if `dist/` is absent. Do not use `pnpm exec` in this source
+checkout: `exec` resolves dependency binaries, while this package does not link itself into its
+own `node_modules/.bin`; an unresolved `sdp` can select macOS's unrelated binary. Do not invoke a
+global `sdp` either.
 
 The catalog contains eleven ready-made bodies in `docs/agent-surface/recipes.md` in the Protocol
 repository and

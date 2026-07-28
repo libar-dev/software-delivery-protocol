@@ -197,12 +197,19 @@ describe("the agent-surface recipe corpus", () => {
       ".agents/skills/sdp-agent-surface/SKILL.md",
       ".agents/skills/sdp-authoring/SKILL.md",
     ];
+    const packageJson = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
+      scripts: Record<string, string>;
+    };
+    const localQuery = packageJson.scripts["sdp:q"] ?? "";
+
+    for (const path of standardExcludes) {
+      expect(localQuery).toContain(`--exclude ${path}`);
+    }
 
     for (const source of onRampSources) {
       const lines = readFileSync(join(repoRoot, source), "utf8").split("\n");
-      const commandLines = lines.filter((line) => line.includes(" q '") && line.includes("sdp"));
-      const selfHostingLines = commandLines.filter((line) => !line.includes("--root PATH"));
-      const adopterLines = commandLines.filter((line) => line.includes("--root PATH"));
+      const selfHostingLines = lines.filter((line) => line.startsWith("pnpm --silent sdp:q '"));
+      const adopterLines = lines.filter((line) => line.startsWith("pnpm exec sdp q '"));
 
       expect({ source, selfHosting: selfHostingLines.length > 0 }).toEqual({
         source,
@@ -212,18 +219,6 @@ describe("the agent-surface recipe corpus", () => {
         source,
         otherQuoting: lines.filter((line) => line.includes(' q "') && line.includes("sdp")),
       }).toEqual({ source, otherQuoting: [] });
-
-      for (const line of selfHostingLines) {
-        expect({
-          source,
-          line,
-          // A word boundary, not a substring: `--exclude examples/checkout` must not count as
-          // naming `examples`.
-          names: standardExcludes.filter((path) =>
-            new RegExp(`--exclude ${path}(?=[\\s'"]|$)`, "u").test(line),
-          ).length,
-        }).toEqual({ source, line, names: standardExcludes.length });
-      }
 
       expect({ source, adopterForms: adopterLines.length }).toEqual({
         source,

@@ -63,7 +63,7 @@ function documentedCommands(body: string): readonly string[] {
     }
     if (
       inShellFence &&
-      (line.startsWith("node ./dist/cli/sdp.js ") || line.startsWith("pnpm exec sdp "))
+      (line.startsWith("pnpm --silent sdp:q ") || line.startsWith("pnpm exec sdp "))
     ) {
       commands.push(line);
     }
@@ -138,20 +138,24 @@ describe("Protocol skill assets", () => {
 
   it("documents only valid CLI verbs and keeps root-specific exclusions intact", () => {
     const knownVerbs = new Set(["build", "q"]);
+    const packageJson = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
+      scripts: Record<string, string>;
+    };
+    const localQuery = packageJson.scripts["sdp:q"] ?? "";
+
+    for (const exclusion of ["explorations", "examples", "test/fixtures/import/parity"]) {
+      expect(localQuery).toContain(`--exclude ${exclusion}`);
+    }
 
     for (const path of skillPaths) {
       const commands = documentedCommands(readSkill(path).body);
       expect(commands.length).toBeGreaterThan(0);
 
       for (const command of commands) {
-        const verb = /(?:sdp\.js|exec sdp) (?<verb>[\w-]+)/u.exec(command)?.groups?.verb;
+        const verb = command.startsWith("pnpm --silent sdp:q ")
+          ? "q"
+          : /exec sdp (?<verb>[\w-]+)/u.exec(command)?.groups?.verb;
         expect(verb === undefined ? false : knownVerbs.has(verb)).toBe(true);
-
-        if (verb === "q" && !command.includes("--root PATH")) {
-          for (const exclusion of ["explorations", "examples", "test/fixtures/import/parity"]) {
-            expect(command).toContain(`--exclude ${exclusion}`);
-          }
-        }
       }
     }
   });
@@ -162,12 +166,12 @@ describe("Protocol skill assets", () => {
 
     expect(
       documentedCommands(agentSurface.body).every(
-        (line) => line.startsWith("node ") || line.startsWith("pnpm exec "),
+        (line) => line.startsWith("pnpm --silent ") || line.startsWith("pnpm exec "),
       ),
     ).toBe(true);
     expect(
       documentedCommands(authoring.body).every(
-        (line) => line.startsWith("node ") || line.startsWith("pnpm exec "),
+        (line) => line.startsWith("pnpm --silent ") || line.startsWith("pnpm exec "),
       ),
     ).toBe(true);
   });

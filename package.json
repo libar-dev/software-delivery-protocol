@@ -41,6 +41,7 @@
     "typecheck:examples": "tsc --noEmit -p tsconfig.examples.json",
     "test": "node ./vitest-test.mjs",
     "test:watch": "vitest",
+    "sdp:q": "node ./dist/cli/sdp.js q --exclude explorations --exclude examples --exclude test/fixtures/import/parity",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

@@ -237,3 +237,13 @@ symlink, so supporting both agent conventions creates no second skill copy and d
 user-level installation. The temporal sweep accepts that tracked in-repository directory symlink,
 continues to scan the canonical tracked files, and fails closed when a symlink escapes the
 repository.
+
+A later source-checkout probe showed that `pnpm exec sdp q` never reached the Protocol CLI. Pnpm 11
+first tried to reconcile the package-lock-based `node_modules`, generated pnpm state, and refused
+an unreviewed `esbuild` install script; after that reconciliation was disabled, `exec` correctly
+found no local dependency bin and fell through to macOS's unrelated `/usr/bin/sdp`. The repository
+therefore disables pnpm's run-time dependency verification and exposes
+`pnpm --silent sdp:q '<body>'` as the non-mutating source-checkout wrapper over the built CLI and
+its three required exclusions. `npm run --silent sdp:q -- '<body>'` remains equivalent. Adopter
+commands remain owned by each adopter's selected package runner, where `pnpm exec sdp` is valid
+because the Protocol is an installed dependency.
