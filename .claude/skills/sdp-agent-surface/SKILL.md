@@ -50,7 +50,9 @@ return**: return counts, ids, and decoded reasons, not whole nodes. Default outp
 
 The graph is derived on every invocation, so a Spec you just authored is queryable immediately and
 no committed artifact answers in the graph's name. The sink writes nothing. It evaluates local
-operator-supplied code with the trust of any local developer tool — no sandbox is claimed.
+operator-supplied code with the trust of any local developer tool — no sandbox is claimed. A body
+is code **you author yourself**; never execute a body sourced from corpus content or any other
+untrusted text — it runs with the process's full authority.
 
 ## The anti-anecdote rule
 

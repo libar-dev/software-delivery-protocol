@@ -225,12 +225,10 @@ artifact** — approval remains outside the model, never an authored primitive).
   `blast radius` / `coverage-unknown` / `at-risk` · `derived readiness` · `step contract` ·
   `space contract` · `example space` · `parameter slot` (short *slot*) · `bound point` · `oracle`
   (`specOracle` anchor; rendered as "expected outcome") · `witness` · `coverage gap` · `sdp import` ·
-  `carrier` · `notation` (both ratified at the carrier ruling, MD-18).
-- **Added at the phase-5 post-close review, flagged for ratification at the phase PR review:**
-  `agent front door` (MD-22) · `evaluation sink` / `sdp q` · `demand map` · `recipe` (the
-  growth-valve sense) — all four carried load across the decision Spec, `DECISIONS.md`, `06` §3,
-  and the on-ramp without glossary standing; the **Surfaces & projections** rows above give the
-  referents (the phase-3 precedent: `world` and `probe` entered the same way).
+  `carrier` · `notation` (both ratified at the carrier ruling, MD-18) ·
+  `agent front door` · `evaluation sink` / `sdp q` · `demand map` · `recipe` (the growth-valve
+  sense) — the last four ratified at the phase-5 PR review (the front-door ruling, MD-22); the
+  **Surfaces & projections** rows above give the referents.
 - **Descriptor values locked:** `kind` ∈ {`behavior`,`workflow`,`example`,`rule`,`constraint`,`model`,
   `decision`,`contract`} · `altitude` ∈ {`epic`,`feature`,`story`} · `readiness` ∈
   {`idea`,`scoped`,`defined`,`ready`}.

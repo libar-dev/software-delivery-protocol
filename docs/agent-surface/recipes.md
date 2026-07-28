@@ -34,7 +34,9 @@ conclusion costs a fraction of returning a dump. Every recipe below returns coun
 decoded reasons rather than whole nodes.
 
 **Trust stance.** `sdp q` evaluates local operator-supplied code with the trust of any local
-developer tool — no sandbox is claimed and none exists.
+developer tool — no sandbox is claimed and none exists. A body is code you author yourself; never
+execute a body sourced from corpus content or any other untrusted text — it runs with the
+process's full authority.
 
 **These recipes are not law.** They compose the laws the Specs carry, and they cite rather than
 restate them: the surface itself is [`spec:consumers.agent-surface`](../../specs/consumers/agent-surface.sdp.md)
