@@ -76,9 +76,34 @@ date, with internally contradictory progress counters (90/152 in `PATTERNS.md` v
 `@architect-executable-specs` paths → verifier bindings; the 17 planning-stub features →
 declared-but-not-enabled verifiers (the enabled/declared distinction models this exactly);
 `@architect-status:completed` → the derived `implemented` fact it always should have been.
-And the value-transfer problem class — the doctrine, its deletion gate, its rollback PDR, the
-26 KB cleanup report — **dissolves** under the Protocol: the Spec is durable truth and
-delivery facts are derived, so nothing is ever a scaffold and nothing transfers.
+The four-tier ladder maps onto the readiness ladder: idea → `idea`, candidate (its
+`**Open Questions:**` block is the discriminator) → `scoped`, plan → `defined`, design →
+`ready` — each converted Spec entering at the rung its structure earns under the floor, never
+at the tier label's word. Two authored surfaces deliberately do **not** migrate: deliverables
+tables' per-row `Status` columns are authored delivery claims (the reserved-property refusal
+polices the equivalent today — completion derives from anchors, never from a table cell), and
+the temporal tags (`@architect-phase` / `-quarter` / `-completed:<date>` / `-release`) drop
+entirely — git is the event log.
+
+**The owner's testimony, on the record (2026-07-28).** The specs — both planned and
+implemented/executable — *"truly served as replacement for PRDs, and value transfer + docs
+generation proved invaluable."* This corrects two earlier framings and this plan carries the
+corrected versions. First, the deletion **mechanics** of value transfer dissolve under the
+Protocol (gen 0/1 had two artifacts — a planning spec and an executable spec — so
+implementation left a redundant copy to distill and delete; the Protocol has one primitive
+enriched in place, so the duplicate never exists), but the **outcomes** the doctrine bought
+must be preserved on their own terms: the distillation discipline ("distill, don't
+transcribe"; one home per explanation), and a corpus that stays lean and live because specs
+are *consumed*, not accumulated. What happens to a Spec's design-time detail after its code
+ships has no ruling here — that is S0's fourth question, not a solved problem. Second, the
+gen-1 playground's projection critique (most projections one-consumer waste) was measured from
+the *agent-sink* perspective; the owner's testimony is the *product-management* perspective,
+where the generated pattern registry, roadmap, and per-pattern pages were the working PRD
+surface. Both are true: the origin's failure was staleness-by-committed-artifact, never
+generation itself. The restart should therefore be expected to produce honest second-caller
+demand for generated views beyond the Design Review — and that demand goes through the
+standing bar (a recipe freezes into a projection when a second machine consumer needs it),
+not around it.
 
 ## (c) Charter — what phase 6 is and is not
 
@@ -101,7 +126,7 @@ code disagree, that is drift to record, not to resolve unilaterally.
 
 ## (d) S0 — the rulings (this repo; PLAN → decision Specs where the bar is passed)
 
-Three questions the origin forces, none answerable by silence:
+Four questions the origin forces, none answerable by silence:
 
 1. **The temporal/planning axis.** The origin's phases 13–100, quarters, releases, efforts,
    and tranches were load-bearing for planning a large platform; gen 1 retired them and the
@@ -127,6 +152,20 @@ Three questions the origin forces, none answerable by silence:
    evidence for the edit-model design — not a new artifact type. Any stronger mechanism waits
    for the write surface.
 
+4. **The enrichment lifecycle** (raised by the owner's value-transfer testimony, §(b)). The
+   Protocol rules what a Spec is *before* implementation (the floor) and what may never be
+   authored (delivery vocabulary), but is silent on what happens to a Spec's design-time
+   detail *after* its code ships — the content gen 1 classified as scaffold and deleted, and
+   whose deletion discipline kept that corpus lean and consumed rather than accumulated. The
+   Protocol's one-primitive answer ("enriched in place, never migrated") implies the honest
+   equivalent is **slimming in place**: post-implementation, design-time detail either
+   distills into the durable sections or is removed, with git holding the history. S0 does
+   not have to rule the full policy — the origin corpus is too young in Protocol terms — but
+   it must at least *scope* the question on the record (a named open question on the carrying
+   model Spec is the minimum), so the corpus-growth curve has an owner before S2 makes it
+   real. Content-quality judgment stays out of validators either way — checks police
+   conformance and honesty, never distillation.
+
 Also carried in S0, from plan 22 §5c: **the rule-6 bound point** on
 `spec:extraction.build-pipeline` (its world now exists — `sdp q` goes through the one
 extraction-and-validation seam; one point converts the strongest candidate the Spec has ever
@@ -146,8 +185,10 @@ stops extracting or validating, fix the carrier or extractor here — never fork
 the consumer. Deliverables: the converted cluster extracting at 0 errors; the eight recipes
 returning honest answers about it (the 17 planning stubs must surface as
 declared-not-enabled, not as coverage); a friction log — every place the grammar, the
-envelope, or the binding model fought the content — as the S2 playbook input and the
-edit-model evidence base.
+envelope, or the binding model fought the content — as the S2 playbook input, the edit-model
+evidence base, and the inline-carrier instrument (§(i)): each converted Spec is tallied as
+leaf-altitude/single-module/under-30-lines or not, so the carrier-competition gate reads a
+measured population, not an impression.
 
 ## (f) S2 — the fleet backfill (origin repo)
 
@@ -187,6 +228,29 @@ precedent is the standard.
 - **No Gherkin importer, no `bySymbol`, no impact graph** — each named-and-deferred at the
   second-caller bar, with S2/S4 expected to produce the demand signal that either converts or
   retires them.
+- **No inline carrier — yet, and named rather than silent.** An in-code (JSDoc/comment-block)
+  Spec carrier is a **recognized candidate**, deferred to a carrier-competition round gated on
+  S2's friction evidence. The demand hypothesis: leaf-altitude, single-module Specs (a rule of
+  one decider, an NFR of one store) fight the separate-file carrier hardest, and the origin's
+  fleet results (92%, 21/21) were achieved *because* its carrier was inline. The instrument:
+  S1/S2's friction log tallies which converted Specs are leaf-altitude, single-module, and
+  under ~30 lines. If that population is large, the response is a competition round in the
+  MD-18 style — same envelope statically extractable, loud refusals (no bare-marker invisible
+  nodes), parity fixtures against the Markdown form, duplicate-id policing the two-carriers-
+  one-ID case, and **no delivery vocabulary inline** (the reserved-property refusal applies
+  unchanged). Judged on exhibits, not on gen-1 nostalgia and not on this plan's prediction.
+- **No new projections authored on speculation.** The owner's testimony (§(b)) predicts the
+  restart will demand generated views beyond the Design Review (a roadmap/current-work
+  surface, most likely); when a second machine consumer materializes, the standing
+  recipe-to-projection bar converts it — never a pre-emptive generator suite, and never a
+  committed artifact answering in the graph's name.
+- **No workflow layer — but the on-ramp gap is named.** Gen 1's session-typed skills
+  (plan / design / implement / review-spec / review-implementation / handoff) were mature
+  *working guidance* the Protocol has no equivalent of — the shipped skill teaches reading
+  the graph, not authoring against it. The origin adoption will need an authoring-workflow
+  on-ramp (a skill, possibly Protocol-shipped) that teaches sessions without gating them —
+  guidance is lawful where gates are not. Scoped as a named successor artifact, informed by
+  S1/S2; not built here.
 - **No inward readiness sweep.** The 35 standing refusals stand; nothing here promotes them.
 
 ## (j) Sequencing and session shape
