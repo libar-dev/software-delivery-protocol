@@ -151,8 +151,8 @@ describe("published package surface", () => {
       ) as readonly [{ readonly files: readonly { readonly path: string }[] }];
       const dryRunPaths = dryRun[0].files.map((file) => file.path);
       const adopterAssets = [
-        ".claude/skills/sdp-agent-surface/SKILL.md",
-        ".claude/skills/sdp-authoring/SKILL.md",
+        ".agents/skills/sdp-agent-surface/SKILL.md",
+        ".agents/skills/sdp-authoring/SKILL.md",
         "docs/agent-surface/recipes.md",
       ];
 
@@ -241,7 +241,7 @@ void [${expectedRootExports.join(", ")}];
           "node_modules",
           "@libar-dev",
           "software-delivery-protocol",
-          ".claude/skills/sdp-agent-surface/SKILL.md",
+          ".agents/skills/sdp-agent-surface/SKILL.md",
         ),
         "utf8",
       );
@@ -251,7 +251,7 @@ void [${expectedRootExports.join(", ")}];
           "node_modules",
           "@libar-dev",
           "software-delivery-protocol",
-          ".claude/skills/sdp-authoring/SKILL.md",
+          ".agents/skills/sdp-authoring/SKILL.md",
         ),
         "utf8",
       );

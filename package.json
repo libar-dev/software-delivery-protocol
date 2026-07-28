@@ -11,8 +11,8 @@
   "files": [
     "dist/**",
     "docs/agent-surface/recipes.md",
-    ".claude/skills/sdp-agent-surface/SKILL.md",
-    ".claude/skills/sdp-authoring/SKILL.md"
+    ".agents/skills/sdp-agent-surface/SKILL.md",
+    ".agents/skills/sdp-authoring/SKILL.md"
   ],
   "bin": {
     "sdp": "./dist/cli/sdp.js"

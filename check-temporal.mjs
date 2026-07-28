@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { lstatSync, readFileSync, realpathSync, statSync } from "node:fs";
+import { isAbsolute, relative, resolve, sep } from "node:path";
 
 // The temporal-token guard: durable artifacts carry current truth, so calendar and session tokens
 // (session/wave/fold handles, ISO dates, numbered plan-file refs) are banned from every delivery
@@ -46,6 +47,7 @@ if (enumerated.error !== undefined || enumerated.status !== 0) {
 }
 
 const paths = enumerated.stdout.split("\0").filter((path) => path !== "" && !isExcluded(path));
+const repositoryRoot = realpathSync(resolve("."));
 
 // This file is swept like every other; its single allowance is line-level use–mention: the guard
 // must name the tokens it bans, so exactly one line — the pattern literal, alone on its line — is
@@ -60,6 +62,26 @@ for (const path of paths) {
   let source;
 
   try {
+    if (lstatSync(path).isSymbolicLink()) {
+      const target = realpathSync(path);
+      const targetFromRoot = relative(repositoryRoot, target);
+      const escapesRepository =
+        isAbsolute(targetFromRoot) ||
+        targetFromRoot === ".." ||
+        targetFromRoot.startsWith(`..${sep}`);
+
+      if (escapesRepository) {
+        fail(`symlink ${path} escapes the repository`, target);
+      }
+
+      // Git enumerates a tracked directory symlink as one entry. Its canonical in-repository files
+      // are enumerated independently, so reading the directory as text would both duplicate the
+      // sweep and fail with EISDIR.
+      if (statSync(path).isDirectory()) {
+        continue;
+      }
+    }
+
     source = readFileSync(path, "utf8");
   } catch (error) {
     fail(`could not read ${path}`, error instanceof Error ? error.message : String(error));

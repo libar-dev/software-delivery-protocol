@@ -156,7 +156,7 @@ changes only when the same friction recurs twice.
 | `spec:observation.runtime-overlay` | none observed | blocking producer boundary keeps `idea` honest | none observed | none observed |
 | `spec:consumers.impact-graph` | none observed | language-neutral identity question keeps `idea` honest | none observed | none observed |
 | `spec:carrier.markdown-pack-authoring` | none observed | unresolved syntax keeps `idea` honest | none observed | none observed |
-| `spec:validation.oracle-target-eligibility` | one shared-predicate anchor; none observed | Design resolved the blocker; fresh statement plus floor/Review earned `ready` | two generated points bound without friction | lower ladder confirmed the preselected slice; no competing evidence |
+| `spec:validation.oracle-target-eligibility` | one shared-predicate anchor; none observed | Design resolved the blocker; fresh statement plus floor/Review earned `ready` | two generated points bound; post-close clean-room verification exposed omitted suite registration | lower ladder confirmed the preselected slice; no competing evidence |
 | `spec:carrier.sdp-import` | concrete entrypoint; no friction | already ready | existing point; no friction | backlog recipe led directly to the missing binding |
 | `spec:consumers.binding-language-views` | three honest sites required | already ready | existing points; no friction | guarantee recipe named all renderers |
 | `spec:consumers.derived-readiness-banner` | one honest site | already ready | existing points; no friction | none observed |
@@ -204,7 +204,8 @@ The inward phase closed on 2026-07-28 with:
 - exactly two inward `models` edges:
   `oracle:protocol.reader-entry-map → spec:consumers.reader` and
   `oracle:protocol.oracle-target-eligibility → spec:validation.oracle-target-eligibility`;
-- no repeated friction category, so neither agent skill needed a speculative revision.
+- no friction category repeated within the inward phase at close, so neither agent skill received a
+  speculative revision before the clean-room follow-up described below.
 
 The genuine enrichment datum is the sequence `019d063` (implementing Design),
 `341ead6` (implementation and executable seams), and `7ae8087` (post-green slimming).
@@ -219,6 +220,20 @@ Before deletion, live references were replaced by carrying Specs, commits `b6f12
 found no remaining live dependency on that file. Its evidence remains recoverable from git.
 
 The phase-close thirteen-leg gate passed over the committed checkpoints. A separate clean-worktree
-run is recorded after the close commit. Vitest 2→4 follows as a separate mechanical commit: inspect
-the installed v4 help and actual configuration, change no Specs or graph semantics, re-measure
-advisories, and stop if derived graph output moves.
+run is recorded after the close commit. Vitest 2→4 followed as a separate mechanical commit:
+`f8a50bb`; it changed no Specs or graph semantics and left derived graph output unchanged.
+
+Post-close clean-install CI then exposed that the four new oracle suites imported generated
+contracts without appearing in the shared contract-dependent suite registry. Commit `191cf49`
+registered those suites, and `fe42233` completed the matching clean-room lint allowance. This was
+the second occurrence of that binding-friction class across the Protocol and origin adoption, so
+the friction-ledger trigger earned a non-speculative revision to the authoring skill: registering a
+generated-contract consumer is now an explicit part of binding. The exact `npm ci && npm run check`
+path passed after both fixes.
+
+The review follow-up also made `.agents/skills/` the repository-owned and packaged canonical skill
+location. Claude resolves the same files through the relative `.claude/skills → ../.agents/skills`
+symlink, so supporting both agent conventions creates no second skill copy and depends on no
+user-level installation. The temporal sweep accepts that tracked in-repository directory symlink,
+continues to scan the canonical tracked files, and fails closed when a symlink escapes the
+repository.

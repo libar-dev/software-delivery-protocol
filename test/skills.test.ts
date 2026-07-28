@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { lstatSync, readFileSync, readlinkSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -15,8 +15,8 @@ import {
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const skillPaths = [
-  ".claude/skills/sdp-agent-surface/SKILL.md",
-  ".claude/skills/sdp-authoring/SKILL.md",
+  ".agents/skills/sdp-agent-surface/SKILL.md",
+  ".agents/skills/sdp-authoring/SKILL.md",
 ] as const;
 
 const authoringOnRampImplementationAnchor = codeAnchor({
@@ -87,6 +87,13 @@ const authoringRecipesTestAnchor = specTest({
 void authoringRecipesTestAnchor;
 
 describe("Protocol skill assets", () => {
+  it("owns skills under .agents and exposes them to Claude through one relative symlink", () => {
+    const claudeSkills = join(repoRoot, ".claude", "skills");
+
+    expect(lstatSync(claudeSkills).isSymbolicLink()).toBe(true);
+    expect(readlinkSync(claudeSkills)).toBe("../.agents/skills");
+  });
+
   it("uses the repository's two-field single-file convention", () => {
     for (const path of skillPaths) {
       const skill = readSkill(path);
@@ -111,7 +118,7 @@ describe("Protocol skill assets", () => {
       expect(source).toContain("spec:");
     }
 
-    const authoring = readSkill(".claude/skills/sdp-authoring/SKILL.md").source;
+    const authoring = readSkill(".agents/skills/sdp-authoring/SKILL.md").source;
     for (const required of [
       "spec:validation.readiness-floor",
       "spec:validation.kind-evidence",
@@ -121,6 +128,7 @@ describe("Protocol skill assets", () => {
       "sdp build",
       "bindExample",
       "specTest",
+      "contract-dependent-suites.mjs",
       "mutation",
       "cannot detect",
     ]) {
@@ -149,8 +157,8 @@ describe("Protocol skill assets", () => {
   });
 
   it("uses the local runtime or package runner instead of a colliding global binary", () => {
-    const agentSurface = readSkill(".claude/skills/sdp-agent-surface/SKILL.md");
-    const authoring = readSkill(".claude/skills/sdp-authoring/SKILL.md");
+    const agentSurface = readSkill(".agents/skills/sdp-agent-surface/SKILL.md");
+    const authoring = readSkill(".agents/skills/sdp-authoring/SKILL.md");
 
     expect(
       documentedCommands(agentSurface.body).every(
@@ -216,7 +224,7 @@ describe("Protocol skill assets", () => {
     }
 
     const agents = readFileSync(join(repoRoot, "AGENTS.md"), "utf8");
-    const skill = readSkill(".claude/skills/sdp-agent-surface/SKILL.md").source;
+    const skill = readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source;
     expect(agents).toContain(`${countWord} runnable \`sdp q\` bodies`);
     expect(skill).toContain(`catalog contains ${countWord} ready-made bodies`);
   });

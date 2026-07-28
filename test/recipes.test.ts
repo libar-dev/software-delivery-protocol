@@ -194,8 +194,8 @@ describe("the agent-surface recipe corpus", () => {
   it("keeps self-hosting and adopter invocation forms distinct", () => {
     const onRampSources = [
       recipesPath,
-      ".claude/skills/sdp-agent-surface/SKILL.md",
-      ".claude/skills/sdp-authoring/SKILL.md",
+      ".agents/skills/sdp-agent-surface/SKILL.md",
+      ".agents/skills/sdp-authoring/SKILL.md",
     ];
 
     for (const source of onRampSources) {

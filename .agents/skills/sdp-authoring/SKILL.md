@@ -56,7 +56,8 @@ unrelated binary with that name. Adopters should use their chosen package runner
    codegen findings.
 
 4. In the verifier suite, colocate `bindExample(generatedContract, world, bindings)` with a
-   `specTest` anchor targeting that example.
+   `specTest` anchor targeting that example. In this repository, registering every suite that
+   imports a generated contract in `contract-dependent-suites.mjs` is part of binding.
 5. Mutate one expected result and prove the new point goes red, then restore it. Keep runner
    execution and pass state outside the graph.
 
