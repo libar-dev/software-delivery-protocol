@@ -1,5 +1,16 @@
 # Plan 23 — The outward turn, refined: origin adoption, the usage layer, and the working ladder
 
+> **⚠️ SUPERSEDED as working guidance (2026-07-28).** This plan is ✅ EXECUTED and stands only
+> as the historical record of phase 6; the **standing plan is
+> [plan 24](24-inward-turn-self-hosting-practice.md)** — read that, not this file, for what to
+> do next. **Origin-repo caution:** the S1–S4 workstreams below executed in the origin project
+> (`new-convex-es` / `libar-platform`), but those local changes were **reverted in the origin
+> working copy** and survive only as PR libar-ai/convex-event-sourcing#181 (unmerged, awaiting
+> the owner's decision). No session may treat the origin working tree as carrying this plan's
+> S1–S4 results, and none re-applies them — plan 24's charter forbids origin-repo work
+> entirely. The owner intends to delete this file once plan 24 is implemented; its evidence
+> (commit SHAs, measurements, dispositions) remains recoverable from git history and PR #181.
+
 > **Status:** ✅ EXECUTED — **phase-6 implementation complete; final clean-copy audit passed**
 > (2026-07-28). S0–W landed in this repo; S1–S4 landed in the origin project
 > (`new-convex-es` / `libar-platform`). The Protocol corpus closes at 121 Specs · 1 Pack ·
