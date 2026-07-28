@@ -53,7 +53,7 @@ export const extractionSpecs = [
         ],
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:extraction.excludes",

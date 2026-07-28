@@ -90,12 +90,12 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    expect(result.counts).toEqual({ specs: 126, packs: 1, anchors: 91 });
+    expect(result.counts).toEqual({ specs: 126, packs: 1, anchors: 112 });
     expect(expectedSpecs).toHaveLength(126);
     expect(expectedPackMembers).toHaveLength(126);
-    expect(expectedAnchors).toHaveLength(91);
-    expect(result.graph.nodes).toHaveLength(218);
-    expect(result.graph.edges).toHaveLength(431);
+    expect(expectedAnchors).toHaveLength(112);
+    expect(result.graph.nodes).toHaveLength(239);
+    expect(result.graph.edges).toHaveLength(452);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -274,14 +274,14 @@ describe("the self-hosting corpus", () => {
     ]);
   });
 
-  it("derives the sdp-import round-trip delivery facts from the child's verifier", () => {
+  it("derives sdp-import realization from its direct code and child verifier bindings", () => {
     const importChildId = "spec:carrier.sdp-import.round-trip";
     const importParentId = "spec:carrier.sdp-import";
     const importChild = primitiveNodes.find((node) => node.id === importChildId);
     const importParent = primitiveNodes.find((node) => node.id === importParentId);
 
     expect(importChild?.deliveryFacts).toEqual(["has-verifier"]);
-    expect(importParent?.deliveryFacts).toEqual(["has-verifier"]);
+    expect(importParent?.deliveryFacts).toEqual(["implemented", "has-verifier"]);
     expect(
       result.graph.edges.filter(
         (edge) =>

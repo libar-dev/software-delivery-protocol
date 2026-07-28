@@ -147,6 +147,13 @@ function describeMissingTarget(missingId: string, index: GraphIndex): string {
 
 /* ----- conformance/referential-integrity (`spec:validation.referential-integrity`) ----- */
 
+const referentialIntegrityAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.referential-integrity"),
+  label: "checks every graph edge endpoint and Pack model reference resolves",
+  satisfies: ref("spec:validation.referential-integrity"),
+});
+void referentialIntegrityAnchor;
+
 function checkReferentialIntegrity(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
   const findings: Finding[] = [];
 
@@ -456,6 +463,13 @@ function checkEdgeContractRow(edge: GraphEdge, index: GraphIndex, findings: Find
   }
 }
 
+const claimSeparationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.claim-separation"),
+  label: "checks graph claims, descriptors, node shapes, and relation endpoint contracts",
+  satisfies: ref("spec:validation.claim-separation"),
+});
+void claimSeparationAnchor;
+
 function checkClaimSeparation(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
   const findings: Finding[] = [];
 
@@ -515,6 +529,13 @@ function checkClaimSeparation(graph: GraphSchema, index: GraphIndex): readonly F
  * spec a resolving test anchor binds), so an unenabled or wrong-kind verifier is named loudly
  * instead of silently conferring nothing.
  */
+const verifiesLinkageAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.verifies-linkage"),
+  label: "resolves declared example verification through enabled test bindings",
+  satisfies: ref("spec:validation.verification-linkage"),
+});
+void verifiesLinkageAnchor;
+
 function checkVerifiesLinkage(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
   const anchorVerified = new Set<string>();
 
@@ -571,6 +592,13 @@ function checkVerifiesLinkage(graph: GraphSchema, index: GraphIndex): readonly F
 
   return findings;
 }
+
+const oracleLinkageAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.oracle-linkage"),
+  label: "resolves and de-duplicates expected-outcome oracle bindings",
+  satisfies: ref("spec:validation.verification-linkage"),
+});
+void oracleLinkageAnchor;
 
 function checkOracleLinkage(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
   const findings: Finding[] = [];
@@ -696,6 +724,13 @@ function checkPackModelRefs(pack: PackNode, index: GraphIndex, findings: Finding
   }
 }
 
+const packCoherenceAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.pack-coherence"),
+  label: "checks Pack membership uniqueness and model-reference kinds",
+  satisfies: ref("spec:validation.pack-coherence"),
+});
+void packCoherenceAnchor;
+
 function checkPackCoherence(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
   const findings: Finding[] = [];
 
@@ -712,6 +747,13 @@ function checkPackCoherence(graph: GraphSchema, index: GraphIndex): readonly Fin
 }
 
 /* ----- conformance/orphans (`spec:validation.warn-level-signals` — informative) ----- */
+
+const orphanSignalAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.orphan-signal"),
+  label: "surfaces relationless Specs as informative orphan warnings",
+  satisfies: ref("spec:validation.warn-level-signals"),
+});
+void orphanSignalAnchor;
 
 function checkOrphans(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
   const findings: Finding[] = [];
@@ -757,6 +799,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * entries): nested content stays content — a vocabulary may legitimately name a term
  * "implemented".
  */
+const authoringShapeAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.authored-honesty-shape"),
+  label: "refuses delivery facts smuggled through authored section carriers",
+  satisfies: ref("spec:validation.authored-honesty"),
+});
+void authoringShapeAnchor;
+
 function checkAuthoringShape(node: PrimitiveNode, findings: Finding[]): void {
   const appendSmuggledFact = (factName: string, path: string): void => {
     findings.push(
@@ -816,6 +865,13 @@ function checkAuthoringShape(node: PrimitiveNode, findings: Finding[]): void {
  * omitted fact corrupts the backlog/drift queries, and `observed` has no producer yet
  * (aspirational, the liveness rung).
  */
+const deliveryFactsHonestyAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.authored-honesty-delivery-facts"),
+  label: "checks stated delivery facts equal the one recomputed derivation",
+  satisfies: ref("spec:validation.authored-honesty"),
+});
+void deliveryFactsHonestyAnchor;
+
 function checkDeliveryFacts(
   graph: GraphSchema,
   derivedFacts: ReadonlyMap<string, readonly DeliveryFactName[]>,
@@ -916,6 +972,13 @@ function checkReadinessFloors(graph: GraphSchema, index: GraphIndex): readonly F
  * binding earns must not silence the gap (that disagreement is the delivery-facts check's error;
  * this check stays truthful either way).
  */
+const gapSignalAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.verifier-gap-signal"),
+  label: "surfaces ready Specs without recomputed verifier bindings as informative gaps",
+  satisfies: ref("spec:validation.warn-level-signals"),
+});
+void gapSignalAnchor;
+
 function checkGaps(
   graph: GraphSchema,
   derivedFacts: ReadonlyMap<string, readonly DeliveryFactName[]>,

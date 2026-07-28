@@ -44,6 +44,10 @@ constant repetition of the bound test, so revision 3 records that vacuity refusa
 `spec:consumers.reader` instead has three existing witness points with three distinct result
 variants; it is the non-vacuous first inward oracle.
 
+S1 bound `oracle:protocol.reader-entry-map` over those three points. Mutating the concept branch
+from `sections.behavior.rules` to `sections.intent.outcome` reddened the exact oracle assertion;
+restoration returned the focused suite green.
+
 The phase's engine slice was selected during revision-3 planning, not at execution theater:
 `spec:validation.oracle-target-eligibility`. Eleven of the thirteen non-example backlog laws are
 rule Specs, most owning example spaces, while the shared fail-closed predicate admits behavior
@@ -96,30 +100,30 @@ a target.
 
 | Spec | Candidate seam | Disposition and current evidence |
 |---|---|---|
-| `spec:carrier.sdp-import` | `runImport` | pending |
-| `spec:consumers.binding-language-views` | binding renderers | pending |
-| `spec:consumers.derived-readiness-banner` | readiness renderer | pending |
-| `spec:consumers.wholesale-view-rewrite` | view/build rewrite boundary | pending |
-| `spec:extraction.determinism` | concrete clean-state seam, if any | pending |
-| `spec:validation.authored-honesty` | authoring-shape and delivery-fact checks | pending |
-| `spec:validation.claim-separation` | claim-separation check | pending |
-| `spec:validation.diagnostic-rendering` | CLI and projection renderers | pending |
-| `spec:validation.kind-evidence` | kind-evidence table | pending |
-| `spec:validation.pack-coherence` | Pack-coherence check | pending |
-| `spec:validation.referential-integrity` | referential-integrity check | pending |
-| `spec:validation.verification-linkage` | verifier and oracle linkage checks | pending |
-| `spec:validation.warn-level-signals` | orphan and gap checks | pending |
+| `spec:carrier.sdp-import` | `runImport` | **bind** — the entrypoint owns scan/refusal/planning/publication orchestration |
+| `spec:consumers.binding-language-views` | binding renderers | **bind ×3** — the Spec explicitly names the Spec page, Pack table, and index table |
+| `spec:consumers.derived-readiness-banner` | readiness renderer | **bind** — `renderReadiness` owns the paired rungs and one-direction banner |
+| `spec:consumers.wholesale-view-rewrite` | view/build rewrite boundary | **bind ×2** — `runBuild` owns up-front invalidation and `runView` owns atomic replacement |
+| `spec:extraction.determinism` | concrete clean-state seam | **bind** — `runBuild --check-clean` independently repeats and byte-compares graph/contracts; not a whole-pipeline token |
+| `spec:validation.authored-honesty` | authoring-shape and delivery-fact checks | **bind ×2** — each named check owns one half of the authored/derived refusal |
+| `spec:validation.claim-separation` | claim-separation check | **bind** — one check owns the typed claim/descriptor/edge contract |
+| `spec:validation.diagnostic-rendering` | CLI and projection renderers | **bind ×2** — the two named renderers own the command and table forms |
+| `spec:validation.kind-evidence` | kind-evidence table | **bind** — the exported table is the ruled code-level row set |
+| `spec:validation.pack-coherence` | Pack-coherence check | **bind** — one check owns membership and modelRef coherence |
+| `spec:validation.referential-integrity` | referential-integrity check | **bind** — one check owns edge endpoints, modelRefs, and nearest-ID suggestions |
+| `spec:validation.verification-linkage` | verifier and oracle linkage checks | **bind ×2** — the Spec explicitly names both resolution checks |
+| `spec:validation.warn-level-signals` | orphan and gap checks | **bind ×2** — each named check owns one informative signal |
 
 | Drift Spec | Fresh disposition |
 |---|---|
-| `spec:carrier.markdown-authoring` | pending re-argument |
-| `spec:consumers.projections-model` | pending re-argument |
-| `spec:extraction.claim-taxonomy` | pending re-argument |
-| `spec:extraction.regenerability` | pending re-argument |
-| `spec:model.core-model` | pending re-argument |
-| `spec:model.pack-aggregate` | pending re-argument |
-| `spec:model.relations` | pending re-argument |
-| `spec:model.spec-sections` | pending re-argument |
+| `spec:carrier.markdown-authoring` | **stay `defined`** — fresh graph: seven refining carrier laws, one implementation binding, zero resolving verifiers; the umbrella promise has no direct executable witness |
+| `spec:consumers.projections-model` | **stay `defined`** — fresh graph: five refining consumer Specs, one projection binding, zero resolving verifiers; vocabulary umbrella rather than one executable guarantee |
+| `spec:extraction.claim-taxonomy` | **stay `defined`** — fresh graph: model vocabulary, one enum binding, zero resolving verifiers; the floor passes but no direct witness justifies the human `ready` statement |
+| `spec:extraction.regenerability` | **stay `defined`** — fresh graph: one `runBuild` binding, zero resolving verifiers; the determinism test targets its constraint parent, not this rule |
+| `spec:model.core-model` | **stay `defined`** — fresh graph: eight refining Specs, two primitive/descriptor bindings, zero resolving verifiers; root vocabulary remains deliberately conservative |
+| `spec:model.pack-aggregate` | **stay `defined`** — fresh graph: two refining Specs, one Pack binding, zero resolving verifiers; no direct aggregate witness targets the model Spec |
+| `spec:model.relations` | **stay `defined`** — fresh graph: relation vocabulary, one builder binding, zero resolving verifiers; structural completeness alone does not supply the human statement |
+| `spec:model.spec-sections` | **stay `defined`** — fresh graph: four refining Specs, two section/verifier bindings, zero resolving verifiers; the umbrella has no direct executable witness |
 
 ## Inward friction ledger
 
@@ -133,6 +137,20 @@ changes only when the same friction recurs twice.
 | `spec:consumers.impact-graph` | none observed | language-neutral identity question keeps `idea` honest | none observed | none observed |
 | `spec:carrier.markdown-pack-authoring` | none observed | unresolved syntax keeps `idea` honest | none observed | none observed |
 | `spec:validation.oracle-target-eligibility` | pending S2 | blocking implementation seam supports `scoped` | pending S2 | graph exposed rule-kind demand directly |
+| `spec:carrier.sdp-import` | concrete entrypoint; no friction | already ready | existing point; no friction | backlog recipe led directly to the missing binding |
+| `spec:consumers.binding-language-views` | three honest sites required | already ready | existing points; no friction | guarantee recipe named all renderers |
+| `spec:consumers.derived-readiness-banner` | one honest site | already ready | existing points; no friction | none observed |
+| `spec:consumers.wholesale-view-rewrite` | split build/view ownership | already ready | existing points; no friction | none observed |
+| `spec:extraction.determinism` | audit distinguished a real check-clean seam from diffuse pipeline truth | already ready | direct test anchor already resolves | none observed |
+| `spec:validation.authored-honesty` | two named check sites | already ready | existing points; no friction | none observed |
+| `spec:validation.claim-separation` | one named check site | already ready | existing points; no friction | none observed |
+| `spec:validation.diagnostic-rendering` | two renderer sites | already ready | existing points; no friction | none observed |
+| `spec:validation.kind-evidence` | one table site | already ready | existing points; no friction | none observed |
+| `spec:validation.pack-coherence` | one check site | already ready | existing point; no friction | none observed |
+| `spec:validation.referential-integrity` | one check site | already ready | existing points; no friction | none observed |
+| `spec:validation.verification-linkage` | two named resolution sites | already ready | existing points; no friction | none observed |
+| `spec:validation.warn-level-signals` | two informative-check sites | already ready | existing points; no friction | none observed |
+| `spec:consumers.reader` | oracle binding resolved directly | already ready | three partial points required explicit defaults | graph context supplied all three witness IDs |
 
 ## Verification and close
 

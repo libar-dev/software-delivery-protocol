@@ -326,6 +326,13 @@ const behaviorFamilyEvidence: KindEvidenceRow = {
   },
 };
 
+const kindEvidenceAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.kind-evidence"),
+  label: "defines the code-level per-kind evidence rows for readiness floors",
+  satisfies: ref("spec:validation.kind-evidence"),
+});
+void kindEvidenceAnchor;
+
 export const kindEvidence = {
   behavior: behaviorFamilyEvidence,
   workflow: behaviorFamilyEvidence,

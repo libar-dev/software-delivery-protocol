@@ -40,12 +40,26 @@ function contractFilesEqual(
   return true;
 }
 
+const determinismAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.extraction-determinism"),
+  label: "repeats and byte-compares graph and contract generation under --check-clean",
+  satisfies: ref("spec:extraction.determinism"),
+});
+void determinismAnchor;
+
 const regenerabilityAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.regenerability"),
   label: "repeats graph and contract producers for deterministic regeneration",
   satisfies: ref("spec:extraction.regenerability"),
 });
 void regenerabilityAnchor;
+
+const wholesaleViewBuildInvalidationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.wholesale-view-build-invalidation"),
+  label: "invalidates the prior Design Review before every build attempt",
+  satisfies: ref("spec:consumers.wholesale-view-rewrite"),
+});
+void wholesaleViewBuildInvalidationAnchor;
 
 export function runBuild(
   parsed: BuildArgs,

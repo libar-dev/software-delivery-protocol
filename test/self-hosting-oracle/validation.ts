@@ -147,7 +147,7 @@ export const validationSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.kind-evidence.constraints-alone",
@@ -404,7 +404,7 @@ export const validationSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.referential-integrity.dangling-target",
@@ -499,7 +499,7 @@ export const validationSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.claim-separation.collapsed-edge-claim",
@@ -597,7 +597,7 @@ export const validationSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.verification-linkage.unbound-example",
@@ -731,7 +731,7 @@ export const validationSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.pack-coherence.incoherent-aggregate",
@@ -794,7 +794,7 @@ export const validationSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.authored-honesty.section-authored-fact",
@@ -891,7 +891,7 @@ export const validationSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.warn-level-signals.orphan-signal",
@@ -991,7 +991,7 @@ export const validationSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.diagnostic-rendering.composed-location",

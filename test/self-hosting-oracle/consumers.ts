@@ -240,7 +240,7 @@ export const consumersSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.derived-readiness-banner.dishonest-divergence",
@@ -345,7 +345,7 @@ export const consumersSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.binding-language-views.bound-spec-page",
@@ -450,7 +450,7 @@ export const consumersSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.wholesale-view-rewrite.stale-page-removed",
