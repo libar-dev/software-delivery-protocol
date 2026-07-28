@@ -1,5 +1,13 @@
 import { spawnSync } from "node:child_process";
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,6 +17,31 @@ import { afterEach, describe, expect, it } from "vitest";
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const guardPath = join(repoRoot, "check-self-hosting-gates.mjs");
 const roots: string[] = [];
+const primaryPlans = readdirSync(join(repoRoot, "plans"), { withFileTypes: true })
+  .filter((entry) => entry.isFile())
+  .map((entry) => {
+    const match = /^(?<number>[1-9]\d*)-[a-z0-9][a-z0-9-]*\.md$/u.exec(entry.name);
+    const number = match?.groups?.number;
+    return number === undefined ? null : { name: entry.name, number: Number(number) };
+  })
+  .filter((entry) => entry !== null)
+  .sort((left, right) => right.number - left.number);
+const currentPlan = primaryPlans[0];
+
+if (currentPlan === undefined) {
+  throw new Error("test fixture requires a current primary-numbered plan");
+}
+
+const currentPlanPath = ["plans", currentPlan.name].join("/");
+const currentPlanSource = readFileSync(join(repoRoot, currentPlanPath), "utf8");
+const currentStatus = /\b(DRAFTED|EXECUTING|RUN|EXECUTED)\b/u.exec(
+  currentPlanSource.split("\n").find((line) => line.startsWith("> **Status:**")) ?? "",
+)?.[1];
+
+if (currentStatus === undefined) {
+  throw new Error(`${currentPlanPath} has no readable status`);
+}
+
 const copiedPaths = [
   "AGENTS.md",
   "CONTEXT.md",
@@ -17,7 +50,7 @@ const copiedPaths = [
   ["plans", "16-carrier-ruling.md"].join("/"),
   ["plans", "17-self-hosting-v1.md"].join("/"),
   ["plans", "18-self-hosting-phase-2.md"].join("/"),
-  ["plans", "23-outward-turn-origin-adoption.md"].join("/"),
+  currentPlanPath,
 ] as const;
 
 function copyRecordTree(): string {
@@ -71,7 +104,13 @@ describe("the self-hosting records gate", () => {
     const root = copyRecordTree();
     const path = join(root, "AGENTS.md");
     const source = readFileSync(path, "utf8");
-    writeFileSync(path, source.replace("plan 23 is EXECUTED", "plan 22 is DRAFTED"));
+    writeFileSync(
+      path,
+      source.replace(
+        `plan ${String(currentPlan.number)} is ${currentStatus}`,
+        `plan ${String(currentPlan.number - 1)} is DRAFTED`,
+      ),
+    );
 
     const result = runGuard(root);
 

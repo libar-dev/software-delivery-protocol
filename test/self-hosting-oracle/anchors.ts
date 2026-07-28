@@ -56,7 +56,7 @@ export const expectedAnchors = [
   {
     id: "impl:protocol.authoring-on-ramp",
     nodeType: "CodeNode",
-    label: "validates the shipped graph-first authoring on-ramp",
+    label: "asserts realization of the shipped graph-first authoring skill document",
     type: "satisfies",
     target: "spec:consumers.authoring-on-ramp",
     file: "test/skills.test.ts",
@@ -66,7 +66,7 @@ export const expectedAnchors = [
   {
     id: "impl:protocol.authoring-recipes",
     nodeType: "CodeNode",
-    label: "validates the shipped authoring recipe surface",
+    label: "asserts realization of the shipped authoring recipe catalog",
     type: "satisfies",
     target: "spec:consumers.agent-surface.authoring-recipes",
     file: "test/skills.test.ts",

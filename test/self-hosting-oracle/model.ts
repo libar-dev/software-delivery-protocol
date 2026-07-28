@@ -297,6 +297,8 @@ export const modelSpecs = [
             "The top-level const builder call that the MVP extractor reifies; decorator and JSDoc forms remain unextracted representations.",
           "code anchor":
             "An implementation-flavored binding that derives an anchored satisfies edge.",
+          "document-realization binding":
+            "When the realizing artifact is authored Markdown that cannot carry an extracted in-code anchor, the executable suite that asserts the shipped document may carry its code anchor. Its label must name the document realization rather than imply the test body is the product, and file-level blast radius remains coverage-unknown for the Markdown artifact.",
           "oracle anchor":
             "A binding that records an oracle's models target without deriving a delivery fact.",
           "test anchor":

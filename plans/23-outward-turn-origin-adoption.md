@@ -5,7 +5,7 @@
 > (`new-convex-es` / `libar-platform`). The Protocol corpus closes at 121 Specs · 1 Pack ·
 > 91 anchors → 213 nodes · 416 edges, with `ready: 83 / defined: 36 / scoped: 1 / idea: 1`
 > and zero findings. The origin closes at 57 Specs · 1 Pack · 11 anchors → 69 nodes ·
-> 111 edges, with `ready: 2 / defined: 50 / scoped: 2 / idea: 3` and zero findings. Architect
+> 105 edges, with `ready: 2 / defined: 50 / scoped: 2 / idea: 3` and zero findings. Architect
 > carriers, the vendored package, process guards, annotations, release machinery, planning
 > plugin, CI legs, and 333 committed projections are retired behind the committed parity ledger.
 >
@@ -490,14 +490,18 @@ session here.
 - **S1:** origin commit `59827121d` installs the package snapshot and lands the green foreign
   tracer. The reactive-projection point calls the production API through its generated contract,
   reddens under mutation, and re-earns `ready` without changing vitest-cucumber.
-- **S2:** origin commit `dad63f1f4` freezes 1,319 exact source dispositions before deletion;
-  `0c3d79d0d` performs the atomic cutover. The measured inline-carrier population is
+- **S2:** origin commit `dad63f1f4` freezes the historical 1,319-row parity population before
+  deletion; the post-close adversarial sweep expands the integrity index to 1,627 rows.
+  `0c3d79d0d` performs the selected atomic deletion pass: “atomic” names the committed
+  parity-checkpoint → deletion boundary, not a claim that later review could discover no missed
+  reference. The measured inline-carrier population is
   **1 / 57 (1.75%)**, recorded without a carrier ruling.
 - **S3:** origin commit `ad02746a2` adds `pack:restart-horizon`, scoped test-reporting intent,
   and idea-level dynamic-projection and generative-UI intent without encoding schedule.
 - **S4:** origin commit `e698e0a2a` retains matched raw logs, structured outputs, hashes, rubric,
   and latency. Treatment scores 12/12 versus control 11/12 and uses 987,559 versus 3,671,422
-  completion-event tokens (**73.1% fewer**) without worse quality. Ten fresh derivations measure
+  gross completion-event tokens (**73.1% fewer**) and 113,575 versus 183,166 non-cached
+  input-plus-output tokens (**38.0% fewer**) without worse quality. Ten fresh derivations measure
   **432.27 ms median / 444.19 ms p95** after one warm-up.
 - **Close audit:** both repositories pass their complete gates from detached clean worktrees;
   the origin frozen installs reproduce from both workspace views, all existing suites pass, the
@@ -506,3 +510,42 @@ session here.
 
 Phase debt disposition and execution order remain in this record, not in ceremonial Specs. The
 origin now runs under the Protocol it adopted.
+
+### Post-close implementation-review corrections
+
+The grounded review found four correctness/honesty defects and four Protocol hygiene defects. The
+fix session re-measured and dispositioned all of them:
+
+- Origin test entry points now generate Protocol contracts before any unit/watch/coverage suite
+  that imports the bound contract; the PR template names the complete `pnpm sdp:check` gate.
+- A second SHA-pinned cutover population, expanded by the final-pass audit, adds 308 exact rows for
+  root support, MCP, review, agent/command/plan, docs, inbox evidence, and the retired handbook
+  package. The manifest now has **1,627** rows; competing project-management and re-entry status
+  systems are deleted, retained technical docs are explicitly classified, and a mutation-tested
+  guard prevents active predecessor paths or instructions from returning.
+- Four tranche-shaped IDs are renamed to capability names. Six schedule-shaped `dependsOn` edges
+  and ordering clauses are removed; the only surviving dependency in the repaired cluster is the
+  real security-to-authentication dependency. No Spec is promoted.
+- The measurement publishes an addendum: 73.1% is gross and includes cached input; non-cached
+  input plus output falls 38.0%. Raw logs prove usage/cache splits but do not independently carry
+  the model string or control SHA. The reviewed phase-close count is 11,936 Vitest assertions plus
+  8 script assertions, **11,944 total**. The first corrective gate adds two retired-surface
+  assertions and reaches 11,946; final-pass removal of the dead 385-assertion handbook package
+  leaves the active gate at **11,561 total**.
+- The shipped reading skill separates adopter invocation from the Protocol source checkout,
+  names all eleven recipes, and the repository map includes the authoring skill.
+- The records-gate mutation test discovers the current primary plan with the same convention as
+  the guard rather than pinning plan 23.
+- `spec:model.anchors` now records the narrow document-realization convention used by the two
+  test-file implementation anchors, whose labels explicitly name the asserted document artifacts.
+- The origin close record states the verifier batch denominator (nine of 127 executable step files
+  plus the bound tracer), the stricter local `ready` discipline, and the manifest/ledger evidence
+  boundary. Ignored cutover residue moved from `/tmp` to a durable recovery directory.
+- The corrected 16-file package snapshot is pinned at SHA-256
+  `7c5a176f658b9d477a324ac0017fd16e66eb04617db675e01cc1c9482512eb76`; the original S1 snapshot
+  remains immutable historical evidence.
+
+The Protocol audit still reports eight development-dependency advisories (3 moderate, 4 high,
+1 critical). The actionable aggregate fix is a Vitest 2→4 major migration; it is recorded rather
+than silently folded into this review repair because it changes the test runner and does not affect
+the shipped runtime surface.

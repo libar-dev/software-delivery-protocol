@@ -225,11 +225,6 @@ describe("the agent-surface recipe corpus", () => {
         }).toEqual({ source, line, names: standardExcludes.length });
       }
 
-      if (source === ".claude/skills/sdp-agent-surface/SKILL.md") {
-        expect(adopterLines).toEqual([]);
-        continue;
-      }
-
       expect({ source, adopterForms: adopterLines.length }).toEqual({
         source,
         adopterForms: 2,

@@ -21,7 +21,7 @@ const skillPaths = [
 
 const authoringOnRampImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.authoring-on-ramp"),
-  label: "validates the shipped graph-first authoring on-ramp",
+  label: "asserts realization of the shipped graph-first authoring skill document",
   satisfies: ref("spec:consumers.authoring-on-ramp"),
 });
 void authoringOnRampImplementationAnchor;
@@ -43,7 +43,7 @@ function readSkill(path: string) {
 
 const authoringRecipesImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.authoring-recipes"),
-  label: "validates the shipped authoring recipe surface",
+  label: "asserts realization of the shipped authoring recipe catalog",
   satisfies: ref("spec:consumers.agent-surface.authoring-recipes"),
 });
 void authoringRecipesImplementationAnchor;
@@ -152,9 +152,11 @@ describe("Protocol skill assets", () => {
     const agentSurface = readSkill(".claude/skills/sdp-agent-surface/SKILL.md");
     const authoring = readSkill(".claude/skills/sdp-authoring/SKILL.md");
 
-    expect(documentedCommands(agentSurface.body).every((line) => line.startsWith("node "))).toBe(
-      true,
-    );
+    expect(
+      documentedCommands(agentSurface.body).every(
+        (line) => line.startsWith("node ") || line.startsWith("pnpm exec "),
+      ),
+    ).toBe(true);
     expect(
       documentedCommands(authoring.body).every(
         (line) => line.startsWith("node ") || line.startsWith("pnpm exec "),
@@ -178,5 +180,44 @@ describe("Protocol skill assets", () => {
         expect(source).not.toContain(claim);
       }
     }
+  });
+
+  it("keeps recipe-count prose synchronized with the executable catalog", () => {
+    const catalog = readFileSync(join(repoRoot, "docs/agent-surface/recipes.md"), "utf8");
+    const headings = [...catalog.matchAll(/^## \d+\. /gmu)];
+    const countWords = [
+      "zero",
+      "one",
+      "two",
+      "three",
+      "four",
+      "five",
+      "six",
+      "seven",
+      "eight",
+      "nine",
+      "ten",
+      "eleven",
+      "twelve",
+      "thirteen",
+      "fourteen",
+      "fifteen",
+      "sixteen",
+      "seventeen",
+      "eighteen",
+      "nineteen",
+      "twenty",
+    ] as const;
+    const countWord = countWords[headings.length];
+
+    expect(countWord).toBeDefined();
+    if (countWord === undefined) {
+      throw new Error(`recipe count ${String(headings.length)} is outside the checked prose range`);
+    }
+
+    const agents = readFileSync(join(repoRoot, "AGENTS.md"), "utf8");
+    const skill = readSkill(".claude/skills/sdp-agent-surface/SKILL.md").source;
+    expect(agents).toContain(`${countWord} runnable \`sdp q\` bodies`);
+    expect(skill).toContain(`catalog contains ${countWord} ready-made bodies`);
   });
 });
