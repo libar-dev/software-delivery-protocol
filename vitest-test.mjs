@@ -139,7 +139,7 @@ if (hasPathFilter) {
   }
 
   process.exit(
-    runVitest(["--run", cliTestPath, "--pool", "forks", "--poolOptions.forks.singleFork"]),
+    runVitest(["--run", cliTestPath, "--pool", "forks", "--maxWorkers", "1", "--no-isolate"]),
   );
 }
 
@@ -152,5 +152,5 @@ if (parallelExitCode !== 0) {
 }
 
 process.exit(
-  runVitest(["--run", cliTestPath, "--pool", "forks", "--poolOptions.forks.singleFork"]),
+  runVitest(["--run", cliTestPath, "--pool", "forks", "--maxWorkers", "1", "--no-isolate"]),
 );
