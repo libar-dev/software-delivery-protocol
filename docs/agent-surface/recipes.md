@@ -28,6 +28,12 @@ pnpm exec sdp q '<body>' --root PATH --exclude PATH --exclude PATH
 `--root PATH` picks the extraction root (default: the working directory) and `--exclude` is
 repeatable for root-relative path prefixes. `PATH` is a placeholder, not a literal directory.
 
+**Some recipes open with a parameter.** Recipes 3, 4, 6, and 9 take their subject on the opening
+`const` line(s) — a Spec id, a changed-file list, a search term. Those lines name *this*
+repository's corpus so every body runs as written here (the recipe check executes each one
+verbatim); in your own corpus, substitute your subject on that line before running. A Spec id
+absent from the graph returns `{ found: false }` rather than failing.
+
 **The contract, in one place.** The front door derives the graph in process and evaluates the body
 you supply; `return` is the output contract. Three bindings are injected:
 
@@ -399,6 +405,7 @@ return {
 };
 ```
 
+The `id` line is the recipe's parameter — substitute the Spec whose promotion you are weighing.
 An empty `currentFloorFailures` list says the stated rung is honest. It does not confer the next
 rung, and `floorReached` above the stated rung is information rather than an automatic edit.
 

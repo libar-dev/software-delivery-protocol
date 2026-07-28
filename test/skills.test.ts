@@ -41,6 +41,27 @@ function readSkill(path: string) {
   };
 }
 
+function shellFenceLines(body: string): readonly string[] {
+  const lines: string[] = [];
+  let inShellFence = false;
+
+  for (const line of body.split("\n")) {
+    if (line.startsWith("```") && line !== "```") {
+      inShellFence = line === "```sh";
+      continue;
+    }
+    if (line === "```") {
+      inShellFence = false;
+      continue;
+    }
+    if (inShellFence) {
+      lines.push(line);
+    }
+  }
+
+  return lines;
+}
+
 const authoringRecipesImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.authoring-recipes"),
   label: "asserts realization of the shipped authoring recipe catalog",
@@ -49,27 +70,9 @@ const authoringRecipesImplementationAnchor = codeAnchor({
 void authoringRecipesImplementationAnchor;
 
 function documentedCommands(body: string): readonly string[] {
-  const commands: string[] = [];
-  let inShellFence = false;
-
-  for (const line of body.split("\n")) {
-    if (line === "```sh") {
-      inShellFence = true;
-      continue;
-    }
-    if (line === "```") {
-      inShellFence = false;
-      continue;
-    }
-    if (
-      inShellFence &&
-      (line.startsWith("pnpm --silent sdp:q ") || line.startsWith("pnpm exec sdp "))
-    ) {
-      commands.push(line);
-    }
-  }
-
-  return commands;
+  return shellFenceLines(body).filter(
+    (line) => line.startsWith("pnpm --silent sdp:q ") || line.startsWith("pnpm exec sdp "),
+  );
 }
 
 const authoringOnRampTestAnchor = specTest({
@@ -161,19 +164,16 @@ describe("Protocol skill assets", () => {
   });
 
   it("uses the local runtime or package runner instead of a colliding global binary", () => {
-    const agentSurface = readSkill(".agents/skills/sdp-agent-surface/SKILL.md");
-    const authoring = readSkill(".agents/skills/sdp-authoring/SKILL.md");
+    // The hazard is a documented invocation the collector above would never collect: a bare
+    // `sdp` resolves to whatever binary shadows it on PATH (macOS ships an unrelated `sdp`),
+    // so the check scans every shell-fenced line rather than the pnpm-prefixed subset.
+    for (const path of skillPaths) {
+      const bareInvocations = shellFenceLines(readSkill(path).body).filter((line) =>
+        /^\s*(?:sdp|npx +sdp|npm +exec +sdp)\b/u.test(line),
+      );
 
-    expect(
-      documentedCommands(agentSurface.body).every(
-        (line) => line.startsWith("pnpm --silent ") || line.startsWith("pnpm exec "),
-      ),
-    ).toBe(true);
-    expect(
-      documentedCommands(authoring.body).every(
-        (line) => line.startsWith("pnpm --silent ") || line.startsWith("pnpm exec "),
-      ),
-    ).toBe(true);
+      expect({ path, bareInvocations }).toEqual({ path, bareInvocations: [] });
+    }
   });
 
   it("contains no contradictory shortcuts for readiness or verifier realization", () => {

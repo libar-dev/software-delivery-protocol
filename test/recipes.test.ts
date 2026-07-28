@@ -467,9 +467,15 @@ describe("the agent-surface recipe corpus", () => {
   it("keeps declared examples distinct from enabled verifier bindings", async () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(10)));
     const rows = asArray(result.rows);
+    // The completeness predicate mirrors the recipe's row predicate exactly: a spec whose only
+    // binding is an off-contract (not-enabled, non-example) verify edge lawfully produces no row.
     const expected = reader
       .specs()
-      .filter((spec) => (reader.specContext(spec.id)?.verifiers.length ?? 0) > 0)
+      .filter((spec) => {
+        const verifiers = reader.specContext(spec.id)?.verifiers ?? [];
+
+        return verifiers.some((binding) => binding.via === "example" || binding.enabled);
+      })
       .map((spec) => spec.id)
       .sort();
 
