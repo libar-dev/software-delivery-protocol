@@ -67,9 +67,12 @@ describe("bootstrap package surface", () => {
     expect(packageJson.scripts["check:self-hosting"]).toBe(
       "node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --check-clean",
     );
+    expect(packageJson.scripts["check:self-hosting-gates"]).toBe(
+      "node ./check-self-hosting-gates.mjs",
+    );
     expect(packageJson.scripts.preflight).toBe("node ./preflight.mjs");
     expect(packageJson.scripts.check).toBe(
-      "npm run check:temporal && npm run lint && npm run format:check && npm run build && npm run generate:self-hosting && npm run generate:example && npm run typecheck && npm run typecheck:examples && npm test && npm run check:self-hosting && npm run check:example && npm run preflight",
+      "npm run check:temporal && npm run lint && npm run format:check && npm run build && npm run generate:self-hosting && npm run generate:example && npm run typecheck && npm run typecheck:examples && npm test && npm run check:self-hosting-gates && npm run check:self-hosting && npm run check:example && npm run preflight",
     );
   });
 

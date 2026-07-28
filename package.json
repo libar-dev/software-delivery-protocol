@@ -45,9 +45,10 @@
     "generate:example": "node ./dist/cli/sdp.js build examples/checkout-v1",
     "generate:self-hosting": "node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --exclude test/fixtures/import/parity",
     "check:self-hosting": "node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --check-clean",
+    "check:self-hosting-gates": "node ./check-self-hosting-gates.mjs",
     "check:example": "node ./dist/cli/sdp.js view examples/checkout-v1 --check-clean",
     "preflight": "node ./preflight.mjs",
-    "check": "npm run check:temporal && npm run lint && npm run format:check && npm run build && npm run generate:self-hosting && npm run generate:example && npm run typecheck && npm run typecheck:examples && npm test && npm run check:self-hosting && npm run check:example && npm run preflight"
+    "check": "npm run check:temporal && npm run lint && npm run format:check && npm run build && npm run generate:self-hosting && npm run generate:example && npm run typecheck && npm run typecheck:examples && npm test && npm run check:self-hosting-gates && npm run check:self-hosting && npm run check:example && npm run preflight"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

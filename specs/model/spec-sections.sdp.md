@@ -9,6 +9,7 @@ relations:
     - spec:decisions.point-per-example
     - spec:decisions.content-only-sections
     - spec:decisions.typing-law
+    - spec:decisions.verification-posture-not-realization
 ---
 # Spec sections carry typed detail and direct verifier semantics
 
@@ -22,3 +23,4 @@ relations:
 - **promotion** — Moving shared or independently reviewed content into a standalone Spec of the matching kind, exclusively rather than alongside inline content.
 - **verifies** — A direct verifier-to-target relation whose enabled test binding can derive has-verifier only for that stated target.
 - **enabled verifier** — An example or direct test with a linked, resolvable test anchor; runner execution and pass state remain outside the graph.
+- **verification mode** — Authored intended posture such as executable; it never stands in for the derived enabled-verifier realization.

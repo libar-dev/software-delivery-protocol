@@ -1,11 +1,11 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-// check-self-hosting-gates — the structured consistency gate for the self-hosting phase's
-// accepted docket close and its four-gate review ledger (git process evidence, never a
-// graph fact).
+// check-self-hosting-gates — frozen historical-record assertions plus universal current-record
+// consistency. Historical process evidence stays pinned here, but later phases do not inherit
+// plan-17/18's docket, owner-packet, or gate-ledger shapes.
 //
 // Asserts, and NAMES each disagreeing surface on failure:
 //   1. DOCKET — all obligations are non-pending (done/deferred/dropped with rationale), including
@@ -17,10 +17,9 @@ import { fileURLToPath } from "node:url";
 //      phase-2 disposition.
 //   3. PACKET AGREEMENT — the ledger's fields agree with the owner-packet
 //      dispositions, embedded here as constants read from those packets.
-//   4. STATUS SURFACES — progress lives in the plan and the agent handbook only: the handbook
-//      stamps owner acceptance and final-audit pending, and its green-gate row names the current root+checkout
-//      chain; the handbook, the diary, and the glossary carry no plan-completion or
-//      plan-completion wording.
+//   4. CURRENT RECORD — the highest primary-numbered plan has a readable status header, the
+//      handbook names that plan and status, semantic surfaces carry no plan status, and the
+//      documented green-gate legs agree with package.json.
 //   5. ADR DISPOSITIONS — both flagged §3 rulings carry explicit three-part-test outcomes:
 //      lean diary entries (the strict consumer-exclusion contract (MD-20); the
 //      envelope-grammar ownership posture (MD-21)) with registry rows, and the plan records
@@ -45,6 +44,7 @@ const plan16Path = ["plans", "16-carrier-ruling.md"].join("/");
 const agentsPath = "AGENTS.md";
 const decisionsPath = "docs/concept/DECISIONS.md";
 const glossaryPath = "CONTEXT.md";
+const packagePath = "package.json";
 
 // Owner-packet dispositions, read from the three packets and embedded as constants: the
 // ledger must agree with them field for field. The shared gate date is assembled in parts.
@@ -83,8 +83,27 @@ const plan = read(planPath);
 const agents = read(agentsPath);
 const decisions = read(decisionsPath);
 const glossary = read(glossaryPath);
+const packageJson = JSON.parse(read(packagePath));
 const plan16 = read(plan16Path);
 const plan18 = existsSync(join(rootDir, plan18Path)) ? read(plan18Path) : null;
+
+const primaryPlans = readdirSync(join(rootDir, "plans"), { withFileTypes: true })
+  .filter((entry) => entry.isFile())
+  .map((entry) => {
+    const match = /^(?<number>[1-9]\d*)-[a-z0-9][a-z0-9-]*\.md$/u.exec(entry.name);
+    const number = match?.groups?.number;
+    return number === undefined ? null : { name: entry.name, number: Number(number) };
+  })
+  .filter((entry) => entry !== null)
+  .sort((left, right) => right.number - left.number);
+const currentPlan = primaryPlans[0];
+
+if (currentPlan === undefined) {
+  failures.push("plans/ — no primary-numbered plan exists");
+}
+
+const currentPlanPath = currentPlan === undefined ? null : ["plans", currentPlan.name].join("/");
+const currentPlanSource = currentPlanPath === null ? "" : read(currentPlanPath);
 
 // ---------------------------------------------------------------------------
 // 1. The docket: all 25 obligations are dispositioned.
@@ -204,40 +223,63 @@ if (ledgerStart === -1) {
 }
 
 // ---------------------------------------------------------------------------
-// 4. Status surfaces: the handbook stamps the executed phase; semantics stay elsewhere.
+// 4. Current record: select the current plan by convention and keep status/gate surfaces aligned.
 // ---------------------------------------------------------------------------
 
-expectContains(
-  agentsPath,
-  agents,
-  "EXECUTED — phase-1 implementation complete; final audit passed",
-  "the handbook must stamp the executed phase status",
-);
+const currentStatusHeader =
+  currentPlanSource.split("\n").find((line) => line.startsWith("> **Status:**")) ?? "";
+const currentStatus = /\b(DRAFTED|EXECUTING|RUN|EXECUTED)\b/u.exec(currentStatusHeader)?.[1];
 
-const gateRowLine = agents.split("\n").find((line) => line.includes("the green gate")) ?? "";
-for (const needle of [
-  "generate:self-hosting",
-  "generate:example",
-  "check:self-hosting",
-  "check:example",
-  "preflight",
-]) {
+if (currentStatusHeader === "") {
+  failures.push(`${currentPlanPath ?? "plans/"} — missing a readable blockquoted status header`);
+}
+if (currentStatus === undefined) {
+  failures.push(
+    `${currentPlanPath ?? "plans/"} — status header has no DRAFTED/EXECUTING/RUN/EXECUTED state`,
+  );
+}
+if (currentPlan !== undefined) {
   expectContains(
     agentsPath,
-    gateRowLine,
-    needle,
-    `the green-gate row does not name the current root+checkout chain (${needle})`,
+    agents,
+    `plan ${String(currentPlan.number)}`,
+    "the handbook does not name the current primary plan",
+  );
+}
+if (currentStatus !== undefined) {
+  expectContains(
+    agentsPath,
+    agents,
+    currentStatus,
+    "the handbook status disagrees with the current primary plan",
   );
 }
 
-// Numbered-plan wording: the handbook must not record the plan's execution state.
-const numberedWording = /plan 17[^\n]{0,80}(landed|executed|accepted|completed|owner-accepted)/iu;
-if (numberedWording.test(agents)) {
-  failures.push(`${agentsPath} — carries numbered wording (a plan-completion claim)`);
+const checkScript = packageJson?.scripts?.check;
+if (typeof checkScript !== "string") {
+  failures.push(`${packagePath} — scripts.check is missing`);
+}
+const actualGateLegs =
+  typeof checkScript !== "string"
+    ? []
+    : [...checkScript.matchAll(/npm run ([\w:-]+)|npm test/gu)].map((match) => match[1] ?? "test");
+const gateRowLine = agents.split("\n").find((line) => line.includes("the green gate")) ?? "";
+const documentedGateLegs = [...gateRowLine.matchAll(/`([^`]+)`/gu)]
+  .map((match) => match[1])
+  .filter((entry) => entry !== "npm run check");
+
+if (gateRowLine === "") {
+  failures.push(`${agentsPath} — missing the documented green-gate row`);
+} else if (JSON.stringify(documentedGateLegs) !== JSON.stringify(actualGateLegs)) {
+  failures.push(
+    `${agentsPath} ↔ ${packagePath} — documented green-gate legs disagree: documented ${documentedGateLegs.join(" → ")}; actual ${actualGateLegs.join(" → ")}`,
+  );
+}
+if (!actualGateLegs.includes("check:self-hosting-gates")) {
+  failures.push(`${packagePath} — scripts.check does not require check:self-hosting-gates`);
 }
 
-// The diary and the glossary are inspected for semantics only: no status may be written into
-// them. (The diary's dated entries legitimately name the plan; completion claims are banned.)
+// The diary and glossary are semantic surfaces: current and historical plan status stays out.
 for (const [surface, text] of [
   [decisionsPath, decisions],
   [glossaryPath, glossary],
@@ -358,6 +400,12 @@ const report = {
     decisions: decisionsPath,
     glossary: glossaryPath,
     phase2Plan: plan18 === null ? null : plan18Path,
+    currentPlan: currentPlanPath,
+    package: packagePath,
+  },
+  currentRecord: {
+    status: currentStatus ?? null,
+    gateLegs: actualGateLegs,
   },
   temporal,
   docket: {

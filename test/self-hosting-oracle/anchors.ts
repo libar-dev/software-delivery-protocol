@@ -44,6 +44,16 @@ export const expectedAnchors = [
     site: 'it("clean-repo determinism: the full pipeline at a different absolute path is byte-identical"',
   },
   {
+    id: "test:protocol.build-pipeline.same-invocation",
+    nodeType: "Anchor",
+    label: "the same-invocation point verifies the query extraction and validation seam",
+    type: "verifies",
+    target: "spec:extraction.build-pipeline.same-invocation",
+    file: "test/self-hosting-extraction.test.ts",
+    constant: "buildPipelineSameInvocationTestAnchor",
+    site: "bindExample(sameInvocationContract",
+  },
+  {
     id: "impl:protocol.readiness-floor",
     nodeType: "CodeNode",
     label: "evaluates the stated readiness floor against the graph",

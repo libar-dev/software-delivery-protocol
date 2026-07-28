@@ -19,3 +19,12 @@ relations:
 - Validate the graph.
 - Emit derived artifacts.
 - rule: Every command uses the same extracted graph and validation seam.
+
+## Example space
+```gwt-vocabulary
+Given an extraction root containing the isolated spec {specId:string}
+When one query invocation reads the reader, raw graph, and validation report
+Then the query exits {exitCode:number}
+Then both graph entrances return the spec {returnedSpecId:string}
+Then the validation report names the same subject {findingSubjectId:string}
+```

@@ -80,10 +80,43 @@ export const modelSpecs = [
             "Every section read by a readiness-floor clause has a closed typed shape; unsettled design and ui surfaces remain open bags.",
           verifies:
             "A direct verifier-to-target relation whose enabled test binding can derive has-verifier only for that stated target.",
+          "verification mode":
+            "Authored intended posture such as executable; it never stands in for the derived enabled-verifier realization.",
         },
       },
     },
     deliveryFacts: ["implemented"],
+  },
+  {
+    id: "spec:model.enrichment-lifecycle",
+    specKind: "model",
+    altitude: "feature",
+    readiness: "scoped",
+    file: "specs/model/enrichment-lifecycle.sdp.md",
+    title: "Enrichment keeps one Spec while its detail changes",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep a Spec useful after implementation without recreating value-transfer duplication.",
+        openQuestions: [
+          {
+            question:
+              "After implementation, which design-time detail stays in the Spec and which detail may be removed while preserving one durable home for each explanation?",
+            blocking: true,
+          },
+        ],
+      },
+      model: {
+        terms: {
+          "enrichment lifecycle":
+            "The same Spec gains and may later slim typed detail without changing identity or moving truth into another artifact type.",
+          "distillation boundary":
+            "Implemented code does not automatically justify either retaining or deleting design-time detail; the unresolved policy must preserve one home per explanation.",
+        },
+      },
+    },
+    deliveryFacts: [],
   },
   {
     id: "spec:model.relations",

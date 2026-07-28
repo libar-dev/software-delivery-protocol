@@ -1,10 +1,10 @@
 # Plan 23 — The outward turn, refined: origin adoption, the usage layer, and the working ladder
 
-> **Status:** DRAFTED — PLAN-ONLY, **revision 2** (2026-07-28 refinement session). No target file is
-> touched under this plan until an execution session is designated. The latest ✅ EXECUTED ground is
+> **Status:** EXECUTING — **revision 3** (2026-07-28 reviewed execution). Full S0–S4 execution,
+> atomic cutover after parity, and local checkpoint/stage commits are authorized. The latest ✅ EXECUTED ground is
 > **plan 22** (self-hosting phase 5: the `05` dissolution and the agent front door; corpus at
 > 115 Specs · 1 Pack · 86 anchors → 202 nodes · 397 edges · `ready: 80 / defined: 35`,
-> 0 errors / 0 warnings). This plan proposes **phase 6 as the usage turn**: the outward turn onto
+> 0 errors / 0 warnings). This plan executes **phase 6 as the usage turn**: the outward turn onto
 > the origin project (`new-convex-es` / `libar-platform`) — unchanged from revision 1 — **plus the
 > usage layer this repo owes any adopter**, promoted into scope by the refinement session. Four
 > usage goals govern the phase (§a); a new workstream **W** (this repo) carries the authoring
@@ -18,6 +18,12 @@
 > (all four rungs exercised honestly; ≥1 end-to-end executable transition on foreign soil);
 > (5) §b gains the inward evidence subsection (the 2026-07-28 engine survey). The origin evidence
 > base, the S0 rulings, and the deferral list otherwise stand as drafted.
+>
+> **What revision 3 changed:** the execution review generalized the records gate before wiring it,
+> authorized recoverable stage commits, returned both candidate rulings to the three-part test,
+> restored the inline-carrier population instrument, matched the repository's single-file skill
+> convention, fixed the package contract, and made stage gates explicit. The origin control-arm
+> checkpoint is `4189d9cca`; the Protocol refinement checkpoint is `7a146dc`.
 >
 > **Spec anchors:** [the agent-surface ruling](../specs/decisions/agent-surface-scripts-graph.sdp.md)
 > (`spec:decisions.agent-surface-scripts-graph`) · [the agent front door](../specs/decisions/agent-front-door.sdp.md)
@@ -260,6 +266,28 @@ had, and S0 is the natural session because it is this repo's first execution win
 phase), and **the gate-leg question** for `check-self-hosting-gates.mjs` (a process change no
 standing ruling authorizes; put to the owner at the S0 close as a yes/no, and wired into
 `npm run check` only on a yes).
+
+### S0 execution disposition
+
+The three-part test was written before the carrying Specs changed:
+
+| Candidate | Hard to reverse | Surprising without context | Real trade-off | Disposition |
+|---|---|---|---|---|
+| Atemporal planning | no new choice remains after the ratified descriptors, git-event-log law, and release-as-tag projection | no — the base already says schedule is not a Spec coordinate | no remaining representation trade-off | **fails admission** — no decision Spec. Packs may group wave-shaped review sets but never order them; the build backlog expresses eligibility, not a roadmap |
+| Verification posture | yes — authored meaning becomes durable across carriers and consumers | yes — `mode: executable` can otherwise be mistaken for a realized verifier | yes — intended posture versus realization-derived honesty signal | **passes** — add the verification-posture-not-realization decision and no validator |
+| Records-gate wiring | yes for repository process, not product semantics | yes — the historical audit looked like a perpetual phase template | yes — gate coverage versus mandatory legacy ceremony | **internal process ruling** — freeze plan-17/18 checks, require only universal current-record invariants, and wire the generalized audit |
+
+Anchored-but-unbound detection is explicitly deferred: `bindExample` call sites are not graph data,
+so neither a signal nor a recipe can compute the claim honestly. The rule-6 bound point is added,
+but `spec:extraction.build-pipeline` remains `defined` because one point does not cover its ordered
+workflow. The enrichment-lifecycle question enters at `scoped` and remains blocking.
+
+**S0 gate evidence.** The generalized records audit accepts the current plan without imposing the
+historical ledger shape. A mutated plan-17 owner-packet SHA fails with the historical surface
+named; a handbook changed from `plan 23 is EXECUTING` to the stale plan-22 status fails both current
+status invariants. The query-seam point passes through the real CLI/extractor, and replacing its
+validation subjects with an empty result reddens exactly that point. The complete thirteen-leg
+Protocol gate passes with `spec:extraction.build-pipeline` still stated `defined`.
 
 ## (e) W — the usage layer (this repo; execution sessions after S0)
 

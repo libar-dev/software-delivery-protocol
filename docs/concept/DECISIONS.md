@@ -31,6 +31,7 @@ positions and are never reused.
 | MD-20 | the strict consumer-exclusion contract | durable | Consumer exclusions are explicit root-relative paths. | [Spec](../../specs/decisions/exclusion-contract.sdp.md) (`spec:decisions.exclusion-contract`) |
 | MD-21 | the envelope-grammar ownership posture | durable | The Protocol owns the envelope contract, not the YAML library. | [Spec](../../specs/decisions/envelope-grammar-posture.sdp.md) (`spec:decisions.envelope-grammar-posture`) |
 | MD-22 | the agent front door | durable | The CLI's one evaluation sink and the exported reader are two entrances over one seam, deriving the graph in process on every invocation. | [Spec](../../specs/decisions/agent-front-door.sdp.md) (`spec:decisions.agent-front-door`) |
+| MD-23 | verification posture, not realization | durable | `verification.mode` states intended posture; enabled-verifier realization remains derived. | [Spec](../../specs/decisions/verification-posture-not-realization.sdp.md) (`spec:decisions.verification-posture-not-realization`) |
 
 ### Current executable decision-spec pointers
 

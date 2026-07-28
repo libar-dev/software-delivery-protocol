@@ -12,6 +12,7 @@ export const expectedPackMembers = [
   "spec:extraction.derive-graph",
   "spec:extraction.determinism",
   "spec:extraction.build-pipeline",
+  "spec:extraction.build-pipeline.same-invocation",
   "spec:extraction.excludes",
   "spec:extraction.claim-taxonomy",
   "spec:extraction.regenerability",
@@ -33,6 +34,7 @@ export const expectedPackMembers = [
   "spec:consumers.edit-model",
   "spec:model.protocol-domain",
   "spec:model.core-model",
+  "spec:model.enrichment-lifecycle",
   "spec:model.spec-sections",
   "spec:model.relations",
   "spec:model.stable-ids",
@@ -117,4 +119,5 @@ export const expectedPackMembers = [
   "spec:decisions.agent-surface-scripts-graph",
   "spec:decisions.mcp-deferred",
   "spec:decisions.agent-front-door",
+  "spec:decisions.verification-posture-not-realization",
 ] as const;

@@ -15,6 +15,7 @@ export const selfHostingV1Pack = pack({
     ref("spec:extraction.derive-graph"),
     ref("spec:extraction.determinism"),
     ref("spec:extraction.build-pipeline"),
+    ref("spec:extraction.build-pipeline.same-invocation"),
     ref("spec:extraction.excludes"),
     ref("spec:extraction.claim-taxonomy"),
     ref("spec:extraction.regenerability"),
@@ -36,6 +37,7 @@ export const selfHostingV1Pack = pack({
     ref("spec:consumers.edit-model"),
     ref("spec:model.protocol-domain"),
     ref("spec:model.core-model"),
+    ref("spec:model.enrichment-lifecycle"),
     ref("spec:model.spec-sections"),
     ref("spec:model.relations"),
     ref("spec:model.stable-ids"),
@@ -120,6 +122,7 @@ export const selfHostingV1Pack = pack({
     ref("spec:decisions.agent-surface-scripts-graph"),
     ref("spec:decisions.mcp-deferred"),
     ref("spec:decisions.agent-front-door"),
+    ref("spec:decisions.verification-posture-not-realization"),
   ],
   modelRefs: [ref("spec:model.protocol-domain"), ref("spec:model.core-model")],
 });
