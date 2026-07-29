@@ -72,6 +72,11 @@ function readTree(root) {
   }
 
   for (const entry of readdirSync(root, { withFileTypes: true })) {
+    // Finder drops .DS_Store into any browsed directory; it is OS metadata, never generated content.
+    if (entry.name === ".DS_Store") {
+      continue;
+    }
+
     const relativePath = entry.name;
     const absolutePath = join(root, relativePath);
 
