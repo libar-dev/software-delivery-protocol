@@ -17,7 +17,7 @@ export function expectedReaderOutcome(conditions: ReaderConditions): ReaderOutco
       return {
         kind: "the reader names {matchedId} as a match on the field {matchedField}",
         matchedId: conditions.conceptSpecId,
-        matchedField: "sections.behavior.rules",
+        matchedField: "sections.behavior",
       };
     case "file":
       return {

@@ -20,7 +20,7 @@ const roots: string[] = [];
 const primaryPlans = readdirSync(join(repoRoot, "plans"), { withFileTypes: true })
   .filter((entry) => entry.isFile())
   .map((entry) => {
-    const match = /^(?<number>[1-9]\d*)-[a-z0-9][a-z0-9-]*\.md$/u.exec(entry.name);
+    const match = /^(?<number>\d+)-[a-z0-9][a-z0-9-]*\.md$/u.exec(entry.name);
     const number = match?.groups?.number;
     return number === undefined ? null : { name: entry.name, number: Number(number) };
   })

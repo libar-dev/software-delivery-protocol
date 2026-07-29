@@ -91,7 +91,7 @@ for (const path of paths) {
       // The same holds for a file symlink whose canonical file git enumerates on its own: that
       // entry is swept — or genre-exempt — under its canonical path, and reading through the link
       // would either duplicate the sweep or un-exempt an excluded genre.
-      if (allEnumerated.has(targetFromRoot)) {
+      if (allEnumerated.has(targetFromRoot.split(sep).join("/"))) {
         continue;
       }
     }

@@ -292,6 +292,10 @@ for (const [surface, text] of [
       "carries plan-status wording — semantics only, never status",
     );
   }
+  // Beyond the frozen historical strings, ban the general shape of a plan-status claim.
+  if (/\bplan \d+ (?:is )?(?:executed|drafted|run|landed|complete|closed)\b/iu.test(norm(text))) {
+    failures.push(`${surface} — carries plan-status wording — semantics only, never status`);
+  }
 }
 
 // ---------------------------------------------------------------------------
