@@ -120,7 +120,8 @@ function regenerateExpectedTree(target) {
       readTree(join(temporaryRoot, target.generatedPath)),
     );
   } finally {
-    rmSync(temporaryRoot, { recursive: true, force: true });
+    // Finder/Spotlight can drop metadata into the tree mid-delete; retry the transient ENOTEMPTY.
+    rmSync(temporaryRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 }
 
