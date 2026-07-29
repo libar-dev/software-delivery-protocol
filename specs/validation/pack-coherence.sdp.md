@@ -14,6 +14,7 @@ relations:
 ## Rule
 - Pack membership must not repeat a Spec, and every modelRef must resolve to a model-kind Spec.
 - Membership is counted on the derived belongsTo edges the manifest re-expresses, so a repeated manifest entry is named once per repeated member.
+- There is no duplicated-intent check on a Pack: a Pack states no system truth to duplicate, and semantic overlap among its members remains human or agent review rather than validator judgment. This lets a coherent group contain low-detail Specs without turning grouping into implementation demand.
 - The realizing validator entrypoint is `checkPackCoherence` in `src/validate/validators.ts`.
 
 ## Example space

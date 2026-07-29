@@ -12,7 +12,8 @@
     "dist/**",
     "docs/agent-surface/recipes.md",
     ".agents/skills/sdp-agent-surface/SKILL.md",
-    ".agents/skills/sdp-authoring/SKILL.md"
+    ".agents/skills/sdp-authoring/SKILL.md",
+    ".agents/skills/sdp-sessions/SKILL.md"
   ],
   "bin": {
     "sdp": "./dist/cli/sdp.js"

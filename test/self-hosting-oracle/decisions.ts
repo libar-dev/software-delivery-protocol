@@ -253,7 +253,9 @@ export const decisionsSpecs = [
         context: "Delivery tools can describe work without making their model executable.",
         decision:
           "The Protocol models authored Specs, Packs, and anchors in typed code, derives one graph, and checks conformance and honesty.",
-        rationale: ["Executable specs alone and workflow tooling omit the meta-model contract."],
+        rationale: [
+          "Gen 1's failure was dual-source binding hidden from the type system, not executability itself; the typed meta-model removes that hidden truth path while allowing executability to return as a recovered surface.",
+        ],
         consequences: [
           "The Protocol is deterministically validated without judging content quality or enforcing workflow.",
         ],

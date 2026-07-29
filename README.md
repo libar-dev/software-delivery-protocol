@@ -63,3 +63,8 @@ pnpm exec sdp q 'return g.specs().map((spec) => spec.id)'
 checks, `view` generates the Design Review, `import` converts TypeScript carriers to Markdown, and
 `q` evaluates a local JavaScript query body against a freshly derived graph. Run `sdp --help` for
 the complete option contract. Adopters own their root and exclusion policy.
+
+The package also ships the three agent on-ramps — `sdp-agent-surface` (reading the graph),
+`sdp-authoring` (authoring intent), and `sdp-sessions` (advisory delivery-session routing) — as
+`SKILL.md` files under `node_modules/@libar-dev/software-delivery-protocol/.agents/skills/`,
+beside the eleven recipe bodies at `docs/agent-surface/recipes.md` in the same package.

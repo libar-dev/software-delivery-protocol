@@ -196,6 +196,7 @@ describe("the agent-surface recipe corpus", () => {
       recipesPath,
       ".agents/skills/sdp-agent-surface/SKILL.md",
       ".agents/skills/sdp-authoring/SKILL.md",
+      ".agents/skills/sdp-sessions/SKILL.md",
     ];
     const packageJson = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
       scripts: Record<string, string>;

@@ -268,6 +268,7 @@ export const expectedDeclaredRelations = [
   ["spec:consumers.reader", "refines", "spec:consumers.agent-surface"],
   ["spec:consumers.edit-model", "refines", "spec:consumers.projections-model"],
   ["spec:consumers.authoring-on-ramp", "refines", "spec:consumers.edit-model"],
+  ["spec:consumers.delivery-session-on-ramp", "refines", "spec:consumers.authoring-on-ramp"],
   ["spec:consumers.agent-surface.authoring-recipes", "refines", "spec:consumers.agent-surface"],
   ["spec:consumers.intent-composition", "refines", "spec:consumers.edit-model"],
   ["spec:model.protocol-domain", "refines", "spec:protocol.self-hosting"],

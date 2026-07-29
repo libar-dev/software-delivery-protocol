@@ -5,24 +5,30 @@ the repo, derive **one graph** from it, and generate every other artifact off th
 take on `@libar-dev/architect` — a year of design thinking front-loaded, **zero back-compat, zero old sins
 carried over**.
 
-The concept synthesis, the ratified ubiquitous language, and the JTBD stories together **are the
-spec** — the product's own thesis (*the spec is the prompt is the design*) applied to itself: there
-is no separate PRD. The engine is **implemented under `src/`** (MVP slices 0–5 landed on `main`);
-concept docs explain design and still hold unsettled post-MVP detail. **Intended truth**
-(authored specs, ratified decisions, concept material) is authoritative for what the Protocol
-claims; **`src/` and tests** are authoritative evidence of current realization. A disagreement is
-**drift to resolve**, never permission to silently promote code behavior into intent.
+There is no separate PRD — the product's own thesis (*the spec is the prompt is the design*)
+applies to itself. This repo **self-hosts**: it authors its own Specs in its own carrier (the
+`.sdp.md` corpus under `specs/`), derives its own graph, and validates itself in CI — the
+Protocol's first production corpus is the Protocol. The ratified ubiquitous language
+(`CONTEXT.md`) and the JTBD stories carry the vocabulary and the jobs; the engine lives under
+`src/`; the surviving concept docs hold the principle-led design that has not yet dissolved into
+carrying Specs. **Intended truth** (authored Specs, ratified decisions, concept material) is
+authoritative for what the Protocol claims; **`src/` and tests** are authoritative evidence of
+current realization. A disagreement is **drift to resolve**, never permission to silently promote
+code behavior into intent.
 
-> **Status:** concept ratified · MVP slices 0–5 landed on `main` (plan 10) · post-MVP executable
-> machinery landed (plan 13) · authoring **carrier ruled** as `.sdp.md` (the carrier ruling, MD-18;
-> plan 16) — product Markdown parser and self-hosting landed · **canonical-default carrier
-> rule:** Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives
-> as import source and a lawful per-ID option. · **what now:** EXECUTED — plan 24 is EXECUTED and landed the inward turn: self-hosting is the standing practice, the example realization posture is ratified, forward intent lives in the graph, the binding layer is deliberately dispositioned, two inward oracles resolve, and the kind-neutral oracle slice completed the full spec-first loop through slimming. The corpus stands at `ready: 86 / defined: 37 / scoped: 1 / idea: 4` over 128 Specs · 1 Pack · 116 anchors → 245 nodes · 462 edges with zero findings. Phase-6 and phase-7 evidence is recoverable from commits `b6f123c` through `7ae8087` and PR #15; the origin working-copy changes remain reverted and survive only on PR libar-ai/convex-event-sourcing#181. The generalized records audit is a required gate; the authoring on-ramp and eleven graph-first recipes ship in the adopter package. Matched second-caller sessions measured 73.1% fewer gross completion-event tokens and 38.0% fewer non-cached input-plus-output tokens without worse rubric quality; ten fresh `sdp q` derivations measured 432.27 ms median / 444.19 ms p95. Build state lives in
-> **`plans/`** — read the highest
+> **Status:** the authoring **carrier is ruled** as `.sdp.md` (the carrier ruling, MD-18): Specs
+> default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import
+> source and a lawful per-ID option. **plan 25 is EXECUTED** — the recovered guidance now has
+> typed owners, and the packaged `sdp-sessions` on-ramp routes advisory delivery work shapes
+> through the existing graph recipes without gates. Plan 24's inward turn remains the standing
+> practice: forward intent lives in the graph, so the live backlog is a graph query, not a
+> document. Corpus counts,
+> readiness, and findings are **derived, never quoted** — run `sdp validate` (or recipe 1) for
+> the current numbers. Build state lives in **`plans/`** — read the highest
 > **primary-numbered** plan's status header, plus any **active subplans it (or its parent family)
 > explicitly designates as current**; ignore unnumbered files and letter-suffixed plans only when
 > no primary/active plan designates them. If that plan is DRAFTED, also read the latest ✅
-> EXECUTED/RUN plan for settled ground. The historical slice roadmap is **`docs/concept/07`**.
+> EXECUTED/RUN plan for settled ground.
 
 ## The frame
 
@@ -54,11 +60,12 @@ Progressive disclosure — start at the top, follow the pointers down.
 | Look here | What you get | Read |
 |---|---|---|
 | `CONTEXT.md` (repo root) | **the vocabulary** — the ratified lean glossary (terms · relations · a worked dialogue · flagged ambiguities); sole source of truth for terminology; the model exposition lives in the Specs under `specs/` and in the surviving concept docs | **first, always** |
+| `specs/` | **the self-hosted corpus** — the Protocol's own Specs in its own carrier (families: `model` · `extraction` · `validation` · `carrier` · `consumers` · `protocol` · `observation` · `decisions`, plus the self-hosting Pack); the primary carrier of intended truth | when design truth is in question — but query it through `sdp q` first, then read the carrying Spec |
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
-| `docs/concept/` (+ README) | **the technical design** — the surviving principle-led docs: vision & MVP boundary, founding principles (P1–P10), authoring & binding, consumers, roadmap; the core model dissolved into the model Specs (`spec:model.core-model`, `spec:model.spec-sections`, `spec:model.relations`, `spec:model.stable-ids`, `spec:model.pack-aggregate`), the one graph into the extraction Specs (`spec:extraction.derive-graph`, `spec:extraction.determinism`, `spec:extraction.claim-taxonomy`, `spec:extraction.regenerability`, `spec:extraction.schema-versioning`), and validation & honesty into the validation Specs (`spec:validation.two-check-families`, `spec:validation.readiness-floor`, `spec:validation.kind-evidence`, `spec:validation.warn-level-signals` and their siblings) | to know *how* it is designed |
+| `docs/concept/` (+ README) | **the technical design** — the surviving principle-led docs: vision & MVP boundary, founding principles (P1–P10), authoring & binding, consumers, roadmap; the core model, the one graph, and validation & honesty dissolved into the `model.*`, `extraction.*`, and `validation.*` Spec families — locate any of them with concept search (recipe 6) | to know *how* it is designed |
 | `docs/concept/DECISIONS.md` | **the lean decision registry** — ratified names, one-line glosses, carrying Specs, and the D1–D6 lookup; historical rationale lives in git, plans, and the Specs themselves | when resolving a decision name or following its canonical pointer |
 | `src/` | **the engine** — `model` (Spec/descriptors/pack/anchors) · `extract` · `graph` · `validate` · `reader` (agent surface) · `projections` (Design Review) · `cli` (`sdp build` · `validate` · `view` · `import` · `q`) · `runner` / `codegen` / `notation` / `adapters` | when implementing or verifying **current engine** behavior |
-| `.agents/skills/sdp-agent-surface/` + `.agents/skills/sdp-authoring/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — repository-owned reading and authoring skills (also exposed to Claude through the `.claude/skills` symlink), plus eleven runnable `sdp q` bodies (build backlog · drift alarm · guarantees & verifiers · blast radius · Pack backbone · concept search · readiness divergence · warn-level signals · promotion preflight · declared/enabled verifier audit · lower ladder); every body is executed as written by `test/recipes.test.ts`; this checkout exposes them through `pnpm --silent sdp:q '<body>'` (not `pnpm exec`, which cannot resolve the package's own bin) | before answering a corpus question or authoring intent — query the graph, then follow the carrying Specs |
+| `.agents/skills/sdp-agent-surface/` + `.agents/skills/sdp-authoring/` + `.agents/skills/sdp-sessions/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — repository-owned reading, authoring, and advisory delivery-session skills (also exposed to Claude through the `.claude/skills` symlink) plus the eleven runnable `sdp q` bodies; see "Query the graph first" below | before answering a corpus question, authoring intent, or routing delivery work — query the graph, then follow the carrying Specs |
 | `examples/checkout-v1` | **the worked MVP example** (TS DSL tracer bullet) — specs, anchors, untracked `generated/` (regenerated in-pipeline); walkthrough in its README | when proving the loop end-to-end |
 | `explorations/` | **evidence only** (carrier exhibits, executable-example findings) — mapping evidence for design; **never promote spike code into product** | when judging design evidence; not a source tree to ship |
 | `plans/` | **the build plan** — what each implementation session does, and why | before writing code — highest primary-numbered plan's status header, plus active subplans it designates; if DRAFTED, also the latest ✅ EXECUTED/RUN plan |
@@ -66,34 +73,43 @@ Progressive disclosure — start at the top, follow the pointers down.
 | `reviews/` | **archived session reviews** (implementation, founding-ideation, adversarial + prompts) — durable findings already folded into plans/DECISIONS; read for provenance | rarely |
 
 > Concept docs still carry implementation detail (TS shapes, DSL, graph JSON) for **unsettled and
-> post-MVP** design. **Intended truth** (ratified decisions, concept material, and — once
-> authored — specs) is authoritative for design claims; **`src/` and the test suite** are
-> authoritative evidence of current realization. A disagreement is **drift to resolve** — fix the
-> stale side deliberately; do not invent a third behavior, and do not silently promote code into
-> intent. A clean concept/representation split remains a recorded future direction.
+> post-MVP** design — on a disagreement with `src/`, the drift rule above applies: fix the stale
+> side deliberately, never invent a third behavior. A clean concept/representation split remains
+> a recorded future direction.
+
+## Query the graph first
+
+The graph is the sole read model, and `sdp q` is the agent front door (MD-22): it derives the
+graph in process and evaluates a plain JavaScript async-function body you supply, with three
+bindings injected — `g` (the reader), `graph` (the raw schema), `report` (the validation
+report). `return` is the output contract; add `--json` for machine-readable output. For any
+corpus question — what a Spec guarantees, what is ready but unimplemented, what a change
+touches, where a concept lives — script the graph instead of reading `.sdp.md` files by hand:
+
+```bash
+# The build backlog (recipe 1, condensed): ready non-example Specs with no implementation binding
+pnpm --silent sdp:q 'return g.specs().filter((s) => s.statedReadiness === "ready" && s.specKind !== "example" && !s.deliveryFacts.includes("implemented")).map((s) => s.id)'
+
+# Concept search (recipe 6): where does a concept live?
+pnpm --silent sdp:q 'return g.findByConcept("readiness floor").slice(0, 5).map((n) => n.id)'
+```
+
+The full CLI surface is `sdp build · validate · view · import · q`. The eleven runnable recipe
+bodies live in `docs/agent-surface/recipes.md` (each executed as written by
+`test/recipes.test.ts`), and the repository-owned skills (`sdp-agent-surface` for reading,
+`sdp-authoring` for writing intent, `sdp-sessions` for advisory work-shape routing) are the
+on-ramps. In this checkout, always go through
+`pnpm --silent sdp:q '<body>'` — `pnpm exec` cannot resolve the package's own bin.
 
 ## The build path
 
-The MVP proves the founding principle on **one** bounded context — Order Management, `pack:checkout-v1`, ~8–12
-specs (`spec:orders.create-order` + a few child scenarios/rules + 1 NFR + the parent `spec:orders.order-management`
-behavior + the pack); **not** the whole checkout flow. The worked example lives at `examples/checkout-v1`
-(documented walkthrough in its README). It is built as thin **end-to-end slices on the Phase 0
-foundation**. `docs/concept/07` is the slice roadmap; **`plans/` holds the live, canonical per-session plan** —
-read it before writing code.
+The MVP proved the founding principle on **one** bounded context — Order Management,
+`pack:checkout-v1` — built as thin **end-to-end slices on the Phase 0 foundation**; the worked
+example lives at `examples/checkout-v1` (documented walkthrough in its README). **Slices 0–5 are
+complete** — the per-slice record is plan 10 and the roadmap `docs/concept/07`. Live work is the
+highest primary-numbered plan under `plans/` — read it before writing code.
 
-**MVP slices 0–5 are complete** (plan 10). The table below is provenance, not the live backlog —
-live work is the highest primary-numbered plan under `plans/` (currently the self-hosting plan).
-
-| Slice | Delivers |
-|---|---|
-| **0** | **Phase 0 — the protocol as code**: the `Spec` primitive, its three descriptors, the relation set, and every validator, as typed code. The extractor, the graph schema, and every check presuppose it — the foundation, not a detour. |
-| **1** | Spec **extraction** over the DSL → a basic graph (nodes + declared relations) → `graph.json`. |
-| **2** | Generic anchors + implementation binding + spec↔test linkage → `verifies` edges (`anchored` claim). |
-| **3** | Core conformance + honesty checks (referential integrity · duplicate IDs · honest readiness against the floor · orphans · `verifies` linkage · authoring-shape honesty) + the CI gate. |
-| **4** | The agent surface (the `reader` — entry adapters + impact) + the Design Review / one generated read-only view — both fully derived. |
-| **5** | Polish: the CLI surface resolved (`build` · `validate` · `view`; `explain`/`search` below the second-caller bar), one diagnostic rendering rule, the documented example walkthrough, the clean-repo determinism test. |
-
-> **Tracer-bullet discipline.** Author the example specs and anchored code *first*, so the DSL and extractor are
+> **Tracer-bullet discipline.** Author the example specs and anchored code *first*, so the carrier and extractor are
 > forced to be usable before they are finished. If the example stops extracting or validating, fix the carrier or extractor — not the example.
 
 ## Two reading conventions
@@ -119,6 +135,13 @@ Every doc honours both — never mistake one half for the other:
 
 ## Working discipline
 
+- **Query before you read.** A corpus question goes to the graph first (`pnpm --silent sdp:q`
+  with a recipe body), then to the carrying Spec it points at. Scanning `specs/` files to learn
+  state is a smell — the graph is derived from the same carrier and is always current.
+- **Write lean, and write for outsiders.** Cut unnecessary verbosity and noise in every session
+  artifact — plans, records, summaries, spec prose. Use technical but plain language a wider
+  open-source audience can follow: the ratified terms are the shared vocabulary, not a license
+  for dense insider prose.
 - **Terminology is ratified, not provisional.** Use the exact terms in the language base; flag, don't silently
   invent, new ones. The docs speak the ratified language end-to-end — a residual pre-ratification term
   (`abstraction`, `provenance`, `marker`, `facet`, "two axes", the old readiness ladder) is a **bug to fix against
@@ -138,8 +161,11 @@ Every doc honours both — never mistake one half for the other:
 - **Plan vs execution.** Distinguish **PLAN-ONLY** work (designing, deciding) from **execution** (editing code or
   docs). For a plan under `plans/`, don't touch its target files unless the session is execution.
 - **Lineage is evidence, not template.** Prior art **`@libar-dev/architect`** (local clone when
-  present, e.g. a sibling `architect` checkout) taught us the problem in production; treat its
-  *shape* as evidence about the problem, never as the answer.
+  present, e.g. a sibling `architect` checkout) taught us the problem in production — source-first
+  annotations, one graph as the read model, a scriptable graph handle (the direct ancestor of
+  `sdp q`). Its old sins — a sprawling authored tag registry, workflow gates on the lifecycle,
+  hand-authored delivery status — are what this design deliberately rejects. Treat its *shape*
+  as evidence about the problem, never as the answer.
 - **A "verified" row is re-measured, never inherited.** A docket or ledger row claiming *fixed* or *verified*
   is re-checked against the tree at the moment of verification, never trusted from the row that closed it —
   the phase-4 close caught a "verified — intact" row that had been false since the commit after the one it cited.

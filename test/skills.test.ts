@@ -17,6 +17,7 @@ const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const skillPaths = [
   ".agents/skills/sdp-agent-surface/SKILL.md",
   ".agents/skills/sdp-authoring/SKILL.md",
+  ".agents/skills/sdp-sessions/SKILL.md",
 ] as const;
 
 const authoringOnRampImplementationAnchor = codeAnchor({
@@ -25,6 +26,13 @@ const authoringOnRampImplementationAnchor = codeAnchor({
   satisfies: ref("spec:consumers.authoring-on-ramp"),
 });
 void authoringOnRampImplementationAnchor;
+
+const deliverySessionOnRampImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.delivery-session-on-ramp"),
+  label: "asserts realization of the shipped advisory delivery-session skill document",
+  satisfies: ref("spec:consumers.delivery-session-on-ramp"),
+});
+void deliverySessionOnRampImplementationAnchor;
 
 function readSkill(path: string) {
   const source = readFileSync(join(repoRoot, path), "utf8");
@@ -82,6 +90,12 @@ const authoringOnRampTestAnchor = specTest({
 });
 void authoringOnRampTestAnchor;
 
+const deliverySessionOnRampTestAnchor = specTest({
+  id: testAnchorId("test:protocol.delivery-session-on-ramp"),
+  label: "skill-asset checks verify advisory delivery-session routing",
+  verifies: ref("spec:consumers.delivery-session-on-ramp"),
+});
+void deliverySessionOnRampTestAnchor;
 const authoringRecipesTestAnchor = specTest({
   id: testAnchorId("test:protocol.authoring-recipes"),
   label: "skill-asset checks verify the authoring recipes",
@@ -109,7 +123,7 @@ describe("Protocol skill assets", () => {
     }
   });
 
-  it("keeps both skills graph-first and the authoring law linked to carrying Specs", () => {
+  it("keeps every skill graph-first and the authoring law linked to carrying Specs", () => {
     for (const path of skillPaths) {
       const { source } = readSkill(path);
 
@@ -134,6 +148,45 @@ describe("Protocol skill assets", () => {
       "contract-dependent-suites.mjs",
       "mutation",
       "cannot detect",
+    ]) {
+      expect(authoring).toContain(required);
+    }
+  });
+
+  it("routes delivery sessions through the five advisory graph shapes", () => {
+    const sessions = readSkill(".agents/skills/sdp-sessions/SKILL.md").source;
+
+    for (const required of [
+      "spec:consumers.delivery-session-on-ramp",
+      "Capture / refine",
+      "recipe 6",
+      "recipe 11",
+      "recipe 9",
+      "Design",
+      "recipe 7",
+      "Implement",
+      "recipe 1",
+      "recipe 3",
+      "Review",
+      "recipe 5",
+      "recipe 8",
+      "Close / slim",
+      "recipe 2",
+      "recipe 4",
+      "Never hand off a carried",
+      "re-runs the named evidence",
+      "never create a process state machine",
+    ]) {
+      expect(sessions).toContain(required);
+    }
+
+    const authoring = readSkill(".agents/skills/sdp-authoring/SKILL.md").source;
+    for (const required of [
+      "Capture a cheap idea",
+      "readiness: idea",
+      "relations: {}",
+      "promotion preflight (recipe 9)",
+      "If a fact straddles kinds",
     ]) {
       expect(authoring).toContain(required);
     }

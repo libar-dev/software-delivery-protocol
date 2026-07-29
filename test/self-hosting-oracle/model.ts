@@ -48,6 +48,8 @@ export const modelSpecs = [
           envelope:
             "The stable outer shape of id, title, kind, altitude, readiness, and relations; sections carry extension detail.",
           kind: "The true subtype that categorizes a Spec's truth and changes its required detail and validation.",
+          "one-kind rule":
+            "A Spec states one category of truth; when one fact straddles kinds, author two Specs and join them with the relation that preserves their distinct intents.",
           readiness:
             "The author-stated design-maturity position `idea`, `scoped`, `defined`, or `ready`, checked against a structural floor.",
         },
@@ -141,6 +143,8 @@ export const modelSpecs = [
           dependsOn: "A dependent Spec points to the Spec it needs.",
           refines: "A child points to its more precise parent.",
           supersedes: "A current Decision Record points forward to the decision it replaces.",
+          "typed dependency distinction":
+            "`constrainedBy` and `decidedBy` preserve separately queryable intents that a generic `dependsOn` edge would flatten.",
           verifies: "A verifier points to the Spec it verifies.",
         },
       },

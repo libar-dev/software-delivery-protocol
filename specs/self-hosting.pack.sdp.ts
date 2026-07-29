@@ -42,6 +42,7 @@ export const selfHostingV1Pack = pack({
     ref("spec:consumers.reader"),
     ref("spec:consumers.edit-model"),
     ref("spec:consumers.authoring-on-ramp"),
+    ref("spec:consumers.delivery-session-on-ramp"),
     ref("spec:consumers.agent-surface.authoring-recipes"),
     ref("spec:consumers.intent-composition"),
     ref("spec:model.protocol-domain"),

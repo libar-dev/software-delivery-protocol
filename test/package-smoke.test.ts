@@ -153,6 +153,7 @@ describe("published package surface", () => {
       const adopterAssets = [
         ".agents/skills/sdp-agent-surface/SKILL.md",
         ".agents/skills/sdp-authoring/SKILL.md",
+        ".agents/skills/sdp-sessions/SKILL.md",
         "docs/agent-surface/recipes.md",
       ];
 
@@ -255,6 +256,16 @@ void [${expectedRootExports.join(", ")}];
         ),
         "utf8",
       );
+      const installedSessionsSkill = await readFile(
+        join(
+          consumer,
+          "node_modules",
+          "@libar-dev",
+          "software-delivery-protocol",
+          ".agents/skills/sdp-sessions/SKILL.md",
+        ),
+        "utf8",
+      );
 
       expect(JSON.parse(driver)).toEqual({
         exports: [...expectedRootExports].sort(),
@@ -266,6 +277,7 @@ void [${expectedRootExports.join(", ")}];
       expect(barrelCheck).toBe("barrel imports available\n");
       expect(installedAgentSkill).toContain("name: sdp-agent-surface");
       expect(installedAuthoringSkill).toContain("name: sdp-authoring");
+      expect(installedSessionsSkill).toContain("name: sdp-sessions");
     } finally {
       await rm(packageRoot, { force: true, recursive: true });
     }

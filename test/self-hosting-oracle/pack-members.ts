@@ -39,6 +39,7 @@ export const expectedPackMembers = [
   "spec:consumers.reader",
   "spec:consumers.edit-model",
   "spec:consumers.authoring-on-ramp",
+  "spec:consumers.delivery-session-on-ramp",
   "spec:consumers.agent-surface.authoring-recipes",
   "spec:consumers.intent-composition",
   "spec:model.protocol-domain",

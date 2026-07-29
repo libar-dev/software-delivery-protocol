@@ -17,4 +17,5 @@ relations:
 
 ## Behavior
 - rule: Mechanical import and symbol structure is inferred and remains distinct from the sparse curated graph.
+- rule: Comparing commits derives `graph(A)` and `graph(B)` and reports added, removed, or changed nodes and edges without persisting either projection as a second store.
 - rule: Candidate relationship suggestions and unambiguous-drift flags are assistive outputs; neither authors intent or silently rewrites the curated graph.

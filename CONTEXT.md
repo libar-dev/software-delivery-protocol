@@ -190,6 +190,10 @@ milestone** (descriptive vocabulary, optional roadmap projections, never gates) 
 a git-tag projection) · **baseline** (a named approved snapshot; the **signed git tag is the approval
 artifact** — approval remains outside the model, never an authored primitive).
 
+**Guidance-only labels:** `delivery session` and `work shape` describe an agent interaction and
+its advisory entry in `sdp-sessions`; neither names a Protocol primitive, descriptor, relation,
+delivery fact, workflow state, or graph state.
+
 ## A worked dialogue  (the language in use)
 
 > **Engineer:** Is `spec:orders.create-order` ready to implement?

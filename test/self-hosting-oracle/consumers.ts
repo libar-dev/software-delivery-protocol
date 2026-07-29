@@ -804,10 +804,37 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "An author starts from the build-backlog and drift-alarm recipes, reads carrying Specs for law, and edits the canonical carrier.",
+          "Cheap capture starts with the minimal lawful `idea` carrier in the family found through concept search, and every later readiness edit is preceded by the promotion-preflight recipe and remains a human statement.",
           "The executable transition is taught as parent example space, child bound point, generated contracts, colocated `bindExample` and `specTest`, and a mutation-probed red result before the human states `ready`.",
           "Contract-generation refusals are diagnosed through `sdp build`; query-time validation does not claim to report codegen findings.",
           "Verifier-binding queries report graph-visible anchors and cannot detect a suite whose generated contract is never bound.",
           "Implementation anchors state identity-only bindings, and Design Review supplies context for the human readiness statement without becoming a workflow gate.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.delivery-session-on-ramp",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/delivery-session-on-ramp.sdp.md",
+    title: "Delivery sessions route work from current graph state",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let an agent enter capture, design, implementation, review, or close work from current graph evidence without inventing workflow state or gates.",
+      },
+      behavior: {
+        rules: [
+          "Work shapes are advisory entries over the same current graph; they are neither phases nor a required sequence, and a session may enter or revisit any shape.",
+          "Capture or refinement uses concept search, the lower ladder, and promotion preflight; design uses promotion preflight and readiness divergence.",
+          "Implementation uses the build backlog and the target Spec context; review uses the Pack backbone and warn-level signals, or the target Spec context and warn-level signals when no Pack exists.",
+          "Close uses the drift alarm and changed-file blast radius; optional slimming preserves durable law and one prose owner without claiming a universal distillation boundary.",
+          "A handoff names targets, changed files, current readiness, findings or open questions, and commands or evidence locations to re-run; it never carries an inherited verification verdict.",
+          "Every preflight informs human or agent judgment and never authorizes, blocks, scopes, or advances delivery work.",
         ],
       },
     },
@@ -859,6 +886,7 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "Mechanical import and symbol structure is inferred and remains distinct from the sparse curated graph.",
+          "Comparing commits derives `graph(A)` and `graph(B)` and reports added, removed, or changed nodes and edges without persisting either projection as a second store.",
           "Candidate relationship suggestions and unambiguous-drift flags are assistive outputs; neither authors intent or silently rewrites the curated graph.",
         ],
       },

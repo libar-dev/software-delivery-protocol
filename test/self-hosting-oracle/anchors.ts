@@ -64,6 +64,16 @@ export const expectedAnchors = [
     site: "function readSkill",
   },
   {
+    id: "impl:protocol.delivery-session-on-ramp",
+    nodeType: "CodeNode",
+    label: "asserts realization of the shipped advisory delivery-session skill document",
+    type: "satisfies",
+    target: "spec:consumers.delivery-session-on-ramp",
+    file: "test/skills.test.ts",
+    constant: "deliverySessionOnRampImplementationAnchor",
+    site: "function readSkill",
+  },
+  {
     id: "impl:protocol.authoring-recipes",
     nodeType: "CodeNode",
     label: "asserts realization of the shipped authoring recipe catalog",
@@ -81,6 +91,16 @@ export const expectedAnchors = [
     target: "spec:consumers.authoring-on-ramp",
     file: "test/skills.test.ts",
     constant: "authoringOnRampTestAnchor",
+    site: 'describe("Protocol skill assets"',
+  },
+  {
+    id: "test:protocol.delivery-session-on-ramp",
+    nodeType: "Anchor",
+    label: "skill-asset checks verify advisory delivery-session routing",
+    type: "verifies",
+    target: "spec:consumers.delivery-session-on-ramp",
+    file: "test/skills.test.ts",
+    constant: "deliverySessionOnRampTestAnchor",
     site: 'describe("Protocol skill assets"',
   },
   {

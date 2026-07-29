@@ -36,6 +36,8 @@ runner.
 2. Create the Markdown carrier with one stable `spec:` id, title, kind, altitude, readiness, and
    relations. The carrier law is `spec:decisions.carrier-ruling`; the envelope and section law is
    `spec:model.spec-sections`.
+   A Spec carries one kind. If a fact straddles kinds, split it into two Specs and join them with
+   the relation that preserves their distinct intents, following `spec:model.core-model`.
 3. State only the rung the structure clears. Use recipe 9 for the current floor, recipe 11 for the
    lower ladder, and read `spec:validation.readiness-floor` plus
    `spec:validation.kind-evidence` for the clauses.
@@ -43,6 +45,33 @@ runner.
    review; follow `spec:decisions.content-only-sections`.
 5. Put unresolved durable questions under Intent. A blocking question honestly keeps the Spec
    below `defined`.
+
+### Capture a cheap idea
+
+Run concept search (recipe 6) first and place the carrier beside the family it finds. In the
+Protocol repository that normally means `specs/<family>/`; an adopter follows its own canonical
+carrier root rather than inventing a second one. This is the complete cheap-capture shape:
+
+```md
+---
+id: spec:<family>.<name>
+kind: <kind>
+altitude: <altitude>
+readiness: idea
+relations: {}
+---
+
+# <Human-readable title>
+
+## Intent
+
+- outcome: <One durable intended outcome>
+```
+
+The `idea` floor is the whole shape: stable envelope coordinates plus either an outcome or a
+`refines` parent. The template states the outcome explicitly so the capture remains intelligible
+without its parent. Before every later human readiness edit, run promotion preflight (recipe 9);
+the reported floor never makes the edit on the author's behalf.
 
 ## Make an example executable
 
