@@ -61,11 +61,15 @@ export default tseslint.config(
     // outside the typed-lint globs these exemptions relax.
     files: [...rootContractDependentSuite.testPaths],
     rules: {
+      // Generated contracts are absent until `generate:self-hosting` (after lint). These
+      // type-aware rules mis-fire when import resolution degrades to `any` / error types;
+      // typecheck later re-enforces the real shapes against the generated output.
       "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",
       "@typescript-eslint/no-unsafe-call": "off",
       "@typescript-eslint/no-unsafe-member-access": "off",
       "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/restrict-template-expressions": "off",
     },
   },
   {
