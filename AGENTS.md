@@ -18,10 +18,11 @@ code behavior into intent.
 
 > **Status:** the authoring **carrier is ruled** as `.sdp.md`: Specs and Packs default to Markdown;
 > the TS DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18,
-> completed by the Pack syntax ruling, MD-25). **plan 26 is EXECUTING** — native Packs, annotation
-> completion, and readiness dispositions. Plan 25 recovered the guidance layer and packaged
-> the `sdp-sessions` on-ramp; plan 24's inward turn remains the standing practice: forward
-> intent lives in the graph, so the live backlog is a graph query, not a document. Corpus counts,
+> completed by the Pack syntax ruling, MD-25). **plan 26 is EXECUTED** — native Packs, annotation
+> completion, decision readiness, and honest element-absence dispositions are settled. Plan 25
+> recovered the guidance layer and packaged the `sdp-sessions` on-ramp; plan 24's inward turn
+> remains the standing practice: forward intent lives in the graph, so the live backlog is a graph
+> query, not a document. Corpus counts,
 > readiness, and findings are **derived, never quoted** — re-run
 > `pnpm --silent sdp validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity`
 > (or `npm run --silent sdp --` with the same argv) and read recipes 8 and 11. Recipe 1 is the

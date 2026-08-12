@@ -1,12 +1,13 @@
 # Plan 26 — Self-hosting completion: the native carrier everywhere
 
-> **Status:** EXECUTING — native Packs, annotation completion, and readiness dispositions. **What
-> this plan does:** finishes self-hosting implementation by ruling the Pack Markdown carrier
-> (MD-25), migrating both authored Pack manifests, completing the remaining public-seam
-> annotations, promoting the 24 floor-clear decision records under the decision-readiness
-> posture (MD-26), and recording the frontier/element dispositions. Plans ≤ 25 are EXECUTED;
-> PR #15 is merged. Corpus counts, readiness, and findings stay derived — re-run the named
-> recipes rather than quoting this header.
+> **Status:** ✅ EXECUTED 2026-08-13 — the Pack syntax ruling (MD-25) made Markdown the native
+> carrier for Specs and Packs; both authored Pack manifests migrated, remaining public seams
+> gained honest anchors, the decision-readiness posture (MD-26) promoted the 24 registry-ratified
+> decisions without manufacturing delivery work, and every format element now has an in-corpus
+> specimen or an explicit honest-absence disposition. Re-measured close: 133 Specs, 1 Pack, 258
+> nodes, 483 edges, 124 anchors, 115 ready / 14 defined / 1 scoped / 3 idea, zero findings, zero
+> operational backlog, and 53/53 ready examples verifier-backed. Re-run the named recipes rather
+> than inheriting these close measurements.
 
 ## Context
 
@@ -147,35 +148,66 @@ No rows struck at approval.
 
 ## Disposition ledgers
 
-Filled at close. Empty on EXECUTING.
+Re-derived from the graph at close; no row inherits a prior verdict.
 
 ### C5 stay-defined
 
 | Spec | Why it stays defined |
 |---|---|
-| | |
+| `spec:carrier.markdown-authoring` | Carrier umbrella with one implementation binding and no direct verifier; its refining laws carry the executable evidence. |
+| `spec:consumers.projections-model` | Consumer-vocabulary umbrella with one projection binding and no direct verifier. |
+| `spec:extraction.claim-taxonomy` | Model vocabulary with one enum binding and no direct witness; a cleared floor is not a human `ready` statement. |
+| `spec:extraction.regenerability` | One `runBuild` binding and no direct verifier; the determinism test targets the constraint parent. |
+| `spec:model.core-model` | Root vocabulary with two bindings and no direct verifier; it remains deliberately conservative. |
+| `spec:model.pack-aggregate` | Aggregate vocabulary with one Pack binding and no direct verifier. |
+| `spec:model.relations` | Relation vocabulary with one builder binding and no direct verifier. |
+| `spec:model.spec-sections` | Section umbrella with two bindings and no direct verifier; refining Specs carry the witnesses. |
+| `spec:model.protocol-domain` | Conceptual dependency with no implementation or verifier binding. |
+| `spec:consumers.edit-model` | The intent → agent → git law is settled, but the realizing composer remains deferred; no binding or verifier exists. |
+| `spec:validation.validator-self-testing` | Testing posture with no direct binding or verifier; existing validator suites do not bind this Spec. |
+| `spec:protocol.self-hosting` | Root self-hosting umbrella with no direct binding or verifier; its refining Specs carry realization. |
 
 ### D1–D5 frontier and element dispositions
 
 | Item | Disposition | Re-entry |
 |---|---|---|
-| | | |
+| `spec:consumers.impact-graph` | Deferred at `idea`; language-neutral symbol identity remains unresolved. | A second machine consumer needs symbol-level reach, or Studio/MCP work begins. |
+| `spec:consumers.intent-composition` | Deferred at `idea`; the in-view composer is not a realized surface. | A realizing composition surface exists. |
+| `spec:observation.runtime-overlay` | Deferred at `idea`; observation identity and freshness remain unanswered. | An adopter supplies a telemetry boundary that can answer both. |
+| `spec:model.enrichment-lifecycle` | Stays `scoped`; the new `design` specimen is only the second enrichment datum. | A third datum or recurring authoring friction appears. |
+| `supersedes` | Honest absence. MD-15 was re-pointed and MD-25 refines MD-18; neither replaces prior truth. | The first real in-corpus replacement. |
+| `observed` | Honest absence with the deferred runtime overlay. | D3 re-entry. |
+| `inferred` | Honest absence; its first producer remains the deferred impact graph. | D1 re-entry. |
+| `ui` | Demonstrated on `spec:consumers.design-review` with the emitted index, Spec-page, and Pack-page anatomy. | — |
 
 ### D6 element-demonstration matrix
 
-Re-derive at close. Do not quote a cached census.
+| Element | Measured demonstration |
+|---|---|
+| Spec kinds | 8/8: behavior · constraint · contract · decision · example · model · rule · workflow |
+| Altitudes | 3/3: epic · feature · story |
+| Readiness rungs | 4/4 in both self-hosting and checkout: idea · scoped · defined · ready |
+| Sections | 8/8: intent · behavior · constraints · model · design · decision · verification · ui |
+| Declared edge types | 6/7: `belongsTo` plus five Spec relations; `supersedes` is dispositioned above |
+| Anchor flavors | 3/3: `impl:` · `test:` · `oracle:` |
+| Delivery facts | 2/3: `implemented` · `has-verifier`; `observed` is dispositioned above |
+| Claims | 2/3: `declared` · `anchored`; `inferred` is dispositioned above |
+| Carrier/posture specimens | Markdown Spec and Pack carriers; decision records, verifier-backed executable examples, plain lower-rung Specs, and unimplemented Specs all present; the TS carrier remains exercised as the lawful parity option |
 
 ### Mutation-probe evidence
 
 | Probe | Mutated value | Result | Restored |
 |---|---|---|---|
-| | | | |
+| Markdown ↔ TypeScript Pack parity | TypeScript framing changed to `Mutated Pack parity point.` | Bound parity example failed on the Pack node framing difference. | Yes; focused suite green. |
+| Pack-envelope refusal | Expected finding changed to `extract/unrecognized-property-mutated` | Bound refusal example failed against the actual `extract/unrecognized-property`. | Yes; focused suite green. |
 
 ### Per-commit check log
 
 | Commit / phase | `npm run check` |
 |---|---|
-| | |
+| `4bd645d` — Phase 0/A native Packs | Green: 49 unit files plus 55 self-hosting contract tests and every repository gate. |
+| `418851c` — Phase B annotation completion | Green: 49 unit files plus 55 self-hosting contract tests and every repository gate. |
+| `a1d36d9` — Phase C readiness posture | Green: 49 unit files plus 55 self-hosting contract tests and every repository gate. |
 
 ## Verification
 
@@ -188,6 +220,9 @@ Re-derive at close. Do not quote a cached census.
 3. Backlog posture (C2): amended recipe 1 returns `{backlog: [], excludedReadyExamples: 53,
    excludedWithoutVerifier: [], excludedReadyDecisions: 26}`.
 4. No new warnings after C3: `report.findings.length === 0`.
-5. Drift/divergence (E1): recipe 2 returns the 8 recorded ids; recipe 7 returns the 14
-   dispositioned divergence rows.
+5. Drift/divergence (E1): recipe 2 returns the 8 recorded ids. Recipe 7 correctly returns `[]`
+   because its contract detects overstated readiness. The complementary non-example upward-
+   divergence query returns the 14 dispositioned rows: the 12 C5 rows plus `impact-graph` and
+   `intent-composition`; the two defined example children are intentionally excluded from that
+   disposition census.
 6. Full gate: `npm run check` green at every blessed commit and once from a clean worktree.
