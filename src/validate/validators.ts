@@ -986,7 +986,11 @@ function checkGaps(
   const findings: Finding[] = [];
 
   for (const node of graph.nodes) {
-    if (node.nodeType !== "Primitive" || node.readiness !== "ready") {
+    if (
+      node.nodeType !== "Primitive" ||
+      node.readiness !== "ready" ||
+      node.specKind === "decision"
+    ) {
       continue;
     }
 

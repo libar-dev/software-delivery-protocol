@@ -106,6 +106,60 @@ export function inspectMarkdownNodes(
   }
 }
 
+export function markdownSpecIdList(
+  value: unknown,
+  field: "specs" | "modelRefs",
+  source: string,
+  baseLine: number,
+  file: string,
+  findings: Finding[],
+): readonly string[] {
+  if (!isSeq(value)) {
+    addMarkdownFinding(
+      findings,
+      markdownFinding(
+        file,
+        markdownScalarLine(value, source, baseLine),
+        `frontmatter field "${field}" must be a YAML list`,
+      ),
+    );
+    return [];
+  }
+
+  const ids: string[] = [];
+  for (const entry of value.items) {
+    const line = markdownScalarLine(entry, source, baseLine);
+    if (!isMarkdownStringScalar(entry)) {
+      addMarkdownFinding(
+        findings,
+        markdownFinding(file, line, `${field} entries must be string scalars`),
+      );
+      continue;
+    }
+    try {
+      if (parseId(entry.value).namespace !== "spec")
+        throw new Error(`${field} entries must use the spec namespace`);
+    } catch (error: unknown) {
+      addMarkdownFinding(
+        findings,
+        markdownFinding(
+          file,
+          line,
+          error instanceof Error ? error.message : "invalid id",
+          "extract/invalid-id",
+        ),
+      );
+      continue;
+    }
+    if (ids.includes(entry.value)) {
+      addMarkdownFinding(findings, markdownFinding(file, line, `duplicate entry in ${field}`));
+      continue;
+    }
+    ids.push(entry.value);
+  }
+  return ids;
+}
+
 export function markdownRelationTargets(
   value: unknown,
   source: string,

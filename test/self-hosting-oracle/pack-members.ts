@@ -9,6 +9,8 @@ export const expectedPackMembers = [
   "spec:carrier.sdp-import.round-trip",
   "spec:carrier.prose-ownership-rule",
   "spec:carrier.markdown-pack-authoring",
+  "spec:carrier.markdown-pack-authoring.markdown-ts-parity",
+  "spec:carrier.markdown-pack-authoring.spec-envelope-refused",
   "spec:protocol.self-hosting",
   "spec:observation.runtime-overlay",
   "spec:extraction.derive-graph",
@@ -131,4 +133,5 @@ export const expectedPackMembers = [
   "spec:decisions.agent-front-door",
   "spec:decisions.verification-posture-not-realization",
   "spec:decisions.example-realization-posture",
+  "spec:decisions.pack-markdown-carrier",
 ] as const;

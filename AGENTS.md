@@ -16,13 +16,12 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
-> **Status:** the authoring **carrier is ruled** as `.sdp.md` (the carrier ruling, MD-18): Specs
-> default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import
-> source and a lawful per-ID option. **plan 25 is EXECUTED** — the recovered guidance now has
-> typed owners, and the packaged `sdp-sessions` on-ramp routes advisory delivery work shapes
-> through the existing graph recipes without gates. Plan 24's inward turn remains the standing
-> practice: forward intent lives in the graph, so the live backlog is a graph query, not a
-> document. Corpus counts,
+> **Status:** the authoring **carrier is ruled** as `.sdp.md`: Specs and Packs default to Markdown;
+> the TS DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18,
+> completed by the Pack syntax ruling, MD-25). **plan 26 is EXECUTING** — native Packs, annotation
+> completion, and readiness dispositions. Plan 25 recovered the guidance layer and packaged
+> the `sdp-sessions` on-ramp; plan 24's inward turn remains the standing practice: forward
+> intent lives in the graph, so the live backlog is a graph query, not a document. Corpus counts,
 > readiness, and findings are **derived, never quoted** — re-run
 > `pnpm --silent sdp validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity`
 > (or `npm run --silent sdp --` with the same argv) and read recipes 8 and 11. Recipe 1 is the

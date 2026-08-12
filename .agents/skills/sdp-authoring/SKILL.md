@@ -73,6 +73,12 @@ The `idea` floor is the whole shape: stable envelope coordinates plus either an 
 without its parent. Before every later human readiness edit, run promotion preflight (recipe 9);
 the reported floor never makes the edit on the author's behalf.
 
+## Author a Pack
+
+Use a Markdown `*.pack.sdp.md` manifest with frontmatter closed to `id`, `specs`, and optional
+`modelRefs`. The H1 is the Pack title; the remaining body prose is its framing. Preserve authored
+membership order and point to `spec:carrier.markdown-pack-authoring` for the complete carrier law.
+
 ## Make an example executable
 
 1. Put the typed `gwt-vocabulary` example space on the parent.

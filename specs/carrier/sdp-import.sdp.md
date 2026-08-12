@@ -18,6 +18,7 @@ relations:
 - rule: Import refuses an existing Markdown sibling rather than overwriting it.
 - rule: Refusal outcomes retain the TypeScript reifier findings and add import-local findings honestly.
 - rule: Import consumes the TypeScript reifier so source acceptance follows one validation path.
+- rule: `sdp import` converts Spec carriers; Pack manifests are out of scope — the TypeScript manifest stays a lawful per-ID option.
 - rule: A batch scans only bounded source directories, canonicalizes physical carrier identity, and computes every refusal and target collision before publishing any sibling.
 - rule: Publication prepares exclusive temporary siblings and atomically creates targets without clobbering; rollback attempts every artifact, reports survivors, and never deletes a TypeScript source.
 

@@ -10,10 +10,11 @@ import { fileURLToPath } from "node:url";
 // Three assertion families, each NAMING the disagreeing surface on failure:
 //   A. CLAIMS — every changed claim and its intended state: the repaired wording present, the
 //      obsolete sole-TS-canonical and interim-transition wording gone, per file. The
-//      canonical-default rule is mirrored exactly: Specs default to Markdown; Packs remain TS
-//      until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID
-//      option. P5's static/side-effect-free principle and the one graph/one validation path are
-//      preserved while their carrier representations are plural, and concept 04 names the
+//      canonical-default rule is mirrored exactly: Specs and Packs default to Markdown; the TS
+//      DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18,
+//      completed by the Pack syntax ruling, MD-25). P5's static/side-effect-free principle and
+//      the one graph/one validation path are preserved while carrier representations are plural,
+//      and concept 04 names the
 //      per-carrier degradation asymmetry (TS: property-level drop with warning; Markdown:
 //      all-or-nothing per document under the four hard finding IDs).
 //   B. OBSOLETE SWEEP — the scanned corpus carries NO active unqualified sole-TS claim at all,
@@ -65,7 +66,7 @@ const CLAIMS = [
     file: "docs/concept/00-vision-scope-and-mvp-boundary.md",
     label: "carrier status states the canonical-default rule precisely",
     present: [
-      "Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option",
+      "Specs and Packs default to Markdown; the TS DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25)",
     ],
     absent: ["until the ruled flip"],
   },
@@ -84,7 +85,7 @@ const CLAIMS = [
   {
     file: "docs/concept/00-vision-scope-and-mvp-boundary.md",
     label: "one-breath statement is carrier-plural",
-    present: ["authored in a ruled carrier", "statically extracted from both carriers"],
+    present: ["authored in ruled carriers", "statically extracted from both carriers"],
     absent: ["TypeScript-canonical", "extracted by `ts-morph` into one"],
   },
   {
@@ -133,7 +134,7 @@ const CLAIMS = [
     file: "docs/concept/04-authoring-and-binding.md",
     label: "one canonical surface per ID states the canonical-default rule verbatim",
     present: [
-      "Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option",
+      "Specs and Packs default to Markdown; the TS DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25)",
     ],
     absent: [
       "In the MVP that is always the TS DSL",
@@ -193,7 +194,7 @@ const CLAIMS = [
     label: "the carrier addendum reconciles the CORE map with the canonical-default rule",
     present: [
       "Carrier addendum (post-MVP)",
-      "Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option",
+      "Specs and Packs now default to Markdown; the TS DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25)",
     ],
     absent: ["until the ruled flip"],
   },
@@ -220,7 +221,7 @@ const CLAIMS = [
     label: "the legend write-path states the canonical-default rule verbatim",
     present: [
       "edit the canonical carrier + git",
-      "Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option",
+      "Specs and Packs default to Markdown; the TS DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25)",
     ],
     absent: ["The MVP write-path is simply **edit TypeScript + git**", "until the ruled flip"],
   },
@@ -234,7 +235,7 @@ const CLAIMS = [
     file: "README.md",
     label: "the package README carries the canonical-default rule",
     present: [
-      "Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option",
+      "Specs and Packs default to Markdown; the TS DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25)",
     ],
     absent: [],
   },
@@ -405,7 +406,7 @@ const RULES = [
   },
   {
     file: "CONTEXT.md",
-    includes: "Packs remain TS until a Pack",
+    includes: "Packs default to Markdown; the TS DSL survives as import source",
     category: PLURAL,
   },
   { file: "CONTEXT.md", includes: "the `.sdp.ts` extension", category: STILL_SUPPORTED },

@@ -26,13 +26,14 @@ positions and are never reused.
 | MD-15 | the `.sdp.ts` extension | durable | The extension law is re-pointed, not repealed: carrier extensions identify Specs without test-glob collisions. | [Spec](../../specs/decisions/sdp-ts-extension.sdp.md) (`spec:decisions.sdp-ts-extension`) |
 | MD-16 | carried evidence | durable | Promoted evidence must carry the evidence it represents. | [Spec](../../specs/decisions/carried-evidence.sdp.md) (`spec:decisions.carried-evidence`) |
 | MD-17 | point-per-example | durable | Each example is one bound point. | [Spec](../../specs/decisions/point-per-example.sdp.md) (`spec:decisions.point-per-example`) |
-| MD-18 | the carrier ruling | durable | Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option. The surviving law is one canonical surface per ID, no mixing. | [Spec](../../specs/decisions/carrier-ruling.sdp.md) (`spec:decisions.carrier-ruling`) |
+| MD-18 | the carrier ruling | durable | Specs and Packs default to Markdown; the TS DSL survives as import source and a lawful per-ID option. MD-25 completes the Pack syntax deferral; the surviving law is one canonical surface per ID, no mixing. | [Spec](../../specs/decisions/carrier-ruling.sdp.md) (`spec:decisions.carrier-ruling`) |
 | MD-19 | the prose-ownership law | durable | Prose belongs to typed graph owners. | [Spec](../../specs/decisions/prose-ownership.sdp.md) (`spec:decisions.prose-ownership`) |
 | MD-20 | the strict consumer-exclusion contract | durable | Consumer exclusions are explicit root-relative paths. | [Spec](../../specs/decisions/exclusion-contract.sdp.md) (`spec:decisions.exclusion-contract`) |
 | MD-21 | the envelope-grammar ownership posture | durable | The Protocol owns the envelope contract, not the YAML library. | [Spec](../../specs/decisions/envelope-grammar-posture.sdp.md) (`spec:decisions.envelope-grammar-posture`) |
 | MD-22 | the agent front door | durable | The CLI's one evaluation sink and the exported reader are two entrances over one seam, deriving the graph in process on every invocation. | [Spec](../../specs/decisions/agent-front-door.sdp.md) (`spec:decisions.agent-front-door`) |
 | MD-23 | verification posture, not realization | durable | `verification.mode` states intended posture; enabled-verifier realization remains derived. | [Spec](../../specs/decisions/verification-posture-not-realization.sdp.md) (`spec:decisions.verification-posture-not-realization`) |
 | MD-24 | the example realization posture | durable | Examples normally carry verification evidence rather than build-backlog work; implementation remains a direct binding-derived fact. | [Spec](../../specs/decisions/example-realization-posture.sdp.md) (`spec:decisions.example-realization-posture`) |
+| MD-25 | the Pack syntax ruling | durable | Packs gain a Markdown manifest carrier closed to id · specs · modelRefs with H1 title and prose framing; the TS manifest stays a lawful per-ID option. | [Spec](../../specs/decisions/pack-markdown-carrier.sdp.md) (`spec:decisions.pack-markdown-carrier`) |
 
 ### Current executable decision-spec pointers
 

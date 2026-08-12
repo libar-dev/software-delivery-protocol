@@ -13,10 +13,12 @@ import {
   isReservedEnvelopeKey,
   markdownRelationTargets,
   markdownScalarLine,
+  markdownSpecIdList,
 } from "./markdown-yaml-policy.js";
 
 const relationTypes = new Set<string>(SPEC_RELATION_TYPES);
-const envelopeKeys = new Set(["id", "kind", "altitude", "readiness", "relations"]);
+const specEnvelopeKeys = new Set(["id", "kind", "altitude", "readiness", "relations"]);
+const packEnvelopeKeys = new Set(["id", "specs", "modelRefs"]);
 const specKinds = new Set<string>(SPEC_KINDS);
 const specAltitudes = new Set<string>(SPEC_ALTITUDES);
 const specReadiness = new Set<string>(SPEC_READINESS);
@@ -73,6 +75,26 @@ export function parseMarkdownFrontmatter(
       return { ok: false, findings: capMarkdownFindings(findings, file) };
     }
     inspectMarkdownNodes(root, envelope.source, envelope.baseLine, file, findings);
+    let carrierClass: "pack" | "spec" = "spec";
+    for (const pair of root.items) {
+      if (
+        !isMarkdownStringScalar(pair.key) ||
+        pair.key.value !== "id" ||
+        !isMarkdownStringScalar(pair.value)
+      )
+        continue;
+      try {
+        if (parseId(pair.value.value).namespace === "pack") carrierClass = "pack";
+      } catch {
+        // The ordinary id branch reports the frozen invalid-id finding below.
+      }
+      break;
+    }
+    const envelopeKeys = carrierClass === "pack" ? packEnvelopeKeys : specEnvelopeKeys;
+    const requiredFields =
+      carrierClass === "pack"
+        ? ["id", "specs"]
+        : ["id", "kind", "altitude", "readiness", "relations"];
     const data: Record<string, unknown> = {};
     const names = new Set<string>();
     let idLine = 1;
@@ -96,7 +118,7 @@ export function parseMarkdownFrontmatter(
           `frontmatter key "${name}" is not accepted`,
           isReservedEnvelopeKey(name)
             ? "extract/reserved-property"
-            : name === "title"
+            : carrierClass === "spec" && name === "title"
               ? "extract/invalid-frontmatter"
               : "extract/unrecognized-property",
         );
@@ -141,6 +163,17 @@ export function parseMarkdownFrontmatter(
         data.relations = relations;
         continue;
       }
+      if (name === "specs" || name === "modelRefs") {
+        data[name] = markdownSpecIdList(
+          pair.value,
+          name,
+          envelope.source,
+          envelope.baseLine,
+          file,
+          findings,
+        );
+        continue;
+      }
       if (!isMarkdownStringScalar(pair.value)) {
         report(findings, file, line, `frontmatter field "${name}" must be a string scalar`);
         continue;
@@ -149,8 +182,8 @@ export function parseMarkdownFrontmatter(
       if (name === "id") {
         idLine = line;
         try {
-          if (parseId(value).namespace !== "spec")
-            throw new Error("id must use the spec namespace");
+          if (parseId(value).namespace !== carrierClass)
+            throw new Error(`id must use the ${carrierClass} namespace`);
           data.id = value;
         } catch (error: unknown) {
           report(
@@ -187,7 +220,7 @@ export function parseMarkdownFrontmatter(
         );
       else data[name] = value;
     }
-    for (const required of ["id", "kind", "altitude", "readiness", "relations"])
+    for (const required of requiredFields)
       if (!names.has(required))
         report(findings, file, 1, `frontmatter field "${required}" is missing`);
     const result = capMarkdownFindings(findings, file);

@@ -74,7 +74,7 @@ describe("review-08 pure import regressions", () => {
     expect(result.emitted).toBeUndefined();
     expect(finding).toMatchObject({ severity: "error" });
     expect(finding).not.toHaveProperty("line");
-    expect(finding?.message).toContain("move the Spec to its own TypeScript carrier");
+    expect(finding?.message).toContain("Pack manifests are out of scope");
     expect(finding?.message).not.toContain("mixed.sdp.ts");
   });
 

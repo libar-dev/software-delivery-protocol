@@ -27,6 +27,7 @@ export const contractDependentSuites = [
       "test/self-hosting-extraction.test.ts",
       "test/self-hosting-model.test.ts",
       "test/self-hosting-projections.test.ts",
+      "test/self-hosting-pack-markdown.test.ts",
       "test/self-hosting-sdp-import.test.ts",
       "test/self-hosting-validators-oracle.test.ts",
       "test/self-hosting-validators.oracle.ts",

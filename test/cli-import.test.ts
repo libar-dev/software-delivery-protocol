@@ -129,7 +129,7 @@ describe("sdp import", () => {
                       validatorId: "import/pack-unsupported",
                       family: "conformance",
                       severity: "error" as const,
-                      message: "Pack remains TypeScript-authored.",
+                      message: "Pack manifests are out of the Spec import scope.",
                       file: relativePath,
                       line: 1,
                     },

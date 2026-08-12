@@ -482,4 +482,26 @@ export const expectedDeclaredRelations = [
     "verifies",
     "spec:validation.oracle-target-eligibility",
   ],
+  ["spec:decisions.pack-markdown-carrier", "refines", "spec:decisions.carrier-ruling"],
+  ["spec:carrier.markdown-pack-authoring", "decidedBy", "spec:decisions.pack-markdown-carrier"],
+  [
+    "spec:carrier.markdown-pack-authoring.markdown-ts-parity",
+    "refines",
+    "spec:carrier.markdown-pack-authoring",
+  ],
+  [
+    "spec:carrier.markdown-pack-authoring.markdown-ts-parity",
+    "verifies",
+    "spec:carrier.markdown-pack-authoring",
+  ],
+  [
+    "spec:carrier.markdown-pack-authoring.spec-envelope-refused",
+    "refines",
+    "spec:carrier.markdown-pack-authoring",
+  ],
+  [
+    "spec:carrier.markdown-pack-authoring.spec-envelope-refused",
+    "verifies",
+    "spec:carrier.markdown-pack-authoring",
+  ],
 ] as const;

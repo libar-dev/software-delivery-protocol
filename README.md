@@ -4,8 +4,8 @@ Libar Software Delivery Protocol is a typed, executable, self-validating meta-mo
 delivery: author `Spec` documents in the repository, derive one graph, and check conformance and
 honesty.
 
-**Carrier rule:** Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS
-DSL survives as import source and a lawful per-ID option.
+**Carrier rule:** Specs and Packs default to Markdown; the TS DSL survives as import source and a
+lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25).
 
 Read the [concept](docs/concept/README.md), the [ubiquitous language](CONTEXT.md), and the
 [checkout-v1 walkthrough](examples/checkout-v1/README.md).
