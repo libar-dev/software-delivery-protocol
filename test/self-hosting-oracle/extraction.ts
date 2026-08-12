@@ -509,7 +509,7 @@ export const extractionSpecs = [
     id: "spec:extraction.build-pipeline",
     specKind: "workflow",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/extraction/build-pipeline.sdp.md",
     title: "The build pipeline has one ordered flow",
     narrative: null,

@@ -504,4 +504,5 @@ export const expectedDeclaredRelations = [
     "verifies",
     "spec:carrier.markdown-pack-authoring",
   ],
+  ["spec:decisions.decision-readiness-posture", "refines", "spec:validation.warn-level-signals"],
 ] as const;

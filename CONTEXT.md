@@ -91,10 +91,11 @@ claim category** — it **inherits** its source's `claim` (so `belongsTo` carrie
 | **`observed`** *(aspirational)* | runtime evidence links to the Spec's target — the liveness rung | — |
 | **enabled verifier** | a verifying `example`/scenario backed by a **linked, resolvable test anchor** — *structurally bound*, not runner-executed (skip/quarantine is CI's, exactly as pass/fail is) | — |
 
-The payoff queries: `ready ∧ kind≠example ∧ ¬implemented` = the operational **build backlog**;
-`implemented ∧ ¬ready` = the **drift alarm**. The raw `ready ∧ ¬implemented` expression also names
-ready example evidence; the example realization posture (MD-24) deliberately keeps that literal
-fact while the canonical recipe excludes examples and audits their verifier bindings.
+The payoff queries: ready unimplemented Specs excluding kinds `example` and `decision` form the
+operational **build backlog**; `implemented ∧ ¬ready` is the **drift alarm**. The raw
+`ready ∧ ¬implemented` expression also names ready example evidence and registry-ratified decision
+records; the example realization posture (MD-24) and decision readiness posture (MD-26) keep those
+facts literal while the canonical recipe reports both audited exclusions.
 
 ## The graph & extraction  (→ `spec:extraction.derive-graph`)
 

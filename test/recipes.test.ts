@@ -263,14 +263,15 @@ describe("the agent-surface recipe corpus", () => {
 
     expect(numberAt(result, "total")).toBe(entries.length);
 
-    // Completeness, not just soundness: the rows must be exactly the operational
-    // `ready ∧ kind≠example ∧ ¬implemented` set. The excluded example set is checked separately,
-    // so filtering it from backlog work cannot hide missing verification evidence.
+    // Completeness, not just soundness: the rows must be exactly the operational ready,
+    // unimplemented set excluding example evidence and decision records. Both exclusions are
+    // checked separately so the backlog filter cannot hide either census.
     const expected = [...primitivesById.values()]
       .filter(
         (node) =>
           node.readiness === "ready" &&
           node.specKind !== "example" &&
+          node.specKind !== "decision" &&
           !(node.deliveryFacts ?? []).includes("implemented"),
       )
       .map((node) => node.id)
@@ -289,7 +290,15 @@ describe("the agent-surface recipe corpus", () => {
       .map((node) => node.id)
       .sort();
 
+    const excludedDecisions = [...primitivesById.values()].filter(
+      (node) =>
+        node.readiness === "ready" &&
+        node.specKind === "decision" &&
+        !(node.deliveryFacts ?? []).includes("implemented"),
+    );
+
     expect(numberAt(result, "excludedReadyExamples")).toBe(excluded.length);
+    expect(numberAt(result, "excludedReadyDecisions")).toBe(excludedDecisions.length);
     expect(
       asArray(result.excludedWithoutVerifier)
         .map((id) => {

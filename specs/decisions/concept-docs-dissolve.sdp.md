@@ -2,7 +2,7 @@
 id: spec:decisions.concept-docs-dissolve
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:protocol.self-hosting
 ---

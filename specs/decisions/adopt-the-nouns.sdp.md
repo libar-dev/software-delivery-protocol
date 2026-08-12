@@ -2,7 +2,7 @@
 id: spec:decisions.adopt-the-nouns
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:protocol.self-hosting
 ---

@@ -2,7 +2,7 @@
 id: spec:decisions.example-realization-posture
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.core-model
 ---

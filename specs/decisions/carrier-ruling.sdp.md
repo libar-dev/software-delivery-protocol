@@ -2,7 +2,7 @@
 id: spec:decisions.carrier-ruling
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.markdown-authoring
 ---

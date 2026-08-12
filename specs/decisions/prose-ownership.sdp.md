@@ -2,7 +2,7 @@
 id: spec:decisions.prose-ownership
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.prose-ownership-rule
 ---

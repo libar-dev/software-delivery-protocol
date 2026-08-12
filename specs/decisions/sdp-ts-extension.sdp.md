@@ -2,7 +2,7 @@
 id: spec:decisions.sdp-ts-extension
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.markdown-authoring
 ---

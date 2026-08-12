@@ -88,8 +88,8 @@ corpus question — what a Spec guarantees, what is ready but unimplemented, wha
 touches, where a concept lives — script the graph instead of reading `.sdp.md` files by hand:
 
 ```bash
-# The build backlog (recipe 1, condensed): ready non-example Specs with no implementation binding
-pnpm --silent sdp:q 'return g.specs().filter((s) => s.statedReadiness === "ready" && s.specKind !== "example" && !s.deliveryFacts.includes("implemented")).map((s) => s.id)'
+# The build backlog (recipe 1, condensed): ready implementation work, excluding examples and decisions
+pnpm --silent sdp:q 'return g.specs().filter((s) => s.statedReadiness === "ready" && s.specKind !== "example" && s.specKind !== "decision" && !s.deliveryFacts.includes("implemented")).map((s) => s.id)'
 
 # Concept search (recipe 6): where does a concept live?
 pnpm --silent sdp:q 'return g.findByConcept("readiness floor").slice(0, 5).map((n) => n.id)'
@@ -130,9 +130,10 @@ Every doc honours both — never mistake one half for the other:
   typed `Spec`* until it is implementable. Implementation becomes near-autopilot ("implement `spec:…`"); the real,
   iterative work is maturing and **reviewing** specs — alone and in related sets (the `Pack` / **Design Review**).
 - **Maturity gates implementation; the graph is AI-native.** Don't ship code before a spec is `ready` —
-  `implemented ∧ ¬ready` is the **drift alarm**; `ready ∧ kind≠example ∧ ¬implemented` is the operational build
-  backlog under the example realization posture (MD-24). A typed graph of related
-  specs is the shape an LLM already reasons in: feed the agent the graph, don't narrate at it.
+  `implemented ∧ ¬ready` is the **drift alarm**; ready unimplemented examples and decisions are
+  audited exclusions from the operational build backlog under the example realization posture
+  (MD-24) and decision readiness posture (MD-26). A typed graph of related specs is the shape an
+  LLM already reasons in: feed the agent the graph, don't narrate at it.
 
 ## Working discipline
 

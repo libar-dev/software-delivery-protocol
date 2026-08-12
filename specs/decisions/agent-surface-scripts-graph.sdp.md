@@ -2,7 +2,7 @@
 id: spec:decisions.agent-surface-scripts-graph
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.agent-surface
 ---

@@ -2,7 +2,7 @@
 id: spec:decisions.executable-meta-model
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:protocol.self-hosting
 ---

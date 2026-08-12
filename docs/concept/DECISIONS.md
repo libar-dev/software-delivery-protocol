@@ -34,6 +34,7 @@ positions and are never reused.
 | MD-23 | verification posture, not realization | durable | `verification.mode` states intended posture; enabled-verifier realization remains derived. | [Spec](../../specs/decisions/verification-posture-not-realization.sdp.md) (`spec:decisions.verification-posture-not-realization`) |
 | MD-24 | the example realization posture | durable | Examples normally carry verification evidence rather than build-backlog work; implementation remains a direct binding-derived fact. | [Spec](../../specs/decisions/example-realization-posture.sdp.md) (`spec:decisions.example-realization-posture`) |
 | MD-25 | the Pack syntax ruling | durable | Packs gain a Markdown manifest carrier closed to id · specs · modelRefs with H1 title and prose framing; the TS manifest stays a lawful per-ID option. | [Spec](../../specs/decisions/pack-markdown-carrier.sdp.md) (`spec:decisions.pack-markdown-carrier`) |
+| MD-26 | the decision readiness posture | durable | Registry-ratified decision records state `ready`; operational backlog and verifier-gap signals exclude kind `decision` while preserving an explicit count. | [Spec](../../specs/decisions/decision-readiness-posture.sdp.md) (`spec:decisions.decision-readiness-posture`) |
 
 ### Current executable decision-spec pointers
 

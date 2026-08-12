@@ -2,7 +2,7 @@
 id: spec:decisions.typing-law
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.spec-sections
 ---

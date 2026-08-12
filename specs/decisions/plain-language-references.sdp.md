@@ -2,7 +2,7 @@
 id: spec:decisions.plain-language-references
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:protocol.self-hosting
 ---

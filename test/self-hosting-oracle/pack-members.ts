@@ -134,4 +134,5 @@ export const expectedPackMembers = [
   "spec:decisions.verification-posture-not-realization",
   "spec:decisions.example-realization-posture",
   "spec:decisions.pack-markdown-carrier",
+  "spec:decisions.decision-readiness-posture",
 ] as const;

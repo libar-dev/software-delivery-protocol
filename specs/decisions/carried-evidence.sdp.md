@@ -2,7 +2,7 @@
 id: spec:decisions.carried-evidence
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.readiness-floor
 ---

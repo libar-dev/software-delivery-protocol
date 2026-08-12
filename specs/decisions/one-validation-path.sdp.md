@@ -2,7 +2,7 @@
 id: spec:decisions.one-validation-path
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.two-check-families
 ---

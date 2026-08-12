@@ -2,7 +2,7 @@
 id: spec:decisions.exclusion-contract
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:extraction.excludes
 ---

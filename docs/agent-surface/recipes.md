@@ -71,17 +71,22 @@ for a new query verb. A join freezes into the reader only when a second machine 
 
 ## 1. The build backlog
 
-*When you need this: you are picking up work and want the non-example Specs whose design is
-finished and whose code is not — `ready ∧ kind≠example ∧ ¬implemented` — while keeping ready
-example evidence visible as an audited exclusion.*
+*When you need this: you are picking up work and want ready implementation work — excluding
+example evidence and decision records — while keeping both exclusions visible in the result.*
 
 ```js
 const ready = g.specs().filter((spec) => spec.statedReadiness === "ready");
 const backlog = ready.filter(
-  (spec) => spec.specKind !== "example" && !spec.deliveryFacts.includes("implemented"),
+  (spec) =>
+    spec.specKind !== "example" &&
+    spec.specKind !== "decision" &&
+    !spec.deliveryFacts.includes("implemented"),
 );
 const excludedExamples = ready.filter(
   (spec) => spec.specKind === "example" && !spec.deliveryFacts.includes("implemented"),
+);
+const excludedDecisions = ready.filter(
+  (spec) => spec.specKind === "decision" && !spec.deliveryFacts.includes("implemented"),
 );
 const byFamily = {};
 
@@ -100,6 +105,7 @@ return {
   total: backlog.length,
   byFamily,
   excludedReadyExamples: excludedExamples.length,
+  excludedReadyDecisions: excludedDecisions.length,
   excludedWithoutVerifier: excludedExamples
     .filter((spec) => !spec.deliveryFacts.includes("has-verifier"))
     .map((spec) => spec.id),
@@ -108,9 +114,11 @@ return {
 
 `implemented` is a delivery fact: it says a code anchor *binds* to the Spec, never that the code
 works or is live. It never propagates through refinement. Ready examples normally carry
-verification evidence rather than implementation work, so the example realization posture
-(MD-24) keeps the raw `ready ∧ ¬implemented` expression literally true while this operational
-recipe excludes examples and audits their verifier bindings. The reverse pairing is recipe 2.
+verification evidence rather than implementation work (MD-24); ready decision records carry
+registry-ratification evidence rather than implementation or verifier work (MD-26). The raw
+`ready ∧ ¬implemented` expression remains literally true while this operational recipe excludes
+both kinds, audits example verifier bindings, and reports both excluded counts. The reverse pairing
+is recipe 2.
 
 ## 2. The drift alarm
 

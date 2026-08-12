@@ -13,7 +13,7 @@ session with the build-backlog and drift-alarm recipes. In the Protocol reposito
 At this repository root, use the exact self-hosting exclusions:
 
 ```sh
-pnpm --silent sdp:q 'const ready = g.specs().filter((spec) => spec.statedReadiness === "ready"); const backlog = ready.filter((spec) => spec.specKind !== "example" && !spec.deliveryFacts.includes("implemented")); const excludedExamples = ready.filter((spec) => spec.specKind === "example" && !spec.deliveryFacts.includes("implemented")); return {backlog: backlog.map((spec) => spec.id), excludedReadyExamples: excludedExamples.length, excludedWithoutVerifier: excludedExamples.filter((spec) => !spec.deliveryFacts.includes("has-verifier")).map((spec) => spec.id)}'
+pnpm --silent sdp:q 'const ready = g.specs().filter((spec) => spec.statedReadiness === "ready"); const backlog = ready.filter((spec) => spec.specKind !== "example" && spec.specKind !== "decision" && !spec.deliveryFacts.includes("implemented")); const excludedExamples = ready.filter((spec) => spec.specKind === "example" && !spec.deliveryFacts.includes("implemented")); const excludedDecisions = ready.filter((spec) => spec.specKind === "decision" && !spec.deliveryFacts.includes("implemented")); return {backlog: backlog.map((spec) => spec.id), excludedReadyExamples: excludedExamples.length, excludedWithoutVerifier: excludedExamples.filter((spec) => !spec.deliveryFacts.includes("has-verifier")).map((spec) => spec.id), excludedReadyDecisions: excludedDecisions.length}'
 pnpm --silent sdp:q 'return g.specs().filter((spec) => spec.deliveryFacts.includes("implemented") && spec.statedReadiness !== "ready").map((spec) => spec.id)'
 ```
 

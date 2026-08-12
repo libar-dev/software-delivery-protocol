@@ -133,6 +133,7 @@ specs:
   - spec:decisions.verification-posture-not-realization
   - spec:decisions.example-realization-posture
   - spec:decisions.pack-markdown-carrier
+  - spec:decisions.decision-readiness-posture
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model
