@@ -20,6 +20,13 @@ relations:
 - rule: Rendering encodes by Markdown syntax context: prose and table fields escape structural characters, fenced JSON preserves authored keys and values through JSON encoding, and inline code uses a delimiter that preserves literal backticks.
 - rule: The realizing entrypoint is `renderDesignReview` in `src/projections/design-review.ts`, which reads the reader and returns pages; writing them is the caller's job.
 
+## UI
+The generated Design Review exposes three page anatomies from the same graph.
+
+- specPage: A Spec page presents descriptors, readiness, relations, bindings, delivery facts, authored sections, and findings in one context.
+- packPage: A Pack page presents framing, model references, and an ordered member table with each member's kind, altitude, readiness, and delivery facts.
+- indexPage: The index presents one sortable-style Markdown table for Specs and one for Packs, with stable links into their detail pages.
+
 ## Example space
 ```gwt-vocabulary
 Given an extraction root holding a Pack, its member Specs, and one member the checks warn about

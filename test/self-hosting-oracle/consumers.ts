@@ -127,6 +127,16 @@ export const consumersSpecs = [
           ],
         },
       },
+      ui: {
+        description:
+          "The generated Design Review exposes three page anatomies from the same graph.",
+        specPage:
+          "A Spec page presents descriptors, readiness, relations, bindings, delivery facts, authored sections, and findings in one context.",
+        packPage:
+          "A Pack page presents framing, model references, and an ordered member table with each member's kind, altitude, readiness, and delivery facts.",
+        indexPage:
+          "The index presents one sortable-style Markdown table for Specs and one for Packs, with stable links into their detail pages.",
+      },
     },
     deliveryFacts: ["implemented", "has-verifier"],
   },

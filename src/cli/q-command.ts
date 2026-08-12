@@ -9,6 +9,8 @@ import { createReader } from "../reader/reader.js";
 import type { Reader } from "../reader/reader.js";
 import type { ValidationReport } from "../validate/contracts.js";
 import { validateGraph } from "../validate/validators.js";
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import { resolveExtractionRoot } from "./build-args.js";
 import type { CliOutput } from "./output.js";
 import { errorMessage, formatFinding, writeStderr, writeStdout } from "./output.js";
@@ -188,6 +190,14 @@ function resolveBody(parsed: QueryArgs, output: CliOutput, hooks: QueryHooks): s
     return undefined;
   }
 }
+
+const buildPipelineQueryAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.build-pipeline-query"),
+  label:
+    "one query invocation derives the graph once and serves reader, raw graph, and report from that one derivation",
+  satisfies: ref("spec:extraction.build-pipeline"),
+});
+void buildPipelineQueryAnchor;
 
 export async function runQuery(
   parsed: QueryArgs,
