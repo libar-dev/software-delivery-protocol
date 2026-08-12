@@ -95,7 +95,8 @@ read the carrying Spec.
 - **Do not read `implemented` as "it is live."** It says a code anchor binds to the Spec. Runtime
   evidence would be `observed`, which is not tracked.
 - **Do not use raw `ready ∧ ¬implemented` as the operational backlog.** Under the example realization
-  posture it also includes ready example evidence; recipe 1 excludes examples and reports their
+  posture and the decision readiness posture it also includes ready example evidence and ready
+  decision records; recipe 1 excludes both kinds, reports the excluded counts, and audits example
   verifier health without inventing inherited implementation.
 - **Do not collapse the claim taxonomy.** `declared` is authored intent, `anchored` is a human
   binding from source, `inferred` is machine-derived structure. Carry the claim into your answer.

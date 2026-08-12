@@ -159,11 +159,25 @@ The second framing paragraph.`;
       lawfulPack.replace("spec:probe.member", "pack:probe.member"),
       "extract/invalid-id",
     ],
+    [
+      "a reserved derived-name key on a Pack",
+      lawfulPack.replace("specs:", "implemented: true\nspecs:"),
+      "extract/reserved-property",
+    ],
+    [
+      "a pack: id that fails the id grammar",
+      lawfulPack.replace("id: pack:probe.parity", 'id: "pack:"'),
+      "extract/invalid-id",
+    ],
   ])("refuses %s", (_name, sourceText, validatorId) => {
     const result = reify(sourceText);
 
+    expect(result.specs).toEqual([]);
     expect(result.packs).toEqual([]);
     expect(result.findings).toContainEqual(expect.objectContaining({ validatorId }));
+    expect(result.findings).not.toContainEqual(
+      expect.objectContaining({ message: 'frontmatter field "kind" is missing' }),
+    );
   });
 
   it("reifies the frozen corpus envelopes at their id token lines", async () => {

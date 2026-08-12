@@ -83,11 +83,9 @@ export function parseMarkdownFrontmatter(
         !isMarkdownStringScalar(pair.value)
       )
         continue;
-      try {
-        if (parseId(pair.value.value).namespace === "pack") carrierClass = "pack";
-      } catch {
-        // The ordinary id branch reports the frozen invalid-id finding below.
-      }
+      // Route by the authored namespace prefix so a pack: token that later fails
+      // id grammar still uses the Pack envelope and never asks for kind.
+      if (pair.value.value.startsWith("pack:")) carrierClass = "pack";
       break;
     }
     const envelopeKeys = carrierClass === "pack" ? packEnvelopeKeys : specEnvelopeKeys;
