@@ -78,7 +78,17 @@ the reported floor never makes the edit on the author's behalf.
 1. Put the typed `gwt-vocabulary` example space on the parent.
 2. Put one concrete `gwt` bound point on each example child, following
    `spec:decisions.point-per-example`.
-3. Generate contracts from the adopter root:
+3. Generate contracts from the extraction root. In this source checkout use the repository
+   scripts, which supply the three fixture exclusions:
+
+   ```sh
+   npm run generate:self-hosting
+   npm run generate:example
+   pnpm --silent sdp build . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+   ```
+
+   The `sdp` script is the same verb with the exclusions written out. In an adopter, select that
+   repository's root and exclusions:
 
    ```sh
    pnpm exec sdp build .

@@ -483,10 +483,28 @@ describe("the agent-surface recipe corpus", () => {
     expect(numberAt(result, "total")).toBe(rows.length);
     expect(rows.map((row) => stringAt(asRecord(row), "id")).sort()).toEqual(expected);
 
+    let withDeclaredOnly = 0;
+
     for (const row of rows) {
-      expect(Array.isArray(asRecord(row).declared)).toBe(true);
-      expect(Array.isArray(asRecord(row).enabled)).toBe(true);
+      const record = asRecord(row);
+      const id = stringAt(record, "id");
+      const verifiers = reader.specContext(id)?.verifiers ?? [];
+      const declared = verifiers
+        .filter((binding) => binding.via === "example")
+        .map((binding) => binding.verifierId);
+      const enabled = verifiers
+        .filter((binding) => binding.enabled)
+        .map((binding) => binding.verifierId);
+
+      expect(asArray(record.declared)).toEqual(declared);
+      expect(asArray(record.enabled)).toEqual(enabled);
+
+      if (declared.some((verifierId) => !enabled.includes(verifierId))) {
+        withDeclaredOnly += 1;
+      }
     }
+
+    expect(numberAt(result, "withDeclaredOnly")).toBe(withDeclaredOnly);
   });
 
   it("returns the complete non-ready ladder grouped by family", async () => {

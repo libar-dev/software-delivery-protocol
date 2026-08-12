@@ -23,8 +23,10 @@ code behavior into intent.
 > through the existing graph recipes without gates. Plan 24's inward turn remains the standing
 > practice: forward intent lives in the graph, so the live backlog is a graph query, not a
 > document. Corpus counts,
-> readiness, and findings are **derived, never quoted** — run `sdp validate` (or recipe 1) for
-> the current numbers. Build state lives in **`plans/`** — read the highest
+> readiness, and findings are **derived, never quoted** — re-run
+> `pnpm --silent sdp validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity`
+> (or `npm run --silent sdp --` with the same argv) and read recipes 8 and 11. Recipe 1 is the
+> operational backlog, not the census. Never invoke a bare `sdp`. Build state lives in **`plans/`** — read the highest
 > **primary-numbered** plan's status header, plus any **active subplans it (or its parent family)
 > explicitly designates as current**; ignore unnumbered files and letter-suffixed plans only when
 > no primary/active plan designates them. If that plan is DRAFTED, also read the latest ✅

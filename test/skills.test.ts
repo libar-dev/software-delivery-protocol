@@ -78,9 +78,14 @@ const authoringRecipesImplementationAnchor = codeAnchor({
 void authoringRecipesImplementationAnchor;
 
 function documentedCommands(body: string): readonly string[] {
-  return shellFenceLines(body).filter(
-    (line) => line.startsWith("pnpm --silent sdp:q ") || line.startsWith("pnpm exec sdp "),
-  );
+  return shellFenceLines(body)
+    .map((line) => line.trim())
+    .filter(
+      (line) =>
+        line.startsWith("pnpm --silent sdp:q ") ||
+        line.startsWith("pnpm --silent sdp ") ||
+        line.startsWith("pnpm exec sdp "),
+    );
 }
 
 const authoringOnRampTestAnchor = specTest({
@@ -143,6 +148,8 @@ describe("Protocol skill assets", () => {
       "spec:decisions.point-per-example",
       "spec:decisions.binding-not-liveness",
       "sdp build",
+      "generate:self-hosting",
+      "generate:example",
       "bindExample",
       "specTest",
       "contract-dependent-suites.mjs",
@@ -210,7 +217,9 @@ describe("Protocol skill assets", () => {
       for (const command of commands) {
         const verb = command.startsWith("pnpm --silent sdp:q ")
           ? "q"
-          : /exec sdp (?<verb>[\w-]+)/u.exec(command)?.groups?.verb;
+          : command.startsWith("pnpm --silent sdp ")
+            ? /^pnpm --silent sdp (?<verb>[\w-]+)/u.exec(command)?.groups?.verb
+            : /exec sdp (?<verb>[\w-]+)/u.exec(command)?.groups?.verb;
         expect(verb === undefined ? false : knownVerbs.has(verb)).toBe(true);
       }
     }

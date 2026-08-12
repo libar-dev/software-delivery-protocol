@@ -100,6 +100,38 @@ describe("the self-hosting records gate", () => {
     expect(result.stderr).toContain("Gate 1 ledger SHA disagrees with the owner packet");
   });
 
+  it("selects a zero-padded primary plan over a lower unpadded number", () => {
+    const root = copyRecordTree();
+    const nextPlanPath = join(root, "plans", "026-next.md");
+    writeFileSync(nextPlanPath, "> **Status:** ✅ EXECUTED — selector probe\n", "utf8");
+    const handbook = join(root, "AGENTS.md");
+    writeFileSync(
+      handbook,
+      readFileSync(handbook, "utf8").replaceAll(
+        `plan ${String(currentPlan.number)} is ${currentStatus}`,
+        "plan 26 is EXECUTED",
+      ),
+      "utf8",
+    );
+
+    const result = runGuard(root);
+
+    expect({ status: result.status, stderr: result.stderr }).toEqual({ status: 0, stderr: "" });
+  });
+
+  it("ignores a letter-suffixed plan when selecting the current primary", () => {
+    const root = copyRecordTree();
+    writeFileSync(
+      join(root, "plans", `${String(currentPlan.number + 1)}a-notes.md`),
+      "> **Status:** DRAFTED — letter-suffix probe\n",
+      "utf8",
+    );
+
+    const result = runGuard(root);
+
+    expect({ status: result.status, stderr: result.stderr }).toEqual({ status: 0, stderr: "" });
+  });
+
   it("fails when the handbook carries a stale current-plan status", () => {
     const root = copyRecordTree();
     const path = join(root, "AGENTS.md");
