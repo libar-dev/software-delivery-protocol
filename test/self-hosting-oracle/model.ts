@@ -43,9 +43,13 @@ export const modelSpecs = [
           altitude: "The scope position `epic`, `feature`, or `story`.",
           "delivery fact":
             "A derived realization signal such as implemented or has-verifier; it is never authored readiness.",
+          "direct realization":
+            "`implemented` follows a resolving implementation binding and never propagates through refinement; examples normally provide verification evidence rather than implementation work.",
           envelope:
             "The stable outer shape of id, title, kind, altitude, readiness, and relations; sections carry extension detail.",
           kind: "The true subtype that categorizes a Spec's truth and changes its required detail and validation.",
+          "one-kind rule":
+            "A Spec states one category of truth; when one fact straddles kinds, author two Specs and join them with the relation that preserves their distinct intents.",
           readiness:
             "The author-stated design-maturity position `idea`, `scoped`, `defined`, or `ready`, checked against a structural floor.",
         },
@@ -80,10 +84,43 @@ export const modelSpecs = [
             "Every section read by a readiness-floor clause has a closed typed shape; unsettled design and ui surfaces remain open bags.",
           verifies:
             "A direct verifier-to-target relation whose enabled test binding can derive has-verifier only for that stated target.",
+          "verification mode":
+            "Authored intended posture such as executable; it never stands in for the derived enabled-verifier realization.",
         },
       },
     },
     deliveryFacts: ["implemented"],
+  },
+  {
+    id: "spec:model.enrichment-lifecycle",
+    specKind: "model",
+    altitude: "feature",
+    readiness: "scoped",
+    file: "specs/model/enrichment-lifecycle.sdp.md",
+    title: "Enrichment keeps one Spec while its detail changes",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep a Spec useful after implementation without recreating value-transfer duplication.",
+        openQuestions: [
+          {
+            question:
+              "After implementation, which design-time detail stays in the Spec and which detail may be removed while preserving one durable home for each explanation?",
+            blocking: true,
+          },
+        ],
+      },
+      model: {
+        terms: {
+          "enrichment lifecycle":
+            "The same Spec gains and may later slim typed detail without changing identity or moving truth into another artifact type.",
+          "distillation boundary":
+            "Implemented code does not automatically justify either retaining or deleting design-time detail; the unresolved policy must preserve one home per explanation.",
+        },
+      },
+    },
+    deliveryFacts: [],
   },
   {
     id: "spec:model.relations",
@@ -106,6 +143,8 @@ export const modelSpecs = [
           dependsOn: "A dependent Spec points to the Spec it needs.",
           refines: "A child points to its more precise parent.",
           supersedes: "A current Decision Record points forward to the decision it replaces.",
+          "typed dependency distinction":
+            "`constrainedBy` and `decidedBy` preserve separately queryable intents that a generic `dependsOn` edge would flatten.",
           verifies: "A verifier points to the Spec it verifies.",
         },
       },
@@ -264,6 +303,10 @@ export const modelSpecs = [
             "The top-level const builder call that the MVP extractor reifies; decorator and JSDoc forms remain unextracted representations.",
           "code anchor":
             "An implementation-flavored binding that derives an anchored satisfies edge.",
+          "document-realization binding":
+            "When the realizing artifact is authored Markdown that cannot carry an extracted in-code anchor, the executable suite that asserts the shipped document may carry its code anchor. Its label must name the document realization rather than imply the test body is the product, and file-level blast radius remains coverage-unknown for the Markdown artifact.",
+          "executable binding boundary":
+            "A resolving `specTest` anchor can establish verifier realization; a `bindExample` call executes a generated contract but is not extracted graph data, so the graph cannot claim from that call alone that the contract is bound.",
           "oracle anchor":
             "A binding that records an oracle's models target without deriving a delivery fact.",
           "test anchor":

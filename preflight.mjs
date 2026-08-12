@@ -72,6 +72,11 @@ function readTree(root) {
   }
 
   for (const entry of readdirSync(root, { withFileTypes: true })) {
+    // Finder drops .DS_Store into any browsed directory; it is OS metadata, never generated content.
+    if (entry.name === ".DS_Store") {
+      continue;
+    }
+
     const relativePath = entry.name;
     const absolutePath = join(root, relativePath);
 
@@ -115,7 +120,8 @@ function regenerateExpectedTree(target) {
       readTree(join(temporaryRoot, target.generatedPath)),
     );
   } finally {
-    rmSync(temporaryRoot, { recursive: true, force: true });
+    // Finder/Spotlight can drop metadata into the tree mid-delete; retry the transient ENOTEMPTY.
+    rmSync(temporaryRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 }
 

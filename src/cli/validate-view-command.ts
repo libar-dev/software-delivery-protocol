@@ -3,6 +3,8 @@ import { dirname, join } from "node:path";
 
 import { renderDesignReview } from "../projections/design-review.js";
 import { createReader } from "../reader/reader.js";
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import { validateGraph } from "../validate/validators.js";
 import { removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
@@ -51,6 +53,13 @@ export function runValidate(
     return { exitCode: 1 };
   }
 }
+
+const wholesaleViewRewriteAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.wholesale-view-rewrite"),
+  label: "publishes each Design Review as one wholesale temporary-directory replacement",
+  satisfies: ref("spec:consumers.wholesale-view-rewrite"),
+});
+void wholesaleViewRewriteAnchor;
 
 export function runView(parsed: BuildArgs, output: CliOutput, hooks: ValidationViewHooks): number {
   const render = hooks.renderDesignReview ?? renderDesignReview;

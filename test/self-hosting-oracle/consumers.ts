@@ -240,7 +240,7 @@ export const consumersSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.derived-readiness-banner.dishonest-divergence",
@@ -345,7 +345,7 @@ export const consumersSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.binding-language-views.bound-spec-page",
@@ -450,7 +450,7 @@ export const consumersSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.wholesale-view-rewrite.stale-page-removed",
@@ -787,5 +787,132 @@ export const consumersSpecs = [
       },
     },
     deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.authoring-on-ramp",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/consumers/authoring-on-ramp.sdp.md",
+    title: "Authors move one Spec from intent to reviewed evidence",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give an agent or human one graph-first path for creating, enriching, binding, and reviewing a Spec without inventing a parallel workflow.",
+      },
+      behavior: {
+        rules: [
+          "An author starts from the build-backlog and drift-alarm recipes, reads carrying Specs for law, and edits the canonical carrier.",
+          "Cheap capture starts with the minimal lawful `idea` carrier in the family found through concept search, and every later readiness edit is preceded by the promotion-preflight recipe and remains a human statement.",
+          "The executable transition is taught as parent example space, child bound point, generated contracts, colocated `bindExample` and `specTest`, and a mutation-probed red result before the human states `ready`.",
+          "Contract-generation refusals are diagnosed through `sdp build`; query-time validation does not claim to report codegen findings.",
+          "Verifier-binding queries report graph-visible anchors and cannot detect a suite whose generated contract is never bound.",
+          "Implementation anchors state identity-only bindings, and Design Review supplies context for the human readiness statement without becoming a workflow gate.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.delivery-session-on-ramp",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/delivery-session-on-ramp.sdp.md",
+    title: "Delivery sessions route work from current graph state",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let an agent enter capture, design, implementation, review, or close work from current graph evidence without inventing workflow state or gates.",
+      },
+      behavior: {
+        rules: [
+          "Work shapes are advisory entries over the same current graph; they are neither phases nor a required sequence, and a session may enter or revisit any shape.",
+          "Capture or refinement uses concept search, the lower ladder, and promotion preflight; design uses promotion preflight and readiness divergence.",
+          "Implementation uses the build backlog and the target Spec context; review uses the Pack backbone and warn-level signals, or the target Spec context and warn-level signals when no Pack exists.",
+          "Close uses the drift alarm and changed-file blast radius; optional slimming preserves durable law and one prose owner without claiming a universal distillation boundary.",
+          "A handoff names targets, changed files, current readiness, findings or open questions, and commands or evidence locations to re-run; it never carries an inherited verification verdict.",
+          "Every preflight informs human or agent judgment and never authorizes, blocks, scopes, or advances delivery work.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.agent-surface.authoring-recipes",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/agent-surface.authoring-recipes.sdp.md",
+    title: "Authoring questions stay executable graph recipes",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Answer recurring maturity and verifier questions by scripting the graph rather than adding query verbs.",
+      },
+      behavior: {
+        rules: [
+          "Promotion preflight reports the Spec's stated rung, floor reached, and any current unmet floor clause.",
+          "The verifier audit keeps declared example relations distinct from enabled verifier bindings.",
+          "The lower-ladder view groups non-ready Specs by family and reports their next graph-visible unmet clause without treating an empty failure list as automatic promotion.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.impact-graph",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    file: "specs/consumers/impact-graph.sdp.md",
+    title: "An impact graph can answer exhaustive code-structure questions",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give symbol and import impact questions an exhaustive derived substrate without promoting mechanical structure into curated intent.",
+        openQuestions: [
+          {
+            question:
+              "Which language-neutral identity and extraction boundary can support exhaustive symbol reach without freezing a single compiler's representation into the Protocol?",
+            blocking: true,
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "Mechanical import and symbol structure is inferred and remains distinct from the sparse curated graph.",
+          "Comparing commits derives `graph(A)` and `graph(B)` and reports added, removed, or changed nodes and edges without persisting either projection as a second store.",
+          "Candidate relationship suggestions and unambiguous-drift flags are assistive outputs; neither authors intent or silently rewrites the curated graph.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.intent-composition",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/consumers/intent-composition.sdp.md",
+    title: "Intent composition needs a realizing surface",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Realize the absent user and agent surface that composes scoped intent before ordinary source edits.",
+      },
+      behavior: {
+        rules: [
+          "`spec:consumers.edit-model` owns the settled intent → agent → git law; this child owns only the future composing interaction that does not yet exist.",
+          "No entrypoint, persistence path, or structured patch contract is implied at the idea rung.",
+        ],
+      },
+    },
+    deliveryFacts: [],
   },
 ] as const;

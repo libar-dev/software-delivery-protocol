@@ -1,4 +1,6 @@
 import type { Finding } from "../validate/contracts.js";
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 
 export interface CliOutput {
   readonly stdout?: { readonly write: (chunk: string) => void };
@@ -17,6 +19,13 @@ export function writeStdout(output: CliOutput, text: string): void {
 export function writeStderr(output: CliOutput, text: string): void {
   output.stderr?.write(text);
 }
+
+const diagnosticCliAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.diagnostic-rendering-cli"),
+  label: "composes structured finding fields into the one command-line diagnostic form",
+  satisfies: ref("spec:validation.diagnostic-rendering"),
+});
+void diagnosticCliAnchor;
 
 export function formatFinding(finding: Finding): string {
   const location =

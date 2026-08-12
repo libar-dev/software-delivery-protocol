@@ -253,7 +253,9 @@ export const decisionsSpecs = [
         context: "Delivery tools can describe work without making their model executable.",
         decision:
           "The Protocol models authored Specs, Packs, and anchors in typed code, derives one graph, and checks conformance and honesty.",
-        rationale: ["Executable specs alone and workflow tooling omit the meta-model contract."],
+        rationale: [
+          "Gen 1's failure was dual-source binding hidden from the type system, not executability itself; the typed meta-model removes that hidden truth path while allowing executability to return as a recovered surface.",
+        ],
         consequences: [
           "The Protocol is deterministically validated without judging content quality or enforcing workflow.",
         ],
@@ -585,6 +587,65 @@ export const decisionsSpecs = [
           "The sink reads only — it consumes the extractor's derived output in memory, never re-parses carriers, and writes no artifact.",
           "The sink evaluates operator-supplied code with the trust stance of a local developer tool rather than a sandbox, and supplied roots resolve to canonical validated identities at the boundary.",
           "The injected binding names are a scripted contract that recipes and skills depend on, so renaming one breaks every body written against the surface.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.verification-posture-not-realization",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/verification-posture-not-realization.sdp.md",
+    title: "Verification mode states posture, not realization",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep authored verification intent distinct from derived evidence that a verifier exists.",
+      },
+      decision: {
+        context:
+          "A Spec may declare `verification.mode: executable` before any resolving test anchor exists, while the graph already derives enabled-verifier realization from bindings.",
+        decision:
+          "`verification.mode` states the intended verification posture; enabled-verifier realization remains a derived fact and the two are never collapsed.",
+        rationale: [
+          "Treating the authored mode as realization would duplicate and weaken the binding-derived fact, while warning on an unrealized posture would turn an intended direction into workflow or content-quality policing.",
+        ],
+        consequences: [
+          "No validator warns merely because `mode: executable` has no enabled verifier.",
+          "Consumers report the authored mode and derived verifier bindings separately.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.example-realization-posture",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/example-realization-posture.sdp.md",
+    title: "Example realization stays evidence, not backlog work",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep implementation bindings direct while making the operational build backlog name work that can own a realization.",
+      },
+      decision: {
+        context:
+          "The raw `ready ∧ ¬implemented` query includes every ready example whose bound suite verifies its parent even though the example usually owns no implementation site distinct from that parent.",
+        decision:
+          "Ready example Specs are verification evidence and are excluded from the canonical build-backlog recipe; `implemented` remains a direct, anchor-derived delivery fact with no propagation through refinement.",
+        rationale: [
+          "Deriving an example's implementation through its parent would introduce an inferred realization claim that no source binding asserted, while adding one anchor per example would turn evidence points into ceremonial implementation sites. Keeping the fact direct preserves the claim boundary and leaves a rare example that genuinely owns a distinct realization free to carry its own code anchor.",
+        ],
+        consequences: [
+          "The unqualified raw `ready ∧ ¬implemented` expression remains literally true but is not the operational backlog definition because it includes example evidence.",
+          "The canonical backlog recipe and adopter guidance filter out examples and report both the excluded count and any excluded ready example missing verifier evidence.",
+          "Consumers that hand-roll the raw expression must opt into the example posture explicitly rather than assuming refinement confers implementation.",
         ],
       },
     },

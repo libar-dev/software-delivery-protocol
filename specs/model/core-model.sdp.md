@@ -16,6 +16,8 @@ relations:
 - **Spec** — The one authored truth-primitive, enriched in place without changing artifact type.
 - **envelope** — The stable outer shape of id, title, kind, altitude, readiness, and relations; sections carry extension detail.
 - **kind** — The true subtype that categorizes a Spec's truth and changes its required detail and validation.
+- **one-kind rule** — A Spec states one category of truth; when one fact straddles kinds, author two Specs and join them with the relation that preserves their distinct intents.
 - **altitude** — The scope position `epic`, `feature`, or `story`.
 - **readiness** — The author-stated design-maturity position `idea`, `scoped`, `defined`, or `ready`, checked against a structural floor.
 - **delivery fact** — A derived realization signal such as implemented or has-verifier; it is never authored readiness.
+- **direct realization** — `implemented` follows a resolving implementation binding and never propagates through refinement; examples normally provide verification evidence rather than implementation work.

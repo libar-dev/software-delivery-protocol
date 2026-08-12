@@ -47,6 +47,7 @@ describe("bootstrap package surface", () => {
     const packageJsonPath = fileURLToPath(new URL("../package.json", import.meta.url));
     const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8")) as {
       type: string;
+      packageManager?: string;
       bin: { sdp: string };
       exports: Record<string, { types: string; import: string }>;
       scripts: Record<string, string>;
@@ -58,6 +59,7 @@ describe("bootstrap package surface", () => {
     }
 
     expect(packageJson.type).toBe("module");
+    expect(packageJson.packageManager).toBeUndefined();
     expect(packageJson.bin.sdp).toBe("./dist/cli/sdp.js");
     expect(rootExport.types).toBe("./dist/index.d.ts");
     expect(rootExport.import).toBe("./dist/index.js");
@@ -67,10 +69,19 @@ describe("bootstrap package surface", () => {
     expect(packageJson.scripts["check:self-hosting"]).toBe(
       "node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --check-clean",
     );
+    expect(packageJson.scripts["check:self-hosting-gates"]).toBe(
+      "node ./check-self-hosting-gates.mjs",
+    );
+    expect(packageJson.scripts["sdp:q"]).toBe(
+      "node ./dist/cli/sdp.js q --exclude explorations --exclude examples --exclude test/fixtures/import/parity",
+    );
     expect(packageJson.scripts.preflight).toBe("node ./preflight.mjs");
     expect(packageJson.scripts.check).toBe(
-      "npm run check:temporal && npm run lint && npm run format:check && npm run build && npm run generate:self-hosting && npm run generate:example && npm run typecheck && npm run typecheck:examples && npm test && npm run check:self-hosting && npm run check:example && npm run preflight",
+      "npm run check:temporal && npm run lint && npm run format:check && npm run build && npm run generate:self-hosting && npm run generate:example && npm run typecheck && npm run typecheck:examples && npm test && npm run check:self-hosting-gates && npm run check:self-hosting && npm run check:example && npm run preflight",
     );
+
+    const pnpmWorkspacePath = fileURLToPath(new URL("../pnpm-workspace.yaml", import.meta.url));
+    expect(await readFile(pnpmWorkspacePath, "utf8")).toContain("verifyDepsBeforeRun: false");
   });
 
   it("reifies a TypeScript carrier and derives a graph through the public root", () => {

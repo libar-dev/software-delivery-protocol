@@ -85,6 +85,11 @@ function fingerprintGeneratedTree() {
     );
 
     for (const entry of entries) {
+      // Finder drops .DS_Store into any browsed directory; it is OS metadata, never generated content.
+      if (entry.name === ".DS_Store") {
+        continue;
+      }
+
       const path = join(directory, entry.name);
       hash.update(path);
       hash.update("\0");
@@ -139,7 +144,7 @@ if (hasPathFilter) {
   }
 
   process.exit(
-    runVitest(["--run", cliTestPath, "--pool", "forks", "--poolOptions.forks.singleFork"]),
+    runVitest(["--run", cliTestPath, "--pool", "forks", "--maxWorkers", "1", "--no-isolate"]),
   );
 }
 
@@ -152,5 +157,5 @@ if (parallelExitCode !== 0) {
 }
 
 process.exit(
-  runVitest(["--run", cliTestPath, "--pool", "forks", "--poolOptions.forks.singleFork"]),
+  runVitest(["--run", cliTestPath, "--pool", "forks", "--maxWorkers", "1", "--no-isolate"]),
 );

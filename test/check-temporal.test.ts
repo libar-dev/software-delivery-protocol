@@ -1,4 +1,12 @@
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -95,6 +103,34 @@ describe("check:temporal", () => {
       writeFileSync(join(root, "generated", "control.txt"), bannedToken, "utf8");
 
       expect(runGuard(root).status).toBe(0);
+    });
+  });
+
+  it("accepts an in-repository directory symlink when its canonical files are tracked", () => {
+    withRoot((root) => {
+      mkdirSync(join(root, ".agents", "skills", "example"), { recursive: true });
+      mkdirSync(join(root, ".claude"), { recursive: true });
+      writeFileSync(
+        join(root, ".agents", "skills", "example", "SKILL.md"),
+        "repository-owned skill",
+        "utf8",
+      );
+      symlinkSync("../.agents/skills", join(root, ".claude", "skills"));
+      runGit(root, ["add", ".agents/skills/example/SKILL.md", ".claude/skills"]);
+
+      expect(runGuard(root).status).toBe(0);
+    });
+  });
+
+  it("fails closed when a tracked symlink escapes the repository", () => {
+    withRoot((root) => {
+      symlinkSync(tmpdir(), join(root, "external"));
+      runGit(root, ["add", "external"]);
+
+      const result = runGuard(root);
+
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).toContain("symlink external escapes the repository");
     });
   });
 

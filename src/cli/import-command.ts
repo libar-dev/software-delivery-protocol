@@ -2,6 +2,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { importFindingIds, importTypeScriptSpec } from "../index.js";
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type { Finding } from "../validate/contracts.js";
 import { publishImports } from "./import-publish.js";
 import type { ImportPublicationHooks, PlannedImport } from "./import-publish.js";
@@ -65,6 +67,13 @@ function targetExistsFinding(targetPath: string): Finding {
     file: targetPath,
   };
 }
+
+const sdpImportAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.sdp-import"),
+  label: "plans, refuses, and publishes TypeScript-to-Markdown Spec imports",
+  satisfies: ref("spec:carrier.sdp-import"),
+});
+void sdpImportAnchor;
 
 export function runImport(parsed: ImportArgs, output: CliOutput, hooks: ImportHooks = {}): number {
   const read = hooks.readFileSync ?? readFileSync;

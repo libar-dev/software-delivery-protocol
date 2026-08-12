@@ -4,6 +4,12 @@
 # User's scratchpad
 .tmp-scratch/
 
+# User-local editor state
+.vscode/
+
+# macOS Finder metadata
+.DS_Store
+
 # Tooling outputs
 node_modules/
 dist/

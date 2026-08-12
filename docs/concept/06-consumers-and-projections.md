@@ -58,7 +58,7 @@ This is the `claim` taxonomy (P9) elevated to two consumable surfaces: the curat
 
 **Do not derive the architecture from code.** Architectural significance is an editorial judgment no import graph can produce. So:
 
-- The divergence between the curated graph and the impact graph is **curation, not drift.** A curated graph that is a deliberately small curated selection of the mechanical firehose is *correct by design*.
+- The divergence between the curated graph and the impact graph is **curation, not drift.** A curated graph that selects architectural significance from the mechanical firehose is *correct by design*.
 - Never "densify" the curated graph by inferring edges from imports — that just rebuilds the language server and throws away the curation.
 - The impact graph has exactly one firehose job (impact / re-test scope) plus two *assist* roles that never overwrite the curated layer: **propose candidates** (e.g. high-fan-in modules with no node) and **flag unambiguous drift** (a `satisfies` target whose source file was deleted) — narrow, honest signals only.
 

@@ -53,7 +53,7 @@ export const extractionSpecs = [
         ],
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:extraction.excludes",
@@ -524,8 +524,48 @@ export const extractionSpecs = [
           "Validate the graph.",
           "Emit derived artifacts.",
         ],
+        exampleSpace: {
+          given: ["an extraction root containing the isolated spec {specId:string}"],
+          when: ["one query invocation reads the reader, raw graph, and validation report"],
+          then: [
+            "the query exits {exitCode:number}",
+            "both graph entrances return the spec {returnedSpecId:string}",
+            "the validation report names the same subject {findingSubjectId:string}",
+          ],
+        },
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:extraction.build-pipeline.same-invocation",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/build-pipeline.same-invocation.sdp.md",
+    title: "One query invocation shares its extracted graph and validation result",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Prove the query body receives a reader, raw graph, and validation report produced from the same invocation's extracted graph.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'an extraction root containing the isolated spec {specId: "spec:probe.same-invocation"}',
+            ],
+            when: ["one query invocation reads the reader, raw graph, and validation report"],
+            then: [
+              "the query exits {exitCode: 0}",
+              'both graph entrances return the spec {returnedSpecId: "spec:probe.same-invocation"}',
+              'the validation report names the same subject {findingSubjectId: "spec:probe.same-invocation"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
 ] as const;

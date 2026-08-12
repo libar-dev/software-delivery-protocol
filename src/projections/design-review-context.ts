@@ -1,4 +1,6 @@
 import { SPEC_READINESS } from "../model/descriptors.js";
+import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type { RelationEnd, SpecContext, VerifierBinding } from "../reader/reader.js";
 import type { Finding } from "../validate/contracts.js";
 import { escapeRenderedField } from "./owned-prose.js";
@@ -9,6 +11,13 @@ import {
   sourceHref,
   tableCell,
 } from "./design-review-markdown.js";
+
+const derivedReadinessBannerAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.derived-readiness-banner"),
+  label: "renders stated readiness beside the structural floor and dishonest divergence",
+  satisfies: ref("spec:consumers.derived-readiness-banner"),
+});
+void derivedReadinessBannerAnchor;
 
 export function renderReadiness(context: SpecContext): readonly string[] {
   const derived = context.derivedReadiness;
@@ -53,6 +62,13 @@ function describeVerifier(verifier: VerifierBinding): string {
     ? "**not enabled** (no test anchor binds this example — it confers no verifier binding)"
     : "**not enabled** (an off-contract `verifies` edge — it confers no verifier binding)";
 }
+
+const bindingLanguageSpecPageAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.binding-language-spec-page"),
+  label: "renders implementation, verifier, oracle, and observation binding language",
+  satisfies: ref("spec:consumers.binding-language-views"),
+});
+void bindingLanguageSpecPageAnchor;
 
 export function renderBindings(context: SpecContext, page: string): readonly string[] {
   const present = (fact: "implemented" | "has-verifier"): string =>
@@ -150,6 +166,13 @@ export function renderRelationsAndImpact(context: SpecContext, page: string): re
 
   return lines.length === 4 ? [] : lines;
 }
+
+const diagnosticDesignReviewAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.diagnostic-rendering-design-review"),
+  label: "renders structured finding locations in the Design Review table",
+  satisfies: ref("spec:validation.diagnostic-rendering"),
+});
+void diagnosticDesignReviewAnchor;
 
 export function renderFindings(findings: readonly Finding[]): readonly string[] {
   if (findings.length === 0) {

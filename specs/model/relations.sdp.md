@@ -17,5 +17,6 @@ relations:
 - **dependsOn** — A dependent Spec points to the Spec it needs.
 - **constrainedBy** — A bounded Spec points to its rule, constraint, or policy Spec.
 - **decidedBy** — A shaped Spec points to its Decision Record.
+- **typed dependency distinction** — `constrainedBy` and `decidedBy` preserve separately queryable intents that a generic `dependsOn` edge would flatten.
 - **verifies** — A verifier points to the Spec it verifies.
 - **supersedes** — A current Decision Record points forward to the decision it replaces.

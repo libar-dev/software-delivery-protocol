@@ -188,36 +188,46 @@ describe("the agent-surface recipe corpus", () => {
     );
   });
 
-  // Given: the on-ramp surfaces that document how to invoke the sink at this root. When: their
-  // `sdp q` command lines are read. Then: each names the project's whole exclusion set, because a
-  // partial set does not derive here and the documented command would fail as written.
-  it("documents the invocation with the same exclusions the check derives with", () => {
-    const onRampSources = [recipesPath, ".claude/skills/sdp-agent-surface/SKILL.md"];
+  // The self-hosting form pins this root's mandatory exclusions, while the adopter form keeps
+  // root and repeatable exclusions project-selected. The two contracts are checked separately so
+  // portability cannot weaken the root's real invocation.
+  it("keeps self-hosting and adopter invocation forms distinct", () => {
+    const onRampSources = [
+      recipesPath,
+      ".agents/skills/sdp-agent-surface/SKILL.md",
+      ".agents/skills/sdp-authoring/SKILL.md",
+      ".agents/skills/sdp-sessions/SKILL.md",
+    ];
+    const packageJson = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
+      scripts: Record<string, string>;
+    };
+    const localQuery = packageJson.scripts["sdp:q"] ?? "";
+
+    for (const path of standardExcludes) {
+      expect(localQuery).toContain(`--exclude ${path}`);
+    }
 
     for (const source of onRampSources) {
       const lines = readFileSync(join(repoRoot, source), "utf8").split("\n");
-      // A concrete invocation is one that carries a quoted body; the bare `sdp q [...]` usage
-      // grammar states the option shapes rather than a command to run, so it is not one.
-      const commandLines = lines.filter((line) => line.includes("sdp q '"));
+      const selfHostingLines = lines.filter((line) => line.startsWith("pnpm --silent sdp:q '"));
+      const adopterLines = lines.filter((line) => line.startsWith("pnpm exec sdp q '"));
 
-      expect({ source, documented: commandLines.length > 0 }).toEqual({ source, documented: true });
-      // The guard parses the single-quoted spelling only, so any other quoting would carry a
-      // documented invocation it cannot see — no other quoting may exist in the on-ramp files.
-      expect({ source, otherQuoting: lines.filter((line) => line.includes('sdp q "')) }).toEqual({
+      expect({ source, selfHosting: selfHostingLines.length > 0 }).toEqual({
         source,
-        otherQuoting: [],
+        selfHosting: true,
       });
+      expect({
+        source,
+        otherQuoting: lines.filter((line) => line.includes(' q "') && line.includes("sdp")),
+      }).toEqual({ source, otherQuoting: [] });
 
-      for (const line of commandLines) {
-        expect({
-          source,
-          line,
-          // A word boundary, not a substring: `--exclude examples/checkout` must not count as
-          // naming `examples`.
-          names: standardExcludes.filter((path) =>
-            new RegExp(`--exclude ${path}(?=[\\s'"]|$)`, "u").test(line),
-          ).length,
-        }).toEqual({ source, line, names: standardExcludes.length });
+      expect({ source, adopterForms: adopterLines.length }).toEqual({
+        source,
+        adopterForms: 2,
+      });
+      for (const line of adopterLines) {
+        expect(standardExcludes.some((path) => line.includes(`--exclude ${path}`))).toBe(false);
+        expect(line.match(/--exclude PATH/gu)?.length ?? 0).toBeLessThanOrEqual(2);
       }
     }
   });
@@ -246,23 +256,51 @@ describe("the agent-surface recipe corpus", () => {
     }
   });
 
-  it("returns a build backlog of stated-ready specs no code binds", async () => {
+  it("returns the non-example build backlog and audits excluded example evidence", async () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(1)));
     const byFamily = asRecord(result.byFamily);
     const entries = Object.values(byFamily).flatMap((family) => asArray(family));
 
     expect(numberAt(result, "total")).toBe(entries.length);
 
-    // Completeness, not just soundness: the rows must be exactly the graph's `ready ∧ ¬implemented`
-    // set, so a body that under-reports — an empty backlog over a corpus that has one — reddens.
+    // Completeness, not just soundness: the rows must be exactly the operational
+    // `ready ∧ kind≠example ∧ ¬implemented` set. The excluded example set is checked separately,
+    // so filtering it from backlog work cannot hide missing verification evidence.
     const expected = [...primitivesById.values()]
       .filter(
-        (node) => node.readiness === "ready" && !(node.deliveryFacts ?? []).includes("implemented"),
+        (node) =>
+          node.readiness === "ready" &&
+          node.specKind !== "example" &&
+          !(node.deliveryFacts ?? []).includes("implemented"),
       )
       .map((node) => node.id)
       .sort();
 
     expect(entries.map((entry) => stringAt(asRecord(entry), "id")).sort()).toEqual(expected);
+
+    const excluded = [...primitivesById.values()].filter(
+      (node) =>
+        node.readiness === "ready" &&
+        node.specKind === "example" &&
+        !(node.deliveryFacts ?? []).includes("implemented"),
+    );
+    const excludedWithoutVerifier = excluded
+      .filter((node) => !(node.deliveryFacts ?? []).includes("has-verifier"))
+      .map((node) => node.id)
+      .sort();
+
+    expect(numberAt(result, "excludedReadyExamples")).toBe(excluded.length);
+    expect(
+      asArray(result.excludedWithoutVerifier)
+        .map((id) => {
+          if (typeof id !== "string") {
+            throw new Error(`expected an excluded example id, got ${JSON.stringify(id)}`);
+          }
+
+          return id;
+        })
+        .sort(),
+    ).toEqual(excludedWithoutVerifier);
   });
 
   it("returns a drift alarm of code-bound specs below ready, with the floor named", async () => {
@@ -414,5 +452,71 @@ describe("the agent-surface recipe corpus", () => {
       expect(["conformance", "honesty"]).toContain(stringAt(row, "family"));
       expect(stringAt(row, "message").length).toBeGreaterThan(0);
     }
+  });
+
+  it("returns promotion preflight without conferring a readiness edit", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(9)));
+
+    expect(result.found).toBe(true);
+    expect(primitivesById.has(stringAt(result, "id"))).toBe(true);
+    expect(rungs).toContain(stringAt(result, "statedReadiness"));
+    expect([...rungs, "none"]).toContain(stringAt(result, "floorReached"));
+    expect(result.promotionRequiresHumanStatement).toBe(true);
+    expect(Array.isArray(result.currentFloorFailures)).toBe(true);
+  });
+
+  it("keeps declared examples distinct from enabled verifier bindings", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(10)));
+    const rows = asArray(result.rows);
+    // The completeness predicate mirrors the recipe's row predicate exactly: a spec whose only
+    // binding is an off-contract (not-enabled, non-example) verify edge lawfully produces no row.
+    const expected = reader
+      .specs()
+      .filter((spec) => {
+        const verifiers = reader.specContext(spec.id)?.verifiers ?? [];
+
+        return verifiers.some((binding) => binding.via === "example" || binding.enabled);
+      })
+      .map((spec) => spec.id)
+      .sort();
+
+    expect(numberAt(result, "total")).toBe(rows.length);
+    expect(rows.map((row) => stringAt(asRecord(row), "id")).sort()).toEqual(expected);
+
+    let withDeclaredOnly = 0;
+
+    for (const row of rows) {
+      const record = asRecord(row);
+      const id = stringAt(record, "id");
+      const verifiers = reader.specContext(id)?.verifiers ?? [];
+      const declared = verifiers
+        .filter((binding) => binding.via === "example")
+        .map((binding) => binding.verifierId);
+      const enabled = verifiers
+        .filter((binding) => binding.enabled)
+        .map((binding) => binding.verifierId);
+
+      expect(asArray(record.declared)).toEqual(declared);
+      expect(asArray(record.enabled)).toEqual(enabled);
+
+      if (declared.some((verifierId) => !enabled.includes(verifierId))) {
+        withDeclaredOnly += 1;
+      }
+    }
+
+    expect(numberAt(result, "withDeclaredOnly")).toBe(withDeclaredOnly);
+  });
+
+  it("returns the complete non-ready ladder grouped by family", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(11)));
+    const rows = Object.values(asRecord(result.byFamily)).flatMap((family) => asArray(family));
+    const expected = reader
+      .specs()
+      .filter((spec) => spec.statedReadiness !== "ready")
+      .map((spec) => spec.id)
+      .sort();
+
+    expect(numberAt(result, "total")).toBe(rows.length);
+    expect(rows.map((row) => stringAt(asRecord(row), "id")).sort()).toEqual(expected);
   });
 });

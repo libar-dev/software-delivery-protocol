@@ -21,6 +21,7 @@ export const validationSpecs = [
           "The `scoped` floor adds three clauses: the intended outcome is stated, at least one authored relation is declared, and the kind's natural evidence is present.",
           "The `defined` floor adds two clauses: the kind's natural evidence is complete, and no open question the Spec records is flagged as blocking.",
           "The `ready` floor reads the Spec's own edges through three clauses: every authored relation resolves to a known target, every `refines` and `dependsOn` target itself stands at least `defined`, and every anchor bound to the Spec resolves.",
+          "Readiness is independent across a refinement relation: a child may be authored at a higher readiness than its parent. Only the child's own cumulative floor applies, including the `ready` target bound above when the child states `ready`.",
           "The anchor clause reads the bindings that are present, so a Spec carrying no anchor clears it — the floor never demands a binding an author has not made.",
           "Only relations the Spec itself declares count toward the relation clauses; membership of a Pack is derived from the manifest and never stands in for an authored relation.",
           "Every clause stated here is kind-blind. The two evidence clauses are the one kind-conditional place in the floor, and what counts as a kind's natural evidence is stated in full by the refining Spec that carries the per-kind evidence table.",
@@ -147,7 +148,7 @@ export const validationSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.kind-evidence.constraints-alone",
@@ -404,7 +405,7 @@ export const validationSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.referential-integrity.dangling-target",
@@ -499,7 +500,7 @@ export const validationSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.claim-separation.collapsed-edge-claim",
@@ -597,7 +598,7 @@ export const validationSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.verification-linkage.unbound-example",
@@ -661,6 +662,100 @@ export const validationSpecs = [
     deliveryFacts: ["has-verifier"],
   },
   {
+    id: "spec:validation.oracle-target-eligibility",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/oracle-target-eligibility.sdp.md",
+    title: "Oracle eligibility follows example-space ownership",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let an expected-outcome oracle model any Spec whose own law defines an example space, regardless of Spec kind.",
+      },
+      behavior: {
+        rules: [
+          "Oracle target eligibility follows ownership of an example space, not a behavior-kind check.",
+          "A resolving binding is an anchored `models` edge from an `oracle:` Anchor to a Spec that owns an example space.",
+          "Missing targets, wrong namespaces, absent example spaces, and competing oracles remain fail-closed refusals.",
+          "Validators and graph readers consume the same eligibility result.",
+        ],
+        exampleSpace: {
+          given: [
+            'the oracle targets a {targetKind:"behavior"|"rule"} spec',
+            "the target owns an example space: {ownsExampleSpace:boolean}",
+          ],
+          when: ["oracle linkage is resolved"],
+          then: [
+            "oracle linkage reports {findingCount:number} findings and resolving presence {oraclePresent:boolean}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:validation.oracle-target-eligibility.rule-space-accepted",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/oracle-target-eligibility.rule-space-accepted.sdp.md",
+    title: "A rule owning an example space accepts an oracle",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute kind-neutral oracle resolution for a rule that owns the vocabulary its oracle models.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the oracle targets a {targetKind: "rule"} spec',
+              "the target owns an example space: {ownsExampleSpace: true}",
+            ],
+            when: ["oracle linkage is resolved"],
+            then: [
+              "oracle linkage reports {findingCount: 0} findings and resolving presence {oraclePresent: true}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.oracle-target-eligibility.missing-space-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/oracle-target-eligibility.missing-space-refused.sdp.md",
+    title: "A target without an example space refuses an oracle",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the fail-closed refusal when an otherwise valid Spec target owns no example space.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the oracle targets a {targetKind: "behavior"} spec',
+              "the target owns an example space: {ownsExampleSpace: false}",
+            ],
+            when: ["oracle linkage is resolved"],
+            then: [
+              "oracle linkage reports {findingCount: 1} findings and resolving presence {oraclePresent: false}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
     id: "spec:validation.pack-coherence",
     specKind: "rule",
     altitude: "story",
@@ -677,6 +772,7 @@ export const validationSpecs = [
         rules: [
           "Pack membership must not repeat a Spec, and every modelRef must resolve to a model-kind Spec.",
           "Membership is counted on the derived belongsTo edges the manifest re-expresses, so a repeated manifest entry is named once per repeated member.",
+          "There is no duplicated-intent check on a Pack: a Pack states no system truth to duplicate, and semantic overlap among its members remains human or agent review rather than validator judgment. This lets a coherent group contain low-detail Specs without turning grouping into implementation demand.",
           "The realizing validator entrypoint is `checkPackCoherence` in `src/validate/validators.ts`.",
         ],
         exampleSpace: {
@@ -692,7 +788,7 @@ export const validationSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.pack-coherence.incoherent-aggregate",
@@ -755,7 +851,7 @@ export const validationSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.authored-honesty.section-authored-fact",
@@ -852,7 +948,7 @@ export const validationSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.warn-level-signals.orphan-signal",
@@ -952,7 +1048,7 @@ export const validationSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.diagnostic-rendering.composed-location",

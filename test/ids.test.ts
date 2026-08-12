@@ -59,16 +59,16 @@ describe("ids", () => {
   });
 
   it.each(invalidIds)("rejects malformed IDs: %s", (value) => {
-    expect(() => parseId(value)).toThrowError(value);
+    expect(() => parseId(value)).toThrow(value);
   });
 
   it("rejects wrong namespaces in helper branding", () => {
-    expect(() => specId("pack:checkout-v1")).toThrowError('expected namespace "spec"');
-    expect(() => packId("spec:orders.create-order")).toThrowError('expected namespace "pack"');
-    expect(() => codeAnchorId("test:orders.create-order.valid-cart")).toThrowError(
+    expect(() => specId("pack:checkout-v1")).toThrow('expected namespace "spec"');
+    expect(() => packId("spec:orders.create-order")).toThrow('expected namespace "pack"');
+    expect(() => codeAnchorId("test:orders.create-order.valid-cart")).toThrow(
       'expected one of the namespaces "impl" · "api" · "component"',
     );
-    expect(() => testAnchorId("impl:orders.create-order-use-case")).toThrowError(
+    expect(() => testAnchorId("impl:orders.create-order-use-case")).toThrow(
       'expected namespace "test"',
     );
   });

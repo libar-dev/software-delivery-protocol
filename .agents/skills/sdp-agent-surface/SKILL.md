@@ -15,18 +15,38 @@ evaluation sink. There is no verb wall — you script the graph.
 
 For any corpus question, **query the graph before reading spec files**.
 
+In an adopter, use the repository's package runner or its documented wrapper script. Select that
+repository's root and repeat only the exclusions its corpus needs:
+
 ```sh
-sdp q 'return g.specs().length' --exclude explorations --exclude examples --exclude test/fixtures/import/parity
-sdp q 'return g.specContext("spec:consumers.reader")' --exclude explorations --exclude examples --exclude test/fixtures/import/parity --json
+pnpm exec sdp q 'return g.specs().length' --root PATH --exclude PATH
+pnpm exec sdp q 'return g.specContext("spec:example.id")' --root PATH --exclude PATH --json
 ```
 
-Those three exclusions are this repository's own and they are **required here**: the corpus carries
-deliberate duplicate-id and carrier-parity fixtures, so without them the graph does not derive and
-the sink refuses to run the body. They are the same list `npm run generate:self-hosting` passes.
+`PATH` is a placeholder, not a universal exclusion. For example, the origin adopter uses its
+`pnpm sdp:q` wrapper and excludes only `deps-packages`.
 
-The catalog of ready-made bodies is `docs/agent-surface/recipes.md` — build backlog, drift alarm,
-per-Spec guarantees and verifiers, blast radius, Pack review backbone, concept search, readiness
-divergence, warn-level signals. Every body there runs verbatim and a test proves it. Start from a
+When working in the **Protocol source checkout itself**, use its repository script, which supplies
+the exact three fixture exclusions:
+
+```sh
+pnpm --silent sdp:q 'return g.specs().length'
+pnpm --silent sdp:q 'return g.specContext("spec:consumers.reader")' --json
+```
+
+Those exclusions are required only for the Protocol source tree: it carries deliberate
+duplicate-id and carrier-parity fixtures. They are the same list `npm run generate:self-hosting`
+passes. Run `npm run build` first if `dist/` is absent. Do not use `pnpm exec` in this source
+checkout: `exec` resolves dependency binaries, while this package does not link itself into its
+own `node_modules/.bin`; an unresolved `sdp` can select macOS's unrelated binary. Do not invoke a
+global `sdp` either.
+
+The catalog contains eleven ready-made bodies in `docs/agent-surface/recipes.md` in the Protocol
+repository and
+`node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an adopter —
+build backlog, drift alarm, per-Spec guarantees and verifiers, blast radius, Pack review backbone,
+concept search, readiness divergence, warn-level signals, promotion preflight, declared-versus-enabled
+verifiers, and the lower ladder. Every body there runs verbatim and a test proves it. Start from a
 recipe; adapt it in place.
 
 Reach for the files only when you need the authored prose itself — the exact words to edit.
@@ -74,6 +94,9 @@ read the carrying Spec.
   Pass, fail, skip, and quarantine are CI's.
 - **Do not read `implemented` as "it is live."** It says a code anchor binds to the Spec. Runtime
   evidence would be `observed`, which is not tracked.
+- **Do not use raw `ready ∧ ¬implemented` as the operational backlog.** Under the example realization
+  posture it also includes ready example evidence; recipe 1 excludes examples and reports their
+  verifier health without inventing inherited implementation.
 - **Do not collapse the claim taxonomy.** `declared` is authored intent, `anchored` is a human
   binding from source, `inferred` is machine-derived structure. Carry the claim into your answer.
 - **Do not treat stated readiness as derived readiness.** `statedReadiness` is the author's

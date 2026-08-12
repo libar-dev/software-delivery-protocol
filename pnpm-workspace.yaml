@@ -1,0 +1,3 @@
+# pnpm 11 otherwise tries to reconcile this package-lock-based checkout before `pnpm run` or
+# `pnpm exec`. Running a repository script must not mutate the dependency tree.
+verifyDepsBeforeRun: false

@@ -7,6 +7,7 @@ import { afterEach, expect } from "vitest";
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
 
+import { sameInvocationContract } from "../generated/contracts/extraction.build-pipeline.same-invocation.contract.js";
 import { refusedPathContract } from "../generated/contracts/extraction.excludes.refused-path.contract.js";
 import { segmentBoundaryContract } from "../generated/contracts/extraction.excludes.segment-boundary.contract.js";
 import { caseCollidingPathContract } from "../generated/contracts/extraction.executable-contracts.case-colliding-path.contract.js";
@@ -22,6 +23,8 @@ import { deriveGraph, generateContracts, refines, spec, specId } from "../src/in
 import type { GeneratedContracts, GraphSchema, Spec } from "../src/index.js";
 import { planExample, runExamplePlan } from "../src/runner/index.js";
 import type { ExampleContract, StepKind } from "../src/runner/index.js";
+import { runSdpCli } from "../src/cli/sdp.js";
+import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
 /**
@@ -45,6 +48,105 @@ afterEach(() => {
   }
   temporaryRoots.clear();
 });
+
+/* ----- spec:extraction.build-pipeline ----- */
+
+interface SameInvocationWorld {
+  readonly root: string;
+  exitCode: number | undefined;
+  answer:
+    | {
+        readonly reader: readonly string[];
+        readonly graph: readonly string[];
+        readonly findingSubjects: readonly string[];
+      }
+    | undefined;
+}
+
+function sameInvocationWorld(): SameInvocationWorld {
+  const root = mkdtempSync(join(tmpdir(), "sdp-same-invocation-"));
+  temporaryRoots.add(root);
+
+  return { root, exitCode: undefined, answer: undefined };
+}
+
+const sameInvocationBindings = {
+  "an extraction root containing the isolated spec {specId}": (
+    world: SameInvocationWorld,
+    params: { readonly specId: string },
+  ) => {
+    writeFileSync(
+      join(world.root, "probe.sdp.md"),
+      `---
+id: ${params.specId}
+kind: behavior
+altitude: story
+readiness: idea
+relations: {}
+---
+# Same-invocation probe
+
+## Intent
+- outcome: Exist only for the query seam point.
+`,
+      "utf8",
+    );
+  },
+  "one query invocation reads the reader, raw graph, and validation report": async (
+    world: SameInvocationWorld,
+  ) => {
+    const capture = createCaptureOutput();
+    const body = `
+      return {
+        reader: g.specs().map((spec) => spec.id),
+        graph: graph.nodes.filter((node) => node.nodeType === "Primitive").map((node) => node.id),
+        findingSubjects: report.findings.map((finding) => finding.subjectId),
+      };
+    `;
+
+    world.exitCode = await runSdpCli(["q", body, "--root", world.root, "--json"], capture.output, {
+      query: {
+        isStdinTty: () => true,
+        readStdin: () => {
+          throw new Error("the point supplies its body on argv");
+        },
+      },
+    });
+    const stderr = capture.readStderr();
+    const stdout = capture.readStdout();
+
+    expect({ exitCode: world.exitCode, stderr }).toEqual({ exitCode: 0, stderr: "" });
+    world.answer = JSON.parse(stdout) as SameInvocationWorld["answer"];
+  },
+  "the query exits {exitCode}": (
+    world: SameInvocationWorld,
+    params: { readonly exitCode: number },
+  ) => {
+    expect(world.exitCode).toBe(params.exitCode);
+  },
+  "both graph entrances return the spec {returnedSpecId}": (
+    world: SameInvocationWorld,
+    params: { readonly returnedSpecId: string },
+  ) => {
+    expect(world.answer?.reader).toEqual([params.returnedSpecId]);
+    expect(world.answer?.graph).toEqual([params.returnedSpecId]);
+  },
+  "the validation report names the same subject {findingSubjectId}": (
+    world: SameInvocationWorld,
+    params: { readonly findingSubjectId: string },
+  ) => {
+    expect(world.answer?.findingSubjects).toContain(params.findingSubjectId);
+  },
+};
+
+const buildPipelineSameInvocationTestAnchor = specTest({
+  id: testAnchorId("test:protocol.build-pipeline.same-invocation"),
+  label: "the same-invocation point verifies the query extraction and validation seam",
+  verifies: ref("spec:extraction.build-pipeline.same-invocation"),
+});
+void buildPipelineSameInvocationTestAnchor;
+
+bindExample(sameInvocationContract, sameInvocationWorld, sameInvocationBindings);
 
 /* ----- spec:extraction.excludes ----- */
 
