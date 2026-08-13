@@ -1,9 +1,10 @@
 # Plan 27 — Executable-verification design review, with the v0 design restored
 
-> **Status:** ⏳ DRAFTED 2026-08-13 — review the executable-verification design against the
-> restored v0 concept set and gen-1 production evidence; restore the deleted v0 documents into a
-> dedicated lineage folder so the review reads them, not git archaeology. PLAN-ONLY until
-> approved: no target files change in the drafting session.
+> **Status:** ✅ EXECUTED 2026-08-13 — restored the ten-file v0 concept set as lineage
+> evidence, reviewed it against gen-1 and the current executable path, and costed six
+> unification options. The review recommended derived runnable tests (O3); at the owner
+> checkpoint O2 won. The Gherkin carrier option (MD-27) is born-ready and the realization
+> work is drafted in plan 28.
 
 ## Context
 
@@ -121,9 +122,60 @@ Adjudicate, with citations, in a review document under `reviews/` (numbered next
 
 ## Verification
 
-1. Phase 0: the nine restored files are byte-identical to `ed5f6ad^` below their lineage
+1. Phase 0: the ten restored files are byte-identical to `ed5f6ad^` below their lineage
    headers; `npm run check` green; the graph is untouched (corpus counts unchanged).
 2. Phase 2: every load-bearing claim in the review carries a file:line citation into the
    restored folder, the gen-1 checkout, or this repo's Specs.
 3. Phase 3: the outcome is either a born-ready decision Spec plus follow-on plan, or a review
    record explaining why the standing design held.
+
+## Done record
+
+### Restoration
+
+- `docs/lineage/v0-design/` contains all ten v0 concept documents from `ed5f6ad^`, each with
+  the six-line lineage header. Every body was compared byte-for-byte after the header.
+- `docs/lineage/README.md` records why the live `CONTEXT.md` and the superseded intermediate
+  `GLOSSARY.md` were not restored.
+- `check-temporal.mjs` excludes the lineage genre explicitly; `.prettierignore` already
+  excludes `docs/**`. The corpus stayed at 133 Specs before and after restoration.
+- Restoration commit: `778ce2a` (`docs(lineage): restore the v0 concept set for review`).
+
+### Review and decision
+
+- `reviews/14-executable-verification-design-review.md` carries the v0, gen-1, and current
+  digests; both thesis readings; the executable-example ergonomics audit; six fully costed
+  options; and the ADR three-part test. Its 117 machine-detected file:line citation tokens
+  resolved at execution, and the load-bearing source ranges were re-read.
+- The review recommendation was O3: derive the runnable wrapper while preserving code-side
+  semantics. The owner selected O2 at the required checkpoint: a Gherkin-like canonical
+  carrier option for behavior and example Specs over the existing generated-contract path.
+- The Gherkin carrier option (MD-27) is carried by
+  `spec:decisions.gherkin-carrier-option`, stated and derived `ready`, in the self-hosting
+  Pack with zero floor failures or findings. The carrier ruling remains historical; the
+  concept clause and MD-18 registry gloss re-point to MD-27.
+- `plans/28-gherkin-carrier-option.md` owns the bounded parser, parity, refusal,
+  executable-contract tracer bullet, and guidance work. No Gherkin engine behavior is
+  claimed landed by this review plan.
+
+### Premise corrections
+
+1. `570996c` renamed `docs/concept/ubiquitous-language.md` to root `CONTEXT.md`; it did not
+   delete it. `GLOSSARY.md` was a post-reboot intermediate superseded by that vocabulary.
+2. The v0 set is ten files because its `README.md` carries the original product framing.
+3. The lawful gate treatment is a named `docs/lineage/` temporal-genre exclusion; scrubbing
+   the verbatim bodies would violate byte identity.
+4. R3 has no registry row. Its live carriers remain `docs/concept/04-authoring-and-binding.md`
+   and `src/model/anchors.ts`; repairing that separate registry gap stayed out of scope.
+5. Restored-file citations include the six-line lineage-header offset.
+
+### Verification
+
+- Phase 0: ten of ten bodies byte-identical; `npm run check` green with the restored files
+  staged; the Spec count remained 133.
+- Review: 117 citation tokens resolved to existing files and in-range lines;
+  `npm run check:temporal && npm run format:check` passed with the lineage and review present.
+- Decision: `sdp q` returned the new decision at stated/derived `ready`, in
+  `pack:self-hosting-v1`, with its declared `refines` edge resolved and zero findings.
+- Close: final `npm run check` evidence is recorded by the closeout commit carrying this
+  done record.

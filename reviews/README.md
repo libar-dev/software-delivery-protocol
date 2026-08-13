@@ -20,6 +20,7 @@ in the finished Protocol, review artifacts become graph projections.
 | `10-self-hosting-phase-4-pre-close-review.md` | the phase-4 pre-close adversarial review (22 independently designed mutations against the ten new points and the oracle split, with the discrimination rule enforced; caught the false "verified — intact" row) | `plans/21`'s done-record; disposition column terminal in the review itself |
 | `11-self-hosting-phase-5-pre-close-review.md` | the phase-5 pre-close adversarial review (eleven engine mutations + three at the recipe check + 31 CLI probes; F-1…F-11 all terminal — seven fixed on the branch) | `plans/22` §9 S6 row (tally corrected at §10) |
 | `12-self-hosting-phase-5-post-close-review.md` | the phase-5 post-close multi-agent review over the PR description and all five phases' plans and PR descriptions (six dimensions, 23 adversarially verified findings: engine, tests, records, verbosity) | `plans/22` §10 and the fixes on the branch; disposition column terminal in the review itself |
+| `14-executable-verification-design-review.md` | the executable-verification design review against the restored v0 set and the gen-1 production record (thesis challenge: one spec format vs separate `.test` verifiers) | the Gherkin carrier option (MD-27) selected O2 for behavior/example Specs; `plans/28` carries realization |
 
 The gen-1 (`@libar-dev/architect`) formal-spec study from the same arc was chat-only; its takeaway is
 formalized in `plans/04` §0/§2 ("lineage is evidence, not template" — no patterns transferred).

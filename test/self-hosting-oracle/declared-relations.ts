@@ -505,4 +505,5 @@ export const expectedDeclaredRelations = [
     "spec:carrier.markdown-pack-authoring",
   ],
   ["spec:decisions.decision-readiness-posture", "refines", "spec:validation.warn-level-signals"],
+  ["spec:decisions.gherkin-carrier-option", "refines", "spec:decisions.carrier-ruling"],
 ] as const;

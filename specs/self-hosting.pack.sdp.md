@@ -134,6 +134,7 @@ specs:
   - spec:decisions.example-realization-posture
   - spec:decisions.pack-markdown-carrier
   - spec:decisions.decision-readiness-posture
+  - spec:decisions.gherkin-carrier-option
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model

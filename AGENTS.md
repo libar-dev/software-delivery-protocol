@@ -16,15 +16,16 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
-> **Status:** the authoring **carrier is ruled** as `.sdp.md`: Specs and Packs default to Markdown;
-> the TS DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18,
-> completed by the Pack syntax ruling, MD-25). **plan 27 is DRAFTED** — the executable-verification
-> design review; per the convention below, settled ground is **plan 26 is EXECUTED** — native
-> Packs, annotation completion, decision readiness, and honest element-absence dispositions are
-> settled. Plan 25
-> recovered the guidance layer and packaged the `sdp-sessions` on-ramp; plan 24's inward turn
-> remains the standing practice: forward intent lives in the graph, so the live backlog is a graph
-> query, not a document. Corpus counts,
+> **Status:** Specs and Packs default to the Markdown carrier; the TS DSL survives as import
+> source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax
+> ruling, MD-25). The Gherkin carrier option (MD-27) now admits a graph-aware lawful per-ID
+> option for behavior and example Specs while preserving generated-contract execution and
+> binding-only anchors. **plan 28 is DRAFTED** — realize that bounded carrier pipeline; settled
+> ground is **plan 27 is EXECUTED** — the v0 set is restored as lineage evidence and the
+> executable-verification review selected the Gherkin option. Plan 26 completed native Packs,
+> annotation coverage, and decision readiness. Plan 25 recovered the guidance layer and packaged
+> the `sdp-sessions` on-ramp; plan 24's inward turn remains the standing practice: forward intent
+> lives in the graph, so the live backlog is a graph query, not a document. Corpus counts,
 > readiness, and findings are **derived, never quoted** — re-run
 > `pnpm --silent sdp validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity`
 > (or `npm run --silent sdp --` with the same argv) and read recipes 8 and 11. Recipe 1 is the

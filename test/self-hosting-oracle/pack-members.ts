@@ -135,4 +135,5 @@ export const expectedPackMembers = [
   "spec:decisions.example-realization-posture",
   "spec:decisions.pack-markdown-carrier",
   "spec:decisions.decision-readiness-posture",
+  "spec:decisions.gherkin-carrier-option",
 ] as const;
