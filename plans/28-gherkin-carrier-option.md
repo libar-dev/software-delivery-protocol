@@ -1,6 +1,6 @@
 # Plan 28 — Gherkin carrier option for behavior and example Specs
 
-> **Status:** 🔨 EXECUTING 2026-08-13 — approved implementation of the Gherkin carrier option (MD-27); drafted 2026-08-13. This plan owns parser, graph parity, executable-contract proof, migration, and guidance.
+> **Status:** ✅ EXECUTED 2026-08-13 — the Gherkin carrier option (MD-27) is realized for behavior and example Specs with one graph, generated-contract execution, and binding-only delivery facts.
 
 ## Context
 
@@ -114,15 +114,42 @@ F5. Stamp this plan `EXECUTED`, update the repository status block, and record t
 6. **Determinism:** repeated builds emit byte-identical graph, contracts, and Design Review output.
 7. **Green gate:** `npm run check` passes with the Gherkin tracer bullet in the self-hosting corpus.
 
-## Done-record template
+## Done record
 
-Fill at close:
-
-- commits:
-- carrier Spec and examples:
-- migrated IDs:
-- graph-parity evidence:
-- refusal mutations:
-- executable mutation:
-- graph/readiness/verifier measurements:
-- final gate:
+- **Commits:** `1b543a0` carrier contract; `e6699d2` parser/discovery; `ed14eac` parity,
+  honesty, executable examples, and mutation evidence; `884a7f2` reader-family migration;
+  `98ae590` CLI/guidance; `6556fde` readiness promotion; `d321208` implementation binding.
+- **Carrier Spec and examples:** `spec:carrier.gherkin-authoring` plus ten ready example Specs cover
+  parent/child extraction, example-space extraction, Markdown parity, missing identity, unsupported
+  constructs, unknown tags, authored facts, malformed relations, readiness-floor reuse, and
+  duplicate-surface refusal. All eleven have enabled verifiers; the parent also has the
+  `impl:protocol.gherkin-authoring` code anchor.
+- **Migrated IDs:** `spec:consumers.reader`, `.concept-entry`, `.file-entry`, and
+  `.changeset-entry` moved from four Markdown files to one `specs/consumers/reader.feature` without
+  changing IDs, sections, relations, contracts, handlers, or anchors.
+- **Graph-parity evidence:** `npx vitest run test/gherkin-parity.test.ts` proved the Markdown and
+  Gherkin twins serialize equally after normalizing only the carrier filename; two derivations and
+  generated-contract sets were byte-identical. Migrating the reader family left
+  `generated/contracts/consumers.reader.*` byte-identical.
+- **Refusal mutations:** removing `@spec.` decoding reddened the parent/child graph assertions;
+  accepting `@implemented` reddened `authored-fact-refused`; mapping `@depends-on.` to `refines`
+  reddened the exact relation assertion; retaining duplicate `.feature` sites reddened the
+  duplicate example's zero-node/zero-edge assertions; reversing serializer order reddened the
+  repeated-extraction byte comparison. Every mutation was reverted.
+- **Executable mutations:** changing the migrated concept point from `{matchCount: 1}` to
+  `{matchCount: 2}` reddened its named runner case with the authored step text. Renaming
+  `{concept:string}` to `{topic:string}` removed `ReaderConditions.concept`; renaming a Then
+  vocabulary line removed the referenced `ReaderOutcome` member. Both made `npm run typecheck`
+  fail and were reverted.
+- **Measurements:** the opening recipe-8/11 baseline was 0 errors, 0 warnings, and 18 lower-ladder
+  Specs. Promotion preflight found all eleven Gherkin Specs at stated `defined`, floor reached
+  `ready`, with no floor failures. At close: 145 Specs, 1 Pack, 135 anchors, 281 nodes, 530 edges;
+  readiness `{ ready: 127, defined: 14, idea: 3, scoped: 1 }`; recipe 1 backlog 0, 63 excluded
+  ready examples, 27 excluded ready decisions, and no excluded example without a verifier;
+  recipe 8 remained 0 errors/0 warnings; recipe 10 had no declared-only verifier; recipe 11
+  returned 18. The measured anchor/node/edge totals are one above the planning estimate because
+  the Gherkin implementation now carries its required code anchor.
+- **Final gate:** the Phase-F targeted command passed 6 files / 75 tests, `npm run typecheck`
+  passed, and the built CLI smoke derived the complete corpus. `npm run check` then passed from the
+  complete tree, including 52 files / 666 tests, self-hosting gates, self-hosting validation,
+  example validation, and preflight.

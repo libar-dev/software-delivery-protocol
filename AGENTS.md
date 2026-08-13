@@ -20,9 +20,10 @@ code behavior into intent.
 > source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax
 > ruling, MD-25). The Gherkin carrier option (MD-27) now admits a graph-aware lawful per-ID
 > option for behavior and example Specs while preserving generated-contract execution and
-> binding-only anchors. **plan 28 is EXECUTING** — realizing that bounded carrier pipeline;
-> settled ground remains **plan 27 is EXECUTED** — the v0 set is restored as lineage evidence and the
-> executable-verification review selected the Gherkin option. Plan 26 completed native Packs,
+> binding-only anchors. **plan 28 is EXECUTED** — the bounded carrier pipeline, parity proof,
+> reader-family tracer bullet, and guidance are complete; settled ground remains **plan 27 is
+> EXECUTED** — the v0 set is restored as lineage evidence and the executable-verification review
+> selected the Gherkin option. Plan 26 completed native Packs,
 > annotation coverage, and decision readiness. Plan 25 recovered the guidance layer and packaged
 > the `sdp-sessions` on-ramp; plan 24's inward turn remains the standing practice: forward intent
 > lives in the graph, so the live backlog is a graph query, not a document. Corpus counts,
