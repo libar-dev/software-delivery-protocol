@@ -145,11 +145,11 @@ function walkDirectory(
 }
 
 /**
- * One walk, two surfaces: every `*.sdp.ts` and `*.sdp.md` under the extraction root (the declared
- * layer) and every other `*.ts`/`*.tsx` source file (the anchor candidates), minus tooling-output
- * directories and dot-directories. Both lists are sorted (code-unit, on the root-relative path)
- * so diagnostics never depend on filesystem enumeration order; output-byte ordering is owned by
- * the serializer regardless.
+ * One walk, two surfaces: every `*.sdp.ts`, `*.sdp.md`, and `*.feature` under the extraction root
+ * (the declared layer) and every other `*.ts`/`*.tsx` source file (the anchor candidates), minus
+ * tooling-output directories and dot-directories. Both lists are sorted (code-unit, on the
+ * root-relative path) so diagnostics never depend on filesystem enumeration order; output-byte
+ * ordering is owned by the serializer regardless.
  */
 export function discoverFiles(root: string, exclude?: readonly string[]): DiscoveredFiles {
   const state: DiscoveryState = {

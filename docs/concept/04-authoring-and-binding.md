@@ -148,9 +148,9 @@ The **carrier-independent executable machinery is landed (CORE)**; what stays de
 - **The oracle.** The authored expected-outcome semantics for a parent's example space — implementation-side, beside the tests, bound by the `specOracle` anchor (§2), never extracted. Typed against the generated space contract on both sides: a renamed slot fails to compile, claiming an outcome the specs never stated is a `tsc` error, and `unspecified` is a first-class answer.
 - **The execution half.** The framework-neutral `/runner` core plus the `/vitest` adapter subpath (vitest an optional peer of the adapter alone); failure messages render in the spec's own language.
 
-### Annotated Gherkin (RULED — implementation pending)
+### Annotated Gherkin (RULED AND REALIZED)
 
-`.feature`-style files with graph-aware syntax as an equal-canonicity surface for behavior and example Specs, for teams that prefer BDD. Markdown remains the default under the carrier ruling (MD-18); the Gherkin carrier option (MD-27) re-points the formerly declined contender as a lawful per-ID option for those two kinds only. Each ID still has one canonical surface with no mixing, and the syntax maps onto the existing envelope, sections, relations, and notation rather than creating a parallel lifecycle or tag registry. Execution stays behind the generated contracts and anchored code-side handlers above: the machinery is carrier-independent by construction. The option is intended truth now; its parser, parity rules, lint, and refusal behavior remain unrealized until the follow-on build plan lands.
+`.feature` files with graph-aware syntax are an equal-canonicity surface for behavior and example Specs, for teams that prefer BDD. Markdown remains the default under the carrier ruling (MD-18); the Gherkin carrier option (MD-27), realized by `spec:carrier.gherkin-authoring`, re-points the formerly declined contender as a lawful per-ID option for those two kinds only. Each ID still has one canonical surface with no mixing, and the syntax maps onto the existing envelope, sections, relations, and notation rather than creating a parallel lifecycle or tag registry. Execution stays behind the generated contracts and anchored code-side handlers above: the machinery is carrier-independent by construction.
 
 ### Interactive harnesses (ASPIRATIONAL — a projection plus one anchored oracle)
 

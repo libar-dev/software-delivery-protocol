@@ -27,9 +27,9 @@ export const extractValidatorId = "extract";
 
 export interface ExtractOptions {
   /**
-   * The extraction root: every `*.sdp.ts` and `*.sdp.md` below it (minus tooling output) is read
-   * as the declared layer, and every other `*.ts`/`*.tsx` source file is swept for anchor
-   * constants (the anchored layer).
+   * The extraction root: every `*.sdp.ts`, `*.sdp.md`, and `*.feature` below it (minus tooling
+   * output) is read as the declared layer, and every other `*.ts`/`*.tsx` source file is swept for
+   * anchor constants (the anchored layer).
    */
   readonly root: string;
   /** Root-relative POSIX path prefixes excluded from both discovery surfaces. */
