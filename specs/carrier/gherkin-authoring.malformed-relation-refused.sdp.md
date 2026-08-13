@@ -2,7 +2,7 @@
 id: spec:carrier.gherkin-authoring.malformed-relation-refused
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.gherkin-authoring
   verifies: spec:carrier.gherkin-authoring

@@ -2,7 +2,7 @@
 id: spec:carrier.gherkin-authoring
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.markdown-authoring
   decidedBy: spec:decisions.gherkin-carrier-option
