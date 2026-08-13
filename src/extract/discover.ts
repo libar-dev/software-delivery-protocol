@@ -2,7 +2,7 @@ import { readdirSync } from "node:fs";
 import { join } from "node:path";
 
 /** Spec carriers (MD-15): discovery reads spec files and pack manifests by suffix alone. */
-const SPEC_FILE_SUFFIXES = [".sdp.ts", ".sdp.md"] as const;
+const SPEC_FILE_SUFFIXES = [".sdp.ts", ".sdp.md", ".feature"] as const;
 
 /**
  * Anchor-candidate source files: the anchored layer lives in real product code (`04` §2), so any
