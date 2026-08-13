@@ -1,0 +1,4 @@
+@spec.fixture.surface-duplicate
+@altitude.feature
+@readiness.defined
+Feature: Duplicate Gherkin surface

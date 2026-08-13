@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { reifyGherkinCarrier } from "../src/extract/gherkin.js";
 import { extractFindingIds } from "../src/extract/reify.js";
+import { deriveGraph } from "../src/extract/derive.js";
+import { reifyMarkdownCarrier } from "../src/extract/markdown.js";
+import { validateGraph } from "../src/validate/validators.js";
 
 const FEATURE_TAGS = "@spec.probe.parent @altitude.feature @readiness.defined";
 const SCENARIO_TAGS = "@spec.probe.child @altitude.story @readiness.defined";
@@ -158,6 +161,44 @@ Feature: Complete carrier
       { type: "verifies", target: "spec:probe.other", claim: "declared" },
       { type: "refines", target: "spec:probe.parent", claim: "declared" },
     ]);
+  });
+
+  it("feeds Gherkin and Markdown relations through the same validation path", () => {
+    const gherkinSource = reifyGherkinCarrier(
+      "@spec.probe.source @altitude.feature @readiness.defined @constrained-by.spec:probe.target\nFeature: Source\n",
+      "source.feature",
+    );
+    const markdownSource = reifyMarkdownCarrier(
+      "---\nid: spec:probe.source\nkind: behavior\naltitude: feature\nreadiness: defined\nrelations:\n  constrainedBy: spec:probe.target\n---\n# Source\n",
+      "source.sdp.md",
+    );
+    const target = reifyMarkdownCarrier(
+      "---\nid: spec:probe.target\nkind: behavior\naltitude: feature\nreadiness: idea\nrelations: {}\n---\n# Wrong-kind target\n\n## Intent\n- outcome: Exercise relation validation.\n",
+      "target.sdp.md",
+    );
+    const projectFinding = (sourceSpecs: typeof gherkinSource.specs) =>
+      validateGraph(deriveGraph([...sourceSpecs, ...target.specs], [], [])).findings.map(
+        ({ validatorId, family, severity, message, subjectId, relatedId, path }) => ({
+          validatorId,
+          family,
+          severity,
+          message,
+          subjectId,
+          relatedId,
+          path,
+        }),
+      );
+
+    expect(gherkinSource.findings).toEqual([]);
+    expect(markdownSource.findings).toEqual([]);
+    const gherkinFindings = projectFinding(gherkinSource.specs);
+    expect(gherkinFindings).toEqual(projectFinding(markdownSource.specs));
+    const constrainedByFinding = gherkinFindings.find(
+      (finding) =>
+        finding.validatorId === "conformance/claim-separation" &&
+        finding.subjectId === "spec:probe.source",
+    );
+    expect(constrainedByFinding?.message).toContain("constrainedBy bounds");
   });
 
   it.each([

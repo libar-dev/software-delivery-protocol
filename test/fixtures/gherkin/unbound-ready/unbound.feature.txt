@@ -1,0 +1,17 @@
+@spec.fixture.unbound-parent
+@altitude.feature
+@readiness.defined
+@refines.spec:fixture.unbound-ready
+Feature: Unbound example parent
+  - outcome: Define the vocabulary used by the unbound example.
+
+  @example-space
+  Scenario: Vocabulary
+    Given an item {item:string}
+
+  @spec.fixture.unbound-ready
+  @altitude.story
+  @readiness.ready
+  Scenario: Unbound point
+    - outcome: Demonstrate the unbound vocabulary slot is refused.
+    Given an item {item}

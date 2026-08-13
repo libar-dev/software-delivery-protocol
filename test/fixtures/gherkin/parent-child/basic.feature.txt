@@ -1,0 +1,12 @@
+@spec.fixture.gherkin-parent
+@altitude.feature
+@readiness.defined
+Feature: Gherkin parent
+
+  @spec.fixture.gherkin-child
+  @altitude.story
+  @readiness.defined
+  Scenario: Nested child
+    Given a cart
+    When the cart is submitted
+    Then an order is created

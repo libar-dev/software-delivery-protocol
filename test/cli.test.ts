@@ -151,11 +151,8 @@ describe("sdp cli", () => {
       );
 
       expect(exitCode).toBe(0);
-      expect(capture.readStderr()).toContain("conformance/verifies-linkage");
-      expect(capture.readStderr()).toContain(
-        "spec:carrier.gherkin-authoring.parent-child-extraction",
-      );
-      expect(capture.readStdout()).toContain("validate: 0 errors · 10 warnings");
+      expect(capture.readStderr()).toBe("");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 0 warnings");
       expect(readFileSync(join(repoRoot, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

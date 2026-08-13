@@ -1,0 +1,11 @@
+---
+id: spec:fixture.surface-sibling
+kind: example
+altitude: story
+readiness: idea
+relations: {}
+---
+# Healthy sibling
+
+## Intent
+- outcome: Survive the duplicate surfaces beside it.

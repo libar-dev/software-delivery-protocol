@@ -41,6 +41,17 @@ export function materializeExtractCorpus(name: string): string {
 
   return target;
 }
+/**
+ * Gherkin corpora use the same defused-tree mechanism but live under their own fixture root so
+ * carrier examples cannot be confused with TypeScript/Markdown extraction refusal probes.
+ */
+export function materializeGherkinCorpus(name: string): string {
+  const source = fileURLToPath(new URL(`../fixtures/gherkin/${name}`, import.meta.url));
+  const target = mkdtempSync(join(tmpdir(), `sdp-gherkin-${name.replaceAll("/", "-")}-`));
+  copyDefusedTree(source, target);
+
+  return target;
+}
 
 export function removeMaterializedCorpus(root: string): void {
   rmSync(root, { recursive: true, force: true });

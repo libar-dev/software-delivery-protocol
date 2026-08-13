@@ -15,7 +15,7 @@ relations:
 ```gwt
 Given the Gherkin fixture corpus {probe: "unbound-ready"}
 When the fixture corpus is extracted and validated
-Then extraction reports {findingCount: 1} findings
-Then the first finding is {findingId: "honesty/readiness-floor"} at line {line: 11}
+Then validation reports {findingCount: 3} findings
+Then the report contains finding {findingId: "honesty/readiness-floor"}
 Then the graph contains the Spec {specId: "spec:fixture.unbound-ready"} with kind {specKind: "example"}
 ```

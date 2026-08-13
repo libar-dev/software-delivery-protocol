@@ -49,71 +49,7 @@ export const expectedSpecs: readonly ExpectedSpec[] = specFamilies.flatMap(
   (family) => family.specs,
 );
 
-// These examples deliberately declare verification before their Phase C test anchors exist. The
-// linkage warnings are the honest interim graph state; binding the executable examples removes
-// every row without changing the authored relations.
-export const expectedWarnings = [
-  {
-    validatorId: "conformance/verifies-linkage",
-    family: "conformance",
-    severity: "warning",
-    subjectId: "spec:carrier.gherkin-authoring.authored-fact-refused",
-  },
-  {
-    validatorId: "conformance/verifies-linkage",
-    family: "conformance",
-    severity: "warning",
-    subjectId: "spec:carrier.gherkin-authoring.contract-parity",
-  },
-  {
-    validatorId: "conformance/verifies-linkage",
-    family: "conformance",
-    severity: "warning",
-    subjectId: "spec:carrier.gherkin-authoring.duplicate-surface-refused",
-  },
-  {
-    validatorId: "conformance/verifies-linkage",
-    family: "conformance",
-    severity: "warning",
-    subjectId: "spec:carrier.gherkin-authoring.example-space-extraction",
-  },
-  {
-    validatorId: "conformance/verifies-linkage",
-    family: "conformance",
-    severity: "warning",
-    subjectId: "spec:carrier.gherkin-authoring.malformed-relation-refused",
-  },
-  {
-    validatorId: "conformance/verifies-linkage",
-    family: "conformance",
-    severity: "warning",
-    subjectId: "spec:carrier.gherkin-authoring.missing-id-refused",
-  },
-  {
-    validatorId: "conformance/verifies-linkage",
-    family: "conformance",
-    severity: "warning",
-    subjectId: "spec:carrier.gherkin-authoring.parent-child-extraction",
-  },
-  {
-    validatorId: "conformance/verifies-linkage",
-    family: "conformance",
-    severity: "warning",
-    subjectId: "spec:carrier.gherkin-authoring.unbound-ready-refused",
-  },
-  {
-    validatorId: "conformance/verifies-linkage",
-    family: "conformance",
-    severity: "warning",
-    subjectId: "spec:carrier.gherkin-authoring.unknown-tag-refused",
-  },
-  {
-    validatorId: "conformance/verifies-linkage",
-    family: "conformance",
-    severity: "warning",
-    subjectId: "spec:carrier.gherkin-authoring.unsupported-construct-refused",
-  },
-] as const;
+export const expectedWarnings = [] as const;
 
 export { expectedAnchors } from "./anchors.js";
 export { expectedDeclaredRelations } from "./declared-relations.js";

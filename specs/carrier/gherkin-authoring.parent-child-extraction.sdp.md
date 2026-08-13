@@ -13,7 +13,7 @@ relations:
 - outcome: Prove Gherkin nesting produces one behavior parent, one example child, and the two declared parent relations.
 
 ```gwt
-Given the Gherkin fixture corpus {probe: "parent-child/basic"}
+Given the Gherkin fixture corpus {probe: "parent-child"}
 When the fixture corpus is extracted and validated
 Then extraction reports {findingCount: 0} findings
 Then the graph contains exactly {specCount: 2} Specs

@@ -52,7 +52,9 @@ export const carrierSpecs = [
           when: ["the fixture corpus is extracted and validated"],
           then: [
             "extraction reports {findingCount:number} findings",
+            "validation reports {findingCount:number} findings",
             "the first finding is {findingId:string} at line {line:number}",
+            "the report contains finding {findingId:string}",
             "the graph contains exactly {specCount:number} Specs",
             'the graph contains the Spec {specId:string} with kind {specKind:"behavior"|"example"}',
             'the graph contains the child Spec {childId:string} with kind {specKind:"behavior"|"example"}',
@@ -67,7 +69,7 @@ export const carrierSpecs = [
         },
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:carrier.gherkin-authoring.authored-fact-refused",
@@ -96,7 +98,7 @@ export const carrierSpecs = [
           "Prove Gherkin cannot author a delivery fact or disguise one as non-semantic decoration.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:carrier.gherkin-authoring.contract-parity",
@@ -125,7 +127,7 @@ export const carrierSpecs = [
           "Prove the Gherkin carrier derives the same graph and generated contract semantics as its Markdown twin.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:carrier.gherkin-authoring.duplicate-surface-refused",
@@ -143,7 +145,7 @@ export const carrierSpecs = [
             when: ["the fixture corpus is extracted and validated"],
             then: [
               "extraction reports {findingCount: 2} findings",
-              'the first finding is {findingId: "extract/duplicate-id"} at line {line: 2}',
+              'the report contains finding {findingId: "extract/duplicate-id"}',
               'the graph omits the Spec {absentId: "spec:fixture.surface-duplicate"}',
               'no graph edge names the absent Spec {absentId: "spec:fixture.surface-duplicate"}',
               'the graph contains the Spec {specId: "spec:fixture.surface-sibling"} with kind {specKind: "example"}',
@@ -156,7 +158,7 @@ export const carrierSpecs = [
           "Prove one canonical surface per Spec ID by excluding every duplicate site and its edges while preserving healthy siblings.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:carrier.gherkin-authoring.example-space-extraction",
@@ -170,7 +172,7 @@ export const carrierSpecs = [
       behavior: {
         examples: [
           {
-            given: ['the Gherkin fixture corpus {probe: "example-space/space"}'],
+            given: ['the Gherkin fixture corpus {probe: "example-space"}'],
             when: ["the fixture corpus is extracted and validated"],
             then: [
               "extraction reports {findingCount: 0} findings",
@@ -186,7 +188,7 @@ export const carrierSpecs = [
           "Prove the Gherkin example-space pseudo-scenario populates the parent vocabulary and is withheld from graph identity.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:carrier.gherkin-authoring.malformed-relation-refused",
@@ -215,7 +217,7 @@ export const carrierSpecs = [
           "Prove every Gherkin relation target restores to a lawful Spec ID before it can enter the graph.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:carrier.gherkin-authoring.missing-id-refused",
@@ -243,7 +245,7 @@ export const carrierSpecs = [
         outcome: "Prove every Gherkin Feature must carry exactly one lawful Spec identity.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:carrier.gherkin-authoring.parent-child-extraction",
@@ -257,7 +259,7 @@ export const carrierSpecs = [
       behavior: {
         examples: [
           {
-            given: ['the Gherkin fixture corpus {probe: "parent-child/basic"}'],
+            given: ['the Gherkin fixture corpus {probe: "parent-child"}'],
             when: ["the fixture corpus is extracted and validated"],
             then: [
               "extraction reports {findingCount: 0} findings",
@@ -275,7 +277,7 @@ export const carrierSpecs = [
           "Prove Gherkin nesting produces one behavior parent, one example child, and the two declared parent relations.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:carrier.gherkin-authoring.unbound-ready-refused",
@@ -292,8 +294,8 @@ export const carrierSpecs = [
             given: ['the Gherkin fixture corpus {probe: "unbound-ready"}'],
             when: ["the fixture corpus is extracted and validated"],
             then: [
-              "extraction reports {findingCount: 1} findings",
-              'the first finding is {findingId: "honesty/readiness-floor"} at line {line: 11}',
+              "validation reports {findingCount: 3} findings",
+              'the report contains finding {findingId: "honesty/readiness-floor"}',
               'the graph contains the Spec {specId: "spec:fixture.unbound-ready"} with kind {specKind: "example"}',
             ],
           },
@@ -304,7 +306,7 @@ export const carrierSpecs = [
           "Prove Gherkin-authored examples share the existing readiness floor and concreteness law without carrier exceptions.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:carrier.gherkin-authoring.unknown-tag-refused",
@@ -333,7 +335,7 @@ export const carrierSpecs = [
           "Prove misspelled graph-aware tags fail with a bounded suggestion rather than becoming silent decoration.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:carrier.gherkin-authoring.unsupported-construct-refused",
@@ -362,7 +364,7 @@ export const carrierSpecs = [
           "Prove Gherkin constructs outside the closed carrier grammar fail loudly instead of entering the graph partially.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:carrier.envelope-contract",

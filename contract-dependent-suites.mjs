@@ -20,6 +20,7 @@ export const contractDependentSuites = [
     generation: "npm run generate:self-hosting",
     testPaths: [
       "test/self-hosting-carrier.test.ts",
+      "test/self-hosting-carrier-gherkin.test.ts",
       "test/self-hosting-consumers-oracle.test.ts",
       "test/self-hosting-consumers.oracle.ts",
       "test/self-hosting-consumers.test.ts",

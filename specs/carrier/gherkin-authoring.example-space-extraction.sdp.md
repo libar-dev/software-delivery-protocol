@@ -13,7 +13,7 @@ relations:
 - outcome: Prove the Gherkin example-space pseudo-scenario populates the parent vocabulary and is withheld from graph identity.
 
 ```gwt
-Given the Gherkin fixture corpus {probe: "example-space/space"}
+Given the Gherkin fixture corpus {probe: "example-space"}
 When the fixture corpus is extracted and validated
 Then extraction reports {findingCount: 0} findings
 Then the graph contains exactly {specCount: 2} Specs

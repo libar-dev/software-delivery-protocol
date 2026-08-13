@@ -28,7 +28,9 @@ relations:
 Given the Gherkin fixture corpus {probe:string}
 When the fixture corpus is extracted and validated
 Then extraction reports {findingCount:number} findings
+Then validation reports {findingCount:number} findings
 Then the first finding is {findingId:string} at line {line:number}
+Then the report contains finding {findingId:string}
 Then the graph contains exactly {specCount:number} Specs
 Then the graph contains the Spec {specId:string} with kind {specKind:"behavior"|"example"}
 Then the graph contains the child Spec {childId:string} with kind {specKind:"behavior"|"example"}

@@ -1,0 +1,21 @@
+---
+id: spec:fixture.parity-twin
+kind: behavior
+altitude: feature
+readiness: defined
+relations: {}
+---
+# Carrier parity twin
+
+## Intent
+- outcome: Derive equal graph and contract semantics from either carrier.
+
+## Behavior
+- rule: Both carriers enter one graph shape.
+
+## Example space
+```gwt-vocabulary
+Given a cart containing {item:string}
+When the cart is submitted
+Then the order contains the item
+```
