@@ -69,7 +69,7 @@ export const carrierSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:carrier.gherkin-authoring.authored-fact-refused",

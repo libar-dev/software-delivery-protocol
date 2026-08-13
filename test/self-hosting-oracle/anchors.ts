@@ -144,6 +144,16 @@ export const expectedAnchors = [
     site: "export function reifyMarkdownCarrier",
   },
   {
+    id: "impl:protocol.gherkin-authoring",
+    nodeType: "CodeNode",
+    label: "reifies Gherkin behavior and example authoring into the one carrier path",
+    type: "satisfies",
+    target: "spec:carrier.gherkin-authoring",
+    file: "src/extract/gherkin.ts",
+    constant: "gherkinAuthoringAnchor",
+    site: "export function reifyGherkinCarrier",
+  },
+  {
     id: "impl:protocol.markdown-parser",
     nodeType: "CodeNode",
     label: "reifies the ruled Markdown parser input",

@@ -10,7 +10,8 @@ import {
   type Tag,
 } from "@cucumber/messages";
 
-import { parseId } from "../ids.js";
+import { codeAnchorId, parseId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type { SpecAltitude, SpecReadiness } from "../model/descriptors.js";
 import type { SpecRelationType } from "../model/relations.js";
 import type { Finding } from "../validate/contracts.js";
@@ -908,6 +909,12 @@ function reifyFeature(feature: Feature, sourceText: string, file: string): Carri
 
   return { specs: [parent, ...children], packs: [], findings: [] };
 }
+
+export const gherkinAuthoringAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.gherkin-authoring"),
+  label: "reifies Gherkin behavior and example authoring into the one carrier path",
+  satisfies: ref("spec:carrier.gherkin-authoring"),
+});
 
 export function reifyGherkinCarrier(sourceText: string, relativePath: string): CarrierReification {
   try {

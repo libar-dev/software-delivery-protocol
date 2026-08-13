@@ -90,12 +90,12 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    expect(result.counts).toEqual({ specs: 145, packs: 1, anchors: 134 });
+    expect(result.counts).toEqual({ specs: 145, packs: 1, anchors: 135 });
     expect(expectedSpecs).toHaveLength(145);
     expect(expectedPackMembers).toHaveLength(145);
-    expect(expectedAnchors).toHaveLength(134);
-    expect(result.graph.nodes).toHaveLength(280);
-    expect(result.graph.edges).toHaveLength(529);
+    expect(expectedAnchors).toHaveLength(135);
+    expect(result.graph.nodes).toHaveLength(281);
+    expect(result.graph.edges).toHaveLength(530);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
