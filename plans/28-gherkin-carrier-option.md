@@ -1,6 +1,6 @@
 # Plan 28 — Gherkin carrier option for behavior and example Specs
 
-> **Status:** ⏳ DRAFTED 2026-08-13 — realize the Gherkin carrier option (MD-27) selected by the owner in review 14. PLAN-ONLY until approved: the ruling and review record are landed by plan 27; this plan owns parser, graph parity, executable-contract proof, migration, and guidance.
+> **Status:** 🔨 EXECUTING 2026-08-13 — approved implementation of the Gherkin carrier option (MD-27); drafted 2026-08-13. This plan owns parser, graph parity, executable-contract proof, migration, and guidance.
 
 ## Context
 

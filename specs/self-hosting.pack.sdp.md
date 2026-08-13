@@ -10,6 +10,17 @@ specs:
   - spec:carrier.markdown-pack-authoring
   - spec:carrier.markdown-pack-authoring.markdown-ts-parity
   - spec:carrier.markdown-pack-authoring.spec-envelope-refused
+  - spec:carrier.gherkin-authoring
+  - spec:carrier.gherkin-authoring.parent-child-extraction
+  - spec:carrier.gherkin-authoring.example-space-extraction
+  - spec:carrier.gherkin-authoring.contract-parity
+  - spec:carrier.gherkin-authoring.missing-id-refused
+  - spec:carrier.gherkin-authoring.unsupported-construct-refused
+  - spec:carrier.gherkin-authoring.unknown-tag-refused
+  - spec:carrier.gherkin-authoring.authored-fact-refused
+  - spec:carrier.gherkin-authoring.malformed-relation-refused
+  - spec:carrier.gherkin-authoring.unbound-ready-refused
+  - spec:carrier.gherkin-authoring.duplicate-surface-refused
   - spec:protocol.self-hosting
   - spec:observation.runtime-overlay
   - spec:extraction.derive-graph

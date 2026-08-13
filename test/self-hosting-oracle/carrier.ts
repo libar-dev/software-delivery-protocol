@@ -24,6 +24,347 @@ export const carrierSpecs = [
     deliveryFacts: ["implemented"],
   },
   {
+    id: "spec:carrier.gherkin-authoring",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/carrier/gherkin-authoring.sdp.md",
+    title: "Gherkin authoring enters the one graph",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Author behavior and example Specs in Gherkin without creating a second graph or execution path.",
+      },
+      behavior: {
+        rules: [
+          "One `.feature` file carries exactly one behavior Spec as its Feature and zero or more example Specs as ordinary Scenarios, with one canonical carrier surface per Spec ID.",
+          "Feature and ordinary Scenario tags carry exactly one identity, altitude, and readiness; kind is structural, Pack membership stays manifest-owned, and authored delivery facts, claims, lifecycle state, and workflow status are refused.",
+          "The closed relation tags map one-for-one to declared `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, and `verifies` relations, while an ordinary Scenario defaults `refines` and `verifies` to its Feature unless that relation type is explicit.",
+          "Closed keyed description lines populate existing intent and verification fields, remaining prose belongs to narrative, unknown keys and heading-shaped lines are refused, and no Gherkin form is invented for open questions.",
+          "Trailing title-only Rule blocks populate behavior rules in source order; a Rule carrying tags, description, or positionally nested children is refused.",
+          "At most one `@example-space` pseudo-scenario supplies the parent vocabulary without producing a Spec node, while each ordinary Scenario supplies exactly one bound example point.",
+          "Gherkin steps reuse the Protocol-owned slot notation; conjunctions inherit the preceding phase, and outlines, backgrounds, star steps, doc strings, data tables, and leading conjunctions are refused.",
+          "Gherkin is a canonical authoring carrier rather than a Cucumber execution path; generated contracts and resolving code-side anchors remain the execution and delivery-fact boundary.",
+        ],
+        exampleSpace: {
+          given: ["the Gherkin fixture corpus {probe:string}"],
+          when: ["the fixture corpus is extracted and validated"],
+          then: [
+            "extraction reports {findingCount:number} findings",
+            "the first finding is {findingId:string} at line {line:number}",
+            "the graph contains exactly {specCount:number} Specs",
+            'the graph contains the Spec {specId:string} with kind {specKind:"behavior"|"example"}',
+            'the graph contains the child Spec {childId:string} with kind {specKind:"behavior"|"example"}',
+            "the child Spec {childId:string} declares {relationType:string} to {relationTarget:string}",
+            "the child Spec {childId:string} declares the additional relation {relationType:string} to {relationTarget:string}",
+            "the graph omits the Spec {absentId:string}",
+            "no graph edge names the absent Spec {absentId:string}",
+            "the parent example space contains {spaceStep:string}",
+            "the graph for {parityLeft:string} equals the graph for {parityRight:string}",
+            "the contracts for {parityLeft:string} equal the contracts for {parityRight:string}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.gherkin-authoring.authored-fact-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/gherkin-authoring.authored-fact-refused.sdp.md",
+    title: "An authored delivery fact lookalike is refused",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: ['the Gherkin fixture corpus {probe: "authored-fact"}'],
+            when: ["the fixture corpus is extracted and validated"],
+            then: [
+              "extraction reports {findingCount: 1} findings",
+              'the first finding is {findingId: "extract/gherkin-grammar"} at line {line: 1}',
+              'the graph omits the Spec {absentId: "spec:fixture.authored-fact"}',
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Prove Gherkin cannot author a delivery fact or disguise one as non-semantic decoration.",
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.gherkin-authoring.contract-parity",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/gherkin-authoring.contract-parity.sdp.md",
+    title: "Markdown and Gherkin twins derive equal graphs and contracts",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: ['the Gherkin fixture corpus {probe: "parity"}'],
+            when: ["the fixture corpus is extracted and validated"],
+            then: [
+              "extraction reports {findingCount: 0} findings",
+              'the graph for {parityLeft: "twin.sdp.md"} equals the graph for {parityRight: "twin.feature"}',
+              'the contracts for {parityLeft: "twin.sdp.md"} equal the contracts for {parityRight: "twin.feature"}',
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Prove the Gherkin carrier derives the same graph and generated contract semantics as its Markdown twin.",
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.gherkin-authoring.duplicate-surface-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/gherkin-authoring.duplicate-surface-refused.sdp.md",
+    title: "Duplicate Markdown and Gherkin surfaces are both excluded",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: ['the Gherkin fixture corpus {probe: "duplicate-surface"}'],
+            when: ["the fixture corpus is extracted and validated"],
+            then: [
+              "extraction reports {findingCount: 2} findings",
+              'the first finding is {findingId: "extract/duplicate-id"} at line {line: 2}',
+              'the graph omits the Spec {absentId: "spec:fixture.surface-duplicate"}',
+              'no graph edge names the absent Spec {absentId: "spec:fixture.surface-duplicate"}',
+              'the graph contains the Spec {specId: "spec:fixture.surface-sibling"} with kind {specKind: "example"}',
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Prove one canonical surface per Spec ID by excluding every duplicate site and its edges while preserving healthy siblings.",
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.gherkin-authoring.example-space-extraction",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/gherkin-authoring.example-space-extraction.sdp.md",
+    title: "The pseudo-scenario supplies example space without a node",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: ['the Gherkin fixture corpus {probe: "example-space/space"}'],
+            when: ["the fixture corpus is extracted and validated"],
+            then: [
+              "extraction reports {findingCount: 0} findings",
+              "the graph contains exactly {specCount: 2} Specs",
+              'the parent example space contains {spaceStep: "Given a cart containing {item:string}"}',
+              'the graph omits the Spec {absentId: "spec:fixture.example-space"}',
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Prove the Gherkin example-space pseudo-scenario populates the parent vocabulary and is withheld from graph identity.",
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.gherkin-authoring.malformed-relation-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/gherkin-authoring.malformed-relation-refused.sdp.md",
+    title: "A malformed relation target is refused",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: ['the Gherkin fixture corpus {probe: "malformed-relation"}'],
+            when: ["the fixture corpus is extracted and validated"],
+            then: [
+              "extraction reports {findingCount: 1} findings",
+              'the first finding is {findingId: "extract/invalid-id"} at line {line: 4}',
+              'the graph omits the Spec {absentId: "spec:fixture.malformed-relation"}',
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Prove every Gherkin relation target restores to a lawful Spec ID before it can enter the graph.",
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.gherkin-authoring.missing-id-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/gherkin-authoring.missing-id-refused.sdp.md",
+    title: "A Feature without identity is refused",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: ['the Gherkin fixture corpus {probe: "missing-id"}'],
+            when: ["the fixture corpus is extracted and validated"],
+            then: [
+              "extraction reports {findingCount: 1} findings",
+              'the first finding is {findingId: "extract/gherkin-grammar"} at line {line: 3}',
+              'the graph omits the Spec {absentId: "spec:fixture.missing-id"}',
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome: "Prove every Gherkin Feature must carry exactly one lawful Spec identity.",
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.gherkin-authoring.parent-child-extraction",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/gherkin-authoring.parent-child-extraction.sdp.md",
+    title: "A Feature and Scenario enter the graph as parent and child",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: ['the Gherkin fixture corpus {probe: "parent-child/basic"}'],
+            when: ["the fixture corpus is extracted and validated"],
+            then: [
+              "extraction reports {findingCount: 0} findings",
+              "the graph contains exactly {specCount: 2} Specs",
+              'the graph contains the Spec {specId: "spec:fixture.gherkin-parent"} with kind {specKind: "behavior"}',
+              'the graph contains the child Spec {childId: "spec:fixture.gherkin-child"} with kind {specKind: "example"}',
+              'the child Spec {childId: "spec:fixture.gherkin-child"} declares {relationType: "refines"} to {relationTarget: "spec:fixture.gherkin-parent"}',
+              'the child Spec {childId: "spec:fixture.gherkin-child"} declares the additional relation {relationType: "verifies"} to {relationTarget: "spec:fixture.gherkin-parent"}',
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Prove Gherkin nesting produces one behavior parent, one example child, and the two declared parent relations.",
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.gherkin-authoring.unbound-ready-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/gherkin-authoring.unbound-ready-refused.sdp.md",
+    title: "A ready example with an unbound used slot is refused",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: ['the Gherkin fixture corpus {probe: "unbound-ready"}'],
+            when: ["the fixture corpus is extracted and validated"],
+            then: [
+              "extraction reports {findingCount: 1} findings",
+              'the first finding is {findingId: "honesty/readiness-floor"} at line {line: 11}',
+              'the graph contains the Spec {specId: "spec:fixture.unbound-ready"} with kind {specKind: "example"}',
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Prove Gherkin-authored examples share the existing readiness floor and concreteness law without carrier exceptions.",
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.gherkin-authoring.unknown-tag-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/gherkin-authoring.unknown-tag-refused.sdp.md",
+    title: "A graph-aware tag near miss is refused",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: ['the Gherkin fixture corpus {probe: "unknown-tag"}'],
+            when: ["the fixture corpus is extracted and validated"],
+            then: [
+              "extraction reports {findingCount: 1} findings",
+              'the first finding is {findingId: "extract/gherkin-grammar"} at line {line: 1}',
+              'the graph omits the Spec {absentId: "spec:fixture.unknown-tag"}',
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Prove misspelled graph-aware tags fail with a bounded suggestion rather than becoming silent decoration.",
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.gherkin-authoring.unsupported-construct-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/gherkin-authoring.unsupported-construct-refused.sdp.md",
+    title: "A Scenario Outline is refused",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: ['the Gherkin fixture corpus {probe: "unsupported-construct"}'],
+            when: ["the fixture corpus is extracted and validated"],
+            then: [
+              "extraction reports {findingCount: 1} findings",
+              'the first finding is {findingId: "extract/gherkin-grammar"} at line {line: 7}',
+              'the graph omits the Spec {absentId: "spec:fixture.outline"}',
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Prove Gherkin constructs outside the closed carrier grammar fail loudly instead of entering the graph partially.",
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
     id: "spec:carrier.envelope-contract",
     specKind: "contract",
     altitude: "feature",
