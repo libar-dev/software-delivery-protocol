@@ -67,7 +67,7 @@ export function importTypeScriptSpec(sourceText: string, relativePath: string): 
       : [
           importFinding(
             importFindingIds.packUnsupported,
-            "the carrier contains a Pack; move the Spec to its own TypeScript carrier before importing because Packs remain TypeScript-authored",
+            "`sdp import` converts Spec carriers; Pack manifests are out of scope — the TypeScript manifest stays a lawful per-ID option",
             relativePath,
           ),
         ];

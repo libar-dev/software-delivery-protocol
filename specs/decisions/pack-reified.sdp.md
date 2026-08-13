@@ -2,7 +2,7 @@
 id: spec:decisions.pack-reified
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.pack-aggregate
 ---

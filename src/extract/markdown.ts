@@ -1,10 +1,11 @@
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, parseId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { CarrierReification } from "./carrier.js";
 import { parseMarkdownBody } from "./markdown-body.js";
 import { readMarkdownEnvelope } from "./markdown-envelope.js";
 import { parseMarkdownFrontmatter as parseFrontmatter } from "./markdown-frontmatter.js";
 import { markdownFinding } from "./markdown-support.js";
+import { reifyMarkdownPackFromFrontmatter } from "./markdown-pack.js";
 import type { MarkdownBodyResult, MarkdownFrontmatterResult } from "./markdown-types.js";
 
 export type {
@@ -60,6 +61,8 @@ export function reifyMarkdownCarrier(sourceText: string, relativePath: string): 
   try {
     const frontmatter = parseMarkdownFrontmatter(sourceText, relativePath);
     if (!frontmatter.ok) return { specs: [], packs: [], findings: frontmatter.findings };
+    if (parseId(frontmatter.frontmatter.id).namespace === "pack")
+      return reifyMarkdownPackFromFrontmatter(frontmatter.frontmatter, sourceText, relativePath);
     const kind = frontmatter.frontmatter.data.kind;
     if (typeof kind !== "string")
       return {

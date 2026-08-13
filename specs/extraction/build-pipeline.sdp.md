@@ -2,7 +2,7 @@
 id: spec:extraction.build-pipeline
 kind: workflow
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:protocol.self-hosting
   dependsOn: spec:extraction.derive-graph

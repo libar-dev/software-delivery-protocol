@@ -102,14 +102,15 @@ describe("the self-hosting records gate", () => {
 
   it("selects a zero-padded primary plan over a lower unpadded number", () => {
     const root = copyRecordTree();
-    const nextPlanPath = join(root, "plans", "026-next.md");
+    const probeNumber = currentPlan.number + 1;
+    const nextPlanPath = join(root, "plans", `${String(probeNumber).padStart(3, "0")}-next.md`);
     writeFileSync(nextPlanPath, "> **Status:** ✅ EXECUTED — selector probe\n", "utf8");
     const handbook = join(root, "AGENTS.md");
     writeFileSync(
       handbook,
       readFileSync(handbook, "utf8").replaceAll(
         `plan ${String(currentPlan.number)} is ${currentStatus}`,
-        "plan 26 is EXECUTED",
+        `plan ${String(probeNumber)} is EXECUTED`,
       ),
       "utf8",
     );

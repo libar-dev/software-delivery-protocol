@@ -15,8 +15,8 @@ pointed at.
 
 ## The layout
 
-- **`specs/`** contains the **authored model**. Each `Spec` is now one `*.sdp.md` file. The Pack
-  manifest remains `checkout.pack.sdp.ts`: Packs remain TS until a Pack syntax ruling.
+- **`specs/`** contains the **authored model**. Each `Spec` and the Pack manifest is a `*.sdp.md`
+  file; the Pack lives at `checkout.pack.sdp.md` and derives through the same carrier path.
 
   All eight `kind`s appear here as named coordinates on one primitive. The `create-order` parent
   owns the example space, and its child examples bind full or partial points in that space.
@@ -38,9 +38,9 @@ pointed at.
 
 The checkout Markdown surface was produced by `sdp import` during the migration.
 
-`sdp import` remains the verb for any future per-ID TypeScript-to-Markdown move. Specs default to
-Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a
-lawful per-ID option.
+`sdp import` remains the verb for any future per-ID TypeScript-to-Markdown Spec move. Specs and
+Packs default to Markdown; the TS DSL survives as import source and a lawful per-ID option (the
+carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25).
 
 Build the CLI once from the repo root, then run the pipeline. Each command includes the stage
 before it:

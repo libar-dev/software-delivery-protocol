@@ -91,10 +91,11 @@ claim category** — it **inherits** its source's `claim` (so `belongsTo` carrie
 | **`observed`** *(aspirational)* | runtime evidence links to the Spec's target — the liveness rung | — |
 | **enabled verifier** | a verifying `example`/scenario backed by a **linked, resolvable test anchor** — *structurally bound*, not runner-executed (skip/quarantine is CI's, exactly as pass/fail is) | — |
 
-The payoff queries: `ready ∧ kind≠example ∧ ¬implemented` = the operational **build backlog**;
-`implemented ∧ ¬ready` = the **drift alarm**. The raw `ready ∧ ¬implemented` expression also names
-ready example evidence; the example realization posture (MD-24) deliberately keeps that literal
-fact while the canonical recipe excludes examples and audits their verifier bindings.
+The payoff queries: ready unimplemented Specs excluding kinds `example` and `decision` form the
+operational **build backlog**; `implemented ∧ ¬ready` is the **drift alarm**. The raw
+`ready ∧ ¬implemented` expression also names ready example evidence and registry-ratified decision
+records; the example realization posture (MD-24) and decision readiness posture (MD-26) keep those
+facts literal while the canonical recipe reports both audited exclusions.
 
 ## The graph & extraction  (→ `spec:extraction.derive-graph`)
 
@@ -252,10 +253,10 @@ delivery fact, workflow state, or graph state.
 - **Resolved (MD-15):** Markdown Spec files use the **`.sdp.md`** extension by default; **`.sdp.ts`**
   identifies the lawful TypeScript carrier without colliding with every JS test-runner's default glob.
   The model name `Spec` itself was always settled — only the file serialization changed.
-- **Resolved (the carrier ruling, MD-18):** Specs default to Markdown; Packs remain TS until a Pack
-  syntax ruling; the TS DSL survives as import source and a lawful per-ID option. The surviving law
-  is **one canonical surface per ID, no mixing** (`04` §1); the `.sdp.ts` extension law (MD-15) is
-  re-pointed, not repealed — its rationale carries to the `.sdp.md` sibling.
+- **Resolved (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25):** Specs and
+  Packs default to Markdown; the TS DSL survives as import source and a lawful per-ID option. The
+  surviving law is **one canonical surface per ID, no mixing** (`04` §1); the `.sdp.ts` extension
+  law (MD-15) is re-pointed, not repealed — its rationale carries to the `.sdp.md` sibling.
 - **Resolved (the prose-ownership law, MD-19):** free prose enters the graph as **description values on
   typed owners** — the owning section or the `Spec` itself (the spec-level narrative slot); never a
   heading-path store, never a file-only pointer; the edge-text ownership rule is the surface-design

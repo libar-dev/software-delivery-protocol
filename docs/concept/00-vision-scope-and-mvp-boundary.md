@@ -56,7 +56,7 @@ The MVP proves the founding principle — *one regenerable graph derived from th
 - **One generated read-only view**: a derived, regenerable human-readable projection (spec tree + per-spec detail with readiness, relations, impact list, source links).
 - **Bidirectional spec↔test trace**: query "what verifies this spec?" and "what does this test cover?" from the graph.
 
-**Carrier status (the carrier ruling, MD-18):** Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option. One canonical surface per ID, no mixing (`04` §1).
+**Carrier status:** Specs and Packs default to Markdown; the TS DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25). One canonical surface per ID, no mixing (`04` §1).
 
 **The MVP write-path is "edit the canonical carrier + git."** No patch loop, no codemod. You change a spec document in its canonical carrier (`.sdp.md` by default; `.sdp.ts` remains lawful per ID) or an anchor, re-run `sdp build`, and the view updates. CI rejects PRs that break links or state readiness the spec has not earned.
 
@@ -101,4 +101,4 @@ These are not "later"; they are deliberately *out*:
 
 ## 6. The one-breath scope statement
 
-Libar Software Delivery Protocol is an executable meta-model of the software-delivery process: one `Spec` primitive positioned by three descriptors (`kind` · `altitude` · `readiness`), authored in a ruled carrier — Markdown (`.sdp.md`) by default, with TypeScript (`.sdp.ts`) a lawful per-ID option and Packs remaining TS until a Pack syntax ruling — with realization signals as **derived delivery facts**, statically extracted from both carriers into one deterministic, **`claim`-aware** graph that is the sole read model, kept honest by **conformance + honesty checks**, and projected into human- and AI-facing surfaces — with git history as the event log. The MVP is the smallest honest vertical that proves this on one bounded context; everything richer is designed-for and deferred.
+Libar Software Delivery Protocol is an executable meta-model of the software-delivery process: one `Spec` primitive positioned by three descriptors (`kind` · `altitude` · `readiness`), authored in ruled carriers — Markdown (`.sdp.md`) by default for Specs and Packs, with TypeScript (`.sdp.ts`) a lawful per-ID option — with realization signals as **derived delivery facts**, statically extracted from both carriers into one deterministic, **`claim`-aware** graph that is the sole read model, kept honest by **conformance + honesty checks**, and projected into human- and AI-facing surfaces — with git history as the event log. The MVP is the smallest honest vertical that proves this on one bounded context; everything richer is designed-for, named, and deferred.

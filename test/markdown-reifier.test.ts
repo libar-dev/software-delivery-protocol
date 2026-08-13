@@ -107,6 +107,79 @@ const envelopeContractTestAnchor = specTest({
 void [proseOwnershipTestAnchor, markdownParserTestAnchor, envelopeContractTestAnchor];
 
 describe("Markdown frontmatter reifier", () => {
+  const lawfulPack = `---
+id: pack:probe.parity
+specs:
+  - spec:probe.member
+modelRefs:
+  - spec:probe.model
+---
+# Probe parity pack
+
+The first framing paragraph
+continues here.
+
+The second framing paragraph.`;
+
+  it("reifies a lawful Markdown Pack manifest", () => {
+    const result = reify(lawfulPack);
+
+    expect(result.findings).toEqual([]);
+    expect(result.specs).toEqual([]);
+    expect(result.packs).toEqual([
+      {
+        data: {
+          id: "pack:probe.parity",
+          specs: ["spec:probe.member"],
+          modelRefs: ["spec:probe.model"],
+          title: "Probe parity pack",
+          framing: "The first framing paragraph continues here.\n\nThe second framing paragraph.",
+        },
+        id: "pack:probe.parity",
+        file: "carrier.sdp.md",
+        line: 2,
+      },
+    ]);
+  });
+
+  it.each([
+    [
+      "a Spec-only key on a Pack",
+      lawfulPack.replace("specs:", "kind: behavior\nspecs:"),
+      "extract/unrecognized-property",
+    ],
+    [
+      "Pack membership on a Spec",
+      validFrontmatter.replace("relations: {}", "relations: {}\nspecs:\n  - spec:probe.member"),
+      "extract/unrecognized-property",
+    ],
+    ["a Pack section heading", `${lawfulPack}\n\n## Intent\nProse`, "extract/unrecognized-heading"],
+    [
+      "a wrong-namespace Pack member",
+      lawfulPack.replace("spec:probe.member", "pack:probe.member"),
+      "extract/invalid-id",
+    ],
+    [
+      "a reserved derived-name key on a Pack",
+      lawfulPack.replace("specs:", "implemented: true\nspecs:"),
+      "extract/reserved-property",
+    ],
+    [
+      "a pack: id that fails the id grammar",
+      lawfulPack.replace("id: pack:probe.parity", 'id: "pack:"'),
+      "extract/invalid-id",
+    ],
+  ])("refuses %s", (_name, sourceText, validatorId) => {
+    const result = reify(sourceText);
+
+    expect(result.specs).toEqual([]);
+    expect(result.packs).toEqual([]);
+    expect(result.findings).toContainEqual(expect.objectContaining({ validatorId }));
+    expect(result.findings).not.toContainEqual(
+      expect.objectContaining({ message: 'frontmatter field "kind" is missing' }),
+    );
+  });
+
   it("reifies the frozen corpus envelopes at their id token lines", async () => {
     const fixtures = await Promise.all(
       fixturePaths.map(async (fixturePath) => ({

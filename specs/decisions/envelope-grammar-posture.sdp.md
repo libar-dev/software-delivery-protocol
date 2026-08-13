@@ -2,7 +2,7 @@
 id: spec:decisions.envelope-grammar-posture
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.envelope-contract
 ---

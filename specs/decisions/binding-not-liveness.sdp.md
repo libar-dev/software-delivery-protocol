@@ -2,7 +2,7 @@
 id: spec:decisions.binding-not-liveness
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.anchors
 ---

@@ -536,6 +536,34 @@ describe("graph validators", () => {
     expect(factsOf(faked)[0]?.message).toContain("derived, never authored");
   });
 
+  it("exempts decision-kind Specs from the gap signal while other kinds still warn", () => {
+    // A decision record's evidence is its registry row and complete record, never a verifier —
+    // the signal is definitional noise for the kind (spec:validation.warn-level-signals).
+    const readyDecision: PrimitiveNode = {
+      ...ideaPrimitive("spec:orders.order-lifecycle", "Record the order lifecycle decision."),
+      specKind: "decision",
+      readiness: "ready",
+      sections: {
+        intent: { outcome: "Record the order lifecycle decision." },
+        decision: {
+          context: "Two lifecycle shapes were on the table.",
+          decision: "The order carries its own lifecycle.",
+        },
+      },
+    };
+    const readyBehavior: PrimitiveNode = {
+      ...ideaPrimitive("spec:orders.create-order", "Turn a valid cart into an order."),
+      readiness: "ready",
+    };
+
+    const findings = validateGraph(syntheticGraph([readyDecision, readyBehavior], [])).findings;
+    const gaps = findings.filter((finding) => finding.validatorId === graphValidatorIds.gaps);
+
+    expect(gaps).toHaveLength(1);
+    expect(gaps[0]?.subjectId).toBe("spec:orders.create-order");
+    expect(gaps[0]?.severity).toBe("warning");
+  });
+
   it("never lets an anchored verifies edge from a non-Anchor source enable an example — fail closed", () => {
     const parent = ideaPrimitive("spec:orders.create-order", "Turn a valid cart into an order.");
     const example: PrimitiveNode = {

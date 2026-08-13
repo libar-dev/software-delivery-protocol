@@ -4,8 +4,8 @@ Libar Software Delivery Protocol is a typed, executable, self-validating meta-mo
 delivery: author `Spec` documents in the repository, derive one graph, and check conformance and
 honesty.
 
-**Carrier rule:** Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS
-DSL survives as import source and a lawful per-ID option.
+**Carrier rule:** Specs and Packs default to Markdown; the TS DSL survives as import source and a
+lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25).
 
 Read the [concept](docs/concept/README.md), the [ubiquitous language](CONTEXT.md), and the
 [checkout-v1 walkthrough](examples/checkout-v1/README.md).
@@ -60,9 +60,9 @@ pnpm exec sdp q 'return g.specs().map((spec) => spec.id)'
 ```
 
 `build` derives the graph and executable contracts, `validate` adds conformance and honesty
-checks, `view` generates the Design Review, `import` converts TypeScript carriers to Markdown, and
-`q` evaluates a local JavaScript query body against a freshly derived graph. Run `sdp --help` for
-the complete option contract. Adopters own their root and exclusion policy.
+checks, `view` generates the Design Review, `import` converts TypeScript Spec carriers to Markdown,
+and `q` evaluates a local JavaScript query body against a freshly derived graph. Run `sdp --help`
+for the complete option contract. Adopters own their root and exclusion policy.
 
 The package also ships the three agent on-ramps — `sdp-agent-surface` (reading the graph),
 `sdp-authoring` (authoring intent), and `sdp-sessions` (advisory delivery-session routing) — as

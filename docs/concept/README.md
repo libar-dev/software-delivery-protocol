@@ -37,7 +37,7 @@ Every load-bearing claim is named as one or the other, on purpose — so a Repre
 | — | [Ubiquitous Language](../../CONTEXT.md) | The ratified **glossary** (`CONTEXT.md`, repo root): terms, descriptor values, relations, a worked dialogue, flagged ambiguities. The terminology base for every doc below. |
 | 00 | [Vision, Scope & MVP Boundary](./00-vision-scope-and-mvp-boundary.md) | The honest full ambition **and** the sharp MVP line, in one place. |
 | 01 | [Founding Principles & Invariants](./01-founding-principles-and-invariants.md) | The load-bearing laws, each tagged Principle/Representation and CORE/ASPIRATIONAL. Git-as-event-log. The `claim` epistemics. |
-| 04 | [Authoring & Binding](./04-authoring-and-binding.md) | The two ruled authoring carriers — Markdown (`.sdp.md`, the default) and the TypeScript DSL (`.sdp.ts`, import source and lawful per-ID option) — plus generic source anchors (framework-neutral). Packs remain TS until a Pack syntax ruling; harnesses named but deferred; the carrier competition is ruled (MD-18). |
+| 04 | [Authoring & Binding](./04-authoring-and-binding.md) | The two ruled authoring carriers — Markdown (`.sdp.md`, the default for Specs and Packs) and the TypeScript DSL (`.sdp.ts`, import source and lawful per-ID option) — plus generic source anchors (framework-neutral); harnesses named but deferred; the carrier competition is ruled (MD-18, completed by MD-25). |
 | 06 | [Consumers & Projections](./06-consumers-and-projections.md) | MVP: the agent surface (a typed graph the agent scripts) + Design Review + reader; edits via intent→agent→git (no patch loop). Two surfaces (curated graph vs impact graph). Aspirational: Studio, exports, MCP surface. |
 | 07 | [MVP Roadmap & Open Questions](./07-mvp-roadmap-and-open-questions.md) | The vertical slice, the CORE/ASPIRATIONAL map, the cut list with rationale, and the residual open questions. |
 
@@ -70,4 +70,4 @@ The MVP is a tight vertical slice on **one** bounded context (Order Management, 
 - one generated read-only view,
 - bidirectional spec↔test trace.
 
-The write-path is simply **edit the canonical carrier + git** — no patch loop. Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18). Everything else is aspirational and labelled as such, with the rationale for cutting it in `07`.
+The write-path is simply **edit the canonical carrier + git** — no patch loop. Specs and Packs default to Markdown; the TS DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25). Everything else is aspirational and labelled as such, with the rationale for cutting it in `07`.

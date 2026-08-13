@@ -23,7 +23,7 @@ function packSource(): string {
 export const authoredPack = pack({
   id: packId("pack:import-test"),
   title: "Import test pack",
-  framing: "A Pack remains TypeScript-authored.",
+  framing: "A Pack manifest outside the Spec import scope.",
   specs: [ref("spec:import.healthy")],
   modelRefs: [],
 });

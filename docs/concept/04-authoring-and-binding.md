@@ -1,6 +1,6 @@
 # 04 — Authoring & Binding
 
-How truth gets into the repo. Authoring has two ruled **carriers**, both framework-neutral: the **Markdown carrier (`.sdp.md`)** — the default for all eight kinds (the carrier ruling, MD-18) — and the **TypeScript Spec DSL (`.sdp.ts`)**, an import source and lawful per-ID option. Packs remain TS until a Pack syntax ruling. **Generic source anchors** bind code under either carrier. Richer surfaces (a Gherkin-like carrier, the interactive harness UI) are named in §4 so the model accommodates them — the harness UI **ASPIRATIONAL**, the carrier competition now ruled — while the carrier-independent executable machinery beneath them is landed (CORE).
+How truth gets into the repo. Authoring has two ruled **carriers**, both framework-neutral: the **Markdown carrier (`.sdp.md`)** — the default for Specs and Packs — and the **TypeScript Spec DSL (`.sdp.ts`)**, an import source and lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25). **Generic source anchors** bind code under either carrier. Richer surfaces (a Gherkin-like carrier, the interactive harness UI) are named in §4 so the model accommodates them — the harness UI **ASPIRATIONAL**, the carrier competition now ruled — while the carrier-independent executable machinery beneath them is landed (CORE).
 
 Realises **P5** (statically extractable), **P6** (ID-linked), **P9/P10** (anchors are anchored bindings, not intent), and the epistemic boundary from `01`.
 
@@ -60,7 +60,7 @@ Two sanctioned moves, both keeping the same IDs (P4):
 
 ### One canonical surface per ID
 
-For any given spec ID, exactly one surface is canonical — no mixing per ID. Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option. A per-ID canonical-surface config is designed-for and deferred (ASPIRATIONAL); the current realization is file-existence-only: the surface that exists is canonical, and the other is a generated read-only view.
+For any given Spec or Pack ID, exactly one surface is canonical — no mixing per ID. Specs and Packs default to Markdown; the TS DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25). A per-ID canonical-surface config is designed-for and deferred (ASPIRATIONAL); the current realization is file-existence-only: the surface that exists is canonical, and the other is a generated read-only view.
 
 ---
 

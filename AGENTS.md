@@ -16,13 +16,15 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
-> **Status:** the authoring **carrier is ruled** as `.sdp.md` (the carrier ruling, MD-18): Specs
-> default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import
-> source and a lawful per-ID option. **plan 25 is EXECUTED** — the recovered guidance now has
-> typed owners, and the packaged `sdp-sessions` on-ramp routes advisory delivery work shapes
-> through the existing graph recipes without gates. Plan 24's inward turn remains the standing
-> practice: forward intent lives in the graph, so the live backlog is a graph query, not a
-> document. Corpus counts,
+> **Status:** the authoring **carrier is ruled** as `.sdp.md`: Specs and Packs default to Markdown;
+> the TS DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18,
+> completed by the Pack syntax ruling, MD-25). **plan 27 is DRAFTED** — the executable-verification
+> design review; per the convention below, settled ground is **plan 26 is EXECUTED** — native
+> Packs, annotation completion, decision readiness, and honest element-absence dispositions are
+> settled. Plan 25
+> recovered the guidance layer and packaged the `sdp-sessions` on-ramp; plan 24's inward turn
+> remains the standing practice: forward intent lives in the graph, so the live backlog is a graph
+> query, not a document. Corpus counts,
 > readiness, and findings are **derived, never quoted** — re-run
 > `pnpm --silent sdp validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity`
 > (or `npm run --silent sdp --` with the same argv) and read recipes 8 and 11. Recipe 1 is the
@@ -89,8 +91,8 @@ corpus question — what a Spec guarantees, what is ready but unimplemented, wha
 touches, where a concept lives — script the graph instead of reading `.sdp.md` files by hand:
 
 ```bash
-# The build backlog (recipe 1, condensed): ready non-example Specs with no implementation binding
-pnpm --silent sdp:q 'return g.specs().filter((s) => s.statedReadiness === "ready" && s.specKind !== "example" && !s.deliveryFacts.includes("implemented")).map((s) => s.id)'
+# The build backlog (recipe 1, condensed): ready implementation work, excluding examples and decisions
+pnpm --silent sdp:q 'return g.specs().filter((s) => s.statedReadiness === "ready" && s.specKind !== "example" && s.specKind !== "decision" && !s.deliveryFacts.includes("implemented")).map((s) => s.id)'
 
 # Concept search (recipe 6): where does a concept live?
 pnpm --silent sdp:q 'return g.findByConcept("readiness floor").slice(0, 5).map((n) => n.id)'
@@ -131,9 +133,10 @@ Every doc honours both — never mistake one half for the other:
   typed `Spec`* until it is implementable. Implementation becomes near-autopilot ("implement `spec:…`"); the real,
   iterative work is maturing and **reviewing** specs — alone and in related sets (the `Pack` / **Design Review**).
 - **Maturity gates implementation; the graph is AI-native.** Don't ship code before a spec is `ready` —
-  `implemented ∧ ¬ready` is the **drift alarm**; `ready ∧ kind≠example ∧ ¬implemented` is the operational build
-  backlog under the example realization posture (MD-24). A typed graph of related
-  specs is the shape an LLM already reasons in: feed the agent the graph, don't narrate at it.
+  `implemented ∧ ¬ready` is the **drift alarm**; ready unimplemented examples and decisions are
+  audited exclusions from the operational build backlog under the example realization posture
+  (MD-24) and decision readiness posture (MD-26). A typed graph of related specs is the shape an
+  LLM already reasons in: feed the agent the graph, don't narrate at it.
 
 ## Working discipline
 

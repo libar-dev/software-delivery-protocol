@@ -39,7 +39,7 @@
       "claim": "declared",
       "title": "Checkout v1",
       "framing": "Let customers create orders from valid carts with honest authored traceability.",
-      "file": "specs/checkout.pack.sdp.ts",
+      "file": "specs/checkout.pack.sdp.md",
       "modelRefs": [
         "spec:orders.order-model"
       ]

@@ -2,7 +2,7 @@
 id: spec:decisions.mcp-deferred
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.projections-model
 ---

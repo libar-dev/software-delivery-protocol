@@ -1,6 +1,6 @@
 # Checkout v1
 
-`pack:checkout-v1` · Pack (the grouping / review aggregate — states no truth of its own) · authored in [specs/checkout.pack.sdp.ts](../../../specs/checkout.pack.sdp.ts) `[declared]`
+`pack:checkout-v1` · Pack (the grouping / review aggregate — states no truth of its own) · authored in [specs/checkout.pack.sdp.md](../../../specs/checkout.pack.sdp.md) `[declared]`
 
 > Let customers create orders from valid carts with honest authored traceability.
 

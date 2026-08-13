@@ -99,7 +99,7 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
           title: "Checkout v1",
           framing:
             "Let customers create orders from valid carts with honest authored traceability.",
-          file: "specs/checkout.pack.sdp.ts",
+          file: "specs/checkout.pack.sdp.md",
           modelRefs: ["spec:orders.order-model"],
         },
       ]);
@@ -306,10 +306,10 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
     });
 
     it("treats a changed pack manifest as pack impact with the members at risk via belongsTo", () => {
-      const radius = exampleReader().blastRadius(["specs/checkout.pack.sdp.ts"]);
+      const radius = exampleReader().blastRadius(["specs/checkout.pack.sdp.md"]);
 
       expect(radius.impactedPacks).toEqual([
-        { id: "pack:checkout-v1", reasons: [{ file: "specs/checkout.pack.sdp.ts" }] },
+        { id: "pack:checkout-v1", reasons: [{ file: "specs/checkout.pack.sdp.md" }] },
       ]);
       expect(radius.atRisk).toHaveLength(11);
       expect(radius.atRisk[0]?.reasons[0]?.edgeType).toBe("belongsTo");
