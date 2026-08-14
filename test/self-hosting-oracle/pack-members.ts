@@ -151,4 +151,6 @@ export const expectedPackMembers = [
   "spec:decisions.decision-readiness-posture",
   "spec:decisions.gherkin-carrier-option",
   "spec:decisions.sdp-gherkin-extension",
+  "spec:decisions.carrier-universality",
+  "spec:decisions.structural-anchor-semantics",
 ] as const;

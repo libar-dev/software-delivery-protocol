@@ -150,6 +150,8 @@ specs:
   - spec:decisions.decision-readiness-posture
   - spec:decisions.gherkin-carrier-option
   - spec:decisions.sdp-gherkin-extension
+  - spec:decisions.carrier-universality
+  - spec:decisions.structural-anchor-semantics
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model
