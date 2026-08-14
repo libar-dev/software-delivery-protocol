@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
@@ -43,6 +43,19 @@ function materializeExampleCopy(): string {
 
   for (const surface of ["specs", "src", "test"]) {
     cpSync(join(exampleRoot, surface), join(root, surface), { recursive: true });
+  }
+
+  return root;
+}
+
+function materializeSelfHostingCopy(): string {
+  const root = mkdtempSync(join(tmpdir(), "sdp-self-hosting-copy-"));
+
+  for (const surface of ["specs", "src", "test"]) {
+    cpSync(join(repoRoot, surface), join(root, surface), {
+      recursive: true,
+      filter: (source) => !source.endsWith(".test.generated.ts"),
+    });
   }
 
   return root;
@@ -133,9 +146,10 @@ describe("sdp cli", () => {
   });
 
   it("views the self-hosting corpus from the default repository root", () => {
-    // Exploration Markdown is evidence, not the authored model. The explicit consumer exclusion
-    // keeps suffix-only discovery honest without adding a hidden global exclusion.
-    rmSync(join(repoRoot, "generated"), { recursive: true, force: true });
+    // Exercise the no-root-argument default against an isolated corpus. Writing the live root
+    // here races read-only CLI suites under Vitest's file-level parallelism.
+    const root = materializeSelfHostingCopy();
+    const cwd = vi.spyOn(process, "cwd").mockReturnValue(root);
 
     try {
       const capture = createCaptureOutput();
@@ -157,27 +171,15 @@ describe("sdp cli", () => {
       expect(exitCode).toBe(0);
       expect(capture.readStderr()).toBe("");
       expect(capture.readStdout()).toContain("validate: 0 errors · 0 warnings");
-      expect(readFileSync(join(repoRoot, "generated", "graph.json"), "utf8")).toContain(
+      expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
-      expect(existsSync(join(repoRoot, "generated", "design-review"))).toBe(true);
+      expect(existsSync(join(root, "generated", "design-review"))).toBe(true);
     } finally {
-      expect(
-        runSdpCli(
-          [
-            "view",
-            "--exclude",
-            "explorations",
-            "--exclude",
-            "examples",
-            "--exclude",
-            "test/fixtures/import/parity",
-          ],
-          createCaptureOutput().output,
-        ),
-      ).toBe(0);
+      cwd.mockRestore();
+      rmSync(root, { recursive: true, force: true });
     }
-  });
+  }, 15_000);
 
   it("renders contracts warnings through the one formatter and counts them in the summary", () => {
     const root = mkdtempSync(join(tmpdir(), "sdp-contracts-warning-"));

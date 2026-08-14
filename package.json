@@ -31,6 +31,10 @@
     "./vitest": {
       "types": "./dist/adapters/vitest.d.ts",
       "import": "./dist/adapters/vitest.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "import": "./dist/testing/index.js"
     }
   },
   "engines": {

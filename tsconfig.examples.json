@@ -5,7 +5,8 @@
     "paths": {
       "@libar-dev/software-delivery-protocol": ["src/index.ts"],
       "@libar-dev/software-delivery-protocol/runner": ["src/runner/index.ts"],
-      "@libar-dev/software-delivery-protocol/vitest": ["src/adapters/vitest.ts"]
+      "@libar-dev/software-delivery-protocol/vitest": ["src/adapters/vitest.ts"],
+      "@libar-dev/software-delivery-protocol/testing": ["src/testing/index.ts"]
     }
   },
   "exclude": [],

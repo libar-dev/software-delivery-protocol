@@ -15,6 +15,9 @@
 node_modules/
 dist/
 generated/
+# Runnable registrars are regenerable siblings. Adopted modules are force-added and reviewed;
+# unadopted family output remains disposable until its authored test imports it.
+**/*.test.generated.ts
 .sisyphus/evidence/
 
 # OmO plans and state

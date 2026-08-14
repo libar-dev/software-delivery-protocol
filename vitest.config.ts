@@ -6,6 +6,7 @@ const runnerAliasTarget = fileURLToPath(new URL("./src/runner/index.ts", import.
 const vitestAdapterAliasTarget = fileURLToPath(
   new URL("./src/adapters/vitest.ts", import.meta.url),
 );
+const testingAliasTarget = fileURLToPath(new URL("./src/testing/index.ts", import.meta.url));
 
 export default defineConfig({
   resolve: {
@@ -17,6 +18,7 @@ export default defineConfig({
         find: "@libar-dev/software-delivery-protocol/vitest",
         replacement: vitestAdapterAliasTarget,
       },
+      { find: "@libar-dev/software-delivery-protocol/testing", replacement: testingAliasTarget },
       { find: "@libar-dev/software-delivery-protocol", replacement: packageAliasTarget },
     ],
   },

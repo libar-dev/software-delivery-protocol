@@ -26,13 +26,16 @@ export function bindExample<W, S extends string, PM extends Record<S, ParamShape
   contract: ExampleContract<S, PM>,
   world: () => W,
   bindings: StepBindings<W, S, PM>,
+  after?: (world: W) => void | Promise<void>,
 ): void {
   const plan = planExample(contract, bindings);
 
   describe(`${contract.title} (${contract.spec})`, () => {
     it("executes the bound example against a fresh world", async () => {
       // The adapter's lifecycle law: the fresh world is created here, per example.
-      await runExamplePlan(plan, world());
+      const freshWorld = world();
+      await runExamplePlan(plan, freshWorld);
+      await after?.(freshWorld);
     });
   });
 }

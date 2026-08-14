@@ -19,7 +19,16 @@ export const createOrderOracle = specOracle({
 // (rename a slot in the spec and this fails to compile), and the return type is the Outcome
 // union derived from the parent's Then vocabulary (claiming an outcome the specs never stated
 // is a `tsc` error). `unspecified` is the honest first-class answer for an unstated region.
-export function expected(conditions: CreateOrderConditions): CreateOrderOutcome {
+export function expected(conditions: Partial<CreateOrderConditions>): CreateOrderOutcome {
+  if (
+    conditions.n === undefined ||
+    conditions.q === undefined ||
+    conditions.price === undefined ||
+    conditions.availability === undefined
+  ) {
+    return unspecified;
+  }
+
   if (conditions.n === 0) {
     return { kind: "order creation is rejected because {reason}", reason: "empty cart" };
   }

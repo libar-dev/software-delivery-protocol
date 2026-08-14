@@ -165,7 +165,10 @@ export function runBuild(
 
       const secondContracts = runGenerateContracts(secondResult.graph);
 
-      if (!contractFilesEqual(contracts.files, secondContracts.files)) {
+      if (
+        !contractFilesEqual(contracts.files, secondContracts.files) ||
+        !contractFilesEqual(contracts.registrars, secondContracts.registrars)
+      ) {
         return failBuild(
           `sdp ${command} --check-clean: two independent contract generations diverged — the build is not deterministic.\n`,
         );
@@ -198,6 +201,12 @@ export function runBuild(
 
     if (contracts.files.size > 0) {
       writeStdout(output, `Wrote ${contractsPath} (${String(contracts.files.size)} modules)\n`);
+    }
+
+    for (const [relativePath, content] of contracts.registrars) {
+      const registrarPath = join(resolvedRoot, relativePath);
+      mkdirSync(join(registrarPath, ".."), { recursive: true });
+      writeFileSync(registrarPath, content, "utf8");
     }
 
     return { exitCode: 0, graph: result.graph };
