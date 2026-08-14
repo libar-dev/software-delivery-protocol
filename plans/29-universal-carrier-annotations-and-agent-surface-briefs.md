@@ -16,7 +16,7 @@
 > canonical Gherkin suffix as `.sdp.gherkin` (MD-28), hardens the carrier pipeline, and repairs
 > known declined-Gherkin current-intent drift. Brief A consumes that settled suffix and remains
 > the open owner of kind coverage, rich content, and any default-carrier flip. **Plan 31**
-> (`carrier-universality-runnable-modules-projections-structural-anchors`, executing) commissions
+> (`carrier-universality-runnable-modules-projections-structural-anchors`, executed) commissions
 > briefs A/B/C/D while deferring brief E.
 
 ## The read model for every commissioning session
