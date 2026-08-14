@@ -83,38 +83,59 @@ function pagePathOf(node: GraphNode): string {
   return `${expectedNamespace}/${machineToken(node.id)}.md`;
 }
 
-function assertMachineTokens(nodes: readonly GraphNode[]): void {
-  const idsByToken = new Map<string, string>();
-  for (const node of [...nodes].sort((left, right) => compareCodeUnits(left.id, right.id))) {
-    const token = machineToken(node.id);
-    const previous = idsByToken.get(token);
-    if (previous !== undefined) {
-      throw new Error(
-        `MERMAID_MACHINE_TOKEN_COLLISION token=${token} first=${JSON.stringify(previous)} second=${JSON.stringify(node.id)}`,
-      );
-    }
-    idsByToken.set(token, node.id);
-  }
+function collisionRefusal(token: string, first: string, second: string): string {
+  return `MERMAID_MACHINE_TOKEN_COLLISION token=${token} first=${JSON.stringify(first)} second=${JSON.stringify(second)}`;
 }
 
-function assertBound(diagramId: string, bound: string, limit: number, observed: number): void {
-  if (observed > limit) {
-    throw new Error(
-      `Mermaid diagram ${JSON.stringify(diagramId)} exceeds ${bound}: limit=${String(limit)} observed=${String(observed)}`,
-    );
+function boundRefusal(diagramId: string, bound: string, limit: number, observed: number): string {
+  return `Mermaid diagram ${JSON.stringify(diagramId)} exceeds ${bound}: limit=${String(limit)} observed=${String(observed)}`;
+}
+
+function findMachineTokenCollisions(ids: readonly string[]): {
+  readonly refusal: string | undefined;
+  readonly ids: ReadonlySet<string>;
+} {
+  const idsByToken = new Map<string, string>();
+  const colliding = new Set<string>();
+  let refusal: string | undefined;
+  for (const id of [...ids].sort(compareCodeUnits)) {
+    const token = machineToken(id);
+    const previous = idsByToken.get(token);
+    if (previous !== undefined) {
+      colliding.add(previous);
+      colliding.add(id);
+      refusal ??= collisionRefusal(token, previous, id);
+    } else {
+      idsByToken.set(token, id);
+    }
   }
+  return { refusal, ids: colliding };
+}
+
+function uniqueById(nodes: readonly GraphNode[]): readonly GraphNode[] {
+  const seen = new Set<string>();
+  const unique: GraphNode[] = [];
+  for (const node of nodes) {
+    if (!seen.has(node.id)) {
+      seen.add(node.id);
+      unique.push(node);
+    }
+  }
+  return unique;
 }
 
 interface DiagramSlice {
   readonly root: GraphNode;
   readonly nodes: readonly { readonly id: string; readonly node: GraphNode | undefined }[];
   readonly edges: readonly GraphEdge[];
+  readonly refusal: string | undefined;
 }
 
 function sliceFor(
   root: GraphNode,
   graphNodes: readonly GraphNode[],
   graphEdges: readonly GraphEdge[],
+  graphCollisions: { readonly refusal: string | undefined; readonly ids: ReadonlySet<string> },
 ): DiagramSlice {
   const nodesById = new Map(graphNodes.map((node) => [node.id, node]));
   const edges = graphEdges
@@ -130,22 +151,26 @@ function sliceFor(
     ids.add(edge.to);
   }
   const nodes = [...ids].sort(compareCodeUnits).map((id) => ({ id, node: nodesById.get(id) }));
-  assertBound(
-    root.id,
-    "MAX_MERMAID_NODES_PER_DIAGRAM",
-    MAX_MERMAID_NODES_PER_DIAGRAM,
-    nodes.length,
-  );
-  assertBound(
-    root.id,
-    "MAX_MERMAID_EDGES_PER_DIAGRAM",
-    MAX_MERMAID_EDGES_PER_DIAGRAM,
-    edges.length,
-  );
-  assertMachineTokens(
-    nodes.map((entry) => ({ id: entry.id, nodeType: "Anchor", claim: "anchored" }) as GraphNode),
-  );
-  return { root, nodes, edges };
+  const sliceCollision = findMachineTokenCollisions(nodes.map((entry) => entry.id)).refusal;
+  const collision = graphCollisions.ids.has(root.id) ? graphCollisions.refusal : sliceCollision;
+  const refusal =
+    collision ??
+    (nodes.length > MAX_MERMAID_NODES_PER_DIAGRAM
+      ? boundRefusal(
+          root.id,
+          "MAX_MERMAID_NODES_PER_DIAGRAM",
+          MAX_MERMAID_NODES_PER_DIAGRAM,
+          nodes.length,
+        )
+      : edges.length > MAX_MERMAID_EDGES_PER_DIAGRAM
+        ? boundRefusal(
+            root.id,
+            "MAX_MERMAID_EDGES_PER_DIAGRAM",
+            MAX_MERMAID_EDGES_PER_DIAGRAM,
+            edges.length,
+          )
+        : undefined);
+  return { root, nodes, edges, refusal };
 }
 
 function renderDiagram(slice: DiagramSlice): string {
@@ -163,14 +188,22 @@ function renderDiagram(slice: DiagramSlice): string {
 
 function renderPage(slice: DiagramSlice): MermaidPage {
   const kind = slice.root.nodeType === "Pack" ? "Pack membership" : "Spec one-hop";
+  const body =
+    slice.refusal === undefined
+      ? ["```mermaid", renderDiagram(slice), "```"]
+      : [
+          "**REFUSED**",
+          "",
+          slice.refusal,
+          "",
+          "The diagram is withheld. In-bound diagrams still publish. The projection never silently truncates, shards partially, or drops edges to fit.",
+        ];
   return {
     path: pagePathOf(slice.root),
     content: [
       `# ${kind}: ${slice.root.id}`,
       "",
-      "```mermaid",
-      renderDiagram(slice),
-      "```",
+      ...body,
       "",
       "_Generated from the one graph by `sdp mermaid` — read-only; regenerate to update._",
       "",
@@ -178,18 +211,26 @@ function renderPage(slice: DiagramSlice): MermaidPage {
   };
 }
 
-function renderIndex(specs: readonly GraphNode[], packs: readonly GraphNode[]): MermaidPage {
+function indexRow(node: GraphNode, refusal: string | undefined): string {
+  const link = `- [\`${node.id}\`](${pagePathOf(node)})`;
+  return refusal === undefined ? link : `${link} — REFUSED ${refusal}`;
+}
+
+function renderIndex(
+  specs: readonly { readonly node: GraphNode; readonly refusal: string | undefined }[],
+  packs: readonly { readonly node: GraphNode; readonly refusal: string | undefined }[],
+): MermaidPage {
   const lines = ["# Mermaid diagrams", "", "## Specs", ""];
   lines.push(
     ...(specs.length === 0
       ? ["No Specs."]
-      : specs.map((node) => `- [\`${node.id}\`](${pagePathOf(node)})`)),
+      : specs.map((entry) => indexRow(entry.node, entry.refusal))),
     "",
     "## Packs",
     "",
     ...(packs.length === 0
       ? ["No Packs."]
-      : packs.map((node) => `- [\`${node.id}\`](${pagePathOf(node)})`)),
+      : packs.map((entry) => indexRow(entry.node, entry.refusal))),
     "",
     "_Generated from the one graph by `sdp mermaid` — read-only; regenerate to update._",
     "",
@@ -200,17 +241,26 @@ function renderIndex(specs: readonly GraphNode[], packs: readonly GraphNode[]): 
 /** Pure, bounded Mermaid projection over the Reader's graph. */
 export function renderMermaid(reader: Reader): ReadonlyMap<string, string> {
   const graph: GraphSchema = reader.graph;
-  assertMachineTokens(graph.nodes);
-  const specs = graph.nodes
-    .filter((node) => node.nodeType === "Primitive")
-    .sort((left, right) => compareCodeUnits(left.id, right.id));
-  const packs = graph.nodes
-    .filter((node) => node.nodeType === "Pack")
-    .sort((left, right) => compareCodeUnits(left.id, right.id));
+  const graphCollisions = findMachineTokenCollisions(graph.nodes.map((node) => node.id));
+  const specs = uniqueById(
+    graph.nodes
+      .filter((node) => node.nodeType === "Primitive")
+      .sort((left, right) => compareCodeUnits(left.id, right.id)),
+  );
+  const packs = uniqueById(
+    graph.nodes
+      .filter((node) => node.nodeType === "Pack")
+      .sort((left, right) => compareCodeUnits(left.id, right.id)),
+  );
+  const specSlices = specs.map((node) => sliceFor(node, graph.nodes, graph.edges, graphCollisions));
+  const packSlices = packs.map((node) => sliceFor(node, graph.nodes, graph.edges, graphCollisions));
   const rendered = [
-    renderIndex(specs, packs),
-    ...specs.map((node) => renderPage(sliceFor(node, graph.nodes, graph.edges))),
-    ...packs.map((node) => renderPage(sliceFor(node, graph.nodes, graph.edges))),
+    renderIndex(
+      specSlices.map((slice) => ({ node: slice.root, refusal: slice.refusal })),
+      packSlices.map((slice) => ({ node: slice.root, refusal: slice.refusal })),
+    ),
+    ...specSlices.map(renderPage),
+    ...packSlices.map(renderPage),
   ].sort((left, right) => compareCodeUnits(left.path, right.path));
   return new Map(rendered.map((page) => [page.path, page.content]));
 }
