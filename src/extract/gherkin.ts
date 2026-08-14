@@ -60,6 +60,9 @@ const RESERVED_HEAD_SUGGESTIONS = [
   { head: "verifies", lawful: true },
   { head: "refines", lawful: true },
   { head: "depends-on", lawful: true },
+  { head: "constrained-by", lawful: true },
+  { head: "decided-by", lawful: true },
+  { head: "example-space", lawful: false },
 ] as const;
 
 const DESCRIPTION_KEYS = [
@@ -332,14 +335,18 @@ function levenshtein(left: string, right: string): number {
 function nearest(
   value: string,
   candidates: readonly string[],
-  maximumDistance: number,
+  maximumDistance: number | ((candidate: string) => number),
 ): string | undefined {
+  const maxDistanceFor =
+    typeof maximumDistance === "function" ? maximumDistance : () => maximumDistance;
+
   let winner: string | undefined;
   let distance = Number.POSITIVE_INFINITY;
   let unique = false;
 
   for (const candidate of candidates) {
     const candidateDistance = levenshtein(value, candidate);
+    if (candidateDistance > maxDistanceFor(candidate)) continue;
     if (candidateDistance < distance) {
       winner = candidate;
       distance = candidateDistance;
@@ -349,7 +356,7 @@ function nearest(
     }
   }
 
-  return unique && distance <= maximumDistance ? winner : undefined;
+  return unique ? winner : undefined;
 }
 
 function tagHead(tagName: string): string {
@@ -405,7 +412,7 @@ function decorationTagFinding(tag: Tag, file: string): Finding | undefined {
   const reservedHead = nearest(
     authoredHead,
     RESERVED_HEAD_SUGGESTIONS.map(({ head }) => head),
-    1,
+    (candidate) => (candidate.length <= 5 ? 1 : 2),
   );
   if (reservedHead !== undefined) {
     const candidate = RESERVED_HEAD_SUGGESTIONS.find(({ head }) => head === reservedHead);

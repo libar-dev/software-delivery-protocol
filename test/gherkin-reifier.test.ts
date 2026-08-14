@@ -217,11 +217,39 @@ Feature: Complete carrier
     expect(decorated.specs).toEqual(undecorated.specs);
   });
 
-  it("suggests exactly one unique reserved head for a near miss", () => {
-    const found = refusal(feature("", `${FEATURE_TAGS} @readines.ready`));
+  it("suggests exactly one unique reserved head for a length ≤5 one-edit near miss", () => {
+    const found = refusal(feature("", `${FEATURE_TAGS} @spe.probe`));
 
     expect(found?.message.match(/did you mean/gu)).toHaveLength(1);
-    expect(found?.message.match(/@readiness\./gu)).toHaveLength(1);
+    expect(found?.message.match(/@spec\./gu)).toHaveLength(1);
+  });
+
+  it.each([
+    ["@constrained-bi.spec:probe.constraint", "constrained-bi", "constrained-by"],
+    ["@decided-bi.spec:probe.decision", "decided-bi", "decided-by"],
+    ["@constraind-by.spec:probe.constraint", "constraind-by", "constrained-by"],
+  ])("suggests lawful long reserved head for one-edit near-miss %s", (tag, authoredHead, head) => {
+    const found = refusal(feature("", `${FEATURE_TAGS} ${tag}`));
+
+    expect(found?.message).toContain(`authored head "${authoredHead}"`);
+    expect(found?.message).toContain(`reserved graph-aware head "${head}"`);
+    expect(found?.message).toContain(`did you mean "@${head}."`);
+  });
+
+  it("refuses an example-space near miss without suggesting invalid decoration syntax", () => {
+    const found = refusal(feature("", `${FEATURE_TAGS} @example-spac`));
+
+    expect(found?.message).toContain('authored head "example-spac"');
+    expect(found?.message).toContain('reserved graph-aware head "example-space"');
+    expect(found?.message).not.toContain("did you mean");
+  });
+
+  it("suggests a unique long reserved head for a length >5 two-edit near miss", () => {
+    const found = refusal(feature("", `${FEATURE_TAGS} @constraind-bi.spec:probe.constraint`));
+
+    expect(found?.message).toContain('authored head "constraind-bi"');
+    expect(found?.message).toContain('reserved graph-aware head "constrained-by"');
+    expect(found?.message).toContain('did you mean "@constrained-by."');
   });
 
   it.each(["@king.dom", "@packs.nightly"])(
