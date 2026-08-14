@@ -388,6 +388,7 @@ export const expectedDeclaredRelations = [
     "spec:validation.warn-level-signals",
   ],
   ["spec:consumers.projections-model", "refines", "spec:protocol.self-hosting"],
+  ["spec:consumers.mermaid-view", "refines", "spec:consumers.projections-model"],
   ["spec:consumers.projections-model", "decidedBy", "spec:decisions.mcp-deferred"],
   ["spec:consumers.agent-surface", "refines", "spec:consumers.projections-model"],
   ["spec:consumers.agent-surface", "decidedBy", "spec:decisions.agent-surface-scripts-graph"],

@@ -22,6 +22,7 @@ export * from "./model/sections.js";
 export * from "./model/spec.js";
 export * from "./projections/census.js";
 export * from "./projections/design-review.js";
+export * from "./projections/mermaid.js";
 export * from "./reader/reader.js";
 export * from "./validate/contracts.js";
 export * from "./validate/graph-index.js";

@@ -81,6 +81,7 @@ export function runBuild(
   const projectionPaths = [
     join(resolvedRoot, "generated", "design-review"),
     join(resolvedRoot, "generated", "census"),
+    join(resolvedRoot, "generated", "mermaid"),
   ];
 
   const failBuild = (message: string): BuildOutcome => {

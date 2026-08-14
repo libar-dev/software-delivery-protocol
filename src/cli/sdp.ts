@@ -9,6 +9,8 @@ import { runCensus } from "./census-command.js";
 import type { CensusHooks } from "./census-command.js";
 import { parseImportArgs, runImport } from "./import-command.js";
 import type { ImportHooks } from "./import-command.js";
+import { runMermaid } from "./mermaid-command.js";
+import type { MermaidHooks } from "./mermaid-command.js";
 import { defaultCliOutput, errorMessage, writeStderr, writeStdout } from "./output.js";
 import type { CliOutput } from "./output.js";
 import { parseQueryArgs, runQuery } from "./q-command.js";
@@ -22,6 +24,7 @@ Usage:
   sdp validate [root] [--exclude PATH]... [--check-clean]
   sdp view [root] [--exclude PATH]... [--check-clean]
   sdp census [root] [--exclude PATH]... [--check-clean]
+  sdp mermaid [root] [--exclude PATH]... [--check-clean]
   sdp import <path...> [--dry-run]
   sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--json]
 
@@ -45,6 +48,9 @@ Commands:
   census     validate, then generate the taxonomy census into <root>/generated/census/ as a
              separate wholesale tmp-to-rename projection. --check-clean independently re-renders
              and refuses when the checked-in/generated page differs from the current projection.
+  mermaid    validate, then generate Mermaid diagrams into <root>/generated/mermaid/ as a
+             separate wholesale tmp-to-rename projection. --check-clean independently re-renders
+             and refuses when the published bytes differ from the current projection.
   import     Convert one or more *.sdp.ts files or recursively scanned roots to write-beside
              *.sdp.md documents. The TypeScript source is never deleted. --dry-run writes
              each would-be document to stdout, headed by its target path, without writing.
@@ -67,7 +73,7 @@ Commands:
              --json prints JSON.stringify instead, unbounded. A body that throws exits 1, as does a
              graph that fails to derive.`;
 
-interface CliHooks extends CensusHooks {
+interface CliHooks extends CensusHooks, MermaidHooks {
   readonly import?: ImportHooks;
   readonly query?: QueryHooks;
 }
@@ -94,6 +100,7 @@ export function runSdpCli(
     command !== "validate" &&
     command !== "view" &&
     command !== "census" &&
+    command !== "mermaid" &&
     command !== "import" &&
     command !== "q"
   ) {
@@ -127,7 +134,13 @@ export function runSdpCli(
     return runValidate(parsed, output, "validate", hooks).exitCode;
   }
 
-  return command === "view" ? runView(parsed, output, hooks) : runCensus(parsed, output, hooks);
+  if (command === "view") {
+    return runView(parsed, output, hooks);
+  }
+
+  return command === "census"
+    ? runCensus(parsed, output, hooks)
+    : runMermaid(parsed, output, hooks);
 }
 
 export function isCliEntrypoint(executedPath: string | undefined, moduleUrl: string): boolean {

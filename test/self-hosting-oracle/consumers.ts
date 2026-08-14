@@ -4,6 +4,60 @@
 
 export const consumersSpecs = [
   {
+    id: "spec:consumers.mermaid-view",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/consumers/mermaid-view.sdp.md",
+    title: "Mermaid renders bounded one-hop and Pack diagrams without becoming a graph browser",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give maintainers disposable, deterministic Mermaid diagrams of each Spec's one-hop neighborhood and each Pack's membership without ever projecting the whole graph or inventing a second truth store.",
+      },
+      behavior: {
+        rules: [
+          "`renderMermaid` is a pure `Reader -> pages` projection with no filesystem or clock access; equal reader data produces byte-identical pages.",
+          "The page set is one diagram per Spec (that Spec plus its one-hop neighborhood), one diagram per Pack (the Pack and its members), and one deterministic index that links them. The projection never emits a whole-graph diagram.",
+          "Machine node tokens are injective encodings of the full graph ID. Titles and other display text never become machine tokens.",
+          "Visible labels use a dedicated Mermaid label escape (`escapeMermaidLabel`) that is parser-safe for Mermaid syntax. The Markdown/owned-prose escaper is not reused.",
+          "Every emitted record — pages, node declarations, edge declarations, index rows — is ordered by deterministic code-unit order independent of graph input order.",
+          "An unresolved relation or edge target renders as an explicit unresolved placeholder node rather than disappearing or being invented.",
+          "Cycles are retained as ordinary edges with a visited-set walk; the projection never computes transitive closure and never performs layout.",
+          "Disconnected neighborhoods and foreign edge types remain visible when they appear in the selected one-hop or Pack slice; absence of a neighbor is honest silence, not a synthetic hub.",
+          "Hard bounds are exact: `maxNodesPerDiagram = 64` and `maxEdgesPerDiagram = 128`. A token collision or an overflow of either bound refuses the affected diagram with a deterministic refusal that names the bound. The projection never silently truncates, shards partially, or drops edges to fit.",
+          "Publication owns only `generated/mermaid/` and uses the explicit `sdp mermaid` surface. It is not a child of or an extra write inside Design Review's transaction, and it shares no publication bus or hidden side channel with other projections.",
+          "A Mermaid run writes its complete page set to `generated/mermaid.tmp/`, removes the prior Mermaid root, and renames the temporary root into place. Every build attempt invalidates both Mermaid roots before extraction, so failure leaves honest absence rather than stale output that looks current. A failed publish removes any live or temporary Mermaid root it cannot certify.",
+          "`sdp mermaid --check-clean` renders an independent twin, refuses divergent renders, and compares the current generated root with the new render. Missing or drifted output returns nonzero and is removed; clean output is replaced wholesale with byte-identical content.",
+          "The projection adds no Mermaid-specific Reader accessors, maintains no projection-owned taxonomy list, and confers nothing back into the graph.",
+        ],
+        exampleSpace: {
+          given: [
+            "a graph containing Specs, Packs, one-hop relations, an unresolved target, a cycle, and a neighborhood within the stated bounds",
+          ],
+          when: [
+            "the Mermaid projection renders and publishes through the explicit mermaid command",
+          ],
+          then: [
+            "each Spec page holds only that Spec's one-hop neighborhood",
+            "each Pack page holds only that Pack and its members",
+            "the index links every diagram deterministically",
+            "machine tokens remain injective full-ID encodings",
+            "hostile label characters cannot close or break Mermaid syntax",
+            "an unresolved target renders as an explicit placeholder",
+            "a colliding token or a diagram past maxNodesPerDiagram = 64 or maxEdgesPerDiagram = 128 is refused by name",
+            "generated/mermaid/ is the only current Mermaid root",
+            "a clean independent render is byte-identical",
+            "no whole-graph diagram is emitted",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+
+  {
     id: "spec:consumers.projections-model",
     specKind: "model",
     altitude: "feature",

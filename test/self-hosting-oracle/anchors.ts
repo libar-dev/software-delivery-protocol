@@ -754,6 +754,16 @@ export const expectedAnchors = [
     site: "function compareCodeUnits",
   },
   {
+    id: "impl:protocol.mermaid-view",
+    nodeType: "CodeNode",
+    label: "renders bounded Spec one-hop and Pack membership diagrams",
+    type: "satisfies",
+    target: "spec:consumers.mermaid-view",
+    file: "src/projections/mermaid.ts",
+    constant: "mermaidViewAnchor",
+    site: "function compareCodeUnits",
+  },
+  {
     id: "impl:protocol.exclusion-surface",
     nodeType: "CodeNode",
     label: "strict root-relative exclusion input for both extraction surfaces",
@@ -1312,6 +1322,16 @@ export const expectedAnchors = [
     file: "test/self-hosting-validators.test.ts",
     constant: "ruleSpaceAcceptedTestAnchor",
     site: "bindExample(ruleSpaceAcceptedContract",
+  },
+  {
+    id: "test:protocol.mermaid-view",
+    nodeType: "Anchor",
+    label: "verifies bounded deterministic Mermaid projection and publication",
+    type: "verifies",
+    target: "spec:consumers.mermaid-view",
+    file: "test/mermaid-render.test.ts",
+    constant: "mermaidTestAnchor",
+    site: "const checkoutRoot",
   },
   {
     id: "test:protocol.oracle-target-eligibility.missing-space-refused",
