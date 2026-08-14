@@ -82,6 +82,7 @@ export function runBuild(
     join(resolvedRoot, "generated", "design-review"),
     join(resolvedRoot, "generated", "census"),
     join(resolvedRoot, "generated", "mermaid"),
+    join(resolvedRoot, "generated", "gherkin"),
   ];
 
   const failBuild = (message: string): BuildOutcome => {

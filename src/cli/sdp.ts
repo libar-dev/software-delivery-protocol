@@ -7,6 +7,8 @@ import { parseBuildArgs } from "./build-args.js";
 import { runBuild } from "./build-command.js";
 import { runCensus } from "./census-command.js";
 import type { CensusHooks } from "./census-command.js";
+import { runGherkinView } from "./gherkin-command.js";
+import type { GherkinViewHooks } from "./gherkin-command.js";
 import { parseImportArgs, runImport } from "./import-command.js";
 import type { ImportHooks } from "./import-command.js";
 import { runMermaid } from "./mermaid-command.js";
@@ -25,6 +27,7 @@ Usage:
   sdp view [root] [--exclude PATH]... [--check-clean]
   sdp census [root] [--exclude PATH]... [--check-clean]
   sdp mermaid [root] [--exclude PATH]... [--check-clean]
+  sdp gherkin [root] [--exclude PATH]... [--check-clean]
   sdp import <path...> [--dry-run]
   sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--json]
 
@@ -51,6 +54,10 @@ Commands:
   mermaid    validate, then generate Mermaid diagrams into <root>/generated/mermaid/ as a
              separate wholesale tmp-to-rename projection. --check-clean independently re-renders
              and refuses when the published bytes differ from the current projection.
+  gherkin    validate, then generate a Gherkin-shaped READ projection of every Spec into
+             <root>/generated/gherkin/ as a separate wholesale tmp-to-rename projection. The
+             pages are disposable and never use .sdp.gherkin. --check-clean independently
+             re-renders and refuses when the published bytes differ from the current projection.
   import     Convert one or more *.sdp.ts files or recursively scanned roots to write-beside
              *.sdp.md documents. The TypeScript source is never deleted. --dry-run writes
              each would-be document to stdout, headed by its target path, without writing.
@@ -73,7 +80,7 @@ Commands:
              --json prints JSON.stringify instead, unbounded. A body that throws exits 1, as does a
              graph that fails to derive.`;
 
-interface CliHooks extends CensusHooks, MermaidHooks {
+interface CliHooks extends CensusHooks, MermaidHooks, GherkinViewHooks {
   readonly import?: ImportHooks;
   readonly query?: QueryHooks;
 }
@@ -101,6 +108,7 @@ export function runSdpCli(
     command !== "view" &&
     command !== "census" &&
     command !== "mermaid" &&
+    command !== "gherkin" &&
     command !== "import" &&
     command !== "q"
   ) {
@@ -138,9 +146,13 @@ export function runSdpCli(
     return runView(parsed, output, hooks);
   }
 
-  return command === "census"
-    ? runCensus(parsed, output, hooks)
-    : runMermaid(parsed, output, hooks);
+  if (command === "census") {
+    return runCensus(parsed, output, hooks);
+  }
+
+  return command === "mermaid"
+    ? runMermaid(parsed, output, hooks)
+    : runGherkinView(parsed, output, hooks);
 }
 
 export function isCliEntrypoint(executedPath: string | undefined, moduleUrl: string): boolean {

@@ -40,7 +40,10 @@ const expectedRootExports = [
   "derivedEdgeTypes",
   "duplicateIdExclusionAnchor",
   "emitMarkdownSpec",
+  "escapeGherkinViewText",
   "escapeMermaidLabel",
+  "GHERKIN_KIND_LIE_REASONS",
+  "gherkinKindLieReason",
   "evaluateReadinessFloor",
   "extract",
   "extractAnchor",
@@ -75,6 +78,7 @@ const expectedRootExports = [
   "reifyTypeScriptCarrier",
   "renderCensus",
   "renderDesignReview",
+  "renderGherkinView",
   "renderMermaid",
   "renderStepText",
   "schemaVersion",
@@ -100,6 +104,7 @@ const typeOnlyRootExports = [
   "ReifiedAnchor",
   "ReifiedPack",
   "ReifiedSpec",
+  "GherkinRefusedKind",
 ] as const;
 
 function run(command: string, args: readonly string[], cwd: string): string {
