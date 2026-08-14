@@ -1,0 +1,6 @@
+@spec.fixture.desc-loc-refusal @altitude.feature @readiness.defined
+Feature: Description location refusal
+
+  # leading comment
+
+  - outcom: Bad key

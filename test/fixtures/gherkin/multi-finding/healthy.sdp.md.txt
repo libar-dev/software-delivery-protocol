@@ -1,0 +1,11 @@
+---
+id: spec:fixture.healthy-sibling
+kind: behavior
+altitude: feature
+readiness: idea
+relations: {}
+---
+# Healthy sibling
+
+## Intent
+- outcome: Survive an invalid Gherkin sibling.

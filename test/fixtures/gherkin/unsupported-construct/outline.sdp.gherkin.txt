@@ -1,0 +1,12 @@
+@spec.fixture.outline-parent @altitude.feature @readiness.defined
+Feature: Outline refusal
+
+  @spec.fixture.outline
+  @altitude.story
+  @readiness.defined
+  Scenario Outline: Unsupported outline
+    Given the value <value>
+
+    Examples:
+      | value |
+      | one   |

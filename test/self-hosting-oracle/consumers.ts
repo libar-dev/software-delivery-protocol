@@ -145,7 +145,7 @@ export const consumersSpecs = [
     specKind: "behavior",
     altitude: "feature",
     readiness: "ready",
-    file: "specs/consumers/reader.sdp.md",
+    file: "specs/consumers/reader.sdp.gherkin",
     title: "The reader bridges agent entry points to composable graph context",
     narrative: null,
     sections: {
@@ -671,7 +671,7 @@ export const consumersSpecs = [
     specKind: "example",
     altitude: "story",
     readiness: "ready",
-    file: "specs/consumers/reader.concept-entry.sdp.md",
+    file: "specs/consumers/reader.sdp.gherkin",
     title:
       "A concept recorded only inside a Spec's sections is still reached, and the field is named",
     narrative: null,
@@ -703,7 +703,7 @@ export const consumersSpecs = [
     specKind: "example",
     altitude: "story",
     readiness: "ready",
-    file: "specs/consumers/reader.file-entry.sdp.md",
+    file: "specs/consumers/reader.sdp.gherkin",
     title: "A source file reaches the Spec its binding names, and a carrier reaches its own Spec",
     narrative: null,
     sections: {
@@ -735,7 +735,7 @@ export const consumersSpecs = [
     specKind: "example",
     altitude: "story",
     readiness: "ready",
-    file: "specs/consumers/reader.changeset-entry.sdp.md",
+    file: "specs/consumers/reader.sdp.gherkin",
     title: "A changeset names what it reaches, why, and what it cannot see",
     narrative: null,
     sections: {

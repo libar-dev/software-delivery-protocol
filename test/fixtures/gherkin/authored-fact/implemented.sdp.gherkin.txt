@@ -1,0 +1,2 @@
+@implemented @spec.fixture.authored-fact @altitude.feature @readiness.defined
+Feature: Authored delivery fact

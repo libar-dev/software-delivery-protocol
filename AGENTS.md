@@ -16,16 +16,19 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
-> **Status:** the authoring **carrier is ruled** as `.sdp.md`: Specs and Packs default to Markdown;
-> the TS DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18,
-> completed by the Pack syntax ruling, MD-25). **plan 27 is DRAFTED** — the executable-verification
-> design review; per the convention below, settled ground is **plan 26 is EXECUTED** — native
-> Packs, annotation completion, decision readiness, and honest element-absence dispositions are
-> settled. Plan 25
-> recovered the guidance layer and packaged the `sdp-sessions` on-ramp; plan 24's inward turn
-> remains the standing practice: forward intent lives in the graph, so the live backlog is a graph
-> query, not a document. Corpus counts,
-> readiness, and findings are **derived, never quoted** — re-run
+> **Status:** Specs and Packs default to the Markdown carrier; the TS DSL survives as import
+> source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax
+> ruling, MD-25). The Gherkin carrier option (MD-27) admits a graph-aware lawful per-ID option
+> for behavior and example Specs; **plan 30 is EXECUTING** — MD-28 settles the canonical suffix
+> as `.sdp.gherkin` and hardens locations, closed grammar, and bounded multi-finding diagnostics.
+> Settled ground remains **plan 28 is EXECUTED** (bounded carrier pipeline, parity proof,
+> reader-family tracer bullet, guidance) and **plan 27 is EXECUTED** (v0 lineage restored;
+> executable-verification review selected the Gherkin option). Plan 29 is the next-arc briefs
+> index (not an execution plan). Plan 26 completed native Packs, annotation coverage, and
+> decision readiness. Plan 25 recovered the guidance layer and packaged the `sdp-sessions`
+> on-ramp; plan 24's inward turn remains the standing practice: forward intent lives in the
+> graph, so the live backlog is a graph query, not a document. Corpus counts, readiness, and
+> findings are **derived, never quoted** — re-run
 > `pnpm --silent sdp validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity`
 > (or `npm run --silent sdp --` with the same argv) and read recipes 8 and 11. Recipe 1 is the
 > operational backlog, not the census. Never invoke a bare `sdp`. Build state lives in **`plans/`** — read the highest
@@ -72,6 +75,7 @@ Progressive disclosure — start at the top, follow the pointers down.
 | `.agents/skills/sdp-agent-surface/` + `.agents/skills/sdp-authoring/` + `.agents/skills/sdp-sessions/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — repository-owned reading, authoring, and advisory delivery-session skills (also exposed to Claude through the `.claude/skills` symlink) plus the eleven runnable `sdp q` bodies; see "Query the graph first" below | before answering a corpus question, authoring intent, or routing delivery work — query the graph, then follow the carrying Specs |
 | `examples/checkout-v1` | **the worked MVP example** (TS DSL tracer bullet) — specs, anchors, untracked `generated/` (regenerated in-pipeline); walkthrough in its README | when proving the loop end-to-end |
 | `explorations/` | **evidence only** (carrier exhibits, executable-example findings) — mapping evidence for design; **never promote spike code into product** | when judging design evidence; not a source tree to ship |
+| `docs/lineage/` | restored historical design documents — the v0 concept set, verbatim with lineage headers; evidence for design reviews, never intended truth | when a review needs superseded design on the table rather than in git history |
 | `plans/` | **the build plan** — what each implementation session does, and why | before writing code — highest primary-numbered plan's status header, plus active subplans it designates; if DRAFTED, also the latest ✅ EXECUTED/RUN plan |
 | `npm run check` | **the green gate** — `check:temporal` → `lint` → `format:check` → `build` → `generate:self-hosting` → `generate:example` → `typecheck` → `typecheck:examples` → `test` → `check:self-hosting-gates` → `check:self-hosting` → `check:example` → `preflight` | before claiming green / after engine edits |
 | `reviews/` | **archived session reviews** (implementation, founding-ideation, adversarial + prompts) — durable findings already folded into plans/DECISIONS; read for provenance | rarely |

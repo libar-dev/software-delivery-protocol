@@ -113,12 +113,14 @@ export function runBuild(
       result.counts.specs === 0 &&
       !findings.some(
         (finding) =>
-          finding.file?.endsWith(".sdp.ts") === true || finding.file?.endsWith(".sdp.md") === true,
+          finding.file?.endsWith(".sdp.ts") === true ||
+          finding.file?.endsWith(".sdp.md") === true ||
+          finding.file?.endsWith(".sdp.gherkin") === true,
       )
     ) {
       writeStderr(
         output,
-        `note: no *.sdp.ts or *.sdp.md spec files found under ${resolvedRoot} — the authored model is empty. Is this the right extraction root?\n`,
+        `note: no *.sdp.ts, *.sdp.md, or *.sdp.gherkin spec files found under ${resolvedRoot} — the authored model is empty. Is this the right extraction root?\n`,
       );
     }
 

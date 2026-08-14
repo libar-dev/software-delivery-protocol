@@ -167,7 +167,7 @@ a sibling set back as a table — the graph never holds a multi-point example.
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
-| **carrier** | the text format that carries the authored `Spec` document — the envelope, the prose, and the owned notation; **ruled: Markdown (`.sdp.md`) for all eight kinds**, the TS DSL remaining the import source and a lawful per-ID option (one canonical surface per ID, `04` §1) | "format"/"file type" (say which layer) · a carrier is never a second store |
+| **carrier** | the text format that carries the authored `Spec` document — the envelope, the prose, and the owned notation; **ruled: Markdown (`.sdp.md`) for all eight kinds**, Gherkin (`.sdp.gherkin`) as a lawful per-ID carrier for behavior and example Specs, and the TS DSL as the import source and a lawful per-ID option (one canonical surface per ID, `04` §1); bare `.feature` is non-canonical import-source territory | "format"/"file type" (say which layer) · a carrier is never a second store |
 | **notation** | the Protocol-**owned** typed step language inside the carrier's fenced blocks — Given/When/Then step text and the slot vocabulary; owned by the Protocol whatever the carrier | "grammar" (the dismissed own-language direction) · "DSL" (reserved for the TS DSL) |
 
 ## Relations  (authored, typed, directed `Spec`→`Spec` edges — → `spec:model.relations`)
@@ -252,11 +252,15 @@ delivery fact, workflow state, or graph state.
   validators consume the one graph only, never a second validation path (one validation path, MD-14).
 - **Resolved (MD-15):** Markdown Spec files use the **`.sdp.md`** extension by default; **`.sdp.ts`**
   identifies the lawful TypeScript carrier without colliding with every JS test-runner's default glob.
-  The model name `Spec` itself was always settled — only the file serialization changed.
-- **Resolved (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25):** Specs and
-  Packs default to Markdown; the TS DSL survives as import source and a lawful per-ID option. The
-  surviving law is **one canonical surface per ID, no mixing** (`04` §1); the `.sdp.ts` extension
-  law (MD-15) is re-pointed, not repealed — its rationale carries to the `.sdp.md` sibling.
+  The model name `Spec` itself was always settled — only the file serialization changed. MD-28 applies
+  the same collision-safety law to the Gherkin option as **`.sdp.gherkin`**.
+- **Resolved (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25, the
+  Gherkin carrier option, MD-27, and the `.sdp.gherkin` extension, MD-28):** Specs and Packs default
+  to Markdown; the TS DSL survives as import source and a lawful per-ID option; behavior and example
+  Specs may instead use a `.sdp.gherkin` carrier. Bare `.feature` stays non-canonical import-source
+  territory. The surviving law is **one canonical surface per ID, no mixing** (`04` §1); the
+  `.sdp.ts` extension law (MD-15) is re-pointed, not repealed — its rationale carries to the
+  `.sdp.md` and `.sdp.gherkin` siblings.
 - **Resolved (the prose-ownership law, MD-19):** free prose enters the graph as **description values on
   typed owners** — the owning section or the `Spec` itself (the spec-level narrative slot); never a
   heading-path store, never a file-only pointer; the edge-text ownership rule is the surface-design

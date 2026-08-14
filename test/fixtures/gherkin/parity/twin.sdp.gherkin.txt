@@ -1,0 +1,13 @@
+@spec.fixture.parity-twin
+@altitude.feature
+@readiness.defined
+Feature: Carrier parity twin
+  - outcome: Derive equal graph and contract semantics from either carrier.
+
+  @example-space
+  Scenario: Shared vocabulary
+    Given a cart containing {item:string}
+    When the cart is submitted
+    Then the order contains the item
+
+  Rule: Both carriers enter one graph shape.

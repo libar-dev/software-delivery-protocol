@@ -1,0 +1,5 @@
+Feature: Login
+  Scenario: user logs in
+    Given valid credentials
+    When they submit the form
+    Then they see the home page

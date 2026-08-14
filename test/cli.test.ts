@@ -22,7 +22,11 @@ import { generateContracts } from "../src/codegen/contracts.js";
 import { extract } from "../src/extract/index.js";
 import { renderDesignReview } from "../src/projections/design-review.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
-import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
+import {
+  materializeExtractCorpus,
+  materializeGherkinCorpus,
+  removeMaterializedCorpus,
+} from "./helpers/extract-corpus.js";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const exampleRoot = join(repoRoot, "examples", "checkout-v1");
@@ -151,7 +155,7 @@ describe("sdp cli", () => {
       );
 
       expect(exitCode).toBe(0);
-      expect(capture.readStderr().trimEnd()).toBe("");
+      expect(capture.readStderr()).toBe("");
       expect(capture.readStdout()).toContain("validate: 0 errors · 0 warnings");
       expect(readFileSync(join(repoRoot, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
@@ -486,7 +490,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
 
   it("documents repeatable --exclude paths in help", () => {
     expect(SDP_HELP_TEXT).toContain("[--exclude PATH]...");
-    expect(SDP_HELP_TEXT).toContain("*.sdp.ts and *.sdp.md");
+    expect(SDP_HELP_TEXT).toContain("*.sdp.ts, *.sdp.md, and *.sdp.gherkin");
   });
 
   it("rejects a second root argument: one line, exit 1, nothing runs", () => {
@@ -511,7 +515,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
       expect(exitCode).toBe(0);
       expect(capture.readStdout()).toContain("0 specs · 0 packs · 0 anchors");
       expect(capture.readStderr()).toContain(
-        `note: no *.sdp.ts or *.sdp.md spec files found under ${emptyRoot}`,
+        `note: no *.sdp.ts, *.sdp.md, or *.sdp.gherkin spec files found under ${emptyRoot}`,
       );
       expect(existsSync(join(emptyRoot, "generated", "graph.json"))).toBe(true);
     } finally {
@@ -539,6 +543,24 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
         .split("\n")
         .find((line) => line.includes("extract/non-static-envelope"));
       expect(findingLine?.match(/non-static-id\.sdp\.ts/g)).toHaveLength(1);
+    } finally {
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("renders a Gherkin parser failure through the public CLI", () => {
+    const corpusRoot = materializeGherkinCorpus("syntax-error");
+
+    try {
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", corpusRoot], capture.output);
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toMatch(
+        /broken\.sdp\.gherkin:4 — \[error\] extract\/gherkin-syntax — /,
+      );
+      expect(capture.readStderr()).toContain("graph.json not written");
+      expect(existsSync(join(corpusRoot, "generated", "graph.json"))).toBe(false);
     } finally {
       removeMaterializedCorpus(corpusRoot);
     }
@@ -807,7 +829,84 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
 
       expect(exitCode).toBe(1);
       expect(capture.readStderr()).toContain("extract/invalid-id");
-      expect(capture.readStderr()).not.toContain("no *.sdp.ts or *.sdp.md spec files found");
+      expect(capture.readStderr()).not.toContain(
+        "no *.sdp.ts, *.sdp.md, or *.sdp.gherkin spec files found",
+      );
+    } finally {
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("treats a root of only ordinary .feature files as an empty authored model, not a missing-identity error", () => {
+    const featureOnlyRoot = mkdtempSync(join(tmpdir(), "sdp-feature-only-cli-"));
+
+    try {
+      writeFileSync(
+        join(featureOnlyRoot, "cucumber-login.feature"),
+        ["Feature: Login", "  Scenario: user logs in", "    Given valid credentials", ""].join(
+          "\n",
+        ),
+        "utf8",
+      );
+
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", featureOnlyRoot], capture.output);
+
+      // Ordinary Cucumber is not a carrier: empty model, exit 0 — never a Gherkin identity refusal.
+      expect(exitCode).toBe(0);
+      expect(capture.readStdout()).toContain("0 specs · 0 packs · 0 anchors");
+      expect(capture.readStderr()).toContain(
+        `note: no *.sdp.ts, *.sdp.md, or *.sdp.gherkin spec files found under ${featureOnlyRoot}`,
+      );
+      expect(capture.readStderr()).not.toContain("missing @spec");
+      expect(capture.readStderr()).not.toContain("extract/gherkin-grammar");
+      expect(existsSync(join(featureOnlyRoot, "generated", "graph.json"))).toBe(true);
+    } finally {
+      rmSync(featureOnlyRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("suppresses the empty-model note when a failed .sdp.gherkin finding.file matches the carrier suffix predicate", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-gherkin-failed-cli-"));
+
+    try {
+      writeFileSync(
+        join(root, "broken.sdp.gherkin"),
+        ["@altitude.feature", "@readiness.defined", "Feature: Missing identity", ""].join("\n"),
+        "utf8",
+      );
+
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", root], capture.output);
+
+      // Code-level finding.file suffix predicate: a discovered-but-refused carrier is not "absent".
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toMatch(
+        /broken\.sdp\.gherkin:\d+ — \[error\] extract\/gherkin-grammar — /,
+      );
+      expect(capture.readStderr()).toContain("missing @spec");
+      expect(capture.readStderr()).not.toContain(
+        "no *.sdp.ts, *.sdp.md, or *.sdp.gherkin spec files found",
+      );
+      expect(existsSync(join(root, "generated", "graph.json"))).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("builds a mixed root with one .sdp.gherkin carrier and ignores the ordinary .feature sibling", () => {
+    const corpusRoot = materializeGherkinCorpus("suffix-discovery");
+
+    try {
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", corpusRoot], capture.output);
+
+      expect(exitCode).toBe(0);
+      expect(capture.readStdout()).toContain("1 specs · 0 packs · 0 anchors");
+      expect(capture.readStderr()).not.toContain("missing @spec");
+      expect(capture.readStderr()).not.toContain("extract/gherkin-grammar");
+      expect(capture.readStderr()).not.toContain("no *.sdp.ts, *.sdp.md, or *.sdp.gherkin");
+      expect(existsSync(join(corpusRoot, "generated", "graph.json"))).toBe(true);
     } finally {
       removeMaterializedCorpus(corpusRoot);
     }

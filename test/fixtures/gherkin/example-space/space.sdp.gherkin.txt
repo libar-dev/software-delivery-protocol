@@ -1,0 +1,18 @@
+@spec.fixture.space-parent
+@altitude.feature
+@readiness.defined
+Feature: Example space parent
+
+  @example-space
+  Scenario: Vocabulary
+    Given a cart containing {item:string}
+    When the cart is submitted
+    Then the order contains the item
+
+  @spec.fixture.space-child
+  @altitude.story
+  @readiness.defined
+  Scenario: Concrete point
+    Given a cart containing {item: "book"}
+    When the cart is submitted
+    Then the order contains the item

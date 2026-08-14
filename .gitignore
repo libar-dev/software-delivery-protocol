@@ -4,8 +4,9 @@
 # User's scratchpad
 .tmp-scratch/
 
-# User-local editor state
-.vscode/
+# User-local editor state — keep the shared Gherkin association for *.sdp.gherkin
+.vscode/*
+!.vscode/settings.json
 
 # macOS Finder metadata
 .DS_Store

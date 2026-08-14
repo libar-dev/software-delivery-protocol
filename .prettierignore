@@ -23,9 +23,10 @@ test/fixtures/checkout-v1/expected-graph.json
 test/fixtures/checkout-v1/expected-design-review/
 generated/
 
-# The ruled carrier grammar owns these bytes; Prettier rewrites can break its grammar
+# The ruled carrier grammars own these bytes; Prettier rewrites can break their grammar
 # and fixture↔live byte-parity
 *.sdp.md
+*.sdp.gherkin
 
 # Refusal-parity carriers are intentionally malformed inputs read as text by the reifiers.
 test/fixtures/import/parity/

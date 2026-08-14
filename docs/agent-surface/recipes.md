@@ -58,7 +58,7 @@ process's full authority.
 
 **These recipes are not law.** They compose the laws the Specs carry, and they cite rather than
 restate them: the surface itself is [`spec:consumers.agent-surface`](../../specs/consumers/agent-surface.sdp.md)
-and [`spec:consumers.reader`](../../specs/consumers/reader.sdp.md); the front door is
+and [`spec:consumers.reader`](../../specs/consumers/reader.sdp.gherkin); the front door is
 [`spec:decisions.agent-front-door`](../../specs/decisions/agent-front-door.sdp.md). The vocabulary
 these bodies speak — claims, delivery facts, stated versus derived readiness, blast radius,
 coverage-unknown, at-risk — is ratified in `CONTEXT.md`.

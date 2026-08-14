@@ -9,7 +9,7 @@ import { codeAnchor } from "../model/code-anchor.js";
 import type { Finding, ValidationReport } from "../validate/contracts.js";
 import { reifyAnchorSourceFile } from "./anchors.js";
 import type { ReifiedAnchor } from "./anchors.js";
-import { reifyTypeScriptCarrier } from "./carrier.js";
+import { reifyGherkinCarrier, reifyTypeScriptCarrier } from "./carrier.js";
 import { deriveGraph } from "./derive.js";
 import { discoverFiles } from "./discover.js";
 import type { DiscoveredSourceFile } from "./discover.js";
@@ -27,9 +27,9 @@ export const extractValidatorId = "extract";
 
 export interface ExtractOptions {
   /**
-   * The extraction root: every `*.sdp.ts` and `*.sdp.md` below it (minus tooling output) is read
-   * as the declared layer, and every other `*.ts`/`*.tsx` source file is swept for anchor
-   * constants (the anchored layer).
+   * The extraction root: every `*.sdp.ts`, `*.sdp.md`, and `*.sdp.gherkin` below it (minus tooling
+   * output) is read as the declared layer, and every other `*.ts`/`*.tsx` source file is swept for
+   * anchor constants (the anchored layer).
    */
   readonly root: string;
   /** Root-relative POSIX path prefixes excluded from both discovery surfaces. */
@@ -192,11 +192,13 @@ export function extract(options: ExtractOptions): ExtractionResult {
     const sourceText = readFileSync(file.absolutePath, "utf8");
     const reified = file.relativePath.endsWith(".sdp.md")
       ? reifyMarkdownCarrier(sourceText, file.relativePath)
-      : reifyTypeScriptCarrier(
-          sourceText,
-          file.relativePath,
-          protocolBindingScopeFor(file.absolutePath),
-        );
+      : file.relativePath.endsWith(".sdp.gherkin")
+        ? reifyGherkinCarrier(sourceText, file.relativePath)
+        : reifyTypeScriptCarrier(
+            sourceText,
+            file.relativePath,
+            protocolBindingScopeFor(file.absolutePath),
+          );
     specs.push(...reified.specs);
     packs.push(...reified.packs);
     findings.push(...reified.findings);

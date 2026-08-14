@@ -1,0 +1,5 @@
+@spec.fixture.malformed-relation
+@altitude.feature
+@readiness.defined
+@refines.order-management
+Feature: Malformed relation target

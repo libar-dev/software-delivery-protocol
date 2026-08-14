@@ -53,6 +53,9 @@ import { setOwn } from "./set-own.js";
  */
 export const extractFindingIds = {
   parseError: "extract/parse-error",
+  gherkinSyntax: "extract/gherkin-syntax",
+  gherkinGrammar: "extract/gherkin-grammar",
+  tooManyGherkinFindings: "extract/too-many-gherkin-findings",
   nonStaticEnvelope: "extract/non-static-envelope",
   invalidId: "extract/invalid-id",
   duplicateId: "extract/duplicate-id",

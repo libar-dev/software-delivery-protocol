@@ -1,0 +1,8 @@
+@spec.fixture.desc-loc-space @altitude.feature @readiness.defined
+Feature: Example space description location
+
+  @example-space
+  Scenario: Space
+
+    prose under space
+    Given one

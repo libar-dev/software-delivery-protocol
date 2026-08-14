@@ -1,6 +1,6 @@
 # 04 — Authoring & Binding
 
-How truth gets into the repo. Authoring has two ruled **carriers**, both framework-neutral: the **Markdown carrier (`.sdp.md`)** — the default for Specs and Packs — and the **TypeScript Spec DSL (`.sdp.ts`)**, an import source and lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25). **Generic source anchors** bind code under either carrier. Richer surfaces (a Gherkin-like carrier, the interactive harness UI) are named in §4 so the model accommodates them — the harness UI **ASPIRATIONAL**, the carrier competition now ruled — while the carrier-independent executable machinery beneath them is landed (CORE).
+How truth gets into the repo. Authoring has three ruled **carriers**, all framework-neutral: the **Markdown carrier (`.sdp.md`)**, the default for Specs and Packs; the **TypeScript Spec DSL (`.sdp.ts`)**, an import source and lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25); and **graph-aware Gherkin (`.sdp.gherkin`)**, a lawful per-ID option for behavior and example Specs only (the Gherkin carrier option, MD-27, and the `.sdp.gherkin` extension, MD-28). **Generic source anchors** bind code under any carrier. The interactive harness UI stays named in §4 as **ASPIRATIONAL**. The carrier-independent executable machinery beneath richer surfaces is landed (CORE).
 
 Realises **P5** (statically extractable), **P6** (ID-linked), **P9/P10** (anchors are anchored bindings, not intent), and the epistemic boundary from `01`.
 
@@ -60,7 +60,7 @@ Two sanctioned moves, both keeping the same IDs (P4):
 
 ### One canonical surface per ID
 
-For any given Spec or Pack ID, exactly one surface is canonical — no mixing per ID. Specs and Packs default to Markdown; the TS DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25). A per-ID canonical-surface config is designed-for and deferred (ASPIRATIONAL); the current realization is file-existence-only: the surface that exists is canonical, and the other is a generated read-only view.
+For any given Spec or Pack ID, exactly one surface is canonical, with no mixing per ID. Specs and Packs default to Markdown; the TS DSL survives as import source and a lawful per-ID option; behavior and example Specs may instead choose `.sdp.gherkin` (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25, plus MD-27/MD-28). Bare `.feature` is never a live canonical surface. A per-ID canonical-surface config is designed-for and deferred (ASPIRATIONAL); the current realization is file-existence-only: the surface that exists is canonical, and any other form is a generated read-only view or foreign material.
 
 ---
 
@@ -148,9 +148,11 @@ The **carrier-independent executable machinery is landed (CORE)**; what stays de
 - **The oracle.** The authored expected-outcome semantics for a parent's example space — implementation-side, beside the tests, bound by the `specOracle` anchor (§2), never extracted. Typed against the generated space contract on both sides: a renamed slot fails to compile, claiming an outcome the specs never stated is a `tsc` error, and `unspecified` is a first-class answer.
 - **The execution half.** The framework-neutral `/runner` core plus the `/vitest` adapter subpath (vitest an optional peer of the adapter alone); failure messages render in the spec's own language.
 
-### Annotated Gherkin (a declined carrier contender)
+### Annotated Gherkin (RULED AND REALIZED)
 
-`.feature`-style files with graph-aware tags (`@spec.orders.create-order`, `@readiness.defined`) as an equal-canonicity surface for behaviour specs, for teams that prefer BDD. The carrier competition is ruled (the carrier ruling, MD-18): the Markdown carrier won for all eight kinds, and this surface was a contender the ruling declined. Any richer surface that ever arrives executes through the generated contracts above: the machinery is carrier-independent by construction.
+`.sdp.gherkin` files with graph-aware syntax are an equal-canonicity surface for behavior and example Specs, for teams that prefer BDD. The suffix is canonical and collision-safe; it is not a Cucumber execution path. Bare `.feature` stays non-canonical import-source territory (MD-28) and is never discovered beside a Protocol corpus. Markdown remains the default under the carrier ruling (MD-18); the Gherkin carrier option (MD-27), realized by `spec:carrier.gherkin-authoring`, re-points the formerly declined contender as a lawful per-ID option for those two kinds only. Each ID still has one canonical surface with no mixing, and the syntax maps onto the existing envelope, sections, relations, and notation rather than creating a parallel lifecycle or tag registry. Execution stays behind the generated contracts and anchored code-side handlers above: the machinery is carrier-independent by construction.
+
+Consumers associate `*.sdp.gherkin` with Gherkin in the editor when they want highlighting or formatting. VS Code / Cursor use `files.associations` mapping `*.sdp.gherkin` to the `cucumber` language id (this repository ships `.vscode/settings.json`); other editors use their equivalent file-type association. No second grammar ships with the package. Extraction always depends on the pinned runtime packages `@cucumber/gherkin@42.0.1` and `@cucumber/messages@34.2.1`, installed with `@libar-dev/software-delivery-protocol` even for Markdown-only consumers. Do not add a parallel parser, and do not expect those dependencies to load lazily.
 
 ### Interactive harnesses (ASPIRATIONAL — a projection plus one anchored oracle)
 

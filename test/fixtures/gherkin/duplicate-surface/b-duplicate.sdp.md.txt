@@ -1,0 +1,11 @@
+---
+id: spec:fixture.surface-duplicate
+kind: behavior
+altitude: feature
+readiness: defined
+relations: {}
+---
+# Duplicate Markdown surface
+
+## Intent
+- outcome: Collide with the Gherkin surface.

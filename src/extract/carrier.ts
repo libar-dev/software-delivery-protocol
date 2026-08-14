@@ -2,6 +2,7 @@ import { Project } from "ts-morph";
 
 import type { Finding } from "../validate/contracts.js";
 export { reifyMarkdownCarrier } from "./markdown.js";
+export { reifyGherkinCarrier } from "./gherkin.js";
 import { extractFindingIds, reifySourceFile } from "./reify.js";
 import type { ReifiedPack, ReifiedSpec } from "./reify.js";
 import type { ProtocolBindingScope } from "./protocol-bindings.js";

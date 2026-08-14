@@ -1,0 +1,6 @@
+@spec.fixture.desc-loc-rule @altitude.feature @readiness.defined
+Feature: Rule description location
+
+  Rule: Described
+
+    prose under rule

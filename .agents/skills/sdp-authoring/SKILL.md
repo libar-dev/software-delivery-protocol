@@ -1,6 +1,6 @@
 ---
 name: sdp-authoring
-description: Author and mature Protocol Specs through the graph-first workflow. Use when creating or editing `.sdp.md` carriers, deciding the honest readiness rung, promoting inline content, generating executable contracts, binding examples or implementation anchors, mutation-probing evidence, or preparing a Spec for human review and a `ready` statement.
+description: Author and mature Protocol Specs through the graph-first workflow. Use when creating or editing `.sdp.md` or lawful `.sdp.gherkin` carriers, deciding the honest readiness rung, promoting inline content, generating executable contracts, binding examples or implementation anchors, mutation-probing evidence, or preparing a Spec for human review and a `ready` statement.
 ---
 
 # Author Specs through the graph
@@ -34,8 +34,9 @@ runner.
 
 1. Read `CONTEXT.md`, then query nearby Specs with recipe 3 or 6. Do not parse the corpus by hand.
 2. Create the Markdown carrier with one stable `spec:` id, title, kind, altitude, readiness, and
-   relations. The carrier law is `spec:decisions.carrier-ruling`; the envelope and section law is
-   `spec:model.spec-sections`.
+   relations. For a behavior parent with example children, a `.sdp.gherkin` carrier is a lawful per-ID
+   alternative; follow `spec:carrier.gherkin-authoring`. The carrier law is
+   `spec:decisions.carrier-ruling`; the envelope and section law is `spec:model.spec-sections`.
    A Spec carries one kind. If a fact straddles kinds, split it into two Specs and join them with
    the relation that preserves their distinct intents, following `spec:model.core-model`.
 3. State only the rung the structure clears. Use recipe 9 for the current floor, recipe 11 for the
@@ -72,6 +73,51 @@ The `idea` floor is the whole shape: stable envelope coordinates plus either an 
 `refines` parent. The template states the outcome explicitly so the capture remains intelligible
 without its parent. Before every later human readiness edit, run promotion preflight (recipe 9);
 the reported floor never makes the edit on the author's behalf.
+
+### Author behavior and examples in Gherkin
+
+Use one `.sdp.gherkin` file only when every carried Spec is `behavior` or `example`. That suffix is
+the only canonical Gherkin carrier. Bare `.feature` is import-source / foreign-corpus territory and
+is never discovered. Renaming a carrier to `.feature` takes it out of the graph; rename it back to
+`.sdp.gherkin` to restore discovery. `.sdp.gherkin` is not a Cucumber execution suffix.
+
+Associate `*.sdp.gherkin` with Gherkin in the editor when highlighting or formatting is needed. In
+VS Code / Cursor, map the suffix to the `cucumber` language id (this repository ships
+`.vscode/settings.json`):
+
+```json
+{
+  "files.associations": {
+    "*.sdp.gherkin": "cucumber"
+  }
+}
+```
+
+Adopters copy that association, or the equivalent mapping in another editor. Do not add a second
+Gherkin grammar; stock editor Gherkin/Cucumber support is enough for highlighting. Extraction uses
+the package runtime pins `@cucumber/gherkin@42.0.1` and `@cucumber/messages@34.2.1`, installed with
+the Protocol dependency even for Markdown-only corpora. Do not re-pin those packages for carrier
+support, and do not expect lazy loading.
+
+The closed carrier grammar is:
+
+1. One Feature is the behavior Spec; ordinary Scenarios are example Specs.
+2. Feature and Scenario tags carry exactly one `@spec.<id>`, `@altitude.<value>`, and
+   `@readiness.<value>`; kind is structural and Pack membership stays manifest-owned.
+3. Relation tags are only `@refines.`, `@depends-on.`, `@constrained-by.`, `@decided-by.`, and
+   `@verifies.`; Scenario nesting supplies missing `refines` and `verifies` relations.
+4. Keyed description lines populate existing intent and verification fields; remaining prose is
+   narrative. Unknown keys, heading-shaped lines, and open-question syntax are refused.
+5. Trailing title-only Rule blocks populate behavior rules; tagged, described, or nested Rules are
+   refused.
+6. At most one `@example-space` Scenario supplies parent vocabulary without creating a node.
+7. Steps use Protocol slot notation and inherited And/But phases; outlines, backgrounds, star
+   steps, doc strings, data tables, and leading conjunctions are refused.
+8. Delivery-fact, claim, lifecycle, and workflow tags are refused. Generated contracts and
+   resolving code-side anchors remain the execution boundary.
+
+Each ID still has one canonical carrier surface. Query
+`spec:carrier.gherkin-authoring` before authoring or changing this syntax.
 
 ## Author a Pack
 
