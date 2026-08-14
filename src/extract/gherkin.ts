@@ -17,6 +17,7 @@ import type { SpecAltitude, SpecReadiness } from "../model/descriptors.js";
 import type { SpecRelationType } from "../model/relations.js";
 import type { Finding } from "../validate/contracts.js";
 import type { CarrierReification } from "./carrier.js";
+import { gherkinKindLieReason } from "./gherkin-kind-honesty.js";
 import { extractFindingIds, type ReifiedSpec } from "./reify.js";
 
 const GHERKIN_RELATION_TAGS = {
@@ -387,10 +388,13 @@ function decorationTagFinding(tag: Tag, file: string): Finding | undefined {
   }
 
   if (name.startsWith("@kind.")) {
+    const lieReason = gherkinKindLieReason(name.slice("@kind.".length));
     return grammarFinding(
       file,
       tag.location.line,
-      `Gherkin tag "${name}" is refused: kind is structural (Feature → behavior, Scenario → example)`,
+      lieReason === undefined
+        ? `Gherkin tag "${name}" is refused: kind is structural (Feature → behavior, Scenario → example)`
+        : `Gherkin tag "${name}" is refused: kind is structural (Feature → behavior, Scenario → example); ${lieReason}`,
     );
   }
   if (name === "@pack" || name.startsWith("@pack.")) {

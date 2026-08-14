@@ -8,6 +8,7 @@ export const expectedDeclaredRelations = [
   ["spec:carrier.markdown-authoring", "decidedBy", "spec:decisions.carrier-ruling"],
   ["spec:carrier.gherkin-authoring", "refines", "spec:carrier.markdown-authoring"],
   ["spec:carrier.gherkin-authoring", "decidedBy", "spec:decisions.gherkin-carrier-option"],
+  ["spec:carrier.gherkin-authoring", "decidedBy", "spec:decisions.carrier-universality"],
   ["spec:carrier.gherkin-authoring", "dependsOn", "spec:carrier.slot-notation"],
   [
     "spec:carrier.gherkin-authoring.parent-child-extraction",
@@ -394,6 +395,8 @@ export const expectedDeclaredRelations = [
   ["spec:consumers.agent-surface", "decidedBy", "spec:decisions.agent-surface-scripts-graph"],
   ["spec:consumers.design-review", "refines", "spec:consumers.projections-model"],
   ["spec:consumers.census-page", "refines", "spec:consumers.projections-model"],
+  ["spec:consumers.gherkin-view", "refines", "spec:consumers.projections-model"],
+  ["spec:consumers.gherkin-view", "decidedBy", "spec:decisions.carrier-universality"],
   ["spec:consumers.reader", "refines", "spec:consumers.agent-surface"],
   ["spec:consumers.edit-model", "refines", "spec:consumers.projections-model"],
   ["spec:consumers.authoring-on-ramp", "refines", "spec:consumers.edit-model"],

@@ -56,6 +56,51 @@ export const consumersSpecs = [
     },
     deliveryFacts: ["implemented", "has-verifier"],
   },
+  {
+    id: "spec:consumers.gherkin-view",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/consumers/gherkin-view.sdp.md",
+    title: "Gherkin view renders any Spec as a disposable read shape",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give maintainers a generated Gherkin-shaped READ projection of any Spec without creating a second carrier, a default flip, or round-trip parity.",
+      },
+      behavior: {
+        rules: [
+          "`renderGherkinView` is a pure `Reader -> pages` projection with no filesystem or clock access; equal reader data produces byte-identical pages.",
+          "Every Spec renders as one Gherkin-shaped page plus one deterministic index. Packs are not projected. The projection never uses `.sdp.gherkin` and never claims round-trip parity.",
+          "Each page is visibly generated and disposable. Refused kinds carry lossy commentary naming the per-kind lie-reason; content Gherkin cannot carry honestly is marked the same way rather than invented as structure.",
+          "Description prose lands only on MD-19's existing owners — narrative or keyed description bullets — and the projection never emits DocStrings, DataTables, Scenario Outlines, Examples tables, backgrounds, star steps, or leading conjunctions.",
+          "Every emitted record is ordered by deterministic code-unit order independent of graph input order. Hostile characters are escaped so they cannot close a fence or invent a DocString.",
+          "Publication owns only `generated/gherkin/` and uses the explicit `sdp gherkin` surface. It is not a child of or an extra write inside Design Review's transaction, and it shares no publication bus or hidden side channel with other projections.",
+          "A Gherkin-view run writes its complete page set to `generated/gherkin.tmp/`, removes the prior Gherkin-view root, and renames the temporary root into place. Every build attempt invalidates both Gherkin-view roots before extraction, so failure leaves honest absence rather than stale output that looks current. A failed publish removes any live or temporary Gherkin-view root it cannot certify.",
+          "`sdp gherkin --check-clean` renders an independent twin, refuses divergent renders, and compares the current generated root with the new render. Missing or drifted output returns nonzero and is removed; clean output is replaced wholesale with byte-identical content.",
+          "The projection adds no Gherkin-specific Reader accessors and confers nothing back into the graph.",
+        ],
+        exampleSpace: {
+          given: [
+            "a graph containing behavior, example, and refused-kind Specs with hostile titles",
+          ],
+          when: [
+            "the Gherkin-view projection renders and publishes through the explicit gherkin command",
+          ],
+          then: [
+            "each Spec page is a visibly generated Gherkin-shaped read",
+            "refused-kind pages carry the per-kind lie-reason as lossy commentary",
+            "a clean independent render is byte-identical",
+            "hostile characters cannot close a fence or invent a DocString",
+            "generated/gherkin/ is the only current Gherkin-view root",
+            "no page uses the .sdp.gherkin suffix",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
 
   {
     id: "spec:consumers.projections-model",

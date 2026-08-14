@@ -39,15 +39,19 @@ export const carrierSpecs = [
       behavior: {
         rules: [
           "One `.sdp.gherkin` file carries exactly one behavior Spec as its Feature and zero or more example Specs as ordinary Scenarios, with one canonical carrier surface per Spec ID.",
-          "Feature and ordinary Scenario tags carry exactly one identity, altitude, and readiness; kind is structural, Pack membership stays manifest-owned, and authored delivery facts, claims, lifecycle state, and workflow status are refused.",
+          "Feature and ordinary Scenario tags carry exactly one identity, altitude, and readiness; kind is structural (Feature → behavior, Scenario → example), Pack membership stays manifest-owned, and authored delivery facts, claims, lifecycle state, and workflow status are refused.",
+          "Gherkin is an honest canonical per-ID option only for `behavior` and `example`; the other six kinds stay Markdown because a Gherkin mapping would lie — `workflow` has no distinct Gherkin root and Feature mapping erases the kind; `rule` collides with `Rule:` already consumed as inline `behavior.rules`; `constraint` needs machine-readable targets a Scenario cannot own; `model` needs keyed terms; `decision` needs context/decision/rationale/consequences (and supersedes) that Feature structure cannot distinguish; `contract` shares the behavior family row today but Feature cannot structurally mark the kind.",
           "The closed relation tags map one-for-one to declared `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, and `verifies` relations, while an ordinary Scenario defaults `refines` and `verifies` to its Feature unless that relation type is explicit.",
-          "Closed keyed description bullets populate existing intent and verification fields; remaining non-heading prose belongs to narrative; unknown keys and heading-shaped lines are refused at their exact physical source line despite blanks and comments; no Gherkin form is invented for open questions.",
+          "Closed keyed description bullets populate existing intent and verification fields; remaining non-heading prose belongs to narrative on the typed Spec owner; unknown keys and heading-shaped lines are refused at their exact physical source line despite blanks and comments; no Gherkin form is invented for open questions; Feature and Scenario description prose is lawful only as free prose on MD-19's existing owners and never as a new field or a parser-within-a-parser.",
           "Trailing title-only Rule blocks populate behavior rules in source order; a Rule carrying tags, description, or positionally nested children is refused.",
           "At most one `@example-space` pseudo-scenario supplies the parent vocabulary without producing a Spec node, while each ordinary Scenario supplies exactly one bound example point.",
           "An ordinary Scenario and an `@example-space` pseudo-scenario must each carry at least one step; a step-less Scenario is refused at its Scenario line without inventing a complete-GWT rule.",
           "Gherkin steps reuse the Protocol-owned slot notation; conjunctions inherit the preceding phase, and outlines, backgrounds, star steps, doc strings, data tables, and leading conjunctions are refused.",
           "Independent semantic Gherkin findings accumulate in physical source order up to a hard cap of 100; any semantic finding excludes the entire invalid carrier from the graph while healthy sibling files survive.",
           "Gherkin is a canonical authoring carrier rather than a Cucumber execution path; generated contracts and resolving code-side anchors remain the execution and delivery-fact boundary.",
+          "Markdown remains the default Spec carrier; a default flip to Gherkin is refused before full honest round-trip exists.",
+          "Packs stay under MD-25; this carrier neither admits a Gherkin Pack surface nor reopens the Pack Markdown envelope.",
+          "Universality is a generated Gherkin-shaped READ projection of any Spec, never an authored `.sdp.gherkin` in an authored tree and never round-trip parity.",
         ],
         exampleSpace: {
           given: ["the Gherkin fixture corpus {probe:string}"],

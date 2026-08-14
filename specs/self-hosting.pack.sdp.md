@@ -54,6 +54,7 @@ specs:
   - spec:consumers.design-review
   - spec:consumers.census-page
   - spec:consumers.mermaid-view
+  - spec:consumers.gherkin-view
   - spec:consumers.reader
   - spec:consumers.edit-model
   - spec:consumers.authoring-on-ramp

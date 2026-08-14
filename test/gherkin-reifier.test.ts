@@ -368,6 +368,11 @@ Feature: Multiple findings
       "outside idea | scoped | defined | ready",
     ],
     ["a kind tag", feature("", `${FEATURE_TAGS} @kind.behavior`), "kind is structural"],
+    [
+      "a refused-kind tag",
+      feature("", `${FEATURE_TAGS} @kind.decision`),
+      "Feature structure cannot distinguish",
+    ],
     ["a Pack tag", feature("", `${FEATURE_TAGS} @pack.checkout`), "Pack membership"],
     [
       "a supersedes tag",
