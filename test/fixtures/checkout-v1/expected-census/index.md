@@ -102,6 +102,12 @@ Anchor flavor is the binding node type plus its ID namespace plus each outgoing 
 | CodeNode | `api` | `satisfies` | 1 |
 | CodeNode | `impl` | `satisfies` | 2 |
 
+## Structural bindings
+
+Authored `memberOf` and `uses` CodeNode edges are rendered as structure; they confer no delivery fact or readiness.
+
+No structural bindings exist.
+
 ## Findings
 
 | Severity | Validator | Subject | Message |

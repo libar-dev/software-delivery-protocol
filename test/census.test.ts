@@ -26,6 +26,7 @@ import {
   SPEC_ALTITUDES,
   SPEC_KINDS,
   SPEC_READINESS,
+  validateGraph,
 } from "../src/index.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import type { CensusPage, Finding, GraphSchema, Reader, SpecSummary } from "../src/index.js";
@@ -189,6 +190,127 @@ describe("the derived census/taxonomy projection", () => {
     }
 
     expect(page).toContain("| `workflow` | Workflow | 0 |");
+    expect(page).toContain("## Structural bindings");
+    expect(page).toContain("No structural bindings exist.");
+  });
+
+  it("renders component rollups and uses cycles deterministically", () => {
+    const graph: GraphSchema = {
+      schemaVersion,
+      nodes: [
+        {
+          id: "component:checkout",
+          nodeType: "CodeNode",
+          claim: "anchored",
+          file: "src/checkout.ts",
+        },
+        {
+          id: "component:payments",
+          nodeType: "CodeNode",
+          claim: "anchored",
+          file: "src/payments.ts",
+        },
+        {
+          id: "impl:checkout.orders",
+          nodeType: "CodeNode",
+          claim: "anchored",
+          file: "src/orders.ts",
+        },
+        {
+          id: "api:payments.gateway",
+          nodeType: "CodeNode",
+          claim: "anchored",
+          file: "src/gateway.ts",
+        },
+      ],
+      edges: [
+        {
+          from: "impl:checkout.orders",
+          type: "memberOf",
+          to: "component:checkout",
+          claim: "anchored",
+        },
+        {
+          from: "api:payments.gateway",
+          type: "memberOf",
+          to: "component:payments",
+          claim: "anchored",
+        },
+        {
+          from: "impl:checkout.orders",
+          type: "uses",
+          to: "api:payments.gateway",
+          claim: "anchored",
+        },
+        {
+          from: "api:payments.gateway",
+          type: "uses",
+          to: "impl:checkout.orders",
+          claim: "anchored",
+        },
+      ],
+    };
+    const first = pageByPath(
+      renderCensus(readerStub({ graph, findings: validateGraph(graph).findings })),
+      "index.md",
+    );
+    const second = pageByPath(
+      renderCensus(
+        readerStub({
+          graph: { ...graph, nodes: [...graph.nodes].reverse(), edges: [...graph.edges].reverse() },
+          findings: validateGraph(graph).findings,
+        }),
+      ),
+      "index.md",
+    );
+
+    expect(second).toBe(first);
+    expect(first).toContain("## Structural bindings");
+    expect(first).toContain("| `component:checkout` | `impl:checkout.orders` | 1 |");
+    expect(first).toContain("| `component:checkout` | 1 | 1 |");
+    expect(first).toContain("### Uses cycles (strongly connected components)");
+    expect(first).toContain("SCC 1");
+    expect(first).toContain("Uses cycles are authored structure, not validator findings.");
+    expect(first).not.toContain("conformance/structural-anchors");
+  });
+
+  it("renders dangling structural references from reader findings without re-deriving them", () => {
+    const graph: GraphSchema = {
+      schemaVersion,
+      nodes: [
+        {
+          id: "impl:checkout.orders",
+          nodeType: "CodeNode",
+          claim: "anchored",
+          file: "src/orders.ts",
+        },
+      ],
+      edges: [
+        { from: "impl:checkout.orders", type: "uses", to: "component:missing", claim: "anchored" },
+      ],
+    };
+    const page = pageByPath(
+      renderCensus(
+        readerStub({
+          graph,
+          findings: [
+            {
+              validatorId: "conformance/referential-integrity",
+              family: "conformance",
+              severity: "error",
+              subjectId: "impl:checkout.orders",
+              relatedId: "component:missing",
+              message: "Reference points to missing structural target.",
+            },
+          ],
+        }),
+      ),
+      "index.md",
+    );
+
+    expect(page).toContain("### Dangling structural references");
+    expect(page).toContain("Reference points to missing structural target.");
+    expect(page).not.toContain("SCC 1");
   });
 
   it("renders foreign taxonomy values as deterministic unrecognized rows", () => {
