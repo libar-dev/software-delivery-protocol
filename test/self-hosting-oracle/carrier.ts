@@ -38,13 +38,15 @@ export const carrierSpecs = [
       },
       behavior: {
         rules: [
-          "One `.feature` file carries exactly one behavior Spec as its Feature and zero or more example Specs as ordinary Scenarios, with one canonical carrier surface per Spec ID.",
+          "One `.sdp.gherkin` file carries exactly one behavior Spec as its Feature and zero or more example Specs as ordinary Scenarios, with one canonical carrier surface per Spec ID.",
           "Feature and ordinary Scenario tags carry exactly one identity, altitude, and readiness; kind is structural, Pack membership stays manifest-owned, and authored delivery facts, claims, lifecycle state, and workflow status are refused.",
           "The closed relation tags map one-for-one to declared `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, and `verifies` relations, while an ordinary Scenario defaults `refines` and `verifies` to its Feature unless that relation type is explicit.",
-          "Closed keyed description lines populate existing intent and verification fields, remaining prose belongs to narrative, unknown keys and heading-shaped lines are refused, and no Gherkin form is invented for open questions.",
+          "Closed keyed description bullets populate existing intent and verification fields; remaining non-heading prose belongs to narrative; unknown keys and heading-shaped lines are refused at their exact physical source line despite blanks and comments; no Gherkin form is invented for open questions.",
           "Trailing title-only Rule blocks populate behavior rules in source order; a Rule carrying tags, description, or positionally nested children is refused.",
           "At most one `@example-space` pseudo-scenario supplies the parent vocabulary without producing a Spec node, while each ordinary Scenario supplies exactly one bound example point.",
+          "An ordinary Scenario and an `@example-space` pseudo-scenario must each carry at least one step; a step-less Scenario is refused at its Scenario line without inventing a complete-GWT rule.",
           "Gherkin steps reuse the Protocol-owned slot notation; conjunctions inherit the preceding phase, and outlines, backgrounds, star steps, doc strings, data tables, and leading conjunctions are refused.",
+          "Independent semantic Gherkin findings accumulate in physical source order up to a hard cap of 100; any semantic finding excludes the entire invalid carrier from the graph while healthy sibling files survive.",
           "Gherkin is a canonical authoring carrier rather than a Cucumber execution path; generated contracts and resolving code-side anchors remain the execution and delivery-fact boundary.",
         ],
         exampleSpace: {
@@ -116,8 +118,8 @@ export const carrierSpecs = [
             when: ["the fixture corpus is extracted and validated"],
             then: [
               "extraction reports {findingCount: 0} findings",
-              'the graph for {parityLeft: "twin.sdp.md"} equals the graph for {parityRight: "twin.feature"}',
-              'the contracts for {parityLeft: "twin.sdp.md"} equal the contracts for {parityRight: "twin.feature"}',
+              'the graph for {parityLeft: "twin.sdp.md"} equals the graph for {parityRight: "twin.sdp.gherkin"}',
+              'the contracts for {parityLeft: "twin.sdp.md"} equal the contracts for {parityRight: "twin.sdp.gherkin"}',
             ],
           },
         ],
@@ -362,6 +364,96 @@ export const carrierSpecs = [
       intent: {
         outcome:
           "Prove Gherkin constructs outside the closed carrier grammar fail loudly instead of entering the graph partially.",
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.gherkin-authoring.description-location-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/carrier/gherkin-authoring.description-location-refused.sdp.md",
+    title: "A bad description key reports its physical source line",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: ['the Gherkin fixture corpus {probe: "description-location-refusal"}'],
+            when: ["the fixture corpus is extracted and validated"],
+            then: [
+              "extraction reports {findingCount: 1} findings",
+              'the first finding is {findingId: "extract/gherkin-grammar"} at line {line: 6}',
+              'the graph omits the Spec {absentId: "spec:fixture.desc-loc-refusal"}',
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Prove Gherkin description diagnostics point at the exact physical line after blanks and comments rather than at a parser-relative offset.",
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.gherkin-authoring.step-less-scenario-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/carrier/gherkin-authoring.step-less-scenario-refused.sdp.md",
+    title: "A step-less Scenario is refused at its Scenario line",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: ['the Gherkin fixture corpus {probe: "step-less"}'],
+            when: ["the fixture corpus is extracted and validated"],
+            then: [
+              "extraction reports {findingCount: 1} findings",
+              'the first finding is {findingId: "extract/gherkin-grammar"} at line {line: 5}',
+              'the graph omits the Spec {absentId: "spec:fixture.step-less"}',
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Prove an ordinary Scenario without steps fails loudly at the Scenario line and contributes no Spec nodes.",
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.gherkin-authoring.multi-finding-bounded",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/carrier/gherkin-authoring.multi-finding-bounded.sdp.md",
+    title: "Multiple findings exclude one carrier and keep a healthy sibling",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: ['the Gherkin fixture corpus {probe: "multi-finding"}'],
+            when: ["the fixture corpus is extracted and validated"],
+            then: [
+              "extraction reports {findingCount: 4} findings",
+              'the first finding is {findingId: "extract/gherkin-grammar"} at line {line: 1}',
+              "the graph contains exactly {specCount: 1} Specs",
+              'the graph omits the Spec {absentId: "spec:fixture.invalid-parent"}',
+              'no graph edge names the absent Spec {absentId: "spec:fixture.invalid-child"}',
+              'the graph contains the Spec {specId: "spec:fixture.healthy-sibling"} with kind {specKind: "behavior"}',
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Prove independent semantic Gherkin findings accumulate without partial graph insertion while a healthy sibling survives.",
       },
     },
     deliveryFacts: ["has-verifier"],

@@ -17,7 +17,12 @@ import {
   validateGraph,
 } from "../src/index.js";
 import type { GraphSchema, PrimitiveNode } from "../src/index.js";
-import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
+import { discoverFiles } from "../src/extract/discover.js";
+import {
+  materializeExtractCorpus,
+  materializeGherkinCorpus,
+  removeMaterializedCorpus,
+} from "./helpers/extract-corpus.js";
 
 const exampleRoot = fileURLToPath(new URL("../examples/checkout-v1", import.meta.url));
 
@@ -1247,5 +1252,68 @@ describe("determinism self-check (rebuild twice, byte-compare — distinct from 
     const second = serializeGraph(extract({ root: exampleRoot }).graph);
 
     expect(second).toBe(first);
+  });
+});
+
+/**
+ * Plan 30 suffix lock: `.sdp.gherkin` is the only discovered Gherkin carrier. Ordinary Cucumber
+ * `*.feature` files must not enter discovery, routing, or the graph — suffix alone, no content sniff.
+ */
+describe("Gherkin carrier suffix discovery", () => {
+  it("materializes a defused .sdp.gherkin carrier and leaves ordinary .feature beside it on disk", () => {
+    const root = materializeGherkinCorpus("suffix-discovery");
+    materializedRoots.push(root);
+
+    // Copied: the defusing suffix is stripped; both names land as real on-disk files.
+    expect(existsSync(join(root, "carrier.sdp.gherkin"))).toBe(true);
+    expect(existsSync(join(root, "cucumber-login.feature"))).toBe(true);
+    expect(existsSync(join(root, "carrier.sdp.gherkin.txt"))).toBe(false);
+    expect(existsSync(join(root, "cucumber-login.feature.txt"))).toBe(false);
+  });
+
+  it("discovers and routes only .sdp.gherkin; an ordinary Cucumber Feature never enters specFiles or poisons extraction", () => {
+    const root = materializeGherkinCorpus("suffix-discovery");
+    materializedRoots.push(root);
+
+    const discovered = discoverFiles(root);
+    expect(discovered.specFiles.map((file) => file.relativePath)).toEqual(["carrier.sdp.gherkin"]);
+    expect(discovered.specFiles.some((file) => file.relativePath.endsWith(".feature"))).toBe(false);
+
+    const result = extract({ root });
+
+    // Routed: the canonical carrier reifies; the tag-less Cucumber Feature is ignored entirely.
+    expect(result.report.findings).toEqual([]);
+    expect(result.counts).toEqual({ specs: 1, packs: 0, anchors: 0 });
+    expect(result.graph.nodes).toEqual([
+      expect.objectContaining({
+        id: "spec:fixture.gherkin-suffix-carrier",
+        nodeType: "Primitive",
+        file: "carrier.sdp.gherkin",
+      }),
+    ]);
+    expect(
+      result.report.findings.some(
+        (finding) =>
+          finding.file?.endsWith(".feature") === true || finding.message.includes("missing @spec"),
+      ),
+    ).toBe(false);
+  });
+
+  it("treats a root of only ordinary .feature files as an empty authored model at the extractor", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-feature-only-"));
+    materializedRoots.push(root);
+    writeFileSync(
+      join(root, "cucumber-only.feature"),
+      ["Feature: Login", "  Scenario: user logs in", "    Given valid credentials", ""].join("\n"),
+      "utf8",
+    );
+
+    const discovered = discoverFiles(root);
+    expect(discovered.specFiles).toEqual([]);
+
+    const result = extract({ root });
+    expect(result.counts).toEqual({ specs: 0, packs: 0, anchors: 0 });
+    expect(result.report.findings).toEqual([]);
+    expect(result.graph.nodes).toEqual([]);
   });
 });

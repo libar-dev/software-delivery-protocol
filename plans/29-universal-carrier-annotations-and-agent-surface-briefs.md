@@ -11,6 +11,11 @@
 > **Numbering retirement rule.** This file is the arc index and keeps 29 permanently;
 > commissioned plans take **30 upward**, one primary number each, and this header gains a
 > commissioned-plans line as they are cut. No future plan reuses 29.
+>
+> **Commissioned plans.** **Plan 30** (`pr-17-gherkin-carrier-hardening`, in flight) settles the
+> canonical Gherkin suffix as `.sdp.gherkin` (MD-28), hardens the carrier pipeline, and repairs
+> known declined-Gherkin current-intent drift. Brief A consumes that settled suffix and remains
+> the open owner of kind coverage, rich content, and any default-carrier flip.
 
 ## The read model for every commissioning session
 
@@ -32,8 +37,9 @@ At this writing the operational backlog (recipe 1) is empty; the drift alarm (re
 eight `implemented ∧ ¬ready` Specs — the `model` family parents (`core-model`, `pack-aggregate`,
 `relations`, `spec-sections`) plus `projections-model`, `claim-taxonomy`, `regenerability`, and
 `markdown-authoring` — several of which this arc touches; and the corpus is overwhelmingly
-Markdown-carried with a single migrated `.feature` family. Mixed-carrier pain is real as a law,
-small as a count. The first commissioned plan opens by re-running the queries.
+Markdown-carried with a single migrated `.sdp.gherkin` family (plan 30 / MD-28). Mixed-carrier
+pain is real as a law, small as a count. The first commissioned plan opens by re-running the
+queries.
 
 ## The honest frame (binds every brief)
 
@@ -53,10 +59,15 @@ table, value-transfer deletion, and any parallel tag registry.
 
 ## Brief A — the carrier universality ruling
 
+**Consumes plan 30.** Plan 30 settled the canonical Gherkin suffix as `.sdp.gherkin` (MD-28) and
+hardened discovery, locations, closed grammar, and multi-finding diagnostics on that suffix;
+brief A authors against `.sdp.gherkin` only and does not reopen the suffix, dual-recognition, or
+bare-`.feature` questions.
+
 **Goal.** Re-decide the Gherkin carrier option's kind bound: which kinds the Gherkin carrier can
 carry *honestly*, whether it may become the default carrier, and whether rich authored content
 (Markdown prose, doc strings) becomes lawful inside it. This is the keystone ruling; briefs
-C and E read its outcome.
+C and E read its outcome. Kind coverage, rich content, and the default flip stay open here.
 
 **The bound is a ruling to overturn or reaffirm, never a gap.** The Gherkin carrier option
 (MD-27) restricted itself to `behavior` and `example` as an affirmative choice — to avoid
@@ -71,7 +82,7 @@ overturn or reaffirm, kind by kind.
   kind tag is forbidden. Extending coverage means new structural mappings, not new tags.
 - Gherkin `Rule:` already means `behavior.rules` (title-only). Extending coverage to the `rule`
   kind collides with that keyword.
-- One `.feature` owns one behavior parent plus example children. Decisions, models,
+- One `.sdp.gherkin` owns one behavior parent plus example children. Decisions, models,
   constraints, contracts, and workflows do not have that shape.
 - Open questions have no Gherkin form today, and several non-behavior kinds live on open
   questions at the lower rungs.
@@ -108,11 +119,11 @@ deliverables table, lifecycle tags, or value-transfer deletion enters the gramma
 and `has-verifier` stay behind generated contracts and anchored handlers. The decision passes
 the ADR three-part test or the session ends without a ruling.
 
-**Rides along — inventory the drift, don't repair one sentence.** The declined-Gherkin claim is
-stale since MD-27 at multiple sites: the roadmap cut list (`07` §3 item 3), the ASPIRATIONAL
-list (`07` §2), and the residual open question (`07` §4); the carrier-ruling Spec itself still
-does not mention Gherkin (review 14 recorded this). The session inventories and repairs the
-set.
+**Drift inventory — plan 30 owns the known current-intent cleanup.** The declined-Gherkin claim
+was stale since MD-27 at multiple sites (roadmap `07` §2/§3/§4, vision `00` §4, and the
+carrier-ruling Spec that review 14 noted omitted Gherkin). Plan 30 repairs that inventory against
+MD-27/MD-28; brief A does not re-open the cleanup and must not reintroduce blanket "Gherkin
+declined" current-intent language. Historical lineage and review evidence stay as written.
 
 ---
 
@@ -260,6 +271,9 @@ neither. Recommended last in the arc.
 
 ## Sequencing and cross-cutting notes
 
+- **Plan 30 before brief A's carrier edits.** Suffix settlement, pipeline hardening, and the
+  declined-Gherkin drift repair land under plan 30; brief A builds on `.sdp.gherkin` and does not
+  re-decide MD-28.
 - **A is the keystone for carrier questions; B is independent and high-payoff** — B can run
   before or beside A. **C and D run beside each other** (C's graph-only first slice is lawful
   before A rules; D is an independent decision). Only E wants D's edges — it goes last.

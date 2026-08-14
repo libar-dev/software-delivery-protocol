@@ -1,0 +1,5 @@
+@spec.fixture.desc-loc-interior @altitude.feature @readiness.defined
+Feature: Interior comment feature
+  - outcome: First
+  # interior comment
+  - outcom: Second

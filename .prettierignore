@@ -26,7 +26,7 @@ generated/
 # The ruled carrier grammars own these bytes; Prettier rewrites can break their grammar
 # and fixture↔live byte-parity
 *.sdp.md
-*.feature
+*.sdp.gherkin
 
 # Refusal-parity carriers are intentionally malformed inputs read as text by the reifiers.
 test/fixtures/import/parity/

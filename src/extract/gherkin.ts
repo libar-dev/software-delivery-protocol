@@ -3,6 +3,7 @@ import {
   IdGenerator,
   SourceMediaType,
   StepKeywordType,
+  type Comment,
   type Feature,
   type Rule,
   type Scenario,
@@ -49,6 +50,18 @@ const RESERVED_TAG_HEADS = [
   "example-space",
 ] as const;
 
+const RESERVED_HEAD_SUGGESTIONS = [
+  { head: "spec", lawful: true },
+  { head: "altitude", lawful: true },
+  { head: "readiness", lawful: true },
+  { head: "kind", lawful: false },
+  { head: "pack", lawful: false },
+  { head: "supersedes", lawful: false },
+  { head: "verifies", lawful: true },
+  { head: "refines", lawful: true },
+  { head: "depends-on", lawful: true },
+] as const;
+
 const DESCRIPTION_KEYS = [
   "problem",
   "outcome",
@@ -88,11 +101,27 @@ const VERIFICATION_MODES: Readonly<Record<string, true>> = {
 const HEADING_SHAPED_LINE = /^[A-Z][^:]*:\s*$/u;
 const KEYED_LINE = /^- ([^:]+):\s*(.*)$/u;
 const LANGUAGE_HEADER = /^\s*#\s*language:\s*([^\s#]+).*$/u;
+const MAX_GHERKIN_FINDINGS = 100;
 
 interface DescriptionSections {
   readonly intent?: Record<string, unknown>;
   readonly verification?: Record<string, unknown>;
   readonly narrative?: string;
+}
+
+interface DescriptionOwner {
+  readonly description: string;
+  readonly location: { readonly line: number };
+}
+
+interface LocatedDescriptionLine {
+  readonly text: string;
+  readonly line: number;
+}
+
+interface GherkinSourceIndex {
+  readonly descriptions: ReadonlyMap<DescriptionOwner, readonly LocatedDescriptionLine[]>;
+  readonly languageHeaderLine: number;
 }
 
 interface ParsedMetadata {
@@ -103,9 +132,19 @@ interface ParsedMetadata {
   readonly relations: readonly ReifiedRelation[];
 }
 
+interface ParsedMetadataResult {
+  readonly id?: string;
+  readonly value?: ParsedMetadata;
+}
+
 type ParseResult<T> =
   | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly finding: Finding };
+
+interface GherkinFindingCollector {
+  readonly findings: Finding[];
+  findingCount: number;
+}
 
 function finding(
   validatorId: string,
@@ -127,6 +166,134 @@ function finding(
 
 function grammarFinding(file: string, line: number, message: string, subjectId?: string): Finding {
   return finding(extractFindingIds.gherkinGrammar, message, file, line, subjectId);
+}
+
+function appendFinding(collector: GherkinFindingCollector, next: Finding, file: string): void {
+  collector.findingCount += 1;
+  if (collector.findings.length >= MAX_GHERKIN_FINDINGS) return;
+  if (collector.findings.length === MAX_GHERKIN_FINDINGS - 1) {
+    collector.findings.push(
+      finding(
+        extractFindingIds.tooManyGherkinFindings,
+        `the Gherkin carrier produced too many semantic findings; reporting is capped at ${String(MAX_GHERKIN_FINDINGS)}`,
+        file,
+        1,
+      ),
+    );
+    return;
+  }
+  collector.findings.push(next);
+}
+
+function addScenarioDescriptionOwners(owners: DescriptionOwner[], scenario: Scenario): void {
+  owners.push(scenario, ...scenario.examples);
+}
+
+function descriptionOwners(feature: Feature): readonly DescriptionOwner[] {
+  const owners: DescriptionOwner[] = [feature];
+
+  for (const child of feature.children) {
+    if (child.background !== undefined) owners.push(child.background);
+    if (child.scenario !== undefined) addScenarioDescriptionOwners(owners, child.scenario);
+    if (child.rule === undefined) continue;
+
+    owners.push(child.rule);
+    for (const ruleChild of child.rule.children) {
+      if (ruleChild.background !== undefined) owners.push(ruleChild.background);
+      if (ruleChild.scenario !== undefined) {
+        addScenarioDescriptionOwners(owners, ruleChild.scenario);
+      }
+    }
+  }
+
+  return owners;
+}
+
+function buildGherkinSourceIndex(
+  sourceText: string,
+  comments: readonly Comment[],
+  feature: Feature,
+  file: string,
+): ParseResult<GherkinSourceIndex> {
+  const sourceLines = sourceText.split(/\r?\n/u);
+  const commentLines = new Set(comments.map((comment) => comment.location.line));
+  const descriptions = new Map<DescriptionOwner, readonly LocatedDescriptionLine[]>();
+
+  for (const owner of descriptionOwners(feature)) {
+    const located: LocatedDescriptionLine[] = [];
+    const descriptionLines = owner.description.length === 0 ? [] : owner.description.split("\n");
+    let sourceLine = owner.location.line + 1;
+
+    for (const descriptionLine of descriptionLines) {
+      let aligned = false;
+      while (sourceLine <= sourceLines.length) {
+        const physicalLine = sourceLines.at(sourceLine - 1) ?? "";
+        if (commentLines.has(sourceLine)) {
+          sourceLine += 1;
+          continue;
+        }
+        if (physicalLine === descriptionLine) {
+          located.push({ text: descriptionLine, line: sourceLine });
+          sourceLine += 1;
+          aligned = true;
+          break;
+        }
+        if (physicalLine.trim().length === 0) {
+          sourceLine += 1;
+          continue;
+        }
+        return {
+          ok: false,
+          finding: finding(
+            extractFindingIds.gherkinSyntax,
+            `the Gherkin parser description at line ${String(owner.location.line)} does not match physical source line ${String(sourceLine)}; the file is excluded`,
+            file,
+            sourceLine,
+          ),
+        };
+      }
+      if (!aligned) {
+        const line = Math.max(1, sourceLines.length);
+        return {
+          ok: false,
+          finding: finding(
+            extractFindingIds.gherkinSyntax,
+            `the Gherkin parser description at line ${String(owner.location.line)} extends past the physical source; the file is excluded`,
+            file,
+            line,
+          ),
+        };
+      }
+    }
+
+    descriptions.set(owner, located);
+  }
+
+  const languageHeaderIndex = sourceLines.findIndex((line) => LANGUAGE_HEADER.test(line));
+  return {
+    ok: true,
+    value: {
+      descriptions,
+      languageHeaderLine: languageHeaderIndex === -1 ? 1 : languageHeaderIndex + 1,
+    },
+  };
+}
+
+function indexedDescription(
+  sourceIndex: GherkinSourceIndex,
+  owner: DescriptionOwner,
+): readonly LocatedDescriptionLine[] {
+  const description = sourceIndex.descriptions.get(owner);
+  if (description === undefined)
+    throw new Error("Gherkin description owner was not source-indexed");
+  return description;
+}
+
+function firstProseLine(sourceIndex: GherkinSourceIndex, owner: DescriptionOwner): number {
+  return (
+    indexedDescription(sourceIndex, owner).find((line) => line.text.trim().length > 0)?.line ??
+    owner.location.line
+  );
 }
 
 function invalidIdFinding(file: string, line: number, token: string, reason: string): Finding {
@@ -162,19 +329,27 @@ function levenshtein(left: string, right: string): number {
   return previous[right.length] ?? Math.max(left.length, right.length);
 }
 
-function nearest(value: string, candidates: readonly string[]): string | undefined {
+function nearest(
+  value: string,
+  candidates: readonly string[],
+  maximumDistance: number,
+): string | undefined {
   let winner: string | undefined;
   let distance = Number.POSITIVE_INFINITY;
+  let unique = false;
 
   for (const candidate of candidates) {
     const candidateDistance = levenshtein(value, candidate);
     if (candidateDistance < distance) {
       winner = candidate;
       distance = candidateDistance;
+      unique = true;
+    } else if (candidateDistance === distance) {
+      unique = false;
     }
   }
 
-  return distance <= 2 ? winner : undefined;
+  return unique && distance <= maximumDistance ? winner : undefined;
 }
 
 function tagHead(tagName: string): string {
@@ -226,13 +401,18 @@ function decorationTagFinding(tag: Tag, file: string): Finding | undefined {
     );
   }
 
-  const head = tagHead(name);
-  const suggestion = nearest(head, RESERVED_TAG_HEADS);
-  if (suggestion !== undefined) {
+  const authoredHead = tagHead(name);
+  const reservedHead = nearest(
+    authoredHead,
+    RESERVED_HEAD_SUGGESTIONS.map(({ head }) => head),
+    1,
+  );
+  if (reservedHead !== undefined) {
+    const candidate = RESERVED_HEAD_SUGGESTIONS.find(({ head }) => head === reservedHead);
     return grammarFinding(
       file,
       tag.location.line,
-      `Gherkin decoration tag "${name}" is too close to reserved graph-aware head "${head}"; did you mean "@${suggestion}."?`,
+      `Gherkin decoration tag "${name}" uses authored head "${authoredHead}" too close to reserved graph-aware head "${reservedHead}"${candidate?.lawful === true ? `; did you mean "@${reservedHead}."?` : ""}`,
     );
   }
 
@@ -272,26 +452,34 @@ function parseMetadataTags(
   file: string,
   keywordLine: number,
   construct: "Feature" | "Scenario",
-): ParseResult<ParsedMetadata> {
+  collector: GherkinFindingCollector,
+): ParsedMetadataResult {
+  const findingCount = collector.findingCount;
   let id: string | undefined;
   let idLine = keywordLine;
   let altitude: SpecAltitude | undefined;
   let readiness: SpecReadiness | undefined;
+  let idTags = 0;
+  let altitudeTags = 0;
+  let readinessTags = 0;
   const relations: ReifiedRelation[] = [];
 
   for (const tag of tags) {
     const name = tag.name;
     if (name.startsWith("@spec.")) {
-      if (id !== undefined) {
-        return {
-          ok: false,
-          finding: grammarFinding(
+      idTags += 1;
+      if (idTags > 1) {
+        appendFinding(
+          collector,
+          grammarFinding(
             file,
             tag.location.line,
             `${construct} carries duplicate identity tag "${name}"; exactly one @spec.<dotted-id> is required`,
             id,
           ),
-        };
+          file,
+        );
+        continue;
       }
       const parsed = parseSpecIdToken(
         `spec:${name.slice("@spec.".length)}`,
@@ -299,65 +487,76 @@ function parseMetadataTags(
         file,
         tag.location.line,
       );
-      if (!parsed.ok) return parsed;
-      id = parsed.value;
-      idLine = tag.location.line;
+      if (parsed.ok) {
+        id = parsed.value;
+        idLine = tag.location.line;
+      } else {
+        appendFinding(collector, parsed.finding, file);
+      }
       continue;
     }
 
     if (name.startsWith("@altitude.")) {
-      if (altitude !== undefined) {
-        return {
-          ok: false,
-          finding: grammarFinding(
+      altitudeTags += 1;
+      if (altitudeTags > 1) {
+        appendFinding(
+          collector,
+          grammarFinding(
             file,
             tag.location.line,
             `${construct} carries duplicate altitude tag "${name}"; exactly one altitude is required`,
             id,
           ),
-        };
+          file,
+        );
+        continue;
       }
       const value = name.slice("@altitude.".length);
-      if (ALTITUDES[value] !== true) {
-        return {
-          ok: false,
-          finding: grammarFinding(
+      if (ALTITUDES[value] === true) altitude = value as SpecAltitude;
+      else {
+        appendFinding(
+          collector,
+          grammarFinding(
             file,
             tag.location.line,
             `${construct} altitude tag "${name}" is outside epic | feature | story`,
             id,
           ),
-        };
+          file,
+        );
       }
-      altitude = value as SpecAltitude;
       continue;
     }
 
     if (name.startsWith("@readiness.")) {
-      if (readiness !== undefined) {
-        return {
-          ok: false,
-          finding: grammarFinding(
+      readinessTags += 1;
+      if (readinessTags > 1) {
+        appendFinding(
+          collector,
+          grammarFinding(
             file,
             tag.location.line,
             `${construct} carries duplicate readiness tag "${name}"; exactly one readiness is required`,
             id,
           ),
-        };
+          file,
+        );
+        continue;
       }
       const value = name.slice("@readiness.".length);
-      if (READINESS[value] !== true) {
-        return {
-          ok: false,
-          finding: grammarFinding(
+      if (READINESS[value] === true) readiness = value as SpecReadiness;
+      else {
+        appendFinding(
+          collector,
+          grammarFinding(
             file,
             tag.location.line,
             `${construct} readiness tag "${name}" is outside idea | scoped | defined | ready`,
             id,
           ),
-        };
+          file,
+        );
       }
-      readiness = value as SpecReadiness;
       continue;
     }
 
@@ -366,64 +565,77 @@ function parseMetadataTags(
       const prefix = `@${head}.`;
       if (!name.startsWith(prefix)) continue;
       relationMatched = true;
-      const targetToken = name.slice(prefix.length);
-      const parsed = parseSpecIdToken(targetToken, name, file, tag.location.line);
-      if (!parsed.ok) return parsed;
-      relations.push({ type: relationType, target: parsed.value, claim: "declared" });
+      const parsed = parseSpecIdToken(name.slice(prefix.length), name, file, tag.location.line);
+      if (parsed.ok)
+        relations.push({ type: relationType, target: parsed.value, claim: "declared" });
+      else appendFinding(collector, parsed.finding, file);
       break;
     }
     if (relationMatched) continue;
 
     if (name === "@example-space") {
-      return {
-        ok: false,
-        finding: grammarFinding(
+      appendFinding(
+        collector,
+        grammarFinding(
           file,
           tag.location.line,
           `${construct} tag "@example-space" is lawful only on the single pseudo-scenario`,
           id,
         ),
-      };
+        file,
+      );
+      continue;
     }
 
     const refusedDecoration = decorationTagFinding(tag, file);
-    if (refusedDecoration !== undefined) return { ok: false, finding: refusedDecoration };
+    if (refusedDecoration !== undefined) appendFinding(collector, refusedDecoration, file);
   }
 
-  if (id === undefined) {
-    return {
-      ok: false,
-      finding: grammarFinding(
+  if (idTags === 0) {
+    appendFinding(
+      collector,
+      grammarFinding(
         file,
         keywordLine,
         `${construct} is missing @spec.<dotted-id>; exactly one identity tag is required`,
       ),
-    };
+      file,
+    );
   }
-  if (altitude === undefined) {
-    return {
-      ok: false,
-      finding: grammarFinding(
+  if (altitudeTags === 0) {
+    appendFinding(
+      collector,
+      grammarFinding(
         file,
         keywordLine,
-        `${construct} "${id}" is missing @altitude.epic|feature|story`,
+        `${construct}${id === undefined ? "" : ` "${id}"`} is missing @altitude.epic|feature|story`,
         id,
       ),
-    };
+      file,
+    );
   }
-  if (readiness === undefined) {
-    return {
-      ok: false,
-      finding: grammarFinding(
+  if (readinessTags === 0) {
+    appendFinding(
+      collector,
+      grammarFinding(
         file,
         keywordLine,
-        `${construct} "${id}" is missing @readiness.idea|scoped|defined|ready`,
+        `${construct}${id === undefined ? "" : ` "${id}"`} is missing @readiness.idea|scoped|defined|ready`,
         id,
       ),
-    };
+      file,
+    );
   }
 
-  return { ok: true, value: { id, idLine, altitude, readiness, relations } };
+  if (
+    collector.findingCount !== findingCount ||
+    id === undefined ||
+    altitude === undefined ||
+    readiness === undefined
+  ) {
+    return { id };
+  }
+  return { id, value: { id, idLine, altitude, readiness, relations } };
 }
 
 function normalizeNarrative(lines: readonly string[]): string | undefined {
@@ -445,12 +657,13 @@ function normalizeNarrative(lines: readonly string[]): string | undefined {
 }
 
 function parseDescription(
-  description: string,
+  description: readonly LocatedDescriptionLine[],
   file: string,
-  firstLine: number,
   construct: string,
+  collector: GherkinFindingCollector,
   subjectId?: string,
-): ParseResult<DescriptionSections> {
+): DescriptionSections | undefined {
+  const findingCount = collector.findingCount;
   const intent: Record<string, unknown> = {};
   const verification: Record<string, unknown> = {};
   const risks: string[] = [];
@@ -458,50 +671,55 @@ function parseDescription(
   const criteria: string[] = [];
   const singular = new Set<string>();
   const narrativeLines: string[] = [];
-  const lines = description.split(/\r?\n/u).map((line) => line.trim());
 
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index] ?? "";
-    const lineNumber = firstLine + index;
+  for (const descriptionLine of description) {
+    const line = descriptionLine.text.trim();
+    const lineNumber = descriptionLine.line;
     const keyed = KEYED_LINE.exec(line);
 
     if (keyed !== null) {
       const key = (keyed[1] ?? "").trim();
       const value = keyed[2] ?? "";
       if (!DESCRIPTION_KEYS.includes(key as (typeof DESCRIPTION_KEYS)[number])) {
-        const suggestion = nearest(key, DESCRIPTION_KEYS);
-        return {
-          ok: false,
-          finding: grammarFinding(
+        const suggestion = nearest(key, DESCRIPTION_KEYS, 2);
+        appendFinding(
+          collector,
+          grammarFinding(
             file,
             lineNumber,
             `${construct} description key "${key}" is outside the closed set ${DESCRIPTION_KEYS.join(" | ")}${suggestion === undefined ? "" : `; did you mean "${suggestion}"?`}`,
             subjectId,
           ),
-        };
+          file,
+        );
+        continue;
       }
       if (value.length === 0) {
-        return {
-          ok: false,
-          finding: grammarFinding(
+        appendFinding(
+          collector,
+          grammarFinding(
             file,
             lineNumber,
             `${construct} description key "${key}" requires a value`,
             subjectId,
           ),
-        };
+          file,
+        );
+        continue;
       }
       if (SINGULAR_INTENT_KEYS[key] === true) {
         if (singular.has(key)) {
-          return {
-            ok: false,
-            finding: grammarFinding(
+          appendFinding(
+            collector,
+            grammarFinding(
               file,
               lineNumber,
               `${construct} description key "${key}" is authored more than once`,
               subjectId,
             ),
-          };
+            file,
+          );
+          continue;
         }
         singular.add(key);
         intent[key] = value;
@@ -513,26 +731,30 @@ function parseDescription(
         criteria.push(value);
       } else if (key === "verification-mode") {
         if (VERIFICATION_MODES[value] !== true) {
-          return {
-            ok: false,
-            finding: grammarFinding(
+          appendFinding(
+            collector,
+            grammarFinding(
               file,
               lineNumber,
               `${construct} verification mode "${value}" is outside manual | reviewed | contract | executable`,
               subjectId,
             ),
-          };
+            file,
+          );
+          continue;
         }
         if (verification.mode !== undefined) {
-          return {
-            ok: false,
-            finding: grammarFinding(
+          appendFinding(
+            collector,
+            grammarFinding(
               file,
               lineNumber,
               `${construct} description key "verification-mode" is authored more than once`,
               subjectId,
             ),
-          };
+            file,
+          );
+          continue;
         }
         verification.mode = value;
       }
@@ -540,15 +762,17 @@ function parseDescription(
     }
 
     if (HEADING_SHAPED_LINE.test(line)) {
-      return {
-        ok: false,
-        finding: grammarFinding(
+      appendFinding(
+        collector,
+        grammarFinding(
           file,
           lineNumber,
           `${construct} description line "${line}" is heading-shaped; the Gherkin carrier has no description headings`,
           subjectId,
         ),
-      };
+        file,
+      );
+      continue;
     }
     narrativeLines.push(line);
   }
@@ -558,13 +782,11 @@ function parseDescription(
   if (criteria.length > 0) verification.criteria = criteria;
 
   const narrative = normalizeNarrative(narrativeLines);
+  if (collector.findingCount !== findingCount) return undefined;
   return {
-    ok: true,
-    value: {
-      ...(Object.keys(intent).length === 0 ? {} : { intent }),
-      ...(Object.keys(verification).length === 0 ? {} : { verification }),
-      ...(narrative === undefined ? {} : { narrative }),
-    },
+    ...(Object.keys(intent).length === 0 ? {} : { intent }),
+    ...(Object.keys(verification).length === 0 ? {} : { verification }),
+    ...(narrative === undefined ? {} : { narrative }),
   };
 }
 
@@ -572,35 +794,14 @@ function parseSteps(
   steps: readonly Step[],
   file: string,
   construct: string,
+  collector: GherkinFindingCollector,
   subjectId?: string,
-): ParseResult<{ readonly given: string[]; readonly when: string[]; readonly then: string[] }> {
+): { readonly given: string[]; readonly when: string[]; readonly then: string[] } | undefined {
+  const findingCount = collector.findingCount;
   const parsed = { given: [] as string[], when: [] as string[], then: [] as string[] };
   let previous: "given" | "when" | "then" | undefined;
 
   for (const step of steps) {
-    if (step.docString !== undefined) {
-      return {
-        ok: false,
-        finding: grammarFinding(
-          file,
-          step.docString.location.line,
-          `${construct} step "${step.text}" carries a doc string, which the closed carrier grammar refuses`,
-          subjectId,
-        ),
-      };
-    }
-    if (step.dataTable !== undefined) {
-      return {
-        ok: false,
-        finding: grammarFinding(
-          file,
-          step.dataTable.location.line,
-          `${construct} step "${step.text}" carries a data table, which the closed carrier grammar refuses`,
-          subjectId,
-        ),
-      };
-    }
-
     let phase: "given" | "when" | "then" | undefined;
     switch (step.keywordType) {
       case StepKeywordType.CONTEXT:
@@ -614,161 +815,258 @@ function parseSteps(
         break;
       case StepKeywordType.CONJUNCTION:
         if (previous === undefined) {
-          return {
-            ok: false,
-            finding: grammarFinding(
+          appendFinding(
+            collector,
+            grammarFinding(
               file,
               step.location.line,
               `${construct} starts with conjunction step "${step.keyword.trim()} ${step.text}"; And/But must inherit a preceding phase`,
               subjectId,
             ),
-          };
-        }
-        phase = previous;
+            file,
+          );
+        } else phase = previous;
         break;
       default:
-        return {
-          ok: false,
-          finding: grammarFinding(
+        appendFinding(
+          collector,
+          grammarFinding(
             file,
             step.location.line,
             `${construct} step keyword "${step.keyword.trim()}" is refused; '*' and unknown step phases have no carrier meaning`,
             subjectId,
           ),
-        };
+          file,
+        );
     }
 
-    parsed[phase].push(step.text);
-    previous = phase;
+    if (step.docString !== undefined) {
+      appendFinding(
+        collector,
+        grammarFinding(
+          file,
+          step.docString.location.line,
+          `${construct} step "${step.text}" carries a doc string, which the closed carrier grammar refuses`,
+          subjectId,
+        ),
+        file,
+      );
+    }
+    if (step.dataTable !== undefined) {
+      appendFinding(
+        collector,
+        grammarFinding(
+          file,
+          step.dataTable.location.line,
+          `${construct} step "${step.text}" carries a data table, which the closed carrier grammar refuses`,
+          subjectId,
+        ),
+        file,
+      );
+    }
+
+    if (phase !== undefined) {
+      parsed[phase].push(step.text);
+      previous = phase;
+    }
   }
 
-  return { ok: true, value: parsed };
+  return collector.findingCount === findingCount ? parsed : undefined;
 }
 
 function parseExampleSpaceScenario(
   scenario: Scenario,
   file: string,
-): ParseResult<{ readonly given: string[]; readonly when: string[]; readonly then: string[] }> {
-  const markers = scenario.tags.filter((tag) => tag.name === "@example-space");
-  if (markers.length !== 1) {
-    return {
-      ok: false,
-      finding: grammarFinding(
-        file,
-        markers[1]?.location.line ?? scenario.location.line,
-        `@example-space pseudo-scenario carries ${String(markers.length)} marker tags; exactly one is required`,
-      ),
-    };
-  }
-
+  sourceIndex: GherkinSourceIndex,
+  collector: GherkinFindingCollector,
+): { readonly given: string[]; readonly when: string[]; readonly then: string[] } | undefined {
+  const findingCount = collector.findingCount;
+  let markerCount = 0;
   for (const tag of scenario.tags) {
-    if (tag.name === "@example-space") continue;
-    const refused = decorationTagFinding(tag, file);
-    if (refused !== undefined) return { ok: false, finding: refused };
+    if (tag.name === "@example-space") {
+      markerCount += 1;
+      if (markerCount > 1) {
+        appendFinding(
+          collector,
+          grammarFinding(
+            file,
+            tag.location.line,
+            `@example-space pseudo-scenario carries ${String(markerCount)} marker tags; exactly one is required`,
+          ),
+          file,
+        );
+      }
+      continue;
+    }
 
+    const refused = decorationTagFinding(tag, file);
+    if (refused !== undefined) {
+      appendFinding(collector, refused, file);
+      continue;
+    }
     const head = tagHead(tag.name);
     if (
       RESERVED_TAG_HEADS.includes(head as (typeof RESERVED_TAG_HEADS)[number]) ||
       authoredFactReason(tag.name) !== undefined
     ) {
-      return {
-        ok: false,
-        finding: grammarFinding(
+      appendFinding(
+        collector,
+        grammarFinding(
           file,
           tag.location.line,
           `@example-space pseudo-scenario carries graph-aware tag "${tag.name}"; only @example-space is allowed`,
         ),
-      };
+        file,
+      );
     }
   }
 
   if (scenario.keyword === "Scenario Outline" || scenario.examples.length > 0) {
-    return {
-      ok: false,
-      finding: grammarFinding(
+    appendFinding(
+      collector,
+      grammarFinding(
         file,
         scenario.location.line,
         `@example-space uses unsupported construct "${scenario.keyword}"; Scenario Outline and Examples are refused`,
       ),
-    };
+      file,
+    );
+  }
+  if (scenario.steps.length === 0) {
+    appendFinding(
+      collector,
+      grammarFinding(
+        file,
+        scenario.location.line,
+        "@example-space pseudo-scenario must carry at least one step",
+      ),
+      file,
+    );
   }
   if (scenario.description.trim().length > 0) {
-    return {
-      ok: false,
-      finding: grammarFinding(
+    appendFinding(
+      collector,
+      grammarFinding(
         file,
-        scenario.location.line + 1,
+        firstProseLine(sourceIndex, scenario),
         "@example-space pseudo-scenario cannot carry a description",
       ),
-    };
+      file,
+    );
   }
 
-  return parseSteps(scenario.steps, file, "@example-space pseudo-scenario");
+  const steps = parseSteps(scenario.steps, file, "@example-space pseudo-scenario", collector);
+  return collector.findingCount === findingCount ? steps : undefined;
 }
 
-function parseRule(rule: Rule, file: string): ParseResult<string> {
-  if (rule.tags.length > 0) {
-    const tag = rule.tags[0];
-    return {
-      ok: false,
-      finding: grammarFinding(
+function parseRule(
+  rule: Rule,
+  file: string,
+  sourceIndex: GherkinSourceIndex,
+  collector: GherkinFindingCollector,
+): string | undefined {
+  const findingCount = collector.findingCount;
+  for (const tag of rule.tags) {
+    appendFinding(
+      collector,
+      grammarFinding(
         file,
-        tag?.location.line ?? rule.location.line,
-        `Rule "${rule.name}" carries tag "${tag?.name ?? ""}"; Rules are title-only`,
+        tag.location.line,
+        `Rule "${rule.name}" carries tag "${tag.name}"; Rules are title-only`,
       ),
-    };
-  }
-  if (rule.description.trim().length > 0) {
-    return {
-      ok: false,
-      finding: grammarFinding(
-        file,
-        rule.location.line + 1,
-        `Rule "${rule.name}" carries a description; Rules are title-only`,
-      ),
-    };
+      file,
+    );
   }
   if (rule.children.length > 0) {
-    return {
-      ok: false,
-      finding: grammarFinding(
+    appendFinding(
+      collector,
+      grammarFinding(
         file,
         rule.location.line,
         `Rule "${rule.name}" has children because Scenarios following a Rule nest under it positionally; place every Scenario before trailing title-only Rules`,
       ),
-    };
+      file,
+    );
   }
-  return { ok: true, value: rule.name };
+  if (rule.description.trim().length > 0) {
+    appendFinding(
+      collector,
+      grammarFinding(
+        file,
+        firstProseLine(sourceIndex, rule),
+        `Rule "${rule.name}" carries a description; Rules are title-only`,
+      ),
+      file,
+    );
+  }
+  return collector.findingCount === findingCount ? rule.name : undefined;
 }
 
 function reifyOrdinaryScenario(
   scenario: Scenario,
-  parentId: string,
+  parentId: string | undefined,
   file: string,
-): ParseResult<ReifiedSpec> {
+  sourceIndex: GherkinSourceIndex,
+  collector: GherkinFindingCollector,
+): ReifiedSpec | undefined {
+  const findingCount = collector.findingCount;
+  const metadata = parseMetadataTags(
+    scenario.tags,
+    file,
+    scenario.location.line,
+    "Scenario",
+    collector,
+  );
+
   if (scenario.keyword === "Scenario Outline" || scenario.examples.length > 0) {
-    return {
-      ok: false,
-      finding: grammarFinding(
+    appendFinding(
+      collector,
+      grammarFinding(
         file,
         scenario.location.line,
         `Scenario construct "${scenario.keyword}" is refused; Scenario Outline and Examples are outside the closed carrier grammar`,
+        metadata.id,
       ),
-    };
+      file,
+    );
+  }
+  if (scenario.steps.length === 0) {
+    appendFinding(
+      collector,
+      grammarFinding(
+        file,
+        scenario.location.line,
+        `Scenario "${scenario.name}" must carry at least one step`,
+        metadata.id,
+      ),
+      file,
+    );
   }
 
-  const metadata = parseMetadataTags(scenario.tags, file, scenario.location.line, "Scenario");
-  if (!metadata.ok) return metadata;
   const description = parseDescription(
-    scenario.description,
+    indexedDescription(sourceIndex, scenario),
     file,
-    scenario.location.line + 1,
     `Scenario "${scenario.name}"`,
-    metadata.value.id,
+    collector,
+    metadata.id,
   );
-  if (!description.ok) return description;
-  const steps = parseSteps(scenario.steps, file, `Scenario "${scenario.name}"`, metadata.value.id);
-  if (!steps.ok) return steps;
+  const steps = parseSteps(
+    scenario.steps,
+    file,
+    `Scenario "${scenario.name}"`,
+    collector,
+    metadata.id,
+  );
+
+  if (
+    collector.findingCount !== findingCount ||
+    metadata.value === undefined ||
+    description === undefined ||
+    steps === undefined ||
+    parentId === undefined
+  ) {
+    return undefined;
+  }
 
   const relations = [...metadata.value.relations];
   if (!relations.some((relation) => relation.type === "refines")) {
@@ -779,32 +1077,27 @@ function reifyOrdinaryScenario(
   }
 
   return {
-    ok: true,
-    value: {
+    id: metadata.value.id,
+    file,
+    line: metadata.value.idLine,
+    data: {
       id: metadata.value.id,
-      file,
-      line: metadata.value.idLine,
-      data: {
-        id: metadata.value.id,
-        kind: "example",
-        altitude: metadata.value.altitude,
-        readiness: metadata.value.readiness,
-        relations,
-        title: scenario.name,
-        ...description.value,
-        behavior: { examples: [steps.value] },
-      },
+      kind: "example",
+      altitude: metadata.value.altitude,
+      readiness: metadata.value.readiness,
+      relations,
+      title: scenario.name,
+      ...description,
+      behavior: { examples: [steps] },
     },
   };
 }
 
-function languageHeaderLine(sourceText: string): number {
-  const lines = sourceText.split(/\r?\n/u);
-  const index = lines.findIndex((line) => LANGUAGE_HEADER.test(line));
-  return index === -1 ? 1 : index + 1;
-}
-
-function reifyFeature(feature: Feature, sourceText: string, file: string): CarrierReification {
+function reifyFeature(
+  feature: Feature,
+  file: string,
+  sourceIndex: GherkinSourceIndex,
+): CarrierReification {
   if (feature.language !== "en") {
     return {
       specs: [],
@@ -812,23 +1105,28 @@ function reifyFeature(feature: Feature, sourceText: string, file: string): Carri
       findings: [
         grammarFinding(
           file,
-          languageHeaderLine(sourceText),
+          sourceIndex.languageHeaderLine,
           `Gherkin language "${feature.language}" is refused; the carrier grammar is closed to en`,
         ),
       ],
     };
   }
 
-  const metadata = parseMetadataTags(feature.tags, file, feature.location.line, "Feature");
-  if (!metadata.ok) return { specs: [], packs: [], findings: [metadata.finding] };
-  const description = parseDescription(
-    feature.description,
+  const collector: GherkinFindingCollector = { findings: [], findingCount: 0 };
+  const metadata = parseMetadataTags(
+    feature.tags,
     file,
-    feature.location.line + 1,
-    `Feature "${feature.name}"`,
-    metadata.value.id,
+    feature.location.line,
+    "Feature",
+    collector,
   );
-  if (!description.ok) return { specs: [], packs: [], findings: [description.finding] };
+  const description = parseDescription(
+    indexedDescription(sourceIndex, feature),
+    file,
+    `Feature "${feature.name}"`,
+    collector,
+    metadata.id,
+  );
 
   const rules: string[] = [];
   const children: ReifiedSpec[] = [];
@@ -839,23 +1137,20 @@ function reifyFeature(feature: Feature, sourceText: string, file: string): Carri
 
   for (const child of feature.children) {
     if (child.background !== undefined) {
-      return {
-        specs: [],
-        packs: [],
-        findings: [
-          grammarFinding(
-            file,
-            child.background.location.line,
-            `Feature "${feature.name}" carries unsupported construct "Background"`,
-            metadata.value.id,
-          ),
-        ],
-      };
+      appendFinding(
+        collector,
+        grammarFinding(
+          file,
+          child.background.location.line,
+          `Feature "${feature.name}" carries unsupported construct "Background"`,
+          metadata.id,
+        ),
+        file,
+      );
     }
     if (child.rule !== undefined) {
-      const parsedRule = parseRule(child.rule, file);
-      if (!parsedRule.ok) return { specs: [], packs: [], findings: [parsedRule.finding] };
-      rules.push(parsedRule.value);
+      const parsedRule = parseRule(child.rule, file, sourceIndex, collector);
+      if (parsedRule !== undefined) rules.push(parsedRule);
       continue;
     }
     if (child.scenario === undefined) continue;
@@ -863,28 +1158,34 @@ function reifyFeature(feature: Feature, sourceText: string, file: string): Carri
     if (child.scenario.tags.some((tag) => tag.name === "@example-space")) {
       exampleSpaceCount += 1;
       if (exampleSpaceCount > 1) {
-        return {
-          specs: [],
-          packs: [],
-          findings: [
-            grammarFinding(
-              file,
-              child.scenario.location.line,
-              `Feature "${feature.name}" carries more than one @example-space pseudo-scenario`,
-              metadata.value.id,
-            ),
-          ],
-        };
+        appendFinding(
+          collector,
+          grammarFinding(
+            file,
+            child.scenario.location.line,
+            `Feature "${feature.name}" carries more than one @example-space pseudo-scenario`,
+            metadata.id,
+          ),
+          file,
+        );
       }
-      const parsedSpace = parseExampleSpaceScenario(child.scenario, file);
-      if (!parsedSpace.ok) return { specs: [], packs: [], findings: [parsedSpace.finding] };
-      exampleSpace = parsedSpace.value;
+      const parsedSpace = parseExampleSpaceScenario(child.scenario, file, sourceIndex, collector);
+      if (parsedSpace !== undefined && exampleSpace === undefined) exampleSpace = parsedSpace;
       continue;
     }
 
-    const scenario = reifyOrdinaryScenario(child.scenario, metadata.value.id, file);
-    if (!scenario.ok) return { specs: [], packs: [], findings: [scenario.finding] };
-    children.push(scenario.value);
+    const scenario = reifyOrdinaryScenario(
+      child.scenario,
+      metadata.id,
+      file,
+      sourceIndex,
+      collector,
+    );
+    if (scenario !== undefined) children.push(scenario);
+  }
+
+  if (collector.findings.length > 0 || metadata.value === undefined || description === undefined) {
+    return { specs: [], packs: [], findings: collector.findings };
   }
 
   const behavior = {
@@ -902,7 +1203,7 @@ function reifyFeature(feature: Feature, sourceText: string, file: string): Carri
       readiness: metadata.value.readiness,
       relations: metadata.value.relations,
       title: feature.name,
-      ...description.value,
+      ...description,
       ...(Object.keys(behavior).length === 0 ? {} : { behavior }),
     },
   };
@@ -958,7 +1259,15 @@ export function reifyGherkinCarrier(sourceText: string, relativePath: string): C
       };
     }
 
-    return reifyFeature(document.feature, sourceText, relativePath);
+    const sourceIndex = buildGherkinSourceIndex(
+      sourceText,
+      document.comments,
+      document.feature,
+      relativePath,
+    );
+    if (!sourceIndex.ok) return { specs: [], packs: [], findings: [sourceIndex.finding] };
+
+    return reifyFeature(document.feature, relativePath, sourceIndex.value);
   } catch (error: unknown) {
     return {
       specs: [],

@@ -1,0 +1,5 @@
+@spec.fixture.invalid-parent @altitude.feature @readiness.defined @readines.ready
+Feature: Invalid carrier
+  - outcom: Misspelled outcome
+  @spec.fixture.invalid-child @altitude.story @readiness.defined @king.dom
+  Scenario: Empty point

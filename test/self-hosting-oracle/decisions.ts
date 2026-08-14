@@ -174,12 +174,13 @@ export const decisionsSpecs = [
         context:
           "The carrier must express all Spec kinds without creating an unbounded tooling obligation or a dual-source truth path.",
         decision:
-          "Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option.",
+          "Specs default to Markdown; Packs remain TS until a Pack syntax ruling; the TS DSL survives as import source and a lawful per-ID option. Later refinements keep this default and the one-surface law without repealing them: the Pack syntax ruling completes Pack Markdown, and the Gherkin carrier option admits graph-aware Gherkin as a lawful per-ID option for behavior and example Specs only, with the canonical suffix settled as `.sdp.gherkin`.",
         rationale: [
-          "An owned grammar and a permanent kind split both add surface cost without a demonstrated expressive gain, while retiring the DSL removes a useful bounded option.",
+          "An owned grammar and a permanent kind split both add surface cost without a demonstrated expressive gain, while retiring the DSL removes a useful bounded option. Bounding Gherkin to behavior and example Specs preserves the same trade-off — a second parser only where BDD-native readability earns it — rather than pretending every kind has a natural Gherkin shape.",
         ],
         consequences: [
           "Each ID has one canonical surface, and Markdown tooling is the default path for authored Specs.",
+          "Gherkin does not flip the default carrier, does not extend kind coverage by itself, and does not reopen dual-source truth; those questions stay with later kind-coverage and default-carrier rulings.",
         ],
       },
     },
@@ -743,10 +744,45 @@ export const decisionsSpecs = [
           "The Gherkin pipeline must define deterministic parsing, source locations, graph parity, vocabulary lint, and fail-loudly behavior before the option is realized.",
           "A Gherkin scenario does not confer `has-verifier`; only the existing resolving anchored `verifies` trace enables it, and runner pass state remains outside the graph.",
           "Gen-1 value-transfer deletion, authored completion status, and an independent tag taxonomy are explicitly not imported.",
+          "The canonical discovered suffix is settled separately as `.sdp.gherkin` (MD-28); this option does not itself choose a file extension, flip the default carrier, or extend kind coverage.",
         ],
         alternatives: [
           "Keeping Markdown as the only default authoring path avoids a second parser but retains the stakeholder-readable duplication established by the executable-verification review.",
           "Deriving more of the test wrapper can reduce mechanical code independently, but does not provide a BDD-native canonical artifact.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.sdp-gherkin-extension",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/decisions/sdp-gherkin-extension.sdp.md",
+    title: "Canonical Gherkin carriers use `.sdp.gherkin`",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Keep graph-aware Gherkin Specs discoverable by the Protocol without colliding with default Cucumber runner globs.",
+      },
+      decision: {
+        context:
+          "The Gherkin carrier option admits a BDD-native surface for behavior and example Specs, but does not settle the file suffix. Bare `.feature` keeps default editor and Cucumber tooling recognition, yet matches ordinary runner globs and therefore risks treating Protocol carriers as executable Cucumber tests. A compound Protocol suffix mirrors the `.sdp.ts` collision-safety law and gives discovery a unique, content-free signal.",
+        decision:
+          "Canonical graph-aware Gherkin Specs use the `.sdp.gherkin` suffix. Discovery is suffix-only: `.sdp.gherkin` files are Gherkin carriers, and bare `.feature` files are not. Bare `.feature` remains non-canonical territory for import sources, foreign corpora, and historical lineage, never a second live canonical surface. This ruling does not change which Spec kinds may choose Gherkin, does not flip the default carrier away from Markdown, and does not admit dual-suffix discovery or content sniffing.",
+        rationale: [
+          "Collision safety outranks default editor recognition before external adoption freezes the suffix. Compound extensions already identify Markdown and TypeScript carriers without test-glob collisions; applying the same pattern to Gherkin keeps one discovery walk honest. Teams that want highlighting can associate `*.sdp.gherkin` with Gherkin in the editor, while Cucumber's default `*.feature` globs stay clear of Protocol carriers.",
+        ],
+        consequences: [
+          "Extractors, CLI empty-corpus diagnostics, copy rules, fixtures, and authoring guidance treat `.sdp.gherkin` as the only discovered Gherkin carrier suffix.",
+          "Ordinary `.feature` files beside a corpus neither enter the graph nor poison extraction; they stay import-source and foreign-corpus material until an explicit import adapter says otherwise.",
+          "Default editor and formatter recognition for bare `.feature` is not inherited; consumers configure a `*.sdp.gherkin` association when they want Gherkin highlighting or formatting.",
+        ],
+        alternatives: [
+          "Keeping bare `.feature` as canonical would preserve stock Gherkin tooling out of the box, but would keep Protocol carriers inside default Cucumber globs and invite false execution of authored intent.",
+          "Accepting both `.feature` and `.sdp.gherkin` would create a dual-suffix window, split discovery, and weaken the one-canonical-surface law the carrier rulings already enforce.",
         ],
       },
     },

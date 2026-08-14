@@ -1,16 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { reifyGherkinCarrier } from "../src/extract/gherkin.js";
 import { extractFindingIds } from "../src/extract/reify.js";
 import { deriveGraph } from "../src/extract/derive.js";
 import { reifyMarkdownCarrier } from "../src/extract/markdown.js";
+import { extract } from "../src/index.js";
 import { validateGraph } from "../src/validate/validators.js";
+import { materializeGherkinCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 
 const FEATURE_TAGS = "@spec.probe.parent @altitude.feature @readiness.defined";
 const SCENARIO_TAGS = "@spec.probe.child @altitude.story @readiness.defined";
 
 function reify(sourceText: string) {
-  return reifyGherkinCarrier(sourceText, "probe.feature");
+  return reifyGherkinCarrier(sourceText, "probe.sdp.gherkin");
 }
 
 function feature(body = "", tags = FEATURE_TAGS): string {
@@ -30,7 +32,7 @@ function refusal(sourceText: string, validatorId: string = extractFindingIds.ghe
     validatorId,
     family: "conformance",
     severity: "error",
-    file: "probe.feature",
+    file: "probe.sdp.gherkin",
   });
   return result.findings[0];
 }
@@ -88,7 +90,7 @@ Feature: Complete carrier
     expect(result.specs).toHaveLength(2);
     expect(result.specs[0]).toMatchObject({
       id: "spec:probe.parent",
-      file: "probe.feature",
+      file: "probe.sdp.gherkin",
       line: 1,
       data: {
         id: "spec:probe.parent",
@@ -166,7 +168,7 @@ Feature: Complete carrier
   it("feeds Gherkin and Markdown relations through the same validation path", () => {
     const gherkinSource = reifyGherkinCarrier(
       "@spec.probe.source @altitude.feature @readiness.defined @constrained-by.spec:probe.target\nFeature: Source\n",
-      "source.feature",
+      "source.sdp.gherkin",
     );
     const markdownSource = reifyMarkdownCarrier(
       "---\nid: spec:probe.source\nkind: behavior\naltitude: feature\nreadiness: defined\nrelations:\n  constrainedBy: spec:probe.target\n---\n# Source\n",
@@ -199,6 +201,116 @@ Feature: Complete carrier
         finding.subjectId === "spec:probe.source",
     );
     expect(constrainedByFinding?.message).toContain("constrainedBy bounds");
+  });
+
+  it("keeps harmless distance-two short-head decoration tags graph-inert", () => {
+    const undecorated = reify(feature(scenario()));
+    const decorated = reify(
+      feature(
+        scenario("    Given a value", `${SCENARIO_TAGS} @paced`),
+        `${FEATURE_TAGS} @kindle.ci`,
+      ),
+    );
+
+    expect(undecorated.findings).toEqual([]);
+    expect(decorated.findings).toEqual([]);
+    expect(decorated.specs).toEqual(undecorated.specs);
+  });
+
+  it("suggests exactly one unique reserved head for a near miss", () => {
+    const found = refusal(feature("", `${FEATURE_TAGS} @readines.ready`));
+
+    expect(found?.message.match(/did you mean/gu)).toHaveLength(1);
+    expect(found?.message.match(/@readiness\./gu)).toHaveLength(1);
+  });
+
+  it.each(["@king.dom", "@packs.nightly"])(
+    "refuses one-edit short-head decoration %s without recommending illegal metadata",
+    (tag) => {
+      const found = refusal(feature("", `${FEATURE_TAGS} ${tag}`));
+
+      expect(found?.message).not.toContain("did you mean");
+    },
+  );
+
+  it.each([
+    ["an ordinary Scenario", feature(scenario("")), 4],
+    [
+      "an @example-space pseudo-scenario",
+      feature("  @example-space\n  Scenario: Empty vocabulary"),
+      4,
+    ],
+  ])("refuses step-less %s at its Scenario line", (_name, sourceText, line) => {
+    const found = refusal(sourceText);
+
+    expect(found?.line).toBe(line);
+  });
+
+  it("accepts a Feature with zero Scenarios", () => {
+    const result = reify(feature());
+
+    expect(result.findings).toEqual([]);
+    expect(result.specs).toHaveLength(1);
+    expect(result.specs[0]?.data).not.toHaveProperty("behavior");
+  });
+
+  it("accepts an ordinary Scenario with one Given step", () => {
+    const result = reify(feature(scenario()));
+
+    expect(result.findings).toEqual([]);
+    expect(result.specs).toHaveLength(2);
+    expect(result.specs[1]?.data.behavior).toEqual({
+      examples: [{ given: ["a value"], when: [], then: [] }],
+    });
+  });
+
+  it("classifies keyed bullets and non-heading colon lines exactly", () => {
+    const result = reify(
+      feature("  Context: details\n  lowercase label:\n\n  - outcome: Parsed outcome\n\n  Next."),
+    );
+
+    expect(result.findings).toEqual([]);
+    expect(result.specs[0]?.data.intent).toEqual({ outcome: "Parsed outcome" });
+    expect(result.specs[0]?.data.narrative).toBe("Context: details lowercase label:\n\nNext.");
+  });
+
+  it("collects four independent semantic findings in physical source order", () => {
+    const source = `${FEATURE_TAGS} @readines.ready
+Feature: Multiple findings
+  - outcom: Misspelled outcome
+  ${SCENARIO_TAGS} @king.dom
+  Scenario: Empty point
+`;
+
+    const result = reify(source);
+
+    expect(result.specs).toEqual([]);
+    expect(result.packs).toEqual([]);
+    expect(result.findings).toHaveLength(4);
+    expect(result.findings.map(({ validatorId, line }) => ({ validatorId, line }))).toEqual([
+      { validatorId: extractFindingIds.gherkinGrammar, line: 1 },
+      { validatorId: extractFindingIds.gherkinGrammar, line: 3 },
+      { validatorId: extractFindingIds.gherkinGrammar, line: 4 },
+      { validatorId: extractFindingIds.gherkinGrammar, line: 5 },
+    ]);
+  });
+
+  it("caps semantic findings at one hundred with a final suppression finding", () => {
+    const emptyScenarios = Array.from(
+      { length: 101 },
+      (_, index) =>
+        `  @spec.probe.empty-${String(index)} @altitude.story @readiness.defined\n  Scenario: Empty ${String(index)}`,
+    ).join("\n");
+    const result = reify(feature(emptyScenarios));
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings).toHaveLength(100);
+    expect(result.findings.at(-1)).toMatchObject({
+      validatorId: extractFindingIds.tooManyGherkinFindings,
+      file: "probe.sdp.gherkin",
+      line: 1,
+    });
+    expect(result.findings.at(-1)?.subjectId).toBeUndefined();
   });
 
   it.each([
@@ -343,5 +455,175 @@ Feature: Complete carrier
 
     expect(found?.line).toBe(5);
     expect(found?.message).toContain("does not parse");
+  });
+});
+
+describe("Gherkin carrier physical description locations", () => {
+  const temporaryRoots: string[] = [];
+
+  afterEach(() => {
+    for (const root of temporaryRoots.splice(0)) removeMaterializedCorpus(root);
+  });
+
+  it.each([
+    [
+      "a Feature bad description key after leading blanks and comments at physical line 6",
+      `${FEATURE_TAGS}
+Feature: Probe feature
+
+  # leading comment
+
+  - outcom: Value
+`,
+      6,
+      'did you mean "outcome"',
+    ],
+    [
+      "a Feature bad description key after an interior comment at physical line 5",
+      `${FEATURE_TAGS}
+Feature: Probe feature
+  - outcome: First
+  # interior comment
+  - outcom: Second
+`,
+      5,
+      'did you mean "outcome"',
+    ],
+    [
+      "a Scenario bad description key after leading blanks and comments at physical line 9",
+      `${FEATURE_TAGS}
+Feature: Probe feature
+
+  ${SCENARIO_TAGS}
+  Scenario: Probe scenario
+
+    # leading comment
+
+    - outcom: Value
+    Given a value
+`,
+      9,
+      'did you mean "outcome"',
+    ],
+    [
+      "a Scenario bad description key after an interior comment at physical line 9",
+      `${FEATURE_TAGS}
+Feature: Probe feature
+
+  ${SCENARIO_TAGS}
+  Scenario: Probe scenario
+
+    - outcome: First
+    # interior comment
+    - outcom: Second
+    Given a value
+`,
+      9,
+      'did you mean "outcome"',
+    ],
+    [
+      "a Rule description after a blank line at physical line 6",
+      `${FEATURE_TAGS}
+Feature: Probe feature
+
+  Rule: Described
+
+    prose under rule
+`,
+      6,
+      "Rules are title-only",
+    ],
+    [
+      "an @example-space description after a blank line at physical line 7",
+      `${FEATURE_TAGS}
+Feature: Probe feature
+
+  @example-space
+  Scenario: Space
+
+    prose under space
+    Given one
+`,
+      7,
+      "@example-space pseudo-scenario cannot carry a description",
+    ],
+  ] as const)("reports %s", (_name, sourceText, line, message) => {
+    const found = refusal(sourceText);
+
+    expect(found?.message).toContain(message);
+    expect(found?.line).toBe(line);
+  });
+
+  it("reports Feature and Scenario bad description keys at the same physical lines under CRLF", () => {
+    const featureSource = `${FEATURE_TAGS}
+Feature: Probe feature
+
+  # leading comment
+
+  - outcom: Value
+`;
+    const scenarioSource = `${FEATURE_TAGS}
+Feature: Probe feature
+
+  ${SCENARIO_TAGS}
+  Scenario: Probe scenario
+
+    # leading comment
+
+    - outcom: Value
+    Given a value
+`;
+
+    const featureFound = refusal(featureSource.replaceAll("\n", "\r\n"));
+    const scenarioFound = refusal(scenarioSource.replaceAll("\n", "\r\n"));
+
+    expect(featureFound?.message).toContain('did you mean "outcome"');
+    expect(featureFound?.line).toBe(6);
+    expect(scenarioFound?.message).toContain('did you mean "outcome"');
+    expect(scenarioFound?.line).toBe(9);
+  });
+
+  it("extracts defused description-location fixtures at physical one-based lines", () => {
+    const root = materializeGherkinCorpus("description-location");
+    temporaryRoots.push(root);
+
+    const result = extract({ root });
+
+    expect(result.counts.specs).toBe(0);
+    expect(result.graph.nodes).toEqual([]);
+    expect(
+      result.report.findings.map(({ file, line, validatorId }) => ({ file, line, validatorId })),
+    ).toEqual([
+      {
+        file: "example-space-description.sdp.gherkin",
+        line: 7,
+        validatorId: extractFindingIds.gherkinGrammar,
+      },
+      {
+        file: "feature-interior.sdp.gherkin",
+        line: 5,
+        validatorId: extractFindingIds.gherkinGrammar,
+      },
+      {
+        file: "feature-leading.sdp.gherkin",
+        line: 6,
+        validatorId: extractFindingIds.gherkinGrammar,
+      },
+      {
+        file: "rule-description.sdp.gherkin",
+        line: 6,
+        validatorId: extractFindingIds.gherkinGrammar,
+      },
+      {
+        file: "scenario-interior.sdp.gherkin",
+        line: 9,
+        validatorId: extractFindingIds.gherkinGrammar,
+      },
+      {
+        file: "scenario-leading.sdp.gherkin",
+        line: 9,
+        validatorId: extractFindingIds.gherkinGrammar,
+      },
+    ]);
   });
 });

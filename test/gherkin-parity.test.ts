@@ -22,13 +22,16 @@ describe("Gherkin carrier graph parity", () => {
   it("serializes the Markdown and Gherkin twins identically modulo carrier filename", () => {
     const markdownRoot = materialize("parity");
     const gherkinRoot = materialize("parity");
-    rmSync(join(markdownRoot, "twin.feature"));
+    rmSync(join(markdownRoot, "twin.sdp.gherkin"));
     rmSync(join(gherkinRoot, "twin.sdp.md"));
 
     const markdown = extract({ root: markdownRoot });
     const gherkin = extract({ root: gherkinRoot });
     const markdownGraph = serializeGraph(markdown.graph).replaceAll("twin.sdp.md", "twin.carrier");
-    const gherkinGraph = serializeGraph(gherkin.graph).replaceAll("twin.feature", "twin.carrier");
+    const gherkinGraph = serializeGraph(gherkin.graph).replaceAll(
+      "twin.sdp.gherkin",
+      "twin.carrier",
+    );
     const markdownContracts = generateContracts(markdown.graph);
     const gherkinContracts = generateContracts(gherkin.graph);
 
@@ -69,7 +72,7 @@ describe("Gherkin carrier graph parity", () => {
 
     expect(duplicates).toHaveLength(2);
     expect(duplicates.map((finding) => finding.file)).toEqual([
-      "a-duplicate.feature",
+      "a-duplicate.sdp.gherkin",
       "b-duplicate.sdp.md",
     ]);
     expect(
@@ -92,5 +95,37 @@ describe("Gherkin carrier graph parity", () => {
         specKind: "example",
       }),
     );
+  });
+
+  it("excludes a semantically invalid carrier whole while a healthy sibling survives", () => {
+    const root = materialize("multi-finding");
+    const result = extract({ root });
+
+    expect(result.report.findings).toHaveLength(4);
+    expect(result.report.findings.map(({ file, line }) => ({ file, line }))).toEqual([
+      { file: "invalid.sdp.gherkin", line: 1 },
+      { file: "invalid.sdp.gherkin", line: 3 },
+      { file: "invalid.sdp.gherkin", line: 4 },
+      { file: "invalid.sdp.gherkin", line: 5 },
+    ]);
+    expect(result.graph.nodes).toEqual([
+      expect.objectContaining({
+        id: "spec:fixture.healthy-sibling",
+        nodeType: "Primitive",
+      }),
+    ]);
+    expect(result.graph.edges).toEqual([]);
+    expect(result.counts.specs).toBe(1);
+  });
+
+  it("repeats invalid carrier derivation deterministically", () => {
+    const root = materialize("multi-finding");
+
+    const first = extract({ root });
+    const second = extract({ root });
+
+    expect(second.report.findings).toEqual(first.report.findings);
+    expect(serializeGraph(second.graph)).toBe(serializeGraph(first.graph));
+    expect(second.counts).toEqual(first.counts);
   });
 });

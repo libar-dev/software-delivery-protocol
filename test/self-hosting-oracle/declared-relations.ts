@@ -101,6 +101,36 @@ export const expectedDeclaredRelations = [
     "verifies",
     "spec:carrier.gherkin-authoring",
   ],
+  [
+    "spec:carrier.gherkin-authoring.description-location-refused",
+    "refines",
+    "spec:carrier.gherkin-authoring",
+  ],
+  [
+    "spec:carrier.gherkin-authoring.description-location-refused",
+    "verifies",
+    "spec:carrier.gherkin-authoring",
+  ],
+  [
+    "spec:carrier.gherkin-authoring.step-less-scenario-refused",
+    "refines",
+    "spec:carrier.gherkin-authoring",
+  ],
+  [
+    "spec:carrier.gherkin-authoring.step-less-scenario-refused",
+    "verifies",
+    "spec:carrier.gherkin-authoring",
+  ],
+  [
+    "spec:carrier.gherkin-authoring.multi-finding-bounded",
+    "refines",
+    "spec:carrier.gherkin-authoring",
+  ],
+  [
+    "spec:carrier.gherkin-authoring.multi-finding-bounded",
+    "verifies",
+    "spec:carrier.gherkin-authoring",
+  ],
   ["spec:carrier.envelope-contract", "refines", "spec:carrier.markdown-authoring"],
   ["spec:carrier.envelope-contract", "decidedBy", "spec:decisions.envelope-grammar-posture"],
   ["spec:carrier.markdown-parser", "refines", "spec:carrier.markdown-authoring"],
@@ -601,4 +631,6 @@ export const expectedDeclaredRelations = [
   ],
   ["spec:decisions.decision-readiness-posture", "refines", "spec:validation.warn-level-signals"],
   ["spec:decisions.gherkin-carrier-option", "refines", "spec:decisions.carrier-ruling"],
+  ["spec:decisions.sdp-gherkin-extension", "refines", "spec:decisions.gherkin-carrier-option"],
+  ["spec:decisions.sdp-gherkin-extension", "dependsOn", "spec:decisions.sdp-ts-extension"],
 ] as const;

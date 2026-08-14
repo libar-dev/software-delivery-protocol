@@ -18,16 +18,17 @@ code behavior into intent.
 
 > **Status:** Specs and Packs default to the Markdown carrier; the TS DSL survives as import
 > source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax
-> ruling, MD-25). The Gherkin carrier option (MD-27) now admits a graph-aware lawful per-ID
-> option for behavior and example Specs while preserving generated-contract execution and
-> binding-only anchors. **plan 28 is EXECUTED** — the bounded carrier pipeline, parity proof,
-> reader-family tracer bullet, and guidance are complete; settled ground remains **plan 27 is
-> EXECUTED** — the v0 set is restored as lineage evidence and the executable-verification review
-> selected the Gherkin option. Plan 26 completed native Packs,
-> annotation coverage, and decision readiness. Plan 25 recovered the guidance layer and packaged
-> the `sdp-sessions` on-ramp; plan 24's inward turn remains the standing practice: forward intent
-> lives in the graph, so the live backlog is a graph query, not a document. Corpus counts,
-> readiness, and findings are **derived, never quoted** — re-run
+> ruling, MD-25). The Gherkin carrier option (MD-27) admits a graph-aware lawful per-ID option
+> for behavior and example Specs; **plan 30 is EXECUTING** — MD-28 settles the canonical suffix
+> as `.sdp.gherkin` and hardens locations, closed grammar, and bounded multi-finding diagnostics.
+> Settled ground remains **plan 28 is EXECUTED** (bounded carrier pipeline, parity proof,
+> reader-family tracer bullet, guidance) and **plan 27 is EXECUTED** (v0 lineage restored;
+> executable-verification review selected the Gherkin option). Plan 29 is the next-arc briefs
+> index (not an execution plan). Plan 26 completed native Packs, annotation coverage, and
+> decision readiness. Plan 25 recovered the guidance layer and packaged the `sdp-sessions`
+> on-ramp; plan 24's inward turn remains the standing practice: forward intent lives in the
+> graph, so the live backlog is a graph query, not a document. Corpus counts, readiness, and
+> findings are **derived, never quoted** — re-run
 > `pnpm --silent sdp validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity`
 > (or `npm run --silent sdp --` with the same argv) and read recipes 8 and 11. Recipe 1 is the
 > operational backlog, not the census. Never invoke a bare `sdp`. Build state lives in **`plans/`** — read the highest

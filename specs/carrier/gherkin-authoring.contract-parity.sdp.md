@@ -16,6 +16,6 @@ relations:
 Given the Gherkin fixture corpus {probe: "parity"}
 When the fixture corpus is extracted and validated
 Then extraction reports {findingCount: 0} findings
-Then the graph for {parityLeft: "twin.sdp.md"} equals the graph for {parityRight: "twin.feature"}
-Then the contracts for {parityLeft: "twin.sdp.md"} equal the contracts for {parityRight: "twin.feature"}
+Then the graph for {parityLeft: "twin.sdp.md"} equals the graph for {parityRight: "twin.sdp.gherkin"}
+Then the contracts for {parityLeft: "twin.sdp.md"} equal the contracts for {parityRight: "twin.sdp.gherkin"}
 ```

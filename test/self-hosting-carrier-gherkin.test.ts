@@ -8,11 +8,14 @@ import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
 
 import { authoredFactRefusedContract } from "../generated/contracts/carrier.gherkin-authoring.authored-fact-refused.contract.js";
 import { contractParityContract } from "../generated/contracts/carrier.gherkin-authoring.contract-parity.contract.js";
+import { descriptionLocationRefusedContract } from "../generated/contracts/carrier.gherkin-authoring.description-location-refused.contract.js";
 import { duplicateSurfaceRefusedContract } from "../generated/contracts/carrier.gherkin-authoring.duplicate-surface-refused.contract.js";
 import { exampleSpaceExtractionContract } from "../generated/contracts/carrier.gherkin-authoring.example-space-extraction.contract.js";
 import { malformedRelationRefusedContract } from "../generated/contracts/carrier.gherkin-authoring.malformed-relation-refused.contract.js";
 import { missingIdRefusedContract } from "../generated/contracts/carrier.gherkin-authoring.missing-id-refused.contract.js";
+import { multiFindingBoundedContract } from "../generated/contracts/carrier.gherkin-authoring.multi-finding-bounded.contract.js";
 import { parentChildExtractionContract } from "../generated/contracts/carrier.gherkin-authoring.parent-child-extraction.contract.js";
+import { stepLessScenarioRefusedContract } from "../generated/contracts/carrier.gherkin-authoring.step-less-scenario-refused.contract.js";
 import { unboundReadyRefusedContract } from "../generated/contracts/carrier.gherkin-authoring.unbound-ready-refused.contract.js";
 import { unknownTagRefusedContract } from "../generated/contracts/carrier.gherkin-authoring.unknown-tag-refused.contract.js";
 import { unsupportedConstructRefusedContract } from "../generated/contracts/carrier.gherkin-authoring.unsupported-construct-refused.contract.js";
@@ -309,3 +312,27 @@ const unsupportedConstructRefusedAnchor = specTest({
 });
 void unsupportedConstructRefusedAnchor;
 bindExample(unsupportedConstructRefusedContract, world, bindings);
+
+const descriptionLocationRefusedAnchor = specTest({
+  id: testAnchorId("test:protocol.gherkin-authoring.description-location-refused"),
+  label: "the description-location-refused point verifies the Gherkin carrier contract",
+  verifies: ref("spec:carrier.gherkin-authoring.description-location-refused"),
+});
+void descriptionLocationRefusedAnchor;
+bindExample(descriptionLocationRefusedContract, world, bindings);
+
+const stepLessScenarioRefusedAnchor = specTest({
+  id: testAnchorId("test:protocol.gherkin-authoring.step-less-scenario-refused"),
+  label: "the step-less-scenario-refused point verifies the Gherkin carrier contract",
+  verifies: ref("spec:carrier.gherkin-authoring.step-less-scenario-refused"),
+});
+void stepLessScenarioRefusedAnchor;
+bindExample(stepLessScenarioRefusedContract, world, bindings);
+
+const multiFindingBoundedAnchor = specTest({
+  id: testAnchorId("test:protocol.gherkin-authoring.multi-finding-bounded"),
+  label: "the multi-finding-bounded point verifies the Gherkin carrier contract",
+  verifies: ref("spec:carrier.gherkin-authoring.multi-finding-bounded"),
+});
+void multiFindingBoundedAnchor;
+bindExample(multiFindingBoundedContract, world, bindings);

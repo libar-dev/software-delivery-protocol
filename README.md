@@ -67,7 +67,8 @@ for the complete option contract. Adopters own their root and exclusion policy.
 
 ## Gherkin carrier
 
-Behavior and example Specs may use a `.feature` file as their one canonical surface:
+Behavior and example Specs may use a `.sdp.gherkin` file as their one canonical surface.
+Bare `.feature` is not discovered. It stays ordinary Cucumber / import-source territory.
 
 ```gherkin
 @spec.orders.submit
@@ -113,8 +114,34 @@ void acceptedAnchor;
 bindExample(acceptedContract, createWorld, handlers);
 ```
 
-Cucumber execution is not part of the design. `.feature` is a canonical carrier; generated
-contracts plus anchored code-side handlers remain the execution boundary.
+Cucumber execution is not part of the design. `.sdp.gherkin` is a canonical carrier suffix, not a
+Cucumber runner target. Generated contracts plus anchored code-side handlers remain the execution
+boundary. Bare `.feature` is never discovered as a Protocol carrier; keep it for foreign Cucumber
+corpora and deferred import-source material only.
+
+Default editor and formatter recognition for bare `.feature` is not inherited. Associate
+`*.sdp.gherkin` with Gherkin (often the `cucumber` language id) in the editor when you want
+highlighting or formatting. This repository ships the VS Code mapping:
+
+```json
+{
+  "files.associations": {
+    "*.sdp.gherkin": "cucumber"
+  }
+}
+```
+
+Copy the same `files.associations` entry into an adopter `.vscode/settings.json`, or apply the
+equivalent association in another editor. No second Gherkin grammar ships with the package.
+
+Extraction always loads the pinned Cucumber parser stack as ordinary runtime dependencies of
+`@libar-dev/software-delivery-protocol`, even when a corpus is Markdown-only:
+
+- `@cucumber/gherkin` `42.0.1`
+- `@cucumber/messages` `34.2.1`
+
+Install the Protocol package once; do not add a parallel Gherkin parser or re-pin those packages
+for carrier support. Lazy loading is not promised.
 
 The package also ships the three agent on-ramps — `sdp-agent-surface` (reading the graph),
 `sdp-authoring` (authoring intent), and `sdp-sessions` (advisory delivery-session routing) — as

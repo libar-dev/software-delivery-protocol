@@ -24,7 +24,7 @@ Usage:
   sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--json]
 
 Commands:
-  build      Extract every *.sdp.ts, *.sdp.md, and *.feature under root (default: cwd), plus
+  build      Extract every *.sdp.ts, *.sdp.md, and *.sdp.gherkin under root (default: cwd), plus
              the anchor constants in the other *.ts/*.tsx source files, into
              <root>/generated/graph.json — then derive the
              executable contracts (per-example step contracts + per-parent space contracts,

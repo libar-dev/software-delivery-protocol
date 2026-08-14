@@ -59,12 +59,12 @@ describe("exclusion diagnostics", () => {
   });
   it("discovers the Gherkin carrier suffix beside the existing carriers", () => {
     const root = temporaryRoot();
-    writeFileSync(join(root, "behavior.feature"), "", "utf8");
+    writeFileSync(join(root, "behavior.sdp.gherkin"), "", "utf8");
     writeFileSync(join(root, "markdown.sdp.md"), "", "utf8");
     writeFileSync(join(root, "typescript.sdp.ts"), "", "utf8");
 
     expect(discoverFiles(root).specFiles.map((file) => file.relativePath)).toEqual([
-      "behavior.feature",
+      "behavior.sdp.gherkin",
       "markdown.sdp.md",
       "typescript.sdp.ts",
     ]);

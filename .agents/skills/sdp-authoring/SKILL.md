@@ -1,6 +1,6 @@
 ---
 name: sdp-authoring
-description: Author and mature Protocol Specs through the graph-first workflow. Use when creating or editing `.sdp.md` or lawful `.feature` carriers, deciding the honest readiness rung, promoting inline content, generating executable contracts, binding examples or implementation anchors, mutation-probing evidence, or preparing a Spec for human review and a `ready` statement.
+description: Author and mature Protocol Specs through the graph-first workflow. Use when creating or editing `.sdp.md` or lawful `.sdp.gherkin` carriers, deciding the honest readiness rung, promoting inline content, generating executable contracts, binding examples or implementation anchors, mutation-probing evidence, or preparing a Spec for human review and a `ready` statement.
 ---
 
 # Author Specs through the graph
@@ -34,7 +34,7 @@ runner.
 
 1. Read `CONTEXT.md`, then query nearby Specs with recipe 3 or 6. Do not parse the corpus by hand.
 2. Create the Markdown carrier with one stable `spec:` id, title, kind, altitude, readiness, and
-   relations. For a behavior parent with example children, a `.feature` carrier is a lawful per-ID
+   relations. For a behavior parent with example children, a `.sdp.gherkin` carrier is a lawful per-ID
    alternative; follow `spec:carrier.gherkin-authoring`. The carrier law is
    `spec:decisions.carrier-ruling`; the envelope and section law is `spec:model.spec-sections`.
    A Spec carries one kind. If a fact straddles kinds, split it into two Specs and join them with
@@ -76,8 +76,30 @@ the reported floor never makes the edit on the author's behalf.
 
 ### Author behavior and examples in Gherkin
 
-Use one `.feature` file only when every carried Spec is `behavior` or `example`. The closed
-carrier grammar is:
+Use one `.sdp.gherkin` file only when every carried Spec is `behavior` or `example`. That suffix is
+the only canonical Gherkin carrier. Bare `.feature` is import-source / foreign-corpus territory and
+is never discovered. Renaming a carrier to `.feature` takes it out of the graph; rename it back to
+`.sdp.gherkin` to restore discovery. `.sdp.gherkin` is not a Cucumber execution suffix.
+
+Associate `*.sdp.gherkin` with Gherkin in the editor when highlighting or formatting is needed. In
+VS Code / Cursor, map the suffix to the `cucumber` language id (this repository ships
+`.vscode/settings.json`):
+
+```json
+{
+  "files.associations": {
+    "*.sdp.gherkin": "cucumber"
+  }
+}
+```
+
+Adopters copy that association, or the equivalent mapping in another editor. Do not add a second
+Gherkin grammar; stock editor Gherkin/Cucumber support is enough for highlighting. Extraction uses
+the package runtime pins `@cucumber/gherkin@42.0.1` and `@cucumber/messages@34.2.1`, installed with
+the Protocol dependency even for Markdown-only corpora. Do not re-pin those packages for carrier
+support, and do not expect lazy loading.
+
+The closed carrier grammar is:
 
 1. One Feature is the behavior Spec; ordinary Scenarios are example Specs.
 2. Feature and Scenario tags carry exactly one `@spec.<id>`, `@altitude.<value>`, and
@@ -91,8 +113,8 @@ carrier grammar is:
 6. At most one `@example-space` Scenario supplies parent vocabulary without creating a node.
 7. Steps use Protocol slot notation and inherited And/But phases; outlines, backgrounds, star
    steps, doc strings, data tables, and leading conjunctions are refused.
-8. Delivery-fact, claim, lifecycle, and workflow tags are refused. `.feature` is not a Cucumber
-   execution path; generated contracts and resolving code-side anchors remain the boundary.
+8. Delivery-fact, claim, lifecycle, and workflow tags are refused. Generated contracts and
+   resolving code-side anchors remain the execution boundary.
 
 Each ID still has one canonical carrier surface. Query
 `spec:carrier.gherkin-authoring` before authoring or changing this syntax.

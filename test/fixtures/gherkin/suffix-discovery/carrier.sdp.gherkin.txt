@@ -1,0 +1,4 @@
+@spec.fixture.gherkin-suffix-carrier
+@altitude.feature
+@readiness.defined
+Feature: Canonical Gherkin carrier

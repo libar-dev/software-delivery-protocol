@@ -1,0 +1,10 @@
+@spec.fixture.desc-loc-parent-i @altitude.feature @readiness.defined
+Feature: Scenario interior parent
+
+  @spec.fixture.desc-loc-scenario-i @altitude.story @readiness.defined
+  Scenario: Scenario interior
+
+    - outcome: First
+    # interior comment
+    - outcom: Second
+    Given a value

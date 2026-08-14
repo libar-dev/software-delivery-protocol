@@ -1,0 +1,6 @@
+@spec.fixture.desc-loc-feature @altitude.feature @readiness.defined
+Feature: Description location feature
+
+  # leading comment
+
+  - outcom: Bad key

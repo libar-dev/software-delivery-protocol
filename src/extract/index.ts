@@ -27,7 +27,7 @@ export const extractValidatorId = "extract";
 
 export interface ExtractOptions {
   /**
-   * The extraction root: every `*.sdp.ts`, `*.sdp.md`, and `*.feature` below it (minus tooling
+   * The extraction root: every `*.sdp.ts`, `*.sdp.md`, and `*.sdp.gherkin` below it (minus tooling
    * output) is read as the declared layer, and every other `*.ts`/`*.tsx` source file is swept for
    * anchor constants (the anchored layer).
    */
@@ -192,7 +192,7 @@ export function extract(options: ExtractOptions): ExtractionResult {
     const sourceText = readFileSync(file.absolutePath, "utf8");
     const reified = file.relativePath.endsWith(".sdp.md")
       ? reifyMarkdownCarrier(sourceText, file.relativePath)
-      : file.relativePath.endsWith(".feature")
+      : file.relativePath.endsWith(".sdp.gherkin")
         ? reifyGherkinCarrier(sourceText, file.relativePath)
         : reifyTypeScriptCarrier(
             sourceText,

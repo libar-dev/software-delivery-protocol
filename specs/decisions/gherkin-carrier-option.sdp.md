@@ -18,5 +18,6 @@ relations:
 - consequence: The Gherkin pipeline must define deterministic parsing, source locations, graph parity, vocabulary lint, and fail-loudly behavior before the option is realized.
 - consequence: A Gherkin scenario does not confer `has-verifier`; only the existing resolving anchored `verifies` trace enables it, and runner pass state remains outside the graph.
 - consequence: Gen-1 value-transfer deletion, authored completion status, and an independent tag taxonomy are explicitly not imported.
+- consequence: The canonical discovered suffix is settled separately as `.sdp.gherkin` (MD-28); this option does not itself choose a file extension, flip the default carrier, or extend kind coverage.
 - alternative: Keeping Markdown as the only default authoring path avoids a second parser but retains the stakeholder-readable duplication established by the executable-verification review.
 - alternative: Deriving more of the test wrapper can reduce mechanical code independently, but does not provide a BDD-native canonical artifact.

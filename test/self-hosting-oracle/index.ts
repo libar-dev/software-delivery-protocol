@@ -49,6 +49,9 @@ export const expectedSpecs: readonly ExpectedSpec[] = specFamilies.flatMap(
   (family) => family.specs,
 );
 
+// The corpus states nothing the honesty and conformance checks can object to: no orphan, no
+// unearned fact, no readiness above its floor. An empty expectation is the strongest one available
+// here — every finding, at any severity, is a failure.
 export const expectedWarnings = [] as const;
 
 export { expectedAnchors } from "./anchors.js";

@@ -1,0 +1,5 @@
+@spec.fixture.step-less-parent @altitude.feature @readiness.defined
+Feature: Step-less Scenario refusal
+
+  @spec.fixture.step-less @altitude.story @readiness.defined
+  Scenario: Empty point

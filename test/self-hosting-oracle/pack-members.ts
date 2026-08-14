@@ -22,6 +22,9 @@ export const expectedPackMembers = [
   "spec:carrier.gherkin-authoring.malformed-relation-refused",
   "spec:carrier.gherkin-authoring.unbound-ready-refused",
   "spec:carrier.gherkin-authoring.duplicate-surface-refused",
+  "spec:carrier.gherkin-authoring.description-location-refused",
+  "spec:carrier.gherkin-authoring.step-less-scenario-refused",
+  "spec:carrier.gherkin-authoring.multi-finding-bounded",
   "spec:protocol.self-hosting",
   "spec:observation.runtime-overlay",
   "spec:extraction.derive-graph",
@@ -147,4 +150,5 @@ export const expectedPackMembers = [
   "spec:decisions.pack-markdown-carrier",
   "spec:decisions.decision-readiness-posture",
   "spec:decisions.gherkin-carrier-option",
+  "spec:decisions.sdp-gherkin-extension",
 ] as const;

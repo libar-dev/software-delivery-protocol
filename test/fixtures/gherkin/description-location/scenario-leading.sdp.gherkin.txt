@@ -1,0 +1,10 @@
+@spec.fixture.desc-loc-parent @altitude.feature @readiness.defined
+Feature: Description location parent
+
+  @spec.fixture.desc-loc-scenario @altitude.story @readiness.defined
+  Scenario: Description location scenario
+
+    # leading comment
+
+    - outcom: Bad key
+    Given a value
