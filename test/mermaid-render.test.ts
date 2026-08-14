@@ -135,11 +135,17 @@ describe("the bounded Mermaid projection", () => {
     );
   });
 
-  it("refuses duplicate identities and both full-diagram bounds deterministically", () => {
+  it("withholds only the affected diagram when identities collide or a bound overflows", () => {
+    // Prior assertion pinned a throw that aborted the whole page set. The Spec withholds
+    // the affected diagram by name and still emits every in-bound page plus the index.
     const duplicate = primitive("spec:duplicate");
-    expect(() => rendered(graph([duplicate, duplicate], []))).toThrow(
+    const collision = rendered(graph([duplicate, duplicate, primitive("spec:ok")], []));
+    expect(collision.get("spec/duplicate.md") ?? "").toMatch(
       /MERMAID_MACHINE_TOKEN_COLLISION.*spec:duplicate/u,
     );
+    expect(collision.get("spec/duplicate.md") ?? "").not.toContain("```mermaid");
+    expect(collision.get("spec/ok.md") ?? "").toContain("```mermaid");
+    expect(collision.get("index.md") ?? "").toMatch(/MERMAID_MACHINE_TOKEN_COLLISION/u);
 
     const nodeOverflowEdges = Array.from(
       { length: MAX_MERMAID_NODES_PER_DIAGRAM },
@@ -150,9 +156,18 @@ describe("the bounded Mermaid projection", () => {
         claim: "declared",
       }),
     );
-    expect(() => rendered(graph([primitive("spec:root")], nodeOverflowEdges))).toThrow(
+    const nodeOverflowGraph = graph(
+      [primitive("spec:root"), primitive("spec:ok")],
+      nodeOverflowEdges,
+    );
+    const nodeOverflow = rendered(nodeOverflowGraph);
+    expect(nodeOverflow.get("spec/root.md") ?? "").toContain(
       `Mermaid diagram "spec:root" exceeds MAX_MERMAID_NODES_PER_DIAGRAM: limit=${String(MAX_MERMAID_NODES_PER_DIAGRAM)} observed=${String(MAX_MERMAID_NODES_PER_DIAGRAM + 1)}`,
     );
+    expect(nodeOverflow.get("spec/root.md") ?? "").not.toContain("```mermaid");
+    expect(nodeOverflow.get("spec/ok.md") ?? "").toContain("```mermaid");
+    expect(nodeOverflow.get("index.md") ?? "").toContain("MAX_MERMAID_NODES_PER_DIAGRAM");
+    expect(rendered(nodeOverflowGraph)).toEqual(nodeOverflow);
 
     const edgeOverflowEdges = Array.from(
       { length: MAX_MERMAID_EDGES_PER_DIAGRAM + 1 },
@@ -163,13 +178,47 @@ describe("the bounded Mermaid projection", () => {
         claim: "declared",
       }),
     );
-    expect(() =>
-      rendered(graph([primitive("spec:root"), primitive("spec:neighbor")], edgeOverflowEdges)),
-    ).toThrow(
-      new RegExp(
-        `Mermaid diagram "spec:(?:neighbor|root)" exceeds MAX_MERMAID_EDGES_PER_DIAGRAM: limit=${String(MAX_MERMAID_EDGES_PER_DIAGRAM)} observed=${String(MAX_MERMAID_EDGES_PER_DIAGRAM + 1)}`,
-        "u",
+    const edgeOverflow = rendered(
+      graph(
+        [primitive("spec:root"), primitive("spec:neighbor"), primitive("spec:ok")],
+        edgeOverflowEdges,
       ),
     );
+    const edgeRefusal = new RegExp(
+      `Mermaid diagram "spec:(?:neighbor|root)" exceeds MAX_MERMAID_EDGES_PER_DIAGRAM: limit=${String(MAX_MERMAID_EDGES_PER_DIAGRAM)} observed=${String(MAX_MERMAID_EDGES_PER_DIAGRAM + 1)}`,
+      "u",
+    );
+    expect(edgeOverflow.get("spec/root.md") ?? "").toMatch(edgeRefusal);
+    expect(edgeOverflow.get("spec/neighbor.md") ?? "").toMatch(edgeRefusal);
+    expect(edgeOverflow.get("spec/root.md") ?? "").not.toContain("```mermaid");
+    expect(edgeOverflow.get("spec/ok.md") ?? "").toContain("```mermaid");
+  });
+
+  it("withholds an oversized Pack and still renders every in-bound Spec diagram", () => {
+    const members = Array.from({ length: MAX_MERMAID_NODES_PER_DIAGRAM }, (_, index) =>
+      primitive(`spec:member-${String(index).padStart(3, "0")}`),
+    );
+    const inbound = primitive("spec:inbound");
+    const oversized = pack("pack:oversized");
+    const edges = members.map(
+      (member): GraphEdge => ({
+        from: member.id,
+        type: "belongsTo",
+        to: oversized.id,
+        claim: "declared",
+      }),
+    );
+    const input = graph([inbound, oversized, ...members].reverse(), [...edges].reverse());
+    const pages = rendered(input);
+
+    expect(pages.get("pack/oversized.md") ?? "").toContain(
+      `Mermaid diagram "pack:oversized" exceeds MAX_MERMAID_NODES_PER_DIAGRAM: limit=${String(MAX_MERMAID_NODES_PER_DIAGRAM)} observed=${String(MAX_MERMAID_NODES_PER_DIAGRAM + 1)}`,
+    );
+    expect(pages.get("pack/oversized.md") ?? "").not.toContain("```mermaid");
+    expect(pages.get("spec/inbound.md") ?? "").toContain("```mermaid");
+    expect(pages.get("spec/member-000.md") ?? "").toContain("```mermaid");
+    expect(pages.get("index.md") ?? "").toContain("`pack:oversized`");
+    expect(pages.get("index.md") ?? "").toContain("MAX_MERMAID_NODES_PER_DIAGRAM");
+    expect(rendered(graph([inbound, oversized, ...members], edges))).toEqual(pages);
   });
 });

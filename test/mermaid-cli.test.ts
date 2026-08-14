@@ -1,9 +1,19 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
 import { SDP_HELP_TEXT, runSdpCli } from "../src/cli/sdp.js";
+import { MAX_MERMAID_NODES_PER_DIAGRAM } from "../src/projections/mermaid.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 
@@ -213,6 +223,104 @@ describe("sdp mermaid publication", () => {
       expect(existsSync(`${mermaidRoot}.tmp`)).toBe(false);
     } finally {
       removeMaterializedCorpus(root);
+    }
+  });
+
+  it("publishes in-bound diagrams and a named refusal when one Pack overflows", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-mermaid-oversized-"));
+    const memberIds = Array.from(
+      { length: MAX_MERMAID_NODES_PER_DIAGRAM },
+      (_, index) => `spec:member-${String(index).padStart(3, "0")}`,
+    );
+
+    try {
+      mkdirSync(join(root, "specs"), { recursive: true });
+      writeFileSync(
+        join(root, "specs", "inbound.sdp.md"),
+        [
+          "---",
+          "id: spec:inbound",
+          "kind: behavior",
+          "altitude: story",
+          "readiness: idea",
+          "relations: {}",
+          "---",
+          "# In-bound Spec",
+          "",
+          "## Intent",
+          "",
+          "- outcome: Stay inside the Mermaid node bound so the command can still publish it.",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      for (const id of memberIds) {
+        const slug = id.slice("spec:".length);
+        writeFileSync(
+          join(root, "specs", `${slug}.sdp.md`),
+          [
+            "---",
+            `id: ${id}`,
+            "kind: behavior",
+            "altitude: story",
+            "readiness: idea",
+            "relations: {}",
+            "---",
+            `# ${id}`,
+            "",
+            "## Intent",
+            "",
+            "- outcome: Belong to the oversized Pack without overflowing this Spec's own diagram.",
+            "",
+          ].join("\n"),
+          "utf8",
+        );
+      }
+      writeFileSync(
+        join(root, "specs", "oversized.pack.sdp.md"),
+        [
+          "---",
+          "id: pack:oversized",
+          "specs:",
+          "  - spec:inbound",
+          ...memberIds.map((id) => `  - ${id}`),
+          "---",
+          "# Oversized pack",
+          "",
+          "Membership that overflows the per-diagram node bound.",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+
+      const firstCapture = createCaptureOutput();
+      expect(runSdpCli(["mermaid", root], firstCapture.output)).toBe(0);
+      expect(firstCapture.readStderr()).not.toMatch(/sdp mermaid:/u);
+      expect(existsSync(join(root, "generated", "mermaid"))).toBe(true);
+      expect(existsSync(join(root, "generated", "mermaid", "spec", "inbound.md"))).toBe(true);
+      expect(existsSync(join(root, "generated", "mermaid", "spec", "member-000.md"))).toBe(true);
+      const refusal = readFileSync(
+        join(root, "generated", "mermaid", "pack", "oversized.md"),
+        "utf8",
+      );
+      expect(refusal).toContain(
+        `Mermaid diagram "pack:oversized" exceeds MAX_MERMAID_NODES_PER_DIAGRAM: limit=${String(MAX_MERMAID_NODES_PER_DIAGRAM)} observed=${String(MAX_MERMAID_NODES_PER_DIAGRAM + 2)}`,
+      );
+      expect(refusal).not.toContain("```mermaid");
+      const index = readFileSync(join(root, "generated", "mermaid", "index.md"), "utf8");
+      expect(index).toContain("`pack:oversized`");
+      expect(index).toContain("MAX_MERMAID_NODES_PER_DIAGRAM");
+      const firstTree = publishedTree(root);
+
+      expect(runSdpCli(["mermaid", root], createCaptureOutput().output)).toBe(0);
+      expect(publishedTree(root)).toEqual(firstTree);
+
+      const checkCapture = createCaptureOutput();
+      expect(runSdpCli(["mermaid", root, "--check-clean"], checkCapture.output)).toBe(0);
+      expect(checkCapture.readStderr()).toBe("");
+      expect(publishedTree(root)).toEqual(firstTree);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
     }
   });
 
