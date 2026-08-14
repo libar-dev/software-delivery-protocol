@@ -1,7 +1,7 @@
 import { computeDeliveryFacts, isResolvingTestAnchorVerify } from "../graph/delivery-facts.js";
 import { isResolvingOracleModel, ownsExampleSpace } from "../graph/oracle-bindings.js";
 import { deliveryFactNames, graphClaims, graphEdgeTypes, graphNodeTypes } from "../graph/schema.js";
-import { codeAnchorId, ref } from "../ids.js";
+import { CODE_ANCHOR_NAMESPACES, codeAnchorId, parseId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type {
   DeliveryFactName,
@@ -35,6 +35,7 @@ export const graphValidatorIds = {
   referentialIntegrity: "conformance/referential-integrity",
   duplicateIds: "conformance/duplicate-ids",
   claimSeparation: "conformance/claim-separation",
+  structuralAnchors: "conformance/structural-anchors",
   verifiesLinkage: "conformance/verifies-linkage",
   oracleLinkage: "conformance/oracle-linkage",
   packCoherence: "conformance/pack-coherence",
@@ -154,10 +155,13 @@ const referentialIntegrityAnchor = codeAnchor({
 });
 void referentialIntegrityAnchor;
 
-function checkReferentialIntegrity(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
+function checkEdgeReferentialIntegrity(
+  edges: readonly GraphEdge[],
+  index: GraphIndex,
+): readonly Finding[] {
   const findings: Finding[] = [];
 
-  for (const edge of graph.edges) {
+  for (const edge of edges) {
     if (!index.nodesById.has(edge.from)) {
       findings.push(
         createFinding({
@@ -185,6 +189,12 @@ function checkReferentialIntegrity(graph: GraphSchema, index: GraphIndex): reado
       );
     }
   }
+
+  return findings;
+}
+
+function checkReferentialIntegrity(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
+  const findings = [...checkEdgeReferentialIntegrity(graph.edges, index)];
 
   for (const node of graph.nodes) {
     if (node.nodeType !== "Pack") {
@@ -393,6 +403,11 @@ function checkEdgeContractRow(edge: GraphEdge, index: GraphIndex, findings: Find
       requireClaim("declared");
       requireEndpoints(["Primitive"], "Pack");
       return;
+    case "memberOf":
+    case "uses":
+      requireClaim("anchored");
+      requireEndpoints(["CodeNode"], "CodeNode");
+      return;
     case "models":
       // The oracle anchor's binding edge (plan 12 §8, settlement 8): anchored, Anchor → Primitive
       // — the graph records that an oracle exists, never what it says, and the edge confers no
@@ -518,6 +533,175 @@ function checkClaimSeparation(graph: GraphSchema, index: GraphIndex): readonly F
   }
 
   return findings;
+}
+
+/* ----- conformance/structural-anchors (`spec:decisions.structural-anchor-semantics`) ----- */
+
+function structuralFinding(
+  edge: GraphEdge,
+  index: GraphIndex,
+  message: string,
+  path?: string,
+): Finding {
+  return createFinding({
+    validatorId: graphValidatorIds.structuralAnchors,
+    family: "conformance",
+    severity: "error",
+    message,
+    subjectId: edge.from,
+    relatedId: edge.to,
+    path,
+    file: fileOf(index, edge.from),
+  });
+}
+
+function namespaceOf(id: string): string | undefined {
+  try {
+    return parseId(id).namespace;
+  } catch {
+    return undefined;
+  }
+}
+
+function checkStructuralAnchors(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
+  const structuralEdges = graph.edges.filter(
+    (edge) => edge.type === "memberOf" || edge.type === "uses",
+  );
+  const findings: Finding[] = [];
+  const exactCounts = new Map<string, number>();
+  const membershipsBySource = new Map<string, GraphEdge[]>();
+
+  for (const edge of structuralEdges) {
+    const key = `${edge.from}\u0000${edge.type}\u0000${edge.to}`;
+    exactCounts.set(key, (exactCounts.get(key) ?? 0) + 1);
+
+    if (edge.from === edge.to) {
+      findings.push(
+        structuralFinding(
+          edge,
+          index,
+          `Structural ${edge.type} self-reference "${edge.from}" is not allowed.`,
+        ),
+      );
+    }
+
+    const fromNamespace = namespaceOf(edge.from);
+    const toNamespace = namespaceOf(edge.to);
+
+    if (edge.type === "memberOf") {
+      const memberships = membershipsBySource.get(edge.from) ?? [];
+      memberships.push(edge);
+      membershipsBySource.set(edge.from, memberships);
+
+      if (fromNamespace !== "impl" && fromNamespace !== "api") {
+        findings.push(
+          structuralFinding(
+            edge,
+            index,
+            `A memberOf edge must originate from an impl: or api: CodeNode; "${edge.from}" uses namespace "${fromNamespace ?? "invalid"}".`,
+            "component",
+          ),
+        );
+      }
+
+      if (toNamespace !== "component") {
+        findings.push(
+          structuralFinding(
+            edge,
+            index,
+            `A memberOf edge must target a component: CodeNode; "${edge.to}" uses namespace "${toNamespace ?? "invalid"}".`,
+            "component",
+          ),
+        );
+      }
+
+      continue;
+    }
+
+    if (
+      fromNamespace === undefined ||
+      !CODE_ANCHOR_NAMESPACES.includes(fromNamespace as (typeof CODE_ANCHOR_NAMESPACES)[number])
+    ) {
+      findings.push(
+        structuralFinding(
+          edge,
+          index,
+          `A uses edge source must use an impl:, api:, or component: CodeNode id; received "${edge.from}".`,
+          "uses",
+        ),
+      );
+    }
+
+    if (
+      toNamespace === undefined ||
+      !CODE_ANCHOR_NAMESPACES.includes(toNamespace as (typeof CODE_ANCHOR_NAMESPACES)[number])
+    ) {
+      findings.push(
+        structuralFinding(
+          edge,
+          index,
+          `A uses edge target must use an impl:, api:, or component: CodeNode id; received "${edge.to}".`,
+          "uses",
+        ),
+      );
+    }
+  }
+
+  const reportedExact = new Set<string>();
+
+  for (const edge of structuralEdges) {
+    const key = `${edge.from}\u0000${edge.type}\u0000${edge.to}`;
+
+    if ((exactCounts.get(key) ?? 0) < 2 || reportedExact.has(key)) {
+      continue;
+    }
+
+    reportedExact.add(key);
+    findings.push(
+      structuralFinding(
+        edge,
+        index,
+        `Structural edge "${edge.from}" → (${edge.type}) → "${edge.to}" is authored ${String(exactCounts.get(key) ?? 0)} times; structural edges must be unique.`,
+      ),
+    );
+  }
+
+  for (const memberships of membershipsBySource.values()) {
+    if (memberships.length < 2) {
+      continue;
+    }
+
+    const [first] = memberships;
+
+    if (first !== undefined) {
+      findings.push(
+        structuralFinding(
+          first,
+          index,
+          `CodeNode "${first.from}" has ${String(memberships.length)} memberOf edges; each source may have at most one component.`,
+          "component",
+        ),
+      );
+    }
+  }
+
+  return findings;
+}
+
+/**
+ * The extraction boundary uses this narrow subset to withhold an entire code anchor whenever one
+ * of its structural declarations fails. Full graph validation still runs the same checks below.
+ */
+export function validateStructuralAnchorEdges(graph: GraphSchema): readonly Finding[] {
+  const index = buildGraphIndex(graph);
+  const structuralEdges = graph.edges.filter(
+    (edge) => edge.type === "memberOf" || edge.type === "uses",
+  );
+
+  return sortFindings([
+    ...checkEdgeReferentialIntegrity(structuralEdges, index),
+    ...checkStructuralAnchors(graph, index),
+  ]);
 }
 
 /* ----- conformance/verifies-linkage (`spec:validation.verification-linkage` — the surfaced half) ----- */
@@ -1054,6 +1238,7 @@ export function validateGraph(graph: GraphSchema): ValidationReport {
     ...checkReferentialIntegrity(graph, index),
     ...checkDuplicateIds(graph),
     ...checkClaimSeparation(graph, index),
+    ...checkStructuralAnchors(graph, index),
     ...checkVerifiesLinkage(graph, index),
     ...checkOracleLinkage(graph, index),
     ...checkPackCoherence(graph, index),

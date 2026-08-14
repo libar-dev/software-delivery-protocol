@@ -78,7 +78,10 @@ export function runBuild(
   const recoveryRm = hooks.rmSync ?? rmSync;
   const graphPath = join(resolvedRoot, "generated", "graph.json");
   const contractsPath = join(resolvedRoot, "generated", "contracts");
-  const viewPath = join(resolvedRoot, "generated", "design-review");
+  const projectionPaths = [
+    join(resolvedRoot, "generated", "design-review"),
+    join(resolvedRoot, "generated", "census"),
+  ];
 
   const failBuild = (message: string): BuildOutcome => {
     writeStderr(output, message);
@@ -91,13 +94,15 @@ export function runBuild(
     return { exitCode: 1 };
   };
 
-  for (const staleViewPath of [viewPath, `${viewPath}.tmp`]) {
-    const failure = removeArtifact(staleViewPath, recoveryRm);
+  for (const projectionPath of projectionPaths) {
+    for (const staleProjectionPath of [projectionPath, `${projectionPath}.tmp`]) {
+      const failure = removeArtifact(staleProjectionPath, recoveryRm);
 
-    if (failure !== undefined) {
-      return failBuild(
-        `sdp ${command}: stale ${staleViewPath} could not be removed (${failure}) — build stopped so it cannot read as current.\n`,
-      );
+      if (failure !== undefined) {
+        return failBuild(
+          `sdp ${command}: stale ${staleProjectionPath} could not be removed (${failure}) — build stopped so it cannot read as current.\n`,
+        );
+      }
     }
   }
 

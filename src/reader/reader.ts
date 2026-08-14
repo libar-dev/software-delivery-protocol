@@ -379,6 +379,8 @@ export function createReader(graph: GraphSchema): Reader {
   const usableOracleEdges = new Set(
     [...oracleEdgesByTarget.values()].flatMap((edges) => (edges.length === 1 ? edges : [])),
   );
+  // Structural memberOf/uses edges are intentionally excluded: this traversal follows binding
+  // nodes to Specs, while structural edges connect CodeNode endpoints and confer no Spec linkage.
   const isTraversableBinding = (edge: GraphEdge): boolean =>
     edge.type === "satisfies" ||
     edge.type === "verifies" ||

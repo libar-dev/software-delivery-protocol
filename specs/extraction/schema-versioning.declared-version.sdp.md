@@ -15,5 +15,5 @@ relations:
 ```gwt
 Given a graph derived from the authored spec {specId: "spec:probe.schema-versioning"}
 When the graph payload is serialized
-Then the payload declares the schema version {schemaVersion: "0.4.0"}
+Then the payload declares the schema version {schemaVersion: "0.5.0"}
 ```

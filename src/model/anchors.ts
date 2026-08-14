@@ -1,7 +1,13 @@
 import { codeAnchor as createCodeAnchor } from "./code-anchor.js";
 
 import { codeAnchorId, ref } from "../ids.js";
-import type { CodeAnchorId, OracleAnchorId, SpecId, TestAnchorId } from "../ids.js";
+import type {
+  CodeAnchorId,
+  ComponentAnchorId,
+  OracleAnchorId,
+  SpecId,
+  TestAnchorId,
+} from "../ids.js";
 
 /**
  * The generic code anchor (MD-8, folded here): one builder over the implementation-flavored code
@@ -9,13 +15,15 @@ import type { CodeAnchorId, OracleAnchorId, SpecId, TestAnchorId } from "../ids.
  * binding is the thing, framework- and location-neutral (`04` §2), and the ID grammar already
  * parses any lowercase namespace. Per-namespace sibling builders (`anchorApi`, `anchorComponent`,
  * …) were rejected as surface bloat for zero expressive gain. An anchor asserts a binding only,
- * never system-truth content (R1): identity, an optional display label, and the one `satisfies`
- * target — nothing spec-level ever rides here.
+ * never system-truth content (R1): identity, an optional display label, the one `satisfies`
+ * target, and closed structural references — nothing spec-level ever rides here.
  */
 export interface CodeAnchor {
   readonly id: CodeAnchorId;
   readonly label?: string;
   readonly satisfies: SpecId;
+  readonly component?: ComponentAnchorId;
+  readonly uses?: readonly CodeAnchorId[];
 }
 
 /**

@@ -744,6 +744,16 @@ export const expectedAnchors = [
     site: "export function renderDesignReview",
   },
   {
+    id: "impl:protocol.census-page",
+    nodeType: "CodeNode",
+    label: "renders the derived census and runtime taxonomy projection",
+    type: "satisfies",
+    target: "spec:consumers.census-page",
+    file: "src/projections/census.ts",
+    constant: "censusAnchor",
+    site: "function compareCodeUnits",
+  },
+  {
     id: "impl:protocol.exclusion-surface",
     nodeType: "CodeNode",
     label: "strict root-relative exclusion input for both extraction surfaces",
@@ -1191,7 +1201,7 @@ export const expectedAnchors = [
     target: "spec:validation.referential-integrity",
     file: "src/validate/validators.ts",
     constant: "referentialIntegrityAnchor",
-    site: "function checkReferentialIntegrity",
+    site: "function checkEdgeReferentialIntegrity",
   },
   {
     id: "impl:protocol.claim-separation",

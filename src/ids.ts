@@ -14,6 +14,9 @@ export type AnchorId = Brand<"AnchorId">;
 // `Brand<…>`: two disjoint unit types on one `__brand` key reduce the intersection to `never`,
 // and `never` assigns everywhere — tsc would stop enforcing the flavored ids entirely.
 export type CodeAnchorId = AnchorId & { readonly __anchorFlavor: "code" };
+export type ComponentAnchorId = CodeAnchorId & {
+  readonly __codeAnchorNamespace: "component";
+};
 export type TestAnchorId = AnchorId & { readonly __anchorFlavor: "test" };
 export type OracleAnchorId = AnchorId & { readonly __anchorFlavor: "oracle" };
 
@@ -161,6 +164,10 @@ export function packId(value: string): PackId {
 
 export function codeAnchorId(value: string): CodeAnchorId {
   return requireNamespace<"AnchorId">(value, CODE_ANCHOR_NAMESPACES) as CodeAnchorId;
+}
+
+export function componentAnchorId(value: string): ComponentAnchorId {
+  return requireNamespace<"AnchorId">(value, ["component"]) as ComponentAnchorId;
 }
 
 export function testAnchorId(value: string): TestAnchorId {

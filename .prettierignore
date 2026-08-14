@@ -21,6 +21,7 @@ test/fixtures/checkout-v1/expected-graph.json
 # The golden Design Review carries the renderer's exact bytes (design-review.ts owns them);
 # same rule for the generated artifacts themselves — derived output is never format-policed
 test/fixtures/checkout-v1/expected-design-review/
+test/fixtures/checkout-v1/expected-census/
 generated/
 
 # The ruled carrier grammars own these bytes; Prettier rewrites can break their grammar

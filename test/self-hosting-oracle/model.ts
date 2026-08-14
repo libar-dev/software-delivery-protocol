@@ -298,17 +298,21 @@ export const modelSpecs = [
           "Protocol builder binding":
             "A builder import from the public Protocol package, or a relative import whose importer-relative resolution — including the TypeScript `.js`-to-`.ts` convention — canonicalizes to this package's `ids` or `model/code-anchor` module; consumer-local lookalike modules confer no binding authority. On the CommonJS package surface the trusted relative-module set is empty (`import.meta.url` is rewritten away), so relative bindings mint no anchors there while package imports stay trusted.",
           anchor:
-            "A human-written source binding from one code location to one Spec ID, carrying identity, an optional label, and one target only.",
+            "A human-written source binding from one code location to one Spec ID, carrying identity, an optional label, and one realization target only.",
           "anchor-constant form":
             "The top-level const builder call that the MVP extractor reifies; decorator and JSDoc forms remain unextracted representations.",
           "code anchor":
-            "An implementation-flavored binding that derives an anchored satisfies edge.",
+            "An implementation-flavored binding that derives an anchored satisfies edge. It may additionally name one `component?: ComponentAnchorId` and a non-empty, unique `uses?: readonly CodeAnchorId[]`; these closed graph-ID references derive only anchored CodeNode-to-CodeNode `memberOf` and `uses` edges.",
           "document-realization binding":
             "When the realizing artifact is authored Markdown that cannot carry an extracted in-code anchor, the executable suite that asserts the shipped document may carry its code anchor. Its label must name the document realization rather than imply the test body is the product, and file-level blast radius remains coverage-unknown for the Markdown artifact.",
           "executable binding boundary":
             "A resolving `specTest` anchor can establish verifier realization; a `bindExample` call executes a generated contract but is not extracted graph data, so the graph cannot claim from that call alone that the contract is bound.",
           "oracle anchor":
             "A binding that records an oracle's models target without deriving a delivery fact.",
+          "structural anchor validity":
+            "A `memberOf` source is an `impl:` or `api:` CodeNode and its target is a `component:` CodeNode; every structural target exists, every edge is unique, each source has at most one component, and structural self-reference is refused. Any failure excludes the whole code anchor rather than preserving a partial declaration. Multi-node `uses` cycles remain data and produce no finding.",
+          "structural non-conferral":
+            "Structural edges carry no intent, delivery fact, readiness effect, or binding-to-Spec traversal; no `implements` field is admitted.",
           "test anchor":
             "A binding that derives an anchored verifies edge from a test to its target Spec.",
           "untrusted builder":

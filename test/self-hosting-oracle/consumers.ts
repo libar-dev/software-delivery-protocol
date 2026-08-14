@@ -141,6 +141,50 @@ export const consumersSpecs = [
     deliveryFacts: ["implemented", "has-verifier"],
   },
   {
+    id: "spec:consumers.census-page",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/consumers/census-page.sdp.md",
+    title: "Census renders the runtime taxonomy without becoming a registry",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give maintainers one disposable graph-derived census that exposes the complete runtime taxonomy, foreign values, readiness divergence, binding flavor, and current findings without creating another source of truth.",
+      },
+      behavior: {
+        rules: [
+          "`renderCensus` is a pure `Reader -> pages` projection with no filesystem or clock access; every page, row, and finding is deterministically sorted so equal reader data produces byte-identical output.",
+          "Spec kind rows and their display labels, altitude rows, and readiness rows derive from `SPEC_KINDS`, `SPEC_KIND_DISPLAY_LABELS`, `SPEC_ALTITUDES`, and `SPEC_READINESS`; graph node, claim, delivery-fact, and edge rows derive from `graphNodeTypes`, `graphClaims`, `deliveryFactNames`, and `graphEdgeTypes`. Every exported runtime category renders even at count zero; no projection-owned taxonomy list is maintained.",
+          "A foreign value outside an exported runtime taxonomy renders as a deterministic `unrecognized` row sorted by its literal value rather than disappearing or being coerced into a known category.",
+          "Stated readiness and structurally derived readiness render as separate dimensions, including a count for Specs that have not structurally reached the first derived rung; the census never resolves or confers readiness.",
+          "Anchor flavor is counted from each binding node's graph node type, ID namespace, and outgoing binding edge, so structural bindings are visible as graph data and their absence is stated rather than inferred.",
+          "Findings come only from `reader.findings()`, the one validation report exposed as data; the projection never re-runs or re-implements validation.",
+          "The census is regenerable and disposable under `generated/census/index.md`; it confers nothing, writes no canonical source, and never becomes a second registry or truth store.",
+          "Publication uses the explicit `sdp census` surface and owns only `generated/census/`. It is not a child of or an extra write inside Design Review's transaction.",
+          "A census run writes its complete page set to `generated/census.tmp/`, removes the prior census root, and renames the temporary root into place. Every build attempt invalidates both census roots before extraction, so failure leaves honest absence rather than stale output that looks current.",
+          "`sdp census --check-clean` renders an independent twin, refuses divergent renders, and compares the current generated root with the new render. Missing or drifted output returns nonzero and is removed; clean output is replaced wholesale with byte-identical content.",
+        ],
+        exampleSpace: {
+          given: [
+            "a graph containing known runtime categories, foreign taxonomy values, bindings, readiness divergence, and findings",
+          ],
+          when: ["the census projection renders and publishes through the explicit census command"],
+          then: [
+            "every runtime category remains visible including zero-count rows",
+            "foreign values render as deterministic unrecognized rows",
+            "stated and derived readiness remain separate dimensions",
+            "findings equal the values returned by reader.findings()",
+            "generated/census/index.md is the only current census page",
+            "a clean independent render is byte-identical",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented"],
+  },
+  {
     id: "spec:consumers.reader",
     specKind: "behavior",
     altitude: "feature",

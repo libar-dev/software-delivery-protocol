@@ -254,7 +254,7 @@ export const extractionSpecs = [
               'a graph derived from the authored spec {specId: "spec:probe.schema-versioning"}',
             ],
             when: ["the graph payload is serialized"],
-            then: ['the payload declares the schema version {schemaVersion: "0.4.0"}'],
+            then: ['the payload declares the schema version {schemaVersion: "0.5.0"}'],
           },
         ],
       },
@@ -400,6 +400,57 @@ export const extractionSpecs = [
       },
     },
     deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:extraction.runnable-modules",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/extraction/runnable-modules.sdp.md",
+    title: "Derived runnable modules freeze the registrar interface",
+    narrative: null,
+    sections: {
+      intent: {
+        problem:
+          "Bound example tests still carry mechanical registration, step-key mapping, parameter dispatch, and oracle↔Then re-encoding that the graph and generated contracts already know.",
+        outcome:
+          "Freeze the adopter-facing derived-runnable-module interface before any codegen change so authored tests shrink to irreducible semantics.",
+        value:
+          'A Spec plus a small authored semantics module become the honest form of "the spec is the test," without the engine loading or executing adopter code (O5 stayed refused).',
+      },
+      behavior: {
+        rules: [
+          "Registrar over self-running module — codegen emits a generated registrar whose call shape is frozen as register Example with the five adapters createWorld, invoke, observe, expected, and optional assertions (see example-space signature line for the exact type-parameter spelling the Markdown carrier cannot put in a list item). That registrar owns describe/it registration, step dispatch, the three-way comparator, and failure rendering. The authored `.test.ts` keeps the top-level `specTest` anchor and ONE activation call that passes the five adapters (`createWorld`, `invoke`, `observe`, `expected`, and optional `assertions`) beside the irreducible functions. IMPORT DIRECTION IS AUTHORED→GENERATED ONLY: the authored file imports the generated registrar and calls it with its semantics; the generated module NEVER imports authored code (no import cycle, and no export-identity problem — the graph stays binding-only per MD-7). Registration executes when the test runner's normal discovery loads the authored file; self-running generated modules are refused.",
+          "Generated sibling path — for each bindable example, codegen emits exactly one generated registration module as a sibling `*.generated.ts` of the authored `.test.ts` (deterministic path keyed by Spec ID). Exactly one generated registration per example; a second registration path for the same example is refused.",
+          'Shared testing runtime and export strategy — generated registrars import runtime helpers only from `@libar-dev/software-delivery-protocol/testing` (the shared registrar/comparator/failure-rendering runtime). Package export strategy freezes three adopter-facing subpaths plus the root: `.` (model/anchors/public types), `./runner` (framework-neutral plan/run core), `./vitest` (low-level `bindExample` adapter), and `./testing` (registrar runtime used by generated siblings). Authored and generated modules may import the root package for types only from the model surface; they must not reach into private `src/` paths. The actual supported Vitest peer range is the package\'s declared optional peer `vitest: ">=2"` (optional peerDependencyMeta), exercised in-repo against the current devDependency line `vitest@^4.1.10` — no tighter floor is frozen here than `>=2`.',
+          "Step identity stays skeleton-text identity with deterministic fail-loudly semantics (wording edits redden types by design). Do NOT introduce generated ordinals or slugs; a wording-stable operation key is a model/carrier change and is out of this freeze.",
+          "Handler resolution — the registrar's parameter object is an exhaustive mapped type over the contract's step skeletons for any residual per-step surface the freeze retains, and the five adapters themselves are required keys (`assertions` optional): a missing or stale authored callback is a `tsc` error naming the step or adapter. This is the strengthened handler-resolution check; codegen cannot statically see authored handlers, so no generation-time handler refusal is promised — the type system carries it. Existing generation-time refusals (unbindable example, incompatible vocabulary, colliding path) are reused unchanged.",
+          "The three-way comparator is the exact generated algorithm: (1) call `expected(point)`; (2) find this example's Then contract step whose skeleton equals `expected.kind`; (3) compare that step's authored params with the oracle payload; (4) call authored `observe(world)` for the actual Outcome; (5) compare observed vs oracle outcomes; (6) run remaining authored domain assertions separately. Actual===oracle alone is FORBIDDEN — a Spec `{total}` mutation must redden. Oracle input typing is compatible with Partial Conditions space points (exact `Partial` of `Conditions` spelling in the example-space signature line) — never cast Partial to Conditions; refuse oracle comparison for incomplete points.",
+          "Equality semantics — oracle payload vs Spec Then params and observed vs oracle Outcomes compare by deep structural equality on the authored shape. Failures emit readable missing/extra/changed diagnostics naming the path and the expected vs actual values; they never collapse to a bare boolean. Verbatim Then expectations stay the Spec's authored Then params and skeleton text — the comparator quotes them, it does not rephrase them. The freeze names this law as verbatim `Then` expectations.",
+          "Failure rendering reuses the contract's matching Then step plus the existing `renderContractStep` path. When the oracle selected no authored Then, emit a scenario-level diagnostic quoting Spec ID, oracle kind, and available Then skeletons; preserve the original assertion as `cause`.",
+          "Non-empty `verifies` — the authored top-level `specTest` must carry a non-empty `verifies` target (the example Spec ID). The anchor remains the sole `has-verifier` source; generated execution confers no delivery fact and says nothing about pass state (claim taxonomy unchanged; MD-7).",
+          "Additive assertions — optional `assertions` may add domain checks the Outcome union cannot express; they never replace steps (3) or (5) of the three-way comparator and never silence a Spec-param or oracle mismatch.",
+          "Case mapping and outlines — outline rows map one deterministic case per row in carrier order when a multi-row table sugar expands statically into sibling examples (point-per-example). Scenario Outlines and inline Examples tables stay refused as executable carrier constructs inside a single example; one example remains one point and earns exactly one generated registration.",
+          "Explicit refusals — env/global/module side channels are refused (no ambient `process.env` contract, no mutable global registry, no module-level singleton world shared across examples). Self-running generated modules are refused (generated siblings export the registrar only; they do not self-register on import). Silently deriving domain observation is refused. O5 engine-side execution of adopter code is refused. Growing into harness projection (O4) is out of this freeze. Scenario Outlines stay refused. Claim taxonomy, the anchor layer, and ordinal/slug step identity stay untouched.",
+        ],
+        exampleSpace: {
+          given: [
+            "a bindable example {exampleId:string} with a generated sibling registrar module",
+            "the authored test keeps top-level specTest with non-empty verifies and passes the five adapters",
+            "the frozen registrar signature is register<Example>({ createWorld, invoke, observe, expected, assertions? })",
+            "oracle input typing is Partial<Conditions> and never casts Partial to Conditions",
+          ],
+          when: ["the test runner discovers the authored file and the registrar activates"],
+          then: [
+            "exactly one generated registration runs for the example",
+            "the three-way comparator applies equality semantics with readable missing/extra/changed diagnostics",
+            "a Spec Then param mutation reddens via verbatim `Then` expectations",
+            "a missing adapter or stale skeleton-text identity fails as a tsc exhaustive mapped type error",
+          ],
+        },
+      },
+    },
+    deliveryFacts: [],
   },
   {
     id: "spec:extraction.example-runner",

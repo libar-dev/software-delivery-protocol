@@ -35,6 +35,7 @@ specs:
   - spec:extraction.regenerability
   - spec:extraction.schema-versioning
   - spec:extraction.executable-contracts
+  - spec:extraction.runnable-modules
   - spec:validation.readiness-floor
   - spec:validation.duplicate-ids
   - spec:validation.two-check-families
@@ -51,6 +52,7 @@ specs:
   - spec:consumers.impact-graph
   - spec:consumers.agent-surface
   - spec:consumers.design-review
+  - spec:consumers.census-page
   - spec:consumers.reader
   - spec:consumers.edit-model
   - spec:consumers.authoring-on-ramp

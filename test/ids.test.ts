@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   anchorId,
   codeAnchorId,
+  componentAnchorId,
   formatId,
   packId,
   parseId,
@@ -56,6 +57,7 @@ describe("ids", () => {
     );
     expect(codeAnchorId("api:orders.post")).toBe("api:orders.post");
     expect(codeAnchorId("component:orders.domain")).toBe("component:orders.domain");
+    expect(componentAnchorId("component:orders.domain")).toBe("component:orders.domain");
   });
 
   it.each(invalidIds)("rejects malformed IDs: %s", (value) => {
@@ -67,6 +69,9 @@ describe("ids", () => {
     expect(() => packId("spec:orders.create-order")).toThrow('expected namespace "pack"');
     expect(() => codeAnchorId("test:orders.create-order.valid-cart")).toThrow(
       'expected one of the namespaces "impl" · "api" · "component"',
+    );
+    expect(() => componentAnchorId("impl:orders.create-order-use-case")).toThrow(
+      'expected namespace "component"',
     );
     expect(() => testAnchorId("impl:orders.create-order-use-case")).toThrow(
       'expected namespace "test"',

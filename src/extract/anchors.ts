@@ -5,6 +5,7 @@ import { CODE_ANCHOR_NAMESPACES } from "../ids.js";
 import { codeAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { Finding, Severity } from "../validate/contracts.js";
+import { graphValidatorIds } from "../validate/validators.js";
 import {
   duplicatePropertyMessage,
   extractFindingIds,
@@ -126,6 +127,27 @@ function appendAnchorIdFinding(
   );
 }
 
+function reifyStructuralId(
+  node: Node,
+  allowedBuilders: readonly string[],
+  expectedNamespaces: readonly string[],
+  bindings: ProtocolBindings,
+  path: string,
+): IdReification {
+  const builderCall = resolveBuilderCall(node, bindings);
+
+  if (builderCall === undefined || !allowedBuilders.includes(builderCall.builder)) {
+    return {
+      ok: false,
+      kind: "non-static",
+      line: node.getStartLineNumber(),
+      reason: `${path} must use ${allowedBuilders.map((name) => `${name}(…)`).join(" or ")} with one string literal`,
+    };
+  }
+
+  return reifyStaticIdExpression(node, expectedNamespaces, bindings, path);
+}
+
 function reifyAnchorCall(
   call: CallExpression,
   builder: AnchorBuilderName,
@@ -163,6 +185,7 @@ function reifyAnchorCall(
   const subjectId = peekId(objectLiteral, ANCHOR_ID_NAMESPACES[builder], bindings);
   const data: Record<string, unknown> = {};
   const authoredNames = new Set<string>();
+  const authoredLines = new Map<string, number>();
   let sawOpaqueEntry = false;
   let envelopeOk = true;
 
@@ -178,6 +201,27 @@ function reifyAnchorCall(
         path,
       ),
     );
+    envelopeOk = false;
+  };
+
+  const failStructural = (
+    line: number,
+    message: string,
+    path: string,
+    relatedId?: string,
+  ): void => {
+    findings.push({
+      ...createAnchorFinding(
+        graphValidatorIds.structuralAnchors,
+        "error",
+        message,
+        file,
+        line,
+        subjectId,
+        path,
+      ),
+      ...(relatedId === undefined ? {} : { relatedId }),
+    });
     envelopeOk = false;
   };
 
@@ -212,6 +256,7 @@ function reifyAnchorCall(
     }
 
     authoredNames.add(name);
+    authoredLines.set(name, property.getStartLineNumber());
     const initializer = property.getInitializer();
 
     if (initializer === undefined) {
@@ -254,6 +299,66 @@ function reifyAnchorCall(
       continue;
     }
 
+    if (builder === "codeAnchor" && name === "component") {
+      const idResult = reifyStructuralId(
+        initializer,
+        ["componentAnchorId"],
+        ["component"],
+        bindings,
+        "component",
+      );
+
+      if (!idResult.ok) {
+        appendAnchorIdFinding(idResult, file, subjectId, "component", findings);
+        envelopeOk = false;
+        continue;
+      }
+
+      data.component = idResult.id;
+      continue;
+    }
+
+    if (builder === "codeAnchor" && name === "uses") {
+      const unwrapped = unwrapTransparent(initializer);
+
+      if (!Node.isArrayLiteralExpression(unwrapped)) {
+        failEnvelope(
+          initializer.getStartLineNumber(),
+          'anchor field "uses" must be a fresh array literal of codeAnchorId(…) references',
+          "uses",
+        );
+        continue;
+      }
+
+      const targets: string[] = [];
+      let targetsOk = true;
+
+      for (const [position, element] of unwrapped.getElements().entries()) {
+        const path = `uses[${String(position)}]`;
+        const idResult = reifyStructuralId(
+          element,
+          ["codeAnchorId", "componentAnchorId"],
+          CODE_ANCHOR_NAMESPACES,
+          bindings,
+          path,
+        );
+
+        if (!idResult.ok) {
+          appendAnchorIdFinding(idResult, file, subjectId, path, findings);
+          envelopeOk = false;
+          targetsOk = false;
+          continue;
+        }
+
+        targets.push(idResult.id);
+      }
+
+      if (targetsOk) {
+        data.uses = targets;
+      }
+      continue;
+    }
+
     if (name === "label") {
       const result = reifyStaticString(initializer, "label");
 
@@ -282,9 +387,59 @@ function reifyAnchorCall(
     // honesty, on the anchored surface.
     failEnvelope(
       property.getStartLineNumber(),
-      `anchor field "${name}" is outside the binding contract (id · ${targetField} · label) — an anchor asserts a binding only, never system-truth content`,
+      `anchor field "${name}" is outside the binding contract (id · ${targetField} · label${builder === "codeAnchor" ? " · component · uses" : ""}) — an anchor asserts a binding only, never system-truth content`,
       name,
     );
+  }
+
+  if (builder === "codeAnchor") {
+    const id = typeof data.id === "string" ? data.id : undefined;
+    const component = typeof data.component === "string" ? data.component : undefined;
+    const uses = Array.isArray(data.uses) ? (data.uses as readonly string[]) : undefined;
+
+    if (id !== undefined && component === id) {
+      failStructural(
+        authoredLines.get("component") ?? call.getStartLineNumber(),
+        `Structural memberOf self-reference "${id}" is not allowed.`,
+        "component",
+        component,
+      );
+    }
+
+    if (uses !== undefined) {
+      if (uses.length === 0) {
+        failStructural(
+          authoredLines.get("uses") ?? call.getStartLineNumber(),
+          'anchor field "uses" must be non-empty when present',
+          "uses",
+        );
+      }
+
+      const seen = new Set<string>();
+
+      for (const target of uses) {
+        if (seen.has(target)) {
+          failStructural(
+            authoredLines.get("uses") ?? call.getStartLineNumber(),
+            `Structural uses target "${target}" is authored more than once; targets must be unique.`,
+            "uses",
+            target,
+          );
+          continue;
+        }
+
+        seen.add(target);
+
+        if (target === id) {
+          failStructural(
+            authoredLines.get("uses") ?? call.getStartLineNumber(),
+            `Structural uses self-reference "${target}" is not allowed.`,
+            "uses",
+            target,
+          );
+        }
+      }
+    }
   }
 
   // Absence is judged on authored names, never on reified values (see `reifySpecCall`).

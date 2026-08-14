@@ -1,6 +1,6 @@
 # Design Review
 
-The one generated read-only view — a pure projection of the one graph (`graph.json`, schema `0.4.0`): 17 nodes · 32 edges.
+The one generated read-only view — a pure projection of the one graph (`graph.json`, schema `0.5.0`): 17 nodes · 32 edges.
 
 ## Specs
 
