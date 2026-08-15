@@ -217,47 +217,17 @@ that it passed. Pass/fail is CI's, exactly as skip and quarantine are.
 
 *When you need this: you have a diff (or are about to make one) and want the Specs it reaches.*
 
+The caller acquires the changed paths — for example with `git diff --name-only` — and substitutes that output onto the opening `const changed` line. The reader never shells to git; it only evaluates the paths supplied by the caller.
+
 ```js
 const changed = ["src/reader/reader.ts", "docs/agent-surface/recipes.md"];
 const radius = g.blastRadius(changed);
-const impacted = (items) =>
-  items.map((item) => ({
-    id: item.id,
-    reasons: item.reasons.map((reason) =>
-      reason.throughBinding === undefined
-        ? { file: reason.file, via: null }
-        : {
-            file: reason.file,
-            via: reason.throughBinding.id,
-            edgeType: reason.throughBinding.edgeType,
-            claim: reason.throughBinding.claim,
-          },
-    ),
-  }));
-
-return {
-  changedFiles: radius.changedFiles,
-  impactedSpecs: impacted(radius.impactedSpecs),
-  impactedPacks: impacted(radius.impactedPacks),
-  atRisk: radius.atRisk.map((item) => ({
-    id: item.id,
-    nodeType: item.nodeType,
-    reasons: item.reasons.map((reason) => ({
-      from: reason.from,
-      edgeType: reason.edgeType,
-      to: reason.to,
-      claim: reason.claim,
-    })),
-  })),
-  coverageUnknown: radius.coverageUnknown,
-};
+const impactReasons = (item) => ({ id: item.id, reasons: item.reasons.map((reason) => reason.throughBinding === undefined ? { file: reason.file, via: null } : { file: reason.file, via: reason.throughBinding.id, edgeType: reason.throughBinding.edgeType, claim: reason.throughBinding.claim }) });
+const atRiskReasons = (item) => ({ id: item.id, nodeType: item.nodeType, reasons: item.reasons.map((reason) => ({ from: reason.from, edgeType: reason.edgeType, to: reason.to, claim: reason.claim })) });
+return { changedFiles: radius.changedFiles, impactedSpecs: radius.impactedSpecs.map(impactReasons), atRiskSpecs: radius.atRisk.filter((item) => item.nodeType === "Primitive").map(atRiskReasons), atRiskOther: radius.atRisk.filter((item) => item.nodeType !== "Primitive").map(atRiskReasons), coverageUnknownFiles: radius.coverageUnknown };
 ```
 
-Three result classes, and none of them may be dropped. **Impacted** is authored-at or bound-to a
-changed file. **At-risk** is one explicit hop away, with the connecting edge and its claim carried.
-**Coverage-unknown** is the honest blind spot: a changed file the graph records nothing at. File
-level reach never claims exhaustive symbol-level reach — that would ride the impact graph, which
-does not exist.
+Every result class is returned. **Impacted Specs** are authored-at or bound-to a changed file. **At-risk Specs** are the one-hop Primitive neighbors; **atRiskOther** retains every other at-risk node and its `nodeType`. Each at-risk reason carries its connecting edge and claim, while **coverageUnknownFiles** names changed files the graph records nothing at. File-level reach never claims exhaustive symbol-level reach — that would ride the impact graph, which does not exist.
 
 ## 5. The Pack review backbone
 

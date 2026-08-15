@@ -363,30 +363,98 @@ describe("the agent-surface recipe corpus", () => {
     }
   });
 
-  it("names all three blast-radius result classes", async () => {
+  it("returns the complete diff-to-at-risk bridge", async () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(4)));
+    const changedFiles = asArray(result.changedFiles).map((file) => stringAt({ file }, "file"));
+    const radius = reader.blastRadius(changedFiles);
 
     expect(Object.keys(result)).toEqual(
-      expect.arrayContaining(["impactedSpecs", "impactedPacks", "atRisk", "coverageUnknown"]),
+      expect.arrayContaining([
+        "changedFiles",
+        "impactedSpecs",
+        "atRiskSpecs",
+        "atRiskOther",
+        "coverageUnknownFiles",
+      ]),
     );
-    expect(asArray(result.changedFiles).length).toBeGreaterThan(0);
+    expect(changedFiles).toEqual(radius.changedFiles);
 
-    for (const item of asArray(result.impactedSpecs)) {
+    const impactedSpecs = asArray(result.impactedSpecs);
+    expect(impactedSpecs.map((item) => stringAt(asRecord(item), "id")).sort()).toEqual(
+      radius.impactedSpecs.map((item) => item.id).sort(),
+    );
+
+    for (const item of impactedSpecs) {
       const row = asRecord(item);
+      const expected = radius.impactedSpecs.find(
+        (candidate) => candidate.id === stringAt(row, "id"),
+      );
 
-      expect(primitivesById.has(stringAt(row, "id"))).toBe(true);
+      expect(expected).toBeDefined();
       expect(asArray(row.reasons).length).toBeGreaterThan(0);
-    }
+      expect(asArray(row.reasons)).toEqual(
+        expected?.reasons.map((reason) =>
+          reason.throughBinding === undefined
+            ? { file: reason.file, via: null }
+            : {
+                file: reason.file,
+                via: reason.throughBinding.id,
+                edgeType: reason.throughBinding.edgeType,
+                claim: reason.throughBinding.claim,
+              },
+        ),
+      );
 
-    for (const item of asArray(result.atRisk)) {
-      for (const reason of asArray(asRecord(item).reasons)) {
-        expect(claims).toContain(stringAt(asRecord(reason), "claim"));
+      for (const reason of asArray(row.reasons)) {
+        const shaped = asRecord(reason);
+        if (shaped.via === null) {
+          expect(shaped).toEqual({ file: expect.any(String), via: null });
+        } else {
+          expect(stringAt(shaped, "edgeType")).toBeTruthy();
+          expect(claims).toContain(stringAt(shaped, "claim"));
+        }
       }
     }
 
-    for (const file of asArray(result.coverageUnknown)) {
-      expect(typeof file).toBe("string");
+    const atRiskRows = [...asArray(result.atRiskSpecs), ...asArray(result.atRiskOther)];
+    expect(atRiskRows.map((item) => stringAt(asRecord(item), "id")).sort()).toEqual(
+      radius.atRisk.map((item) => item.id).sort(),
+    );
+
+    const expectedAtRisk = radius.atRisk
+      .map((item) => ({
+        id: item.id,
+        nodeType: item.nodeType,
+        reasons: item.reasons.map((reason) => ({
+          from: reason.from,
+          edgeType: reason.edgeType,
+          to: reason.to,
+          claim: reason.claim,
+        })),
+      }))
+      .sort((left, right) => left.id.localeCompare(right.id));
+    expect(
+      atRiskRows
+        .map((item) => {
+          const row = asRecord(item);
+          return {
+            id: stringAt(row, "id"),
+            nodeType: stringAt(row, "nodeType"),
+            reasons: asArray(row.reasons),
+          };
+        })
+        .sort((left, right) => left.id.localeCompare(right.id)),
+    ).toEqual(expectedAtRisk);
+
+    for (const reason of atRiskRows.flatMap((item) => asArray(asRecord(item).reasons))) {
+      expect(claims).toContain(stringAt(asRecord(reason), "claim"));
     }
+
+    for (const item of asArray(result.atRiskOther)) {
+      expect(stringAt(asRecord(item), "nodeType")).not.toBe("Primitive");
+    }
+
+    expect(asArray(result.coverageUnknownFiles)).toEqual(radius.coverageUnknown);
   });
 
   it("returns a pack's review backbone with its verifier gaps", async () => {
