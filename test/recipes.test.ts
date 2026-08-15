@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import { runSdpCli } from "../src/cli/sdp.js";
 import { createReader, extract } from "../src/index.js";
+import { expectedComponentIds, expectedUsesEdges } from "./self-hosting-oracle/structural-edges.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 
 // The recipe corpus is executable documentation: every fenced `js` body in the catalog must run
@@ -175,6 +176,36 @@ function recipeByOrdinal(ordinal: number): Recipe {
   }
 
   return recipe;
+}
+
+function edgeId(edge: { readonly from: string; readonly to: string }): string {
+  return `${edge.from} -> ${edge.to}`;
+}
+
+function structuralGroundTruth() {
+  const components = derived.graph.nodes
+    .filter((node) => node.nodeType === "CodeNode" && node.id.startsWith("component:"))
+    .map((node) => node.id)
+    .sort();
+  const memberOfEdges = derived.graph.edges.filter((edge) => edge.type === "memberOf");
+  const usesEdges = derived.graph.edges.filter((edge) => edge.type === "uses");
+  const structuralIds = new Set(
+    [...memberOfEdges, ...usesEdges].flatMap((edge) => [edge.from, edge.to]),
+  );
+  const danglingStructuralFindings = derived.report.findings.filter(
+    (finding) =>
+      finding.validatorId === "conformance/referential-integrity" &&
+      [finding.subjectId, finding.relatedId].some(
+        (id) => id !== undefined && structuralIds.has(id),
+      ),
+  );
+
+  return {
+    components,
+    memberOfEdges,
+    usesEdges,
+    danglingStructuralFindings,
+  };
 }
 
 describe("the agent-surface recipe corpus", () => {
@@ -595,5 +626,135 @@ describe("the agent-surface recipe corpus", () => {
 
     expect(numberAt(result, "total")).toBe(rows.length);
     expect(rows.map((row) => stringAt(asRecord(row), "id")).sort()).toEqual(expected);
+  });
+
+  it("returns every committed structural component with non-empty membership", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(12)));
+    const rows = asArray(result.components).map(asRecord);
+    const expectedIds = [...expectedComponentIds].sort();
+
+    expect(rows.map((row) => stringAt(row, "id")).sort()).toEqual(expectedIds);
+
+    for (const row of rows) {
+      const id = stringAt(row, "id");
+      const members = asArray(row.members).map((member) => stringAt({ member }, "member"));
+      const expectedMembers = derived.graph.edges
+        .filter((edge) => edge.type === "memberOf" && edge.to === id)
+        .map((edge) => edge.from)
+        .sort();
+
+      expect(members).toEqual(expectedMembers);
+      expect(members.length).toBeGreaterThan(0);
+      expect(numberAt(row, "memberCount")).toBe(members.length);
+    }
+  });
+
+  it("returns exact component uses fan-in and fan-out from the structural oracle", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(13)));
+    const rows = asArray(result.components).map(asRecord);
+    const expectedUses = expectedUsesEdges.map(([from, to]) => ({ from, to }));
+
+    expect(rows.map((row) => stringAt(row, "id")).sort()).toEqual([...expectedComponentIds].sort());
+
+    for (const row of rows) {
+      const id = stringAt(row, "id");
+      const usesOut = asArray(row.usesOut).map((target) => stringAt({ target }, "target"));
+      const usedBy = asArray(row.usedBy).map((source) => stringAt({ source }, "source"));
+      const expectedOut = expectedUses
+        .filter((edge) => edge.from === id)
+        .map((edge) => edge.to)
+        .sort();
+      const expectedIn = expectedUses
+        .filter((edge) => edge.to === id)
+        .map((edge) => edge.from)
+        .sort();
+
+      expect(usesOut).toEqual(expectedOut);
+      expect(usedBy).toEqual(expectedIn);
+      expect(numberAt(row, "fanOut")).toBe(expectedOut.length);
+      expect(numberAt(row, "fanIn")).toBe(expectedIn.length);
+    }
+
+    expect(rows.some((row) => numberAt(row, "fanOut") > 0)).toBe(true);
+    expect(rows.some((row) => numberAt(row, "fanIn") > 0)).toBe(true);
+  });
+
+  it("returns a component structural neighborhood and an exact absent shape", async () => {
+    const recipe = recipeByOrdinal(14);
+    const result = asRecord(await runRecipe(recipe));
+    const id = "component:protocol.reader";
+    const members = derived.graph.edges
+      .filter((edge) => edge.type === "memberOf" && edge.to === id)
+      .map((edge) => edge.from)
+      .sort();
+    const usesOut = derived.graph.edges
+      .filter((edge) => edge.type === "uses" && edge.from === id)
+      .map((edge) => edge.to)
+      .sort();
+    const usedBy = derived.graph.edges
+      .filter((edge) => edge.type === "uses" && edge.to === id)
+      .map((edge) => edge.from)
+      .sort();
+    const satisfiedSpecs = [
+      ...new Set(
+        derived.graph.edges
+          .filter((edge) => edge.type === "satisfies" && members.includes(edge.from))
+          .map((edge) => edge.to),
+      ),
+    ].sort();
+
+    expect(result).toEqual({
+      found: true,
+      id,
+      members,
+      usesOut,
+      usedBy,
+      satisfiedSpecs,
+    });
+
+    const absent = await runRecipe({
+      ...recipe,
+      body: recipe.body.replace("component:protocol.reader", "component:protocol.nonexistent"),
+    });
+    expect(absent).toEqual({ found: false });
+  });
+
+  it("reports census structural coverage from graph and report ground truth", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(15)));
+    const expected = structuralGroundTruth();
+    const expectedFindings = expected.danglingStructuralFindings.map(
+      (finding) => finding.subjectId ?? finding.relatedId ?? finding.validatorId,
+    );
+
+    for (const [key, count, ids] of [
+      ["components", expected.components.length, expected.components],
+      ["memberOfEdges", expected.memberOfEdges.length, expected.memberOfEdges.map(edgeId).sort()],
+      ["usesEdges", expected.usesEdges.length, expected.usesEdges.map(edgeId).sort()],
+      ["danglingStructuralFindings", expectedFindings.length, expectedFindings.sort()],
+    ] as const) {
+      const row = asRecord(result[key]);
+      expect(numberAt(row, "count")).toBe(count);
+      expect(asArray(row.ids)).toEqual(ids);
+    }
+  });
+
+  it("reports graph-side upper bounds for every shipped projection root", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(16)));
+    const primitiveCount = derived.graph.nodes.filter(
+      (node) => node.nodeType === "Primitive",
+    ).length;
+    const packCount = derived.graph.nodes.filter((node) => node.nodeType === "Pack").length;
+    const anchorCount = derived.graph.nodes.filter(
+      (node) => node.nodeType === "Anchor" || node.nodeType === "CodeNode",
+    ).length;
+    const memberSpecCount = derived.graph.edges.filter((edge) => edge.type === "belongsTo").length;
+    const diagramSubjectCount = primitiveCount + packCount;
+
+    expect(result).toEqual({
+      designReview: { packs: packCount, memberSpecs: memberSpecCount },
+      census: { specs: primitiveCount, anchors: anchorCount },
+      mermaid: { diagramSubjects: diagramSubjectCount },
+      gherkin: { specs: primitiveCount },
+    });
   });
 });

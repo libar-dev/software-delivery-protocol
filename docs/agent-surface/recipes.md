@@ -455,3 +455,180 @@ return { total: lower.length, byFamily };
 `nextUnmetClause: null` means the current stated floor has no failure. It is not permission to
 promote: the next rung may require evidence the current-floor evaluator was not asked to police,
 and `ready` always remains a human statement.
+
+## 12. Component membership
+
+*When you need this: you want to know which code units belong to each declared component.*
+
+```js
+const componentIds = new Set(
+  graph.nodes
+    .filter((node) => node.nodeType === "CodeNode" && node.id.startsWith("component:"))
+    .map((node) => node.id),
+);
+const membersByComponent = new Map();
+
+for (const edge of graph.edges.filter((edge) => edge.type === "memberOf")) {
+  const members = membersByComponent.get(edge.to) ?? [];
+  members.push(edge.from);
+  membersByComponent.set(edge.to, members);
+}
+
+const components = [...componentIds].sort().map((id) => {
+  const members = [...new Set(membersByComponent.get(id) ?? [])].sort();
+  return { id, members, memberCount: members.length };
+});
+
+return { components };
+```
+
+Membership is authored structural data. An empty member list is visible rather than invented away,
+and the component ids come from the graph's declared component nodes.
+
+## 13. Uses fan-in and fan-out
+
+*When you need this: you want to know which components depend on which, with both directions visible.*
+
+```js
+const componentIds = new Set(
+  graph.nodes
+    .filter((node) => node.nodeType === "CodeNode" && node.id.startsWith("component:"))
+    .map((node) => node.id),
+);
+const ownerByMember = new Map();
+
+for (const edge of graph.edges.filter((edge) => edge.type === "memberOf")) {
+  ownerByMember.set(edge.from, edge.to);
+}
+
+const ownerOf = (id) => componentIds.has(id) ? id : ownerByMember.get(id);
+const usesOutByComponent = new Map();
+const usedByByComponent = new Map();
+
+for (const edge of graph.edges.filter((edge) => edge.type === "uses")) {
+  const from = ownerOf(edge.from);
+  const to = ownerOf(edge.to);
+  if (from === undefined || to === undefined) continue;
+  const outgoing = usesOutByComponent.get(from) ?? new Set();
+  outgoing.add(to);
+  usesOutByComponent.set(from, outgoing);
+  const incoming = usedByByComponent.get(to) ?? new Set();
+  incoming.add(from);
+  usedByByComponent.set(to, incoming);
+}
+
+const components = [...componentIds].sort().map((id) => {
+  const usesOut = [...(usesOutByComponent.get(id) ?? [])].sort();
+  const usedBy = [...(usedByByComponent.get(id) ?? [])].sort();
+  return { id, fanOut: usesOut.length, fanIn: usedBy.length, usesOut, usedBy };
+});
+
+return { components };
+```
+
+Fan counts are graph-side composition, not a new reader accessor. A structural cycle is data about
+component dependencies, not a validation finding.
+
+## 14. Structural neighborhood
+
+*When you need this: you want the members, neighboring components, and Specs satisfied by one component.*
+
+The opening `const subject` is the parameter. Replace it with the component you are reviewing; an
+unknown subject returns the exact not-found shape and does not throw.
+
+```js
+const subject = "component:protocol.reader";
+const component = graph.nodes.find((node) => node.nodeType === "CodeNode" && node.id === subject);
+
+if (component === undefined) {
+  return { found: false };
+}
+
+const members = graph.edges
+  .filter((edge) => edge.type === "memberOf" && edge.to === subject)
+  .map((edge) => edge.from)
+  .sort();
+const usesOut = graph.edges
+  .filter((edge) => edge.type === "uses" && edge.from === subject)
+  .map((edge) => edge.to)
+  .sort();
+const usedBy = graph.edges
+  .filter((edge) => edge.type === "uses" && edge.to === subject)
+  .map((edge) => edge.from)
+  .sort();
+const satisfiedSpecs = [...new Set(
+  graph.edges
+    .filter((edge) => edge.type === "satisfies" && members.includes(edge.from))
+    .map((edge) => edge.to),
+)].sort();
+
+return { found: true, id: subject, members, usesOut, usedBy, satisfiedSpecs };
+```
+
+`satisfiedSpecs` reports the member anchors' own realization targets. Structural edges themselves
+confer no delivery fact or readiness.
+
+## 15. Census structural coverage
+
+*When you need this: you want to know what the census structural sections will receive from the graph.*
+
+This reads validation findings already supplied by `report`; it never revalidates or reconstructs
+dangling references.
+
+```js
+const components = graph.nodes
+  .filter((node) => node.nodeType === "CodeNode" && node.id.startsWith("component:"))
+  .map((node) => node.id)
+  .sort();
+const memberOfEdges = graph.edges.filter((edge) => edge.type === "memberOf");
+const usesEdges = graph.edges.filter((edge) => edge.type === "uses");
+const structuralIds = new Set(
+  [...memberOfEdges, ...usesEdges].flatMap((edge) => [edge.from, edge.to]),
+);
+const danglingStructuralFindings = report.findings.filter(
+  (finding) =>
+    finding.validatorId === "conformance/referential-integrity" &&
+    [finding.subjectId, finding.relatedId].some(
+      (id) => id !== undefined && structuralIds.has(id),
+    ),
+);
+const edgeId = (edge) => `${edge.from} -> ${edge.to}`;
+const findingId = (finding) => finding.subjectId ?? finding.relatedId ?? finding.validatorId;
+
+return {
+  components: { count: components.length, ids: components },
+  memberOfEdges: { count: memberOfEdges.length, ids: memberOfEdges.map(edgeId).sort() },
+  usesEdges: { count: usesEdges.length, ids: usesEdges.map(edgeId).sort() },
+  danglingStructuralFindings: {
+    count: danglingStructuralFindings.length,
+    ids: danglingStructuralFindings.map(findingId).sort(),
+  },
+};
+```
+
+The component and edge ids make an empty or shortened section observable, while the finding count
+keeps census's validator-owned honesty signal distinct from structural data.
+
+## 16. Projection coverage upper bound
+
+*When you need this: you want the graph-side slice each shipped projection root is allowed to render.*
+
+```js
+const specs = graph.nodes.filter((node) => node.nodeType === "Primitive");
+const packs = graph.nodes.filter((node) => node.nodeType === "Pack");
+const anchors = graph.nodes.filter(
+  (node) => node.nodeType === "Anchor" || node.nodeType === "CodeNode",
+);
+const memberSpecs = graph.edges.filter((edge) => edge.type === "belongsTo");
+
+return {
+  designReview: { packs: packs.length, memberSpecs: memberSpecs.length },
+  census: { specs: specs.length, anchors: anchors.length },
+  mermaid: { diagramSubjects: specs.length + packs.length },
+  gherkin: { specs: specs.length },
+};
+```
+
+This is a graph-side **upper bound**, not a rendered-page census. Mermaid's per-diagram refusal can
+withhold graph rows, and census inclusion rules can withhold rows the graph contains; projection
+refusal or inclusion can therefore make rendered output smaller than these counts.
