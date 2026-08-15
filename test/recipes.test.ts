@@ -408,7 +408,7 @@ describe("the agent-surface recipe corpus", () => {
       for (const reason of asArray(row.reasons)) {
         const shaped = asRecord(reason);
         if (shaped.via === null) {
-          expect(shaped).toEqual({ file: expect.any(String), via: null });
+          expect(shaped).toEqual({ file: expect.any(String) as unknown, via: null });
         } else {
           expect(stringAt(shaped, "edgeType")).toBeTruthy();
           expect(claims).toContain(stringAt(shaped, "claim"));
