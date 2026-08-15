@@ -303,6 +303,8 @@ export const modelSpecs = [
             "The top-level const builder call that the MVP extractor reifies; decorator and JSDoc forms remain unextracted representations.",
           "code anchor":
             "An implementation-flavored binding that derives an anchored satisfies edge. It may additionally name one `component?: ComponentAnchorId` and a non-empty, unique `uses?: readonly CodeAnchorId[]`; these closed graph-ID references derive only anchored CodeNode-to-CodeNode `memberOf` and `uses` edges.",
+          "component realization convention":
+            "A `component:` anchor satisfies its seam's most-specific design Spec; the `satisfies` edge is the component's own realization claim. Structural edges confer nothing, so MD-30 remains unchanged.",
           "document-realization binding":
             "When the realizing artifact is authored Markdown that cannot carry an extracted in-code anchor, the executable suite that asserts the shipped document may carry its code anchor. Its label must name the document realization rather than imply the test body is the product, and file-level blast radius remains coverage-unknown for the Markdown artifact.",
           "executable binding boundary":
