@@ -1,4 +1,4 @@
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import { SPEC_KINDS, SPEC_READINESS } from "../model/descriptors.js";
 import type { SpecKind, SpecReadiness } from "../model/descriptors.js";
@@ -330,6 +330,7 @@ const kindEvidenceAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.kind-evidence"),
   label: "defines the code-level per-kind evidence rows for readiness floors",
   satisfies: ref("spec:validation.kind-evidence"),
+  component: componentAnchorId("component:protocol.validate"),
 });
 void kindEvidenceAnchor;
 
@@ -512,12 +513,14 @@ export const readinessFloorAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.readiness-floor"),
   label: "evaluates the stated readiness floor against the graph",
   satisfies: ref("spec:validation.readiness-floor"),
+  component: componentAnchorId("component:protocol.validate"),
 });
 
 const verifierSemanticsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.verifier-semantics"),
   label: "readiness clauses over direct verification bindings",
   satisfies: ref("spec:model.spec-sections"),
+  component: componentAnchorId("component:protocol.validate"),
 });
 
 void verifierSemanticsAnchor;

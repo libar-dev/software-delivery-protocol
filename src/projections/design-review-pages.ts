@@ -1,5 +1,5 @@
 import type { PackContext, Reader, SpecContext, SpecSummary } from "../reader/reader.js";
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import { escapeRenderedField, renderNarrative } from "./owned-prose.js";
 import type { DesignReviewPage } from "./design-review.js";
@@ -52,6 +52,7 @@ const bindingLanguagePackTableAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.binding-language-pack-table"),
   label: "renders Pack member implementation and verifier bindings as present or none",
   satisfies: ref("spec:consumers.binding-language-views"),
+  component: componentAnchorId("component:protocol.projections"),
 });
 void bindingLanguagePackTableAnchor;
 
@@ -124,6 +125,7 @@ const bindingLanguageIndexTableAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.binding-language-index-table"),
   label: "renders index implementation and verifier bindings as present or none",
   satisfies: ref("spec:consumers.binding-language-views"),
+  component: componentAnchorId("component:protocol.projections"),
 });
 void bindingLanguageIndexTableAnchor;
 

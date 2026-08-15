@@ -1,4 +1,4 @@
-import { codeAnchorId, parseId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, parseId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { GraphEdge, GraphNode, PrimitiveNode } from "./schema.js";
 
@@ -26,6 +26,7 @@ const oracleTargetEligibilityAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.oracle-target-eligibility"),
   label: "resolves oracle targets by example-space ownership across Spec kinds",
   satisfies: ref("spec:validation.oracle-target-eligibility"),
+  component: componentAnchorId("component:protocol.graph"),
 });
 void oracleTargetEligibilityAnchor;
 

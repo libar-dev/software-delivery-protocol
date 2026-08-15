@@ -11,7 +11,7 @@ import {
   type Tag,
 } from "@cucumber/messages";
 
-import { codeAnchorId, parseId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, parseId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { SpecAltitude, SpecReadiness } from "../model/descriptors.js";
 import type { SpecRelationType } from "../model/relations.js";
@@ -1226,6 +1226,7 @@ export const gherkinAuthoringAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.gherkin-authoring"),
   label: "reifies Gherkin behavior and example authoring into the one carrier path",
   satisfies: ref("spec:carrier.gherkin-authoring"),
+  component: componentAnchorId("component:protocol.extract"),
 });
 
 export function reifyGherkinCarrier(sourceText: string, relativePath: string): CarrierReification {

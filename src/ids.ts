@@ -1,3 +1,4 @@
+import { componentAnchorId as createComponentAnchorId } from "./ids.js";
 import { codeAnchor } from "./model/code-anchor.js";
 
 type Brand<TBrand extends string> = string & {
@@ -133,12 +134,15 @@ export function parseId(value: string): IdParts {
   return validateIdShape(value);
 }
 
-// R-27 bootstrap seam: these two casts stay because same-module local builder calls are
-// intentionally not recognized as imported Protocol bindings (plan 19, execution step 2).
+// R-27 bootstrap seam: id and satisfies stay cast because same-module local builder calls are
+// intentionally not recognized as imported Protocol bindings (plan 19, execution step 2). The
+// self-import gives the structural field the same physically trusted builder identity every other
+// anchor uses without admitting a cast around component ownership.
 const stableIdsAnchor = codeAnchor({
   id: "impl:protocol.stable-ids" as CodeAnchorId,
   label: "stable ID grammar parser",
   satisfies: "spec:model.stable-ids" as SpecId,
+  component: createComponentAnchorId("component:protocol.model"),
 });
 
 void stableIdsAnchor;

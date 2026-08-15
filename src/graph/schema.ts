@@ -1,4 +1,4 @@
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSections } from "../model/sections.js";
@@ -9,6 +9,7 @@ const schemaVersionAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.schema-version"),
   label: "declares the graph schema version",
   satisfies: ref("spec:extraction.schema-versioning"),
+  component: componentAnchorId("component:protocol.graph"),
 });
 void schemaVersionAnchor;
 
@@ -18,11 +19,19 @@ export type GraphNodeType = (typeof graphNodeTypes)[number];
 export const graphClaims = ["declared", "anchored", "inferred"] as const;
 export type GraphClaim = (typeof graphClaims)[number];
 
+const graphComponentAnchor = codeAnchor({
+  id: codeAnchorId("component:protocol.graph"),
+  label: "Protocol graph seam",
+  satisfies: ref("spec:extraction.claim-taxonomy"),
+  uses: [componentAnchorId("component:protocol.model")],
+});
 const graphClaimsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.graph-claims"),
   label: "declares the graph claim taxonomy",
   satisfies: ref("spec:extraction.claim-taxonomy"),
+  component: componentAnchorId("component:protocol.graph"),
 });
+void graphComponentAnchor;
 void graphClaimsAnchor;
 
 export const deliveryFactNames = ["implemented", "has-verifier", "observed"] as const;

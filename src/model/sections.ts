@@ -1,5 +1,5 @@
 import { codeAnchor } from "./code-anchor.js";
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 
 export const SPEC_SECTION_NAMES = [
   "intent",
@@ -127,6 +127,7 @@ const specSectionsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.spec-sections"),
   label: "typed Spec section shapes",
   satisfies: ref("spec:model.spec-sections"),
+  component: componentAnchorId("component:protocol.model"),
 });
 
 void specSectionsAnchor;

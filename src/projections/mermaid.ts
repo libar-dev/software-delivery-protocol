@@ -1,4 +1,4 @@
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import type { GraphEdge, GraphNode, GraphSchema } from "../graph/schema.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { Reader } from "../reader/reader.js";
@@ -17,6 +17,7 @@ const mermaidViewAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.mermaid-view"),
   label: "renders bounded Spec one-hop and Pack membership diagrams",
   satisfies: ref("spec:consumers.mermaid-view"),
+  component: componentAnchorId("component:protocol.projections"),
 });
 void mermaidViewAnchor;
 

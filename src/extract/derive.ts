@@ -14,7 +14,7 @@ import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors
 import { SPEC_SECTION_NAMES } from "../model/sections.js";
 import type { SpecSections } from "../model/sections.js";
 import type { ReifiedAnchor } from "./anchors.js";
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { ReifiedPack, ReifiedSpec } from "./reify.js";
 
@@ -116,6 +116,7 @@ export const deriveGraphAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.derive-graph"),
   label: "derives the graph from reified carriers and bindings",
   satisfies: ref("spec:extraction.derive-graph"),
+  component: componentAnchorId("component:protocol.extract"),
 });
 
 export function deriveGraph(

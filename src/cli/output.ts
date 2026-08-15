@@ -1,5 +1,5 @@
 import type { Finding } from "../validate/contracts.js";
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 
 export interface CliOutput {
@@ -24,6 +24,7 @@ const diagnosticCliAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.diagnostic-rendering-cli"),
   label: "composes structured finding fields into the one command-line diagnostic form",
   satisfies: ref("spec:validation.diagnostic-rendering"),
+  component: componentAnchorId("component:protocol.cli"),
 });
 void diagnosticCliAnchor;
 

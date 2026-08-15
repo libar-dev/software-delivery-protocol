@@ -1,6 +1,6 @@
 import { deliveryFactNames, graphClaims, graphEdgeTypes, graphNodeTypes } from "../graph/schema.js";
 import type { GraphEdge, GraphSchema } from "../graph/schema.js";
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import {
   SPEC_ALTITUDES,
@@ -22,6 +22,7 @@ const censusAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.census-page"),
   label: "renders the derived census and runtime taxonomy projection",
   satisfies: ref("spec:consumers.census-page"),
+  component: componentAnchorId("component:protocol.projections"),
 });
 void censusAnchor;
 

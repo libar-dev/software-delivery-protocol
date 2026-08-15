@@ -1,5 +1,5 @@
 import { SPEC_READINESS } from "../model/descriptors.js";
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { RelationEnd, SpecContext, VerifierBinding } from "../reader/reader.js";
 import type { Finding } from "../validate/contracts.js";
@@ -16,6 +16,7 @@ const derivedReadinessBannerAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.derived-readiness-banner"),
   label: "renders stated readiness beside the structural floor and dishonest divergence",
   satisfies: ref("spec:consumers.derived-readiness-banner"),
+  component: componentAnchorId("component:protocol.projections"),
 });
 void derivedReadinessBannerAnchor;
 
@@ -67,6 +68,7 @@ const bindingLanguageSpecPageAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.binding-language-spec-page"),
   label: "renders implementation, verifier, oracle, and observation binding language",
   satisfies: ref("spec:consumers.binding-language-views"),
+  component: componentAnchorId("component:protocol.projections"),
 });
 void bindingLanguageSpecPageAnchor;
 
@@ -171,6 +173,7 @@ const diagnosticDesignReviewAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.diagnostic-rendering-design-review"),
   label: "renders structured finding locations in the Design Review table",
   satisfies: ref("spec:validation.diagnostic-rendering"),
+  component: componentAnchorId("component:protocol.projections"),
 });
 void diagnosticDesignReviewAnchor;
 

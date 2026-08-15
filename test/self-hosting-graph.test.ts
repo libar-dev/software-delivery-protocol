@@ -8,11 +8,15 @@ import { extract, validateGraph } from "../src/index.js";
 import type { ExpectedSpec } from "./self-hosting-oracle/index.js";
 import {
   expectedAnchors,
+  expectedComponentIds,
   expectedDeclaredRelations,
+  expectedMemberOfEdges,
   expectedPackMembers,
   expectedSpecs,
+  expectedUsesEdges,
   expectedWarnings,
   specFamilies,
+  structuralMembershipExceptions,
 } from "./self-hosting-oracle/index.js";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -90,12 +94,12 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    expect(result.counts).toEqual({ specs: 156, packs: 1, anchors: 146 });
+    expect(result.counts).toEqual({ specs: 156, packs: 1, anchors: 157 });
     expect(expectedSpecs).toHaveLength(156);
     expect(expectedPackMembers).toHaveLength(156);
-    expect(expectedAnchors).toHaveLength(146);
-    expect(result.graph.nodes).toHaveLength(303);
-    expect(result.graph.edges).toHaveLength(571);
+    expect(expectedAnchors).toHaveLength(157);
+    expect(result.graph.nodes).toHaveLength(314);
+    expect(result.graph.edges).toHaveLength(660);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -168,13 +172,56 @@ describe("the self-hosting corpus", () => {
     });
   });
 
-  it("derives one anchored edge per authored anchor", () => {
+  it("derives one binding edge per authored anchor", () => {
     expect(
       result.graph.edges
-        .filter((edge) => edge.claim === "anchored")
+        .filter(
+          (edge) => edge.claim === "anchored" && edge.type !== "memberOf" && edge.type !== "uses",
+        )
         .map((edge) => [edge.from, edge.type, edge.to])
         .sort(),
     ).toEqual(expectedAnchors.map((anchor) => [anchor.id, anchor.type, anchor.target]).sort());
+  });
+
+  it("rosters exactly the accepted component set", () => {
+    expect(
+      result.graph.nodes
+        .filter((node) => node.nodeType === "CodeNode" && node.id.startsWith("component:"))
+        .map((node) => node.id)
+        .sort(),
+    ).toEqual([...expectedComponentIds].sort());
+  });
+
+  it("gives every owned impl/api CodeNode exactly one component", () => {
+    const exceptions = new Set<string>(structuralMembershipExceptions);
+    const codeUnits = result.graph.nodes.filter(
+      (node) =>
+        node.nodeType === "CodeNode" && (node.id.startsWith("impl:") || node.id.startsWith("api:")),
+    );
+
+    for (const codeUnit of codeUnits) {
+      const memberships = result.graph.edges.filter(
+        (edge) => edge.from === codeUnit.id && edge.type === "memberOf",
+      );
+
+      expect(memberships, codeUnit.id).toHaveLength(exceptions.has(codeUnit.id) ? 0 : 1);
+    }
+
+    expect(
+      result.graph.edges
+        .filter((edge) => edge.type === "memberOf")
+        .map((edge) => [edge.from, edge.to])
+        .sort(),
+    ).toEqual([...expectedMemberOfEdges].sort());
+  });
+
+  it("derives exactly the sparse authored component uses edges", () => {
+    expect(
+      result.graph.edges
+        .filter((edge) => edge.type === "uses")
+        .map((edge) => [edge.from, edge.to])
+        .sort(),
+    ).toEqual([...expectedUsesEdges].sort());
   });
 
   it("projects every anchor and code node at the line its declaration occupies", () => {
@@ -217,7 +264,9 @@ describe("the self-hosting corpus", () => {
 
       expect(anchorLine).toBeGreaterThan(0);
       expect(siteLine, anchor.id).toBeGreaterThan(0);
-      expect(Math.abs(anchorLine - siteLine), anchor.id).toBeLessThanOrEqual(20);
+      // The densest site has four adjacent member anchors; their required component rows add
+      // exactly four lines to the original 20-line locality bound.
+      expect(Math.abs(anchorLine - siteLine), anchor.id).toBeLessThanOrEqual(24);
       expect(node).toMatchObject({ file: anchor.file, line: anchorLine, claim: "anchored" });
     }
   });

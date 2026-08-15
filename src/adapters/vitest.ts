@@ -2,7 +2,7 @@ import { describe, it } from "vitest";
 
 import { planExample, runExamplePlan } from "../runner/index.js";
 import type { ExampleContract, ParamShape, StepBindings } from "../runner/index.js";
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 
 /**
@@ -15,11 +15,19 @@ import { codeAnchor } from "../model/code-anchor.js";
  * framework-free. vitest is an **optional peer of this subpath only** — the package's
  * single-runtime-dependency posture holds everywhere else.
  */
+const adaptersComponentAnchor = codeAnchor({
+  id: codeAnchorId("component:protocol.adapters"),
+  label: "Protocol Vitest adapter seam",
+  satisfies: ref("spec:extraction.example-runner"),
+  uses: [componentAnchorId("component:protocol.runner")],
+});
 const exampleRunnerAdapterAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.example-runner-adapter"),
   label: "registers one test per example and owns the fresh world lifecycle",
   satisfies: ref("spec:extraction.example-runner"),
+  component: componentAnchorId("component:protocol.adapters"),
 });
+void adaptersComponentAnchor;
 void exampleRunnerAdapterAnchor;
 
 export function bindExample<W, S extends string, PM extends Record<S, ParamShape>>(

@@ -22,7 +22,7 @@
  * dedupes ("same words, same meaning" — the ubiquitous-language bet at step level).
  */
 
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 
 export type SlotScalar = string | number | boolean;
@@ -253,12 +253,20 @@ function parseGroup(group: RawGroup): SlotGroup | undefined {
     : { form: "bound", name, value: parsed.value, raw: group.raw };
 }
 
+const notationComponentAnchor = codeAnchor({
+  id: codeAnchorId("component:protocol.notation"),
+  label: "Protocol slot notation seam",
+  satisfies: ref("spec:carrier.slot-notation"),
+  uses: [componentAnchorId("component:protocol.model")],
+});
 const slotNotationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.slot-notation"),
   label: "parses slot groups and normalizes a step to its skeleton",
   satisfies: ref("spec:carrier.slot-notation"),
+  component: componentAnchorId("component:protocol.notation"),
 });
 
+void notationComponentAnchor;
 void slotNotationAnchor;
 
 /** Every slot group in one step text, in authored order. Prose braces are not returned. */

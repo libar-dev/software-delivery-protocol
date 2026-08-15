@@ -2,7 +2,7 @@ import { posix } from "node:path";
 
 import { resolveExampleVocabulary } from "../graph/example-space.js";
 import type { GraphSchema, PrimitiveNode } from "../graph/schema.js";
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import { parseSlots, stepSkeleton } from "../notation/slots.js";
 import type { SlotDeclaredType, SlotScalar } from "../notation/slots.js";
@@ -959,16 +959,28 @@ function renderRunnableRegistrar(
 
 /* ----- the stage ----- */
 
+const codegenComponentAnchor = codeAnchor({
+  id: codeAnchorId("component:protocol.codegen"),
+  label: "Protocol runnable code generation seam",
+  satisfies: ref("spec:extraction.runnable-modules"),
+  uses: [
+    componentAnchorId("component:protocol.graph"),
+    componentAnchorId("component:protocol.notation"),
+  ],
+});
 const executableContractsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.executable-contracts"),
   label: "derives step and example-space contracts from the graph",
   satisfies: ref("spec:extraction.executable-contracts"),
+  component: componentAnchorId("component:protocol.codegen"),
 });
 const runnableModulesAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.runnable-modules"),
   label: "derives and publishes runnable registrar modules from the graph",
   satisfies: ref("spec:extraction.runnable-modules"),
+  component: componentAnchorId("component:protocol.codegen"),
 });
+void codegenComponentAnchor;
 void executableContractsAnchor;
 void runnableModulesAnchor;
 
