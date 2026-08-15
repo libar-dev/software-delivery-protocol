@@ -15,6 +15,7 @@ relations:
 ## Model
 - **anchor** — A human-written source binding from one code location to one Spec ID, carrying identity, an optional label, and one realization target only.
 - **code anchor** — An implementation-flavored binding that derives an anchored satisfies edge. It may additionally name one `component?: ComponentAnchorId` and a non-empty, unique `uses?: readonly CodeAnchorId[]`; these closed graph-ID references derive only anchored CodeNode-to-CodeNode `memberOf` and `uses` edges.
+- **component realization convention** — A `component:` anchor satisfies its seam's most-specific design Spec; the `satisfies` edge is the component's own realization claim. Structural edges confer nothing, so MD-30 remains unchanged.
 - **structural anchor validity** — A `memberOf` source is an `impl:` or `api:` CodeNode and its target is a `component:` CodeNode; every structural target exists, every edge is unique, each source has at most one component, and structural self-reference is refused. A malformed or non-static structural field refuses the whole anchor at reification; a graph-validly reified edge that later fails referential or structural validation remains visible with its anchor and independent `satisfies` binding. Multi-node `uses` cycles remain data and produce no finding.
 - **structural non-conferral** — Structural edges carry no intent, delivery fact, readiness effect, or binding-to-Spec traversal; no `implements` field is admitted.
 - **test anchor** — A binding that derives an anchored verifies edge from a test to its target Spec.
