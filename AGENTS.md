@@ -188,4 +188,26 @@ Every doc honours both — never mistake one half for the other:
 - **Git hygiene** follows the global rules (no `git stash`; commit early on a WIP branch; commit/push only when
   asked).
 
+## PR descriptions as durable context
+
+PR descriptions are the project's durable narrative record — sessions return to them long after
+merge, so write for the reader who arrives in six months with no context. The standard, set by
+PR #19 (the universal-Spec arc) building on PRs #10 and #16:
+
+- **Story before inventory.** Lead with what the PR introduces and why — the questions it answers,
+  the arc it closes, the plans it executes. What-changed lists and review-closure details are
+  evidence, never the headline; a description written during a review session must still be
+  re-anchored on the full scope before publication.
+- **Present new things, don't just name them.** Each new surface gets a short explanation of the
+  idea and a linked representative artifact on the branch — a carrying Spec, a worked example, a
+  plan. One stop per surface, tour-style.
+- **Ratified decisions are a table.** Ratified name, one-line ruling, carrying Spec link.
+- **Invite use.** A try-it block with real commands verified against the branch, plus a feedback
+  call naming the open questions the PR most wants pressure on.
+- **Upcoming work stays, always.** Every description keeps a forward section — what re-enters
+  next, in what order, with re-entry triggers — and the durable refused list. It contextualizes
+  the arc and feeds planning; never drop it, and rewrite it rather than appending stale rows.
+- **Numbers are re-measured and marked.** Close measurements are re-derived at close and labeled
+  as such ("re-run the recipes rather than inheriting these"), never quoted from an older record.
+
 > `CLAUDE.md` is a symlink to `AGENTS.md` — **edit `AGENTS.md`.**
