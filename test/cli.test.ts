@@ -18,6 +18,12 @@ import { afterAll, describe, expect, it, vi } from "vitest";
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
 import { SDP_HELP_TEXT, isCliEntrypoint, onStdoutError, runSdpCli } from "../src/cli/sdp.js";
+import {
+  isWatchedCarrierPath,
+  type ValidateWatchCycle,
+  type ValidateWatchEvent,
+  type ValidateWatchEventSource,
+} from "../src/cli/validate-watch.js";
 import { generateContracts } from "../src/codegen/contracts.js";
 import { extract } from "../src/extract/index.js";
 import { renderDesignReview } from "../src/projections/design-review.js";
@@ -1331,6 +1337,443 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
       // the render failure describe the run, not that artifact.
       expect(existsSync(join(corpusRoot, "generated", "graph.json"))).toBe(true);
     } finally {
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+});
+
+const WATCH_CYCLE_TIMEOUT_MS = 2_000;
+const SHARED_PARSER_COMMANDS = ["build", "view", "census", "mermaid", "gherkin"] as const;
+
+interface Deferred<T> {
+  readonly promise: Promise<T>;
+  readonly resolve: (value: T) => void;
+}
+
+function createDeferred<T>(): Deferred<T> {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((settle) => {
+    resolve = settle;
+  });
+
+  return { promise, resolve };
+}
+
+function createSignal(): Deferred<undefined> {
+  return createDeferred<undefined>();
+}
+
+function timeoutRejection(label: string): Promise<never> {
+  return new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(new Error(`${label} timed out after ${String(WATCH_CYCLE_TIMEOUT_MS)}ms`));
+    }, WATCH_CYCLE_TIMEOUT_MS).unref();
+  });
+}
+
+async function waitForWatchCycle(
+  pending: Promise<ValidateWatchCycle>,
+  label: string,
+): Promise<ValidateWatchCycle> {
+  return await Promise.race([pending, timeoutRejection(label)]);
+}
+
+class InjectedWatchSource implements ValidateWatchEventSource {
+  private listener: ((event: ValidateWatchEvent) => void) | undefined;
+  closed = false;
+
+  on(listener: (event: ValidateWatchEvent) => void): void {
+    this.listener = listener;
+  }
+
+  emit(event: ValidateWatchEvent): void {
+    this.listener?.(event);
+  }
+
+  close(): void {
+    this.closed = true;
+  }
+}
+
+function createWatchHarness(): {
+  readonly source: InjectedWatchSource;
+  readonly abort: AbortController;
+  readonly nextCycle: () => Promise<ValidateWatchCycle>;
+  readonly createWatchSource: (input: {
+    readonly root: string;
+    readonly exclude: readonly string[];
+  }) => InjectedWatchSource;
+  readonly onWatchCycleComplete: (cycle: ValidateWatchCycle) => void;
+} {
+  const source = new InjectedWatchSource();
+  const abort = new AbortController();
+  const waiters: Deferred<ValidateWatchCycle>[] = [];
+  const ready: ValidateWatchCycle[] = [];
+
+  return {
+    source,
+    abort,
+    nextCycle: () => {
+      const already = ready.shift();
+
+      if (already !== undefined) {
+        return Promise.resolve(already);
+      }
+
+      const deferred = createDeferred<ValidateWatchCycle>();
+      waiters.push(deferred);
+      return deferred.promise;
+    },
+    createWatchSource: () => source,
+    onWatchCycleComplete: (cycle) => {
+      const waiter = waiters.shift();
+
+      if (waiter === undefined) {
+        ready.push(cycle);
+        return;
+      }
+
+      waiter.resolve(cycle);
+    },
+  };
+}
+
+describe("sdp validate --watch", () => {
+  it("documents --watch as a validate-only authoring loop", () => {
+    expect(SDP_HELP_TEXT).toContain(
+      "sdp validate [root] [--exclude PATH]... [--check-clean | --watch]",
+    );
+    expect(SDP_HELP_TEXT).toContain(
+      "--watch re-runs the same validate path on carrier create/change/delete/rename",
+    );
+    expect(SDP_HELP_TEXT).not.toContain(
+      "sdp build [root] [--exclude PATH]... [--check-clean | --watch]",
+    );
+  });
+
+  it.each(SHARED_PARSER_COMMANDS)(
+    "rejects --watch on %s with a named error and no watcher",
+    (command) => {
+      const capture = createCaptureOutput();
+      let created = 0;
+
+      const exitCode = runSdpCli([command, "--watch"], capture.output, {
+        createWatchSource: () => {
+          created += 1;
+          throw new Error(`${command} must not start a watcher`);
+        },
+      });
+
+      expect(exitCode).toBe(1);
+      expect(created).toBe(0);
+      expect(capture.readStdout()).toBe("");
+      expect(capture.readStderr()).toBe(`sdp ${command}: --watch is only valid on validate.\n`);
+    },
+  );
+
+  it.each(["import", "new", "q"] as const)(
+    "rejects --watch on %s with a named error and no watcher",
+    async (command) => {
+      const capture = createCaptureOutput();
+      let created = 0;
+      const args =
+        command === "new"
+          ? ["new", "spec", "--watch", "probe.sdp.md"]
+          : command === "q"
+            ? ["q", "return 1", "--watch"]
+            : ["import", "--watch"];
+
+      const exitCode = await runSdpCli(args, capture.output, {
+        createWatchSource: () => {
+          created += 1;
+          throw new Error(`${command} must not start a watcher`);
+        },
+      });
+
+      expect(exitCode).toBe(1);
+      expect(created).toBe(0);
+      expect(capture.readStdout()).toBe("");
+      expect(capture.readStderr()).toMatch(
+        command === "new"
+          ? /sdp new spec: unknown option --watch\n/u
+          : new RegExp(`sdp ${command}: unknown option --watch\n`, "u"),
+      );
+    },
+  );
+
+  it("rejects --watch --check-clean with a named error and no watcher", () => {
+    const capture = createCaptureOutput();
+    let created = 0;
+
+    const exitCode = runSdpCli(["validate", "--watch", "--check-clean"], capture.output, {
+      createWatchSource: () => {
+        created += 1;
+        throw new Error("validate --watch --check-clean must not start a watcher");
+      },
+    });
+
+    expect(exitCode).toBe(1);
+    expect(created).toBe(0);
+    expect(capture.readStdout()).toBe("");
+    expect(capture.readStderr()).toBe(
+      "sdp validate: --watch cannot be combined with --check-clean.\n",
+    );
+  });
+
+  it("installs the watcher before the first validation cycle", async () => {
+    const corpusRoot = materializeExtractCorpus("anchored-binding");
+    const capture = createCaptureOutput();
+    const harness = createWatchHarness();
+    const firstGate = createSignal();
+    const firstEntered = createSignal();
+    const firstCycle = harness.nextCycle();
+    const order: string[] = [];
+
+    try {
+      const running = runSdpCli(["validate", "--watch", corpusRoot], capture.output, {
+        createWatchSource: (input) => {
+          expect(input.root).toBe(corpusRoot);
+          order.push("watch");
+          return harness.createWatchSource(input);
+        },
+        watchCycleGate: async (cycleIndex) => {
+          if (cycleIndex === 1) {
+            firstEntered.resolve(undefined);
+            await firstGate.promise;
+          }
+
+          return undefined;
+        },
+        extract: (options) => {
+          order.push("validate");
+          return extract(options);
+        },
+        onWatchCycleComplete: harness.onWatchCycleComplete,
+        abortSignal: harness.abort.signal,
+      });
+
+      await Promise.race([firstEntered.promise, timeoutRejection("watch install")]);
+      expect(order).toEqual(["watch"]);
+      firstGate.resolve(undefined);
+
+      const cycle = await waitForWatchCycle(firstCycle, "first watch cycle");
+      expect(cycle).toEqual({ index: 1, exitCode: 0 });
+      expect(order).toEqual(["watch", "validate"]);
+      expect(capture.readStdout()).toContain("validate: 0 errors");
+
+      harness.abort.abort();
+      expect(await Promise.race([running, timeoutRejection("watch abort")])).toBe(0);
+      expect(harness.source.closed).toBe(true);
+    } finally {
+      firstGate.resolve(undefined);
+      harness.abort.abort();
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("catches an edit during the first cycle with exactly one coalesced rerun", async () => {
+    const corpusRoot = materializeExtractCorpus("anchored-binding");
+    const capture = createCaptureOutput();
+    const harness = createWatchHarness();
+    const firstGate = createSignal();
+    const firstEntered = createSignal();
+    const firstCycle = harness.nextCycle();
+    const secondCycle = harness.nextCycle();
+    let extractCount = 0;
+
+    try {
+      const running = runSdpCli(["validate", "--watch", corpusRoot], capture.output, {
+        createWatchSource: harness.createWatchSource,
+        watchCycleGate: async (cycleIndex) => {
+          if (cycleIndex === 1) {
+            firstEntered.resolve(undefined);
+            await firstGate.promise;
+          }
+
+          return undefined;
+        },
+        extract: (options) => {
+          extractCount += 1;
+          return extract(options);
+        },
+        onWatchCycleComplete: harness.onWatchCycleComplete,
+        abortSignal: harness.abort.signal,
+      });
+
+      await Promise.race([firstEntered.promise, timeoutRejection("first cycle start")]);
+      harness.source.emit({ type: "change", path: "parent.sdp.ts" });
+      firstGate.resolve(undefined);
+
+      expect(await waitForWatchCycle(firstCycle, "first watch cycle")).toEqual({
+        index: 1,
+        exitCode: 0,
+      });
+      expect(await waitForWatchCycle(secondCycle, "coalesced rerun")).toEqual({
+        index: 2,
+        exitCode: 0,
+      });
+      expect(extractCount).toBe(2);
+
+      harness.abort.abort();
+      expect(await Promise.race([running, timeoutRejection("watch abort")])).toBe(0);
+      expect(harness.source.closed).toBe(true);
+    } finally {
+      firstGate.resolve(undefined);
+      harness.abort.abort();
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("coalesces a burst during an active cycle into exactly one rerun", async () => {
+    const corpusRoot = materializeExtractCorpus("anchored-binding");
+    const capture = createCaptureOutput();
+    const harness = createWatchHarness();
+    const firstGate = createSignal();
+    const firstEntered = createSignal();
+    const firstCycle = harness.nextCycle();
+    const secondCycle = harness.nextCycle();
+    let extractCount = 0;
+
+    try {
+      const running = runSdpCli(["validate", "--watch", corpusRoot], capture.output, {
+        createWatchSource: harness.createWatchSource,
+        watchCycleGate: async (cycleIndex) => {
+          if (cycleIndex === 1) {
+            firstEntered.resolve(undefined);
+            await firstGate.promise;
+          }
+
+          return undefined;
+        },
+        extract: (options) => {
+          extractCount += 1;
+          return extract(options);
+        },
+        onWatchCycleComplete: harness.onWatchCycleComplete,
+        abortSignal: harness.abort.signal,
+      });
+
+      await Promise.race([firstEntered.promise, timeoutRejection("first cycle start")]);
+      harness.source.emit({ type: "create", path: "added.sdp.md" });
+      harness.source.emit({ type: "change", path: "parent.sdp.ts" });
+      harness.source.emit({ type: "delete", path: "verifying-example.sdp.ts" });
+      harness.source.emit({ type: "rename", path: "parent.sdp.ts" });
+      firstGate.resolve(undefined);
+
+      expect(await waitForWatchCycle(firstCycle, "first watch cycle")).toEqual({
+        index: 1,
+        exitCode: 0,
+      });
+      expect(await waitForWatchCycle(secondCycle, "burst rerun")).toEqual({
+        index: 2,
+        exitCode: 0,
+      });
+      expect(extractCount).toBe(2);
+
+      harness.abort.abort();
+      expect(await Promise.race([running, timeoutRejection("watch abort")])).toBe(0);
+      expect(harness.source.closed).toBe(true);
+    } finally {
+      firstGate.resolve(undefined);
+      harness.abort.abort();
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("prints validation findings and keeps watching until abort exits 0", async () => {
+    const corpusRoot = materializeExtractCorpus("dangling-relation");
+    const capture = createCaptureOutput();
+    const harness = createWatchHarness();
+    const firstCycle = harness.nextCycle();
+
+    try {
+      const running = runSdpCli(["validate", "--watch", corpusRoot], capture.output, {
+        createWatchSource: harness.createWatchSource,
+        onWatchCycleComplete: harness.onWatchCycleComplete,
+        abortSignal: harness.abort.signal,
+      });
+
+      expect(await waitForWatchCycle(firstCycle, "failing first cycle")).toEqual({
+        index: 1,
+        exitCode: 1,
+      });
+      expect(capture.readStderr()).toContain("conformance/referential-integrity");
+      expect(capture.readStdout()).toContain("validate: 1 errors · 0 warnings");
+      expect(harness.source.closed).toBe(false);
+
+      const secondCycle = harness.nextCycle();
+      harness.source.emit({ type: "change", path: "dangling-relation.sdp.ts" });
+      expect(await waitForWatchCycle(secondCycle, "failing rerun")).toEqual({
+        index: 2,
+        exitCode: 1,
+      });
+      expect(harness.source.closed).toBe(false);
+
+      harness.abort.abort();
+      expect(await Promise.race([running, timeoutRejection("watch abort")])).toBe(0);
+      expect(harness.source.closed).toBe(true);
+    } finally {
+      harness.abort.abort();
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("ignores generated, dist, node_modules, coverage, dot directories, and configured excludes", async () => {
+    const corpusRoot = materializeExtractCorpus("anchored-binding");
+    const capture = createCaptureOutput();
+    const harness = createWatchHarness();
+    const firstCycle = harness.nextCycle();
+    const secondCycle = harness.nextCycle();
+    const ignored = [
+      "generated/probe.sdp.md",
+      "dist/probe.sdp.md",
+      "node_modules/probe.sdp.md",
+      "coverage/probe.sdp.md",
+      ".hidden/probe.sdp.md",
+      "explorations/probe.sdp.md",
+      "notes.txt",
+    ] as const;
+    let extractCount = 0;
+
+    try {
+      const running = runSdpCli(
+        ["validate", "--watch", corpusRoot, "--exclude", "explorations"],
+        capture.output,
+        {
+          createWatchSource: harness.createWatchSource,
+          extract: (options) => {
+            extractCount += 1;
+            return extract(options);
+          },
+          onWatchCycleComplete: harness.onWatchCycleComplete,
+          abortSignal: harness.abort.signal,
+        },
+      );
+
+      expect(await waitForWatchCycle(firstCycle, "ignore first cycle")).toEqual({
+        index: 1,
+        exitCode: 0,
+      });
+      expect(extractCount).toBe(1);
+
+      for (const path of ignored) {
+        expect(isWatchedCarrierPath(corpusRoot, path, ["explorations"])).toBe(false);
+        harness.source.emit({ type: "change", path });
+      }
+
+      expect(isWatchedCarrierPath(corpusRoot, "parent.sdp.ts", ["explorations"])).toBe(true);
+      harness.source.emit({ type: "change", path: "parent.sdp.ts" });
+      expect(await waitForWatchCycle(secondCycle, "carrier rerun after ignored paths")).toEqual({
+        index: 2,
+        exitCode: 0,
+      });
+      expect(extractCount).toBe(2);
+
+      harness.abort.abort();
+      expect(await Promise.race([running, timeoutRejection("watch abort")])).toBe(0);
+      expect(harness.source.closed).toBe(true);
+    } finally {
+      harness.abort.abort();
       removeMaterializedCorpus(corpusRoot);
     }
   });
