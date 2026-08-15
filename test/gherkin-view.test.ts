@@ -13,6 +13,7 @@ import { schemaVersion } from "../src/graph/schema.js";
 import { escapeGherkinViewText, renderGherkinView } from "../src/projections/gherkin-view.js";
 import { createReader } from "../src/reader/reader.js";
 import type { Reader, SpecContext, SpecSummary } from "../src/reader/reader.js";
+import type { Finding } from "../src/validate/contracts.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 
@@ -63,16 +64,16 @@ function specContext(overrides: Partial<SpecContext> = {}): SpecContext {
   };
 }
 
-function readerStub(contexts: readonly SpecContext[]): Reader {
+function readerStub(contexts: readonly SpecContext[], findings: readonly Finding[] = []): Reader {
   const unavailable = (): never => {
-    throw new Error("gherkin view used a Reader accessor outside specs/specContext");
+    throw new Error("gherkin view used a Reader accessor outside specs/specContext/findings");
   };
 
   return {
     graph: emptyGraph(),
     specs: () => contexts,
     specContext: (id) => contexts.find((context) => context.id === id),
-    findings: unavailable,
+    findings: () => findings,
     packs: unavailable,
     findByConcept: unavailable,
     byFile: unavailable,
@@ -141,6 +142,36 @@ describe("the generated Gherkin-shaped READ projection", () => {
     expect(pageByPath(first, "spec/a.behavior.feature.md")).toContain("Feature: Earlier");
     expect(pageByPath(first, "spec/a.behavior.feature.md")).toContain("- outcome: Read any Spec");
     expect(pageByPath(first, "spec/a.behavior.feature.md")).toContain("Rule: Title-only");
+  });
+
+  it("labels the index as diagnostic when validation errors are present", () => {
+    const diagnostic = renderGherkinView(
+      readerStub(
+        [specContext()],
+        [
+          {
+            validatorId: "conformance/referential-integrity",
+            family: "conformance",
+            severity: "error",
+            message: "missing target",
+          },
+          {
+            validatorId: "honesty/readiness-floor",
+            family: "honesty",
+            severity: "warning",
+            message: "advisory warning",
+          },
+        ],
+      ),
+    );
+
+    expect(pageByPath(renderGherkinView(readerStub([specContext()])), "index.md")).not.toContain(
+      "Diagnostic projection",
+    );
+    expect(pageByPath(diagnostic, "index.md")).toContain(
+      "Diagnostic projection — validation errors present",
+    );
+    expect(pageByPath(diagnostic, "index.md")).toContain("1 error and 1 warning");
   });
 
   it("marks refused kinds with the ruled lie-reason and never uses .sdp.gherkin", () => {
@@ -242,22 +273,33 @@ describe("sdp gherkin publication", () => {
 
       expect(
         runSdpCli(["gherkin", root], capture.output, {
-          validateGraph: () => ({
-            validatorId: "graph/report",
-            findings: [
-              {
-                validatorId: "conformance/referential-integrity",
-                family: "conformance",
-                severity: "error",
-                message: "retained-graph validation failure",
+          extract: (options) => {
+            const result = extract(options);
+            const source = result.graph.nodes.find((node) => node.nodeType === "Primitive");
+            if (source === undefined) throw new Error("diagnostic probe needs a Spec");
+
+            return {
+              ...result,
+              graph: {
+                ...result.graph,
+                edges: [
+                  ...result.graph.edges,
+                  {
+                    from: source.id,
+                    type: "dependsOn",
+                    to: "spec:probe.missing",
+                    claim: "declared",
+                  },
+                ],
               },
-            ],
-          }),
-          renderGherkinView: () => pages,
+            };
+          },
         }),
       ).toBe(1);
-      expect(capture.readStderr()).toContain("retained-graph validation failure");
-      expect([...publishedTree(root).keys()].sort()).toEqual(["index.md", "spec/probe.feature.md"]);
+      expect(capture.readStderr()).toContain("spec:probe.missing");
+      expect(readFileSync(join(root, "generated", "gherkin", "index.md"), "utf8")).toContain(
+        "Diagnostic projection — validation errors present",
+      );
     } finally {
       removeMaterializedCorpus(root);
     }

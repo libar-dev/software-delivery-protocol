@@ -33,5 +33,6 @@ Then refused-kind pages carry the per-kind lie-reason as lossy commentary
 Then a clean independent render is byte-identical
 Then hostile characters cannot close a fence or invent a DocString
 Then generated/gherkin/ is the only current Gherkin-view root
+Then validation errors label the index as a diagnostic projection
 Then no page uses the .sdp.gherkin suffix
 ```

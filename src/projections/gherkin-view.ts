@@ -10,6 +10,7 @@ import type {
   VerificationSection,
 } from "../model/sections.js";
 import type { Reader, SpecContext } from "../reader/reader.js";
+import { renderDiagnosticBanner } from "./diagnostic-banner.js";
 
 export interface GherkinViewPage {
   /** POSIX path under the projection root (`generated/gherkin/`). */
@@ -323,10 +324,11 @@ function renderSpecPage(context: SpecContext): GherkinViewPage {
   return { path: pagePathOf(context.id), content: lines.join("\n") };
 }
 
-function renderIndex(specs: readonly SpecContext[]): GherkinViewPage {
+function renderIndex(specs: readonly SpecContext[], reader: Reader): GherkinViewPage {
   const lines = [
     "# Generated Gherkin-shaped READ projection",
     "",
+    ...renderDiagnosticBanner(reader.findings()),
     "Disposable. Not a carrier. Not round-trippable. Never `.sdp.gherkin`.",
     "",
     ...(specs.length === 0
@@ -356,7 +358,7 @@ export function renderGherkinView(reader: Reader): readonly GherkinViewPage[] {
       const context = reader.specContext(spec.id);
       return context === undefined ? [] : [context];
     });
-  return [renderIndex(contexts), ...contexts.map(renderSpecPage)].sort((left, right) =>
+  return [renderIndex(contexts, reader), ...contexts.map(renderSpecPage)].sort((left, right) =>
     compareCodeUnits(left.path, right.path),
   );
 }

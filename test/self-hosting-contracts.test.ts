@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import {
   buildGraphIndex,
@@ -10,14 +10,18 @@ import {
 } from "../src/index.js";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
+let result: ReturnType<typeof extract>;
 
 describe("the self-hosting duplicate-ID example contracts", () => {
-  it("carries the exact duplicate-ID example-space vocabulary", () => {
-    // Given: the root corpus with the duplicate-ID rule.
-    const result = extract({
+  beforeAll(() => {
+    result = extract({
       root: repoRoot,
       exclude: ["explorations", "examples", "test/fixtures/import/parity"],
     });
+  });
+
+  it("carries the exact duplicate-ID example-space vocabulary", () => {
+    // Given: the root corpus with the duplicate-ID rule.
     const index = buildGraphIndex(result.graph);
     const parent = index.primitivesById.get("spec:validation.duplicate-ids");
 
@@ -45,10 +49,6 @@ describe("the self-hosting duplicate-ID example contracts", () => {
 
   it("binds one ready point with distinct refines and verifies relations", () => {
     // Given: the root corpus and the parent vocabulary it owns.
-    const result = extract({
-      root: repoRoot,
-      exclude: ["explorations", "examples", "test/fixtures/import/parity"],
-    });
     const index = buildGraphIndex(result.graph);
     const point = index.primitivesById.get("spec:validation.duplicate-ids.dual-carrier");
 
@@ -74,11 +74,6 @@ describe("the self-hosting duplicate-ID example contracts", () => {
 
   it("derives the bound space and step contracts", () => {
     // Given: the root corpus carries the duplicate-ID vocabulary and its bound point.
-    const result = extract({
-      root: repoRoot,
-      exclude: ["explorations", "examples", "test/fixtures/import/parity"],
-    });
-
     // When: contracts are generated from the root graph.
     const generated = generateContracts(result.graph);
     const space = generated.files.get("validation.duplicate-ids.space.ts") ?? "";

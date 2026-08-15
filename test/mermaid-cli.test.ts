@@ -13,6 +13,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { SDP_HELP_TEXT, runSdpCli } from "../src/cli/sdp.js";
+import { extract } from "../src/extract/index.js";
 import { MAX_MERMAID_NODES_PER_DIAGRAM } from "../src/projections/mermaid.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
@@ -188,7 +189,6 @@ describe("sdp mermaid publication", () => {
   it("publishes diagnostic output for validation errors and returns the validation exit code", () => {
     const root = materializeExtractCorpus("anchored-binding");
     const mermaidRoot = join(root, "generated", "mermaid");
-    let renders = 0;
 
     try {
       for (const directory of [mermaidRoot, `${mermaidRoot}.tmp`]) {
@@ -199,27 +199,33 @@ describe("sdp mermaid publication", () => {
 
       expect(
         runSdpCli(["mermaid", root], capture.output, {
-          validateGraph: () => ({
-            validatorId: "graph/report",
-            findings: [
-              {
-                validatorId: "conformance/referential-integrity",
-                family: "conformance",
-                severity: "error",
-                message: "retained-graph validation failure",
-                subjectId: "spec:probe.invalid",
+          extract: (options) => {
+            const result = extract(options);
+            const source = result.graph.nodes.find((node) => node.nodeType === "Primitive");
+            if (source === undefined) throw new Error("diagnostic probe needs a Spec");
+
+            return {
+              ...result,
+              graph: {
+                ...result.graph,
+                edges: [
+                  ...result.graph.edges,
+                  {
+                    from: source.id,
+                    type: "dependsOn",
+                    to: "spec:probe.missing",
+                    claim: "declared",
+                  },
+                ],
               },
-            ],
-          }),
-          renderMermaid: () => {
-            renders += 1;
-            return pages;
+            };
           },
         }),
       ).toBe(1);
-      expect(capture.readStderr()).toContain("retained-graph validation failure");
-      expect(renders).toBe(1);
-      expect(existsSync(join(mermaidRoot, "index.md"))).toBe(true);
+      expect(capture.readStderr()).toContain("spec:probe.missing");
+      expect(readFileSync(join(mermaidRoot, "index.md"), "utf8")).toContain(
+        "Diagnostic projection — validation errors present",
+      );
       expect(existsSync(`${mermaidRoot}.tmp`)).toBe(false);
     } finally {
       removeMaterializedCorpus(root);

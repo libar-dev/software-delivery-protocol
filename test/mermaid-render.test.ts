@@ -6,7 +6,7 @@ import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protoc
 import { describe, expect, it } from "vitest";
 
 import { extract } from "../src/extract/index.js";
-import type { GraphEdge, GraphNode, GraphSchema } from "../src/graph/schema.js";
+import type { GraphEdge, GraphNode, GraphSchema, PrimitiveNode } from "../src/graph/schema.js";
 import { schemaVersion } from "../src/graph/schema.js";
 import {
   escapeMermaidLabel,
@@ -33,7 +33,7 @@ function graph(nodes: readonly GraphNode[], edges: readonly GraphEdge[]): GraphS
   return { schemaVersion, nodes, edges };
 }
 
-function primitive(id: string, title = id): GraphNode {
+function primitive(id: string, title = id): PrimitiveNode {
   return {
     id,
     nodeType: "Primitive",
@@ -89,6 +89,33 @@ describe("the bounded Mermaid projection", () => {
     expect(rendered(graph([...nodes].reverse(), [...edges].reverse()))).toEqual(
       rendered(graph(nodes, edges)),
     );
+  });
+
+  it("labels the index as diagnostic when validation errors are present", () => {
+    const probe: PrimitiveNode = {
+      ...primitive("spec:probe"),
+      readiness: "idea",
+      sections: { intent: { outcome: "Render a diagnostic label when validation fails." } },
+    };
+    const clean = rendered(graph([probe], [])).get("index.md") ?? "";
+    const diagnostic =
+      rendered(
+        graph(
+          [probe],
+          [
+            {
+              from: probe.id,
+              type: "dependsOn",
+              to: "spec:missing",
+              claim: "declared",
+            },
+          ],
+        ),
+      ).get("index.md") ?? "";
+
+    expect(clean).not.toContain("Diagnostic projection");
+    expect(diagnostic).toContain("Diagnostic projection — validation errors present");
+    expect(diagnostic).toMatch(/1 error and \d+ warnings/u);
   });
 
   it("escapes hostile labels without changing injective full-ID machine tokens", () => {

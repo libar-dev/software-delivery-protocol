@@ -2,6 +2,7 @@ import { codeAnchorId, ref } from "../ids.js";
 import type { GraphEdge, GraphNode, GraphSchema } from "../graph/schema.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { Reader } from "../reader/reader.js";
+import { renderDiagnosticBanner } from "./diagnostic-banner.js";
 
 export const MAX_MERMAID_NODES_PER_DIAGRAM = 64;
 export const MAX_MERMAID_EDGES_PER_DIAGRAM = 128;
@@ -219,8 +220,15 @@ function indexRow(node: GraphNode, refusal: string | undefined): string {
 function renderIndex(
   specs: readonly { readonly node: GraphNode; readonly refusal: string | undefined }[],
   packs: readonly { readonly node: GraphNode; readonly refusal: string | undefined }[],
+  reader: Reader,
 ): MermaidPage {
-  const lines = ["# Mermaid diagrams", "", "## Specs", ""];
+  const lines = [
+    "# Mermaid diagrams",
+    "",
+    ...renderDiagnosticBanner(reader.findings()),
+    "## Specs",
+    "",
+  ];
   lines.push(
     ...(specs.length === 0
       ? ["No Specs."]
@@ -258,6 +266,7 @@ export function renderMermaid(reader: Reader): ReadonlyMap<string, string> {
     renderIndex(
       specSlices.map((slice) => ({ node: slice.root, refusal: slice.refusal })),
       packSlices.map((slice) => ({ node: slice.root, refusal: slice.refusal })),
+      reader,
     ),
     ...specSlices.map(renderPage),
     ...packSlices.map(renderPage),

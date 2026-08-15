@@ -40,5 +40,6 @@ Then an unresolved target renders as an explicit placeholder
 Then a colliding token or a diagram past maxNodesPerDiagram = 64 or maxEdgesPerDiagram = 128 is refused by name while every in-bound diagram still publishes
 Then generated/mermaid/ is the only current Mermaid root
 Then a clean independent render is byte-identical
+Then validation errors label the index as a diagnostic projection
 Then no whole-graph diagram is emitted
 ```
