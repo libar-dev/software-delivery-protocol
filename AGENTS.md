@@ -19,9 +19,12 @@ code behavior into intent.
 > **Status:** Specs and Packs default to the Markdown carrier; the TS DSL survives as import
 > source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax
 > ruling, MD-25). The Gherkin carrier option (MD-27) admits a graph-aware lawful per-ID option
-> for behavior and example Specs. **plan 31 is EXECUTED** — carrier universality, derived
-> runnable modules, census/Mermaid projections, and structural anchor semantics (briefs A/B/C/D);
-> brief E may re-enter now that census + structural edges are queryable. Settled ground remains
+> for behavior and example Specs. **plan 33 is DRAFTED** — close the adjudicated plan-31 review
+> findings, re-measure the graph and gate, and publish the ready PR; plan 32 remains its review
+> brief and brief E stays outside this fix pass. Settled ground is **plan 31 is EXECUTED** —
+> carrier universality, derived runnable modules, census/Mermaid projections, and structural
+> anchor semantics (briefs A/B/C/D). Brief E may re-enter now that census + structural edges are
+> queryable. Earlier settled ground remains
 > **plan 30 is EXECUTED** (MD-28 settles the canonical suffix as `.sdp.gherkin` and hardens
 > locations, closed grammar, and bounded multi-finding diagnostics), **plan 28 is EXECUTED**
 > (bounded carrier pipeline, parity proof, reader-family tracer bullet, guidance) and **plan 27
