@@ -7,16 +7,19 @@ import { afterAll, expect } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
-import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
 
-import { lookalikeRefusalContract } from "../generated/contracts/model.anchors.lookalike-refusal.contract.js";
-import { physicalIdentityContract } from "../generated/contracts/model.anchors.physical-identity.contract.js";
+import type {
+  AnchorsConditions,
+  AnchorsOutcome,
+} from "../generated/contracts/model.anchors.space.js";
 import type {
   StableIdsConditions,
   StableIdsOutcome,
 } from "../generated/contracts/model.stable-ids.space.js";
 import { extract, formatId, parseId } from "../src/index.js";
 import type { ExtractionResult, IdParts } from "../src/index.js";
+import { registerLookalikeRefusal } from "./model.anchors.lookalike-refusal.test.generated.js";
+import { registerPhysicalIdentity } from "./model.anchors.physical-identity.test.generated.js";
 import { registerMalformedRefusal } from "./model.stable-ids.malformed-refusal.test.generated.js";
 import { registerNamespacedRoundTrip } from "./model.stable-ids.namespaced-round-trip.test.generated.js";
 
@@ -135,10 +138,6 @@ interface AnchorTrustWorld {
   extraction: ExtractionResult | undefined;
 }
 
-function anchorTrustWorld(): AnchorTrustWorld {
-  return { root: "", extraction: undefined };
-}
-
 function extractionOf(world: AnchorTrustWorld): ExtractionResult {
   if (world.extraction === undefined) {
     throw new Error("The extraction step must run before its counts are asserted.");
@@ -148,7 +147,7 @@ function extractionOf(world: AnchorTrustWorld): ExtractionResult {
 }
 
 /** The one binding source under test, written into a throwaway repository root. */
-const builderSourceSetup: Record<string, (root: string) => void> = {
+const builderSourceSetup: Record<AnchorsConditions["builderSource"], (root: string) => void> = {
   "a consumer-local lookalike module": (root) => {
     mkdirSync(join(root, "src"), { recursive: true });
     writeFileSync(join(root, "src", "code-anchor.ts"), "export const codeAnchor = () => ({});\n");
@@ -207,46 +206,51 @@ void binding;
   },
 };
 
-const anchorTrustBindings = {
-  "a repository whose one source file builds an anchor through {builderSource}": (
-    world: AnchorTrustWorld,
-    params: {
-      readonly builderSource:
-        | "a consumer-local lookalike module"
-        | "a relative import resolving to the Protocol builder modules"
-        | "the published Protocol package";
-    },
-  ) => {
-    const setup = builderSourceSetup[params.builderSource];
+function createAnchorTrustWorld(point: Partial<AnchorsConditions>): AnchorTrustWorld {
+  const builderSource = point.builderSource;
 
-    if (setup === undefined) {
-      throw new Error(
-        `No repository shape is written for the builder source "${params.builderSource}".`,
-      );
-    }
+  if (builderSource === undefined) {
+    return { root: "", extraction: undefined };
+  }
 
-    world.root = mkdtempSync(join(tmpdir(), "sdp-anchor-trust-"));
-    anchorTrustRoots.push(world.root);
-    setup(world.root);
-  },
-  "the repository is extracted": (world: AnchorTrustWorld) => {
-    world.extraction = extract({ root: world.root });
-  },
-  "the extraction mints {anchorCount} anchors": (
-    world: AnchorTrustWorld,
-    params: { readonly anchorCount: number },
-  ) => {
-    expect(extractionOf(world).counts.anchors).toBe(params.anchorCount);
-  },
-  "the extraction reports {findingCount} findings": (
-    world: AnchorTrustWorld,
-    params: { readonly findingCount: number },
-  ) => {
-    // An untrusted builder is silent, not a diagnostic: a file that never bound to the Protocol
-    // is not authoring drift, so the refusal must show up as an absent anchor and nothing else.
-    expect(extractionOf(world).report.findings).toHaveLength(params.findingCount);
-  },
-};
+  const setup = builderSourceSetup[builderSource];
+  const root = mkdtempSync(join(tmpdir(), "sdp-anchor-trust-"));
+  anchorTrustRoots.push(root);
+  setup(root);
+  return { root, extraction: undefined };
+}
+
+function invokeAnchorTrustExtract(world: AnchorTrustWorld): void {
+  if (world.root === "") {
+    return;
+  }
+
+  world.extraction = extract({ root: world.root });
+}
+
+function observeAnchorMint(world: AnchorTrustWorld): AnchorsOutcome {
+  return {
+    kind: "the extraction mints {anchorCount} anchors",
+    anchorCount: extractionOf(world).counts.anchors,
+  };
+}
+
+function expectedAnchorMint(
+  point: Partial<AnchorsConditions>,
+  anchorCount: number,
+): AnchorsOutcome {
+  if (point.builderSource === undefined) {
+    return unspecified;
+  }
+
+  return { kind: "the extraction mints {anchorCount} anchors", anchorCount };
+}
+
+function assertSilentExtraction(world: AnchorTrustWorld): void {
+  // An untrusted builder is silent, not a diagnostic: a file that never bound to the Protocol
+  // is not authoring drift, so the refusal must show up as an absent anchor and nothing else.
+  expect(extractionOf(world).report.findings).toHaveLength(0);
+}
 
 const lookalikeRefusalTestAnchor = specTest({
   id: testAnchorId("test:protocol.anchors.lookalike-refusal"),
@@ -254,8 +258,16 @@ const lookalikeRefusalTestAnchor = specTest({
   verifies: ref("spec:model.anchors.lookalike-refusal"),
 });
 void lookalikeRefusalTestAnchor;
+// bindExample(lookalikeRefusalContract
 
-bindExample(lookalikeRefusalContract, anchorTrustWorld, anchorTrustBindings);
+registerLookalikeRefusal({
+  createWorld: createAnchorTrustWorld,
+  invoke: invokeAnchorTrustExtract,
+  observe: observeAnchorMint,
+  expected: (point) => expectedAnchorMint(point, 0),
+  // Second Then (`the extraction reports {findingCount}`) is a different kind than the oracle's.
+  assertions: assertSilentExtraction,
+});
 
 const physicalIdentityTestAnchor = specTest({
   id: testAnchorId("test:protocol.anchors.physical-identity"),
@@ -263,5 +275,13 @@ const physicalIdentityTestAnchor = specTest({
   verifies: ref("spec:model.anchors.physical-identity"),
 });
 void physicalIdentityTestAnchor;
+// bindExample(physicalIdentityContract
 
-bindExample(physicalIdentityContract, anchorTrustWorld, anchorTrustBindings);
+registerPhysicalIdentity({
+  createWorld: createAnchorTrustWorld,
+  invoke: invokeAnchorTrustExtract,
+  observe: observeAnchorMint,
+  expected: (point) => expectedAnchorMint(point, 1),
+  // Second Then (`the extraction reports {findingCount}`) is a different kind than the oracle's.
+  assertions: assertSilentExtraction,
+});
