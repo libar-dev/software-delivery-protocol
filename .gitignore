@@ -27,6 +27,7 @@ generated/
 !.omo/drafts/
 !.omo/plans/
 !.omo/evidence/
+.omo/evidence/*-plan-35-agent-surface-arc.md
 
 # Pi state (used by taskplane)
 .pi/

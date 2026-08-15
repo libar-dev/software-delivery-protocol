@@ -4,13 +4,18 @@ status: plan-complete
 intent: clear
 review_required: true
 plan_path: .omo/plans/plan-35-agent-surface-arc.md
-plan_sha256: bd6782f5da09c7aafd03d98d3024990e2fdfb617f2b12e5e0795ac50f32b9720
-review_round_id: rr-plan35-r9
+plan_sha256: 3f3642571bd134657680af3b61fdfe82ededed08f9b2f94f4dd8a74bc31224d3
+review_round_id: user-directed-repair-2026-08-15
 review_round_limit: unlimited (user explicitly authorized finalizing the review loop without per-step permission)
-round_status: closed-approved
+round_status: focused-repair-verified
 pending-action: execute .omo/plans/plan-35-agent-surface-arc.md via /start-work
 phase: review_complete
-plan_status: complete-r6-blockers-fixed
+plan_status: complete-user-directed-repair
+focused_repair_review:
+  session: st_01a0061e
+  reviewer: oracle
+  result: approved
+  findings: 0
 metis_final_check:
   session: st_01a005c1
   lane: kimi-coding/kimi-for-coding-highspeed (user-configured; completed 7m16s, 82 tools — lane viable)
@@ -69,7 +74,11 @@ review_history:
   - round_id: rr-plan35-r9
     session: st_01a005df
     result: approved
-    note: unconditional [OKAY]; live-plan hash validated; review complete
+    note: superseded by the user-directed repair after post-restoration forensics
+  - round_id: user-directed-repair-2026-08-15
+    session: st_01a0061e
+    result: approved
+    note: focused Oracle review found no blockers; the unnecessary public --root expansion is removed, commit boundaries are logical rather than per-todo, and Plan 35 runtime evidence remains narrowly ignored and workspace-local
 gap_analysis:
   agent: oracle st_01a0057e (metis substitute — metis aborted twice on provider errors)
   findings: 9 (1 blocker, 6 major, 2 minor)
@@ -78,7 +87,7 @@ structural_self_check: "18 impl rows (1-18), 4 final rows (F1-F4), all column-ze
 metis_substitution: "metis aborted 3x on kimi-for-coding standard lane (2m40s/2m42s/3m12s, mid-stream, invisible to provider logs); gap analysis substituted to oracle st_01a0057e with identical contract. Post-restore gate re-arm: ulw-plan re-activated by user + hash-preserving edit-pair touch of the plan (sha256 d62aa4e8 verified intact). Final metis check running on kimi-for-coding-highspeed: st_01a005c1"
 review:
   momus:
-    status: approved
+    status: superseded-by-user-directed-repair
     workspace_root: /home/darkomijic/dev-libar/software-delivery-protocol
     runtime_home: null
     target: .omo/plans/plan-35-agent-surface-arc.md
@@ -86,7 +95,7 @@ review:
     plan_sha256: bd6782f5da09c7aafd03d98d3024990e2fdfb617f2b12e5e0795ac50f32b9720
     launch_id: launch-plan35-r9
     session: st_01a005df
-    result: "[OKAY] plan is executable: core references exist and match their claimed patterns, dependencies provide workable starting points, every todo includes concrete QA commands with expected outcomes, no blocking contradictions"; final live-plan validation passed (hash match bd6782f5da09c7aafd03d98d3024990e2fdfb617f2b12e5e0795ac50f32b9720, session receipt st_01a005df matched)
+    result: "Historical rr-plan35-r9 approval only; superseded when the user-directed repair changed the live plan to hash 3f3642571bd134657680af3b61fdfe82ededed08f9b2f94f4dd8a74bc31224d3."
 approach: <fill: the approach you intend to plan>
 ---
 

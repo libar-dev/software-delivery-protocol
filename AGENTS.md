@@ -187,8 +187,17 @@ Every doc honours both — never mistake one half for the other:
 - **A "verified" row is re-measured, never inherited.** A docket or ledger row claiming *fixed* or *verified*
   is re-checked against the tree at the moment of verification, never trusted from the row that closed it —
   the phase-4 close caught a "verified — intact" row that had been false since the commit after the one it cited.
-- **Git hygiene** follows the global rules (no `git stash`; commit early on a WIP branch; commit/push only when
-  asked).
+- **OmO state is recoverable project state.** Track durable `.omo/` state that carries decisions, plans,
+  review history, proofs, or orchestration recovery (`boulder.json`, `drafts/`, `plans/`, and durable
+  `evidence/`). Commit coherent checkpoints when that state is created or materially changed; a plan may mark
+  narrowly named runtime evidence as workspace-local. Never delete, prune, overwrite, or blanket-ignore
+  unfamiliar `.omo/` state as cleanup — inspect it and preserve it until its owner and recovery value are clear.
+- **Commits are recovery boundaries, not workflow gates.** An execution plan's explicit commit strategy counts
+  as authorization on its work branch; otherwise ask before committing. Prefer a commit after a coherent
+  logical unit and its relevant quality gate, but never force one per todo, create empty commits, absorb
+  unrelated or pre-existing changes, or commit from an unsafe dirty baseline. When no clean boundary exists,
+  preserve and account for the state in the tracked plan/draft rather than discarding it; commit at the next
+  safe boundary. Push only on the user's explicit request; never use `git stash`.
 
 ## PR descriptions as durable context
 

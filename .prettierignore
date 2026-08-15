@@ -7,6 +7,10 @@ plans/**
 .sisyphus/**
 .tmp-scratch/**
 
+# OmO state carries review hashes, recovery records, and tool-authored evidence; product formatting
+# must not rewrite those bytes or create unrelated orchestration churn.
+.omo/**
+
 # Archived review artifacts - verbatim historical records, not format-policed
 reviews/
 
