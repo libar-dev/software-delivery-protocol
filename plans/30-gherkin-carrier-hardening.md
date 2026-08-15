@@ -1,6 +1,6 @@
 # Plan 30 — Gherkin carrier hardening (`.sdp.gherkin`)
 
-> **Status:** 🔄 EXECUTING — settle the canonical Gherkin suffix as `.sdp.gherkin` (MD-28),
+> **Status:** ✅ EXECUTED — settle the canonical Gherkin suffix as `.sdp.gherkin` (MD-28),
 > harden physical description locations, closed decoration/empty-scenario grammar, and bounded
 > multi-finding diagnostics; repair known declined-Gherkin current-intent drift. Commissioned
 > from the plan 29 arc index; brief A consumes the settled suffix and does not reopen it.

@@ -12,10 +12,15 @@
 > commissioned plans take **30 upward**, one primary number each, and this header gains a
 > commissioned-plans line as they are cut. No future plan reuses 29.
 >
-> **Commissioned plans.** **Plan 30** (`pr-17-gherkin-carrier-hardening`, in flight) settles the
+> **Commissioned plans.** **Plan 30** (`pr-17-gherkin-carrier-hardening`, executed) settles the
 > canonical Gherkin suffix as `.sdp.gherkin` (MD-28), hardens the carrier pipeline, and repairs
-> known declined-Gherkin current-intent drift. Brief A consumes that settled suffix and remains
-> the open owner of kind coverage, rich content, and any default-carrier flip.
+> known declined-Gherkin current-intent drift. Brief A consumed that settled suffix and plan 31
+> closed kind coverage, rich content, and the default-carrier question without reopening it. **Plan 31**
+> (`carrier-universality-runnable-modules-projections-structural-anchors`, executed) commissions
+> briefs A/B/C/D while deferring brief E. **Brief E is superseded by plan 34** (the next-arc
+> briefs index), which expands it with the post-plan-31 state and consolidates it with the
+> registrar-adoption, structural-self-binding, and next-projections briefs; the brief E text
+> below stays as lineage.
 
 ## The read model for every commissioning session
 

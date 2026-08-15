@@ -19,16 +19,23 @@ code behavior into intent.
 > **Status:** Specs and Packs default to the Markdown carrier; the TS DSL survives as import
 > source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax
 > ruling, MD-25). The Gherkin carrier option (MD-27) admits a graph-aware lawful per-ID option
-> for behavior and example Specs; **plan 30 is EXECUTING** — MD-28 settles the canonical suffix
-> as `.sdp.gherkin` and hardens locations, closed grammar, and bounded multi-finding diagnostics.
-> Settled ground remains **plan 28 is EXECUTED** (bounded carrier pipeline, parity proof,
-> reader-family tracer bullet, guidance) and **plan 27 is EXECUTED** (v0 lineage restored;
-> executable-verification review selected the Gherkin option). Plan 29 is the next-arc briefs
-> index (not an execution plan). Plan 26 completed native Packs, annotation coverage, and
-> decision readiness. Plan 25 recovered the guidance layer and packaged the `sdp-sessions`
-> on-ramp; plan 24's inward turn remains the standing practice: forward intent lives in the
-> graph, so the live backlog is a graph query, not a document. Corpus counts, readiness, and
-> findings are **derived, never quoted** — re-run
+> for behavior and example Specs. **plan 34 is DRAFTED** — the next-arc briefs index, the sole
+> planning input for the next arc: the agent surface (brief E, expanded there and superseding
+> the plan-29 text), deferred registrar adoption, Protocol-side structural self-binding, and
+> next projections. Settled ground is **plan 33 is EXECUTED** — the
+> adjudicated plan-31 review is closed, the graph and gate are freshly re-measured, and the ready
+> PR is prepared; plan 32 remains its review brief. Beneath it, **plan 31 is EXECUTED** —
+> carrier universality, derived runnable modules, census/Mermaid projections, and structural
+> anchor semantics (briefs A/B/C/D). Earlier settled ground remains
+> **plan 30 is EXECUTED** (MD-28 settles the canonical suffix as `.sdp.gherkin` and hardens
+> locations, closed grammar, and bounded multi-finding diagnostics), **plan 28 is EXECUTED**
+> (bounded carrier pipeline, parity proof, reader-family tracer bullet, guidance) and **plan 27
+> is EXECUTED** (v0 lineage restored; executable-verification review selected the Gherkin
+> option). Plan 29 is the next-arc briefs index (not an execution plan). Plan 26 completed native
+> Packs, annotation coverage, and decision readiness. Plan 25 recovered the guidance layer and
+> packaged the `sdp-sessions` on-ramp; plan 24's inward turn remains the standing practice:
+> forward intent lives in the graph, so the live backlog is a graph query, not a document.
+> Corpus counts, readiness, and findings are **derived, never quoted** — re-run
 > `pnpm --silent sdp validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity`
 > (or `npm run --silent sdp --` with the same argv) and read recipes 8 and 11. Recipe 1 is the
 > operational backlog, not the census. Never invoke a bare `sdp`. Build state lives in **`plans/`** — read the highest
@@ -102,7 +109,9 @@ pnpm --silent sdp:q 'return g.specs().filter((s) => s.statedReadiness === "ready
 pnpm --silent sdp:q 'return g.findByConcept("readiness floor").slice(0, 5).map((n) => n.id)'
 ```
 
-The full CLI surface is `sdp build · validate · view · import · q`. The eleven runnable recipe
+The full CLI surface is `sdp build · validate · view · census · mermaid · gherkin · import · q`.
+The four projection publishers remain independent public verbs; repository generation/check scripts
+certify all four roots through the private projection-suite driver. The eleven runnable recipe
 bodies live in `docs/agent-surface/recipes.md` (each executed as written by
 `test/recipes.test.ts`), and the repository-owned skills (`sdp-agent-surface` for reading,
 `sdp-authoring` for writing intent, `sdp-sessions` for advisory work-shape routing) are the
@@ -180,5 +189,27 @@ Every doc honours both — never mistake one half for the other:
   the phase-4 close caught a "verified — intact" row that had been false since the commit after the one it cited.
 - **Git hygiene** follows the global rules (no `git stash`; commit early on a WIP branch; commit/push only when
   asked).
+
+## PR descriptions as durable context
+
+PR descriptions are the project's durable narrative record — sessions return to them long after
+merge, so write for the reader who arrives in six months with no context. The standard, set by
+PR #19 (the universal-Spec arc) building on PRs #10 and #16:
+
+- **Story before inventory.** Lead with what the PR introduces and why — the questions it answers,
+  the arc it closes, the plans it executes. What-changed lists and review-closure details are
+  evidence, never the headline; a description written during a review session must still be
+  re-anchored on the full scope before publication.
+- **Present new things, don't just name them.** Each new surface gets a short explanation of the
+  idea and a linked representative artifact on the branch — a carrying Spec, a worked example, a
+  plan. One stop per surface, tour-style.
+- **Ratified decisions are a table.** Ratified name, one-line ruling, carrying Spec link.
+- **Invite use.** A try-it block with real commands verified against the branch, plus a feedback
+  call naming the open questions the PR most wants pressure on.
+- **Upcoming work stays, always.** Every description keeps a forward section — what re-enters
+  next, in what order, with re-entry triggers — and the durable refused list. It contextualizes
+  the arc and feeds planning; never drop it, and rewrite it rather than appending stale rows.
+- **Numbers are re-measured and marked.** Close measurements are re-derived at close and labeled
+  as such ("re-run the recipes rather than inheriting these"), never quoted from an older record.
 
 > `CLAUDE.md` is a symlink to `AGENTS.md` — **edit `AGENTS.md`.**

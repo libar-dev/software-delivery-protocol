@@ -249,11 +249,14 @@ export function extract(options: ExtractOptions): ExtractionResult {
   }
 
   const duplicated = findDuplicatedIds(specs, packs, anchors, findings);
-  const graph = deriveGraph(
-    specs.filter((entry) => !duplicated.has(entry.id)),
-    packs.filter((entry) => !duplicated.has(entry.id)),
-    anchors.filter((entry) => !duplicated.has(entry.id)),
-  );
+  const uniqueSpecs = specs.filter((entry) => !duplicated.has(entry.id));
+  const uniquePacks = packs.filter((entry) => !duplicated.has(entry.id));
+  const uniqueAnchors = anchors.filter((entry) => !duplicated.has(entry.id));
+  // Reification owns whole-anchor refusal for malformed/non-static envelope fields. Once an
+  // anchor is graph-validly reified, its structural edges remain visible even when graph-level
+  // validation rejects an endpoint or relationship: the unresolved edge is the sentinel, and
+  // structural metadata cannot erase the anchor's independent `satisfies` binding.
+  const graph = deriveGraph(uniqueSpecs, uniquePacks, uniqueAnchors);
 
   return {
     graph,

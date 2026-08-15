@@ -180,7 +180,7 @@ export const decisionsSpecs = [
         ],
         consequences: [
           "Each ID has one canonical surface, and Markdown tooling is the default path for authored Specs.",
-          "Gherkin does not flip the default carrier, does not extend kind coverage by itself, and does not reopen dual-source truth; those questions stay with later kind-coverage and default-carrier rulings.",
+          "Gherkin does not flip the default carrier, does not extend kind coverage by itself, and does not reopen dual-source truth; the carrier-universality ruling (spec:decisions.carrier-universality) reaffirms the behavior/example kind bound, keeps Markdown as default, defines universal as a generated Gherkin-shaped read projection, and leaves Packs to MD-25.",
         ],
       },
     },
@@ -744,7 +744,7 @@ export const decisionsSpecs = [
           "The Gherkin pipeline must define deterministic parsing, source locations, graph parity, vocabulary lint, and fail-loudly behavior before the option is realized.",
           "A Gherkin scenario does not confer `has-verifier`; only the existing resolving anchored `verifies` trace enables it, and runner pass state remains outside the graph.",
           "Gen-1 value-transfer deletion, authored completion status, and an independent tag taxonomy are explicitly not imported.",
-          "The canonical discovered suffix is settled separately as `.sdp.gherkin` (MD-28); this option does not itself choose a file extension, flip the default carrier, or extend kind coverage.",
+          "The canonical discovered suffix is settled separately as `.sdp.gherkin` (MD-28); this option does not itself choose a file extension, flip the default carrier, or extend kind coverage. The carrier-universality ruling (spec:decisions.carrier-universality) reaffirms that kind bound with per-kind honesty reasons, admits Feature/Scenario description prose only on MD-19 owners while keeping DocStrings and DataTables refused, defines universal as a generated read projection, keeps Markdown as default, and places Packs outside this option.",
         ],
         alternatives: [
           "Keeping Markdown as the only default authoring path avoids a second parser but retains the stakeholder-readable duplication established by the executable-verification review.",
@@ -783,6 +783,118 @@ export const decisionsSpecs = [
         alternatives: [
           "Keeping bare `.feature` as canonical would preserve stock Gherkin tooling out of the box, but would keep Protocol carriers inside default Cucumber globs and invite false execution of authored intent.",
           "Accepting both `.feature` and `.sdp.gherkin` would create a dual-suffix window, split discovery, and weaken the one-canonical-surface law the carrier rulings already enforce.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.carrier-universality",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/decisions/carrier-universality.sdp.md",
+    title: "Carrier universality is bounded by honest kind structure",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          'Decide which kinds of truth the Gherkin carrier can hold honestly, what "universal" means, and whether Markdown stays the default.',
+      },
+      decision: {
+        context:
+          'MD-27 admitted graph-aware Gherkin only for behavior and example Specs so the corpus would not pretend every kind has a natural Gherkin shape. Owner pressure for one preferred format asks whether that kind bound should be overturned, whether rich content may live inside the carrier, what "universal" means, whether Markdown remains the default, and whether Packs are in scope. The kind-evidence table, the structural collisions in the current Gherkin grammar (Feature = behavior, Scenario = example, Rule: = behavior.rules, one file = one Feature parent), review 14 §2.3, and the v0 projection record are the evidence on the table. MD-27\'s own rationale is the thing this session overturns or reaffirms, kind by kind.',
+        decision:
+          'In order, first, Gherkin remains an honest canonical per-ID option only for `behavior` (Feature) and `example` (ordinary Scenario); the other six kinds stay Markdown because a Gherkin mapping would lie against the kind-evidence table — `workflow` has no distinct Gherkin root and Feature mapping erases the kind; `rule` collides with `Rule:` already consumed as inline `behavior.rules`; `constraint` needs machine-readable targets a Scenario cannot own; `model` needs keyed terms; `decision` needs context/decision/rationale/consequences (and supersedes) that Feature structure cannot distinguish; `contract` shares the behavior family row today but Feature cannot structurally mark the kind. Second, rich content is ruled by physical form: Feature and Scenario description prose (keyed description bullets and remaining non-heading prose) is lawful only as free prose on MD-19\'s existing owners — narrative or description on the typed owner — never a new field and never a parser-within-a-parser beyond enumerated constructs; Gherkin DocStrings and DataTables remain refused. Third, "universal" means per-ID carriers plus a generated Gherkin-shaped READ projection of any Spec (visibly generated, disposable, lossy commentary allowed for refused kinds), not one default authored carrier for everything and not a lossless codec. Fourth, the corpus default does not flip: Markdown remains the default Spec carrier; a default flip is refused before full honest round-trip exists. Fifth, Packs are out of this ruling; MD-25 remains the Pack carrier law.',
+        rationale: [
+          'This is hard to reverse because kind coverage, default posture, and the meaning of universality become contracts for authoring guidance, extraction, projections, and later follow-through — flipping them later would churn every carrier surface and every consumer that trusted the bound. It is surprising without context that "universal" is a generated read projection rather than one authored format, that six kinds stay Markdown on honesty grounds rather than missing syntax, and that description prose is admitted only onto already-owned MD-19 slots while DocStrings and DataTables stay refused. It is a real trade-off: one preferred stakeholder shape is worth a bounded second parser and a generated view, while refusing dishonest kind mappings, a default flip, self-executing prose, DocString/DataTable expansion, and Pack absorption gives up format uniformity to keep one graph language and the kind-evidence table honest. MD-27\'s rationale is therefore reaffirmed and sharpened, not overturned.',
+        ],
+        consequences: [
+          "`spec:carrier.gherkin-authoring` remains the surface that records the closed grammar: structural kinds for behavior and example only, title-only Rules as `behavior.rules`, description prose on MD-19 owners only, DocStrings and DataTables refused, physical source locations preserved, and the hard cap of 100 independent semantic findings retained.",
+          "A generated Gherkin-shaped projection may render any Spec for reading; it never uses `.sdp.gherkin` in an authored tree, never claims round-trip parity, never becomes a second source of truth, and may mark refused kinds with lossy commentary.",
+          "Markdown stays the default Spec carrier (MD-18); the Gherkin option stays opt-in per ID for behavior and example only (MD-27); MD-28's `.sdp.gherkin` suffix, dual-recognition refusal, and bare-`.feature` non-canonicity are untouched.",
+          "Packs stay under MD-25; this Spec neither admits a Gherkin Pack surface nor reopens the Pack Markdown envelope.",
+          "Execution and `has-verifier` stay behind generated contracts and resolving anchored handlers; Gherkin prose does not execute; authored delivery status, lifecycle tags, value-transfer deletion, Scenario Outlines, Examples tables, backgrounds, star steps, and leading conjunctions stay refused.",
+          'Follow-through amends carrier grammar and optional projection emitters only along the branches this Spec names; it does not reopen the suffix ruling or reintroduce blanket "Gherkin declined" current-intent language.',
+        ],
+        alternatives: [
+          "Making Gherkin the default authored carrier for every kind would satisfy the one-preferred-format desire, but would force dishonest Feature mappings for six kinds and an XL migration before round-trip honesty exists.",
+          "Admitting DocStrings or DataTables as authored rich content would look more BDD-native, but would invent structure outside MD-19's prose owners and reopen a parser-within-a-parser the closed grammar refuses.",
+          'Treating "universal" as one lossless codec between Markdown and Gherkin would promise field-level fidelity the v0 record never designed and the kind-evidence collisions forbid.',
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.adopted-registrars-committed",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/decisions/adopted-registrars-committed.sdp.md",
+    title: "Adopted runnable registrars are committed",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Make an authored test's generated registrar dependency reviewable and available before generation without pretending every generated registrar is source.",
+      },
+      decision: {
+        context:
+          "Runnable registrars are derived siblings of authored tests. Most remain ignored, but an authored test that imports one cannot typecheck or execute from a clean checkout unless that adopted sibling is present or generation runs first.",
+        decision:
+          "A registrar becomes adopted when tracked authored code imports it. Adopted registrars are committed and byte-checked against fresh generation; unadopted registrars remain ignored, regenerable output. A deterministic generated manifest owns reconciliation for both groups without turning registrar content into authored truth.",
+        rationale: [
+          "This is hard to reverse once adopter tests depend on clean-checkout imports. It is surprising without context that one derived sibling is tracked while its unadopted peers are ignored. It is a real trade-off: committing adopted bytes adds review noise and requires a falsifiable equality gate, while ignoring them all makes authored imports depend on an unrecorded generation precondition.",
+        ],
+        consequences: [
+          "`--check-clean` refuses manifest or sibling-byte drift, preflight compares tracked worktree and Git-index bytes with independent regeneration, and stale manifest-owned siblings are removed.",
+          "Tracking a registrar confers no delivery fact or migration claim; its `specTest` anchor remains the only verifier-binding source.",
+        ],
+        alternatives: [
+          "Ignore every registrar and require generation before typecheck or test discovery; this keeps git smaller but makes an authored import unavailable in a clean checkout.",
+          "Commit every registrar; this is mechanically simple but turns unadopted migration candidates into persistent review noise.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.structural-anchor-semantics",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/decisions/structural-anchor-semantics.sdp.md",
+    title: "Structural anchor semantics",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Resolve which intent-free structural relationships code anchors may author without creating a second architecture truth.",
+      },
+      decision: {
+        context:
+          "The generic `codeAnchor` already binds realization to a Spec through `satisfies`, while the reserved structural-semantics question leaves component membership and dependencies between anchored code units unresolved. Gen-1 also used `@architect-implements` to join separate test-pattern identities, not code to Spec, and exposed authored `uses` relationships through a broad tag registry.",
+        decision:
+          "In order, first, `satisfies` remains the only code-to-Spec realization slot: code that realizes a contract-kind Spec satisfies that Spec by authoring convention, so no `implements` field is admitted. Second, `component` and `uses` enter the `codeAnchor` contract as the only new structural fields. Third, their value forms are closed graph-ID references: `component?: ComponentAnchorId` is one statically reifiable reference, and `uses?: readonly CodeAnchorId[]` is a statically reifiable array of references; neither field accepts free strings or an enum detached from graph identity. Fourth, the structural references derive only the anchored `memberOf` and `uses` edges under the validation rules below. Fifth, the census always derives their taxonomy and rows from the graph and runtime constants; it is generated, disposable, and never hand-maintained.",
+        rationale: [
+          "This is hard to reverse because the anchor authoring API and persisted edge vocabulary become contracts for source, validators, queries, and projections. It is surprising without context that contract realization remains `satisfies`, that a dependency cycle is accepted, and that structural edges confer no realization state. It is a real trade-off: local authored structure and referential checks justify two narrow fields, while rejecting `implements`, inference, lifecycle metadata, and an open tag system gives up looser notation to preserve one graph language. The caution is gen-1's taxonomy drift: a claimed 50 tags was corrected to about 26 while inconsistent counts remained (`reviews/14-executable-verification-design-review.md`, which cites the gen-1 formal-spec findings review); generated census output is therefore evidence, never another registry.",
+        ],
+        consequences: [
+          "Every `component` and `uses` target must exist as a `CodeNode`; a dangling graph ID is an error. A `memberOf` edge runs only from an `impl:` or `api:` `CodeNode` to a `component:` `CodeNode`, and each source has at most one component, enforcing one-level membership: a `component:` node cannot itself be a member. A `uses` edge runs between `CodeNode` endpoints whose IDs use the `impl:`, `api:`, or `component:` namespace.",
+          "A present `uses` array must be non-empty and contain unique targets. Structural edges must be unique, and any structural self-reference is an error. Multi-node `uses` cycles remain authored data for census projection, not validator findings; validators do not infer transitive edges or reject cycles.",
+          "The census renders the admitted structural bindings from graph edges, including component membership and uses relationships, and reports an explicit empty state when none exist. It may group cycles as data, but it neither re-derives validation findings nor owns a manually curated taxonomy.",
+          "The new fields extend `codeAnchor` only; there are no per-namespace sibling anchor builders.",
+          "The new edges are anchored claims only, never inferred claims; deriving architecture from imports is refused, because these edges are authored declarations in code. Derivation remains a mechanism and does not add a fourth claim.",
+          "Anchors carry no intent, readiness, status, or delivery fact. `memberOf` and structural `uses` mint no delivery facts, add no delivery status, and do not change readiness floors.",
+          "No free-form tag vocabulary, authored lifecycle, or parallel registry is admitted.",
+          "Foreign fields remain extraction errors; after admitting `component` and `uses`, the anchor envelope remains closed and a malformed structural field refuses the whole anchor rather than yielding a partial declaration.",
+          "Anchor-required lint remains warn-level and optional; absence of an anchor is useful evidence but never a load-bearing workflow gate.",
+        ],
+        alternatives: [
+          "Adding `implements` would mirror gen-1 terminology, but would duplicate `satisfies` for contract-kind targets and make code-to-Spec realization ambiguous.",
+          "Deriving dependencies from imports would increase coverage without annotations, but would turn incidental runtime wiring into authoritative architecture and misclassify an inferred observation as an anchored claim.",
+          "Closed enums or free-form tags would be easy to author, but would not resolve to graph nodes and would recreate the taxonomy-governance failure this decision is intended to avoid.",
         ],
       },
     },

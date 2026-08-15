@@ -1,6 +1,6 @@
 # 06 — Consumers & Projections
 
-Everything human- or AI-facing is **generated from the one graph** (P1, P2, L8). The #1 consumer is **agents**; a human view is second; static document exports are last. This document covers what the MVP ships — the graph plus the agent surface, the flagship Design Review, and one human view — and names the richer projections that are designed-for and deferred.
+Everything human- or AI-facing is **generated from the one graph** (P1, P2, L8). The #1 consumer is **agents**; human views are second; static document exports are last. This document covers what the MVP ships — the graph plus the agent surface, the flagship Design Review, the taxonomy census, bounded Mermaid diagrams, and the Gherkin-shaped read view — and names the richer projections that are designed-for and deferred.
 
 > Sink priority (a Representation-level stance, but a firm one): **agents first, human view second, document exports last.** The MVP optimises the sink the old framing optimised least.
 
@@ -14,7 +14,7 @@ A **`projection`** is a pure function of the graph producing a consumer artifact
 
 ```
                  ┌── agent surface (typed graph + graph.json)   (agents — the #1 sink)   ← MVP
-graph  ──fan──►  ├── Design Review + one read-only view          (humans)                 ← MVP
+graph  ──fan──►  ├── Design Review + census + Mermaid + Gherkin  (humans)                 ← MVP
                  ├── Spec Studio (rich interactive)              (stakeholders)           ← aspirational
                  ├── LikeC4 / OpenAPI / JSON-LD exports                                   ← aspirational
                  └── MCP surface (user-facing app integration)                            ← aspirational
@@ -29,7 +29,9 @@ The canonical set of surfaces, each a projection of the one graph:
 | **Design Review** | the flagship curated review: a `Spec`/`Pack` rendered *in context* — neighbors, relations, `claim`/delivery badges, auto-generated **design questions** + a **findings** table | the context in which a human decides to state `ready` (validators check only the structural floor — never a gate) |
 | **agent surface** | a **visible typed graph the agent *scripts*** via the CLI — no verb wall; the schema *is* the contract | **push** a Design-Review slice + **pull** by scripting the graph |
 | **reader** | the thin typed loader: joins + `claim`/taxonomy decode done **once**, returns composable data; persists nothing | a front door, not a store |
-| **Mermaid projection** | logical / analytical / topological charts | live, regenerable |
+| **census projection** | complete runtime taxonomy, readiness divergence, structural bindings, and validation findings | shipped, generated at `generated/census/` |
+| **Mermaid projection** | bounded one-hop Spec and Pack diagrams | shipped, generated at `generated/mermaid/` |
+| **Gherkin-shaped read projection** | visibly lossy `.feature.md` reading shape for every Spec kind | shipped, generated at `generated/gherkin/`; never a carrier |
 | **reference projection** | interface / API reference, kept current | live |
 | **context bundle** | a token-budgeted curated slice pushed to an agent | |
 | **MCP surface** | integration for user-facing apps — designed-in, **deferred build**, shape TBD | distinct from the agent surface (agents *script*; apps *integrate*) |
@@ -139,11 +141,11 @@ Why patching dissolves:
 - It is a **pure projection** — findings resolve through the edit loop (§4); there is **no stored `Finding` type**, no second store.
 - *Concept is core; rich diagrams grow later* — the MVP renders the relationship slice; heatmaps and interactive trees are aspirational (Spec Studio, §8).
 
-### The one MVP human view (read-only)
+### The flagship MVP human view (read-only)
 
-The MVP human view *is* the Design Review's relationship slice: a single derived, regenerable human-readable projection — **fully derived** and reproducible (delete and rebuild identically). Per spec it shows: header (title, `kind`, `altitude`, `readiness`, and any stated-vs-derived divergence); intent and behaviour (rules/examples); relations; bindings (implementing code, tests, with source links, derived from anchors); verification status (does a linked, enabled verifier *exist* — the `has-verifier` delivery fact, not run results); an impact list; and `claim` cues (declared vs anchored vs inferred shown distinguishably, P9).
+The flagship human view is the Design Review's relationship slice: a derived, regenerable human-readable projection — **fully derived** and reproducible (delete and rebuild identically). Per spec it shows: header (title, `kind`, `altitude`, `readiness`, and any stated-vs-derived divergence); intent and behaviour (rules/examples); relations; bindings (implementing code, tests, with source links, derived from anchors); verification status (does a linked, enabled verifier *exist* — the `has-verifier` delivery fact, not run results); an impact list; and `claim` cues (declared vs anchored vs inferred shown distinguishably, P9). The census, Mermaid, and Gherkin-shaped read projections are co-equal derived views with narrower jobs; none re-specifies the Design Review.
 
-Owned prose is already available through the graph and Reader: `narrative` appears in a spec summary/context and concept search, while section descriptions remain in `SpecContext.sections` and are searchable. Design Review now renders `Spec.narrative` and the seven approved section descriptions from those Reader/graph values (schema `0.4.0`), with no source reparse and stable omission when prose is absent.
+Owned prose is already available through the graph and Reader: `narrative` appears in a spec summary/context and concept search, while section descriptions remain in `SpecContext.sections` and are searchable. Design Review now renders `Spec.narrative` and the seven approved section descriptions from those Reader/graph values (schema `0.5.0`), with no source reparse and stable omission when prose is absent.
 
 **Form is a Representation — settled for the MVP: generated Markdown.** An index plus one page per `Spec` and per `Pack` under `generated/design-review/` (`sdp view`), rewritten wholesale each run so no stale page survives; byte-exact regeneration is the same determinism discipline as the graph. The dev-mode and CI surfaces are the *same* generated artifact (no drift-prone "dev view"). The rich interactive **Spec Studio**, and HTML-over-Markdown as a product thesis, are aspirational (§8).
 
@@ -207,4 +209,4 @@ There is **no patch-back loop** (§4). The aspirational write surface is a riche
 
 ## 10. What the MVP consumer story proves
 
-With the agent surface + graph JSON + the Design Review (one view), an agent reads structured context (and scripts the rest) at a measured fraction of the token cost of grep; a human opens a derived view showing intent, implementation links, verification *presence*, and impact — all regenerable; and edits flow as *intent → agent → git → conformance checks*, with no patch subsystem. That proves the founding principle's consumer half — *views are lenses; the repo is the truth; the agent is the editor* — without any aspirational surface area.
+With the agent surface + graph JSON + the shipped projection family, an agent reads structured context (and scripts the rest) at a measured fraction of the token cost of grep; a human selects a derived view for contextual review, taxonomy, topology, or Gherkin-shaped reading — all regenerable; and edits flow as *intent → agent → git → conformance checks*, with no patch subsystem. That proves the founding principle's consumer half — *views are lenses; the repo is the truth; the agent is the editor* — without any aspirational surface area.

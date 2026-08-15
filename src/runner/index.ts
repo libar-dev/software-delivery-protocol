@@ -157,7 +157,8 @@ function prefixStepFailure(label: string, error: unknown): unknown {
 /**
  * The one outcome no spec ever states — contributed by the runner core, first-class in every
  * generated Outcome union: the honest answer for a region of the example space the spec set does
- * not cover. An oracle returning it names a coverage gap, never an error.
+ * not cover. An oracle returning it names a coverage gap; when a bound executable example selects
+ * it, the registrar reddens because no authored Then may silently witness an unspecified outcome.
  */
 export interface UnspecifiedOutcome {
   readonly kind: "unspecified";

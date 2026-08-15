@@ -41,6 +41,10 @@ checkout: `exec` resolves dependency binaries, while this package does not link 
 own `node_modules/.bin`; an unresolved `sdp` can select macOS's unrelated binary. Do not invoke a
 global `sdp` either.
 
+The public projection publishers are `sdp view`, `sdp census`, `sdp mermaid`, and `sdp gherkin`.
+In this source checkout, use `npm run generate:self-hosting` or `npm run check:self-hosting` when
+all four roots must be published or certified together.
+
 The catalog contains eleven ready-made bodies in `docs/agent-surface/recipes.md` in the Protocol
 repository and
 `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an adopter —

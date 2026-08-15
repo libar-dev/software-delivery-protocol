@@ -5,7 +5,13 @@ import { defineConfig } from "tsup";
 // library entry, no shebang) stays clean. No banner / strip-plugin / post-build normalisation.
 export default defineConfig([
   {
-    entry: ["src/index.ts", "src/cli/sdp.ts", "src/runner/index.ts", "src/adapters/vitest.ts"],
+    entry: [
+      "src/index.ts",
+      "src/cli/sdp.ts",
+      "src/runner/index.ts",
+      "src/adapters/vitest.ts",
+      "src/testing/index.ts",
+    ],
     format: ["esm"],
     dts: true,
     platform: "node",

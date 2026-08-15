@@ -18,6 +18,10 @@ the recipe check derives with. Run `npm run build` first if `dist/` is absent. D
 link itself into its own `node_modules/.bin`; an unresolved `sdp` can select macOS's unrelated
 binary.
 
+The same CLI publishes four independent read roots with `view`, `census`, `mermaid`, and `gherkin`.
+Repository generation/check scripts run the private projection suite so all four survive and are
+certified together; graph questions still enter through `q`.
+
 For adopters, the portable form keeps root and exclusions project-selected:
 
 ```sh

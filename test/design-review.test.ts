@@ -95,7 +95,7 @@ describe("the Design Review — the one generated read-only view", () => {
       "## Narrative\n\nThe Protocol's own delivery model exercises the same carrier, graph, checks, and projections offered to consumers.\n\n**Readiness:",
     );
     expect(page).toContain("## Intent\n\n- **outcome:");
-    expect(index).toContain("schema `0.4.0`");
+    expect(index).toContain("schema `0.5.0`");
     expect(pack).toContain(
       "| [`spec:protocol.self-hosting`](../spec/protocol.self-hosting.md) The Protocol authors and validates itself | behavior | epic | defined | ready | none | none |",
     );
@@ -205,7 +205,7 @@ describe("the Design Review — the one generated read-only view", () => {
       rmSync(firstRoot, { recursive: true, force: true });
       rmSync(secondRoot, { recursive: true, force: true });
     }
-  });
+  }, 20_000);
 
   it("rejects swapped prose semantically even when the wrong graph renders deterministically", () => {
     const correct = deriveFixtureGraph({

@@ -76,6 +76,13 @@ afterEach(() => {
 });
 
 describe("the self-hosting records gate", () => {
+  it("discovers plan 34 as the current primary plan", () => {
+    expect(currentPlan).toMatchObject({
+      number: 34,
+      name: "34-agent-surface-adoption-and-self-binding-briefs.md",
+    });
+  });
+
   it("accepts the current record without requiring the historical ledger shape", () => {
     const result = runGuard(copyRecordTree());
 

@@ -5,14 +5,19 @@ import { fileURLToPath } from "node:url";
 
 import { parseBuildArgs } from "./build-args.js";
 import { runBuild } from "./build-command.js";
+import { runCensus } from "./census-command.js";
+import type { CensusHooks } from "./census-command.js";
+import { runGherkinView } from "./gherkin-command.js";
+import type { GherkinViewHooks } from "./gherkin-command.js";
 import { parseImportArgs, runImport } from "./import-command.js";
 import type { ImportHooks } from "./import-command.js";
+import { runMermaid } from "./mermaid-command.js";
+import type { MermaidHooks } from "./mermaid-command.js";
 import { defaultCliOutput, errorMessage, writeStderr, writeStdout } from "./output.js";
 import type { CliOutput } from "./output.js";
 import { parseQueryArgs, runQuery } from "./q-command.js";
 import type { QueryHooks } from "./q-command.js";
 import { runValidate, runView } from "./validate-view-command.js";
-import type { ValidationViewHooks } from "./validate-view-command.js";
 
 export const SDP_HELP_TEXT = `sdp — Libar Software Delivery Protocol
 Usage:
@@ -20,6 +25,9 @@ Usage:
   sdp build [root] [--exclude PATH]... [--check-clean]
   sdp validate [root] [--exclude PATH]... [--check-clean]
   sdp view [root] [--exclude PATH]... [--check-clean]
+  sdp census [root] [--exclude PATH]... [--check-clean]
+  sdp mermaid [root] [--exclude PATH]... [--check-clean]
+  sdp gherkin [root] [--exclude PATH]... [--check-clean]
   sdp import <path...> [--dry-run]
   sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--json]
 
@@ -37,12 +45,19 @@ Commands:
              validation path). A check error exits 1; gaps and orphans inform as warnings.
              graph.json is still written when the checks fail — the graph is the faithful
              projection; check errors describe the repo's conformance, not the artifact.
-  view       validate, then generate the Design Review — the one read-only human view, a pure
-             projection of the graph — into <root>/generated/design-review/ (rewritten
-             wholesale, so no stale page survives). The view is written even when checks
-             fail: findings render in it, which is what a review surface is for. Exit code
-             follows validate. --check-clean additionally re-renders independently and fails
-             on any byte divergence.
+  view       validate, then generate the Design Review — the contextual read-only human view —
+             into <root>/generated/design-review/ (rewritten wholesale). Findings remain data;
+             exit code follows validate. --check-clean independently re-renders.
+  census     validate, then generate the taxonomy census into <root>/generated/census/ as a
+             separate wholesale tmp-to-rename projection. --check-clean independently re-renders
+             and refuses when the checked-in/generated page differs from the current projection.
+  mermaid    validate, then generate Mermaid diagrams into <root>/generated/mermaid/ as a
+             separate wholesale tmp-to-rename projection. --check-clean independently re-renders
+             and refuses when the published bytes differ from the current projection.
+  gherkin    validate, then generate a Gherkin-shaped READ projection of every Spec into
+             <root>/generated/gherkin/ as a separate wholesale tmp-to-rename projection. The
+             pages are disposable and never use .sdp.gherkin. --check-clean independently
+             re-renders and refuses when the published bytes differ from the current projection.
   import     Convert one or more *.sdp.ts files or recursively scanned roots to write-beside
              *.sdp.md documents. The TypeScript source is never deleted. --dry-run writes
              each would-be document to stdout, headed by its target path, without writing.
@@ -65,7 +80,7 @@ Commands:
              --json prints JSON.stringify instead, unbounded. A body that throws exits 1, as does a
              graph that fails to derive.`;
 
-interface CliHooks extends ValidationViewHooks {
+interface CliHooks extends CensusHooks, MermaidHooks, GherkinViewHooks {
   readonly import?: ImportHooks;
   readonly query?: QueryHooks;
 }
@@ -91,6 +106,9 @@ export function runSdpCli(
     command !== "build" &&
     command !== "validate" &&
     command !== "view" &&
+    command !== "census" &&
+    command !== "mermaid" &&
+    command !== "gherkin" &&
     command !== "import" &&
     command !== "q"
   ) {
@@ -124,7 +142,17 @@ export function runSdpCli(
     return runValidate(parsed, output, "validate", hooks).exitCode;
   }
 
-  return runView(parsed, output, hooks);
+  if (command === "view") {
+    return runView(parsed, output, hooks);
+  }
+
+  if (command === "census") {
+    return runCensus(parsed, output, hooks);
+  }
+
+  return command === "mermaid"
+    ? runMermaid(parsed, output, hooks)
+    : runGherkinView(parsed, output, hooks);
 }
 
 export function isCliEntrypoint(executedPath: string | undefined, moduleUrl: string): boolean {

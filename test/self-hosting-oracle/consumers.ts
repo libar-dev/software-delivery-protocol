@@ -4,6 +4,109 @@
 
 export const consumersSpecs = [
   {
+    id: "spec:consumers.mermaid-view",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/consumers/mermaid-view.sdp.md",
+    title: "Mermaid renders bounded one-hop and Pack diagrams without becoming a graph browser",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give maintainers disposable, deterministic Mermaid diagrams of each Spec's one-hop neighborhood and each Pack's membership without ever projecting the whole graph or inventing a second truth store.",
+      },
+      behavior: {
+        rules: [
+          "`renderMermaid` is a pure `Reader -> pages` projection with no filesystem or clock access; equal reader data produces byte-identical pages.",
+          "The page set is one diagram per Spec (that Spec plus its one-hop neighborhood), one diagram per Pack (the Pack and its members), and one deterministic index that links them. The projection never emits a whole-graph diagram.",
+          "Machine node tokens are injective encodings of the full graph ID. Titles and other display text never become machine tokens.",
+          "Visible labels use a dedicated Mermaid label escape (`escapeMermaidLabel`) that is parser-safe for Mermaid syntax. The Markdown/owned-prose escaper is not reused.",
+          "Every emitted record — pages, node declarations, edge declarations, index rows — is ordered by deterministic code-unit order independent of graph input order.",
+          "An unresolved relation or edge target renders as an explicit unresolved placeholder node rather than disappearing or being invented.",
+          "Cycles are retained as ordinary edges with a visited-set walk; the projection never computes transitive closure and never performs layout.",
+          "Disconnected neighborhoods and foreign edge types remain visible when they appear in the selected one-hop or Pack slice; absence of a neighbor is honest silence, not a synthetic hub.",
+          "Hard bounds are exact: `maxNodesPerDiagram = 64` and `maxEdgesPerDiagram = 128`. A token collision or an overflow of either bound refuses the affected diagram with a deterministic refusal that names the bound, while every in-bound diagram still publishes and the command exits 0. The projection never silently truncates, shards partially, drops edges to fit, or aborts the whole page set because one diagram overflowed.",
+          "Publication owns only `generated/mermaid/` and uses the explicit `sdp mermaid` surface. It is not a child of or an extra write inside Design Review's transaction, and it shares no publication bus or hidden side channel with other projections.",
+          "A Mermaid run writes its complete page set to `generated/mermaid.tmp/`, removes the prior Mermaid root, and renames the temporary root into place. Every build attempt invalidates both Mermaid roots before extraction, so failure leaves honest absence rather than stale output that looks current. A failed publish removes any live or temporary Mermaid root it cannot certify.",
+          "`sdp mermaid --check-clean` renders an independent twin, refuses divergent renders, and compares the current generated root with the new render. Missing or drifted output returns nonzero and is removed; clean output is replaced wholesale with byte-identical content.",
+          "When extraction succeeds but graph validation reports errors, Mermaid still publishes the labelled diagnostic projection and returns the nonzero validation exit code.",
+          "The projection adds no Mermaid-specific Reader accessors, maintains no projection-owned taxonomy list, and confers nothing back into the graph.",
+        ],
+        exampleSpace: {
+          given: [
+            "a graph containing Specs, Packs, one-hop relations, an unresolved target, a cycle, and a neighborhood within the stated bounds",
+          ],
+          when: [
+            "the Mermaid projection renders and publishes through the explicit mermaid command",
+          ],
+          then: [
+            "each Spec page holds only that Spec's one-hop neighborhood",
+            "each Pack page holds only that Pack and its members",
+            "the index links every diagram deterministically",
+            "machine tokens remain injective full-ID encodings",
+            "hostile label characters cannot close or break Mermaid syntax",
+            "an unresolved target renders as an explicit placeholder",
+            "a colliding token or a diagram past maxNodesPerDiagram = 64 or maxEdgesPerDiagram = 128 is refused by name while every in-bound diagram still publishes",
+            "generated/mermaid/ is the only current Mermaid root",
+            "a clean independent render is byte-identical",
+            "validation errors label the index as a diagnostic projection",
+            "no whole-graph diagram is emitted",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.gherkin-view",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/consumers/gherkin-view.sdp.md",
+    title: "Gherkin view renders any Spec as a disposable read shape",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give maintainers a generated Gherkin-shaped READ projection of any Spec without creating a second carrier, a default flip, or round-trip parity.",
+      },
+      behavior: {
+        rules: [
+          "`renderGherkinView` is a pure `Reader -> pages` projection with no filesystem or clock access; equal reader data produces byte-identical pages.",
+          "Every Spec renders as one Gherkin-shaped page plus one deterministic index. Packs are not projected. The projection never uses `.sdp.gherkin` and never claims round-trip parity.",
+          "Each page is visibly generated and disposable. Refused kinds carry lossy commentary naming the per-kind lie-reason; content Gherkin cannot carry honestly is marked the same way rather than invented as structure.",
+          "Description prose lands only on MD-19's existing owners — narrative or keyed description bullets — and the projection never emits DocStrings, DataTables, Scenario Outlines, Examples tables, backgrounds, star steps, or leading conjunctions.",
+          "Every emitted record is ordered by deterministic code-unit order independent of graph input order. Hostile characters are escaped so they cannot close a fence or invent a DocString.",
+          "Publication owns only `generated/gherkin/` and uses the explicit `sdp gherkin` surface. It is not a child of or an extra write inside Design Review's transaction, and it shares no publication bus or hidden side channel with other projections.",
+          "A Gherkin-view run writes its complete page set to `generated/gherkin.tmp/`, removes the prior Gherkin-view root, and renames the temporary root into place. Every build attempt invalidates both Gherkin-view roots before extraction, so failure leaves honest absence rather than stale output that looks current. A failed publish removes any live or temporary Gherkin-view root it cannot certify.",
+          "`sdp gherkin --check-clean` renders an independent twin, refuses divergent renders, and compares the current generated root with the new render. Missing or drifted output returns nonzero and is removed; clean output is replaced wholesale with byte-identical content.",
+          "When extraction succeeds but graph validation reports errors, the Gherkin view still publishes the labelled diagnostic projection and returns the nonzero validation exit code.",
+          "The projection adds no Gherkin-specific Reader accessors and confers nothing back into the graph.",
+        ],
+        exampleSpace: {
+          given: [
+            "a graph containing behavior, example, and refused-kind Specs with hostile titles",
+          ],
+          when: [
+            "the Gherkin-view projection renders and publishes through the explicit gherkin command",
+          ],
+          then: [
+            "each Spec page is a visibly generated Gherkin-shaped read",
+            "refused-kind pages carry the per-kind lie-reason as lossy commentary",
+            "a clean independent render is byte-identical",
+            "hostile characters cannot close a fence or invent a DocString",
+            "generated/gherkin/ is the only current Gherkin-view root",
+            "validation errors label the index as a diagnostic projection",
+            "no page uses the .sdp.gherkin suffix",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+
+  {
     id: "spec:consumers.projections-model",
     specKind: "model",
     altitude: "feature",
@@ -24,6 +127,8 @@ export const consumersSpecs = [
             "The authored architectural read model of declared intent and anchored bindings, valued for editorial sparsity.",
           curation:
             "The deliberate difference between the sparse curated graph and the code-structure surface; it is not drift.",
+          "diagnostic publication posture":
+            "After extraction succeeds, a projection publishes its honestly labelled graph view even when validation reports errors, and returns the validation exit code so findings remain both visible and nonzero.",
           discipline:
             "A lens or projection that filters or groups Specs by kind or section; it is not a phase to pass through.",
           "measured curation":
@@ -136,6 +241,51 @@ export const consumersSpecs = [
           "A Pack page presents framing, model references, and an ordered member table with each member's kind, altitude, readiness, and implementation and verifier bindings.",
         indexPage:
           "The index presents one sortable-style Markdown table for Specs and a linked bullet list for Packs, with stable links into their detail pages.",
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.census-page",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/consumers/census-page.sdp.md",
+    title: "Census renders the runtime taxonomy without becoming a registry",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give maintainers one disposable graph-derived census that exposes the complete runtime taxonomy, foreign values, readiness divergence, binding flavor, and current findings without creating another source of truth.",
+      },
+      behavior: {
+        rules: [
+          "`renderCensus` is a pure `Reader -> pages` projection with no filesystem or clock access; every page, row, and finding is deterministically sorted so equal reader data produces byte-identical output.",
+          "Spec kind rows and their display labels, altitude rows, and readiness rows derive from `SPEC_KINDS`, `SPEC_KIND_DISPLAY_LABELS`, `SPEC_ALTITUDES`, and `SPEC_READINESS`; graph node, claim, delivery-fact, and edge rows derive from `graphNodeTypes`, `graphClaims`, `deliveryFactNames`, and `graphEdgeTypes`. Every exported runtime category renders even at count zero; no projection-owned taxonomy list is maintained.",
+          "A foreign value outside an exported runtime taxonomy renders as a deterministic `unrecognized` row sorted by its literal value rather than disappearing or being coerced into a known category.",
+          "Stated readiness and structurally derived readiness render as separate dimensions, including a count for Specs that have not structurally reached the first derived rung; the census never resolves or confers readiness.",
+          "Anchor flavor is counted from each binding node's graph node type, ID namespace, and outgoing binding edge, so structural bindings are visible as graph data and their absence is stated rather than inferred.",
+          "Findings come only from `reader.findings()`, the one validation report exposed as data; the projection never re-runs or re-implements validation.",
+          "The census is regenerable and disposable under `generated/census/index.md`; it confers nothing, writes no canonical source, and never becomes a second registry or truth store.",
+          "Publication uses the explicit `sdp census` surface and owns only `generated/census/`. It is not a child of or an extra write inside Design Review's transaction.",
+          "A census run writes its complete page set to `generated/census.tmp/`, removes the prior census root, and renames the temporary root into place. Every build attempt invalidates both census roots before extraction, so failure leaves honest absence rather than stale output that looks current.",
+          "`sdp census --check-clean` renders an independent twin, refuses divergent renders, and compares the current generated root with the new render. Missing or drifted output returns nonzero and is removed; clean output is replaced wholesale with byte-identical content.",
+          "When extraction succeeds but graph validation reports errors, census still publishes the labelled diagnostic projection and returns the nonzero validation exit code.",
+        ],
+        exampleSpace: {
+          given: [
+            "a graph containing known runtime categories, foreign taxonomy values, bindings, readiness divergence, and findings",
+          ],
+          when: ["the census projection renders and publishes through the explicit census command"],
+          then: [
+            "every runtime category remains visible including zero-count rows",
+            "foreign values render as deterministic unrecognized rows",
+            "stated and derived readiness remain separate dimensions",
+            "findings equal the values returned by reader.findings()",
+            "generated/census/index.md is the only current census page",
+            "a clean independent render is byte-identical",
+          ],
+        },
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],

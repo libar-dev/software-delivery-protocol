@@ -80,6 +80,7 @@ export const ID_UNWRAP_BUILDERS: ReadonlyMap<string, readonly string[]> = new Ma
   ["packId", ["pack"]],
   ["ref", ["spec"]],
   ["codeAnchorId", CODE_ANCHOR_NAMESPACES],
+  ["componentAnchorId", ["component"]],
   ["testAnchorId", ["test"]],
   ["oracleAnchorId", ["oracle"]],
 ]);

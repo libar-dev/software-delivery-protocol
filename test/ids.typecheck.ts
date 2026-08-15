@@ -1,11 +1,13 @@
 import {
   type AnchorId,
   type CodeAnchorId,
+  type ComponentAnchorId,
   type PackId,
   type SpecId,
   type TestAnchorId,
   anchorId,
   codeAnchorId,
+  componentAnchorId,
   packId,
   ref,
   specId,
@@ -16,10 +18,12 @@ const spec: SpecId = ref("spec:orders.create-order.valid-cart");
 const alsoSpec: SpecId = specId("spec:orders.create-order");
 const pack: PackId = packId("pack:checkout-v1");
 const impl: CodeAnchorId = codeAnchorId("impl:orders.create-order-use-case");
+const component: ComponentAnchorId = componentAnchorId("component:orders.domain");
+const structuralTarget: CodeAnchorId = component;
 const test: TestAnchorId = testAnchorId("test:orders.create-order.valid-cart");
 const anchor: AnchorId = anchorId("api:orders.post");
 
-void [spec, alsoSpec, pack, impl, test, anchor];
+void [spec, alsoSpec, pack, impl, component, structuralTarget, test, anchor];
 
 // The id-brand discipline, pinned: one brand never assigns to another, a raw string carries no
 // brand, and the generic anchorId result never narrows to a flavored anchor brand — only the
@@ -47,6 +51,18 @@ const wrongFlavorTest: TestAnchorId = codeAnchorId("impl:orders.create-order-use
 // @ts-expect-error a CodeAnchorId slot rejects a TestAnchorId result
 const wrongFlavorImpl: CodeAnchorId = testAnchorId("test:orders.create-order.valid-cart");
 
+// @ts-expect-error a generic CodeAnchorId does not prove the component: namespace
+const wrongComponent: ComponentAnchorId = codeAnchorId("component:orders.domain");
+
 const widensToAnchor: AnchorId = codeAnchorId("impl:orders.create-order-use-case");
 
-void [wrongPack, rawSpec, wrongTest, wrongImpl, wrongFlavorTest, wrongFlavorImpl, widensToAnchor];
+void [
+  wrongPack,
+  rawSpec,
+  wrongTest,
+  wrongImpl,
+  wrongFlavorTest,
+  wrongFlavorImpl,
+  wrongComponent,
+  widensToAnchor,
+];

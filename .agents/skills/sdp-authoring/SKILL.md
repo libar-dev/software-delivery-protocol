@@ -149,6 +149,10 @@ membership order and point to `spec:carrier.markdown-pack-authoring` for the com
    Diagnose contract refusals from `sdp build`; `sdp q` receives graph-validation findings, not
    codegen findings.
 
+   Repository generation also publishes the independent Design Review, census, Mermaid, and
+   Gherkin-shaped read roots. Use the repository generate/check scripts to certify the complete
+   projection suite; do not treat the Gherkin read root as an authored carrier.
+
 4. In the verifier suite, colocate `bindExample(generatedContract, world, bindings)` with a
    `specTest` anchor targeting that example. In this repository, registering every suite that
    imports a generated contract in `contract-dependent-suites.mjs` is part of binding.

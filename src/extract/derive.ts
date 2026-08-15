@@ -103,9 +103,10 @@ function deriveAnchorNode(entry: ReifiedAnchor): AnchorNode | CodeNode {
  * The declared + anchored layers of the one graph: one `Primitive` node per spec, one `Pack` node
  * per pack, one binding node per anchor (`CodeNode` for a code anchor, `Anchor` for a test anchor
  * — the `spec:extraction.derive-graph` edge contract), one edge per authored relation, one derived `belongsTo` per
- * manifest entry, and one anchored `satisfies`/`verifies` edge per anchor. `belongsTo` is a
- * deterministic re-expression of the declared manifest, so it inherits its source's claim — there
- * is no 4th claim (`spec:extraction.claim-taxonomy`). A dangling target is emitted, not dropped: the unresolved id itself
+ * manifest entry, and anchored binding/structural edges per anchor. `memberOf` and `uses` connect
+ * CodeNode endpoints only: they confer no delivery fact and deliberately do not join the reader's
+ * binding-to-Spec traversal. `belongsTo` is a deterministic re-expression of the declared manifest,
+ * so it inherits its source's claim — there is no 4th claim (`spec:extraction.claim-taxonomy`). A dangling target is emitted, not dropped: the unresolved id itself
  * is the sentinel the referential-integrity check (`validateGraph`) flags — but resolution does
  * gate the delivery facts (see `computeDeliveryFacts`). Zero `inferred` claims by decision: the
  * consumers (the reader's entry adapters and file-level impact) resolve off the curated layers
@@ -173,6 +174,34 @@ export function deriveGraph(
         to: target,
         claim: "anchored",
       });
+    }
+
+    if (entry.flavor !== "code") {
+      continue;
+    }
+
+    const component = entry.data.component;
+
+    if (typeof component === "string") {
+      edges.push({
+        from: entry.id,
+        type: "memberOf",
+        to: component,
+        claim: "anchored",
+      });
+    }
+
+    const uses = Array.isArray(entry.data.uses) ? (entry.data.uses as readonly unknown[]) : [];
+
+    for (const dependency of uses) {
+      if (typeof dependency === "string") {
+        edges.push({
+          from: entry.id,
+          type: "uses",
+          to: dependency,
+          claim: "anchored",
+        });
+      }
     }
   }
 

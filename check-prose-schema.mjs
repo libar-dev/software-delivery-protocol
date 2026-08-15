@@ -23,7 +23,7 @@ for (const section of [
 ]) {
   expectContains("src/model/sections.ts", section, "missing section description owner");
 }
-expectContains("src/graph/schema.ts", 'schemaVersion = "0.4.0"', "missing 0.4.0 schema literal");
+expectContains("src/graph/schema.ts", 'schemaVersion = "0.5.0"', "missing 0.5.0 schema literal");
 expectContains("src/graph/schema.ts", "readonly narrative?: string;", "missing graph narrative");
 expectContains("src/reader/reader.ts", "readonly narrative?: string;", "missing Reader narrative");
 expectContains(
@@ -47,7 +47,7 @@ expectContains(
 );
 expectContains(
   "specs/extraction/schema-versioning.declared-version.sdp.md",
-  '{schemaVersion: "0.4.0"}',
+  '{schemaVersion: "0.5.0"}',
   "missing declared-version example literal",
 );
 expectContains(
@@ -62,7 +62,7 @@ expectContains(
 );
 expectContains(
   "docs/concept/06-consumers-and-projections.md",
-  "Design Review now renders `Spec.narrative` and the seven approved section descriptions from those Reader/graph values (schema `0.4.0`), with no source reparse and stable omission when prose is absent.",
+  "Design Review now renders `Spec.narrative` and the seven approved section descriptions from those Reader/graph values (schema `0.5.0`), with no source reparse and stable omission when prose is absent.",
   "missing landed prose projection claim",
 );
 

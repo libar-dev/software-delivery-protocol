@@ -3,7 +3,7 @@ import { codeAnchor } from "../model/code-anchor.js";
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSections } from "../model/sections.js";
 
-export const schemaVersion = "0.4.0" as const;
+export const schemaVersion = "0.5.0" as const;
 
 const schemaVersionAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.schema-version"),
@@ -39,8 +39,10 @@ export const authoredEdgeTypes = [
 export type AuthoredEdgeType = (typeof authoredEdgeTypes)[number];
 
 /** `models` is the oracle anchor's binding edge (Anchor → Primitive, anchored) — anchor-emitted
- *  like `satisfies`, never authored; it confers no delivery fact (no `has-oracle` at MVP). */
-export const derivedEdgeTypes = ["belongsTo", "satisfies", "models"] as const;
+ *  like `satisfies`, never authored; it confers no delivery fact (no `has-oracle` at MVP).
+ *  `memberOf` and `uses` are anchored CodeNode → CodeNode structure. They deliberately stay out
+ *  of delivery facts and the reader's binding traversal, whose destination is always a Spec. */
+export const derivedEdgeTypes = ["belongsTo", "satisfies", "models", "memberOf", "uses"] as const;
 export type DerivedEdgeType = (typeof derivedEdgeTypes)[number];
 
 export const graphEdgeTypes = [...authoredEdgeTypes, ...derivedEdgeTypes] as const;

@@ -11,6 +11,8 @@ import {
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { trackedRegistrarDifferences } from "./preflight-registrars.mjs";
+
 const repoRoot = fileURLToPath(new URL(".", import.meta.url));
 const scratchRoot = join(repoRoot, ".tmp-scratch");
 
@@ -18,17 +20,17 @@ const scratchRoot = join(repoRoot, ".tmp-scratch");
 // the clean-room must carry its own `dist/` and `package.json` and execute those. Running the
 // repo's binary against a copied tree would lawfully lose every relative-import anchor and make the
 // comparison meaningless; running the copy's binary proves the regeneration is relocation-independent.
-const runtimePaths = ["dist", "package.json"];
+const runtimePaths = ["dist", "package.json", "preflight-registrars.mjs", "projection-suite.mjs"];
 
 // The check pipeline owns precisely these outputs. Root dist/ is package assembly rather than
 // generated truth; broader ignored runtime garbage remains a manual inspection responsibility.
 const generationTargets = [
   {
     name: "self-hosting",
+    rootPath: ".",
     generatedPath: "generated",
     sourcePaths: ["specs", "src", "test"],
     command: [
-      "view",
       ".",
       "--exclude",
       "explorations",
@@ -40,13 +42,14 @@ const generationTargets = [
   },
   {
     name: "checkout-v1",
+    rootPath: "examples/checkout-v1",
     generatedPath: "examples/checkout-v1/generated",
     sourcePaths: [
       "examples/checkout-v1/specs",
       "examples/checkout-v1/src",
       "examples/checkout-v1/test",
     ],
-    command: ["view", "examples/checkout-v1", "--check-clean"],
+    command: ["examples/checkout-v1"],
   },
 ];
 
@@ -110,15 +113,32 @@ function regenerateExpectedTree(target) {
       cpSync(join(repoRoot, sourcePath), join(temporaryRoot, sourcePath), { recursive: true });
     }
 
-    run(process.execPath, [join(temporaryRoot, "dist", "cli", "sdp.js"), ...target.command], {
+    run(process.execPath, [join(temporaryRoot, "projection-suite.mjs"), ...target.command], {
       cwd: temporaryRoot,
     });
 
-    return compareGeneratedTree(
-      target,
-      readTree(join(repoRoot, target.generatedPath)),
-      readTree(join(temporaryRoot, target.generatedPath)),
-    );
+    const expectedGenerated = readTree(join(temporaryRoot, target.generatedPath));
+    const manifestText = expectedGenerated.get("registrars.json");
+    const expectedRegistrars = new Map();
+
+    if (manifestText !== undefined) {
+      const manifest = JSON.parse(manifestText);
+      for (const registrarPath of manifest.files ?? []) {
+        expectedRegistrars.set(
+          join(target.rootPath, registrarPath).replaceAll("\\", "/").replace(/^\.\//u, ""),
+          readFileSync(join(temporaryRoot, target.rootPath, registrarPath), "utf8"),
+        );
+      }
+    }
+
+    return {
+      generatedDrift: compareGeneratedTree(
+        target,
+        readTree(join(repoRoot, target.generatedPath)),
+        expectedGenerated,
+      ),
+      expectedRegistrars,
+    };
   } finally {
     // Finder/Spotlight can drop metadata into the tree mid-delete; retry the transient ENOTEMPTY.
     rmSync(temporaryRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
@@ -160,7 +180,20 @@ function main() {
   ]
     .filter(isGeneratedPath)
     .sort();
-  const generatedDrift = generationTargets.flatMap((target) => regenerateExpectedTree(target));
+  const regenerated = generationTargets.map((target) => regenerateExpectedTree(target));
+  const generatedDrift = regenerated.flatMap((result) => result.generatedDrift);
+  const expectedRegistrars = new Map(
+    regenerated.flatMap((result) => [...result.expectedRegistrars.entries()]),
+  );
+  const trackedRegistrars = gitLines(["ls-files", "--", ":(glob)**/*.test.generated.ts"]).sort();
+  const registrarDrift = trackedRegistrars.flatMap((path) =>
+    trackedRegistrarDifferences(
+      path,
+      expectedRegistrars.get(path),
+      existsSync(join(repoRoot, path)) ? readFileSync(join(repoRoot, path), "utf8") : undefined,
+      run("git", ["show", `:${path}`], { cwd: repoRoot }),
+    ),
+  );
   const failures = [];
 
   if (trackedGeneratedWrites.length > 0) {
@@ -177,6 +210,10 @@ function main() {
         "\n",
       )}`,
     );
+  }
+
+  if (registrarDrift.length > 0) {
+    failures.push(`preflight: tracked adopted registrar drift:\n${registrarDrift.join("\n")}`);
   }
 
   if (nonignoredUntracked.length > 0) {
