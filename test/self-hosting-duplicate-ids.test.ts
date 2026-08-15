@@ -7,16 +7,70 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
-import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
+import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
 
+import type {
+  DuplicateIdsConditions,
+  DuplicateIdsOutcome,
+} from "../generated/contracts/validation.duplicate-ids.space.js";
 import { dualCarrierContract } from "../generated/contracts/validation.duplicate-ids.dual-carrier.contract.js";
 import { extract } from "../src/index.js";
 import type { ExtractionResult } from "../src/index.js";
+import { registerDualCarrier } from "./validation.duplicate-ids.dual-carrier.test.generated.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 
 interface DuplicateIdWorld {
   readonly root: string;
   result: ExtractionResult | undefined;
+}
+
+function createDuplicateIdWorld(point: Partial<DuplicateIdsConditions>): DuplicateIdWorld {
+  void point;
+  const root = materializeExtractCorpus("duplicate-id");
+  temporaryRoots.add(root);
+
+  return { root, result: undefined };
+}
+
+function invokeDuplicateIdExtract(world: DuplicateIdWorld): void {
+  world.result = extract({ root: world.root });
+}
+
+function observeDuplicateIds(world: DuplicateIdWorld): DuplicateIdsOutcome {
+  const duplicateFindings = extractedResult(world).report.findings.filter(
+    (finding) => finding.validatorId === "extract/duplicate-id",
+  );
+
+  return {
+    kind: "both sites report {findingId}",
+    findingId: duplicateFindings[0]?.validatorId ?? "",
+  };
+}
+
+function expectedDuplicateIds(point: Partial<DuplicateIdsConditions>): DuplicateIdsOutcome {
+  if (
+    point.firstCarrier === undefined ||
+    point.specId === undefined ||
+    point.secondCarrier === undefined
+  ) {
+    return unspecified;
+  }
+
+  return { kind: "both sites report {findingId}", findingId: "extract/duplicate-id" };
+}
+
+function assertDuplicateIdSemantics(world: DuplicateIdWorld): void {
+  const result = extractedResult(world);
+  const duplicateFindings = result.report.findings.filter(
+    (finding) => finding.validatorId === "extract/duplicate-id",
+  );
+
+  expect(duplicateFindings.map((finding) => finding.file).sort()).toEqual([
+    "first-site.sdp.ts",
+    "second-site.sdp.md",
+  ]);
+  expect(result.graph.nodes.some((node) => node.id === "spec:fixture.duplicate")).toBe(false);
+  expect(result.graph.nodes.some((node) => node.id === "spec:fixture.healthy-sibling")).toBe(true);
 }
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -221,43 +275,11 @@ const dualCarrierDuplicateTestAnchor = specTest({
 });
 void dualCarrierDuplicateTestAnchor;
 
-bindExample(
-  dualCarrierContract,
-  (): DuplicateIdWorld => {
-    const root = materializeExtractCorpus("duplicate-id");
-    temporaryRoots.add(root);
-
-    return { root, result: undefined };
-  },
-  {
-    "a {firstCarrier} carrier declares {specId}": (_world, params) => {
-      expect(params.firstCarrier).toBe("TypeScript");
-      expect(params.specId).toBe("spec:fixture.duplicate");
-    },
-    "a {secondCarrier} carrier declares {specId}": (_world, params) => {
-      expect(params.secondCarrier).toBe("Markdown");
-      expect(params.specId).toBe("spec:fixture.duplicate");
-    },
-    "the extraction root is read": (world) => {
-      world.result = extract({ root: world.root });
-    },
-    "both sites report {findingId}": (world, params) => {
-      const duplicateFindings = extractedResult(world).report.findings.filter(
-        (finding) => finding.validatorId === params.findingId,
-      );
-
-      expect(duplicateFindings.map((finding) => finding.file).sort()).toEqual([
-        "first-site.sdp.ts",
-        "second-site.sdp.md",
-      ]);
-    },
-    "no graph node is emitted for {specId}": (world, params) => {
-      const result = extractedResult(world);
-
-      expect(result.graph.nodes.some((node) => node.id === params.specId)).toBe(false);
-      expect(result.graph.nodes.some((node) => node.id === "spec:fixture.healthy-sibling")).toBe(
-        true,
-      );
-    },
-  },
-);
+// bindExample(dualCarrierContract
+registerDualCarrier({
+  createWorld: createDuplicateIdWorld,
+  invoke: invokeDuplicateIdExtract,
+  observe: observeDuplicateIds,
+  expected: expectedDuplicateIds,
+  assertions: assertDuplicateIdSemantics,
+});
