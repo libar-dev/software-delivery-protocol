@@ -4,12 +4,12 @@ status: plan-complete
 intent: clear
 review_required: true
 plan_path: .omo/plans/plan-35-agent-surface-arc.md
-plan_sha256: 9000c8bfd67a2ddd471f228a3cc80a0a07ec19e9ed14f1bcdbd214e0e8921df1
-review_round_id: rr-plan35-r6
-review_round_limit: 6 (user explicitly requested round 6 beyond the default 5-round cap)
-round_status: fix-applied-awaiting-round-7-decision
-pending-action: ask user — round 7 (explicit request required), accept, or adjust
-phase: cap_reached_awaiting_user
+plan_sha256: bd6782f5da09c7aafd03d98d3024990e2fdfb617f2b12e5e0795ac50f32b9720
+review_round_id: rr-plan35-r9
+review_round_limit: unlimited (user explicitly authorized finalizing the review loop without per-step permission)
+round_status: closed-approved
+pending-action: execute .omo/plans/plan-35-agent-surface-arc.md via /start-work
+phase: review_complete
 plan_status: complete-r6-blockers-fixed
 metis_final_check:
   session: st_01a005c1
@@ -23,8 +23,11 @@ convergence_ledger:
     - "metis-final (st_01a005c1): matrix/wave-gate contradiction; constraint bare-heading scaffold impossible (mapConstraints error); missing re-measure preamble — all folded"
     - "rr-plan35-r5: todo 10 cited gitignored untracked generated registrar with unstable line numbers — fixed with explicit generation prerequisite + tracked pattern reference"
     - "rr-plan35-r6: zero-human-intervention vs user-gated F-wave (clarified: governance checkpoint, not verification labor); F3 invocation used non-root-relative PATH (fixed to specs/probe.sdp.md --root <scratch>)"
-  non_blocking_notes: []
-  rounds: 6 (cap reached — user extension exhausted)
+    - "rr-plan35-r7: F3's --root option missing from todo 6's command contract — fixed by adding optional --root (default cwd) to the contract + tests, matching the CLI family's existing convention"
+    - "rr-plan35-r8: F1 required closure commits todo 17 may legitimately not produce — fixed (zero-or-more)"
+  non_blocking_notes:
+    - "rr-plan35-r8 claimed the tracked checkout registrar examples/checkout-v1/test/orders/orders.create-order.valid-cart.test.generated.ts is absent — DISPROVEN against the canonical tree: on disk, git ls-files tracked, committed in fa4518f (momus sandbox likely stale). Reference annotated with the commit id for executor verifiability; no contract change."
+  rounds: 8
 fable_metis_review:
   source: user-delivered Fable 5 report (designated by user as today's Metis review)
   findings: 10 (3 fix-before-execution, 4 worth-adjusting, 3 minor) + 1 process note
@@ -54,7 +57,19 @@ review_history:
   - round_id: rr-plan35-r6
     session: st_01a005d5
     result: changes_requested
-    note: zero-human-intervention vs user-gated final wave contradiction (clarified as governance checkpoint, not verification labor); F3 scratch invocation violated root-relative PATH contract (fixed); stale eight-kind QA wording aligned — awaiting user decision on round 7
+    note: zero-human-intervention vs user-gated final wave contradiction (clarified as governance checkpoint, not verification labor); F3 scratch invocation violated root-relative PATH contract (fixed); stale eight-kind QA wording aligned — user authorized round 7
+  - round_id: rr-plan35-r7
+    session: st_01a005da
+    result: changes_requested
+    note: F3's --root missing from todo 6 contract; added optional --root (default cwd) to contract + tests; resubmitted as rr-plan35-r8
+  - round_id: rr-plan35-r8
+    session: st_01a005dc
+    result: changes_requested
+    note: F1/todo-17 commit-count conflict fixed (zero-or-more); second finding (missing tracked registrar) disproven against canonical tree and recorded as non-blocking note; resubmitted as rr-plan35-r9
+  - round_id: rr-plan35-r9
+    session: st_01a005df
+    result: approved
+    note: unconditional [OKAY]; live-plan hash validated; review complete
 gap_analysis:
   agent: oracle st_01a0057e (metis substitute — metis aborted twice on provider errors)
   findings: 9 (1 blocker, 6 major, 2 minor)
@@ -63,15 +78,15 @@ structural_self_check: "18 impl rows (1-18), 4 final rows (F1-F4), all column-ze
 metis_substitution: "metis aborted 3x on kimi-for-coding standard lane (2m40s/2m42s/3m12s, mid-stream, invisible to provider logs); gap analysis substituted to oracle st_01a0057e with identical contract. Post-restore gate re-arm: ulw-plan re-activated by user + hash-preserving edit-pair touch of the plan (sha256 d62aa4e8 verified intact). Final metis check running on kimi-for-coding-highspeed: st_01a005c1"
 review:
   momus:
-    status: changes_requested
+    status: approved
     workspace_root: /home/darkomijic/dev-libar/software-delivery-protocol
     runtime_home: null
     target: .omo/plans/plan-35-agent-surface-arc.md
-    round_id: rr-plan35-r6
-    plan_sha256: 27c720d8febc015340114696c2bf01b9a01f49b6f77f08986b4d7ad9bb79162c
-    launch_id: launch-plan35-r6
-    session: st_01a005d5
-    result: "[REJECT] (1) zero-human-intervention vs user-gated final wave contradiction; (2) F3 invocation violated todo 6's root-relative PATH contract — both fixed in 9000c8bf"
+    round_id: rr-plan35-r9
+    plan_sha256: bd6782f5da09c7aafd03d98d3024990e2fdfb617f2b12e5e0795ac50f32b9720
+    launch_id: launch-plan35-r9
+    session: st_01a005df
+    result: "[OKAY] plan is executable: core references exist and match their claimed patterns, dependencies provide workable starting points, every todo includes concrete QA commands with expected outcomes, no blocking contradictions"; final live-plan validation passed (hash match bd6782f5da09c7aafd03d98d3024990e2fdfb617f2b12e5e0795ac50f32b9720, session receipt st_01a005df matched)
 approach: <fill: the approach you intend to plan>
 ---
 
