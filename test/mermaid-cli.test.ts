@@ -185,7 +185,7 @@ describe("sdp mermaid publication", () => {
     }
   });
 
-  it("refuses validation errors that retain a graph and removes both publication roots", () => {
+  it("publishes diagnostic output for validation errors and returns the validation exit code", () => {
     const root = materializeExtractCorpus("anchored-binding");
     const mermaidRoot = join(root, "generated", "mermaid");
     let renders = 0;
@@ -218,8 +218,8 @@ describe("sdp mermaid publication", () => {
         }),
       ).toBe(1);
       expect(capture.readStderr()).toContain("retained-graph validation failure");
-      expect(renders).toBe(0);
-      expect(existsSync(mermaidRoot)).toBe(false);
+      expect(renders).toBe(1);
+      expect(existsSync(join(mermaidRoot, "index.md"))).toBe(true);
       expect(existsSync(`${mermaidRoot}.tmp`)).toBe(false);
     } finally {
       removeMaterializedCorpus(root);

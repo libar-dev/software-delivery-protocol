@@ -2,7 +2,7 @@
 id: spec:consumers.gherkin-view
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.projections-model
   decidedBy: spec:decisions.carrier-universality
@@ -21,6 +21,7 @@ relations:
 - rule: Publication owns only `generated/gherkin/` and uses the explicit `sdp gherkin` surface. It is not a child of or an extra write inside Design Review's transaction, and it shares no publication bus or hidden side channel with other projections.
 - rule: A Gherkin-view run writes its complete page set to `generated/gherkin.tmp/`, removes the prior Gherkin-view root, and renames the temporary root into place. Every build attempt invalidates both Gherkin-view roots before extraction, so failure leaves honest absence rather than stale output that looks current. A failed publish removes any live or temporary Gherkin-view root it cannot certify.
 - rule: `sdp gherkin --check-clean` renders an independent twin, refuses divergent renders, and compares the current generated root with the new render. Missing or drifted output returns nonzero and is removed; clean output is replaced wholesale with byte-identical content.
+- rule: When extraction succeeds but graph validation reports errors, the Gherkin view still publishes the labelled diagnostic projection and returns the nonzero validation exit code.
 - rule: The projection adds no Gherkin-specific Reader accessors and confers nothing back into the graph.
 
 ## Example space

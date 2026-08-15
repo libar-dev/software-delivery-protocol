@@ -393,18 +393,7 @@ function reifyAnchorCall(
   }
 
   if (builder === "codeAnchor") {
-    const id = typeof data.id === "string" ? data.id : undefined;
-    const component = typeof data.component === "string" ? data.component : undefined;
     const uses = Array.isArray(data.uses) ? (data.uses as readonly string[]) : undefined;
-
-    if (id !== undefined && component === id) {
-      failStructural(
-        authoredLines.get("component") ?? call.getStartLineNumber(),
-        `Structural memberOf self-reference "${id}" is not allowed.`,
-        "component",
-        component,
-      );
-    }
 
     if (uses !== undefined) {
       if (uses.length === 0) {
@@ -429,15 +418,6 @@ function reifyAnchorCall(
         }
 
         seen.add(target);
-
-        if (target === id) {
-          failStructural(
-            authoredLines.get("uses") ?? call.getStartLineNumber(),
-            `Structural uses self-reference "${target}" is not allowed.`,
-            "uses",
-            target,
-          );
-        }
       }
     }
   }

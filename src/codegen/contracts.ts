@@ -54,6 +54,8 @@ export const contractsFindingIds = {
    *  — a partial tree reading as current would be its own dishonesty) and the warning names the
    *  colliding pair; gating stays `validateGraph`'s alone (MD-14). */
   caseCollidingPath: "contracts/case-colliding-path",
+  /** More than one authored suite claims the registrar path for one example. */
+  multipleRegistrarPaths: "contracts/multiple-registrar-paths",
 } as const;
 
 export interface GeneratedContracts {
@@ -962,7 +964,13 @@ const executableContractsAnchor = codeAnchor({
   label: "derives step and example-space contracts from the graph",
   satisfies: ref("spec:extraction.executable-contracts"),
 });
+const runnableModulesAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.runnable-modules"),
+  label: "derives and publishes runnable registrar modules from the graph",
+  satisfies: ref("spec:extraction.runnable-modules"),
+});
 void executableContractsAnchor;
+void runnableModulesAnchor;
 
 export function generateContracts(graph: GraphSchema): GeneratedContracts {
   const findings: Finding[] = [];
@@ -1090,15 +1098,34 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
     const point = parentId === undefined ? undefined : boundPoints.get(`${parentId}\u0000${id}`);
 
     if (space !== undefined && point !== undefined) {
-      const anchoredTestFiles = graph.edges
-        .filter((edge) => edge.type === "verifies" && edge.claim === "anchored" && edge.to === id)
-        .map((edge) => graph.nodes.find((candidate) => candidate.id === edge.from))
-        .filter(
-          (candidate): candidate is Extract<(typeof graph.nodes)[number], { nodeType: "Anchor" }> =>
-            candidate?.nodeType === "Anchor",
-        )
-        .map((anchor) => anchor.file)
-        .sort();
+      const anchoredTestFiles = [
+        ...new Set(
+          graph.edges
+            .filter(
+              (edge) => edge.type === "verifies" && edge.claim === "anchored" && edge.to === id,
+            )
+            .map((edge) => graph.nodes.find((candidate) => candidate.id === edge.from))
+            .filter(
+              (
+                candidate,
+              ): candidate is Extract<(typeof graph.nodes)[number], { nodeType: "Anchor" }> =>
+                candidate?.nodeType === "Anchor",
+            )
+            .map((anchor) => anchor.file),
+        ),
+      ].sort();
+
+      if (anchoredTestFiles.length > 1) {
+        findings.push(
+          contractsFinding(
+            contractsFindingIds.multipleRegistrarPaths,
+            `example resolves to multiple authored registrar paths (${anchoredTestFiles.map((path) => `"${path}"`).join(" · ")}) — the registrar is withheld until exactly one path remains`,
+            node,
+            "behavior.examples",
+          ),
+        );
+        continue;
+      }
       const authoredPath = anchoredTestFiles[0];
 
       if (authoredPath !== undefined) {

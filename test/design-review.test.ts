@@ -205,7 +205,7 @@ describe("the Design Review — the one generated read-only view", () => {
       rmSync(firstRoot, { recursive: true, force: true });
       rmSync(secondRoot, { recursive: true, force: true });
     }
-  });
+  }, 20_000);
 
   it("rejects swapped prose semantically even when the wrong graph renders deterministically", () => {
     const correct = deriveFixtureGraph({

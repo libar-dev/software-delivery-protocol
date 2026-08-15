@@ -1,5 +1,5 @@
-import { mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { join, posix } from "node:path";
 
 import { generateContracts } from "../codegen/contracts.js";
 import { extract } from "../extract/index.js";
@@ -16,6 +16,7 @@ export interface BuildHooks {
   readonly extract?: typeof extract;
   readonly generateContracts?: typeof generateContracts;
   readonly rmSync?: typeof rmSync;
+  readonly writeFileSync?: typeof writeFileSync;
 }
 
 export interface BuildOutcome {
@@ -40,11 +41,56 @@ function contractFilesEqual(
   return true;
 }
 
-const determinismAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.extraction-determinism"),
-  label: "repeats and byte-compares graph and contract generation under --check-clean",
-  satisfies: ref("spec:extraction.determinism"),
-});
+const REGISTRAR_MANIFEST_VERSION = 1;
+
+interface RegistrarManifest {
+  readonly version: typeof REGISTRAR_MANIFEST_VERSION;
+  readonly files: readonly string[];
+}
+
+function validRegistrarPath(path: string): boolean {
+  return (
+    path !== "" &&
+    !posix.isAbsolute(path) &&
+    posix.normalize(path) === path &&
+    path !== ".." &&
+    !path.startsWith("../") &&
+    path.endsWith(".test.generated.ts")
+  );
+}
+
+function serializeRegistrarManifest(paths: readonly string[]): string {
+  return `${JSON.stringify({ version: REGISTRAR_MANIFEST_VERSION, files: paths }, null, 2)}\n`;
+}
+
+function readRegistrarManifest(path: string): readonly string[] {
+  if (!existsSync(path)) {
+    return [];
+  }
+
+  const decoded: unknown = JSON.parse(readFileSync(path, "utf8"));
+
+  if (
+    typeof decoded !== "object" ||
+    decoded === null ||
+    (decoded as Partial<RegistrarManifest>).version !== REGISTRAR_MANIFEST_VERSION ||
+    !Array.isArray((decoded as Partial<RegistrarManifest>).files)
+  ) {
+    throw new Error(`registrar manifest ${path} has an unsupported shape or version`);
+  }
+
+  const files = (decoded as RegistrarManifest).files;
+
+  if (
+    files.some((entry) => typeof entry !== "string" || !validRegistrarPath(entry)) ||
+    new Set(files).size !== files.length ||
+    [...files].sort().some((entry, index) => entry !== files[index])
+  ) {
+    throw new Error(`registrar manifest ${path} must contain unique sorted safe sibling paths`);
+  }
+
+  return files;
+}
 const regenerabilityAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.regenerability"),
   label: "repeats graph and contract producers for deterministic regeneration",
@@ -60,24 +106,34 @@ const buildPipelineEmitAnchor = codeAnchor({
   label: "the build command owns the ordered flow through artifact emission",
   satisfies: ref("spec:extraction.build-pipeline"),
 });
-void determinismAnchor;
-void regenerabilityAnchor;
-void wholesaleViewBuildInvalidationAnchor;
-void buildPipelineEmitAnchor;
-
+const determinismAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.extraction-determinism"),
+  label: "repeats and byte-compares graph and contract generation under --check-clean",
+  satisfies: ref("spec:extraction.determinism"),
+});
 export function runBuild(
   parsed: BuildArgs,
   output: CliOutput,
   command: string,
   hooks: BuildHooks,
 ): BuildOutcome {
+  void [
+    determinismAnchor,
+    regenerabilityAnchor,
+    wholesaleViewBuildInvalidationAnchor,
+    buildPipelineEmitAnchor,
+  ];
   const { root: resolvedRoot, exclude, checkClean } = parsed;
   const extractionOptions = { root: resolvedRoot, exclude };
   const runExtract = hooks.extract ?? extract;
   const runGenerateContracts = hooks.generateContracts ?? generateContracts;
   const recoveryRm = hooks.rmSync ?? rmSync;
+  const write = hooks.writeFileSync ?? writeFileSync;
   const graphPath = join(resolvedRoot, "generated", "graph.json");
   const contractsPath = join(resolvedRoot, "generated", "contracts");
+  const registrarManifestPath = join(resolvedRoot, "generated", "registrars.json");
+  let priorRegistrarPaths: readonly string[] = [];
+  let nextRegistrarPaths: readonly string[] = [];
   const projectionPaths = [
     join(resolvedRoot, "generated", "design-review"),
     join(resolvedRoot, "generated", "census"),
@@ -87,8 +143,19 @@ export function runBuild(
 
   const failBuild = (message: string): BuildOutcome => {
     writeStderr(output, message);
+    const registrarArtifacts = [
+      ...new Set([...priorRegistrarPaths, ...nextRegistrarPaths]),
+    ].flatMap((path) => [join(resolvedRoot, path), `${join(resolvedRoot, path)}.tmp`]);
     removeArtifacts(
-      [graphPath, `${graphPath}.tmp`, contractsPath, `${contractsPath}.tmp`],
+      [
+        graphPath,
+        `${graphPath}.tmp`,
+        contractsPath,
+        `${contractsPath}.tmp`,
+        registrarManifestPath,
+        `${registrarManifestPath}.tmp`,
+        ...registrarArtifacts,
+      ],
       output,
       command,
       recoveryRm,
@@ -109,6 +176,7 @@ export function runBuild(
   }
 
   try {
+    priorRegistrarPaths = readRegistrarManifest(registrarManifestPath);
     const result = runExtract(extractionOptions);
     const findings = result.report.findings;
 
@@ -144,6 +212,11 @@ export function runBuild(
 
     const serialized = serializeGraph(result.graph);
     const contracts = runGenerateContracts(result.graph);
+    nextRegistrarPaths = [...contracts.registrars.keys()].sort();
+
+    if (nextRegistrarPaths.some((path) => !validRegistrarPath(path))) {
+      return failBuild(`sdp ${command}: generated an unsafe registrar sibling path.\n`);
+    }
 
     for (const finding of contracts.findings) {
       writeStderr(output, formatFinding(finding));
@@ -174,12 +247,25 @@ export function runBuild(
           `sdp ${command} --check-clean: two independent contract generations diverged — the build is not deterministic.\n`,
         );
       }
+
+      if (
+        priorRegistrarPaths.length !== nextRegistrarPaths.length ||
+        priorRegistrarPaths.some((path, index) => path !== nextRegistrarPaths[index]) ||
+        nextRegistrarPaths.some(
+          (path) =>
+            !existsSync(join(resolvedRoot, path)) ||
+            readFileSync(join(resolvedRoot, path), "utf8") !== contracts.registrars.get(path),
+        )
+      ) {
+        return failBuild(
+          `sdp ${command} --check-clean: generated registrar manifest or sibling bytes differ from the current projection.\n`,
+        );
+      }
     }
 
     const temporaryPath = `${graphPath}.tmp`;
     mkdirSync(join(resolvedRoot, "generated"), { recursive: true });
-    writeFileSync(temporaryPath, serialized, "utf8");
-    renameSync(temporaryPath, graphPath);
+    write(temporaryPath, serialized, "utf8");
 
     const contractsTemporaryPath = `${contractsPath}.tmp`;
     rmSync(contractsTemporaryPath, { recursive: true, force: true });
@@ -188,26 +274,46 @@ export function runBuild(
       mkdirSync(contractsTemporaryPath, { recursive: true });
 
       for (const [relativePath, content] of contracts.files) {
-        writeFileSync(join(contractsTemporaryPath, relativePath), content, "utf8");
+        const target = join(contractsTemporaryPath, relativePath);
+        mkdirSync(join(target, ".."), { recursive: true });
+        write(target, content, "utf8");
       }
-
-      rmSync(contractsPath, { recursive: true, force: true });
-      renameSync(contractsTemporaryPath, contractsPath);
-    } else {
-      rmSync(contractsPath, { recursive: true, force: true });
     }
+
+    for (const [relativePath, content] of contracts.registrars) {
+      const registrarPath = join(resolvedRoot, relativePath);
+      const registrarTemporaryPath = `${registrarPath}.tmp`;
+      mkdirSync(join(registrarPath, ".."), { recursive: true });
+      rmSync(registrarTemporaryPath, { force: true });
+      write(registrarTemporaryPath, content, "utf8");
+    }
+
+    const registrarManifestTemporaryPath = `${registrarManifestPath}.tmp`;
+    write(registrarManifestTemporaryPath, serializeRegistrarManifest(nextRegistrarPaths), "utf8");
+
+    // Every owed byte now exists in a temporary location. Publish, reconcile, and remove stale
+    // siblings; any later failure falls through failBuild, which removes the whole known set so
+    // partially current output cannot survive.
+    renameSync(temporaryPath, graphPath);
+    rmSync(contractsPath, { recursive: true, force: true });
+    if (contracts.files.size > 0) {
+      renameSync(contractsTemporaryPath, contractsPath);
+    }
+    for (const stalePath of priorRegistrarPaths.filter(
+      (path) => !nextRegistrarPaths.includes(path),
+    )) {
+      rmSync(join(resolvedRoot, stalePath), { force: true });
+    }
+    for (const relativePath of nextRegistrarPaths) {
+      renameSync(`${join(resolvedRoot, relativePath)}.tmp`, join(resolvedRoot, relativePath));
+    }
+    renameSync(registrarManifestTemporaryPath, registrarManifestPath);
 
     writeStdout(output, summary);
     writeStdout(output, `Wrote ${graphPath}\n`);
 
     if (contracts.files.size > 0) {
       writeStdout(output, `Wrote ${contractsPath} (${String(contracts.files.size)} modules)\n`);
-    }
-
-    for (const [relativePath, content] of contracts.registrars) {
-      const registrarPath = join(resolvedRoot, relativePath);
-      mkdirSync(join(registrarPath, ".."), { recursive: true });
-      writeFileSync(registrarPath, content, "utf8");
     }
 
     return { exitCode: 0, graph: result.graph };

@@ -14,6 +14,8 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+
 import {
   createReader,
   extract,
@@ -142,6 +144,13 @@ function foreignGraph(): GraphSchema {
     ],
   } as unknown as GraphSchema;
 }
+
+const censusTestAnchor = specTest({
+  id: testAnchorId("test:protocol.census-page"),
+  label: "verifies census taxonomy, findings, and structural-binding projection",
+  verifies: ref("spec:consumers.census-page"),
+});
+void censusTestAnchor;
 
 describe("the derived census/taxonomy projection", () => {
   it("renders the checkout fixture as the reviewed golden page", () => {
@@ -313,6 +322,51 @@ describe("the derived census/taxonomy projection", () => {
     expect(page).not.toContain("SCC 1");
   });
 
+  it("renders a dangling structural reference produced by the real extraction pipeline", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-census-dangling-"));
+
+    try {
+      mkdirSync(join(root, "specs"));
+      writeFileSync(
+        join(root, "specs", "target.sdp.md"),
+        `---
+id: spec:fixture.census-target
+kind: behavior
+altitude: feature
+readiness: idea
+relations: {}
+---
+# Census target
+
+## Intent
+- outcome: Keep dangling structure visible for diagnosis.
+`,
+        "utf8",
+      );
+      writeFileSync(
+        join(root, "anchor.ts"),
+        `import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
+export const anchor = codeAnchor({
+  id: codeAnchorId("impl:fixture.census-target"),
+  satisfies: ref("spec:fixture.census-target"),
+  uses: [codeAnchorId("api:fixture.missing")],
+});
+`,
+        "utf8",
+      );
+
+      const result = extract({ root });
+      const page = pageByPath(renderCensus(createReader(result.graph)), "index.md");
+
+      expect(result.report.findings).toEqual([]);
+      expect(page).toContain("### Dangling structural references");
+      expect(page).toContain("api:fixture.missing");
+      expect(page).toContain('via "uses" points to missing target "api:fixture.missing"');
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("renders foreign taxonomy values as deterministic unrecognized rows", () => {
     const page = pageByPath(
       renderCensus(
@@ -394,6 +448,38 @@ describe("the derived census/taxonomy projection", () => {
 });
 
 describe("sdp census publication", () => {
+  it("publishes diagnostic output for validation errors and returns nonzero", () => {
+    const root = materializeExampleCopy();
+
+    try {
+      const capture = createCaptureOutput();
+      const diagnosticPages = [{ path: "index.md", content: "# Diagnostic census\n" }];
+
+      expect(
+        runSdpCli(["census", root], capture.output, {
+          validateGraph: () => ({
+            validatorId: "graph/report",
+            findings: [
+              {
+                validatorId: "conformance/referential-integrity",
+                family: "conformance",
+                severity: "error",
+                message: "retained-graph validation failure",
+              },
+            ],
+          }),
+          renderCensus: () => diagnosticPages,
+        }),
+      ).toBe(1);
+      expect(capture.readStderr()).toContain("retained-graph validation failure");
+      expect(readFileSync(join(root, "generated", "census", "index.md"), "utf8")).toBe(
+        "# Diagnostic census\n",
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("creates the explicit generated/census surface by wholesale temporary-directory replacement", () => {
     const root = materializeExampleCopy();
 

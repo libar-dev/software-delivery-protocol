@@ -2,7 +2,7 @@
 id: spec:consumers.census-page
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.projections-model
 ---
@@ -22,6 +22,7 @@ relations:
 - rule: Publication uses the explicit `sdp census` surface and owns only `generated/census/`. It is not a child of or an extra write inside Design Review's transaction.
 - rule: A census run writes its complete page set to `generated/census.tmp/`, removes the prior census root, and renames the temporary root into place. Every build attempt invalidates both census roots before extraction, so failure leaves honest absence rather than stale output that looks current.
 - rule: `sdp census --check-clean` renders an independent twin, refuses divergent renders, and compares the current generated root with the new render. Missing or drifted output returns nonzero and is removed; clean output is replaced wholesale with byte-identical content.
+- rule: When extraction succeeds but graph validation reports errors, census still publishes the labelled diagnostic projection and returns the nonzero validation exit code.
 
 ## Example space
 ```gwt-vocabulary

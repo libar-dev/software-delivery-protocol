@@ -31,8 +31,10 @@ pointed at.
   verifier, while generated step and space contracts keep the test and oracle aligned with the
   authored example space.
 
-- **`generated/`** is untracked output from the walk: `graph.json`, contracts, and the Design
-  Review. It is regenerable and never edited by hand.
+- **`generated/`** is untracked output from the walk: `graph.json`, contracts, the registrar
+  manifest, and all four projections. It is regenerable and never edited by hand. The valid-cart
+  registrar beside the authored test is the one committed adopted generated sibling because the
+  authored test imports it; preflight byte-checks that exception against fresh generation.
 
 ## The walk
 
@@ -50,6 +52,7 @@ npm run build
 node ./dist/cli/sdp.js build    examples/checkout-v1   # extract, graph, and contracts
 node ./dist/cli/sdp.js validate examples/checkout-v1   # build, conformance, and honesty checks
 node ./dist/cli/sdp.js view     examples/checkout-v1   # validate and the Design Review
+npm run generate:example                              # publish all four projection roots
 ```
 
 `build` prints an extraction summary and writes the one graph. Its flat nodes and edges retain
@@ -61,7 +64,9 @@ their `claim`, `declared`, `anchored`, or `inferred`, without collapsing them:
 
 Beside the graph it writes three modules in `generated/contracts/`: a step contract for each
 `example` Spec and one parent space contract. They are graph projections, keyed by Spec ID, never
-authored modules.
+authored modules. It also writes `generated/registrars.json` and the valid-cart registrar beside
+the authored test. The import direction is deliberately authored → generated: the test imports and
+activates the registrar; generated code never imports authored semantics and never self-registers.
 
 The executable half runs off those contracts:
 
@@ -105,9 +110,10 @@ informative rather than a gate.
 
 - **relations and one-hop impact**: the relation list is the blast radius of changing this Spec.
 
-`--check-clean` runs the pipeline twice and rejects any divergent byte across the graph, contracts,
-and review. `npm run check:example` gates that determinism. Delete `generated/` and rerun to
-reproduce the same bytes.
+`--check-clean` rejects divergent graph, contract, registrar-manifest, registrar, or projection
+bytes. `npm run check:example` certifies Design Review, census, Mermaid, and Gherkin roots while
+preserving all four despite each public projection verb's build invalidation. Delete `generated/`
+and rerun `npm run generate:example` to reproduce the same bytes.
 
 ## Break it on purpose
 

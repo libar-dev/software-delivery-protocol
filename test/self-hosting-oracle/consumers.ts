@@ -7,7 +7,7 @@ export const consumersSpecs = [
     id: "spec:consumers.mermaid-view",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/mermaid-view.sdp.md",
     title: "Mermaid renders bounded one-hop and Pack diagrams without becoming a graph browser",
     narrative: null,
@@ -30,6 +30,7 @@ export const consumersSpecs = [
           "Publication owns only `generated/mermaid/` and uses the explicit `sdp mermaid` surface. It is not a child of or an extra write inside Design Review's transaction, and it shares no publication bus or hidden side channel with other projections.",
           "A Mermaid run writes its complete page set to `generated/mermaid.tmp/`, removes the prior Mermaid root, and renames the temporary root into place. Every build attempt invalidates both Mermaid roots before extraction, so failure leaves honest absence rather than stale output that looks current. A failed publish removes any live or temporary Mermaid root it cannot certify.",
           "`sdp mermaid --check-clean` renders an independent twin, refuses divergent renders, and compares the current generated root with the new render. Missing or drifted output returns nonzero and is removed; clean output is replaced wholesale with byte-identical content.",
+          "When extraction succeeds but graph validation reports errors, Mermaid still publishes the labelled diagnostic projection and returns the nonzero validation exit code.",
           "The projection adds no Mermaid-specific Reader accessors, maintains no projection-owned taxonomy list, and confers nothing back into the graph.",
         ],
         exampleSpace: {
@@ -60,7 +61,7 @@ export const consumersSpecs = [
     id: "spec:consumers.gherkin-view",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/gherkin-view.sdp.md",
     title: "Gherkin view renders any Spec as a disposable read shape",
     narrative: null,
@@ -79,6 +80,7 @@ export const consumersSpecs = [
           "Publication owns only `generated/gherkin/` and uses the explicit `sdp gherkin` surface. It is not a child of or an extra write inside Design Review's transaction, and it shares no publication bus or hidden side channel with other projections.",
           "A Gherkin-view run writes its complete page set to `generated/gherkin.tmp/`, removes the prior Gherkin-view root, and renames the temporary root into place. Every build attempt invalidates both Gherkin-view roots before extraction, so failure leaves honest absence rather than stale output that looks current. A failed publish removes any live or temporary Gherkin-view root it cannot certify.",
           "`sdp gherkin --check-clean` renders an independent twin, refuses divergent renders, and compares the current generated root with the new render. Missing or drifted output returns nonzero and is removed; clean output is replaced wholesale with byte-identical content.",
+          "When extraction succeeds but graph validation reports errors, the Gherkin view still publishes the labelled diagnostic projection and returns the nonzero validation exit code.",
           "The projection adds no Gherkin-specific Reader accessors and confers nothing back into the graph.",
         ],
         exampleSpace: {
@@ -123,6 +125,8 @@ export const consumersSpecs = [
             "The authored architectural read model of declared intent and anchored bindings, valued for editorial sparsity.",
           curation:
             "The deliberate difference between the sparse curated graph and the code-structure surface; it is not drift.",
+          "diagnostic publication posture":
+            "After extraction succeeds, a projection publishes its honestly labelled graph view even when validation reports errors, and returns the validation exit code so findings remain both visible and nonzero.",
           discipline:
             "A lens or projection that filters or groups Specs by kind or section; it is not a phase to pass through.",
           "measured curation":
@@ -243,7 +247,7 @@ export const consumersSpecs = [
     id: "spec:consumers.census-page",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/census-page.sdp.md",
     title: "Census renders the runtime taxonomy without becoming a registry",
     narrative: null,
@@ -264,6 +268,7 @@ export const consumersSpecs = [
           "Publication uses the explicit `sdp census` surface and owns only `generated/census/`. It is not a child of or an extra write inside Design Review's transaction.",
           "A census run writes its complete page set to `generated/census.tmp/`, removes the prior census root, and renames the temporary root into place. Every build attempt invalidates both census roots before extraction, so failure leaves honest absence rather than stale output that looks current.",
           "`sdp census --check-clean` renders an independent twin, refuses divergent renders, and compares the current generated root with the new render. Missing or drifted output returns nonzero and is removed; clean output is replaced wholesale with byte-identical content.",
+          "When extraction succeeds but graph validation reports errors, census still publishes the labelled diagnostic projection and returns the nonzero validation exit code.",
         ],
         exampleSpace: {
           given: [
@@ -281,7 +286,7 @@ export const consumersSpecs = [
         },
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.reader",

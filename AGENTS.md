@@ -107,7 +107,9 @@ pnpm --silent sdp:q 'return g.specs().filter((s) => s.statedReadiness === "ready
 pnpm --silent sdp:q 'return g.findByConcept("readiness floor").slice(0, 5).map((n) => n.id)'
 ```
 
-The full CLI surface is `sdp build · validate · view · import · q`. The eleven runnable recipe
+The full CLI surface is `sdp build · validate · view · census · mermaid · gherkin · import · q`.
+The four projection publishers remain independent public verbs; repository generation/check scripts
+certify all four roots through the private projection-suite driver. The eleven runnable recipe
 bodies live in `docs/agent-surface/recipes.md` (each executed as written by
 `test/recipes.test.ts`), and the repository-owned skills (`sdp-agent-surface` for reading,
 `sdp-authoring` for writing intent, `sdp-sessions` for advisory work-shape routing) are the

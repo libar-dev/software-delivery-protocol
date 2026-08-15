@@ -156,6 +156,7 @@ specs:
   - spec:decisions.sdp-gherkin-extension
   - spec:decisions.carrier-universality
   - spec:decisions.structural-anchor-semantics
+  - spec:decisions.adopted-registrars-committed
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model

@@ -95,7 +95,7 @@ export function runMermaid(parsed: BuildArgs, output: CliOutput, hooks: MermaidH
 
   const validate = runValidate(parsed, output, "mermaid", hooks);
 
-  if (validate.exitCode !== 0 || validate.graph === undefined) {
+  if (validate.graph === undefined) {
     removeArtifacts([mermaidPath, temporaryPath], output, "mermaid", recoveryRm);
     return validate.exitCode;
   }

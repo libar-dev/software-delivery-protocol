@@ -76,6 +76,10 @@ afterEach(() => {
 });
 
 describe("the self-hosting records gate", () => {
+  it("discovers plan 33 as the current primary execution authority", () => {
+    expect(currentPlan).toMatchObject({ number: 33, name: "33-plan-31-review-closure.md" });
+  });
+
   it("accepts the current record without requiring the historical ledger shape", () => {
     const result = runGuard(copyRecordTree());
 

@@ -14,6 +14,7 @@ relations:
 
 ## Model
 - **projection** — A pure, disposable, regenerable function of the graph that produces a consumer artifact without becoming a second source of truth.
+- **diagnostic publication posture** — After extraction succeeds, a projection publishes its honestly labelled graph view even when validation reports errors, and returns the validation exit code so findings remain both visible and nonzero.
 - **curated graph** — The authored architectural read model of declared intent and anchored bindings, valued for editorial sparsity.
 - **impact graph** — A separately derived code-structure surface for exhaustive usage and blast-radius questions, valued for exhaustiveness and never promoted into architecture.
 - **reader** — The thin typed front door that decodes graph joins and taxonomy once, returns composable data, and persists nothing.

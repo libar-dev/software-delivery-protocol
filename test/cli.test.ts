@@ -102,10 +102,11 @@ describe("sdp cli", () => {
     expect(capture.readStderr()).toBe("");
   });
 
-  it("builds the checkout-v1 example: writes graph.json + contracts (and no temp leftover) and exits 0", () => {
+  it("builds the checkout-v1 example: writes graph, contracts, and registrar manifest atomically", () => {
     const root = materializeExampleCopy();
 
     try {
+      expect(runSdpCli(["build", root], createCaptureOutput().output)).toBe(0);
       const capture = createCaptureOutput();
 
       const exitCode = runSdpCli(["build", root], capture.output);
@@ -116,12 +117,23 @@ describe("sdp cli", () => {
         "11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges",
       );
       expect(capture.readStdout()).toContain("(3 modules)");
-      expect(readdirSync(join(root, "generated")).sort()).toEqual(["contracts", "graph.json"]);
+      expect(readdirSync(join(root, "generated")).sort()).toEqual([
+        "contracts",
+        "graph.json",
+        "registrars.json",
+      ]);
       expect(readdirSync(join(root, "generated", "contracts")).sort()).toEqual([
         "orders.create-order.invalid-cart.contract.ts",
         "orders.create-order.space.ts",
         "orders.create-order.valid-cart.contract.ts",
       ]);
+      expect(JSON.parse(readFileSync(join(root, "generated", "registrars.json"), "utf8"))).toEqual({
+        version: 1,
+        files: ["test/orders/orders.create-order.valid-cart.test.generated.ts"],
+      });
+      expect(
+        existsSync(join(root, "test/orders/orders.create-order.valid-cart.test.generated.ts")),
+      ).toBe(true);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -152,6 +164,20 @@ describe("sdp cli", () => {
     const cwd = vi.spyOn(process, "cwd").mockReturnValue(root);
 
     try {
+      expect(
+        runSdpCli(
+          [
+            "view",
+            "--exclude",
+            "explorations",
+            "--exclude",
+            "examples",
+            "--exclude",
+            "test/fixtures/import/parity",
+          ],
+          createCaptureOutput().output,
+        ),
+      ).toBe(0);
       const capture = createCaptureOutput();
 
       const exitCode = runSdpCli(
@@ -301,6 +327,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
     const root = materializeExampleCopy();
 
     try {
+      expect(runSdpCli(["build", root], createCaptureOutput().output)).toBe(0);
       const capture = createCaptureOutput();
 
       const exitCode = runSdpCli(["build", root, "--check-clean"], capture.output);
@@ -680,6 +707,80 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
     }
   });
 
+  it("reconciles a registrar sibling that a later generation no longer owes", () => {
+    const root = materializeExampleCopy();
+
+    try {
+      expect(runSdpCli(["build", root], createCaptureOutput().output)).toBe(0);
+      const registrar = join(root, "test/orders/orders.create-order.valid-cart.test.generated.ts");
+      expect(existsSync(registrar)).toBe(true);
+
+      const capture = createCaptureOutput();
+      expect(
+        runSdpCli(["build", root], capture.output, {
+          generateContracts: (graph) => ({ ...generateContracts(graph), registrars: new Map() }),
+        }),
+      ).toBe(0);
+      expect(existsSync(registrar)).toBe(false);
+      expect(JSON.parse(readFileSync(join(root, "generated/registrars.json"), "utf8"))).toEqual({
+        version: 1,
+        files: [],
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("fails --check-clean on registrar-byte drift and removes the uncertified known set", () => {
+    const root = materializeExampleCopy();
+
+    try {
+      expect(runSdpCli(["build", root], createCaptureOutput().output)).toBe(0);
+      const registrar = join(root, "test/orders/orders.create-order.valid-cart.test.generated.ts");
+      writeFileSync(registrar, `${readFileSync(registrar, "utf8")}drift\n`, "utf8");
+      const capture = createCaptureOutput();
+
+      expect(runSdpCli(["build", root, "--check-clean"], capture.output)).toBe(1);
+      expect(capture.readStderr()).toContain(
+        "generated registrar manifest or sibling bytes differ from the current projection",
+      );
+      expect(existsSync(registrar)).toBe(false);
+      expect(existsSync(join(root, "generated/registrars.json"))).toBe(false);
+      expect(existsSync(join(root, "generated/graph.json"))).toBe(false);
+      expect(existsSync(join(root, "generated/contracts"))).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("removes graph, contracts, manifest, and registrar siblings after a staged write failure", () => {
+    const root = materializeExampleCopy();
+
+    try {
+      expect(runSdpCli(["build", root], createCaptureOutput().output)).toBe(0);
+      const registrar = join(root, "test/orders/orders.create-order.valid-cart.test.generated.ts");
+      const capture = createCaptureOutput();
+
+      expect(
+        runSdpCli(["build", root], capture.output, {
+          writeFileSync: (path, data, options) => {
+            if (String(path).endsWith(".test.generated.ts.tmp")) {
+              throw new Error("injected registrar write failure");
+            }
+            writeFileSync(path, data, options);
+          },
+        }),
+      ).toBe(1);
+      expect(capture.readStderr()).toContain("injected registrar write failure");
+      expect(existsSync(registrar)).toBe(false);
+      expect(existsSync(join(root, "generated/registrars.json"))).toBe(false);
+      expect(existsSync(join(root, "generated/graph.json"))).toBe(false);
+      expect(existsSync(join(root, "generated/contracts"))).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("fails clean when extraction throws past discovery: one line, exit 1, the stale graph.json removed", () => {
     const root = mkdtempSync(join(tmpdir(), "sdp-unreadable-root-"));
 
@@ -999,6 +1100,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
     const root = materializeExampleCopy();
 
     try {
+      expect(runSdpCli(["build", root], createCaptureOutput().output)).toBe(0);
       const capture = createCaptureOutput();
 
       const exitCode = runSdpCli(["validate", root, "--check-clean"], capture.output);
@@ -1071,6 +1173,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
     const root = materializeExampleCopy();
 
     try {
+      expect(runSdpCli(["view", root], createCaptureOutput().output)).toBe(0);
       const capture = createCaptureOutput();
 
       const exitCode = runSdpCli(["view", root, "--check-clean"], capture.output);
@@ -1089,6 +1192,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
         "contracts",
         "design-review",
         "graph.json",
+        "registrars.json",
       ]);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -1244,6 +1348,8 @@ it("clean-repo determinism: the full pipeline at a different absolute path is by
   const secondRoot = materializeExampleCopy();
 
   try {
+    expect(runSdpCli(["view", firstRoot], createCaptureOutput().output)).toBe(0);
+    expect(runSdpCli(["view", secondRoot], createCaptureOutput().output)).toBe(0);
     expect(runSdpCli(["view", firstRoot, "--check-clean"], createCaptureOutput().output)).toBe(0);
     expect(runSdpCli(["view", secondRoot, "--check-clean"], createCaptureOutput().output)).toBe(0);
     expect(readGeneratedTree(secondRoot)).toEqual(readGeneratedTree(firstRoot));

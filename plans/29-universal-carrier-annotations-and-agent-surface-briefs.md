@@ -14,8 +14,8 @@
 >
 > **Commissioned plans.** **Plan 30** (`pr-17-gherkin-carrier-hardening`, executed) settles the
 > canonical Gherkin suffix as `.sdp.gherkin` (MD-28), hardens the carrier pipeline, and repairs
-> known declined-Gherkin current-intent drift. Brief A consumes that settled suffix and remains
-> the open owner of kind coverage, rich content, and any default-carrier flip. **Plan 31**
+> known declined-Gherkin current-intent drift. Brief A consumed that settled suffix and plan 31
+> closed kind coverage, rich content, and the default-carrier question without reopening it. **Plan 31**
 > (`carrier-universality-runnable-modules-projections-structural-anchors`, executed) commissions
 > briefs A/B/C/D while deferring brief E.
 

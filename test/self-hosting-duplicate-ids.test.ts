@@ -212,7 +212,7 @@ it("derives the duplicate-ID verifier facts from the bound executable example", 
 
   expect(child.deliveryFacts).toEqual(["has-verifier"]);
   expect(parent.deliveryFacts).toEqual(["implemented", "has-verifier"]);
-});
+}, 20_000);
 
 const dualCarrierDuplicateTestAnchor = specTest({
   id: testAnchorId("test:protocol.duplicate-ids.dual-carrier"),

@@ -194,6 +194,36 @@ describe("the bounded Mermaid projection", () => {
     expect(edgeOverflow.get("spec/ok.md") ?? "").toContain("```mermaid");
   });
 
+  it("accepts diagrams exactly at the 64-node and 128-edge bounds", () => {
+    const nodeEdges = Array.from(
+      { length: MAX_MERMAID_NODES_PER_DIAGRAM - 1 },
+      (_, index): GraphEdge => ({
+        from: "spec:root",
+        type: "dependsOn",
+        to: `spec:neighbor-${String(index).padStart(3, "0")}`,
+        claim: "declared",
+      }),
+    );
+    const nodePages = rendered(graph([primitive("spec:root")], nodeEdges));
+    expect(nodePages.get("spec/root.md") ?? "").toContain("```mermaid");
+    expect(nodePages.get("spec/root.md") ?? "").not.toContain("MAX_MERMAID_NODES_PER_DIAGRAM");
+
+    const edgeEdges = Array.from(
+      { length: MAX_MERMAID_EDGES_PER_DIAGRAM },
+      (): GraphEdge => ({
+        from: "spec:root",
+        type: "dependsOn",
+        to: "spec:neighbor",
+        claim: "declared",
+      }),
+    );
+    const edgePages = rendered(
+      graph([primitive("spec:root"), primitive("spec:neighbor")], edgeEdges),
+    );
+    expect(edgePages.get("spec/root.md") ?? "").toContain("```mermaid");
+    expect(edgePages.get("spec/root.md") ?? "").not.toContain("MAX_MERMAID_EDGES_PER_DIAGRAM");
+  });
+
   it("withholds an oversized Pack and still renders every in-bound Spec diagram", () => {
     const members = Array.from({ length: MAX_MERMAID_NODES_PER_DIAGRAM }, (_, index) =>
       primitive(`spec:member-${String(index).padStart(3, "0")}`),

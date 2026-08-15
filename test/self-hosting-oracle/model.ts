@@ -310,7 +310,7 @@ export const modelSpecs = [
           "oracle anchor":
             "A binding that records an oracle's models target without deriving a delivery fact.",
           "structural anchor validity":
-            "A `memberOf` source is an `impl:` or `api:` CodeNode and its target is a `component:` CodeNode; every structural target exists, every edge is unique, each source has at most one component, and structural self-reference is refused. Any failure excludes the whole code anchor rather than preserving a partial declaration. Multi-node `uses` cycles remain data and produce no finding.",
+            "A `memberOf` source is an `impl:` or `api:` CodeNode and its target is a `component:` CodeNode; every structural target exists, every edge is unique, each source has at most one component, and structural self-reference is refused. A malformed or non-static structural field refuses the whole anchor at reification; a graph-validly reified edge that later fails referential or structural validation remains visible with its anchor and independent `satisfies` binding. Multi-node `uses` cycles remain data and produce no finding.",
           "structural non-conferral":
             "Structural edges carry no intent, delivery fact, readiness effect, or binding-to-Spec traversal; no `implements` field is admitted.",
           "test anchor":

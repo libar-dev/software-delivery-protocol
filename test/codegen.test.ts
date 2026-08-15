@@ -180,6 +180,58 @@ describe("the contracts codegen stage", () => {
     ]);
   });
 
+  it("refuses multiple distinct registrar paths for one example", () => {
+    const base = deriveFixtureGraph({ specs: [parent(VOCABULARY), child(BOUND_GWT)] });
+    const graph: GraphSchema = {
+      ...base,
+      nodes: [
+        ...base.nodes,
+        {
+          id: "test:orders.create-order.valid-cart.first",
+          nodeType: "Anchor",
+          claim: "anchored",
+          file: "test/orders/first.test.ts",
+          line: 1,
+        },
+        {
+          id: "test:orders.create-order.valid-cart.second",
+          nodeType: "Anchor",
+          claim: "anchored",
+          file: "test/orders/second.test.ts",
+          line: 1,
+        },
+      ],
+      edges: [
+        ...base.edges,
+        {
+          from: "test:orders.create-order.valid-cart.first",
+          type: "verifies",
+          to: "spec:orders.create-order.valid-cart",
+          claim: "anchored",
+        },
+        {
+          from: "test:orders.create-order.valid-cart.second",
+          type: "verifies",
+          to: "spec:orders.create-order.valid-cart",
+          claim: "anchored",
+        },
+      ],
+    };
+    const generated = generateContracts(graph);
+
+    expect(generated.registrars).toEqual(new Map());
+    const finding = generated.findings.find(
+      (entry) => entry.validatorId === contractsFindingIds.multipleRegistrarPaths,
+    );
+    expect(finding).toMatchObject({
+      validatorId: contractsFindingIds.multipleRegistrarPaths,
+      subjectId: "spec:orders.create-order.valid-cart",
+    });
+    expect(finding?.message).toContain(
+      '"test/orders/first.test.ts" · "test/orders/second.test.ts"',
+    );
+  });
+
   it("is deterministic: two generations over one graph are byte-identical", () => {
     const graph = deriveFixtureGraph({ specs: [parent(VOCABULARY), child(BOUND_GWT)] });
 

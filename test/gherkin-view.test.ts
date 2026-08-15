@@ -168,6 +168,36 @@ describe("the generated Gherkin-shaped READ projection", () => {
     expect(page).not.toContain(".sdp.gherkin");
   });
 
+  it("marks every populated section that a canonical Gherkin shape cannot represent", () => {
+    const pages = renderGherkinView(
+      readerStub([
+        specContext({
+          id: "spec:probe.lossy-sections",
+          sections: {
+            intent: { outcome: "Keep omissions visible." },
+            behavior: { rules: ["Rendered behavior"] },
+            constraints: [{ statement: "Remain bounded." }],
+            model: { terms: { Order: "A purchase." } },
+            design: { description: "A design note." },
+            decision: { decision: "A local choice." },
+            verification: { criteria: ["Markers remain visible."] },
+            ui: { description: "A UI note." },
+          },
+        }),
+      ]),
+    );
+    const page = pageByPath(pages, "spec/probe.lossy-sections.feature.md");
+
+    for (const section of ["constraints", "decision", "design", "model", "ui"]) {
+      expect(page).toContain(
+        `# LOSSY: ${section} section is present but cannot be represented honestly`,
+      );
+    }
+    expect(page).not.toContain("# LOSSY: behavior section");
+    expect(page).not.toContain("# LOSSY: intent section");
+    expect(page).not.toContain("# LOSSY: verification section");
+  });
+
   it("escapes hostile characters so they cannot close a fence or invent a DocString", () => {
     const hostile = 'quotes " ``` fence """ docstring\nnewline';
     const pages = renderGherkinView(
@@ -204,6 +234,35 @@ describe("the generated Gherkin-shaped READ projection", () => {
 });
 
 describe("sdp gherkin publication", () => {
+  it("publishes diagnostic output for validation errors and returns nonzero", () => {
+    const root = materializeExtractCorpus("anchored-binding");
+
+    try {
+      const capture = createCaptureOutput();
+
+      expect(
+        runSdpCli(["gherkin", root], capture.output, {
+          validateGraph: () => ({
+            validatorId: "graph/report",
+            findings: [
+              {
+                validatorId: "conformance/referential-integrity",
+                family: "conformance",
+                severity: "error",
+                message: "retained-graph validation failure",
+              },
+            ],
+          }),
+          renderGherkinView: () => pages,
+        }),
+      ).toBe(1);
+      expect(capture.readStderr()).toContain("retained-graph validation failure");
+      expect([...publishedTree(root).keys()].sort()).toEqual(["index.md", "spec/probe.feature.md"]);
+    } finally {
+      removeMaterializedCorpus(root);
+    }
+  });
+
   it("surfaces the explicit command in help and names Gherkin on bad input", () => {
     const capture = createCaptureOutput();
     expect(runSdpCli(["gherkin", "--bogus"], capture.output)).toBe(1);

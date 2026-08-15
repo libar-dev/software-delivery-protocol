@@ -266,6 +266,32 @@ function renderRefusedKindContent(
   return lines;
 }
 
+function isPopulatedSection(value: unknown): boolean {
+  if (Array.isArray(value)) return value.length > 0;
+  return typeof value === "object" && value !== null && Object.keys(value).length > 0;
+}
+
+function renderUnrepresentedSections(
+  sections: SpecSections | undefined,
+  kind: SpecKind,
+  refused: boolean,
+): readonly string[] {
+  if (sections === undefined) return [];
+
+  const represented = new Set<string>(["intent", "verification"]);
+  if (!refused || kind === "workflow" || kind === "contract") represented.add("behavior");
+  if (refused) {
+    represented.add("constraints");
+    represented.add("model");
+    represented.add("decision");
+  }
+
+  return Object.entries(sections)
+    .filter(([name, value]) => !represented.has(name) && isPopulatedSection(value))
+    .sort(([left], [right]) => compareCodeUnits(left, right))
+    .map(([name]) => commentary(`${name} section is present but cannot be represented honestly`));
+}
+
 function renderSpecPage(context: SpecContext): GherkinViewPage {
   const kind = context.specKind;
   const lieReason = (GHERKIN_KIND_LIE_REASONS as Readonly<Record<string, string>>)[kind];
@@ -288,6 +314,7 @@ function renderSpecPage(context: SpecContext): GherkinViewPage {
     ...(lieReason === undefined
       ? renderBehavior(context.sections?.behavior, kind)
       : renderRefusedKindContent(context.sections, kind)),
+    ...renderUnrepresentedSections(context.sections, kind, lieReason !== undefined),
     "",
     "_Generated from the one graph by `sdp gherkin` — read-only; regenerate to update._",
     "",

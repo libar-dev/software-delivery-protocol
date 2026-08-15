@@ -7,7 +7,6 @@ import type { GraphSchema } from "../graph/schema.js";
 import { codeAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { Finding, ValidationReport } from "../validate/contracts.js";
-import { validateStructuralAnchorEdges } from "../validate/validators.js";
 import { reifyAnchorSourceFile } from "./anchors.js";
 import type { ReifiedAnchor } from "./anchors.js";
 import { reifyGherkinCarrier, reifyTypeScriptCarrier } from "./carrier.js";
@@ -128,47 +127,6 @@ function findDuplicatedIds(
   }
 
   return duplicated;
-}
-
-/**
- * Structural references fail closed at the carrier boundary. Referential failures can cascade
- * when one refused code anchor was another anchor's target, so derive and withhold to a fixed
- * point; every excluded source keeps its deterministic validator findings in the extraction
- * report, while unrelated anchors survive.
- */
-function excludeInvalidStructuralAnchors(
-  specs: readonly ReifiedSpec[],
-  packs: readonly ReifiedPack[],
-  anchors: readonly ReifiedAnchor[],
-  findings: Finding[],
-): readonly ReifiedAnchor[] {
-  let remaining = [...anchors];
-
-  for (;;) {
-    const candidateGraph = deriveGraph(specs, packs, remaining);
-    const structuralFindings = validateStructuralAnchorEdges(candidateGraph);
-    const codeAnchorIds = new Set(
-      remaining.filter((entry) => entry.flavor === "code").map((entry) => entry.id),
-    );
-    const refusedIds = new Set(
-      structuralFindings.flatMap((finding) =>
-        finding.subjectId !== undefined && codeAnchorIds.has(finding.subjectId)
-          ? [finding.subjectId]
-          : [],
-      ),
-    );
-
-    if (refusedIds.size === 0) {
-      return remaining;
-    }
-
-    findings.push(
-      ...structuralFindings.filter(
-        (finding) => finding.subjectId !== undefined && refusedIds.has(finding.subjectId),
-      ),
-    );
-    remaining = remaining.filter((entry) => !refusedIds.has(entry.id));
-  }
 }
 
 interface ParsedSourceFile {
@@ -294,13 +252,11 @@ export function extract(options: ExtractOptions): ExtractionResult {
   const uniqueSpecs = specs.filter((entry) => !duplicated.has(entry.id));
   const uniquePacks = packs.filter((entry) => !duplicated.has(entry.id));
   const uniqueAnchors = anchors.filter((entry) => !duplicated.has(entry.id));
-  const structuralAnchors = excludeInvalidStructuralAnchors(
-    uniqueSpecs,
-    uniquePacks,
-    uniqueAnchors,
-    findings,
-  );
-  const graph = deriveGraph(uniqueSpecs, uniquePacks, structuralAnchors);
+  // Reification owns whole-anchor refusal for malformed/non-static envelope fields. Once an
+  // anchor is graph-validly reified, its structural edges remain visible even when graph-level
+  // validation rejects an endpoint or relationship: the unresolved edge is the sentinel, and
+  // structural metadata cannot erase the anchor's independent `satisfies` binding.
+  const graph = deriveGraph(uniqueSpecs, uniquePacks, uniqueAnchors);
 
   return {
     graph,

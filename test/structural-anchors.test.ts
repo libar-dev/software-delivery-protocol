@@ -176,12 +176,13 @@ export const gateway = codeAnchor({
     expect(findings[0]?.message).toContain("requires CodeNode");
   });
 
-  it("rejects a missing component target and excludes the whole anchor", () => {
+  it("reports a missing component target without stripping the anchor or its delivery fact", () => {
     const result = extract({
       root: fixtureRoot(oneAnchor('  component: componentAnchorId("component:fixture.missing"),')),
     });
 
-    expect(result.report.findings).toEqual([
+    expect(result.report.findings).toEqual([]);
+    expect(validateGraph(result.graph).findings).toEqual([
       expect.objectContaining({
         validatorId: graphValidatorIds.referentialIntegrity,
         severity: "error",
@@ -189,27 +190,38 @@ export const gateway = codeAnchor({
         relatedId: "component:fixture.missing",
       }),
     ]);
-    expect(result.graph.nodes.some((node) => node.id === "impl:fixture.subject")).toBe(false);
-    expect(result.graph.edges.some((edge) => edge.from === "impl:fixture.subject")).toBe(false);
+    expect(result.graph.nodes.some((node) => node.id === "impl:fixture.subject")).toBe(true);
+    expect(result.graph.edges).toEqual(
+      expect.arrayContaining([
+        {
+          from: "impl:fixture.subject",
+          type: "satisfies",
+          to: "spec:fixture.structural-target",
+          claim: "anchored",
+        },
+        {
+          from: "impl:fixture.subject",
+          type: "memberOf",
+          to: "component:fixture.missing",
+          claim: "anchored",
+        },
+      ]),
+    );
+    expect(
+      result.graph.nodes.find(
+        (node) => node.nodeType === "Primitive" && node.id === "spec:fixture.structural-target",
+      ),
+    ).toEqual(expect.objectContaining({ deliveryFacts: ["implemented"] }));
   });
 
-  it.each([
-    {
-      name: "an invalid namespace",
-      fields: '  uses: [codeAnchorId("test:fixture.not-code")],',
-      validatorId: extractFindingIds.invalidId,
-    },
-    {
-      name: "a missing CodeNode",
-      fields: '  uses: [codeAnchorId("api:fixture.missing")],',
-      validatorId: graphValidatorIds.referentialIntegrity,
-    },
-  ])("rejects $name uses endpoint and excludes the whole anchor", ({ fields, validatorId }) => {
-    const result = extract({ root: fixtureRoot(oneAnchor(fields)) });
+  it("rejects an invalid uses namespace as a malformed anchor field", () => {
+    const result = extract({
+      root: fixtureRoot(oneAnchor('  uses: [codeAnchorId("test:fixture.not-code")],')),
+    });
 
     expect(result.report.findings).toEqual([
       expect.objectContaining({
-        validatorId,
+        validatorId: extractFindingIds.invalidId,
         severity: "error",
         subjectId: "impl:fixture.subject",
       }),
@@ -218,20 +230,45 @@ export const gateway = codeAnchor({
     expect(result.graph.edges.some((edge) => edge.from === "impl:fixture.subject")).toBe(false);
   });
 
-  it("rejects self-use and excludes the whole anchor", () => {
+  it("reports a missing uses target while retaining the graph-validly reified anchor", () => {
+    const result = extract({
+      root: fixtureRoot(oneAnchor('  uses: [codeAnchorId("api:fixture.missing")],')),
+    });
+
+    expect(result.report.findings).toEqual([]);
+    expect(validateGraph(result.graph).findings).toEqual([
+      expect.objectContaining({
+        validatorId: graphValidatorIds.referentialIntegrity,
+        severity: "error",
+        subjectId: "impl:fixture.subject",
+        relatedId: "api:fixture.missing",
+      }),
+    ]);
+    expect(result.graph.nodes.some((node) => node.id === "impl:fixture.subject")).toBe(true);
+    expect(result.graph.edges).toContainEqual({
+      from: "impl:fixture.subject",
+      type: "uses",
+      to: "api:fixture.missing",
+      claim: "anchored",
+    });
+  });
+
+  it("reports self-use at graph validation without excluding the anchor", () => {
     const result = extract({
       root: fixtureRoot(oneAnchor('  uses: [codeAnchorId("impl:fixture.subject")],')),
     });
 
-    expect(result.report.findings).toEqual([
+    expect(result.report.findings).toEqual([]);
+    const findings = validateGraph(result.graph).findings;
+    expect(findings).toEqual([
       expect.objectContaining({
         validatorId: graphValidatorIds.structuralAnchors,
         severity: "error",
         subjectId: "impl:fixture.subject",
       }),
     ]);
-    expect(result.report.findings[0]?.message).toContain("self-reference");
-    expect(result.graph.nodes.some((node) => node.id === "impl:fixture.subject")).toBe(false);
+    expect(findings[0]?.message).toContain("self-reference");
+    expect(result.graph.nodes.some((node) => node.id === "impl:fixture.subject")).toBe(true);
   });
 
   it("rejects an empty uses array and excludes the whole anchor", () => {

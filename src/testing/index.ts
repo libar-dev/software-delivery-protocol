@@ -1,7 +1,6 @@
 import { isDeepStrictEqual } from "node:util";
 
 import { bindExample } from "../adapters/vitest.js";
-import { renderContractStep } from "../runner/index.js";
 import type { ContractStep, ExampleContract, ParamShape, StepBindings } from "../runner/index.js";
 
 export interface RunnableOutcome {
@@ -20,9 +19,11 @@ export interface RunnableExampleWorld<W, C, O extends RunnableOutcome> {
   readonly spec: string;
   readonly world: W;
   readonly point: Partial<C>;
-  readonly oracle: O;
   readonly adapters: RunnableExampleAdapters<W, C, O>;
   readonly availableThen: readonly string[];
+  readonly missingConditions: readonly string[];
+  oracle?: O;
+  invoked: boolean;
   compared: boolean;
   observed?: O;
 }
@@ -34,22 +35,16 @@ export function createRunnableExample<W, C, O extends RunnableOutcome>(
   adapters: RunnableExampleAdapters<W, C, O>,
   thenSteps: readonly ContractStep<string, ParamShape>[],
 ): RunnableExampleWorld<W, C, O> {
-  const oracle = adapters.expected(point);
   const missing = requiredConditions.filter((name) => point[name] === undefined);
-
-  if (missing.length > 0) {
-    throw new Error(
-      `scenario ${spec}: oracle comparison refused for incomplete point; missing Conditions: ${missing.map((name) => JSON.stringify(name)).join(", ")}`,
-    );
-  }
 
   return {
     spec,
     world: adapters.createWorld(point),
     point,
-    oracle,
     adapters,
     availableThen: thenSteps.map((step) => step.text),
+    missingConditions: missing,
+    invoked: false,
     compared: false,
   };
 }
@@ -57,32 +52,49 @@ export function createRunnableExample<W, C, O extends RunnableOutcome>(
 export async function invokeRunnableExample<W, C, O extends RunnableOutcome>(
   execution: RunnableExampleWorld<W, C, O>,
 ): Promise<void> {
+  if (execution.invoked) {
+    return;
+  }
+
+  execution.invoked = true;
   await execution.adapters.invoke(execution.world, execution.point);
+}
+
+function oracleForComparison<W, C, O extends RunnableOutcome>(
+  execution: RunnableExampleWorld<W, C, O>,
+): O {
+  if (execution.missingConditions.length > 0) {
+    throw new Error(
+      `scenario ${execution.spec}: oracle comparison refused for incomplete point; missing Conditions: ${execution.missingConditions.map((name) => JSON.stringify(name)).join(", ")}`,
+    );
+  }
+
+  const oracle = execution.oracle ?? execution.adapters.expected(execution.point);
+  execution.oracle = oracle;
+  return oracle;
 }
 
 export function compareContractOutcome<W, C, O extends RunnableOutcome>(
   execution: RunnableExampleWorld<W, C, O>,
   step: ContractStep<string, ParamShape>,
 ): void {
-  if (step.text !== execution.oracle.kind) {
+  const oracle = oracleForComparison(execution);
+
+  if (step.text !== oracle.kind) {
     return;
   }
 
-  const { kind: _oracleKind, ...oraclePayload } = execution.oracle;
+  const { kind: _oracleKind, ...oraclePayload } = oracle;
   void _oracleKind;
 
   assertDeepEqual(
     step.params,
     oraclePayload,
-    `at step: ${renderContractStep(step)}\nSpec Then parameters do not match the oracle payload`,
+    "Spec Then parameters do not match the oracle payload",
   );
 
   const observed = execution.adapters.observe(execution.world);
-  assertDeepEqual(
-    execution.oracle,
-    observed,
-    `at step: ${renderContractStep(step)}\nobserved outcome does not match the oracle outcome`,
-  );
+  assertDeepEqual(oracle, observed, "observed outcome does not match the oracle outcome");
   execution.observed = observed;
   execution.compared = true;
 }
@@ -90,12 +102,12 @@ export function compareContractOutcome<W, C, O extends RunnableOutcome>(
 export async function completeRunnableExample<W, C, O extends RunnableOutcome>(
   execution: RunnableExampleWorld<W, C, O>,
 ): Promise<void> {
+  const oracle = oracleForComparison(execution);
+
   if (!execution.compared) {
-    const cause = new Error(
-      `oracle kind ${JSON.stringify(execution.oracle.kind)} has no matching Then`,
-    );
+    const cause = new Error(`oracle kind ${JSON.stringify(oracle.kind)} has no matching Then`);
     throw new Error(
-      `scenario ${execution.spec}: oracle selected ${JSON.stringify(execution.oracle.kind)}; available Then skeletons: ${execution.availableThen.map((step) => JSON.stringify(step)).join(", ")}`,
+      `scenario ${execution.spec}: oracle selected ${JSON.stringify(oracle.kind)}; available Then skeletons: ${execution.availableThen.map((step) => JSON.stringify(step)).join(", ")}`,
       { cause },
     );
   }

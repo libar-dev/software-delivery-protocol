@@ -23,6 +23,9 @@ pnpm --silent sdp:q 'return g.specs().length'
 If the active pnpm binary cannot run this package-lock-based checkout, the equivalent source
 wrapper is `npm run --silent sdp:q -- '<body>'`. Never fall through to a global `sdp`.
 
+When a session needs human-readable output, the public publishers are `view`, `census`, `mermaid`,
+and `gherkin`; the source checkout's generate/check scripts certify the four roots together.
+
 An adopter selects its root and exclusions through its installed package runner:
 
 ```sh

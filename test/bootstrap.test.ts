@@ -64,10 +64,16 @@ describe("bootstrap package surface", () => {
     expect(rootExport.types).toBe("./dist/index.d.ts");
     expect(rootExport.import).toBe("./dist/index.js");
     expect(packageJson.scripts["generate:self-hosting"]).toBe(
-      "node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --exclude test/fixtures/import/parity",
+      "node ./projection-suite.mjs . --exclude explorations --exclude examples --exclude test/fixtures/import/parity",
     );
     expect(packageJson.scripts["check:self-hosting"]).toBe(
-      "node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --check-clean",
+      "node ./projection-suite.mjs . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --check-clean",
+    );
+    expect(packageJson.scripts["generate:example"]).toBe(
+      "node ./projection-suite.mjs examples/checkout-v1",
+    );
+    expect(packageJson.scripts["check:example"]).toBe(
+      "node ./projection-suite.mjs examples/checkout-v1 --check-clean",
     );
     expect(packageJson.scripts["check:self-hosting-gates"]).toBe(
       "node ./check-self-hosting-gates.mjs",
@@ -79,6 +85,12 @@ describe("bootstrap package surface", () => {
     expect(packageJson.scripts.check).toBe(
       "npm run check:temporal && npm run lint && npm run format:check && npm run build && npm run generate:self-hosting && npm run generate:example && npm run typecheck && npm run typecheck:examples && npm test && npm run check:self-hosting-gates && npm run check:self-hosting && npm run check:example && npm run preflight",
     );
+
+    const projectionSuitePath = fileURLToPath(new URL("../projection-suite.mjs", import.meta.url));
+    const projectionSuite = await readFile(projectionSuitePath, "utf8");
+    for (const command of ["view", "census", "mermaid", "gherkin"]) {
+      expect(projectionSuite).toContain(`["${command}",`);
+    }
 
     const pnpmWorkspacePath = fileURLToPath(new URL("../pnpm-workspace.yaml", import.meta.url));
     expect(await readFile(pnpmWorkspacePath, "utf8")).toContain("verifyDepsBeforeRun: false");

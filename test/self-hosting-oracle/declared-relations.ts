@@ -642,4 +642,6 @@ export const expectedDeclaredRelations = [
   ["spec:decisions.sdp-gherkin-extension", "dependsOn", "spec:decisions.sdp-ts-extension"],
   ["spec:decisions.carrier-universality", "refines", "spec:decisions.gherkin-carrier-option"],
   ["spec:decisions.structural-anchor-semantics", "refines", "spec:model.anchors"],
+  ["spec:decisions.adopted-registrars-committed", "refines", "spec:extraction.runnable-modules"],
+  ["spec:extraction.runnable-modules", "decidedBy", "spec:decisions.adopted-registrars-committed"],
 ] as const;
