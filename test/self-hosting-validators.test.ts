@@ -1,6 +1,7 @@
 import { expect } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
 import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
 
 import { orphanSignalContract } from "../generated/contracts/validation.warn-level-signals.orphan-signal.contract.js";
@@ -11,9 +12,10 @@ import { danglingTargetContract } from "../generated/contracts/validation.refere
 import { didYouMeanContract } from "../generated/contracts/validation.referential-integrity.did-you-mean.contract.js";
 import { blockingOpenQuestionContract } from "../generated/contracts/validation.readiness-floor.blocking-open-question.contract.js";
 import { unrelatedScopedSpecContract } from "../generated/contracts/validation.readiness-floor.unrelated-scoped-spec.contract.js";
-import { constraintsAloneContract } from "../generated/contracts/validation.kind-evidence.constraints-alone.contract.js";
-import { emptyPromotedChildContract } from "../generated/contracts/validation.kind-evidence.empty-promoted-child.contract.js";
-import { untargetedConstraintContract } from "../generated/contracts/validation.kind-evidence.untargeted-constraint.contract.js";
+import type {
+  KindEvidenceConditions,
+  KindEvidenceOutcome,
+} from "../generated/contracts/validation.kind-evidence.space.js";
 import { collapsedEdgeClaimContract } from "../generated/contracts/validation.claim-separation.collapsed-edge-claim.contract.js";
 import { unratifiedDescriptorContract } from "../generated/contracts/validation.claim-separation.unratified-descriptor.contract.js";
 import { incoherentAggregateContract } from "../generated/contracts/validation.pack-coherence.incoherent-aggregate.contract.js";
@@ -33,6 +35,9 @@ import type {
   SpecReadiness,
   ValidationReport,
 } from "../src/index.js";
+import { registerConstraintsAlone } from "./validation.kind-evidence.constraints-alone.test.generated.js";
+import { registerEmptyPromotedChild } from "./validation.kind-evidence.empty-promoted-child.test.generated.js";
+import { registerUntargetedConstraint } from "./validation.kind-evidence.untargeted-constraint.test.generated.js";
 
 /**
  * The bound executable points of the validation family: each `bindExample` below runs one
@@ -232,65 +237,117 @@ function evidencelessProbe(id: string, kind: SpecKind, readiness: SpecReadiness)
   };
 }
 
-const kindEvidenceBindings = {
-  "the graph holds a {kind} spec {specId} stating readiness {readiness}": (
-    world: ValidatorWorld,
-    params: {
-      readonly kind: "behavior" | "constraint";
-      readonly specId: string;
-      readonly readiness: "scoped" | "defined";
-    },
-  ) => {
-    world.subjectId = params.specId;
-    world.nodes.push(evidencelessProbe(params.specId, params.kind, params.readiness));
-    // The relation clause is not the law under test, so the probe always declares one.
-    declareDecisionRelation(world);
-  },
-  "its only evidence is {evidence}": (
-    world: ValidatorWorld,
-    params: {
-      readonly evidence:
-        | "a constraints entry carrying a target"
-        | "a constraints entry with no target"
-        | "an empty promoted rule child";
-    },
-  ) => {
-    if (params.evidence === "an empty promoted rule child") {
-      // Promotion moves content out, so a stub child carrying none of its own kind's evidence is
-      // not a promotion: it resolves, it refines, and it still confers nothing.
-      const childId = `${world.subjectId}.promoted-stub`;
+function placeKindEvidence(
+  world: ValidatorWorld,
+  evidence: KindEvidenceConditions["evidence"],
+): void {
+  if (evidence === "an empty promoted rule child") {
+    // Promotion moves content out, so a stub child carrying none of its own kind's evidence is
+    // not a promotion: it resolves, it refines, and it still confers nothing.
+    const childId = `${world.subjectId}.promoted-stub`;
 
-      world.nodes.push(evidencelessProbe(childId, "rule", "idea"));
-      world.edges.push({
-        from: childId,
-        type: "refines",
-        to: world.subjectId,
-        claim: "declared",
-      });
-      return;
-    }
+    world.nodes.push(evidencelessProbe(childId, "rule", "idea"));
+    world.edges.push({
+      from: childId,
+      type: "refines",
+      to: world.subjectId,
+      claim: "declared",
+    });
+    return;
+  }
 
-    reviseSubject(
-      world,
-      (node) => ({
-        ...node,
-        sections: {
-          ...node.sections,
-          constraints: [
-            params.evidence === "a constraints entry carrying a target"
-              ? { statement: "The probe answers within its budget.", target: "p95 < 200ms" }
-              : { statement: "The probe answers quickly enough." },
-          ],
-        },
-      }),
-      "The spec step must run before its evidence is placed.",
-    );
-  },
-  "the graph is validated": validate,
-  "the report names {findingId} at severity {severity}": namesFinding,
-  "the finding names the unmet floor clause {clauseId}": namesUnmetClause,
-  "the report holds {errorCount} errors": holdsErrorCount,
-};
+  reviseSubject(
+    world,
+    (node) => ({
+      ...node,
+      sections: {
+        ...node.sections,
+        constraints: [
+          evidence === "a constraints entry carrying a target"
+            ? { statement: "The probe answers within its budget.", target: "p95 < 200ms" }
+            : { statement: "The probe answers quickly enough." },
+        ],
+      },
+    }),
+    "The spec step must run before its evidence is placed.",
+  );
+}
+
+function createKindEvidenceWorld(point: Partial<KindEvidenceConditions>): ValidatorWorld {
+  const world = validatorWorld();
+  const { kind, specId, readiness, evidence } = point;
+
+  if (
+    kind === undefined ||
+    specId === undefined ||
+    readiness === undefined ||
+    evidence === undefined
+  ) {
+    return world;
+  }
+
+  world.subjectId = specId;
+  world.nodes.push(evidencelessProbe(specId, kind, readiness));
+  // The relation clause is not the law under test, so the probe always declares one.
+  declareDecisionRelation(world);
+  placeKindEvidence(world, evidence);
+  return world;
+}
+
+function invokeKindEvidenceValidate(world: ValidatorWorld): void {
+  if (world.subjectId === "") {
+    return;
+  }
+
+  validate(world);
+}
+
+function observeNamedFinding(world: ValidatorWorld): KindEvidenceOutcome {
+  const errors = reportOf(world).findings.filter((finding) => finding.severity === "error");
+  const finding = errors[0];
+
+  if (finding === undefined || errors.length !== 1) {
+    throw new Error("The validation report must hold exactly one error before it is observed.");
+  }
+
+  return {
+    kind: "the report names {findingId} at severity {severity}",
+    findingId: finding.validatorId,
+    severity: "error",
+  };
+}
+
+function expectedNamedFinding(
+  point: Partial<KindEvidenceConditions>,
+  findingId: string,
+  severity: "warning" | "error",
+): KindEvidenceOutcome {
+  if (
+    point.kind === undefined ||
+    point.specId === undefined ||
+    point.readiness === undefined ||
+    point.evidence === undefined
+  ) {
+    return unspecified;
+  }
+
+  return {
+    kind: "the report names {findingId} at severity {severity}",
+    findingId,
+    severity,
+  };
+}
+
+function assertKindEvidenceFloor(
+  world: ValidatorWorld,
+  clauseId: string,
+  errorCount: number,
+): void {
+  // Second and third Thens (`the finding names the unmet floor clause`, `the report holds
+  // {errorCount} errors`) are different kinds than the oracle's named-finding Then.
+  namesUnmetClause(world, { clauseId });
+  holdsErrorCount(world, { errorCount });
+}
 
 const constraintsAloneTestAnchor = specTest({
   id: testAnchorId("test:protocol.kind-evidence.constraints-alone"),
@@ -298,8 +355,17 @@ const constraintsAloneTestAnchor = specTest({
   verifies: ref("spec:validation.kind-evidence.constraints-alone"),
 });
 void constraintsAloneTestAnchor;
+// bindExample(constraintsAloneContract
 
-bindExample(constraintsAloneContract, validatorWorld, kindEvidenceBindings);
+registerConstraintsAlone({
+  createWorld: createKindEvidenceWorld,
+  invoke: invokeKindEvidenceValidate,
+  observe: observeNamedFinding,
+  expected: (point) => expectedNamedFinding(point, "honesty/readiness-floor", "error"),
+  assertions: (world) => {
+    assertKindEvidenceFloor(world, "kind-evidence-complete", 1);
+  },
+});
 
 const untargetedConstraintTestAnchor = specTest({
   id: testAnchorId("test:protocol.kind-evidence.untargeted-constraint"),
@@ -307,8 +373,17 @@ const untargetedConstraintTestAnchor = specTest({
   verifies: ref("spec:validation.kind-evidence.untargeted-constraint"),
 });
 void untargetedConstraintTestAnchor;
+// bindExample(untargetedConstraintContract
 
-bindExample(untargetedConstraintContract, validatorWorld, kindEvidenceBindings);
+registerUntargetedConstraint({
+  createWorld: createKindEvidenceWorld,
+  invoke: invokeKindEvidenceValidate,
+  observe: observeNamedFinding,
+  expected: (point) => expectedNamedFinding(point, "honesty/readiness-floor", "error"),
+  assertions: (world) => {
+    assertKindEvidenceFloor(world, "kind-evidence-complete", 1);
+  },
+});
 
 const emptyPromotedChildTestAnchor = specTest({
   id: testAnchorId("test:protocol.kind-evidence.empty-promoted-child"),
@@ -316,8 +391,17 @@ const emptyPromotedChildTestAnchor = specTest({
   verifies: ref("spec:validation.kind-evidence.empty-promoted-child"),
 });
 void emptyPromotedChildTestAnchor;
+// bindExample(emptyPromotedChildContract
 
-bindExample(emptyPromotedChildContract, validatorWorld, kindEvidenceBindings);
+registerEmptyPromotedChild({
+  createWorld: createKindEvidenceWorld,
+  invoke: invokeKindEvidenceValidate,
+  observe: observeNamedFinding,
+  expected: (point) => expectedNamedFinding(point, "honesty/readiness-floor", "error"),
+  assertions: (world) => {
+    assertKindEvidenceFloor(world, "kind-evidence-present", 1);
+  },
+});
 
 /* ----- spec:validation.warn-level-signals ----- */
 
