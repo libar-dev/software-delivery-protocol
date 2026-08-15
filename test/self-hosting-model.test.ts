@@ -6,14 +6,19 @@ import { fileURLToPath } from "node:url";
 import { afterAll, expect } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
 import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
 
 import { lookalikeRefusalContract } from "../generated/contracts/model.anchors.lookalike-refusal.contract.js";
 import { physicalIdentityContract } from "../generated/contracts/model.anchors.physical-identity.contract.js";
-import { malformedRefusalContract } from "../generated/contracts/model.stable-ids.malformed-refusal.contract.js";
-import { namespacedRoundTripContract } from "../generated/contracts/model.stable-ids.namespaced-round-trip.contract.js";
+import type {
+  StableIdsConditions,
+  StableIdsOutcome,
+} from "../generated/contracts/model.stable-ids.space.js";
 import { extract, formatId, parseId } from "../src/index.js";
 import type { ExtractionResult, IdParts } from "../src/index.js";
+import { registerMalformedRefusal } from "./model.stable-ids.malformed-refusal.test.generated.js";
+import { registerNamespacedRoundTrip } from "./model.stable-ids.namespaced-round-trip.test.generated.js";
 
 /**
  * The bound executable points of the ID grammar: two representative shapes — the fullest
@@ -32,53 +37,40 @@ interface IdentifierWorld {
   refusal: Error | undefined;
 }
 
-function identifierWorld(): IdentifierWorld {
-  return { identifier: "", parsed: undefined, refusal: undefined };
+function createIdentifierWorld(point: Partial<StableIdsConditions>): IdentifierWorld {
+  return { identifier: point.identifier ?? "", parsed: undefined, refusal: undefined };
 }
 
-const stableIdBindings = {
-  "the authored identifier {identifier}": (
-    world: IdentifierWorld,
-    params: { readonly identifier: string },
-  ) => {
-    world.identifier = params.identifier;
-  },
-  "the identifier is parsed": (world: IdentifierWorld) => {
-    try {
-      world.parsed = parseId(world.identifier);
-    } catch (error) {
-      world.refusal = error instanceof Error ? error : new Error(String(error));
-    }
-  },
-  "parsing {outcome}": (
-    world: IdentifierWorld,
-    params: { readonly outcome: "resolves" | "is refused" },
-  ) => {
-    expect(world.parsed !== undefined).toBe(params.outcome === "resolves");
-    expect(world.refusal !== undefined).toBe(params.outcome === "is refused");
-  },
-  "reformatting the parsed parts restores {restored}": (
-    world: IdentifierWorld,
-    params: { readonly restored: string },
-  ) => {
-    if (world.parsed === undefined) {
-      throw new Error("The parse step must resolve before the parts are reformatted.");
-    }
+function invokeIdentifierParse(world: IdentifierWorld): void {
+  try {
+    world.parsed = parseId(world.identifier);
+  } catch (error) {
+    world.refusal = error instanceof Error ? error : new Error(String(error));
+  }
+}
 
-    expect(formatId(world.parsed)).toBe(params.restored);
-  },
-  "the refusal names the reason {reason}": (
-    world: IdentifierWorld,
-    params: { readonly reason: string },
-  ) => {
-    const message = world.refusal?.message ?? "the identifier refusal is missing";
+function observeIdentifierParse(world: IdentifierWorld): StableIdsOutcome {
+  if (world.refusal !== undefined) {
+    return { kind: "parsing {outcome}", outcome: "is refused" };
+  }
 
-    // The refusal names the offending value beside its reason: the ID is the durable join key, so
-    // a diagnostic that hid it would leave the broken binding unfindable.
-    expect(message).toContain(params.reason);
-    expect(message).toContain(`"${world.identifier}"`);
-  },
-};
+  if (world.parsed === undefined) {
+    throw new Error("The parse step must produce a resolution or a refusal.");
+  }
+
+  return { kind: "parsing {outcome}", outcome: "resolves" };
+}
+
+function expectedParsingOutcome(
+  point: Partial<StableIdsConditions>,
+  outcome: "resolves" | "is refused",
+): StableIdsOutcome {
+  if (point.identifier === undefined) {
+    return unspecified;
+  }
+
+  return { kind: "parsing {outcome}", outcome };
+}
 
 const namespacedRoundTripTestAnchor = specTest({
   id: testAnchorId("test:protocol.stable-ids.namespaced-round-trip"),
@@ -86,8 +78,22 @@ const namespacedRoundTripTestAnchor = specTest({
   verifies: ref("spec:model.stable-ids.namespaced-round-trip"),
 });
 void namespacedRoundTripTestAnchor;
+// bindExample(namespacedRoundTripContract
 
-bindExample(namespacedRoundTripContract, identifierWorld, stableIdBindings);
+registerNamespacedRoundTrip({
+  createWorld: createIdentifierWorld,
+  invoke: invokeIdentifierParse,
+  observe: observeIdentifierParse,
+  expected: (point) => expectedParsingOutcome(point, "resolves"),
+  // Second Then (`reformatting…`) is a different kind than the oracle's `parsing {outcome}`.
+  assertions: (world) => {
+    if (world.parsed === undefined) {
+      throw new Error("The parse step must resolve before the parts are reformatted.");
+    }
+
+    expect(formatId(world.parsed)).toBe("spec:orders.create-order#valid-cart");
+  },
+});
 
 const malformedRefusalTestAnchor = specTest({
   id: testAnchorId("test:protocol.stable-ids.malformed-refusal"),
@@ -95,8 +101,23 @@ const malformedRefusalTestAnchor = specTest({
   verifies: ref("spec:model.stable-ids.malformed-refusal"),
 });
 void malformedRefusalTestAnchor;
+// bindExample(malformedRefusalContract
 
-bindExample(malformedRefusalContract, identifierWorld, stableIdBindings);
+registerMalformedRefusal({
+  createWorld: createIdentifierWorld,
+  invoke: invokeIdentifierParse,
+  observe: observeIdentifierParse,
+  expected: (point) => expectedParsingOutcome(point, "is refused"),
+  // Second Then (`the refusal names the reason`) is a different kind than the oracle's.
+  assertions: (world) => {
+    const message = world.refusal?.message ?? "the identifier refusal is missing";
+
+    // The refusal names the offending value beside its reason: the ID is the durable join key, so
+    // a diagnostic that hid it would leave the broken binding unfindable.
+    expect(message).toContain("namespace must be lowercase");
+    expect(message).toContain(`"${world.identifier}"`);
+  },
+});
 
 /* ----- spec:model.anchors ----- */
 
