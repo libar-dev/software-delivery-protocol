@@ -1,0 +1,104 @@
+wave1-commit evidence
+=====================
+worktree: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+branch: arc/keystone-engines
+date: 2026-08-14
+
+PREFLIGHT
+---------
+HEAD (required): 29b11c068c03ea20201eefdd390900ae93659c08
+HEAD (observed): 29b11c068c03ea20201eefdd390900ae93659c08
+status: ## arc/keystone-engines...origin/main [ahead 1]
+staged_paths: 39
+unstaged_paths: 0
+index_hash (required): ae8c61d4665d3c3b8ffe8a8379f6a2657d534c50
+index_hash (observed via git write-tree): ae8c61d4665d3c3b8ffe8a8379f6a2657d534c50
+git diff --cached --check: exit 0
+rejected_paths (.omo/ generated/ evidence/ log/ scratch): none
+staged manifest (39):
+.prettierignore
+check-prose-schema.mjs
+docs/concept/06-consumers-and-projections.md
+specs/consumers/census-page.sdp.md
+specs/extraction/runnable-modules.sdp.md
+specs/extraction/schema-versioning.declared-version.sdp.md
+specs/model/anchors.sdp.md
+specs/self-hosting.pack.sdp.md
+src/cli/build-command.ts
+src/cli/census-command.ts
+src/cli/sdp.ts
+src/extract/anchors.ts
+src/extract/derive.ts
+src/extract/index.ts
+src/extract/reify.ts
+src/graph/schema.ts
+src/ids.ts
+src/index.ts
+src/model/anchors.ts
+src/projections/census.ts
+src/reader/reader.ts
+src/validate/validators.ts
+test/census.test.ts
+test/design-review.test.ts
+test/fixtures/checkout-v1/expected-census/index.md
+test/fixtures/checkout-v1/expected-design-review/index.md
+test/fixtures/checkout-v1/expected-graph.json
+test/graph-schema.test.ts
+test/ids.test.ts
+test/ids.typecheck.ts
+test/package-smoke.test.ts
+test/self-hosting-graph.test.ts
+test/self-hosting-oracle/anchors.ts
+test/self-hosting-oracle/consumers.ts
+test/self-hosting-oracle/declared-relations.ts
+test/self-hosting-oracle/extraction.ts
+test/self-hosting-oracle/model.ts
+test/self-hosting-oracle/pack-members.ts
+test/structural-anchors.test.ts
+
+COMMIT
+------
+command:
+  git commit \
+    -m "feat(engines): integrate Wave 1 runnable-modules, structural anchors, and census" \
+    -m "Land the Todo 4 interface freeze, Todo 5 structural component/uses edges at schema 0.5.0, and Todo 6 census projection with shared Pack/oracle/package-smoke absorption as one green self-hosting boundary."
+amended: no
+pushed: no
+subject: feat(engines): integrate Wave 1 runnable-modules, structural anchors, and census
+body: Land the Todo 4 interface freeze, Todo 5 structural component/uses edges at schema 0.5.0, and Todo 6 census projection with shared Pack/oracle/package-smoke absorption as one green self-hosting boundary.
+commit_sha_full: 7e22c6316460affe542acffc02cb23aebd70cdcf
+commit_oneline: 7e22c63 feat(engines): integrate Wave 1 runnable-modules, structural anchors, and census
+files_changed: 39
+insertions: 1875
+deletions: 58
+
+POST-COMMIT
+-----------
+npm run check: exit 0
+summary:
+  - check:temporal exit 0
+  - lint exit 0
+  - format:check: All matched files use Prettier code style!
+  - build: ESM/CJS/DTS success
+  - generate:self-hosting: 153 specs · 1 packs · 139 anchors → 293 nodes · 555 edges (0 errors, 0 warnings)
+  - generate:example: 11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
+  - typecheck exit 0
+  - typecheck:examples exit 0
+  - test: 54 files passed; 719 passed | 1 skipped; cli suite 59 passed
+  - check:self-hosting-gates exit 0
+  - check:self-hosting: 0 errors · 0 warnings
+  - check:example: 0 errors · 1 warnings (pre-existing invalid-cart verifies-linkage)
+  - preflight: clean
+git status --short --branch: ## arc/keystone-engines...origin/main [ahead 2]
+staged empty: yes
+unstaged empty: yes
+working tree clean: yes
+ahead of origin/main: 2
+push performed: no
+
+CLEANUP / NO-PUSH RECEIPT
+-------------------------
+No product edits.
+No format/stage/unstage/amend/push.
+No .omo/evidence/generated ignored files touched in the product worktree commit boundary.
+Evidence written only to parent evidence path as authorized.

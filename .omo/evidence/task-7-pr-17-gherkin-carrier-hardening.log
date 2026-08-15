@@ -1,0 +1,56 @@
+Task 7 evidence: pr-17-gherkin-carrier-hardening
+Date: 2026-08-14
+Worktree: /home/darkomijic/dev-libar/software-delivery-protocol
+Commit: none
+
+Scope implemented
+- Reserved-head matching now uses a bounded, frozen candidate list and Levenshtein distance 1 for decoration tags.
+- Nearest-head matching requires one unique winner.
+- Diagnostics distinguish the authored head from the reserved head.
+- Forbidden kind/Pack/supersedes metadata near-misses are refused without a `did you mean` recommendation.
+- Distance-2 decorations such as `@kindle.ci` and `@paced` remain graph-inert.
+- Ordinary and `@example-space` Scenarios with zero steps are refused at the Scenario line, after outline rejection.
+- Features with no Scenarios and ordinary Scenarios with one Given remain accepted.
+- Description classification and the Todo 6 physical-line source index were preserved.
+- The identity parser and exact fact/claim/lifecycle refusals were not broadened.
+
+Baseline mutation evidence (old implementation)
+Command: npx vitest run test/gherkin-reifier.test.ts
+Exit: 1
+Result: 7 failures, 46 passes. The failing regressions covered distance-2 decoration false positives, illegal short-head recommendations, both empty Scenario paths, and Todo 8 collector/cap behavior.
+Full baseline output was captured by the tool at /tmp/pi-bash-8eb1b55b41c3cee9.log during this task.
+
+Post-fix focused verification
+Command: npx vitest run test/gherkin-reifier.test.ts
+Exit: 1 (accepted Todo 8 remainder)
+Result: 51 passes, 2 failures.
+Remaining failures only:
+1. collects four independent semantic findings in physical source order
+2. caps semantic findings at one hundred with a final suppression finding
+All Task 7 decoration, empty-scenario, zero-Scenario Feature, one-Given, narrative-classification, identity/refusal, and physical-line tests passed.
+Output: /tmp/task7-vitest.log
+
+Command: npx vitest run test/gherkin-parity.test.ts
+Exit: 1 (accepted Todo 8 remainder)
+Result: 4 passes, 1 failure.
+Remaining failure only: excludes a semantically invalid carrier whole while a healthy sibling survives (expects Todo 8's four-finding collector; current parser returns the first finding).
+
+Static verification
+Command: npm run typecheck
+Exit: 0
+Result: tsc --noEmit -p tsconfig.json passed.
+
+Command: npm run lint
+Exit: 0
+Result: eslint . passed.
+
+Command: npx prettier --check src/extract/gherkin.ts
+Exit: 0
+Result: file matches Prettier style.
+
+Command: git diff --check -- src/extract/gherkin.ts
+Exit: 0
+Result: no whitespace errors.
+
+Diagnostics note
+The requested LSP diagnostic could not run because typescript-language-server is not installed on the workstation. TypeScript compiler and ESLint verification both passed; no dependency was installed.

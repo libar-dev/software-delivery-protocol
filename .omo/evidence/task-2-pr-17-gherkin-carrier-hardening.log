@@ -1,0 +1,267 @@
+=== Task 2: Lock suffix discovery with failing tests ===
+Date: 2026-08-14T02:23:19+02:00
+Branch: feature/design-review
+Worktree: /home/darkomijic/dev-libar/software-delivery-protocol
+
+=== Intent ===
+Add failing cross-module tests proving .sdp.gherkin is discovered/routed/copied
+while ordinary .feature is ignored (empty-corpus diagnostic + finding.file suffix predicate).
+No discovery implementation changes in this todo.
+
+=== Files touched ===
+ M test/cli.test.ts
+ M test/extract.test.ts
+?? test/fixtures/gherkin/suffix-discovery/
+
+=== Focused suite (expected: new suffix tests FAIL against bare-.feature behavior) ===
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/darkomijic/dev-libar/software-delivery-protocol[39m
+
+ [31m❯[39m test/extract.test.ts [2m([22m[2m63 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 534[2mms[22m[39m
+     [32m✓[39m invalid-non-static-id: envelope hard error; the static sibling still extracts (L3)[32m 62[2mms[22m[39m
+     [32m✓[39m invalid-malformed-id: a static id failing the id grammar is an invalid-id hard error[32m 6[2mms[22m[39m
+     [32m✓[39m invalid-non-static-section: that one property drops with a warning; the spec survives[32m 7[2mms[22m[39m
+     [32m✓[39m invalid-hand-authored-satisfies-edge: a raw relations[] entry is an envelope error[32m 6[2mms[22m[39m
+     [32m✓[39m duplicate-id: TypeScript and Markdown sites are excluded before graph derivation; the healthy sibling remains[32m 23[2mms[22m[39m
+     [32m✓[39m dangling-relation: the edge is emitted, not dropped; referential integrity flags it[32m 7[2mms[22m[39m
+     [32m✓[39m unrecognized-statement: the stray statement warns and is ignored; the spec extracts[32m 7[2mms[22m[39m
+     [32m✓[39m invalid-reserved-property: a hand-authored delivery fact at the top level is an envelope hard error; the sibling survives (L3)[32m 7[2mms[22m[39m
+     [32m✓[39m unrecognized-property: a typoed section name drops with a warning; the spec survives without it[32m 4[2mms[22m[39m
+     [32m✓[39m unrecognized in-section property: warns before canonical serialization drops it[32m 4[2mms[22m[39m
+     [32m✓[39m reserved model term: refuses a term key that collides with the section description field[32m 3[2mms[22m[39m
+     [32m✓[39m reserved camel delivery fact: rejects hasVerifier at the TS carrier envelope (R-6 parity)[32m 2[2mms[22m[39m
+     [32m✓[39m retains a nested __proto__ model term as own string content[32m 2[2mms[22m[39m
+     [32m✓[39m retains an object-valued nested __proto__ term without prototype pollution[32m 3[2mms[22m[39m
+     [32m✓[39m retains a Markdown __proto__ Model term through extract and serializeGraph[32m 5[2mms[22m[39m
+     [32m✓[39m id-shaped-string-content: a raw id-shaped string in section content is prose — kept, edge-free, finding-free[32m 3[2mms[22m[39m
+     [32m✓[39m invalid-parse-error: a parse-broken file is excluded whole, loudly, on both surfaces; siblings survive (L3)[32m 8[2mms[22m[39m
+     [32m✓[39m invalid-missing-envelope-fields: every absent required field reports in one pass — spec, pack, and anchor carriers[32m 8[2mms[22m[39m
+     [32m✓[39m invalid-duplicate-property: a property authored twice in one carrier fails the envelope loudly; the last value never wins[32m 7[2mms[22m[39m
+     [32m✓[39m ref-in-section-content: an id builder in section content drops the owning property (MD-10)[32m 5[2mms[22m[39m
+     [32m✓[39m invalid-wrong-builder: an id wrapping the wrong builder is an invalid-id hard error — the builder's contract, restated statically[32m 5[2mms[22m[39m
+     [32m✓[39m opaque-envelope-entries: a shorthand or spread entry never double-reports its fields as missing[32m 6[2mms[22m[39m
+     [32m✓[39m duplicate-section-property: a repeated name inside section content drops with a warning; the first authored value survives[32m 4[2mms[22m[39m
+     [32m✓[39m routes the five defused target documents through real discovery with their exact nodes[32m 14[2mms[22m[39m
+     [32m✓[39m derives semantically equivalent accepted subsets through extract and serializeGraph[32m 7[2mms[22m[39m
+     [32m✓[39m excludes a malformed Markdown carrier while retaining its healthy TypeScript sibling[32m 4[2mms[22m[39m
+     [32m✓[39m reports same-ID TypeScript and Markdown carriers at both sites without deriving either[32m 5[2mms[22m[39m
+     [32m✓[39m anchored-binding: the full ladder — anchored edges and delivery facts per `spec:extraction.derive-graph`[32m 10[2mms[22m[39m
+     [32m✓[39m unenabled-verifier: a declared verifies without a test binding confers nothing (MD-7) and is surfaced[32m 8[2mms[22m[39m
+     [32m✓[39m invalid-non-static-anchor: envelope hard error; the static sibling still extracts (L3)[32m 7[2mms[22m[39m
+     [32m✓[39m invalid-anchor-namespace: a code anchor with a test: id is an invalid-id hard error[32m 3[2mms[22m[39m
+     [32m✓[39m duplicate-anchor-id: both sites reported (L2); neither enters the graph; the counts record both[32m 21[2mms[22m[39m
+     [32m✓[39m dangling-anchor: the edge is emitted, no fact is conferred, and referential integrity flags it[32m 4[2mms[22m[39m
+     [32m✓[39m misplaced-anchor: authoring calls outside their surface warn and are not extracted[32m 5[2mms[22m[39m
+     [32m✓[39m non-static-anchor-label: the label drops with a warning; the binding survives whole[32m 4[2mms[22m[39m
+     [32m✓[39m namespace-import: carriers authored as `ns.builder(…)` extract on both surfaces — the full anchored ladder[32m 10[2mms[22m[39m
+     [32m✓[39m namespace-misplaced-authoring: the misplaced-authoring sweep sees the property-access spelling (L2)[32m 3[2mms[22m[39m
+     [32m✓[39m dot-directory-skipped: discovery never descends into a dot-directory, so a stray copy raises no duplicate-id noise[32m 6[2mms[22m[39m
+     [32m✓[39m shadowed-namespace-local: a parameter or local shadowing the import is somebody else's value — no spurious misplaced-authoring[32m 8[2mms[22m[39m
+     [32m✓[39m default-import: a binding authored through a default-import local extracts — it never silently falls out (L2)[32m 3[2mms[22m[39m
+     [32m✓[39m consumer exclusions are case-sensitive root-relative prefixes applied before either surface classifies[32m 18[2mms[22m[39m
+     [32m✓[39m rejects the invalid consumer exclusion ""[32m 2[2mms[22m[39m
+     [32m✓[39m rejects the invalid consumer exclusion "."[32m 1[2mms[22m[39m
+     [32m✓[39m rejects the invalid consumer exclusion "./explorations"[32m 1[2mms[22m[39m
+     [32m✓[39m rejects the invalid consumer exclusion "explorations/"[32m 1[2mms[22m[39m
+     [32m✓[39m rejects the invalid consumer exclusion "/explorations"[32m 1[2mms[22m[39m
+     [32m✓[39m rejects the invalid consumer exclusion "C:/work/specs"[32m 1[2mms[22m[39m
+     [32m✓[39m rejects the invalid consumer exclusion "../x"[32m 1[2mms[22m[39m
+     [32m✓[39m rejects the invalid consumer exclusion "a/../b"[32m 1[2mms[22m[39m
+     [32m✓[39m rejects the invalid consumer exclusion "a//b"[32m 1[2mms[22m[39m
+     [32m✓[39m rejects the invalid consumer exclusion "a\\b"[32m 1[2mms[22m[39m
+     [32m✓[39m invalid-ready-with-unresolved-dependency: the conformance error and the floor failure both fire — two families, two statements[32m 5[2mms[22m[39m
+     [32m✓[39m invalid-ready-with-target-below-defined: every reference resolves; the one error is the floor clause[32m 7[2mms[22m[39m
+     [32m✓[39m invalid-hand-authored-delivery-fact-in-section: the smuggled key fails over the graph end-to-end (MD-16)[32m 4[2mms[22m[39m
+     [32m✓[39m invalid-duplicate-pack-member: a duplicated manifest entry is a pack-coherence error[32m 7[2mms[22m[39m
+     [32m✓[39m invalid-non-model-modelref: a resolving but wrong-kind modelRef is a pack-coherence error[32m 12[2mms[22m[39m
+     [32m✓[39m non-example-verifier: a declared verifies from a non-example kind is surfaced, never gated[32m 5[2mms[22m[39m
+     [32m✓[39m orphan-spec: no relations and nothing pointing at it — a warning, never a gate[32m 3[2mms[22m[39m
+     [32m✓[39m ready-without-verifier: the cleared floor plus the surfaced gap — informative only[32m 7[2mms[22m[39m
+     [32m✓[39m two independent extractions of the example serialize byte-identically[32m 106[2mms[22m[39m
+     [32m✓[39m materializes a defused .sdp.gherkin carrier and leaves ordinary .feature beside it on disk[32m 1[2mms[22m[39m
+[31m     [31m×[31m discovers and routes only .sdp.gherkin; an ordinary Cucumber Feature never enters specFiles or poisons extraction[39m[32m 19[2mms[22m[39m
+[31m     [31m×[31m treats a root of only ordinary .feature files as an empty authored model at the extractor[39m[32m 4[2mms[22m[39m
+ [31m❯[39m test/cli.test.ts [2m([22m[2m59 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[33m 4502[2mms[22m[39m
+     [32m✓[39m prints the exact help text for no args[32m 4[2mms[22m[39m
+     [32m✓[39m prints the exact help text for --help[32m 1[2mms[22m[39m
+     [32m✓[39m builds the checkout-v1 example: writes graph.json + contracts (and no temp leftover) and exits 0[32m 175[2mms[22m[39m
+     [32m✓[39m invalidates an existing Design Review when build replaces its source graph[32m 114[2mms[22m[39m
+     [33m[2m✓[22m[39m views the self-hosting corpus from the default repository root [33m 3588[2mms[22m[39m
+     [32m✓[39m renders contracts warnings through the one formatter and counts them in the summary[32m 12[2mms[22m[39m
+     [32m✓[39m withholds case-colliding contract paths with a warning: graph kept, nothing gates[32m 8[2mms[22m[39m
+     [32m✓[39m passes --check-clean on the example (determinism self-check through the CLI)[32m 49[2mms[22m[39m
+     [32m✓[39m end-to-end determinism self-check: delete generated/, rebuild, byte-identical[32m 49[2mms[22m[39m
+     [32m✓[39m fails clean on a root that is not a directory: one line, exit 1, never a stack trace[32m 1[2mms[22m[39m
+     [32m✓[39m rejects an unknown option: one line, exit 1, nothing runs[32m 0[2mms[22m[39m
+     [32m✓[39m accepts repeatable --exclude paths for build[32m 7[2mms[22m[39m
+     [32m✓[39m accepts repeatable --exclude paths for validate[32m 8[2mms[22m[39m
+     [32m✓[39m accepts repeatable --exclude paths for view[32m 8[2mms[22m[39m
+     [32m✓[39m uses the identical normalized exclusions in both --check-clean extractions[32m 13[2mms[22m[39m
+     [32m✓[39m refuses invalid --exclude path "" before build writes[32m 2[2mms[22m[39m
+     [32m✓[39m refuses invalid --exclude path "." before build writes[32m 1[2mms[22m[39m
+     [32m✓[39m refuses invalid --exclude path "./explorations" before build writes[32m 1[2mms[22m[39m
+     [32m✓[39m refuses invalid --exclude path "explorations/" before build writes[32m 1[2mms[22m[39m
+     [32m✓[39m refuses invalid --exclude path "/explorations" before build writes[32m 1[2mms[22m[39m
+     [32m✓[39m refuses invalid --exclude path "../x" before build writes[32m 1[2mms[22m[39m
+     [32m✓[39m refuses invalid --exclude path "a/../b" before build writes[32m 1[2mms[22m[39m
+     [32m✓[39m refuses invalid --exclude path "a//b" before build writes[32m 1[2mms[22m[39m
+     [32m✓[39m refuses invalid --exclude path "a\\b" before build writes[32m 1[2mms[22m[39m
+     [32m✓[39m refuses a missing --exclude operand before build writes[32m 1[2mms[22m[39m
+     [32m✓[39m names a flag supplied as an --exclude operand before build writes[32m 1[2mms[22m[39m
+     [32m✓[39m documents repeatable --exclude paths in help[32m 0[2mms[22m[39m
+     [32m✓[39m rejects a second root argument: one line, exit 1, nothing runs[32m 0[2mms[22m[39m
+     [32m✓[39m notes an empty authored model: zero spec files still builds and exits 0, but says where it looked[32m 1[2mms[22m[39m
+     [32m✓[39m renders a finding's location exactly once, from the structured fields: file:line — [severity][32m 6[2mms[22m[39m
+     [32m✓[39m renders a Gherkin parser failure through the public CLI[32m 3[2mms[22m[39m
+     [32m✓[39m exits 1, writes nothing, and removes a stale graph.json on a hard-error corpus[32m 5[2mms[22m[39m
+     [32m✓[39m fails --check-clean on a diverging second extraction: exit 1, the stale graph.json removed[32m 14[2mms[22m[39m
+     [32m✓[39m fails --check-clean on a diverging second contract generation: exit 1, no artifact survives[32m 41[2mms[22m[39m
+     [32m✓[39m owns the contracts tree wholesale: with nothing to generate, a stale contracts dir is removed[32m 6[2mms[22m[39m
+     [32m✓[39m fails clean when extraction throws past discovery: one line, exit 1, the stale graph.json removed[32m 1[2mms[22m[39m
+     [32m✓[39m fails clean when generated exists as a file: one line each for build and view, never a stack trace[32m 13[2mms[22m[39m
+     [32m✓[39m names the survivor when a recovery-path removal is denied: a stale artifact never silently reads as current[32m 1[2mms[22m[39m
+     [32m✓[39m stops a build when an existing Design Review cannot be invalidated[32m 2[2mms[22m[39m
+     [32m✓[39m fails clean when the checks throw: one line, exit 1, the built graph.json stays[32m 7[2mms[22m[39m
+     [32m✓[39m suppresses the empty-model note when spec files were found but none reified — a failed file is not an absent one[32m 4[2mms[22m[39m
+[31m     [31m×[31m treats a root of only ordinary .feature files as an empty authored model, not a missing-identity error[39m[32m 14[2mms[22m[39m
+[31m     [31m×[31m suppresses the empty-model note when a failed .sdp.gherkin finding.file matches the carrier suffix predicate[39m[32m 3[2mms[22m[39m
+[31m     [31m×[31m builds a mixed root with one .sdp.gherkin carrier and ignores the ordinary .feature sibling[39m[32m 2[2mms[22m[39m
+     [32m✓[39m removes the temp twin on a failed build and a failed view — no partial .tmp artifact survives[32m 33[2mms[22m[39m
+     [32m✓[39m recognizes the published-bin path: a .bin-style symlink resolves to the entry module[32m 1[2mms[22m[39m
+     [32m✓[39m exits 0 quietly on a stdout EPIPE and stays fatal for any other stream error[32m 2[2mms[22m[39m
+     [32m✓[39m validates the example: exit 0, the artifact written, and exactly the one surfaced warning[32m 39[2mms[22m[39m
+     [32m✓[39m gates on the checks, not the build: a clean-building broken link validates to exit 1 with the artifact kept[32m 6[2mms[22m[39m
+     [32m✓[39m short-circuits the checks on extraction hard errors: validate keeps build semantics[32m 4[2mms[22m[39m
+     [32m✓[39m prints help plus an unknown-command error[32m 0[2mms[22m[39m
+     [32m✓[39m views the example: validate + the Design Review written, with the one standing warning[32m 46[2mms[22m[39m
+     [32m✓[39m owns the view directory wholesale: a stale page does not survive a re-render[32m 23[2mms[22m[39m
+     [32m✓[39m regenerates the view byte-identically: delete generated/, re-view, same bytes[32m 49[2mms[22m[39m
+     [32m✓[39m writes the view even when checks fail: findings render in it, the exit code is validate's[32m 3[2mms[22m[39m
+     [32m✓[39m keeps build semantics on extraction hard errors: no graph, no view, stale view removed[32m 4[2mms[22m[39m
+     [32m✓[39m fails view --check-clean on a diverging second render: exit 1, the stale view removed[32m 13[2mms[22m[39m
+     [32m✓[39m fails clean when the render throws: one line on stderr, exit 1, the stale view removed[32m 6[2mms[22m[39m
+   [32m✓[39m clean-repo determinism: the full pipeline at a different absolute path is byte-identical[32m 98[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 5 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/cli.test.ts[2m > [22msdp cli[2m > [22mtreats a root of only ordinary .feature files as an empty authored model, not a missing-identity error
+[31m[1mAssertionError[22m: expected 1 to be +0 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 0[39m
+[31m+ 1[39m
+
+[36m [2m❯[22m test/cli.test.ts:[2m859:24[22m[39m
+    [90m857|[39m
+    [90m858|[39m       // Ordinary Cucumber is not a carrier: empty model, exit 0 — nev…
+    [90m859|[39m       [34mexpect[39m(exitCode)[33m.[39m[34mtoBe[39m([34m0[39m)[33m;[39m
+    [90m   |[39m                        [31m^[39m
+    [90m860|[39m       expect(capture.readStdout()).toContain("0 specs · 0 packs · 0 an…
+    [90m861|[39m       [34mexpect[39m(capture[33m.[39m[34mreadStderr[39m())[33m.[39m[34mtoContain[39m(
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/cli.test.ts[2m > [22msdp cli[2m > [22msuppresses the empty-model note when a failed .sdp.gherkin finding.file matches the carrier suffix predicate
+[31m[1mAssertionError[22m: expected +0 to be 1 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 0[39m
+
+[36m [2m❯[22m test/cli.test.ts:[2m886:24[22m[39m
+    [90m884|[39m
+    [90m885|[39m       // Code-level finding.file suffix predicate: a discovered-but-re…
+    [90m886|[39m       [34mexpect[39m(exitCode)[33m.[39m[34mtoBe[39m([34m1[39m)[33m;[39m
+    [90m   |[39m                        [31m^[39m
+    [90m887|[39m       [34mexpect[39m(capture[33m.[39m[34mreadStderr[39m())[33m.[39m[34mtoMatch[39m(
+    [90m888|[39m         /broken\.sdp\.gherkin:\d+ — \[error\] extract\/gherkin-grammar…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/cli.test.ts[2m > [22msdp cli[2m > [22mbuilds a mixed root with one .sdp.gherkin carrier and ignores the ordinary .feature sibling
+[31m[1mAssertionError[22m: expected 1 to be +0 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 0[39m
+[31m+ 1[39m
+
+[36m [2m❯[22m test/cli.test.ts:[2m907:24[22m[39m
+    [90m905|[39m       const exitCode = runSdpCli(["build", corpusRoot], capture.output…
+    [90m906|[39m
+    [90m907|[39m       [34mexpect[39m(exitCode)[33m.[39m[34mtoBe[39m([34m0[39m)[33m;[39m
+    [90m   |[39m                        [31m^[39m
+    [90m908|[39m       expect(capture.readStdout()).toContain("1 specs · 0 packs · 0 an…
+    [90m909|[39m       [34mexpect[39m(capture[33m.[39m[34mreadStderr[39m())[33m.[39mnot[33m.[39m[34mtoContain[39m([32m"missing @spec"[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/extract.test.ts[2m > [22mGherkin carrier suffix discovery[2m > [22mdiscovers and routes only .sdp.gherkin; an ordinary Cucumber Feature never enters specFiles or poisons extraction
+[31m[1mAssertionError[22m: expected [ 'cucumber-login.feature' ] to deeply equal [ 'carrier.sdp.gherkin' ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[32m-   "carrier.sdp.gherkin",[39m
+[31m+   "cucumber-login.feature",[39m
+[2m  ][22m
+
+[36m [2m❯[22m test/extract.test.ts:[2m1279:67[22m[39m
+    [90m1277|[39m
+    [90m1278|[39m     [35mconst[39m discovered [33m=[39m [34mdiscoverFiles[39m(root)[33m;[39m
+    [90m1279|[39m     expect(discovered.specFiles.map((file) => file.relativePath)).toEq…
+    [90m   |[39m                                                                   [31m^[39m
+    [90m1280|[39m     [34mexpect[39m(
+    [90m1281|[39m       discovered.specFiles.some((file) => file.relativePath.endsWith("…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/extract.test.ts[2m > [22mGherkin carrier suffix discovery[2m > [22mtreats a root of only ordinary .feature files as an empty authored model at the extractor
+[31m[1mAssertionError[22m: expected [ { …(2) } ] to deeply equal [][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [][39m
+[31m+ [[39m
+[31m+   {[39m
+[31m+     "absolutePath": "/tmp/sdp-feature-only-Ce06Q9/cucumber-only.feature",[39m
+[31m+     "relativePath": "cucumber-only.feature",[39m
+[31m+   },[39m
+[31m+ ][39m
+
+[36m [2m❯[22m test/extract.test.ts:[2m1320:34[22m[39m
+    [90m1318|[39m
+    [90m1319|[39m     [35mconst[39m discovered [33m=[39m [34mdiscoverFiles[39m(root)[33m;[39m
+    [90m1320|[39m     [34mexpect[39m(discovered[33m.[39mspecFiles)[33m.[39m[34mtoEqual[39m([])[33m;[39m
+    [90m   |[39m                                  [31m^[39m
+    [90m1321|[39m
+    [90m1322|[39m     [35mconst[39m result [33m=[39m [34mextract[39m({ root })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m5 failed[39m[22m[2m | [22m[1m[32m117 passed[39m[22m[90m (122)[39m
+[2m   Start at [22m 02:23:13
+[2m   Duration [22m 6.01s[2m (transform 1.19s, setup 0ms, import 2.48s, tests 5.04s, environment 0ms)[22m
+
+
+=== Failure analysis (expected suffix reasons) ===
+1. extract: discovers cucumber-login.feature instead of carrier.sdp.gherkin (SPEC_FILE_SUFFIXES still .feature)
+2. extract: feature-only root still yields specFiles entry (ordinary .feature not ignored)
+3. cli feature-only: exit 1 + gherkin-grammar missing @spec (poison) instead of empty-model note for *.sdp.gherkin
+4. cli failed .sdp.gherkin: exit 0 empty model (file not discovered/routed; finding.file predicate never sees .sdp.gherkin)
+5. cli mixed root: exit 1 because ordinary .feature is extracted and refuses identity
+PASS: materialize copy strips .txt and lands carrier.sdp.gherkin + cucumber-login.feature on disk
+
+=== Acceptance ===
+New focused discovery/CLI tests fail against current bare-.feature behavior for the expected suffix reason.
+Later Todo 5 will make them pass via: npx vitest run test/extract.test.ts test/cli.test.ts
+No commit made.

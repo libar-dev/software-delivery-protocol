@@ -1,0 +1,300 @@
+# Wave 0 — Regenerate self-hosting graph after decision rulings (FINAL, post-pack)
+# Worktree: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+# Host: fedora-thinkpad
+# UTC: 2026-08-14T09:46:13Z
+# Unit: Regenerate self-hosting graph after decision rulings
+# Evidence: this file (supersedes earlier pre-pack capture in the same path)
+# Scope owned: generator-owned tree under generated/ (gitignored) + this evidence log
+# Out of scope (NOT edited): Specs, plans, AGENTS.md, source, tests, frozen oracle
+#   expectation code, Boulder, ledger, plan checkboxes. No commit.
+# Dependency observed (authored elsewhere, not edited here):
+#   specs/self-hosting.pack.sdp.md now rosters both new decision IDs (lines 153–154).
+
+## Preconditions
+- spec:decisions.carrier-universality final ready/ready (MD-18/MD-27 consequences amended)
+- spec:decisions.structural-anchor-semantics final ready/ready
+- pack:self-hosting-v1 manifest includes both new IDs (151 members)
+- Validate via generator: 0 errors · 0 warnings
+
+## A. Baseline BEFORE this resume run
+
+CMD: git status --short
+--- stdout ---
+ M AGENTS.md
+ M plans/29-universal-carrier-annotations-and-agent-surface-briefs.md
+ M plans/30-gherkin-carrier-hardening.md
+ M specs/decisions/carrier-ruling.sdp.md
+ M specs/decisions/gherkin-carrier-option.sdp.md
+ M specs/self-hosting.pack.sdp.md
+?? plans/31-carrier-universality-runnable-modules-projections-structural-anchors.md
+?? specs/decisions/carrier-universality.sdp.md
+?? specs/decisions/structural-anchor-semantics.sdp.md
+--- end ---
+
+Note: generated/ is gitignored. Ownership uses sha256 over generated/, not git status.
+
+CMD: find generated -type f | sort | xargs sha256sum  > hashes-before.txt
+RESULT: 99 files (graph.json + 98 contracts; design-review tree was absent at baseline)
+  generated/graph.json baseline hash (already post-pack from prior validate/view):
+    859cc5678924e9865cba1a1eb4cff9e7131cbbc778196097e8d37d6f4042d844
+
+Pack source (not owned by this unit; observed):
+  specs/self-hosting.pack.sdp.md sha256=
+    0b198db89abeb713f74742345edd9b2a923b382301144d98b247573a4897dc2e
+  contains:
+    - spec:decisions.carrier-universality
+    - spec:decisions.structural-anchor-semantics
+
+## B. Run 1 — canonical self-hosting generation
+
+CMD: npm run generate:self-hosting
+cwd: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+expands to: node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+RUN1_EXIT=0
+
+--- stdout/stderr (raw) ---
+> @libar-dev/software-delivery-protocol@0.0.0 generate:self-hosting
+> node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+
+151 specs · 1 packs · 138 anchors → 290 nodes · 549 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/generated/graph.json
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/generated/contracts (98 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/generated/design-review (153 pages)
+
+real	0m2.145s
+user	0m2.969s
+sys	0m0.284s
+--- end raw ---
+
+FINAL CORPUS LINE (authoritative for this unit):
+  151 specs · 1 packs · 138 anchors → 290 nodes · 549 edges
+  validate: 0 errors · 0 warnings
+
+Hash delta before → run1:
+  before_files = 99
+  run1_files   = 252
+  only_before  = 0
+  only_after   = 153  (all under generated/design-review/)
+  content-changed among shared paths = 0
+    (graph.json and all 98 contracts already matched post-pack content)
+
+Files changed/created by THIS generator invocation:
+  + generated/design-review/** (153 pages, full rewrite of missing tree)
+  including:
+    generated/design-review/pack/self-hosting-v1.md
+    generated/design-review/spec/decisions.carrier-universality.md
+    generated/design-review/spec/decisions.structural-anchor-semantics.md
+    generated/design-review/spec/decisions.carrier-ruling.md
+    generated/design-review/spec/decisions.gherkin-carrier-option.md
+    … and 148 other design-review pages
+  ~ generated/graph.json          (rewritten, byte-identical to baseline)
+  ~ generated/contracts/* (98)    (rewritten, byte-identical to baseline)
+
+## C. Run 2 — second-run determinism
+
+CMD: npm run generate:self-hosting
+RUN2_EXIT=0
+
+--- stdout/stderr (raw) ---
+> @libar-dev/software-delivery-protocol@0.0.0 generate:self-hosting
+> node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+
+151 specs · 1 packs · 138 anchors → 290 nodes · 549 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/generated/graph.json
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/generated/contracts (98 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/generated/design-review (153 pages)
+
+real	0m2.041s
+user	0m2.873s
+sys	0m0.305s
+--- end raw ---
+
+CMD: cmp hashes-run1.txt hashes-run2.txt
+RESULT: identical → DETERMINISM = PASS
+  file_count = 252
+  inventory: graph 1 + contracts 98 + design-review 153
+  aggregate_owned_hash (path + content-hash fold) =
+    e02c62aa33a2ff8d2fa7a308f6c7826748757dca37e43a7f05018e0cb8c7473f
+  hashlist_sha256(run2 full listing file) =
+    8dc7372bb79fba70b02f8155692f4d622a007356a8d22bc3ac5a1577e82ea1cd
+
+### Final stable key hashes (run1 == run2)
+  859cc5678924e9865cba1a1eb4cff9e7131cbbc778196097e8d37d6f4042d844  generated/graph.json
+  10e0947674b9d8fb8a0095de2dbf1047f6187fd05c81284706ce5318db16e837  generated/design-review/pack/self-hosting-v1.md
+  97f6de82142cfc05da32cbd95560679f9725225e82b5a547c8e5401abecd1e39  generated/design-review/spec/decisions.carrier-universality.md
+  9daeeed59db911b1c0e0f6087cc4de1d9f8a17a1396973e858b33182297e63f1  generated/design-review/spec/decisions.structural-anchor-semantics.md
+  75b6257356738d40772a54355f1d26c566dea9f37e08eaebf65473dc746679a0  generated/design-review/spec/decisions.carrier-ruling.md
+  f38b358a62f3aff0042efa51955ab798cb908c2dcb5b54e8a3f35f1b7cb17ec5  generated/design-review/spec/decisions.gherkin-carrier-option.md
+
+Delta vs pre-pack evidence snapshot (historical; not this run's before):
+  graph.json was 954ecd17… @ 547 edges → now 859cc567… @ 549 edges
+  (+2 belongsTo edges for the two new pack members)
+
+## D. Fresh query (stale_state probe)
+
+CMD: npm run --silent sdp:q -- 'return {specs, decisionCount, hasCU, hasSA, findings, …}' --json
+QUERY_EXIT=0
+
+--- result ---
+{
+  "specs": 151,
+  "decisionCount": 30,
+  "hasCU": true,
+  "hasSA": true,
+  "findings": 0
+}
+decisions include:
+  "spec:decisions.carrier-universality"
+  "spec:decisions.structural-anchor-semantics"
+--- end ---
+
+## E. Manual QA — graph + Pack (PASS)
+
+CMD: npm run --silent sdp:q — both decision Specs
+--- result ---
+spec:decisions.carrier-universality
+  title: Carrier universality is bounded by honest kind structure
+  statedReadiness: ready
+  derivedReadiness: ready
+  packs: ["pack:self-hosting-v1"]
+spec:decisions.structural-anchor-semantics
+  title: Structural anchor semantics
+  statedReadiness: ready
+  derivedReadiness: ready
+  packs: ["pack:self-hosting-v1"]
+findings: 0
+specs: 151
+--- end ---
+
+graph.json edge inspection (authoritative membership = belongsTo edges):
+  belongsTo → pack:self-hosting-v1 count = 151
+  EDGE {from: spec:decisions.carrier-universality, type: belongsTo, to: pack:self-hosting-v1, claim: declared}
+  EDGE {from: spec:decisions.structural-anchor-semantics, type: belongsTo, to: pack:self-hosting-v1, claim: declared}
+  EDGE {from: spec:decisions.carrier-universality, type: refines, to: spec:decisions.gherkin-carrier-option, claim: declared}
+  EDGE {from: spec:decisions.structural-anchor-semantics, type: refines, to: spec:model.anchors, claim: declared}
+
+graph totals:
+  nodes 290 · edges 549
+  Primitive 151 · Pack 1 · Anchor-nodeType count 79 (anchor *bindings* remain 138 per generator line)
+  readiness: ready 133 · defined 14 · idea 3 · scoped 1
+
+design-review pack page lists both members (ready/ready, priority slice).
+
+MANUAL_QA = PASS
+  both IDs present · declared refines present · both belongsTo pack ·
+  packs[] on reader shows pack:self-hosting-v1 · findings 0/0 · 151 specs · 549 edges
+
+## F. Focused self-hosting graph test (expectation code NOT updated)
+
+CMD: npm test -- test/self-hosting-graph.test.ts
+TEST_EXIT=1
+Summary: Test Files 1 failed (1) · Tests 7 failed | 15 passed (22)
+
+Failures are frozen oracle / expectation lag only (next registered dependent unit).
+Exact expected → received deltas:
+
+### F1. holds the frozen corpus totals
+  expected: { specs: 149, packs: 1, anchors: 138 }
+  received: { specs: 151, packs: 1, anchors: 138 }
+  also: expect(expectedSpecs).toHaveLength(149)
+        expect(expectedPackMembers).toHaveLength(149)   // oracle pack roster still 149
+
+### F2. rosters exactly the authored Spec, Pack, and anchor node ids
+  expected length 288; received 290
+  received adds:
+    + "spec:decisions.carrier-universality"
+    + "spec:decisions.structural-anchor-semantics"
+
+### F3. carries the authored descriptors of the decisions family
+  expected ~28 descriptors; received 30
+  + full descriptor spec:decisions.carrier-universality (ready, feature, …)
+  + full descriptor spec:decisions.structural-anchor-semantics (ready, feature, …)
+  + amended consequence text on carrier-ruling and gherkin-carrier-option
+    citing spec:decisions.carrier-universality
+
+### F4. leaves no authored Spec outside the families
+  expected familyIds 149; received primitives 151
+  oracle missing the two new decision IDs
+
+### F5. derives exactly the authored declared relations
+  expected Array(258); received Array(260)   // non-belongsTo declared set in test
+  received adds:
+    + ["spec:decisions.carrier-universality", "refines", "spec:decisions.gherkin-carrier-option"]
+    + ["spec:decisions.structural-anchor-semantics", "refines", "spec:model.anchors"]
+
+### F6. holds the frozen stated-readiness distribution
+  expected: { defined: 14, idea: 3, ready: 131, scoped: 1 }
+  received: { defined: 14, idea: 3, ready: 133, scoped: 1 }
+
+### F7. derives the Pack membership edges from the manifest, in manifest order  [NEW post-pack]
+  expected Array(149); received Array(151)
+  received adds belongsTo rows for:
+    + "spec:decisions.carrier-universality"
+    + "spec:decisions.structural-anchor-semantics"
+  (oracle pack-members.ts still length 149)
+
+STOP: expectation / oracle / pack-members freeze code is the next unit.
+This unit did NOT modify test/** or Specs.
+
+## G. Adversarial classes
+
+### generated_or_cached_artifacts — APPLICABLE — PASS
+  Second generate:self-hosting: 252/252 hashes byte-identical to run1.
+  No partial/cached skew (contracts 98, design-review 153, graph 1).
+
+### stale_state — APPLICABLE — PASS
+  Fresh sdp:q after run2: specs=151, both IDs, packs membership on reader,
+  findings=0, edges=549.
+
+### dirty_worktree — APPLICABLE — PASS
+  git status AFTER == BEFORE (concurrent dirties preserved). This unit did not
+  edit Specs/plans/AGENTS/tests/oracle. generated/ gitignored; hash-attributed only.
+  Evidence log is this unit's deliverable under .omo/evidence/.
+
+### misleading_success_output — APPLICABLE — PASS
+  Success = RUN_EXIT=0 AND final "validate: 0 errors · 0 warnings" AND fresh query.
+  Extraction header alone is not treated as success.
+  Focused test exit 1 reported honestly (oracle lag), not masked by generator green.
+
+### Other ultraqa classes — N/A
+  privilege/auth, injection/XSS, resource exhaustion, crypto/secrets, network/SSRF:
+  N/A — local offline generator only.
+  race/concurrency: N/A for owned mutators (single-writer generate runs; measured
+  hashes stable across run1/run2).
+
+## H. Cleanup
+- Scratch /tmp/wave0-regen-<pid>/ removed after evidence write.
+- No *.bak / *~ / *.orig in worktree from this unit.
+- No unit-owned sdp/vitest processes left running.
+- No commit.
+
+## I. Files changed (final attribution for this resume)
+
+Generator-owned (this resume invocation):
+  + generated/design-review/** (153 pages; was missing at baseline; now stable)
+  ~ generated/graph.json (rewrite, byte-identical pre→post within this resume)
+  ~ generated/contracts/* (98; rewrite, byte-identical pre→post within this resume)
+
+Evidence:
+  .omo/evidence/arc-keystone-engines/wave0-self-hosting-regeneration.log  (this file)
+
+Not touched: Specs, pack source, plans, AGENTS, source, tests, oracle expectations.
+
+## J. Remaining work (out of this unit)
+Frozen expectation absorption must update:
+  - test/self-hosting-graph.test.ts: totals 149→151; ready 131→133
+  - test/self-hosting-oracle/decisions.ts (+2 descriptors; amend 2 consequences)
+  - test/self-hosting-oracle/declared-relations.ts (+2 refines)
+  - test/self-hosting-oracle/pack-members.ts (+2 members, manifest order)  ← now required
+  - any pack-member length literals still pinned at 149
+
+## K. DoneClaim summary (FINAL)
+- generate:self-hosting ×2 exit 0
+- corpus: 151 specs · 1 pack · 138 anchors · 290 nodes · 549 edges · 0/0 findings
+- determinism: 252/252 byte-identical across runs
+- pack membership: 151 belongsTo edges; both new IDs in pack:self-hosting-v1
+- both decision IDs ready/ready with declared refines
+- focused test: 7 failed / 15 passed — oracle deltas catalogued; stopped
+- concurrent dirties preserved; no commit; cleanup done

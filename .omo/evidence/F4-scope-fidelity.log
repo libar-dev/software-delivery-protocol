@@ -1,0 +1,255 @@
+F4 Scope Fidelity — pr-17-gherkin-carrier-hardening (re-run after fix)
+Date: 2026-08-14
+Auditor: omo senpi-task child (st_019ffde8)
+Mode: inspect-only (no source edits; this log is the only write)
+Worktree: /home/darkomijic/dev-libar/software-delivery-protocol
+Branch: feature/design-review
+Context: Re-run after small unstaged remediation of F1/F2 reserved-head defects.
+Sources:
+  - .omo/drafts/pr-17-gherkin-carrier-hardening.md (Scope IN/OUT + findings 1–6)
+  - .omo/plans/pr-17-gherkin-carrier-hardening.md (Must / Must-NOT + F4 charter)
+  - plans/30-gherkin-carrier-hardening.md (Out of scope)
+  - plans/29-universal-carrier-annotations-and-agent-surface-briefs.md (Brief A open)
+  - prior F4 (st_019ffddf PASS with F1/F2 incompleteness noted as in-scope quality)
+  - sibling re-runs: F1 st_019ffde5 PASS; F2 st_019ffde6 PASS
+  - git diff HEAD (67 files, +1668/-366 working tree)
+  - unstaged fix only: src/extract/gherkin.ts (+10/-3), test/gherkin-reifier.test.ts (+22/-1)
+  - live surfaces: src/extract/, src/cli/, specs/, package.json, docs/, plans/
+
+================================================================================
+VERDICT: PASS
+================================================================================
+
+The final working-tree diff (including the post-F1/F2 reserved-head fix) stays inside
+PR review findings 1–6 and plan-30 hardening. It does not expand into plan-29 brief-A
+universality / default-kind / rich-content work, does not add a Cucumber runtime, and
+does not migrate a second dogfooding family.
+
+The small fix is a pure in-scope completion of finding 3:
+  - RESERVED_HEAD_SUGGESTIONS gains constrained-by, decided-by, example-space
+  - nearest() accepts per-candidate max-distance function
+  - decorationTagFinding uses (candidate) => candidate.length <= 5 ? 1 : 2
+  - regression tests for one-edit and two-edit long-head near-misses
+No new product surface, no new module family, no package dependency change.
+
+--------------------------------------------------------------------------------
+PR review findings 1–6 ↔ final diff (scope mapping)
+--------------------------------------------------------------------------------
+
+Finding numbering follows the draft's confirmed defects and Scope IN
+(.omo/drafts/pr-17-gherkin-carrier-hardening.md):
+
+[1] Source-location honesty (description refusals at physical LF/CRLF lines)
+    IN SCOPE — present
+    Evidence:
+      - src/extract/gherkin.ts: buildGherkinSourceIndex + monotonic AST/source alignment
+      - test/fixtures/gherkin/description-location/*.sdp.gherkin.txt
+      - test/fixtures/gherkin/description-location-refusal/carrier.sdp.gherkin.txt
+      - specs/carrier/gherkin-authoring.description-location-refused.sdp.md
+      - test/gherkin-reifier.test.ts physical-location coverage
+    Disposition: hardening of existing reifier; no new product surface.
+
+[2] Discovery / suffix collision (canonical `.sdp.gherkin`; bare `.feature` out)
+    IN SCOPE — present
+    Evidence:
+      - src/extract/discover.ts SPEC_FILE_SUFFIXES = [".sdp.ts",".sdp.md",".sdp.gherkin"]
+      - src/extract/index.ts routes endsWith(".sdp.gherkin") only
+      - src/cli/build-command.ts empty-corpus note + finding.file predicate
+      - specs/decisions/sdp-gherkin-extension.sdp.md (MD-28)
+      - Atomic rename specs/consumers/reader.feature → reader.sdp.gherkin
+      - Ordinary Cucumber sibling kept as cucumber-login.feature.txt (not discovered)
+      - rg on src/extract + src/cli: no endsWith(".feature"), no content sniff, no .sdp.feature
+    Disposition: owner-selected public policy from finding 2; plan-30 primary ruling.
+
+[3] Reserved-head similarity / decoration ergonomics
+    IN SCOPE — present; fix completes prior under-implementation
+    Evidence (post-fix working tree):
+      - RESERVED_TAG_HEADS (12) == RESERVED_HEAD_SUGGESTIONS heads (12), including
+        constrained-by, decided-by, example-space (lawful:true)
+      - nearest(value, candidates, number | ((candidate) => number))
+      - decorationTagFinding: nearest(..., (c) => c.length <= 5 ? 1 : 2)
+      - kind/pack/supersedes remain lawful:false (refuse without illegal did-you-mean)
+      - Accepted decorations remain graph-inert (@kindle.ci / @paced)
+      - Unstaged tests: long-head one-edit + two-edit near-misses
+    Disposition: closed-grammar rider only. Fix does not invent new tag heads outside
+    the existing reserved vocabulary; it only makes suggestions cover that set with
+    the planned length-scaled threshold.
+
+[4] Step-less ordinary and @example-space Scenario refusal
+    IN SCOPE — present
+    Evidence:
+      - gherkin.ts zero-step guards after outline checks (ordinary + pseudo)
+        ("must carry at least one step")
+      - test/fixtures/gherkin/step-less/empty.sdp.gherkin.txt
+      - specs/carrier/gherkin-authoring.step-less-scenario-refused.sdp.md
+      - No complete-GWT / phase-cardinality expansion; existing given/when/then phase
+        tracking unchanged; Feature with zero Scenarios and one-Given acceptance preserved
+    Disposition: closed-grammar rider.
+
+[5] Closed narrative / description classification (preserve, document; do not loosen)
+    IN SCOPE — present; still closed
+    Evidence:
+      - DESCRIPTION_KEYS unchanged closed set (problem|outcome|value|actor|description|
+        risk|assumption|criterion|verification-mode)
+      - Doc strings refused (gherkin.ts ~856)
+      - Data tables refused (gherkin.ts ~868)
+      - specs/carrier/gherkin-authoring.sdp.md + skill/concept docs document lawful
+        rewrites without admitting rich Markdown bodies
+    Disposition: documentation + honesty of the closed set; brief A still owns any
+    future rich-content ruling.
+
+[6] Minor polish (multi-finding, oracle rationale, parser pins, declined-Gherkin drift)
+    IN SCOPE — present
+    Evidence:
+      - Bounded multi-finding collector (cap 100, whole-file exclusion, sibling survival)
+        + specs/carrier/gherkin-authoring.multi-finding-bounded.sdp.md
+        + test/fixtures/gherkin/multi-finding/
+      - test/self-hosting-oracle/index.ts expectedWarnings = [] rationale restored
+      - README / skill / docs document exact @cucumber/gherkin@42.0.1 and
+        @cucumber/messages@34.2.1 runtime pins (parser only; package.json not in this diff)
+      - Drift repair: docs/concept/00, 07, carrier-ruling, gherkin-carrier-option,
+        CONTEXT.md, AGENTS.md current-intent language updated against MD-27/MD-28
+      - plan 29 updated only to consume plan 30 and keep brief A open
+    Disposition: draft Scope IN minor-item set.
+
+Supporting plan-30 surfaces also in the diff (not expansions):
+  - .vscode/settings.json association *.sdp.gherkin → cucumber language id (highlight only)
+  - .prettierignore / .gitignore association tracking
+  - Frozen oracle / pack / contract regeneration for new examples + suffix paths
+  - plans/30-gherkin-carrier-hardening.md + AGENTS.md primary-plan status
+  - test/self-hosting-oracle/anchors.ts adds three verifies anchors for the new
+    ready examples only (not brief-D structural anchor semantics)
+
+--------------------------------------------------------------------------------
+Plan-29 boundary rejection checks (must remain OUT)
+--------------------------------------------------------------------------------
+
+Reject trigger: universality / default-kind / rich-content / Cucumber-runtime /
+second-family expansion.
+
+[PASS] No universality ruling
+  - No decision Spec claims Gherkin is universal or default for all kinds.
+  - MD-28 (specs/decisions/sdp-gherkin-extension.sdp.md) explicitly:
+      "does not change which Spec kinds may choose Gherkin, does not flip the
+       default carrier away from Markdown"
+  - plans/29 Brief A still titled "the carrier universality ruling" and states
+    "Kind coverage, rich content, and the default flip stay open here."
+  - plan 29 header: Brief A "remains the open owner of kind coverage, rich
+    content, and any default-carrier flip."
+  - Brief A open questions 1–5 (kind coverage, rich content, meaning of universal,
+    default flip, Packs) remain open text, not closed by this PR.
+
+[PASS] No default-kind / kind-coverage expansion
+  - Reifier still maps Feature → kind:"behavior", Scenario → kind:"example" only
+    (src/extract/gherkin.ts reifyFeature / reifyOrdinaryScenario).
+  - Kind tags still refused as structural ("Feature → behavior, Scenario → example").
+  - No Gherkin form added for decision/model/constraint/contract/workflow/NFR/
+    open-question kinds.
+  - Live corpus still one behavior family under Gherkin (reader).
+
+[PASS] No rich-content admission
+  - Doc strings: still refused with extract/gherkin-grammar finding.
+  - Data tables: still refused.
+  - Closed DESCRIPTION_KEYS; no Markdown-in-description lawful content path.
+  - Parent carrier Spec rule keeps outlines/backgrounds/star steps/doc strings/
+    data tables refused.
+  - Brief A still owns "whether rich authored content (Markdown prose, doc
+    strings) becomes lawful."
+
+[PASS] No Cucumber runtime / execution path
+  - package.json not in this diff; still only:
+      @cucumber/gherkin 42.0.1
+      @cucumber/messages 34.2.1
+  - No @cucumber/cucumber, no runCucumber/loadSupportCode, no NDJSON evidence
+    ingest, no runner state in the graph.
+  - Editor association uses language id "cucumber" for highlighting only
+    (.vscode/settings.json); docs state ".sdp.gherkin is not a Cucumber
+    execution suffix."
+  - gherkin-authoring rule: Gherkin is a canonical authoring carrier rather
+    than a Cucumber execution path.
+
+[PASS] No second-family / dogfooding migration
+  - Live Gherkin under specs/: only specs/consumers/reader.sdp.gherkin
+    (R100 rename from reader.feature — the plan-28 tracer, atomic suffix move).
+  - No additional Spec family converted to Gherkin for dogfooding.
+  - New carrier Specs are Markdown example Specs about the Gherkin carrier
+    (description-location-refused, step-less-scenario-refused,
+    multi-finding-bounded), not a second authored Gherkin family.
+  - plan 29 corpus note: "single migrated .sdp.gherkin family".
+
+[PASS] No dual-suffix window / content-gated discovery / .sdp.feature
+  - SPEC_FILE_SUFFIXES has exactly one Gherkin entry: .sdp.gherkin
+  - No endsWith(".feature") discovery path in src/extract or src/cli
+  - No .sdp.feature introduced
+  - MD-28 alternatives explicitly reject dual-suffix and bare-.feature canonical
+
+[PASS] No adjacent plan-29 brief product work (B/C/D/E)
+  - src/ diff limited to: cli/build-command.ts, cli/sdp.ts,
+    extract/{discover,gherkin,index,reify}.ts
+  - No src/projections, src/codegen product, MCP, structural-anchor contract,
+    impact-graph, or derived-runnable-module changes
+  - anchors.ts delta is self-hosting verifies anchors for new examples only
+  - git diff HEAD --name-only | rg claim|workflow|runner|mcp|projection|codegen|impact
+    → none
+  - No new claim path, workflow gate, or authored delivery facts
+
+--------------------------------------------------------------------------------
+Post-fix delta vs prior F4 (explicit non-expansion)
+--------------------------------------------------------------------------------
+
+Unstaged only (the "small fix"):
+  src/extract/gherkin.ts       | 13 ++++++++++---
+  test/gherkin-reifier.test.ts | 23 ++++++++++++++++++++++-
+  2 files changed, 32 insertions(+), 4 deletions(-)
+
+Nature of change:
+  - Completes finding-3 Must-have (length-scaled reserved-head similarity + full
+    reserved-head suggestion vocabulary).
+  - Does not touch discovery, kinds, DESCRIPTION_KEYS, doc-string/data-table
+    refusals, multi-finding collector, package.json, or any second family.
+  - Prior F4 already classified F1/F2 incompleteness as "under-implementation of
+    an in-scope rule, not expansion beyond it." This re-run confirms the fix
+    stayed inside that same box.
+
+Sibling final-verification status after the fix (for non-conflation):
+  - F1 plan compliance: PASS (st_019ffde5) — length-scaled similarity remediated
+  - F2 code quality: PASS (st_019ffde6) — RESERVED_HEAD_SUGGESTIONS complete
+  - F3 real manual QA: PASS (prior; not re-run here; scope surface unchanged)
+  - F4 scope fidelity: PASS (this audit)
+
+--------------------------------------------------------------------------------
+Diff inventory vs plan surfaces (no drive-by expansion)
+--------------------------------------------------------------------------------
+
+67 paths, all attributable to plan-30 / findings 1–6:
+
+  Engine:        src/extract/gherkin.ts (hardening + finding-3 fix),
+                 discover/index/reify, cli
+  Decision:      specs/decisions/sdp-gherkin-extension.sdp.md + MD glosses
+  Carrier truth: specs/carrier/gherkin-authoring*.sdp.md (+3 ready examples)
+  Tracer rename: specs/consumers/reader.sdp.gherkin
+  Fixtures:      test/fixtures/gherkin/** → *.sdp.gherkin.txt + new corpora
+  Tests/oracles: gherkin-*, extract, cli, self-hosting-*
+  Guidance:      README, skill, concept 00/04/07, CONTEXT, DECISIONS, recipes
+  Tooling:       .vscode/settings.json, .prettierignore, .gitignore
+  Planning:      plans/30-*, plans/29-* (consume-only), AGENTS.md status
+
+No unrelated modules, no second arc brief implementation, no package dependency
+additions. Totals: 67 files, +1668/-366 (working tree including unstaged fix).
+
+--------------------------------------------------------------------------------
+F4 reject triggers (from plan charter)
+--------------------------------------------------------------------------------
+
+- universality expansion          → clear
+- default-kind / default-carrier  → clear (still open under brief A)
+- rich-content admission          → clear (still refused; brief A owns)
+- Cucumber-runtime path           → clear (parser pins only)
+- second-family expansion         → clear (reader tracer only)
+
+================================================================================
+SUMMARY: PASS — final diff (incl. finding-3 fix) is plan-30 / findings 1–6 only;
+plan-29 boundaries hold; no universality/default-kind/rich-content/Cucumber-runtime
+or second-family expansion.
+================================================================================
+END F4

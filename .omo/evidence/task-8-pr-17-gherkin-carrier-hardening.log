@@ -1,0 +1,29 @@
+Task 8 - pr-17-gherkin-carrier-hardening
+Date: 2026-08-14
+
+Implemented bounded semantic finding accumulation in the Gherkin reifier.
+
+Behavior verified:
+- Semantic metadata, description, child, Background, Rule, pseudo-scenario, ordinary Scenario, and step findings accumulate in deterministic traversal/source order.
+- Invalid semantic carriers return no Specs or Packs.
+- The multi-finding fixture returns four ordered findings at lines 1, 3, 4, and 5 while its healthy sibling remains as the sole graph node with zero edges.
+- Repeated invalid extraction returns equal findings, serialized graph bytes, and counts.
+- Reports are capped at exactly 100 entries; entry 100 is extract/too-many-gherkin-findings at file line 1.
+- Parser syntax, missing Feature, non-English language, and source-alignment gates still exclude the whole file immediately with one file-level finding.
+
+Verification:
+$ npx vitest run test/gherkin-reifier.test.ts test/gherkin-parity.test.ts
+PASS - 2 files, 58 tests
+
+$ npm run typecheck
+PASS - tsc --noEmit -p tsconfig.json
+
+$ npm run lint
+PASS - eslint .
+
+$ git diff --check -- src/extract/gherkin.ts src/extract/reify.ts test/gherkin-reifier.test.ts
+PASS - no output
+
+LSP diagnostics were unavailable because typescript-language-server is not installed in the workstation; npm typecheck completed successfully instead.
+
+No commit created.

@@ -1,0 +1,91 @@
+task-9-pr-17-gherkin-carrier-hardening
+date: 2026-08-14T03:03:29+02:00
+
+## Summary
+Extended self-hosted executable Gherkin carrier evidence:
+- Updated spec:carrier.gherkin-authoring rules for physical description locations, zero-step refusal, and bounded whole-file multi-finding diagnostics.
+- Added three ready example Specs with defused fixtures and bindExample anchors.
+- Regenerated generated/ contracts and graph; updated frozen oracles/totals.
+
+## New example Specs
+- spec:carrier.gherkin-authoring.description-location-refused (probe description-location-refusal, line 6)
+- spec:carrier.gherkin-authoring.step-less-scenario-refused (probe step-less, line 5)
+- spec:carrier.gherkin-authoring.multi-finding-bounded (probe multi-finding, 4 findings + healthy sibling)
+
+## Acceptance
+### npx vitest run test/self-hosting-carrier-gherkin.test.ts
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/darkomijic/dev-libar/software-delivery-protocol[39m
+
+ [32m✓[39m test/self-hosting-carrier-gherkin.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 88[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m13 passed[39m[22m[90m (13)[39m
+[2m   Start at [22m 03:03:29
+[2m   Duration [22m 1.46s[2m (transform 530ms, setup 0ms, import 1.15s, tests 88ms, environment 0ms)[22m
+
+
+### node dist/cli/sdp.js validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+149 specs · 1 packs · 138 anchors → 288 nodes · 545 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol/generated/graph.json
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol/generated/contracts (98 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+
+### has-verifier query
+[
+  {
+    "id": "spec:carrier.gherkin-authoring.description-location-refused",
+    "readiness": "ready",
+    "facts": [
+      "has-verifier"
+    ],
+    "packs": [
+      "pack:self-hosting-v1"
+    ]
+  },
+  {
+    "id": "spec:carrier.gherkin-authoring.multi-finding-bounded",
+    "readiness": "ready",
+    "facts": [
+      "has-verifier"
+    ],
+    "packs": [
+      "pack:self-hosting-v1"
+    ]
+  },
+  {
+    "id": "spec:carrier.gherkin-authoring.step-less-scenario-refused",
+    "readiness": "ready",
+    "facts": [
+      "has-verifier"
+    ],
+    "packs": [
+      "pack:self-hosting-v1"
+    ]
+  }
+]
+
+### QA happy — built CLI on valid .sdp.gherkin temp root
+2 specs · 0 packs · 0 anchors → 2 nodes · 2 edges (0 errors, 0 warnings)
+Wrote /tmp/tmp.JjqrHcCBib/generated/graph.json
+Wrote /tmp/tmp.JjqrHcCBib/generated/contracts (1 modules)
+ok.sdp.gherkin — [warning] conformance/verifies-linkage — Example "spec:fixture.happy-child" declares verifies → "spec:fixture.happy-parent" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier.
+ok.sdp.gherkin — [error] honesty/readiness-floor — Spec "spec:fixture.happy-parent" states readiness "idea" but does not satisfy floor clause "intent.outcome-or-parent-relation": Spec states intent.outcome or declares a parent relation via refines.
+validate: 1 errors · 1 warnings (conformance + honesty over the one graph)
+
+### QA failure — corrupt/step-less carrier
+broken.sdp.gherkin:5 — [error] extract/gherkin-grammar — Scenario "Empty point" must carry at least one step
+0 specs · 0 packs · 0 anchors → 0 nodes · 0 edges (1 errors, 0 warnings)
+sdp validate: hard errors present — graph.json not written.
+
+### Supporting oracle suite
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/darkomijic/dev-libar/software-delivery-protocol[39m
+
+ [32m✓[39m test/self-hosting-graph.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 143[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m22 passed[39m[22m[90m (22)[39m
+[2m   Start at [22m 03:03:37
+[2m   Duration [22m 2.98s[2m (transform 663ms, setup 0ms, import 2.63s, tests 143ms, environment 0ms)[22m
+

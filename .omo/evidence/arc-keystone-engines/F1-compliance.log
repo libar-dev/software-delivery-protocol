@@ -1,0 +1,327 @@
+F1 plan-compliance audit — arc-keystone-engines
+Auditor: omo senpi-task child st_01a00156
+Date: 2026-08-14
+Worktree: /home/darkomijic/dev-libar/sdp-f1-verify
+Source: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+HEAD: 269fe5162323699370456e7daf0fd1d70d8a4e0d
+Commit: 269fe51 merge: todo 9 gherkin carrier follow-through (verified)
+Status: detached HEAD, clean
+Setup:
+  git worktree add /home/darkomijic/dev-libar/sdp-f1-verify --detach HEAD  (from arc-keystone-engines)
+  npm ci  (201 packages)
+  npm run build  (CLI required before sdp/sdp:q)
+
+All commands below ran in /home/darkomijic/dev-libar/sdp-f1-verify unless noted.
+Evidence path written from the verify worktree to the parent evidence root.
+
+================================================================================
+VERDICT: APPROVE
+Confidence: 0.93
+================================================================================
+
+Per-todo matrix
+---------------
+ T1  PASS   commissioning hygiene greps
+ T2  PASS   carrier-universality decision Spec extracts + queryable
+ T3  PASS   structural-anchor-semantics decision Spec extracts + queryable
+ T4  PASS   runnable-modules frozen interface tokens present
+ T5  PASS   BR1 structural fields/edges/validators + schemaVersion 0.5.0
+ T6  PASS   census at Spec-named path; --check-clean; zero-count rows
+ T7  PASS   mermaid permutation/escaping/dangling/refusal tests green
+ T8  PASS   valid-cart registrar shape; mutation log red/red/green matches tree
+ T9  PASS   exemplar stable; ruled branches recorded in gherkin-authoring
+ T10 PASS   census structural section + explicit zero-edge note
+ FINAL PASS npm run check exit 0
+
+Notes that do not fail the gate:
+- T5 repo-wide memberOf/uses count is 0 (honest: the corpus authors no structural
+  bindings). Fixture-root query returns 3 (> 0) as the plan requires.
+- T9 has no labeled "B1..B5 checklist" heading. Every ruled branch is present as
+  a carrier-Spec rule (per-kind refusals, MD-19 rich-content bound, READ
+  projection, default-flip refusal, packs-out). Mapped below.
+- T8 mutation was not re-executed live (would mutate the tree). The committed
+  mutation log is red/red/green and the live tree is the restored green state.
+
+================================================================================
+T1 — Commissioning hygiene
+================================================================================
+Command:
+  grep -in "status:.*executed" plans/30-gherkin-carrier-hardening.md
+Result: EXIT 0
+  3:> **Status:** ✅ EXECUTED — settle the canonical Gherkin suffix as `.sdp.gherkin` (MD-28),
+
+Command:
+  grep -n "Plan 31" plans/29-universal-carrier-annotations-and-agent-surface-briefs.md
+Result: EXIT 0
+  18:> the open owner of kind coverage, rich content, and any default-carrier flip. **Plan 31**
+
+Command:
+  test -f plans/31-carrier-universality-runnable-modules-projections-structural-anchors.md
+Result: EXISTS (483 bytes)
+
+T1: PASS
+
+================================================================================
+T2 / T3 — Decision Specs extract; concept/readiness queries
+================================================================================
+Command:
+  npm run --silent sdp -- validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+Result: EXIT 0
+  155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+  validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+
+Command:
+  npm run --silent sdp:q -- 'return g.findByConcept("carrier universality").map(n=>n.id)'
+Result: EXIT 0
+  [ 'spec:decisions.carrier-universality' ]
+
+Command:
+  npm run --silent sdp:q -- 'return g.specs().filter(s=>s.id.includes("structural-anchor")).map(s=>[s.id,s.statedReadiness])'
+Result: EXIT 0
+  [ [ 'spec:decisions.structural-anchor-semantics', 'ready' ] ]
+
+ADR three-part test present in both rationales
+  (hard to reverse · surprising without context · real trade-off):
+  specs/decisions/carrier-universality.sdp.md:17
+  specs/decisions/structural-anchor-semantics.sdp.md:17
+
+T2 five ruling questions answered in the decision body (per-kind honesty,
+rich content on MD-19 owners, universal = generated READ projection, default
+does not flip, packs out / MD-25).
+
+T3 refusal list present IN the Spec body:
+  - no per-namespace sibling builders
+  - new edges are anchored claims, never inferred
+  - anchors carry no intent/readiness/status/delivery fact
+  - no free-form tag vocabulary / parallel registry
+  - foreign fields remain extraction errors
+  - anchor-required lint stays warn-level
+satisfies-vs-implements ruled first:
+  "In order, first, `satisfies` remains the only code-to-Spec realization slot"
+
+T2: PASS
+T3: PASS
+
+================================================================================
+T4 — Frozen derived-runnable-module interface tokens
+================================================================================
+File: specs/extraction/runnable-modules.sdp.md
+
+Command (exact-substring greps):
+  registrar                     -> 9 hits
+  skeleton-text identity        -> 2 hits
+  three-way comparator          -> 4 hits
+  Partial<Conditions>           -> 1 hit
+  renderContractStep            -> 1 hit
+  exhaustive mapped type        -> 2 hits
+  Scenario Outlines             -> 2 hits
+
+Six-step algorithm enumerated in the Spec (call expected; match Then skeleton;
+compare authored params; observe; compare outcomes; remaining assertions).
+
+Command:
+  npm run --silent sdp:q -- 'return g.specs().filter(s=>/runnable|example-runner|executable-contracts/.test(s.id)).map(s=>[s.id,s.statedReadiness])'
+Result: EXIT 0
+  spec:extraction.example-runner                          ready
+  spec:extraction.example-runner.red-step-naming          ready
+  spec:extraction.example-runner.step-order               ready
+  spec:extraction.executable-contracts                    ready
+  spec:extraction.executable-contracts.case-colliding-path ready
+  spec:extraction.executable-contracts.concreteness-refusal ready
+  spec:extraction.executable-contracts.multi-entry-example ready
+  spec:extraction.runnable-modules                        defined   (stated readiness; floor clears)
+
+T4: PASS
+
+================================================================================
+T5 — Structural anchor fields, edges, validators (BR1)
+================================================================================
+schemaVersion:
+  src/graph/schema.ts:6  export const schemaVersion = "0.5.0" as const;
+  generated/graph.json   "schemaVersion": "0.5.0"
+
+Command (focused tests):
+  npx vitest run test/structural-anchors.test.ts --reporter=dot
+Result: EXIT 0
+  Test Files  1 passed (1)
+  Tests       11 passed (11)
+  Covers: edge emission + cycle-as-data, uniqueness, one-level membership,
+  CodeNode endpoints, dangling target, invalid namespace, self-use,
+  empty uses, duplicate uses, non-static whole-anchor exclusion.
+
+Command (repo corpus — honesty, not the fixture):
+  npm run --silent sdp:q -- 'return graph.edges.filter(e=>e.type==="memberOf"||e.type==="uses").length'
+Result: 0
+  Expected: the self-hosting corpus authors no component/uses fields.
+
+Command (fixture root, plan-required > 0):
+  npm run --silent sdp:q -- --root /tmp/sdp-f1-struct-fix 'return graph.edges.filter(e=>e.type==="memberOf"||e.type==="uses").length'
+Result: EXIT 0
+  3
+  edges:
+    impl:fixture.subject  memberOf  component:fixture.core  (anchored)
+    impl:fixture.subject  uses      api:fixture.gateway     (anchored)
+    api:fixture.gateway   uses      impl:fixture.subject    (anchored)
+
+T5: PASS (BR1)
+
+================================================================================
+T6 — Derived census/taxonomy projection
+================================================================================
+Spec-named path: generated/census/index.md
+  (specs/consumers/census-page.sdp.md:21)
+
+Command:
+  npm run --silent sdp -- census . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+Result: EXIT 0
+  Wrote .../generated/census (1 pages)
+  test -f generated/census/index.md  -> CENSUS_INDEX_EXISTS
+
+Command:
+  npm run --silent sdp -- census . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --check-clean
+Result: EXIT 0
+  Wrote .../generated/census (1 pages)   (byte-identical re-render accepted)
+
+Zero-count rows rendered (runtime-constant taxonomy, not observed-only):
+  | `defined` | 0 |                 (derived readiness)
+  | not structurally reached | 0 |
+  | `inferred` | 0 |                (node claims + edge claims)
+  | `observed` | 0 |                (delivery facts)
+  | `supersedes` | 0 |
+  | `memberOf` | 0 |
+  | `uses` | 0 |
+
+Command:
+  npx vitest run test/census.test.ts --reporter=dot
+Result: EXIT 0
+  Test Files  1 passed (1)
+  Tests       13 passed (13)
+
+T6: PASS
+
+================================================================================
+T7 — Bounded Mermaid diagrams
+================================================================================
+Command:
+  npx vitest run test/mermaid-render.test.ts test/mermaid-cli.test.ts --reporter=dot
+Result: EXIT 0
+  Test Files  2 passed (2)
+  Tests       13 passed (13)
+
+Covered acceptance cases in test/mermaid-render.test.ts:
+  - permutation: reorder nodes/edges → byte-identical
+  - escaping: quotes, brackets, backticks, ampersands, angle brackets,
+    newlines, Unicode, and `"]-->` cannot close a node declaration
+  - dangling target rendered as explicit placeholder
+    (`spec:missing&#10;unresolved`)
+  - deterministic refusal for duplicate identities and both diagram bounds
+
+T7: PASS
+
+================================================================================
+T8 — Derived runnable modules + mutation evidence
+================================================================================
+File: examples/checkout-v1/test/orders/create-order.valid-cart.test.ts
+
+Command:
+  grep specTest / registerValidCart / literal skeleton
+Result:
+  specTest(  once (line 13) — one specTest anchor
+  registerValidCart(  once (line 58) — one activation
+  "a customer has a cart with {n} line items"  → 0 hits
+
+Mutation log:
+  /home/darkomijic/dev-libar/software-delivery-protocol/.omo/evidence/arc-keystone-engines/task-8-mutation.log
+  EXISTS
+  (a) Spec {total: 100} → {total: 101}  vitest exit 1
+      "Spec Then parameters do not match the oracle payload
+       $.total: expected 101, actual 100"
+  (b) oracle expected() total + 1       vitest exit 1
+      "$.total: expected 100, actual 101"
+  (c) restore both                      vitest exit 0
+      Test Files 1 passed / Tests 1 passed
+
+Tree-state match (restored green, not left mutated):
+  create-order-valid-cart.sdp.md  Then ... {total: 100}
+  create-order.oracle.ts          total: conditions.n * conditions.q * conditions.price
+  (no leftover +1 / 101)
+
+Self-hosting rationale exists:
+  .omo/evidence/arc-keystone-engines/task-8-self-hosting-rationale.md
+  31 families, 1 MIGRATE / 30 DEFER
+
+T8: PASS
+
+================================================================================
+T9 — Brief A follow-through
+================================================================================
+Command (exemplar stability):
+  npm run --silent sdp:q -- 'return g.specs().filter(s=>s.id==="spec:consumers.reader").map(s=>({id:s.id,kind:s.kind,statedReadiness:s.statedReadiness}))'
+Result: EXIT 0
+  [ { id: 'spec:consumers.reader', kind: undefined, statedReadiness: 'ready' } ]
+
+Command (node count for spec:consumers.reader family):
+  4 nodes:
+    spec:consumers.reader
+    spec:consumers.reader.concept-entry
+    spec:consumers.reader.file-entry
+    spec:consumers.reader.changeset-entry
+  specs/consumers/reader.sdp.gherkin still present (6133 bytes)
+
+Branch checklist mapping (decision Spec → carrier Spec rules):
+  B1 per-kind refusals
+    gherkin-authoring.sdp.md:21  six kinds stay Markdown with per-kind reasons
+  B2 rich content
+    gherkin-authoring.sdp.md:23  MD-19 existing owners only; no new field
+  B3 universal = READ projection
+    gherkin-authoring.sdp.md:32  generated Gherkin-shaped READ projection
+  B4 default flip refused
+    gherkin-authoring.sdp.md:30  Markdown remains default
+  B5 packs out
+    gherkin-authoring.sdp.md:31  Packs stay under MD-25
+
+No labeled "B1..B5" heading — the ruled branches are the checklist content.
+
+T9: PASS
+
+================================================================================
+T10 — Census consumes structural edges (C∩D seam)
+================================================================================
+Command:
+  npm run --silent sdp -- census . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+Result: EXIT 0
+
+generated/census/index.md:
+  ## Structural bindings
+  Authored `memberOf` and `uses` CodeNode edges are rendered as structure; they confer no delivery fact or readiness.
+  No structural bindings exist.
+
+Zero-count edge-type rows also present (`memberOf` 0, `uses` 0).
+
+T10: PASS
+
+================================================================================
+FINAL — npm run check on the merged tree
+================================================================================
+Command:
+  npm run check
+Result: EXIT 0
+
+Legs (all green):
+  check:temporal
+  lint
+  format:check
+  build
+  generate:self-hosting   155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0/0)
+  generate:example        11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0/0)
+  typecheck
+  typecheck:examples
+  test                    58 files / 751 passed | 1 skipped; plus 1 file / 59 passed
+  check:self-hosting-gates
+  check:self-hosting      --check-clean 0/0
+  check:example           0 errors · 1 warnings (pre-existing verifies-linkage on invalid-cart)
+  preflight               semantic diff summary: clean
+
+Worktree left in place for orchestrator teardown.
+================================================================================
+END

@@ -1,0 +1,1177 @@
+F3 real-surface QA re-run
+date: 2026-08-14T20:18:50+02:00
+verify worktree: /home/darkomijic/dev-libar/sdp-f3-rerun
+HEAD: c7e9524a3c9e4ca9c32e481eec2753180157cb46
+git describe: c7e9524 merge: mermaid refusal locality fix (verified)
+409d2b9 is ancestor: True
+git status:
+## HEAD (no branch)
+node: v24.19.0
+npm: 11.17.0
+
+================================================================
+### 0. environment
+================================================================
+dist/cli/sdp.js present: yes
+node_modules present: yes
+================================================================
+### 1a. sdp view . (self-hosting excludes)
+================================================================
+$ npm run --silent sdp -- view . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:18:50+02:00
+exit: 0
+--- stdout ---
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/contracts (102 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/design-review (157 pages)
+ended: 2026-08-14T20:18:52+02:00
+test -f generated/census/index.md -> 1
+test -d generated/mermaid -> 1
+test -d generated/gherkin -> 1
+test -d generated/design-review -> 0
+================================================================
+### 1b. sdp census . then immediate existence
+================================================================
+$ npm run --silent sdp -- census . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:18:52+02:00
+exit: 0
+--- stdout ---
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/contracts (102 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/census (1 pages)
+ended: 2026-08-14T20:18:53+02:00
+test -f generated/census/index.md -> 0
+  census/index.md bytes=2196
+test -d generated/mermaid -> 1
+test -d generated/gherkin -> 1
+test -d generated/design-review -> 1
+--- census/index.md head ---
+# Census
+
+A disposable projection of the one graph (schema `0.5.0`): 299 nodes · 565 edges · 155 Specs.
+
+## Spec kinds
+
+| Value | Display label | Count |
+| --- | --- | ---: |
+| `behavior` | Use Case / Behavior | 24 |
+| `workflow` | Workflow | 1 |
+| `example` | Example / Scenario | 68 |
+| `rule` | Business Rule | 21 |
+| `constraint` | Constraint (NFR) | 1 |
+| `model` | Domain Model | 9 |
+| `decision` | Decision Record | 30 |
+| `contract` | Contract | 1 |
+
+## Spec altitudes
+
+| Value | Count |
+| --- | ---: |
+| `epic` | 1 |
+| `feature` | 74 |
+| `story` | 80 |
+================================================================
+### 1c. sdp mermaid . (self-hosting excludes) CRITICAL
+================================================================
+$ npm run --silent sdp -- mermaid . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:18:53+02:00
+exit: 0
+--- stdout ---
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/contracts (102 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/mermaid (157 pages)
+ended: 2026-08-14T20:18:55+02:00
+test -f generated/census/index.md -> 1
+test -d generated/mermaid -> 0
+  mermaid pages=157
+test -d generated/gherkin -> 1
+test -d generated/design-review -> 1
+--- pack:self-hosting-v1 page ---
+# Pack membership: pack:self-hosting-v1
+
+**REFUSED**
+
+Mermaid diagram "pack:self-hosting-v1" exceeds MAX_MERMAID_NODES_PER_DIAGRAM: limit=64 observed=156
+
+The diagram is withheld. In-bound diagrams still publish. The projection never silently truncates, shards partially, or drops edges to fit.
+
+_Generated from the one graph by `sdp mermaid` — read-only; regenerate to update._
+--- index pack row ---
+- [`pack:self-hosting-v1`](pack/self-hosting-v1.md) — REFUSED Mermaid diagram "pack:self-hosting-v1" exceeds MAX_MERMAID_NODES_PER_DIAGRAM: limit=64 observed=156
+in-bound spec:consumers.mermaid-view fence=True
+================================================================
+### 1d. sdp gherkin . (self-hosting excludes)
+================================================================
+$ npm run --silent sdp -- gherkin . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:18:55+02:00
+exit: 0
+--- stdout ---
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/contracts (102 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/gherkin (156 pages)
+ended: 2026-08-14T20:18:56+02:00
+test -f generated/census/index.md -> 1
+test -d generated/mermaid -> 1
+test -d generated/gherkin -> 0
+  gherkin files=156
+test -d generated/design-review -> 1
+================================================================
+### 2a. sdp view examples/checkout-v1 + design-review golden
+================================================================
+$ npm run --silent sdp -- view examples/checkout-v1
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:18:56+02:00
+exit: 0
+--- stdout ---
+11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/examples/checkout-v1/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/examples/checkout-v1/generated/contracts (3 modules)
+validate: 0 errors · 1 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/examples/checkout-v1/generated/design-review (13 pages)
+--- stderr ---
+specs/orders/create-order-invalid-cart.sdp.md — [warning] conformance/verifies-linkage — Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier.
+ended: 2026-08-14T20:18:57+02:00
+$ diff -rq examples/checkout-v1/generated/design-review test/fixtures/checkout-v1/expected-design-review
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:18:57+02:00
+exit: 0
+ended: 2026-08-14T20:18:57+02:00
+================================================================
+### 2b. sdp census examples/checkout-v1 + census golden
+================================================================
+$ npm run --silent sdp -- census examples/checkout-v1
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:18:57+02:00
+exit: 0
+--- stdout ---
+11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/examples/checkout-v1/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/examples/checkout-v1/generated/contracts (3 modules)
+validate: 0 errors · 1 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/examples/checkout-v1/generated/census (1 pages)
+--- stderr ---
+specs/orders/create-order-invalid-cart.sdp.md — [warning] conformance/verifies-linkage — Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier.
+ended: 2026-08-14T20:18:57+02:00
+$ diff -rq examples/checkout-v1/generated/census test/fixtures/checkout-v1/expected-census
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:18:57+02:00
+exit: 0
+ended: 2026-08-14T20:18:57+02:00
+================================================================
+### 2c. sdp mermaid examples/checkout-v1 + mermaid golden
+================================================================
+$ npm run --silent sdp -- mermaid examples/checkout-v1
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:18:57+02:00
+exit: 0
+--- stdout ---
+11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/examples/checkout-v1/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/examples/checkout-v1/generated/contracts (3 modules)
+validate: 0 errors · 1 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/examples/checkout-v1/generated/mermaid (13 pages)
+--- stderr ---
+specs/orders/create-order-invalid-cart.sdp.md — [warning] conformance/verifies-linkage — Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier.
+ended: 2026-08-14T20:18:58+02:00
+$ diff -rq examples/checkout-v1/generated/mermaid test/fixtures/checkout-v1/expected-mermaid
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:18:58+02:00
+exit: 0
+ended: 2026-08-14T20:18:58+02:00
+$ diff -q examples/checkout-v1/generated/graph.json test/fixtures/checkout-v1/expected-graph.json
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:18:58+02:00
+exit: 0
+ended: 2026-08-14T20:18:58+02:00
+================================================================
+### 3. recipe bodies (verbatim from docs/agent-surface/recipes.md)
+================================================================
+recipe 1 title='1. The build backlog' bytes=1122 sha256=24d28a642df6
+recipe 2 title='2. The drift alarm' bytes=763 sha256=f4ab52e8102e
+recipe 8 title='8. Orphans and gaps' bytes=568 sha256=e78121ce6c5d
+================================================================
+### 3.1 recipe 1 via sdp:q --json
+================================================================
+body bytes: 1122
+$ npm run --silent sdp:q -- const ready = g.specs().filter((spec) => spec.statedReadiness === "ready");
+const backlog = ready.filter(
+  (spec) =>
+    spec.specKind !== "example" &&
+    spec.specKind !== "decision" &&
+    !spec.deliveryFacts.includes("implemented"),
+);
+const excludedExamples = ready.filter(
+  (spec) => spec.specKind === "example" && !spec.deliveryFacts.includes("implemented"),
+);
+const excludedDecisions = ready.filter(
+  (spec) => spec.specKind === "decision" && !spec.deliveryFacts.includes("implemented"),
+);
+const byFamily = {};
+
+for (const spec of backlog) {
+  const family = spec.id.slice("spec:".length).split(".")[0];
+  byFamily[family] = byFamily[family] ?? [];
+  byFamily[family].push({
+    id: spec.id,
+    kind: spec.specKind,
+    altitude: spec.altitude,
+    hasVerifier: spec.deliveryFacts.includes("has-verifier"),
+  });
+}
+
+return {
+  total: backlog.length,
+  byFamily,
+  excludedReadyExamples: excludedExamples.length,
+  excludedReadyDecisions: excludedDecisions.length,
+  excludedWithoutVerifier: excludedExamples
+    .filter((spec) => !spec.deliveryFacts.includes("has-verifier"))
+    .map((spec) => spec.id),
+};
+ --json
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:18:58+02:00
+exit: 0
+--- stdout ---
+{
+  "total": 0,
+  "byFamily": {},
+  "excludedReadyExamples": 66,
+  "excludedReadyDecisions": 30,
+  "excludedWithoutVerifier": []
+}
+ended: 2026-08-14T20:18:59+02:00
+================================================================
+### 3.2 recipe 2 via sdp:q --json
+================================================================
+body bytes: 763
+$ npm run --silent sdp:q -- const rungs = ["idea", "scoped", "defined", "ready"];
+const alarms = g
+  .specs()
+  .filter((spec) => spec.deliveryFacts.includes("implemented") && spec.statedReadiness !== "ready")
+  .map((spec) => {
+    const context = g.specContext(spec.id);
+    const unmet = context === undefined ? [] : context.floorFailures;
+
+    return {
+      id: spec.id,
+      statedReadiness: spec.statedReadiness,
+      floorReached: spec.derivedReadiness ?? "none",
+      firstUnmetClause: unmet.length === 0 ? null : unmet[0].clauseId,
+      implementationBindings: context === undefined ? 0 : context.implementations.length,
+    };
+  })
+  .sort((left, right) => rungs.indexOf(left.statedReadiness) - rungs.indexOf(right.statedReadiness));
+
+return { total: alarms.length, alarms };
+ --json
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:18:59+02:00
+exit: 0
+--- stdout ---
+{
+  "total": 11,
+  "alarms": [
+    {
+      "id": "spec:carrier.markdown-authoring",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "firstUnmetClause": null,
+      "implementationBindings": 1
+    },
+    {
+      "id": "spec:consumers.census-page",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "firstUnmetClause": null,
+      "implementationBindings": 1
+    },
+    {
+      "id": "spec:consumers.gherkin-view",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "firstUnmetClause": null,
+      "implementationBindings": 1
+    },
+    {
+      "id": "spec:consumers.mermaid-view",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "firstUnmetClause": null,
+      "implementationBindings": 1
+    },
+    {
+      "id": "spec:consumers.projections-model",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "firstUnmetClause": null,
+      "implementationBindings": 1
+    },
+    {
+      "id": "spec:extraction.claim-taxonomy",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "firstUnmetClause": null,
+      "implementationBindings": 1
+    },
+    {
+      "id": "spec:extraction.regenerability",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "firstUnmetClause": null,
+      "implementationBindings": 1
+    },
+    {
+      "id": "spec:model.core-model",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "firstUnmetClause": null,
+      "implementationBindings": 2
+    },
+    {
+      "id": "spec:model.pack-aggregate",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "firstUnmetClause": null,
+      "implementationBindings": 1
+    },
+    {
+      "id": "spec:model.relations",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "firstUnmetClause": null,
+      "implementationBindings": 1
+    },
+    {
+      "id": "spec:model.spec-sections",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "firstUnmetClause": null,
+      "implementationBindings": 2
+    }
+  ]
+}
+ended: 2026-08-14T20:19:00+02:00
+================================================================
+### 3.8 recipe 8 via sdp:q --json
+================================================================
+body bytes: 568
+$ npm run --silent sdp:q -- const warnings = report.findings.filter((finding) => finding.severity === "warning");
+const byValidator = {};
+
+for (const finding of warnings) {
+  byValidator[finding.validatorId] = (byValidator[finding.validatorId] ?? 0) + 1;
+}
+
+return {
+  errors: report.findings.filter((finding) => finding.severity === "error").length,
+  warnings: warnings.length,
+  byValidator,
+  signals: warnings.slice(0, 25).map((finding) => ({
+    validatorId: finding.validatorId,
+    family: finding.family,
+    subjectId: finding.subjectId ?? null,
+    message: finding.message,
+  })),
+};
+ --json
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:00+02:00
+exit: 0
+--- stdout ---
+{
+  "errors": 0,
+  "warnings": 0,
+  "byValidator": {},
+  "signals": []
+}
+ended: 2026-08-14T20:19:02+02:00
+================================================================
+### 3x. independent recipe correctness check
+================================================================
+recipe1 keys: ['byFamily', 'excludedReadyDecisions', 'excludedReadyExamples', 'excludedWithoutVerifier', 'total']
+recipe2 keys: ['alarms', 'total']
+recipe8 keys: ['byValidator', 'errors', 'signals', 'warnings']
+recipe2 alarm ids: ['spec:carrier.markdown-authoring', 'spec:consumers.census-page', 'spec:consumers.gherkin-view', 'spec:consumers.mermaid-view', 'spec:consumers.projections-model', 'spec:extraction.claim-taxonomy', 'spec:extraction.regenerability', 'spec:model.core-model', 'spec:model.pack-aggregate', 'spec:model.relations', 'spec:model.spec-sections']
+OK recipe1=True total=0
+OK recipe2=True total=11
+OK recipe8=True errors=0
+================================================================
+### 3y. independent expected sets via sdp:q
+================================================================
+$ npm run --silent sdp:q -- return { backlogIds: g.specs().filter(s => s.statedReadiness === 'ready' && s.specKind !== 'example' && s.specKind !== 'decision' && !s.deliveryFacts.includes('implemented')).map(s => s.id), backlogTotal: g.specs().filter(s => s.statedReadiness === 'ready' && s.specKind !== 'example' && s.specKind !== 'decision' && !s.deliveryFacts.includes('implemented')).length, excludedReadyExamples: g.specs().filter(s => s.statedReadiness === 'ready' && s.specKind === 'example' && !s.deliveryFacts.includes('implemented')).length, excludedReadyDecisions: g.specs().filter(s => s.statedReadiness === 'ready' && s.specKind === 'decision' && !s.deliveryFacts.includes('implemented')).length, excludedWithoutVerifier: g.specs().filter(s => s.statedReadiness === 'ready' && s.specKind === 'example' && !s.deliveryFacts.includes('implemented') && !s.deliveryFacts.includes('has-verifier')).map(s => s.id), alarmIds: g.specs().filter(s => s.deliveryFacts.includes('implemented') && s.statedReadiness !== 'ready').map(s => s.id).sort(), errors: report.findings.filter(f => f.severity === 'error').length, warnings: report.findings.filter(f => f.severity === 'warning').length, byValidator: report.findings.filter(f => f.severity === 'warning') .reduce((acc, f) => { acc[f.validatorId] = (acc[f.validatorId] ?? 0) + 1; return acc; }, {}) } --json
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:02+02:00
+exit: 0
+--- stdout ---
+{
+  "backlogIds": [],
+  "backlogTotal": 0,
+  "excludedReadyExamples": 66,
+  "excludedReadyDecisions": 30,
+  "excludedWithoutVerifier": [],
+  "alarmIds": [
+    "spec:carrier.markdown-authoring",
+    "spec:consumers.census-page",
+    "spec:consumers.gherkin-view",
+    "spec:consumers.mermaid-view",
+    "spec:consumers.projections-model",
+    "spec:extraction.claim-taxonomy",
+    "spec:extraction.regenerability",
+    "spec:model.core-model",
+    "spec:model.pack-aggregate",
+    "spec:model.relations",
+    "spec:model.spec-sections"
+  ],
+  "errors": 0,
+  "warnings": 0,
+  "byValidator": {}
+}
+ended: 2026-08-14T20:19:03+02:00
+{
+  "backlogIds": [],
+  "backlogTotal": 0,
+  "excludedReadyExamples": 66,
+  "excludedReadyDecisions": 30,
+  "excludedWithoutVerifier": [],
+  "alarmIds": [
+    "spec:carrier.markdown-authoring",
+    "spec:consumers.census-page",
+    "spec:consumers.gherkin-view",
+    "spec:consumers.mermaid-view",
+    "spec:consumers.projections-model",
+    "spec:extraction.claim-taxonomy",
+    "spec:extraction.regenerability",
+    "spec:model.core-model",
+    "spec:model.pack-aggregate",
+    "spec:model.relations",
+    "spec:model.spec-sections"
+  ],
+  "errors": 0,
+  "warnings": 0,
+  "byValidator": {}
+}
+RECIPE_CROSSCHECK_OK=True
+================================================================
+### 4a. generate:example
+================================================================
+$ npm run --silent generate:example
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:03+02:00
+exit: 0
+--- stdout ---
+11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/examples/checkout-v1/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/examples/checkout-v1/generated/contracts (3 modules)
+ended: 2026-08-14T20:19:03+02:00
+================================================================
+### 4b. valid-cart test GREEN in worktree
+================================================================
+$ npx vitest run examples/checkout-v1/test/orders/create-order.valid-cart.test.ts
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:03+02:00
+exit: 0
+--- stdout ---
+
+ RUN  v4.1.10 /home/darkomijic/dev-libar/sdp-f3-rerun
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  20:19:04
+   Duration  886ms (transform 366ms, setup 0ms, import 754ms, tests 5ms, environment 0ms)
+ended: 2026-08-14T20:19:05+02:00
+================================================================
+### 4c. scratch mutation {total: 100} -> {total: 101}
+================================================================
+scratch: /tmp/sdp-f3-rerun-mutation
+mutating /tmp/sdp-f3-rerun-mutation/examples/checkout-v1/specs/orders/create-order-valid-cart.sdp.md
+mutation applied
+22:Then an order is created with total {total: 101}
+29:- The returned total matches the authored total — the spec's value, never the test's.
+================================================================
+### 4d. generate:example in scratch
+================================================================
+$ npm run --silent generate:example
+cwd: /tmp/sdp-f3-rerun-mutation
+started: 2026-08-14T20:19:05+02:00
+exit: 0
+--- stdout ---
+11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
+Wrote /tmp/sdp-f3-rerun-mutation/examples/checkout-v1/generated/graph.json
+Wrote /tmp/sdp-f3-rerun-mutation/examples/checkout-v1/generated/contracts (3 modules)
+ended: 2026-08-14T20:19:06+02:00
+================================================================
+### 4e. valid-cart test RED after Spec {total} 100->101
+================================================================
+$ npx vitest run examples/checkout-v1/test/orders/create-order.valid-cart.test.ts
+cwd: /tmp/sdp-f3-rerun-mutation
+started: 2026-08-14T20:19:06+02:00
+exit: 1
+--- stdout ---
+
+ RUN  v4.1.10 /tmp/sdp-f3-rerun-mutation
+
+ ❯ examples/checkout-v1/test/orders/create-order.valid-cart.test.ts (1 test | 1 failed) 7ms
+     × executes the bound example against a fresh world 6ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  20:19:07
+   Duration  877ms (transform 364ms, setup 0ms, import 737ms, tests 7ms, environment 0ms)
+--- stderr ---
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  examples/checkout-v1/test/orders/create-order.valid-cart.test.ts > Valid cart creates an order (spec:orders.create-order.valid-cart) > executes the bound example against a fresh world
+Error: at step: Then an order is created with total 101
+at step: Then an order is created with total 101
+Spec Then parameters do not match the oracle payload
+$.total: expected 101, actual 100
+ ❯ assertDeepEqual src/testing/index.ts:138:9
+    136|   }
+    137|
+    138|   throw new Error(`${context}\n${firstDifference(expected, actual, "$"…
+       |         ^
+    139| }
+    140|
+ ❯ compareContractOutcome src/testing/index.ts:74:3
+ ❯ Object.an order is created with total {total} examples/checkout-v1/test/orders/orders.create-order.valid-cart.test.generated.ts:44:7
+ ❯ Object.run src/runner/index.ts:117:45
+ ❯ runExamplePlan src/runner/index.ts:135:18
+ ❯ src/adapters/vitest.ts:37:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+ended: 2026-08-14T20:19:07+02:00
+RED_OK (exit!=0 and expected 101 actual 100)=True
+================================================================
+### 4f. discard scratch; confirm worktree untouched
+================================================================
+scratch removed: True
+worktree git status after mutation experiment:
+## HEAD (no branch)
+worktree spec still has {total: 100}: True
+22:Then an order is created with total {total: 100}
+29:- The returned total matches the authored total — the spec's value, never the test's.
+================================================================
+### 4g. valid-cart test still GREEN in worktree
+================================================================
+$ npx vitest run examples/checkout-v1/test/orders/create-order.valid-cart.test.ts
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:07+02:00
+exit: 0
+--- stdout ---
+
+ RUN  v4.1.10 /home/darkomijic/dev-libar/sdp-f3-rerun
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  20:19:08
+   Duration  875ms (transform 372ms, setup 0ms, import 741ms, tests 5ms, environment 0ms)
+ended: 2026-08-14T20:19:09+02:00
+================================================================
+### 5.census pass 1
+================================================================
+$ npm run --silent sdp -- census . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:09+02:00
+exit: 0
+--- stdout ---
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/contracts (102 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/census (1 pages)
+ended: 2026-08-14T20:19:10+02:00
+================================================================
+### 5.census pass 2
+================================================================
+$ npm run --silent sdp -- census . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:10+02:00
+exit: 0
+--- stdout ---
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/contracts (102 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/census (1 pages)
+ended: 2026-08-14T20:19:12+02:00
+================================================================
+### 5.census byte-identical
+================================================================
+$ diff -rq /tmp/sdp-f3-rerun-det/census-1 /tmp/sdp-f3-rerun-det/census-2
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:12+02:00
+exit: 0
+ended: 2026-08-14T20:19:12+02:00
+================================================================
+### 5.census --check-clean immediately after write
+================================================================
+$ npm run --silent sdp -- census . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --check-clean
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:12+02:00
+exit: 0
+--- stdout ---
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/contracts (102 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/census (1 pages)
+ended: 2026-08-14T20:19:14+02:00
+census still present after --check-clean: True
+================================================================
+### 5.mermaid pass 1
+================================================================
+$ npm run --silent sdp -- mermaid . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:14+02:00
+exit: 0
+--- stdout ---
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/contracts (102 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/mermaid (157 pages)
+ended: 2026-08-14T20:19:15+02:00
+================================================================
+### 5.mermaid pass 2
+================================================================
+$ npm run --silent sdp -- mermaid . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:15+02:00
+exit: 0
+--- stdout ---
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/contracts (102 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/mermaid (157 pages)
+ended: 2026-08-14T20:19:17+02:00
+================================================================
+### 5.mermaid byte-identical
+================================================================
+$ diff -rq /tmp/sdp-f3-rerun-det/mermaid-1 /tmp/sdp-f3-rerun-det/mermaid-2
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:17+02:00
+exit: 0
+ended: 2026-08-14T20:19:17+02:00
+================================================================
+### 5.mermaid --check-clean immediately after write
+================================================================
+$ npm run --silent sdp -- mermaid . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --check-clean
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:17+02:00
+exit: 0
+--- stdout ---
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/contracts (102 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/mermaid (157 pages)
+ended: 2026-08-14T20:19:19+02:00
+mermaid still present after --check-clean: True
+================================================================
+### 5.gherkin pass 1
+================================================================
+$ npm run --silent sdp -- gherkin . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:19+02:00
+exit: 0
+--- stdout ---
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/contracts (102 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/gherkin (156 pages)
+ended: 2026-08-14T20:19:20+02:00
+================================================================
+### 5.gherkin pass 2
+================================================================
+$ npm run --silent sdp -- gherkin . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:20+02:00
+exit: 0
+--- stdout ---
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/contracts (102 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/gherkin (156 pages)
+ended: 2026-08-14T20:19:21+02:00
+================================================================
+### 5.gherkin byte-identical
+================================================================
+$ diff -rq /tmp/sdp-f3-rerun-det/gherkin-1 /tmp/sdp-f3-rerun-det/gherkin-2
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:22+02:00
+exit: 0
+ended: 2026-08-14T20:19:22+02:00
+================================================================
+### 5.gherkin --check-clean immediately after write
+================================================================
+$ npm run --silent sdp -- gherkin . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --check-clean
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:22+02:00
+exit: 0
+--- stdout ---
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/contracts (102 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/gherkin (156 pages)
+ended: 2026-08-14T20:19:23+02:00
+gherkin still present after --check-clean: True
+================================================================
+### 6. full gate: npm run check
+================================================================
+$ npm run check
+cwd: /home/darkomijic/dev-libar/sdp-f3-rerun
+started: 2026-08-14T20:19:23+02:00
+exit: 0
+--- stdout ---
+
+> @libar-dev/software-delivery-protocol@0.0.0 check
+> npm run check:temporal && npm run lint && npm run format:check && npm run build && npm run generate:self-hosting && npm run generate:example && npm run typecheck && npm run typecheck:examples && npm test && npm run check:self-hosting-gates && npm run check:self-hosting && npm run check:example && npm run preflight
+
+
+> @libar-dev/software-delivery-protocol@0.0.0 check:temporal
+> node ./check-temporal.mjs
+
+
+> @libar-dev/software-delivery-protocol@0.0.0 lint
+> eslint .
+
+
+> @libar-dev/software-delivery-protocol@0.0.0 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> @libar-dev/software-delivery-protocol@0.0.0 build
+> tsup
+
+CLI Building entry: src/index.ts
+CLI Using tsconfig: tsconfig.json
+CLI tsup v8.5.1
+CLI Using tsup config: /home/darkomijic/dev-libar/sdp-f3-rerun/tsup.config.ts
+CLI Building entry: src/index.ts, src/adapters/vitest.ts, src/cli/sdp.ts, src/runner/index.ts, src/testing/index.ts
+CLI Using tsconfig: tsconfig.json
+CLI tsup v8.5.1
+CLI Using tsup config: /home/darkomijic/dev-libar/sdp-f3-rerun/tsup.config.ts
+CLI Target: es2022
+CJS Build start
+CLI Target: es2022
+CLI Cleaning output folder
+ESM Build start
+CJS dist/index.cjs 335.34 KB
+CJS ⚡️ Build success in 94ms
+ESM dist/runner/index.js    8.39 KB
+ESM dist/testing/index.js   12.91 KB
+ESM dist/adapters/vitest.js 8.96 KB
+ESM dist/index.js           329.25 KB
+ESM dist/cli/sdp.js         370.39 KB
+ESM ⚡️ Build success in 96ms
+DTS Build start
+DTS ⚡️ Build success in 4755ms
+DTS dist/adapters/vitest.d.ts 325.00 B
+DTS dist/cli/sdp.d.ts         7.86 KB
+DTS dist/index.d.ts           19.76 KB
+DTS dist/testing/index.d.ts   2.05 KB
+DTS dist/runner/index.d.ts    5.23 KB
+DTS dist/census-6hMb-wXx.d.ts 48.59 KB
+
+> @libar-dev/software-delivery-protocol@0.0.0 generate:self-hosting
+> node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/contracts (102 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/design-review (157 pages)
+
+> @libar-dev/software-delivery-protocol@0.0.0 generate:example
+> node ./dist/cli/sdp.js build examples/checkout-v1
+
+11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/examples/checkout-v1/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/examples/checkout-v1/generated/contracts (3 modules)
+
+> @libar-dev/software-delivery-protocol@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @libar-dev/software-delivery-protocol@0.0.0 typecheck:examples
+> tsc --noEmit -p tsconfig.examples.json
+
+
+> @libar-dev/software-delivery-protocol@0.0.0 test
+> node ./vitest-test.mjs
+
+
+ RUN  v4.1.10 /home/darkomijic/dev-libar/sdp-f3-rerun
+
+
+ Test Files  58 passed (58)
+      Tests  753 passed | 1 skipped (754)
+   Start at  20:19:53
+   Duration  26.51s (transform 4.88s, setup 0ms, import 54.91s, tests 42.71s, environment 13ms)
+
+
+ RUN  v4.1.10 /home/darkomijic/dev-libar/sdp-f3-rerun
+
+
+ Test Files  1 passed (1)
+      Tests  59 passed (59)
+   Start at  20:20:20
+   Duration  2.74s (transform 434ms, setup 0ms, import 824ms, tests 1.78s, environment 0ms)
+
+
+> @libar-dev/software-delivery-protocol@0.0.0 check:self-hosting-gates
+> node ./check-self-hosting-gates.mjs
+
+{
+  "surfaces": {
+    "plan": "plans/17-self-hosting-v1.md",
+    "plan16": "plans/16-carrier-ruling.md",
+    "agents": "AGENTS.md",
+    "decisions": "docs/concept/DECISIONS.md",
+    "glossary": "CONTEXT.md",
+    "phase2Plan": "plans/18-self-hosting-phase-2.md",
+    "currentPlan": "plans/31-carrier-universality-runnable-modules-projections-structural-anchors.md",
+    "package": "package.json"
+  },
+  "currentRecord": {
+    "status": "EXECUTING",
+    "gateLegs": [
+      "check:temporal",
+      "lint",
+      "format:check",
+      "build",
+      "generate:self-hosting",
+      "generate:example",
+      "typecheck",
+      "typecheck:examples",
+      "test",
+      "check:self-hosting-gates",
+      "check:self-hosting",
+      "check:example",
+      "preflight"
+    ]
+  },
+  "temporal": {
+    "ran": true,
+    "exit": 0
+  },
+  "docket": {
+    "total": 25,
+    "nonPending": 25,
+    "dispositions": [
+      {
+        "item": "Frontmatter envelope schema (17)",
+        "state": "done"
+      },
+      {
+        "item": "Editor-association gap (17)",
+        "state": "deferred"
+      },
+      {
+        "item": "Fence names (17)",
+        "state": "done"
+      },
+      {
+        "item": "Slot sigils (17)",
+        "state": "done"
+      },
+      {
+        "item": "Single-literal vocabulary form (17)",
+        "state": "dropped"
+      },
+      {
+        "item": "Table-sugar syntax (17)",
+        "state": "dropped"
+      },
+      {
+        "item": "Prose edge-text ownership rule (17)",
+        "state": "done"
+      },
+      {
+        "item": "Diagnostics register (17)",
+        "state": "done"
+      },
+      {
+        "item": "Carrier seam public API (18)",
+        "state": "done"
+      },
+      {
+        "item": "Product parser (18)",
+        "state": "done"
+      },
+      {
+        "item": "`sdp import` emitter (18)",
+        "state": "deferred"
+      },
+      {
+        "item": "checkout-v1 migration + canonical flip (18)",
+        "state": "deferred"
+      },
+      {
+        "item": "Self-hosting pack (19)",
+        "state": "done"
+      },
+      {
+        "item": "Decision-spec fold (19)",
+        "state": "done"
+      },
+      {
+        "item": "Doc-repair bill (19)",
+        "state": "done"
+      },
+      {
+        "item": "Extraction-root & exclusion policy (new — forced by self-hosting)",
+        "state": "done"
+      },
+      {
+        "item": "Graph schema-version policy for prose fields (new)",
+        "state": "done"
+      },
+      {
+        "item": "Carrier-ruling transition-clause amendment (new — forced by the interim story)",
+        "state": "done"
+      },
+      {
+        "item": "Public/package API proof (new — forced by grounded review)",
+        "state": "done"
+      },
+      {
+        "item": "Temporal-scan coverage (new — forced by grounded review)",
+        "state": "done"
+      },
+      {
+        "item": "Root generated-state isolation (new — forced by grounded review)",
+        "state": "done"
+      },
+      {
+        "item": "Clean-clone proof (new — forced by grounded review)",
+        "state": "done"
+      },
+      {
+        "item": "JTBD carrier repair (new — drift found by grounded review)",
+        "state": "done"
+      },
+      {
+        "item": "MD-15 wording repair (new — forced by the carrier ruling)",
+        "state": "done"
+      },
+      {
+        "item": "Four-gate review ledger (new — forced by the owner-gate design)",
+        "state": "done"
+      }
+    ],
+    "pending": []
+  },
+  "adrDispositions": {
+    "the strict consumer-exclusion contract (MD-20)": "diary entry entered — three-part test passes",
+    "the envelope-grammar ownership posture (MD-21)": "diary entry entered — three-part test passes"
+  },
+  "ledger": {
+    "gate1": {
+      "meaning": "schema freeze",
+      "disposition": "accepted",
+      "date": "2026-07-18",
+      "sha": "aca79090529c2f6625ceafc78f33e16da81bfcb1",
+      "corrections": "none"
+    },
+    "gate2": {
+      "meaning": "corpus/readiness",
+      "disposition": "accepted",
+      "date": "2026-07-18",
+      "sha": "cdb68fc1564c9167ebc0372ba8f8599a97df4393",
+      "corrections": "none"
+    },
+    "gate3": {
+      "meaning": "executable loop",
+      "disposition": "accepted",
+      "date": "2026-07-18",
+      "sha": "1687885df7b1898c56e154ce2dbe4fa3c6c6c425",
+      "corrections": "none"
+    },
+    "gate4": {
+      "meaning": "whole-phase review and the phase-2 disposition",
+      "disposition": "accepted",
+      "date": "2026-07-18",
+      "sha": "1d9f38c7a993f9cdc27cc4e178e211e33286758b",
+      "corrections": "24f9978: docs(concept): record the landed prose projection in 06"
+    }
+  },
+  "phase2Ledger": "G1-G8 scaffold checked"
+}
+
+> @libar-dev/software-delivery-protocol@0.0.0 check:self-hosting
+> node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --check-clean
+
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/contracts (102 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/generated/design-review (157 pages)
+
+> @libar-dev/software-delivery-protocol@0.0.0 check:example
+> node ./dist/cli/sdp.js view examples/checkout-v1 --check-clean
+
+11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/examples/checkout-v1/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/examples/checkout-v1/generated/contracts (3 modules)
+validate: 0 errors · 1 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/sdp-f3-rerun/examples/checkout-v1/generated/design-review (13 pages)
+
+> @libar-dev/software-delivery-protocol@0.0.0 preflight
+> node ./preflight.mjs
+
+preflight: semantic diff summary
+clean
+--- stderr ---
+
+ WARN  [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1m"import.meta" is not available with the "cjs" output format and will be empty[0m [empty-import-meta]
+
+    src/extract/protocol-bindings.ts:53:20:
+[37m      53 │   const moduleUrl = [32mimport.meta[37m.url;
+         ╵                     [32m~~~~~~~~~~~[0m
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+
+
+[warn] [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1m"import.meta" is not available with the "cjs" output format and will be empty[0m [empty-import-meta]
+
+    src/extract/protocol-bindings.ts:53:20:
+[37m      53 │   const moduleUrl = [32mimport.meta[37m.url;
+         ╵                     [32m~~~~~~~~~~~[0m
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+
+npm notice
+npm notice 📦  @libar-dev/software-delivery-protocol@0.0.0
+npm notice Tarball Contents
+npm notice 6.5kB .agents/skills/sdp-agent-surface/SKILL.md
+npm notice 9.6kB .agents/skills/sdp-authoring/SKILL.md
+npm notice 3.5kB .agents/skills/sdp-sessions/SKILL.md
+npm notice 11.4kB LICENSE
+npm notice 5.8kB README.md
+npm notice 325B dist/adapters/vitest.d.ts
+npm notice 9.2kB dist/adapters/vitest.js
+npm notice 50.0kB dist/census-6hMb-wXx.d.ts
+npm notice 8.1kB dist/cli/sdp.d.ts
+npm notice 379.3kB dist/cli/sdp.js
+npm notice 343.4kB dist/index.cjs
+npm notice 20.3kB dist/index.d.ts
+npm notice 337.2kB dist/index.js
+npm notice 5.4kB dist/runner/index.d.ts
+npm notice 8.6kB dist/runner/index.js
+npm notice 2.1kB dist/testing/index.d.ts
+npm notice 13.2kB dist/testing/index.js
+npm notice 17.9kB docs/agent-surface/recipes.md
+npm notice 3.2kB package.json
+npm notice Tarball Details
+npm notice name: @libar-dev/software-delivery-protocol
+npm notice version: 0.0.0
+npm notice filename: libar-dev-software-delivery-protocol-0.0.0.tgz
+npm notice package size: 265.7 kB
+npm notice unpacked size: 1.2 MB
+npm notice shasum: 07d76f0c5b25ed3d9225c602a26fd0a83ec41db5
+npm notice integrity: sha512-qV5Xo/d82J5yp[...]MC1Qcl+VC8a/A==
+npm notice total files: 19
+npm notice
+specs/orders/create-order-invalid-cart.sdp.md — [warning] conformance/verifies-linkage — Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier.
+ended: 2026-08-14T20:20:27+02:00
+--- check notable lines ---
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
+ Test Files  58 passed (58)
+      Tests  753 passed | 1 skipped (754)
+ Test Files  1 passed (1)
+      Tests  59 passed (59)
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
+validate: 0 errors · 1 warnings (conformance + honesty over the one graph)
+specs/orders/create-order-invalid-cart.sdp.md — [warning] conformance/verifies-linkage — Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier.
+worktree_status_final:
+## HEAD (no branch)
+================================================================
+### VERDICT
+================================================================
+date: 2026-08-14T20:20:27+02:00
+worktree: /home/darkomijic/dev-libar/sdp-f3-rerun
+HEAD: c7e9524a3c9e4ca9c32e481eec2753180157cb46
+worktree_kept: yes
+scratch_discarded: /tmp/sdp-f3-rerun-mutation removed; worktree spec still {total: 100}
+
+VERDICT: APPROVE
+confidence: 0.96
+
+Gate-by-gate:
+
+1. Real surfaces (self-hosting excludes: explorations, examples, test/fixtures/import/parity)
+   - sdp view .                         exit 0  PASS
+   - sdp census .                       exit 0  PASS
+   - test -f generated/census/index.md  PASS
+   - sdp gherkin .                      exit 0  PASS
+   - sdp mermaid .                      exit 0  PASS
+     mermaid root populated: True pages=157
+     pack:self-hosting-v1 named REFUSED page: True
+     index names refusal: True
+     pack page has mermaid fence (must be False): False
+     in-bound mermaid-view page has fence: True
+   GATE 1: PASS
+
+2. Golden fidelity (examples/checkout-v1 vs test/fixtures/checkout-v1/expected-*)
+   - design-review  exit 0  PASS
+   - census         exit 0  PASS
+   - mermaid        exit 0  PASS
+   - graph.json     exit 0  PASS
+   GATE 2: PASS
+
+3. Recipes 1, 2, 8 via npm run --silent sdp:q -- '<body>' --json
+   - recipe 1 exit 0 ok=True
+   - recipe 2 exit 0 ok=True
+   - recipe 8 exit 0 ok=True
+   - independent cross-check: True
+   GATE 3: PASS
+
+4. Valid-cart generated test + mutation
+   - generate:example exit 0
+   - worktree GREEN exit 0
+   - scratch RED_OK=True exit 1
+   - worktree untouched=True
+   - worktree GREEN again exit 0
+   GATE 4: PASS
+
+5. Determinism (two independent generations, byte-identical) + --check-clean twins
+   - census   1=0 2=0 diff=0 check-clean=0
+   - mermaid  1=0 2=0 diff=0 check-clean=0
+   - gherkin  1=0 2=0 diff=0 check-clean=0
+   GATE 5: PASS
+
+6. Full gate npm run check exit 0  PASS
+   GATE 6: PASS
+
+RESULTS raw: {"VIEW_EC": 0, "CENSUS_EC": 0, "census_index": true, "MERMAID_EC": 0, "mermaid_root": true, "GHERKIN_EC": 0, "gherkin_root": true, "VIEW_EX_EC": 0, "GOLDEN_DR": 0, "CENSUS_EX_EC": 0, "GOLDEN_CE": 0, "MERMAID_EX_EC": 0, "GOLDEN_ME": 0, "GOLDEN_GR": 0, "GOLDEN_FAIL": false, "R1_EC": 0, "R2_EC": 0, "R8_EC": 0, "RECIPE_OK": true, "INDEPENDENT_EC": 0, "RECIPE_CROSSCHECK": true, "GEN_EX_EC": 0, "GREEN_EC": 0, "MUTATION_APPLIED": true, "MUT_GEN_EC": 0, "RED_EC": 1, "RED_OK": true, "WORKTREE_UNTOUCHED": true, "GREEN2_EC": 0, "CENSUS_1_EC": 0, "CENSUS_2_EC": 0, "CENSUS_DIFF_EC": 0, "CC_C_EC": 0, "MERMAID_1_EC": 0, "MERMAID_2_EC": 0, "MERMAID_DIFF_EC": 0, "CC_M_EC": 0, "GHERKIN_1_EC": 0, "GHERKIN_2_EC": 0, "GHERKIN_DIFF_EC": 0, "CC_G_EC": 0, "CHECK_EC": 0}
+mermaid_refusal: {"root_exists": true, "pack_page_exists": true, "index_exists": true, "refused_named": true, "index_names_refusal": true, "page_count": 157, "pack_has_fence": false, "in_bound_has_fence": true}
+ended: 2026-08-14T20:20:27+02:00

@@ -22,7 +22,11 @@ generated/
 
 # OmO plans and state
 .sisyphus/
-.omo/
+.omo/*
+!.omo/boulder.json
+!.omo/drafts/
+!.omo/plans/
+!.omo/evidence/
 
 # Pi state (used by taskplane)
 .pi/

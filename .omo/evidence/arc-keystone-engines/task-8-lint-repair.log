@@ -1,0 +1,34 @@
+Task: Todo 8 lint repair on branch arc/keystone-engines
+
+Patch summary:
+- src/testing/index.ts: explicitly consumed the destructured oracle kind with `void _oracleKind;`.
+- test/testing.test.ts: changed Conditions from a type alias to an interface.
+- test/testing.test.ts: added block braces around the void-returning compareContractOutcome assertion callback.
+- No behavior or test expectations changed.
+
+Commands and exits:
+- `npx eslint src/testing/index.ts test/testing.test.ts` -> exit 0
+- `npx vitest run test/testing.test.ts` -> exit 0 (1 file, 4 tests passed)
+- Restaged exactly: `src/testing/index.ts test/testing.test.ts`
+
+Cached manifest (13 paths, exact):
+examples/checkout-v1/test/orders/create-order.oracle.ts
+examples/checkout-v1/test/orders/create-order.valid-cart.test.generated.ts
+examples/checkout-v1/test/orders/create-order.valid-cart.test.ts
+package.json
+src/adapters/vitest.ts
+src/cli/build-command.ts
+src/codegen/contracts.ts
+src/testing/index.ts
+test/codegen.test.ts
+test/testing.test.ts
+tsconfig.examples.json
+tsup.config.ts
+vitest.config.ts
+
+Residue:
+- Cached manifest count: 13
+- Manifest exact: YES
+- Unstaged tracked paths: none
+- Untracked non-ignored paths: none
+- Residue clean: YES

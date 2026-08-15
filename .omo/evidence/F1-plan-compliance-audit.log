@@ -1,0 +1,215 @@
+F1 Plan Compliance Audit — pr-17-gherkin-carrier-hardening
+Date: 2026-08-14
+Auditor: omo senpi-task child (st_019ffde5)
+Mode: inspect-only (no source edits)
+Re-run after prior F1 FAIL on reserved-head similarity scaling.
+
+Sources:
+  - .omo/plans/pr-17-gherkin-carrier-hardening.md
+  - .omo/start-work/ledger.jsonl (13 task-completed events)
+  - .omo/evidence/task-{1..13}-pr-17-gherkin-carrier-hardening.log
+  - prior F1 log (st_019ffddc FAIL + st_019ffde1 remediation note)
+  - git status / git diff HEAD (67 files, +1668/-366 working tree incl. unstaged fix)
+  - live corpus: generated/graph.json, specs/, src/extract/, tests
+  - live verification this audit: npx vitest run test/gherkin-reifier.test.ts
+    test/gherkin-parity.test.ts → 63/63 pass; npm run typecheck → exit 0
+  - independent levenshtein harness for candidate-length thresholds
+
+================================================================================
+VERDICT: PASS
+================================================================================
+
+Primary prior defect is remediated in the final working tree:
+  Must-have "Scale reserved-head similarity by candidate length" is implemented.
+  decorationTagFinding → nearest(..., (candidate) => candidate.length <= 5 ? 1 : 2)
+  nearest() accepts number | ((candidate: string) => number) and skips candidates
+  outside their per-candidate max before unique-winner selection.
+
+Behavioral proof (code + tests + harness):
+  - Short reserved heads (≤5: kind/pack/spec): d=1 only
+      kindle ↛ kind (d=2) inert; paced ↛ pack (d=2) inert
+      king → kind (d=1); packs → pack (d=1) refuse without illegal did-you-mean
+  - Long reserved heads (>5): d≤2
+      readines → readiness (d=1)
+      constraind-by → constrained-by (d=1)
+      constraind-bi → constrained-by (d=2)  [explicit two-edit test]
+      example-spac → example-space (d=1)
+  - Tests green: gherkin-reifier 58 + gherkin-parity 5 = 63 passed
+  - No plan deviation / no missing trade-off record required (behavior matches Must-have)
+
+Note (non-blocking): one test title still says "length ≤5 one-edit near miss" while
+exercising @readines→readiness (candidate length 9). Behavior and other tests lock
+the real rule; title mismatch is cosmetic, not a Must-have miss.
+
+--------------------------------------------------------------------------------
+Must-have checklist (final diff + ledger + evidence)
+--------------------------------------------------------------------------------
+
+[PASS] Born-ready decision Spec for canonical .sdp.gherkin
+  - specs/decisions/sdp-gherkin-extension.sdp.md
+    id=spec:decisions.sdp-gherkin-extension, readiness=ready
+    refines → gherkin-carrier-option; dependsOn → sdp-ts-extension
+  - Trade-off recorded in Decision context/rationale/alternatives/consequences:
+    bare .feature keeps default tooling but collides with Cucumber globs;
+    .sdp.gherkin trades default editor recognition for collision-safe discovery
+  - MD-28 registered in docs/concept/DECISIONS.md; MD-15/MD-27 glosses extended
+    without rewriting original choices
+  - pack:self-hosting-v1 membership (specs/self-hosting.pack.sdp.md + oracle)
+  - Graph node present, readiness ready, belongsTo pack:self-hosting-v1
+  - Evidence: task-1 log + ledger
+
+[PASS] Atomic rename to .sdp.gherkin across discovery/routing/CLI/copy/ignore/
+       reader family/fixtures/tests/docs/skills/editor/oracles
+  - SPEC_FILE_SUFFIXES = [".sdp.ts", ".sdp.md", ".sdp.gherkin"] (discover.ts)
+  - index.ts routes endsWith(".sdp.gherkin"); build-command empty-corpus + finding.file
+    predicate use .sdp.gherkin; sdp.ts help updated
+  - .prettierignore: *.sdp.gherkin
+  - .vscode/settings.json: "*.sdp.gherkin" → "cucumber"; .gitignore allows tracking
+  - Live family: specs/consumers/reader.sdp.gherkin (reader.feature absent)
+  - Fixtures renamed *.sdp.gherkin.txt; cucumber-login.feature.txt kept as ordinary sibling
+  - Evidence: task-5, task-12, task-13
+
+[PASS] Suffix-only discovery; ordinary .feature not canonical; no dual-suffix; no sniff
+  - No bare .feature in SPEC_FILE_SUFFIXES
+  - Tests prove mixed root, feature-only empty model, failed .sdp.gherkin suffix predicate
+  - Operational residues of bare .feature confined to import/history/lineage/review/
+    collision-rationale / @altitude.feature tags / intentional cucumber fixtures /
+    historical plans
+  - Evidence: task-2 (red), task-5/10/13 (green + CLI QA)
+
+[PASS] Description findings at exact physical LF/CRLF source lines
+  - buildGherkinSourceIndex + monotonic AST/source alignment in gherkin.ts
+  - Fixtures under test/fixtures/gherkin/description-location/
+  - Tests assert exact one-based lines (not line > 0)
+  - Evidence: task-3 (red), task-6 (green)
+
+[PASS] Scale reserved-head similarity by candidate length; name authored/reserved heads;
+       keep accepted decorations graph-inert
+  - Implementation: (candidate) => candidate.length <= 5 ? 1 : 2  [see Primary]
+  - authored/reserved heads named in diagnostics; unique nearest only
+  - kind/pack/supersedes omit illegal "did you mean" (lawful:false)
+  - @kindle.ci/@paced inert and serialize equal to undecorated
+  - RESERVED_HEAD_SUGGESTIONS covers full reserved head set incl. constrained-by,
+    decided-by, example-space
+  - Evidence: source inspection; unstaged+HEAD diff; task-4/7 + this-audit vitest;
+    independent distance harness
+
+[PASS] Refuse step-less ordinary and @example-space Scenarios at Scenario line;
+       no complete-GWT rule
+  - gherkin.ts zero-step guards after outline checks (ordinary + pseudo-scenario)
+    report at scenario.location.line
+  - Feature with zero Scenarios accepted; single-step Scenario accepted
+  - Evidence: task-4/7; spec:carrier.gherkin-authoring.step-less-scenario-refused;
+    reifier tests
+
+[PASS] Preserve/document closed description classification (no rich prose ahead of brief A)
+  - Closed DESCRIPTION_KEYS; narrative for remaining non-heading prose
+  - Doc-strings and data tables refused as closed-grammar
+  - Parent rules in specs/carrier/gherkin-authoring.sdp.md state exact classification
+  - Evidence: task-4/7/9/10
+
+[PASS] Accumulate independent semantic findings deterministically; cap 100;
+       whole-file exclusion; healthy sibling survives
+  - MAX_GHERKIN_FINDINGS=100; extract/too-many-gherkin-findings suppression entry
+  - Invalid carrier returns no Specs/Packs when collector has findings
+  - multi-finding fixture + healthy.sdp.md sibling; parity determinism test
+  - Evidence: task-4/8/9; reify.ts adds tooManyGherkinFindings id
+
+[PASS] Ready executable example Specs, defused corpora, contracts, anchors,
+       Pack membership, frozen oracles
+  - New ready examples with deliveryFacts includes has-verifier in generated/graph.json:
+      spec:carrier.gherkin-authoring.description-location-refused
+      spec:carrier.gherkin-authoring.step-less-scenario-refused
+      spec:carrier.gherkin-authoring.multi-finding-bounded
+  - Anchor edges: test:protocol.gherkin-authoring.* → verifies → each example
+  - Generated contracts present:
+      carrier.gherkin-authoring.description-location-refused.contract.ts
+      carrier.gherkin-authoring.step-less-scenario-refused.contract.ts
+      carrier.gherkin-authoring.multi-finding-bounded.contract.ts
+  - Pack members + oracle rows updated (carrier/decisions/consumers/pack-members/…)
+  - Evidence: task-9/12; graph query this audit
+
+[PASS] Restore warning-oracle rationale; document runtime parser pins;
+       repair declined-Gherkin drift; plan 29 brief A consumes plan 30 suffix
+  - expectedWarnings = [] rationale restored (self-hosting-oracle/index.ts):
+    "empty expectation is the strongest one available — every finding… is a failure"
+  - Pins @cucumber/gherkin@42.0.1 / @cucumber/messages@34.2.1 in package.json,
+    README, skill, docs/concept/04
+  - docs/concept/00, 07, carrier-ruling drift repaired to MD-27/MD-28 current intent
+  - plans/29…: "Consumes plan 30", authors against .sdp.gherkin; kind/rich/default stay open
+  - Evidence: task-10/11; source inspection this audit
+
+[PASS] Finish with diagnostics/tests/graph/build/CLI QA/npm run check
+  - task-13: npm run check exit 0; CLI happy .sdp.gherkin, mixed ignore,
+    feature-only empty note, malformed multi-finding deterministic
+  - Post-fix focused re-verify this audit: reifier+parity 63 pass; typecheck 0
+  - No commit (plan Commit strategy honored)
+
+--------------------------------------------------------------------------------
+Must-NOT-have checklist
+--------------------------------------------------------------------------------
+
+[PASS] No plan 29 brief-A universality ruling, default-carrier flip, new Spec kinds,
+       rich bodies, doc strings/data tables as accepted content, derived runnable modules,
+       projections-as-product, structural anchors, or MCP work
+  - MD-28 explicitly non-decides kind coverage / default flip
+  - Doc strings/data tables still refused
+  - plan 29 brief A remains owner of open questions
+
+[PASS] No .feature compatibility shim, .sdp.feature, content-gated discovery,
+       path caste, opt-in carrier config, or second family migration
+  - Single suffix; only reader family migrated (plan-expected tracer)
+
+[PASS] No Cucumber execution path, tag autocorrection/persistence, parallel tag registry,
+       authored delivery facts, new claim path, workflow gate, or runner state in graph
+  - package.json only pins @cucumber/gherkin + messages (parser), not cucumber runner
+  - Delivery-fact lookalikes still refused
+
+[PASS] No handwritten structural Gherkin parser, approximate source lines,
+       complete-GWT expansion, empty-contract workaround, partial graph insertion,
+       lazy parser architecture, or new validator family
+  - Official parser retained; source index aligns descriptions only
+  - too-many finding is extract/* taxonomy extension, not a new validator family
+
+[PASS] No modification/reversal of unrelated user/agent changes
+  - Diff confined to plan surfaces + gate-required plan-30 status / AGENTS.md primary-plan
+    naming (task-13 recorded as pre-existing gate fix, in-scope for close)
+  - No commits
+
+--------------------------------------------------------------------------------
+Ledger / evidence integrity
+--------------------------------------------------------------------------------
+
+[PASS] All 13 todos have task-completed ledger rows with artifacts on disk
+[PASS] Adversarial classes (stale_state, dirty_worktree, misleading_success_output)
+       recorded per task
+[PASS] No unbound new ready examples (has-verifier deliveryFacts + anchor verifies edges)
+[PASS] Decision/trade-off for the suffix itself is present (MD-28)
+[PASS] No abandoned length-scaling trade-off — final code implements the Must-have
+       (task-7 evidence historically described flat d=1; subsequent remediation landed
+       in working tree; F1 judges final diff, not intermediate task prose)
+[PASS] No operational suffix residues of bare .feature as canonical carrier
+[PASS] Close-gate claim (npm run check = 0) backed by task-13 evidence; post-fix
+       similarity scaling re-verified by focused suite + typecheck this audit
+
+--------------------------------------------------------------------------------
+F1 reject triggers (from plan)
+--------------------------------------------------------------------------------
+
+- missing decision/trade-off records  → clear (suffix recorded; scaling implemented)
+- suffix residues                     → clear
+- unbound examples                    → clear
+- unverified claims                   → clear (close gate in task-13; scaling re-proven)
+
+--------------------------------------------------------------------------------
+Summary
+--------------------------------------------------------------------------------
+
+Every Must-have and Must-NOT-have is satisfied by the final working tree and evidence
+ledger. The prior F1 FAIL (flat maximumDistance=1) is cured: candidate-length scaling
+is distance 1 for reserved heads ≤5 and distance 2 for heads >5, with unique nearest
+suggestion semantics, lawful/illegal recommendation gating, and green focused tests.
+
+VERDICT: PASS
+
+END F1

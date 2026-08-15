@@ -1,0 +1,156 @@
+Task 8 rework evidence — 2026-08-14
+
+Defect 1 — registrar identity collision
+- Changed registrar output filename identity from authored suite path to full Spec ID in the authored suite directory.
+- Added a two-example/one-authored-suite test asserting two deterministic registrar paths.
+
+Defect 2 — deferred-family residue
+- Preserved frozen per-bindable-example emission; unadopted siblings are ignored disposable generated output.
+- Only the authored-imported valid-cart registrar is force-added. Updated task-8-self-hosting-rationale.md.
+
+Defect 3 — lint/format
+$ npx eslint --no-ignore examples/checkout-v1/test/orders/orders.create-order.valid-cart.test.generated.ts test/*.test.generated.ts
+exit: 0
+$ npx prettier --check --ignore-path /dev/null examples/checkout-v1/test/orders/orders.create-order.valid-cart.test.generated.ts test/*.test.generated.ts
+All matched files use Prettier code style! (exit 0)
+
+Defect 4 — golden line drift
+- Preserved specTest anchor at physical line 13; no assertion weakened.
+
+Defect 5 — handler resolution proof and deliberate interface clarification
+- Frozen law has no authored per-step surface. Clarified that generated dispatch names missing steps while authored activation names missing adapters; requiring an authored step name contradicts the frozen no-step-key activation.
+$ remove generated callback "a customer has a cart with {n} line items"; npm run typecheck:examples
+exit: 2
+
+> @libar-dev/software-delivery-protocol@0.0.0 typecheck:examples
+> tsc --noEmit -p tsconfig.examples.json
+
+examples/checkout-v1/test/orders/orders.create-order.valid-cart.test.generated.ts(54,5): error TS1360: Type '{ "every line item has quantity {q} and unit price {price}": () => void; "every cart item is {availability}": () => void; "the customer submits the cart for order creation": (execution: Execution) => Promise<...>; "an order is created with total {total}": (execution: Execution, params: { ...; }) => void; "the order ...' does not satisfy the expected type 'StepBindings<Execution, Step, StepParams>'.
+  Property '"a customer has a cart with {n} line items"' is missing in type '{ "every line item has quantity {q} and unit price {price}": () => void; "every cart item is {availability}": () => void; "the customer submits the cart for order creation": (execution: Execution) => Promise<...>; "an order is created with total {total}": (execution: Execution, params: { ...; }) => void; "the order ...' but required in type 'StepBindings<Execution, Step, StepParams>'.
+examples/checkout-v1/test/orders/orders.create-order.valid-cart.test.generated.ts(61,5): error TS2345: Argument of type '{ "every line item has quantity {q} and unit price {price}": () => void; "every cart item is {availability}": () => void; "the customer submits the cart for order creation": (execution: Execution) => Promise<...>; "an order is created with total {total}": (execution: Execution, params: { ...; }) => void; "the order ...' is not assignable to parameter of type 'StepBindings<RunnableExampleWorld<World, CreateOrderConditions, CreateOrderOutcome>, Step, StepParams>'.
+  Property '"a customer has a cart with {n} line items"' is missing in type '{ "every line item has quantity {q} and unit price {price}": () => void; "every cart item is {availability}": () => void; "the customer submits the cart for order creation": (execution: Execution) => Promise<...>; "an order is created with total {total}": (execution: Execution, params: { ...; }) => void; "the order ...' but required in type 'StepBindings<RunnableExampleWorld<World, CreateOrderConditions, CreateOrderOutcome>, Step, StepParams>'.
+
+$ restore generated callback; remove authored observe adapter; npm run typecheck:examples
+exit: 2
+
+> @libar-dev/software-delivery-protocol@0.0.0 typecheck:examples
+> tsc --noEmit -p tsconfig.examples.json
+
+examples/checkout-v1/test/orders/create-order.valid-cart.test.ts(58,19): error TS2345: Argument of type '{ createWorld: (point: Partial<CreateOrderConditions>) => World; invoke: (world: World) => void; expected: (conditions: Partial<CreateOrderConditions>) => CreateOrderOutcome; assertions: (world: World) => void; }' is not assignable to parameter of type 'RunnableExampleAdapters<World, CreateOrderConditions, CreateOrderOutcome>'.
+  Property 'observe' is missing in type '{ createWorld: (point: Partial<CreateOrderConditions>) => World; invoke: (world: World) => void; expected: (conditions: Partial<CreateOrderConditions>) => CreateOrderOutcome; assertions: (world: World) => void; }' but required in type 'RunnableExampleAdapters<World, CreateOrderConditions, CreateOrderOutcome>'.
+
+$ restore both; npm run typecheck:examples
+exit: 0
+
+> @libar-dev/software-delivery-protocol@0.0.0 typecheck:examples
+> tsc --noEmit -p tsconfig.examples.json
+
+
+Defect 6 — CLI integration timeout
+- Set only the real self-hosting view integration test timeout to 15 seconds; no sleeps, polling, skip, or suppression.
+
+Mutation proof: task-8-mutation.log (fresh red/red/green).
+
+Final verification
+$ npm run check
+exit: 0
+    }
+  },
+  "phase2Ledger": "G1-G8 scaffold checked"
+}
+
+> @libar-dev/software-delivery-protocol@0.0.0 check:self-hosting
+> node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --check-clean
+
+154 specs · 1 packs · 141 anchors → 296 nodes · 559 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/generated/graph.json
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/generated/contracts (101 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/generated/design-review (156 pages)
+
+> @libar-dev/software-delivery-protocol@0.0.0 check:example
+> node ./dist/cli/sdp.js view examples/checkout-v1 --check-clean
+
+11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/examples/checkout-v1/generated/graph.json
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/examples/checkout-v1/generated/contracts (3 modules)
+specs/orders/create-order-invalid-cart.sdp.md — [warning] conformance/verifies-linkage — Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier.
+validate: 0 errors · 1 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/examples/checkout-v1/generated/design-review (13 pages)
+
+> @libar-dev/software-delivery-protocol@0.0.0 preflight
+> node ./preflight.mjs
+
+preflight: semantic diff summary
+.gitignore
+examples/checkout-v1/test/orders/create-order.oracle.ts
+examples/checkout-v1/test/orders/create-order.valid-cart.test.ts
+package.json
+specs/extraction/runnable-modules.sdp.md
+src/adapters/vitest.ts
+src/cli/build-command.ts
+src/codegen/contracts.ts
+src/testing/index.ts
+test/cli.test.ts
+test/codegen.test.ts
+test/self-hosting-oracle/extraction.ts
+test/testing.test.ts
+tsconfig.examples.json
+tsup.config.ts
+vitest.config.ts
+preflight: tracked/untracked status inspected
+
+$ npx vitest run
+exit: 0
+npm notice package size: 251.1 kB
+npm notice unpacked size: 1.2 MB
+npm notice shasum: cab9e9ea70969653f19d75726601e236d3dde892
+npm notice integrity: sha512-xkPcTLmV5t0tp[...]T98wLj+/0BKiw==
+npm notice total files: 19
+npm notice
+
+ Test Files  58 passed (58)
+      Tests  797 passed | 1 skipped (798)
+   Start at  18:47:30
+   Duration  16.79s (transform 4.61s, setup 0ms, import 47.83s, tests 40.58s, environment 11ms)
+
+
+$ npx vitest run test/cli.test.ts test/cli-q.test.ts
+exit: 0
+
+ RUN  v4.1.10 /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+
+
+ Test Files  2 passed (2)
+      Tests  84 passed (84)
+   Start at  18:47:22
+   Duration  2.71s (transform 792ms, setup 0ms, import 1.66s, tests 1.92s, environment 0ms)
+
+
+LSP diagnostics unavailable: typescript-language-server is not installed; npm typecheck and typecheck:examples both passed in npm run check.
+
+Commit boundary and cleanup
+$ git commit -m "feat(codegen): derived runnable modules with oracle comparison"
+fa4518f feat(codegen): derived runnable modules with oracle comparison
+$ npm run check  # post-commit
+exit: 0
+> @libar-dev/software-delivery-protocol@0.0.0 check:example
+> node ./dist/cli/sdp.js view examples/checkout-v1 --check-clean
+
+11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/examples/checkout-v1/generated/graph.json
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/examples/checkout-v1/generated/contracts (3 modules)
+specs/orders/create-order-invalid-cart.sdp.md — [warning] conformance/verifies-linkage — Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier.
+validate: 0 errors · 1 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/examples/checkout-v1/generated/design-review (13 pages)
+
+> @libar-dev/software-delivery-protocol@0.0.0 preflight
+> node ./preflight.mjs
+
+preflight: semantic diff summary
+clean
+$ remove every ignored/untracked *.test.generated.ts while preserving tracked adopted registrar
+removed_disposable_registrars=68
+remaining=examples/checkout-v1/test/orders/orders.create-order.valid-cart.test.generated.ts
+git status --short: empty
+pgrep -af vitest|dist/cli/sdp.js: no leftover process (cleanup shell itself excluded)

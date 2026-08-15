@@ -1,0 +1,162 @@
+Wave 0 unit: Commit Wave 0 change set and prove commit boundary green
+Worktree: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+Date: 2026-08-14
+Owner scope: single normal git commit of the independently confirmed staged Wave 0 set + this evidence log
+Push: none (forbidden)
+Amend: none (forbidden)
+
+========================================================================
+1. PRE-COMMIT AUDIT
+========================================================================
+
+Branch: arc/keystone-engines...origin/main
+Pre-commit status: 13 paths staged (index M/A only); no unstaged tracked changes; no .omo staged.
+
+git diff --cached --name-only (exact 13):
+  AGENTS.md
+  plans/29-universal-carrier-annotations-and-agent-surface-briefs.md
+  plans/30-gherkin-carrier-hardening.md
+  plans/31-carrier-universality-runnable-modules-projections-structural-anchors.md
+  specs/decisions/carrier-ruling.sdp.md
+  specs/decisions/carrier-universality.sdp.md
+  specs/decisions/gherkin-carrier-option.sdp.md
+  specs/decisions/structural-anchor-semantics.sdp.md
+  specs/self-hosting.pack.sdp.md
+  test/self-hosting-graph.test.ts
+  test/self-hosting-oracle/decisions.ts
+  test/self-hosting-oracle/declared-relations.ts
+  test/self-hosting-oracle/pack-members.ts
+
+git diff --cached --stat:
+  13 files changed, 175 insertions(+), 23 deletions(-)
+
+Confirmation: staged path list equals the CONFIRMED STATE intended set.
+No .omo path staged. No unrelated path staged. No staged omission/addition relative to the 13-path contract.
+
+Recent message convention samples:
+  4ccc2e9 fix(carrier): complete reserved-head suggestions
+  a9b65c5 feat(carrier): harden Gherkin carrier with .sdp.gherkin suffix and closed grammar
+  e819872 docs: record the next-arc planning briefs
+  6556fde spec: promote Gherkin carrier family to ready
+
+========================================================================
+2. COMMIT
+========================================================================
+
+Command: git commit (normal, no --amend, no path add at commit time)
+Exit: 0
+SHA: 29b11c068c03ea20201eefdd390900ae93659c08
+Short: 29b11c0
+Branch tip: arc/keystone-engines (ahead of origin/main by 1)
+Message subject:
+  spec(carrier): integrate Wave 0 universality and structural-anchor decisions
+Message body:
+  Bind carrier-universality and structural-anchor-semantics decisions into the
+  self-hosting pack, graph oracles, and plan surface as one coherent Wave 0 set.
+
+reflog HEAD@{0}: commit: spec(carrier): integrate Wave 0 universality and structural-anchor decisions
+(proves new commit, not amend)
+
+git show --stat --oneline --decorate HEAD:
+  29b11c0 (HEAD -> arc/keystone-engines) spec(carrier): integrate Wave 0 universality and structural-anchor decisions
+  13 files changed, 175 insertions(+), 23 deletions(-)
+
+git diff HEAD^..HEAD --name-only (exact 13; equals intended set):
+  AGENTS.md
+  plans/29-universal-carrier-annotations-and-agent-surface-briefs.md
+  plans/30-gherkin-carrier-hardening.md
+  plans/31-carrier-universality-runnable-modules-projections-structural-anchors.md
+  specs/decisions/carrier-ruling.sdp.md
+  specs/decisions/carrier-universality.sdp.md
+  specs/decisions/gherkin-carrier-option.sdp.md
+  specs/decisions/structural-anchor-semantics.sdp.md
+  specs/self-hosting.pack.sdp.md
+  test/self-hosting-graph.test.ts
+  test/self-hosting-oracle/decisions.ts
+  test/self-hosting-oracle/declared-relations.ts
+  test/self-hosting-oracle/pack-members.ts
+
+========================================================================
+3. POST-COMMIT GATE
+========================================================================
+
+Command: npm run check
+Exit: 0 (CHECK_EXIT=0)
+
+Gate legs observed green in order:
+  check:temporal        ok
+  lint                  ok
+  format:check          ok (All matched files use Prettier code style!)
+  build                 ok (CJS/ESM/DTS success; known non-fatal empty-import-meta CJS warning)
+  generate:self-hosting ok (151 specs · 1 packs · 138 anchors → 290 nodes · 549 edges; 0 errors, 0 warnings)
+  generate:example      ok (11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges; 0 errors, 0 warnings)
+  typecheck             ok
+  typecheck:examples    ok
+  test                  ok
+    - suite 1: Test Files 52 passed (52); Tests 697 passed | 1 skipped (698)
+    - suite 2 (cli.test.ts): Test Files 1 passed (1); Tests 59 passed (59)
+  check:self-hosting-gates ok (docket pending=[]; currentPlan=plans/31-...; temporal.exit=0)
+  check:self-hosting    ok (--check-clean; 0 errors, 0 warnings)
+  check:example         ok (--check-clean; 0 errors, 1 pre-existing warning on invalid-cart verifies-linkage)
+  preflight             ok (semantic diff summary: clean)
+
+Gate result: PASS (exit 0)
+
+========================================================================
+4. MANUAL QA
+========================================================================
+
+- Confirmed staged set before commit equaled the 13-path contract.
+- Confirmed commit created a new SHA (29b11c0) atop 4ccc2e9; reflog shows "commit:" not "commit (amend):".
+- Confirmed git diff HEAD^..HEAD --name-only equals the same 13 paths (no silent addition/omission).
+- Confirmed npm run check exit 0 after the commit (not merely pre-commit).
+- Confirmed git status --short --branch: "## arc/keystone-engines...origin/main [ahead 1]" with empty porcelain (no uncommitted repository content).
+- Confirmed no push (branch still ahead 1 of origin/main; no remote update performed).
+- Evidence log written under task-owned .omo path only; not staged or committed.
+
+========================================================================
+5. ADVERSARIAL CLASSES
+========================================================================
+
+dirty_worktree:
+  PROBED — post-commit `git status --porcelain` empty (PORCELAIN_EMPTY=yes).
+  Branch clean aside from being ahead 1. PASS.
+
+staged_omission_addition:
+  PROBED — pre-commit cached names and post-commit HEAD^..HEAD names both exactly the 13 intended paths; no .omo; no extras. PASS.
+
+misleading_success_output:
+  PROBED — captured CHECK_EXIT=0 from the shell after `npm run check`; preflight printed "clean"; test runners reported all files passed. Not inferred from partial leg success. PASS.
+
+preflight_tracked_status:
+  PROBED — preflight semantic diff summary = clean; status porcelain empty after full check (generated outputs did not dirty tracked files). PASS.
+
+accidental_amend:
+  PROBED — reflog HEAD@{0} is "commit:" (not amend); new SHA 29b11c0 != parent 4ccc2e9; single new tip. PASS.
+
+accidental_push:
+  PROBED — no push command run; status remains [ahead 1] vs origin/main. PASS.
+
+Other ultraqa classes:
+  N/A for this commit-only boundary task (no auth, no network attack surface, no UI, no concurrency harness beyond the repo's own check suite).
+
+========================================================================
+6. CLEANUP
+========================================================================
+
+- No extra paths added to the index or commit.
+- No amend, no push, no force operations.
+- Worktree porcelain empty after gates.
+- Only task-owned untracked content permitted: `.omo/evidence/arc-keystone-engines/wave0-commit.log` (this file) and pre-existing `.omo` orchestration linkage — not part of the repository commit boundary.
+- No generated ignored artifacts committed.
+
+========================================================================
+7. RISKS / RESIDUALS
+========================================================================
+
+- Branch is intentionally unpushed (ahead 1); remote does not yet contain Wave 0.
+- Known non-fatal tsup CJS empty-import-meta warning remains pre-existing.
+- check:example retains one pre-existing conformance warning on create-order-invalid-cart verifies-linkage (does not fail the gate).
+- Evidence under `.omo/` is local orchestration state and is not versioned with the Wave 0 commit by design.
+
+DONE CLAIM: Wave 0 committed at 29b11c068c03ea20201eefdd390900ae93659c08; 13-path boundary exact; npm run check exit 0; worktree clean; no push/amend.

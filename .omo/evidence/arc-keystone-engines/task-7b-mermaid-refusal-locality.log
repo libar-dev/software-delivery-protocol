@@ -1,0 +1,67 @@
+task: st_01a00160 mermaid oversized-diagram refusal locality
+lane: /home/darkomijic/dev-libar/sdp-mermaid-fix
+branch: lane/mermaid-refusal-locality
+base: 269fe5162323699370456e7daf0fd1d70d8a4e0d
+date: 2026-08-14
+
+LAW
+- specs/consumers/mermaid-view.sdp.md already named per-diagram refusal
+  ("refuses the affected diagram with a deterministic refusal that names the bound").
+- Implementation was dishonest: renderMermaid() threw and runMermaid() aborted
+  the whole publish, leaving generated/mermaid/ absent.
+- Fix: withhold only the overflowing/colliding diagram; publish every in-bound
+  page; command exits 0. No silent truncation. Spec wording tightened in the
+  same commit so locality and exit 0 cannot drift back into whole-publish abort.
+
+FAILING-FIRST
+- Added unit + CLI tests that expected local refusal + remaining pages.
+- Before the renderer change, vitest reproduced the abort:
+  * mermaid-render: MERMAID_MACHINE_TOKEN_COLLISION throw
+  * mermaid-render: pack:oversized exceeds MAX_MERMAID_NODES_PER_DIAGRAM throw
+  * mermaid-cli: sdp mermaid exit 1 on oversized Pack fixture
+- After the renderer change those tests pass (15/15 in the two mermaid files).
+
+ASSERTION CHANGES (whole-abort pins only)
+- test/mermaid-render.test.ts "refuses duplicate identities and both full-diagram
+  bounds deterministically" no longer expects renderMermaid() to throw.
+  Justification: that pin encoded the dishonest whole-publish abort. The Spec
+  withholds the affected diagram by name. New assertions require:
+  refused page names the bound / collision, contains no mermaid fence,
+  in-bound pages still contain a mermaid fence, index names the refusal,
+  second render is byte-identical.
+- Added oversized Pack unit case and a real CLI oversized-pack fixture
+  (relations: {} so Markdown extraction is valid; inbound listed in the Pack
+  so --check-clean is not polluted by the orphan warning).
+
+CHANGED FILES
+- src/projections/mermaid.ts
+- specs/consumers/mermaid-view.sdp.md
+- test/self-hosting-oracle/consumers.ts
+- test/mermaid-render.test.ts
+- test/mermaid-cli.test.ts
+
+VERIFICATION
+- npm run check  -> exit 0
+  temporal, lint, format:check, build, generate:self-hosting, generate:example,
+  typecheck, typecheck:examples, test (58 files / 753 passed + 1 skipped;
+  dedicated cli.test.ts 59 passed), self-hosting gates, --check-clean view,
+  example --check-clean, preflight.
+- Real surface (twice):
+  npm run --silent sdp -- mermaid . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+  first exit=0  Wrote generated/mermaid (157 pages)
+  second exit=0 Wrote generated/mermaid (157 pages)
+  content diff of the two published trees: empty
+  --check-clean exit=0
+- pack:self-hosting-v1 refusal (named bound):
+  Mermaid diagram "pack:self-hosting-v1" exceeds MAX_MERMAID_NODES_PER_DIAGRAM: limit=64 observed=156
+  index row: [`pack:self-hosting-v1`](pack/self-hosting-v1.md) — REFUSED ...
+  in-bound spec:consumers.mermaid-view page present
+  generated/mermaid/ populated (157 files)
+
+COMMIT
+- fix(projections): mermaid oversized-diagram refusal withholds locally
+- npm run check exit 0 at the commit boundary
+
+CLEANUP
+- worktree /home/darkomijic/dev-libar/sdp-mermaid-fix retained (do not remove)
+- no push

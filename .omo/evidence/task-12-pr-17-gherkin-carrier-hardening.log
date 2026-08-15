@@ -1,0 +1,78 @@
+task: 12. Regenerate frozen graph and contract projections
+plan: pr-17-gherkin-carrier-hardening
+date: 2026-08-14
+result: PASS
+
+## Actions
+1. Staged rename specs/consumers/reader.feature -> specs/consumers/reader.sdp.gherkin in the git index (no commit).
+2. Staged remaining Todo-5 fixture renames so check:temporal no longer ENOENT-lstats deleted *.feature.txt ghosts:
+   - 11 renamed fixtures (*.feature.txt -> *.sdp.gherkin.txt)
+   - new defused corpora (description-location*, multi-finding, step-less, suffix-discovery)
+3. npm run build (exit 0)
+4. npm run generate:self-hosting (exit 0) — derived graph + contracts + design-review
+5. npm run generate:example (exit 0)
+6. Second consecutive generate:self-hosting — graph.json and contracts/ byte-identical (cmp/diff -rq)
+
+## Generation output
+- 149 specs · 1 packs · 138 anchors → 288 nodes · 545 edges
+- 0 errors, 0 warnings
+- Wrote generated/graph.json
+- Wrote generated/contracts (98 modules)
+- Wrote generated/design-review (151 pages)
+- generated/ is gitignored; projections refreshed on disk only
+
+## Graph projections (derived, not hand-edited)
+Gherkin carriers in graph (only .sdp.gherkin; zero bare .feature):
+- spec:consumers.reader → specs/consumers/reader.sdp.gherkin
+- spec:consumers.reader.changeset-entry → specs/consumers/reader.sdp.gherkin
+- spec:consumers.reader.concept-entry → specs/consumers/reader.sdp.gherkin
+- spec:consumers.reader.file-entry → specs/consumers/reader.sdp.gherkin
+
+MD-28 decision present:
+- spec:decisions.sdp-gherkin-extension — "Canonical Gherkin carriers use `.sdp.gherkin`"
+
+QA query (happy path):
+  npm run --silent sdp:q -- 'return g.specs().filter((s) => s.id.startsWith("spec:carrier")).map((s) => ({id:s.id, file:s.file}))' --json
+  - All spec:carrier.* files are .sdp.md (authoring/example Specs, not Gherkin carriers)
+  - bare_feature_count among carrier ids: 0
+  - Full-graph Gherkin carriers: only reader.sdp.gherkin family (above)
+
+## Acceptance
+Command: npm run generate:self-hosting
+Exit: 0 (twice; second-run byte-identical)
+
+Command: npx vitest run test/self-hosting-graph.test.ts
+Exit: 0
+Observed: 22 tests passed
+
+Command: npm run check:temporal
+Exit: 0
+Note: first attempt failed on deleted fixture ghosts still in the index (same class of failure Todo 11 reported for reader.feature). Cleared by staging the fixture renames. cucumber-login.feature.txt remains intentionally as a non-canonical ordinary-.feature fixture and is readable.
+
+Command: npm run build && npm run typecheck
+Exit: 0 / 0
+
+Command: npm run check:self-hosting && npm run check:example
+Exit: 0 / 0
+
+Command: npm run check:self-hosting-gates
+Exit: 0
+Observed residual non-blocking surface notes (pre-existing / out of Todo 12 scope):
+- plans/29-… missing blockquoted status header DRAFTED/EXECUTING/RUN/EXECUTED
+- AGENTS.md does not name the current primary plan
+
+## Git index (no commit)
+- R  specs/consumers/reader.feature -> specs/consumers/reader.sdp.gherkin
+- R/A fixture renames and new gherkin corpora under test/fixtures/gherkin/
+- git ls-files -d: empty (no deleted ghosts)
+- git status no longer shows reader.feature as a deleted/untracked ghost (staged rename only)
+- Untracked still present (other todos' sources, not required for index ghost clear):
+  - specs/decisions/sdp-gherkin-extension.sdp.md
+  - specs/carrier/gherkin-authoring.{description-location-refused,multi-finding-bounded,step-less-scenario-refused}.sdp.md
+  - .vscode/
+
+## Scope notes
+- No commit
+- No hand-edits to generated JSON
+- No unrelated source edits; only generator runs + git index updates for suffix-migration ghosts
+- Oracle sources (test/self-hosting-oracle/*) already reflected .sdp.gherkin from earlier wave todos; frozen graph regenerated from current corpus

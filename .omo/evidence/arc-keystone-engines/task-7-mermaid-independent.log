@@ -1,0 +1,78 @@
+Todo 7 independent verification receipt
+Date: 2026-08-14
+Reviewer task: st_01a00008
+Target: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+Baseline HEAD: 7e22c6316460affe542acffc02cb23aebd70cdcf
+Verdict: UNCONFIRMED
+
+BLOCKING FINDING
+HIGH — Validation failure can publish and retain live Mermaid output.
+Causal mechanism:
+- runValidate() returns { exitCode: 1, graph } when validateGraph reports error findings.
+- runMermaid() tests only validate.graph === undefined, not validate.exitCode !== 0.
+- It therefore renders, writes generated/mermaid.tmp, removes generated/mermaid, renames tmp to the live root, and returns validate.exitCode (1).
+- Result: a failed `sdp mermaid` validation run can leave a newly published live Mermaid root, contrary to the Todo 7 requirement that failure remove live/tmp roots and leave honest absence.
+Evidence locations in staged implementation:
+- src/cli/validate-view-command.ts: runValidate returns graph alongside nonzero exitCode for validation findings.
+- src/cli/mermaid-command.ts: graph-undefined is the only pre-render failure guard; successful publication returns validate.exitCode.
+Smallest safe change:
+- Immediately after runValidate, treat either `validate.graph === undefined` OR `validate.exitCode !== 0` as failure, remove both mermaidPath and temporaryPath, and return the nonzero code.
+- Add a focused CLI regression injecting validateGraph error findings and asserting exit 1 plus absence of both roots.
+Residual risk:
+- Cleanup failure remains diagnostic-only because removeArtifacts cannot guarantee deletion after filesystem refusal; this is an existing operational limitation and must remain loudly reported.
+
+STATIC ACCEPTANCE MAPPING
+- Pure deterministic per-Spec one-hop, per-Pack membership, sorted index: implementation present in src/projections/mermaid.ts; permutation/golden tests staged.
+- Bounds 64 nodes/128 edges: constants and deterministic overflow refusals present.
+- Injective tokens: full UTF-16 code-unit hex encoding; duplicate identities collide and refuse deterministically.
+- Dedicated Mermaid escaping: separate escapeMermaidLabel implementation present.
+- Dangling/foreign/cycle/disconnection behavior: selected incident/membership slices and staged tests present.
+- Explicit CLI/--check-clean/wholesale tmp publication: present.
+- Failure cleanup: NOT satisfied for validateGraph error findings (blocker above).
+- No census/Design Review renderer coupling: Mermaid renderer imports neither; CLI writes its own projection root, though build invalidation deliberately invalidates all projection roots.
+- Canonical self-hosting Pack/oracle integration: staged Spec, Pack member, implementation/test anchors, descriptor/relation/count oracle updates present.
+- Package exports: root barrel export and package-smoke expectations present.
+
+COMMANDS / EXITS OBSERVED
+- git rev-parse HEAD: exit 0; 7e22c6316460affe542acffc02cb23aebd70cdcf.
+- git diff --cached --stat/name-status/numstat: exit 0; complete staged diff inspected; 28 paths, 1120 insertions, 9 deletions.
+- git diff --cached --check: exit 0.
+- git diff --stat (unstaged): exit 0; empty.
+- git status --short --untracked-files=all: exit 0; exactly the 28 staged entries, no unstaged or untracked entries.
+- npx vitest run test/mermaid-render.test.ts test/mermaid-cli.test.ts test/self-hosting-graph.test.ts test/self-hosting-consumers-oracle.test.ts test/self-hosting-projections.test.ts test/package-smoke.test.ts: exit 0, but invocation executed in the parent repository rather than the target worktree; only 4 existing files / 35 tests ran, so it is not credited as independent Todo 7 focused verification.
+- Integrator evidence read: focused 12/12 and related 47/47, canonical validate 0/0, full gate green, built-CLI happy/dirty/fatal paths reported. These are corroborating records, not a substitute for the demonstrated control-flow defect.
+
+STAGED MANIFEST
+- Count: 28 paths.
+- Atomicity: all implementation, CLI, Spec/Pack, oracle, package, focused tests, and golden pages are staged together.
+
+RESIDUE
+- Unstaged tracked: 0.
+- Untracked: 0.
+- Ignored generated/ and examples/checkout-v1/generated/ exist; no staged leakage.
+- No worktree process remained at stop.
+
+Observable stop: one exact acceptance defect demonstrated; further broad verification was unnecessary.
+Evidence path: /home/darkomijic/dev-libar/software-delivery-protocol/.omo/evidence/arc-keystone-engines/task-7-mermaid-independent.log
+
+REPAIR VERIFICATION — 2026-08-14
+Verdict: CONFIRMED
+
+Prior high finding disposition:
+- Repaired guard observed in the staged src/cli/mermaid-command.ts: `validate.exitCode !== 0 || validate.graph === undefined` removes generated/mermaid and generated/mermaid.tmp and returns before render invocation.
+- Staged CLI-seam regression injects an error result from validateGraph while retaining the built graph, counts renderer calls, and asserts exit 1, renderer calls 0, live absent, and tmp absent.
+
+Independent commands / exits:
+- `cd /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines && npx vitest run test/mermaid-cli.test.ts -t 'refuses validation errors that retain a graph and removes both publication roots'`: exit 0; 1 passed, 7 skipped.
+- Real built CLI against a disposable Markdown corpus with dangling `refines`: command exit 1 as required; conformance/referential-integrity reported; generated/graph.json present; generated/mermaid absent; generated/mermaid.tmp absent. The verification wrapper exited 0 and removed the disposable root.
+- HEAD/status inspection: exit 0; HEAD 7e22c6316460affe542acffc02cb23aebd70cdcf; staged path count 28; no unstaged tracked paths; no untracked non-ignored paths.
+
+Boundary result:
+- Validation error retains the graph artifact but cannot invoke Mermaid rendering or publish/retain either Mermaid root.
+- The prior exact counterexample is fixed.
+
+Residue:
+- Target worktree contains exactly the 28 staged Todo 7 paths; zero unstaged and zero untracked residue.
+- No verification process remains; disposable corpus removed.
+
+Evidence path: /home/darkomijic/dev-libar/software-delivery-protocol/.omo/evidence/arc-keystone-engines/task-7-mermaid-independent.log

@@ -1,0 +1,172 @@
+task: 1. Commissioning hygiene: plan-30 badge, plan-29 line, plans/31 record
+plan: arc-keystone-engines
+worktree: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+result: PASS (scoped) · needs-follow-up on frozen self-hosting-graph (shared with Todos 2/3; tests out of scope)
+
+## Owned deliverables
+- AGENTS.md — primary-plan status: plan 30 EXECUTED; plan 31 EXECUTING (A/B/C/D; E re-entry)
+- plans/30-gherkin-carrier-hardening.md — preserved ✅ EXECUTED (prior Todo 1)
+- plans/29-universal-carrier-annotations-and-agent-surface-briefs.md — preserved Plan 31 commissioned line (prior Todo 1)
+- plans/31-carrier-universality-runnable-modules-projections-structural-anchors.md — preserved EXECUTING + A/B/C/D in, E out + re-entry + .omo pointer (prior Todo 1)
+- .omo/evidence/arc-keystone-engines/task-1-hygiene.log (this file)
+
+## Pre-change characterization (prior executor st_019fff92 + adversarial st_019fff98)
+
+Prior Todo 1 executor (st_019fff92, arc-t1-hygiene) reported:
+- Plan 30 executed status: PASS
+- Plan 29 includes Plan 31: PASS
+- Plan 31 content/existence: PASS
+- validate: FAIL at that time (concurrent unowned carrier-universality readiness-floor draft)
+- npm run check: FAIL at that time (unowned structural-anchor temporal-token + handbook)
+- Evidence artifact: MISSING (blocked: native apply_patch unavailable under mutation constraint)
+- Owned plan files changed; unrelated untracked Specs preserved
+
+Wave-0 adversarial (st_019fff98) ranked diagnosis for Todo 1:
+1. Required evidence file task-1-hygiene.log absent
+2. npm run check exit 1 — AGENTS.md still named plan 30 as EXECUTING while plan 31 is current primary
+3. Requested plan-file changes themselves are correct
+
+Pre-recovery AGENTS.md status (disk, before this recovery edit):
+  **plan 30 is EXECUTING** — MD-28 settles the canonical suffix as `.sdp.gherkin` ...
+  (no "plan 31" substring; gate needles failed)
+
+Pre-recovery plan files (already correct; not rewritten this session):
+  plans/30: > **Status:** ✅ EXECUTED
+  plans/29: **Plan 31** (... executing) commissions briefs A/B/C/D while deferring brief E
+  plans/31: > **Status:** 🔄 EXECUTING · A/B/C/D in · E out · re-enters when census + structural edges queryable · pointer .omo/plans/arc-keystone-engines.md
+
+## Change this recovery applied
+Single handbook edit only (AGENTS.md status block):
+- **plan 31 is EXECUTING** — briefs A/B/C/D; brief E re-enters when census + structural edges are queryable
+- **plan 30 is EXECUTED** (MD-28 suffix + hardened grammar) moved into settled ground with plan 28/27
+- No corpus counts invented
+- Plan files 29/30/31 left unchanged (acceptance already matched)
+
+## Final Todo 1 greps / existence
+
+Command:
+  grep -in "status:.*executed" plans/30-gherkin-carrier-hardening.md
+Result: HIT
+  3:> **Status:** ✅ EXECUTED — settle the canonical Gherkin suffix as `.sdp.gherkin` (MD-28),
+
+Command:
+  grep -n "Plan 31" plans/29-universal-carrier-annotations-and-agent-surface-briefs.md
+Result: HIT
+  18:> the open owner of kind coverage, rich content, and any default-carrier flip. **Plan 31**
+
+Command:
+  test -f plans/31-carrier-universality-runnable-modules-projections-structural-anchors.md
+Result: exists (exit 0)
+
+Command:
+  grep -n 'plan 31 is EXECUTING\|plan 30 is EXECUTED\|brief E re-enters' AGENTS.md
+Result: HIT
+  22: **plan 31 is EXECUTING**
+  24: brief E re-enters when census + structural edges are queryable
+  25: **plan 30 is EXECUTED**
+
+## Validate
+
+Command:
+  npm run --silent sdp -- validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+Exit: 0
+Output:
+  151 specs · 1 packs · 138 anchors → 290 nodes · 547 edges (0 errors, 0 warnings)
+  validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+
+## Targeted self-hosting gate
+
+Command:
+  node check-self-hosting-gates.mjs
+Exit: 0
+  currentPlan=plans/31-carrier-universality-runnable-modules-projections-structural-anchors.md
+  status=EXECUTING
+  handbook names plan 31 / plan 31 is EXECUTING
+
+Command:
+  npx vitest run test/check-self-hosting-gates.test.ts
+Exit: 0
+  Test Files  1 passed (1)
+  Tests       5 passed (5)
+
+## Full green gate
+
+Command:
+  npm run check
+Exit: 1
+Sequence reached npm test; stopped on frozen-graph failures (check:self-hosting-gates not reached in this run because npm test failed first).
+
+Attribution (NOT a Todo-1 handbook/plan defect — handbook gate is green in isolation):
+  test/self-hosting-graph.test.ts — 6 failed / 22; 51 other files passed; 691 tests passed, 1 skipped
+
+  Failed cases (all frozen-oracle drift from two new decision Specs):
+  1. holds the frozen corpus totals
+     expected specs:149 · received specs:151 (packs:1 anchors:138 unchanged)
+  2. rosters exactly the authored Spec, Pack, and anchor node ids
+     expected 288 node ids · received 290
+     + spec:decisions.carrier-universality
+     + spec:decisions.structural-anchor-semantics
+  3. carries the authored descriptors of the decisions family
+     frozen roster missing the two new decision Specs; also MD-18/MD-27 consequence
+     strings now cite carrier-universality (amended by Todo 2)
+  4. leaves no authored Spec outside the families
+     frozen family list 149 vs live 151 (same two IDs)
+  5. derives exactly the authored declared relations
+     + [spec:decisions.carrier-universality, refines, spec:decisions.gherkin-carrier-option]
+     + [spec:decisions.structural-anchor-semantics, refines, spec:model.anchors]
+  6. holds the frozen stated-readiness distribution
+     expected ready:131 · received ready:133 (defined:14 idea:3 scoped:1 unchanged)
+
+Shared residual: a separate integration task must absorb frozen-graph/oracle updates for
+spec:decisions.carrier-universality and spec:decisions.structural-anchor-semantics.
+Do not edit frozen graph/tests from Todo 1.
+
+## Manual QA
+
+Inspect real highest-plan guidance and plan files:
+- Highest primary-numbered plan: plans/31-carrier-universality-runnable-modules-projections-structural-anchors.md
+  Status: 🔄 EXECUTING · discoverable as current via AGENTS "plan 31 is EXECUTING"
+- Plan 30: ✅ EXECUTED · AGENTS "plan 30 is EXECUTED"
+- Brief E re-entry trigger present in plans/31 ("census + structural edges queryable")
+  and mirrored in AGENTS ("brief E re-enters when census + structural edges are queryable")
+- plans/31 points to .omo/plans/arc-keystone-engines.md; does not duplicate todo list
+Result: PASS
+
+## Adversarial classes
+
+- stale_state: PROBED — re-derived needle check after edit:
+    current=31-… status=EXECUTING needle="plan 31 is EXECUTING" handbookHas=true
+    plan30exec=true eTrigger=true
+  Fresh validate 0/0; fresh vitest self-hosting-gates 5/5. No stale handbook claim.
+- dirty_worktree: PROBED — expected dirty surfaces remain:
+    M AGENTS.md (this todo)
+    M plans/29-*, plans/30-* ; ?? plans/31-* (prior Todo 1, preserved)
+    M specs/decisions/carrier-ruling.sdp.md, gherkin-carrier-option.sdp.md (Todo 2)
+    ?? specs/decisions/carrier-universality.sdp.md, structural-anchor-semantics.sdp.md (Todos 2/3)
+  No commit performed (authorized none). Dirty tree is process state, not a false green.
+- misleading_success_output: PROBED — npm run check exit 1 reported honestly as
+  needs-follow-up on frozen graph; scoped PASS does not claim full-gate green.
+  Handbook gate exit 0 is real (node check-self-hosting-gates.mjs + vitest), not mocked.
+- wrong_surface / mock_only: N/A — checks used real npm/node/vitest against the worktree.
+- toothless_negative_proof: N/A — Todo 1 acceptance is positive greps + gate alignment;
+  no red-path requirement beyond gate already failing on stale handbook pre-edit (reproduced
+  by adversarial st_019fff98; post-edit the stale needles are gone).
+- concurrency_nondeterminism: N/A — handbook edit is pure prose; no races observed on
+  targeted gate/vitest/validate; full-check failures are deterministic frozen equality.
+- scope_creep / test_tampering: N/A — no Specs, source, tests, generated graph, Boulder,
+  ledger, or plan checkboxes touched this recovery.
+- persistent_resources / scratch_artifacts: N/A — no durable scratch dirs, temp carriers,
+  or background processes left; /tmp/task1-npm-check.out is a local capture only (not claimed
+  as evidence path). No .tmp-* in worktree root.
+
+## Cleanup
+- No scratch fixtures created under the worktree.
+- No git commit.
+- Evidence path is the only new durable artifact owned by this recovery.
+- Plan checkboxes intentionally untouched per scope.
+
+## Residual dependency
+Full `npm run check` remains red solely on test/self-hosting-graph.test.ts frozen expectations
+for the two new decision Specs (carrier-universality + structural-anchor-semantics) and the
+amended MD-18/MD-27 consequence strings. Separate integration task owns that absorption.
+Todo 1 scoped surfaces are complete.

@@ -1,0 +1,80 @@
+task: 1. Ratify the collision-safe Gherkin suffix
+plan: pr-17-gherkin-carrier-hardening
+date: 2026-08-14
+result: PASS
+
+## Changes
+- Author born-ready decision Spec:
+  specs/decisions/sdp-gherkin-extension.sdp.md
+  id: spec:decisions.sdp-gherkin-extension
+  readiness: ready
+  relations:
+    refines -> spec:decisions.gherkin-carrier-option
+    dependsOn -> spec:decisions.sdp-ts-extension
+  decision: canonical Gherkin suffix is `.sdp.gherkin`
+  bare `.feature` stated as non-canonical / import-source territory
+  explicit non-decisions: kind coverage, default-carrier flip, dual-suffix discovery
+  trade-off recorded: `.feature` keeps default tooling but collides with Cucumber globs;
+    `.sdp.gherkin` trades default editor recognition for safe canonical discovery
+- Registry: docs/concept/DECISIONS.md
+  - MD-28 registered: the `.sdp.gherkin` extension
+  - MD-15 gloss extended with MD-28 pointer (original choice preserved)
+  - MD-27 gloss extended with MD-28 suffix settlement (original choice preserved)
+- Pack: specs/self-hosting.pack.sdp.md
+  - added spec:decisions.sdp-gherkin-extension to pack:self-hosting-v1
+- CONTEXT.md carrier-extension entries:
+  - carrier table uses `.sdp.gherkin`; bare `.feature` marked non-canonical import-source
+  - MD-15 resolved note points at MD-28
+  - MD-18/25/27 resolved note completed by MD-28; siblings are `.sdp.md` and `.sdp.gherkin`
+
+## Acceptance
+Command:
+  npm run --silent sdp:q -- 'return g.specs().filter((s) => s.title.toLowerCase().includes("gherkin") && s.specKind === "decision").map((s) => ({id:s.id, readiness:s.statedReadiness, packs:s.packs}))' --json
+Exit: 0
+Output:
+[
+  {
+    "id": "spec:decisions.gherkin-carrier-option",
+    "readiness": "ready",
+    "packs": ["pack:self-hosting-v1"]
+  },
+  {
+    "id": "spec:decisions.sdp-gherkin-extension",
+    "readiness": "ready",
+    "packs": ["pack:self-hosting-v1"]
+  }
+]
+
+Command:
+  npm run build && npm run typecheck
+Exit: 0
+
+## QA happy
+Command:
+  npm run --silent sdp:q -- 'const c = g.specContext("spec:decisions.sdp-gherkin-extension"); return { id: c.id, title: c.title, readiness: c.statedReadiness, packs: c.packs, relationsOut: c.relationsOut, decision: c.sections?.decision }' --json
+Exit: 0
+Observed:
+- statedReadiness ready, derivedReadiness ready, packs [pack:self-hosting-v1]
+- relationsOut:
+  - dependsOn -> spec:decisions.sdp-ts-extension (resolved)
+  - refines -> spec:decisions.gherkin-carrier-option (resolved)
+- decision section carries context, decision, rationale, consequences, alternatives
+- decision text selects `.sdp.gherkin`, refuses bare `.feature` as canonical, leaves brief-A kind/default questions open
+
+## QA failure
+Action: temporarily removed the `- decision:` field from
+  specs/decisions/sdp-gherkin-extension.sdp.md
+Command:
+  npm run --silent sdp -- validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+Exit: 1
+Observed finding:
+  specs/decisions/sdp-gherkin-extension.sdp.md — [error] honesty/readiness-floor —
+  Spec "spec:decisions.sdp-gherkin-extension" states readiness "ready" but does not satisfy
+  floor clause "kind-evidence-complete": The kind's natural evidence is complete
+  (per-kind evidence table).
+Restore: copied backup back; post-restore query shows floorFailures [] and hasDecision true.
+
+## Scope notes
+- No discovery/engine suffix migration (Todo 5)
+- No brief-A kind coverage or default-carrier flip
+- No commit

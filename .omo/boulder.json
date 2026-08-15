@@ -1,0 +1,30 @@
+{
+  "schema_version": 2,
+  "active_work_id": null,
+  "works": {
+    "pr-17-gherkin-carrier-hardening": {
+      "work_id": "pr-17-gherkin-carrier-hardening",
+      "active_plan": ".omo/plans/pr-17-gherkin-carrier-hardening.md",
+      "plan_name": "pr-17-gherkin-carrier-hardening",
+      "session_ids": [
+        "senpi:019ffd9e-6428-7150-b975-a934a798ca4b"
+      ],
+      "status": "completed",
+      "worktree_path": "/home/darkomijic/dev-libar/software-delivery-protocol"
+    },
+    "arc-keystone-engines": {
+      "work_id": "arc-keystone-engines",
+      "active_plan": ".omo/plans/arc-keystone-engines.md",
+      "plan_name": "arc-keystone-engines",
+      "session_ids": [
+        "senpi:019fff8b-e09d-7084-abc5-e4bbc7f60a2c",
+        "senpi:01a00105-11b5-7d0c-a614-dfe74f1acc75"
+      ],
+      "status": "completed",
+      "worktree_path": "/home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines",
+      "completed_todo": 14,
+      "current_commit": "002849f3f8dcac2346967207dc9200ce9071964a",
+      "active_task": null
+    }
+  }
+}

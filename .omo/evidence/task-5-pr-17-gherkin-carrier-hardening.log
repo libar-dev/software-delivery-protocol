@@ -1,0 +1,213 @@
+=== Task 5: Migrate canonical files to .sdp.gherkin ===
+Date: 2026-08-14T02:28:36+02:00
+Worktree: /home/darkomijic/dev-libar/software-delivery-protocol
+Branch: feature/design-review
+
+=== Intent ===
+Replace bare .feature with .sdp.gherkin across discovery, routing, CLI,
+prettierignore, live reader family, defused fixtures, tests, docs, skills,
+editor association, and frozen-path oracle inputs. No dual-suffix.
+
+=== Source suffix surfaces ===
+.prettierignore:29:*.sdp.gherkin
+src/cli/sdp.ts:27:  build      Extract every *.sdp.ts, *.sdp.md, and *.sdp.gherkin under root (default: cwd), plus
+src/extract/discover.ts:5:const SPEC_FILE_SUFFIXES = [".sdp.ts", ".sdp.md", ".sdp.gherkin"] as const;
+src/extract/discover.ts:133:    if (SPEC_FILE_SUFFIXES.some((suffix) => entry.name.endsWith(suffix))) {
+src/extract/discover.ts:148: * One walk, two surfaces: every `*.sdp.ts`, `*.sdp.md`, and `*.sdp.gherkin` under the extraction root
+src/cli/build-command.ts:118:          finding.file?.endsWith(".sdp.gherkin") === true,
+src/cli/build-command.ts:123:        `note: no *.sdp.ts, *.sdp.md, or *.sdp.gherkin spec files found under ${resolvedRoot} — the authored model is empty. Is this the right extraction root?\n`,
+src/extract/index.ts:30:   * The extraction root: every `*.sdp.ts`, `*.sdp.md`, and `*.sdp.gherkin` below it (minus tooling
+src/extract/index.ts:195:      : file.relativePath.endsWith(".sdp.gherkin")
+
+=== No dual-suffix / bare .feature discovery residues in src ===
+(none)
+
+=== Live reader family ===
+-rw-r--r--. 1 darkomijic darkomijic 6133 Aug 14 01:25 specs/consumers/reader.sdp.gherkin
+reader.feature absent (good)
+
+=== Defused fixtures ===
+test/fixtures/gherkin/authored-fact/implemented.sdp.gherkin.txt
+test/fixtures/gherkin/description-location/example-space-description.sdp.gherkin.txt
+test/fixtures/gherkin/description-location/feature-interior.sdp.gherkin.txt
+test/fixtures/gherkin/description-location/feature-leading.sdp.gherkin.txt
+test/fixtures/gherkin/description-location/rule-description.sdp.gherkin.txt
+test/fixtures/gherkin/description-location/scenario-interior.sdp.gherkin.txt
+test/fixtures/gherkin/description-location/scenario-leading.sdp.gherkin.txt
+test/fixtures/gherkin/duplicate-surface/a-duplicate.sdp.gherkin.txt
+test/fixtures/gherkin/duplicate-surface/b-duplicate.sdp.md.txt
+test/fixtures/gherkin/duplicate-surface/healthy.sdp.md.txt
+test/fixtures/gherkin/example-space/space.sdp.gherkin.txt
+test/fixtures/gherkin/malformed-relation/relation.sdp.gherkin.txt
+test/fixtures/gherkin/missing-id/missing.sdp.gherkin.txt
+test/fixtures/gherkin/multi-finding/healthy.sdp.md.txt
+test/fixtures/gherkin/multi-finding/invalid.sdp.gherkin.txt
+test/fixtures/gherkin/parent-child/basic.sdp.gherkin.txt
+test/fixtures/gherkin/parity/twin.sdp.gherkin.txt
+test/fixtures/gherkin/parity/twin.sdp.md.txt
+test/fixtures/gherkin/suffix-discovery/carrier.sdp.gherkin.txt
+test/fixtures/gherkin/suffix-discovery/cucumber-login.feature.txt
+test/fixtures/gherkin/syntax-error/broken.sdp.gherkin.txt
+test/fixtures/gherkin/unbound-ready/unbound.sdp.gherkin.txt
+test/fixtures/gherkin/unknown-tag/typo.sdp.gherkin.txt
+test/fixtures/gherkin/unsupported-construct/outline.sdp.gherkin.txt
+
+=== Editor association ===
+{
+  "files.associations": {
+    "*.sdp.gherkin": "cucumber"
+  }
+}
+
+=== Focused suite (allow non-zero; classify failures) ===
+AssertionError: expected [ { …(3) }, { …(3) }, { …(3) }, …(3) ] to deeply equal [ { …(3) }, { …(3) }, { …(3) }, …(3) ]
+
+- Expected
++ Received
+
+  [
+    {
+      "file": "example-space-description.sdp.gherkin",
+-     "line": 7,
++     "line": 6,
+      "validatorId": "extract/gherkin-grammar",
+    },
+    {
+      "file": "feature-interior.sdp.gherkin",
+-     "line": 5,
++     "line": 4,
+      "validatorId": "extract/gherkin-grammar",
+    },
+    {
+      "file": "feature-leading.sdp.gherkin",
+-     "line": 6,
++     "line": 4,
+      "validatorId": "extract/gherkin-grammar",
+    },
+    {
+      "file": "rule-description.sdp.gherkin",
+-     "line": 6,
++     "line": 5,
+      "validatorId": "extract/gherkin-grammar",
+    },
+    {
+      "file": "scenario-interior.sdp.gherkin",
+-     "line": 9,
++     "line": 7,
+      "validatorId": "extract/gherkin-grammar",
+    },
+    {
+      "file": "scenario-leading.sdp.gherkin",
+-     "line": 9,
++     "line": 7,
+      "validatorId": "extract/gherkin-grammar",
+    },
+  ]
+
+ ❯ test/gherkin-reifier.test.ts:596:7
+    594|     expect(
+    595|       result.report.findings.map(({ file, line, validatorId }) => ({ f…
+    596|     ).toEqual([
+       |       ^
+    597|       {
+    598|         file: "example-space-description.sdp.gherkin",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/16]⎯
+
+
+ Test Files  2 failed | 2 passed (4)
+      Tests  16 failed | 164 passed (180)
+   Start at  02:28:37
+   Duration  6.43s (transform 2.30s, setup 0ms, import 6.02s, tests 5.47s, environment 1ms)
+
+
+=== Failure classification ===
+extract.test.ts: PASS (all)
+cli.test.ts: PASS (all)
+gherkin-parity: 4/5 — multi-finding count is Todo 8 grammar/collector, not suffix
+gherkin-reifier: remaining fails are Todos 6-8 (locations, empty scenarios, short-head, multi-finding)
+No failure cites bare .feature path, dual discovery, or wrong empty-corpus note.
+
+=== QA Happy: valid .sdp.gherkin + ordinary .feature ===
+exit=0
+--- stdout ---
+1 specs · 0 packs · 0 anchors → 1 nodes · 0 edges (0 errors, 0 warnings)
+Wrote /tmp/tmp.4fFbuTRPJQ/generated/graph.json
+--- stderr ---
+primitive_specs=1
+files=["carrier.sdp.gherkin"]
+
+=== QA Failure A: only ordinary .feature (empty model) ===
+exit=0
+--- stdout ---
+0 specs · 0 packs · 0 anchors → 0 nodes · 0 edges (0 errors, 0 warnings)
+Wrote /tmp/tmp.7b3FQE9ea8/generated/graph.json
+--- stderr ---
+note: no *.sdp.ts, *.sdp.md, or *.sdp.gherkin spec files found under /tmp/tmp.7b3FQE9ea8 — the authored model is empty. Is this the right extraction root?
+
+=== QA Failure B: malformed .sdp.gherkin (source-located grammar error) ===
+exit=1
+--- stdout ---
+0 specs · 0 packs · 0 anchors → 0 nodes · 0 edges (1 errors, 0 warnings)
+--- stderr ---
+broken.sdp.gherkin:3 — [error] extract/gherkin-grammar — Feature is missing @spec.<dotted-id>; exactly one identity tag is required
+sdp build: hard errors present — graph.json not written.
+
+=== git status (no commit) ===
+ M .agents/skills/sdp-authoring/SKILL.md
+ M .prettierignore
+ M CONTEXT.md
+ M README.md
+ M docs/agent-surface/recipes.md
+ M docs/concept/04-authoring-and-binding.md
+ M docs/concept/DECISIONS.md
+ M specs/carrier/gherkin-authoring.contract-parity.sdp.md
+ M specs/carrier/gherkin-authoring.sdp.md
+ D specs/consumers/reader.feature
+ M specs/self-hosting.pack.sdp.md
+ M src/cli/build-command.ts
+ M src/cli/sdp.ts
+ M src/extract/discover.ts
+ M src/extract/index.ts
+ M test/cli.test.ts
+ M test/exclude-diagnostics.test.ts
+ M test/extract.test.ts
+ D test/fixtures/gherkin/authored-fact/implemented.feature.txt
+ D test/fixtures/gherkin/duplicate-surface/a-duplicate.feature.txt
+ D test/fixtures/gherkin/example-space/space.feature.txt
+ D test/fixtures/gherkin/malformed-relation/relation.feature.txt
+ D test/fixtures/gherkin/missing-id/missing.feature.txt
+ D test/fixtures/gherkin/parent-child/basic.feature.txt
+ D test/fixtures/gherkin/parity/twin.feature.txt
+ D test/fixtures/gherkin/syntax-error/broken.feature.txt
+ D test/fixtures/gherkin/unbound-ready/unbound.feature.txt
+ D test/fixtures/gherkin/unknown-tag/typo.feature.txt
+ D test/fixtures/gherkin/unsupported-construct/outline.feature.txt
+ M test/gherkin-parity.test.ts
+ M test/gherkin-reifier.test.ts
+ M test/self-hosting-oracle/carrier.ts
+ M test/self-hosting-oracle/consumers.ts
+?? specs/consumers/reader.sdp.gherkin
+?? specs/decisions/sdp-gherkin-extension.sdp.md
+?? test/fixtures/gherkin/authored-fact/implemented.sdp.gherkin.txt
+?? test/fixtures/gherkin/description-location/
+?? test/fixtures/gherkin/duplicate-surface/a-duplicate.sdp.gherkin.txt
+?? test/fixtures/gherkin/example-space/space.sdp.gherkin.txt
+?? test/fixtures/gherkin/malformed-relation/relation.sdp.gherkin.txt
+?? test/fixtures/gherkin/missing-id/missing.sdp.gherkin.txt
+?? test/fixtures/gherkin/multi-finding/
+?? test/fixtures/gherkin/parent-child/basic.sdp.gherkin.txt
+?? test/fixtures/gherkin/parity/twin.sdp.gherkin.txt
+?? test/fixtures/gherkin/suffix-discovery/
+?? test/fixtures/gherkin/syntax-error/broken.sdp.gherkin.txt
+?? test/fixtures/gherkin/unbound-ready/unbound.sdp.gherkin.txt
+?? test/fixtures/gherkin/unknown-tag/typo.sdp.gherkin.txt
+?? test/fixtures/gherkin/unsupported-construct/outline.sdp.gherkin.txt
+
+=== DONE Task 5 ===
+
+=== .vscode tracking ===
+gitignore narrowed so .vscode/settings.json is repository-trackable
+.gitignore:9:!.vscode/settings.json	.vscode/settings.json
+ M .gitignore
+?? .vscode/settings.json

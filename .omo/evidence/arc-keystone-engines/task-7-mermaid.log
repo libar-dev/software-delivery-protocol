@@ -1,0 +1,147 @@
+Todo 7 — bounded Mermaid projection evidence
+Date: 2026-08-14
+Worktree: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+Baseline/HEAD: 7e22c6316460affe542acffc02cb23aebd70cdcf
+Commit/push: none
+
+ORIGINAL / RED MATRIX
+- Correct-worktree immediate baseline:
+  npx vitest run test/mermaid-render.test.ts test/mermaid-cli.test.ts
+  exit 0; 2 files, 9 tests passed. No original renderer or CLI red existed; the inherited tests under-specified the contract.
+- Strengthened renderer contract first run: CLI 7/7 green; renderer 3/5 green. Two test-contract failures:
+  1. foreign-edge assertion expected unescaped brackets although labels are correctly escaped;
+  2. edge-overflow refusal named spec:neighbor because pages are code-unit sorted before spec:root.
+  Both assertions were corrected without weakening renderer behavior.
+- Next focused run exposed one invalid test RegExp quote escape; corrected. Final focused result: 2 files, 12/12 passed.
+- First full npm run check stopped at lint: unnecessary quote escapes and deprecated toThrowError calls in the new renderer test. Mechanical test-only cleanup applied and restaged.
+- One package-smoke probe failed only because it was incorrectly run in parallel with npm build while dist was being cleaned. The tarball visibly lacked declarations. Serial package smoke against the complete build passed; the staged/full gate is serial and passed.
+
+IMPLEMENTED CONTRACT
+- Pure renderMermaid(reader) projection returning deterministic path/content pages.
+- Per-Spec incident one-hop diagrams, per-Pack belongsTo membership diagrams, and sorted index; no whole-graph diagram.
+- Injective full UTF-16-code-unit ID machine tokens; labels never become tokens.
+- Dedicated Mermaid label escaping for quotes, brackets/braces/parentheses, backticks, pipe, ampersand, angle brackets, backslash, CR/LF, and Unicode preservation.
+- Independent code-unit sorting for pages, nodes, edges, and index rows.
+- Explicit unresolved placeholder nodes; cycles retained without closure/layout; disconnected Pack members and foreign edge types retained.
+- Exact full-diagram bounds: 64 nodes / 128 edges; deterministic duplicate-token and overflow refusal; no truncation.
+- Explicit sdp mermaid publication under generated/mermaid via wholesale tmp-to-rename, twin-render/current-byte --check-clean, failure cleanup, and build invalidation.
+- Public barrel/package surface and self-hosting implementation/verifier anchors.
+- Spec stays stated readiness defined; derived delivery facts are implemented + has-verifier.
+
+SELF-HOSTING / CANONICAL VALIDATION
+- Canonical validate output:
+  154 specs · 1 packs · 141 anchors → 296 nodes · 559 edges (0 errors, 0 warnings)
+  validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+- Frozen updates: consumers descriptor, declared refines relation, implementation/verifier anchors, Pack member, and exact totals/distribution.
+- npm run generate:self-hosting: exit 0, 156 Design Review pages.
+- npm run generate:example: exit 0.
+- LSP diagnostics refused because the assigned sibling worktree is outside the request LSP workspace root. Accepted fallback diagnostics: typecheck/build/full check all green.
+
+FOCUSED / RELATED VERIFICATION
+- npx vitest run test/mermaid-render.test.ts test/mermaid-cli.test.ts: exit 0, 12/12.
+- npx vitest run test/mermaid-render.test.ts test/mermaid-cli.test.ts test/self-hosting-graph.test.ts test/self-hosting-consumers-oracle.test.ts test/self-hosting-projections.test.ts test/package-smoke.test.ts: exit 0, 47/47.
+- Related census, Design Review, checkout, self-hosting graph/projections/consumer oracle/check-gates suites: green.
+- Serial package-smoke: exit 0; runtime and declaration imports include Mermaid public exports.
+- git diff --cached --check: exit 0.
+- No unstaged tracked changes.
+
+FULL STAGED GATE
+Command: npm run check
+Exit: 0
+Included: temporal, lint, format check, build, self-hosting/example generation, root/example typechecks, tests, self-hosting gates/checks, example check, preflight.
+Test summary: main run 56 files, 731 passed, 1 skipped; CLI run 59 passed. All gate legs exited 0.
+Canonical self-hosting during gate: 154 Specs, 1 Pack, 141 anchors, 296 nodes, 559 edges; literal 0 errors · 0 warnings.
+
+REAL CLI / MANUAL QA
+Surface: node ./dist/cli/sdp.js mermaid examples/checkout-v1
+- First run: exit 0, 13 pages.
+- Second run: exit 0; sorted SHA-256 manifest diff = 0 and recursive tree diff = 0.
+- Clean --check-clean: exit 0.
+- Published-page perturb then --check-clean: exit 1; stderr named generated Mermaid drift; live root absent; tmp root absent.
+- Final restore: exit 0, 13 pages; final --check-clean exit 0; live root present and tmp root absent.
+- Inspected:
+  examples/checkout-v1/generated/mermaid/index.md
+  examples/checkout-v1/generated/mermaid/spec/orders.create-order.md
+  examples/checkout-v1/generated/mermaid/pack/checkout-v1.md
+  Machine IDs are n_ + complete hexadecimal code-unit encoding; node/edge order is sorted; Spec page is incident one-hop only; Pack page contains Pack membership only.
+- Checkout measured maxima:
+  max nodes = 14 at spec/orders.create-order.md; headroom to 64 = 50.
+  max edges = 17 at spec/orders.create-order.md; headroom to 128 = 111.
+- Census and Design Review implementation SHA-256 hashes were unchanged before/after Mermaid QA. Mermaid publication writes no sibling projection source and does not use runView/census/Design Review rendering.
+
+INVALID-CORPUS BLOCKER RESOLUTION
+- test/fixtures/extract/invalid-non-static-id is an established template fixture whose files are non-static-id.sdp.ts.txt and static-sibling.sdp.ts.txt.
+- Direct canonical validate/build lawfully returned 0 with 0 Specs and the note that no *.sdp.* source was found. It was unsuitable as a direct executable corpus; production behavior was not changed.
+- Disposable materialization stripped only the terminal .txt suffix, matching the established fixture-helper pattern.
+- Materialized canonical validate: exit 1.
+- Materialized sdp mermaid: exit 1 with extract/non-static-envelope (TemplateExpression outside static value grammar).
+- Planted stale generated/mermaid and generated/mermaid.tmp were both absent after refusal.
+- Disposable root and accidental direct-fixture generated root were removed.
+
+ADVERSARIAL TABLE
+- Input permutation: byte-identical pages — pass.
+- Hostile label containing quotes, apostrophe, [], {}, (), backtick, pipe, ampersand, <>, backslash, newline, Unicode, and "]-->: dedicated escaping prevents syntax closure — pass.
+- Duplicate graph identity/token collision: deterministic MERMAID_MACHINE_TOKEN_COLLISION refusal — pass.
+- 65-node diagram: deterministic MAX_MERMAID_NODES_PER_DIAGRAM limit=64 observed=65 refusal — pass.
+- 129-edge diagram: deterministic MAX_MERMAID_EDGES_PER_DIAGRAM limit=128 observed=129 refusal — pass.
+- Dangling edge: explicit unresolved placeholder — pass.
+- Foreign edge type: retained and deterministically escaped/sorted — pass.
+- Cycle: both ordinary edges retained, no closure/layout — pass.
+- Disconnected Pack members: retained and sorted — pass.
+- Unrelated graph node: absent from Spec one-hop page — pass.
+- Stale page wholesale replacement: stale page removed — pass.
+- Dirty publication attribution: drift refusal, nonzero, live/tmp removed — pass.
+- Misleading twin success: divergent twin refusal, live/tmp removed — pass.
+- Fatal corpus/build: nonzero, planted live/tmp removed — pass.
+- Ignored generated leakage: none staged — pass.
+- Resource/process leaks: no command remains; disposable roots removed; no sleeps/polling used — pass.
+
+EXACT STAGED MANIFEST (28 paths)
+specs/consumers/mermaid-view.sdp.md
+specs/self-hosting.pack.sdp.md
+src/cli/build-command.ts
+src/cli/mermaid-command.ts
+src/cli/sdp.ts
+src/index.ts
+src/projections/mermaid.ts
+test/fixtures/checkout-v1/expected-mermaid/index.md
+test/fixtures/checkout-v1/expected-mermaid/pack/checkout-v1.md
+test/fixtures/checkout-v1/expected-mermaid/spec/decisions.order-lifecycle.md
+test/fixtures/checkout-v1/expected-mermaid/spec/orders.create-order.api-contract.md
+test/fixtures/checkout-v1/expected-mermaid/spec/orders.create-order.invalid-cart.md
+test/fixtures/checkout-v1/expected-mermaid/spec/orders.create-order.md
+test/fixtures/checkout-v1/expected-mermaid/spec/orders.create-order.valid-cart.md
+test/fixtures/checkout-v1/expected-mermaid/spec/orders.order-inventory-rule.md
+test/fixtures/checkout-v1/expected-mermaid/spec/orders.order-latency-constraint.md
+test/fixtures/checkout-v1/expected-mermaid/spec/orders.order-management.md
+test/fixtures/checkout-v1/expected-mermaid/spec/orders.order-model.md
+test/fixtures/checkout-v1/expected-mermaid/spec/orders.order-placement-flow.md
+test/fixtures/checkout-v1/expected-mermaid/spec/orders.order-total-rule.md
+test/mermaid-cli.test.ts
+test/mermaid-render.test.ts
+test/package-smoke.test.ts
+test/self-hosting-graph.test.ts
+test/self-hosting-oracle/anchors.ts
+test/self-hosting-oracle/consumers.ts
+test/self-hosting-oracle/declared-relations.ts
+test/self-hosting-oracle/pack-members.ts
+
+FINAL STATE
+- Exact intended Todo 7 paths staged.
+- HEAD remains baseline 7e22c6316460affe542acffc02cb23aebd70cdcf; no commit and no push.
+- No unstaged tracked semantic changes.
+- generated/mermaid.tmp absent; final checkout Mermaid publication clean.
+
+INDEPENDENT-ORACLE REPAIR — RETAINED-GRAPH VALIDATION FAILURE
+- Independent finding: runValidate may return { exitCode: 1, graph }; the prior runMermaid guard checked only graph absence, so it rendered/published a live Mermaid tree and then returned 1.
+- Test-first regression added at the CLI seam in test/mermaid-cli.test.ts. It injects one validation error while retaining the built graph, plants live/tmp roots, counts renderer calls, and requires exit 1, renderer calls 0, live absent, tmp absent.
+- Observed pre-fix failure: expected renderer calls 0, received 1. This proved publication occurred despite validation failure.
+- Minimal production repair in src/cli/mermaid-command.ts: the pre-publication guard now refuses when validate.exitCode !== 0 OR graph is absent, removes live/tmp roots, and returns without rendering.
+- Single regression after repair: exit 0; 1 passed, 7 skipped.
+- Focused renderer/CLI after repair: 13/13 passed.
+- Full focused Mermaid/self-hosting/package set after repair: 6 files, 48/48 passed.
+- Canonical self-hosting validate after repair: 154 Specs, 1 Pack, 141 anchors, 296 nodes, 559 edges; literal 0 errors · 0 warnings.
+- Real retained-graph QA: disposable Markdown Spec with dangling refines target produced conformance/referential-integrity; sdp mermaid exit 1; generated/graph.json present; generated/mermaid absent; generated/mermaid.tmp absent. Disposable root removed.
+- Serial staged npm run check after repair: exit 0. Main suite 732 passed, 1 skipped; CLI suite 59 passed; all lint/format/build/generation/typecheck/self-hosting/example/preflight legs green.
+- Repair changed only already-staged Todo 7 paths src/cli/mermaid-command.ts and test/mermaid-cli.test.ts; exact staged boundary remains 28 paths.
+- git diff --cached --check: exit 0; no unstaged tracked files; no untracked non-ignored files; no commit/push.

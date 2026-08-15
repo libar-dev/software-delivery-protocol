@@ -1,0 +1,69 @@
+Wave 1 Todo 4 - closed Gherkin grammar and bounded collector test evidence
+Date: 2026-08-14
+
+Changed test surfaces
+- test/gherkin-reifier.test.ts
+  - unique reserved-head suggestion cardinality
+  - harmless distance-two short decoration tags remain graph-inert
+  - one-edit short-head refusal without illegal metadata suggestions
+  - step-less ordinary and @example-space Scenario refusal at Scenario lines
+  - zero-Scenario Feature and one-Given Scenario acceptance
+  - exact keyed-bullet / narrative classification
+  - four semantic findings in physical order
+  - exactly 100 findings with a final suppression finding
+- test/gherkin-parity.test.ts
+  - invalid carrier contributes no graph nodes or edges
+  - healthy sibling survives
+  - repeated invalid extraction returns equal findings, graph bytes, and counts
+- test/fixtures/gherkin/multi-finding/
+  - one four-error Gherkin carrier
+  - one healthy Markdown sibling
+
+Focused red run
+Command:
+  npx vitest run test/gherkin-reifier.test.ts test/gherkin-parity.test.ts
+Observed:
+  exit 1
+  2 test files failed
+  8 tests failed, 42 passed
+Named failures exercise the current defects:
+  - global distance-2 rejects @kindle.ci
+  - empty ordinary and @example-space Scenarios reify
+  - first-finding behavior returns 1 rather than 4 findings
+  - cap case reifies empty points rather than returning 100 findings
+  - integration corpus reports one finding rather than four and determinism follows that old result
+
+Targeted mutation-equivalent probes against current implementation
+1. Global distance-2 threshold:
+   npx vitest run test/gherkin-reifier.test.ts -t "keeps harmless distance-two short-head decoration tags graph-inert"
+   exit 1; @kindle.ci was incorrectly suggested as @kind.
+2. Missing zero-step guard:
+   npx vitest run test/gherkin-reifier.test.ts -t "refuses step-less an ordinary Scenario at its Scenario line"
+   exit 1; the empty example point entered the reified Specs.
+3. First-finding early return:
+   npx vitest run test/gherkin-reifier.test.ts -t "collects four independent semantic findings in physical source order"
+   exit 1; one finding was returned instead of four.
+
+Unaffected parity proof
+Command:
+  npx vitest run test/gherkin-parity.test.ts -t "serializes|repeats extraction|excludes both cross-carrier"
+Observed:
+  exit 0
+  3 passed, 2 skipped
+
+Static verification
+Command:
+  npx tsc --noEmit --pretty false
+Observed:
+  exit 0
+
+Coordination
+- location-tests owns the append-only physical-description-location describe block and
+  test/fixtures/gherkin/description-location/.
+- Todo 4 owns the grammar block, parity collector cases, and multi-finding fixtures.
+- No production files were edited and no commit was created.
+
+Known verification state
+- The full focused suite is intentionally red until Wave 2 implements Todos 7 and 8.
+- TypeScript LSP diagnostics were unavailable because typescript-language-server is not installed;
+  the repository TypeScript compiler completed successfully instead.

@@ -1,0 +1,146 @@
+# Task 2 — Brief A ruling: carrier universality decision Spec
+# Worktree: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+# Date: 2026-08-14
+# Scope owned: specs/decisions/carrier-universality.sdp.md
+# Conditional consequences: specs/decisions/carrier-ruling.sdp.md (MD-18),
+#   specs/decisions/gherkin-carrier-option.sdp.md (MD-27)
+# Evidence: this file
+# Out of scope (preserved / not absorbed here): source, tests, other Specs,
+#   plan files, pack freeze, self-hosting oracle, AGENTS handbook, Boulder, ledger
+
+## Ruling summary (operative law)
+1. Per-kind honesty (all 8): behavior + example = lawful Gherkin; workflow, rule,
+   constraint, model, decision, contract = Markdown (mapping would lie).
+2. Rich content by physical form: Feature/Scenario description prose lawful only on
+   MD-19 owners (narrative | description). Gherkin DocStrings and DataTables remain
+   refused. Physical source locations preserved; hard cap of 100 semantic findings retained.
+3. "Universal" = per-ID carriers + generated Gherkin-shaped READ projection (not one
+   default authored carrier; not a lossless codec).
+4. Default does not flip; Markdown remains default Spec carrier.
+5. Packs out; MD-25 remains Pack carrier law.
+ADR three-part test addressed in rationale (hard to reverse · surprising without
+context · real trade-off). MD-27 kind bound reaffirmed, not overturned.
+
+## A. Malformed-input red proof (readiness floor)
+CMD: npm run --silent sdp -- validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+Setup: temporary draft of specs/decisions/carrier-universality.sdp.md with
+decision.decision withheld (context/rationale only), readiness still "ready".
+exit=1
+
+--- stdout/stderr (raw) ---
+151 specs · 1 packs · 138 anchors → 290 nodes · 547 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/generated/graph.json
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/generated/contracts (98 modules)
+specs/decisions/carrier-universality.sdp.md — [error] honesty/readiness-floor — Spec "spec:decisions.carrier-universality" states readiness "ready" but does not satisfy floor clause "kind-evidence-complete": The kind's natural evidence is complete (per-kind evidence table).
+validate: 1 errors · 0 warnings (conformance + honesty over the one graph)
+RED_EXIT=1
+--- end raw ---
+
+Cross-check: honesty/readiness-floor fires because decision.decision is missing
+(kind-evidence-complete / decision defined rung). Incomplete draft cannot claim ready.
+
+## B. Final green validate (complete ruling)
+CMD: npm run --silent sdp -- validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+exit=0
+
+--- stdout/stderr (raw) ---
+151 specs · 1 packs · 138 anchors → 290 nodes · 547 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/generated/graph.json
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/generated/contracts (98 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+GREEN_VALIDATE_EXIT=0
+--- end raw ---
+
+Note: corpus count 151 includes sibling worker Spec
+spec:decisions.structural-anchor-semantics (out of this task's ownership).
+
+## C. Fresh-state graph query — concept hit
+CMD: npm run --silent sdp:q -- 'return g.findByConcept("carrier universality").map(n=>({id:n.id,title:n.title}))'
+
+--- stdout (raw) ---
+[
+  {
+    id: 'spec:decisions.carrier-universality',
+    title: 'Carrier universality is bounded by honest kind structure'
+  }
+]
+--- end raw ---
+
+## D. Stated/derived readiness + five questions + three ADR tests + rich-content forms
+CMD: npm run --silent sdp:q -- '<body inspecting graph.nodes decision section>'
+
+--- stdout (raw) ---
+{
+  id: 'spec:decisions.carrier-universality',
+  stated: 'ready',
+  derived: 'ready',
+  hasDecision: true,
+  kinds: {
+    behavior: true,
+    example: true,
+    workflow: true,
+    rule: true,
+    constraint: true,
+    model: true,
+    decision: true,
+    contract: true
+  },
+  rich: {
+    descriptionProse: true,
+    md19: true,
+    docStringsRefused: true,
+    dataTablesRefused: true,
+    cap100: true,
+    physical: true
+  },
+  universal: true,
+  defaultNoFlip: true,
+  packsOut: true,
+  adr: { hard: true, surprise: true, trade: true }
+}
+--- end raw ---
+
+## E. Dirty-worktree ownership
+Owned by this task after cleanup of out-of-scope freeze attempts:
+  M specs/decisions/carrier-ruling.sdp.md
+  M specs/decisions/gherkin-carrier-option.sdp.md
+  ?? specs/decisions/carrier-universality.sdp.md
+  ?? .omo/evidence/arc-keystone-engines/task-2-a-ruling.log
+
+Shared worktree siblings (NOT owned; preserved untouched by final state):
+  M plans/29-... M plans/30-... ?? plans/31-... (todo 1 hygiene)
+  ?? specs/decisions/structural-anchor-semantics.sdp.md (todo 3)
+
+Reverted after parent steer (frozen-oracle absorption deferred to integration):
+  AGENTS.md, specs/self-hosting.pack.sdp.md, test/self-hosting-graph.test.ts,
+  test/self-hosting-oracle/{decisions,declared-relations,pack-members}.ts
+
+## F. Misleading-success-output cross-check
+- Extraction header line "0 errors, 0 warnings" appears even when honesty later
+  reports readiness-floor errors (red proof above). Success is the final
+  "validate: 0 errors · 0 warnings" line + exit 0, not the extraction counts line.
+- Red proof exit 1 with honesty/readiness-floor is the teeth check; green must not
+  be claimed from extraction-only output.
+
+## G. Other ultraqa classes
+- N/A privilege escalation / auth bypass: no auth surface in this decision Spec task.
+- N/A injection / XSS: no web or template rendering path touched.
+- N/A race / concurrency: single-writer Spec authoring; no concurrent mutators on owned files.
+- N/A resource exhaustion: no new loops, caps, or generators landed.
+- N/A crypto / secrets: no secret material.
+- Frozen self-hosting oracle / pack roster / AGENTS handbook: deliberately NOT updated
+  here; integration absorbs corpus freeze. Therefore `npm run check` is expected red
+  on frozen totals until that absorption lands (shared structural-anchor Spec also
+  contributes +1 ready Spec).
+
+## H. Cleanup
+- Temporary red draft restored to final green Spec before green validate.
+- No scratch processes left running.
+- No /tmp fixtures retained as deliverables; evidence is this log only.
+- Out-of-scope freeze edits reverted via git checkout.
+
+## I. Files changed (final)
+- specs/decisions/carrier-universality.sdp.md (new decision Spec)
+- specs/decisions/carrier-ruling.sdp.md (MD-18 consequence points at this ruling)
+- specs/decisions/gherkin-carrier-option.sdp.md (MD-27 consequence points at this ruling)
+- .omo/evidence/arc-keystone-engines/task-2-a-ruling.log (this file)

@@ -1,0 +1,28 @@
+Todo 8 focused implementation evidence — 2026-08-14
+
+RED
+- npx vitest run test/codegen.test.ts
+- exit 1: generated.registrars was absent; the registrar seam test failed at test/codegen.test.ts.
+
+GREEN
+- npx vitest run test/codegen.test.ts test/runner.test.ts test/testing.test.ts examples/checkout-v1/test/orders/create-order.valid-cart.test.ts
+- exit 0: 4 files, 31 tests passed.
+- npx vitest run test/cli.test.ts examples/checkout-v1/test/orders/create-order.valid-cart.test.ts
+- exit 0: 2 files, 60 tests passed; valid-cart registered and ran exactly one test.
+- npm run typecheck:examples
+- exit 0.
+- npm run build
+- exit 0 (pre-existing CJS import.meta warning only).
+- npm run generate:example
+- exit 0: 11 specs, 1 pack, 5 anchors, 17 nodes, 32 edges, 0 errors, 0 warnings; 3 contract modules and the valid-cart sibling registrar regenerated.
+
+Generated shape
+- examples/checkout-v1/test/orders/create-order.valid-cart.test.generated.ts is the sole retained Todo 8 generated registrar.
+- It imports the contract and space, owns the exhaustive StepBindings skeleton map, delegates registration through the shared Vitest-backed testing runtime, threads the generated Partial<Conditions> point, and performs Spec Then/oracle/observed comparisons.
+- examples/checkout-v1/test/orders/create-order.valid-cart.test.ts contains exactly one registerValidCart(...) activation and zero literal step-skeleton keys.
+- The authored file retains specTest and only createWorld, invoke, observe, expected wiring, and Outcome-external domain assertions.
+
+Scope and follow-up
+- Self-hosting disposition is recorded separately at task-8-self-hosting-rationale.md: valid-cart MIGRATE; the other 30 runnable families DEFER. No deferred generated siblings remain in the worktree.
+- Mutation probes and full npm run check were deliberately not run; downstream QA owns them.
+- All Todo 8 changes remain unstaged; no commit or push was made.

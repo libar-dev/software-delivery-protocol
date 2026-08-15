@@ -1,0 +1,84 @@
+# Task 3 — Lock physical description locations with fixtures
+# pr-17-gherkin-carrier-hardening / Wave 1 Todo 3
+# Member: location-tests
+# Date: 2026-08-14
+
+## Deliverable
+Failing unit + defused-corpus exact-line regression tests for Gherkin description
+location diagnostics. No production code changes. No commit.
+
+## Files touched
+- test/gherkin-reifier.test.ts
+  - imports: afterEach, extract, materializeGherkinCorpus/removeMaterializedCorpus
+  - NEW sibling describe at EOF: "Gherkin carrier physical description locations"
+  - Does NOT modify the existing refusal table harness (still uses line > 0)
+  - Preserves exact-line assertions for language header (line 1) and parser syntax (line 5)
+- test/fixtures/gherkin/description-location/ (NEW, LF only)
+  - feature-leading.feature.txt          expect line 6
+  - feature-interior.feature.txt         expect line 5
+  - scenario-leading.feature.txt         expect line 9
+  - scenario-interior.feature.txt        expect line 9
+  - rule-description.feature.txt         expect line 6
+  - example-space-description.feature.txt expect line 7
+
+## Coordination
+- grammar-tests owns multi-finding fixtures + grammar block before refusal table + gherkin-parity.
+- location-tests append-only physical-location block + description-location fixtures only.
+
+## Defect under test (current engine)
+src/extract/gherkin.ts still derives description finding lines as:
+  firstLine = feature|scenario.location.line + 1
+  lineNumber = firstLine + descriptionIndex
+and Rule / @example-space description refusals use keywordLine + 1.
+@cucumber/gherkin elides blank lines and comments from description text, so
+keyword+index under-reports the physical one-based source line.
+
+## Unit cases (exact physical lines; fail against current arithmetic)
+
+| case | expected physical | current reported | delta |
+|---|---:|---:|---:|
+| Feature bad key after leading blanks+comment | 6 | 4 | -2 |
+| Feature bad key after interior comment | 5 | 4 | -1 |
+| Scenario bad key after leading blanks+comment | 9 | 7 | -2 |
+| Scenario bad key after interior comment | 9 | 7 | -2 |
+| Rule description after blank | 6 | 5 | -1 |
+| @example-space description after blank | 7 | 6 | -1 |
+| Feature CRLF parity (same source as Feature leading) | 6 | 4 | -2 |
+| Scenario CRLF parity (same source as Scenario leading) | 9 | 7 | -2 |
+
+## Defused corpus extract expectations (sorted by file)
+example-space-description.feature → 7 (got 6)
+feature-interior.feature → 5 (got 4)
+feature-leading.feature → 6 (got 4)
+rule-description.feature → 6 (got 5)
+scenario-interior.feature → 9 (got 7)
+scenario-leading.feature → 9 (got 7)
+
+## QA commands
+
+### Happy path (red seam verification)
+```
+npx vitest run test/gherkin-reifier.test.ts -t "physical description|non-English language|parser diagnostic" --reporter=verbose
+```
+Observed:
+- 8 failed location tests with exact expected-vs-received mismatches above
+- 2 passed preserved syntax/location tests:
+  - refuses a non-English language header at its source line (line 1)
+  - normalizes the first parser diagnostic as Gherkin syntax (line 5)
+
+Full suite snapshot also includes grammar-tests' intentional red tests (out of scope here).
+
+### Failure mutation (arithmetic already present)
+Current production code already uses `feature.location.line + 1` /
+`scenario.location.line + 1` / `rule.location.line + 1` for description starts.
+No temporary edit required to observe failure: the named physical-location tests
+fail against that arithmetic today. Todo 6 will replace the arithmetic; after
+that lands, the inverse mutation (restore +1) must re-break these same tests.
+
+## Acceptance
+- [x] Unit exact-line tests fail for intended mismatch (not line > 0)
+- [x] Defused-corpus extract asserts exact physical lines and fails identically
+- [x] CRLF parity covered for Feature + Scenario bad keys
+- [x] Existing parser-syntax / language-header exact lines still pass
+- [x] No commit
+- [x] Evidence written to this log

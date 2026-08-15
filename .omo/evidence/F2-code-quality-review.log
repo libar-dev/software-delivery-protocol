@@ -1,0 +1,213 @@
+F2 Code Quality Review — pr-17-gherkin-carrier-hardening (re-run after fix)
+Date: 2026-08-14
+Worktree: /home/darkomijic/dev-libar/software-delivery-protocol
+Branch: feature/design-review
+Reviewer: omo senpi-task child (st_019ffde6)
+Scope: inspect-only (no source edits; this evidence log only)
+Primary surface: src/extract/gherkin.ts (+ discover/index/reify/cli wiring)
+Prior F2: FAIL (incomplete RESERVED_HEAD_SUGGESTIONS) — remediated; this is verification.
+
+========================================================================
+VERDICT: PASS
+========================================================================
+
+Similarity matching now covers the full closed reserved-head vocabulary with
+length-scaled thresholds. Previously silent lawful-relation near-misses
+(@constrained-bi / @decided-bi / @constraind-by / @example-spac /
+@constraind-bi) refuse with a single grammar finding and contribute no graph
+nodes. All other F2 dimensions continue to hold. Typecheck and ESLint are
+clean; LSP server is unavailable on this workstation (tsc used as substitute).
+Remediation diff is scoped to the failing dimension only (no unrelated cleanup).
+
+------------------------------------------------------------------------
+1) Similarity matching — PASS (was FAIL)
+------------------------------------------------------------------------
+
+Code (src/extract/gherkin.ts):
+- RESERVED_TAG_HEADS (12):
+  spec, altitude, readiness, refines, depends-on, constrained-by, decided-by,
+  verifies, kind, pack, supersedes, example-space
+- RESERVED_HEAD_SUGGESTIONS heads: same 12 (equalSets=true; missingFromSugg=[];
+  extraInSugg=[]). Previously missing constrained-by, decided-by, example-space
+  are present with lawful: true.
+- nearest() accepts number | ((candidate) => number); length scale:
+  candidate.length <= 5 → d=1; else d=2.
+- decorationTagFinding gates "did you mean" on candidate.lawful === true
+  (kind/pack/supersedes refuse without recommending illegal metadata).
+- Description keys still use flat nearest(..., 2).
+
+Runtime probe (vite-node, reifyGherkinCarrier, complete valid Feature+Scenario):
+
+  Input head                 findings  specs  suggest  headHit
+  -------------------------  --------  -----  -------  --------------
+  @constrained-bi.spec:…     1         0      yes      constrained-by
+  @decided-bi.spec:…         1         0      yes      decided-by
+  @constraind-by.spec:…      1         0      yes      constrained-by
+  @example-spac              1         0      yes      example-space
+  @constraind-bi.spec:…      1         0      yes      constrained-by  (d=2 long)
+  @depends-om.spec:…         1         0      yes      depends-on
+  @readines.ready            1         0      yes      readiness       (d=1 short)
+  @paced                     0         2      no       —               (inert)
+  @kindle.ci                 0         2      no       —               (inert d=2 short)
+  @king.dom                  1         0      no       kind            (unlawful)
+  @packs.nightly             1         0      no       pack            (unlawful)
+  @supercedes.x              1         0      no       supersedes      (unlawful)
+
+Distances checked: constrained-bi→constrained-by=1; constraind-bi→constrained-by=2;
+example-spac→example-space=1; readines→readiness=1; king→kind=1; packs→pack=1;
+kindle→kind=2 (above short-head threshold).
+
+Regression tests (test/gherkin-reifier.test.ts):
+- it.each one-edit long-head near-misses for constrained-bi / decided-bi /
+  constraind-by / example-spac
+- two-edit long-head @constraind-bi → constrained-by
+- short unique @readines.ready
+- unlawful @king.dom / @packs.nightly without "did you mean"
+- inert @paced / @kindle.ci retained
+
+------------------------------------------------------------------------
+2) Source indexing (buildGherkinSourceIndex) — PASS
+------------------------------------------------------------------------
+
+- One private index from physical lines (split /\r?\n/u) + official parser
+  Comment locations.
+- Monotonic exact alignment of AST description lines; skips comment lines and
+  blank physical lines; mismatch/EOF → single extract/gherkin-syntax finding
+  and empty specs/packs.
+- indexedDescription / firstProseLine feed description parsing and Rule /
+  @example-space description refusals at true physical lines.
+- languageHeaderLine retained in the same index (no second structural parse).
+- Runtime: identical LF and CRLF carriers with interior comment between keyed
+  description lines both reify intent {problem, outcome} + narrative and two
+  specs, zero findings.
+- Tests: physical-location describe (LF/CRLF, leading/interior comments,
+  Rule/@example-space description lines, description-location fixture corpus).
+
+------------------------------------------------------------------------
+3) Collector ordering / cap / cascade control — PASS
+------------------------------------------------------------------------
+
+- GherkinFindingCollector: findings[] + findingCount (count continues after cap).
+- appendFinding: push until 99; 100th slot is extract/too-many-gherkin-findings
+  at line 1 with no subjectId; further findings increment count only.
+- Runtime cap probe: 101 empty-metadata scenarios → findingsLen=100,
+  lastValidator=extract/too-many-gherkin-findings, lastLine=1, lastSubject=null,
+  specs=[].
+- Semantic helpers snapshot findingCount, append independently, return
+  undefined on any local finding (no missing-field cascade of partial values).
+- Traversal order: feature tags → feature description → children
+  (Background, Rule, example-space, ordinary Scenario) in document order.
+- Tests: four ordered findings; multi-finding fixture physical line order.
+
+------------------------------------------------------------------------
+4) Error taxonomy — PASS
+------------------------------------------------------------------------
+
+- extract/gherkin-syntax: official parse errors, source-index mismatch,
+  catch-all reify failure (file excluded).
+- extract/gherkin-grammar: closed-grammar / decoration / empty-scenario
+  semantic refusals.
+- extract/invalid-id: id token / relation target parse failures.
+- extract/too-many-gherkin-findings: cap suppression only
+  (reify.ts extractFindingIds.tooManyGherkinFindings).
+- All carrier findings: family "conformance", severity "error".
+- File-level gates (missing Feature, non-en language, syntax/index) stay
+  single-finding short circuits; semantic path accumulates.
+
+------------------------------------------------------------------------
+5) Strict types — PASS
+------------------------------------------------------------------------
+
+- Readonly interfaces for index/metadata/located lines; ParseResult and
+  collector shapes; const satisfies on relation tag map and frozen candidate
+  tables.
+- Narrow casts only after closed-set membership checks
+  (SpecAltitude / SpecReadiness / DESCRIPTION_KEYS / RESERVED_TAG_HEADS).
+- No any / ts-ignore / eslint-disable in gherkin.ts
+  (rg only hit the tooManyGherkinFindings identifier string).
+- DescriptionOwner is structural (description + location) and keyed by AST
+  object identity within one reify call — sound for the cucumber message graph.
+- nearest maximumDistance widened to number | ((candidate: string) => number)
+  without loosening call sites (description keys still pass number 2).
+
+------------------------------------------------------------------------
+6) Determinism — PASS
+------------------------------------------------------------------------
+
+- IdGenerator.incrementing(); no time/random in the reifier.
+- Within-file finding order = traversal order; extract sortFindings orders by
+  file, line, validatorId (src/extract/index.ts).
+- Discovery lists sorted (discover.ts); nearest() tie → no suggestion (unique).
+- Runtime: repeated reify of multi-error carrier → byte-identical JSON.
+- Tests: gherkin-parity "repeats invalid carrier derivation deterministically"
+  (equal findings + serializeGraph).
+
+------------------------------------------------------------------------
+7) No-partial-graph behavior — PASS
+------------------------------------------------------------------------
+
+- reifyFeature final gate: any collector.findings.length > 0 OR missing
+  metadata/description → { specs: [], packs: [], findings }.
+- Successfully built child ReifiedSpecs are discarded when the file has any
+  semantic finding (never returned).
+- Syntax/index/language/catch paths always return empty specs.
+- Similarity near-miss probes: findings≥1 ⇒ specs=0 (no silent relation drop
+  into a published node).
+- Tests: multi-finding fixture — only spec:fixture.healthy-sibling survives;
+  invalid.sdp.gherkin contributes four findings and zero nodes
+  (test/gherkin-parity.test.ts).
+
+------------------------------------------------------------------------
+8) Zero type/lint errors (LSP substitute) — PASS
+------------------------------------------------------------------------
+
+- typescript-language-server: NOT INSTALLED on workstation
+  (lsp_diagnostics reported install required; no install performed).
+- npx tsc --noEmit -p tsconfig.json → exit 0
+- npx eslint src/extract/gherkin.ts src/extract/discover.ts
+  src/extract/index.ts src/extract/reify.ts src/cli/build-command.ts
+  src/cli/sdp.ts → exit 0
+- Focused tests: gherkin-reifier + gherkin-parity + extract → 126 passed
+  (58 + 5 + 63)
+
+------------------------------------------------------------------------
+9) No unrelated cleanup — PASS
+------------------------------------------------------------------------
+
+- Unstaged remediation (post prior F2 FAIL) touches only:
+    src/extract/gherkin.ts       | +10 / -3  (RESERVED_HEAD_SUGGESTIONS +
+                                              length-scaled nearest)
+    test/gherkin-reifier.test.ts | +22 / -1  (regression coverage)
+- Staged PR diff remains plan-scoped: .sdp.gherkin migration, reifier
+  hardening, fixtures/specs/oracles, MD-28 decision, docs/skills,
+  .vscode/settings.json association (plan todo 5), .gitignore exception,
+  plan 30 + AGENTS status.
+- reify.ts staged change is one finding-id addition only.
+- No drive-by refactors of unrelated extract/validate modules in the
+  remediation wave.
+
+------------------------------------------------------------------------
+Evidence commands
+------------------------------------------------------------------------
+- npx tsc --noEmit -p tsconfig.json                                   → 0
+- npx eslint src/extract/gherkin.ts …                                 → 0
+- npx vitest run test/gherkin-reifier.test.ts \
+    test/gherkin-parity.test.ts test/extract.test.ts                  → 126 passed
+- npx vite-node /tmp/probe-gherkin-f2.mts
+  (coverage equalSets; cap; determinism; distances)
+- npx vite-node /tmp/probe-gherkin-f2b.mts
+  (complete-carrier similarity table; LF/CRLF index; desc near-miss)
+- git diff --stat src/extract/gherkin.ts test/gherkin-reifier.test.ts
+  → 2 files, +32/-4 (remediation only)
+
+------------------------------------------------------------------------
+Summary
+------------------------------------------------------------------------
+PASS — prior similarity FAIL is closed: full reserved-head candidate set,
+length-scaled thresholds (d=1 ≤5, d=2 >5), lawful/unlawful suggestion gating,
+and regression tests prevent silent reify of typoed lawful relation /
+example-space heads. Source indexing, collector cap/cascade, error taxonomy,
+strict types, determinism, no-partial-graph, type/lint cleanliness, and
+scope fidelity all remain green.
+
+END F2 (re-run after fix)

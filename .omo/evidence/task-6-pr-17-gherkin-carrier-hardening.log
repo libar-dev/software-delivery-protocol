@@ -1,0 +1,129 @@
+# Task 6 - Align AST descriptions to physical source lines
+# pr-17-gherkin-carrier-hardening / Wave 2 Todo 6
+# Task id: st_019ffdac
+# Date: 2026-08-14
+# Worktree: /home/darkomijic/dev-libar/software-delivery-protocol
+
+## Deliverable
+Implemented the private Gherkin source index in `src/extract/gherkin.ts`. No commit.
+
+The index:
+- splits LF/CRLF source into physical one-based lines exactly once;
+- uses `GherkinDocument.comments[*].location.line` from the official parser as the only comment-line authority;
+- indexes Feature, Background, Scenario, Examples, Rule, and Rule-child description owners from the official AST;
+- aligns every AST description entry monotonically and by exact text;
+- skips only parser-identified comment lines and whitespace-only physical lines;
+- carries `{ text, line }` entries into Feature/Scenario description parsing;
+- uses the first located nonblank prose line for Rule and `@example-space` description refusals;
+- returns one `extract/gherkin-syntax` finding and no Specs/Packs on a nonblank mismatch or EOF;
+- retains language-header lookup in the same physical source index, avoiding a second line split.
+
+No Gherkin structure is inferred from raw source. Valid metadata, identity-tag locations, graph data, and contract data are unchanged.
+
+## Files touched by this task
+- `src/extract/gherkin.ts`
+- `.omo/evidence/task-6-pr-17-gherkin-carrier-hardening.log`
+
+The existing edits in `test/gherkin-reifier.test.ts`, `test/gherkin-parity.test.ts`, and description-location fixtures came from Wave 1 Todos 3-4 / the parallel suffix migration and were not modified by this task.
+
+## Baseline
+Before implementation:
+
+```
+npx vitest run test/gherkin-reifier.test.ts test/gherkin-parity.test.ts
+```
+
+Observed: 16 failed / 42 passed. Eight failures were the exact Feature, Scenario, Rule, pseudo-scenario, LF/CRLF, and defused-corpus location regressions. The other eight were the intentional Todo 7-8 grammar/collector regressions.
+
+## Happy-path verification
+Focused exact-location and byte-parity selection:
+
+```
+npx vitest run test/gherkin-reifier.test.ts test/gherkin-parity.test.ts \
+  -t 'physical description locations|serializes the Markdown and Gherkin twins identically'
+```
+
+Observed:
+
+```
+Test Files  2 passed (2)
+Tests       9 passed | 49 skipped (58)
+```
+
+This includes:
+- exact Feature and Scenario lines after leading blanks/comments;
+- exact Feature and Scenario lines after interior comments;
+- exact Rule and `@example-space` first-prose lines;
+- exact LF and CRLF parity;
+- all six defused location fixtures at their physical one-based lines;
+- serialized Markdown/Gherkin twin graph equality and contract-file equality.
+
+Final exact acceptance command:
+
+```
+npx vitest run test/gherkin-reifier.test.ts test/gherkin-parity.test.ts
+```
+
+Observed after the final implementation:
+
+```
+Test Files  2 failed (2)
+Tests       8 failed | 50 passed (58)
+```
+
+All eight location failures were eliminated. The only remaining failures are explicitly owned by Todos 7-8:
+1. harmless distance-two short-head decoration tags;
+2. `@king.dom` recommendation behavior;
+3. `@packs.nightly` recommendation behavior;
+4. step-less ordinary Scenario refusal;
+5. step-less `@example-space` refusal;
+6. four-finding semantic collection;
+7. one-hundred-finding cap;
+8. invalid-carrier whole-file exclusion / healthy sibling parity.
+
+No remaining failure is source-location, LF/CRLF, graph-byte parity, or contract parity related.
+
+## Failure-path QA: injected official-AST/source divergence
+A temporary esbuild stdin seam bundled the finalized extractor without changing the worktree. The seam ran the official parser first, then changed only the returned Feature description before source indexing.
+
+Two assertions were exercised:
+- nonblank mismatch: AST `outcom` versus physical `outcome`;
+- EOF: append one AST-only prose entry.
+
+For each result the probe asserted exactly one finding, `extract/gherkin-syntax`, zero Specs, and zero Packs. Observed:
+
+```
+{"file":"alignment-mismatch.sdp.gherkin","specs":0,"packs":0,"findings":1,"validatorId":"extract/gherkin-syntax","line":3}
+{"file":"alignment-eof.sdp.gherkin","specs":0,"packs":0,"findings":1,"validatorId":"extract/gherkin-syntax","line":4}
+```
+
+The temporary bundle was removed. No test-only hook or generated file remains in the worktree.
+
+## Static verification
+
+```
+npm run typecheck
+```
+
+Exit 0.
+
+```
+npx eslint src/extract/gherkin.ts
+```
+
+Exit 0.
+
+```
+npx prettier --check src/extract/gherkin.ts
+git diff --check -- src/extract/gherkin.ts
+```
+
+Both exit 0.
+
+The TypeScript LSP validator could not run because `typescript-language-server` is not installed on the workstation. No dependency installation was performed; repository typecheck and typed ESLint both pass instead.
+
+## Scope / coordination
+- Did not touch suffix discovery, suffix names, canonical carrier renames, docs, or frozen paths owned by Todo 5.
+- Did not implement decoration, empty-scenario, or multi-finding behavior owned by Todos 7-8.
+- Did not alter tests or fixtures owned by other workers.
+- Did not commit.

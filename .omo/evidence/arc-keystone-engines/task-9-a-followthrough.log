@@ -1,0 +1,48 @@
+===== VALIDATE =====
+155 specs · 1 packs · 143 anchors → 299 nodes · 565 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/sdp-t9-lane/generated/graph.json
+Wrote /home/darkomijic/dev-libar/sdp-t9-lane/generated/contracts (102 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+===== EXEMPLAR STABILITY =====
+[ [ 'spec:consumers.reader', 'Primitive' ] ]
+===== NEWLY-REFUSED KIND TAG =====
+probe.sdp.gherkin:1 — [error] extract/gherkin-grammar — Gherkin tag "@kind.decision" is refused: kind is structural (Feature → behavior, Scenario → example); decision needs context/decision/rationale/consequences (and supersedes) that Feature structure cannot distinguish
+0 specs · 0 packs · 0 anchors → 0 nodes · 0 edges (1 errors, 0 warnings)
+sdp validate: hard errors present — graph.json not written.
+===== FINDING CAP 101 -> 100 =====
+file:///home/darkomijic/dev-libar/sdp-t9-lane/[eval1]:1
+import { reifyGherkinCarrier } from "./dist/index.js";
+         ^^^^^^^^^^^^^^^^^^^
+SyntaxError: The requested module './dist/index.js' does not provide an export named 'reifyGherkinCarrier'
+    at #asyncInstantiate (node:internal/modules/esm/module_job:327:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:431:5)
+    at async node:internal/modules/esm/loader:224:26
+    at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:221:20)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.19.0
+===== FINDING CAP 101 -> 100 =====
+node:internal/modules/esm/resolve:271
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/darkomijic/dev-libar/sdp-t9-lane/src/ids.js' imported from /home/darkomijic/dev-libar/sdp-t9-lane/src/extract/gherkin.ts
+    at finalizeResolution (node:internal/modules/esm/resolve:271:11)
+    at moduleResolve (node:internal/modules/esm/resolve:865:10)
+    at defaultResolve (node:internal/modules/esm/resolve:992:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:701:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:721:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:759:56)
+    at #resolve (node:internal/modules/esm/loader:683:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:603:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:163:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:253:17) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///home/darkomijic/dev-libar/sdp-t9-lane/src/ids.js'
+}
+
+Node.js v24.19.0
+===== FINDING CAP 101 -> 100 (vitest) =====
+test/gherkin-reifier.test.ts > caps semantic findings at one hundred with a final suppression finding — PASSED
+101 empty Scenarios produce 100 findings; last validatorId is extract/too-many-gherkin-findings at line 1.

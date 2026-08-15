@@ -1,0 +1,105 @@
+Todo 8 integration gate evidence
+UTC start: 2026-08-14T12:03:13Z
+Repository cwd: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+
+=== PRECONDITION ===
+Branch: arc/keystone-engines
+HEAD before: e2c2698197d718e1e6a0875c7bd1e8064be245f1
+Cached manifest before:
+examples/checkout-v1/test/orders/create-order.oracle.ts
+examples/checkout-v1/test/orders/create-order.valid-cart.test.generated.ts
+examples/checkout-v1/test/orders/create-order.valid-cart.test.ts
+package.json
+src/adapters/vitest.ts
+src/cli/build-command.ts
+src/codegen/contracts.ts
+src/testing/index.ts
+test/codegen.test.ts
+test/testing.test.ts
+tsconfig.examples.json
+tsup.config.ts
+vitest.config.ts
+Cached diff SHA-256 before: 6578ead1a3ee94994cbdea90449cb154df76cefc513e9f0a7a1cd706db5eb995
+Unstaged before:
+<none>
+Untracked non-ignored before:
+<none>
+Precondition: PASS
+
+=== COMMAND 1 ===
+cwd: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+command: npm run generate:example
+--- output begin ---
+
+> @libar-dev/software-delivery-protocol@0.0.0 generate:example
+> node ./dist/cli/sdp.js build examples/checkout-v1
+
+11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/examples/checkout-v1/generated/graph.json
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/examples/checkout-v1/generated/contracts (3 modules)
+--- output end ---
+exit: 0
+
+=== COMMAND 2 ===
+cwd: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+command: npm test -- examples/checkout-v1/test/orders/create-order.valid-cart.test.ts
+--- output begin ---
+
+> @libar-dev/software-delivery-protocol@0.0.0 test
+> node ./vitest-test.mjs examples/checkout-v1/test/orders/create-order.valid-cart.test.ts
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines[39m
+
+ [32m✓[39m examples/checkout-v1/test/orders/create-order.valid-cart.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m   Start at [22m 14:03:14
+[2m   Duration [22m 849ms[2m (transform 347ms, setup 0ms, import 718ms, tests 5ms, environment 0ms)[22m
+
+--- output end ---
+exit: 0
+
+=== COMMAND 3 ===
+cwd: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+command: npm run typecheck:examples
+--- output begin ---
+
+> @libar-dev/software-delivery-protocol@0.0.0 typecheck:examples
+> tsc --noEmit -p tsconfig.examples.json
+
+--- output end ---
+exit: 0
+
+=== COMMAND 4 ===
+cwd: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+command: npm run check
+--- output begin ---
+
+> @libar-dev/software-delivery-protocol@0.0.0 check
+> npm run check:temporal && npm run lint && npm run format:check && npm run build && npm run generate:self-hosting && npm run generate:example && npm run typecheck && npm run typecheck:examples && npm test && npm run check:self-hosting-gates && npm run check:self-hosting && npm run check:example && npm run preflight
+
+
+> @libar-dev/software-delivery-protocol@0.0.0 check:temporal
+> node ./check-temporal.mjs
+
+
+> @libar-dev/software-delivery-protocol@0.0.0 lint
+> eslint .
+
+
+> @libar-dev/software-delivery-protocol@0.0.0 format:check
+> prettier --check .
+
+Checking formatting...
+[warn] examples/checkout-v1/test/orders/create-order.valid-cart.test.generated.ts
+[warn] examples/checkout-v1/test/orders/create-order.valid-cart.test.ts
+[warn] src/codegen/contracts.ts
+[warn] src/testing/index.ts
+[warn] test/testing.test.ts
+[warn] Code style issues found in 5 files. Run Prettier with --write to fix.
+--- output end ---
+exit: 1
+
+FIRST FAILURE: npm run check exited 1

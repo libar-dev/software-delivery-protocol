@@ -1,0 +1,224 @@
+DoneClaim evidence — Todo 5 / Brief D structural anchor implementation
+Date: 2026-08-14
+Worktree: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+Commit created: no
+
+SCOPE REALIZED
+- Added closed ComponentAnchorId + componentAnchorId("component:...") helper.
+- Extended CodeAnchor with optional component?: ComponentAnchorId and uses?: readonly CodeAnchorId[].
+- Static extractor admits only canonical componentAnchorId/codeAnchorId calls in fresh structural literals.
+- Derivation emits only anchored memberOf and uses CodeNode -> CodeNode edges.
+- Graph schema version is 0.5.0; structural edges confer no delivery fact and do not join binding-to-Spec reader traversal.
+- Structural checks enforce CodeNode endpoints, impl/api -> component one-level membership, at-most-one owner, exact-edge uniqueness, non-empty/unique uses, self-reference refusal, canonical namespaces, and target existence.
+- Extraction excludes the entire code anchor on every structural failure, including fixed-point exclusion when a referenced code anchor was itself refused.
+- Multi-node uses cycles are accepted as authored data without findings.
+
+ATTRIBUTABLE CHANGED FILES
+- specs/model/anchors.sdp.md
+- src/extract/anchors.ts
+- src/extract/derive.ts
+- src/extract/index.ts
+- src/extract/reify.ts
+- src/graph/schema.ts
+- src/ids.ts
+- src/model/anchors.ts
+- src/reader/reader.ts
+- src/validate/validators.ts
+- test/graph-schema.test.ts
+- test/ids.test.ts
+- test/ids.typecheck.ts
+- test/package-smoke.test.ts (shared union: preserved renderCensus and added structural exports)
+- test/structural-anchors.test.ts
+
+CONCURRENT FILES PRESERVED (not owned or edited by this task)
+- .prettierignore
+- specs/consumers/census-page.sdp.md
+- specs/extraction/runnable-modules.sdp.md
+- src/cli/build-command.ts
+- src/cli/census-command.ts
+- src/cli/sdp.ts
+- src/index.ts
+- src/projections/census.ts
+- test/census.test.ts
+- test/fixtures/checkout-v1/expected-census/
+
+TDD PROOF
+1. Baseline characterization before production edits:
+   npm test -- --run test/extract.test.ts test/validators.test.ts
+   EXIT 0: 2 files passed; 89 tests passed. This covered existing valid anchor extraction and existing graph validation behavior unchanged.
+
+2. Failing-first after adding focused tests and before production edits:
+   npm test -- --run test/structural-anchors.test.ts
+   EXIT 1: 9 tests; 8 failed, 1 passed.
+   Failures specifically showed component/uses rejected as foreign fields, absent structural edges, absent ownership validator, and wrong failure modes for missing targets/self-use/empty/duplicate uses.
+
+3. Final focused run:
+   npm test -- --run test/structural-anchors.test.ts test/extract.test.ts test/validators.test.ts test/graph-schema.test.ts test/ids.test.ts
+   EXIT 0: 5 files passed; 116 tests passed.
+   Cases include successful component+uses edges, accepted two-node uses cycle, duplicate ownership, one-level membership, CodeNode endpoint contract, missing component, invalid/missing uses, self-use, empty uses, duplicate targets, non-static whole-anchor refusal, old extraction behavior, old validators, schema, and ID helpers.
+
+STRICT VERIFICATION
+- Native LSP attempt was made before build on every attributable changed TS file. The native tool rejected each target path with:
+  "LSP file path must be inside request cwd: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines/..."
+  The child session request cwd is the parent worktree (/home/darkomijic/dev-libar/software-delivery-protocol), so native LSP cannot address this assigned sibling worktree. No clean-LSP claim is made.
+- Strict substitute before build:
+  npm run typecheck
+  EXIT 0 (tsc --noEmit -p tsconfig.json).
+- Final strict typecheck:
+  npm run typecheck
+  EXIT 0.
+- Formatting for only attributable files:
+  npx prettier --check src/extract/anchors.ts src/extract/derive.ts src/extract/index.ts src/extract/reify.ts src/graph/schema.ts src/ids.ts src/model/anchors.ts src/reader/reader.ts src/validate/validators.ts test/graph-schema.test.ts test/ids.test.ts test/ids.typecheck.ts test/structural-anchors.test.ts specs/model/anchors.sdp.md
+  EXIT 0.
+- Build:
+  npm run build
+  EXIT 0. ESM/CJS/DTS succeeded. Existing tsup CJS import.meta warning remained; no error.
+
+CANONICAL CORPUS + QUERIES
+- Full concurrent corpus command:
+  npm run --silent sdp -- validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+  EXIT 1 due solely to concurrent specs/extraction/runnable-modules.sdp.md:
+    line 18 [error] extract/invalid-markdown-structure — raw HTML is unsupported
+    line 23 [error] extract/invalid-markdown-structure — raw HTML is unsupported
+  Summary: 152 specs, 1 pack, 139 anchors, 292 nodes, 551 edges; 2 errors, 0 warnings.
+- Attributable corpus proof with only that concurrent file excluded:
+  npm run --silent sdp -- validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --exclude specs/extraction/runnable-modules.sdp.md
+  EXIT 0: validate 0 errors, 0 warnings.
+- Relevant Spec query with the same exact exclusion:
+  npm run --silent sdp:q -- --exclude specs/extraction/runnable-modules.sdp.md 'return g.specs().filter(s=>s.id.includes("structural-anchor")||s.id==="spec:model.anchors").map(s=>[s.id,s.statedReadiness])'
+  EXIT 0:
+    spec:decisions.structural-anchor-semantics — ready
+    spec:model.anchors — ready
+- Structural reader query over the canonical source currently returns 0 structural edges and 0 structural findings, honestly reflecting that no repository production anchor has authored the new optional fields yet.
+
+REAL CLI MANUAL QA
+Correct invocation form used once throughout:
+  node dist/cli/sdp.js validate <root>
+  node dist/cli/sdp.js q '<body>' --root <root>
+
+Valid fixture:
+$ node dist/cli/sdp.js validate /tmp/sdp-task5-qa/valid
+EXIT=0
+1 specs · 0 packs · 3 anchors -> 4 nodes · 5 edges (0 errors, 0 warnings)
+validate: 0 errors · 0 warnings
+
+$ node dist/cli/sdp.js q 'return {nodes: graph.nodes.filter(n=>n.nodeType==="CodeNode").map(n=>n.id), edges: graph.edges.filter(e=>e.type==="memberOf"||e.type==="uses"), findings: report.findings}' --root /tmp/sdp-task5-qa/valid
+EXIT=0
+nodes: component:fixture.core, api:fixture.gateway, impl:fixture.subject
+edges:
+  impl:fixture.subject -(memberOf, anchored)-> component:fixture.core
+  impl:fixture.subject -(uses, anchored)-> api:fixture.gateway
+findings: []
+
+Invalid duplicate ownership property:
+$ node dist/cli/sdp.js validate /tmp/sdp-task5-qa/duplicate-owner
+EXIT=1
+anchors.ts:6 [error] extract/non-static-envelope — property "component" is authored more than once; carrier is not extracted
+1 specs · 0 anchors -> 1 node · 0 edges; graph.json not written.
+
+Missing component target:
+$ node dist/cli/sdp.js validate /tmp/sdp-task5-qa/missing-component
+EXIT=1
+[error] conformance/referential-integrity — memberOf points to missing component:fixture.missing
+1 specs · 1 authored anchor -> 1 node · 0 edges; graph.json not written. The entire anchor, including its satisfies edge, is absent.
+
+Missing uses target:
+$ node dist/cli/sdp.js validate /tmp/sdp-task5-qa/missing-uses
+EXIT=1
+[error] conformance/referential-integrity — uses points to missing api:fixture.missing
+1 specs · 1 authored anchor -> 1 node · 0 edges; graph.json not written. The entire anchor is absent.
+
+Self-use:
+$ node dist/cli/sdp.js validate /tmp/sdp-task5-qa/self-use
+EXIT=1
+anchors.ts:5 [error] conformance/structural-anchors — Structural uses self-reference is not allowed.
+1 specs · 0 reified anchors -> 1 node · 0 edges; graph.json not written.
+
+Empty uses:
+$ node dist/cli/sdp.js validate /tmp/sdp-task5-qa/empty-uses
+EXIT=1
+anchors.ts:5 [error] conformance/structural-anchors — anchor field "uses" must be non-empty when present
+1 specs · 0 reified anchors -> 1 node · 0 edges; graph.json not written.
+
+ADVERSARIAL RESULTS
+- malformed_input: PASS — non-static uses and invalid namespace are hard extraction errors; whole anchor absent.
+- stale_state: PASS — real `sdp q` derives in process from the disposable root and returned current structural edges after validate; it did not answer from generated graph.json.
+- dirty_worktree: PASS — concurrent census/runnable-module changes were identified and left untouched.
+- misleading_success_output: PASS — literal exit codes captured; all invalid fixtures exited 1 despite summary output, valid validate/query exited 0.
+- generated/cached artifact interference: PASS for fixture QA — q derived current source; disposable generated output was removed. Canonical generation is owned by later serialized integration and was not added to this task's changed-file set.
+- whole-anchor exclusion: PASS — missing target fixtures report 1 authored anchor but only 1 graph node (the Spec) and 0 edges; self/empty/duplicate forms reify 0 anchors. No partial satisfies/memberOf/uses declaration survives.
+- multi-node cycle: PASS — focused test accepts impl -> api -> impl uses cycle with no findings.
+- prompt injection: N/A (not triggered).
+- cancellation/resume: N/A.
+- flaky timing: N/A; no sleeps, polling, or timing waits used.
+- repeated interruptions: N/A.
+
+CLEANUP RECEIPT
+rm -rf /tmp/sdp-task5-qa && test ! -e /tmp/sdp-task5-qa
+SCRATCH_CLEANUP_EXIT=0.
+No commit created. No self-hosting Pack or generated contract file was edited.
+
+SERIALIZED OVERLAP FOLLOW-UP
+- Preserved Todo 6's `renderCensus` package-smoke expectation and added the structural runtime exports `componentAnchorId` and `validateStructuralAnchorEdges` to the same expected export union.
+- Focused command:
+  npm test -- --run test/structural-anchors.test.ts test/package-smoke.test.ts
+  EXIT 0: 2 files passed; 12 tests passed. The installed tarball passed runtime ESM/CJS barrel and strict type-surface checks with the census + structural union.
+- Formatting command:
+  npx prettier --check test/package-smoke.test.ts test/structural-anchors.test.ts
+  EXIT 0.
+
+SCHEMA 0.5.0 MIGRATION REPAIR — FRESH VERIFIER OUTPUT
+Authorized migration files changed:
+- specs/extraction/schema-versioning.declared-version.sdp.md
+- test/self-hosting-oracle/extraction.ts
+- test/design-review.test.ts
+- test/fixtures/checkout-v1/expected-graph.json
+- test/fixtures/checkout-v1/expected-design-review/index.md
+- docs/concept/06-consumers-and-projections.md
+- check-prose-schema.mjs
+No concurrent runnable/census file was formatted or edited.
+
+Red seam before migration:
+  npm test -- --run test/self-hosting-extraction.test.ts test/design-review.test.ts test/checkout-v1.test.ts test/structural-anchors.test.ts
+  EXIT 1: 47 tests; 43 passed, 4 failed.
+  Exact stale failures:
+  - checkout-v1 expected graph schemaVersion 0.4.0 vs actual 0.5.0.
+  - Design Review test expected schema `0.4.0` vs actual `0.5.0`.
+  - checkout-v1 Design Review golden expected schema `0.4.0` vs actual `0.5.0`.
+  - self-hosting declared-version contract supplied 0.4.0 vs serialized payload 0.5.0.
+
+Fresh run after the authorized migration:
+  npm test -- --run test/self-hosting-extraction.test.ts test/design-review.test.ts test/checkout-v1.test.ts test/structural-anchors.test.ts
+  EXIT 1: 47 tests; 46 passed, 1 failed.
+  Green suites:
+  - test/design-review.test.ts: 20 passed.
+  - test/checkout-v1.test.ts: 7 passed.
+  - test/structural-anchors.test.ts: 11 passed.
+  Remaining failure:
+  - test/self-hosting-extraction.test.ts: 8 passed, 1 failed.
+  - Assertion: `at step: Then the payload declares the schema version 0.4.0`; expected serialized `0.5.0` to equal generated parameter `0.4.0`.
+
+Other fresh verification:
+- node check-prose-schema.mjs
+  EXIT 0: `check-prose-schema — model, graph, Reader, and concept surfaces agree.`
+- npm run build
+  EXIT 0: ESM/CJS/DTS succeeded; only the existing CJS import.meta warning was emitted.
+- npm run typecheck
+  EXIT 0.
+- Todo-5-owned explicit Prettier check over the implementation, migration sources, oracle, graph/design-review goldens, package union test, and structural tests
+  EXIT 0: all matched files use Prettier code style.
+
+EXACT REMAINING TODO-5 BLOCKER
+- `test/self-hosting-extraction.test.ts` imports `declaredVersionContract` from `generated/contracts/extraction.schema-versioning.declared-version.contract.ts`.
+- That generated contract still contains:
+  `params: { schemaVersion: "0.4.0" }`
+- Both authorized authored sources now carry 0.5.0:
+  - `specs/extraction/schema-versioning.declared-version.sdp.md`
+  - `test/self-hosting-oracle/extraction.ts`
+- The generated contract is outside the user's authorized migration-file list, and generated state is assigned to the dedicated serialized integration worker. Editing or regenerating it here would violate the lane boundary. This is the sole remaining failure in the mandated focused command.
+
+CLEANUP / PRESERVATION RECEIPT
+- No migration scratch fixture or temporary artifact was created, so no scratch cleanup was required.
+- `git status --short` confirms the authorized migration files plus prior Todo-5 files; concurrent `.prettierignore`, runnable-module, census CLI/projection/tests/golden, and their source files remain present and unmodified by this repair.
+- No commit created.
+- Native LSP remains unavailable because the request cwd is the parent worktree; strict tsc, build, formatting, prose guard, Design Review, checkout-v1, and structural suites are green.

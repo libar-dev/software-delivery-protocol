@@ -1,0 +1,349 @@
+WAVE 1 SERIALIZED INTEGRATION EVIDENCE
+Date: 2026-08-14
+Task: st_019fffda
+Worktree: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+Starting/ending HEAD: 29b11c068c03ea20201eefdd390900ae93659c08
+Commit created by this task: no
+
+RESULT
+PASS — Wave 1 shared graph surfaces are integrated. The exact 39-path Todo 4/5/6 + integration delta is staged; ignored generated output is unstaged; canonical validation is literally 0 errors · 0 warnings; full `npm run check` exits 0; no temporary root survives.
+
+1. BASELINE REDS (BEFORE SHARED EDITS)
+
+Build first, per serialized sequence:
+  npm run build
+  exit 0
+  ESM/CJS/DTS succeeded. Existing non-failing CJS import.meta warning only.
+
+Deterministic baseline command:
+  npm test -- --run test/self-hosting-extraction.test.ts test/self-hosting-graph.test.ts
+  exit 1
+  Test files: 2 failed
+  Tests: 12 failed, 19 passed
+
+The one extraction red was the intentionally stale ignored generated contract:
+  test/self-hosting-extraction.test.ts
+  Then the payload declares the schema version 0.4.0
+  expected serialized 0.5.0 to equal generated parameter 0.4.0
+
+The 11 frozen graph/oracle reds were exactly:
+  - holds the frozen corpus totals (live 153 specs / 1 pack / 139 anchors vs frozen 151 / 1 / 138)
+  - rosters exactly the authored Spec, Pack, and anchor node ids
+  - carries the authored descriptors of the extraction family
+  - carries the authored descriptors of the model family
+  - carries the authored descriptors of the consumers family
+  - leaves no authored Spec outside the families
+  - derives exactly the authored declared relations
+  - holds the frozen stated-readiness distribution
+  - derives one anchored edge per authored anchor
+  - projects every anchor and code node at the line its declaration occupies
+  - keeps every anchor beside the site it binds
+
+No unrelated baseline failure was introduced or recreated.
+
+2. LAWFUL SELF-HOSTING REGENERATION / SCHEMA CONTRACT
+
+Command:
+  npm run generate:self-hosting
+  exit 0
+  Before the Pack absorption, measured output was:
+    153 specs · 1 packs · 139 anchors → 293 nodes · 553 edges (0 errors, 0 warnings)
+    validate: 0 errors · 0 warnings
+
+Proof from ignored generated output:
+  generated/contracts/extraction.schema-versioning.declared-version.contract.ts:25
+  params: { schemaVersion: "0.5.0" }
+
+Generated contracts were never hand-edited and are not staged.
+
+Command immediately after regeneration:
+  npm test -- --run test/self-hosting-extraction.test.ts
+  exit 0
+  1 file passed; 9 tests passed
+
+3. EXACT SHARED INTEGRATION EDITS
+
+Authored Pack:
+  specs/self-hosting.pack.sdp.md
+  Added exactly:
+    spec:extraction.runnable-modules
+    spec:consumers.census-page
+
+Frozen self-hosting oracle:
+  test/self-hosting-oracle/pack-members.ts
+    added the same two IDs in manifest order
+  test/self-hosting-oracle/declared-relations.ts
+    added runnable-modules refines example-runner
+    added runnable-modules dependsOn executable-contracts
+    added census-page refines projections-model
+  test/self-hosting-oracle/extraction.ts
+    added the exact live descriptor for spec:extraction.runnable-modules
+    retained the authored schema-version example at 0.5.0
+  test/self-hosting-oracle/consumers.ts
+    added the exact live descriptor for spec:consumers.census-page
+  test/self-hosting-oracle/model.ts
+    updated only spec:model.anchors terms changed by the structural-anchor contract
+  test/self-hosting-oracle/anchors.ts
+    added impl:protocol.census-page
+    moved the referential-integrity proximity token to the now-nearby checkEdgeReferentialIntegrity site after structural validator growth
+  test/self-hosting-graph.test.ts
+    totals: 153 specs, 1 pack, 139 anchors, 293 nodes, 555 edges
+    stated readiness: defined 16, idea 3, ready 133, scoped 1
+
+No Todo 4/5/6 product behavior file was changed by this integration pass. Generator-owned ignored output was changed only by project commands.
+
+4. LIVE GRAPH MEASUREMENT (AFTER PACK ABSORPTION)
+
+Exact live query measured, rather than copying survey estimates:
+  totals:
+    specs 153
+    packs 1
+    anchors 139
+    nodes 293
+    edges 555
+  stated readiness:
+    ready 133
+    defined 16
+    idea 3
+    scoped 1
+  derived readiness:
+    ready 150
+    scoped 2
+    idea 1
+  edge types:
+    refines 151
+    decidedBy 25
+    verifies 145
+    dependsOn 18
+    constrainedBy 1
+    belongsTo 153
+    satisfies 60
+    models 2
+    memberOf 0
+    uses 0
+  claims:
+    declared 416
+    anchored 139
+  findings: []
+
+Both new Specs are stated defined and derived ready. Census carries implemented; runnable-modules carries no delivery fact. Both have a declared belongsTo edge to pack:self-hosting-v1.
+
+5. FOCUSED VERIFICATION
+
+Graph oracle after exact absorption:
+  npm test -- --run test/self-hosting-graph.test.ts
+  exit 0
+  22 tests passed
+
+Required focused integration command:
+  npm test -- --run test/self-hosting-graph.test.ts test/self-hosting-pack-markdown.test.ts test/design-review.test.ts test/self-hosting-extraction.test.ts test/checkout-v1.test.ts test/structural-anchors.test.ts test/census.test.ts test/cli.test.ts test/package-smoke.test.ts
+  exit 0
+  Main pool: 8 files passed, 83 tests passed
+  Isolated CLI pool: 1 file passed, 59 tests passed
+  Structural, Pack, extraction, census, checkout, graph, Design Review, package smoke, and CLI all green.
+
+Lawful example regeneration:
+  npm run generate:example
+  exit 0
+  11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
+
+Reviewed projections exercised:
+  npm run --silent sdp -- view examples/checkout-v1
+  exit 0
+  npm run --silent sdp -- census examples/checkout-v1
+  exit 0
+  npm run --silent sdp -- census examples/checkout-v1 --check-clean
+  exit 0
+
+Expected checkout policy warning was inspected, not hidden:
+  conformance/verifies-linkage for spec:orders.create-order.invalid-cart
+  This is the reviewed fixture finding represented in the Design Review and census goldens; canonical root validation remained warning-free.
+
+Canonical root validation:
+  npm run --silent sdp -- validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+  exit 0
+  153 specs · 1 packs · 139 anchors → 293 nodes · 555 edges (0 errors, 0 warnings)
+  validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+
+Literal requirement met: 0 errors · 0 warnings.
+
+LSP note:
+  Native LSP rejected the assigned sibling worktree as outside the request cwd. No false LSP-clean claim is made. Full lint, TypeScript typecheck, example typecheck, builds, tests, and package smoke all passed.
+
+6. STAGED MANIFEST (REVIEWED PATH BY PATH)
+
+Count: 39 paths
+Stat: 39 files changed, 1875 insertions(+), 58 deletions(-)
+Unstaged semantic paths: none
+
+.prettierignore
+check-prose-schema.mjs
+docs/concept/06-consumers-and-projections.md
+specs/consumers/census-page.sdp.md
+specs/extraction/runnable-modules.sdp.md
+specs/extraction/schema-versioning.declared-version.sdp.md
+specs/model/anchors.sdp.md
+specs/self-hosting.pack.sdp.md
+src/cli/build-command.ts
+src/cli/census-command.ts
+src/cli/sdp.ts
+src/extract/anchors.ts
+src/extract/derive.ts
+src/extract/index.ts
+src/extract/reify.ts
+src/graph/schema.ts
+src/ids.ts
+src/index.ts
+src/model/anchors.ts
+src/projections/census.ts
+src/reader/reader.ts
+src/validate/validators.ts
+test/census.test.ts
+test/design-review.test.ts
+test/fixtures/checkout-v1/expected-census/index.md
+test/fixtures/checkout-v1/expected-design-review/index.md
+test/fixtures/checkout-v1/expected-graph.json
+test/graph-schema.test.ts
+test/ids.test.ts
+test/ids.typecheck.ts
+test/package-smoke.test.ts
+test/self-hosting-graph.test.ts
+test/self-hosting-oracle/anchors.ts
+test/self-hosting-oracle/consumers.ts
+test/self-hosting-oracle/declared-relations.ts
+test/self-hosting-oracle/extraction.ts
+test/self-hosting-oracle/model.ts
+test/self-hosting-oracle/pack-members.ts
+test/structural-anchors.test.ts
+
+Excluded from staging:
+  .omo/**
+  generated/**
+  examples/checkout-v1/generated/**
+  evidence/log/scratch paths
+  unrelated paths
+
+`git diff --cached --check` exits 0. `git ls-files generated examples/checkout-v1/generated` returns no paths.
+
+7. FULL CANONICAL GATE
+
+Command, run once against the exact staged set:
+  npm run check
+  exit 0
+
+Gate results:
+  check:temporal exit 0
+  lint exit 0
+  format:check exit 0 — All matched files use Prettier code style
+  build exit 0
+  generate:self-hosting exit 0 — 153 / 1 / 139 → 293 nodes / 555 edges, 0 errors / 0 warnings
+  generate:example exit 0
+  typecheck exit 0
+  typecheck:examples exit 0
+  full Vitest main pool: 54 files passed; 719 passed, 1 skipped
+  isolated CLI pool: 1 file passed; 59 passed
+  check:self-hosting-gates exit 0
+  check:self-hosting exit 0 — 0 errors / 0 warnings
+  check:example exit 0
+  preflight exit 0
+
+Preflight printed exactly the 39 staged semantic paths above and no failure. Existing build CJS import.meta warning and the reviewed checkout invalid-cart warning were visible and inspected; neither was mistaken for canonical-root cleanliness.
+
+Raw full-gate capture during execution: /tmp/arc-wave1-full-check.log (ephemeral workstation capture; authoritative summary is this evidence record).
+
+8. REAL SURFACE QA
+
+Exact runnable-module command:
+  npm run --silent sdp:q -- 'const id="spec:extraction.runnable-modules"; const s=g.specContext(id); return {id:s.id,stated:s.statedReadiness,derived:s.derivedReadiness,findings:report.findings.filter(f=>f.subjectId===id),packMembership:graph.edges.filter(e=>e.from===id&&e.type==="belongsTo")}' --json
+  exit 0
+  observed:
+    id spec:extraction.runnable-modules
+    stated defined
+    derived ready
+    findings []
+    packMembership [{ from: spec:extraction.runnable-modules, type: belongsTo, to: pack:self-hosting-v1, claim: declared }]
+
+Exact census command:
+  npm run --silent sdp:q -- 'const id="spec:consumers.census-page"; const s=g.specContext(id); return {id:s.id,stated:s.statedReadiness,derived:s.derivedReadiness,deliveryFacts:s.deliveryFacts,outputPath:s.sections.behavior.rules.filter(r=>r.includes("generated/census/index.md")),findings:report.findings.filter(f=>f.subjectId===id),packMembership:graph.edges.filter(e=>e.from===id&&e.type==="belongsTo")}' --json
+  exit 0
+  observed:
+    id spec:consumers.census-page
+    stated defined
+    derived ready
+    deliveryFacts [implemented]
+    output path rule names generated/census/index.md
+    findings []
+    packMembership [{ from: spec:consumers.census-page, type: belongsTo, to: pack:self-hosting-v1, claim: declared }]
+
+Exact structural query:
+  npm run --silent sdp:q -- 'const structural=graph.edges.filter(e=>e.type==="memberOf"||e.type==="uses"); return {schemaVersion:graph.schemaVersion,structuralEdgeTypes:["memberOf","uses"],counts:{memberOf:structural.filter(e=>e.type==="memberOf").length,uses:structural.filter(e=>e.type==="uses").length,total:structural.length},edges:structural,structuralFindings:report.findings.filter(f=>f.validatorId==="conformance/structural-anchors"||f.message.toLowerCase().includes("structural")),allFindingCount:report.findings.length}' --json
+  exit 0
+  observed:
+    schemaVersion 0.5.0
+    memberOf 0
+    uses 0
+    structural edges []
+    structural findings []
+    all root findings 0
+  This is honest live-corpus data: the optional structural contract is implemented and fixture-tested, while no production self-hosting anchor currently authors component/uses.
+
+Real census clean-generation QA:
+  npm run --silent sdp -- census examples/checkout-v1
+  exit 0
+  npm run --silent sdp -- census examples/checkout-v1 --check-clean
+  exit 0
+  named path existed: examples/checkout-v1/generated/census/index.md
+  inspected rows:
+    memberOf | 0
+    uses | 0
+    warning | conformance/verifies-linkage | spec:orders.create-order.invalid-cart | ...
+
+The final real example view was restored lawfully with:
+  npm run --silent sdp -- view examples/checkout-v1 --check-clean
+  exit 0
+This restores the preflight-certified view state after the independent census QA command.
+
+Generated declared-version proof after the full gate:
+  generated/contracts/extraction.schema-versioning.declared-version.contract.ts:25
+  params: { schemaVersion: "0.5.0" }
+Self-hosting extraction is green both in its focused run and in full `npm run check`.
+
+9. ADVERSARIAL TABLE
+
+| Risk | Probe | Result |
+| stale generated contract | Baseline self-hosting extraction read 0.4.0; lawful generate:self-hosting; grep generated contract; rerun extraction | PASS — now 0.5.0, 9/9 green |
+| stale Pack membership | Exact sdp:q checks for each new ID | PASS — both declared belongsTo edges resolve to pack:self-hosting-v1 |
+| frozen count drift | Measured live graph after Pack edit before changing literals | PASS — 153/1/139, 293 nodes, 555 edges; readiness and edge histograms recorded |
+| dirty index attribution | Explicit 39-path git add; cached manifest reviewed; unstaged diff checked | PASS — exact intended union staged, no unstaged semantic path |
+| ignored generated leakage | git status --ignored + git ls-files + cached manifest | PASS — both generated roots ignored, no generated path tracked/staged |
+| misleading exit-0 with warnings | Inspected root and example outputs separately | PASS — canonical root is literal 0/0; reviewed example warning is named and represented in goldens; existing build warning named |
+| preflight staging coverage | Full check preflight over staged+unstaged semantic diff | PASS — exact 39 paths printed, exit 0 |
+| generated/cached residue | Lawful generators only; final example view restored; no tmp-root scan | PASS — no *.tmp directory survives; no scratch content survives |
+| scope creep | Compared integration edits to ownership and staged manifest | PASS — only shared Pack/oracle/frozen graph integration added here; Todo product lanes preserved |
+| resource leakage | No sleeps/polling; no background process; find for *.tmp; .tmp-scratch inspection | PASS — none survives |
+| accidental commit | HEAD checked before stop; no git commit command used | PASS — HEAD remains 29b11c068c03ea20201eefdd390900ae93659c08 |
+
+10. CLEANUP / COMMIT-READY STOP RECEIPT
+
+- No `.tmp` directory exists anywhere in the worktree.
+- `.tmp-scratch` has no content.
+- No census temporary sibling survives in either generated root.
+- The example's generator-owned state was restored to a check-clean Design Review after census QA.
+- Root and example generated roots remain ignored and unstaged.
+- Unstaged semantic diff is empty.
+- Cached manifest contains exactly the reviewed 39 paths.
+- `git diff --cached --check` is clean.
+- Full `npm run check` passed with this staged set.
+- No commit was created.
+
+Final post-QA preflight:
+  node ./preflight.mjs
+  exit 0
+  exact 39-path semantic summary; tracked/untracked status inspected; no failure.
+
+Final HEAD:
+  29b11c068c03ea20201eefdd390900ae93659c08 spec(carrier): integrate Wave 0 universality and structural-anchor decisions
+Final staged count: 39
+Final unstaged semantic paths: none
+
+COMMIT-READY STOP STATE: YES

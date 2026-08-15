@@ -1,0 +1,187 @@
+task: 4. Brief B design gate: freeze the derived-runnable-module interface
+plan: arc-keystone-engines
+worktree: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+result: PASS · canonical validate 0 errors · 0 warnings · shared freeze absorption deferred
+
+## Owned deliverables
+- specs/extraction/runnable-modules.sdp.md
+  id: spec:extraction.runnable-modules
+  kind: behavior · altitude: feature · readiness: defined
+  relations.refines: spec:extraction.example-runner
+  relations.dependsOn: spec:extraction.executable-contracts
+- .omo/evidence/arc-keystone-engines/task-4-b-design-gate.log (this file)
+
+## Correction (independent verdict)
+Stated readiness was lowered from `ready` to `defined` so the ready-without-verifier
+honesty/gaps warning does not fire. Full frozen contract, relations, and body unchanged.
+Derived readiness remains `ready` (floor clears); stated stays `defined` until a verifier
+exists (todo 8).
+
+## Recovery note
+Prior child stalled before a tracked deliverable. This recover pass creates the standalone
+behavior Spec only (no codegen, no package export implementation, no self-hosting Pack edit).
+
+## Pre-change baseline
+Command:
+  npm run --silent sdp -- validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+Exit: 0
+Output:
+  152 specs · 1 packs · 139 anchors → 292 nodes · 551 edges (0 errors, 0 warnings)
+  validate: 0 errors · 0 warnings
+Package policy snapshot:
+  exports: ".", "./runner", "./vitest"
+  peerDependencies.vitest: ">=2" (optional)
+  devDependencies.vitest: "^4.1.10"
+Runnable-family query (pre): example-runner + executable-contracts family only — no runnable-modules id.
+
+Dirty worktree at baseline (other live workers; not touched):
+  structural-anchor / census / prettierignore / engine files — out of ownership.
+
+## Red teeth: incomplete draft probe
+Disposable draft: .tmp-scratch/runnable-modules.incomplete-draft.sdp.md
+  (missing adapter/comparison/outline/verifies freeze rules; weak "registrar"/"observe" only)
+Acceptance greps on draft: red_hits=2 red_misses=20 (key misses include
+  skeleton-text identity, three-way comparator, Partial<Conditions>, renderContractStep,
+  exhaustive mapped type, Scenario Outlines, non-empty verifies, five adapters)
+Draft removed after probe (cleanup_ok=yes). LIVE Spec never held the incomplete body.
+
+## Frozen dispositions (in Spec body)
+(a) registrar over self-running module — register<Example>({ createWorld, invoke, observe, expected, assertions? });
+    authored .test.ts keeps top-level specTest + ONE activation; five adapters; authored→generated import only
+(b) skeleton-text identity (no ordinals/slugs)
+(c) three-way comparator 6-step algorithm; Actual===oracle alone forbidden
+(d) Partial<Conditions> — never cast Partial to Conditions; refuse incomplete points
+(e) renderContractStep failure path + oracle-miss scenario diagnostic + cause
+(f) exhaustive mapped type handler/adapter resolution (tsc, not generation-time handler refusal);
+    existing generation-time refusals reused
+(g) Scenario Outlines / Examples tables refused; outline rows map one deterministic case per row
+    in carrier order under point-per-example table sugar expansion
+
+Packaging freeze also written:
+- generated sibling *.generated.ts; exactly one generated registration per example
+- shared @libar-dev/software-delivery-protocol/testing runtime; model/root import for types only
+- export strategy: . / ./runner / ./vitest / ./testing
+- actual supported Vitest peer range: vitest ">=2" (optional peer; in-repo ^4.1.10)
+- equality semantics + readable missing/extra/changed diagnostics
+- verbatim Then expectations
+- non-empty verifies on authored specTest
+- additive assertions (optional; never replace comparator steps 3/5)
+- refusals: env/global/module side channels; self-running generated modules; silent observation derivation; O5
+
+Carrier note: ASCII angle brackets in list items trip extract/invalid-markdown-structure
+(raw HTML). Exact signature spellings register<Example>(...) and Partial<Conditions> live in the
+gwt-vocabulary fence body (fence bodies are not HTML-scanned); list rules describe the same law
+in prose.
+
+## Green acceptance greps (LIVE Spec)
+All HIT (20/20 plan+task keys), including:
+  registrar · skeleton-text identity · three-way comparator · Partial<Conditions> ·
+  renderContractStep · exhaustive mapped type · Scenario Outlines ·
+  register<Example>({ createWorld, invoke, observe, expected, assertions? }) · five adapters ·
+  .generated.ts · @libar-dev/software-delivery-protocol/testing ·
+  outline rows map one deterministic case per row in carrier order · missing/extra/changed ·
+  verbatim `Then` expectations · non-empty `verifies` · exactly one generated registration ·
+  Additive assertions · env/global/module side channels · self-running generated modules ·
+  vitest: ">=2"
+
+## Final commands / results
+
+Command:
+  npm run --silent sdp -- validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+Exit: 0
+Output tail:
+  153 specs · 1 packs · 139 anchors → 293 nodes · 553 edges (0 errors, 0 warnings)
+  validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Literal requirement met: 0 errors · 0 warnings.
+
+Command:
+  npm run --silent sdp:q -- 'const s=g.specContext("spec:extraction.runnable-modules"); return {id:s.id,stated:s.statedReadiness,derived:s.derivedReadiness,floorFailures:s.floorFailures,findings:[],refines:...,dependsOn:...}' --json
+Exit: 0
+Observed:
+  { id: spec:extraction.runnable-modules, stated: defined, derived: ready,
+    floorFailures: [], findings: [],
+    refines: [spec:extraction.example-runner],
+    dependsOn: [spec:extraction.executable-contracts] }
+
+Command:
+  npm run --silent sdp:q -- 'return g.specs().filter(s=>/runnable|example-runner|executable-contracts/.test(s.id)).map(s=>[s.id,s.statedReadiness,s.derivedReadiness])' --json
+Exit: 0
+Includes: ["spec:extraction.runnable-modules","defined","ready"]
+
+Command:
+  npm run --silent sdp:q -- '<compact dispositions body>' --json
+Exit: 0
+Observed compact object (all disposition flags true; stated corrected to defined):
+{
+  "spec": {
+    "id": "spec:extraction.runnable-modules",
+    "stated": "defined",
+    "derived": "ready",
+    "floorFailures": [],
+    "refines": ["spec:extraction.example-runner"],
+    "dependsOn": ["spec:extraction.executable-contracts"]
+  },
+  "registrar": {
+    "shape": true,
+    "fiveAdapters": true,
+    "generatedSibling": true,
+    "oneRegistration": true
+  },
+  "outlineOrder": {
+    "outlineRowsCarrierOrder": true,
+    "scenarioOutlinesRefused": true
+  },
+  "equalityDiagnostics": {
+    "missingExtraChanged": true,
+    "verbatimThen": true,
+    "threeWay": true,
+    "partialConditions": true,
+    "renderContractStep": true,
+    "exhaustiveMappedType": true,
+    "skeletonIdentity": true
+  },
+  "verifies": { "nonEmpty": true },
+  "packagePolicy": {
+    "testingExport": true,
+    "vitestPeer": true,
+    "modelTypesOnly": true
+  },
+  "refusals": {
+    "sideChannels": true,
+    "selfRunning": true,
+    "additiveAssertions": true
+  },
+  "malformedProbe": { "incompleteDraftMissesComparator": true }
+}
+
+## Adversarial table
+| probe | action | result |
+|---|---|---|
+| malformed_input | sdp:q empty body; validate --not-a-real-flag | empty-body refused ("body is empty"); unknown option named; no false graph write claimed |
+| stale_state | specContext("...runnable-modules-STALE") | body returned nothing — no fabricated Spec |
+| dirty_worktree | git status | concurrent worker dirt present; owned path only adds runnable-modules Spec; no reverts/stages of foreign files |
+| misleading_success_output | incomplete draft still matched weak "registrar" | draft alone would mislead; full acceptance key set reddens draft (comparator etc. miss) |
+| scope_creep/no-codegen | package exports / generated/runnable / src/codegen | ./testing absent (frozen, not implemented); no runnable codegen dir; no src/codegen\|adapters\|runner\|package.json edits by this todo |
+
+## Cleanup receipt
+- removed .tmp-scratch/runnable-modules.incomplete-draft.sdp.md
+- DRAFT_GONE=yes
+- no other scratch left by this todo
+
+## Shared integration dependency (NOT done here — out of ownership)
+- self-hosting Pack does not yet list spec:extraction.runnable-modules
+- frozen corpus tests (self-hosting-graph counts / design-review / package-smoke export list)
+  will need absorption when ./testing is implemented (todo 8) and when Pack membership is updated
+- npm run check expected to fail shared freezes (spec count 153 vs prior freeze; gap warning;
+  concurrent todo dirt) — not run as a gate for this scoped design todo
+- ./testing export + registrar codegen intentionally unimplemented (design gate only)
+
+## Risks
+- Stated readiness is `defined` (not `ready`) until a verifying example lands (todo 8); derived remains `ready`.
+- Pack membership omission means the Spec is corpus-visible but not a Pack member — coherent
+  under current pack-coherence rules (members must resolve; extras outside the Pack are allowed)
+  yet self-hosting projection completeness may lag until Pack edit is owned.
+- Angle-bracket signatures live in the gwt fence; a future fence HTML scan would force a
+  carrier-safe spelling change.
+- Concurrent workers are mid-edit on census/structural-anchor surfaces; graph counts in this
+  log reflect that live tree, not a clean main tip.

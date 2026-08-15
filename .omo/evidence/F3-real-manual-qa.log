@@ -1,0 +1,288 @@
+=== F3. Real manual QA — pr-17-gherkin-carrier-hardening (re-run after small fix) ===
+Date: 2026-08-14T03:36:52+02:00
+Worktree: /home/darkomijic/dev-libar/software-delivery-protocol
+Branch: feature/design-review
+Built CLI: dist/cli/sdp.js
+Temp root: /tmp/f3-rerun2-7QWfj2
+No source files edited (evidence log write only). Approve only from captured real outputs below.
+
+Overall: PASS
+
+Scenarios required by plan F3:
+  1. built-CLI help
+  2. valid .sdp.gherkin
+  3. ordinary .feature-only
+  4. malformed carrier
+  5. reader contract
+  6. repeat-derivation
+
+------------------------------------------------------------------------
+=== 1) Built-CLI help ===
+CMD: node dist/cli/sdp.js --help
+exit=0
+help lines naming *.sdp.gherkin: 1
+--- stdout (full) ---
+sdp — Libar Software Delivery Protocol
+Usage:
+  sdp --help
+  sdp build [root] [--exclude PATH]... [--check-clean]
+  sdp validate [root] [--exclude PATH]... [--check-clean]
+  sdp view [root] [--exclude PATH]... [--check-clean]
+  sdp import <path...> [--dry-run]
+  sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--json]
+
+Commands:
+  build      Extract every *.sdp.ts, *.sdp.md, and *.sdp.gherkin under root (default: cwd), plus
+             the anchor constants in the other *.ts/*.tsx source files, into
+             <root>/generated/graph.json — then derive the
+             executable contracts (per-example step contracts + per-parent space contracts,
+             the A2 mechanism) into <root>/generated/contracts/. Exits 1 and writes nothing on
+             any hard error — the emitted artifacts are all-or-nothing. --check-clean
+             additionally runs a second independent extraction + generation and fails on any
+             byte divergence (the determinism self-check). Repeat --exclude PATH to omit exact
+             root-relative POSIX path prefixes from both extraction surfaces.
+  validate   build, then run the conformance + honesty checks over the one graph (one
+             validation path). A check error exits 1; gaps and orphans inform as warnings.
+             graph.json is still written when the checks fail — the graph is the faithful
+             projection; check errors describe the repo's conformance, not the artifact.
+  view       validate, then generate the Design Review — the one read-only human view, a pure
+             projection of the graph — into <root>/generated/design-review/ (rewritten
+             wholesale, so no stale page survives). The view is written even when checks
+             fail: findings render in it, which is what a review surface is for. Exit code
+             follows validate. --check-clean additionally re-renders independently and fails
+             on any byte divergence.
+  import     Convert one or more *.sdp.ts files or recursively scanned roots to write-beside
+             *.sdp.md documents. The TypeScript source is never deleted. --dry-run writes
+             each would-be document to stdout, headed by its target path, without writing.
+             Existing Markdown siblings and non-emitting carrier refusals are rendered as
+             findings and never throw or overwrite. Exits 0 only when every requested source
+             emits (or would emit); any finding error or operational failure exits 1. Publication
+             creates atomic hard links; the target filesystem must support them (FAT/exFAT and
+             some network mounts do not).
+  q          The agent front door: derive the graph under --root (default: cwd) in process, then
+             evaluate the supplied body and print what it returns. The body is the single
+             positional argument, or stdin when stdin is not a terminal; with neither, q refuses
+             with a usage note and exits 1 rather than waiting. It is a plain JavaScript async function
+             body — no import/export, no TypeScript-only syntax — and `return` is the output
+             contract. Three bindings are injected: `g`, the reader over the derived graph (the
+             same createReader the package exports); `graph`, the raw graph schema object; and
+             `report`, the validation report, so honesty findings are queryable data rather than a
+             gate — checks never gate the read path. The graph is derived on every invocation, so a
+             just-authored Spec is queryable immediately and no committed artifact answers in the
+             graph's name; nothing is written anywhere. Output is bounded util.inspect (depth 4);
+             --json prints JSON.stringify instead, unbounded. A body that throws exits 1, as does a
+             graph that fails to derive.
+--- stderr ---
+Expected: exit 0; help text lists *.sdp.gherkin among extractable suffixes.
+Result: YES
+
+------------------------------------------------------------------------
+=== 2) Valid .sdp.gherkin ===
+root: /tmp/f3-rerun2-7QWfj2/happy
+fixture: carrier.sdp.gherkin (temp; floor-complete defined parent+point with verifies)
+CMD: node dist/cli/sdp.js validate /tmp/f3-rerun2-7QWfj2/happy
+exit=0
+--- stdout ---
+2 specs · 0 packs · 0 anchors → 2 nodes · 3 edges (0 errors, 0 warnings)
+Wrote /tmp/f3-rerun2-7QWfj2/happy/generated/graph.json
+Wrote /tmp/f3-rerun2-7QWfj2/happy/generated/contracts (1 modules)
+validate: 0 errors · 1 warnings (conformance + honesty over the one graph)
+--- stderr ---
+carrier.sdp.gherkin — [warning] conformance/verifies-linkage — Example "spec:fixture.qa-happy.point" declares verifies → "spec:fixture.qa-happy" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier.
+Expected: exit 0; specs discovered from *.sdp.gherkin; no hard extract errors
+  (conformance verifies-linkage warning without test anchor is acceptable).
+Result: YES
+
+--- supporting mixed discovery (valid .sdp.gherkin + ordinary .feature) ---
+root: /tmp/f3-rerun2-7QWfj2/mixed
+CMD: node dist/cli/sdp.js build /tmp/f3-rerun2-7QWfj2/mixed
+exit=0
+--- stdout ---
+2 specs · 0 packs · 0 anchors → 2 nodes · 3 edges (0 errors, 0 warnings)
+Wrote /tmp/f3-rerun2-7QWfj2/mixed/generated/graph.json
+Wrote /tmp/f3-rerun2-7QWfj2/mixed/generated/contracts (1 modules)
+--- stderr ---
+
+graph projection:
+['carrier.sdp.gherkin']
+login.feature_in_graph= False
+Expected: only carrier.sdp.gherkin enters the graph; login.feature ignored.
+Result: YES
+
+------------------------------------------------------------------------
+=== 3) Ordinary .feature-only ===
+root: /tmp/f3-rerun2-7QWfj2/feature-only
+CMD: node dist/cli/sdp.js validate /tmp/f3-rerun2-7QWfj2/feature-only
+exit=0
+--- stdout ---
+0 specs · 0 packs · 0 anchors → 0 nodes · 0 edges (0 errors, 0 warnings)
+Wrote /tmp/f3-rerun2-7QWfj2/feature-only/generated/graph.json
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+--- stderr ---
+note: no *.sdp.ts, *.sdp.md, or *.sdp.gherkin spec files found under /tmp/f3-rerun2-7QWfj2/feature-only — the authored model is empty. Is this the right extraction root?
+Expected: exit 0; 0 specs; empty-model note naming *.sdp.gherkin (not missing-identity).
+Result: YES
+
+------------------------------------------------------------------------
+=== 4) Malformed carrier ===
+root: /tmp/f3-rerun2-7QWfj2/malformed
+fixture body: test/fixtures/gherkin/multi-finding/invalid.sdp.gherkin.txt -> broken.sdp.gherkin
+CMD: node dist/cli/sdp.js build /tmp/f3-rerun2-7QWfj2/malformed  (run 1)
+exit=1
+--- stdout ---
+0 specs · 0 packs · 0 anchors → 0 nodes · 0 edges (4 errors, 0 warnings)
+--- stderr ---
+broken.sdp.gherkin:1 — [error] extract/gherkin-grammar — Gherkin decoration tag "@readines.ready" uses authored head "readines" too close to reserved graph-aware head "readiness"; did you mean "@readiness."?
+broken.sdp.gherkin:3 — [error] extract/gherkin-grammar — Feature "Invalid carrier" description key "outcom" is outside the closed set problem | outcome | value | actor | description | risk | assumption | criterion | verification-mode; did you mean "outcome"?
+broken.sdp.gherkin:4 — [error] extract/gherkin-grammar — Gherkin decoration tag "@king.dom" uses authored head "king" too close to reserved graph-aware head "kind"
+broken.sdp.gherkin:5 — [error] extract/gherkin-grammar — Scenario "Empty point" must carry at least one step
+sdp build: hard errors present — graph.json not written.
+CMD: node dist/cli/sdp.js build /tmp/f3-rerun2-7QWfj2/malformed  (run 2)
+exit=1
+--- stdout ---
+0 specs · 0 packs · 0 anchors → 0 nodes · 0 edges (4 errors, 0 warnings)
+--- stderr ---
+broken.sdp.gherkin:1 — [error] extract/gherkin-grammar — Gherkin decoration tag "@readines.ready" uses authored head "readines" too close to reserved graph-aware head "readiness"; did you mean "@readiness."?
+broken.sdp.gherkin:3 — [error] extract/gherkin-grammar — Feature "Invalid carrier" description key "outcom" is outside the closed set problem | outcome | value | actor | description | risk | assumption | criterion | verification-mode; did you mean "outcome"?
+broken.sdp.gherkin:4 — [error] extract/gherkin-grammar — Gherkin decoration tag "@king.dom" uses authored head "king" too close to reserved graph-aware head "kind"
+broken.sdp.gherkin:5 — [error] extract/gherkin-grammar — Scenario "Empty point" must carry at least one step
+sdp build: hard errors present — graph.json not written.
+deterministic rerun (stdout/stderr/exit byte-identical): YES
+graph.json written after malformed build: NO
+Expected: nonzero exit; source-located extract/gherkin-grammar findings (multi, not first-only);
+  no graph.json; deterministic rerun.
+Result: YES
+
+------------------------------------------------------------------------
+=== 5) Reader contract ===
+CMD: node dist/cli/sdp.js q 'return g.specs().filter(s => s.file && String(s.file).includes("reader.sdp.gherkin")).map(s => ({id:s.id, file:s.file}))' --root . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --json
+exit=0
+--- stdout ---
+[
+  {
+    "id": "spec:consumers.reader",
+    "file": "specs/consumers/reader.sdp.gherkin"
+  },
+  {
+    "id": "spec:consumers.reader.changeset-entry",
+    "file": "specs/consumers/reader.sdp.gherkin"
+  },
+  {
+    "id": "spec:consumers.reader.concept-entry",
+    "file": "specs/consumers/reader.sdp.gherkin"
+  },
+  {
+    "id": "spec:consumers.reader.file-entry",
+    "file": "specs/consumers/reader.sdp.gherkin"
+  }
+]
+--- stderr ---
+
+Live carrier path checks:
+  specs/consumers/reader.sdp.gherkin: present
+  specs/consumers/reader.feature: absent
+  generated reader contract modules:
+    generated/contracts/consumers.reader.changeset-entry.contract.ts
+    generated/contracts/consumers.reader.concept-entry.contract.ts
+    generated/contracts/consumers.reader.file-entry.contract.ts
+    generated/contracts/consumers.reader.space.ts
+
+CMD: npm test -- test/self-hosting-carrier-gherkin.test.ts
+exit=0
+--- stdout ---
+
+> @libar-dev/software-delivery-protocol@0.0.0 test
+> node ./vitest-test.mjs test/self-hosting-carrier-gherkin.test.ts
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/darkomijic/dev-libar/software-delivery-protocol[39m
+
+ [32m✓[39m test/self-hosting-carrier-gherkin.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 89[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m13 passed[39m[22m[90m (13)[39m
+[2m   Start at [22m 03:36:58
+[2m   Duration [22m 1.46s[2m (transform 540ms, setup 0ms, import 1.15s, tests 89ms, environment 0ms)[22m
+
+--- stderr ---
+Expected: reader family specs resolve to specs/consumers/reader.sdp.gherkin; bare .feature absent;
+  generated consumers.reader.* contracts present; self-hosting Gherkin carrier contracts green.
+Result: YES
+
+------------------------------------------------------------------------
+=== 6) Repeat-derivation ===
+CMD: node dist/cli/sdp.js build /tmp/f3-rerun2-7QWfj2/happy --check-clean
+exit=0
+--- stdout ---
+2 specs · 0 packs · 0 anchors → 2 nodes · 3 edges (0 errors, 0 warnings)
+Wrote /tmp/f3-rerun2-7QWfj2/happy/generated/graph.json
+Wrote /tmp/f3-rerun2-7QWfj2/happy/generated/contracts (1 modules)
+--- stderr ---
+
+CMD: node dist/cli/sdp.js build . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --check-clean
+exit=0
+--- stdout ---
+149 specs · 1 packs · 138 anchors → 288 nodes · 545 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol/generated/graph.json
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol/generated/contracts (98 modules)
+--- stderr ---
+
+CMD: npm run generate:self-hosting  (second consecutive after snapshot)
+exit=0
+--- stdout ---
+
+> @libar-dev/software-delivery-protocol@0.0.0 generate:self-hosting
+> node ./dist/cli/sdp.js view . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+
+149 specs · 1 packs · 138 anchors → 288 nodes · 545 edges (0 errors, 0 warnings)
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol/generated/graph.json
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol/generated/contracts (98 modules)
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Wrote /home/darkomijic/dev-libar/software-delivery-protocol/generated/design-review (151 pages)
+--- stderr ---
+
+consecutive generate:self-hosting graph.json byte-identical: YES
+consecutive generate:self-hosting contracts/ byte-identical: YES
+
+CMD: npm test -- test/gherkin-parity.test.ts
+  (includes "repeats extraction and contract generation byte-identically"
+   and "repeats invalid carrier derivation deterministically")
+exit=0
+--- stdout ---
+
+> @libar-dev/software-delivery-protocol@0.0.0 test
+> node ./vitest-test.mjs test/gherkin-parity.test.ts
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/darkomijic/dev-libar/software-delivery-protocol[39m
+
+ [32m✓[39m test/gherkin-parity.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 61[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 03:37:08
+[2m   Duration [22m 1.37s[2m (transform 500ms, setup 0ms, import 1.09s, tests 61ms, environment 0ms)[22m
+
+--- stderr ---
+
+Expected: --check-clean exit 0 on happy + self-hosting root; consecutive generation byte-identical;
+  gherkin-parity repeat tests pass.
+Result: YES
+
+------------------------------------------------------------------------
+=== Verdict checklist ===
+[PASS] 1 built-CLI help names *.sdp.gherkin (exit 0)
+[PASS] 2 valid .sdp.gherkin validate exit 0 with discovered specs
+[PASS] 2b mixed root discovers only .sdp.gherkin (ordinary .feature ignored)
+[PASS] 3 ordinary .feature-only empty-model note (exit 0)
+[PASS] 4 malformed multi-finding deterministic nonzero (no graph)
+[PASS] 5 reader contract path + generated contracts + focused suite
+[PASS] 6 repeat-derivation (--check-clean, consecutive gen, parity tests)
+
+PASS count: 7
+FAIL count: 0
+OVERALL: PASS
+
+F3 APPROVED from captured real outputs.
+
+=== DONE F3 ===

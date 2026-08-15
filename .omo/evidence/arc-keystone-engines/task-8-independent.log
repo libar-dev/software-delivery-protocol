@@ -1,0 +1,52 @@
+TASK 8 INDEPENDENT VERIFICATION
+Timestamp: 2026-08-14
+Verifier: omo oracle child st_01a0001e
+Worktree: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+Branch observed: arc/keystone-engines
+Mode: read-only audit of candidate unstaged implementation; no edits/stage/commit/push/orchestration changes.
+
+VERDICT: CONFIRMED
+
+Operative sources read:
+- .omo/plans/arc-keystone-engines.md Todo 8
+- specs/extraction/runnable-modules.sdp.md frozen registrar law
+- /home/darkomijic/dev-libar/software-delivery-protocol/.omo/evidence/arc-keystone-engines/task-8-mutation.log
+- /home/darkomijic/dev-libar/software-delivery-protocol/.omo/evidence/arc-keystone-engines/task-8-self-hosting-rationale.md
+
+Independent commands and exits:
+- git status/diff/untracked audit: exit 0
+- npm run build: exit 0 (tsup warning about existing cjs/import.meta build behavior observed; build succeeded)
+- npm test -- test/codegen.test.ts test/testing.test.ts test/runner.test.ts examples/checkout-v1/test/orders/create-order.valid-cart.test.ts: exit 0; 4 files, 31 tests passed
+- npm run typecheck:examples: exit 0
+
+Criterion matrix:
+1. Deterministic per-bindable registrar output: PASS. Diff adds GeneratedContracts.registrars sorted map, check-clean compares registrars, codegen test asserts sibling registrar emission, and mutation log final regeneration restored identical registrar hash 7bf6dfd7c701f365458de3c6dcd10e929d7012fe9e7512354bd9ba2f7fd8df36.
+2. Generated module owns contract import: PASS. create-order.valid-cart.test.generated.ts imports validCartContract and generated space/contract types; authored module imports generated registrar only.
+3. describe/it through existing Vitest adapter: PASS. src/testing/registerRunnableExample delegates to bindExample; src/adapters/vitest.ts remains the describe/it owner with an added after hook.
+4. Skeleton-to-callback dispatch: PASS. Generated registrar emits a StepBindings object keyed by every skeleton; Given no-ops, When invokes invokeRunnableExample, Then invokes compareContractOutcome.
+5. Parameter threading: PASS. Generated registrar embeds the bound point { n: 2, q: 1, price: 50, availability: "in stock" }; runtime passes point to createWorld/invoke/expected and runner passes step params to compareContractOutcome via contract step.
+6. Three-way Spec/oracle/observed comparison: PASS. Runtime calls expected(point), compares matching Then params to oracle payload, observes world, then compares observed outcome to oracle; focused runtime tests and mutation log prove both Spec-red and oracle-red.
+7. renderContractStep plus scenario diagnostic: PASS. compareContractOutcome errors include renderContractStep output; completeRunnableExample emits scenario-level diagnostic with Spec ID, oracle kind, and available Then skeletons and preserves cause.
+8. Missing/stale callback TypeScript error: PASS. Generated skeleton StepBindings uses exhaustive mapped type; mutation log separately proves missing required adapter observe is TS2345. Existing drift-pins continue to cover stale/missing skeleton map behavior for StepBindings.
+9. Authored valid-cart shape: PASS. Authored file keeps specTest anchor and exactly one activation call registerValidCart({ createWorld, invoke, observe, expected, assertions }); it has no literal skeleton keys; authored code contains only domain setup/product invocation/observation/assertions.
+10. Oracle expected() consumed by generated code: PASS. Authored activation passes expected into generated registrar; generated/runtime calls adapters.expected(point). Mutation log oracle mutation reddens.
+11. Refusal taxonomy remains existing three: PASS. contractsFindingIds unchanged in substance; no handler-resolution refusal added. Existing generation refusals remain unbindable/incompatible vocabulary/colliding path families.
+12. Forbidden scope: PASS. No engine-side adopter execution found; no ordinal/order semantic inference in implementation; no Partial<Conditions> to Conditions cast found; Outline handling remains existing refusal; no claim-taxonomy or anchor-layer change in candidate Todo 8 diff.
+13. Mutation evidence genuine: PASS. task-8-mutation.log records Spec total mutation red (exit 1), oracle expected mutation red (exit 1), missing adapter type red (exit 2), restored green valid-cart test (exit 0), restored typecheck:examples (exit 0), final byte-for-byte restoration hashes, and pre/final status+diff hashes identical.
+14. Self-hosting rationale exhaustive binary verdicts: PASS. task-8-self-hosting-rationale.md lists 31 families with exactly one verdict each: 1 MIGRATE (checkout valid-cart), 30 DEFER, plus explicit non-families and blocking rationale.
+15. Residue / untracked generated source: PASS. git status showed intended candidate changes plus untracked examples/checkout-v1/test/orders/create-order.valid-cart.test.generated.ts, src/testing/index.ts, test/testing.test.ts. Generated-source scan found only ./examples/checkout-v1/test/orders/create-order.valid-cart.test.generated.ts as generated *.generated.ts. No mutation/baseline/tmp residue found.
+
+Mutation/rationale verdict:
+- Mutation log: genuine red/red/type-red/restored-green evidence with restoration hashes and identical final status/diff fingerprints.
+- Self-hosting rationale: accepted as exhaustive for Todo 8; valid-cart migrated, all other runnable families explicitly deferred with binary verdicts.
+
+Forbidden-scope verdict:
+- PASS. No claim taxonomy or anchor layer changes; no O5 engine-side adopter execution; no ordinal/slug/order identity; no Partial<Conditions> cast; no Outline support; no handler-resolution generation refusal.
+
+Residue:
+- Intended untracked/generated source: examples/checkout-v1/test/orders/create-order.valid-cart.test.generated.ts only.
+- Intended new non-generated source/test: src/testing/index.ts, test/testing.test.ts.
+- No mutation/temp/baseline residue detected.
+
+Smallest safe fix:
+- None required for Todo 8.

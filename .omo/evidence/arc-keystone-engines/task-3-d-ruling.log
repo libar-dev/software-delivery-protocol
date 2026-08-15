@@ -1,0 +1,140 @@
+task: 3. Brief D ruling: the structural anchor semantics decision Spec
+plan: arc-keystone-engines
+worktree: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+result: PASS (scoped) · needs-follow-up on frozen self-hosting-graph (shared with Todo 2; tests out of scope)
+
+## Owned deliverables
+- specs/decisions/structural-anchor-semantics.sdp.md
+  id: spec:decisions.structural-anchor-semantics
+  kind: decision · altitude: feature · readiness: ready
+  relations.refines: spec:model.anchors
+- .omo/evidence/arc-keystone-engines/task-3-d-ruling.log (this file)
+
+## Recovery note
+Prior executor authored a complete decision Spec (satisfies-vs-implements first, fields/value forms/validators/census, full refusal list, ADR three-part, cycles-as-data) and captured the refusal-list teeth/red proof, but could not land the evidence log. The live Spec failed `check:temporal` solely because the rationale cited the gen-1 path `architect/formal-spec/REVIEW-2026-05-17-FINDINGS.md` (ISO date token banned outside genre-exempt paths). Fix: cite only `reviews/14-executable-verification-design-review.md` (which already records the 50→~26 drift and cites the gen-1 findings review).
+
+## Ruling content (body review)
+Ordering in `- decision:` (explicit, first→fifth):
+1. satisfies-vs-implements FIRST — no `implements` field; contract realization stays `satisfies` by authoring convention
+2. fields admitted — `component` and `uses` only, on `codeAnchor`
+3. value form — `component?: ComponentAnchorId`, `uses?: readonly CodeAnchorId[]`; no free strings / detached enums
+4. validators — target existence; endpoint types/namespaces; one-level membership (impl:/api: → component:); unique + non-empty-when-present uses; unique edges; self-ref refused; multi-node cycles are DATA not findings
+5. census — always generated from graph + runtime constants; never hand-maintained; empty-state honesty
+
+ADR three-part (all in `- rationale:`):
+- hard to reverse — anchor API + edge vocabulary become contracts
+- surprising without context — realization stays `satisfies`; cycles accepted; structural edges confer no realization state
+- real trade-off — two narrow fields vs rejecting implements/inference/lifecycle/open tags
+- cautionary evidence — gen-1 taxonomy drift via reviews/14
+
+Refusal list present IN Spec body (consequence bullets):
+- new fields extend `codeAnchor` only; no per-namespace sibling builders
+- new edges are anchored claims only, never inferred; imports not architecture; no fourth claim
+- anchors carry no intent/readiness/status/delivery fact; memberOf/uses mint no delivery facts and do not change readiness floors
+- no free-form tag vocabulary, authored lifecycle, or parallel registry
+- foreign fields remain extraction errors; closed envelope; malformed structural field refuses whole anchor
+- anchor-required lint remains warn-level and optional
+
+## Teeth / red proof (plan QA failure scenario)
+Acceptance greps on LIVE Spec (all HIT, baseline_misses=0):
+  extend `codeAnchor` only
+  per-namespace sibling
+  never inferred
+  no intent, readiness, status, or delivery fact
+  No free-form tag vocabulary
+  parallel registry
+  Foreign fields remain extraction errors
+  warn-level and optional
+
+Red draft: stripped refusal-list consequence bullets to
+  /tmp/structural-anchor-semantics.no-refusal-draft.sdp.md
+  (draft_lines 23 vs orig 29; LIVE Spec left untouched — cmp confirmed)
+Red greps on draft: all 8 MISS (red_misses=8) — acceptance check has teeth.
+LIVE Spec re-confirmed intact with all 8 HITs after the red exercise.
+
+## Final commands / results
+
+Command:
+  node check-temporal.mjs
+Exit: 0
+(pre-fix: banned token at structural-anchor-semantics.sdp.md:17 via REVIEW-2026-05-17 path)
+
+Command:
+  npm run --silent sdp -- validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+Exit: 0
+Output tail:
+  151 specs · 1 packs · 138 anchors → 290 nodes · 547 edges (0 errors, 0 warnings)
+  validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+Note: concurrent Todo 2 carrier-universality Spec is also green on this surface; earlier red on that Spec is resolved by the other worker.
+
+Command:
+  npm run --silent sdp:q -- 'return g.specs().filter(s=>s.id.includes("structural-anchor")).map(s=>[s.id,s.statedReadiness,s.derivedReadiness])'
+Exit: 0
+Output:
+  [ [ 'spec:decisions.structural-anchor-semantics', 'ready', 'ready' ] ]
+
+Command:
+  npm run check
+Exit: 1
+Attribution (NOT a structural-anchor temporal/conformance defect):
+  A. test/self-hosting-graph.test.ts — frozen corpus expects specs:149 / ready:131 and the prior decisions-family roster.
+     Received specs:151 / ready:133 because BOTH untracked Wave-0 decision Specs land:
+       - spec:decisions.structural-anchor-semantics  (this todo)
+       - spec:decisions.carrier-universality         (concurrent Todo 2)
+     Also new declared relations and decisions-family descriptor rows for both.
+     Scope forbids touching tests; freeze absorption is shared follow-through.
+  B. test/check-self-hosting-gates.test.ts — AGENTS.md does not name current primary plan 31.
+     Attributable to Todo 1 plan-record work (plans/31 + handbook status), not this Spec.
+
+## Manual QA (real surfaces)
+1. validate (command above) — 0/0; Spec extracts.
+2. readiness query (command above) — ready/ready.
+3. specContext probe:
+   npm run --silent sdp:q -- 'const c=g.specContext("spec:decisions.structural-anchor-semantics"); return {id:c.id,title:c.title,stated:c.statedReadiness,derived:c.derivedReadiness,floorFailures:c.floorFailures,relationsOut:c.relationsOut,hasDecision:!!(c.sections&&c.sections.decision),decisionKeys:c.sections&&c.sections.decision?Object.keys(c.sections.decision):[]}'
+   Observed:
+     - floorFailures: []
+     - relationsOut: refines → spec:model.anchors (resolved)
+     - hasDecision: true
+     - decisionKeys: context, decision, rationale, consequences, alternatives
+     - decision text opens with satisfies-only / no implements, then component+uses, graph-ID forms, validators, census
+4. findByConcept("structural anchor") hits spec:decisions.structural-anchor-semantics.
+5. Body/grep review: every refusal clause HIT; ordering first=implements-decline before field admission; cycles-as-data present; ADR three phrases present; no temporal tokens remain.
+
+## Adversarial classes
+- malformed_or_omission_teeth: VERIFIED — draft without refusal consequences fails all 8 acceptance greps; live Spec keeps them.
+- fresh_state_query: VERIFIED — sdp:q ready/ready and validate 0/0 on the live worktree graph (not a stale generated snapshot as source of truth; validate rewrote generated/ as a side effect of the one path).
+- dirty_worktree_ownership: VERIFIED — this todo owns only
+    ?? specs/decisions/structural-anchor-semantics.sdp.md
+    and this evidence file under .omo/evidence/arc-keystone-engines/.
+  Concurrent (NOT owned here):
+    ?? specs/decisions/carrier-universality.sdp.md
+    M  specs/decisions/carrier-ruling.sdp.md
+    M  specs/decisions/gherkin-carrier-option.sdp.md
+    M/?? plans/29,30,31 (Todo 1)
+- misleading_success_output: VERIFIED — validate 0/0 and ready/ready are real for this Spec; npm run check exit 1 is honestly reported and attributed to frozen self-hosting-graph (+2 Specs) and Todo-1 AGENTS/plan-31 gate drift, not papered over.
+- privilege_or_auth_bypass: N/A — no auth surface in this decision-Spec task.
+- injection_or_path_traversal: N/A — no new parsers, FS writers, or path joins.
+- concurrency_races: N/A for Spec body; concurrent Todo 2 edited sibling decision files only; no merge conflict on this Spec path.
+- resource_exhaustion: N/A — prose Spec, no loops/allocators.
+
+## Cleanup
+Removed task-local temps after capture:
+  /tmp/structural-anchor-semantics.no-refusal-draft.sdp.md (teeth red draft)
+  /tmp/structural-anchor-semantics.teeth-backup (if present)
+  /tmp/structural-anchor-semantics.final (prior executor scratch copy of Spec)
+  /tmp/task3.patch (prior executor scratch)
+  /tmp/task3-check-final.out (this run's check capture)
+Left untouched (other sessions / not this todo):
+  /tmp/task3-vitest*.log, /tmp/extract_task3.py, /tmp/sdp-extract-anchored-binding-* (pr-17 era)
+
+## Scope fidelity
+Touched:
+  - specs/decisions/structural-anchor-semantics.sdp.md (temporal citation only)
+  - .omo/evidence/arc-keystone-engines/task-3-d-ruling.log (created)
+Did NOT touch: source, tests, anchor model Spec, plans, Boulder, ledger, checkboxes, carrier-universality.sdp.md, DECISIONS.md, pack manifests, AGENTS.md.
+No commit.
+
+## Unresolved risks / follow-ups
+1. Frozen self-hosting-graph expectations must absorb BOTH Wave-0 decision Specs (and any Todo-2 consequence edits to MD-18/MD-27 descriptors) before `npm run check` is green. Out of this todo's file scope.
+2. Todo-1 AGENTS.md primary-plan naming (plan 31) still reds check-self-hosting-gates.
+3. Registry/MD-n row for this decision is not in scope here; floor already clears without it. A later registry curation pass may append an MD-n pointer if the corpus wants the diary row.

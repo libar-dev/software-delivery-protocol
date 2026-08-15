@@ -1,0 +1,259 @@
+Wave 0 unit: Add new decision Specs to self-hosting Pack
+Worktree: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+Date: 2026-08-14
+Owner scope: specs/self-hosting.pack.sdp.md + this evidence log only
+Commit: none (forbidden)
+
+========================================================================
+1. PRE-EDIT BASELINE (fresh graph queries)
+========================================================================
+
+Command family: npm run --silent sdp:q -- '<body>'
+(Excludes: explorations, examples, test/fixtures/import/parity)
+
+A. Corpus size
+  g.specs().length => 151
+  g.packs() => [{ id: 'pack:self-hosting-v1', ... }]  (1 pack)
+
+B. Pack membership via belongsTo edges and packContext
+  graph.edges filter type==='belongsTo' && to==='pack:self-hosting-v1'
+    => belongsCount: 149
+  g.packContext('pack:self-hosting-v1').members.length
+    => 149
+
+C. Missing members (all Spec IDs minus pack members)
+  missing exactly:
+    - spec:decisions.carrier-universality
+    - spec:decisions.structural-anchor-semantics
+  extra (pack members not in corpus): []
+
+D. Missing Spec readiness / identity
+  spec:decisions.carrier-universality
+    kind=decision stated=ready derived=ready
+    file=specs/decisions/carrier-universality.sdp.md
+    packs=[]
+  spec:decisions.structural-anchor-semantics
+    kind=decision stated=ready derived=ready
+    file=specs/decisions/structural-anchor-semantics.sdp.md
+    packs=[]
+
+E. Decisions already in pack (28)
+  includes carrier-ruling, gherkin-carrier-option, sdp-gherkin-extension, ...
+  does NOT include the two IDs above
+
+F. Pack law / complete-corpus posture
+  Manifest: specs/self-hosting.pack.sdp.md (id pack:self-hosting-v1)
+  Carrier law: specs/carrier/markdown-pack-authoring.sdp.md +
+               specs/decisions/pack-markdown-carrier.sdp.md
+    - Pack envelope closed to id · specs · modelRefs
+    - Membership is the YAML specs list; derives belongsTo edges
+  Pack model: specs/model/pack-aggregate.sdp.md +
+              specs/decisions/pack-reified.sdp.md
+    - Pack is a truth-free review aggregate; membership is authored
+  Self-hosting framing: "The Protocol authors and validates its own delivery model."
+  Historical posture (git log on the pack manifest): every corpus growth
+  appends new Spec IDs into this one Pack (most recent: sdp-gherkin-extension
+  and three gherkin-authoring examples). No second Pack exists.
+  Conclusion: Pack is the complete self-hosted corpus enumerator; the two
+  ready decision Specs are the only missing members → add exactly those two.
+
+========================================================================
+2. EXACT EDIT
+========================================================================
+
+File: specs/self-hosting.pack.sdp.md
+Tool: structured edit (StrReplace-equivalent); no shell mutation.
+
+Diff (git diff -- specs/self-hosting.pack.sdp.md):
+  specs/self-hosting.pack.sdp.md | 2 ++
+  1 file changed, 2 insertions(+)
+
+  @@ -150,6 +150,8 @@ specs:
+     - spec:decisions.decision-readiness-posture
+     - spec:decisions.gherkin-carrier-option
+     - spec:decisions.sdp-gherkin-extension
+  +  - spec:decisions.carrier-universality
+  +  - spec:decisions.structural-anchor-semantics
+   modelRefs:
+
+Ordering rationale (established decisions-family order):
+  Decisions block is chronological append order, not alphabetical.
+  Prior landing of sdp-gherkin-extension appended at the end of the
+  decisions family. Plan 31 order is carrier-universality then
+  structural-anchor-semantics. Both appended after sdp-gherkin-extension
+  in that sequence.
+
+Manifest member count after edit: 151 (python count of specs: list entries)
+Decision family tail after edit:
+  ... pack-markdown-carrier
+  ... decision-readiness-posture
+  ... gherkin-carrier-option
+  ... sdp-gherkin-extension
+  ... carrier-universality
+  ... structural-anchor-semantics
+
+========================================================================
+3. VALIDATE / GRAPH AFTER
+========================================================================
+
+Command:
+  npm run --silent sdp -- validate . \
+    --exclude explorations \
+    --exclude examples \
+    --exclude test/fixtures/import/parity
+
+Result (stdout):
+  151 specs · 1 packs · 138 anchors → 290 nodes · 549 edges (0 errors, 0 warnings)
+  Wrote .../generated/graph.json
+  Wrote .../generated/contracts (98 modules)
+  validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+
+Edge delta: belongsTo 149 → 151 (+2); total edges 547 → 549 (+2) matches
+the two new membership edges only (no unrelated membership churn).
+
+Note: validate rewrites generated/graph.json and contracts/ as its normal
+side effect. generated/ is gitignored (.gitignore:17). This unit did not
+author or hand-edit generated artifacts; frozen self-hosting tests were
+NOT run or updated (separate registered units).
+
+========================================================================
+4. POST-EDIT sdp:q (fresh derive; not cached-artifact authority)
+========================================================================
+
+Command: npm run --silent sdp:q -- '<body>'
+
+Results:
+  specCount: 151
+  memberCount: 151
+  belongsCount: 151
+  missing: []
+  extra: []
+  targetInMembers: [true, true] for
+    spec:decisions.carrier-universality
+    spec:decisions.structural-anchor-semantics
+  decisionBelongs count: 30
+  decisionBelongs tail (manifest order preserved on belongsTo):
+    pack-markdown-carrier
+    decision-readiness-posture
+    gherkin-carrier-option
+    sdp-gherkin-extension
+    carrier-universality
+    structural-anchor-semantics
+  report findings: 0
+  packContext findings: []
+
+Stale re-query (second independent sdp:q):
+  { n: 151, hasCU: true, hasSA: true, missing: [] }
+
+========================================================================
+5. MANUAL QA — real Pack reader
+========================================================================
+
+Surface: g.packContext('pack:self-hosting-v1') via sdp:q (createReader packContext)
+
+Both decisions appear in the decisions family with resolved identities:
+
+  {
+    id: 'spec:decisions.carrier-universality',
+    resolved: true,
+    title: 'Carrier universality is bounded by honest kind structure',
+    specKind: 'decision',
+    altitude: 'feature',
+    statedReadiness: 'ready',
+    derivedReadiness: 'ready',
+    deliveryFacts: []
+  }
+  {
+    id: 'spec:decisions.structural-anchor-semantics',
+    resolved: true,
+    title: 'Structural anchor semantics',
+    specKind: 'decision',
+    altitude: 'feature',
+    statedReadiness: 'ready',
+    derivedReadiness: 'ready',
+    deliveryFacts: []
+  }
+
+decisionsFamilyFromCtxCount: 30
+No pack-level findings.
+
+========================================================================
+6. ADVERSARIAL CLASSES
+========================================================================
+
+stale_state — PROBED PASS
+  Re-ran independent sdp:q after validate; membership still 151 with both
+  IDs present and missing=[]. sdp q derives the graph in-process each
+  invocation (CLI contract: nothing written; committed graph.json is not
+  the answer authority).
+
+dirty_worktree — PROBED PASS (acknowledged)
+  Pre-existing dirty/untracked from prior Wave 0 / plan 31 work:
+    M AGENTS.md
+    M plans/29-... M plans/30-...
+    M specs/decisions/carrier-ruling.sdp.md
+    M specs/decisions/gherkin-carrier-option.sdp.md
+    ?? plans/31-...
+    ?? specs/decisions/carrier-universality.sdp.md
+    ?? specs/decisions/structural-anchor-semantics.sdp.md
+  This unit's only owned diff: M specs/self-hosting.pack.sdp.md (+2 lines)
+  plus this evidence log. Did not commit. Did not touch other dirty paths.
+
+misleading_success_output — PROBED PASS
+  validate exit reported "0 errors · 0 warnings" AND the explicit summary
+  line matched. Cross-checked with packContext memberCount=151, missing=[],
+  belongsCount=151, and report.findings length 0 — not a lone green banner.
+
+generated/cached-artifact boundaries — PROBED PASS
+  generated/ is gitignored. sdp:q derives fresh and does not treat
+  generated/graph.json as authoritative. validate may rewrite generated/
+  as a build side effect; no hand edit of generated files or frozen
+  expectation tables. Frozen self-hosting oracle/tests intentionally not
+  run (separate units).
+
+Other ultraqa classes — N/A
+  auth_bypass / injection / privilege_escalation / path_traversal /
+  ssrf / xss / csrf: N/A — change is authored YAML membership IDs in a
+  Pack manifest; no network, auth, or user-input surface.
+  concurrency_races / timing: N/A — deterministic graph derive; no async
+  shared mutable protocol state under test here.
+  resource_exhaustion: N/A — two ID string inserts.
+  partial_failure_rollback: N/A — single-file two-line append; no multi-
+  step transaction.
+  unicode_homoglyph / id_spoof: N/A — exact existing Spec IDs already in
+  the corpus; validated referential integrity 0 findings.
+
+========================================================================
+7. CLEANUP
+========================================================================
+
+- No scratch dirs, temp files, or helper scripts created outside this log.
+- No git commit.
+- No reverts of pre-existing dirty paths.
+- generated/ rewrite is validate's normal ignored side effect; left as-is
+  (gitignored; not an owned deliverable).
+
+========================================================================
+8. BEFORE / AFTER COUNTS
+========================================================================
+
+                  before    after
+  Specs             151      151
+  Pack members      149      151
+  Decision members   28       30
+  Missing members     2        0
+  belongsTo edges   149      151
+  Total edges       547      549   (from prior wave0 baseline → validate)
+  validate errors     -        0
+  validate warnings   -        0
+
+========================================================================
+9. RISKS / OUT OF SCOPE
+========================================================================
+
+- Frozen self-hosting oracle/tests still expect 149 pack members / prior
+  family lists; they were deliberately not run or updated here.
+- Graph regeneration / design-review pages for pack membership tables may
+  lag until a dedicated generation unit runs.
+- Pre-existing dirty worktree from plan 31 decision authorship remains;
+  not owned by this unit.

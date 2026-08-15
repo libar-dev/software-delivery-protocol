@@ -1,0 +1,94 @@
+=== Task 10: Publish suffix tooling and dependency guidance ===
+Date: 2026-08-14
+Worktree: /home/darkomijic/dev-libar/software-delivery-protocol
+Branch: feature/design-review
+Do not commit: honored
+
+=== Intent ===
+Update authoring skill, README, and concept authoring guidance so `.sdp.gherkin` is
+canonical, bare `.feature` is import-source/non-canonical, editor association is
+documented, and the exact `@cucumber/gherkin` / `@cucumber/messages` runtime pins are
+listed for Markdown-only consumers. Keep repository `.vscode/settings.json`. No new
+parser or duplicated grammar.
+
+=== Files touched (this task) ===
+- README.md — Gherkin carrier section: non-execution suffix, bare `.feature` import-source,
+  concrete VS Code `files.associations` snippet, runtime pins 42.0.1 / 34.2.1, no lazy load
+- .agents/skills/sdp-authoring/SKILL.md — Gherkin authoring section: canonical suffix, rename
+  warning, editor association JSON, runtime pins, closed grammar retained
+- docs/concept/04-authoring-and-binding.md — intro now three carriers; one-surface law names
+  `.sdp.gherkin` and refuses bare `.feature`; Annotated Gherkin adds editor + dependency pins
+- .vscode/settings.json — already present from Todo 5 (`*.sdp.gherkin` -> `cucumber`); verified
+
+No shipped-skill full-equality fixtures present (skills.test uses toContain; package-smoke
+checks skill name only). No skill-test fixture update required.
+
+=== Dependency pins (package.json) ===
+"@cucumber/gherkin": "42.0.1"
+"@cucumber/messages": "34.2.1"
+
+=== Editor association ===
+{
+  "files.associations": {
+    "*.sdp.gherkin": "cucumber"
+  }
+}
+JSON.parse: ok
+
+=== Text inventory (agent-facing / public guidance) ===
+No guidance still pointing to bare `.feature` as canonical.
+
+Surviving `.feature` mentions are explicitly non-canonical / import-source / deferred-adapter:
+- README.md: "not discovered" / "never discovered as a Protocol carrier"
+- SKILL.md: "import-source / foreign-corpus" / "never discovered"
+- docs/concept/04-authoring-and-binding.md: "never a live canonical surface" / "non-canonical import-source"
+- CONTEXT.md / DECISIONS.md MD-28: non-canonical import-source territory
+- README @altitude.feature tag value (altitude enum, not file suffix)
+
+Positive pins present in README, SKILL, and 04:
+- `.sdp.gherkin` canonical
+- `files.associations` / `cucumber` language id
+- `@cucumber/gherkin@42.0.1` and `@cucumber/messages@34.2.1`
+- Markdown-only consumers still install the pins
+- no lazy loading promised
+- no second grammar
+
+=== Acceptance commands ===
+npm run typecheck -> exit 0
+npm run lint (project; md files ignored by eslint config) -> 0 errors
+npx vitest run test/skills.test.ts -> 8 passed
+
+=== QA scenarios ===
+
+Happy — follow skill/README: author minimal `.sdp.gherkin`, build with CLI
+  $ node ./dist/cli/sdp.js build <tmp>/happy
+  exit=0
+  stdout: 2 specs · 0 packs · 0 anchors → 2 nodes · 2 edges (0 errors, 0 warnings)
+  q: [
+    { id: 'spec:orders.submit', kind: 'behavior', file: 'orders.submit.sdp.gherkin' },
+    { id: 'spec:orders.submit.accepted', kind: 'example', file: 'orders.submit.sdp.gherkin' }
+  ]
+  editor association JSON parses and maps *.sdp.gherkin -> cucumber
+
+Failure A — bare ordinary `.feature` beside canonical carrier
+  $ node ./dist/cli/sdp.js q 'return { files, ids, count }' --root <tmp>/mixed
+  count: 2
+  files: only orders.submit.sdp.gherkin (cucumber-login.feature ignored)
+
+Failure B — rename carrier to `.feature` only (skill-predicted non-canonical)
+  $ node ./dist/cli/sdp.js build <tmp>/renamed
+  exit=0
+  stdout: 0 specs · ... empty model
+  stderr: note: no *.sdp.ts, *.sdp.md, or *.sdp.gherkin spec files found under ... — the authored model is empty.
+  q specs length: 0
+
+=== Must NOT ===
+- No new Gherkin parser added
+- No grammar duplication
+- No dual-suffix discovery
+- No commit created
+- Lazy loading not promised
+- `.feature` not implied canonical
+
+=== Result ===
+Todo 10 complete. Guidance, editor association, and dependency pins published and verified.

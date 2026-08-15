@@ -1,0 +1,86 @@
+task: 11. Repair Gherkin history drift and arc sequencing
+plan: pr-17-gherkin-carrier-hardening
+date: 2026-08-14
+result: PASS
+
+## Changes
+- docs/concept/07-mvp-roadmap-and-open-questions.md
+  - Carrier addendum: MD-27/MD-28 admitted; kind/rich/default remain open under plan 29 brief A
+  - ASPIRATIONAL: removed blanket "Gherkin surface (contender the ruling declined, MD-18)"
+  - Cut list §3: MVP-cut then re-admitted for behavior/example; dual-source still refused
+  - Residual open question §4: Gherkin half answered by MD-27/MD-28; harnesses remain open
+- docs/concept/00-vision-scope-and-mvp-boundary.md
+  - Deferred table Gherkin row reframed as MVP-cut / later re-admitted for two kinds (MD-27/MD-28)
+- specs/decisions/carrier-ruling.sdp.md
+  - Decision/rationale/consequence now name Gherkin option + `.sdp.gherkin` without flipping default
+  - Kind-coverage / default-carrier questions left to later rulings (no plan-number in Spec body)
+- specs/decisions/gherkin-carrier-option.sdp.md
+  - Consequence: suffix settled separately as `.sdp.gherkin` (MD-28); no kind/default flip here
+- docs/concept/DECISIONS.md
+  - MD-18 gloss extended with MD-28 suffix pointer (original default preserved)
+- plans/29-universal-carrier-annotations-and-agent-surface-briefs.md
+  - Commissioned-plans line: plan 30 in flight settles `.sdp.gherkin` (MD-28)
+  - Brief A "Consumes plan 30" — authors against `.sdp.gherkin` only
+  - Kind coverage / rich content / default flip stay open on brief A
+  - Corpus note and structural collision use `.sdp.gherkin` not bare `.feature`
+  - Drift inventory reassigned to plan 30; brief A must not reintroduce declined language
+  - Sequencing: plan 30 before brief A carrier edits
+- test/self-hosting-oracle/index.ts
+  - Restored non-obvious expectedWarnings = [] rationale (empty = strongest expectation)
+- test/self-hosting-oracle/decisions.ts
+  - Paired carrier-ruling consequence wording with Spec (one-line sync only; broader oracle regen remains Todo 12)
+
+## Declined-Gherkin inventory (QA failure path)
+Classified remaining matches:
+- LAWFUL HISTORY (left untouched):
+  - reviews/14-executable-verification-design-review.md:115-117 (review evidence quote)
+  - docs/lineage/** (historical exhibits; not rewritten)
+- CURRENT-INTENT framing that is correct after repair:
+  - docs/concept/04-authoring-and-binding.md:153 "formerly declined contender" re-point language
+  - plans/29 … drift-inventory meta references to the cleanup plan 30 owns
+- FIXED this todo:
+  - docs/concept/07 §2 ASPIRATIONAL declined claim
+  - docs/concept/07 §3 cut-list item 3
+  - docs/concept/07 §4 residual open question
+  - docs/concept/00 §4 deferred Gherkin row
+  - specs/decisions/carrier-ruling.sdp.md omitted-Gherkin intended truth
+
+## Acceptance
+Command (as specified; list view omits relations — used specContext for relation proof):
+  npm run --silent sdp:q -- 'return g.specs().filter((s) => s.specKind === "decision" && s.title.toLowerCase().includes("gherkin")).map((s) => { const c = g.specContext(s.id); return {id:c.id, title:c.title, relationsOut:c.relationsOut.map(r=>({type:r.type,otherId:r.otherId,resolved:r.resolved})), relationsIn:c.relationsIn.map(r=>({type:r.type,otherId:r.otherId,resolved:r.resolved}))}; })' --json
+Exit: 0
+Observed:
+- spec:decisions.gherkin-carrier-option
+  - out: refines → carrier-ruling (resolved)
+  - in: decidedBy ← gherkin-authoring; refines ← sdp-gherkin-extension (MD-28)
+  - consequence names MD-28 `.sdp.gherkin` suffix settlement
+- spec:decisions.sdp-gherkin-extension (MD-28 canonical suffix)
+  - out: dependsOn → sdp-ts-extension; refines → gherkin-carrier-option (both resolved)
+  - title/consequences point at `.sdp.gherkin` only
+
+Command:
+  npm run build && npm run typecheck
+Exit: 0
+
+Command:
+  npm run --silent sdp -- validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+Exit: 0
+Observed: 0 errors · 0 warnings
+
+## Temporal
+- Manual pattern sweep on todo-11 touched delivery paths: PASS (no banned tokens)
+- Full `npm run check:temporal`: FAIL CLOSED on pre-existing unstaged Todo-5 rename
+  path: specs/consumers/reader.feature (deleted in worktree, still git-cached)
+  ENOENT lstat — not introduced by this todo; index update belongs with suffix migration/oracle regen
+- plans/ is genre-exempt; plan 29 file may name plan 30
+
+## Plan 29 brief A still open
+- Kind coverage, rich content, default flip explicitly stay open
+- Consumes plan 30's `.sdp.gherkin`; does not close universality or claim default-carrier coverage
+- No historical lineage/review rewrites
+
+## Scope notes
+- No commit
+- No brief-A kind coverage / rich content / default-carrier flip
+- No Cucumber path, dual-suffix, or bare-`.feature` canonicity
+- Broader frozen oracle/count regeneration remains Todo 12

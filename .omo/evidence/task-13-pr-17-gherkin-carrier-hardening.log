@@ -1,0 +1,274 @@
+=== Task 13: Prove PR-ready behavior through every surface ===
+Date: 2026-08-14T03:19:11+02:00
+Worktree: /home/darkomijic/dev-libar/software-delivery-protocol
+Branch: feature/design-review
+No commit authorized / performed.
+
+=== Intent ===
+Close pr-17-gherkin-carrier-hardening: full green gate, built-CLI QA for
+suffix migration + bounded grammar, repository cleanliness. Fix only plan-
+caused regressions; record pre-existing blockers that prevented check=0.
+
+=== Fixes applied in this todo (minimal, PR-blocking) ===
+1. Prettier --write on plan-touched files that failed format:check:
+   - src/extract/gherkin.ts
+   - test/cli.test.ts
+   - test/extract.test.ts
+   - test/gherkin-parity.test.ts
+2. Pre-existing self-hosting gate break (HEAD already red): highest primary
+   plan was plans/29-… with status "🧭 BRIEFS" (not DRAFTED|EXECUTING|RUN|
+   EXECUTED) and AGENTS.md did not name plan 29. Plan 29 already commissions
+   Plan 30 in flight. Added:
+   - plans/30-gherkin-carrier-hardening.md (Status: EXECUTING)
+   - AGENTS.md status block: "plan 30 is EXECUTING"
+   This is required for npm run check to exit 0; not a Gherkin engine change.
+3. Staged all expected plan sources (no commit) so preflight no longer treats
+   them as nonignored runtime garbage.
+
+=== Full green gate ===
+Command: npm run check
+Exit: 0
+Sequence: check:temporal → lint → format:check → build → generate:self-hosting
+  → generate:example → typecheck → typecheck:examples → test
+  → check:self-hosting-gates → check:self-hosting → check:example → preflight
+
+Observed:
+- Self-hosting corpus: 149 specs · 1 packs · 138 anchors → 288 nodes · 545 edges
+  (0 errors, 0 warnings)
+- Vitest pool A: 52 files passed, 692 tests passed, 1 skipped
+- Vitest pool B (cli): 59 tests passed
+- check:self-hosting-gates currentPlan=plans/30-gherkin-carrier-hardening.md
+  status=EXECUTING
+- check:example: 0 errors · 1 warnings (pre-existing checkout-v1 verifies-linkage
+  warning on create-order-invalid-cart — unchanged)
+- preflight: exit 0 after staging expected sources
+
+npm run check exited 0 (full green gate; 52 test files, 692+59 tests, self-hosting gates currentPlan=plans/30-gherkin-carrier-hardening.md status=EXECUTING)
+
+=== Focused suites (included in full gate; all green) ===
+- test/gherkin-reifier.test.ts (53)
+- test/gherkin-parity.test.ts (5)
+- test/self-hosting-carrier-gherkin.test.ts (13)
+- test/extract.test.ts (63)
+- test/cli.test.ts (59)
+- test/skills.test.ts (8)
+- test/check-self-hosting-gates.test.ts (5)
+
+=== Built CLI --help ===
+exit=0
+help names *.sdp.gherkin: 1
+sample:
+sdp — Libar Software Delivery Protocol
+Usage:
+  sdp --help
+  sdp build [root] [--exclude PATH]... [--check-clean]
+  sdp validate [root] [--exclude PATH]... [--check-clean]
+  sdp view [root] [--exclude PATH]... [--check-clean]
+  sdp import <path...> [--dry-run]
+  sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--json]
+
+Commands:
+  build      Extract every *.sdp.ts, *.sdp.md, and *.sdp.gherkin under root (default: cwd), plus
+             the anchor constants in the other *.ts/*.tsx source files, into
+             <root>/generated/graph.json — then derive the
+             executable contracts (per-example step contracts + per-parent space contracts,
+             the A2 mechanism) into <root>/generated/contracts/. Exits 1 and writes nothing on
+             any hard error — the emitted artifacts are all-or-nothing. --check-clean
+             additionally runs a second independent extraction + generation and fails on any
+             byte divergence (the determinism self-check). Repeat --exclude PATH to omit exact
+             root-relative POSIX path prefixes from both extraction surfaces.
+  validate   build, then run the conformance + honesty checks over the one graph (one
+
+=== QA 1 Happy — validate temp .sdp.gherkin root ===
+root: /tmp/tmp.eud5DQenBO
+command: node dist/cli/sdp.js validate <temp>
+exit=0
+--- stdout ---
+2 specs · 0 packs · 0 anchors → 2 nodes · 2 edges (0 errors, 0 warnings)
+Wrote /tmp/tmp.eud5DQenBO/generated/graph.json
+validate: 0 errors · 1 warnings (conformance + honesty over the one graph)
+--- stderr ---
+carrier.sdp.gherkin — [warning] conformance/verifies-linkage — Example "spec:fixture.qa-happy.point" declares verifies → "spec:fixture.qa-happy" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier.
+Expected: exit 0, specs discovered from *.sdp.gherkin, no hard extract errors.
+Result: PASS
+
+=== QA 2 Mixed — validate/build .sdp.gherkin + ordinary .feature ===
+root: /tmp/tmp.fAbOl01uNj
+command: node dist/cli/sdp.js validate <temp>
+exit=0
+--- stdout ---
+2 specs · 0 packs · 0 anchors → 2 nodes · 2 edges (0 errors, 0 warnings)
+Wrote /tmp/tmp.fAbOl01uNj/generated/graph.json
+validate: 0 errors · 1 warnings (conformance + honesty over the one graph)
+--- stderr ---
+carrier.sdp.gherkin — [warning] conformance/verifies-linkage — Example "spec:fixture.qa-happy.point" declares verifies → "spec:fixture.qa-happy" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier.
+command: node dist/cli/sdp.js build <temp>
+exit=0
+--- stdout ---
+2 specs · 0 packs · 0 anchors → 2 nodes · 2 edges (0 errors, 0 warnings)
+Wrote /tmp/tmp.fAbOl01uNj/generated/graph.json
+--- stderr ---
+
+graph projection files / counts:
+carrier.sdp.gherkin
+nodes=2 edges=2
+Expected: only carrier.sdp.gherkin enters the graph; login.feature ignored.
+Result: PASS (graph files contain only carrier.sdp.gherkin)
+
+=== QA 3 Feature-only — validate ordinary .feature root (empty model) ===
+root: /tmp/tmp.TciKEOpqqi
+command: node dist/cli/sdp.js validate <temp>
+exit=0
+--- stdout ---
+0 specs · 0 packs · 0 anchors → 0 nodes · 0 edges (0 errors, 0 warnings)
+Wrote /tmp/tmp.TciKEOpqqi/generated/graph.json
+validate: 0 errors · 0 warnings (conformance + honesty over the one graph)
+--- stderr ---
+note: no *.sdp.ts, *.sdp.md, or *.sdp.gherkin spec files found under /tmp/tmp.TciKEOpqqi — the authored model is empty. Is this the right extraction root?
+Expected: exit 0, 0 specs, empty-model note naming *.sdp.gherkin (not missing-identity).
+Result: PASS
+
+=== QA 4 Malformed — build multi-finding .sdp.gherkin (bounded findings) ===
+root: /tmp/tmp.sxWjoWYWZX
+fixture body: test/fixtures/gherkin/multi-finding/invalid.sdp.gherkin.txt
+command: node dist/cli/sdp.js build <temp>
+exit=1
+--- stdout ---
+0 specs · 0 packs · 0 anchors → 0 nodes · 0 edges (4 errors, 0 warnings)
+--- stderr ---
+broken.sdp.gherkin:1 — [error] extract/gherkin-grammar — Gherkin decoration tag "@readines.ready" uses authored head "readines" too close to reserved graph-aware head "readiness"; did you mean "@readiness."?
+broken.sdp.gherkin:3 — [error] extract/gherkin-grammar — Feature "Invalid carrier" description key "outcom" is outside the closed set problem | outcome | value | actor | description | risk | assumption | criterion | verification-mode; did you mean "outcome"?
+broken.sdp.gherkin:4 — [error] extract/gherkin-grammar — Gherkin decoration tag "@king.dom" uses authored head "king" too close to reserved graph-aware head "kind"
+broken.sdp.gherkin:5 — [error] extract/gherkin-grammar — Scenario "Empty point" must carry at least one step
+sdp build: hard errors present — graph.json not written.
+rerun exit=1 deterministic=YES
+Expected: nonzero exit, source-located extract/gherkin-grammar findings, no graph.json,
+  multiple independent findings (not first-only), deterministic rerun.
+Result: PASS (4 ordered findings; graph not written; byte-identical rerun)
+
+=== Graph queries ===
+Gherkin-suffixed specs in self-hosting corpus (exit=0):
+[
+  {
+    "id": "spec:consumers.reader",
+    "file": "specs/consumers/reader.sdp.gherkin"
+  },
+  {
+    "id": "spec:consumers.reader.changeset-entry",
+    "file": "specs/consumers/reader.sdp.gherkin"
+  },
+  {
+    "id": "spec:consumers.reader.concept-entry",
+    "file": "specs/consumers/reader.sdp.gherkin"
+  },
+  {
+    "id": "spec:consumers.reader.file-entry",
+    "file": "specs/consumers/reader.sdp.gherkin"
+  }
+]
+MD-28 decision (exit=0):
+[
+  {
+    "id": "spec:decisions.sdp-gherkin-extension",
+    "readiness": "ready",
+    "packs": [
+      "pack:self-hosting-v1"
+    ],
+    "file": "specs/decisions/sdp-gherkin-extension.sdp.md"
+  }
+]
+bare .feature carriers in graph: none expected / none observed above.
+
+=== git status (no commit) ===
+Staged file count: 67
+M  .agents/skills/sdp-authoring/SKILL.md
+M  .gitignore
+M  .prettierignore
+A  .vscode/settings.json
+M  AGENTS.md
+M  CONTEXT.md
+M  README.md
+M  docs/agent-surface/recipes.md
+M  docs/concept/00-vision-scope-and-mvp-boundary.md
+M  docs/concept/04-authoring-and-binding.md
+M  docs/concept/07-mvp-roadmap-and-open-questions.md
+M  docs/concept/DECISIONS.md
+M  plans/29-universal-carrier-annotations-and-agent-surface-briefs.md
+A  plans/30-gherkin-carrier-hardening.md
+M  specs/carrier/gherkin-authoring.contract-parity.sdp.md
+A  specs/carrier/gherkin-authoring.description-location-refused.sdp.md
+A  specs/carrier/gherkin-authoring.multi-finding-bounded.sdp.md
+M  specs/carrier/gherkin-authoring.sdp.md
+A  specs/carrier/gherkin-authoring.step-less-scenario-refused.sdp.md
+R  specs/consumers/reader.feature -> specs/consumers/reader.sdp.gherkin
+M  specs/decisions/carrier-ruling.sdp.md
+M  specs/decisions/gherkin-carrier-option.sdp.md
+A  specs/decisions/sdp-gherkin-extension.sdp.md
+M  specs/self-hosting.pack.sdp.md
+M  src/cli/build-command.ts
+M  src/cli/sdp.ts
+M  src/extract/discover.ts
+M  src/extract/gherkin.ts
+M  src/extract/index.ts
+M  src/extract/reify.ts
+M  test/cli.test.ts
+M  test/exclude-diagnostics.test.ts
+M  test/extract.test.ts
+R  test/fixtures/gherkin/authored-fact/implemented.feature.txt -> test/fixtures/gherkin/authored-fact/implemented.sdp.gherkin.txt
+A  test/fixtures/gherkin/description-location-refusal/carrier.sdp.gherkin.txt
+A  test/fixtures/gherkin/description-location/example-space-description.sdp.gherkin.txt
+A  test/fixtures/gherkin/description-location/feature-interior.sdp.gherkin.txt
+A  test/fixtures/gherkin/description-location/feature-leading.sdp.gherkin.txt
+A  test/fixtures/gherkin/description-location/rule-description.sdp.gherkin.txt
+A  test/fixtures/gherkin/description-location/scenario-interior.sdp.gherkin.txt
+A  test/fixtures/gherkin/description-location/scenario-leading.sdp.gherkin.txt
+R  test/fixtures/gherkin/duplicate-surface/a-duplicate.feature.txt -> test/fixtures/gherkin/duplicate-surface/a-duplicate.sdp.gherkin.txt
+R  test/fixtures/gherkin/example-space/space.feature.txt -> test/fixtures/gherkin/example-space/space.sdp.gherkin.txt
+R  test/fixtures/gherkin/malformed-relation/relation.feature.txt -> test/fixtures/gherkin/malformed-relation/relation.sdp.gherkin.txt
+R  test/fixtures/gherkin/missing-id/missing.feature.txt -> test/fixtures/gherkin/missing-id/missing.sdp.gherkin.txt
+A  test/fixtures/gherkin/multi-finding/healthy.sdp.md.txt
+A  test/fixtures/gherkin/multi-finding/invalid.sdp.gherkin.txt
+R  test/fixtures/gherkin/parent-child/basic.feature.txt -> test/fixtures/gherkin/parent-child/basic.sdp.gherkin.txt
+R  test/fixtures/gherkin/parity/twin.feature.txt -> test/fixtures/gherkin/parity/twin.sdp.gherkin.txt
+A  test/fixtures/gherkin/step-less/empty.sdp.gherkin.txt
+A  test/fixtures/gherkin/suffix-discovery/carrier.sdp.gherkin.txt
+A  test/fixtures/gherkin/suffix-discovery/cucumber-login.feature.txt
+R  test/fixtures/gherkin/syntax-error/broken.feature.txt -> test/fixtures/gherkin/syntax-error/broken.sdp.gherkin.txt
+R  test/fixtures/gherkin/unbound-ready/unbound.feature.txt -> test/fixtures/gherkin/unbound-ready/unbound.sdp.gherkin.txt
+R  test/fixtures/gherkin/unknown-tag/typo.feature.txt -> test/fixtures/gherkin/unknown-tag/typo.sdp.gherkin.txt
+R  test/fixtures/gherkin/unsupported-construct/outline.feature.txt -> test/fixtures/gherkin/unsupported-construct/outline.sdp.gherkin.txt
+M  test/gherkin-parity.test.ts
+M  test/gherkin-reifier.test.ts
+M  test/self-hosting-carrier-gherkin.test.ts
+M  test/self-hosting-graph.test.ts
+M  test/self-hosting-oracle/anchors.ts
+M  test/self-hosting-oracle/carrier.ts
+M  test/self-hosting-oracle/consumers.ts
+M  test/self-hosting-oracle/decisions.ts
+M  test/self-hosting-oracle/declared-relations.ts
+M  test/self-hosting-oracle/index.ts
+M  test/self-hosting-oracle/pack-members.ts
+
+Untracked residual:
+
+
+Diffstat vs HEAD (includes staged):
+ test/self-hosting-oracle/anchors.ts                |  30 +
+ test/self-hosting-oracle/carrier.ts                | 100 ++-
+ test/self-hosting-oracle/consumers.ts              |   8 +-
+ test/self-hosting-oracle/decisions.ts              |  40 +-
+ test/self-hosting-oracle/declared-relations.ts     |  32 +
+ test/self-hosting-oracle/index.ts                  |   3 +
+ test/self-hosting-oracle/pack-members.ts           |   4 +
+ 67 files changed, 1640 insertions(+), 366 deletions(-)
+
+=== Acceptance checklist ===
+[x] npm run check exits 0
+[x] Happy validate temp .sdp.gherkin exits 0
+[x] Mixed root discovers only .sdp.gherkin
+[x] Feature-only validate exits 0 with empty-model note
+[x] Malformed build exits nonzero with bounded multi-findings (deterministic)
+[x] git status shows only expected plan files; no unexpected untracked
+[x] No commit created
+
+=== DONE Task 13 ===

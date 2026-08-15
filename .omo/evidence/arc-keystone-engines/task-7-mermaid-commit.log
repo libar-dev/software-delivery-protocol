@@ -1,0 +1,51 @@
+Todo 7 Mermaid projection atomic commit receipt
+Date: 2026-08-14
+Worktree: /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines
+
+PRECONDITIONS
+- HEAD: 7e22c6316460affe542acffc02cb23aebd70cdcf
+- Branch: arc/keystone-engines
+- Staged paths: 28
+- Unstaged tracked paths: 0 (`git diff --quiet --` exit 0)
+- Untracked non-ignored paths: 0
+- Independent receipt: /home/darkomijic/dev-libar/software-delivery-protocol/.omo/evidence/arc-keystone-engines/task-7-mermaid-independent.log
+- Latest verdict in independent receipt: CONFIRMED (line 59, under `REPAIR VERIFICATION — 2026-08-14`)
+- Existing commit convention inspected with `git log -12 --pretty=format:'%h %s'`; scoped Conventional Commit subjects are established.
+
+COMMIT
+- Command: `git commit -m 'feat(projections): add bounded Mermaid views'`
+- Exit: 0
+- Commit: e2c2698197d718e1e6a0875c7bd1e8064be245f1
+- Subject: feat(projections): add bounded Mermaid views
+- Boundary: 28 files changed, 1161 insertions, 9 deletions
+
+POST-COMMIT CHECK
+- Command: `cd /home/darkomijic/dev-libar/software-delivery-protocol-arc-keystone-engines && npm run check`
+- Execution: serial
+- Exit: 0
+- Gate legs passed: check:temporal; lint; format:check; build; generate:self-hosting; generate:example; typecheck; typecheck:examples; test; check:self-hosting-gates; check:self-hosting; check:example; preflight.
+- Formatting: all matched files use Prettier code style.
+- Build: success (CJS, ESM, and DTS); emitted the existing import.meta/CJS warning.
+- Main test run: 56 files passed; 732 tests passed; 1 skipped (733 total).
+- CLI test run: 1 file passed; 59 tests passed.
+- Aggregate test result: 57 files passed; 791 tests passed; 1 skipped.
+- Self-hosting graph: 154 specs, 1 pack, 141 anchors -> 296 nodes, 559 edges; 0 errors, 0 warnings.
+- Example graph: 11 specs, 1 pack, 5 anchors -> 17 nodes, 32 edges; 0 errors, 1 warning.
+- Preflight semantic diff: clean.
+
+POST-COMMIT STATUS
+- HEAD: e2c2698197d718e1e6a0875c7bd1e8064be245f1
+- Branch: arc/keystone-engines
+- Upstream: origin/main
+- Ahead/behind: +3/-0 (`git rev-list --left-right --count origin/main...HEAD` -> `0 3`)
+- Worktree status: clean (`git status --short --branch --untracked-files=all` emitted only `## arc/keystone-engines...origin/main [ahead 3]`).
+
+CLEANUP
+- `generated/mermaid`: ABSENT
+- `generated/mermaid.tmp`: ABSENT
+- `examples/checkout-v1/generated/mermaid`: ABSENT
+- `examples/checkout-v1/generated/mermaid.tmp`: ABSENT
+- No Mermaid-named directory exists under either generated root.
+- Ignored example publication root `examples/checkout-v1/generated/` remains, as permitted.
+
+RESULT: CONFIRMED
