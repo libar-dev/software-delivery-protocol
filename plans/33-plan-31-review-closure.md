@@ -1,8 +1,8 @@
 # Plan 33 — close the plan-31 review
 
-> **Status:** DRAFTED — execute every adjudicated plan-32 finding, re-measure the graph and
-> green gate, then prepare and publish the ready plan-31 PR. Plan 32 remains the review brief;
-> brief E remains outside this fix pass.
+> **Status:** ✅ EXECUTED — every adjudicated plan-32 finding is closed, the graph and gate were
+> re-measured from the final implementation, and the branch is ready for publication. Plan 32
+> remains the review brief; brief E remained outside this fix pass.
 
 ## Settled choices
 
@@ -34,3 +34,24 @@
 - Two consecutive `npm run check` invocations pass at the final commit candidate.
 - The branch is committed in scoped logical commits, pushed without history rewriting, and opened
   as a ready-for-review PR with the final human-readable description.
+
+## Close record — 2026-08-15
+
+- Graph re-measurement: 156 Specs, 1 Pack, and 146 anchors derive 303 nodes and 571 edges with
+  zero extraction or validation findings. The operational build backlog is empty.
+- Promotion evidence: runnable modules, census, Mermaid, and Gherkin view all state and derive
+  `ready`, have no floor failures, and carry resolving implementation plus verifier bindings.
+  The drift alarm fell from 11 to 8 because the three implemented projection Specs no longer sit
+  below `ready`.
+- Generated review inspection: each promoted Spec's Design Review shows stated/floor `ready`,
+  present implementation and verifier bindings, and no findings.
+- Verification: `npm run check` passed twice consecutively after the implementation commit. Each
+  run passed both typechecks, 763 pooled tests plus 62 isolated CLI tests (825 passed total, one
+  intentional skip), self-hosting generation/checks for all four projection roots, checkout
+  generation/checks, current-plan discovery, and clean-room preflight with a clean semantic diff.
+- Commit structure: `fc792e4` commissioned plan 33; `421233d` implemented the adjudicated review
+  closure. This close record is the third and final scoped commit.
+
+Remaining work is deliberately forward-looking: brief E; adoption decisions for the 30 deferred
+registrar families; Protocol-side `component`/`uses` authorship; and brief C's reference,
+context-bundle, and Spec Studio candidates.

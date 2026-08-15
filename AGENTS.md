@@ -19,9 +19,9 @@ code behavior into intent.
 > **Status:** Specs and Packs default to the Markdown carrier; the TS DSL survives as import
 > source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax
 > ruling, MD-25). The Gherkin carrier option (MD-27) admits a graph-aware lawful per-ID option
-> for behavior and example Specs. **plan 33 is DRAFTED** — close the adjudicated plan-31 review
-> findings, re-measure the graph and gate, and publish the ready PR; plan 32 remains its review
-> brief and brief E stays outside this fix pass. Settled ground is **plan 31 is EXECUTED** —
+> for behavior and example Specs. **plan 33 is EXECUTED** — the adjudicated plan-31 review is
+> closed, the graph and gate are freshly re-measured, and the ready PR is prepared; plan 32 remains
+> its review brief and brief E stayed outside this fix pass. Settled ground is **plan 31 is EXECUTED** —
 > carrier universality, derived runnable modules, census/Mermaid projections, and structural
 > anchor semantics (briefs A/B/C/D). Brief E may re-enter now that census + structural edges are
 > queryable. Earlier settled ground remains
