@@ -198,6 +198,13 @@ Every doc honours both — never mistake one half for the other:
   unrelated or pre-existing changes, or commit from an unsafe dirty baseline. When no clean boundary exists,
   preserve and account for the state in the tracked plan/draft rather than discarding it; commit at the next
   safe boundary. Push only on the user's explicit request; never use `git stash`.
+- **GitHub transport on this workstation is SSH.** Use `git@github.com:<owner>/<repo>.git` remotes and confirm
+  `gh auth status` reports `Git operations protocol: ssh` before a push. Do not switch remotes to HTTPS, replace
+  SSH with token transport, or edit credential configuration unless the user explicitly requests it.
+- **Unreleased OmO installs are user-controlled.** The user switches the official
+  `~/dev-admin/oh-my-openagent` clone to `dev` when needed and owns `~/.omo/omo.jsonc`. Agents may inspect and
+  report that state, but must not checkout, pull, build, globally install, or edit the OmO configuration unless
+  the user explicitly requests that action.
 
 ## PR descriptions as durable context
 
