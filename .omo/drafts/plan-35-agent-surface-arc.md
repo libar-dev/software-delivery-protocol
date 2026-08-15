@@ -4,13 +4,13 @@ status: plan-complete
 intent: clear
 review_required: true
 plan_path: .omo/plans/plan-35-agent-surface-arc.md
-plan_sha256: 27c720d8febc015340114696c2bf01b9a01f49b6f77f08986b4d7ad9bb79162c
+plan_sha256: 9000c8bfd67a2ddd471f228a3cc80a0a07ec19e9ed14f1bcdbd214e0e8921df1
 review_round_id: rr-plan35-r6
 review_round_limit: 6 (user explicitly requested round 6 beyond the default 5-round cap)
-round_status: active
-pending-action: review .omo/plans/plan-35-agent-surface-arc.md
-phase: review_round_initialized
-plan_status: complete-r5-blocker-fixed
+round_status: fix-applied-awaiting-round-7-decision
+pending-action: ask user — round 7 (explicit request required), accept, or adjust
+phase: cap_reached_awaiting_user
+plan_status: complete-r6-blockers-fixed
 metis_final_check:
   session: st_01a005c1
   lane: kimi-coding/kimi-for-coding-highspeed (user-configured; completed 7m16s, 82 tools — lane viable)
@@ -22,8 +22,9 @@ convergence_ledger:
     - "rr-plan35-r3: F1 audit was circular (required todo 18's commit/evidence while gating it) — F1 scope now todos 1-17; todo 18's flip verified by its own gate commands"
     - "metis-final (st_01a005c1): matrix/wave-gate contradiction; constraint bare-heading scaffold impossible (mapConstraints error); missing re-measure preamble — all folded"
     - "rr-plan35-r5: todo 10 cited gitignored untracked generated registrar with unstable line numbers — fixed with explicit generation prerequisite + tracked pattern reference"
+    - "rr-plan35-r6: zero-human-intervention vs user-gated F-wave (clarified: governance checkpoint, not verification labor); F3 invocation used non-root-relative PATH (fixed to specs/probe.sdp.md --root <scratch>)"
   non_blocking_notes: []
-  rounds: 5 (cap reached)
+  rounds: 6 (cap reached — user extension exhausted)
 fable_metis_review:
   source: user-delivered Fable 5 report (designated by user as today's Metis review)
   findings: 10 (3 fix-before-execution, 4 worth-adjusting, 3 minor) + 1 process note
@@ -49,7 +50,11 @@ review_history:
   - round_id: rr-plan35-r5
     session: st_01a005cb
     result: changes_requested
-    note: todo 10 cited an untracked gitignored generated file with line numbers; fixed (generation prerequisite + tracked checkout registrar as pattern ref); CAP REACHED — awaiting user decision on round 6
+    note: todo 10 cited an untracked gitignored generated file with line numbers; fixed (generation prerequisite + tracked checkout registrar as pattern ref); CAP REACHED — user authorized round 6
+  - round_id: rr-plan35-r6
+    session: st_01a005d5
+    result: changes_requested
+    note: zero-human-intervention vs user-gated final wave contradiction (clarified as governance checkpoint, not verification labor); F3 scratch invocation violated root-relative PATH contract (fixed); stale eight-kind QA wording aligned — awaiting user decision on round 7
 gap_analysis:
   agent: oracle st_01a0057e (metis substitute — metis aborted twice on provider errors)
   findings: 9 (1 blocker, 6 major, 2 minor)
@@ -58,15 +63,15 @@ structural_self_check: "18 impl rows (1-18), 4 final rows (F1-F4), all column-ze
 metis_substitution: "metis aborted 3x on kimi-for-coding standard lane (2m40s/2m42s/3m12s, mid-stream, invisible to provider logs); gap analysis substituted to oracle st_01a0057e with identical contract. Post-restore gate re-arm: ulw-plan re-activated by user + hash-preserving edit-pair touch of the plan (sha256 d62aa4e8 verified intact). Final metis check running on kimi-for-coding-highspeed: st_01a005c1"
 review:
   momus:
-    status: launching
+    status: changes_requested
     workspace_root: /home/darkomijic/dev-libar/software-delivery-protocol
     runtime_home: null
     target: .omo/plans/plan-35-agent-surface-arc.md
     round_id: rr-plan35-r6
     plan_sha256: 27c720d8febc015340114696c2bf01b9a01f49b6f77f08986b4d7ad9bb79162c
     launch_id: launch-plan35-r6
-    session: pending-receipt
-    result: null
+    session: st_01a005d5
+    result: "[REJECT] (1) zero-human-intervention vs user-gated final wave contradiction; (2) F3 invocation violated todo 6's root-relative PATH contract — both fixed in 9000c8bf"
 approach: <fill: the approach you intend to plan>
 ---
 
