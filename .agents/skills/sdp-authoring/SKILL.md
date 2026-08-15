@@ -33,10 +33,15 @@ runner.
 ## Create and enrich
 
 1. Read `CONTEXT.md`, then query nearby Specs with recipe 3 or 6. Do not parse the corpus by hand.
-2. Create the Markdown carrier with one stable `spec:` id, title, kind, altitude, readiness, and
-   relations. For a behavior parent with example children, a `.sdp.gherkin` carrier is a lawful per-ID
-   alternative; follow `spec:carrier.gherkin-authoring`. The carrier law is
-   `spec:decisions.carrier-ruling`; the envelope and section law is `spec:model.spec-sections`.
+2. Create the Markdown carrier with `sdp new spec PATH --id ID --kind KIND --altitude ALT --title TITLE --outcome OUTCOME`
+   when the kind has a lawful bare skeleton (`behavior`, `workflow`, `rule`, `model`, `decision`,
+   `contract`, `example`). That verb writes an idea-rung `.sdp.md` stub — envelope, Intent outcome,
+   and the kind's empty typed heading — and refuses overwrite, invented content, and `constraint`
+   (Constraints require a statement; there is no lawful bare skeleton). PATH is cwd-relative and
+   must not contain `..`. Hand-author the same shape when the scaffolder cannot express it. For a
+   behavior parent with example children, a `.sdp.gherkin` carrier is a lawful per-ID alternative;
+   follow `spec:carrier.gherkin-authoring`. The carrier law is `spec:decisions.carrier-ruling`; the
+   envelope and section law is `spec:model.spec-sections`.
    A Spec carries one kind. If a fact straddles kinds, split it into two Specs and join them with
    the relation that preserves their distinct intents, following `spec:model.core-model`.
 3. State only the rung the structure clears. Use recipe 9 for the current floor, recipe 11 for the
@@ -51,7 +56,8 @@ runner.
 
 Run concept search (recipe 6) first and place the carrier beside the family it finds. In the
 Protocol repository that normally means `specs/<family>/`; an adopter follows its own canonical
-carrier root rather than inventing a second one. This is the complete cheap-capture shape:
+carrier root rather than inventing a second one. Prefer `sdp new spec` for the seven scaffoldable
+kinds; it emits this exact cheap-capture shape and never invents typed content:
 
 ```md
 ---

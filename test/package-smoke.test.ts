@@ -286,6 +286,9 @@ void [${expectedRootExports.join(", ")}];
         nodes: ["spec:package.typescript", "spec:package.markdown"],
       });
       expect(sdpHelp).toContain("sdp import");
+      expect(sdpHelp).toContain(
+        "sdp new spec PATH --id ID --kind KIND --altitude ALT --title TITLE --outcome OUTCOME",
+      );
       expect(sdpImportDryRun).toContain("id: spec:round-trip.behavior");
       expect(await readdir(consumer)).not.toContain("behavior.sdp.md");
       expect(barrelCheck).toBe("barrel imports available\n");

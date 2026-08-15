@@ -175,9 +175,27 @@ function verificationSection(verification: ImportData | undefined): string | und
   );
 }
 
-export function emitMarkdownSpec(reified: ReifiedSpec): string {
+export interface EmitMarkdownOptions {
+  /**
+   * Emit the kind's lawful typed-section heading even when that section has no
+   * authored content. Import emission stays loss-less and still omits empty
+   * sections; only the idea-rung scaffolder opts in.
+   */
+  readonly scaffold?: boolean;
+}
+
+function scaffoldBehaviorHeading(kind: string | undefined): string | undefined {
+  if (kind === "behavior" || kind === "example") return "## Behavior";
+  if (kind === "workflow") return "## Workflow";
+  if (kind === "rule") return "## Rule";
+  if (kind === "contract") return "## Contract";
+  return undefined;
+}
+
+export function emitMarkdownSpec(reified: ReifiedSpec, options: EmitMarkdownOptions = {}): string {
   const data = reified.data;
   const title = importText(data.title);
+  const scaffold = options.scaffold === true;
 
   if (title === undefined) {
     throw new MarkdownEmissionError("first divergent path: title (Markdown requires an H1 title)");
@@ -225,22 +243,28 @@ export function emitMarkdownSpec(reified: ReifiedSpec): string {
   const examples = Array.isArray(behavior?.examples) ? behavior.examples : [];
   const example = importText(data.kind) === "example" ? fence("gwt", examples[0]) : undefined;
   const primaryBehavior = behavior === undefined ? undefined : behaviorSection(data, behavior);
+  const kind = importText(data.kind);
+  const scaffoldHeading =
+    scaffold && primaryBehavior === undefined ? scaffoldBehaviorHeading(kind) : undefined;
   const sections = [
     importText(data.narrative),
     intentSection(importData(data.intent), example),
-    primaryBehavior,
+    primaryBehavior ?? scaffoldHeading,
     behavior === undefined
       ? undefined
       : exampleSpaceSection(behavior, primaryBehavior !== undefined),
     constraintsSection(data.constraints),
-    modelSection(importData(data.model)),
+    modelSection(importData(data.model)) ?? (scaffold && kind === "model" ? "## Model" : undefined),
     openSection("Design", importData(data.design)),
-    decisionSection(importData(data.decision)),
+    decisionSection(importData(data.decision)) ??
+      (scaffold && kind === "decision" ? "## Decision" : undefined),
     verificationSection(importData(data.verification)),
     openSection("UI", importData(data.ui)),
   ].filter((value): value is string => value !== undefined);
   const document =
     sections.length === 0 ? `${envelope}\n` : `${envelope}\n\n${sections.join("\n\n")}\n`;
-  assertMarkdownEmissionFidelity(reified, document);
+  if (!scaffold) {
+    assertMarkdownEmissionFidelity(reified, document);
+  }
   return document;
 }

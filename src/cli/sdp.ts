@@ -11,6 +11,7 @@ import { runGherkinView } from "./gherkin-command.js";
 import type { GherkinViewHooks } from "./gherkin-command.js";
 import { parseImportArgs, runImport } from "./import-command.js";
 import type { ImportHooks } from "./import-command.js";
+import { NEW_SPEC_HELP_TEXT, parseNewSpecArgs, runNewSpec } from "./new-spec-command.js";
 import { runMermaid } from "./mermaid-command.js";
 import type { MermaidHooks } from "./mermaid-command.js";
 import { defaultCliOutput, errorMessage, writeStderr, writeStdout } from "./output.js";
@@ -29,6 +30,7 @@ Usage:
   sdp mermaid [root] [--exclude PATH]... [--check-clean]
   sdp gherkin [root] [--exclude PATH]... [--check-clean]
   sdp import <path...> [--dry-run]
+  sdp new spec PATH --id ID --kind KIND --altitude ALT --title TITLE --outcome OUTCOME
   sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--json]
 
 Commands:
@@ -66,6 +68,9 @@ Commands:
              emits (or would emit); any finding error or operational failure exits 1. Publication
              creates atomic hard links; the target filesystem must support them (FAT/exFAT and
              some network mounts do not).
+  new spec   Scaffold an honest idea-rung Markdown Spec at a cwd-relative .sdp.md PATH. Always
+             emits readiness: idea and relations: {}; never overwrites; never invents typed
+             content. constraint is refused because Constraints require a statement.
   q          The agent front door: derive the graph under --root (default: cwd) in process, then
              evaluate the supplied body and print what it returns. The body is the single
              positional argument, or stdin when stdin is not a terminal; with neither, q refuses
@@ -110,6 +115,7 @@ export function runSdpCli(
     command !== "mermaid" &&
     command !== "gherkin" &&
     command !== "import" &&
+    command !== "new" &&
     command !== "q"
   ) {
     writeStderr(output, `${SDP_HELP_TEXT}\n\nUnknown command: ${command}\n`);
@@ -120,6 +126,41 @@ export function runSdpCli(
     const parsed = parseImportArgs(rest, output);
 
     return parsed === undefined ? 1 : runImport(parsed, output, hooks.import);
+  }
+
+  if (command === "new") {
+    const [noun, ...newRest] = rest;
+
+    if (noun === "--help") {
+      writeStdout(output, `${NEW_SPEC_HELP_TEXT}\n`);
+      return 0;
+    }
+
+    if (noun === undefined) {
+      writeStdout(output, `${NEW_SPEC_HELP_TEXT}\n`);
+      writeStderr(
+        output,
+        "sdp new: requires spec. Usage: sdp new spec PATH --id ID --kind KIND --altitude ALT --title TITLE --outcome OUTCOME\n",
+      );
+      return 1;
+    }
+
+    if (noun !== "spec") {
+      writeStderr(
+        output,
+        "sdp new: requires spec. Usage: sdp new spec PATH --id ID --kind KIND --altitude ALT --title TITLE --outcome OUTCOME\n",
+      );
+      return 1;
+    }
+
+    if (newRest.includes("--help")) {
+      writeStdout(output, `${NEW_SPEC_HELP_TEXT}\n`);
+      return 0;
+    }
+
+    const parsed = parseNewSpecArgs(newRest, output);
+
+    return parsed === undefined ? 1 : runNewSpec(parsed, output);
   }
 
   if (command === "q") {
