@@ -34,10 +34,10 @@ runner.
 
 1. Read `CONTEXT.md`, then query nearby Specs with recipe 3 or 6. Do not parse the corpus by hand.
 2. Create the Markdown carrier with `sdp new spec PATH --id ID --kind KIND --altitude ALT --title TITLE --outcome OUTCOME`
-   when the kind has a lawful bare skeleton (`behavior`, `workflow`, `rule`, `model`, `decision`,
-   `contract`, `example`). That verb writes an idea-rung `.sdp.md` stub — envelope, Intent outcome,
-   and the kind's empty typed heading — and refuses overwrite, invented content, and `constraint`
-   (Constraints require a statement; there is no lawful bare skeleton). There is no dry-run flag;
+   for every ratified Spec kind. That verb writes an idea-rung `.sdp.md` stub — envelope, Intent
+   outcome, and the kind's empty typed heading — and refuses overwrite and invented content.
+   `constraint` is the settled no-twin exception: envelope, title, and Intent only, because a bare
+   `## Constraints` heading is not lawful. There is no dry-run flag;
    probe in a scratch directory if you need to inspect bytes first. PATH is cwd-relative and
    must not contain `..`. Hand-author the same shape when the scaffolder cannot express it. For a
    behavior parent with example children, a `.sdp.gherkin` carrier is a lawful per-ID alternative;
@@ -65,8 +65,9 @@ runner.
 
 Run concept search (recipe 6) first and place the carrier beside the family it finds. In the
 Protocol repository that normally means `specs/<family>/`; an adopter follows its own canonical
-carrier root rather than inventing a second one. Prefer `sdp new spec` for the seven scaffoldable
-kinds; it emits this exact cheap-capture shape and never invents typed content:
+carrier root rather than inventing a second one. Prefer `sdp new spec` for every ratified kind; it
+emits this exact cheap-capture shape and never invents typed content. `constraint` stops after
+Intent and does not add a twin heading:
 
 ```md
 ---

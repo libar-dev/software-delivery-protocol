@@ -75,7 +75,7 @@ Commands:
              some network mounts do not).
   new spec   Scaffold an honest idea-rung Markdown Spec at a cwd-relative .sdp.md PATH. Always
              emits readiness: idea and relations: {}; never overwrites; never invents typed
-             content. constraint is refused because Constraints require a statement.
+             content. constraint emits envelope, title, and Intent only, with no twin section.
   q          The agent front door: derive the graph under --root (default: cwd) in process, then
              evaluate the supplied body and print what it returns. The body is the single
              positional argument, or stdin when stdin is not a terminal; with neither, q refuses

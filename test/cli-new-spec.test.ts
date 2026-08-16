@@ -1,9 +1,20 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, isAbsolute, join, relative, sep } from "node:path";
 
 import { describe, expect, it, vi } from "vitest";
 
+import { parseNewSpecArgs, runNewSpec as executeNewSpec } from "../src/cli/new-spec-command.js";
 import { SDP_HELP_TEXT, runSdpCli } from "../src/cli/sdp.js";
 import { extract } from "../src/extract/index.js";
 import { createReader } from "../src/reader/reader.js";
@@ -36,6 +47,35 @@ relations: {}
 
 ## ${heading}
 `;
+}
+
+function expectedConstraintScaffold(): string {
+  return `---
+id: spec:tmp.probe
+kind: constraint
+altitude: story
+readiness: idea
+relations: {}
+---
+# Probe
+
+## Intent
+
+- outcome: Probe
+`;
+}
+
+function collectHardErrors(root: string): readonly unknown[] {
+  const extracted = extract({ root });
+  const validation = validateGraph(extracted.graph);
+  return [...extracted.report.findings, ...validation.findings].filter(
+    (finding) => finding.severity === "error",
+  );
+}
+
+function isInsideRoot(candidate: string, root: string): boolean {
+  const relativePath = relative(realpathSync(root), realpathSync(candidate));
+  return relativePath !== ".." && !relativePath.startsWith(`..${sep}`) && !isAbsolute(relativePath);
 }
 
 function runNewSpec(
@@ -101,6 +141,9 @@ describe("sdp new spec", () => {
 
     expect(exitCode).toBe(0);
     expect(capture.readStdout()).toContain("sdp new spec PATH");
+    expect(capture.readStdout()).toMatch(/constraint/u);
+    expect(capture.readStdout()).toMatch(/no twin|Intent-only|without a twin/u);
+    expect(capture.readStdout()).not.toMatch(/refused/u);
     expect(capture.readStderr()).toBe("");
   });
 
@@ -123,17 +166,16 @@ describe("sdp new spec", () => {
     },
   );
 
-  it("refuses constraint because no lawful bare skeleton exists and writes no file", () => {
+  it("emits the no-twin constraint scaffold: envelope, title, and Intent only", () => {
     const root = mkdtempSync(join(tmpdir(), "sdp-new-spec-constraint-"));
 
     try {
       const result = runNewSpec(requiredFlags({ kind: "constraint", path: "probe.sdp.md" }), root);
 
-      expect(result.exitCode).toBe(1);
-      expect(result.stderr).toMatch(/constraint/u);
-      expect(result.stderr).toMatch(/statement|bare skeleton|no lawful/u);
-      expect(existsSync(join(root, "probe.sdp.md"))).toBe(false);
-      expect(existsSync(join(root, "specs"))).toBe(false);
+      expect(result.exitCode).toBe(0);
+      expect(result.stderr).toBe("");
+      expect(readFileSync(join(root, "probe.sdp.md"), "utf8")).toBe(expectedConstraintScaffold());
+      expect(readFileSync(join(root, "probe.sdp.md"), "utf8")).not.toMatch(/## Constraints/u);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -242,7 +284,7 @@ describe("sdp new spec", () => {
   });
 
   it("extracts and validates every scaffolded kind with readiness staying idea", () => {
-    const kinds = twinSectionKinds.map(([kind]) => kind);
+    const kinds = [...twinSectionKinds.map(([kind]) => kind), "constraint"] as const;
 
     for (const kind of kinds) {
       const root = mkdtempSync(join(tmpdir(), `sdp-new-spec-validate-${kind}-`));
@@ -280,6 +322,179 @@ describe("sdp new spec", () => {
       expect(capture.readStderr()).not.toMatch(/\[error\]/u);
     } finally {
       rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects an existing parent symlink that escapes cwd before any outside write", () => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-new-spec-symlink-"));
+    const outside = join(workspace, "outside");
+    const root = join(workspace, "root");
+    const escapedTarget = join(outside, "probe.sdp.md");
+
+    mkdirSync(outside);
+    mkdirSync(root);
+    symlinkSync(outside, join(root, "linked"));
+
+    try {
+      const result = runNewSpec(requiredFlags({ path: "linked/probe.sdp.md" }), root);
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toMatch(/cwd-relative|symlink|escapes|outside/u);
+      expect(existsSync(escapedTarget)).toBe(false);
+      expect(existsSync(join(root, "linked", "probe.sdp.md"))).toBe(false);
+      expect(lstatSync(join(root, "linked")).isSymbolicLink()).toBe(true);
+      expect(realpathSync(join(root, "linked"))).toBe(realpathSync(outside));
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects an escaping closest-existing ancestor before creating nested parents", () => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-new-spec-ancestor-"));
+    const outside = join(workspace, "outside");
+    const root = join(workspace, "root");
+    const escapedNested = join(outside, "nested");
+    const escapedTarget = join(escapedNested, "probe.sdp.md");
+
+    mkdirSync(outside);
+    mkdirSync(root);
+    symlinkSync(outside, join(root, "linked"));
+
+    try {
+      const result = runNewSpec(requiredFlags({ path: "linked/nested/probe.sdp.md" }), root);
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toMatch(/cwd-relative|symlink|escapes|outside/u);
+      expect(existsSync(escapedTarget)).toBe(false);
+      expect(existsSync(escapedNested)).toBe(false);
+      expect(existsSync(join(root, "linked", "nested"))).toBe(false);
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it("cannot use an in-cwd parent symlink to bypass containment", () => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-new-spec-incwd-"));
+    const outside = join(workspace, "outside");
+    const root = join(workspace, "root");
+    const inside = join(root, "inside");
+
+    mkdirSync(outside);
+    mkdirSync(inside, { recursive: true });
+    symlinkSync(inside, join(root, "alias"));
+
+    try {
+      const result = runNewSpec(requiredFlags({ path: "alias/probe.sdp.md" }), root);
+
+      expect(result.exitCode).toBe(0);
+      expect(existsSync(join(inside, "probe.sdp.md"))).toBe(true);
+      expect(existsSync(join(outside, "probe.sdp.md"))).toBe(false);
+      expect(realpathSync(join(root, "alias", "probe.sdp.md"))).toBe(
+        realpathSync(join(inside, "probe.sdp.md")),
+      );
+      expect(isInsideRoot(dirname(join(root, "alias", "probe.sdp.md")), root)).toBe(true);
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it("rechecks the created parent boundary after mkdir and refuses a swapped outside parent", () => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-new-spec-postmkdir-"));
+    const outside = join(workspace, "outside");
+    const root = join(workspace, "root");
+    const parent = join(root, "specs");
+    const escapedTarget = join(outside, "probe.sdp.md");
+    const capture = createCaptureOutput();
+    const cwdSpy = vi.spyOn(process, "cwd").mockReturnValue(root);
+
+    mkdirSync(outside);
+    mkdirSync(root);
+
+    try {
+      const parsed = parseNewSpecArgs(
+        requiredFlags({ path: "specs/probe.sdp.md" }),
+        capture.output,
+      );
+      expect(parsed).toBeDefined();
+      if (parsed === undefined) {
+        return;
+      }
+
+      const exitCode = executeNewSpec(parsed, capture.output, {
+        mkdirSync(target, options) {
+          const created = mkdirSync(target, options);
+          if (String(target) === parent) {
+            rmSync(parent, { recursive: true, force: true });
+            symlinkSync(outside, parent);
+          }
+          return created;
+        },
+      });
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toMatch(/cwd-relative|symlink|escapes|outside/u);
+      expect(existsSync(escapedTarget)).toBe(false);
+      expect(existsSync(join(parent, "probe.sdp.md"))).toBe(false);
+    } finally {
+      cwdSpy.mockRestore();
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it("refuses extractor-rejected raw HTML outcome text before creating a file", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-new-spec-html-"));
+
+    try {
+      const result = runNewSpec(
+        requiredFlags({ path: "probe.sdp.md", outcome: "<script>alert(1)</script>" }),
+        root,
+      );
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toMatch(/raw HTML is unsupported|invalid-markdown-structure/u);
+      expect(existsSync(join(root, "probe.sdp.md"))).toBe(false);
+      expect(existsSync(join(root, "specs"))).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("refuses other extractor-rejected outcome text and still writes no file", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-new-spec-html-comment-"));
+
+    try {
+      const result = runNewSpec(
+        requiredFlags({ path: "probe.sdp.md", outcome: "<!-- not lawful -->" }),
+        root,
+      );
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toMatch(/raw HTML is unsupported|invalid-markdown-structure/u);
+      expect(existsSync(join(root, "probe.sdp.md"))).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("accepts lawful Markdown and plain-text outcomes that the extractor already accepts", () => {
+    const cases = [
+      ["plain", "Stay within the checkout budget"],
+      ["markdown", "Stay within the **checkout** budget"],
+    ] as const;
+
+    for (const [label, outcome] of cases) {
+      const root = mkdtempSync(join(tmpdir(), `sdp-new-spec-lawful-${label}-`));
+
+      try {
+        const result = runNewSpec(requiredFlags({ path: "probe.sdp.md", outcome }), root);
+
+        expect(result.exitCode).toBe(0);
+        expect(result.stderr).toBe("");
+        expect(readFileSync(join(root, "probe.sdp.md"), "utf8")).toContain(`- outcome: ${outcome}`);
+        expect(collectHardErrors(root)).toEqual([]);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
     }
   });
 

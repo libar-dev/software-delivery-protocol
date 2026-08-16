@@ -1,6 +1,8 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { lstatSync, mkdirSync, realpathSync, writeFileSync } from "node:fs";
+import type { PathLike } from "node:fs";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
+import { reifyMarkdownCarrier } from "../extract/markdown.js";
 import type { ReifiedSpec } from "../extract/reify.js";
 import { specId } from "../ids.js";
 import { emitMarkdownSpec } from "../import/emit-markdown.js";
@@ -14,8 +16,8 @@ export const NEW_SPEC_HELP_TEXT = `sdp new spec PATH --id ID --kind KIND --altit
 Scaffold an honest idea-rung Markdown Spec. PATH is cwd-relative and must end
 in .sdp.md; parent directories are created as needed. The file is never
 overwritten. Readiness is always idea; relations are always empty. The kind's
-typed section is a bare heading with no invented content. constraint has no
-lawful bare skeleton and is refused.`;
+typed section is a bare heading with no invented content. constraint emits
+envelope, title, and Intent only, with no twin section.`;
 
 const requiredFlags = ["--id", "--kind", "--altitude", "--title", "--outcome"] as const;
 
@@ -26,6 +28,10 @@ export interface NewSpecArgs {
   readonly altitude: SpecAltitude;
   readonly title: string;
   readonly outcome: string;
+}
+
+export interface NewSpecHooks {
+  readonly mkdirSync?: (path: PathLike, options: { recursive: true }) => string | undefined;
 }
 
 function refuse(output: CliOutput, message: string): void {
@@ -157,14 +163,6 @@ export function parseNewSpecArgs(
     return undefined;
   }
 
-  if (ratifiedKind === "constraint") {
-    refuse(
-      output,
-      "--kind constraint has no lawful bare skeleton: Constraints require one statement, and a scaffolder must not invent that content.",
-    );
-    return undefined;
-  }
-
   const ratifiedAltitude = SPEC_ALTITUDES.find((candidate) => candidate === altitude);
 
   if (ratifiedAltitude === undefined) {
@@ -190,6 +188,89 @@ export function parseNewSpecArgs(
     title: singleTitle,
     outcome: singleOutcome,
   };
+}
+
+function isNotFound(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
+}
+
+function pathExists(path: string): boolean {
+  try {
+    lstatSync(path);
+    return true;
+  } catch (error) {
+    if (isNotFound(error)) {
+      return false;
+    }
+
+    throw error;
+  }
+}
+
+function containedWithin(candidate: string, root: string): boolean {
+  const relativePath = relative(root, candidate);
+  return relativePath !== ".." && !relativePath.startsWith(`..${sep}`) && !isAbsolute(relativePath);
+}
+
+function closestExistingAncestor(path: string): string | undefined {
+  let current = path;
+
+  for (;;) {
+    try {
+      lstatSync(current);
+      return current;
+    } catch (error) {
+      if (!isNotFound(error)) {
+        return undefined;
+      }
+
+      const parent = dirname(current);
+
+      if (parent === current) {
+        return undefined;
+      }
+
+      current = parent;
+    }
+  }
+}
+
+function workingDirectoryReal(output: CliOutput): string | undefined {
+  try {
+    return realpathSync(process.cwd());
+  } catch (error) {
+    refuse(
+      output,
+      `PATH cannot be resolved inside the current working directory: ${errorMessage(error)}`,
+    );
+    return undefined;
+  }
+}
+
+function assertExistingBoundary(path: string, rootReal: string, output: CliOutput): boolean {
+  const existing = closestExistingAncestor(path);
+
+  if (existing === undefined) {
+    refuse(output, "PATH cannot be resolved inside the current working directory.");
+    return false;
+  }
+
+  try {
+    const existingReal = realpathSync(existing);
+
+    if (!containedWithin(existingReal, rootReal)) {
+      refuse(output, "PATH escapes the current working directory through a parent symlink.");
+      return false;
+    }
+  } catch (error) {
+    refuse(
+      output,
+      `PATH escapes the current working directory through a parent symlink: ${errorMessage(error)}`,
+    );
+    return false;
+  }
+
+  return true;
 }
 
 function resolveScaffoldPath(rawPath: string, output: CliOutput): string | undefined {
@@ -224,6 +305,12 @@ function resolveScaffoldPath(rawPath: string, output: CliOutput): string | undef
     return undefined;
   }
 
+  const cwdReal = workingDirectoryReal(output);
+
+  if (cwdReal === undefined || !assertExistingBoundary(resolved, cwdReal, output)) {
+    return undefined;
+  }
+
   return resolved;
 }
 
@@ -246,24 +333,91 @@ function scaffoldDocument(parsed: NewSpecArgs): string {
   return emitMarkdownSpec(reified, { scaffold: true });
 }
 
-export function runNewSpec(parsed: NewSpecArgs, output: CliOutput): number {
+function acceptScaffoldDocument(
+  document: string,
+  parsed: NewSpecArgs,
+  output: CliOutput,
+): string | undefined {
+  const extracted = reifyMarkdownCarrier(document, parsed.path);
+  const hardError = extracted.findings.find((finding) => finding.severity === "error");
+
+  if (hardError !== undefined || extracted.specs.length === 0) {
+    const detail =
+      hardError === undefined
+        ? "the emitted Markdown is not accepted by the extractor"
+        : `${hardError.validatorId} — ${hardError.message}`;
+    refuse(output, `--outcome ${detail}`);
+    return undefined;
+  }
+
+  return document;
+}
+
+export function runNewSpec(
+  parsed: NewSpecArgs,
+  output: CliOutput,
+  hooks: NewSpecHooks = {},
+): number {
   const targetPath = resolveScaffoldPath(parsed.path, output);
 
   if (targetPath === undefined) {
     return 1;
   }
 
-  if (existsSync(targetPath)) {
-    writeStderr(
-      output,
-      `sdp new spec: ${targetPath} already exists and will not be overwritten.\n`,
-    );
+  try {
+    if (pathExists(targetPath)) {
+      writeStderr(
+        output,
+        `sdp new spec: ${targetPath} already exists and will not be overwritten.\n`,
+      );
+      return 1;
+    }
+  } catch (error) {
+    writeStderr(output, `sdp new spec: ${errorMessage(error)}\n`);
+    return 1;
+  }
+
+  let document: string;
+
+  try {
+    const accepted = acceptScaffoldDocument(scaffoldDocument(parsed), parsed, output);
+
+    if (accepted === undefined) {
+      return 1;
+    }
+
+    document = accepted;
+  } catch (error) {
+    writeStderr(output, `sdp new spec: ${errorMessage(error)}\n`);
+    return 1;
+  }
+
+  const createParent = hooks.mkdirSync ?? mkdirSync;
+  const parentPath = dirname(targetPath);
+
+  try {
+    createParent(parentPath, { recursive: true });
+  } catch (error) {
+    writeStderr(output, `sdp new spec: ${errorMessage(error)}\n`);
+    return 1;
+  }
+
+  const cwdReal = workingDirectoryReal(output);
+
+  if (cwdReal === undefined || !assertExistingBoundary(targetPath, cwdReal, output)) {
     return 1;
   }
 
   try {
-    mkdirSync(dirname(targetPath), { recursive: true });
-    writeFileSync(targetPath, scaffoldDocument(parsed), { encoding: "utf8", flag: "wx" });
+    if (pathExists(targetPath)) {
+      writeStderr(
+        output,
+        `sdp new spec: ${targetPath} already exists and will not be overwritten.\n`,
+      );
+      return 1;
+    }
+
+    writeFileSync(targetPath, document, { encoding: "utf8", flag: "wx" });
   } catch (error) {
     writeStderr(output, `sdp new spec: ${errorMessage(error)}\n`);
     return 1;
