@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -110,23 +110,38 @@ const queryHooks = {
   },
 };
 
-async function runRecipe(recipe: Recipe): Promise<unknown> {
-  const capture = createCaptureOutput();
-  const exitCode = await runSdpCli(
-    ["q", recipe.body, "--root", repoRoot, "--json"],
-    capture.output,
-    queryHooks,
-  );
+async function runRecipe(recipe: Recipe, changedFiles?: readonly string[]): Promise<unknown> {
+  const previousChangedFiles = process.env.SDP_CHANGED_FILES_JSON;
+  if (changedFiles === undefined) {
+    delete process.env.SDP_CHANGED_FILES_JSON;
+  } else {
+    process.env.SDP_CHANGED_FILES_JSON = JSON.stringify(changedFiles);
+  }
 
-  // The expected stderr is the empty string, not a self-comparison: a recipe run over the green
-  // corpus has nothing to say on stderr, and the object shape keeps the actual output in the
-  // failure diff when it does.
-  expect(
-    { recipe: recipe.title, exitCode, stderr: capture.readStderr() },
-    `recipe ${String(recipe.ordinal)} must run as written`,
-  ).toEqual({ recipe: recipe.title, exitCode: 0, stderr: "" });
+  try {
+    const capture = createCaptureOutput();
+    const exitCode = await runSdpCli(
+      ["q", recipe.body, "--root", repoRoot, "--json"],
+      capture.output,
+      queryHooks,
+    );
 
-  return JSON.parse(capture.readStdout()) as unknown;
+    // The expected stderr is the empty string, not a self-comparison: a recipe run over the green
+    // corpus has nothing to say on stderr, and the object shape keeps the actual output in the
+    // failure diff when it does.
+    expect(
+      { recipe: recipe.title, exitCode, stderr: capture.readStderr() },
+      `recipe ${String(recipe.ordinal)} must run as written`,
+    ).toEqual({ recipe: recipe.title, exitCode: 0, stderr: "" });
+
+    return JSON.parse(capture.readStdout()) as unknown;
+  } finally {
+    if (previousChangedFiles === undefined) {
+      delete process.env.SDP_CHANGED_FILES_JSON;
+    } else {
+      process.env.SDP_CHANGED_FILES_JSON = previousChangedFiles;
+    }
+  }
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -294,6 +309,7 @@ describe("the agent-surface recipe corpus", () => {
     const parameterizedOrdinals = [...parameterizedMention.matchAll(/\d+/gu)].map((match) =>
       Number(match[0]),
     );
+    const introProse = intro.replace(/\s+/gu, " ");
     const onRamps = {
       agents: readFileSync(join(repoRoot, "AGENTS.md"), "utf8"),
       agentSurface: readFileSync(
@@ -303,9 +319,21 @@ describe("the agent-surface recipe corpus", () => {
       authoring: readFileSync(join(repoRoot, ".agents/skills/sdp-authoring/SKILL.md"), "utf8"),
       sessions: readFileSync(join(repoRoot, ".agents/skills/sdp-sessions/SKILL.md"), "utf8"),
     };
-    const parameterizedRecipes = recipes.filter((recipe) =>
-      /^(?:const (?:id|changed|term|subject) = )/u.test(recipe.body),
+    const parameterizedRecipes = recipes.filter(
+      (recipe) => recipe.ordinal !== 4 && /^(?:const (?:id|term|subject) = )/u.test(recipe.body),
     );
+
+    // Recipe 4 receives filenames as data. Intro guidance must never teach callers to construct
+    // executable query source from repository-controlled paths.
+    const parameterGuidance =
+      /\*\*Some recipes open with a parameter\.[\s\S]*?(?=\n\n\*\*Recipe 4 is different)/u.exec(
+        intro,
+      )?.[0] ?? "";
+    expect(parameterGuidance).not.toMatch(
+      /\b4\b[\s\S]*?(?:changed-file list|substitut(?:e|ion))/iu,
+    );
+    expect(introProse).toContain("Recipe 4 filenames travel via `SDP_CHANGED_FILES_JSON`");
+    expect(introProse).toContain("callers never substitute filenames into the JavaScript fence");
 
     expect(countWord).toBeDefined();
     if (countWord === undefined) {
@@ -471,8 +499,42 @@ describe("the agent-surface recipe corpus", () => {
     }
   });
 
+  it("keeps hostile changed filenames as inert JSON data", async () => {
+    const sentinel = `/tmp/sdp-recipe-4-${String(process.pid)}-sentinel`;
+    const hostileChangedFiles = [
+      `changed-"double"-${sentinel}.ts`,
+      "changed-'single'.ts",
+      "changed-`backtick`.ts",
+      `changed-$(touch ${sentinel}).ts`,
+      "changed:semicolon;name.ts",
+      "changed with spaces.ts",
+      "changed-Unicode-Δ-文件.ts",
+      "changed-embedded\nnewline.ts",
+    ];
+    const recipe = recipeByOrdinal(4);
+    rmSync(sentinel, { force: true });
+
+    expect(recipe.body).toContain("process.env.SDP_CHANGED_FILES_JSON");
+    for (const filename of hostileChangedFiles) {
+      expect(recipe.body).not.toContain(filename);
+    }
+
+    try {
+      const result = asRecord(await runRecipe(recipe, hostileChangedFiles));
+
+      expect([...asArray(result.changedFiles)].sort()).toEqual([...hostileChangedFiles].sort());
+      expect([...asArray(result.coverageUnknownFiles)].sort()).toEqual(
+        [...hostileChangedFiles].sort(),
+      );
+      expect(existsSync(sentinel)).toBe(false);
+    } finally {
+      rmSync(sentinel, { force: true });
+    }
+  });
+
   it("returns the complete diff-to-at-risk bridge", async () => {
-    const result = asRecord(await runRecipe(recipeByOrdinal(4)));
+    const normalChangedFiles = ["src/reader/reader.ts", "docs/agent-surface/recipes.md"];
+    const result = asRecord(await runRecipe(recipeByOrdinal(4), normalChangedFiles));
     const changedFiles = asArray(result.changedFiles).map((file) => stringAt({ file }, "file"));
     const radius = reader.blastRadius(changedFiles);
 

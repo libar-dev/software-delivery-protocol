@@ -32,11 +32,15 @@ pnpm exec sdp q '<body>' --root PATH --exclude PATH --exclude PATH
 `--root PATH` picks the extraction root (default: the working directory) and `--exclude` is
 repeatable for root-relative path prefixes. `PATH` is a placeholder, not a literal directory.
 
-**Some recipes open with a parameter.** Recipes 3, 4, 6, 9, and 14 take their subject on the opening
-`const` line(s): a Spec id, a changed-file list, a search term, or a component id. Those lines name *this*
-repository's corpus so every body runs as written here (the recipe check executes each one
-verbatim); in your own corpus, substitute your subject on that line before running. A Spec id
-or component id absent from the graph returns `{ found: false }` rather than failing.
+**Some recipes open with a parameter.** Recipes 3, 6, 9, and 14 take their subject on the opening
+`const` line(s): a Spec id, a search term, or a component id. Those lines name *this* repository's
+corpus so every body runs as written here (the recipe check executes each one verbatim); in your
+own corpus, substitute your subject on that line before running. A Spec id or component id absent
+from the graph returns `{ found: false }` rather than failing.
+
+**Recipe 4 is different.** Recipe 4 filenames travel via `SDP_CHANGED_FILES_JSON`; callers never
+substitute filenames into the JavaScript fence. Keep its query body static and pass changed paths
+as JSON data through that environment variable, as shown in the recipe-4 instructions below.
 
 **The contract, in one place.** The front door derives the graph in process and evaluates the body
 you supply; `return` is the output contract. Three bindings are injected:
@@ -217,10 +221,17 @@ that it passed. Pass/fail is CI's, exactly as skip and quarantine are.
 
 *When you need this: you have a diff (or are about to make one) and want the Specs it reaches.*
 
-The caller acquires the changed paths — for example with `git diff --name-only` — and substitutes that output onto the opening `const changed` line. The reader never shells to git; it only evaluates the paths supplied by the caller.
+The caller acquires the changed paths and passes them as data, never as query source. From the repository root, this exact pipeline preserves every valid Git filename byte except NUL (which Git filenames cannot contain), including newlines, while JSON-encoding the NUL-delimited list before it reaches the environment:
+
+```sh
+SDP_CHANGED_FILES_JSON="$(git diff --name-only -z | node -e 'const fs = require("node:fs"); const names = fs.readFileSync(0).toString("utf8").split("\0"); process.stdout.write(JSON.stringify(names.slice(0, -1)));')" \
+pnpm --silent sdp:q 'const changed = JSON.parse(process.env.SDP_CHANGED_FILES_JSON ?? "[]"); const radius = g.blastRadius(changed); const impactReasons = (item) => ({ id: item.id, reasons: item.reasons.map((reason) => reason.throughBinding === undefined ? { file: reason.file, via: null } : { file: reason.file, via: reason.throughBinding.id, edgeType: reason.throughBinding.edgeType, claim: reason.throughBinding.claim }) }); const atRiskReasons = (item) => ({ id: item.id, nodeType: item.nodeType, reasons: item.reasons.map((reason) => ({ from: reason.from, edgeType: reason.edgeType, to: reason.to, claim: reason.claim })) }); return { changedFiles: radius.changedFiles, impactedSpecs: radius.impactedSpecs.map(impactReasons), atRiskSpecs: radius.atRisk.filter((item) => item.nodeType === "Primitive").map(atRiskReasons), atRiskOther: radius.atRisk.filter((item) => item.nodeType !== "Primitive").map(atRiskReasons), coverageUnknownFiles: radius.coverageUnknown };' --json
+```
+
+The query body is static and reads only the JSON environment value; neither the shell nor the reader reevaluates filenames. `JSON.parse` receives data, so quotes, shell metacharacters, spaces, Unicode, and embedded newlines remain filenames rather than JavaScript or shell syntax. The reader never shells to git.
 
 ```js
-const changed = ["src/reader/reader.ts", "docs/agent-surface/recipes.md"];
+const changed = JSON.parse(process.env.SDP_CHANGED_FILES_JSON ?? "[]");
 const radius = g.blastRadius(changed);
 const impactReasons = (item) => ({ id: item.id, reasons: item.reasons.map((reason) => reason.throughBinding === undefined ? { file: reason.file, via: null } : { file: reason.file, via: reason.throughBinding.id, edgeType: reason.throughBinding.edgeType, claim: reason.throughBinding.claim }) });
 const atRiskReasons = (item) => ({ id: item.id, nodeType: item.nodeType, reasons: item.reasons.map((reason) => ({ from: reason.from, edgeType: reason.edgeType, to: reason.to, claim: reason.claim })) });
