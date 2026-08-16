@@ -20,6 +20,7 @@ import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protoc
 import { SDP_HELP_TEXT, isCliEntrypoint, onStdoutError, runSdpCli } from "../src/cli/sdp.js";
 import {
   isWatchedCarrierPath,
+  type NativeWatchHandle,
   type ValidateWatchCycle,
   type ValidateWatchEvent,
   type ValidateWatchEventSource,
@@ -1380,14 +1381,23 @@ async function waitForWatchCycle(
 
 class InjectedWatchSource implements ValidateWatchEventSource {
   private listener: ((event: ValidateWatchEvent) => void) | undefined;
+  private errorListener: ((error: unknown) => void) | undefined;
   closed = false;
 
   on(listener: (event: ValidateWatchEvent) => void): void {
     this.listener = listener;
   }
 
+  onError(listener: (error: unknown) => void): void {
+    this.errorListener = listener;
+  }
+
   emit(event: ValidateWatchEvent): void {
     this.listener?.(event);
+  }
+
+  emitError(error: unknown): void {
+    this.errorListener?.(error);
   }
 
   close(): void {
@@ -1774,6 +1784,250 @@ describe("sdp validate --watch", () => {
       expect(harness.source.closed).toBe(true);
     } finally {
       harness.abort.abort();
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("coalesces production-shaped events from later turns into one pending rerun", async () => {
+    const corpusRoot = materializeExtractCorpus("anchored-binding");
+    const capture = createCaptureOutput();
+    const harness = createWatchHarness();
+    const firstCycle = harness.nextCycle();
+    const secondCycle = harness.nextCycle();
+    const laterCycles: ValidateWatchCycle[] = [];
+    const cycleIndexes: number[] = [];
+    const burstDrained = createSignal();
+    let extractCount = 0;
+
+    try {
+      const running = runSdpCli(["validate", "--watch", corpusRoot], capture.output, {
+        createWatchSource: harness.createWatchSource,
+        extract: (options) => {
+          extractCount += 1;
+
+          if (extractCount === 1) {
+            setImmediate(() => {
+              harness.source.emit({ type: "change", path: "parent.sdp.ts" });
+            });
+            setImmediate(() => {
+              harness.source.emit({ type: "rename", path: "parent.sdp.ts" });
+            });
+            setImmediate(() => {
+              harness.source.emit({ type: "create", path: "added.sdp.md" });
+              setImmediate(() => {
+                burstDrained.resolve(undefined);
+              });
+            });
+          }
+
+          return extract(options);
+        },
+        onWatchCycleComplete: (cycle) => {
+          cycleIndexes.push(cycle.index);
+
+          if (cycle.index > 2) {
+            laterCycles.push(cycle);
+          }
+
+          harness.onWatchCycleComplete(cycle);
+        },
+        abortSignal: harness.abort.signal,
+      });
+
+      expect(await waitForWatchCycle(firstCycle, "production first cycle")).toEqual({
+        index: 1,
+        exitCode: 0,
+      });
+      expect(await waitForWatchCycle(secondCycle, "production coalesced rerun")).toEqual({
+        index: 2,
+        exitCode: 0,
+      });
+      await Promise.race([burstDrained.promise, timeoutRejection("production burst drain")]);
+      await new Promise<undefined>((resolve) => {
+        setImmediate(() => {
+          resolve(undefined);
+        });
+      });
+      expect(laterCycles).toEqual([]);
+      expect(cycleIndexes).toEqual([1, 2]);
+      expect(extractCount).toBe(2);
+
+      harness.abort.abort();
+      expect(await Promise.race([running, timeoutRejection("watch abort")])).toBe(0);
+      expect(harness.source.closed).toBe(true);
+    } finally {
+      harness.abort.abort();
+      removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("does not natively subscribe to excluded or generated subtrees", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-watch-native-"));
+    const capture = createCaptureOutput();
+    const harness = createWatchHarness();
+    const firstCycle = harness.nextCycle();
+    const secondCycle = harness.nextCycle();
+    const watched = new Set<string>();
+    const listeners = new Map<string, (eventType: string, filename: string | null) => void>();
+    mkdirSync(join(root, "specs"));
+    mkdirSync(join(root, "generated"));
+    mkdirSync(join(root, "dist"));
+    mkdirSync(join(root, "node_modules"));
+    mkdirSync(join(root, "coverage"));
+    mkdirSync(join(root, ".git"));
+    mkdirSync(join(root, "explorations"));
+    writeFileSync(
+      join(root, "specs", "probe.sdp.md"),
+      [
+        "---",
+        "id: spec:tmp.probe",
+        "kind: rule",
+        "altitude: story",
+        "readiness: idea",
+        "relations: {}",
+        "---",
+        "# Probe",
+        "",
+        "## Intent",
+        "",
+        "- outcome: Probe",
+        "",
+        "## Rule",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    try {
+      const running = runSdpCli(
+        ["validate", "--watch", root, "--exclude", "explorations"],
+        capture.output,
+        {
+          createNativeWatch: (directory, listener): NativeWatchHandle => {
+            watched.add(directory);
+            listeners.set(directory, listener);
+            return {
+              on() {
+                return undefined;
+              },
+              close() {
+                return undefined;
+              },
+            };
+          },
+          onWatchCycleComplete: harness.onWatchCycleComplete,
+          abortSignal: harness.abort.signal,
+        },
+      );
+
+      expect(await waitForWatchCycle(firstCycle, "native first cycle")).toEqual({
+        index: 1,
+        exitCode: 0,
+      });
+      expect([...watched].sort()).toEqual([root, join(root, "specs")].sort());
+      expect(watched.has(join(root, "generated"))).toBe(false);
+      expect(watched.has(join(root, "dist"))).toBe(false);
+      expect(watched.has(join(root, "node_modules"))).toBe(false);
+      expect(watched.has(join(root, "coverage"))).toBe(false);
+      expect(watched.has(join(root, ".git"))).toBe(false);
+      expect(watched.has(join(root, "explorations"))).toBe(false);
+
+      mkdirSync(join(root, "specs", "nested"));
+      mkdirSync(join(root, "generated", "extra"));
+      mkdirSync(join(root, "explorations", "nested"));
+      listeners.get(join(root, "specs"))?.("rename", "nested");
+      listeners.get(root)?.("rename", "generated");
+      listeners.get(root)?.("rename", "explorations");
+      expect(watched.has(join(root, "specs", "nested"))).toBe(true);
+      expect(watched.has(join(root, "generated"))).toBe(false);
+      expect(watched.has(join(root, "generated", "extra"))).toBe(false);
+      expect(watched.has(join(root, "explorations"))).toBe(false);
+      expect(watched.has(join(root, "explorations", "nested"))).toBe(false);
+
+      writeFileSync(
+        join(root, "specs", "nested", "child.sdp.md"),
+        [
+          "---",
+          "id: spec:tmp.nested",
+          "kind: rule",
+          "altitude: story",
+          "readiness: idea",
+          "relations: {}",
+          "---",
+          "# Nested",
+          "",
+          "## Intent",
+          "",
+          "- outcome: Nested",
+          "",
+          "## Rule",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      listeners.get(join(root, "specs", "nested"))?.("rename", "child.sdp.md");
+      expect(await waitForWatchCycle(secondCycle, "new lawful directory rerun")).toEqual({
+        index: 2,
+        exitCode: 0,
+      });
+
+      harness.abort.abort();
+      expect(await Promise.race([running, timeoutRejection("watch abort")])).toBe(0);
+    } finally {
+      harness.abort.abort();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("routes a native watcher error through a typed channel and closes once", async () => {
+    const corpusRoot = materializeExtractCorpus("anchored-binding");
+    const capture = createCaptureOutput();
+    const abort = new AbortController();
+    const firstCycle = createDeferred<ValidateWatchCycle>();
+    const errorListeners: ((error: Error) => void)[] = [];
+    let closeCount = 0;
+    const unhandled: unknown[] = [];
+    const onUnhandled = (error: unknown): void => {
+      unhandled.push(error);
+    };
+    process.on("uncaughtException", onUnhandled);
+    process.on("unhandledRejection", onUnhandled);
+
+    try {
+      const running = runSdpCli(["validate", "--watch", corpusRoot], capture.output, {
+        createNativeWatch: () => ({
+          on(_event, listener) {
+            errorListeners.push(listener);
+          },
+          close() {
+            closeCount += 1;
+          },
+        }),
+        onWatchCycleComplete: (cycle) => {
+          firstCycle.resolve(cycle);
+        },
+        abortSignal: abort.signal,
+      });
+
+      expect(await waitForWatchCycle(firstCycle.promise, "error first cycle")).toEqual({
+        index: 1,
+        exitCode: 0,
+      });
+      expect(errorListeners).toHaveLength(1);
+
+      const nativeError = new Error("EMFILE: too many open files");
+      errorListeners[0]?.(nativeError);
+      const exitCode = await Promise.race([running, timeoutRejection("native watch error exit")]);
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toContain("sdp validate: watch failed");
+      expect(capture.readStderr()).toContain("EMFILE: too many open files");
+      expect(closeCount).toBe(1);
+      expect(unhandled).toEqual([]);
+    } finally {
+      process.removeListener("uncaughtException", onUnhandled);
+      process.removeListener("unhandledRejection", onUnhandled);
+      abort.abort();
       removeMaterializedCorpus(corpusRoot);
     }
   });

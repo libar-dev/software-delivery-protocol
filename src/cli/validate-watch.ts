@@ -1,9 +1,10 @@
-import { watch } from "node:fs";
-import { isAbsolute, relative } from "node:path";
+import { readdirSync, statSync, watch } from "node:fs";
+import { isAbsolute, join, relative } from "node:path";
 
 import { isExcludedDiscoveryDirectory } from "../extract/discover.js";
 import type { BuildArgs } from "./build-args.js";
 import type { CliOutput } from "./output.js";
+import { writeStderr } from "./output.js";
 import { runValidate } from "./validate-view-command.js";
 import type { ValidationViewHooks } from "./validate-view-command.js";
 
@@ -16,7 +17,28 @@ export interface ValidateWatchEvent {
 
 export interface ValidateWatchEventSource {
   readonly on: (listener: (event: ValidateWatchEvent) => void) => void;
+  readonly onError: (listener: (error: unknown) => void) => void;
   readonly close: () => void;
+}
+
+export interface NativeWatchHandle {
+  readonly on: (event: "error", listener: (error: Error) => void) => void;
+  readonly close: () => void;
+}
+
+export type NativeWatchFactory = (
+  directory: string,
+  listener: (eventType: string, filename: string | null) => void,
+) => NativeWatchHandle;
+
+export class ValidateWatchSourceError extends Error {
+  readonly name = "ValidateWatchSourceError";
+
+  constructor(cause: unknown) {
+    super(cause instanceof Error ? cause.message : String(cause), {
+      cause: cause instanceof Error ? cause : undefined,
+    });
+  }
 }
 
 export interface ValidateWatchCycle {
@@ -30,6 +52,7 @@ export interface ValidateWatchHooks {
     readonly root: string;
     readonly exclude: readonly string[];
   }) => ValidateWatchEventSource;
+  readonly createNativeWatch?: NativeWatchFactory;
   readonly onWatchCycleComplete?: (cycle: ValidateWatchCycle) => void;
   readonly watchCycleGate?: (cycleIndex: number) => Promise<undefined> | undefined;
 }
@@ -43,7 +66,9 @@ interface WatchLoopState {
   closed: boolean;
   running: boolean;
   pendingRerun: boolean;
+  coalesceScheduled: boolean;
   cycleIndex: number;
+  failure: ValidateWatchSourceError | undefined;
 }
 
 function isWatchClosed(state: WatchLoopState): boolean {
@@ -94,6 +119,34 @@ function toPosixRelative(root: string, eventPath: string): string {
   return relative(root, eventPath).replaceAll("\\", "/");
 }
 
+function isExcludedPrefix(relativePath: string, exclude: readonly string[]): boolean {
+  return exclude.some((prefix) => relativePath === prefix || relativePath.startsWith(`${prefix}/`));
+}
+
+function isWatchableDirectoryPath(
+  root: string,
+  directoryPath: string,
+  exclude: readonly string[],
+): boolean {
+  const relativePath = toPosixRelative(root, directoryPath);
+
+  if (relativePath === "" || relativePath === ".") {
+    return true;
+  }
+
+  if (relativePath.startsWith("../")) {
+    return false;
+  }
+
+  const segments = relativePath.split("/").filter((segment) => segment !== "");
+
+  if (segments.some((segment) => isExcludedDiscoveryDirectory(segment))) {
+    return false;
+  }
+
+  return !isExcludedPrefix(relativePath, exclude);
+}
+
 export function isWatchedCarrierPath(
   root: string,
   eventPath: string,
@@ -111,37 +164,179 @@ export function isWatchedCarrierPath(
     return false;
   }
 
-  if (exclude.some((prefix) => relativePath === prefix || relativePath.startsWith(`${prefix}/`))) {
+  if (isExcludedPrefix(relativePath, exclude)) {
     return false;
   }
 
   return CARRIER_SUFFIXES.some((suffix) => relativePath.endsWith(suffix));
 }
 
+function defaultNativeWatch(
+  directory: string,
+  listener: (eventType: string, filename: string | null) => void,
+): NativeWatchHandle {
+  return watch(directory, listener);
+}
+
+function isDescendantPath(parent: string, candidate: string): boolean {
+  const nested = relative(parent, candidate);
+
+  return nested !== "" && !nested.startsWith("..") && !isAbsolute(nested);
+}
+
 function createFilesystemWatchSource(input: {
   readonly root: string;
   readonly exclude: readonly string[];
+  readonly createNativeWatch?: NativeWatchFactory;
 }): ValidateWatchEventSource {
-  void input.exclude;
+  const createNativeWatch = input.createNativeWatch ?? defaultNativeWatch;
+  const watchers = new Map<string, NativeWatchHandle>();
+  let eventListener: ((event: ValidateWatchEvent) => void) | undefined;
+  let errorListener: ((error: unknown) => void) | undefined;
+  let pendingError: unknown;
+  let closed = false;
 
-  let listener: ((event: ValidateWatchEvent) => void) | undefined;
-  const watcher = watch(input.root, { recursive: true }, (eventType, filename) => {
-    if (filename === null || filename === "") {
+  const fail = (error: unknown): void => {
+    if (closed) {
       return;
     }
 
-    listener?.({
-      type: eventType === "rename" ? "rename" : "change",
-      path: filename.replaceAll("\\", "/"),
+    if (errorListener === undefined) {
+      pendingError = error;
+      return;
+    }
+
+    errorListener(error);
+  };
+
+  const unwatchTree = (absoluteDirectory: string): void => {
+    for (const candidate of [...watchers.keys()]) {
+      if (candidate !== absoluteDirectory && !isDescendantPath(absoluteDirectory, candidate)) {
+        continue;
+      }
+
+      const handle = watchers.get(candidate);
+      watchers.delete(candidate);
+      handle?.close();
+    }
+  };
+
+  const subscribeDirectory = (absoluteDirectory: string, relativeDirectory: string): void => {
+    if (closed || watchers.has(absoluteDirectory)) {
+      return;
+    }
+
+    if (!isWatchableDirectoryPath(input.root, relativeDirectory, input.exclude)) {
+      return;
+    }
+
+    let handle: NativeWatchHandle;
+
+    try {
+      handle = createNativeWatch(absoluteDirectory, (eventType, filename) => {
+        if (closed || filename === null || filename === "") {
+          return;
+        }
+
+        const entryName = filename.replaceAll("\\", "/");
+        const relativePath =
+          relativeDirectory === "" ? entryName : `${relativeDirectory}/${entryName}`;
+        const absolutePath = join(absoluteDirectory, entryName);
+        let directoryNow = false;
+
+        try {
+          directoryNow = statSync(absolutePath).isDirectory();
+        } catch {
+          unwatchTree(absolutePath);
+        }
+
+        if (directoryNow) {
+          subscribeTree(absolutePath, relativePath, true);
+        }
+
+        eventListener?.({
+          type: eventType === "rename" ? "rename" : "change",
+          path: relativePath,
+        });
+      });
+    } catch (error) {
+      fail(error);
+      return;
+    }
+
+    handle.on("error", (error) => {
+      fail(error);
     });
-  });
+    watchers.set(absoluteDirectory, handle);
+  };
+
+  const subscribeTree = (
+    absoluteDirectory: string,
+    relativeDirectory: string,
+    emitExistingCarriers: boolean,
+  ): void => {
+    subscribeDirectory(absoluteDirectory, relativeDirectory);
+
+    if (closed || !watchers.has(absoluteDirectory)) {
+      return;
+    }
+
+    let entries;
+
+    try {
+      entries = readdirSync(absoluteDirectory, { withFileTypes: true });
+    } catch (error) {
+      fail(error);
+      return;
+    }
+
+    for (const entry of entries) {
+      const relativePath =
+        relativeDirectory === "" ? entry.name : `${relativeDirectory}/${entry.name}`;
+
+      if (entry.isDirectory()) {
+        subscribeTree(join(absoluteDirectory, entry.name), relativePath, emitExistingCarriers);
+        continue;
+      }
+
+      if (
+        emitExistingCarriers &&
+        entry.isFile() &&
+        isWatchedCarrierPath(input.root, relativePath, input.exclude)
+      ) {
+        eventListener?.({ type: "create", path: relativePath });
+      }
+    }
+  };
+
+  subscribeTree(input.root, "", false);
 
   return {
     on(next) {
-      listener = next;
+      eventListener = next;
+    },
+    onError(next) {
+      errorListener = next;
+
+      if (pendingError !== undefined) {
+        const error = pendingError;
+        pendingError = undefined;
+        next(error);
+      }
     },
     close() {
-      watcher.close();
+      if (closed) {
+        return;
+      }
+
+      closed = true;
+      pendingError = undefined;
+
+      for (const handle of watchers.values()) {
+        handle.close();
+      }
+
+      watchers.clear();
     },
   };
 }
@@ -152,14 +347,21 @@ export async function runValidateWatch(
   hooks: ValidationViewHooks,
   watchHooks: ValidateWatchHooks,
 ): Promise<number> {
-  const createSource = watchHooks.createWatchSource ?? createFilesystemWatchSource;
-  const source = createSource({ root: parsed.root, exclude: parsed.exclude });
+  const source =
+    watchHooks.createWatchSource?.({ root: parsed.root, exclude: parsed.exclude }) ??
+    createFilesystemWatchSource({
+      root: parsed.root,
+      exclude: parsed.exclude,
+      createNativeWatch: watchHooks.createNativeWatch,
+    });
   const waiter = createCycleWaiter();
   const state: WatchLoopState = {
     closed: false,
     running: false,
     pendingRerun: false,
+    coalesceScheduled: false,
     cycleIndex: 0,
+    failure: undefined,
   };
 
   const close = (): void => {
@@ -184,16 +386,39 @@ export async function runValidateWatch(
     watchHooks.abortSignal.addEventListener("abort", onAbort, { once: true });
   }
 
+  const noteCarrierEvent = (): void => {
+    state.pendingRerun = true;
+
+    if (state.running || state.closed || state.coalesceScheduled) {
+      return;
+    }
+
+    state.coalesceScheduled = true;
+    setImmediate(() => {
+      state.coalesceScheduled = false;
+
+      if (!state.closed) {
+        waiter.wake();
+      }
+    }).unref();
+  };
+
   source.on((event) => {
     if (state.closed || !isWatchedCarrierPath(parsed.root, event.path, parsed.exclude)) {
       return;
     }
 
-    state.pendingRerun = true;
+    noteCarrierEvent();
+  });
 
-    if (!state.running) {
-      waiter.wake();
+  source.onError((error) => {
+    if (state.closed) {
+      return;
     }
+
+    state.failure =
+      error instanceof ValidateWatchSourceError ? error : new ValidateWatchSourceError(error);
+    close();
   });
 
   try {
@@ -229,6 +454,11 @@ export async function runValidateWatch(
     }
 
     close();
+  }
+
+  if (state.failure !== undefined) {
+    writeStderr(output, `sdp validate: watch failed — ${state.failure.message}\n`);
+    return 1;
   }
 
   return 0;
