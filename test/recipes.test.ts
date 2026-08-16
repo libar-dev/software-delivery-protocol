@@ -263,6 +263,83 @@ describe("the agent-surface recipe corpus", () => {
     }
   });
 
+  it("keeps on-ramp recipe mentions synchronized with the catalog", () => {
+    const countWords = [
+      "zero",
+      "one",
+      "two",
+      "three",
+      "four",
+      "five",
+      "six",
+      "seven",
+      "eight",
+      "nine",
+      "ten",
+      "eleven",
+      "twelve",
+      "thirteen",
+      "fourteen",
+      "fifteen",
+      "sixteen",
+      "seventeen",
+      "eighteen",
+      "nineteen",
+      "twenty",
+    ] as const;
+    const countWord = countWords[recipes.length];
+    const lastOrdinal = recipes[recipes.length - 1]?.ordinal;
+    const intro = source.slice(0, source.indexOf("## 1."));
+    const parameterizedMention = /Recipes (?<list>[0-9, and]+)/u.exec(intro)?.groups?.list ?? "";
+    const parameterizedOrdinals = [...parameterizedMention.matchAll(/\d+/gu)].map((match) =>
+      Number(match[0]),
+    );
+    const onRamps = {
+      agents: readFileSync(join(repoRoot, "AGENTS.md"), "utf8"),
+      agentSurface: readFileSync(
+        join(repoRoot, ".agents/skills/sdp-agent-surface/SKILL.md"),
+        "utf8",
+      ),
+      authoring: readFileSync(join(repoRoot, ".agents/skills/sdp-authoring/SKILL.md"), "utf8"),
+      sessions: readFileSync(join(repoRoot, ".agents/skills/sdp-sessions/SKILL.md"), "utf8"),
+    };
+    const parameterizedRecipes = recipes.filter((recipe) =>
+      /^(?:const (?:id|changed|term|subject) = )/u.test(recipe.body),
+    );
+
+    expect(countWord).toBeDefined();
+    if (countWord === undefined) {
+      throw new Error(`recipe count ${String(recipes.length)} is outside the checked prose range`);
+    }
+    expect(lastOrdinal).toBe(recipes.length);
+    expect(onRamps.agentSurface).toContain(`catalog contains ${countWord} ready-made bodies`);
+    expect(onRamps.agentSurface).toContain(`Recipes 1-${String(recipes.length)}`);
+    expect(onRamps.agents).toContain(`${countWord} runnable \`sdp q\` bodies`);
+    expect(parameterizedOrdinals).toEqual(parameterizedRecipes.map((recipe) => recipe.ordinal));
+    expect(onRamps.authoring).toContain("sdp new spec");
+    expect(onRamps.authoring).toContain("sdp validate --watch");
+    expect(onRamps.authoring).not.toContain("--dry-run");
+    expect(onRamps.sessions).toContain("sdp new spec");
+    expect(onRamps.sessions).toContain("validate --watch");
+    expect(onRamps.agents).toContain("new spec");
+    expect(onRamps.agents).toContain("sdp validate --watch");
+
+    const agentSurfaceProse = onRamps.agentSurface.toLowerCase().replace(/\s+/gu, " ");
+    for (const phrase of [
+      "component membership",
+      "uses fan-in and fan-out",
+      "structural neighborhood",
+      "census structural coverage",
+      "projection-coverage upper bound",
+    ]) {
+      expect(agentSurfaceProse).toContain(phrase);
+    }
+
+    for (const ordinal of [12, 13, 14, 15, 16]) {
+      expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
+    }
+  });
+
   it("keeps every body plain JavaScript with a return", () => {
     for (const recipe of recipes) {
       expect({ recipe: recipe.title, hasReturn: recipe.body.includes("return ") }).toEqual({

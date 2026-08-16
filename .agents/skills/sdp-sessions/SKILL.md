@@ -43,7 +43,7 @@ result informs the session; it never grants permission or records a verdict.
 Use concept search (recipe 6) to find the existing family and avoid duplicate intent. Use the
 lower ladder (recipe 11) to see current stated and derived readiness, then promotion preflight
 (recipe 9) before a human changes a rung. Follow `sdp-authoring` for the minimal lawful `idea`
-carrier and the one-kind rule.
+carrier, `sdp new spec`, the `validate --watch` loop, and the one-kind rule.
 
 ### Design
 
@@ -54,14 +54,18 @@ not an automatic `ready` statement.
 ### Implement
 
 Use the build backlog (recipe 1) to orient the available ready work and the target Spec context
-(recipe 3) to read guarantees, relations, implementation bindings, and verifiers. Bind anchors
+(recipe 3) to read guarantees, relations, implementation bindings, and verifiers. When the work
+lives in a declared seam, use component membership (recipe 12) and uses fan-in/fan-out (recipe 13)
+to see the units and neighbors before binding. Bind anchors
 and executable examples through `sdp-authoring`; an `implemented` fact names a binding, not a
 passing or live system.
 
 ### Review
 
 For a Pack, use the Pack review backbone (recipe 5) and warn-level signals (recipe 8). Without a
-Pack, use the target Spec context (recipe 3) with warn-level signals (recipe 8). Review findings
+Pack, use the target Spec context (recipe 3) with warn-level signals (recipe 8). For a component
+or projection question, use structural neighborhood (recipe 14), census structural coverage
+(recipe 15), and the projection-coverage upper bound (recipe 16). Review findings
 and gaps as data; the review never becomes a workflow gate.
 
 ### Close / slim

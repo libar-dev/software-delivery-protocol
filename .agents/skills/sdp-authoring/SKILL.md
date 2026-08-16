@@ -37,13 +37,22 @@ runner.
    when the kind has a lawful bare skeleton (`behavior`, `workflow`, `rule`, `model`, `decision`,
    `contract`, `example`). That verb writes an idea-rung `.sdp.md` stub — envelope, Intent outcome,
    and the kind's empty typed heading — and refuses overwrite, invented content, and `constraint`
-   (Constraints require a statement; there is no lawful bare skeleton). PATH is cwd-relative and
+   (Constraints require a statement; there is no lawful bare skeleton). There is no dry-run flag;
+   probe in a scratch directory if you need to inspect bytes first. PATH is cwd-relative and
    must not contain `..`. Hand-author the same shape when the scaffolder cannot express it. For a
    behavior parent with example children, a `.sdp.gherkin` carrier is a lawful per-ID alternative;
    follow `spec:carrier.gherkin-authoring`. The carrier law is `spec:decisions.carrier-ruling`; the
    envelope and section law is `spec:model.spec-sections`.
    A Spec carries one kind. If a fact straddles kinds, split it into two Specs and join them with
    the relation that preserves their distinct intents, following `spec:model.core-model`.
+   After the carrier exists, `sdp validate --watch [root]` is the authoring loop: it installs the
+   watcher first, then re-runs the same `validate` path from scratch on carrier create, change,
+   delete, or rename. Findings print and the process stays alive; operator stop (SIGINT) exits 0.
+   `--watch` is validate-only and cannot combine with `--check-clean`. The watcher ignores
+   `generated`, `dist`, `node_modules`, `coverage`, dot-directories, configured `--exclude` prefixes,
+   and non-carrier paths. Events during a run coalesce to one pending rerun. In this source
+   checkout, invoke it through the repository `sdp` script with the three fixture exclusions; do
+   not invent extra watch flags.
 3. State only the rung the structure clears. Use recipe 9 for the current floor, recipe 11 for the
    lower ladder, and read `spec:validation.readiness-floor` plus
    `spec:validation.kind-evidence` for the clauses.
