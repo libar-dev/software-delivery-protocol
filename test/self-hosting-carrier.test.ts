@@ -163,8 +163,6 @@ const slotNotationTypedTestAnchor = specTest({
   verifies: ref("spec:carrier.slot-notation.typed-declaration"),
 });
 void slotNotationTypedTestAnchor;
-// bindExample(typedDeclarationContract
-
 registerTypedDeclaration({
   createWorld: createSlotWorld,
   invoke: invokeSlotParse,
@@ -186,8 +184,6 @@ const slotNotationRefusedTestAnchor = specTest({
   verifies: ref("spec:carrier.slot-notation.refused-guess"),
 });
 void slotNotationRefusedTestAnchor;
-// bindExample(refusedGuessContract
-
 registerRefusedGuess({
   createWorld: createSlotWorld,
   invoke: invokeSlotParse,

@@ -2,6 +2,15 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  createSourceFile,
+  forEachChild,
+  isCallExpression,
+  isExpressionStatement,
+  isIdentifier,
+  ScriptKind,
+  ScriptTarget,
+} from "typescript";
 import { describe, expect, it } from "vitest";
 
 import { extract, validateGraph } from "../src/index.js";
@@ -20,6 +29,78 @@ import {
 } from "./self-hosting-oracle/index.js";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
+
+const adoptedActivationSites: Readonly<Record<string, { activation: string; file: string }>> = {
+  "test:protocol.stable-ids.namespaced-round-trip": {
+    activation: "registerNamespacedRoundTrip",
+    file: "test/self-hosting-model.test.ts",
+  },
+  "test:protocol.stable-ids.malformed-refusal": {
+    activation: "registerMalformedRefusal",
+    file: "test/self-hosting-model.test.ts",
+  },
+  "test:protocol.anchors.lookalike-refusal": {
+    activation: "registerLookalikeRefusal",
+    file: "test/self-hosting-model.test.ts",
+  },
+  "test:protocol.anchors.physical-identity": {
+    activation: "registerPhysicalIdentity",
+    file: "test/self-hosting-model.test.ts",
+  },
+  "test:protocol.slot-notation.typed-declaration": {
+    activation: "registerTypedDeclaration",
+    file: "test/self-hosting-carrier.test.ts",
+  },
+  "test:protocol.slot-notation.refused-guess": {
+    activation: "registerRefusedGuess",
+    file: "test/self-hosting-carrier.test.ts",
+  },
+  "test:protocol.duplicate-ids.dual-carrier": {
+    activation: "registerDualCarrier",
+    file: "test/self-hosting-duplicate-ids.test.ts",
+  },
+  "test:protocol.kind-evidence.constraints-alone": {
+    activation: "registerConstraintsAlone",
+    file: "test/self-hosting-validators.test.ts",
+  },
+  "test:protocol.kind-evidence.untargeted-constraint": {
+    activation: "registerUntargetedConstraint",
+    file: "test/self-hosting-validators.test.ts",
+  },
+  "test:protocol.kind-evidence.empty-promoted-child": {
+    activation: "registerEmptyPromotedChild",
+    file: "test/self-hosting-validators.test.ts",
+  },
+};
+
+function executableActivationLine(source: string, activation: string): number | undefined {
+  const sourceFile = createSourceFile(
+    "authored-test.ts",
+    source,
+    ScriptTarget.Latest,
+    true,
+    ScriptKind.TS,
+  );
+  let activationLine: number | undefined;
+
+  function visit(node: import("typescript").Node): void {
+    if (
+      activationLine === undefined &&
+      isCallExpression(node) &&
+      isIdentifier(node.expression) &&
+      node.expression.text === activation &&
+      isExpressionStatement(node.parent) &&
+      node.parent.parent === sourceFile
+    ) {
+      activationLine = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1;
+    }
+
+    forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return activationLine;
+}
 
 // Given: the repository root with evidence and the worked example excluded from the authored model.
 // The corpus walk is this suite's one expensive step, so it runs exactly once and every assertion
@@ -255,14 +336,31 @@ describe("the self-hosting corpus", () => {
     ).toEqual(expectedAnchorNodes);
   });
 
+  it("rejects comment-only and string activation sites and accepts executable calls", () => {
+    const commentOnlySource = "// registerExample({});\n";
+    const stringOnlySource = 'const text = "registerExample({});";\n';
+    const executableSource = "registerExample({});\n";
+
+    expect(lineContaining(commentOnlySource, "registerExample(")).toBe(1);
+    expect(lineContaining(stringOnlySource, "registerExample(")).toBe(1);
+    expect(executableActivationLine(commentOnlySource, "registerExample")).toBeUndefined();
+    expect(executableActivationLine(stringOnlySource, "registerExample")).toBeUndefined();
+    expect(executableActivationLine(executableSource, "registerExample")).toBe(1);
+  });
+
   it("keeps every anchor beside the site it binds", () => {
     for (const anchor of expectedAnchors) {
       const source = readFileSync(join(repoRoot, anchor.file), "utf8");
       const anchorLine = lineContaining(source, `const ${anchor.constant}`);
-      const siteLine = lineContaining(source, anchor.site);
+      const adoptedSite = adoptedActivationSites[anchor.id];
+      const siteLine =
+        adoptedSite === undefined
+          ? lineContaining(source, anchor.site)
+          : (executableActivationLine(source, adoptedSite.activation) ?? 0);
       const node = result.graph.nodes.find((entry) => entry.id === anchor.id);
 
       expect(anchorLine).toBeGreaterThan(0);
+      expect(adoptedSite?.file ?? anchor.file, anchor.id).toBe(anchor.file);
       expect(siteLine, anchor.id).toBeGreaterThan(0);
       // The densest site has four adjacent member anchors; their required component rows add
       // exactly four lines to the original 20-line locality bound.

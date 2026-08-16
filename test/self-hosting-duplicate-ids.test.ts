@@ -275,7 +275,6 @@ const dualCarrierDuplicateTestAnchor = specTest({
 });
 void dualCarrierDuplicateTestAnchor;
 
-// bindExample(dualCarrierContract
 registerDualCarrier({
   createWorld: createDuplicateIdWorld,
   invoke: invokeDuplicateIdExtract,

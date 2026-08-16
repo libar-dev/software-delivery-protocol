@@ -81,8 +81,6 @@ const namespacedRoundTripTestAnchor = specTest({
   verifies: ref("spec:model.stable-ids.namespaced-round-trip"),
 });
 void namespacedRoundTripTestAnchor;
-// bindExample(namespacedRoundTripContract
-
 registerNamespacedRoundTrip({
   createWorld: createIdentifierWorld,
   invoke: invokeIdentifierParse,
@@ -104,8 +102,6 @@ const malformedRefusalTestAnchor = specTest({
   verifies: ref("spec:model.stable-ids.malformed-refusal"),
 });
 void malformedRefusalTestAnchor;
-// bindExample(malformedRefusalContract
-
 registerMalformedRefusal({
   createWorld: createIdentifierWorld,
   invoke: invokeIdentifierParse,
@@ -258,8 +254,6 @@ const lookalikeRefusalTestAnchor = specTest({
   verifies: ref("spec:model.anchors.lookalike-refusal"),
 });
 void lookalikeRefusalTestAnchor;
-// bindExample(lookalikeRefusalContract
-
 registerLookalikeRefusal({
   createWorld: createAnchorTrustWorld,
   invoke: invokeAnchorTrustExtract,
@@ -275,8 +269,6 @@ const physicalIdentityTestAnchor = specTest({
   verifies: ref("spec:model.anchors.physical-identity"),
 });
 void physicalIdentityTestAnchor;
-// bindExample(physicalIdentityContract
-
 registerPhysicalIdentity({
   createWorld: createAnchorTrustWorld,
   invoke: invokeAnchorTrustExtract,

@@ -355,8 +355,6 @@ const constraintsAloneTestAnchor = specTest({
   verifies: ref("spec:validation.kind-evidence.constraints-alone"),
 });
 void constraintsAloneTestAnchor;
-// bindExample(constraintsAloneContract
-
 registerConstraintsAlone({
   createWorld: createKindEvidenceWorld,
   invoke: invokeKindEvidenceValidate,
@@ -373,8 +371,6 @@ const untargetedConstraintTestAnchor = specTest({
   verifies: ref("spec:validation.kind-evidence.untargeted-constraint"),
 });
 void untargetedConstraintTestAnchor;
-// bindExample(untargetedConstraintContract
-
 registerUntargetedConstraint({
   createWorld: createKindEvidenceWorld,
   invoke: invokeKindEvidenceValidate,
@@ -391,8 +387,6 @@ const emptyPromotedChildTestAnchor = specTest({
   verifies: ref("spec:validation.kind-evidence.empty-promoted-child"),
 });
 void emptyPromotedChildTestAnchor;
-// bindExample(emptyPromotedChildContract
-
 registerEmptyPromotedChild({
   createWorld: createKindEvidenceWorld,
   invoke: invokeKindEvidenceValidate,
