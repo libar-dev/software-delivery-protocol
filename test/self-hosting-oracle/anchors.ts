@@ -564,7 +564,7 @@ export const expectedAnchors = [
     target: "spec:carrier.markdown-parser.bounded-parity",
     file: "test/self-hosting-carrier.test.ts",
     constant: "boundedParityTestAnchor",
-    site: "bindExample(boundedParityContract",
+    site: "registerBoundedParity(",
   },
   {
     id: "test:protocol.gherkin-authoring.authored-fact-refused",
