@@ -17,7 +17,7 @@ current realization. A disagreement is **drift to resolve**, never permission to
 code behavior into intent.
 
 > **plan 37 is EXECUTING** — the plan-36 arc is executing; briefs I–K are delivered per
-> plans/36, with operational tracking in `.omo/plans/plan-37-settling-arc.md`.
+> plan 36, with operational tracking in `.omo/plans/plan-37-settling-arc.md`.
 > **Status:** Specs and Packs default to the Markdown carrier; the TS DSL survives as import
 > source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax
 > ruling, MD-25). The Gherkin carrier option (MD-27) admits a graph-aware lawful per-ID option
