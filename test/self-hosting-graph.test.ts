@@ -30,48 +30,12 @@ import {
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 
-const adoptedActivationSites: Readonly<Record<string, { activation: string; file: string }>> = {
-  "test:protocol.stable-ids.namespaced-round-trip": {
-    activation: "registerNamespacedRoundTrip",
-    file: "test/self-hosting-model.test.ts",
-  },
-  "test:protocol.stable-ids.malformed-refusal": {
-    activation: "registerMalformedRefusal",
-    file: "test/self-hosting-model.test.ts",
-  },
-  "test:protocol.anchors.lookalike-refusal": {
-    activation: "registerLookalikeRefusal",
-    file: "test/self-hosting-model.test.ts",
-  },
-  "test:protocol.anchors.physical-identity": {
-    activation: "registerPhysicalIdentity",
-    file: "test/self-hosting-model.test.ts",
-  },
-  "test:protocol.slot-notation.typed-declaration": {
-    activation: "registerTypedDeclaration",
-    file: "test/self-hosting-carrier.test.ts",
-  },
-  "test:protocol.slot-notation.refused-guess": {
-    activation: "registerRefusedGuess",
-    file: "test/self-hosting-carrier.test.ts",
-  },
-  "test:protocol.duplicate-ids.dual-carrier": {
-    activation: "registerDualCarrier",
-    file: "test/self-hosting-duplicate-ids.test.ts",
-  },
-  "test:protocol.kind-evidence.constraints-alone": {
-    activation: "registerConstraintsAlone",
-    file: "test/self-hosting-validators.test.ts",
-  },
-  "test:protocol.kind-evidence.untargeted-constraint": {
-    activation: "registerUntargetedConstraint",
-    file: "test/self-hosting-validators.test.ts",
-  },
-  "test:protocol.kind-evidence.empty-promoted-child": {
-    activation: "registerEmptyPromotedChild",
-    file: "test/self-hosting-validators.test.ts",
-  },
-};
+// An oracle site written as a bare `register<Example>(` call names an adopted generated-registrar
+// activation. Its identifier resolves through the executable AST probe below, so a comment or a
+// string literal can never satisfy the locality invariant (the R9 closure).
+function adoptedActivationIdentifier(site: string): string | undefined {
+  return /^(register[A-Za-z0-9]+)\($/u.exec(site)?.[1];
+}
 
 function executableActivationLine(source: string, activation: string): number | undefined {
   const sourceFile = createSourceFile(
@@ -352,15 +316,14 @@ describe("the self-hosting corpus", () => {
     for (const anchor of expectedAnchors) {
       const source = readFileSync(join(repoRoot, anchor.file), "utf8");
       const anchorLine = lineContaining(source, `const ${anchor.constant}`);
-      const adoptedSite = adoptedActivationSites[anchor.id];
+      const activation = adoptedActivationIdentifier(anchor.site);
       const siteLine =
-        adoptedSite === undefined
+        activation === undefined
           ? lineContaining(source, anchor.site)
-          : (executableActivationLine(source, adoptedSite.activation) ?? 0);
+          : (executableActivationLine(source, activation) ?? 0);
       const node = result.graph.nodes.find((entry) => entry.id === anchor.id);
 
       expect(anchorLine).toBeGreaterThan(0);
-      expect(adoptedSite?.file ?? anchor.file, anchor.id).toBe(anchor.file);
       expect(siteLine, anchor.id).toBeGreaterThan(0);
       // The densest site has four adjacent member anchors; their required component rows add
       // exactly four lines to the original 20-line locality bound.

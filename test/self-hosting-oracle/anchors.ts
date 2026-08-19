@@ -1,6 +1,9 @@
 // The authored anchors of the self-hosting corpus — a binding assertion each, identity only and
 // never intent. `constant` names the anchor declaration and `site` the code it binds, so the
 // suite can resolve both lines in the real file rather than trusting a transcribed line number.
+// A site written as a bare `register<Example>(` call marks an adopted generated registrar: the
+// suite resolves it as an executable top-level call through the TypeScript AST, so a comment or
+// string literal can never satisfy the locality invariant.
 
 export const expectedAnchors = [
   {
@@ -341,7 +344,7 @@ export const expectedAnchors = [
     target: "spec:validation.duplicate-ids.dual-carrier",
     file: "test/self-hosting-duplicate-ids.test.ts",
     constant: "dualCarrierDuplicateTestAnchor",
-    site: "bindExample(",
+    site: "registerDualCarrier(",
   },
   {
     id: "test:protocol.warn-level-signals.orphan-signal",
@@ -391,7 +394,7 @@ export const expectedAnchors = [
     target: "spec:validation.kind-evidence.constraints-alone",
     file: "test/self-hosting-validators.test.ts",
     constant: "constraintsAloneTestAnchor",
-    site: "bindExample(constraintsAloneContract",
+    site: "registerConstraintsAlone(",
   },
   {
     id: "test:protocol.kind-evidence.untargeted-constraint",
@@ -401,7 +404,7 @@ export const expectedAnchors = [
     target: "spec:validation.kind-evidence.untargeted-constraint",
     file: "test/self-hosting-validators.test.ts",
     constant: "untargetedConstraintTestAnchor",
-    site: "bindExample(untargetedConstraintContract",
+    site: "registerUntargetedConstraint(",
   },
   {
     id: "test:protocol.kind-evidence.empty-promoted-child",
@@ -411,7 +414,7 @@ export const expectedAnchors = [
     target: "spec:validation.kind-evidence.empty-promoted-child",
     file: "test/self-hosting-validators.test.ts",
     constant: "emptyPromotedChildTestAnchor",
-    site: "bindExample(emptyPromotedChildContract",
+    site: "registerEmptyPromotedChild(",
   },
   {
     id: "test:protocol.referential-integrity.dangling-target",
@@ -541,7 +544,7 @@ export const expectedAnchors = [
     target: "spec:model.stable-ids.namespaced-round-trip",
     file: "test/self-hosting-model.test.ts",
     constant: "namespacedRoundTripTestAnchor",
-    site: "bindExample(namespacedRoundTripContract",
+    site: "registerNamespacedRoundTrip(",
   },
   {
     id: "test:protocol.stable-ids.malformed-refusal",
@@ -551,7 +554,7 @@ export const expectedAnchors = [
     target: "spec:model.stable-ids.malformed-refusal",
     file: "test/self-hosting-model.test.ts",
     constant: "malformedRefusalTestAnchor",
-    site: "bindExample(malformedRefusalContract",
+    site: "registerMalformedRefusal(",
   },
   {
     id: "test:protocol.markdown-parser.bounded-parity",
@@ -1021,7 +1024,7 @@ export const expectedAnchors = [
     target: "spec:carrier.slot-notation.typed-declaration",
     file: "test/self-hosting-carrier.test.ts",
     constant: "slotNotationTypedTestAnchor",
-    site: "bindExample(typedDeclarationContract",
+    site: "registerTypedDeclaration(",
   },
   {
     id: "test:protocol.slot-notation.refused-guess",
@@ -1031,7 +1034,7 @@ export const expectedAnchors = [
     target: "spec:carrier.slot-notation.refused-guess",
     file: "test/self-hosting-carrier.test.ts",
     constant: "slotNotationRefusedTestAnchor",
-    site: "bindExample(refusedGuessContract",
+    site: "registerRefusedGuess(",
   },
   {
     id: "test:protocol.anchors.lookalike-refusal",
@@ -1041,7 +1044,7 @@ export const expectedAnchors = [
     target: "spec:model.anchors.lookalike-refusal",
     file: "test/self-hosting-model.test.ts",
     constant: "lookalikeRefusalTestAnchor",
-    site: "bindExample(lookalikeRefusalContract",
+    site: "registerLookalikeRefusal(",
   },
   {
     id: "test:protocol.anchors.physical-identity",
@@ -1051,7 +1054,7 @@ export const expectedAnchors = [
     target: "spec:model.anchors.physical-identity",
     file: "test/self-hosting-model.test.ts",
     constant: "physicalIdentityTestAnchor",
-    site: "bindExample(physicalIdentityContract",
+    site: "registerPhysicalIdentity(",
   },
   {
     id: "test:protocol.two-check-families.split-report",
