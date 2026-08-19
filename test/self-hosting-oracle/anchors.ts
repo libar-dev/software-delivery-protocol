@@ -164,7 +164,7 @@ export const expectedAnchors = [
     target: "spec:extraction.build-pipeline.same-invocation",
     file: "test/self-hosting-extraction.test.ts",
     constant: "buildPipelineSameInvocationTestAnchor",
-    site: "bindExample(sameInvocationContract",
+    site: "registerSameInvocation(",
   },
   {
     id: "impl:protocol.authoring-on-ramp",
@@ -354,7 +354,7 @@ export const expectedAnchors = [
     target: "spec:validation.warn-level-signals.orphan-signal",
     file: "test/self-hosting-validators.test.ts",
     constant: "warnLevelOrphanTestAnchor",
-    site: "bindExample(orphanSignalContract",
+    site: "registerOrphanSignal(",
   },
   {
     id: "test:protocol.warn-level-signals.ready-gap-signal",
@@ -364,7 +364,7 @@ export const expectedAnchors = [
     target: "spec:validation.warn-level-signals.ready-gap-signal",
     file: "test/self-hosting-validators.test.ts",
     constant: "warnLevelGapTestAnchor",
-    site: "bindExample(readyGapSignalContract",
+    site: "registerReadyGapSignal(",
   },
   {
     id: "test:protocol.readiness-floor.unrelated-scoped-spec",
@@ -374,7 +374,7 @@ export const expectedAnchors = [
     target: "spec:validation.readiness-floor.unrelated-scoped-spec",
     file: "test/self-hosting-validators.test.ts",
     constant: "unrelatedScopedSpecTestAnchor",
-    site: "bindExample(unrelatedScopedSpecContract",
+    site: "registerUnrelatedScopedSpec(",
   },
   {
     id: "test:protocol.readiness-floor.blocking-open-question",
@@ -384,7 +384,7 @@ export const expectedAnchors = [
     target: "spec:validation.readiness-floor.blocking-open-question",
     file: "test/self-hosting-validators.test.ts",
     constant: "blockingOpenQuestionTestAnchor",
-    site: "bindExample(blockingOpenQuestionContract",
+    site: "registerBlockingOpenQuestion(",
   },
   {
     id: "test:protocol.kind-evidence.constraints-alone",
@@ -424,7 +424,7 @@ export const expectedAnchors = [
     target: "spec:validation.referential-integrity.dangling-target",
     file: "test/self-hosting-validators.test.ts",
     constant: "danglingTargetTestAnchor",
-    site: "bindExample(danglingTargetContract",
+    site: "registerDanglingTarget(",
   },
   {
     id: "test:protocol.referential-integrity.did-you-mean",
@@ -434,7 +434,7 @@ export const expectedAnchors = [
     target: "spec:validation.referential-integrity.did-you-mean",
     file: "test/self-hosting-validators.test.ts",
     constant: "didYouMeanTestAnchor",
-    site: "bindExample(didYouMeanContract",
+    site: "registerDidYouMean(",
   },
   {
     id: "test:protocol.authored-honesty.section-authored-fact",
@@ -444,7 +444,7 @@ export const expectedAnchors = [
     target: "spec:validation.authored-honesty.section-authored-fact",
     file: "test/self-hosting-validators.test.ts",
     constant: "sectionAuthoredFactTestAnchor",
-    site: "bindExample(sectionAuthoredFactContract",
+    site: "registerSectionAuthoredFact(",
   },
   {
     id: "test:protocol.authored-honesty.unearned-stated-fact",
@@ -454,7 +454,7 @@ export const expectedAnchors = [
     target: "spec:validation.authored-honesty.unearned-stated-fact",
     file: "test/self-hosting-validators.test.ts",
     constant: "unearnedStatedFactTestAnchor",
-    site: "bindExample(unearnedStatedFactContract",
+    site: "registerUnearnedStatedFact(",
   },
   {
     id: "test:protocol.claim-separation.collapsed-edge-claim",
@@ -464,7 +464,7 @@ export const expectedAnchors = [
     target: "spec:validation.claim-separation.collapsed-edge-claim",
     file: "test/self-hosting-validators.test.ts",
     constant: "collapsedEdgeClaimTestAnchor",
-    site: "bindExample(collapsedEdgeClaimContract",
+    site: "registerCollapsedEdgeClaim(",
   },
   {
     id: "test:protocol.claim-separation.unratified-descriptor",
@@ -474,7 +474,7 @@ export const expectedAnchors = [
     target: "spec:validation.claim-separation.unratified-descriptor",
     file: "test/self-hosting-validators.test.ts",
     constant: "unratifiedDescriptorTestAnchor",
-    site: "bindExample(unratifiedDescriptorContract",
+    site: "registerUnratifiedDescriptor(",
   },
   {
     id: "test:protocol.verification-linkage.unbound-example",
@@ -484,7 +484,7 @@ export const expectedAnchors = [
     target: "spec:validation.verification-linkage.unbound-example",
     file: "test/self-hosting-validators.test.ts",
     constant: "unboundExampleTestAnchor",
-    site: "bindExample(unboundExampleContract",
+    site: "registerUnboundExample(",
   },
   {
     id: "test:protocol.verification-linkage.unresolved-oracle",
@@ -494,7 +494,7 @@ export const expectedAnchors = [
     target: "spec:validation.verification-linkage.unresolved-oracle",
     file: "test/self-hosting-validators.test.ts",
     constant: "unresolvedOracleTestAnchor",
-    site: "bindExample(unresolvedOracleContract",
+    site: "registerUnresolvedOracle(",
   },
   {
     id: "test:protocol.pack-coherence.incoherent-aggregate",
@@ -504,7 +504,7 @@ export const expectedAnchors = [
     target: "spec:validation.pack-coherence.incoherent-aggregate",
     file: "test/self-hosting-validators.test.ts",
     constant: "incoherentAggregateTestAnchor",
-    site: "bindExample(incoherentAggregateContract",
+    site: "registerIncoherentAggregate(",
   },
   {
     id: "test:protocol.excludes.segment-boundary",
@@ -514,7 +514,7 @@ export const expectedAnchors = [
     target: "spec:extraction.excludes.segment-boundary",
     file: "test/self-hosting-extraction.test.ts",
     constant: "excludesSegmentBoundaryTestAnchor",
-    site: "bindExample(segmentBoundaryContract",
+    site: "registerSegmentBoundary(",
   },
   {
     id: "test:protocol.excludes.refused-path",
@@ -524,7 +524,7 @@ export const expectedAnchors = [
     target: "spec:extraction.excludes.refused-path",
     file: "test/self-hosting-extraction.test.ts",
     constant: "excludesRefusedPathTestAnchor",
-    site: "bindExample(refusedPathContract",
+    site: "registerRefusedPath(",
   },
   {
     id: "test:protocol.schema-versioning.declared-version",
@@ -534,7 +534,7 @@ export const expectedAnchors = [
     target: "spec:extraction.schema-versioning.declared-version",
     file: "test/self-hosting-extraction.test.ts",
     constant: "schemaVersioningTestAnchor",
-    site: "bindExample(declaredVersionContract",
+    site: "registerDeclaredVersion(",
   },
   {
     id: "test:protocol.stable-ids.namespaced-round-trip",
@@ -564,7 +564,7 @@ export const expectedAnchors = [
     target: "spec:carrier.markdown-parser.bounded-parity",
     file: "test/self-hosting-carrier.test.ts",
     constant: "boundedParityTestAnchor",
-    site: "bindExample(boundedParityContract",
+    site: "registerBoundedParity(",
   },
   {
     id: "test:protocol.gherkin-authoring.authored-fact-refused",
@@ -574,7 +574,7 @@ export const expectedAnchors = [
     target: "spec:carrier.gherkin-authoring.authored-fact-refused",
     file: "test/self-hosting-carrier-gherkin.test.ts",
     constant: "authoredFactRefusedAnchor",
-    site: "bindExample(authoredFactRefusedContract",
+    site: "registerAuthoredFactRefused(",
   },
   {
     id: "test:protocol.gherkin-authoring.contract-parity",
@@ -594,7 +594,7 @@ export const expectedAnchors = [
     target: "spec:carrier.gherkin-authoring.duplicate-surface-refused",
     file: "test/self-hosting-carrier-gherkin.test.ts",
     constant: "duplicateSurfaceRefusedAnchor",
-    site: "bindExample(duplicateSurfaceRefusedContract",
+    site: "registerDuplicateSurfaceRefused(",
   },
   {
     id: "test:protocol.gherkin-authoring.example-space-extraction",
@@ -604,7 +604,7 @@ export const expectedAnchors = [
     target: "spec:carrier.gherkin-authoring.example-space-extraction",
     file: "test/self-hosting-carrier-gherkin.test.ts",
     constant: "exampleSpaceExtractionAnchor",
-    site: "bindExample(exampleSpaceExtractionContract",
+    site: "registerExampleSpaceExtraction(",
   },
   {
     id: "test:protocol.gherkin-authoring.malformed-relation-refused",
@@ -614,7 +614,7 @@ export const expectedAnchors = [
     target: "spec:carrier.gherkin-authoring.malformed-relation-refused",
     file: "test/self-hosting-carrier-gherkin.test.ts",
     constant: "malformedRelationRefusedAnchor",
-    site: "bindExample(malformedRelationRefusedContract",
+    site: "registerMalformedRelationRefused(",
   },
   {
     id: "test:protocol.gherkin-authoring.missing-id-refused",
@@ -624,7 +624,7 @@ export const expectedAnchors = [
     target: "spec:carrier.gherkin-authoring.missing-id-refused",
     file: "test/self-hosting-carrier-gherkin.test.ts",
     constant: "missingIdRefusedAnchor",
-    site: "bindExample(missingIdRefusedContract",
+    site: "registerMissingIdRefused(",
   },
   {
     id: "test:protocol.gherkin-authoring.parent-child-extraction",
@@ -634,7 +634,7 @@ export const expectedAnchors = [
     target: "spec:carrier.gherkin-authoring.parent-child-extraction",
     file: "test/self-hosting-carrier-gherkin.test.ts",
     constant: "parentChildExtractionAnchor",
-    site: "bindExample(parentChildExtractionContract",
+    site: "registerParentChildExtraction(",
   },
   {
     id: "test:protocol.gherkin-authoring.unbound-ready-refused",
@@ -654,7 +654,7 @@ export const expectedAnchors = [
     target: "spec:carrier.gherkin-authoring.unknown-tag-refused",
     file: "test/self-hosting-carrier-gherkin.test.ts",
     constant: "unknownTagRefusedAnchor",
-    site: "bindExample(unknownTagRefusedContract",
+    site: "registerUnknownTagRefused(",
   },
   {
     id: "test:protocol.gherkin-authoring.unsupported-construct-refused",
@@ -664,7 +664,7 @@ export const expectedAnchors = [
     target: "spec:carrier.gherkin-authoring.unsupported-construct-refused",
     file: "test/self-hosting-carrier-gherkin.test.ts",
     constant: "unsupportedConstructRefusedAnchor",
-    site: "bindExample(unsupportedConstructRefusedContract",
+    site: "registerUnsupportedConstructRefused(",
   },
   {
     id: "test:protocol.gherkin-authoring.description-location-refused",
@@ -674,7 +674,7 @@ export const expectedAnchors = [
     target: "spec:carrier.gherkin-authoring.description-location-refused",
     file: "test/self-hosting-carrier-gherkin.test.ts",
     constant: "descriptionLocationRefusedAnchor",
-    site: "bindExample(descriptionLocationRefusedContract",
+    site: "registerDescriptionLocationRefused(",
   },
   {
     id: "test:protocol.gherkin-authoring.step-less-scenario-refused",
@@ -684,7 +684,7 @@ export const expectedAnchors = [
     target: "spec:carrier.gherkin-authoring.step-less-scenario-refused",
     file: "test/self-hosting-carrier-gherkin.test.ts",
     constant: "stepLessScenarioRefusedAnchor",
-    site: "bindExample(stepLessScenarioRefusedContract",
+    site: "registerStepLessScenarioRefused(",
   },
   {
     id: "test:protocol.gherkin-authoring.multi-finding-bounded",
@@ -694,7 +694,7 @@ export const expectedAnchors = [
     target: "spec:carrier.gherkin-authoring.multi-finding-bounded",
     file: "test/self-hosting-carrier-gherkin.test.ts",
     constant: "multiFindingBoundedAnchor",
-    site: "bindExample(multiFindingBoundedContract",
+    site: "registerMultiFindingBounded(",
   },
   {
     id: "test:protocol.sdp-import.round-trip",
@@ -704,7 +704,7 @@ export const expectedAnchors = [
     target: "spec:carrier.sdp-import.round-trip",
     file: "test/self-hosting-sdp-import.test.ts",
     constant: "sdpImportRoundTripTestAnchor",
-    site: "bindExample(",
+    site: "registerRoundTrip(",
   },
   {
     id: "impl:protocol.anchor-extraction",
@@ -1014,7 +1014,7 @@ export const expectedAnchors = [
     target: "spec:extraction.example-runner.red-step-naming",
     file: "test/self-hosting-extraction.test.ts",
     constant: "exampleRunnerRedStepTestAnchor",
-    site: "bindExample(redStepNamingContract",
+    site: "registerRedStepNaming(",
   },
   {
     id: "test:protocol.slot-notation.typed-declaration",
@@ -1064,7 +1064,7 @@ export const expectedAnchors = [
     target: "spec:validation.two-check-families.split-report",
     file: "test/self-hosting-validators.test.ts",
     constant: "splitReportTestAnchor",
-    site: "bindExample(splitReportContract",
+    site: "registerSplitReport(",
   },
   {
     id: "test:protocol.derived-readiness-banner.dishonest-divergence",
@@ -1074,7 +1074,7 @@ export const expectedAnchors = [
     target: "spec:consumers.derived-readiness-banner.dishonest-divergence",
     file: "test/self-hosting-projections.test.ts",
     constant: "dishonestDivergenceTestAnchor",
-    site: "bindExample(dishonestDivergenceContract",
+    site: "registerDishonestDivergence(",
   },
   {
     id: "test:protocol.derived-readiness-banner.honest-headroom",
@@ -1084,7 +1084,7 @@ export const expectedAnchors = [
     target: "spec:consumers.derived-readiness-banner.honest-headroom",
     file: "test/self-hosting-projections.test.ts",
     constant: "honestHeadroomTestAnchor",
-    site: "bindExample(honestHeadroomContract",
+    site: "registerHonestHeadroom(",
   },
   {
     id: "test:protocol.binding-language-views.bound-spec-page",
@@ -1104,7 +1104,7 @@ export const expectedAnchors = [
     target: "spec:consumers.binding-language-views.pack-member-table",
     file: "test/self-hosting-projections.test.ts",
     constant: "packMemberTableTestAnchor",
-    site: "bindExample(packMemberTableContract",
+    site: "registerPackMemberTable(",
   },
   {
     id: "test:protocol.wholesale-view-rewrite.stale-page-removed",
@@ -1114,7 +1114,7 @@ export const expectedAnchors = [
     target: "spec:consumers.wholesale-view-rewrite.stale-page-removed",
     file: "test/self-hosting-projections.test.ts",
     constant: "stalePageRemovedTestAnchor",
-    site: "bindExample(stalePageRemovedContract",
+    site: "registerStalePageRemoved(",
   },
   {
     id: "test:protocol.wholesale-view-rewrite.late-stale-page",
@@ -1124,7 +1124,7 @@ export const expectedAnchors = [
     target: "spec:consumers.wholesale-view-rewrite.late-stale-page",
     file: "test/self-hosting-projections.test.ts",
     constant: "lateStalePageTestAnchor",
-    site: "bindExample(lateStalePageContract",
+    site: "registerLateStalePage(",
   },
   {
     id: "test:protocol.wholesale-view-rewrite.failed-run-view-removed",
@@ -1134,7 +1134,7 @@ export const expectedAnchors = [
     target: "spec:consumers.wholesale-view-rewrite.failed-run-view-removed",
     file: "test/self-hosting-projections.test.ts",
     constant: "failedRunViewRemovedTestAnchor",
-    site: "bindExample(failedRunViewRemovedContract",
+    site: "registerFailedRunViewRemoved(",
   },
   {
     id: "test:protocol.wholesale-view-rewrite.build-invalidates-view",
@@ -1144,7 +1144,7 @@ export const expectedAnchors = [
     target: "spec:consumers.wholesale-view-rewrite.build-invalidates-view",
     file: "test/self-hosting-projections.test.ts",
     constant: "buildInvalidatesViewTestAnchor",
-    site: "bindExample(buildInvalidatesViewContract",
+    site: "registerBuildInvalidatesView(",
   },
   {
     id: "test:protocol.diagnostic-rendering.composed-location",
@@ -1154,7 +1154,7 @@ export const expectedAnchors = [
     target: "spec:validation.diagnostic-rendering.composed-location",
     file: "test/self-hosting-projections.test.ts",
     constant: "composedLocationTestAnchor",
-    site: "bindExample(composedLocationContract",
+    site: "registerComposedLocation(",
   },
   {
     id: "test:protocol.diagnostic-rendering.table-cell-location",
@@ -1164,7 +1164,7 @@ export const expectedAnchors = [
     target: "spec:validation.diagnostic-rendering.table-cell-location",
     file: "test/self-hosting-projections.test.ts",
     constant: "tableCellLocationTestAnchor",
-    site: "bindExample(tableCellLocationContract",
+    site: "registerTableCellLocation(",
   },
   {
     id: "test:protocol.design-review.pure-projection",
@@ -1174,7 +1174,7 @@ export const expectedAnchors = [
     target: "spec:consumers.design-review.pure-projection",
     file: "test/self-hosting-projections.test.ts",
     constant: "pureProjectionTestAnchor",
-    site: "bindExample(pureProjectionContract",
+    site: "registerPureProjection(",
   },
   {
     id: "test:protocol.agent-surface.scripted-context-body",
@@ -1454,7 +1454,7 @@ export const expectedAnchors = [
     target: "spec:validation.oracle-target-eligibility.rule-space-accepted",
     file: "test/self-hosting-validators.test.ts",
     constant: "ruleSpaceAcceptedTestAnchor",
-    site: "bindExample(ruleSpaceAcceptedContract",
+    site: "registerRuleSpaceAccepted(",
   },
   {
     id: "test:protocol.mermaid-view",
@@ -1474,7 +1474,7 @@ export const expectedAnchors = [
     target: "spec:validation.oracle-target-eligibility.missing-space-refused",
     file: "test/self-hosting-validators.test.ts",
     constant: "missingSpaceRefusedTestAnchor",
-    site: "bindExample(missingSpaceRefusedContract",
+    site: "registerMissingSpaceRefused(",
   },
   {
     id: "oracle:protocol.oracle-target-eligibility",
@@ -1504,7 +1504,7 @@ export const expectedAnchors = [
     target: "spec:carrier.markdown-pack-authoring.markdown-ts-parity",
     file: "test/self-hosting-pack-markdown.test.ts",
     constant: "parityTestAnchor",
-    site: "bindExample(markdownTsParityContract",
+    site: "registerMarkdownTsParity(",
   },
   {
     id: "test:protocol.markdown-pack-authoring.spec-envelope-refused",
@@ -1514,7 +1514,7 @@ export const expectedAnchors = [
     target: "spec:carrier.markdown-pack-authoring.spec-envelope-refused",
     file: "test/self-hosting-pack-markdown.test.ts",
     constant: "refusalTestAnchor",
-    site: "bindExample(specEnvelopeRefusedContract",
+    site: "registerSpecEnvelopeRefused(",
   },
   {
     id: "impl:protocol.build-pipeline-query",

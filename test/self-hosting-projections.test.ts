@@ -14,18 +14,39 @@ import { dirname, join } from "node:path";
 import { afterEach, expect } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
 import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
 
 import { boundSpecPageContract } from "../generated/contracts/consumers.binding-language-views.bound-spec-page.contract.js";
 import { packMemberTableContract } from "../generated/contracts/consumers.binding-language-views.pack-member-table.contract.js";
+import type {
+  BindingLanguageViewsConditions,
+  BindingLanguageViewsOutcome,
+} from "../generated/contracts/consumers.binding-language-views.space.js";
 import { dishonestDivergenceContract } from "../generated/contracts/consumers.derived-readiness-banner.dishonest-divergence.contract.js";
-import { pureProjectionContract } from "../generated/contracts/consumers.design-review.pure-projection.contract.js";
 import { honestHeadroomContract } from "../generated/contracts/consumers.derived-readiness-banner.honest-headroom.contract.js";
+import type {
+  DerivedReadinessBannerConditions,
+  DerivedReadinessBannerOutcome,
+} from "../generated/contracts/consumers.derived-readiness-banner.space.js";
+import { pureProjectionContract } from "../generated/contracts/consumers.design-review.pure-projection.contract.js";
+import type {
+  DesignReviewConditions,
+  DesignReviewOutcome,
+} from "../generated/contracts/consumers.design-review.space.js";
 import { buildInvalidatesViewContract } from "../generated/contracts/consumers.wholesale-view-rewrite.build-invalidates-view.contract.js";
 import { failedRunViewRemovedContract } from "../generated/contracts/consumers.wholesale-view-rewrite.failed-run-view-removed.contract.js";
 import { lateStalePageContract } from "../generated/contracts/consumers.wholesale-view-rewrite.late-stale-page.contract.js";
+import type {
+  WholesaleViewRewriteConditions,
+  WholesaleViewRewriteOutcome,
+} from "../generated/contracts/consumers.wholesale-view-rewrite.space.js";
 import { stalePageRemovedContract } from "../generated/contracts/consumers.wholesale-view-rewrite.stale-page-removed.contract.js";
 import { composedLocationContract } from "../generated/contracts/validation.diagnostic-rendering.composed-location.contract.js";
+import type {
+  DiagnosticRenderingConditions,
+  DiagnosticRenderingOutcome,
+} from "../generated/contracts/validation.diagnostic-rendering.space.js";
 import { tableCellLocationContract } from "../generated/contracts/validation.diagnostic-rendering.table-cell-location.contract.js";
 import {
   codeAnchor,
@@ -47,8 +68,19 @@ import { runView } from "../src/cli/validate-view-command.js";
 import { extract } from "../src/extract/index.js";
 import { renderFindings } from "../src/projections/design-review-context.js";
 import { validateGraph } from "../src/validate/validators.js";
+import { registerPackMemberTable } from "./consumers.binding-language-views.pack-member-table.test.generated.js";
+import { registerDishonestDivergence } from "./consumers.derived-readiness-banner.dishonest-divergence.test.generated.js";
+import { registerHonestHeadroom } from "./consumers.derived-readiness-banner.honest-headroom.test.generated.js";
+import { registerPureProjection } from "./consumers.design-review.pure-projection.test.generated.js";
+import { registerBuildInvalidatesView } from "./consumers.wholesale-view-rewrite.build-invalidates-view.test.generated.js";
+import { registerFailedRunViewRemoved } from "./consumers.wholesale-view-rewrite.failed-run-view-removed.test.generated.js";
+import { registerLateStalePage } from "./consumers.wholesale-view-rewrite.late-stale-page.test.generated.js";
+import { registerStalePageRemoved } from "./consumers.wholesale-view-rewrite.stale-page-removed.test.generated.js";
+import { paramsForStep } from "./helpers/generated-contract.js";
 import { materializeExtractCorpus } from "./helpers/extract-corpus.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
+import { registerComposedLocation } from "./validation.diagnostic-rendering.composed-location.test.generated.js";
+import { registerTableCellLocation } from "./validation.diagnostic-rendering.table-cell-location.test.generated.js";
 
 /**
  * The bound executable points of the projection family: what the one read-only view renders, and
@@ -81,6 +113,10 @@ function pageOf(pages: readonly DesignReviewPage[], path: string): string {
   }
 
   return page.content;
+}
+
+function localOf(id: string): string {
+  return id.slice(id.indexOf(":") + 1);
 }
 
 /* ----- spec:consumers.design-review ----- */
@@ -120,25 +156,6 @@ interface ProjectionWorld {
   secondPages: readonly DesignReviewPage[] | undefined;
 }
 
-function projectionWorld(): ProjectionWorld {
-  // The whole pipeline over a real on-disk root: nothing here hands the projection a hand-built
-  // graph, because a page that is a pure function of the graph can only be read as one when the
-  // graph came from the extractor the way it does in production.
-  const root = materializeExtractCorpus("consumer-surface");
-  temporaryRoots.add(root);
-
-  return {
-    root,
-    fingerprintBefore: "",
-    fingerprintAfter: "",
-    specIds: [],
-    packIds: [],
-    warning: undefined,
-    pages: undefined,
-    secondPages: undefined,
-  };
-}
-
 function renderedPagesOf(world: ProjectionWorld): readonly DesignReviewPage[] {
   if (world.pages === undefined) {
     throw new Error("The rendering step must run before the page set is read.");
@@ -147,115 +164,134 @@ function renderedPagesOf(world: ProjectionWorld): readonly DesignReviewPage[] {
   return world.pages;
 }
 
-function localOf(id: string): string {
-  return id.slice(id.indexOf(":") + 1);
+function createProjectionWorld(_point: Partial<DesignReviewConditions>): ProjectionWorld {
+  void _point;
+  // The whole pipeline over a real on-disk root: nothing here hands the projection a hand-built
+  // graph, because a page that is a pure function of the graph can only be read as one when the
+  // graph came from the extractor the way it does in production.
+  const root = materializeExtractCorpus("consumer-surface");
+  temporaryRoots.add(root);
+
+  const derived = extract({ root });
+  expect(derived.report.findings).toEqual([]);
+  const specIds = derived.graph.nodes
+    .filter((node) => node.nodeType === "Primitive")
+    .map((node) => node.id);
+  const packIds = derived.graph.nodes
+    .filter((node) => node.nodeType === "Pack")
+    .map((node) => node.id);
+  expect(specIds.length).toBeGreaterThan(1);
+  expect(packIds).toHaveLength(1);
+
+  const findings = validateGraph(derived.graph).findings;
+  expect(findings.filter((finding) => finding.severity === "error")).toEqual([]);
+  expect(findings).toHaveLength(1);
+
+  return {
+    root,
+    fingerprintBefore: fingerprintTree(root),
+    fingerprintAfter: "",
+    specIds,
+    packIds,
+    warning: findings[0],
+    pages: undefined,
+    secondPages: undefined,
+  };
 }
 
-const pureProjectionBindings = {
-  "an extraction root holding a Pack, its member Specs, and one member the checks warn about": (
-    world: ProjectionWorld,
-  ) => {
-    const derived = extract({ root: world.root });
+function invokePureProjection(world: ProjectionWorld): void {
+  world.pages = renderDesignReview(createReader(extract({ root: world.root }).graph));
+  // The second run derives its own graph from the same source rather than re-using the first
+  // one: a renderer that carried a timestamp, a run id, or a cached handle would diverge here
+  // where a re-render off one graph object could still agree.
+  world.secondPages = renderDesignReview(createReader(extract({ root: world.root }).graph));
+  world.fingerprintAfter = fingerprintTree(world.root);
+}
 
-    expect(derived.report.findings).toEqual([]);
-    world.specIds = derived.graph.nodes
-      .filter((node) => node.nodeType === "Primitive")
-      .map((node) => node.id);
-    world.packIds = derived.graph.nodes
-      .filter((node) => node.nodeType === "Pack")
-      .map((node) => node.id);
-    expect(world.specIds.length).toBeGreaterThan(1);
-    expect(world.packIds).toHaveLength(1);
+function observePureProjection(world: ProjectionWorld): DesignReviewOutcome {
+  const index = renderedPagesOf(world).find((page) => page.path === "index.md");
 
-    const findings = validateGraph(derived.graph).findings;
+  return {
+    kind: "the page set holds the index page {indexPage}, one page per Spec, and one page per Pack",
+    indexPage: index?.path ?? "",
+  };
+}
 
-    expect(findings.filter((finding) => finding.severity === "error")).toEqual([]);
-    expect(findings).toHaveLength(1);
-    world.warning = findings[0];
-  },
-  "the Design Review renders the graph derived from that root": (world: ProjectionWorld) => {
-    world.fingerprintBefore = fingerprintTree(world.root);
-    world.pages = renderDesignReview(createReader(extract({ root: world.root }).graph));
-    // The second run derives its own graph from the same source rather than re-using the first
-    // one: a renderer that carried a timestamp, a run id, or a cached handle would diverge here
-    // where a re-render off one graph object could still agree.
-    world.secondPages = renderDesignReview(createReader(extract({ root: world.root }).graph));
-    world.fingerprintAfter = fingerprintTree(world.root);
-  },
-  "the page set holds the index page {indexPage}, one page per Spec, and one page per Pack": (
-    world: ProjectionWorld,
-    params: { readonly indexPage: string },
-  ) => {
-    expect(renderedPagesOf(world).map((page) => page.path)).toEqual(
-      [
-        params.indexPage,
-        ...world.specIds.map((id) => `spec/${localOf(id)}.md`),
-        ...world.packIds.map((id) => `pack/${localOf(id)}.md`),
-      ].sort(),
-    );
-    // The index is a page of the graph too, not a stub: every Spec is reachable from it.
-    for (const id of world.specIds) {
-      expect(pageOf(renderedPagesOf(world), params.indexPage)).toContain(`\`${id}\``);
+function expectedPureProjection(_point: Partial<DesignReviewConditions>): DesignReviewOutcome {
+  void _point;
+  const { indexPage } = paramsForStep(
+    pureProjectionContract,
+    "the page set holds the index page {indexPage}, one page per Spec, and one page per Pack",
+  );
+
+  return {
+    kind: "the page set holds the index page {indexPage}, one page per Spec, and one page per Pack",
+    indexPage,
+  };
+}
+
+function assertPureProjection(world: ProjectionWorld): void {
+  const { indexPage } = paramsForStep(
+    pureProjectionContract,
+    "the page set holds the index page {indexPage}, one page per Spec, and one page per Pack",
+  );
+  const { packPage } = paramsForStep(
+    pureProjectionContract,
+    "the page {packPage} renders its members in context",
+  );
+  const { specPage, findingId } = paramsForStep(
+    pureProjectionContract,
+    "the page {specPage} renders the finding {findingId} as data",
+  );
+  const { byteIdentical } = paramsForStep(
+    pureProjectionContract,
+    "a second render from a freshly derived graph is byte-identical: {byteIdentical}",
+  );
+  const { rootUntouched } = paramsForStep(
+    pureProjectionContract,
+    "the render leaves the extraction root byte-identical: {rootUntouched}",
+  );
+
+  expect(renderedPagesOf(world).map((page) => page.path)).toEqual(
+    [
+      indexPage,
+      ...world.specIds.map((id) => `spec/${localOf(id)}.md`),
+      ...world.packIds.map((id) => `pack/${localOf(id)}.md`),
+    ].sort(),
+  );
+  for (const id of world.specIds) {
+    expect(pageOf(renderedPagesOf(world), indexPage)).toContain(`\`${id}\``);
+  }
+
+  const packRendered = pageOf(renderedPagesOf(world), packPage);
+  for (const id of world.specIds) {
+    expect(packRendered).toContain(`[\`${id}\`](../spec/${localOf(id)}.md)`);
+  }
+  expect(packRendered).toContain("| Spec | Kind | Altitude | Stated | Floor reached |");
+
+  const specRendered = pageOf(renderedPagesOf(world), specPage);
+  const warning = world.warning;
+  expect(warning?.validatorId).toBe(findingId);
+  expect(specRendered).toContain(`\`${findingId}\``);
+  expect(specRendered).toContain(warning?.severity ?? "");
+  expect(warning?.subjectId).toBe(`spec:${specPage.slice("spec/".length, -".md".length)}`);
+  const named = new Set([warning?.subjectId, warning?.relatedId]);
+
+  for (const page of renderedPagesOf(world)) {
+    if (page.path === "index.md") {
+      continue;
     }
-  },
-  "the page {packPage} renders its members in context": (
-    world: ProjectionWorld,
-    params: { readonly packPage: string },
-  ) => {
-    const rendered = pageOf(renderedPagesOf(world), params.packPage);
 
-    // In context means the aggregate reads as a review set: every member, linked, with the
-    // descriptors and binding words the review is conducted in.
-    for (const id of world.specIds) {
-      expect(rendered).toContain(`[\`${id}\`](../spec/${localOf(id)}.md)`);
-    }
-    expect(rendered).toContain("| Spec | Kind | Altitude | Stated | Floor reached |");
-  },
-  "the page {specPage} renders the finding {findingId} as data": (
-    world: ProjectionWorld,
-    params: { readonly specPage: string; readonly findingId: string },
-  ) => {
-    const rendered = pageOf(renderedPagesOf(world), params.specPage);
-    const warning = world.warning;
+    const [directory, file] = page.path.split("/");
+    const subject = `${directory === "spec" ? "spec" : "pack"}:${(file ?? "").slice(0, -".md".length)}`;
 
-    expect(warning?.validatorId).toBe(params.findingId);
-    expect(rendered).toContain(`\`${params.findingId}\``);
-    expect(rendered).toContain(warning?.severity ?? "");
-    // Rendered in context and nowhere else: the finding appears beside every node it names and
-    // beside no node it does not. It is the report's data placed where it is read, never a verdict
-    // the view attaches to the corpus. (The index is the whole report's aggregate, lawfully.)
-    expect(warning?.subjectId).toBe(`spec:${params.specPage.slice("spec/".length, -".md".length)}`);
-    const named = new Set([warning?.subjectId, warning?.relatedId]);
+    expect(page.content.includes(`\`${findingId}\``), page.path).toBe(named.has(subject));
+  }
 
-    for (const page of renderedPagesOf(world)) {
-      if (page.path === "index.md") {
-        continue;
-      }
-
-      const [directory, file] = page.path.split("/");
-      const subject = `${directory === "spec" ? "spec" : "pack"}:${(file ?? "").slice(0, -".md".length)}`;
-
-      expect(page.content.includes(`\`${params.findingId}\``), page.path).toBe(named.has(subject));
-    }
-  },
-  "a second render from a freshly derived graph is byte-identical: {byteIdentical}": (
-    world: ProjectionWorld,
-    params: { readonly byteIdentical: boolean },
-  ) => {
-    expect(JSON.stringify(world.secondPages) === JSON.stringify(world.pages)).toBe(
-      params.byteIdentical,
-    );
-  },
-  "the render leaves the extraction root byte-identical: {rootUntouched}": (
-    world: ProjectionWorld,
-    params: { readonly rootUntouched: boolean },
-  ) => {
-    // Stores no finding, writes no canonical source: two renders later the corpus is the file
-    // tree it was, with no view directory, no report, and no approval recorded anywhere.
-    expect(world.fingerprintAfter === world.fingerprintBefore).toBe(params.rootUntouched);
-    expect(existsSync(join(world.root, "generated"))).toBe(!params.rootUntouched);
-  },
-};
+  expect(JSON.stringify(world.secondPages) === JSON.stringify(world.pages)).toBe(byteIdentical);
+  expect(world.fingerprintAfter === world.fingerprintBefore).toBe(rootUntouched);
+  expect(existsSync(join(world.root, "generated"))).toBe(!rootUntouched);
+}
 
 const pureProjectionTestAnchor = specTest({
   id: testAnchorId("test:protocol.design-review.pure-projection"),
@@ -264,7 +300,13 @@ const pureProjectionTestAnchor = specTest({
 });
 void pureProjectionTestAnchor;
 
-bindExample(pureProjectionContract, projectionWorld, pureProjectionBindings);
+registerPureProjection({
+  createWorld: createProjectionWorld,
+  invoke: invokePureProjection,
+  observe: observePureProjection,
+  expected: expectedPureProjection,
+  assertions: assertPureProjection,
+});
 
 /* ----- spec:consumers.derived-readiness-banner ----- */
 
@@ -277,11 +319,11 @@ interface BannerWorld {
   pages: readonly DesignReviewPage[] | undefined;
 }
 
-function bannerWorld(): BannerWorld {
+function createBannerWorld(point: Partial<DerivedReadinessBannerConditions>): BannerWorld {
   return {
-    specId: "",
-    statedReadiness: "idea",
-    blockingQuestion: false,
+    specId: point.specId ?? "",
+    statedReadiness: point.statedReadiness ?? "idea",
+    blockingQuestion: point.structure === "records a blocking open question",
     pages: undefined,
   };
 }
@@ -301,89 +343,113 @@ function bannerLineOf(world: BannerWorld): string | undefined {
     .find((line) => line.startsWith("> **Readiness divergence.**"));
 }
 
-const bannerBindings = {
-  "the graph holds a rule spec {specId} whose stated readiness is {statedReadiness}": (
-    world: BannerWorld,
-    params: { readonly specId: string; readonly statedReadiness: "scoped" | "ready" },
-  ) => {
-    world.specId = params.specId;
-    world.statedReadiness = params.statedReadiness;
-  },
-  "the spec {structure}": (
-    world: BannerWorld,
-    params: {
-      readonly structure: "clears every floor clause" | "records a blocking open question";
+function invokeBannerRender(world: BannerWorld): void {
+  if (world.specId === "") {
+    return;
+  }
+
+  // The parent is `defined`, so the subject's own `ready` clauses (targets at least `defined`,
+  // every relation resolving) all pass: the open question is the only clause that can refuse,
+  // and the rung the page renders is the rung the floor table yielded.
+  const parent = spec({
+    id: specId(BANNER_PARENT_ID),
+    title: "Probe parent for the readiness banner",
+    kind: "behavior",
+    altitude: "feature",
+    readiness: "defined",
+    intent: { outcome: "Terminate the probe's relation chain at a defined target." },
+    behavior: { rules: ["The parent carries its own kind evidence."] },
+  });
+  const subject = spec({
+    id: specId(world.specId),
+    title: "Probe subject of the readiness banner",
+    kind: "rule",
+    altitude: "story",
+    readiness: world.statedReadiness,
+    intent: {
+      outcome: "State one rung against the structure the probe carries.",
+      ...(world.blockingQuestion
+        ? {
+            openQuestions: [
+              { question: "Which rung does the probe honestly stand at?", blocking: true },
+            ],
+          }
+        : {}),
     },
-  ) => {
-    world.blockingQuestion = params.structure === "records a blocking open question";
-  },
-  "the Design Review renders the graph": (world: BannerWorld) => {
-    // The parent is `defined`, so the subject's own `ready` clauses (targets at least `defined`,
-    // every relation resolving) all pass: the open question is the only clause that can refuse,
-    // and the rung the page renders is the rung the floor table yielded.
-    const parent = spec({
-      id: specId(BANNER_PARENT_ID),
-      title: "Probe parent for the readiness banner",
-      kind: "behavior",
-      altitude: "feature",
-      readiness: "defined",
-      intent: { outcome: "Terminate the probe's relation chain at a defined target." },
-      behavior: { rules: ["The parent carries its own kind evidence."] },
-    });
-    const subject = spec({
-      id: specId(world.specId),
-      title: "Probe subject of the readiness banner",
-      kind: "rule",
-      altitude: "story",
-      readiness: world.statedReadiness,
-      intent: {
-        outcome: "State one rung against the structure the probe carries.",
-        ...(world.blockingQuestion
-          ? {
-              openQuestions: [
-                { question: "Which rung does the probe honestly stand at?", blocking: true },
-              ],
-            }
-          : {}),
-      },
-      behavior: { rules: ["A rule's statement is its own evidence."] },
-      relations: [refines(specId(BANNER_PARENT_ID))],
-    });
+    behavior: { rules: ["A rule's statement is its own evidence."] },
+    relations: [refines(specId(BANNER_PARENT_ID))],
+  });
 
-    world.pages = renderDesignReview(
-      createReader(deriveFixtureGraph({ specs: [parent, subject] })),
-    );
-  },
-  "the spec page renders the floor reached {floorReached}": (
-    world: BannerWorld,
-    params: { readonly floorReached: "scoped" | "ready" },
-  ) => {
-    // The pair renders on every page, agreeing or not — the positive statement the banner's own
-    // absence is read beside, so absence is never the sole discriminator.
-    expect(bannerPage(world)).toContain(
-      `**Readiness:** stated \`${world.statedReadiness}\` · structural floor reached: \`${params.floorReached}\``,
-    );
-  },
-  "the divergence banner is raised: {bannerRaised}": (
-    world: BannerWorld,
-    params: { readonly bannerRaised: boolean },
-  ) => {
-    expect(bannerLineOf(world) !== undefined).toBe(params.bannerRaised);
-  },
-  "the banner names the first unmet clause {clauseId}": (
-    world: BannerWorld,
-    params: { readonly clauseId: string },
-  ) => {
-    const named = /First unmet clause: `(?<clauseId>[^`]+)` — (?<description>.+)$/u.exec(
-      bannerLineOf(world) ?? "the divergence banner is missing",
-    );
+  world.pages = renderDesignReview(createReader(deriveFixtureGraph({ specs: [parent, subject] })));
+}
 
-    expect(named?.groups?.clauseId).toBe(params.clauseId);
-    // The description is the clause's own words, read from the banner rather than from the table
-    // the banner read: what the law requires is that the reader is told which clause refused.
-    expect((named?.groups?.description ?? "").length).toBeGreaterThan(0);
-  },
-};
+function observeBannerFloor(world: BannerWorld): DerivedReadinessBannerOutcome {
+  const named =
+    /\*\*Readiness:\*\* stated `[^`]+` · structural floor reached: `(?<floorReached>[^`]+)`/u.exec(
+      bannerPage(world),
+    );
+  const floorReached = named?.groups?.floorReached;
+
+  if (floorReached !== "scoped" && floorReached !== "ready") {
+    throw new Error("The spec page did not render a structural floor the banner law can read.");
+  }
+
+  return {
+    kind: "the spec page renders the floor reached {floorReached}",
+    floorReached,
+  };
+}
+
+function expectedBannerFloor(
+  point: Partial<DerivedReadinessBannerConditions>,
+  floorReached: "scoped" | "ready",
+): DerivedReadinessBannerOutcome {
+  if (
+    point.specId === undefined ||
+    point.statedReadiness === undefined ||
+    point.structure === undefined
+  ) {
+    return unspecified;
+  }
+
+  return {
+    kind: "the spec page renders the floor reached {floorReached}",
+    floorReached,
+  };
+}
+
+function assertBannerPair(
+  world: BannerWorld,
+  floorReached: "scoped" | "ready",
+  bannerRaised: boolean,
+): void {
+  expect(bannerPage(world)).toContain(
+    `**Readiness:** stated \`${world.statedReadiness}\` · structural floor reached: \`${floorReached}\``,
+  );
+  expect(bannerLineOf(world) !== undefined).toBe(bannerRaised);
+}
+
+function assertDishonestBanner(world: BannerWorld): void {
+  const { floorReached } = paramsForStep(
+    dishonestDivergenceContract,
+    "the spec page renders the floor reached {floorReached}",
+  );
+  const { bannerRaised } = paramsForStep(
+    dishonestDivergenceContract,
+    "the divergence banner is raised: {bannerRaised}",
+  );
+  assertBannerPair(world, floorReached, bannerRaised);
+  const { clauseId } = paramsForStep(
+    dishonestDivergenceContract,
+    "the banner names the first unmet clause {clauseId}",
+  );
+  const named = /First unmet clause: `(?<clauseId>[^`]+)` — (?<description>.+)$/u.exec(
+    bannerLineOf(world) ?? "the divergence banner is missing",
+  );
+
+  expect(named?.groups?.clauseId).toBe(clauseId);
+  expect((named?.groups?.description ?? "").length).toBeGreaterThan(0);
+}
 
 const dishonestDivergenceTestAnchor = specTest({
   id: testAnchorId("test:protocol.derived-readiness-banner.dishonest-divergence"),
@@ -392,7 +458,19 @@ const dishonestDivergenceTestAnchor = specTest({
 });
 void dishonestDivergenceTestAnchor;
 
-bindExample(dishonestDivergenceContract, bannerWorld, bannerBindings);
+registerDishonestDivergence({
+  createWorld: createBannerWorld,
+  invoke: invokeBannerRender,
+  observe: observeBannerFloor,
+  expected: (point) => {
+    const { floorReached } = paramsForStep(
+      dishonestDivergenceContract,
+      "the spec page renders the floor reached {floorReached}",
+    );
+    return expectedBannerFloor(point, floorReached);
+  },
+  assertions: assertDishonestBanner,
+});
 
 const honestHeadroomTestAnchor = specTest({
   id: testAnchorId("test:protocol.derived-readiness-banner.honest-headroom"),
@@ -401,7 +479,29 @@ const honestHeadroomTestAnchor = specTest({
 });
 void honestHeadroomTestAnchor;
 
-bindExample(honestHeadroomContract, bannerWorld, bannerBindings);
+registerHonestHeadroom({
+  createWorld: createBannerWorld,
+  invoke: invokeBannerRender,
+  observe: observeBannerFloor,
+  expected: (point) => {
+    const { floorReached } = paramsForStep(
+      honestHeadroomContract,
+      "the spec page renders the floor reached {floorReached}",
+    );
+    return expectedBannerFloor(point, floorReached);
+  },
+  assertions: (world) => {
+    const { floorReached } = paramsForStep(
+      honestHeadroomContract,
+      "the spec page renders the floor reached {floorReached}",
+    );
+    const { bannerRaised } = paramsForStep(
+      honestHeadroomContract,
+      "the divergence banner is raised: {bannerRaised}",
+    );
+    assertBannerPair(world, floorReached, bannerRaised);
+  },
+});
 
 /* ----- spec:consumers.binding-language-views ----- */
 
@@ -416,6 +516,15 @@ interface BindingWorld {
 
 function bindingWorld(): BindingWorld {
   return { specId: "", bound: false, packId: "", pages: undefined };
+}
+
+function createBindingWorld(point: Partial<BindingLanguageViewsConditions>): BindingWorld {
+  return {
+    specId: point.specId ?? "",
+    bound: point.bindings === "an implementing code anchor and a verifying test anchor",
+    packId: point.packId ?? "",
+    pages: undefined,
+  };
 }
 
 function bindingPages(world: BindingWorld): readonly DesignReviewPage[] {
@@ -467,6 +576,67 @@ function renderedSurfaces(world: BindingWorld): readonly string[] {
     : [bindingPage(world), indexRowOf(world), memberRowOf(world, world.specId)];
 }
 
+function renderBindingGraph(world: BindingWorld): void {
+  if (world.specId === "") {
+    return;
+  }
+
+  const parent = spec({
+    id: specId(BINDING_PARENT_ID),
+    title: "Probe parent for the rendered binding vocabulary",
+    kind: "behavior",
+    altitude: "feature",
+    readiness: "defined",
+    intent: { outcome: "Keep the probe connected so no orphan signal renders beside it." },
+    behavior: { rules: ["The parent carries its own kind evidence."] },
+  });
+  const subject = spec({
+    id: specId(world.specId),
+    title: "Probe subject of the rendered binding vocabulary",
+    kind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    intent: { outcome: "Carry the bindings the view must describe in its own words." },
+    behavior: { rules: ["The subject states one rule and lets its anchors do the rest."] },
+    relations: [refines(specId(BINDING_PARENT_ID))],
+  });
+  // Probe anchors, built inline through the source builders rather than the package import: an
+  // anchor-constant form bound to the protocol import is a real corpus binding, and these two are
+  // world data the extractor must never reify.
+  const anchors = world.bound
+    ? [
+        codeAnchor({
+          id: codeAnchorId("impl:probe.bound-surface"),
+          label: "binds the probe subject to code",
+          satisfies: specId(world.specId),
+        }),
+        probeSpecTest({
+          id: probeTestAnchorId("test:probe.bound-surface"),
+          label: "binds the probe subject to a test entrypoint",
+          verifies: specId(world.specId),
+        }),
+      ]
+    : [];
+
+  // The pack lists the bound subject beside the unbound parent, so the member table has to
+  // render both binding values and a shorthand cannot pass by matching one of them.
+  const packs =
+    world.packId === ""
+      ? []
+      : [
+          probePack({
+            id: probePackId(world.packId),
+            title: "Probe aggregate for the rendered binding vocabulary",
+            framing: "One bound member and one unbound member, read as one review set.",
+            specs: [specId(world.specId), specId(BINDING_PARENT_ID)],
+          }),
+        ];
+
+  world.pages = renderDesignReview(
+    createReader(deriveFixtureGraph({ specs: [parent, subject], packs, anchors })),
+  );
+}
+
 const bindingLanguageBindings = {
   "the graph holds a spec {specId} bound by {bindings}": (
     world: BindingWorld,
@@ -480,67 +650,8 @@ const bindingLanguageBindings = {
     world.specId = params.specId;
     world.bound = params.bindings === "an implementing code anchor and a verifying test anchor";
   },
-  "the graph holds a pack {packId} listing that spec beside an unbound member": (
-    world: BindingWorld,
-    params: { readonly packId: string },
-  ) => {
-    world.packId = params.packId;
-  },
   "the Design Review renders the graph": (world: BindingWorld) => {
-    const parent = spec({
-      id: specId(BINDING_PARENT_ID),
-      title: "Probe parent for the rendered binding vocabulary",
-      kind: "behavior",
-      altitude: "feature",
-      readiness: "defined",
-      intent: { outcome: "Keep the probe connected so no orphan signal renders beside it." },
-      behavior: { rules: ["The parent carries its own kind evidence."] },
-    });
-    const subject = spec({
-      id: specId(world.specId),
-      title: "Probe subject of the rendered binding vocabulary",
-      kind: "behavior",
-      altitude: "story",
-      readiness: "idea",
-      intent: { outcome: "Carry the bindings the view must describe in its own words." },
-      behavior: { rules: ["The subject states one rule and lets its anchors do the rest."] },
-      relations: [refines(specId(BINDING_PARENT_ID))],
-    });
-    // Probe anchors, built inline through the source builders rather than the package import: an
-    // anchor-constant form bound to the protocol import is a real corpus binding, and these two are
-    // world data the extractor must never reify.
-    const anchors = world.bound
-      ? [
-          codeAnchor({
-            id: codeAnchorId("impl:probe.bound-surface"),
-            label: "binds the probe subject to code",
-            satisfies: specId(world.specId),
-          }),
-          probeSpecTest({
-            id: probeTestAnchorId("test:probe.bound-surface"),
-            label: "binds the probe subject to a test entrypoint",
-            verifies: specId(world.specId),
-          }),
-        ]
-      : [];
-
-    // The pack lists the bound subject beside the unbound parent, so the member table has to
-    // render both binding values and a shorthand cannot pass by matching one of them.
-    const packs =
-      world.packId === ""
-        ? []
-        : [
-            probePack({
-              id: probePackId(world.packId),
-              title: "Probe aggregate for the rendered binding vocabulary",
-              framing: "One bound member and one unbound member, read as one review set.",
-              specs: [specId(world.specId), specId(BINDING_PARENT_ID)],
-            }),
-          ];
-
-    world.pages = renderDesignReview(
-      createReader(deriveFixtureGraph({ specs: [parent, subject], packs, anchors })),
-    );
+    renderBindingGraph(world);
   },
   "the spec page renders the implementation binding as {implementation}": (
     world: BindingWorld,
@@ -570,19 +681,6 @@ const bindingLanguageBindings = {
 
     expect(columns).toBe(params.tableRepeats);
   },
-  "the pack member table repeats those binding values for the spec: {memberTableRepeats}": (
-    world: BindingWorld,
-    params: { readonly memberTableRepeats: boolean },
-  ) => {
-    expect(memberRowOf(world, world.specId).endsWith("| present | present |")).toBe(
-      params.memberTableRepeats,
-    );
-    // The negative beside the positive: the unbound member's cells read the other word of the
-    // same pair, so a table that hard-coded one value could not satisfy both rows.
-    expect(memberRowOf(world, BINDING_PARENT_ID).endsWith("| none | none |")).toBe(
-      params.memberTableRepeats,
-    );
-  },
   "the internal delivery-fact name {factName} appears as rendered label text: {factNameRendered}": (
     world: BindingWorld,
     params: { readonly factName: string; readonly factNameRendered: boolean },
@@ -595,6 +693,53 @@ const bindingLanguageBindings = {
   },
 };
 
+function observePackMemberTable(world: BindingWorld): BindingLanguageViewsOutcome {
+  return {
+    kind: "the pack member table repeats those binding values for the spec: {memberTableRepeats}",
+    memberTableRepeats: memberRowOf(world, world.specId).endsWith("| present | present |"),
+  };
+}
+
+function expectedPackMemberTable(
+  point: Partial<BindingLanguageViewsConditions>,
+): BindingLanguageViewsOutcome {
+  if (point.specId === undefined || point.bindings === undefined || point.packId === undefined) {
+    return unspecified;
+  }
+
+  const { memberTableRepeats } = paramsForStep(
+    packMemberTableContract,
+    "the pack member table repeats those binding values for the spec: {memberTableRepeats}",
+  );
+
+  return {
+    kind: "the pack member table repeats those binding values for the spec: {memberTableRepeats}",
+    memberTableRepeats,
+  };
+}
+
+function assertPackMemberTable(world: BindingWorld): void {
+  const { memberTableRepeats } = paramsForStep(
+    packMemberTableContract,
+    "the pack member table repeats those binding values for the spec: {memberTableRepeats}",
+  );
+  const { factName, factNameRendered } = paramsForStep(
+    packMemberTableContract,
+    "the internal delivery-fact name {factName} appears as rendered label text: {factNameRendered}",
+  );
+
+  // The negative beside the positive: the unbound member's cells read the other word of the
+  // same pair, so a table that hard-coded one value could not satisfy both rows.
+  expect(memberRowOf(world, BINDING_PARENT_ID).endsWith("| none | none |")).toBe(
+    memberTableRepeats,
+  );
+
+  for (const surface of renderedSurfaces(world)) {
+    expect(surface.includes(factName)).toBe(factNameRendered);
+    expect(surface.includes("has-verifier")).toBe(factNameRendered);
+  }
+}
+
 const boundSpecPageTestAnchor = specTest({
   id: testAnchorId("test:protocol.binding-language-views.bound-spec-page"),
   label: "the bound-surface point verifies the rendered binding vocabulary",
@@ -602,6 +747,7 @@ const boundSpecPageTestAnchor = specTest({
 });
 void boundSpecPageTestAnchor;
 
+// Refused: generated sibling requires unused packId.
 bindExample(boundSpecPageContract, bindingWorld, bindingLanguageBindings);
 
 const packMemberTableTestAnchor = specTest({
@@ -611,7 +757,13 @@ const packMemberTableTestAnchor = specTest({
 });
 void packMemberTableTestAnchor;
 
-bindExample(packMemberTableContract, bindingWorld, bindingLanguageBindings);
+registerPackMemberTable({
+  createWorld: createBindingWorld,
+  invoke: renderBindingGraph,
+  observe: observePackMemberTable,
+  expected: expectedPackMemberTable,
+  assertions: assertPackMemberTable,
+});
 
 /* ----- spec:consumers.wholesale-view-rewrite ----- */
 
@@ -649,13 +801,6 @@ interface ViewWorld {
   exitCode: number | undefined;
 }
 
-function viewWorld(): ViewWorld {
-  const root = mkdtempSync(join(tmpdir(), "sdp-self-hosting-view-"));
-  temporaryRoots.add(root);
-
-  return { root, stalePage: "", plantLate: false, exitCode: undefined };
-}
-
 function viewPathOf(world: ViewWorld): string {
   return join(world.root, "generated", "design-review");
 }
@@ -670,88 +815,101 @@ function plantStalePage(world: ViewWorld): void {
   writeFileSync(stalePath, "# A spec the corpus no longer holds\n", "utf8");
 }
 
-const wholesaleRewriteBindings = {
-  "an extraction root holding {corpus} and a stale view page {stalePage}": (
-    world: ViewWorld,
-    params: {
-      readonly corpus: "one authored spec" | "one authored spec the extractor refuses";
-      readonly stalePage: string;
-    },
-  ) => {
-    mkdirSync(join(world.root, "specs"), { recursive: true });
-    writeFileSync(
-      join(world.root, "specs", "probe.sdp.md"),
-      params.corpus === "one authored spec" ? PROBE_CARRIER : REFUSED_CARRIER,
-      "utf8",
-    );
-    world.stalePage = params.stalePage;
-  },
-  "the stale page is planted {planted}": (
-    world: ViewWorld,
-    params: {
-      readonly planted: "before the run" | "after the build has invalidated the view";
-    },
-  ) => {
-    world.plantLate = params.planted === "after the build has invalidated the view";
+function createViewWorld(point: Partial<WholesaleViewRewriteConditions>): ViewWorld {
+  const root = mkdtempSync(join(tmpdir(), "sdp-self-hosting-view-"));
+  temporaryRoots.add(root);
+  const world: ViewWorld = {
+    root,
+    stalePage: point.stalePage ?? "",
+    plantLate: point.planted === "after the build has invalidated the view",
+    exitCode: undefined,
+  };
 
-    if (!world.plantLate) {
-      plantStalePage(world);
-    }
-  },
-  "the {command} command runs at that root": (
-    world: ViewWorld,
-    params: { readonly command: "view" | "build" },
-  ) => {
-    const parsed = { root: world.root, exclude: [], checkClean: false };
-    // Late planting rides the extraction seam the build already declares, used here only as a
-    // clock: it runs *after* the build's up-front invalidation and delegates to the real
-    // extractor, so the page the run must evict is one that invalidation cannot have removed.
-    const hooks = world.plantLate
-      ? {
-          extract: (options: Parameters<typeof extract>[0]) => {
-            plantStalePage(world);
+  if (point.corpus === undefined) {
+    return world;
+  }
 
-            return extract(options);
-          },
-        }
-      : {};
+  mkdirSync(join(world.root, "specs"), { recursive: true });
+  writeFileSync(
+    join(world.root, "specs", "probe.sdp.md"),
+    point.corpus === "one authored spec" ? PROBE_CARRIER : REFUSED_CARRIER,
+    "utf8",
+  );
 
-    world.exitCode =
-      params.command === "view"
-        ? runView(parsed, {}, hooks)
-        : runBuild(parsed, {}, "build", hooks).exitCode;
-  },
-  "the run exits {exitCode}": (world: ViewWorld, params: { readonly exitCode: number }) => {
-    expect(world.exitCode).toBe(params.exitCode);
-  },
-  "the view directory survives: {viewSurvives}": (
-    world: ViewWorld,
-    params: { readonly viewSurvives: boolean },
-  ) => {
-    expect(existsSync(viewPathOf(world))).toBe(params.viewSurvives);
-  },
-  "the view holds the current page {currentPage}": (
-    world: ViewWorld,
-    params: { readonly currentPage: string },
-  ) => {
-    expect(existsSync(join(viewPathOf(world), ...params.currentPage.split("/")))).toBe(true);
+  if (point.planted === "before the run") {
+    plantStalePage(world);
+  }
+
+  return world;
+}
+
+function invokeViewCommand(world: ViewWorld, point: Partial<WholesaleViewRewriteConditions>): void {
+  if (point.command === undefined) {
+    return;
+  }
+
+  const parsed = { root: world.root, exclude: [], checkClean: false };
+  // Late planting rides the extraction seam the build already declares, used here only as a
+  // clock: it runs *after* the build's up-front invalidation and delegates to the real
+  // extractor, so the page the run must evict is one that invalidation cannot have removed.
+  const hooks = world.plantLate
+    ? {
+        extract: (options: Parameters<typeof extract>[0]) => {
+          plantStalePage(world);
+
+          return extract(options);
+        },
+      }
+    : {};
+
+  world.exitCode =
+    point.command === "view"
+      ? runView(parsed, {}, hooks)
+      : runBuild(parsed, {}, "build", hooks).exitCode;
+}
+
+function observeViewExit(world: ViewWorld): WholesaleViewRewriteOutcome {
+  if (world.exitCode === undefined) {
+    throw new Error("The view command must run before its exit code is read.");
+  }
+
+  return { kind: "the run exits {exitCode}", exitCode: world.exitCode };
+}
+
+function expectedViewExit(
+  point: Partial<WholesaleViewRewriteConditions>,
+  exitCode: number,
+): WholesaleViewRewriteOutcome {
+  if (
+    point.corpus === undefined ||
+    point.stalePage === undefined ||
+    point.planted === undefined ||
+    point.command === undefined
+  ) {
+    return unspecified;
+  }
+
+  return { kind: "the run exits {exitCode}", exitCode };
+}
+
+interface ViewSurvivalExpectations {
+  readonly viewSurvives: boolean;
+  readonly staleSurvives: boolean;
+  readonly temporarySurvives: boolean;
+  readonly currentPage?: string;
+}
+
+function assertViewSurvivals(world: ViewWorld, expectations: ViewSurvivalExpectations): void {
+  expect(existsSync(viewPathOf(world))).toBe(expectations.viewSurvives);
+  if (expectations.currentPage !== undefined) {
+    expect(existsSync(join(viewPathOf(world), ...expectations.currentPage.split("/")))).toBe(true);
     expect(existsSync(join(viewPathOf(world), "spec", "probe.view-subject.md"))).toBe(true);
-  },
-  "the stale page survives: {staleSurvives}": (
-    world: ViewWorld,
-    params: { readonly staleSurvives: boolean },
-  ) => {
-    expect(existsSync(join(viewPathOf(world), ...world.stalePage.split("/")))).toBe(
-      params.staleSurvives,
-    );
-  },
-  "a temporary view sibling survives: {temporarySurvives}": (
-    world: ViewWorld,
-    params: { readonly temporarySurvives: boolean },
-  ) => {
-    expect(existsSync(`${viewPathOf(world)}.tmp`)).toBe(params.temporarySurvives);
-  },
-};
+  }
+  expect(existsSync(join(viewPathOf(world), ...world.stalePage.split("/")))).toBe(
+    expectations.staleSurvives,
+  );
+  expect(existsSync(`${viewPathOf(world)}.tmp`)).toBe(expectations.temporarySurvives);
+}
 
 const stalePageRemovedTestAnchor = specTest({
   id: testAnchorId("test:protocol.wholesale-view-rewrite.stale-page-removed"),
@@ -760,7 +918,34 @@ const stalePageRemovedTestAnchor = specTest({
 });
 void stalePageRemovedTestAnchor;
 
-bindExample(stalePageRemovedContract, viewWorld, wholesaleRewriteBindings);
+registerStalePageRemoved({
+  createWorld: createViewWorld,
+  invoke: invokeViewCommand,
+  observe: observeViewExit,
+  expected: (point) => {
+    const { exitCode } = paramsForStep(stalePageRemovedContract, "the run exits {exitCode}");
+    return expectedViewExit(point, exitCode);
+  },
+  assertions: (world) => {
+    const { viewSurvives } = paramsForStep(
+      stalePageRemovedContract,
+      "the view directory survives: {viewSurvives}",
+    );
+    const { staleSurvives } = paramsForStep(
+      stalePageRemovedContract,
+      "the stale page survives: {staleSurvives}",
+    );
+    const { temporarySurvives } = paramsForStep(
+      stalePageRemovedContract,
+      "a temporary view sibling survives: {temporarySurvives}",
+    );
+    const { currentPage } = paramsForStep(
+      stalePageRemovedContract,
+      "the view holds the current page {currentPage}",
+    );
+    assertViewSurvivals(world, { viewSurvives, staleSurvives, temporarySurvives, currentPage });
+  },
+});
 
 const lateStalePageTestAnchor = specTest({
   id: testAnchorId("test:protocol.wholesale-view-rewrite.late-stale-page"),
@@ -769,7 +954,34 @@ const lateStalePageTestAnchor = specTest({
 });
 void lateStalePageTestAnchor;
 
-bindExample(lateStalePageContract, viewWorld, wholesaleRewriteBindings);
+registerLateStalePage({
+  createWorld: createViewWorld,
+  invoke: invokeViewCommand,
+  observe: observeViewExit,
+  expected: (point) => {
+    const { exitCode } = paramsForStep(lateStalePageContract, "the run exits {exitCode}");
+    return expectedViewExit(point, exitCode);
+  },
+  assertions: (world) => {
+    const { viewSurvives } = paramsForStep(
+      lateStalePageContract,
+      "the view directory survives: {viewSurvives}",
+    );
+    const { staleSurvives } = paramsForStep(
+      lateStalePageContract,
+      "the stale page survives: {staleSurvives}",
+    );
+    const { temporarySurvives } = paramsForStep(
+      lateStalePageContract,
+      "a temporary view sibling survives: {temporarySurvives}",
+    );
+    const { currentPage } = paramsForStep(
+      lateStalePageContract,
+      "the view holds the current page {currentPage}",
+    );
+    assertViewSurvivals(world, { viewSurvives, staleSurvives, temporarySurvives, currentPage });
+  },
+});
 
 const failedRunViewRemovedTestAnchor = specTest({
   id: testAnchorId("test:protocol.wholesale-view-rewrite.failed-run-view-removed"),
@@ -778,7 +990,30 @@ const failedRunViewRemovedTestAnchor = specTest({
 });
 void failedRunViewRemovedTestAnchor;
 
-bindExample(failedRunViewRemovedContract, viewWorld, wholesaleRewriteBindings);
+registerFailedRunViewRemoved({
+  createWorld: createViewWorld,
+  invoke: invokeViewCommand,
+  observe: observeViewExit,
+  expected: (point) => {
+    const { exitCode } = paramsForStep(failedRunViewRemovedContract, "the run exits {exitCode}");
+    return expectedViewExit(point, exitCode);
+  },
+  assertions: (world) => {
+    const { viewSurvives } = paramsForStep(
+      failedRunViewRemovedContract,
+      "the view directory survives: {viewSurvives}",
+    );
+    const { staleSurvives } = paramsForStep(
+      failedRunViewRemovedContract,
+      "the stale page survives: {staleSurvives}",
+    );
+    const { temporarySurvives } = paramsForStep(
+      failedRunViewRemovedContract,
+      "a temporary view sibling survives: {temporarySurvives}",
+    );
+    assertViewSurvivals(world, { viewSurvives, staleSurvives, temporarySurvives });
+  },
+});
 
 const buildInvalidatesViewTestAnchor = specTest({
   id: testAnchorId("test:protocol.wholesale-view-rewrite.build-invalidates-view"),
@@ -787,7 +1022,30 @@ const buildInvalidatesViewTestAnchor = specTest({
 });
 void buildInvalidatesViewTestAnchor;
 
-bindExample(buildInvalidatesViewContract, viewWorld, wholesaleRewriteBindings);
+registerBuildInvalidatesView({
+  createWorld: createViewWorld,
+  invoke: invokeViewCommand,
+  observe: observeViewExit,
+  expected: (point) => {
+    const { exitCode } = paramsForStep(buildInvalidatesViewContract, "the run exits {exitCode}");
+    return expectedViewExit(point, exitCode);
+  },
+  assertions: (world) => {
+    const { viewSurvives } = paramsForStep(
+      buildInvalidatesViewContract,
+      "the view directory survives: {viewSurvives}",
+    );
+    const { staleSurvives } = paramsForStep(
+      buildInvalidatesViewContract,
+      "the stale page survives: {staleSurvives}",
+    );
+    const { temporarySurvives } = paramsForStep(
+      buildInvalidatesViewContract,
+      "a temporary view sibling survives: {temporarySurvives}",
+    );
+    assertViewSurvivals(world, { viewSurvives, staleSurvives, temporarySurvives });
+  },
+});
 
 /* ----- spec:validation.diagnostic-rendering ----- */
 
@@ -795,105 +1053,180 @@ type LocationFields = Pick<Finding, "file" | "line">;
 
 interface DiagnosticWorld {
   finding: Finding | undefined;
-  render: ((location: LocationFields) => string) | undefined;
+  renderer: DiagnosticRenderingConditions["renderer"] | undefined;
   file: string;
+  line: number;
+  withLocation: string;
+  fileOnly: string;
+  neither: string;
 }
 
-function diagnosticWorld(): DiagnosticWorld {
-  return { finding: undefined, render: undefined, file: "" };
+function createDiagnosticWorld(point: Partial<DiagnosticRenderingConditions>): DiagnosticWorld {
+  return {
+    finding:
+      point.validatorId === undefined || point.severity === undefined || point.message === undefined
+        ? undefined
+        : {
+            validatorId: point.validatorId,
+            family: "honesty",
+            severity: point.severity,
+            message: point.message,
+          },
+    renderer: point.renderer,
+    file: "",
+    line: 0,
+    withLocation: "",
+    fileOnly: "",
+    neither: "",
+  };
 }
 
-function renderOf(world: DiagnosticWorld): (location: LocationFields) => string {
-  if (world.render === undefined) {
-    throw new Error("The formatting step must run before a rendered line is read.");
+function renderDiagnostic(world: DiagnosticWorld, location: LocationFields): string {
+  const finding = world.finding;
+
+  if (finding === undefined || world.renderer === undefined) {
+    throw new Error("The finding and renderer must be bound before a location shape is formatted.");
   }
 
-  return world.render;
+  return world.renderer === "command-line"
+    ? formatFinding({ ...finding, ...location })
+    : (renderFindings([{ ...finding, ...location }]).at(-1) ?? "");
 }
 
-const diagnosticRenderingBindings = {
-  "a finding naming the validator {validatorId} at severity {severity} carrying the message {message}":
-    (
-      world: DiagnosticWorld,
-      params: {
-        readonly validatorId: string;
-        readonly severity: "warning" | "error";
-        readonly message: string;
-      },
-    ) => {
-      world.finding = {
-        validatorId: params.validatorId,
-        family: "honesty",
-        severity: params.severity,
-        message: params.message,
-      };
-    },
-  "the {renderer} renderer formats that finding once per location shape": (
-    world: DiagnosticWorld,
-    params: { readonly renderer: "command-line" | "Design Review" },
-  ) => {
-    const finding = world.finding;
+function invokeDiagnosticShapes(
+  world: DiagnosticWorld,
+  point: Partial<DiagnosticRenderingConditions>,
+): void {
+  if (world.finding === undefined || point.renderer === undefined) {
+    return;
+  }
 
-    if (finding === undefined) {
-      throw new Error("The finding step must run before the renderer is bound to it.");
-    }
+  if (point.renderer === "command-line") {
+    const composed = paramsForStep(
+      composedLocationContract,
+      "the finding carrying the file {file} and the line {line} renders {withLocation}",
+    );
+    world.file = composed.file;
+    world.line = composed.line;
+    world.withLocation = renderDiagnostic(world, { file: composed.file, line: composed.line });
+    world.fileOnly = renderDiagnostic(world, { file: composed.file });
+    world.neither = renderDiagnostic(world, {});
+    return;
+  }
 
-    // One finding, one renderer: each outcome step below supplies a location shape and reads what
-    // the real renderer composed from those structured fields alone. Both entrypoints the Spec
-    // names are called directly — `formatFinding` for the command line, `renderFindings` for the
-    // Design Review's table — because each is the seam its own surface renders through.
-    world.render =
-      params.renderer === "command-line"
-        ? (location) => formatFinding({ ...finding, ...location })
-        : (location) => renderFindings([{ ...finding, ...location }]).at(-1) ?? "";
-  },
-  "the finding carrying the file {file} and the line {line} renders {withLocation}": (
-    world: DiagnosticWorld,
-    params: { readonly file: string; readonly line: number; readonly withLocation: string },
-  ) => {
-    const rendered = renderOf(world)({ file: params.file, line: params.line });
+  const table = paramsForStep(
+    tableCellLocationContract,
+    "the findings row carrying the file {file} and the line {line} renders {locationRow}",
+  );
+  world.file = table.file;
+  world.line = table.line;
+  world.withLocation = renderDiagnostic(world, { file: table.file, line: table.line });
+  world.fileOnly = renderDiagnostic(world, { file: table.file });
+  world.neither = renderDiagnostic(world, {});
+}
 
-    world.file = params.file;
-    expect(rendered).toBe(`${params.withLocation}\n`);
-    // The composed prefix is the only place the path appears: the message never carries it too.
-    expect(rendered.indexOf(params.file)).toBe(rendered.lastIndexOf(params.file));
-  },
-  "the same finding carrying the file alone renders {fileOnly}": (
-    world: DiagnosticWorld,
-    params: { readonly fileOnly: string },
-  ) => {
-    expect(renderOf(world)({ file: world.file })).toBe(`${params.fileOnly}\n`);
-  },
-  "the same finding carrying neither renders {bare}": (
-    world: DiagnosticWorld,
-    params: { readonly bare: string },
-  ) => {
-    expect(renderOf(world)({})).toBe(`${params.bare}\n`);
-  },
-  "the findings row carrying the file {file} and the line {line} renders {locationRow}": (
-    world: DiagnosticWorld,
-    params: { readonly file: string; readonly line: number; readonly locationRow: string },
-  ) => {
-    const rendered = renderOf(world)({ file: params.file, line: params.line });
+function observeComposedLocation(world: DiagnosticWorld): DiagnosticRenderingOutcome {
+  return {
+    kind: "the finding carrying the file {file} and the line {line} renders {withLocation}",
+    file: world.file,
+    line: world.line,
+    withLocation: world.withLocation.replace(/\n$/u, ""),
+  };
+}
 
-    world.file = params.file;
-    expect(rendered).toBe(params.locationRow);
-    // The location cell is the only place the path appears — the message cell never carries it.
-    expect(rendered.indexOf(params.file)).toBe(rendered.lastIndexOf(params.file));
-  },
-  "the same row carrying the file alone renders {fileOnlyRow}": (
-    world: DiagnosticWorld,
-    params: { readonly fileOnlyRow: string },
-  ) => {
-    expect(renderOf(world)({ file: world.file })).toBe(params.fileOnlyRow);
-  },
-  "the same row carrying neither renders {absentRow}": (
-    world: DiagnosticWorld,
-    params: { readonly absentRow: string },
-  ) => {
-    expect(renderOf(world)({})).toBe(params.absentRow);
-  },
-};
+function expectedComposedLocation(
+  point: Partial<DiagnosticRenderingConditions>,
+): DiagnosticRenderingOutcome {
+  if (
+    point.validatorId === undefined ||
+    point.severity === undefined ||
+    point.message === undefined ||
+    point.renderer === undefined
+  ) {
+    return unspecified;
+  }
+
+  const { file, line, withLocation } = paramsForStep(
+    composedLocationContract,
+    "the finding carrying the file {file} and the line {line} renders {withLocation}",
+  );
+
+  return {
+    kind: "the finding carrying the file {file} and the line {line} renders {withLocation}",
+    file,
+    line,
+    withLocation,
+  };
+}
+
+function assertComposedLocation(world: DiagnosticWorld): void {
+  const { withLocation } = paramsForStep(
+    composedLocationContract,
+    "the finding carrying the file {file} and the line {line} renders {withLocation}",
+  );
+  const { fileOnly } = paramsForStep(
+    composedLocationContract,
+    "the same finding carrying the file alone renders {fileOnly}",
+  );
+  const { bare } = paramsForStep(
+    composedLocationContract,
+    "the same finding carrying neither renders {bare}",
+  );
+
+  expect(world.withLocation).toBe(`${withLocation}\n`);
+  expect(world.fileOnly).toBe(`${fileOnly}\n`);
+  expect(world.neither).toBe(`${bare}\n`);
+  expect(world.withLocation.indexOf(world.file)).toBe(world.withLocation.lastIndexOf(world.file));
+}
+
+function observeTableCellLocation(world: DiagnosticWorld): DiagnosticRenderingOutcome {
+  return {
+    kind: "the findings row carrying the file {file} and the line {line} renders {locationRow}",
+    file: world.file,
+    line: world.line,
+    locationRow: world.withLocation,
+  };
+}
+
+function expectedTableCellLocation(
+  point: Partial<DiagnosticRenderingConditions>,
+): DiagnosticRenderingOutcome {
+  if (
+    point.validatorId === undefined ||
+    point.severity === undefined ||
+    point.message === undefined ||
+    point.renderer === undefined
+  ) {
+    return unspecified;
+  }
+
+  const { file, line, locationRow } = paramsForStep(
+    tableCellLocationContract,
+    "the findings row carrying the file {file} and the line {line} renders {locationRow}",
+  );
+
+  return {
+    kind: "the findings row carrying the file {file} and the line {line} renders {locationRow}",
+    file,
+    line,
+    locationRow,
+  };
+}
+
+function assertTableCellLocation(world: DiagnosticWorld): void {
+  const { fileOnlyRow } = paramsForStep(
+    tableCellLocationContract,
+    "the same row carrying the file alone renders {fileOnlyRow}",
+  );
+  const { absentRow } = paramsForStep(
+    tableCellLocationContract,
+    "the same row carrying neither renders {absentRow}",
+  );
+
+  expect(world.fileOnly).toBe(fileOnlyRow);
+  expect(world.neither).toBe(absentRow);
+  expect(world.withLocation.indexOf(world.file)).toBe(world.withLocation.lastIndexOf(world.file));
+}
 
 const composedLocationTestAnchor = specTest({
   id: testAnchorId("test:protocol.diagnostic-rendering.composed-location"),
@@ -902,7 +1235,13 @@ const composedLocationTestAnchor = specTest({
 });
 void composedLocationTestAnchor;
 
-bindExample(composedLocationContract, diagnosticWorld, diagnosticRenderingBindings);
+registerComposedLocation({
+  createWorld: createDiagnosticWorld,
+  invoke: invokeDiagnosticShapes,
+  observe: observeComposedLocation,
+  expected: expectedComposedLocation,
+  assertions: assertComposedLocation,
+});
 
 const tableCellLocationTestAnchor = specTest({
   id: testAnchorId("test:protocol.diagnostic-rendering.table-cell-location"),
@@ -911,4 +1250,10 @@ const tableCellLocationTestAnchor = specTest({
 });
 void tableCellLocationTestAnchor;
 
-bindExample(tableCellLocationContract, diagnosticWorld, diagnosticRenderingBindings);
+registerTableCellLocation({
+  createWorld: createDiagnosticWorld,
+  invoke: invokeDiagnosticShapes,
+  observe: observeTableCellLocation,
+  expected: expectedTableCellLocation,
+  assertions: assertTableCellLocation,
+});

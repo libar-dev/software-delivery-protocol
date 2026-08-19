@@ -4,9 +4,11 @@ import { expect } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
-import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
-
 import { boundedParityContract } from "../generated/contracts/carrier.markdown-parser.bounded-parity.contract.js";
+import type {
+  MarkdownParserConditions,
+  MarkdownParserOutcome,
+} from "../generated/contracts/carrier.markdown-parser.space.js";
 import { refusedGuessContract } from "../generated/contracts/carrier.slot-notation.refused-guess.contract.js";
 import type {
   SlotNotationConditions,
@@ -20,6 +22,7 @@ import {
   stepSkeleton,
 } from "../src/index.js";
 import type { CarrierReification, SlotGroup } from "../src/index.js";
+import { registerBoundedParity } from "./carrier.markdown-parser.bounded-parity.test.generated.js";
 import { registerRefusedGuess } from "./carrier.slot-notation.refused-guess.test.generated.js";
 import { paramsForStep } from "./helpers/generated-contract.js";
 import { registerTypedDeclaration } from "./carrier.slot-notation.typed-declaration.test.generated.js";
@@ -46,8 +49,13 @@ interface ParityWorld {
   markdown: CarrierReification | undefined;
 }
 
-function parityWorld(): ParityWorld {
-  return { probe: "", findingId: "", typeScript: undefined, markdown: undefined };
+function parityWorld(point: Partial<MarkdownParserConditions>): ParityWorld {
+  return {
+    probe: point.probe ?? "",
+    findingId: "",
+    typeScript: undefined,
+    markdown: undefined,
+  };
 }
 
 function reifiedOf(world: ParityWorld, carrier: "typeScript" | "markdown"): CarrierReification {
@@ -67,55 +75,62 @@ function severityOf(world: ParityWorld, carrier: "typeScript" | "markdown"): str
   )?.severity;
 }
 
-const parityBindings = {
-  "the paired carrier probes named {probe}": (
-    world: ParityWorld,
-    params: { readonly probe: string },
-  ) => {
-    world.probe = params.probe;
-  },
-  "both carriers reify their probe": (world: ParityWorld) => {
-    world.typeScript = reifyTypeScriptCarrier(
-      readFileSync(new URL(`${world.probe}.sdp.ts`, fixtureRoot), "utf8"),
-      `${world.probe}.sdp.ts`,
-    );
-    world.markdown = reifyMarkdownCarrier(
-      readFileSync(new URL(`${world.probe}.sdp.md`, fixtureRoot), "utf8"),
-      `${world.probe}.sdp.md`,
-    );
-  },
-  "both carriers report the finding class {findingId}": (
-    world: ParityWorld,
-    params: { readonly findingId: string },
-  ) => {
-    world.findingId = params.findingId;
+function invokeParity(world: ParityWorld): void {
+  world.typeScript = reifyTypeScriptCarrier(
+    readFileSync(new URL(`${world.probe}.sdp.ts`, fixtureRoot), "utf8"),
+    `${world.probe}.sdp.ts`,
+  );
+  world.markdown = reifyMarkdownCarrier(
+    readFileSync(new URL(`${world.probe}.sdp.md`, fixtureRoot), "utf8"),
+    `${world.probe}.sdp.md`,
+  );
+}
 
-    for (const carrier of ["typeScript", "markdown"] as const) {
-      expect(
-        reifiedOf(world, carrier).findings.map((finding) => finding.validatorId),
-        carrier,
-      ).toContain(params.findingId);
-    }
-  },
-  "the TypeScript carrier reports severity {typeScriptSeverity} and extracts {typeScriptSpecs} specs":
-    (
-      world: ParityWorld,
-      params: {
-        readonly typeScriptSeverity: "warning" | "error";
-        readonly typeScriptSpecs: number;
-      },
-    ) => {
-      expect(severityOf(world, "typeScript")).toBe(params.typeScriptSeverity);
-      expect(reifiedOf(world, "typeScript").specs).toHaveLength(params.typeScriptSpecs);
-    },
-  "the Markdown carrier reports severity {markdownSeverity} and extracts {markdownSpecs} specs": (
-    world: ParityWorld,
-    params: { readonly markdownSeverity: "warning" | "error"; readonly markdownSpecs: number },
-  ) => {
-    expect(severityOf(world, "markdown")).toBe(params.markdownSeverity);
-    expect(reifiedOf(world, "markdown").specs).toHaveLength(params.markdownSpecs);
-  },
-};
+function observeParity(world: ParityWorld): MarkdownParserOutcome {
+  const { findingId } = paramsForStep(
+    boundedParityContract,
+    "both carriers report the finding class {findingId}",
+  );
+  world.findingId = findingId;
+
+  for (const carrier of ["typeScript", "markdown"] as const) {
+    expect(
+      reifiedOf(world, carrier).findings.map((finding) => finding.validatorId),
+      carrier,
+    ).toContain(findingId);
+  }
+
+  return { kind: "both carriers report the finding class {findingId}", findingId };
+}
+
+function expectedParity(point: Partial<MarkdownParserConditions>): MarkdownParserOutcome {
+  if (point.probe === undefined) {
+    return unspecified;
+  }
+
+  const { findingId } = paramsForStep(
+    boundedParityContract,
+    "both carriers report the finding class {findingId}",
+  );
+
+  return { kind: "both carriers report the finding class {findingId}", findingId };
+}
+
+function assertParity(world: ParityWorld): void {
+  const { typeScriptSeverity, typeScriptSpecs } = paramsForStep(
+    boundedParityContract,
+    "the TypeScript carrier reports severity {typeScriptSeverity} and extracts {typeScriptSpecs} specs",
+  );
+  const { markdownSeverity, markdownSpecs } = paramsForStep(
+    boundedParityContract,
+    "the Markdown carrier reports severity {markdownSeverity} and extracts {markdownSpecs} specs",
+  );
+
+  expect(severityOf(world, "typeScript")).toBe(typeScriptSeverity);
+  expect(reifiedOf(world, "typeScript").specs).toHaveLength(typeScriptSpecs);
+  expect(severityOf(world, "markdown")).toBe(markdownSeverity);
+  expect(reifiedOf(world, "markdown").specs).toHaveLength(markdownSpecs);
+}
 
 const boundedParityTestAnchor = specTest({
   id: testAnchorId("test:protocol.markdown-parser.bounded-parity"),
@@ -124,7 +139,14 @@ const boundedParityTestAnchor = specTest({
 });
 void boundedParityTestAnchor;
 
-bindExample(boundedParityContract, parityWorld, parityBindings);
+registerBoundedParity({
+  createWorld: parityWorld,
+  invoke: invokeParity,
+  observe: observeParity,
+  expected: expectedParity,
+  // The severity/count halves are different-kind Thens than the finding-ID oracle.
+  assertions: assertParity,
+});
 
 /* ----- spec:carrier.slot-notation ----- */
 

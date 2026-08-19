@@ -2,16 +2,31 @@ import { expect } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
-import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
 
 import { orphanSignalContract } from "../generated/contracts/validation.warn-level-signals.orphan-signal.contract.js";
 import { readyGapSignalContract } from "../generated/contracts/validation.warn-level-signals.ready-gap-signal.contract.js";
+import type {
+  WarnLevelSignalsConditions,
+  WarnLevelSignalsOutcome,
+} from "../generated/contracts/validation.warn-level-signals.space.js";
 import { sectionAuthoredFactContract } from "../generated/contracts/validation.authored-honesty.section-authored-fact.contract.js";
 import { unearnedStatedFactContract } from "../generated/contracts/validation.authored-honesty.unearned-stated-fact.contract.js";
+import type {
+  AuthoredHonestyConditions,
+  AuthoredHonestyOutcome,
+} from "../generated/contracts/validation.authored-honesty.space.js";
 import { danglingTargetContract } from "../generated/contracts/validation.referential-integrity.dangling-target.contract.js";
 import { didYouMeanContract } from "../generated/contracts/validation.referential-integrity.did-you-mean.contract.js";
+import type {
+  ReferentialIntegrityConditions,
+  ReferentialIntegrityOutcome,
+} from "../generated/contracts/validation.referential-integrity.space.js";
 import { blockingOpenQuestionContract } from "../generated/contracts/validation.readiness-floor.blocking-open-question.contract.js";
 import { unrelatedScopedSpecContract } from "../generated/contracts/validation.readiness-floor.unrelated-scoped-spec.contract.js";
+import type {
+  ReadinessFloorConditions,
+  ReadinessFloorOutcome,
+} from "../generated/contracts/validation.readiness-floor.space.js";
 import { constraintsAloneContract } from "../generated/contracts/validation.kind-evidence.constraints-alone.contract.js";
 import { emptyPromotedChildContract } from "../generated/contracts/validation.kind-evidence.empty-promoted-child.contract.js";
 import type {
@@ -21,31 +36,66 @@ import type {
 import { untargetedConstraintContract } from "../generated/contracts/validation.kind-evidence.untargeted-constraint.contract.js";
 import { collapsedEdgeClaimContract } from "../generated/contracts/validation.claim-separation.collapsed-edge-claim.contract.js";
 import { unratifiedDescriptorContract } from "../generated/contracts/validation.claim-separation.unratified-descriptor.contract.js";
+import type {
+  ClaimSeparationConditions,
+  ClaimSeparationOutcome,
+} from "../generated/contracts/validation.claim-separation.space.js";
 import { incoherentAggregateContract } from "../generated/contracts/validation.pack-coherence.incoherent-aggregate.contract.js";
+import type {
+  PackCoherenceConditions,
+  PackCoherenceOutcome,
+} from "../generated/contracts/validation.pack-coherence.space.js";
 import { splitReportContract } from "../generated/contracts/validation.two-check-families.split-report.contract.js";
+import type {
+  TwoCheckFamiliesConditions,
+  TwoCheckFamiliesOutcome,
+} from "../generated/contracts/validation.two-check-families.space.js";
 import { unboundExampleContract } from "../generated/contracts/validation.verification-linkage.unbound-example.contract.js";
 import { unresolvedOracleContract } from "../generated/contracts/validation.verification-linkage.unresolved-oracle.contract.js";
-import { missingSpaceRefusedContract } from "../generated/contracts/validation.oracle-target-eligibility.missing-space-refused.contract.js";
-import { ruleSpaceAcceptedContract } from "../generated/contracts/validation.oracle-target-eligibility.rule-space-accepted.contract.js";
-import { computeDeliveryFacts, createReader, schemaVersion, validateGraph } from "../src/index.js";
+import type {
+  VerificationLinkageConditions,
+  VerificationLinkageOutcome,
+} from "../generated/contracts/validation.verification-linkage.space.js";
+import type {
+  OracleTargetEligibilityConditions,
+  OracleTargetEligibilityOutcome,
+} from "../generated/contracts/validation.oracle-target-eligibility.space.js";
+import { createReader, schemaVersion, validateGraph } from "../src/index.js";
 import type {
   Finding,
   GraphClaim,
   GraphEdge,
   GraphNode,
   PrimitiveNode,
+  SpecContext,
   SpecKind,
   SpecReadiness,
   ValidationReport,
 } from "../src/index.js";
 import { paramsForStep } from "./helpers/generated-contract.js";
+import { registerSectionAuthoredFact } from "./validation.authored-honesty.section-authored-fact.test.generated.js";
+import { registerUnearnedStatedFact } from "./validation.authored-honesty.unearned-stated-fact.test.generated.js";
+import { registerCollapsedEdgeClaim } from "./validation.claim-separation.collapsed-edge-claim.test.generated.js";
+import { registerUnratifiedDescriptor } from "./validation.claim-separation.unratified-descriptor.test.generated.js";
 import { registerConstraintsAlone } from "./validation.kind-evidence.constraints-alone.test.generated.js";
 import { registerEmptyPromotedChild } from "./validation.kind-evidence.empty-promoted-child.test.generated.js";
 import { registerUntargetedConstraint } from "./validation.kind-evidence.untargeted-constraint.test.generated.js";
+import { registerIncoherentAggregate } from "./validation.pack-coherence.incoherent-aggregate.test.generated.js";
+import { registerBlockingOpenQuestion } from "./validation.readiness-floor.blocking-open-question.test.generated.js";
+import { registerUnrelatedScopedSpec } from "./validation.readiness-floor.unrelated-scoped-spec.test.generated.js";
+import { registerDanglingTarget } from "./validation.referential-integrity.dangling-target.test.generated.js";
+import { registerDidYouMean } from "./validation.referential-integrity.did-you-mean.test.generated.js";
+import { registerSplitReport } from "./validation.two-check-families.split-report.test.generated.js";
+import { registerMissingSpaceRefused } from "./validation.oracle-target-eligibility.missing-space-refused.test.generated.js";
+import { registerRuleSpaceAccepted } from "./validation.oracle-target-eligibility.rule-space-accepted.test.generated.js";
+import { registerUnboundExample } from "./validation.verification-linkage.unbound-example.test.generated.js";
+import { registerUnresolvedOracle } from "./validation.verification-linkage.unresolved-oracle.test.generated.js";
+import { registerOrphanSignal } from "./validation.warn-level-signals.orphan-signal.test.generated.js";
+import { registerReadyGapSignal } from "./validation.warn-level-signals.ready-gap-signal.test.generated.js";
 
 /**
- * The bound executable points of the validation family: each `bindExample` below runs one
- * authored example spec against a probe graph the Given steps assemble in memory. The graph is
+ * The bound executable points of the validation family: each adopted registrar below runs one
+ * authored example spec against a probe graph `createWorld` assembles in memory. The graph is
  * the public validation seam, so a hand-built `GraphSchema` is the honest input class here —
  * several of these laws have teeth only for a producer other than this repository's extractor.
  *
@@ -103,17 +153,6 @@ function findingsOf(world: ValidatorWorld, validatorId: string): readonly Findin
   return reportOf(world).findings.filter((finding) => finding.validatorId === validatorId);
 }
 
-/** The shared Then step of the family: the named check fires, and only at the stated severity. */
-function namesFinding(
-  world: ValidatorWorld,
-  params: { readonly findingId: string; readonly severity: "warning" | "error" },
-): void {
-  const findings = findingsOf(world, params.findingId);
-
-  expect(findings.length).toBeGreaterThan(0);
-  expect(findings.every((finding) => finding.severity === params.severity)).toBe(true);
-}
-
 /**
  * A decision endpoint terminates the relation chain honestly: only the `ready` rung reads
  * dependsOn and refines targets, so a decidedBy edge satisfies the relation clause without adding
@@ -162,24 +201,77 @@ function holdsErrorCount(world: ValidatorWorld, params: { readonly errorCount: n
   );
 }
 
+interface NamedFindingOutcome {
+  readonly kind: "the report names {findingId} at severity {severity}";
+  readonly findingId: string;
+  readonly severity: "warning" | "error";
+}
+
+function observeNamedFindingAt(
+  world: ValidatorWorld,
+  severity: "warning" | "error",
+): NamedFindingOutcome {
+  const matches = reportOf(world).findings.filter((finding) => finding.severity === severity);
+  const findingIds = [...new Set(matches.map((finding) => finding.validatorId))];
+  const findingId = findingIds[0];
+
+  if (findingId === undefined || findingIds.length !== 1) {
+    throw new Error(
+      `The validation report must hold exactly one ${severity} validator class before it is observed.`,
+    );
+  }
+
+  return {
+    kind: "the report names {findingId} at severity {severity}",
+    findingId,
+    severity,
+  };
+}
+
+function expectedNamedFindingAt(
+  complete: boolean,
+  findingId: string,
+  severity: "warning" | "error",
+): NamedFindingOutcome | typeof unspecified {
+  if (!complete) {
+    return unspecified;
+  }
+
+  return {
+    kind: "the report names {findingId} at severity {severity}",
+    findingId,
+    severity,
+  };
+}
+
+function invokeValidate(world: ValidatorWorld): void {
+  if (world.subjectId === "") {
+    return;
+  }
+
+  validate(world);
+}
+
+function namesSubject(world: ValidatorWorld, findingId: string): void {
+  expect(findingsOf(world, findingId).map((finding) => finding.subjectId)).toEqual([
+    world.subjectId,
+  ]);
+}
+
 /* ----- spec:validation.readiness-floor ----- */
 
-const readinessFloorBindings = {
-  "the graph holds a spec {specId} stating readiness {readiness}": (
-    world: ValidatorWorld,
-    params: { readonly specId: string; readonly readiness: "scoped" | "defined" },
-  ) => {
-    world.subjectId = params.specId;
-    world.nodes.push(probeSpec(params.specId, { readiness: params.readiness }));
-  },
-  "the spec {defect}": (
-    world: ValidatorWorld,
-    params: { readonly defect: "declares no relation" | "records a blocking open question" },
-  ) => {
-    if (params.defect === "declares no relation") {
-      return;
-    }
+function createReadinessFloorWorld(point: Partial<ReadinessFloorConditions>): ValidatorWorld {
+  const world = validatorWorld();
+  const { specId, readiness, defect } = point;
 
+  if (specId === undefined || readiness === undefined || defect === undefined) {
+    return world;
+  }
+
+  world.subjectId = specId;
+  world.nodes.push(probeSpec(specId, { readiness }));
+
+  if (defect === "records a blocking open question") {
     // Every other clause of the stated rung still passes: the blocked probe declares its relation
     // and keeps its kind evidence, so the open-questions clause is the only one that can refuse.
     reviseSubject(
@@ -199,12 +291,36 @@ const readinessFloorBindings = {
       "The spec step must run before its open question is recorded.",
     );
     declareDecisionRelation(world);
-  },
-  "the graph is validated": validate,
-  "the report names {findingId} at severity {severity}": namesFinding,
-  "the finding names the unmet floor clause {clauseId}": namesUnmetClause,
-  "the report holds {errorCount} errors": holdsErrorCount,
-};
+  }
+
+  return world;
+}
+
+function observeReadinessFloor(world: ValidatorWorld): ReadinessFloorOutcome {
+  return observeNamedFindingAt(world, "error");
+}
+
+function expectedReadinessFloor(point: Partial<ReadinessFloorConditions>): ReadinessFloorOutcome {
+  return expectedNamedFindingAt(
+    point.specId !== undefined && point.readiness !== undefined && point.defect !== undefined,
+    "honesty/readiness-floor",
+    "error",
+  );
+}
+
+function assertReadinessFloor(
+  world: ValidatorWorld,
+  contract: typeof unrelatedScopedSpecContract | typeof blockingOpenQuestionContract,
+): void {
+  const { clauseId } = paramsForStep(
+    contract,
+    "the finding names the unmet floor clause {clauseId}",
+  );
+  const { errorCount } = paramsForStep(contract, "the report holds {errorCount} errors");
+
+  namesUnmetClause(world, { clauseId });
+  holdsErrorCount(world, { errorCount });
+}
 
 const unrelatedScopedSpecTestAnchor = specTest({
   id: testAnchorId("test:protocol.readiness-floor.unrelated-scoped-spec"),
@@ -212,8 +328,15 @@ const unrelatedScopedSpecTestAnchor = specTest({
   verifies: ref("spec:validation.readiness-floor.unrelated-scoped-spec"),
 });
 void unrelatedScopedSpecTestAnchor;
-
-bindExample(unrelatedScopedSpecContract, validatorWorld, readinessFloorBindings);
+registerUnrelatedScopedSpec({
+  createWorld: createReadinessFloorWorld,
+  invoke: invokeValidate,
+  observe: observeReadinessFloor,
+  expected: expectedReadinessFloor,
+  assertions: (world) => {
+    assertReadinessFloor(world, unrelatedScopedSpecContract);
+  },
+});
 
 const blockingOpenQuestionTestAnchor = specTest({
   id: testAnchorId("test:protocol.readiness-floor.blocking-open-question"),
@@ -221,8 +344,15 @@ const blockingOpenQuestionTestAnchor = specTest({
   verifies: ref("spec:validation.readiness-floor.blocking-open-question"),
 });
 void blockingOpenQuestionTestAnchor;
-
-bindExample(blockingOpenQuestionContract, validatorWorld, readinessFloorBindings);
+registerBlockingOpenQuestion({
+  createWorld: createReadinessFloorWorld,
+  invoke: invokeValidate,
+  observe: observeReadinessFloor,
+  expected: expectedReadinessFloor,
+  assertions: (world) => {
+    assertReadinessFloor(world, blockingOpenQuestionContract);
+  },
+});
 
 /* ----- spec:validation.kind-evidence ----- */
 
@@ -430,52 +560,51 @@ registerEmptyPromotedChild({
 
 /* ----- spec:validation.warn-level-signals ----- */
 
-const warnLevelSignalBindings = {
-  "the graph holds a spec {specId} at readiness {readiness}": (
-    world: ValidatorWorld,
-    params: { readonly specId: string; readonly readiness: "idea" | "ready" },
-  ) => {
-    world.subjectId = params.specId;
-    world.nodes.push(probeSpec(params.specId, { readiness: params.readiness }));
-  },
-  "the spec declares {relations}": (
-    world: ValidatorWorld,
-    params: { readonly relations: "no relation" | "a decidedBy decision" },
-  ) => {
-    if (params.relations === "no relation") {
-      return;
-    }
+function createWarnLevelWorld(point: Partial<WarnLevelSignalsConditions>): ValidatorWorld {
+  const world = validatorWorld();
+  const { specId, readiness, relations } = point;
 
+  if (specId === undefined || readiness === undefined || relations === undefined) {
+    return world;
+  }
+
+  world.subjectId = specId;
+  world.nodes.push(probeSpec(specId, { readiness }));
+
+  if (relations === "a decidedBy decision") {
     // A decision endpoint terminates the chain honestly: the ready floor reads only dependsOn and
     // refines targets, so the probe's single warning stays the one under test.
-    const decisionId = `${world.subjectId}-decider`;
-    world.nodes.push(probeSpec(decisionId, { kind: "decision" }));
-    world.edges.push({
-      from: world.subjectId,
-      type: "decidedBy",
-      to: decisionId,
-      claim: "declared",
-    });
-  },
-  "the graph is validated": validate,
-  "the report names {findingId} at severity {severity}": (
-    world: ValidatorWorld,
-    params: { readonly findingId: string; readonly severity: "warning" | "error" },
-  ) => {
-    namesFinding(world, params);
-    expect(findingsOf(world, params.findingId).map((finding) => finding.subjectId)).toEqual([
-      world.subjectId,
-    ]);
-  },
-  "the report holds {errorCount} errors": (
-    world: ValidatorWorld,
-    params: { readonly errorCount: number },
-  ) => {
-    expect(reportOf(world).findings.filter((finding) => finding.severity === "error")).toHaveLength(
-      params.errorCount,
-    );
-  },
-};
+    declareDecisionRelation(world);
+  }
+
+  return world;
+}
+
+function observeWarnLevel(world: ValidatorWorld): WarnLevelSignalsOutcome {
+  return observeNamedFindingAt(world, "warning");
+}
+
+function expectedWarnLevel(
+  point: Partial<WarnLevelSignalsConditions>,
+  findingId: string,
+): WarnLevelSignalsOutcome {
+  return expectedNamedFindingAt(
+    point.specId !== undefined && point.readiness !== undefined && point.relations !== undefined,
+    findingId,
+    "warning",
+  );
+}
+
+function assertWarnLevel(
+  world: ValidatorWorld,
+  contract: typeof orphanSignalContract | typeof readyGapSignalContract,
+  findingId: string,
+): void {
+  const { errorCount } = paramsForStep(contract, "the report holds {errorCount} errors");
+
+  namesSubject(world, findingId);
+  holdsErrorCount(world, { errorCount });
+}
 
 const warnLevelOrphanTestAnchor = specTest({
   id: testAnchorId("test:protocol.warn-level-signals.orphan-signal"),
@@ -483,8 +612,15 @@ const warnLevelOrphanTestAnchor = specTest({
   verifies: ref("spec:validation.warn-level-signals.orphan-signal"),
 });
 void warnLevelOrphanTestAnchor;
-
-bindExample(orphanSignalContract, validatorWorld, warnLevelSignalBindings);
+registerOrphanSignal({
+  createWorld: createWarnLevelWorld,
+  invoke: invokeValidate,
+  observe: observeWarnLevel,
+  expected: (point) => expectedWarnLevel(point, "conformance/orphans"),
+  assertions: (world) => {
+    assertWarnLevel(world, orphanSignalContract, "conformance/orphans");
+  },
+});
 
 const warnLevelGapTestAnchor = specTest({
   id: testAnchorId("test:protocol.warn-level-signals.ready-gap-signal"),
@@ -492,56 +628,74 @@ const warnLevelGapTestAnchor = specTest({
   verifies: ref("spec:validation.warn-level-signals.ready-gap-signal"),
 });
 void warnLevelGapTestAnchor;
-
-bindExample(readyGapSignalContract, validatorWorld, warnLevelSignalBindings);
+registerReadyGapSignal({
+  createWorld: createWarnLevelWorld,
+  invoke: invokeValidate,
+  observe: observeWarnLevel,
+  expected: (point) => expectedWarnLevel(point, "honesty/gaps"),
+  assertions: (world) => {
+    assertWarnLevel(world, readyGapSignalContract, "honesty/gaps");
+  },
+});
 
 /* ----- spec:validation.referential-integrity ----- */
 
-const referentialIntegrityBindings = {
-  "the graph holds one spec {presentId}": (
-    world: ValidatorWorld,
-    params: { readonly presentId: string },
-  ) => {
-    world.subjectId = params.presentId;
-    world.nodes.push(probeSpec(params.presentId));
-  },
-  "the spec declares a dependsOn relation to {targetId}": (
-    world: ValidatorWorld,
-    params: { readonly targetId: string },
-  ) => {
-    world.edges.push({
-      from: world.subjectId,
-      type: "dependsOn",
-      to: params.targetId,
-      claim: "declared",
-    });
-  },
-  "the graph is validated": validate,
-  "the report names {findingId} at severity {severity}": (
-    world: ValidatorWorld,
-    params: { readonly findingId: string; readonly severity: "warning" | "error" },
-  ) => {
-    namesFinding(world, params);
-    expect(findingsOf(world, params.findingId).map((finding) => finding.subjectId)).toEqual([
-      world.subjectId,
-    ]);
-  },
-  "the finding offers the nearest-id suggestion: {suggested}": (
-    world: ValidatorWorld,
-    params: { readonly suggested: boolean },
-  ) => {
-    const message =
-      findingsOf(world, "conformance/referential-integrity")[0]?.message ??
-      "the referential-integrity finding is missing";
+function createReferentialIntegrityWorld(
+  point: Partial<ReferentialIntegrityConditions>,
+): ValidatorWorld {
+  const world = validatorWorld();
+  const { presentId, targetId } = point;
 
-    if (params.suggested) {
-      expect(message).toContain(`Did you mean "${world.subjectId}"?`);
-      return;
-    }
+  if (presentId === undefined || targetId === undefined) {
+    return world;
+  }
 
-    expect(message).not.toContain("Did you mean");
-  },
-};
+  world.subjectId = presentId;
+  world.nodes.push(probeSpec(presentId));
+  world.edges.push({
+    from: presentId,
+    type: "dependsOn",
+    to: targetId,
+    claim: "declared",
+  });
+  return world;
+}
+
+function observeReferentialIntegrity(world: ValidatorWorld): ReferentialIntegrityOutcome {
+  return observeNamedFindingAt(world, "error");
+}
+
+function expectedReferentialIntegrity(
+  point: Partial<ReferentialIntegrityConditions>,
+): ReferentialIntegrityOutcome {
+  return expectedNamedFindingAt(
+    point.presentId !== undefined && point.targetId !== undefined,
+    "conformance/referential-integrity",
+    "error",
+  );
+}
+
+function assertReferentialIntegrity(
+  world: ValidatorWorld,
+  contract: typeof danglingTargetContract | typeof didYouMeanContract,
+): void {
+  const { suggested } = paramsForStep(
+    contract,
+    "the finding offers the nearest-id suggestion: {suggested}",
+  );
+  const message =
+    findingsOf(world, "conformance/referential-integrity")[0]?.message ??
+    "the referential-integrity finding is missing";
+
+  namesSubject(world, "conformance/referential-integrity");
+
+  if (suggested) {
+    expect(message).toContain(`Did you mean "${world.subjectId}"?`);
+    return;
+  }
+
+  expect(message).not.toContain("Did you mean");
+}
 
 const danglingTargetTestAnchor = specTest({
   id: testAnchorId("test:protocol.referential-integrity.dangling-target"),
@@ -549,8 +703,15 @@ const danglingTargetTestAnchor = specTest({
   verifies: ref("spec:validation.referential-integrity.dangling-target"),
 });
 void danglingTargetTestAnchor;
-
-bindExample(danglingTargetContract, validatorWorld, referentialIntegrityBindings);
+registerDanglingTarget({
+  createWorld: createReferentialIntegrityWorld,
+  invoke: invokeValidate,
+  observe: observeReferentialIntegrity,
+  expected: expectedReferentialIntegrity,
+  assertions: (world) => {
+    assertReferentialIntegrity(world, danglingTargetContract);
+  },
+});
 
 const didYouMeanTestAnchor = specTest({
   id: testAnchorId("test:protocol.referential-integrity.did-you-mean"),
@@ -558,69 +719,83 @@ const didYouMeanTestAnchor = specTest({
   verifies: ref("spec:validation.referential-integrity.did-you-mean"),
 });
 void didYouMeanTestAnchor;
-
-bindExample(didYouMeanContract, validatorWorld, referentialIntegrityBindings);
+registerDidYouMean({
+  createWorld: createReferentialIntegrityWorld,
+  invoke: invokeValidate,
+  observe: observeReferentialIntegrity,
+  expected: expectedReferentialIntegrity,
+  assertions: (world) => {
+    assertReferentialIntegrity(world, didYouMeanContract);
+  },
+});
 
 /* ----- spec:validation.authored-honesty ----- */
 
-const authoredHonestyBindings = {
-  "the graph holds a spec {specId}": (
-    world: ValidatorWorld,
-    params: { readonly specId: string },
-  ) => {
-    world.subjectId = params.specId;
-    world.nodes.push(probeSpec(params.specId));
-  },
-  "the spec hand-authors the delivery fact {factName} at {site}": (
-    world: ValidatorWorld,
-    params: {
-      readonly factName: "implemented" | "has-verifier";
-      readonly site: "a behavior section carrier" | "the node deliveryFacts array";
-    },
-  ) => {
-    const node = world.nodes[world.nodes.length - 1];
+function createAuthoredHonestyWorld(point: Partial<AuthoredHonestyConditions>): ValidatorWorld {
+  const world = validatorWorld();
+  const { specId, factName, site } = point;
 
-    if (node?.nodeType !== "Primitive") {
-      throw new Error("The spec step must run before the fact is smuggled onto it.");
-    }
+  if (specId === undefined || factName === undefined || site === undefined) {
+    return world;
+  }
 
-    // Typed sections are the authoring-time guardrail; the graph is a public seam, so both
-    // smuggling routes are shaped here as the value data a foreign producer could hand over.
-    const smuggled =
-      params.site === "the node deliveryFacts array"
-        ? { ...node, deliveryFacts: [params.factName] }
-        : {
-            ...node,
-            sections: {
-              ...node.sections,
-              behavior: { ...node.sections?.behavior, [params.factName]: true },
-            },
-          };
+  world.subjectId = specId;
+  world.nodes.push(probeSpec(specId));
 
-    world.nodes[world.nodes.length - 1] = smuggled;
-  },
-  "the graph is validated": validate,
-  "the report names {findingId} at severity {severity}": (
-    world: ValidatorWorld,
-    params: { readonly findingId: string; readonly severity: "warning" | "error" },
-  ) => {
-    namesFinding(world, params);
-    expect(findingsOf(world, params.findingId).map((finding) => finding.subjectId)).toEqual([
-      world.subjectId,
-    ]);
-  },
-  "the finding names the fact {relatedId} and states {phrase}": (
-    world: ValidatorWorld,
-    params: { readonly relatedId: string; readonly phrase: string },
-  ) => {
-    const findings = reportOf(world).findings.filter(
-      (finding) => finding.relatedId === params.relatedId && finding.subjectId === world.subjectId,
-    );
+  const node = world.nodes[world.nodes.length - 1];
 
-    expect(findings).toHaveLength(1);
-    expect(findings[0]?.message).toContain(params.phrase);
-  },
-};
+  if (node?.nodeType !== "Primitive") {
+    throw new Error("The spec step must run before the fact is smuggled onto it.");
+  }
+
+  // Typed sections are the authoring-time guardrail; the graph is a public seam, so both
+  // smuggling routes are shaped here as the value data a foreign producer could hand over.
+  world.nodes[world.nodes.length - 1] =
+    site === "the node deliveryFacts array"
+      ? { ...node, deliveryFacts: [factName] }
+      : {
+          ...node,
+          sections: {
+            ...node.sections,
+            behavior: { ...node.sections?.behavior, [factName]: true },
+          },
+        };
+
+  return world;
+}
+
+function observeAuthoredHonesty(world: ValidatorWorld): AuthoredHonestyOutcome {
+  return observeNamedFindingAt(world, "error");
+}
+
+function expectedAuthoredHonesty(
+  point: Partial<AuthoredHonestyConditions>,
+  findingId: string,
+): AuthoredHonestyOutcome {
+  return expectedNamedFindingAt(
+    point.specId !== undefined && point.factName !== undefined && point.site !== undefined,
+    findingId,
+    "error",
+  );
+}
+
+function assertAuthoredHonesty(
+  world: ValidatorWorld,
+  contract: typeof sectionAuthoredFactContract | typeof unearnedStatedFactContract,
+  findingId: string,
+): void {
+  const { relatedId, phrase } = paramsForStep(
+    contract,
+    "the finding names the fact {relatedId} and states {phrase}",
+  );
+  const findings = reportOf(world).findings.filter(
+    (finding) => finding.relatedId === relatedId && finding.subjectId === world.subjectId,
+  );
+
+  namesSubject(world, findingId);
+  expect(findings).toHaveLength(1);
+  expect(findings[0]?.message).toContain(phrase);
+}
 
 const sectionAuthoredFactTestAnchor = specTest({
   id: testAnchorId("test:protocol.authored-honesty.section-authored-fact"),
@@ -628,8 +803,15 @@ const sectionAuthoredFactTestAnchor = specTest({
   verifies: ref("spec:validation.authored-honesty.section-authored-fact"),
 });
 void sectionAuthoredFactTestAnchor;
-
-bindExample(sectionAuthoredFactContract, validatorWorld, authoredHonestyBindings);
+registerSectionAuthoredFact({
+  createWorld: createAuthoredHonestyWorld,
+  invoke: invokeValidate,
+  observe: observeAuthoredHonesty,
+  expected: (point) => expectedAuthoredHonesty(point, "honesty/authoring-shape"),
+  assertions: (world) => {
+    assertAuthoredHonesty(world, sectionAuthoredFactContract, "honesty/authoring-shape");
+  },
+});
 
 const unearnedStatedFactTestAnchor = specTest({
   id: testAnchorId("test:protocol.authored-honesty.unearned-stated-fact"),
@@ -637,71 +819,87 @@ const unearnedStatedFactTestAnchor = specTest({
   verifies: ref("spec:validation.authored-honesty.unearned-stated-fact"),
 });
 void unearnedStatedFactTestAnchor;
-
-bindExample(unearnedStatedFactContract, validatorWorld, authoredHonestyBindings);
+registerUnearnedStatedFact({
+  createWorld: createAuthoredHonestyWorld,
+  invoke: invokeValidate,
+  observe: observeAuthoredHonesty,
+  expected: (point) => expectedAuthoredHonesty(point, "honesty/delivery-facts"),
+  assertions: (world) => {
+    assertAuthoredHonesty(world, unearnedStatedFactContract, "honesty/delivery-facts");
+  },
+});
 
 /* ----- spec:validation.claim-separation ----- */
 
-const claimSeparationBindings = {
-  "the graph holds a spec {specId}": (
-    world: ValidatorWorld,
-    params: { readonly specId: string },
-  ) => {
-    world.subjectId = params.specId;
-    world.nodes.push(probeSpec(params.specId));
-  },
-  "the graph carries an off-contract {element} spelled {value}": (
-    world: ValidatorWorld,
-    params: {
-      readonly element: "edge claim" | "descriptor value";
-      readonly value: string;
-    },
-  ) => {
-    const node = world.nodes[world.nodes.length - 1];
+function createClaimSeparationWorld(point: Partial<ClaimSeparationConditions>): ValidatorWorld {
+  const world = validatorWorld();
+  const { specId, element, value } = point;
 
-    if (node?.nodeType !== "Primitive") {
-      throw new Error("The spec step must run before the off-contract shape is placed.");
-    }
+  if (specId === undefined || element === undefined || value === undefined) {
+    return world;
+  }
 
-    if (params.element === "descriptor value") {
-      world.nodes[world.nodes.length - 1] = { ...node, specKind: params.value as SpecKind };
-      return;
-    }
+  world.subjectId = specId;
+  world.nodes.push(probeSpec(specId));
 
-    const binderId = "impl:probe.create-order-use-case";
-    world.nodes.push({
-      id: binderId,
-      nodeType: "CodeNode",
-      claim: "anchored",
-      file: "src/probe/create-order.use-case.ts",
-      line: 3,
-    });
-    world.edges.push({
-      from: binderId,
-      type: "satisfies",
-      to: world.subjectId,
-      claim: params.value as GraphClaim,
-    });
-  },
-  "the graph is validated": validate,
-  "the report names {findingId} at severity {severity}": namesFinding,
-  "the finding message states {phrase}": (
-    world: ValidatorWorld,
-    params: { readonly phrase: string },
-  ) => {
-    const messages = findingsOf(world, "conformance/claim-separation").map(
-      (finding) => finding.message,
-    );
+  const node = world.nodes[world.nodes.length - 1];
 
-    expect(messages.filter((message) => message.includes(params.phrase))).toHaveLength(1);
-  },
-  "the report holds {floorCount} readiness-floor findings": (
-    world: ValidatorWorld,
-    params: { readonly floorCount: number },
-  ) => {
-    expect(findingsOf(world, "honesty/readiness-floor")).toHaveLength(params.floorCount);
-  },
-};
+  if (node?.nodeType !== "Primitive") {
+    throw new Error("The spec step must run before the off-contract shape is placed.");
+  }
+
+  if (element === "descriptor value") {
+    world.nodes[world.nodes.length - 1] = { ...node, specKind: value as SpecKind };
+    return world;
+  }
+
+  const binderId = "impl:probe.create-order-use-case";
+  world.nodes.push({
+    id: binderId,
+    nodeType: "CodeNode",
+    claim: "anchored",
+    file: "src/probe/create-order.use-case.ts",
+    line: 3,
+  });
+  world.edges.push({
+    from: binderId,
+    type: "satisfies",
+    to: specId,
+    claim: value as GraphClaim,
+  });
+  return world;
+}
+
+function observeClaimSeparation(world: ValidatorWorld): ClaimSeparationOutcome {
+  return observeNamedFindingAt(world, "error");
+}
+
+function expectedClaimSeparation(
+  point: Partial<ClaimSeparationConditions>,
+): ClaimSeparationOutcome {
+  return expectedNamedFindingAt(
+    point.specId !== undefined && point.element !== undefined && point.value !== undefined,
+    "conformance/claim-separation",
+    "error",
+  );
+}
+
+function assertClaimSeparation(
+  world: ValidatorWorld,
+  contract: typeof collapsedEdgeClaimContract | typeof unratifiedDescriptorContract,
+): void {
+  const { phrase } = paramsForStep(contract, "the finding message states {phrase}");
+  const { floorCount } = paramsForStep(
+    contract,
+    "the report holds {floorCount} readiness-floor findings",
+  );
+  const messages = findingsOf(world, "conformance/claim-separation").map(
+    (finding) => finding.message,
+  );
+
+  expect(messages.filter((message) => message.includes(phrase))).toHaveLength(1);
+  expect(findingsOf(world, "honesty/readiness-floor")).toHaveLength(floorCount);
+}
 
 const collapsedEdgeClaimTestAnchor = specTest({
   id: testAnchorId("test:protocol.claim-separation.collapsed-edge-claim"),
@@ -709,8 +907,15 @@ const collapsedEdgeClaimTestAnchor = specTest({
   verifies: ref("spec:validation.claim-separation.collapsed-edge-claim"),
 });
 void collapsedEdgeClaimTestAnchor;
-
-bindExample(collapsedEdgeClaimContract, validatorWorld, claimSeparationBindings);
+registerCollapsedEdgeClaim({
+  createWorld: createClaimSeparationWorld,
+  invoke: invokeValidate,
+  observe: observeClaimSeparation,
+  expected: expectedClaimSeparation,
+  assertions: (world) => {
+    assertClaimSeparation(world, collapsedEdgeClaimContract);
+  },
+});
 
 const unratifiedDescriptorTestAnchor = specTest({
   id: testAnchorId("test:protocol.claim-separation.unratified-descriptor"),
@@ -718,64 +923,136 @@ const unratifiedDescriptorTestAnchor = specTest({
   verifies: ref("spec:validation.claim-separation.unratified-descriptor"),
 });
 void unratifiedDescriptorTestAnchor;
-
-bindExample(unratifiedDescriptorContract, validatorWorld, claimSeparationBindings);
+registerUnratifiedDescriptor({
+  createWorld: createClaimSeparationWorld,
+  invoke: invokeValidate,
+  observe: observeClaimSeparation,
+  expected: expectedClaimSeparation,
+  assertions: (world) => {
+    assertClaimSeparation(world, unratifiedDescriptorContract);
+  },
+});
 
 /* ----- spec:validation.verification-linkage ----- */
 
-const verificationLinkageBindings = {
-  "the graph holds a parent spec {parentId}": (
-    world: ValidatorWorld,
-    params: { readonly parentId: string },
-  ) => {
-    world.subjectId = params.parentId;
-    world.nodes.push(probeSpec(params.parentId));
-  },
-  "a non-resolving {verifierKind} named {verifierId} points at it": (
-    world: ValidatorWorld,
-    params: {
-      readonly verifierKind: "example spec" | "oracle anchor";
-      readonly verifierId: string;
-    },
-  ) => {
-    if (params.verifierKind === "example spec") {
-      world.nodes.push(probeSpec(params.verifierId, { kind: "example" }));
-      world.edges.push({
-        from: params.verifierId,
-        type: "verifies",
-        to: world.subjectId,
-        claim: "declared",
-      });
-      return;
-    }
+interface SpecContextWorld extends ValidatorWorld {
+  context: SpecContext | undefined;
+}
 
-    // The oracle anchor resolves as a node and rides its contract row; what it cannot resolve
-    // through is the modelled spec's example space, which the parent probe never owns.
-    world.nodes.push({
-      id: params.verifierId,
-      nodeType: "Anchor",
-      claim: "anchored",
-      file: "test/probe-oracle.test.ts",
-      line: 5,
-    });
+function createVerificationLinkageWorld(
+  point: Partial<VerificationLinkageConditions>,
+): SpecContextWorld {
+  const world: SpecContextWorld = { ...validatorWorld(), context: undefined };
+  const { parentId, verifierKind, verifierId } = point;
+
+  if (parentId === undefined || verifierKind === undefined || verifierId === undefined) {
+    return world;
+  }
+
+  world.subjectId = parentId;
+  world.nodes.push(probeSpec(parentId));
+
+  if (verifierKind === "example spec") {
+    world.nodes.push(probeSpec(verifierId, { kind: "example" }));
     world.edges.push({
-      from: params.verifierId,
-      type: "models",
-      to: world.subjectId,
-      claim: "anchored",
+      from: verifierId,
+      type: "verifies",
+      to: parentId,
+      claim: "declared",
     });
-  },
-  "the graph is validated": validate,
-  "the report names {findingId} at severity {severity}": namesFinding,
-  "the parent earns the delivery fact has-verifier: {conferred}": (
-    world: ValidatorWorld,
-    params: { readonly conferred: boolean },
-  ) => {
-    const derived = computeDeliveryFacts(world.nodes, world.edges).get(world.subjectId) ?? [];
+    return world;
+  }
 
-    expect(derived.includes("has-verifier")).toBe(params.conferred);
-  },
-};
+  // The oracle anchor resolves as a node and rides its contract row; what it cannot resolve
+  // through is the modelled spec's example space, which the parent probe never owns.
+  world.nodes.push({
+    id: verifierId,
+    nodeType: "Anchor",
+    claim: "anchored",
+    file: "test/probe-oracle.test.ts",
+    line: 5,
+  });
+  world.edges.push({
+    from: verifierId,
+    type: "models",
+    to: parentId,
+    claim: "anchored",
+  });
+  return world;
+}
+
+function invokeSpecContext(world: SpecContextWorld): void {
+  if (world.subjectId === "") {
+    return;
+  }
+
+  world.context = createReader({
+    schemaVersion,
+    nodes: world.nodes,
+    edges: world.edges,
+  }).specContext(world.subjectId);
+}
+
+function observeVerificationLinkage(
+  world: SpecContextWorld,
+  findingId: string,
+): VerificationLinkageOutcome {
+  const context = world.context;
+
+  if (context === undefined) {
+    throw new Error("The reader context must be stored before the outcome is observed.");
+  }
+
+  const finding = context.findings.find((entry) => entry.validatorId === findingId);
+
+  if (finding === undefined) {
+    throw new Error(`The reader context must name ${findingId} before it is observed.`);
+  }
+
+  return {
+    kind: "the report names {findingId} at severity {severity}",
+    findingId: finding.validatorId,
+    severity: finding.severity,
+  };
+}
+
+function expectedVerificationLinkage(
+  point: Partial<VerificationLinkageConditions>,
+  findingId: string,
+  severity: "warning" | "error",
+): VerificationLinkageOutcome {
+  if (
+    point.parentId === undefined ||
+    point.verifierKind === undefined ||
+    point.verifierId === undefined
+  ) {
+    return unspecified;
+  }
+
+  return {
+    kind: "the report names {findingId} at severity {severity}",
+    findingId,
+    severity,
+  };
+}
+
+function assertVerificationLinkage(
+  world: SpecContextWorld,
+  contract: typeof unboundExampleContract | typeof unresolvedOracleContract,
+): void {
+  const context = world.context;
+
+  if (context === undefined) {
+    throw new Error("The reader context must be stored before the outcome is asserted.");
+  }
+
+  const { conferred } = paramsForStep(
+    contract,
+    "the parent earns the delivery fact has-verifier: {conferred}",
+  );
+
+  expect(context.deliveryFacts.includes("has-verifier")).toBe(conferred);
+}
 
 const unboundExampleTestAnchor = specTest({
   id: testAnchorId("test:protocol.verification-linkage.unbound-example"),
@@ -783,8 +1060,16 @@ const unboundExampleTestAnchor = specTest({
   verifies: ref("spec:validation.verification-linkage.unbound-example"),
 });
 void unboundExampleTestAnchor;
-
-bindExample(unboundExampleContract, validatorWorld, verificationLinkageBindings);
+registerUnboundExample({
+  createWorld: createVerificationLinkageWorld,
+  invoke: invokeSpecContext,
+  observe: (world) => observeVerificationLinkage(world, "conformance/verifies-linkage"),
+  expected: (point) =>
+    expectedVerificationLinkage(point, "conformance/verifies-linkage", "warning"),
+  assertions: (world) => {
+    assertVerificationLinkage(world, unboundExampleContract);
+  },
+});
 
 const unresolvedOracleTestAnchor = specTest({
   id: testAnchorId("test:protocol.verification-linkage.unresolved-oracle"),
@@ -792,41 +1077,46 @@ const unresolvedOracleTestAnchor = specTest({
   verifies: ref("spec:validation.verification-linkage.unresolved-oracle"),
 });
 void unresolvedOracleTestAnchor;
-
-bindExample(unresolvedOracleContract, validatorWorld, verificationLinkageBindings);
+registerUnresolvedOracle({
+  createWorld: createVerificationLinkageWorld,
+  invoke: invokeSpecContext,
+  observe: (world) => observeVerificationLinkage(world, "conformance/oracle-linkage"),
+  expected: (point) => expectedVerificationLinkage(point, "conformance/oracle-linkage", "error"),
+  assertions: (world) => {
+    assertVerificationLinkage(world, unresolvedOracleContract);
+  },
+});
 
 /* ----- spec:validation.oracle-target-eligibility ----- */
 
-const oracleTargetEligibilityBindings = {
-  "the oracle targets a {targetKind} spec": (
-    world: ValidatorWorld,
-    params: { readonly targetKind: "behavior" | "rule" },
-  ) => {
-    world.subjectId = "spec:probe.oracle-target";
-    world.nodes.push(probeSpec(world.subjectId, { kind: params.targetKind }));
-    world.nodes.push({
-      id: "oracle:probe.oracle-target",
-      nodeType: "Anchor",
-      claim: "anchored",
-      label: "probe expected outcome",
-      file: "test/probe-oracle.test.ts",
-      line: 5,
-    });
-    world.edges.push({
-      from: "oracle:probe.oracle-target",
-      type: "models",
-      to: world.subjectId,
-      claim: "anchored",
-    });
-  },
-  "the target owns an example space: {ownsExampleSpace}": (
-    world: ValidatorWorld,
-    params: { readonly ownsExampleSpace: boolean },
-  ) => {
-    if (!params.ownsExampleSpace) {
-      return;
-    }
+function createOracleTargetWorld(
+  point: Partial<OracleTargetEligibilityConditions>,
+): SpecContextWorld {
+  const world: SpecContextWorld = { ...validatorWorld(), context: undefined };
+  const { targetKind, ownsExampleSpace } = point;
 
+  if (targetKind === undefined || ownsExampleSpace === undefined) {
+    return world;
+  }
+
+  world.subjectId = "spec:probe.oracle-target";
+  world.nodes.push(probeSpec(world.subjectId, { kind: targetKind }));
+  world.nodes.push({
+    id: "oracle:probe.oracle-target",
+    nodeType: "Anchor",
+    claim: "anchored",
+    label: "probe expected outcome",
+    file: "test/probe-oracle.test.ts",
+    line: 5,
+  });
+  world.edges.push({
+    from: "oracle:probe.oracle-target",
+    type: "models",
+    to: world.subjectId,
+    claim: "anchored",
+  });
+
+  if (ownsExampleSpace) {
     reviseSubject(
       world,
       (node) => ({
@@ -841,19 +1131,40 @@ const oracleTargetEligibilityBindings = {
       }),
       "The target-kind step must run before example-space ownership is recorded.",
     );
-  },
-  "oracle linkage is resolved": validate,
-  "oracle linkage reports {findingCount} findings and resolving presence {oraclePresent}": (
-    world: ValidatorWorld,
-    params: { readonly findingCount: number; readonly oraclePresent: boolean },
-  ) => {
-    expect(findingsOf(world, "conformance/oracle-linkage")).toHaveLength(params.findingCount);
-    const graph = { schemaVersion, nodes: world.nodes, edges: world.edges };
-    expect(createReader(graph).specContext(world.subjectId)?.oracle !== undefined).toBe(
-      params.oraclePresent,
-    );
-  },
-};
+  }
+
+  return world;
+}
+
+function observeOracleTarget(world: SpecContextWorld): OracleTargetEligibilityOutcome {
+  const context = world.context;
+
+  if (context === undefined) {
+    throw new Error("Oracle linkage must be resolved before the outcome is observed.");
+  }
+
+  return {
+    kind: "oracle linkage reports {findingCount} findings and resolving presence {oraclePresent}",
+    findingCount: context.findings.filter(
+      (finding) => finding.validatorId === "conformance/oracle-linkage",
+    ).length,
+    oraclePresent: context.oracle !== undefined,
+  };
+}
+
+function expectedOracleTarget(
+  point: Partial<OracleTargetEligibilityConditions>,
+): OracleTargetEligibilityOutcome {
+  if (point.targetKind === undefined || point.ownsExampleSpace === undefined) {
+    return unspecified;
+  }
+
+  return {
+    kind: "oracle linkage reports {findingCount} findings and resolving presence {oraclePresent}",
+    findingCount: point.ownsExampleSpace ? 0 : 1,
+    oraclePresent: point.ownsExampleSpace,
+  };
+}
 
 const ruleSpaceAcceptedTestAnchor = specTest({
   id: testAnchorId("test:protocol.oracle-target-eligibility.rule-space-accepted"),
@@ -861,8 +1172,25 @@ const ruleSpaceAcceptedTestAnchor = specTest({
   verifies: ref("spec:validation.oracle-target-eligibility.rule-space-accepted"),
 });
 void ruleSpaceAcceptedTestAnchor;
+registerRuleSpaceAccepted({
+  createWorld: createOracleTargetWorld,
+  invoke: invokeSpecContext,
+  observe: observeOracleTarget,
+  expected: expectedOracleTarget,
+  assertions: (world) => {
+    const context = world.context;
 
-bindExample(ruleSpaceAcceptedContract, validatorWorld, oracleTargetEligibilityBindings);
+    if (context === undefined) {
+      throw new Error("Oracle linkage must be resolved before the outcome is asserted.");
+    }
+
+    expect(
+      context.findings
+        .filter((finding) => finding.validatorId === "conformance/oracle-linkage")
+        .every((finding) => finding.relatedId === world.subjectId),
+    ).toBe(true);
+  },
+});
 
 const missingSpaceRefusedTestAnchor = specTest({
   id: testAnchorId("test:protocol.oracle-target-eligibility.missing-space-refused"),
@@ -870,61 +1198,79 @@ const missingSpaceRefusedTestAnchor = specTest({
   verifies: ref("spec:validation.oracle-target-eligibility.missing-space-refused"),
 });
 void missingSpaceRefusedTestAnchor;
+registerMissingSpaceRefused({
+  createWorld: createOracleTargetWorld,
+  invoke: invokeSpecContext,
+  observe: observeOracleTarget,
+  expected: expectedOracleTarget,
+  assertions: (world) => {
+    const context = world.context;
 
-bindExample(missingSpaceRefusedContract, validatorWorld, oracleTargetEligibilityBindings);
+    if (context === undefined) {
+      throw new Error("Oracle linkage must be resolved before the outcome is asserted.");
+    }
+
+    expect(
+      context.findings
+        .filter((finding) => finding.validatorId === "conformance/oracle-linkage")
+        .every((finding) => finding.relatedId === world.subjectId),
+    ).toBe(true);
+  },
+});
 
 /* ----- spec:validation.pack-coherence ----- */
 
-const packCoherenceBindings = {
-  "a pack {packId} lists the spec {specId} {memberCount} times": (
-    world: ValidatorWorld,
-    params: {
-      readonly packId: string;
-      readonly specId: string;
-      readonly memberCount: number;
-    },
-  ) => {
-    world.subjectId = params.packId;
-    world.nodes.push(probeSpec(params.specId));
-    world.nodes.push({
-      id: params.packId,
-      nodeType: "Pack",
+function createPackCoherenceWorld(point: Partial<PackCoherenceConditions>): ValidatorWorld {
+  const world = validatorWorld();
+  const { packId, specId, memberCount } = point;
+
+  if (packId === undefined || specId === undefined || memberCount === undefined) {
+    return world;
+  }
+
+  world.subjectId = packId;
+  world.nodes.push(probeSpec(specId));
+  world.nodes.push({
+    id: packId,
+    nodeType: "Pack",
+    claim: "declared",
+    title: "Probe aggregate",
+    file: "specs/probe.pack.sdp.ts",
+  });
+
+  // Membership is the manifest re-expressed as belongsTo edges, one per entry — a repeated
+  // manifest entry is a repeated edge, which is what the coherence check counts.
+  for (let entry = 0; entry < memberCount; entry += 1) {
+    world.edges.push({
+      from: specId,
+      type: "belongsTo",
+      to: packId,
       claim: "declared",
-      title: "Probe aggregate",
-      file: "specs/probe.pack.sdp.ts",
     });
+  }
 
-    // Membership is the manifest re-expressed as belongsTo edges, one per entry — a repeated
-    // manifest entry is a repeated edge, which is what the coherence check counts.
-    for (let entry = 0; entry < params.memberCount; entry += 1) {
-      world.edges.push({
-        from: params.specId,
-        type: "belongsTo",
-        to: params.packId,
-        claim: "declared",
-      });
-    }
-  },
-  "the pack also names that spec as a modelRef": (world: ValidatorWorld) => {
-    const memberId = world.edges.find((edge) => edge.type === "belongsTo")?.from;
-    const packIndex = world.nodes.findIndex((node) => node.id === world.subjectId);
-    const packNode = world.nodes[packIndex];
+  const packIndex = world.nodes.findIndex((node) => node.id === packId);
+  const packNode = world.nodes[packIndex];
 
-    if (memberId === undefined || packNode?.nodeType !== "Pack") {
-      throw new Error("The pack step must run before its modelRefs are named.");
-    }
+  if (packNode?.nodeType !== "Pack") {
+    throw new Error("The pack step must run before its modelRefs are named.");
+  }
 
-    world.nodes[packIndex] = { ...packNode, modelRefs: [memberId] };
-  },
-  "the graph is validated": validate,
-  "the report names {findingId} at severity {severity}": namesFinding,
-  "the report holds {findingCount} pack-coherence findings": (
-    world: ValidatorWorld,
-    params: { readonly findingCount: number },
-  ) => {
-    expect(findingsOf(world, "conformance/pack-coherence")).toHaveLength(params.findingCount);
-  },
-};
+  world.nodes[packIndex] = { ...packNode, modelRefs: [specId] };
+  return world;
+}
+
+function observePackCoherence(world: ValidatorWorld): PackCoherenceOutcome {
+  return observeNamedFindingAt(world, "error");
+}
+
+function expectedPackCoherence(point: Partial<PackCoherenceConditions>): PackCoherenceOutcome {
+  return expectedNamedFindingAt(
+    point.packId !== undefined && point.specId !== undefined && point.memberCount !== undefined,
+    "conformance/pack-coherence",
+    "error",
+  );
+}
 
 const incoherentAggregateTestAnchor = specTest({
   id: testAnchorId("test:protocol.pack-coherence.incoherent-aggregate"),
@@ -932,8 +1278,20 @@ const incoherentAggregateTestAnchor = specTest({
   verifies: ref("spec:validation.pack-coherence.incoherent-aggregate"),
 });
 void incoherentAggregateTestAnchor;
+registerIncoherentAggregate({
+  createWorld: createPackCoherenceWorld,
+  invoke: invokeValidate,
+  observe: observePackCoherence,
+  expected: expectedPackCoherence,
+  assertions: (world) => {
+    const { findingCount } = paramsForStep(
+      incoherentAggregateContract,
+      "the report holds {findingCount} pack-coherence findings",
+    );
 
-bindExample(incoherentAggregateContract, validatorWorld, packCoherenceBindings);
+    expect(findingsOf(world, "conformance/pack-coherence")).toHaveLength(findingCount);
+  },
+});
 
 /* ----- spec:validation.two-check-families ----- */
 
@@ -950,57 +1308,42 @@ function familyReports(
   expect(findings.every((finding) => finding.severity === params.severity)).toBe(true);
 }
 
-const twoCheckFamilyBindings = {
-  "the graph holds a spec {specId} at readiness {readiness}": (
-    world: ValidatorWorld,
-    params: { readonly specId: string; readonly readiness: "idea" | "ready" },
-  ) => {
-    world.subjectId = params.specId;
-    world.nodes.push(probeSpec(params.specId, { readiness: params.readiness }));
-  },
-  "the spec declares a dependsOn relation to the absent target {targetId}": (
-    world: ValidatorWorld,
-    params: { readonly targetId: string },
-  ) => {
-    world.edges.push({
-      from: world.subjectId,
-      type: "dependsOn",
-      to: params.targetId,
-      claim: "declared",
-    });
-  },
-  "the graph is validated": validate,
-  "the aggregate report states no family of its own": (world: ValidatorWorld) => {
-    // The aggregate spans both families, so it never mislabels itself with a single one; each
-    // finding names its own family, and only ever one of the two ratified ones.
-    expect(reportOf(world).family).toBeUndefined();
-    expect([...new Set(reportOf(world).findings.map((finding) => finding.family))].sort()).toEqual([
-      "conformance",
-      "honesty",
-    ]);
-  },
-  "the conformance family reports {conformanceId} at severity {conformanceSeverity}": (
-    world: ValidatorWorld,
-    params: {
-      readonly conformanceId: string;
-      readonly conformanceSeverity: "warning" | "error";
-    },
-  ) => {
-    familyReports(world, "conformance", {
-      findingId: params.conformanceId,
-      severity: params.conformanceSeverity,
-    });
-  },
-  "the honesty family reports {honestyId} at severity {honestySeverity}": (
-    world: ValidatorWorld,
-    params: { readonly honestyId: string; readonly honestySeverity: "warning" | "error" },
-  ) => {
-    familyReports(world, "honesty", {
-      findingId: params.honestyId,
-      severity: params.honestySeverity,
-    });
-  },
-};
+function createTwoCheckWorld(point: Partial<TwoCheckFamiliesConditions>): ValidatorWorld {
+  const world = validatorWorld();
+  const { specId, readiness, targetId } = point;
+
+  if (specId === undefined || readiness === undefined || targetId === undefined) {
+    return world;
+  }
+
+  world.subjectId = specId;
+  world.nodes.push(probeSpec(specId, { readiness }));
+  world.edges.push({
+    from: specId,
+    type: "dependsOn",
+    to: targetId,
+    claim: "declared",
+  });
+  return world;
+}
+
+function observeSplitReport(world: ValidatorWorld): TwoCheckFamiliesOutcome {
+  const report = reportOf(world);
+
+  if (report.family !== undefined) {
+    throw new Error("The aggregate report must not name a family of its own.");
+  }
+
+  return { kind: "the aggregate report states no family of its own" };
+}
+
+function expectedSplitReport(point: Partial<TwoCheckFamiliesConditions>): TwoCheckFamiliesOutcome {
+  if (point.specId === undefined || point.readiness === undefined || point.targetId === undefined) {
+    return unspecified;
+  }
+
+  return { kind: "the aggregate report states no family of its own" };
+}
 
 const splitReportTestAnchor = specTest({
   id: testAnchorId("test:protocol.two-check-families.split-report"),
@@ -1008,5 +1351,29 @@ const splitReportTestAnchor = specTest({
   verifies: ref("spec:validation.two-check-families.split-report"),
 });
 void splitReportTestAnchor;
+registerSplitReport({
+  createWorld: createTwoCheckWorld,
+  invoke: invokeValidate,
+  observe: observeSplitReport,
+  expected: expectedSplitReport,
+  assertions: (world) => {
+    const { conformanceId, conformanceSeverity } = paramsForStep(
+      splitReportContract,
+      "the conformance family reports {conformanceId} at severity {conformanceSeverity}",
+    );
+    const { honestyId, honestySeverity } = paramsForStep(
+      splitReportContract,
+      "the honesty family reports {honestyId} at severity {honestySeverity}",
+    );
 
-bindExample(splitReportContract, validatorWorld, twoCheckFamilyBindings);
+    expect([...new Set(reportOf(world).findings.map((finding) => finding.family))].sort()).toEqual([
+      "conformance",
+      "honesty",
+    ]);
+    familyReports(world, "conformance", {
+      findingId: conformanceId,
+      severity: conformanceSeverity,
+    });
+    familyReports(world, "honesty", { findingId: honestyId, severity: honestySeverity });
+  },
+});

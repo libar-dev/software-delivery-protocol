@@ -5,17 +5,34 @@ import { join } from "node:path";
 import { afterEach, expect } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
 import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
 
 import { sameInvocationContract } from "../generated/contracts/extraction.build-pipeline.same-invocation.contract.js";
+import type {
+  BuildPipelineConditions,
+  BuildPipelineOutcome,
+} from "../generated/contracts/extraction.build-pipeline.space.js";
 import { refusedPathContract } from "../generated/contracts/extraction.excludes.refused-path.contract.js";
 import { segmentBoundaryContract } from "../generated/contracts/extraction.excludes.segment-boundary.contract.js";
+import type {
+  ExcludesConditions,
+  ExcludesOutcome,
+} from "../generated/contracts/extraction.excludes.space.js";
 import { caseCollidingPathContract } from "../generated/contracts/extraction.executable-contracts.case-colliding-path.contract.js";
 import { concretenessRefusalContract } from "../generated/contracts/extraction.executable-contracts.concreteness-refusal.contract.js";
 import { multiEntryExampleContract } from "../generated/contracts/extraction.executable-contracts.multi-entry-example.contract.js";
 import { redStepNamingContract } from "../generated/contracts/extraction.example-runner.red-step-naming.contract.js";
+import type {
+  ExampleRunnerConditions,
+  ExampleRunnerOutcome,
+} from "../generated/contracts/extraction.example-runner.space.js";
 import { stepOrderContract } from "../generated/contracts/extraction.example-runner.step-order.contract.js";
 import { declaredVersionContract } from "../generated/contracts/extraction.schema-versioning.declared-version.contract.js";
+import type {
+  SchemaVersioningConditions,
+  SchemaVersioningOutcome,
+} from "../generated/contracts/extraction.schema-versioning.space.js";
 import { discoverFiles } from "../src/extract/discover.js";
 import type { DiscoveredFiles } from "../src/extract/discover.js";
 import { serializeGraph } from "../src/extract/serialize.js";
@@ -26,6 +43,12 @@ import type { ExampleContract, StepKind } from "../src/runner/index.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
+import { paramsForStep } from "./helpers/generated-contract.js";
+import { registerSameInvocation } from "./extraction.build-pipeline.same-invocation.test.generated.js";
+import { registerRefusedPath } from "./extraction.excludes.refused-path.test.generated.js";
+import { registerSegmentBoundary } from "./extraction.excludes.segment-boundary.test.generated.js";
+import { registerRedStepNaming } from "./extraction.example-runner.red-step-naming.test.generated.js";
+import { registerDeclaredVersion } from "./extraction.schema-versioning.declared-version.test.generated.js";
 
 /**
  * The bound executable points of the extraction family. The exclusion law reads a real filesystem
@@ -63,22 +86,15 @@ interface SameInvocationWorld {
     | undefined;
 }
 
-function sameInvocationWorld(): SameInvocationWorld {
+function createSameInvocationWorld(point: Partial<BuildPipelineConditions>): SameInvocationWorld {
   const root = mkdtempSync(join(tmpdir(), "sdp-same-invocation-"));
   temporaryRoots.add(root);
 
-  return { root, exitCode: undefined, answer: undefined };
-}
-
-const sameInvocationBindings = {
-  "an extraction root containing the isolated spec {specId}": (
-    world: SameInvocationWorld,
-    params: { readonly specId: string },
-  ) => {
+  if (point.specId !== undefined) {
     writeFileSync(
-      join(world.root, "probe.sdp.md"),
+      join(root, "probe.sdp.md"),
       `---
-id: ${params.specId}
+id: ${point.specId}
 kind: behavior
 altitude: story
 readiness: idea
@@ -91,12 +107,14 @@ relations: {}
 `,
       "utf8",
     );
-  },
-  "one query invocation reads the reader, raw graph, and validation report": async (
-    world: SameInvocationWorld,
-  ) => {
-    const capture = createCaptureOutput();
-    const body = `
+  }
+
+  return { root, exitCode: undefined, answer: undefined };
+}
+
+async function invokeSameInvocation(world: SameInvocationWorld): Promise<void> {
+  const capture = createCaptureOutput();
+  const body = `
       return {
         reader: g.specs().map((spec) => spec.id),
         graph: graph.nodes.filter((node) => node.nodeType === "Primitive").map((node) => node.id),
@@ -104,40 +122,49 @@ relations: {}
       };
     `;
 
-    world.exitCode = await runSdpCli(["q", body, "--root", world.root, "--json"], capture.output, {
-      query: {
-        isStdinTty: () => true,
-        readStdin: () => {
-          throw new Error("the point supplies its body on argv");
-        },
+  world.exitCode = await runSdpCli(["q", body, "--root", world.root, "--json"], capture.output, {
+    query: {
+      isStdinTty: () => true,
+      readStdin: () => {
+        throw new Error("the point supplies its body on argv");
       },
-    });
-    const stderr = capture.readStderr();
-    const stdout = capture.readStdout();
+    },
+  });
+  world.answer = JSON.parse(capture.readStdout()) as SameInvocationWorld["answer"];
+}
 
-    expect({ exitCode: world.exitCode, stderr }).toEqual({ exitCode: 0, stderr: "" });
-    world.answer = JSON.parse(stdout) as SameInvocationWorld["answer"];
-  },
-  "the query exits {exitCode}": (
-    world: SameInvocationWorld,
-    params: { readonly exitCode: number },
-  ) => {
-    expect(world.exitCode).toBe(params.exitCode);
-  },
-  "both graph entrances return the spec {returnedSpecId}": (
-    world: SameInvocationWorld,
-    params: { readonly returnedSpecId: string },
-  ) => {
-    expect(world.answer?.reader).toEqual([params.returnedSpecId]);
-    expect(world.answer?.graph).toEqual([params.returnedSpecId]);
-  },
-  "the validation report names the same subject {findingSubjectId}": (
-    world: SameInvocationWorld,
-    params: { readonly findingSubjectId: string },
-  ) => {
-    expect(world.answer?.findingSubjects).toContain(params.findingSubjectId);
-  },
-};
+function observeSameInvocation(world: SameInvocationWorld): BuildPipelineOutcome {
+  if (world.exitCode === undefined) {
+    throw new Error("The query must run before the exit code is observed.");
+  }
+
+  return { kind: "the query exits {exitCode}", exitCode: world.exitCode };
+}
+
+function expectedSameInvocation(point: Partial<BuildPipelineConditions>): BuildPipelineOutcome {
+  if (point.specId === undefined) {
+    return unspecified;
+  }
+
+  const { exitCode } = paramsForStep(sameInvocationContract, "the query exits {exitCode}");
+
+  return { kind: "the query exits {exitCode}", exitCode };
+}
+
+function assertSameInvocation(world: SameInvocationWorld): void {
+  const { returnedSpecId } = paramsForStep(
+    sameInvocationContract,
+    "both graph entrances return the spec {returnedSpecId}",
+  );
+  const { findingSubjectId } = paramsForStep(
+    sameInvocationContract,
+    "the validation report names the same subject {findingSubjectId}",
+  );
+
+  expect(world.answer?.reader).toEqual([returnedSpecId]);
+  expect(world.answer?.graph).toEqual([returnedSpecId]);
+  expect(world.answer?.findingSubjects).toContain(findingSubjectId);
+}
 
 const buildPipelineSameInvocationTestAnchor = specTest({
   id: testAnchorId("test:protocol.build-pipeline.same-invocation"),
@@ -146,7 +173,13 @@ const buildPipelineSameInvocationTestAnchor = specTest({
 });
 void buildPipelineSameInvocationTestAnchor;
 
-bindExample(sameInvocationContract, sameInvocationWorld, sameInvocationBindings);
+registerSameInvocation({
+  createWorld: createSameInvocationWorld,
+  invoke: invokeSameInvocation,
+  observe: observeSameInvocation,
+  expected: expectedSameInvocation,
+  assertions: assertSameInvocation,
+});
 
 /* ----- spec:extraction.excludes ----- */
 
@@ -157,11 +190,34 @@ interface ExcludeWorld {
   refusal: Error | undefined;
 }
 
-function excludeWorld(): ExcludeWorld {
+function createExcludeWorld(point: Partial<ExcludesConditions>): ExcludeWorld {
   const root = mkdtempSync(join(tmpdir(), "sdp-self-hosting-excludes-"));
   temporaryRoots.add(root);
 
-  return { root, exclusion: "", discovered: undefined, refusal: undefined };
+  const world: ExcludeWorld = {
+    root,
+    exclusion: point.exclusion ?? "",
+    discovered: undefined,
+    refusal: undefined,
+  };
+
+  if (point.excludedTree === undefined || point.similarTree === undefined) {
+    return world;
+  }
+
+  // Both trees carry both discovery surfaces — a spec carrier and an anchor candidate — so one
+  // exclusion is observed on each surface rather than on the declared layer alone.
+  for (const tree of [point.excludedTree, point.similarTree]) {
+    mkdirSync(join(world.root, tree), { recursive: true });
+    writeFileSync(
+      join(world.root, tree, tree === point.excludedTree ? "excluded.sdp.ts" : "included.sdp.ts"),
+      "",
+      "utf8",
+    );
+    writeFileSync(join(world.root, tree, "helper.ts"), "", "utf8");
+  }
+
+  return world;
 }
 
 function discoveredOf(world: ExcludeWorld): DiscoveredFiles {
@@ -172,69 +228,59 @@ function discoveredOf(world: ExcludeWorld): DiscoveredFiles {
   return world.discovered;
 }
 
-const excludeBindings = {
-  "the extraction root carries the tree {excludedTree} and the similar sibling {similarTree}": (
-    world: ExcludeWorld,
-    params: { readonly excludedTree: string; readonly similarTree: string },
-  ) => {
-    // Both trees carry both discovery surfaces — a spec carrier and an anchor candidate — so one
-    // exclusion is observed on each surface rather than on the declared layer alone.
-    for (const tree of [params.excludedTree, params.similarTree]) {
-      mkdirSync(join(world.root, tree), { recursive: true });
-      writeFileSync(
-        join(
-          world.root,
-          tree,
-          tree === params.excludedTree ? "excluded.sdp.ts" : "included.sdp.ts",
-        ),
-        "",
-        "utf8",
-      );
-      writeFileSync(join(world.root, tree, "helper.ts"), "", "utf8");
-    }
-  },
-  "the consumer supplies the exclusion {exclusion}": (
-    world: ExcludeWorld,
-    params: { readonly exclusion: string },
-  ) => {
-    world.exclusion = params.exclusion;
-  },
-  "the root is discovered": (world: ExcludeWorld) => {
-    try {
-      world.discovered = discoverFiles(world.root, [world.exclusion]);
-    } catch (error) {
-      world.refusal = error instanceof Error ? error : new Error(String(error));
-    }
-  },
-  "the discovery attempt {outcome}": (
-    world: ExcludeWorld,
-    params: { readonly outcome: "completes" | "is refused" },
-  ) => {
-    expect(world.discovered !== undefined).toBe(params.outcome === "completes");
-    expect(world.refusal !== undefined).toBe(params.outcome === "is refused");
-  },
-  "the surviving spec carrier is {specCarrier} and the surviving anchor candidate is {anchorCandidate}":
-    (
-      world: ExcludeWorld,
-      params: { readonly specCarrier: string; readonly anchorCandidate: string },
-    ) => {
-      const discovered = discoveredOf(world);
+function invokeDiscover(world: ExcludeWorld): void {
+  try {
+    world.discovered = discoverFiles(world.root, [world.exclusion]);
+  } catch (error) {
+    world.refusal = error instanceof Error ? error : new Error(String(error));
+  }
+}
 
-      expect(discovered.specFiles.map((file) => file.relativePath)).toEqual([params.specCarrier]);
-      expect(discovered.anchorCandidateFiles.map((file) => file.relativePath)).toEqual([
-        params.anchorCandidate,
-      ]);
-    },
-  "the refusal states {diagnostic} and names the offending path": (
-    world: ExcludeWorld,
-    params: { readonly diagnostic: string },
-  ) => {
-    const message = world.refusal?.message ?? "the exclusion refusal is missing";
+function observeDiscovery(world: ExcludeWorld): ExcludesOutcome {
+  return {
+    kind: "the discovery attempt {outcome}",
+    outcome: world.discovered !== undefined ? "completes" : "is refused",
+  };
+}
 
-    expect(message).toContain(params.diagnostic);
-    expect(message).toContain(`"${world.exclusion}"`);
-  },
-};
+function expectedDiscovery(
+  point: Partial<ExcludesConditions>,
+  outcome: "completes" | "is refused",
+): ExcludesOutcome {
+  if (
+    point.excludedTree === undefined ||
+    point.similarTree === undefined ||
+    point.exclusion === undefined
+  ) {
+    return unspecified;
+  }
+
+  return { kind: "the discovery attempt {outcome}", outcome };
+}
+
+function assertSegmentBoundary(world: ExcludeWorld): void {
+  const { specCarrier, anchorCandidate } = paramsForStep(
+    segmentBoundaryContract,
+    "the surviving spec carrier is {specCarrier} and the surviving anchor candidate is {anchorCandidate}",
+  );
+  const discovered = discoveredOf(world);
+
+  expect(discovered.specFiles.map((file) => file.relativePath)).toEqual([specCarrier]);
+  expect(discovered.anchorCandidateFiles.map((file) => file.relativePath)).toEqual([
+    anchorCandidate,
+  ]);
+}
+
+function assertRefusedPath(world: ExcludeWorld): void {
+  const { diagnostic } = paramsForStep(
+    refusedPathContract,
+    "the refusal states {diagnostic} and names the offending path",
+  );
+  const message = world.refusal?.message ?? "the exclusion refusal is missing";
+
+  expect(message).toContain(diagnostic);
+  expect(message).toContain(`"${world.exclusion}"`);
+}
 
 const excludesSegmentBoundaryTestAnchor = specTest({
   id: testAnchorId("test:protocol.excludes.segment-boundary"),
@@ -243,7 +289,13 @@ const excludesSegmentBoundaryTestAnchor = specTest({
 });
 void excludesSegmentBoundaryTestAnchor;
 
-bindExample(segmentBoundaryContract, excludeWorld, excludeBindings);
+registerSegmentBoundary({
+  createWorld: createExcludeWorld,
+  invoke: invokeDiscover,
+  observe: observeDiscovery,
+  expected: (point) => expectedDiscovery(point, "completes"),
+  assertions: assertSegmentBoundary,
+});
 
 const excludesRefusedPathTestAnchor = specTest({
   id: testAnchorId("test:protocol.excludes.refused-path"),
@@ -252,7 +304,13 @@ const excludesRefusedPathTestAnchor = specTest({
 });
 void excludesRefusedPathTestAnchor;
 
-bindExample(refusedPathContract, excludeWorld, excludeBindings);
+registerRefusedPath({
+  createWorld: createExcludeWorld,
+  invoke: invokeDiscover,
+  observe: observeDiscovery,
+  expected: (point) => expectedDiscovery(point, "is refused"),
+  assertions: assertRefusedPath,
+});
 
 /* ----- spec:extraction.schema-versioning ----- */
 
@@ -261,8 +319,32 @@ interface SchemaVersionWorld {
   payload: string | undefined;
 }
 
-function schemaVersionWorld(): SchemaVersionWorld {
-  return { graph: undefined, payload: undefined };
+function createSchemaVersionWorld(point: Partial<SchemaVersioningConditions>): SchemaVersionWorld {
+  if (point.specId === undefined) {
+    return { graph: undefined, payload: undefined };
+  }
+
+  return {
+    graph: deriveGraph(
+      [
+        {
+          id: point.specId,
+          file: "specs/probe.sdp.md",
+          line: 1,
+          data: {
+            id: point.specId,
+            title: "Probe for the declared schema version",
+            kind: "rule",
+            altitude: "story",
+            readiness: "idea",
+          },
+        },
+      ],
+      [],
+      [],
+    ),
+    payload: undefined,
+  };
 }
 
 function payloadOf(world: SchemaVersionWorld): Record<string, unknown> {
@@ -273,44 +355,41 @@ function payloadOf(world: SchemaVersionWorld): Record<string, unknown> {
   return JSON.parse(world.payload) as Record<string, unknown>;
 }
 
-const schemaVersionBindings = {
-  "a graph derived from the authored spec {specId}": (
-    world: SchemaVersionWorld,
-    params: { readonly specId: string },
-  ) => {
-    world.graph = deriveGraph(
-      [
-        {
-          id: params.specId,
-          file: "specs/probe.sdp.md",
-          line: 1,
-          data: {
-            id: params.specId,
-            title: "Probe for the declared schema version",
-            kind: "rule",
-            altitude: "story",
-            readiness: "idea",
-          },
-        },
-      ],
-      [],
-      [],
-    );
-  },
-  "the graph payload is serialized": (world: SchemaVersionWorld) => {
-    if (world.graph === undefined) {
-      throw new Error("The derivation step must run before the payload is serialized.");
-    }
+function invokeSerialize(world: SchemaVersionWorld): void {
+  if (world.graph === undefined) {
+    return;
+  }
 
-    world.payload = serializeGraph(world.graph);
-  },
-  "the payload declares the schema version {schemaVersion}": (
-    world: SchemaVersionWorld,
-    params: { readonly schemaVersion: string },
-  ) => {
-    expect(payloadOf(world).schemaVersion).toBe(params.schemaVersion);
-  },
-};
+  world.payload = serializeGraph(world.graph);
+}
+
+function observeSchemaVersion(world: SchemaVersionWorld): SchemaVersioningOutcome {
+  const schemaVersion = payloadOf(world).schemaVersion;
+
+  if (typeof schemaVersion !== "string") {
+    throw new Error("The serialized payload must declare a string schemaVersion.");
+  }
+
+  return {
+    kind: "the payload declares the schema version {schemaVersion}",
+    schemaVersion,
+  };
+}
+
+function expectedSchemaVersion(
+  point: Partial<SchemaVersioningConditions>,
+): SchemaVersioningOutcome {
+  if (point.specId === undefined) {
+    return unspecified;
+  }
+
+  const { schemaVersion } = paramsForStep(
+    declaredVersionContract,
+    "the payload declares the schema version {schemaVersion}",
+  );
+
+  return { kind: "the payload declares the schema version {schemaVersion}", schemaVersion };
+}
 
 const schemaVersioningTestAnchor = specTest({
   id: testAnchorId("test:protocol.schema-versioning.declared-version"),
@@ -319,7 +398,12 @@ const schemaVersioningTestAnchor = specTest({
 });
 void schemaVersioningTestAnchor;
 
-bindExample(declaredVersionContract, schemaVersionWorld, schemaVersionBindings);
+registerDeclaredVersion({
+  createWorld: createSchemaVersionWorld,
+  invoke: invokeSerialize,
+  observe: observeSchemaVersion,
+  expected: expectedSchemaVersion,
+});
 
 /* ----- spec:extraction.executable-contracts ----- */
 
@@ -550,6 +634,17 @@ function runnerWorld(): RunnerWorld {
   };
 }
 
+function createRedStepWorld(point: Partial<ExampleRunnerConditions>): RunnerWorld {
+  return {
+    occurrences: point.occurrences ?? 0,
+    failingPhase: point.failingPhase,
+    thrown: point.thrown === undefined ? undefined : new Error(point.thrown),
+    trace: [],
+    failure: undefined,
+    completed: false,
+  };
+}
+
 function cartContract(occurrences: number): CartContract {
   const steps: CartContract["steps"][number][] = [];
 
@@ -577,6 +672,67 @@ function failureOf(world: RunnerWorld): Error {
   return world.failure;
 }
 
+async function runBoundPlan(world: RunnerWorld): Promise<void> {
+  const plan = planExample<RunnerWorld, CartStep, CartStepParams>(cartContract(world.occurrences), {
+    "a cart with {n} line items": (running, params) => {
+      throwWhenRed(running, "given");
+      running.trace.push(`given ${String(params.n)}`);
+    },
+    "the cart is submitted": (running) => {
+      throwWhenRed(running, "when");
+      running.trace.push("when");
+    },
+    "an order is created": (running) => {
+      throwWhenRed(running, "then");
+      running.trace.push("then");
+    },
+  });
+
+  try {
+    await runExamplePlan(plan, world);
+    world.completed = true;
+  } catch (error) {
+    world.failure = error;
+  }
+}
+
+function observeRunOutcome(world: RunnerWorld): ExampleRunnerOutcome {
+  return {
+    kind: "the run {outcome}",
+    outcome: world.completed ? "completes" : "fails",
+  };
+}
+
+function expectedRedStep(point: Partial<ExampleRunnerConditions>): ExampleRunnerOutcome {
+  if (
+    point.occurrences === undefined ||
+    point.failingPhase === undefined ||
+    point.thrown === undefined
+  ) {
+    return unspecified;
+  }
+
+  return { kind: "the run {outcome}", outcome: "fails" };
+}
+
+function assertRedStep(world: RunnerWorld): void {
+  const { failureLabel } = paramsForStep(
+    redStepNamingContract,
+    "the failure names the step in the Spec's own words as {failureLabel}",
+  );
+  const { detail } = paramsForStep(
+    redStepNamingContract,
+    "the failure preserves the original detail {detail}",
+  );
+  const failure = failureOf(world);
+
+  expect(failure.message.startsWith(failureLabel)).toBe(true);
+  // The original error survives as the thrown object, so an assertion renderer still reads its
+  // own fields off it; the step name is a prefix, never a replacement.
+  expect(failure).toBe(world.thrown);
+  expect(failure.message).toContain(detail);
+}
+
 const runnerBindings = {
   "a contract whose given step repeats {occurrences} times before one when step and one then step":
     (world: RunnerWorld, params: { readonly occurrences: number }) => {
@@ -590,30 +746,7 @@ const runnerBindings = {
     world.thrown = new Error(params.thrown);
   },
   "the bound plan runs against a fresh world": async (world: RunnerWorld) => {
-    const plan = planExample<RunnerWorld, CartStep, CartStepParams>(
-      cartContract(world.occurrences),
-      {
-        "a cart with {n} line items": (running, params) => {
-          throwWhenRed(running, "given");
-          running.trace.push(`given ${String(params.n)}`);
-        },
-        "the cart is submitted": (running) => {
-          throwWhenRed(running, "when");
-          running.trace.push("when");
-        },
-        "an order is created": (running) => {
-          throwWhenRed(running, "then");
-          running.trace.push("then");
-        },
-      },
-    );
-
-    try {
-      await runExamplePlan(plan, world);
-      world.completed = true;
-    } catch (error) {
-      world.failure = error;
-    }
+    await runBoundPlan(world);
   },
   "the world records the handler trace {trace}": (
     world: RunnerWorld,
@@ -638,8 +771,6 @@ const runnerBindings = {
     world: RunnerWorld,
     params: { readonly detail: string },
   ) => {
-    // The original error survives as the thrown object, so an assertion renderer still reads its
-    // own fields off it; the step name is a prefix, never a replacement.
     expect(failureOf(world)).toBe(world.thrown);
     expect(failureOf(world).message).toContain(params.detail);
   },
@@ -661,4 +792,10 @@ const exampleRunnerRedStepTestAnchor = specTest({
 });
 void exampleRunnerRedStepTestAnchor;
 
-bindExample(redStepNamingContract, runnerWorld, runnerBindings);
+registerRedStepNaming({
+  createWorld: createRedStepWorld,
+  invoke: runBoundPlan,
+  observe: observeRunOutcome,
+  expected: expectedRedStep,
+  assertions: assertRedStep,
+});

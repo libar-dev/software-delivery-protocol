@@ -1,0 +1,30 @@
+================================================================
+kind            session
+file            /home/darkomijic/.omo/agent/sessions/--home-darkomijic-dev-libar-software-delivery-protocol--/2026-08-15T12-01-28-521Z_01a0054c-67c9-7597-a1ea-f11b2864e0c4.jsonl
+session_id      01a0054c-67c9-7597-a1ea-f11b2864e0c4
+cwd             /home/darkomijic/dev-libar/software-delivery-protocol
+started         2026-08-15T12:01:28.521Z
+jsonl_lines     410
+malformed_lines 0
+catalog         /home/darkomijic/dev-libar/software-delivery-protocol/docs/agent-surface/recipes.md
+catalog_sha256  9571ac632a11cad25126e733a7ca5aa8ac5fc699a9d14369faff41b35bbd8b87
+invocations     3
+recipe_sequence unmatched,unresolved,unresolved
+distinct_ids    (none)
+distinct_count  0
+
+seq recipe     ok       out_bytes   body_bytes body_sha256     runner
+--- ---------- -------- ----------- ---------- --------------- ------------------------------
+1   unmatched  yes      unknown     288        f49527c7eb75e48d npm run --silent sdp:q
+    note=- preview=const ready = g.specs().filter((spec) => spec.statedReadiness === "ready"); const backlog = read
+    shared_tool_result_bytes=449 (per-invocation stdout not separable)
+2   unresolved yes      unknown     0                          npm run --silent sdp:q
+    note=command_substitution preview=-
+    shared_tool_result_bytes=449 (per-invocation stdout not separable)
+3   unresolved yes      unknown     0                          npm run --silent sdp:q
+    note=command_substitution preview=-
+    shared_tool_result_bytes=449 (per-invocation stdout not separable)
+
+candidate_windows:
+  W1 open_seq=1 open_ts=2026-08-15T12:19:34.667Z close=bash:cd /home/darkomijic/dev-libar/software-delivery-protocol git commit -m "chore(om close_seq=3 recipes=unmatched,unresolved,unresolved distinct=(none)
+================================================================

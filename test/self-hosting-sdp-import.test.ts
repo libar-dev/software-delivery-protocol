@@ -1,14 +1,14 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { describe, expect } from "vitest";
+import { expect } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
-import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
 
-import { roundTripContract } from "../generated/contracts/carrier.sdp-import.round-trip.contract.js";
+import type { SdpImportOutcome } from "../generated/contracts/carrier.sdp-import.space.js";
 import { importTypeScriptSpec } from "../src/index.js";
 import type { ImportResult } from "../src/import/import.js";
+import { registerRoundTrip } from "./carrier.sdp-import.round-trip.test.generated.js";
 import { assertAuthoredRoundTrip } from "./import-round-trip.helpers.js";
 
 interface ImportRoundTripWorld {
@@ -32,30 +32,29 @@ const sdpImportRoundTripTestAnchor = specTest({
 });
 void sdpImportRoundTripTestAnchor;
 
-describe("TypeScript import round-trip contract", () => {
-  bindExample(
-    roundTripContract,
-    (): ImportRoundTripWorld => ({
-      source: readFileSync(
-        fileURLToPath(new URL("./fixtures/import/round-trip/behavior.sdp.ts.txt", import.meta.url)),
-        "utf8",
-      ),
-      relativePath: "behavior.sdp.ts",
-      result: undefined,
-    }),
-    {
-      "a TS-carrier spec": (world) => {
-        expect(world.relativePath).toBe("behavior.sdp.ts");
-      },
-      "importTypeScriptSpec runs": (world) => {
-        world.result = importTypeScriptSpec(world.source, world.relativePath);
-      },
-      "the emitted Markdown re-parses to an equal graph": (world) => {
-        const result = importResult(world);
-        expect(result.findings).toEqual([]);
-        expect(result.emitted).toBeDefined();
-        assertAuthoredRoundTrip(world.source, world.relativePath);
-      },
-    },
-  );
+registerRoundTrip({
+  createWorld: (): ImportRoundTripWorld => ({
+    source: readFileSync(
+      fileURLToPath(new URL("./fixtures/import/round-trip/behavior.sdp.ts.txt", import.meta.url)),
+      "utf8",
+    ),
+    relativePath: "behavior.sdp.ts",
+    result: undefined,
+  }),
+  invoke: (world) => {
+    world.result = importTypeScriptSpec(world.source, world.relativePath);
+  },
+  observe: (world): SdpImportOutcome => {
+    importResult(world);
+    return { kind: "the emitted Markdown re-parses to an equal graph" };
+  },
+  expected: (): SdpImportOutcome => ({
+    kind: "the emitted Markdown re-parses to an equal graph",
+  }),
+  assertions: (world) => {
+    const result = importResult(world);
+    expect(result.findings).toEqual([]);
+    expect(result.emitted).toBeDefined();
+    assertAuthoredRoundTrip(world.source, world.relativePath);
+  },
 });

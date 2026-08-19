@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { afterEach, expect } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
 import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
 
 import { authoredFactRefusedContract } from "../generated/contracts/carrier.gherkin-authoring.authored-fact-refused.contract.js";
@@ -19,9 +20,25 @@ import { stepLessScenarioRefusedContract } from "../generated/contracts/carrier.
 import { unboundReadyRefusedContract } from "../generated/contracts/carrier.gherkin-authoring.unbound-ready-refused.contract.js";
 import { unknownTagRefusedContract } from "../generated/contracts/carrier.gherkin-authoring.unknown-tag-refused.contract.js";
 import { unsupportedConstructRefusedContract } from "../generated/contracts/carrier.gherkin-authoring.unsupported-construct-refused.contract.js";
+import type {
+  GherkinAuthoringConditions,
+  GherkinAuthoringOutcome,
+} from "../generated/contracts/carrier.gherkin-authoring.space.js";
 import { extract, generateContracts, serializeGraph, validateGraph } from "../src/index.js";
 import type { Finding, GraphSchema, ValidationReport } from "../src/index.js";
+import { registerAuthoredFactRefused } from "./carrier.gherkin-authoring.authored-fact-refused.test.generated.js";
+import { registerDescriptionLocationRefused } from "./carrier.gherkin-authoring.description-location-refused.test.generated.js";
+import { registerDuplicateSurfaceRefused } from "./carrier.gherkin-authoring.duplicate-surface-refused.test.generated.js";
+import { registerExampleSpaceExtraction } from "./carrier.gherkin-authoring.example-space-extraction.test.generated.js";
+import { registerMalformedRelationRefused } from "./carrier.gherkin-authoring.malformed-relation-refused.test.generated.js";
+import { registerMissingIdRefused } from "./carrier.gherkin-authoring.missing-id-refused.test.generated.js";
+import { registerMultiFindingBounded } from "./carrier.gherkin-authoring.multi-finding-bounded.test.generated.js";
+import { registerParentChildExtraction } from "./carrier.gherkin-authoring.parent-child-extraction.test.generated.js";
+import { registerStepLessScenarioRefused } from "./carrier.gherkin-authoring.step-less-scenario-refused.test.generated.js";
+import { registerUnknownTagRefused } from "./carrier.gherkin-authoring.unknown-tag-refused.test.generated.js";
+import { registerUnsupportedConstructRefused } from "./carrier.gherkin-authoring.unsupported-construct-refused.test.generated.js";
 import { materializeGherkinCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
+import { paramsForStep } from "./helpers/generated-contract.js";
 
 const temporaryRoots: string[] = [];
 
@@ -82,6 +99,80 @@ function relationsOf(state: GherkinWorld, childId: string) {
   return graphOf(state)
     .edges.filter((edge) => edge.from === childId && edge.claim === "declared")
     .map((edge) => ({ type: edge.type, target: edge.to, claim: edge.claim }));
+}
+
+function createExtractionWorld(point: Partial<GherkinAuthoringConditions>): GherkinWorld {
+  const state = world();
+  if (point.probe !== undefined) {
+    state.root = materialize(point.probe);
+  }
+  return state;
+}
+
+function invokeExtraction(state: GherkinWorld): void {
+  if (state.root === "") {
+    return;
+  }
+
+  const result = extract({ root: state.root });
+  state.graph = result.graph;
+  state.extractionReport = result.report;
+}
+
+function observeExtractionCount(state: GherkinWorld): GherkinAuthoringOutcome {
+  return {
+    kind: "extraction reports {findingCount} findings",
+    findingCount: extractionReportOf(state).findings.length,
+  };
+}
+
+function expectedExtractionCount(
+  point: Partial<GherkinAuthoringConditions>,
+  findingCount: number,
+): GherkinAuthoringOutcome {
+  if (point.probe === undefined) {
+    return unspecified;
+  }
+
+  return { kind: "extraction reports {findingCount} findings", findingCount };
+}
+
+function assertFirstFindingAndAbsentSpec(
+  state: GherkinWorld,
+  finding: { readonly findingId: string; readonly line: number },
+  absent: { readonly absentId: string },
+): void {
+  expect(extractionReportOf(state).findings[0]).toMatchObject({
+    validatorId: finding.findingId,
+    line: finding.line,
+  });
+  expect(graphOf(state).nodes.some((node) => node.id === absent.absentId)).toBe(false);
+}
+
+function assertSpecCount(state: GherkinWorld, specCount: number): void {
+  expect(graphOf(state).nodes.filter((node) => node.nodeType === "Primitive")).toHaveLength(
+    specCount,
+  );
+}
+
+function assertGraphContainsSpec(
+  state: GherkinWorld,
+  specId: string,
+  specKind: "behavior" | "example",
+): void {
+  expect(graphOf(state).nodes).toContainEqual(
+    expect.objectContaining({ id: specId, nodeType: "Primitive", specKind }),
+  );
+}
+
+function assertGraphOmitsSpec(state: GherkinWorld, absentId: string): void {
+  expect(graphOf(state).nodes.some((node) => node.id === absentId)).toBe(false);
+}
+
+function assertNoEdgeNames(state: GherkinWorld, absentId: string): void {
+  expect(graphOf(state).edges.some((edge) => edge.from === absentId || edge.to === absentId)).toBe(
+    false,
+  );
 }
 
 const bindings = {
@@ -239,7 +330,24 @@ const authoredFactRefusedAnchor = specTest({
   verifies: ref("spec:carrier.gherkin-authoring.authored-fact-refused"),
 });
 void authoredFactRefusedAnchor;
-bindExample(authoredFactRefusedContract, world, bindings);
+registerAuthoredFactRefused({
+  createWorld: createExtractionWorld,
+  invoke: invokeExtraction,
+  observe: observeExtractionCount,
+  expected: (point) =>
+    expectedExtractionCount(
+      point,
+      paramsForStep(authoredFactRefusedContract, "extraction reports {findingCount} findings")
+        .findingCount,
+    ),
+  assertions: (state) => {
+    assertFirstFindingAndAbsentSpec(
+      state,
+      paramsForStep(authoredFactRefusedContract, "the first finding is {findingId} at line {line}"),
+      paramsForStep(authoredFactRefusedContract, "the graph omits the Spec {absentId}"),
+    );
+  },
+});
 
 const contractParityAnchor = specTest({
   id: testAnchorId("test:protocol.gherkin-authoring.contract-parity"),
@@ -255,7 +363,42 @@ const duplicateSurfaceRefusedAnchor = specTest({
   verifies: ref("spec:carrier.gherkin-authoring.duplicate-surface-refused"),
 });
 void duplicateSurfaceRefusedAnchor;
-bindExample(duplicateSurfaceRefusedContract, world, bindings);
+registerDuplicateSurfaceRefused({
+  createWorld: createExtractionWorld,
+  invoke: invokeExtraction,
+  observe: observeExtractionCount,
+  expected: (point) =>
+    expectedExtractionCount(
+      point,
+      paramsForStep(duplicateSurfaceRefusedContract, "extraction reports {findingCount} findings")
+        .findingCount,
+    ),
+  assertions: (state) => {
+    const { findingId } = paramsForStep(
+      duplicateSurfaceRefusedContract,
+      "the report contains finding {findingId}",
+    );
+    const { absentId } = paramsForStep(
+      duplicateSurfaceRefusedContract,
+      "the graph omits the Spec {absentId}",
+    );
+    const namedEdge = paramsForStep(
+      duplicateSurfaceRefusedContract,
+      "no graph edge names the absent Spec {absentId}",
+    );
+    const { specId, specKind } = paramsForStep(
+      duplicateSurfaceRefusedContract,
+      "the graph contains the Spec {specId} with kind {specKind}",
+    );
+
+    expect(extractionReportOf(state).findings).toContainEqual(
+      expect.objectContaining({ validatorId: findingId }),
+    );
+    assertGraphOmitsSpec(state, absentId);
+    assertNoEdgeNames(state, namedEdge.absentId);
+    assertGraphContainsSpec(state, specId, specKind);
+  },
+});
 
 const exampleSpaceExtractionAnchor = specTest({
   id: testAnchorId("test:protocol.gherkin-authoring.example-space-extraction"),
@@ -263,7 +406,41 @@ const exampleSpaceExtractionAnchor = specTest({
   verifies: ref("spec:carrier.gherkin-authoring.example-space-extraction"),
 });
 void exampleSpaceExtractionAnchor;
-bindExample(exampleSpaceExtractionContract, world, bindings);
+registerExampleSpaceExtraction({
+  createWorld: createExtractionWorld,
+  invoke: invokeExtraction,
+  observe: observeExtractionCount,
+  expected: (point) =>
+    expectedExtractionCount(
+      point,
+      paramsForStep(exampleSpaceExtractionContract, "extraction reports {findingCount} findings")
+        .findingCount,
+    ),
+  assertions: (state) => {
+    const { specCount } = paramsForStep(
+      exampleSpaceExtractionContract,
+      "the graph contains exactly {specCount} Specs",
+    );
+    const { spaceStep } = paramsForStep(
+      exampleSpaceExtractionContract,
+      "the parent example space contains {spaceStep}",
+    );
+    const { absentId } = paramsForStep(
+      exampleSpaceExtractionContract,
+      "the graph omits the Spec {absentId}",
+    );
+    const parent = graphOf(state).nodes.find((node) => node.id === "spec:fixture.space-parent");
+
+    assertSpecCount(state, specCount);
+    if (parent?.nodeType !== "Primitive") {
+      throw new Error("Expected the example-space parent Primitive.");
+    }
+    expect(parent.sections?.behavior?.exampleSpace?.given).toContain(
+      spaceStep.replace(/^Given /u, ""),
+    );
+    assertGraphOmitsSpec(state, absentId);
+  },
+});
 
 const malformedRelationRefusedAnchor = specTest({
   id: testAnchorId("test:protocol.gherkin-authoring.malformed-relation-refused"),
@@ -271,7 +448,27 @@ const malformedRelationRefusedAnchor = specTest({
   verifies: ref("spec:carrier.gherkin-authoring.malformed-relation-refused"),
 });
 void malformedRelationRefusedAnchor;
-bindExample(malformedRelationRefusedContract, world, bindings);
+registerMalformedRelationRefused({
+  createWorld: createExtractionWorld,
+  invoke: invokeExtraction,
+  observe: observeExtractionCount,
+  expected: (point) =>
+    expectedExtractionCount(
+      point,
+      paramsForStep(malformedRelationRefusedContract, "extraction reports {findingCount} findings")
+        .findingCount,
+    ),
+  assertions: (state) => {
+    assertFirstFindingAndAbsentSpec(
+      state,
+      paramsForStep(
+        malformedRelationRefusedContract,
+        "the first finding is {findingId} at line {line}",
+      ),
+      paramsForStep(malformedRelationRefusedContract, "the graph omits the Spec {absentId}"),
+    );
+  },
+});
 
 const missingIdRefusedAnchor = specTest({
   id: testAnchorId("test:protocol.gherkin-authoring.missing-id-refused"),
@@ -279,7 +476,24 @@ const missingIdRefusedAnchor = specTest({
   verifies: ref("spec:carrier.gherkin-authoring.missing-id-refused"),
 });
 void missingIdRefusedAnchor;
-bindExample(missingIdRefusedContract, world, bindings);
+registerMissingIdRefused({
+  createWorld: createExtractionWorld,
+  invoke: invokeExtraction,
+  observe: observeExtractionCount,
+  expected: (point) =>
+    expectedExtractionCount(
+      point,
+      paramsForStep(missingIdRefusedContract, "extraction reports {findingCount} findings")
+        .findingCount,
+    ),
+  assertions: (state) => {
+    assertFirstFindingAndAbsentSpec(
+      state,
+      paramsForStep(missingIdRefusedContract, "the first finding is {findingId} at line {line}"),
+      paramsForStep(missingIdRefusedContract, "the graph omits the Spec {absentId}"),
+    );
+  },
+});
 
 const parentChildExtractionAnchor = specTest({
   id: testAnchorId("test:protocol.gherkin-authoring.parent-child-extraction"),
@@ -287,7 +501,53 @@ const parentChildExtractionAnchor = specTest({
   verifies: ref("spec:carrier.gherkin-authoring.parent-child-extraction"),
 });
 void parentChildExtractionAnchor;
-bindExample(parentChildExtractionContract, world, bindings);
+registerParentChildExtraction({
+  createWorld: createExtractionWorld,
+  invoke: invokeExtraction,
+  observe: observeExtractionCount,
+  expected: (point) =>
+    expectedExtractionCount(
+      point,
+      paramsForStep(parentChildExtractionContract, "extraction reports {findingCount} findings")
+        .findingCount,
+    ),
+  assertions: (state) => {
+    const { specCount } = paramsForStep(
+      parentChildExtractionContract,
+      "the graph contains exactly {specCount} Specs",
+    );
+    const parent = paramsForStep(
+      parentChildExtractionContract,
+      "the graph contains the Spec {specId} with kind {specKind}",
+    );
+    const child = paramsForStep(
+      parentChildExtractionContract,
+      "the graph contains the child Spec {childId} with kind {specKind}",
+    );
+    const relation = paramsForStep(
+      parentChildExtractionContract,
+      "the child Spec {childId} declares {relationType} to {relationTarget}",
+    );
+    const additionalRelation = paramsForStep(
+      parentChildExtractionContract,
+      "the child Spec {childId} declares the additional relation {relationType} to {relationTarget}",
+    );
+
+    assertSpecCount(state, specCount);
+    assertGraphContainsSpec(state, parent.specId, parent.specKind);
+    assertGraphContainsSpec(state, child.childId, child.specKind);
+    expect(relationsOf(state, relation.childId)).toContainEqual({
+      type: relation.relationType,
+      target: relation.relationTarget,
+      claim: "declared",
+    });
+    expect(relationsOf(state, additionalRelation.childId)).toContainEqual({
+      type: additionalRelation.relationType,
+      target: additionalRelation.relationTarget,
+      claim: "declared",
+    });
+  },
+});
 
 const unboundReadyRefusedAnchor = specTest({
   id: testAnchorId("test:protocol.gherkin-authoring.unbound-ready-refused"),
@@ -303,7 +563,24 @@ const unknownTagRefusedAnchor = specTest({
   verifies: ref("spec:carrier.gherkin-authoring.unknown-tag-refused"),
 });
 void unknownTagRefusedAnchor;
-bindExample(unknownTagRefusedContract, world, bindings);
+registerUnknownTagRefused({
+  createWorld: createExtractionWorld,
+  invoke: invokeExtraction,
+  observe: observeExtractionCount,
+  expected: (point) =>
+    expectedExtractionCount(
+      point,
+      paramsForStep(unknownTagRefusedContract, "extraction reports {findingCount} findings")
+        .findingCount,
+    ),
+  assertions: (state) => {
+    assertFirstFindingAndAbsentSpec(
+      state,
+      paramsForStep(unknownTagRefusedContract, "the first finding is {findingId} at line {line}"),
+      paramsForStep(unknownTagRefusedContract, "the graph omits the Spec {absentId}"),
+    );
+  },
+});
 
 const unsupportedConstructRefusedAnchor = specTest({
   id: testAnchorId("test:protocol.gherkin-authoring.unsupported-construct-refused"),
@@ -311,7 +588,29 @@ const unsupportedConstructRefusedAnchor = specTest({
   verifies: ref("spec:carrier.gherkin-authoring.unsupported-construct-refused"),
 });
 void unsupportedConstructRefusedAnchor;
-bindExample(unsupportedConstructRefusedContract, world, bindings);
+registerUnsupportedConstructRefused({
+  createWorld: createExtractionWorld,
+  invoke: invokeExtraction,
+  observe: observeExtractionCount,
+  expected: (point) =>
+    expectedExtractionCount(
+      point,
+      paramsForStep(
+        unsupportedConstructRefusedContract,
+        "extraction reports {findingCount} findings",
+      ).findingCount,
+    ),
+  assertions: (state) => {
+    assertFirstFindingAndAbsentSpec(
+      state,
+      paramsForStep(
+        unsupportedConstructRefusedContract,
+        "the first finding is {findingId} at line {line}",
+      ),
+      paramsForStep(unsupportedConstructRefusedContract, "the graph omits the Spec {absentId}"),
+    );
+  },
+});
 
 const descriptionLocationRefusedAnchor = specTest({
   id: testAnchorId("test:protocol.gherkin-authoring.description-location-refused"),
@@ -319,7 +618,29 @@ const descriptionLocationRefusedAnchor = specTest({
   verifies: ref("spec:carrier.gherkin-authoring.description-location-refused"),
 });
 void descriptionLocationRefusedAnchor;
-bindExample(descriptionLocationRefusedContract, world, bindings);
+registerDescriptionLocationRefused({
+  createWorld: createExtractionWorld,
+  invoke: invokeExtraction,
+  observe: observeExtractionCount,
+  expected: (point) =>
+    expectedExtractionCount(
+      point,
+      paramsForStep(
+        descriptionLocationRefusedContract,
+        "extraction reports {findingCount} findings",
+      ).findingCount,
+    ),
+  assertions: (state) => {
+    assertFirstFindingAndAbsentSpec(
+      state,
+      paramsForStep(
+        descriptionLocationRefusedContract,
+        "the first finding is {findingId} at line {line}",
+      ),
+      paramsForStep(descriptionLocationRefusedContract, "the graph omits the Spec {absentId}"),
+    );
+  },
+});
 
 const stepLessScenarioRefusedAnchor = specTest({
   id: testAnchorId("test:protocol.gherkin-authoring.step-less-scenario-refused"),
@@ -327,7 +648,27 @@ const stepLessScenarioRefusedAnchor = specTest({
   verifies: ref("spec:carrier.gherkin-authoring.step-less-scenario-refused"),
 });
 void stepLessScenarioRefusedAnchor;
-bindExample(stepLessScenarioRefusedContract, world, bindings);
+registerStepLessScenarioRefused({
+  createWorld: createExtractionWorld,
+  invoke: invokeExtraction,
+  observe: observeExtractionCount,
+  expected: (point) =>
+    expectedExtractionCount(
+      point,
+      paramsForStep(stepLessScenarioRefusedContract, "extraction reports {findingCount} findings")
+        .findingCount,
+    ),
+  assertions: (state) => {
+    assertFirstFindingAndAbsentSpec(
+      state,
+      paramsForStep(
+        stepLessScenarioRefusedContract,
+        "the first finding is {findingId} at line {line}",
+      ),
+      paramsForStep(stepLessScenarioRefusedContract, "the graph omits the Spec {absentId}"),
+    );
+  },
+});
 
 const multiFindingBoundedAnchor = specTest({
   id: testAnchorId("test:protocol.gherkin-authoring.multi-finding-bounded"),
@@ -335,4 +676,45 @@ const multiFindingBoundedAnchor = specTest({
   verifies: ref("spec:carrier.gherkin-authoring.multi-finding-bounded"),
 });
 void multiFindingBoundedAnchor;
-bindExample(multiFindingBoundedContract, world, bindings);
+registerMultiFindingBounded({
+  createWorld: createExtractionWorld,
+  invoke: invokeExtraction,
+  observe: observeExtractionCount,
+  expected: (point) =>
+    expectedExtractionCount(
+      point,
+      paramsForStep(multiFindingBoundedContract, "extraction reports {findingCount} findings")
+        .findingCount,
+    ),
+  assertions: (state) => {
+    const firstFinding = paramsForStep(
+      multiFindingBoundedContract,
+      "the first finding is {findingId} at line {line}",
+    );
+    const { specCount } = paramsForStep(
+      multiFindingBoundedContract,
+      "the graph contains exactly {specCount} Specs",
+    );
+    const omittedSpec = paramsForStep(
+      multiFindingBoundedContract,
+      "the graph omits the Spec {absentId}",
+    );
+    const absentEdge = paramsForStep(
+      multiFindingBoundedContract,
+      "no graph edge names the absent Spec {absentId}",
+    );
+    const healthySpec = paramsForStep(
+      multiFindingBoundedContract,
+      "the graph contains the Spec {specId} with kind {specKind}",
+    );
+
+    expect(extractionReportOf(state).findings[0]).toMatchObject({
+      validatorId: firstFinding.findingId,
+      line: firstFinding.line,
+    });
+    assertSpecCount(state, specCount);
+    assertGraphOmitsSpec(state, omittedSpec.absentId);
+    assertNoEdgeNames(state, absentEdge.absentId);
+    assertGraphContainsSpec(state, healthySpec.specId, healthySpec.specKind);
+  },
+});
