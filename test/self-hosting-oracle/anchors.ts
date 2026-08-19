@@ -164,7 +164,7 @@ export const expectedAnchors = [
     target: "spec:extraction.build-pipeline.same-invocation",
     file: "test/self-hosting-extraction.test.ts",
     constant: "buildPipelineSameInvocationTestAnchor",
-    site: "bindExample(sameInvocationContract",
+    site: "registerSameInvocation(",
   },
   {
     id: "impl:protocol.authoring-on-ramp",
@@ -514,7 +514,7 @@ export const expectedAnchors = [
     target: "spec:extraction.excludes.segment-boundary",
     file: "test/self-hosting-extraction.test.ts",
     constant: "excludesSegmentBoundaryTestAnchor",
-    site: "bindExample(segmentBoundaryContract",
+    site: "registerSegmentBoundary(",
   },
   {
     id: "test:protocol.excludes.refused-path",
@@ -524,7 +524,7 @@ export const expectedAnchors = [
     target: "spec:extraction.excludes.refused-path",
     file: "test/self-hosting-extraction.test.ts",
     constant: "excludesRefusedPathTestAnchor",
-    site: "bindExample(refusedPathContract",
+    site: "registerRefusedPath(",
   },
   {
     id: "test:protocol.schema-versioning.declared-version",
@@ -534,7 +534,7 @@ export const expectedAnchors = [
     target: "spec:extraction.schema-versioning.declared-version",
     file: "test/self-hosting-extraction.test.ts",
     constant: "schemaVersioningTestAnchor",
-    site: "bindExample(declaredVersionContract",
+    site: "registerDeclaredVersion(",
   },
   {
     id: "test:protocol.stable-ids.namespaced-round-trip",
@@ -1014,7 +1014,7 @@ export const expectedAnchors = [
     target: "spec:extraction.example-runner.red-step-naming",
     file: "test/self-hosting-extraction.test.ts",
     constant: "exampleRunnerRedStepTestAnchor",
-    site: "bindExample(redStepNamingContract",
+    site: "registerRedStepNaming(",
   },
   {
     id: "test:protocol.slot-notation.typed-declaration",
@@ -1074,7 +1074,7 @@ export const expectedAnchors = [
     target: "spec:consumers.derived-readiness-banner.dishonest-divergence",
     file: "test/self-hosting-projections.test.ts",
     constant: "dishonestDivergenceTestAnchor",
-    site: "bindExample(dishonestDivergenceContract",
+    site: "registerDishonestDivergence(",
   },
   {
     id: "test:protocol.derived-readiness-banner.honest-headroom",
@@ -1084,7 +1084,7 @@ export const expectedAnchors = [
     target: "spec:consumers.derived-readiness-banner.honest-headroom",
     file: "test/self-hosting-projections.test.ts",
     constant: "honestHeadroomTestAnchor",
-    site: "bindExample(honestHeadroomContract",
+    site: "registerHonestHeadroom(",
   },
   {
     id: "test:protocol.binding-language-views.bound-spec-page",
@@ -1104,7 +1104,7 @@ export const expectedAnchors = [
     target: "spec:consumers.binding-language-views.pack-member-table",
     file: "test/self-hosting-projections.test.ts",
     constant: "packMemberTableTestAnchor",
-    site: "bindExample(packMemberTableContract",
+    site: "registerPackMemberTable(",
   },
   {
     id: "test:protocol.wholesale-view-rewrite.stale-page-removed",
@@ -1114,7 +1114,7 @@ export const expectedAnchors = [
     target: "spec:consumers.wholesale-view-rewrite.stale-page-removed",
     file: "test/self-hosting-projections.test.ts",
     constant: "stalePageRemovedTestAnchor",
-    site: "bindExample(stalePageRemovedContract",
+    site: "registerStalePageRemoved(",
   },
   {
     id: "test:protocol.wholesale-view-rewrite.late-stale-page",
@@ -1124,7 +1124,7 @@ export const expectedAnchors = [
     target: "spec:consumers.wholesale-view-rewrite.late-stale-page",
     file: "test/self-hosting-projections.test.ts",
     constant: "lateStalePageTestAnchor",
-    site: "bindExample(lateStalePageContract",
+    site: "registerLateStalePage(",
   },
   {
     id: "test:protocol.wholesale-view-rewrite.failed-run-view-removed",
@@ -1134,7 +1134,7 @@ export const expectedAnchors = [
     target: "spec:consumers.wholesale-view-rewrite.failed-run-view-removed",
     file: "test/self-hosting-projections.test.ts",
     constant: "failedRunViewRemovedTestAnchor",
-    site: "bindExample(failedRunViewRemovedContract",
+    site: "registerFailedRunViewRemoved(",
   },
   {
     id: "test:protocol.wholesale-view-rewrite.build-invalidates-view",
@@ -1144,7 +1144,7 @@ export const expectedAnchors = [
     target: "spec:consumers.wholesale-view-rewrite.build-invalidates-view",
     file: "test/self-hosting-projections.test.ts",
     constant: "buildInvalidatesViewTestAnchor",
-    site: "bindExample(buildInvalidatesViewContract",
+    site: "registerBuildInvalidatesView(",
   },
   {
     id: "test:protocol.diagnostic-rendering.composed-location",
@@ -1154,7 +1154,7 @@ export const expectedAnchors = [
     target: "spec:validation.diagnostic-rendering.composed-location",
     file: "test/self-hosting-projections.test.ts",
     constant: "composedLocationTestAnchor",
-    site: "bindExample(composedLocationContract",
+    site: "registerComposedLocation(",
   },
   {
     id: "test:protocol.diagnostic-rendering.table-cell-location",
@@ -1164,7 +1164,7 @@ export const expectedAnchors = [
     target: "spec:validation.diagnostic-rendering.table-cell-location",
     file: "test/self-hosting-projections.test.ts",
     constant: "tableCellLocationTestAnchor",
-    site: "bindExample(tableCellLocationContract",
+    site: "registerTableCellLocation(",
   },
   {
     id: "test:protocol.design-review.pure-projection",
@@ -1174,7 +1174,7 @@ export const expectedAnchors = [
     target: "spec:consumers.design-review.pure-projection",
     file: "test/self-hosting-projections.test.ts",
     constant: "pureProjectionTestAnchor",
-    site: "bindExample(pureProjectionContract",
+    site: "registerPureProjection(",
   },
   {
     id: "test:protocol.agent-surface.scripted-context-body",
