@@ -76,10 +76,10 @@ afterEach(() => {
 });
 
 describe("the self-hosting records gate", () => {
-  it("discovers plan 36 as the current primary plan", () => {
+  it("discovers plan 37 as the current primary plan", () => {
     expect(currentPlan).toMatchObject({
-      number: 36,
-      name: "36-adoption-tranches-maturation-and-bundle-evidence-briefs.md",
+      number: 37,
+      name: "37-adoption-tranches-drift-maturation-and-bundle-measurement.md",
     });
   });
 

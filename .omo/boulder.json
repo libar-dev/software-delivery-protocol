@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "active_work_id": null,
+  "active_work_id": "plan-37-settling-arc",
   "works": {
     "pr-17-gherkin-carrier-hardening": {
       "work_id": "pr-17-gherkin-carrier-hardening",
@@ -37,6 +37,16 @@
       "worktree_path": null,
       "completed_todo": 18,
       "active_task": null
+    },
+    "plan-37-settling-arc": {
+      "work_id": "plan-37-settling-arc",
+      "active_plan": ".omo/plans/plan-37-settling-arc.md",
+      "plan_name": "plan-37-settling-arc",
+      "session_ids": [
+        "senpi:01a01ab3-2496-7976-ac03-6f41265f4e60"
+      ],
+      "status": "active",
+      "worktree_path": "/home/darkomijic/dev-libar/software-delivery-protocol"
     }
   }
 }
