@@ -112,7 +112,7 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
   QA scenarios: happy — run the census over two plan-35-era session files, paste tables. failure — run it over a nonexistent path and over a truncated jsonl, record both failure modes (non-zero exit / skipped-malformed-line count), Evidence `.omo/evidence/task-4-plan-37-settling-arc.md`
   Commit: N (measurement tooling is `.omo` workspace state; committed at close with the K record)
   Recommended task executor category: `unspecified-high` — the design is pre-decided but the script + honest-freeze judgment is real work.
-- [ ] 5. I-1 validators: adopt the remaining 16 sites across 9 validation families
+- [x] 5. I-1 validators: adopt the remaining 16 sites across 9 validation families
   What to do / Must NOT do: Adopt-or-refuse per family the 16 deferred `bindExample` sites in `test/self-hosting-validators.test.ts` — readiness-floor (`unrelated-scoped-spec`, `blocking-open-question`), warn-level-signals (`orphan-signal`, `ready-gap-signal`), referential-integrity (`dangling-target`, `did-you-mean`), authored-honesty (`section-authored-fact`, `unearned-stated-fact`), claim-separation (`collapsed-edge-claim`, `unratified-descriptor`), verification-linkage (`unbound-example`, `unresolved-oracle`), oracle-target-eligibility (`rule-space-accepted`, `missing-space-refused`), pack-coherence (`incoherent-aggregate`), two-check-families (`split-report`). Reuse the kind-evidence pattern already proven in this same file: shared `validatorWorld` factory → `createWorld(point)`, When = `validateGraph`, oracle Then = named finding id/severity comparator-owned, join-heavy multi-Thens (clause id, error count, subject, did-you-mean text) → `assertions` + `paramsForStep`. One ledger row PER FAMILY (outcome, one-line evidence, generated siblings named); a refuse inside one family does not block the others. Must NOT: rewrite or byte-touch the three adopted kind-evidence registrars in the same file; loosen the freeze for multi-Then friction — record friction verbatim in evidence instead (the task-11 record is the shape).
   Parallelization: Wave 1 | Blocked by: 2 | Blocks: 18
   References (executor has NO interview context - be exhaustive): in-file pattern `test/self-hosting-validators.test.ts` (the three `register*` kind-evidence blocks); friction record `.omo/evidence/task-11-plan-35-agent-surface-arc.md` §"Five-adapter friction"; join procedure + ownership splits per `.omo/plans/plan-37-settling-arc.md` Verification strategy and draft Findings ("Brief I machinery"); MD-31 `specs/decisions/adopted-registrars-committed.sdp.md`.
@@ -128,7 +128,7 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
   QA scenarios: happy — adopted examples pass focused vitest + serialized byte-gates. failure — prove the refuse path is real: for any refused example, show the exact adapter that fails to express it (quote the binding shape) in evidence, Evidence `.omo/evidence/task-6-plan-37-settling-arc.md`
   Commit: Y | test(carrier-gherkin): adopt-or-refuse gherkin-authoring examples onto generated registrars (MD-31 tranche 2)
   Recommended task executor category: `deep` — the shape-stressing case; refusal judgment is the deliverable as much as adoption.
-- [ ] 7. I-5a tail: pack-markdown (2 sites)
+- [x] 7. I-5a tail: pack-markdown (2 sites)
   What to do / Must NOT do: Adopt-or-refuse `markdown-ts-parity` and `spec-envelope-refused` in `test/self-hosting-pack-markdown.test.ts` (family `carrier.markdown-pack-authoring`). Shared pack world, filesystem `createWorld` like `model.anchors`. Per-family ledger row. Must NOT: touch any other suite; do not edit helpers.
   Parallelization: Wave 1 | Blocked by: 2 | Blocks: 18
   References (executor has NO interview context - be exhaustive): `test/self-hosting-pack-markdown.test.ts` (~179 LOC); `model.anchors` pattern in `test/self-hosting-model.test.ts` + `.omo/evidence/task-8-plan-35-agent-surface-arc.md`; join procedure in Verification strategy.
@@ -136,7 +136,7 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
   QA scenarios: happy — focused vitest + byte-gates. failure — tamper one new sibling, preflight names drift, restore, Evidence `.omo/evidence/task-7-plan-37-settling-arc.md`
   Commit: Y | test(pack-markdown): adopt markdown-pack-authoring onto generated registrars (MD-31 tranche 2)
   Recommended task executor category: `quick` — 2 sites, high bindability, proven pattern.
-- [ ] 8. I-5b tail: consumers (5 sites)
+- [x] 8. I-5b tail: consumers (5 sites)
   What to do / Must NOT do: Adopt-or-refuse the 5 sites in `test/self-hosting-consumers.test.ts` — `consumers.agent-surface` (`scripted-context-body`, `demand-map-entries`) and `consumers.reader` (`concept-entry`, `file-entry`, `changeset-entry`). CLI/front-door and reader construction move into `createWorld`/`invoke`; multi-Then joins (anchored vs declared verifier, coverageUnknown) → `assertions`. Per-family ledger rows. Must NOT: promote or edit `spec:consumers.*` carriers as a side effect — maturation is brief J's job, not this lane's.
   Parallelization: Wave 1 | Blocked by: 2 | Blocks: 18
   References (executor has NO interview context - be exhaustive): `test/self-hosting-consumers.test.ts` (~524 LOC); adapter law `specs/extraction/runnable-modules.sdp.md`; draft Findings "Brief I machinery".
@@ -144,7 +144,7 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
   QA scenarios: happy — vitest + byte-gates. failure — tamper one new sibling, preflight names drift, restore, Evidence `.omo/evidence/task-8-plan-37-settling-arc.md`
   Commit: Y | test(consumers): adopt agent-surface and reader examples onto generated registrars (MD-31 tranche 2)
   Recommended task executor category: `unspecified-low` — 5 sites, two families, good bindability.
-- [ ] 9. I-5c tail: sdp-import (1 site)
+- [x] 9. I-5c tail: sdp-import (1 site)
   What to do / Must NOT do: Adopt-or-refuse `carrier.sdp-import` `round-trip` in `test/self-hosting-sdp-import.test.ts` — the simplest site in the arc (Given fixture source, When `importTypeScriptSpec`, Then round-trip equality). Ledger row. Must NOT: anything beyond this one file + its sibling.
   Parallelization: Wave 1 | Blocked by: 2 | Blocks: 18
   References (executor has NO interview context - be exhaustive): `test/self-hosting-sdp-import.test.ts` (~61 LOC); join procedure in Verification strategy.
@@ -152,7 +152,7 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
   QA scenarios: happy — vitest + byte-gates. failure — tamper sibling, preflight names drift, restore, Evidence `.omo/evidence/task-9-plan-37-settling-arc.md`
   Commit: Y | test(sdp-import): adopt round-trip onto generated registrar (MD-31 tranche 2)
   Recommended task executor category: `quick` — 1 site, trivial.
-- [ ] 10. J-model: evidence packets + prepared diffs for the four model Specs
+- [x] 10. J-model: evidence packets + prepared diffs for the four model Specs
   What to do / Must NOT do: For `spec:model.core-model`, `spec:model.pack-aggregate`, `spec:model.relations`, `spec:model.spec-sections`: fill the todo-3 packet template per Spec — recipe-9 floor evidence, recipe-3 relations, section inventory, and the BOTH-WAYS judgment aid with quoted carrier lines (finished-design vs settle-first). Prepare but DO NOT APPLY the per-Spec artifacts: (a) the one-rung carrier diff (`readiness: defined` → `ready`) staged as a patch block inside the packet; (b) the matching oracle descriptor update in `test/self-hosting-oracle/model.ts` (the `readiness: "defined"` rows) staged the same way; or (c) the recorded blocking reason where the alarm points, if the packet concludes the content does not earn `ready`. Present both readings honestly — the owner ratifies at the checkpoint, the packet never pre-decides. Must NOT: edit any carrier or oracle file in this todo; demote anything; invent content to reach a rung; treat `floorReached: ready` as conferring the rung (recipe 9: promotion requires the human statement).
   Parallelization: Wave 1 | Blocked by: 3 | Blocks: 16
   References (executor has NO interview context - be exhaustive): packet template `.omo/evidence/plan-37-j-packets/TEMPLATE.md`; per-Spec judgment-aid evidence in `.omo/drafts/plan-37-settling-arc.md` Findings (core-model: 8-term glossary + enrichment-lifecycle sibling still scoped with blocking OQ; pack-aggregate: 5 terms, story altitude; relations: no decidedBy, no inbound refiners; spec-sections: 4 decidedBy — strongest); carriers under `specs/model/`; oracle `test/self-hosting-oracle/model.ts`; theme-9 posture (plans/32 Theme 9; plans/36 brief J).
@@ -160,7 +160,7 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
   QA scenarios: happy — template checklist passes per packet (a packet missing any field is red). failure — demonstrate honesty: quote the exact carrier line(s) behind every settle-first claim; a packet with an unsupported claim is red and rewritten, Evidence `.omo/evidence/task-10-plan-37-settling-arc.md`
   Commit: N (packets are `.omo` evidence; applied diffs commit at todo 16)
   Recommended task executor category: `unspecified-low` — template-driven evidence work over four well-mapped Specs.
-- [ ] 11. J-extraction: evidence packets + prepared diffs for the two extraction Specs
+- [x] 11. J-extraction: evidence packets + prepared diffs for the two extraction Specs
   What to do / Must NOT do: Same packet discipline as todo 10 for `spec:extraction.claim-taxonomy` (5-term claims glossary; leaf — no declared relationsIn) and `spec:extraction.regenerability` (5 rules incl. the disposable-rebuild invariant and the measured graph-DB deferral; approximate thresholds without on-carrier measurement artifact are the settle-first candidate). Oracle descriptor rows live in `test/self-hosting-oracle/extraction.ts`, staged not applied. Must NOT: apply edits; invent the missing measurement artifact — its absence is packet evidence, not a gap to fill.
   Parallelization: Wave 1 | Blocked by: 3 | Blocks: 16
   References (executor has NO interview context - be exhaustive): template `.omo/evidence/plan-37-j-packets/TEMPLATE.md`; judgment aids in draft Findings; carriers `specs/extraction/claim-taxonomy.sdp.md`, `specs/extraction/regenerability.sdp.md`; oracle `test/self-hosting-oracle/extraction.ts`.
@@ -168,6 +168,12 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
   QA scenarios: happy — template checklist per packet. failure — every settle-first claim quotes its carrier line or the packet is red, Evidence `.omo/evidence/task-11-plan-37-settling-arc.md`
   Commit: N (evidence; application at todo 16)
   Recommended task executor category: `quick` — two Specs, template-driven.
+- [ ] W1-B. Apply all Wave 1 anchor-site pin flips
+  What to do / Must NOT do: Apply the exact adopted-site replacements recorded in task-5, task-6, task-7, and task-9 evidence to `test/self-hosting-oracle/anchors.ts` through one shared-file writer. The expected set is 30 flips: validators 16, Gherkin 11, pack-markdown 2, sdp-import 1. Preserve all refused `bindExample` pins (Gherkin 2, consumers 5), anchor count, ids, targets, constants, labels, and every unrelated row.
+  Acceptance criteria (agent-executable): `test/self-hosting-oracle/anchors.ts` changes exactly 30 `site:` values; `npx vitest run test/self-hosting-graph.test.ts` green; all five Wave-1 focused suites green; anchor count remains 157.
+  QA scenarios: happy — graph locality and focused suites green. failure — every expected old site must be absent only in its owned anchor entry; any missing or duplicate match is red, Evidence `.omo/evidence/wave-1-anchor-pins-plan-37-settling-arc.md`
+  Commit: N (lands with Wave-1 adoption commits)
+  Recommended task executor category: `unspecified-low` — mechanical shared-file integration from verified evidence.
 - [ ] 12. I-3 projections: adopt-or-refuse 11 sites across 5 families
   What to do / Must NOT do: Adopt-or-refuse the 11 deferred sites in `test/self-hosting-projections.test.ts` — `consumers.design-review` (`pure-projection`), `consumers.derived-readiness-banner` (`dishonest-divergence`, `honest-headroom`), `consumers.binding-language-views` (`bound-spec-page`, `pack-member-table`), `consumers.wholesale-view-rewrite` (`stale-page-removed`, `late-stale-page`, `failed-run-view-removed`, `build-invalidates-view`), `validation.diagnostic-rendering` (`composed-location`, `table-cell-location`). Banner and diagnostics look like normal oracle+extra-Then cases; `wholesale-view-rewrite` is the strain cluster — temp view trees, byte-identity and multi-page Thens, existence assertions — apply the `createWorld`-owns-materialization rule (the `model.anchors` temp-root pattern) and refuse any example that needs a second product call or leaks a shared mutable view path across examples. Per-family ledger rows (5 rows). Must NOT: edit the projection publishers themselves; mature `spec:consumers.projections-model` as a side effect (J-consumers owns that Spec); touch `generated/` outside the serialized queue.
   Parallelization: Wave 2 | Blocked by: 2 | Blocks: 18
@@ -247,6 +253,7 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
 - [ ] F2. Code quality review
 - [ ] F3. Real manual QA
 - [ ] F4. Scope fidelity
+- [ ] F5. Open reviewer-ready pull request for plan 37
 
 ## Commit strategy
 One commit per I-lane todo (suite + force-added siblings land together, each green under the byte-gates before commit); J applies as one commit at todo 16 (only ratified rungs); commission (todo 1), close record (todo 18), review register (todo 19), and final status flips (todo 20) are their own commits. Evidence-only todos (3, 4, 10, 11, 14, 15, 17) carry `.omo/` state that rides the next coherent commit — `.omo` is recoverable project state, committed at checkpoints, never force-committed per todo. Never commit from a dirty baseline that mixes lanes; the wave-gate merge point is the natural commit boundary.

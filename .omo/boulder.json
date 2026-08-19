@@ -46,7 +46,9 @@
         "senpi:01a01ab3-2496-7976-ac03-6f41265f4e60"
       ],
       "status": "active",
-      "worktree_path": "/home/darkomijic/dev-libar/software-delivery-protocol"
+      "worktree_path": "/home/darkomijic/dev-libar/software-delivery-protocol",
+      "delivery_mode": "make-pr",
+      "make_pr": true
     }
   }
 }
