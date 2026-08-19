@@ -237,3 +237,23 @@ PR #19 (the universal-Spec arc) building on PRs #10 and #16:
   as such ("re-run the recipes rather than inheriting these"), never quoted from an older record.
 
 > `CLAUDE.md` is a symlink to `AGENTS.md` — **edit `AGENTS.md`.**
+
+## Cursor Cloud specific instructions
+
+This repo is a self-contained TypeScript CLI (`sdp`) — no servers, databases, or external services
+to run. Development is terminal-driven. Node ≥ 20 (Node 22 is installed); dependencies install from
+the committed `package-lock.json` (npm is the lockfile-native package manager; `pnpm` scripts also
+work, but never a bare `sdp`).
+
+The startup update script only refreshes dependencies (`npm ci`). It does **not** build, so on a
+fresh pod you must run `npm run build` before the `sdp` CLI (`dist/cli/sdp.js`) exists.
+
+Non-obvious gotcha: `npm test` refuses to run until the generated contracts exist and errors with
+"Generated contracts required by the selected test suite are missing." Build and generate first:
+`npm run build && npm run generate:self-hosting && npm run generate:example`, then `npm test`. The
+documented green gate `npm run check` already sequences build → generate → typecheck → test →
+self-hosting/example checks → preflight correctly, so prefer it after engine edits.
+
+The `check:example` step emits one intentional `verifies-linkage` warning (a declared-but-unbound
+verifier in the example corpus); the gate still exits 0. That warning is expected, not a
+regression.
