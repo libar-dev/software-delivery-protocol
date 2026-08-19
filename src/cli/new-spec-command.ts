@@ -466,7 +466,8 @@ export function runNewSpec(
 
     // The held directory itself may have been renamed out of the working directory between the
     // verification and the write; the create followed the inode, so verify the landing spot and
-    // undo a relocated scaffold.
+    // undo a relocated scaffold. The success report happens here, immediately after the check and
+    // while the handle is still held, so no operation separates the revalidation from the claim.
     try {
       if (!containedWithin(realpathSync("."), cwdReal)) {
         unlinkSync(scaffoldName);
@@ -480,6 +481,9 @@ export function runNewSpec(
       );
       return 1;
     }
+
+    writeStdout(output, `Wrote ${targetPath}\n`);
+    return 0;
   } finally {
     try {
       process.chdir(restoreCwd);
@@ -491,7 +495,4 @@ export function runNewSpec(
       }
     }
   }
-
-  writeStdout(output, `Wrote ${targetPath}\n`);
-  return 0;
 }
