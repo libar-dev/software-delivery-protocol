@@ -1,6 +1,8 @@
 # Plan 35 — Agent-surface adoption and self-binding
 
-> **Status:** 🚧 EXECUTING — the plan-34 arc under execution; briefs E–H in scope per plans/34; operational tracking in `.omo/plans/plan-35-agent-surface-arc.md`
+> **Status:** ✅ EXECUTED — the plan-34 arc is closed; briefs E–H delivered per plans/34; operational tracking in `.omo/plans/plan-35-agent-surface-arc.md`
+
+Close summary. **E** shipped the diff-to-at-risk bridge (recipe 4, JSON filename transport), five structural recipes (12–16), `sdp new spec`, and `sdp validate --watch`; the MCP attempt (E3) closed as a recorded non-ruling at D6's bar. **F** adopted all five first-tranche families onto generated registrars with the frozen interface untouched. **G** authored the eleven-component structural self-binding under the convention ruling; the census structural sections are real and the corpus pins re-derived. **H** deferred all four projection candidates with re-entry triggers. The independent review's nine accepted findings closed with red-first tests (scaffold symlink confinement and pre-write extraction, registrar-sibling realpath confinement, watch subscription/coalescing/error hardening, recipe-4 transport, AST-based registrar locality), and a fresh follow-up review of the full delta returned APPROVE. The gate ran green twice consecutively at close.
 
 This is the execution stamp for the plan-34 arc. The briefs index stays plan 34. Latest EXECUTED settled ground stays plan 33. Operational tracking lives in `.omo/plans/plan-35-agent-surface-arc.md`, same pointer shape as plan 31.
 
@@ -13,7 +15,7 @@ This is the execution stamp for the plan-34 arc. The briefs index stays plan 34.
 - **G** Protocol-side structural bindings under the convention ruling. Sparse and true.
 - **H** decide or defer the four leftover projection candidates. Defer-with-reason is lawful.
 
-**Out.** The plan-34 do-not-reopen list, verbatim. No MCP server. No new projection. No reader-accessor freeze, no `sdp impact`/`sdp diff`, no new query verbs. No MD-30 amendment slipped in as convenience. No import-graph dump as `uses`. This stamp is not EXECUTED.
+**Out.** The plan-34 do-not-reopen list, verbatim. No MCP server. No new projection. No reader-accessor freeze, no `sdp impact`/`sdp diff`, no new query verbs. No MD-30 amendment slipped in as convenience. No import-graph dump as `uses`.
 
 Re-measured at commission, never inherited: 156 Specs · 1 Pack · 146 anchors → 303 nodes · 571 edges, 0 errors, 0 warnings. Recipe 1 backlog empty. Recipe 2 names the same eight `defined` drift-alarm Specs. Recipe 8 reports 0 warnings.
 
@@ -21,7 +23,7 @@ E2 placement ruling. `sdp new spec` and `sdp validate --watch` are write-side au
 
 ## Execution record
 
-Still commissioned and in progress. This record closes briefs E through H on the evidence below. It does not flip the stamp. Todo 18 owns `EXECUTED`.
+This record closes briefs E through H on the evidence below.
 
 ### F first-tranche ledger (MD-31)
 
@@ -86,7 +88,7 @@ Candidate classes that failed that bar: repository agent skills, OmO harness ses
 
 ## Close record — 2026-08-16
 
-Commissioned, not executed. Numbers below were measured in this close task against the live tree. They were not copied from the commission stamp, from plan 33, or from any prior evidence file.
+Numbers below were measured in the close task against the live tree. They were not copied from the commission stamp, from plan 33, or from any prior evidence file.
 
 ## re-derived at close (re-run the recipes rather than inheriting these)
 

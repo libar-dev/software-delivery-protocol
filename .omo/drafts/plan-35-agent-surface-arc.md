@@ -4,13 +4,13 @@ status: plan-complete
 intent: clear
 review_required: true
 plan_path: .omo/plans/plan-35-agent-surface-arc.md
-plan_sha256: 3f3642571bd134657680af3b61fdfe82ededed08f9b2f94f4dd8a74bc31224d3
-review_round_id: user-directed-repair-2026-08-15
+plan_sha256: 91aa2620ed79eb7db8c00ae8569e1d948d433e925d4da8d1cc63438d97a7e880
+review_round_id: rr-plan35-r12-20260815T181330Z
 review_round_limit: unlimited (user explicitly authorized finalizing the review loop without per-step permission)
-round_status: focused-repair-verified
+round_status: approved
 pending-action: execute .omo/plans/plan-35-agent-surface-arc.md via /start-work
 phase: review_complete
-plan_status: complete-user-directed-repair
+plan_status: complete-momus-approved
 focused_repair_review:
   session: st_01a0061e
   reviewer: oracle
@@ -30,9 +30,11 @@ convergence_ledger:
     - "rr-plan35-r6: zero-human-intervention vs user-gated F-wave (clarified: governance checkpoint, not verification labor); F3 invocation used non-root-relative PATH (fixed to specs/probe.sdp.md --root <scratch>)"
     - "rr-plan35-r7: F3's --root option missing from todo 6's command contract — fixed by adding optional --root (default cwd) to the contract + tests, matching the CLI family's existing convention"
     - "rr-plan35-r8: F1 required closure commits todo 17 may legitimately not produce — fixed (zero-or-more)"
+    - "rr-plan35-r10: Todo 6 contradicted itself on empty relations and Todo 17 lacked executable five-agent/re-measurement invocations — fixed by binding empty relations to emitMarkdownSpec's canonical relations: {} branch and specifying the exact native task batch, command gates, evidence, and retry semantics"
+    - "rr-plan35-r11: Todo 17 cited absent test/agent-recipes.test.ts — corrected to the repository-owned test/recipes.test.ts suite"
   non_blocking_notes:
     - "rr-plan35-r8 claimed the tracked checkout registrar examples/checkout-v1/test/orders/orders.create-order.valid-cart.test.generated.ts is absent — DISPROVEN against the canonical tree: on disk, git ls-files tracked, committed in fa4518f (momus sandbox likely stale). Reference annotated with the commit id for executor verifiability; no contract change."
-  rounds: 8
+  rounds: 12
 fable_metis_review:
   source: user-delivered Fable 5 report (designated by user as today's Metis review)
   findings: 10 (3 fix-before-execution, 4 worth-adjusting, 3 minor) + 1 process note
@@ -79,6 +81,18 @@ review_history:
     session: st_01a0061e
     result: approved
     note: focused Oracle review found no blockers; the unnecessary public --root expansion is removed, commit boundaries are logical rather than per-todo, and Plan 35 runtime evidence remains narrowly ignored and workspace-local
+  - round_id: rr-plan35-r10-20260815T180612Z
+    session: st_01a0069a
+    result: changes_requested
+    note: empty-relations contradiction and non-executable Todo 17 review/re-measurement gates fixed; resubmitted as rr-plan35-r11
+  - round_id: rr-plan35-r11-20260815T181122Z
+    session: st_01a0069f
+    result: changes_requested
+    note: corrected absent test/agent-recipes.test.ts invocation to the repository-owned test/recipes.test.ts; resubmitted as rr-plan35-r12
+  - round_id: rr-plan35-r12-20260815T181330Z
+    session: st_01a006a1
+    result: approved
+    note: all implementation, test, plan, Spec, and tooling references exist and are relevant; every todo and final verifier has executable QA commands, concrete steps, and expected outcomes
 gap_analysis:
   agent: oracle st_01a0057e (metis substitute — metis aborted twice on provider errors)
   findings: 9 (1 blocker, 6 major, 2 minor)
@@ -87,15 +101,15 @@ structural_self_check: "18 impl rows (1-18), 4 final rows (F1-F4), all column-ze
 metis_substitution: "metis aborted 3x on kimi-for-coding standard lane (2m40s/2m42s/3m12s, mid-stream, invisible to provider logs); gap analysis substituted to oracle st_01a0057e with identical contract. Post-restore gate re-arm: ulw-plan re-activated by user + hash-preserving edit-pair touch of the plan (sha256 d62aa4e8 verified intact). Final metis check running on kimi-for-coding-highspeed: st_01a005c1"
 review:
   momus:
-    status: superseded-by-user-directed-repair
+    status: approved
     workspace_root: /home/darkomijic/dev-libar/software-delivery-protocol
     runtime_home: null
     target: .omo/plans/plan-35-agent-surface-arc.md
-    round_id: rr-plan35-r9
-    plan_sha256: bd6782f5da09c7aafd03d98d3024990e2fdfb617f2b12e5e0795ac50f32b9720
-    launch_id: launch-plan35-r9
-    session: st_01a005df
-    result: "Historical rr-plan35-r9 approval only; superseded when the user-directed repair changed the live plan to hash 3f3642571bd134657680af3b61fdfe82ededed08f9b2f94f4dd8a74bc31224d3."
+    round_id: rr-plan35-r12-20260815T181330Z
+    plan_sha256: 91aa2620ed79eb7db8c00ae8569e1d948d433e925d4da8d1cc63438d97a7e880
+    launch_id: launch-plan35-r12-20260815T181330Z
+    session: st_01a006a1
+    result: "OKAY — all referenced implementation, test, plan, Spec, and tooling files exist and are relevant; each todo and final verifier provides executable QA commands, concrete steps, and expected outcomes."
 approach: <fill: the approach you intend to plan>
 ---
 

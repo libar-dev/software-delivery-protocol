@@ -25,6 +25,18 @@
       "completed_todo": 14,
       "current_commit": "002849f3f8dcac2346967207dc9200ce9071964a",
       "active_task": null
+    },
+    "plan-35-agent-surface-arc": {
+      "work_id": "plan-35-agent-surface-arc",
+      "active_plan": ".omo/plans/plan-35-agent-surface-arc.md",
+      "plan_name": "plan-35-agent-surface-arc",
+      "session_ids": [
+        "senpi:01a006af-0045-79c3-ad8f-cba255f2bc2c"
+      ],
+      "status": "completed",
+      "worktree_path": null,
+      "completed_todo": 18,
+      "active_task": null
     }
   }
 }
