@@ -212,9 +212,16 @@ function createFilesystemWatchSource(input: {
   readonly createNativeWatch?: NativeWatchFactory;
   readonly lstatWatchPath?: (path: string) => Stats;
 }): ValidateWatchEventSource {
+  interface WatcherEntry {
+    readonly handle: NativeWatchHandle;
+    /** Identity of the directory the handle actually watches — a recreated path is a new inode. */
+    readonly dev: number;
+    readonly ino: number;
+  }
+
   const createNativeWatch = input.createNativeWatch ?? defaultNativeWatch;
   const lstatWatchPath = input.lstatWatchPath ?? lstatSync;
-  const watchers = new Map<string, NativeWatchHandle>();
+  const watchers = new Map<string, WatcherEntry>();
   let eventListener: ((event: ValidateWatchEvent) => void) | undefined;
   let errorListener: ((error: unknown) => void) | undefined;
   let pendingError: unknown;
@@ -239,17 +246,52 @@ function createFilesystemWatchSource(input: {
         continue;
       }
 
-      const handle = watchers.get(candidate);
+      const entry = watchers.get(candidate);
       watchers.delete(candidate);
-      handle?.close();
+      entry?.handle.close();
     }
+  };
+
+  /**
+   * Close a watcher whose path no longer names the directory it watches. Named deletions unwatch
+   * their subtree on arrival, but a filename-less event may stand for a descendant that vanished
+   * or was recreated silently — its stale entry would block re-subscription forever, leaving the
+   * recreated tree watched by a dead handle. Returns false only when a non-deletion error was
+   * routed to the failure path.
+   */
+  const pruneStaleWatcher = (path: string): boolean => {
+    const entry = watchers.get(path);
+
+    if (entry === undefined) {
+      return true;
+    }
+
+    let stats: Stats;
+
+    try {
+      stats = lstatWatchPath(path);
+    } catch (error) {
+      if (!isNotFoundError(error)) {
+        fail(error);
+        return false;
+      }
+
+      unwatchTree(path);
+      return true;
+    }
+
+    if (!stats.isDirectory() || stats.dev !== entry.dev || stats.ino !== entry.ino) {
+      unwatchTree(path);
+    }
+
+    return true;
   };
 
   // A native watcher may report an event without a filename (platform-dependent, common on
   // directory renames and deletions). The change cannot be attributed to one entry, so reconcile
   // the watched directory itself: drop its subtree if it is gone or no longer a real directory,
-  // otherwise re-walk it for new subdirectories and report an unattributed change — the rerun
-  // re-derives everything, so attribution is never load-bearing.
+  // otherwise prune dead descendants, re-walk for new or recreated subdirectories, and report an
+  // unattributed change — the rerun re-derives everything, so attribution is never load-bearing.
   const reconcileDirectory = (absoluteDirectory: string, relativeDirectory: string): void => {
     let stats: Stats;
 
@@ -272,6 +314,20 @@ function createFilesystemWatchSource(input: {
       return;
     }
 
+    if (!pruneStaleWatcher(absoluteDirectory)) {
+      return;
+    }
+
+    for (const candidate of [...watchers.keys()]) {
+      if (!isDescendantPath(absoluteDirectory, candidate)) {
+        continue;
+      }
+
+      if (!pruneStaleWatcher(candidate)) {
+        return;
+      }
+    }
+
     subscribeTree(absoluteDirectory, relativeDirectory, false);
     eventListener?.({ type: "change", path: relativeDirectory, unattributed: true });
   };
@@ -282,6 +338,23 @@ function createFilesystemWatchSource(input: {
     }
 
     if (!isWatchableDirectoryPath(input.root, relativeDirectory, input.exclude)) {
+      return;
+    }
+
+    let directoryStats: Stats;
+
+    try {
+      directoryStats = lstatWatchPath(absoluteDirectory);
+    } catch (error) {
+      if (!isNotFoundError(error)) {
+        fail(error);
+      }
+
+      // Vanished between the event and the subscription — the parent's deletion event covers it.
+      return;
+    }
+
+    if (!directoryStats.isDirectory()) {
       return;
     }
 
@@ -341,7 +414,11 @@ function createFilesystemWatchSource(input: {
     handle.on("error", (error) => {
       fail(error);
     });
-    watchers.set(absoluteDirectory, handle);
+    watchers.set(absoluteDirectory, {
+      handle,
+      dev: directoryStats.dev,
+      ino: directoryStats.ino,
+    });
   };
 
   const subscribeTree = (
@@ -406,8 +483,8 @@ function createFilesystemWatchSource(input: {
       closed = true;
       pendingError = undefined;
 
-      for (const handle of watchers.values()) {
-        handle.close();
+      for (const entry of watchers.values()) {
+        entry.handle.close();
       }
 
       watchers.clear();

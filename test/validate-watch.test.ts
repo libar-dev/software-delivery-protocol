@@ -320,6 +320,124 @@ describe("validate watch filesystem source", () => {
     }
   });
 
+  it("prunes a dead descendant watcher on reconciliation so a recreated directory rewatches", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-watch-recreate-"));
+    const specs = join(root, "specs");
+    const capture = createCaptureOutput();
+    const cycles = new CycleHarness();
+    const native = new NativeWatchHarness();
+    const firstCycle = cycles.cycle(1);
+    const secondCycle = cycles.cycle(2);
+    const thirdCycle = cycles.cycle(3);
+    const fourthCycle = cycles.cycle(4);
+    writeCarrier(join(specs, "probe.sdp.md"), "spec:tmp.recreate-first");
+
+    try {
+      const running = Promise.resolve(
+        runSdpCli(["validate", "--watch", root], capture.output, {
+          createNativeWatch: native.create,
+          onWatchCycleComplete: (cycle) => {
+            cycles.onComplete(cycle);
+
+            if (cycle.index === 4) {
+              cycles.abort.abort();
+            }
+          },
+          abortSignal: cycles.abort.signal,
+        }),
+      );
+
+      await bounded(firstCycle, "recreate first cycle");
+      const deadSubscription = native.subscriptions.get(specs);
+      expect(deadSubscription).toBeDefined();
+
+      // The subtree vanishes, but the only signal is a filename-less event on the ancestor.
+      rmSync(specs, { recursive: true });
+      native.subscriptions.get(root)?.listener("rename", null);
+      await bounded(secondCycle, "recreate reconciliation rerun");
+      expect(deadSubscription?.closeCount).toBe(1);
+
+      // The recreated directory must get a fresh watcher, not be blocked by the stale entry.
+      writeCarrier(join(specs, "again.sdp.md"), "spec:tmp.recreate-second");
+      native.subscriptions.get(root)?.listener("rename", "specs");
+      await bounded(thirdCycle, "recreate resubscription rerun");
+      const freshSubscription = native.subscriptions.get(specs);
+      expect(freshSubscription).toBeDefined();
+      expect(freshSubscription).not.toBe(deadSubscription);
+      expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
+        "spec:tmp.recreate-second",
+      );
+
+      // And the fresh watcher must be live: a carrier change under it schedules a rerun.
+      writeCarrier(join(specs, "again.sdp.md"), "spec:tmp.recreate-third");
+      freshSubscription?.listener("change", "again.sdp.md");
+      await bounded(fourthCycle, "recreate live-watcher rerun");
+
+      expect(await bounded(running, "recreate watch exit")).toBe(0);
+      expect(cycles.completed.map((cycle) => cycle.index)).toEqual([1, 2, 3, 4]);
+      expect(capture.readStderr()).not.toContain("watch failed");
+    } finally {
+      cycles.abort.abort();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("replaces a watcher whose directory was recreated before the filename-less reconciliation", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-watch-inode-swap-"));
+    const specs = join(root, "specs");
+    const capture = createCaptureOutput();
+    const cycles = new CycleHarness();
+    const native = new NativeWatchHarness();
+    const firstCycle = cycles.cycle(1);
+    const secondCycle = cycles.cycle(2);
+    const thirdCycle = cycles.cycle(3);
+    writeCarrier(join(specs, "probe.sdp.md"), "spec:tmp.inode-first");
+
+    try {
+      const running = Promise.resolve(
+        runSdpCli(["validate", "--watch", root], capture.output, {
+          createNativeWatch: native.create,
+          onWatchCycleComplete: (cycle) => {
+            cycles.onComplete(cycle);
+
+            if (cycle.index === 3) {
+              cycles.abort.abort();
+            }
+          },
+          abortSignal: cycles.abort.signal,
+        }),
+      );
+
+      await bounded(firstCycle, "inode-swap first cycle");
+      const deadSubscription = native.subscriptions.get(specs);
+      expect(deadSubscription).toBeDefined();
+
+      // Delete and recreate before the reconciliation runs: the path exists again, but it is a
+      // new inode the dead handle does not watch.
+      rmSync(specs, { recursive: true });
+      writeCarrier(join(specs, "swapped.sdp.md"), "spec:tmp.inode-second");
+      native.subscriptions.get(root)?.listener("rename", null);
+
+      await bounded(secondCycle, "inode-swap reconciliation rerun");
+      expect(deadSubscription?.closeCount).toBe(1);
+      const freshSubscription = native.subscriptions.get(specs);
+      expect(freshSubscription).toBeDefined();
+      expect(freshSubscription).not.toBe(deadSubscription);
+
+      // The replacement watcher is live.
+      writeCarrier(join(specs, "swapped.sdp.md"), "spec:tmp.inode-third");
+      freshSubscription?.listener("change", "swapped.sdp.md");
+      await bounded(thirdCycle, "inode-swap live-watcher rerun");
+
+      expect(await bounded(running, "inode-swap watch exit")).toBe(0);
+      expect(cycles.completed.map((cycle) => cycle.index)).toEqual([1, 2, 3]);
+      expect(capture.readStderr()).not.toContain("watch failed");
+    } finally {
+      cycles.abort.abort();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("treats a basename beginning with '..cache' as contained while rejecting real parent escapes", () => {
     const root = resolve(tmpdir(), "sdp-watch-containment-root");
 
@@ -337,9 +455,12 @@ describe("validate watch filesystem source", () => {
     const firstCycle = cycles.cycle(1);
     const secondCycle = cycles.cycle(2);
     writeCarrier(join(specs, "probe.sdp.md"), "spec:tmp.watch-enotdir");
+    // Armed after the first cycle: subscription itself lstats the directory, and the injected
+    // failure must model an event-time deletion, not an unwatchable tree.
+    let armed = false;
     const watchHooks = {
       lstatWatchPath: (path: string) => {
-        if (path === specs) {
+        if (armed && path === specs) {
           throw errno("ENOTDIR");
         }
 
@@ -364,6 +485,7 @@ describe("validate watch filesystem source", () => {
       );
 
       await bounded(firstCycle, "ENOTDIR first cycle");
+      armed = true;
       native.subscriptions.get(root)?.listener("rename", "specs");
 
       await bounded(secondCycle, "ENOTDIR deletion rerun");
