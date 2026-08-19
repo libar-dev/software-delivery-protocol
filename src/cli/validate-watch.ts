@@ -1,4 +1,5 @@
-import { readdirSync, statSync, watch } from "node:fs";
+import { lstatSync, readdirSync, watch } from "node:fs";
+import type { Stats } from "node:fs";
 import { isAbsolute, join, relative } from "node:path";
 
 import { isExcludedDiscoveryDirectory } from "../extract/discover.js";
@@ -13,6 +14,12 @@ const CARRIER_SUFFIXES = [".sdp.ts", ".sdp.md", ".sdp.gherkin"] as const;
 export interface ValidateWatchEvent {
   readonly type: "create" | "change" | "delete" | "rename";
   readonly path: string;
+  /**
+   * True when the event stands for a removed watched directory: the carriers underneath are gone
+   * without per-file events, so the deletion must schedule a rerun even though the directory path
+   * itself carries no carrier suffix.
+   */
+  readonly subtreeRemoved?: boolean;
 }
 
 export interface ValidateWatchEventSource {
@@ -53,6 +60,7 @@ export interface ValidateWatchHooks {
     readonly exclude: readonly string[];
   }) => ValidateWatchEventSource;
   readonly createNativeWatch?: NativeWatchFactory;
+  readonly lstatWatchPath?: (path: string) => Stats;
   readonly onWatchCycleComplete?: (cycle: ValidateWatchCycle) => void;
   readonly watchCycleGate?: (cycleIndex: number) => Promise<undefined> | undefined;
 }
@@ -158,9 +166,11 @@ export function isWatchedCarrierPath(
     return false;
   }
 
+  // Discovery skips dot-directories, never dot-files: a basename like `..cache.sdp.ts` is a
+  // lawful carrier, so only the directory segments carry the exclusion check.
   const segments = relativePath.split("/").filter((segment) => segment !== "");
 
-  if (segments.some((segment) => isExcludedDiscoveryDirectory(segment))) {
+  if (segments.slice(0, -1).some((segment) => isExcludedDiscoveryDirectory(segment))) {
     return false;
   }
 
@@ -184,12 +194,21 @@ function isDescendantPath(parent: string, candidate: string): boolean {
   return nested !== "" && !nested.startsWith("..") && !isAbsolute(nested);
 }
 
+function isNotFoundError(error: unknown): boolean {
+  const code =
+    typeof error === "object" && error !== null && "code" in error ? error.code : undefined;
+
+  return code === "ENOENT" || code === "ENOTDIR";
+}
+
 function createFilesystemWatchSource(input: {
   readonly root: string;
   readonly exclude: readonly string[];
   readonly createNativeWatch?: NativeWatchFactory;
+  readonly lstatWatchPath?: (path: string) => Stats;
 }): ValidateWatchEventSource {
   const createNativeWatch = input.createNativeWatch ?? defaultNativeWatch;
+  const lstatWatchPath = input.lstatWatchPath ?? lstatSync;
   const watchers = new Map<string, NativeWatchHandle>();
   let eventListener: ((event: ValidateWatchEvent) => void) | undefined;
   let errorListener: ((error: unknown) => void) | undefined;
@@ -242,15 +261,29 @@ function createFilesystemWatchSource(input: {
         const relativePath =
           relativeDirectory === "" ? entryName : `${relativeDirectory}/${entryName}`;
         const absolutePath = join(absoluteDirectory, entryName);
-        let directoryNow = false;
+        let stats: Stats;
 
         try {
-          directoryNow = statSync(absolutePath).isDirectory();
-        } catch {
+          // lstat, never stat: a directory symlink must not be traversed or subscribed — following
+          // it would watch trees outside the root and admit watcher loops.
+          stats = lstatWatchPath(absolutePath);
+        } catch (error) {
+          if (!isNotFoundError(error)) {
+            fail(error);
+            return;
+          }
+
+          const removedWatchedDirectory = watchers.has(absolutePath);
           unwatchTree(absolutePath);
+          eventListener?.({
+            type: "delete",
+            path: relativePath,
+            ...(removedWatchedDirectory ? { subtreeRemoved: true } : {}),
+          });
+          return;
         }
 
-        if (directoryNow) {
+        if (stats.isDirectory()) {
           subscribeTree(absolutePath, relativePath, true);
         }
 
@@ -353,6 +386,7 @@ export async function runValidateWatch(
       root: parsed.root,
       exclude: parsed.exclude,
       createNativeWatch: watchHooks.createNativeWatch,
+      lstatWatchPath: watchHooks.lstatWatchPath,
     });
   const waiter = createCycleWaiter();
   const state: WatchLoopState = {
@@ -404,7 +438,14 @@ export async function runValidateWatch(
   };
 
   source.on((event) => {
-    if (state.closed || !isWatchedCarrierPath(parsed.root, event.path, parsed.exclude)) {
+    if (state.closed) {
+      return;
+    }
+
+    if (
+      event.subtreeRemoved !== true &&
+      !isWatchedCarrierPath(parsed.root, event.path, parsed.exclude)
+    ) {
       return;
     }
 
