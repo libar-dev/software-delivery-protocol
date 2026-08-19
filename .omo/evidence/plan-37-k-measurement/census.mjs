@@ -28,18 +28,60 @@ function stripShellQuotes(command) {
     .replace(/"(?:\\.|[^"])*"/g, '""');
 }
 
+// Split on && / || / ; / newline while leaving quoted spans intact so scratch
+// paths inside quotes stay visible to targetsScratchRoot.
+function splitShellStatements(command) {
+  const parts = [];
+  let buf = "";
+  let quote = null;
+  const s = String(command);
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (quote) {
+      buf += ch;
+      if (quote === "'" && ch === "'") {
+        quote = null;
+      } else if (quote === '"' && ch === '"' && s[i - 1] !== "\\") {
+        quote = null;
+      }
+      continue;
+    }
+    if (ch === "'" || ch === '"') {
+      quote = ch;
+      buf += ch;
+      continue;
+    }
+    if (ch === "\n" || ch === ";") {
+      parts.push(buf);
+      buf = "";
+      continue;
+    }
+    if ((ch === "&" || ch === "|") && s[i + 1] === ch) {
+      parts.push(buf);
+      buf = "";
+      i += 1;
+      continue;
+    }
+    buf += ch;
+  }
+  if (buf) parts.push(buf);
+  return parts;
+}
+
 // A mutating verb pointed at a scratch root (an operand under /tmp) rewrites a
 // throwaway graph, not the product graph or carriers — same product scoping
-// the edit/write prong applies through isProductPath.
+// the edit/write prong applies through isProductPath. Match bare, quoted, and
+// --root= / --root forms on the original (pre-strip) statement.
 function targetsScratchRoot(statement) {
-  return statement.split(/\s+/).some((token) => /^\/tmp\//.test(token));
+  return /(?:^|[\s=])(?:'\/tmp\/[^']*'|"\/tmp\/[^"]*"|\/tmp\/[^\s;|&]+)/.test(statement);
 }
 
 function bashIsCloser(command) {
-  const stripped = stripShellQuotes(command);
-  const statements = stripped.split(/(?:&&|\|\||;|\n)/);
+  const statements = splitShellStatements(command);
   for (const raw of statements) {
-    const st = raw.trim();
+    const original = raw.trim();
+    if (!original) continue;
+    const st = stripShellQuotes(original).trim();
     if (!st) continue;
     if (/^(?:grep|rg|echo|printf|cat|sed|awk|head|tail|less|more)\b/.test(st)) continue;
     if (/\bgit\s+commit\b/.test(st)) return true;
@@ -49,7 +91,7 @@ function bashIsCloser(command) {
     // and stays a non-closer per §1.
     if (
       /\bsdp(?:\.js)?\s+(?:--\s+)?(?:new|build|validate|view|census|mermaid|gherkin)\b/.test(st) &&
-      !targetsScratchRoot(st)
+      !targetsScratchRoot(original)
     ) {
       return true;
     }
@@ -57,7 +99,7 @@ function bashIsCloser(command) {
     if (
       /\bsdp(?:\.js)?\s+(?:--\s+)?import\b/.test(st) &&
       !/--dry-run\b/.test(st) &&
-      !targetsScratchRoot(st)
+      !targetsScratchRoot(original)
     ) {
       return true;
     }
@@ -65,15 +107,23 @@ function bashIsCloser(command) {
       return true;
     }
     // Repository scripts that regenerate product bytes: generate:*, the
-    // projection-suite driver, the full gate and its writing sub-gates, and
-    // prettier --write. check:temporal, check:self-hosting-gates, and
-    // format:check are read-only and remain non-closers.
+    // projection-suite driver, the full gate and its writing sub-gates,
+    // npm|pnpm format, and direct prettier --write. check:temporal,
+    // check:self-hosting-gates, format:check, and prettier --check are
+    // read-only and remain non-closers.
     if (/\bgenerate:[A-Za-z0-9:_-]+/.test(st)) return true;
-    if (/\bprojection-suite\.mjs\b/.test(st) && !targetsScratchRoot(st)) return true;
+    if (/\bprojection-suite\.mjs\b/.test(st) && !targetsScratchRoot(original)) return true;
     if (
       /\b(?:npm\s+run|pnpm(?:\s+run)?)\s+(?:--silent\s+)?(?:check(?::self-hosting|:example)?|format)(?![\w:-])/.test(
         st,
       )
+    ) {
+      return true;
+    }
+    if (
+      /\b(?:npx\s+|node_modules\/\.bin\/)?prettier\b/.test(st) &&
+      /\s--write\b/.test(st) &&
+      !targetsScratchRoot(original)
     ) {
       return true;
     }
@@ -826,6 +876,39 @@ function selfCheck(catalog) {
     die(1, `census --self-check: expected sequence ${expected.join(",")} got ${got.join(",")}`);
   }
   process.stdout.write("self-check: 16 exact catalog bodies + recipe-3 param variant matched\n");
+
+  // Closer matrix (A2/A3): product-mutating verbs close; scratch-root spellings
+  // (bare, quoted, --root=) and reader-only heads do not.
+  const closerCases = [
+    ["node ./dist/cli/sdp.js validate /tmp/scaffold-probe", false],
+    ["sdp validate '/tmp/scratch'", false],
+    ['sdp validate "/tmp/scratch"', false],
+    ["sdp validate --root='/tmp/scratch'", false],
+    ["sdp validate --root=/tmp/scratch", false],
+    ["sdp validate --root /tmp/scratch", false],
+    ["sdp validate .", true],
+    ["sdp view specs/", true],
+    ["sdp import --dry-run fixtures/", false],
+    ["sdp import fixtures/", true],
+    ["npx prettier --write test/foo.ts", true],
+    ["prettier --write .", true],
+    ["prettier --write /tmp/scratch.ts", false],
+    ["npx prettier --check test/foo.ts", false],
+    ["npm run format", true],
+    ["npm run format:check", false],
+    ["sdp q 'return g.specs().length'", false],
+    ["git commit -m chore", true],
+  ];
+  for (const [command, want] of closerCases) {
+    const gotCloser = bashIsCloser(command);
+    if (gotCloser !== want) {
+      die(
+        1,
+        `census --self-check: bashIsCloser(${JSON.stringify(command)}) = ${gotCloser}, want ${want}`,
+      );
+    }
+  }
+  process.stdout.write(`self-check: ${closerCases.length} bashIsCloser cases matched\n`);
 }
 
 async function main(argv) {
@@ -838,6 +921,8 @@ async function main(argv) {
         "",
         "Writes nothing. Prints a per-session table (recipe sequence, distinct ids,",
         "output byte sizes, candidate windows). Bytes only; never tokens.",
+        "--self-check also asserts the bashIsCloser matrix (scratch-root spellings,",
+        "product-mutating verbs, prettier --write / --check).",
         "",
         "malformed / truncated jsonl: each unparseable line increments malformed_lines",
         "and is skipped; exit 0 if the file itself was readable.",
