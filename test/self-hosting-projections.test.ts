@@ -402,7 +402,7 @@ function observeBannerFloor(world: BannerWorld): DerivedReadinessBannerOutcome {
 
 function expectedBannerFloor(
   point: Partial<DerivedReadinessBannerConditions>,
-  contract: typeof dishonestDivergenceContract | typeof honestHeadroomContract,
+  floorReached: "scoped" | "ready",
 ): DerivedReadinessBannerOutcome {
   if (
     point.specId === undefined ||
@@ -412,11 +412,6 @@ function expectedBannerFloor(
     return unspecified;
   }
 
-  const { floorReached } = paramsForStep(
-    contract,
-    "the spec page renders the floor reached {floorReached}",
-  );
-
   return {
     kind: "the spec page renders the floor reached {floorReached}",
     floorReached,
@@ -425,17 +420,9 @@ function expectedBannerFloor(
 
 function assertBannerPair(
   world: BannerWorld,
-  contract: typeof dishonestDivergenceContract | typeof honestHeadroomContract,
+  floorReached: "scoped" | "ready",
+  bannerRaised: boolean,
 ): void {
-  const { floorReached } = paramsForStep(
-    contract,
-    "the spec page renders the floor reached {floorReached}",
-  );
-  const { bannerRaised } = paramsForStep(
-    contract,
-    "the divergence banner is raised: {bannerRaised}",
-  );
-
   expect(bannerPage(world)).toContain(
     `**Readiness:** stated \`${world.statedReadiness}\` · structural floor reached: \`${floorReached}\``,
   );
@@ -443,7 +430,15 @@ function assertBannerPair(
 }
 
 function assertDishonestBanner(world: BannerWorld): void {
-  assertBannerPair(world, dishonestDivergenceContract);
+  const { floorReached } = paramsForStep(
+    dishonestDivergenceContract,
+    "the spec page renders the floor reached {floorReached}",
+  );
+  const { bannerRaised } = paramsForStep(
+    dishonestDivergenceContract,
+    "the divergence banner is raised: {bannerRaised}",
+  );
+  assertBannerPair(world, floorReached, bannerRaised);
   const { clauseId } = paramsForStep(
     dishonestDivergenceContract,
     "the banner names the first unmet clause {clauseId}",
@@ -467,7 +462,13 @@ registerDishonestDivergence({
   createWorld: createBannerWorld,
   invoke: invokeBannerRender,
   observe: observeBannerFloor,
-  expected: (point) => expectedBannerFloor(point, dishonestDivergenceContract),
+  expected: (point) => {
+    const { floorReached } = paramsForStep(
+      dishonestDivergenceContract,
+      "the spec page renders the floor reached {floorReached}",
+    );
+    return expectedBannerFloor(point, floorReached);
+  },
   assertions: assertDishonestBanner,
 });
 
@@ -482,9 +483,23 @@ registerHonestHeadroom({
   createWorld: createBannerWorld,
   invoke: invokeBannerRender,
   observe: observeBannerFloor,
-  expected: (point) => expectedBannerFloor(point, honestHeadroomContract),
+  expected: (point) => {
+    const { floorReached } = paramsForStep(
+      honestHeadroomContract,
+      "the spec page renders the floor reached {floorReached}",
+    );
+    return expectedBannerFloor(point, floorReached);
+  },
   assertions: (world) => {
-    assertBannerPair(world, honestHeadroomContract);
+    const { floorReached } = paramsForStep(
+      honestHeadroomContract,
+      "the spec page renders the floor reached {floorReached}",
+    );
+    const { bannerRaised } = paramsForStep(
+      honestHeadroomContract,
+      "the divergence banner is raised: {bannerRaised}",
+    );
+    assertBannerPair(world, floorReached, bannerRaised);
   },
 });
 
@@ -863,11 +878,7 @@ function observeViewExit(world: ViewWorld): WholesaleViewRewriteOutcome {
 
 function expectedViewExit(
   point: Partial<WholesaleViewRewriteConditions>,
-  contract:
-    | typeof stalePageRemovedContract
-    | typeof lateStalePageContract
-    | typeof failedRunViewRemovedContract
-    | typeof buildInvalidatesViewContract,
+  exitCode: number,
 ): WholesaleViewRewriteOutcome {
   if (
     point.corpus === undefined ||
@@ -878,34 +889,26 @@ function expectedViewExit(
     return unspecified;
   }
 
-  const { exitCode } = paramsForStep(contract, "the run exits {exitCode}");
-
   return { kind: "the run exits {exitCode}", exitCode };
 }
 
-function assertViewSurvivals(
-  world: ViewWorld,
-  contract:
-    | typeof stalePageRemovedContract
-    | typeof lateStalePageContract
-    | typeof failedRunViewRemovedContract
-    | typeof buildInvalidatesViewContract,
-  currentPage: string | undefined,
-): void {
-  const { viewSurvives } = paramsForStep(contract, "the view directory survives: {viewSurvives}");
-  const { staleSurvives } = paramsForStep(contract, "the stale page survives: {staleSurvives}");
-  const { temporarySurvives } = paramsForStep(
-    contract,
-    "a temporary view sibling survives: {temporarySurvives}",
-  );
+interface ViewSurvivalExpectations {
+  readonly viewSurvives: boolean;
+  readonly staleSurvives: boolean;
+  readonly temporarySurvives: boolean;
+  readonly currentPage?: string;
+}
 
-  expect(existsSync(viewPathOf(world))).toBe(viewSurvives);
-  if (currentPage !== undefined) {
-    expect(existsSync(join(viewPathOf(world), ...currentPage.split("/")))).toBe(true);
+function assertViewSurvivals(world: ViewWorld, expectations: ViewSurvivalExpectations): void {
+  expect(existsSync(viewPathOf(world))).toBe(expectations.viewSurvives);
+  if (expectations.currentPage !== undefined) {
+    expect(existsSync(join(viewPathOf(world), ...expectations.currentPage.split("/")))).toBe(true);
     expect(existsSync(join(viewPathOf(world), "spec", "probe.view-subject.md"))).toBe(true);
   }
-  expect(existsSync(join(viewPathOf(world), ...world.stalePage.split("/")))).toBe(staleSurvives);
-  expect(existsSync(`${viewPathOf(world)}.tmp`)).toBe(temporarySurvives);
+  expect(existsSync(join(viewPathOf(world), ...world.stalePage.split("/")))).toBe(
+    expectations.staleSurvives,
+  );
+  expect(existsSync(`${viewPathOf(world)}.tmp`)).toBe(expectations.temporarySurvives);
 }
 
 const stalePageRemovedTestAnchor = specTest({
@@ -919,13 +922,28 @@ registerStalePageRemoved({
   createWorld: createViewWorld,
   invoke: invokeViewCommand,
   observe: observeViewExit,
-  expected: (point) => expectedViewExit(point, stalePageRemovedContract),
+  expected: (point) => {
+    const { exitCode } = paramsForStep(stalePageRemovedContract, "the run exits {exitCode}");
+    return expectedViewExit(point, exitCode);
+  },
   assertions: (world) => {
+    const { viewSurvives } = paramsForStep(
+      stalePageRemovedContract,
+      "the view directory survives: {viewSurvives}",
+    );
+    const { staleSurvives } = paramsForStep(
+      stalePageRemovedContract,
+      "the stale page survives: {staleSurvives}",
+    );
+    const { temporarySurvives } = paramsForStep(
+      stalePageRemovedContract,
+      "a temporary view sibling survives: {temporarySurvives}",
+    );
     const { currentPage } = paramsForStep(
       stalePageRemovedContract,
       "the view holds the current page {currentPage}",
     );
-    assertViewSurvivals(world, stalePageRemovedContract, currentPage);
+    assertViewSurvivals(world, { viewSurvives, staleSurvives, temporarySurvives, currentPage });
   },
 });
 
@@ -940,13 +958,28 @@ registerLateStalePage({
   createWorld: createViewWorld,
   invoke: invokeViewCommand,
   observe: observeViewExit,
-  expected: (point) => expectedViewExit(point, lateStalePageContract),
+  expected: (point) => {
+    const { exitCode } = paramsForStep(lateStalePageContract, "the run exits {exitCode}");
+    return expectedViewExit(point, exitCode);
+  },
   assertions: (world) => {
+    const { viewSurvives } = paramsForStep(
+      lateStalePageContract,
+      "the view directory survives: {viewSurvives}",
+    );
+    const { staleSurvives } = paramsForStep(
+      lateStalePageContract,
+      "the stale page survives: {staleSurvives}",
+    );
+    const { temporarySurvives } = paramsForStep(
+      lateStalePageContract,
+      "a temporary view sibling survives: {temporarySurvives}",
+    );
     const { currentPage } = paramsForStep(
       lateStalePageContract,
       "the view holds the current page {currentPage}",
     );
-    assertViewSurvivals(world, lateStalePageContract, currentPage);
+    assertViewSurvivals(world, { viewSurvives, staleSurvives, temporarySurvives, currentPage });
   },
 });
 
@@ -961,9 +994,24 @@ registerFailedRunViewRemoved({
   createWorld: createViewWorld,
   invoke: invokeViewCommand,
   observe: observeViewExit,
-  expected: (point) => expectedViewExit(point, failedRunViewRemovedContract),
+  expected: (point) => {
+    const { exitCode } = paramsForStep(failedRunViewRemovedContract, "the run exits {exitCode}");
+    return expectedViewExit(point, exitCode);
+  },
   assertions: (world) => {
-    assertViewSurvivals(world, failedRunViewRemovedContract, undefined);
+    const { viewSurvives } = paramsForStep(
+      failedRunViewRemovedContract,
+      "the view directory survives: {viewSurvives}",
+    );
+    const { staleSurvives } = paramsForStep(
+      failedRunViewRemovedContract,
+      "the stale page survives: {staleSurvives}",
+    );
+    const { temporarySurvives } = paramsForStep(
+      failedRunViewRemovedContract,
+      "a temporary view sibling survives: {temporarySurvives}",
+    );
+    assertViewSurvivals(world, { viewSurvives, staleSurvives, temporarySurvives });
   },
 });
 
@@ -978,9 +1026,24 @@ registerBuildInvalidatesView({
   createWorld: createViewWorld,
   invoke: invokeViewCommand,
   observe: observeViewExit,
-  expected: (point) => expectedViewExit(point, buildInvalidatesViewContract),
+  expected: (point) => {
+    const { exitCode } = paramsForStep(buildInvalidatesViewContract, "the run exits {exitCode}");
+    return expectedViewExit(point, exitCode);
+  },
   assertions: (world) => {
-    assertViewSurvivals(world, buildInvalidatesViewContract, undefined);
+    const { viewSurvives } = paramsForStep(
+      buildInvalidatesViewContract,
+      "the view directory survives: {viewSurvives}",
+    );
+    const { staleSurvives } = paramsForStep(
+      buildInvalidatesViewContract,
+      "the stale page survives: {staleSurvives}",
+    );
+    const { temporarySurvives } = paramsForStep(
+      buildInvalidatesViewContract,
+      "a temporary view sibling survives: {temporarySurvives}",
+    );
+    assertViewSurvivals(world, { viewSurvives, staleSurvives, temporarySurvives });
   },
 });
 
