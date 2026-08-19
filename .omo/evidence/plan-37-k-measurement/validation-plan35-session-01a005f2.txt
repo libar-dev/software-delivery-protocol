@@ -1,0 +1,22 @@
+================================================================
+kind            session
+file            /home/darkomijic/.omo/agent/sessions/--home-darkomijic-dev-libar-software-delivery-protocol--/2026-08-15T15-03-01-602Z_01a005f2-9ee1-7329-8c3c-c36c986a62aa.jsonl
+session_id      01a005f2-9ee1-7329-8c3c-c36c986a62aa
+cwd             /home/darkomijic/dev-libar/software-delivery-protocol
+started         2026-08-15T15:03:01.602Z
+jsonl_lines     575
+malformed_lines 0
+catalog         /home/darkomijic/dev-libar/software-delivery-protocol/docs/agent-surface/recipes.md
+catalog_sha256  9571ac632a11cad25126e733a7ca5aa8ac5fc699a9d14369faff41b35bbd8b87
+invocations     0
+recipe_sequence (none)
+distinct_ids    (none)
+distinct_count  0
+
+seq recipe     ok       out_bytes   body_bytes body_sha256     runner
+--- ---------- -------- ----------- ---------- --------------- ------------------------------
+(no sdp q / sdp:q invocations)
+
+candidate_windows:
+  (none)
+================================================================
