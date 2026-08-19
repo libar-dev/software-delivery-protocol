@@ -13,12 +13,24 @@
 // oracle (`test/self-hosting-graph.test.ts`) and the contracts self-check
 // (`test/self-hosting-contracts.test.ts`) import no contract, so listing them would weaken lint
 // and demand a generation neither needs.
+//
+// The tracked `test/*.test.generated.ts` registrars belong here too: each imports its contract
+// module directly. So does `test/helpers/generated-contract.ts`, whose types come from the
+// package's `runner` subpath — `dist/` output that, like the contracts, does not exist yet when
+// lint runs in a clean room.
 
 export const contractDependentSuites = [
   {
     contracts: "generated/contracts",
     generation: "npm run generate:self-hosting",
     testPaths: [
+      "test/carrier.slot-notation.refused-guess.test.generated.ts",
+      "test/carrier.slot-notation.typed-declaration.test.generated.ts",
+      "test/helpers/generated-contract.ts",
+      "test/model.anchors.lookalike-refusal.test.generated.ts",
+      "test/model.anchors.physical-identity.test.generated.ts",
+      "test/model.stable-ids.malformed-refusal.test.generated.ts",
+      "test/model.stable-ids.namespaced-round-trip.test.generated.ts",
       "test/self-hosting-carrier.test.ts",
       "test/self-hosting-carrier-gherkin.test.ts",
       "test/self-hosting-consumers-oracle.test.ts",
@@ -33,6 +45,10 @@ export const contractDependentSuites = [
       "test/self-hosting-validators-oracle.test.ts",
       "test/self-hosting-validators.oracle.ts",
       "test/self-hosting-validators.test.ts",
+      "test/validation.duplicate-ids.dual-carrier.test.generated.ts",
+      "test/validation.kind-evidence.constraints-alone.test.generated.ts",
+      "test/validation.kind-evidence.empty-promoted-child.test.generated.ts",
+      "test/validation.kind-evidence.untargeted-constraint.test.generated.ts",
     ],
   },
   {
