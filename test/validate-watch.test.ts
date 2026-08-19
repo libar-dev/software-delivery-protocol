@@ -438,6 +438,59 @@ describe("validate watch filesystem source", () => {
     }
   });
 
+  it.each([
+    ["before reconciliation", 1],
+    ["between reconciliation and re-subscription", 2],
+  ])("fails typed when the watch root vanishes %s", async (_label, throwAtRootLstat) => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-watch-root-gone-"));
+    const capture = createCaptureOutput();
+    const cycles = new CycleHarness();
+    const native = new NativeWatchHarness();
+    const firstCycle = cycles.cycle(1);
+    writeCarrier(join(root, "probe.sdp.md"), "spec:tmp.root-gone");
+    // Armed after the first cycle: the injected not-found must model the root vanishing at event
+    // time, not an unwatchable startup tree.
+    let armed = false;
+    let rootLstats = 0;
+    const watchHooks = {
+      lstatWatchPath: (path: string) => {
+        if (armed && path === root) {
+          rootLstats += 1;
+
+          if (rootLstats >= throwAtRootLstat) {
+            throw errno("ENOENT");
+          }
+        }
+
+        return lstatSync(path);
+      },
+    };
+
+    try {
+      const running = Promise.resolve(
+        runSdpCli(["validate", "--watch", root], capture.output, {
+          ...watchHooks,
+          createNativeWatch: native.create,
+          onWatchCycleComplete: cycles.onComplete,
+          abortSignal: cycles.abort.signal,
+        }),
+      );
+
+      await bounded(firstCycle, "root-gone first cycle");
+      armed = true;
+      const rootSubscription = native.subscriptions.get(root);
+      rootSubscription?.listener("rename", null);
+
+      expect(await bounded(running, "root-gone typed watch failure")).toBe(1);
+      expect(capture.readStderr()).toContain("sdp validate: watch failed — the watch root");
+      expect(rootSubscription?.closeCount).toBe(1);
+      expect(cycles.completed).toHaveLength(1);
+    } finally {
+      cycles.abort.abort();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("treats a basename beginning with '..cache' as contained while rejecting real parent escapes", () => {
     const root = resolve(tmpdir(), "sdp-watch-containment-root");
 

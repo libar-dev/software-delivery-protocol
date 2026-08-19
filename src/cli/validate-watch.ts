@@ -245,6 +245,17 @@ function createFilesystemWatchSource(input: {
     }
   };
 
+  // A directory whose subtree loses its watchers recovers through its parent's deletion event —
+  // except the root, which has no parent watcher. A root that cannot be observed anymore would
+  // leave the command alive but permanently blind to the tree it claims to validate, so it rides
+  // the same typed failure path as any other watcher error.
+  const failUnwatchableRoot = (cause: unknown): void => {
+    const detail = cause instanceof Error ? `: ${cause.message}` : "";
+    fail(
+      new Error(`the watch root ${input.root} was removed or can no longer be watched${detail}`),
+    );
+  };
+
   // A native watcher may report an event without a filename (platform-dependent, common on
   // directory renames and deletions). The change cannot be attributed to one entry, so reconcile
   // the watched directory itself: drop its subtree if it is gone or no longer a real directory,
@@ -265,18 +276,36 @@ function createFilesystemWatchSource(input: {
       }
 
       unwatchTree(absoluteDirectory);
+
+      if (absoluteDirectory === input.root) {
+        failUnwatchableRoot(error);
+        return;
+      }
+
       eventListener?.({ type: "delete", path: relativeDirectory, subtreeRemoved: true });
       return;
     }
 
     if (!stats.isDirectory()) {
       unwatchTree(absoluteDirectory);
+
+      if (absoluteDirectory === input.root) {
+        failUnwatchableRoot(undefined);
+        return;
+      }
+
       eventListener?.({ type: "delete", path: relativeDirectory, subtreeRemoved: true });
       return;
     }
 
     unwatchTree(absoluteDirectory);
     subscribeTree(absoluteDirectory, relativeDirectory, false);
+
+    if (!watchers.has(input.root)) {
+      failUnwatchableRoot(undefined);
+      return;
+    }
+
     eventListener?.({ type: "change", path: relativeDirectory, unattributed: true });
   };
 
@@ -296,13 +325,19 @@ function createFilesystemWatchSource(input: {
     } catch (error) {
       if (!isNotFoundError(error)) {
         fail(error);
+      } else if (absoluteDirectory === input.root) {
+        failUnwatchableRoot(error);
       }
 
-      // Vanished between the event and the subscription — the parent's deletion event covers it.
+      // A vanished non-root directory recovers through its parent's deletion event.
       return;
     }
 
     if (!directoryStats.isDirectory()) {
+      if (absoluteDirectory === input.root) {
+        failUnwatchableRoot(undefined);
+      }
+
       return;
     }
 
