@@ -28,6 +28,13 @@ function stripShellQuotes(command) {
     .replace(/"(?:\\.|[^"])*"/g, '""');
 }
 
+// A mutating verb pointed at a scratch root (an operand under /tmp) rewrites a
+// throwaway graph, not the product graph or carriers — same product scoping
+// the edit/write prong applies through isProductPath.
+function targetsScratchRoot(statement) {
+  return statement.split(/\s+/).some((token) => /^\/tmp\//.test(token));
+}
+
 function bashIsCloser(command) {
   const stripped = stripShellQuotes(command);
   const statements = stripped.split(/(?:&&|\|\||;|\n)/);
@@ -36,10 +43,40 @@ function bashIsCloser(command) {
     if (!st) continue;
     if (/^(?:grep|rg|echo|printf|cat|sed|awk|head|tail|less|more)\b/.test(st)) continue;
     if (/\bgit\s+commit\b/.test(st)) return true;
-    if (/\bsdp\s+(?:--\s+)?new\b/.test(st)) return true;
-    if (/\bsdp\s+(?:--\s+)?build\b/.test(st)) return true;
-    if (/\b(?:npm|pnpm)\s+run\s+(?:--silent\s+)?(?:sdp\s+--\s+)?build\b/.test(st)) return true;
+    // Every sdp verb below runs the build pipeline and rewrites generated/
+    // artifacts (validate/view/census/mermaid/gherkin all call runBuild), or
+    // authors new bytes (new). `sdp q` derives in process, writes nothing,
+    // and stays a non-closer per §1.
+    if (
+      /\bsdp(?:\.js)?\s+(?:--\s+)?(?:new|build|validate|view|census|mermaid|gherkin)\b/.test(st) &&
+      !targetsScratchRoot(st)
+    ) {
+      return true;
+    }
+    // sdp import writes carrier files unless --dry-run keeps it on stdout.
+    if (
+      /\bsdp(?:\.js)?\s+(?:--\s+)?import\b/.test(st) &&
+      !/--dry-run\b/.test(st) &&
+      !targetsScratchRoot(st)
+    ) {
+      return true;
+    }
+    if (/\b(?:npm\s+run|pnpm(?:\s+run)?)\s+(?:--silent\s+)?(?:sdp\s+--\s+)?build\b/.test(st)) {
+      return true;
+    }
+    // Repository scripts that regenerate product bytes: generate:*, the
+    // projection-suite driver, the full gate and its writing sub-gates, and
+    // prettier --write. check:temporal, check:self-hosting-gates, and
+    // format:check are read-only and remain non-closers.
     if (/\bgenerate:[A-Za-z0-9:_-]+/.test(st)) return true;
+    if (/\bprojection-suite\.mjs\b/.test(st) && !targetsScratchRoot(st)) return true;
+    if (
+      /\b(?:npm\s+run|pnpm(?:\s+run)?)\s+(?:--silent\s+)?(?:check(?::self-hosting|:example)?|format)(?![\w:-])/.test(
+        st,
+      )
+    ) {
+      return true;
+    }
   }
   return false;
 }
