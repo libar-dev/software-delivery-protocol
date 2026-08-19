@@ -8,10 +8,14 @@ import { afterAll, expect } from "vitest";
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
 
+import { lookalikeRefusalContract } from "../generated/contracts/model.anchors.lookalike-refusal.contract.js";
+import { physicalIdentityContract } from "../generated/contracts/model.anchors.physical-identity.contract.js";
 import type {
   AnchorsConditions,
   AnchorsOutcome,
 } from "../generated/contracts/model.anchors.space.js";
+import { malformedRefusalContract } from "../generated/contracts/model.stable-ids.malformed-refusal.contract.js";
+import { namespacedRoundTripContract } from "../generated/contracts/model.stable-ids.namespaced-round-trip.contract.js";
 import type {
   StableIdsConditions,
   StableIdsOutcome,
@@ -20,6 +24,7 @@ import { extract, formatId, parseId } from "../src/index.js";
 import type { ExtractionResult, IdParts } from "../src/index.js";
 import { registerLookalikeRefusal } from "./model.anchors.lookalike-refusal.test.generated.js";
 import { registerPhysicalIdentity } from "./model.anchors.physical-identity.test.generated.js";
+import { paramsForStep } from "./helpers/generated-contract.js";
 import { registerMalformedRefusal } from "./model.stable-ids.malformed-refusal.test.generated.js";
 import { registerNamespacedRoundTrip } from "./model.stable-ids.namespaced-round-trip.test.generated.js";
 
@@ -92,7 +97,12 @@ registerNamespacedRoundTrip({
       throw new Error("The parse step must resolve before the parts are reformatted.");
     }
 
-    expect(formatId(world.parsed)).toBe("spec:orders.create-order#valid-cart");
+    const { restored } = paramsForStep(
+      namespacedRoundTripContract,
+      "reformatting the parsed parts restores {restored}",
+    );
+
+    expect(formatId(world.parsed)).toBe(restored);
   },
 });
 
@@ -113,7 +123,12 @@ registerMalformedRefusal({
 
     // The refusal names the offending value beside its reason: the ID is the durable join key, so
     // a diagnostic that hid it would leave the broken binding unfindable.
-    expect(message).toContain("namespace must be lowercase");
+    const { reason } = paramsForStep(
+      malformedRefusalContract,
+      "the refusal names the reason {reason}",
+    );
+
+    expect(message).toContain(reason);
     expect(message).toContain(`"${world.identifier}"`);
   },
 });
@@ -242,10 +257,10 @@ function expectedAnchorMint(
   return { kind: "the extraction mints {anchorCount} anchors", anchorCount };
 }
 
-function assertSilentExtraction(world: AnchorTrustWorld): void {
+function assertExtractionFindingCount(world: AnchorTrustWorld, findingCount: number): void {
   // An untrusted builder is silent, not a diagnostic: a file that never bound to the Protocol
   // is not authoring drift, so the refusal must show up as an absent anchor and nothing else.
-  expect(extractionOf(world).report.findings).toHaveLength(0);
+  expect(extractionOf(world).report.findings).toHaveLength(findingCount);
 }
 
 const lookalikeRefusalTestAnchor = specTest({
@@ -260,7 +275,14 @@ registerLookalikeRefusal({
   observe: observeAnchorMint,
   expected: (point) => expectedAnchorMint(point, 0),
   // Second Then (`the extraction reports {findingCount}`) is a different kind than the oracle's.
-  assertions: assertSilentExtraction,
+  assertions: (world) => {
+    const { findingCount } = paramsForStep(
+      lookalikeRefusalContract,
+      "the extraction reports {findingCount} findings",
+    );
+
+    assertExtractionFindingCount(world, findingCount);
+  },
 });
 
 const physicalIdentityTestAnchor = specTest({
@@ -275,5 +297,12 @@ registerPhysicalIdentity({
   observe: observeAnchorMint,
   expected: (point) => expectedAnchorMint(point, 1),
   // Second Then (`the extraction reports {findingCount}`) is a different kind than the oracle's.
-  assertions: assertSilentExtraction,
+  assertions: (world) => {
+    const { findingCount } = paramsForStep(
+      physicalIdentityContract,
+      "the extraction reports {findingCount} findings",
+    );
+
+    assertExtractionFindingCount(world, findingCount);
+  },
 });

@@ -12,10 +12,13 @@ import { danglingTargetContract } from "../generated/contracts/validation.refere
 import { didYouMeanContract } from "../generated/contracts/validation.referential-integrity.did-you-mean.contract.js";
 import { blockingOpenQuestionContract } from "../generated/contracts/validation.readiness-floor.blocking-open-question.contract.js";
 import { unrelatedScopedSpecContract } from "../generated/contracts/validation.readiness-floor.unrelated-scoped-spec.contract.js";
+import { constraintsAloneContract } from "../generated/contracts/validation.kind-evidence.constraints-alone.contract.js";
+import { emptyPromotedChildContract } from "../generated/contracts/validation.kind-evidence.empty-promoted-child.contract.js";
 import type {
   KindEvidenceConditions,
   KindEvidenceOutcome,
 } from "../generated/contracts/validation.kind-evidence.space.js";
+import { untargetedConstraintContract } from "../generated/contracts/validation.kind-evidence.untargeted-constraint.contract.js";
 import { collapsedEdgeClaimContract } from "../generated/contracts/validation.claim-separation.collapsed-edge-claim.contract.js";
 import { unratifiedDescriptorContract } from "../generated/contracts/validation.claim-separation.unratified-descriptor.contract.js";
 import { incoherentAggregateContract } from "../generated/contracts/validation.pack-coherence.incoherent-aggregate.contract.js";
@@ -35,6 +38,7 @@ import type {
   SpecReadiness,
   ValidationReport,
 } from "../src/index.js";
+import { paramsForStep } from "./helpers/generated-contract.js";
 import { registerConstraintsAlone } from "./validation.kind-evidence.constraints-alone.test.generated.js";
 import { registerEmptyPromotedChild } from "./validation.kind-evidence.empty-promoted-child.test.generated.js";
 import { registerUntargetedConstraint } from "./validation.kind-evidence.untargeted-constraint.test.generated.js";
@@ -361,7 +365,16 @@ registerConstraintsAlone({
   observe: observeNamedFinding,
   expected: (point) => expectedNamedFinding(point, "honesty/readiness-floor", "error"),
   assertions: (world) => {
-    assertKindEvidenceFloor(world, "kind-evidence-complete", 1);
+    const { clauseId } = paramsForStep(
+      constraintsAloneContract,
+      "the finding names the unmet floor clause {clauseId}",
+    );
+    const { errorCount } = paramsForStep(
+      constraintsAloneContract,
+      "the report holds {errorCount} errors",
+    );
+
+    assertKindEvidenceFloor(world, clauseId, errorCount);
   },
 });
 
@@ -377,7 +390,16 @@ registerUntargetedConstraint({
   observe: observeNamedFinding,
   expected: (point) => expectedNamedFinding(point, "honesty/readiness-floor", "error"),
   assertions: (world) => {
-    assertKindEvidenceFloor(world, "kind-evidence-complete", 1);
+    const { clauseId } = paramsForStep(
+      untargetedConstraintContract,
+      "the finding names the unmet floor clause {clauseId}",
+    );
+    const { errorCount } = paramsForStep(
+      untargetedConstraintContract,
+      "the report holds {errorCount} errors",
+    );
+
+    assertKindEvidenceFloor(world, clauseId, errorCount);
   },
 });
 
@@ -393,7 +415,16 @@ registerEmptyPromotedChild({
   observe: observeNamedFinding,
   expected: (point) => expectedNamedFinding(point, "honesty/readiness-floor", "error"),
   assertions: (world) => {
-    assertKindEvidenceFloor(world, "kind-evidence-present", 1);
+    const { clauseId } = paramsForStep(
+      emptyPromotedChildContract,
+      "the finding names the unmet floor clause {clauseId}",
+    );
+    const { errorCount } = paramsForStep(
+      emptyPromotedChildContract,
+      "the report holds {errorCount} errors",
+    );
+
+    assertKindEvidenceFloor(world, clauseId, errorCount);
   },
 });
 

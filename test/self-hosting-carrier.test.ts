@@ -7,10 +7,12 @@ import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
 import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
 
 import { boundedParityContract } from "../generated/contracts/carrier.markdown-parser.bounded-parity.contract.js";
+import { refusedGuessContract } from "../generated/contracts/carrier.slot-notation.refused-guess.contract.js";
 import type {
   SlotNotationConditions,
   SlotNotationOutcome,
 } from "../generated/contracts/carrier.slot-notation.space.js";
+import { typedDeclarationContract } from "../generated/contracts/carrier.slot-notation.typed-declaration.contract.js";
 import {
   parseSlots,
   reifyMarkdownCarrier,
@@ -19,6 +21,7 @@ import {
 } from "../src/index.js";
 import type { CarrierReification, SlotGroup } from "../src/index.js";
 import { registerRefusedGuess } from "./carrier.slot-notation.refused-guess.test.generated.js";
+import { paramsForStep } from "./helpers/generated-contract.js";
 import { registerTypedDeclaration } from "./carrier.slot-notation.typed-declaration.test.generated.js";
 
 /**
@@ -171,10 +174,15 @@ registerTypedDeclaration({
   // Second and third Thens are different kinds than the oracle's slot-count Then.
   assertions: (world) => {
     const first = world.slots?.[0];
+    const { form, slotName } = paramsForStep(
+      typedDeclarationContract,
+      "the first group has the form {form} and the name {slotName}",
+    );
+    const { skeleton } = paramsForStep(typedDeclarationContract, "the step skeleton is {skeleton}");
 
-    expect(first?.form).toBe("typed");
-    expect(first?.name).toBe("n");
-    expect(stepSkeleton(world.stepText)).toBe("a cart with {n} line items");
+    expect(first?.form).toBe(form);
+    expect(first?.name).toBe(slotName);
+    expect(stepSkeleton(world.stepText)).toBe(skeleton);
   },
 });
 
@@ -192,10 +200,15 @@ registerRefusedGuess({
   // Second and third Thens are different kinds than the oracle's slot-count Then.
   assertions: (world) => {
     const first = world.slots?.[0];
+    const { form, slotName } = paramsForStep(
+      refusedGuessContract,
+      "the first group has the form {form} and the name {slotName}",
+    );
+    const { skeleton } = paramsForStep(refusedGuessContract, "the step skeleton is {skeleton}");
 
-    expect(first?.form).toBe("malformed");
-    expect(first?.name).toBe("n");
+    expect(first?.form).toBe(form);
+    expect(first?.name).toBe(slotName);
     // The stray brace stays prose in the skeleton; only the identifier-led group normalizes.
-    expect(stepSkeleton(world.stepText)).toBe("a stray { then {n} line items");
+    expect(stepSkeleton(world.stepText)).toBe(skeleton);
   },
 });

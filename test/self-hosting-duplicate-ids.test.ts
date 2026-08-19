@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,20 +16,61 @@ import type {
 import { dualCarrierContract } from "../generated/contracts/validation.duplicate-ids.dual-carrier.contract.js";
 import { extract } from "../src/index.js";
 import type { ExtractionResult } from "../src/index.js";
-import { registerDualCarrier } from "./validation.duplicate-ids.dual-carrier.test.generated.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
+import { paramsForStep } from "./helpers/generated-contract.js";
+import { registerDualCarrier } from "./validation.duplicate-ids.dual-carrier.test.generated.js";
 
 interface DuplicateIdWorld {
   readonly root: string;
+  readonly point: DuplicateIdsConditions;
   result: ExtractionResult | undefined;
 }
 
-function createDuplicateIdWorld(point: Partial<DuplicateIdsConditions>): DuplicateIdWorld {
-  void point;
+function completeDuplicateIdPoint(point: Partial<DuplicateIdsConditions>): DuplicateIdsConditions {
+  const { firstCarrier, secondCarrier, specId } = point;
+
+  if (firstCarrier === undefined || secondCarrier === undefined || specId === undefined) {
+    throw new Error("The generated duplicate-ID point must bind both carriers and the spec ID.");
+  }
+
+  return { firstCarrier, secondCarrier, specId };
+}
+
+const duplicateFixtureId = "spec:fixture.duplicate";
+const duplicateFixtureFiles = ["first-site.sdp.ts", "second-site.sdp.md"] as const;
+
+function materializeDuplicateIdPoint(point: DuplicateIdsConditions): string {
   const root = materializeExtractCorpus("duplicate-id");
   temporaryRoots.add(root);
 
-  return { root, result: undefined };
+  for (const file of duplicateFixtureFiles) {
+    const path = join(root, file);
+    const source = readFileSync(path, "utf8");
+    writeFileSync(path, source.replaceAll(duplicateFixtureId, point.specId));
+  }
+
+  return root;
+}
+
+function fixtureFileForCarrier(carrier: string): (typeof duplicateFixtureFiles)[number] {
+  if (carrier === "TypeScript") {
+    return "first-site.sdp.ts";
+  }
+  if (carrier === "Markdown") {
+    return "second-site.sdp.md";
+  }
+
+  throw new Error(`The duplicate-ID fixture has no generated ${JSON.stringify(carrier)} carrier.`);
+}
+
+function createDuplicateIdWorld(point: Partial<DuplicateIdsConditions>): DuplicateIdWorld {
+  const completePoint = completeDuplicateIdPoint(point);
+
+  return {
+    root: materializeDuplicateIdPoint(completePoint),
+    point: completePoint,
+    result: undefined,
+  };
 }
 
 function invokeDuplicateIdExtract(world: DuplicateIdWorld): void {
@@ -61,15 +102,18 @@ function expectedDuplicateIds(point: Partial<DuplicateIdsConditions>): Duplicate
 
 function assertDuplicateIdSemantics(world: DuplicateIdWorld): void {
   const result = extractedResult(world);
+  const { findingId } = paramsForStep(dualCarrierContract, "both sites report {findingId}");
+  const { specId } = paramsForStep(dualCarrierContract, "no graph node is emitted for {specId}");
   const duplicateFindings = result.report.findings.filter(
-    (finding) => finding.validatorId === "extract/duplicate-id",
+    (finding) => finding.validatorId === findingId,
   );
+  const expectedFiles = [
+    fixtureFileForCarrier(world.point.firstCarrier),
+    fixtureFileForCarrier(world.point.secondCarrier),
+  ].sort();
 
-  expect(duplicateFindings.map((finding) => finding.file).sort()).toEqual([
-    "first-site.sdp.ts",
-    "second-site.sdp.md",
-  ]);
-  expect(result.graph.nodes.some((node) => node.id === "spec:fixture.duplicate")).toBe(false);
+  expect(duplicateFindings.map((finding) => finding.file).sort()).toEqual(expectedFiles);
+  expect(result.graph.nodes.some((node) => node.id === specId)).toBe(false);
   expect(result.graph.nodes.some((node) => node.id === "spec:fixture.healthy-sibling")).toBe(true);
 }
 
