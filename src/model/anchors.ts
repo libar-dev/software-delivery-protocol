@@ -1,6 +1,6 @@
 import { codeAnchor as createCodeAnchor } from "./code-anchor.js";
 
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import type {
   CodeAnchorId,
   ComponentAnchorId,
@@ -68,10 +68,17 @@ export function specOracle(anchor: SpecOracleAnchor): SpecOracleAnchor {
   };
 }
 
+const modelComponentAnchor = createCodeAnchor({
+  id: codeAnchorId("component:protocol.model"),
+  label: "Protocol model seam",
+  satisfies: ref("spec:model.core-model"),
+});
 const anchorModelAnchor = createCodeAnchor({
   id: codeAnchorId("impl:protocol.anchor-model"),
   label: "binding-only anchor model builders",
   satisfies: ref("spec:model.anchors"),
+  component: componentAnchorId("component:protocol.model"),
 });
 
+void modelComponentAnchor;
 void anchorModelAnchor;

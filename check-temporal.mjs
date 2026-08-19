@@ -10,14 +10,23 @@ import { fileURLToPath } from "node:url";
 // is written for one. Only the temporal-by-genre artifacts are exempt: the dated decision diary,
 // the per-session plan done-records, the archived reviews, the dated exploration records (verbatim
 // exhibits, diary-dated like DECISIONS), the restored lineage documents (verbatim historical
-// exhibits) — plus the machine-generated lockfile (derived, not authored prose). `Slice N` /
-// `Phase 0` (roadmap-relative capability names) and `MD-n` citations
+// exhibits), the tracked orchestration drafts/plans/evidence under `.omo/` — plus the
+// machine-generated lockfile (derived, not authored prose). A tracked `.omo/boulder.json` is not
+// that genre. `Slice N` / `Phase 0` (roadmap-relative capability names) and `MD-n` citations
 // are allowed.
 const pattern =
   "Session[ -][0-9]|Wave[- ][A-Z]|Fold-[A-Z]|deferredInSession|plans/[0-9]+|20[0-9]{2}-[0-9]{2}-[0-9]{2}";
 const expression = new RegExp(pattern, "u");
 const excludedFiles = ["docs/concept/DECISIONS.md", "package-lock.json"];
-const excludedDirectories = ["plans/", "reviews/", "explorations/", "docs/lineage/"];
+const excludedDirectories = [
+  "plans/",
+  "reviews/",
+  "explorations/",
+  "docs/lineage/",
+  ".omo/drafts/",
+  ".omo/plans/",
+  ".omo/evidence/",
+];
 
 function isExcluded(path) {
   return (

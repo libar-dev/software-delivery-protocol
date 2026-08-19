@@ -49,6 +49,35 @@ function expectMarkdownRoundTrip(source: ReifiedSpec): string {
 }
 
 describe("emitMarkdownSpec", () => {
+  it("emits a bare typed heading in scaffold mode without inventing content", () => {
+    const emitted = emitMarkdownSpec(
+      reifiedSpec({
+        kind: "rule",
+        intent: { outcome: "Probe" },
+      }),
+      { scaffold: true },
+    );
+
+    expect(emitted).toBe(`---
+id: spec:import.emitter
+kind: rule
+altitude: story
+readiness: idea
+relations: {}
+---
+# Emit a Markdown carrier
+
+## Intent
+
+- outcome: Probe
+
+## Rule
+`);
+    expect(
+      emitMarkdownSpec(reifiedSpec({ kind: "rule", intent: { outcome: "Probe" } })),
+    ).not.toContain("## Rule");
+  });
+
   it("emits the empty envelope and maps title to the H1", () => {
     const emitted = emitMarkdownSpec(reifiedSpec({}));
 

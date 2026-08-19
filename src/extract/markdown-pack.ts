@@ -1,5 +1,5 @@
 import type { Finding } from "../validate/contracts.js";
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { CarrierReification } from "./carrier.js";
 import { isUnsupportedCommonMarkBlock, normalizeProse } from "./markdown-body-content.js";
@@ -116,6 +116,7 @@ export const markdownPackAuthoringAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.markdown-pack-authoring"),
   label: "reifies the Markdown Pack manifest into the one carrier path",
   satisfies: ref("spec:carrier.markdown-pack-authoring"),
+  component: componentAnchorId("component:protocol.extract"),
 });
 export function reifyMarkdownPack(sourceText: string, relativePath: string): CarrierReification {
   try {

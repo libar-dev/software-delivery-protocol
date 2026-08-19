@@ -11,24 +11,28 @@ import { runGherkinView } from "./gherkin-command.js";
 import type { GherkinViewHooks } from "./gherkin-command.js";
 import { parseImportArgs, runImport } from "./import-command.js";
 import type { ImportHooks } from "./import-command.js";
+import { NEW_SPEC_HELP_TEXT, parseNewSpecArgs, runNewSpec } from "./new-spec-command.js";
 import { runMermaid } from "./mermaid-command.js";
 import type { MermaidHooks } from "./mermaid-command.js";
 import { defaultCliOutput, errorMessage, writeStderr, writeStdout } from "./output.js";
 import type { CliOutput } from "./output.js";
 import { parseQueryArgs, runQuery } from "./q-command.js";
 import type { QueryHooks } from "./q-command.js";
+import { runValidateWatch } from "./validate-watch.js";
+import type { ValidateWatchHooks } from "./validate-watch.js";
 import { runValidate, runView } from "./validate-view-command.js";
 
 export const SDP_HELP_TEXT = `sdp — Libar Software Delivery Protocol
 Usage:
   sdp --help
   sdp build [root] [--exclude PATH]... [--check-clean]
-  sdp validate [root] [--exclude PATH]... [--check-clean]
+  sdp validate [root] [--exclude PATH]... [--check-clean | --watch]
   sdp view [root] [--exclude PATH]... [--check-clean]
   sdp census [root] [--exclude PATH]... [--check-clean]
   sdp mermaid [root] [--exclude PATH]... [--check-clean]
   sdp gherkin [root] [--exclude PATH]... [--check-clean]
   sdp import <path...> [--dry-run]
+  sdp new spec PATH --id ID --kind KIND --altitude ALT --title TITLE --outcome OUTCOME
   sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--json]
 
 Commands:
@@ -45,6 +49,9 @@ Commands:
              validation path). A check error exits 1; gaps and orphans inform as warnings.
              graph.json is still written when the checks fail — the graph is the faithful
              projection; check errors describe the repo's conformance, not the artifact.
+             --watch re-runs the same validate path on carrier create/change/delete/rename
+             and stays alive after findings; operator stop (SIGINT) exits 0. --watch cannot
+             be combined with --check-clean.
   view       validate, then generate the Design Review — the contextual read-only human view —
              into <root>/generated/design-review/ (rewritten wholesale). Findings remain data;
              exit code follows validate. --check-clean independently re-renders.
@@ -66,6 +73,9 @@ Commands:
              emits (or would emit); any finding error or operational failure exits 1. Publication
              creates atomic hard links; the target filesystem must support them (FAT/exFAT and
              some network mounts do not).
+  new spec   Scaffold an honest idea-rung Markdown Spec at a cwd-relative .sdp.md PATH. Always
+             emits readiness: idea and relations: {}; never overwrites; never invents typed
+             content. constraint emits envelope, title, and Intent only, with no twin section.
   q          The agent front door: derive the graph under --root (default: cwd) in process, then
              evaluate the supplied body and print what it returns. The body is the single
              positional argument, or stdin when stdin is not a terminal; with neither, q refuses
@@ -80,15 +90,16 @@ Commands:
              --json prints JSON.stringify instead, unbounded. A body that throws exits 1, as does a
              graph that fails to derive.`;
 
-interface CliHooks extends CensusHooks, MermaidHooks, GherkinViewHooks {
+interface CliHooks extends CensusHooks, MermaidHooks, GherkinViewHooks, ValidateWatchHooks {
   readonly import?: ImportHooks;
   readonly query?: QueryHooks;
 }
 
 /**
- * Every verb but `q` completes synchronously; `q` awaits an operator-supplied async body, so the
- * dispatcher's return type carries that one asynchronous branch rather than making every caller of
- * a synchronous verb await a resolved promise.
+ * Every verb but `q` and `validate --watch` completes synchronously. `q` awaits an
+ * operator-supplied async body; `validate --watch` stays open until abort. The dispatcher's return
+ * type carries those asynchronous branches rather than making every caller of a synchronous verb
+ * await a resolved promise.
  */
 export function runSdpCli(
   args: readonly string[],
@@ -110,6 +121,7 @@ export function runSdpCli(
     command !== "mermaid" &&
     command !== "gherkin" &&
     command !== "import" &&
+    command !== "new" &&
     command !== "q"
   ) {
     writeStderr(output, `${SDP_HELP_TEXT}\n\nUnknown command: ${command}\n`);
@@ -120,6 +132,41 @@ export function runSdpCli(
     const parsed = parseImportArgs(rest, output);
 
     return parsed === undefined ? 1 : runImport(parsed, output, hooks.import);
+  }
+
+  if (command === "new") {
+    const [noun, ...newRest] = rest;
+
+    if (noun === "--help") {
+      writeStdout(output, `${NEW_SPEC_HELP_TEXT}\n`);
+      return 0;
+    }
+
+    if (noun === undefined) {
+      writeStdout(output, `${NEW_SPEC_HELP_TEXT}\n`);
+      writeStderr(
+        output,
+        "sdp new: requires spec. Usage: sdp new spec PATH --id ID --kind KIND --altitude ALT --title TITLE --outcome OUTCOME\n",
+      );
+      return 1;
+    }
+
+    if (noun !== "spec") {
+      writeStderr(
+        output,
+        "sdp new: requires spec. Usage: sdp new spec PATH --id ID --kind KIND --altitude ALT --title TITLE --outcome OUTCOME\n",
+      );
+      return 1;
+    }
+
+    if (newRest.includes("--help")) {
+      writeStdout(output, `${NEW_SPEC_HELP_TEXT}\n`);
+      return 0;
+    }
+
+    const parsed = parseNewSpecArgs(newRest, output);
+
+    return parsed === undefined ? 1 : runNewSpec(parsed, output);
   }
 
   if (command === "q") {
@@ -139,7 +186,9 @@ export function runSdpCli(
   }
 
   if (command === "validate") {
-    return runValidate(parsed, output, "validate", hooks).exitCode;
+    return parsed.watch
+      ? runValidateWatch(parsed, output, hooks, hooks)
+      : runValidate(parsed, output, "validate", hooks).exitCode;
   }
 
   if (command === "view") {

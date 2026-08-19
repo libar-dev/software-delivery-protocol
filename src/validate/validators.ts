@@ -1,7 +1,7 @@
 import { computeDeliveryFacts, isResolvingTestAnchorVerify } from "../graph/delivery-facts.js";
 import { isResolvingOracleModel, ownsExampleSpace } from "../graph/oracle-bindings.js";
 import { deliveryFactNames, graphClaims, graphEdgeTypes, graphNodeTypes } from "../graph/schema.js";
-import { CODE_ANCHOR_NAMESPACES, codeAnchorId, parseId, ref } from "../ids.js";
+import { CODE_ANCHOR_NAMESPACES, codeAnchorId, componentAnchorId, parseId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type {
   DeliveryFactName,
@@ -50,9 +50,17 @@ const validationFamiliesAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.validation-families"),
   label: "conformance and honesty validator registry",
   satisfies: ref("spec:validation.two-check-families"),
+  component: componentAnchorId("component:protocol.validate"),
+});
+const validateComponentAnchor = codeAnchor({
+  id: codeAnchorId("component:protocol.validate"),
+  label: "Protocol validation seam",
+  satisfies: ref("spec:validation.two-check-families"),
+  uses: [componentAnchorId("component:protocol.graph")],
 });
 
 void validationFamiliesAnchor;
+void validateComponentAnchor;
 
 /** The aggregate report id; it spans both check families, so it carries no single family. */
 export const graphReportId = "graph";
@@ -152,6 +160,7 @@ const referentialIntegrityAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.referential-integrity"),
   label: "checks every graph edge endpoint and Pack model reference resolves",
   satisfies: ref("spec:validation.referential-integrity"),
+  component: componentAnchorId("component:protocol.validate"),
 });
 void referentialIntegrityAnchor;
 
@@ -482,6 +491,7 @@ const claimSeparationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.claim-separation"),
   label: "checks graph claims, descriptors, node shapes, and relation endpoint contracts",
   satisfies: ref("spec:validation.claim-separation"),
+  component: componentAnchorId("component:protocol.validate"),
 });
 void claimSeparationAnchor;
 
@@ -717,6 +727,7 @@ const verifiesLinkageAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.verifies-linkage"),
   label: "resolves declared example verification through enabled test bindings",
   satisfies: ref("spec:validation.verification-linkage"),
+  component: componentAnchorId("component:protocol.validate"),
 });
 void verifiesLinkageAnchor;
 
@@ -781,6 +792,7 @@ const oracleLinkageAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.oracle-linkage"),
   label: "resolves and de-duplicates expected-outcome oracle bindings",
   satisfies: ref("spec:validation.verification-linkage"),
+  component: componentAnchorId("component:protocol.validate"),
 });
 void oracleLinkageAnchor;
 
@@ -912,6 +924,7 @@ const packCoherenceAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.pack-coherence"),
   label: "checks Pack membership uniqueness and model-reference kinds",
   satisfies: ref("spec:validation.pack-coherence"),
+  component: componentAnchorId("component:protocol.validate"),
 });
 void packCoherenceAnchor;
 
@@ -936,6 +949,7 @@ const orphanSignalAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.orphan-signal"),
   label: "surfaces relationless Specs as informative orphan warnings",
   satisfies: ref("spec:validation.warn-level-signals"),
+  component: componentAnchorId("component:protocol.validate"),
 });
 void orphanSignalAnchor;
 
@@ -987,6 +1001,7 @@ const authoringShapeAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.authored-honesty-shape"),
   label: "refuses delivery facts smuggled through authored section carriers",
   satisfies: ref("spec:validation.authored-honesty"),
+  component: componentAnchorId("component:protocol.validate"),
 });
 void authoringShapeAnchor;
 
@@ -1053,6 +1068,7 @@ const deliveryFactsHonestyAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.authored-honesty-delivery-facts"),
   label: "checks stated delivery facts equal the one recomputed derivation",
   satisfies: ref("spec:validation.authored-honesty"),
+  component: componentAnchorId("component:protocol.validate"),
 });
 void deliveryFactsHonestyAnchor;
 
@@ -1160,6 +1176,7 @@ const gapSignalAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.verifier-gap-signal"),
   label: "surfaces ready Specs without recomputed verifier bindings as informative gaps",
   satisfies: ref("spec:validation.warn-level-signals"),
+  component: componentAnchorId("component:protocol.validate"),
 });
 void gapSignalAnchor;
 

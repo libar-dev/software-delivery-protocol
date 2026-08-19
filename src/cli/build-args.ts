@@ -9,6 +9,7 @@ export interface BuildArgs {
   readonly root: string;
   readonly exclude: readonly string[];
   readonly checkClean: boolean;
+  readonly watch?: boolean;
 }
 
 export function parseBuildArgs(
@@ -18,6 +19,7 @@ export function parseBuildArgs(
 ): BuildArgs | undefined {
   let root: string | undefined;
   let checkClean = false;
+  let watchMode = false;
   const rawExcludes: string[] = [];
 
   for (let index = 0; index < args.length; index += 1) {
@@ -29,6 +31,16 @@ export function parseBuildArgs(
 
     if (argument === "--check-clean") {
       checkClean = true;
+      continue;
+    }
+
+    if (argument === "--watch") {
+      if (command !== "validate") {
+        writeStderr(output, `sdp ${command}: --watch is only valid on validate.\n`);
+        return undefined;
+      }
+
+      watchMode = true;
       continue;
     }
 
@@ -76,9 +88,16 @@ export function parseBuildArgs(
     throw error;
   }
 
+  if (watchMode && checkClean) {
+    writeStderr(output, `sdp ${command}: --watch cannot be combined with --check-clean.\n`);
+    return undefined;
+  }
+
   const resolvedRoot = resolveExtractionRoot(root, output, command);
 
-  return resolvedRoot === undefined ? undefined : { root: resolvedRoot, exclude, checkClean };
+  return resolvedRoot === undefined
+    ? undefined
+    : { root: resolvedRoot, exclude, checkClean, watch: watchMode };
 }
 
 /**

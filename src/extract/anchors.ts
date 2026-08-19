@@ -2,7 +2,7 @@ import { Node, VariableDeclarationKind } from "ts-morph";
 import type { CallExpression, ObjectLiteralExpression, SourceFile } from "ts-morph";
 
 import { CODE_ANCHOR_NAMESPACES } from "../ids.js";
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { Finding, Severity } from "../validate/contracts.js";
 import { graphValidatorIds } from "../validate/validators.js";
@@ -42,6 +42,7 @@ const anchorExtractionAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.anchor-extraction"),
   label: "anchor-constant reification seam",
   satisfies: ref("spec:model.anchors"),
+  component: componentAnchorId("component:protocol.extract"),
 });
 
 void anchorExtractionAnchor;

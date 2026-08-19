@@ -57,3 +57,9 @@ export const expectedWarnings = [] as const;
 export { expectedAnchors } from "./anchors.js";
 export { expectedDeclaredRelations } from "./declared-relations.js";
 export { expectedPackMembers } from "./pack-members.js";
+export {
+  expectedComponentIds,
+  expectedMemberOfEdges,
+  expectedUsesEdges,
+  structuralMembershipExceptions,
+} from "./structural-edges.js";

@@ -6,14 +6,27 @@ import { fileURLToPath } from "node:url";
 import { afterAll, expect } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
-import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
+import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
 
 import { lookalikeRefusalContract } from "../generated/contracts/model.anchors.lookalike-refusal.contract.js";
 import { physicalIdentityContract } from "../generated/contracts/model.anchors.physical-identity.contract.js";
+import type {
+  AnchorsConditions,
+  AnchorsOutcome,
+} from "../generated/contracts/model.anchors.space.js";
 import { malformedRefusalContract } from "../generated/contracts/model.stable-ids.malformed-refusal.contract.js";
 import { namespacedRoundTripContract } from "../generated/contracts/model.stable-ids.namespaced-round-trip.contract.js";
+import type {
+  StableIdsConditions,
+  StableIdsOutcome,
+} from "../generated/contracts/model.stable-ids.space.js";
 import { extract, formatId, parseId } from "../src/index.js";
 import type { ExtractionResult, IdParts } from "../src/index.js";
+import { registerLookalikeRefusal } from "./model.anchors.lookalike-refusal.test.generated.js";
+import { registerPhysicalIdentity } from "./model.anchors.physical-identity.test.generated.js";
+import { paramsForStep } from "./helpers/generated-contract.js";
+import { registerMalformedRefusal } from "./model.stable-ids.malformed-refusal.test.generated.js";
+import { registerNamespacedRoundTrip } from "./model.stable-ids.namespaced-round-trip.test.generated.js";
 
 /**
  * The bound executable points of the ID grammar: two representative shapes — the fullest
@@ -32,53 +45,40 @@ interface IdentifierWorld {
   refusal: Error | undefined;
 }
 
-function identifierWorld(): IdentifierWorld {
-  return { identifier: "", parsed: undefined, refusal: undefined };
+function createIdentifierWorld(point: Partial<StableIdsConditions>): IdentifierWorld {
+  return { identifier: point.identifier ?? "", parsed: undefined, refusal: undefined };
 }
 
-const stableIdBindings = {
-  "the authored identifier {identifier}": (
-    world: IdentifierWorld,
-    params: { readonly identifier: string },
-  ) => {
-    world.identifier = params.identifier;
-  },
-  "the identifier is parsed": (world: IdentifierWorld) => {
-    try {
-      world.parsed = parseId(world.identifier);
-    } catch (error) {
-      world.refusal = error instanceof Error ? error : new Error(String(error));
-    }
-  },
-  "parsing {outcome}": (
-    world: IdentifierWorld,
-    params: { readonly outcome: "resolves" | "is refused" },
-  ) => {
-    expect(world.parsed !== undefined).toBe(params.outcome === "resolves");
-    expect(world.refusal !== undefined).toBe(params.outcome === "is refused");
-  },
-  "reformatting the parsed parts restores {restored}": (
-    world: IdentifierWorld,
-    params: { readonly restored: string },
-  ) => {
-    if (world.parsed === undefined) {
-      throw new Error("The parse step must resolve before the parts are reformatted.");
-    }
+function invokeIdentifierParse(world: IdentifierWorld): void {
+  try {
+    world.parsed = parseId(world.identifier);
+  } catch (error) {
+    world.refusal = error instanceof Error ? error : new Error(String(error));
+  }
+}
 
-    expect(formatId(world.parsed)).toBe(params.restored);
-  },
-  "the refusal names the reason {reason}": (
-    world: IdentifierWorld,
-    params: { readonly reason: string },
-  ) => {
-    const message = world.refusal?.message ?? "the identifier refusal is missing";
+function observeIdentifierParse(world: IdentifierWorld): StableIdsOutcome {
+  if (world.refusal !== undefined) {
+    return { kind: "parsing {outcome}", outcome: "is refused" };
+  }
 
-    // The refusal names the offending value beside its reason: the ID is the durable join key, so
-    // a diagnostic that hid it would leave the broken binding unfindable.
-    expect(message).toContain(params.reason);
-    expect(message).toContain(`"${world.identifier}"`);
-  },
-};
+  if (world.parsed === undefined) {
+    throw new Error("The parse step must produce a resolution or a refusal.");
+  }
+
+  return { kind: "parsing {outcome}", outcome: "resolves" };
+}
+
+function expectedParsingOutcome(
+  point: Partial<StableIdsConditions>,
+  outcome: "resolves" | "is refused",
+): StableIdsOutcome {
+  if (point.identifier === undefined) {
+    return unspecified;
+  }
+
+  return { kind: "parsing {outcome}", outcome };
+}
 
 const namespacedRoundTripTestAnchor = specTest({
   id: testAnchorId("test:protocol.stable-ids.namespaced-round-trip"),
@@ -86,8 +86,25 @@ const namespacedRoundTripTestAnchor = specTest({
   verifies: ref("spec:model.stable-ids.namespaced-round-trip"),
 });
 void namespacedRoundTripTestAnchor;
+registerNamespacedRoundTrip({
+  createWorld: createIdentifierWorld,
+  invoke: invokeIdentifierParse,
+  observe: observeIdentifierParse,
+  expected: (point) => expectedParsingOutcome(point, "resolves"),
+  // Second Then (`reformatting…`) is a different kind than the oracle's `parsing {outcome}`.
+  assertions: (world) => {
+    if (world.parsed === undefined) {
+      throw new Error("The parse step must resolve before the parts are reformatted.");
+    }
 
-bindExample(namespacedRoundTripContract, identifierWorld, stableIdBindings);
+    const { restored } = paramsForStep(
+      namespacedRoundTripContract,
+      "reformatting the parsed parts restores {restored}",
+    );
+
+    expect(formatId(world.parsed)).toBe(restored);
+  },
+});
 
 const malformedRefusalTestAnchor = specTest({
   id: testAnchorId("test:protocol.stable-ids.malformed-refusal"),
@@ -95,8 +112,26 @@ const malformedRefusalTestAnchor = specTest({
   verifies: ref("spec:model.stable-ids.malformed-refusal"),
 });
 void malformedRefusalTestAnchor;
+registerMalformedRefusal({
+  createWorld: createIdentifierWorld,
+  invoke: invokeIdentifierParse,
+  observe: observeIdentifierParse,
+  expected: (point) => expectedParsingOutcome(point, "is refused"),
+  // Second Then (`the refusal names the reason`) is a different kind than the oracle's.
+  assertions: (world) => {
+    const message = world.refusal?.message ?? "the identifier refusal is missing";
 
-bindExample(malformedRefusalContract, identifierWorld, stableIdBindings);
+    // The refusal names the offending value beside its reason: the ID is the durable join key, so
+    // a diagnostic that hid it would leave the broken binding unfindable.
+    const { reason } = paramsForStep(
+      malformedRefusalContract,
+      "the refusal names the reason {reason}",
+    );
+
+    expect(message).toContain(reason);
+    expect(message).toContain(`"${world.identifier}"`);
+  },
+});
 
 /* ----- spec:model.anchors ----- */
 
@@ -114,10 +149,6 @@ interface AnchorTrustWorld {
   extraction: ExtractionResult | undefined;
 }
 
-function anchorTrustWorld(): AnchorTrustWorld {
-  return { root: "", extraction: undefined };
-}
-
 function extractionOf(world: AnchorTrustWorld): ExtractionResult {
   if (world.extraction === undefined) {
     throw new Error("The extraction step must run before its counts are asserted.");
@@ -127,7 +158,7 @@ function extractionOf(world: AnchorTrustWorld): ExtractionResult {
 }
 
 /** The one binding source under test, written into a throwaway repository root. */
-const builderSourceSetup: Record<string, (root: string) => void> = {
+const builderSourceSetup: Record<AnchorsConditions["builderSource"], (root: string) => void> = {
   "a consumer-local lookalike module": (root) => {
     mkdirSync(join(root, "src"), { recursive: true });
     writeFileSync(join(root, "src", "code-anchor.ts"), "export const codeAnchor = () => ({});\n");
@@ -186,46 +217,51 @@ void binding;
   },
 };
 
-const anchorTrustBindings = {
-  "a repository whose one source file builds an anchor through {builderSource}": (
-    world: AnchorTrustWorld,
-    params: {
-      readonly builderSource:
-        | "a consumer-local lookalike module"
-        | "a relative import resolving to the Protocol builder modules"
-        | "the published Protocol package";
-    },
-  ) => {
-    const setup = builderSourceSetup[params.builderSource];
+function createAnchorTrustWorld(point: Partial<AnchorsConditions>): AnchorTrustWorld {
+  const builderSource = point.builderSource;
 
-    if (setup === undefined) {
-      throw new Error(
-        `No repository shape is written for the builder source "${params.builderSource}".`,
-      );
-    }
+  if (builderSource === undefined) {
+    return { root: "", extraction: undefined };
+  }
 
-    world.root = mkdtempSync(join(tmpdir(), "sdp-anchor-trust-"));
-    anchorTrustRoots.push(world.root);
-    setup(world.root);
-  },
-  "the repository is extracted": (world: AnchorTrustWorld) => {
-    world.extraction = extract({ root: world.root });
-  },
-  "the extraction mints {anchorCount} anchors": (
-    world: AnchorTrustWorld,
-    params: { readonly anchorCount: number },
-  ) => {
-    expect(extractionOf(world).counts.anchors).toBe(params.anchorCount);
-  },
-  "the extraction reports {findingCount} findings": (
-    world: AnchorTrustWorld,
-    params: { readonly findingCount: number },
-  ) => {
-    // An untrusted builder is silent, not a diagnostic: a file that never bound to the Protocol
-    // is not authoring drift, so the refusal must show up as an absent anchor and nothing else.
-    expect(extractionOf(world).report.findings).toHaveLength(params.findingCount);
-  },
-};
+  const setup = builderSourceSetup[builderSource];
+  const root = mkdtempSync(join(tmpdir(), "sdp-anchor-trust-"));
+  anchorTrustRoots.push(root);
+  setup(root);
+  return { root, extraction: undefined };
+}
+
+function invokeAnchorTrustExtract(world: AnchorTrustWorld): void {
+  if (world.root === "") {
+    return;
+  }
+
+  world.extraction = extract({ root: world.root });
+}
+
+function observeAnchorMint(world: AnchorTrustWorld): AnchorsOutcome {
+  return {
+    kind: "the extraction mints {anchorCount} anchors",
+    anchorCount: extractionOf(world).counts.anchors,
+  };
+}
+
+function expectedAnchorMint(
+  point: Partial<AnchorsConditions>,
+  anchorCount: number,
+): AnchorsOutcome {
+  if (point.builderSource === undefined) {
+    return unspecified;
+  }
+
+  return { kind: "the extraction mints {anchorCount} anchors", anchorCount };
+}
+
+function assertExtractionFindingCount(world: AnchorTrustWorld, findingCount: number): void {
+  // An untrusted builder is silent, not a diagnostic: a file that never bound to the Protocol
+  // is not authoring drift, so the refusal must show up as an absent anchor and nothing else.
+  expect(extractionOf(world).report.findings).toHaveLength(findingCount);
+}
 
 const lookalikeRefusalTestAnchor = specTest({
   id: testAnchorId("test:protocol.anchors.lookalike-refusal"),
@@ -233,8 +269,21 @@ const lookalikeRefusalTestAnchor = specTest({
   verifies: ref("spec:model.anchors.lookalike-refusal"),
 });
 void lookalikeRefusalTestAnchor;
+registerLookalikeRefusal({
+  createWorld: createAnchorTrustWorld,
+  invoke: invokeAnchorTrustExtract,
+  observe: observeAnchorMint,
+  expected: (point) => expectedAnchorMint(point, 0),
+  // Second Then (`the extraction reports {findingCount}`) is a different kind than the oracle's.
+  assertions: (world) => {
+    const { findingCount } = paramsForStep(
+      lookalikeRefusalContract,
+      "the extraction reports {findingCount} findings",
+    );
 
-bindExample(lookalikeRefusalContract, anchorTrustWorld, anchorTrustBindings);
+    assertExtractionFindingCount(world, findingCount);
+  },
+});
 
 const physicalIdentityTestAnchor = specTest({
   id: testAnchorId("test:protocol.anchors.physical-identity"),
@@ -242,5 +291,18 @@ const physicalIdentityTestAnchor = specTest({
   verifies: ref("spec:model.anchors.physical-identity"),
 });
 void physicalIdentityTestAnchor;
+registerPhysicalIdentity({
+  createWorld: createAnchorTrustWorld,
+  invoke: invokeAnchorTrustExtract,
+  observe: observeAnchorMint,
+  expected: (point) => expectedAnchorMint(point, 1),
+  // Second Then (`the extraction reports {findingCount}`) is a different kind than the oracle's.
+  assertions: (world) => {
+    const { findingCount } = paramsForStep(
+      physicalIdentityContract,
+      "the extraction reports {findingCount} findings",
+    );
 
-bindExample(physicalIdentityContract, anchorTrustWorld, anchorTrustBindings);
+    assertExtractionFindingCount(world, findingCount);
+  },
+});

@@ -146,6 +146,34 @@ describe("check:temporal", () => {
     });
   });
 
+  it("exempts tracked orchestration genres under .omo drafts, plans, and evidence", () => {
+    withRoot((root) => {
+      writeExcludedFile(root, ".omo/drafts/record.md");
+      writeExcludedFile(root, ".omo/plans/record.md");
+      writeExcludedFile(root, ".omo/evidence/record.md");
+      runGit(root, [
+        "add",
+        ".omo/drafts/record.md",
+        ".omo/plans/record.md",
+        ".omo/evidence/record.md",
+      ]);
+
+      expect(runGuard(root).status).toBe(0);
+    });
+  });
+
+  it("still fails for a tracked .omo boulder containing a banned token", () => {
+    withRoot((root) => {
+      writeExcludedFile(root, ".omo/boulder.json");
+      runGit(root, ["add", ".omo/boulder.json"]);
+
+      const result = runGuard(root);
+
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).toContain(".omo/boulder.json:1");
+    });
+  });
+
   it("fails closed when file enumeration fails", () => {
     const root = mkdtempSync(join(tmpdir(), "sdp-temporal-no-git-"));
 

@@ -1,5 +1,5 @@
 import { codeAnchor } from "./code-anchor.js";
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 
 export const SPEC_KINDS = [
   "behavior",
@@ -39,6 +39,7 @@ const specDescriptorsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.spec-descriptors"),
   label: "Spec kind, altitude, and readiness coordinates",
   satisfies: ref("spec:model.core-model"),
+  component: componentAnchorId("component:protocol.model"),
 });
 
 void specDescriptorsAnchor;

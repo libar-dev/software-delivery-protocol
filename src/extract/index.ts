@@ -4,7 +4,7 @@ import { Project } from "ts-morph";
 import type { Program, SourceFile } from "ts-morph";
 
 import type { GraphSchema } from "../graph/schema.js";
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { Finding, ValidationReport } from "../validate/contracts.js";
 import { reifyAnchorSourceFile } from "./anchors.js";
@@ -40,6 +40,7 @@ const exclusionSurfaceAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.exclusion-surface"),
   label: "strict root-relative exclusion input for both extraction surfaces",
   satisfies: ref("spec:extraction.excludes"),
+  component: componentAnchorId("component:protocol.extract"),
 });
 void exclusionSurfaceAnchor;
 
@@ -88,6 +89,7 @@ export const duplicateIdExclusionAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.duplicate-id-exclusion"),
   label: "excludes duplicated carrier ids from the graph",
   satisfies: ref("spec:validation.duplicate-ids"),
+  component: componentAnchorId("component:protocol.extract"),
 });
 
 function findDuplicatedIds(
@@ -175,10 +177,23 @@ function fileParses(program: Program, source: ParsedSourceFile, findings: Findin
  * adapters and file-level impact) resolve off the curated layers (`06` §2), so the first inferred
  * producer is the aspirational impact graph.
  */
+const extractComponentAnchor = codeAnchor({
+  id: codeAnchorId("component:protocol.extract"),
+  label: "Protocol extraction seam",
+  satisfies: ref("spec:extraction.derive-graph"),
+  uses: [
+    componentAnchorId("component:protocol.graph"),
+    componentAnchorId("component:protocol.validate"),
+    componentAnchorId("component:protocol.model"),
+  ],
+});
+void extractComponentAnchor;
+
 export const extractAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.extract"),
   label: "extracts authored carriers and bindings into one graph",
   satisfies: ref("spec:extraction.derive-graph"),
+  component: componentAnchorId("component:protocol.extract"),
 });
 
 export function extract(options: ExtractOptions): ExtractionResult {

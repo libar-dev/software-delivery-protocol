@@ -1,5 +1,5 @@
 import { GHERKIN_KIND_LIE_REASONS } from "../extract/gherkin-kind-honesty.js";
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { SpecKind } from "../model/descriptors.js";
 import type {
@@ -22,6 +22,7 @@ const gherkinViewAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.gherkin-view"),
   label: "renders a generated Gherkin-shaped READ projection of any Spec",
   satisfies: ref("spec:consumers.gherkin-view"),
+  component: componentAnchorId("component:protocol.projections"),
 });
 void gherkinViewAnchor;
 

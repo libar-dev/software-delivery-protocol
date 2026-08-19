@@ -13,7 +13,7 @@ relations:
 
 ## Behavior
 - rule: An author starts from the build-backlog and drift-alarm recipes, reads carrying Specs for law, and edits the canonical carrier.
-- rule: Cheap capture starts with the minimal lawful `idea` carrier in the family found through concept search, and every later readiness edit is preceded by the promotion-preflight recipe and remains a human statement.
+- rule: Cheap capture starts with `sdp new spec` (or the equivalent hand-authored idea carrier) in the family found through concept search; the scaffolder emits envelope, Intent outcome, and the kind's bare typed heading, never invented content, and for `constraint` emits envelope, title, and Intent only with no twin section. Every later readiness edit is preceded by the promotion-preflight recipe and remains a human statement.
 - rule: The executable transition is taught as parent example space, child bound point, generated contracts, colocated `bindExample` and `specTest`, and a mutation-probed red result before the human states `ready`.
 - rule: Contract-generation refusals are diagnosed through `sdp build`; query-time validation does not claim to report codegen findings.
 - rule: Verifier-binding queries report graph-visible anchors and cannot detect a suite whose generated contract is never bound.

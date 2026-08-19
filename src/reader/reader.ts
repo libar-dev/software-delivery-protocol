@@ -5,7 +5,7 @@ import {
 } from "../graph/delivery-facts.js";
 import { isResolvingOracleModel } from "../graph/oracle-bindings.js";
 import { authoredEdgeTypes } from "../graph/schema.js";
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type {
   DeliveryFactName,
@@ -226,6 +226,7 @@ const readerImpactAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.reader-impact"),
   label: "file-level reader blast-radius contract",
   satisfies: ref("spec:consumers.reader"),
+  component: componentAnchorId("component:protocol.reader"),
 });
 
 void readerImpactAnchor;
@@ -348,10 +349,20 @@ function matchSections(sections: SpecSections | undefined, needle: string): read
   return matched.sort(compareCodeUnits);
 }
 
+const readerComponentAnchor = codeAnchor({
+  id: codeAnchorId("component:protocol.reader"),
+  label: "Protocol reader seam",
+  satisfies: ref("spec:consumers.reader"),
+  uses: [
+    componentAnchorId("component:protocol.graph"),
+    componentAnchorId("component:protocol.validate"),
+  ],
+});
 const agentSurfaceAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.agent-surface"),
   label: "typed graph reader and agent entry adapters",
   satisfies: ref("spec:consumers.agent-surface"),
+  component: componentAnchorId("component:protocol.reader"),
 });
 
 void agentSurfaceAnchor;
@@ -360,8 +371,10 @@ const readerAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.reader"),
   label: "thin typed graph reader construction",
   satisfies: ref("spec:consumers.reader"),
+  component: componentAnchorId("component:protocol.reader"),
 });
 
+void readerComponentAnchor;
 void readerAnchor;
 
 export function createReader(graph: GraphSchema): Reader {

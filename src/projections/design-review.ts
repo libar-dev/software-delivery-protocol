@@ -1,5 +1,5 @@
 import { codeAnchor } from "../model/code-anchor.js";
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import type { Reader } from "../reader/reader.js";
 import { escapeRenderedField } from "./owned-prose.js";
 import { pageHref, pagePathOf } from "./design-review-markdown.js";
@@ -24,18 +24,30 @@ export interface DesignReviewPage {
   readonly content: string;
 }
 
+const projectionsComponentAnchor = codeAnchor({
+  id: codeAnchorId("component:protocol.projections"),
+  label: "Protocol projections seam",
+  satisfies: ref("spec:consumers.projections-model"),
+  uses: [
+    componentAnchorId("component:protocol.reader"),
+    componentAnchorId("component:protocol.graph"),
+  ],
+});
 const projectionModelAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.projections-model"),
   label: "pure generated projection page contract",
   satisfies: ref("spec:consumers.projections-model"),
+  component: componentAnchorId("component:protocol.projections"),
 });
 
+void projectionsComponentAnchor;
 void projectionModelAnchor;
 
 const designReviewAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.design-review"),
   label: "renders the contextual Design Review projection",
   satisfies: ref("spec:consumers.design-review"),
+  component: componentAnchorId("component:protocol.projections"),
 });
 
 void designReviewAnchor;

@@ -17,6 +17,10 @@
 > **Numbering.** This file takes 34 and keeps it. Execution plans this arc commissions take **35
 > upward**, one primary number each; this header gains a commissioned-plans line as they are cut.
 > Brief lettering continues plan 29's: **E** is kept (same scope, matured), **F/G/H** are new.
+>
+> **Commissioned plans.** **Plan 35** (`35-agent-surface-adoption-and-self-binding.md`, executing)
+> runs briefs E through H. Operational tracking lives in
+> `.omo/plans/plan-35-agent-surface-arc.md`.
 
 ## How to consume this brief (binding on the planning session)
 

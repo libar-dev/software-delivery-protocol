@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import { runSdpCli } from "../src/cli/sdp.js";
 import { createReader, extract } from "../src/index.js";
+import { expectedComponentIds, expectedUsesEdges } from "./self-hosting-oracle/structural-edges.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 
 // The recipe corpus is executable documentation: every fenced `js` body in the catalog must run
@@ -109,23 +110,38 @@ const queryHooks = {
   },
 };
 
-async function runRecipe(recipe: Recipe): Promise<unknown> {
-  const capture = createCaptureOutput();
-  const exitCode = await runSdpCli(
-    ["q", recipe.body, "--root", repoRoot, "--json"],
-    capture.output,
-    queryHooks,
-  );
+async function runRecipe(recipe: Recipe, changedFiles?: readonly string[]): Promise<unknown> {
+  const previousChangedFiles = process.env.SDP_CHANGED_FILES_JSON;
+  if (changedFiles === undefined) {
+    delete process.env.SDP_CHANGED_FILES_JSON;
+  } else {
+    process.env.SDP_CHANGED_FILES_JSON = JSON.stringify(changedFiles);
+  }
 
-  // The expected stderr is the empty string, not a self-comparison: a recipe run over the green
-  // corpus has nothing to say on stderr, and the object shape keeps the actual output in the
-  // failure diff when it does.
-  expect(
-    { recipe: recipe.title, exitCode, stderr: capture.readStderr() },
-    `recipe ${String(recipe.ordinal)} must run as written`,
-  ).toEqual({ recipe: recipe.title, exitCode: 0, stderr: "" });
+  try {
+    const capture = createCaptureOutput();
+    const exitCode = await runSdpCli(
+      ["q", recipe.body, "--root", repoRoot, "--json"],
+      capture.output,
+      queryHooks,
+    );
 
-  return JSON.parse(capture.readStdout()) as unknown;
+    // The expected stderr is the empty string, not a self-comparison: a recipe run over the green
+    // corpus has nothing to say on stderr, and the object shape keeps the actual output in the
+    // failure diff when it does.
+    expect(
+      { recipe: recipe.title, exitCode, stderr: capture.readStderr() },
+      `recipe ${String(recipe.ordinal)} must run as written`,
+    ).toEqual({ recipe: recipe.title, exitCode: 0, stderr: "" });
+
+    return JSON.parse(capture.readStdout()) as unknown;
+  } finally {
+    if (previousChangedFiles === undefined) {
+      delete process.env.SDP_CHANGED_FILES_JSON;
+    } else {
+      process.env.SDP_CHANGED_FILES_JSON = previousChangedFiles;
+    }
+  }
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -175,6 +191,36 @@ function recipeByOrdinal(ordinal: number): Recipe {
   }
 
   return recipe;
+}
+
+function edgeId(edge: { readonly from: string; readonly to: string }): string {
+  return `${edge.from} -> ${edge.to}`;
+}
+
+function structuralGroundTruth() {
+  const components = derived.graph.nodes
+    .filter((node) => node.nodeType === "CodeNode" && node.id.startsWith("component:"))
+    .map((node) => node.id)
+    .sort();
+  const memberOfEdges = derived.graph.edges.filter((edge) => edge.type === "memberOf");
+  const usesEdges = derived.graph.edges.filter((edge) => edge.type === "uses");
+  const structuralIds = new Set(
+    [...memberOfEdges, ...usesEdges].flatMap((edge) => [edge.from, edge.to]),
+  );
+  const danglingStructuralFindings = derived.report.findings.filter(
+    (finding) =>
+      finding.validatorId === "conformance/referential-integrity" &&
+      [finding.subjectId, finding.relatedId].some(
+        (id) => id !== undefined && structuralIds.has(id),
+      ),
+  );
+
+  return {
+    components,
+    memberOfEdges,
+    usesEdges,
+    danglingStructuralFindings,
+  };
 }
 
 describe("the agent-surface recipe corpus", () => {
@@ -229,6 +275,96 @@ describe("the agent-surface recipe corpus", () => {
         expect(standardExcludes.some((path) => line.includes(`--exclude ${path}`))).toBe(false);
         expect(line.match(/--exclude PATH/gu)?.length ?? 0).toBeLessThanOrEqual(2);
       }
+    }
+  });
+
+  it("keeps on-ramp recipe mentions synchronized with the catalog", () => {
+    const countWords = [
+      "zero",
+      "one",
+      "two",
+      "three",
+      "four",
+      "five",
+      "six",
+      "seven",
+      "eight",
+      "nine",
+      "ten",
+      "eleven",
+      "twelve",
+      "thirteen",
+      "fourteen",
+      "fifteen",
+      "sixteen",
+      "seventeen",
+      "eighteen",
+      "nineteen",
+      "twenty",
+    ] as const;
+    const countWord = countWords[recipes.length];
+    const lastOrdinal = recipes[recipes.length - 1]?.ordinal;
+    const intro = source.slice(0, source.indexOf("## 1."));
+    const parameterizedMention = /Recipes (?<list>[0-9, and]+)/u.exec(intro)?.groups?.list ?? "";
+    const parameterizedOrdinals = [...parameterizedMention.matchAll(/\d+/gu)].map((match) =>
+      Number(match[0]),
+    );
+    const introProse = intro.replace(/\s+/gu, " ");
+    const onRamps = {
+      agents: readFileSync(join(repoRoot, "AGENTS.md"), "utf8"),
+      agentSurface: readFileSync(
+        join(repoRoot, ".agents/skills/sdp-agent-surface/SKILL.md"),
+        "utf8",
+      ),
+      authoring: readFileSync(join(repoRoot, ".agents/skills/sdp-authoring/SKILL.md"), "utf8"),
+      sessions: readFileSync(join(repoRoot, ".agents/skills/sdp-sessions/SKILL.md"), "utf8"),
+    };
+    const parameterizedRecipes = recipes.filter(
+      (recipe) => recipe.ordinal !== 4 && /^(?:const (?:id|term|subject) = )/u.test(recipe.body),
+    );
+
+    // Recipe 4 receives filenames as data. Intro guidance must never teach callers to construct
+    // executable query source from repository-controlled paths.
+    const parameterGuidance =
+      /\*\*Some recipes open with a parameter\.[\s\S]*?(?=\n\n\*\*Recipe 4 is different)/u.exec(
+        intro,
+      )?.[0] ?? "";
+    expect(parameterGuidance).not.toMatch(
+      /\b4\b[\s\S]*?(?:changed-file list|substitut(?:e|ion))/iu,
+    );
+    expect(introProse).toContain("Recipe 4 filenames travel via `SDP_CHANGED_FILES_JSON`");
+    expect(introProse).toContain("callers never substitute filenames into the JavaScript fence");
+
+    expect(countWord).toBeDefined();
+    if (countWord === undefined) {
+      throw new Error(`recipe count ${String(recipes.length)} is outside the checked prose range`);
+    }
+    expect(lastOrdinal).toBe(recipes.length);
+    expect(onRamps.agentSurface).toContain(`catalog contains ${countWord} ready-made bodies`);
+    expect(onRamps.agentSurface).toContain(`Recipes 1-${String(recipes.length)}`);
+    expect(onRamps.agents).toContain(`${countWord} runnable \`sdp q\` bodies`);
+    expect(parameterizedOrdinals).toEqual(parameterizedRecipes.map((recipe) => recipe.ordinal));
+    expect(onRamps.authoring).toContain("sdp new spec");
+    expect(onRamps.authoring).toContain("sdp validate --watch");
+    expect(onRamps.authoring).not.toContain("--dry-run");
+    expect(onRamps.sessions).toContain("sdp new spec");
+    expect(onRamps.sessions).toContain("validate --watch");
+    expect(onRamps.agents).toContain("new spec");
+    expect(onRamps.agents).toContain("sdp validate --watch");
+
+    const agentSurfaceProse = onRamps.agentSurface.toLowerCase().replace(/\s+/gu, " ");
+    for (const phrase of [
+      "component membership",
+      "uses fan-in and fan-out",
+      "structural neighborhood",
+      "census structural coverage",
+      "projection-coverage upper bound",
+    ]) {
+      expect(agentSurfaceProse).toContain(phrase);
+    }
+
+    for (const ordinal of [12, 13, 14, 15, 16]) {
+      expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
     }
   });
 
@@ -363,30 +499,132 @@ describe("the agent-surface recipe corpus", () => {
     }
   });
 
-  it("names all three blast-radius result classes", async () => {
-    const result = asRecord(await runRecipe(recipeByOrdinal(4)));
+  it("keeps hostile changed filenames as inert JSON data", async () => {
+    const sentinel = `/tmp/sdp-recipe-4-${String(process.pid)}-sentinel`;
+    const hostileChangedFiles = [
+      `changed-"double"-${sentinel}.ts`,
+      "changed-'single'.ts",
+      "changed-`backtick`.ts",
+      `changed-$(touch ${sentinel}).ts`,
+      "changed:semicolon;name.ts",
+      "changed with spaces.ts",
+      "changed-Unicode-Δ-文件.ts",
+      "changed-embedded\nnewline.ts",
+    ];
+    const recipe = recipeByOrdinal(4);
+    rmSync(sentinel, { force: true });
 
-    expect(Object.keys(result)).toEqual(
-      expect.arrayContaining(["impactedSpecs", "impactedPacks", "atRisk", "coverageUnknown"]),
-    );
-    expect(asArray(result.changedFiles).length).toBeGreaterThan(0);
-
-    for (const item of asArray(result.impactedSpecs)) {
-      const row = asRecord(item);
-
-      expect(primitivesById.has(stringAt(row, "id"))).toBe(true);
-      expect(asArray(row.reasons).length).toBeGreaterThan(0);
+    expect(recipe.body).toContain("process.env.SDP_CHANGED_FILES_JSON");
+    for (const filename of hostileChangedFiles) {
+      expect(recipe.body).not.toContain(filename);
     }
 
-    for (const item of asArray(result.atRisk)) {
-      for (const reason of asArray(asRecord(item).reasons)) {
-        expect(claims).toContain(stringAt(asRecord(reason), "claim"));
+    try {
+      const result = asRecord(await runRecipe(recipe, hostileChangedFiles));
+
+      expect([...asArray(result.changedFiles)].sort()).toEqual([...hostileChangedFiles].sort());
+      expect([...asArray(result.coverageUnknownFiles)].sort()).toEqual(
+        [...hostileChangedFiles].sort(),
+      );
+      expect(existsSync(sentinel)).toBe(false);
+    } finally {
+      rmSync(sentinel, { force: true });
+    }
+  });
+
+  it("returns the complete diff-to-at-risk bridge", async () => {
+    const normalChangedFiles = ["src/reader/reader.ts", "docs/agent-surface/recipes.md"];
+    const result = asRecord(await runRecipe(recipeByOrdinal(4), normalChangedFiles));
+    const changedFiles = asArray(result.changedFiles).map((file) => stringAt({ file }, "file"));
+    const radius = reader.blastRadius(changedFiles);
+
+    expect(Object.keys(result)).toEqual(
+      expect.arrayContaining([
+        "changedFiles",
+        "impactedSpecs",
+        "atRiskSpecs",
+        "atRiskOther",
+        "coverageUnknownFiles",
+      ]),
+    );
+    expect(changedFiles).toEqual(radius.changedFiles);
+
+    const impactedSpecs = asArray(result.impactedSpecs);
+    expect(impactedSpecs.map((item) => stringAt(asRecord(item), "id")).sort()).toEqual(
+      radius.impactedSpecs.map((item) => item.id).sort(),
+    );
+
+    for (const item of impactedSpecs) {
+      const row = asRecord(item);
+      const expected = radius.impactedSpecs.find(
+        (candidate) => candidate.id === stringAt(row, "id"),
+      );
+
+      expect(expected).toBeDefined();
+      expect(asArray(row.reasons).length).toBeGreaterThan(0);
+      expect(asArray(row.reasons)).toEqual(
+        expected?.reasons.map((reason) =>
+          reason.throughBinding === undefined
+            ? { file: reason.file, via: null }
+            : {
+                file: reason.file,
+                via: reason.throughBinding.id,
+                edgeType: reason.throughBinding.edgeType,
+                claim: reason.throughBinding.claim,
+              },
+        ),
+      );
+
+      for (const reason of asArray(row.reasons)) {
+        const shaped = asRecord(reason);
+        if (shaped.via === null) {
+          expect(shaped).toEqual({ file: expect.any(String) as unknown, via: null });
+        } else {
+          expect(stringAt(shaped, "edgeType")).toBeTruthy();
+          expect(claims).toContain(stringAt(shaped, "claim"));
+        }
       }
     }
 
-    for (const file of asArray(result.coverageUnknown)) {
-      expect(typeof file).toBe("string");
+    const atRiskRows = [...asArray(result.atRiskSpecs), ...asArray(result.atRiskOther)];
+    expect(atRiskRows.map((item) => stringAt(asRecord(item), "id")).sort()).toEqual(
+      radius.atRisk.map((item) => item.id).sort(),
+    );
+
+    const expectedAtRisk = radius.atRisk
+      .map((item) => ({
+        id: item.id,
+        nodeType: item.nodeType,
+        reasons: item.reasons.map((reason) => ({
+          from: reason.from,
+          edgeType: reason.edgeType,
+          to: reason.to,
+          claim: reason.claim,
+        })),
+      }))
+      .sort((left, right) => left.id.localeCompare(right.id));
+    expect(
+      atRiskRows
+        .map((item) => {
+          const row = asRecord(item);
+          return {
+            id: stringAt(row, "id"),
+            nodeType: stringAt(row, "nodeType"),
+            reasons: asArray(row.reasons),
+          };
+        })
+        .sort((left, right) => left.id.localeCompare(right.id)),
+    ).toEqual(expectedAtRisk);
+
+    for (const reason of atRiskRows.flatMap((item) => asArray(asRecord(item).reasons))) {
+      expect(claims).toContain(stringAt(asRecord(reason), "claim"));
     }
+
+    for (const item of asArray(result.atRiskOther)) {
+      expect(stringAt(asRecord(item), "nodeType")).not.toBe("Primitive");
+    }
+
+    expect(asArray(result.coverageUnknownFiles)).toEqual(radius.coverageUnknown);
   });
 
   it("returns a pack's review backbone with its verifier gaps", async () => {
@@ -527,5 +765,135 @@ describe("the agent-surface recipe corpus", () => {
 
     expect(numberAt(result, "total")).toBe(rows.length);
     expect(rows.map((row) => stringAt(asRecord(row), "id")).sort()).toEqual(expected);
+  });
+
+  it("returns every committed structural component with non-empty membership", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(12)));
+    const rows = asArray(result.components).map(asRecord);
+    const expectedIds = [...expectedComponentIds].sort();
+
+    expect(rows.map((row) => stringAt(row, "id")).sort()).toEqual(expectedIds);
+
+    for (const row of rows) {
+      const id = stringAt(row, "id");
+      const members = asArray(row.members).map((member) => stringAt({ member }, "member"));
+      const expectedMembers = derived.graph.edges
+        .filter((edge) => edge.type === "memberOf" && edge.to === id)
+        .map((edge) => edge.from)
+        .sort();
+
+      expect(members).toEqual(expectedMembers);
+      expect(members.length).toBeGreaterThan(0);
+      expect(numberAt(row, "memberCount")).toBe(members.length);
+    }
+  });
+
+  it("returns exact component uses fan-in and fan-out from the structural oracle", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(13)));
+    const rows = asArray(result.components).map(asRecord);
+    const expectedUses = expectedUsesEdges.map(([from, to]) => ({ from, to }));
+
+    expect(rows.map((row) => stringAt(row, "id")).sort()).toEqual([...expectedComponentIds].sort());
+
+    for (const row of rows) {
+      const id = stringAt(row, "id");
+      const usesOut = asArray(row.usesOut).map((target) => stringAt({ target }, "target"));
+      const usedBy = asArray(row.usedBy).map((source) => stringAt({ source }, "source"));
+      const expectedOut = expectedUses
+        .filter((edge) => edge.from === id)
+        .map((edge) => edge.to)
+        .sort();
+      const expectedIn = expectedUses
+        .filter((edge) => edge.to === id)
+        .map((edge) => edge.from)
+        .sort();
+
+      expect(usesOut).toEqual(expectedOut);
+      expect(usedBy).toEqual(expectedIn);
+      expect(numberAt(row, "fanOut")).toBe(expectedOut.length);
+      expect(numberAt(row, "fanIn")).toBe(expectedIn.length);
+    }
+
+    expect(rows.some((row) => numberAt(row, "fanOut") > 0)).toBe(true);
+    expect(rows.some((row) => numberAt(row, "fanIn") > 0)).toBe(true);
+  });
+
+  it("returns a component structural neighborhood and an exact absent shape", async () => {
+    const recipe = recipeByOrdinal(14);
+    const result = asRecord(await runRecipe(recipe));
+    const id = "component:protocol.reader";
+    const members = derived.graph.edges
+      .filter((edge) => edge.type === "memberOf" && edge.to === id)
+      .map((edge) => edge.from)
+      .sort();
+    const usesOut = derived.graph.edges
+      .filter((edge) => edge.type === "uses" && edge.from === id)
+      .map((edge) => edge.to)
+      .sort();
+    const usedBy = derived.graph.edges
+      .filter((edge) => edge.type === "uses" && edge.to === id)
+      .map((edge) => edge.from)
+      .sort();
+    const satisfiedSpecs = [
+      ...new Set(
+        derived.graph.edges
+          .filter((edge) => edge.type === "satisfies" && members.includes(edge.from))
+          .map((edge) => edge.to),
+      ),
+    ].sort();
+
+    expect(result).toEqual({
+      found: true,
+      id,
+      members,
+      usesOut,
+      usedBy,
+      satisfiedSpecs,
+    });
+
+    const absent = await runRecipe({
+      ...recipe,
+      body: recipe.body.replace("component:protocol.reader", "component:protocol.nonexistent"),
+    });
+    expect(absent).toEqual({ found: false });
+  });
+
+  it("reports census structural coverage from graph and report ground truth", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(15)));
+    const expected = structuralGroundTruth();
+    const expectedFindings = expected.danglingStructuralFindings.map(
+      (finding) => finding.subjectId ?? finding.relatedId ?? finding.validatorId,
+    );
+
+    for (const [key, count, ids] of [
+      ["components", expected.components.length, expected.components],
+      ["memberOfEdges", expected.memberOfEdges.length, expected.memberOfEdges.map(edgeId).sort()],
+      ["usesEdges", expected.usesEdges.length, expected.usesEdges.map(edgeId).sort()],
+      ["danglingStructuralFindings", expectedFindings.length, expectedFindings.sort()],
+    ] as const) {
+      const row = asRecord(result[key]);
+      expect(numberAt(row, "count")).toBe(count);
+      expect(asArray(row.ids)).toEqual(ids);
+    }
+  });
+
+  it("reports graph-side upper bounds for every shipped projection root", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(16)));
+    const primitiveCount = derived.graph.nodes.filter(
+      (node) => node.nodeType === "Primitive",
+    ).length;
+    const packCount = derived.graph.nodes.filter((node) => node.nodeType === "Pack").length;
+    const anchorCount = derived.graph.nodes.filter(
+      (node) => node.nodeType === "Anchor" || node.nodeType === "CodeNode",
+    ).length;
+    const memberSpecCount = derived.graph.edges.filter((edge) => edge.type === "belongsTo").length;
+    const diagramSubjectCount = primitiveCount + packCount;
+
+    expect(result).toEqual({
+      designReview: { packs: packCount, memberSpecs: memberSpecCount },
+      census: { specs: primitiveCount, anchors: anchorCount },
+      mermaid: { diagramSubjects: diagramSubjectCount },
+      gherkin: { specs: primitiveCount },
+    });
   });
 });

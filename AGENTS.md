@@ -19,10 +19,16 @@ code behavior into intent.
 > **Status:** Specs and Packs default to the Markdown carrier; the TS DSL survives as import
 > source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax
 > ruling, MD-25). The Gherkin carrier option (MD-27) admits a graph-aware lawful per-ID option
-> for behavior and example Specs. **plan 34 is DRAFTED** — the next-arc briefs index, the sole
-> planning input for the next arc: the agent surface (brief E, expanded there and superseding
-> the plan-29 text), deferred registrar adoption, Protocol-side structural self-binding, and
-> next projections. Settled ground is **plan 33 is EXECUTED** — the
+> for behavior and example Specs. **plan 36 is DRAFTED** — the next-arc briefs index and the
+> sole planning input for the next arc (briefs I–K: later registrar adoption tranches under
+> MD-31, honest dispositions for the eight drift-alarm Specs, and the context-bundle trigger
+> measurement); execution plans it commissions take 37 upward. Settled ground is
+> **plan 35 is EXECUTED** — the plan-34 arc is closed (briefs E
+> through H: the diff-to-at-risk and structural recipes, `sdp new spec` and `sdp validate
+> --watch`, first-tranche registrar adoption under MD-31, the engine's own component/uses
+> self-binding, and recorded E3/H dispositions); the adjudicated independent review is closed
+> and the gate re-measured. **plan 34 is DRAFTED** remains that arc's briefs index (lineage).
+> Beneath it, **plan 33 is EXECUTED** — the
 > adjudicated plan-31 review is closed, the graph and gate are freshly re-measured, and the ready
 > PR is prepared; plan 32 remains its review brief. Beneath it, **plan 31 is EXECUTED** —
 > carrier universality, derived runnable modules, census/Mermaid projections, and structural
@@ -78,8 +84,8 @@ Progressive disclosure — start at the top, follow the pointers down.
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
 | `docs/concept/` (+ README) | **the technical design** — the surviving principle-led docs: vision & MVP boundary, founding principles (P1–P10), authoring & binding, consumers, roadmap; the core model, the one graph, and validation & honesty dissolved into the `model.*`, `extraction.*`, and `validation.*` Spec families — locate any of them with concept search (recipe 6) | to know *how* it is designed |
 | `docs/concept/DECISIONS.md` | **the lean decision registry** — ratified names, one-line glosses, carrying Specs, and the D1–D6 lookup; historical rationale lives in git, plans, and the Specs themselves | when resolving a decision name or following its canonical pointer |
-| `src/` | **the engine** — `model` (Spec/descriptors/pack/anchors) · `extract` · `graph` · `validate` · `reader` (agent surface) · `projections` (Design Review) · `cli` (`sdp build` · `validate` · `view` · `import` · `q`) · `runner` / `codegen` / `notation` / `adapters` | when implementing or verifying **current engine** behavior |
-| `.agents/skills/sdp-agent-surface/` + `.agents/skills/sdp-authoring/` + `.agents/skills/sdp-sessions/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — repository-owned reading, authoring, and advisory delivery-session skills (also exposed to Claude through the `.claude/skills` symlink) plus the eleven runnable `sdp q` bodies; see "Query the graph first" below | before answering a corpus question, authoring intent, or routing delivery work — query the graph, then follow the carrying Specs |
+| `src/` | **the engine** — `model` (Spec/descriptors/pack/anchors) · `extract` · `graph` · `validate` · `reader` (agent surface) · `projections` (Design Review) · `cli` (`sdp build` · `validate` · `view` · `census` · `mermaid` · `gherkin` · `import` · `new spec` · `q`) · `runner` / `codegen` / `notation` / `adapters` | when implementing or verifying **current engine** behavior |
+| `.agents/skills/sdp-agent-surface/` + `.agents/skills/sdp-authoring/` + `.agents/skills/sdp-sessions/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — repository-owned reading, authoring, and advisory delivery-session skills (also exposed to Claude through the `.claude/skills` symlink) plus the sixteen runnable `sdp q` bodies; see "Query the graph first" below | before answering a corpus question, authoring intent, or routing delivery work — query the graph, then follow the carrying Specs |
 | `examples/checkout-v1` | **the worked MVP example** (TS DSL tracer bullet) — specs, anchors, untracked `generated/` (regenerated in-pipeline); walkthrough in its README | when proving the loop end-to-end |
 | `explorations/` | **evidence only** (carrier exhibits, executable-example findings) — mapping evidence for design; **never promote spike code into product** | when judging design evidence; not a source tree to ship |
 | `docs/lineage/` | restored historical design documents — the v0 concept set, verbatim with lineage headers; evidence for design reviews, never intended truth | when a review needs superseded design on the table rather than in git history |
@@ -109,10 +115,12 @@ pnpm --silent sdp:q 'return g.specs().filter((s) => s.statedReadiness === "ready
 pnpm --silent sdp:q 'return g.findByConcept("readiness floor").slice(0, 5).map((n) => n.id)'
 ```
 
-The full CLI surface is `sdp build · validate · view · census · mermaid · gherkin · import · q`.
-The four projection publishers remain independent public verbs; repository generation/check scripts
-certify all four roots through the private projection-suite driver. The eleven runnable recipe
-bodies live in `docs/agent-surface/recipes.md` (each executed as written by
+The full CLI surface is `sdp build · validate · view · census · mermaid · gherkin · import · new spec · q`.
+`sdp validate --watch` re-runs that same validate path on carrier create, change, delete, or rename
+and stays alive after findings; operator stop exits 0. `--watch` is validate-only and cannot combine
+with `--check-clean`. The four projection publishers remain independent public verbs; repository
+generation/check scripts certify all four roots through the private projection-suite driver. The
+sixteen runnable recipe bodies live in `docs/agent-surface/recipes.md` (each executed as written by
 `test/recipes.test.ts`), and the repository-owned skills (`sdp-agent-surface` for reading,
 `sdp-authoring` for writing intent, `sdp-sessions` for advisory work-shape routing) are the
 on-ramps. In this checkout, always go through

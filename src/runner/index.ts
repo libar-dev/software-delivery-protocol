@@ -1,4 +1,4 @@
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import { renderStepText } from "../notation/slots.js";
 
@@ -89,12 +89,20 @@ function substituteParams(skeleton: string, params: ParamShape): string {
   );
 }
 
+const runnerComponentAnchor = codeAnchor({
+  id: codeAnchorId("component:protocol.runner"),
+  label: "Protocol example runner seam",
+  satisfies: ref("spec:extraction.example-runner"),
+  uses: [componentAnchorId("component:protocol.model")],
+});
 const exampleRunnerAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.example-runner"),
   label: "plans and executes a bound example against the caller's world",
   satisfies: ref("spec:extraction.example-runner"),
+  component: componentAnchorId("component:protocol.runner"),
 });
 
+void runnerComponentAnchor;
 void exampleRunnerAnchor;
 
 /**

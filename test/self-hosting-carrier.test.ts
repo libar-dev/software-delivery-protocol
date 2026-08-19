@@ -3,10 +3,15 @@ import { readFileSync } from "node:fs";
 import { expect } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
 import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
 
 import { boundedParityContract } from "../generated/contracts/carrier.markdown-parser.bounded-parity.contract.js";
 import { refusedGuessContract } from "../generated/contracts/carrier.slot-notation.refused-guess.contract.js";
+import type {
+  SlotNotationConditions,
+  SlotNotationOutcome,
+} from "../generated/contracts/carrier.slot-notation.space.js";
 import { typedDeclarationContract } from "../generated/contracts/carrier.slot-notation.typed-declaration.contract.js";
 import {
   parseSlots,
@@ -15,6 +20,9 @@ import {
   stepSkeleton,
 } from "../src/index.js";
 import type { CarrierReification, SlotGroup } from "../src/index.js";
+import { registerRefusedGuess } from "./carrier.slot-notation.refused-guess.test.generated.js";
+import { paramsForStep } from "./helpers/generated-contract.js";
+import { registerTypedDeclaration } from "./carrier.slot-notation.typed-declaration.test.generated.js";
 
 /**
  * The bound executable points of the carrier family: the ruled Markdown parser's bounded parity,
@@ -125,48 +133,32 @@ interface SlotWorld {
   slots: readonly SlotGroup[] | undefined;
 }
 
-function slotWorld(): SlotWorld {
-  return { stepText: "", slots: undefined };
+function createSlotWorld(point: Partial<SlotNotationConditions>): SlotWorld {
+  return { stepText: point.stepText ?? "", slots: undefined };
 }
 
-function slotsOf(world: SlotWorld): readonly SlotGroup[] {
+function invokeSlotParse(world: SlotWorld): void {
+  world.slots = parseSlots(world.stepText);
+}
+
+function observeSlotCount(world: SlotWorld): SlotNotationOutcome {
   if (world.slots === undefined) {
-    throw new Error("The parse step must run before the slot groups are asserted.");
+    throw new Error("The parse step must run before the slot groups are observed.");
   }
 
-  return world.slots;
+  return {
+    kind: "the notation finds {slotCount} slot groups",
+    slotCount: world.slots.length,
+  };
 }
 
-const slotNotationBindings = {
-  "the step text {stepText}": (world: SlotWorld, params: { readonly stepText: string }) => {
-    world.stepText = params.stepText;
-  },
-  "the notation parses the step text": (world: SlotWorld) => {
-    world.slots = parseSlots(world.stepText);
-  },
-  "the notation finds {slotCount} slot groups": (
-    world: SlotWorld,
-    params: { readonly slotCount: number },
-  ) => {
-    // Prose braces are absent by construction: the notation returns slots only.
-    expect(slotsOf(world)).toHaveLength(params.slotCount);
-  },
-  "the first group has the form {form} and the name {slotName}": (
-    world: SlotWorld,
-    params: {
-      readonly form: "bare" | "typed" | "bound" | "malformed";
-      readonly slotName: string;
-    },
-  ) => {
-    const first = slotsOf(world)[0];
+function expectedSlotCount(point: Partial<SlotNotationConditions>): SlotNotationOutcome {
+  if (point.stepText === undefined) {
+    return unspecified;
+  }
 
-    expect(first?.form).toBe(params.form);
-    expect(first?.name).toBe(params.slotName);
-  },
-  "the step skeleton is {skeleton}": (world: SlotWorld, params: { readonly skeleton: string }) => {
-    expect(stepSkeleton(world.stepText)).toBe(params.skeleton);
-  },
-};
+  return { kind: "the notation finds {slotCount} slot groups", slotCount: 1 };
+}
 
 const slotNotationTypedTestAnchor = specTest({
   id: testAnchorId("test:protocol.slot-notation.typed-declaration"),
@@ -174,8 +166,25 @@ const slotNotationTypedTestAnchor = specTest({
   verifies: ref("spec:carrier.slot-notation.typed-declaration"),
 });
 void slotNotationTypedTestAnchor;
+registerTypedDeclaration({
+  createWorld: createSlotWorld,
+  invoke: invokeSlotParse,
+  observe: observeSlotCount,
+  expected: expectedSlotCount,
+  // Second and third Thens are different kinds than the oracle's slot-count Then.
+  assertions: (world) => {
+    const first = world.slots?.[0];
+    const { form, slotName } = paramsForStep(
+      typedDeclarationContract,
+      "the first group has the form {form} and the name {slotName}",
+    );
+    const { skeleton } = paramsForStep(typedDeclarationContract, "the step skeleton is {skeleton}");
 
-bindExample(typedDeclarationContract, slotWorld, slotNotationBindings);
+    expect(first?.form).toBe(form);
+    expect(first?.name).toBe(slotName);
+    expect(stepSkeleton(world.stepText)).toBe(skeleton);
+  },
+});
 
 const slotNotationRefusedTestAnchor = specTest({
   id: testAnchorId("test:protocol.slot-notation.refused-guess"),
@@ -183,5 +192,23 @@ const slotNotationRefusedTestAnchor = specTest({
   verifies: ref("spec:carrier.slot-notation.refused-guess"),
 });
 void slotNotationRefusedTestAnchor;
+registerRefusedGuess({
+  createWorld: createSlotWorld,
+  invoke: invokeSlotParse,
+  observe: observeSlotCount,
+  expected: expectedSlotCount,
+  // Second and third Thens are different kinds than the oracle's slot-count Then.
+  assertions: (world) => {
+    const first = world.slots?.[0];
+    const { form, slotName } = paramsForStep(
+      refusedGuessContract,
+      "the first group has the form {form} and the name {slotName}",
+    );
+    const { skeleton } = paramsForStep(refusedGuessContract, "the step skeleton is {skeleton}");
 
-bindExample(refusedGuessContract, slotWorld, slotNotationBindings);
+    expect(first?.form).toBe(form);
+    expect(first?.name).toBe(slotName);
+    // The stray brace stays prose in the skeleton; only the identifier-led group normalizes.
+    expect(stepSkeleton(world.stepText)).toBe(skeleton);
+  },
+});

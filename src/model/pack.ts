@@ -1,6 +1,6 @@
 import { codeAnchor } from "./code-anchor.js";
 
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import type { PackId, SpecId } from "../ids.js";
 
 export interface Pack {
@@ -23,6 +23,7 @@ const packAggregateAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.pack-aggregate"),
   label: "Pack aggregate and model references",
   satisfies: ref("spec:model.pack-aggregate"),
+  component: componentAnchorId("component:protocol.model"),
 });
 
 void packAggregateAnchor;

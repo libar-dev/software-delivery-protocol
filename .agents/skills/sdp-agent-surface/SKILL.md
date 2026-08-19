@@ -1,6 +1,6 @@
 ---
 name: sdp-agent-surface
-description: Query this repository's Spec graph through `sdp q` instead of reading spec files by hand. Use whenever a question is about the authored corpus — what a Spec says or guarantees, who verifies it, what is ready but unimplemented, what a change touches, where a concept lives, which Specs are in a Pack, or what the validation report says. Also use before editing `.sdp.md` files, before writing a Spec citation, and before answering "is this implemented / verified / ready".
+description: Query this repository's Spec graph through `sdp q` instead of reading spec files by hand. Use whenever a question is about the authored corpus — what a Spec says or guarantees, who verifies it, what is ready but unimplemented, what a change touches, where a concept lives, which Specs are in a Pack, what a component contains or uses, what the census or projections will see, or what the validation report says. Also use before editing `.sdp.md` files, before writing a Spec citation, and before answering "is this implemented / verified / ready".
 ---
 
 # The agent surface
@@ -45,13 +45,15 @@ The public projection publishers are `sdp view`, `sdp census`, `sdp mermaid`, an
 In this source checkout, use `npm run generate:self-hosting` or `npm run check:self-hosting` when
 all four roots must be published or certified together.
 
-The catalog contains eleven ready-made bodies in `docs/agent-surface/recipes.md` in the Protocol
+The catalog contains sixteen ready-made bodies in `docs/agent-surface/recipes.md` in the Protocol
 repository and
-`node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an adopter —
-build backlog, drift alarm, per-Spec guarantees and verifiers, blast radius, Pack review backbone,
-concept search, readiness divergence, warn-level signals, promotion preflight, declared-versus-enabled
-verifiers, and the lower ladder. Every body there runs verbatim and a test proves it. Start from a
-recipe; adapt it in place.
+`node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an adopter.
+Recipes 1-16 cover the existing read path plus the structural and projection slice: build backlog,
+drift alarm, per-Spec guarantees and verifiers, blast radius, Pack review backbone, concept search,
+readiness divergence, warn-level signals, promotion preflight, declared-versus-enabled verifiers,
+the lower ladder, component membership, uses fan-in and fan-out, structural neighborhood, census
+structural coverage, and the projection-coverage upper bound. Every body there runs verbatim and a
+test proves it. Start from a recipe; adapt it in place.
 
 Reach for the files only when you need the authored prose itself — the exact words to edit.
 
