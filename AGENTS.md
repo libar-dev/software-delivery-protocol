@@ -19,12 +19,16 @@ code behavior into intent.
 > **Status:** Specs and Packs default to the Markdown carrier; the TS DSL survives as import
 > source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax
 > ruling, MD-25). The Gherkin carrier option (MD-27) admits a graph-aware lawful per-ID option
-> for behavior and example Specs. **plan 35 is EXECUTED** — the plan-34 arc is closed (briefs E
+> for behavior and example Specs. **plan 36 is DRAFTED** — the next-arc briefs index and the
+> sole planning input for the next arc (briefs I–K: later registrar adoption tranches under
+> MD-31, honest dispositions for the eight drift-alarm Specs, and the context-bundle trigger
+> measurement); execution plans it commissions take 37 upward. Settled ground is
+> **plan 35 is EXECUTED** — the plan-34 arc is closed (briefs E
 > through H: the diff-to-at-risk and structural recipes, `sdp new spec` and `sdp validate
 > --watch`, first-tranche registrar adoption under MD-31, the engine's own component/uses
 > self-binding, and recorded E3/H dispositions); the adjudicated independent review is closed
-> and the gate re-measured. **plan 34 is DRAFTED** remains the briefs index (lineage). Beneath
-> it, **plan 33 is EXECUTED** — the
+> and the gate re-measured. **plan 34 is DRAFTED** remains that arc's briefs index (lineage).
+> Beneath it, **plan 33 is EXECUTED** — the
 > adjudicated plan-31 review is closed, the graph and gate are freshly re-measured, and the ready
 > PR is prepared; plan 32 remains its review brief. Beneath it, **plan 31 is EXECUTED** —
 > carrier universality, derived runnable modules, census/Mermaid projections, and structural

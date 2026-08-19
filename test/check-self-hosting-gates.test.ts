@@ -76,10 +76,10 @@ afterEach(() => {
 });
 
 describe("the self-hosting records gate", () => {
-  it("discovers plan 35 as the current primary plan", () => {
+  it("discovers plan 36 as the current primary plan", () => {
     expect(currentPlan).toMatchObject({
-      number: 35,
-      name: "35-agent-surface-adoption-and-self-binding.md",
+      number: 36,
+      name: "36-adoption-tranches-maturation-and-bundle-evidence-briefs.md",
     });
   });
 
