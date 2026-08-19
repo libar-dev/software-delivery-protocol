@@ -1,6 +1,6 @@
-import { lstatSync, mkdirSync, realpathSync, writeFileSync } from "node:fs";
+import { lstatSync, mkdirSync, realpathSync, unlinkSync, writeFileSync } from "node:fs";
 import type { PathLike } from "node:fs";
-import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
+import { basename, dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
 import { reifyMarkdownCarrier } from "../extract/markdown.js";
 import type { ReifiedSpec } from "../extract/reify.js";
@@ -32,6 +32,8 @@ export interface NewSpecArgs {
 
 export interface NewSpecHooks {
   readonly mkdirSync?: (path: PathLike, options: { recursive: true }) => string | undefined;
+  /** Runs after the parent is held and verified, before the write — tests inject a swap here. */
+  readonly onBeforeScaffoldWrite?: () => void;
 }
 
 function refuse(output: CliOutput, message: string): void {
@@ -404,23 +406,90 @@ export function runNewSpec(
 
   const cwdReal = workingDirectoryReal(output);
 
-  if (cwdReal === undefined || !assertExistingBoundary(targetPath, cwdReal, output)) {
+  if (cwdReal === undefined) {
+    return 1;
+  }
+
+  // The create must go through a held directory handle, never a re-traversed path: between any
+  // path-based check and the write, the checked parent can be swapped for a symlink that
+  // redirects the create outside the working directory. Node has no openat-style API, so chdir
+  // is the handle — it binds the process to the parent's inode, the relative `wx` create names
+  // that inode directly, and a swap after the bind cannot redirect it.
+  const scaffoldName = basename(targetPath);
+  let restoreCwd: string;
+
+  try {
+    restoreCwd = realpathSync(".");
+    process.chdir(parentPath);
+  } catch (error) {
+    refuse(
+      output,
+      `PATH cannot be resolved inside the current working directory: ${errorMessage(error)}`,
+    );
     return 1;
   }
 
   try {
-    if (pathExists(targetPath)) {
-      writeStderr(
+    let heldReal: string;
+
+    try {
+      heldReal = realpathSync(".");
+    } catch (error) {
+      refuse(
         output,
-        `sdp new spec: ${targetPath} already exists and will not be overwritten.\n`,
+        `PATH escapes the current working directory through a parent symlink: ${errorMessage(error)}`,
       );
       return 1;
     }
 
-    writeFileSync(targetPath, document, { encoding: "utf8", flag: "wx" });
-  } catch (error) {
-    writeStderr(output, `sdp new spec: ${errorMessage(error)}\n`);
-    return 1;
+    if (!containedWithin(heldReal, cwdReal)) {
+      refuse(output, "PATH escapes the current working directory through a parent symlink.");
+      return 1;
+    }
+
+    hooks.onBeforeScaffoldWrite?.();
+
+    try {
+      if (pathExists(scaffoldName)) {
+        writeStderr(
+          output,
+          `sdp new spec: ${targetPath} already exists and will not be overwritten.\n`,
+        );
+        return 1;
+      }
+
+      writeFileSync(scaffoldName, document, { encoding: "utf8", flag: "wx" });
+    } catch (error) {
+      writeStderr(output, `sdp new spec: ${errorMessage(error)}\n`);
+      return 1;
+    }
+
+    // The held directory itself may have been renamed out of the working directory between the
+    // verification and the write; the create followed the inode, so verify the landing spot and
+    // undo a relocated scaffold.
+    try {
+      if (!containedWithin(realpathSync("."), cwdReal)) {
+        unlinkSync(scaffoldName);
+        refuse(output, "PATH escapes the current working directory through a parent symlink.");
+        return 1;
+      }
+    } catch (error) {
+      refuse(
+        output,
+        `PATH escapes the current working directory through a parent symlink: ${errorMessage(error)}`,
+      );
+      return 1;
+    }
+  } finally {
+    try {
+      process.chdir(restoreCwd);
+    } catch {
+      try {
+        process.chdir(cwdReal);
+      } catch {
+        // Both restore targets vanished concurrently; the CLI exits right after this return.
+      }
+    }
   }
 
   writeStdout(output, `Wrote ${targetPath}\n`);

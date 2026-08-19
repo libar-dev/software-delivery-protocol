@@ -20,6 +20,11 @@ export interface ValidateWatchEvent {
    * itself carries no carrier suffix.
    */
   readonly subtreeRemoved?: boolean;
+  /**
+   * True when the native watcher reported no filename: the change cannot be attributed to one
+   * entry, so the event must schedule a rerun even though its path names a directory.
+   */
+  readonly unattributed?: boolean;
 }
 
 export interface ValidateWatchEventSource {
@@ -240,6 +245,37 @@ function createFilesystemWatchSource(input: {
     }
   };
 
+  // A native watcher may report an event without a filename (platform-dependent, common on
+  // directory renames and deletions). The change cannot be attributed to one entry, so reconcile
+  // the watched directory itself: drop its subtree if it is gone or no longer a real directory,
+  // otherwise re-walk it for new subdirectories and report an unattributed change — the rerun
+  // re-derives everything, so attribution is never load-bearing.
+  const reconcileDirectory = (absoluteDirectory: string, relativeDirectory: string): void => {
+    let stats: Stats;
+
+    try {
+      stats = lstatWatchPath(absoluteDirectory);
+    } catch (error) {
+      if (!isNotFoundError(error)) {
+        fail(error);
+        return;
+      }
+
+      unwatchTree(absoluteDirectory);
+      eventListener?.({ type: "delete", path: relativeDirectory, subtreeRemoved: true });
+      return;
+    }
+
+    if (!stats.isDirectory()) {
+      unwatchTree(absoluteDirectory);
+      eventListener?.({ type: "delete", path: relativeDirectory, subtreeRemoved: true });
+      return;
+    }
+
+    subscribeTree(absoluteDirectory, relativeDirectory, false);
+    eventListener?.({ type: "change", path: relativeDirectory, unattributed: true });
+  };
+
   const subscribeDirectory = (absoluteDirectory: string, relativeDirectory: string): void => {
     if (closed || watchers.has(absoluteDirectory)) {
       return;
@@ -253,7 +289,12 @@ function createFilesystemWatchSource(input: {
 
     try {
       handle = createNativeWatch(absoluteDirectory, (eventType, filename) => {
-        if (closed || filename === null || filename === "") {
+        if (closed) {
+          return;
+        }
+
+        if (filename === null || filename === "") {
+          reconcileDirectory(absoluteDirectory, relativeDirectory);
           return;
         }
 
@@ -444,6 +485,7 @@ export async function runValidateWatch(
 
     if (
       event.subtreeRemoved !== true &&
+      event.unattributed !== true &&
       !isWatchedCarrierPath(parsed.root, event.path, parsed.exclude)
     ) {
       return;

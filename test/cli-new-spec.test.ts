@@ -5,6 +5,7 @@ import {
   mkdtempSync,
   readFileSync,
   realpathSync,
+  renameSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -405,10 +406,12 @@ describe("sdp new spec", () => {
     const parent = join(root, "specs");
     const escapedTarget = join(outside, "probe.sdp.md");
     const capture = createCaptureOutput();
-    const cwdSpy = vi.spyOn(process, "cwd").mockReturnValue(root);
 
     mkdirSync(outside);
     mkdirSync(root);
+    // A real chdir, not a cwd mock: the held-handle write path resolves "." through
+    // process.cwd(), so mocking it would split the checked world from the written world.
+    process.chdir(root);
 
     try {
       const parsed = parseNewSpecArgs(
@@ -436,7 +439,52 @@ describe("sdp new spec", () => {
       expect(existsSync(escapedTarget)).toBe(false);
       expect(existsSync(join(parent, "probe.sdp.md"))).toBe(false);
     } finally {
-      cwdSpy.mockRestore();
+      process.chdir(tmpdir());
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it("holds the parent through the write so a post-check symlink swap cannot escape cwd", () => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-new-spec-writeswap-"));
+    const outside = join(workspace, "outside");
+    const root = join(workspace, "root");
+    const parent = join(root, "specs");
+    const moved = join(workspace, "moved");
+    const capture = createCaptureOutput();
+
+    mkdirSync(outside);
+    mkdirSync(root);
+    // A real chdir, not a cwd mock: the held-handle write path resolves "." through
+    // process.cwd(), so mocking it would split the checked world from the written world.
+    process.chdir(root);
+
+    try {
+      const parsed = parseNewSpecArgs(
+        requiredFlags({ path: "specs/probe.sdp.md" }),
+        capture.output,
+      );
+      expect(parsed).toBeDefined();
+      if (parsed === undefined) {
+        return;
+      }
+
+      const exitCode = executeNewSpec(parsed, capture.output, {
+        onBeforeScaffoldWrite() {
+          // The adversary's window: the parent was already checked and verified, and the swap
+          // lands immediately before the write. The held-handle write must not follow the
+          // symlink outside, and the relocated create must be undone.
+          renameSync(parent, moved);
+          symlinkSync(outside, parent);
+        },
+      });
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toMatch(/symlink|escapes|outside/u);
+      expect(existsSync(join(outside, "probe.sdp.md"))).toBe(false);
+      expect(existsSync(join(moved, "probe.sdp.md"))).toBe(false);
+      expect(existsSync(join(parent, "probe.sdp.md"))).toBe(false);
+    } finally {
+      process.chdir(tmpdir());
       rmSync(workspace, { recursive: true, force: true });
     }
   });

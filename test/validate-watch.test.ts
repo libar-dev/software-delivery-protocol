@@ -228,6 +228,98 @@ describe("validate watch filesystem source", () => {
     }
   });
 
+  it("reconciles a filename-less deletion event: unwatches the removed subtree and reruns once", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-watch-null-filename-remove-"));
+    const specs = join(root, "specs");
+    const carrier = join(specs, "removed.sdp.md");
+    const capture = createCaptureOutput();
+    const cycles = new CycleHarness();
+    const native = new NativeWatchHarness();
+    const firstCycle = cycles.cycle(1);
+    const secondCycle = cycles.cycle(2);
+    writeCarrier(carrier, "spec:tmp.null-filename-removed");
+
+    try {
+      const running = Promise.resolve(
+        runSdpCli(["validate", "--watch", root], capture.output, {
+          createNativeWatch: native.create,
+          onWatchCycleComplete: (cycle) => {
+            cycles.onComplete(cycle);
+
+            if (cycle.index === 2) {
+              cycles.abort.abort();
+            }
+          },
+          abortSignal: cycles.abort.signal,
+        }),
+      );
+
+      await bounded(firstCycle, "null-filename first cycle");
+      expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
+        "spec:tmp.null-filename-removed",
+      );
+
+      rmSync(specs, { recursive: true });
+      native.subscriptions.get(specs)?.listener("rename", null);
+
+      await bounded(secondCycle, "null-filename deletion rerun");
+      expect(await bounded(running, "null-filename watch exit")).toBe(0);
+      expect(cycles.completed.map((cycle) => cycle.index)).toEqual([1, 2]);
+      expect(native.subscriptions.get(specs)?.closeCount).toBe(1);
+      expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).not.toContain(
+        "spec:tmp.null-filename-removed",
+      );
+      expect(capture.readStderr()).not.toContain("watch failed");
+    } finally {
+      cycles.abort.abort();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("reconciles a filename-less change on an intact directory: rescans subtrees and reruns", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-watch-null-filename-change-"));
+    const late = join(root, "late");
+    const capture = createCaptureOutput();
+    const cycles = new CycleHarness();
+    const native = new NativeWatchHarness();
+    const firstCycle = cycles.cycle(1);
+    const secondCycle = cycles.cycle(2);
+    writeCarrier(join(root, "existing.sdp.md"), "spec:tmp.null-filename-existing");
+
+    try {
+      const running = Promise.resolve(
+        runSdpCli(["validate", "--watch", root], capture.output, {
+          createNativeWatch: native.create,
+          onWatchCycleComplete: (cycle) => {
+            cycles.onComplete(cycle);
+
+            if (cycle.index === 2) {
+              cycles.abort.abort();
+            }
+          },
+          abortSignal: cycles.abort.signal,
+        }),
+      );
+
+      await bounded(firstCycle, "null-filename change first cycle");
+
+      writeCarrier(join(late, "late.sdp.md"), "spec:tmp.null-filename-late");
+      native.subscriptions.get(root)?.listener("rename", null);
+
+      await bounded(secondCycle, "null-filename conservative rerun");
+      expect(await bounded(running, "null-filename change watch exit")).toBe(0);
+      expect(cycles.completed.map((cycle) => cycle.index)).toEqual([1, 2]);
+      expect(native.subscriptions.has(late)).toBe(true);
+      expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
+        "spec:tmp.null-filename-late",
+      );
+      expect(capture.readStderr()).not.toContain("watch failed");
+    } finally {
+      cycles.abort.abort();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("treats a basename beginning with '..cache' as contained while rejecting real parent escapes", () => {
     const root = resolve(tmpdir(), "sdp-watch-containment-root");
 
