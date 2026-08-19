@@ -747,7 +747,7 @@ const boundSpecPageTestAnchor = specTest({
 });
 void boundSpecPageTestAnchor;
 
-// bindExample(boundSpecPageContract — refused: generated sibling requires unused packId
+// Refused: generated sibling requires unused packId.
 bindExample(boundSpecPageContract, bindingWorld, bindingLanguageBindings);
 
 const packMemberTableTestAnchor = specTest({
