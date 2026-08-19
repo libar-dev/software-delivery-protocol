@@ -1,5 +1,14 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { join, posix } from "node:path";
+import {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname, isAbsolute, join, posix, relative, sep, win32 } from "node:path";
 
 import { generateContracts } from "../codegen/contracts.js";
 import { extract } from "../extract/index.js";
@@ -61,22 +70,104 @@ interface RegistrarManifest {
   readonly files: readonly string[];
 }
 
-function validRegistrarPath(path: string): boolean {
+function isNotFound(error: unknown): boolean {
+  const code =
+    typeof error === "object" && error !== null && "code" in error ? error.code : undefined;
+  return code === "ENOENT" || code === "ENOTDIR";
+}
+
+function containedWithin(root: string, candidate: string): boolean {
+  const nested = relative(root, candidate);
   return (
-    path !== "" &&
-    !posix.isAbsolute(path) &&
-    posix.normalize(path) === path &&
-    path !== ".." &&
-    !path.startsWith("../") &&
-    path.endsWith(".test.generated.ts")
+    nested === "" || (!nested.startsWith(`..${sep}`) && nested !== ".." && !isAbsolute(nested))
   );
+}
+
+function closestExistingAncestor(path: string): string {
+  let candidate = path;
+
+  for (;;) {
+    try {
+      lstatSync(candidate);
+      return candidate;
+    } catch (error) {
+      if (!isNotFound(error)) {
+        throw error;
+      }
+
+      const parent = dirname(candidate);
+
+      if (parent === candidate) {
+        throw error;
+      }
+
+      candidate = parent;
+    }
+  }
+}
+
+/** Parse one manifest key and resolve its existing parent without trusting lexical containment. */
+function confinedRegistrarPath(
+  root: string,
+  rootReal: string,
+  path: string,
+  createParent = false,
+): string | undefined {
+  const parsed = posix.parse(path);
+
+  if (
+    path === "" ||
+    path.includes("\\") ||
+    parsed.root !== "" ||
+    win32.parse(path).root !== "" ||
+    posix.normalize(path) !== path ||
+    !parsed.base.endsWith(".test.generated.ts")
+  ) {
+    throw new Error(`unsafe registrar sibling path "${path}"`);
+  }
+
+  const lexicalParent = join(root, ...parsed.dir.split("/").filter((segment) => segment !== ""));
+  const existingParent = closestExistingAncestor(lexicalParent);
+  let existingParentReal: string;
+
+  try {
+    existingParentReal = realpathSync(existingParent);
+  } catch (error) {
+    throw new Error(`unsafe registrar sibling path "${path}": ${errorMessage(error)}`);
+  }
+
+  if (!containedWithin(rootReal, existingParentReal)) {
+    throw new Error(`unsafe registrar sibling path "${path}" escapes the extraction root`);
+  }
+
+  if (existingParent !== lexicalParent) {
+    if (!createParent) {
+      return undefined;
+    }
+
+    mkdirSync(lexicalParent, { recursive: true });
+  }
+
+  let parentReal: string;
+
+  try {
+    parentReal = realpathSync(lexicalParent);
+  } catch (error) {
+    throw new Error(`unsafe registrar sibling path "${path}": ${errorMessage(error)}`);
+  }
+
+  if (!containedWithin(rootReal, parentReal)) {
+    throw new Error(`unsafe registrar sibling path "${path}" escapes the extraction root`);
+  }
+
+  return join(parentReal, parsed.base);
 }
 
 function serializeRegistrarManifest(paths: readonly string[]): string {
   return `${JSON.stringify({ version: REGISTRAR_MANIFEST_VERSION, files: paths }, null, 2)}\n`;
 }
 
-function readRegistrarManifest(path: string): readonly string[] {
+function readRegistrarManifest(path: string, root: string, rootReal: string): readonly string[] {
   if (!existsSync(path)) {
     return [];
   }
@@ -95,11 +186,15 @@ function readRegistrarManifest(path: string): readonly string[] {
   const files = (decoded as RegistrarManifest).files;
 
   if (
-    files.some((entry) => typeof entry !== "string" || !validRegistrarPath(entry)) ||
+    files.some((entry) => typeof entry !== "string") ||
     new Set(files).size !== files.length ||
     [...files].sort().some((entry, index) => entry !== files[index])
   ) {
     throw new Error(`registrar manifest ${path} must contain unique sorted safe sibling paths`);
+  }
+
+  for (const entry of files) {
+    confinedRegistrarPath(root, rootReal, entry);
   }
 
   return files;
@@ -150,6 +245,7 @@ export function runBuild(
   const graphPath = join(resolvedRoot, "generated", "graph.json");
   const contractsPath = join(resolvedRoot, "generated", "contracts");
   const registrarManifestPath = join(resolvedRoot, "generated", "registrars.json");
+  const registrarRootReal = realpathSync(resolvedRoot);
   let priorRegistrarPaths: readonly string[] = [];
   let nextRegistrarPaths: readonly string[] = [];
   const projectionPaths = [
@@ -161,9 +257,6 @@ export function runBuild(
 
   const failBuild = (message: string): BuildOutcome => {
     writeStderr(output, message);
-    const registrarArtifacts = [
-      ...new Set([...priorRegistrarPaths, ...nextRegistrarPaths]),
-    ].flatMap((path) => [join(resolvedRoot, path), `${join(resolvedRoot, path)}.tmp`]);
     removeArtifacts(
       [
         graphPath,
@@ -172,12 +265,24 @@ export function runBuild(
         `${contractsPath}.tmp`,
         registrarManifestPath,
         `${registrarManifestPath}.tmp`,
-        ...registrarArtifacts,
       ],
       output,
       command,
       recoveryRm,
     );
+
+    for (const path of new Set([...priorRegistrarPaths, ...nextRegistrarPaths])) {
+      try {
+        const registrarPath = confinedRegistrarPath(resolvedRoot, registrarRootReal, path);
+
+        if (registrarPath !== undefined) {
+          removeArtifacts([registrarPath, `${registrarPath}.tmp`], output, command, recoveryRm);
+        }
+      } catch {
+        // An untrusted or swapped parent is outside generated ownership and must not be followed.
+      }
+    }
+
     return { exitCode: 1 };
   };
 
@@ -194,7 +299,11 @@ export function runBuild(
   }
 
   try {
-    priorRegistrarPaths = readRegistrarManifest(registrarManifestPath);
+    priorRegistrarPaths = readRegistrarManifest(
+      registrarManifestPath,
+      resolvedRoot,
+      registrarRootReal,
+    );
     const result = runExtract(extractionOptions);
     const findings = result.report.findings;
 
@@ -230,11 +339,17 @@ export function runBuild(
 
     const serialized = serializeGraph(result.graph);
     const contracts = runGenerateContracts(result.graph);
-    nextRegistrarPaths = [...contracts.registrars.keys()].sort();
+    const generatedRegistrarPaths = [...contracts.registrars.keys()].sort();
 
-    if (nextRegistrarPaths.some((path) => !validRegistrarPath(path))) {
+    try {
+      for (const path of generatedRegistrarPaths) {
+        confinedRegistrarPath(resolvedRoot, registrarRootReal, path);
+      }
+    } catch {
       return failBuild(`sdp ${command}: generated an unsafe registrar sibling path.\n`);
     }
+
+    nextRegistrarPaths = generatedRegistrarPaths;
 
     for (const finding of contracts.findings) {
       writeStderr(output, formatFinding(finding));
@@ -269,11 +384,14 @@ export function runBuild(
       if (
         priorRegistrarPaths.length !== nextRegistrarPaths.length ||
         priorRegistrarPaths.some((path, index) => path !== nextRegistrarPaths[index]) ||
-        nextRegistrarPaths.some(
-          (path) =>
-            !existsSync(join(resolvedRoot, path)) ||
-            readFileSync(join(resolvedRoot, path), "utf8") !== contracts.registrars.get(path),
-        )
+        nextRegistrarPaths.some((path) => {
+          const registrarPath = confinedRegistrarPath(resolvedRoot, registrarRootReal, path);
+          return (
+            registrarPath === undefined ||
+            !existsSync(registrarPath) ||
+            readFileSync(registrarPath, "utf8") !== contracts.registrars.get(path)
+          );
+        })
       ) {
         return failBuild(
           `sdp ${command} --check-clean: generated registrar manifest or sibling bytes differ from the current projection.\n`,
@@ -299,11 +417,25 @@ export function runBuild(
     }
 
     for (const [relativePath, content] of contracts.registrars) {
-      const registrarPath = join(resolvedRoot, relativePath);
-      const registrarTemporaryPath = `${registrarPath}.tmp`;
-      mkdirSync(join(registrarPath, ".."), { recursive: true });
-      rmSync(registrarTemporaryPath, { force: true });
-      write(registrarTemporaryPath, content, "utf8");
+      const createdRegistrarPath = confinedRegistrarPath(
+        resolvedRoot,
+        registrarRootReal,
+        relativePath,
+        true,
+      );
+
+      if (createdRegistrarPath === undefined) {
+        throw new Error(`unsafe registrar sibling path "${relativePath}"`);
+      }
+
+      rmSync(`${createdRegistrarPath}.tmp`, { force: true });
+      const registrarPath = confinedRegistrarPath(resolvedRoot, registrarRootReal, relativePath);
+
+      if (registrarPath === undefined) {
+        throw new Error(`unsafe registrar sibling path "${relativePath}"`);
+      }
+
+      write(`${registrarPath}.tmp`, content, "utf8");
     }
 
     const registrarManifestTemporaryPath = `${registrarManifestPath}.tmp`;
@@ -320,10 +452,20 @@ export function runBuild(
     for (const stalePath of priorRegistrarPaths.filter(
       (path) => !nextRegistrarPaths.includes(path),
     )) {
-      rmSync(join(resolvedRoot, stalePath), { force: true });
+      const registrarPath = confinedRegistrarPath(resolvedRoot, registrarRootReal, stalePath);
+
+      if (registrarPath !== undefined) {
+        rmSync(registrarPath, { force: true });
+      }
     }
     for (const relativePath of nextRegistrarPaths) {
-      renameSync(`${join(resolvedRoot, relativePath)}.tmp`, join(resolvedRoot, relativePath));
+      const registrarPath = confinedRegistrarPath(resolvedRoot, registrarRootReal, relativePath);
+
+      if (registrarPath === undefined) {
+        throw new Error(`unsafe registrar sibling path "${relativePath}"`);
+      }
+
+      renameSync(`${registrarPath}.tmp`, registrarPath);
     }
     renameSync(registrarManifestTemporaryPath, registrarManifestPath);
 
