@@ -5,12 +5,19 @@ import { join } from "node:path";
 import { afterEach, expect } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
-import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
+import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
 
 import { markdownTsParityContract } from "../generated/contracts/carrier.markdown-pack-authoring.markdown-ts-parity.contract.js";
+import type {
+  MarkdownPackAuthoringConditions,
+  MarkdownPackAuthoringOutcome,
+} from "../generated/contracts/carrier.markdown-pack-authoring.space.js";
 import { specEnvelopeRefusedContract } from "../generated/contracts/carrier.markdown-pack-authoring.spec-envelope-refused.contract.js";
 import { extract } from "../src/index.js";
 import type { ExtractionResult, GraphEdge, GraphNode } from "../src/index.js";
+import { registerMarkdownTsParity } from "./carrier.markdown-pack-authoring.markdown-ts-parity.test.generated.js";
+import { registerSpecEnvelopeRefused } from "./carrier.markdown-pack-authoring.spec-envelope-refused.test.generated.js";
+import { paramsForStep } from "./helpers/generated-contract.js";
 
 const temporaryRoots = new Set<string>();
 
@@ -63,25 +70,20 @@ interface PackWorld {
   typeScript?: ExtractionResult;
 }
 
-function packWorld(): PackWorld {
-  return { carrierSource: "" };
-}
+function packWorld(point: Partial<MarkdownPackAuthoringConditions>): PackWorld {
+  const carrierSource = point.carrierSource;
+  const world: PackWorld = { carrierSource: carrierSource ?? "" };
 
-const packBindings = {
-  "an extraction root holding the pack carrier {carrierSource}": (
-    world: PackWorld,
-    params: { readonly carrierSource: string },
-  ) => {
-    world.carrierSource = params.carrierSource;
-    world.markdownRoot = temporaryRoot("sdp-markdown-pack-");
+  if (carrierSource === undefined) return world;
 
-    if (params.carrierSource === "the Markdown twin of a TS manifest") {
-      world.typeScriptRoot = temporaryRoot("sdp-typescript-pack-");
-      writeMember(world.markdownRoot);
-      writeMember(world.typeScriptRoot);
-      writeFileSync(
-        join(world.markdownRoot, "parity.pack.sdp.md"),
-        `---
+  world.markdownRoot = temporaryRoot("sdp-markdown-pack-");
+  if (carrierSource === "the Markdown twin of a TS manifest") {
+    world.typeScriptRoot = temporaryRoot("sdp-typescript-pack-");
+    writeMember(world.markdownRoot);
+    writeMember(world.typeScriptRoot);
+    writeFileSync(
+      join(world.markdownRoot, "parity.pack.sdp.md"),
+      `---
 id: pack:probe.parity
 specs:
   - spec:probe.member
@@ -90,11 +92,11 @@ specs:
 
 The Pack parity point.
 `,
-        "utf8",
-      );
-      writeFileSync(
-        join(world.typeScriptRoot, "parity.pack.sdp.ts"),
-        `import { pack, packId, ref } from "@libar-dev/software-delivery-protocol";
+      "utf8",
+    );
+    writeFileSync(
+      join(world.typeScriptRoot, "parity.pack.sdp.ts"),
+      `import { pack, packId, ref } from "@libar-dev/software-delivery-protocol";
 
 export const parityPack = pack({
   id: packId("pack:probe.parity"),
@@ -103,63 +105,110 @@ export const parityPack = pack({
   specs: [ref("spec:probe.member")],
 });
 `,
-        "utf8",
-      );
-      return;
-    }
+      "utf8",
+    );
+    return world;
+  }
 
-    writeFileSync(
-      join(world.markdownRoot, "refused.pack.sdp.md"),
-      `---
+  writeFileSync(
+    join(world.markdownRoot, "refused.pack.sdp.md"),
+    `---
 id: pack:probe.refused
 specs: []
 kind: behavior
 ---
 # Refused probe pack
 `,
-      "utf8",
-    );
-  },
-  "the extractor derives the graph": (world: PackWorld) => {
-    if (world.markdownRoot === undefined)
-      throw new Error("The carrier step must create the Markdown root before extraction.");
-    world.markdown = extract({ root: world.markdownRoot });
-    if (world.typeScriptRoot !== undefined)
-      world.typeScript = extract({ root: world.typeScriptRoot });
-  },
-  "the graph holds the pack {packId} whose membership names {memberId}": (
-    world: PackWorld,
-    params: { readonly packId: string; readonly memberId: string },
-  ) => {
-    if (world.markdown === undefined || world.typeScript === undefined)
-      throw new Error("The parity point requires both carrier extractions.");
+    "utf8",
+  );
+  return world;
+}
 
-    const markdownPack = world.markdown.graph.nodes.find((node) => node.id === params.packId);
-    const typeScriptPack = world.typeScript.graph.nodes.find((node) => node.id === params.packId);
-    expect(markdownPack?.nodeType).toBe("Pack");
-    expect(withoutFile(markdownPack)).toEqual(withoutFile(typeScriptPack));
-    expect(membership(world.markdown, params.packId)).toEqual(
-      membership(world.typeScript, params.packId),
-    );
-    expect(membership(world.markdown, params.packId)).toContainEqual({
-      from: params.memberId,
-      type: "belongsTo",
-      to: params.packId,
-      claim: "declared",
-    });
-  },
-  "the report names the refusal {findingId} and the graph holds no pack node": (
-    world: PackWorld,
-    params: { readonly findingId: string },
-  ) => {
-    if (world.markdown === undefined)
-      throw new Error("The refusal point requires the Markdown extraction.");
-    expect(world.markdown.report.findings).toContainEqual(
-      expect.objectContaining({ validatorId: params.findingId }),
-    );
-    expect(world.markdown.graph.nodes.some((node) => node.nodeType === "Pack")).toBe(false);
-  },
-};
+function invokePackExtraction(world: PackWorld): void {
+  if (world.markdownRoot === undefined) return;
+
+  world.markdown = extract({ root: world.markdownRoot });
+  if (world.typeScriptRoot !== undefined) {
+    world.typeScript = extract({ root: world.typeScriptRoot });
+  }
+}
+
+function observeParity(world: PackWorld): MarkdownPackAuthoringOutcome {
+  if (world.markdown === undefined || world.typeScript === undefined)
+    throw new Error("The parity point requires both carrier extractions.");
+
+  const outcome = paramsForStep(
+    markdownTsParityContract,
+    "the graph holds the pack {packId} whose membership names {memberId}",
+  );
+  const markdownPack = world.markdown.graph.nodes.find((node) => node.id === outcome.packId);
+  const typeScriptPack = world.typeScript.graph.nodes.find((node) => node.id === outcome.packId);
+  expect(markdownPack?.nodeType).toBe("Pack");
+  expect(withoutFile(markdownPack)).toEqual(withoutFile(typeScriptPack));
+  expect(membership(world.markdown, outcome.packId)).toEqual(
+    membership(world.typeScript, outcome.packId),
+  );
+  expect(membership(world.markdown, outcome.packId)).toContainEqual({
+    from: outcome.memberId,
+    type: "belongsTo",
+    to: outcome.packId,
+    claim: "declared",
+  });
+
+  return {
+    kind: "the graph holds the pack {packId} whose membership names {memberId}",
+    ...outcome,
+  };
+}
+
+function expectedParity(
+  point: Partial<MarkdownPackAuthoringConditions>,
+): MarkdownPackAuthoringOutcome {
+  if (point.carrierSource === undefined) return unspecified;
+
+  const { packId, memberId } = paramsForStep(
+    markdownTsParityContract,
+    "the graph holds the pack {packId} whose membership names {memberId}",
+  );
+  return {
+    kind: "the graph holds the pack {packId} whose membership names {memberId}",
+    packId,
+    memberId,
+  };
+}
+
+function observeRefusal(world: PackWorld): MarkdownPackAuthoringOutcome {
+  if (world.markdown === undefined)
+    throw new Error("The refusal point requires the Markdown extraction.");
+
+  const { findingId } = paramsForStep(
+    specEnvelopeRefusedContract,
+    "the report names the refusal {findingId} and the graph holds no pack node",
+  );
+  expect(world.markdown.report.findings).toContainEqual(
+    expect.objectContaining({ validatorId: findingId }),
+  );
+  expect(world.markdown.graph.nodes.some((node) => node.nodeType === "Pack")).toBe(false);
+  return {
+    kind: "the report names the refusal {findingId} and the graph holds no pack node",
+    findingId,
+  };
+}
+
+function expectedRefusal(
+  point: Partial<MarkdownPackAuthoringConditions>,
+): MarkdownPackAuthoringOutcome {
+  if (point.carrierSource === undefined) return unspecified;
+
+  const { findingId } = paramsForStep(
+    specEnvelopeRefusedContract,
+    "the report names the refusal {findingId} and the graph holds no pack node",
+  );
+  return {
+    kind: "the report names the refusal {findingId} and the graph holds no pack node",
+    findingId,
+  };
+}
 
 const parityTestAnchor = specTest({
   id: testAnchorId("test:protocol.markdown-pack-authoring.markdown-ts-parity"),
@@ -174,5 +223,15 @@ const refusalTestAnchor = specTest({
 });
 void [parityTestAnchor, refusalTestAnchor];
 
-bindExample(markdownTsParityContract, packWorld, packBindings);
-bindExample(specEnvelopeRefusedContract, packWorld, packBindings);
+registerMarkdownTsParity({
+  createWorld: packWorld,
+  invoke: invokePackExtraction,
+  observe: observeParity,
+  expected: expectedParity,
+});
+registerSpecEnvelopeRefused({
+  createWorld: packWorld,
+  invoke: invokePackExtraction,
+  observe: observeRefusal,
+  expected: expectedRefusal,
+});
