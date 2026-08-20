@@ -16,6 +16,11 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
+> **plan 38 is DRAFTED** — the graph-first planning arc, a thin lineage pointer, not a briefs
+> index: the arc's forward intent is authored as capture-rung Specs
+> (`spec:consumers.graph-first-planning`, `spec:model.structural-patterns`,
+> `spec:protocol.structural-self-binding`) and the backlog and readiness are read
+> from the graph (recipes 1, 9, 11). Settled ground:
 > **plan 37 is EXECUTED** — the plan-36 arc is closed; briefs I–K are delivered per
 > plan 36, with operational tracking in `.omo/plans/plan-37-settling-arc.md`.
 > **Status:** Specs and Packs default to the Markdown carrier (the carrier ruling, MD-18, completed

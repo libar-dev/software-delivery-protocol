@@ -17,4 +17,5 @@ relations:
 - rule: Implementation uses the build backlog and the target Spec context; review uses the Pack backbone and warn-level signals, or the target Spec context and warn-level signals when no Pack exists.
 - rule: Close uses the drift alarm and changed-file blast radius; optional slimming preserves durable law and one prose owner without claiming a universal distillation boundary.
 - rule: A handoff names targets, changed files, current readiness, findings or open questions, and commands or evidence locations to re-run; it never carries an inherited verification verdict.
+- rule: An arc-scale handoff names the concrete register carriers rather than an abstract home: `spec:consumers.graph-first-planning` for placement law and the Spec ids that carry its register rows, including `spec:decisions.planning-truths-placement` and `spec:decisions.shipped-projections-frozen`, so the next session re-measures those Specs rather than inheriting register state from the handoff.
 - rule: Every preflight informs human or agent judgment and never authorizes, blocks, scopes, or advances delivery work.

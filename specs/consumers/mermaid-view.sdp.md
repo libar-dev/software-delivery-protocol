@@ -5,6 +5,7 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:consumers.projections-model
+  decidedBy: spec:decisions.shipped-projections-frozen
 ---
 # Mermaid renders bounded one-hop and Pack diagrams without becoming a graph browser
 

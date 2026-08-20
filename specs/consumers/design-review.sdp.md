@@ -5,6 +5,7 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:consumers.projections-model
+  decidedBy: spec:decisions.shipped-projections-frozen
 ---
 # Design Review renders graph context without becoming a gate
 

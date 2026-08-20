@@ -80,8 +80,10 @@ universal distillation boundary unresolved.
 
 Name the chosen shape, target Spec ids or Pack, changed files, stated and derived readiness,
 findings or blocking open questions, and the exact commands, commits, or artifact locations from
-which evidence can be re-derived. Never hand off a carried "verified" verdict: the next session
-re-runs the named evidence. Git remains the event log; no session state enters the graph.
+which evidence can be re-derived. An arc-scale handoff follows the register-carrier rule on
+`spec:consumers.delivery-session-on-ramp` and names those Spec ids so the next session
+re-measures them. Never hand off a carried "verified" verdict: the next session re-runs the named evidence.
+Git remains the event log; no session state enters the graph.
 
 All preflights are advisory. They never authorize, block, scope, unlock, or advance delivery work,
 and they never create a process state machine.

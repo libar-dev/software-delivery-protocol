@@ -1,0 +1,14 @@
+## Baseline outline (pre-edit)
+1:# Plan 38 — the graph-first planning arc (pilot)
+3:> **Status:** 🧭 DRAFTED — a thin lineage pointer, deliberately not a briefs index. This arc
+9:## Why this arc
+16:## The arc's intent lives here (re-measure with recipe 11, never inherit)
+39:## Discipline (unchanged)
+
+## Failing-first proof: machinery/narrative beyond the four retained truths (pre-edit)
+pattern 're-measure with recipe 11'              -> 16:## The arc's intent lives here (re-measure with recipe 11, never inherit)
+pattern 'the standing'                           -> 33:  language-neutral identity question; it stays `idea` until that answer exists (the standing
+pattern 'PRs #22'                                -> 14:this file, alongside the native-skills work merged in PRs #22 and #23.
+pattern 'derived floor'                          -> 30:- `spec:consumers.intent-composition` (`idea`, derived floor `ready`) — design the composing
+pattern 'recorded blocker is narrow'             -> 36:- `spec:extraction.regenerability` (`defined`) — recorded blocker is narrow: quoted thresholds
+pattern 'recipe 11 is current'                   -> 28:Existing sub-ready Specs this arc expects to work (already in the graph; recipe 11 is current):

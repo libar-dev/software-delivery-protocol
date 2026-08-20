@@ -997,6 +997,7 @@ export const consumersSpecs = [
           "Implementation uses the build backlog and the target Spec context; review uses the Pack backbone and warn-level signals, or the target Spec context and warn-level signals when no Pack exists.",
           "Close uses the drift alarm and changed-file blast radius; optional slimming preserves durable law and one prose owner without claiming a universal distillation boundary.",
           "A handoff names targets, changed files, current readiness, findings or open questions, and commands or evidence locations to re-run; it never carries an inherited verification verdict.",
+          "An arc-scale handoff names the concrete register carriers rather than an abstract home: `spec:consumers.graph-first-planning` for placement law and the Spec ids that carry its register rows, including `spec:decisions.planning-truths-placement` and `spec:decisions.shipped-projections-frozen`, so the next session re-measures those Specs rather than inheriting register state from the handoff.",
           "Every preflight informs human or agent judgment and never authorizes, blocks, scopes, or advances delivery work.",
         ],
       },
@@ -1025,6 +1026,44 @@ export const consumersSpecs = [
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.graph-first-planning",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    file: "specs/consumers/graph-first-planning.sdp.md",
+    title: "Arc intent is planned from the graph, not a prose briefs index",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Forward arc intent is captured as sub-ready Specs so planning sessions derive the backlog and readiness from the graph, with plans reduced to thin lineage pointers.",
+        openQuestions: [
+          {
+            question:
+              "How does an arc boundary stay legible in the graph (a Pack, a relation cluster, a naming convention) without minting a workflow gate or an authored delivery fact? Evidence note: the briefs-index register's rows landed in four homes: tradeoff refusals on `decision`-kind Specs, existing behavior guarantees on their carrying Specs, holds as blocking open questions, and a lawful non-decision in the plan record; that split is observed evidence for this question, not a ruling on arc-boundary representation.",
+            blocking: true,
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "`spec:consumers.delivery-session-on-ramp` owns per-session routing from graph state; this Spec owns only arc-scale commissioning — how the next arc's intent enters the corpus and is read back.",
+          "Planning remains advisory reading of the graph; no recipe, preflight, or plan document authorizes, blocks, or sequences delivery work.",
+          "A work-item dependency is authored only as a `dependsOn` edge between Specs whose truth genuinely needs the other to hold; independence is the absence of the edge, and no scheduling or sequencing phrase is ever authored.",
+          "A decision record is a `decision`-kind Spec joined to its subject by `decidedBy`; a lawful non-decision lives as decision content or a plan record, never as a decision record, and it never mints an authored delivery fact.",
+          "A do-not-reopen row's home follows its shape: a tradeoff refusal lives on a `decision`-kind Spec, never a `constraint`, and reopens only through a later decision that `supersedes` it and passes the ADR three-part test; an existing behavior guarantee stays on its carrying Spec and reopens by revising that Spec; a hold stays a blocking open question on its Spec; a lawful non-decision stays in the plan record and mints no Spec.",
+          "A re-entry trigger is the deferred Spec's own blocking open questions, plus a `dependsOn` edge when a true precondition exists; the plan 35 deferrals name three re-entry triggers for this arc: Spec Studio, the reference projection, and the structural-edge Mermaid; no plan document re-arms deferred work.",
+          "A deliverable with exclusive ownership across consumers has exactly one Spec identity; every consumer `dependsOn` that identity instead of restating the deliverable.",
+          "Selection-pressure heuristics stay advisory, carried as behavior rules here or as recipes; they authorize, block, and sequence nothing.",
+          "Session law re-measures from the graph first; a session never inherits readiness, backlog, or placement state from a prior plan, register, or summary.",
+          "The thin plan file is a lineage pointer that carries plan numbering and staleness; numbering and staleness never become graph structure.",
+          "The E2 placement ruling for `sdp new spec` and `sdp validate --watch` is a lawful non-decision that failed the ADR three-part test; it lives in the plan record and mints no Spec.",
+        ],
+      },
+    },
+    deliveryFacts: [],
   },
   {
     id: "spec:consumers.impact-graph",
