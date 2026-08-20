@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "active_work_id": "sdp-skills-gen1-parity-unslop",
+  "active_work_id": "briefs-index-into-spec-relations",
   "works": {
     "pr-17-gherkin-carrier-hardening": {
       "work_id": "pr-17-gherkin-carrier-hardening",
@@ -75,6 +75,20 @@
       "delivery_mode": "make-pr",
       "make_pr": true,
       "active_task": null,
+      "completed_todo": 6
+    },
+    "briefs-index-into-spec-relations": {
+      "work_id": "briefs-index-into-spec-relations",
+      "active_plan": ".omo/plans/briefs-index-into-spec-relations.md",
+      "plan_name": "briefs-index-into-spec-relations",
+      "session_ids": [
+        "senpi:01a01fe9-6d0e-73a4-a450-d2db4cb7beae"
+      ],
+      "status": "active",
+      "worktree_path": null,
+      "delivery_mode": "direct",
+      "make_pr": false,
+      "active_task": "Run gate-after QA and record evidence",
       "completed_todo": 6
     }
   }

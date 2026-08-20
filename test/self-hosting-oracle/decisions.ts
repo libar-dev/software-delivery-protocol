@@ -915,7 +915,7 @@ export const decisionsSpecs = [
       },
       decision: {
         context:
-          "The do-not-reopen register carried forward from plans/34 into plans/36 (the shipped-projections row) refused re-specifying the four shipped projections, but that refusal lived only as plan prose the graph could not check.",
+          "The shipped-projections row in the 36 register has lineage to the 34 projection-settling record: it refused re-specifying the four shipped projections, but that refusal lived only as plan prose the graph could not check.",
         decision:
           "The shipped Design Review, census, Mermaid, and Gherkin projections are frozen as ruled. Re-specifying any of them is refused, and the ruling reopens only through a later decision Spec that supersedes this one and passes the ADR three-part test.",
         rationale: [
