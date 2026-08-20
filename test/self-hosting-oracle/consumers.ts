@@ -1038,7 +1038,7 @@ export const consumersSpecs = [
     sections: {
       intent: {
         outcome:
-          "Forward arc intent is captured as sub-ready Specs so planning sessions derive the backlog, sequencing, and readiness from the graph, with plans reduced to thin lineage pointers.",
+          "Forward arc intent is captured as sub-ready Specs so planning sessions derive the backlog and readiness from the graph, with plans reduced to thin lineage pointers.",
         openQuestions: [
           {
             question:

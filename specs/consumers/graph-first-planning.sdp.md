@@ -11,7 +11,7 @@ relations:
 
 ## Intent
 
-- outcome: Forward arc intent is captured as sub-ready Specs so planning sessions derive the backlog, sequencing, and readiness from the graph, with plans reduced to thin lineage pointers.
+- outcome: Forward arc intent is captured as sub-ready Specs so planning sessions derive the backlog and readiness from the graph, with plans reduced to thin lineage pointers.
 
 ### Open questions
 

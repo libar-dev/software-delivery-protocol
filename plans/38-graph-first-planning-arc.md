@@ -2,7 +2,7 @@
 
 > **Status:** 🧭 DRAFTED — a thin lineage pointer, deliberately not a briefs index. This arc
 > pilots `spec:consumers.graph-first-planning`: the arc's forward intent is authored as
-> capture-rung Specs in the corpus, and the backlog, readiness, and sequencing are read from the
+> capture-rung Specs in the corpus, and the backlog and readiness are read from the
 > graph (recipes 1, 9, 11) rather than from this file. If this file and the graph disagree, the
 > graph wins and this file is stale.
 
@@ -31,9 +31,9 @@ Already in the graph:
 - `spec:consumers.impact-graph`
 - `spec:extraction.regenerability`
 
-Readiness, backlog, and sequencing for all of the above are read from the graph, never from
-this file. These graph facts are advisory selection pressure, not authorization and not a
-sequence.
+Readiness and backlog for all of the above are read from the graph, never from this file.
+Declared `dependsOn` edges are the only dependency facts. These graph facts are advisory
+selection pressure, not authorization and not a sequence.
 
 ## The do-not-reopen register lives in the graph
 

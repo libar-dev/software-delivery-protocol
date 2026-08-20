@@ -19,7 +19,7 @@ code behavior into intent.
 > **plan 38 is DRAFTED** — the graph-first planning arc, a thin lineage pointer, not a briefs
 > index: the arc's forward intent is authored as capture-rung Specs
 > (`spec:consumers.graph-first-planning`, `spec:model.structural-patterns`,
-> `spec:protocol.structural-self-binding`) and the backlog, readiness, and sequencing are read
+> `spec:protocol.structural-self-binding`) and the backlog and readiness are read
 > from the graph (recipes 1, 9, 11). Settled ground:
 > **plan 37 is EXECUTED** — the plan-36 arc is closed; briefs I–K are delivered per
 > plan 36, with operational tracking in `.omo/plans/plan-37-settling-arc.md`.
@@ -166,7 +166,7 @@ Every doc honours both — never mistake one half for the other:
 - **Skills first, graph second, files last.** Load the matching skill before the work starts; then
   query the graph (`pnpm --silent sdp:q` with a recipe body); then read the carrying Spec it points
   at. Scanning `specs/` files to learn state is a smell — the graph is derived from the same
-  carrier and is always current. Always use `unslop` skill.
+  carrier and is always current.
 - **Write lean, and write for outsiders.** Cut unnecessary verbosity and noise in every session
   artifact — plans, records, summaries, spec prose. Use technical but plain language a wider
   open-source audience can follow: the ratified terms are the shared vocabulary, not a license
