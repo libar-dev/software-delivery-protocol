@@ -56,9 +56,10 @@ not an automatic `ready` statement.
 Use the build backlog (recipe 1) to orient the available ready work and the target Spec context
 (recipe 3) to read guarantees, relations, implementation bindings, and verifiers. When the work
 lives in a declared seam, use component membership (recipe 12) and uses fan-in/fan-out (recipe 13)
-to see the units and neighbors before binding. Bind anchors
-and executable examples through `sdp-authoring`; an `implemented` fact names a binding, not a
-passing or live system.
+to see the units and neighbors before binding. Bind code, test, and oracle anchors, the structural
+`component` and `uses` fields included, and executable examples through `sdp-authoring`, which owns
+the registrar-first executable transition; an `implemented` fact names a binding, not a passing or
+live system.
 
 ### Review
 

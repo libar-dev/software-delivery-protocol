@@ -8,6 +8,9 @@ import { describe, expect, it } from "vitest";
 import {
   codeAnchor,
   codeAnchorId,
+  graphClaims,
+  graphEdgeTypes,
+  graphNodeTypes,
   ref,
   specTest,
   testAnchorId,
@@ -144,19 +147,55 @@ describe("Protocol skill assets", () => {
     for (const required of [
       "spec:validation.readiness-floor",
       "spec:validation.kind-evidence",
+      "spec:validation.oracle-target-eligibility",
       "spec:decisions.content-only-sections",
       "spec:decisions.point-per-example",
       "spec:decisions.binding-not-liveness",
+      "spec:decisions.structural-anchor-semantics",
+      "spec:decisions.adopted-registrars-committed",
+      "spec:extraction.runnable-modules",
       "sdp build",
       "generate:self-hosting",
       "generate:example",
       "bindExample",
       "specTest",
+      "specOracle",
+      "codeAnchor",
+      "componentAnchorId",
+      "anchor-constant",
+      ".test.generated.ts",
+      "mints nothing and reports nothing",
+      "document-realization",
+      "registrar",
       "contract-dependent-suites.mjs",
       "mutation",
       "cannot detect",
     ]) {
       expect(authoring).toContain(required);
+    }
+
+    const surface = readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source;
+    for (const required of [
+      "How delivery state derives",
+      "declared",
+      "anchored",
+      "inferred",
+      "verifies the Spec directly",
+      "enabled verifier",
+      "designed-and-deferred",
+    ]) {
+      expect(surface).toContain(required);
+    }
+  });
+
+  it("names the complete closed graph schema in the shape section", () => {
+    // Lockstep with the engine: adding or removing a node type, edge type, or claim must
+    // force this prose to move with it, exactly as the recipe-count test pins the catalog.
+    const surface = readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source;
+
+    expect(surface).toContain("The shape of the graph");
+    for (const name of [...graphNodeTypes, ...graphEdgeTypes, ...graphClaims]) {
+      expect(surface).toContain(`\`${name}\``);
     }
   });
 
