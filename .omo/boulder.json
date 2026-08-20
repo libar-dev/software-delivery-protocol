@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "active_work_id": null,
+  "active_work_id": "sdp-skills-gen1-parity-unslop",
   "works": {
     "pr-17-gherkin-carrier-hardening": {
       "work_id": "pr-17-gherkin-carrier-hardening",
@@ -58,11 +58,24 @@
       "plan_name": "sdp-skills-gen1-parity",
       "session_ids": [],
       "status": "completed",
-      "completed_at": "2026\u002d08\u002d20T13:07:13+02:00",
       "current_commit": "8df0d8096b476408ec364b884155537d74c7603e",
       "worktree_path": null,
       "delivery_mode": "direct",
       "make_pr": false
+    },
+    "sdp-skills-gen1-parity-unslop": {
+      "work_id": "sdp-skills-gen1-parity-unslop",
+      "active_plan": ".omo/plans/sdp-skills-gen1-parity-unslop.md",
+      "plan_name": "sdp-skills-gen1-parity-unslop",
+      "session_ids": [
+        "senpi:01A01EF7-DEC3-787C-A72D-C792A28A2C2F"
+      ],
+      "status": "completed",
+      "worktree_path": "/home/darkomijic/dev-libar/software-delivery-protocol-sdp-skills-gen1-parity-unslop",
+      "delivery_mode": "make-pr",
+      "make_pr": true,
+      "active_task": null,
+      "completed_todo": 6
     }
   }
 }
