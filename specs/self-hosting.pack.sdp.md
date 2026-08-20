@@ -161,6 +161,7 @@ specs:
   - spec:decisions.structural-anchor-semantics
   - spec:decisions.adopted-registrars-committed
   - spec:decisions.shipped-projections-frozen
+  - spec:decisions.planning-truths-placement
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model

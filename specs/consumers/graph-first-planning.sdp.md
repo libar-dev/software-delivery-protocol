@@ -5,6 +5,7 @@ altitude: feature
 readiness: idea
 relations:
   refines: spec:consumers.delivery-session-on-ramp
+  decidedBy: spec:decisions.planning-truths-placement
 ---
 # Arc intent is planned from the graph, not a prose briefs index
 

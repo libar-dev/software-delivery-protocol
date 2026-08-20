@@ -652,4 +652,6 @@ export const expectedDeclaredRelations = [
   ["spec:consumers.census-page", "decidedBy", "spec:decisions.shipped-projections-frozen"],
   ["spec:consumers.mermaid-view", "decidedBy", "spec:decisions.shipped-projections-frozen"],
   ["spec:consumers.gherkin-view", "decidedBy", "spec:decisions.shipped-projections-frozen"],
+  ["spec:consumers.graph-first-planning", "decidedBy", "spec:decisions.planning-truths-placement"],
+  ["spec:decisions.planning-truths-placement", "refines", "spec:model.relations"],
 ] as const;
