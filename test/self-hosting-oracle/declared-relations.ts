@@ -647,4 +647,9 @@ export const expectedDeclaredRelations = [
   ["spec:decisions.structural-anchor-semantics", "refines", "spec:model.anchors"],
   ["spec:decisions.adopted-registrars-committed", "refines", "spec:extraction.runnable-modules"],
   ["spec:extraction.runnable-modules", "decidedBy", "spec:decisions.adopted-registrars-committed"],
+  ["spec:decisions.shipped-projections-frozen", "refines", "spec:consumers.projections-model"],
+  ["spec:consumers.design-review", "decidedBy", "spec:decisions.shipped-projections-frozen"],
+  ["spec:consumers.census-page", "decidedBy", "spec:decisions.shipped-projections-frozen"],
+  ["spec:consumers.mermaid-view", "decidedBy", "spec:decisions.shipped-projections-frozen"],
+  ["spec:consumers.gherkin-view", "decidedBy", "spec:decisions.shipped-projections-frozen"],
 ] as const;

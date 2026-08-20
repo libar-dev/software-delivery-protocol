@@ -5,6 +5,7 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:consumers.projections-model
+  decidedBy: spec:decisions.shipped-projections-frozen
 ---
 # Census renders the runtime taxonomy without becoming a registry
 

@@ -40,6 +40,7 @@ positions and are never reused.
 | MD-29 | the carrier universality bound | durable | Gherkin remains honest for behavior and example Specs; universality is per-ID carriers plus a generated read projection, with Markdown still the default. | [Spec](../../specs/decisions/carrier-universality.sdp.md) (`spec:decisions.carrier-universality`) |
 | MD-30 | structural anchors confer nothing | durable | `component` and `uses` author narrow CodeNode structure while leaving realization, readiness, and delivery facts untouched. | [Spec](../../specs/decisions/structural-anchor-semantics.sdp.md) (`spec:decisions.structural-anchor-semantics`) |
 | MD-31 | adopted registrars are committed | durable | A registrar imported by tracked authored code is committed and byte-checked; unadopted registrar siblings remain ignored and regenerable. | [Spec](../../specs/decisions/adopted-registrars-committed.sdp.md) (`spec:decisions.adopted-registrars-committed`) |
+| MD-32 | the shipped projections stay frozen | durable | The shipped Design Review, census, Mermaid, and Gherkin projections are settled read models; re-specifying them is refused, and reopening needs a superseding decision that passes the ADR test. | [Spec](../../specs/decisions/shipped-projections-frozen.sdp.md) (`spec:decisions.shipped-projections-frozen`) |
 
 ### Current executable decision-spec pointers
 

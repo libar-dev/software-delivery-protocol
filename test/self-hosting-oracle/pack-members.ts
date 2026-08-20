@@ -161,4 +161,5 @@ export const expectedPackMembers = [
   "spec:decisions.carrier-universality",
   "spec:decisions.structural-anchor-semantics",
   "spec:decisions.adopted-registrars-committed",
+  "spec:decisions.shipped-projections-frozen",
 ] as const;

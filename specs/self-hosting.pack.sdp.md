@@ -160,6 +160,7 @@ specs:
   - spec:decisions.carrier-universality
   - spec:decisions.structural-anchor-semantics
   - spec:decisions.adopted-registrars-committed
+  - spec:decisions.shipped-projections-frozen
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model

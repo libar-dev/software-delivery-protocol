@@ -5,7 +5,9 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:consumers.projections-model
-  decidedBy: spec:decisions.carrier-universality
+  decidedBy:
+    - spec:decisions.carrier-universality
+    - spec:decisions.shipped-projections-frozen
 ---
 # Gherkin view renders any Spec as a disposable read shape
 
