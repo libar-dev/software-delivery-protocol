@@ -2,7 +2,7 @@
 id: spec:model.spec-sections
 kind: model
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.core-model
   decidedBy:

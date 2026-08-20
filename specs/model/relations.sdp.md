@@ -2,7 +2,7 @@
 id: spec:model.relations
 kind: model
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.core-model
 ---

@@ -124,7 +124,7 @@ describe("the self-hosting corpus", () => {
     expect(result.report.findings).toEqual([]);
   });
 
-  it("derives a graph the conformance and honesty checks leave without a finding", () => {
+  it("reports exactly the five informative honesty gaps", () => {
     expect(
       validateGraph(result.graph).findings.map(({ validatorId, family, severity, subjectId }) => ({
         validatorId,
@@ -194,7 +194,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 14, idea: 3, ready: 138, scoped: 1 });
+    ).toEqual({ defined: 9, idea: 3, ready: 143, scoped: 1 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {

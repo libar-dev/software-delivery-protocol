@@ -197,6 +197,14 @@ Matching oracle descriptor row patch, also unapplied:
 - **Decision date:** pending
 - **Ratification/evidence reference:** pending owner ratification; this packet is the evidence reference
 
+## 6. Owner ratification
+
+- **Selected disposition:** `READY`
+- **Owner decision:** `READY`
+- **Decision date:** 2026-08-20
+- **Ratification reference:** `.omo/evidence/plan-37-j-packets/RATIFICATION-BUNDLE.md`, owner statement `Ratify proposed set`.
+- **Reason:** Complete bounded claims glossary; no blocker found.
+
 ## Adversarial QA
 
 - **misleading_success_output:** complete raw Recipe 9 and Recipe 3 JSON is retained above; summary fields were not used alone.

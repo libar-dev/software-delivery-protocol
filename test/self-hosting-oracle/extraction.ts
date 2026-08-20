@@ -156,7 +156,7 @@ export const extractionSpecs = [
     id: "spec:extraction.claim-taxonomy",
     specKind: "model",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/extraction/claim-taxonomy.sdp.md",
     title: "Graph claims retain their epistemic source",
     narrative: null,

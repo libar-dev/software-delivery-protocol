@@ -2,7 +2,7 @@
 id: spec:extraction.claim-taxonomy
 kind: model
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:extraction.derive-graph
 ---

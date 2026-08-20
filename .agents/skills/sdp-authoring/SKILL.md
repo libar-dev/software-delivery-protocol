@@ -97,43 +97,9 @@ the only canonical Gherkin carrier. Bare `.feature` is import-source / foreign-c
 is never discovered. Renaming a carrier to `.feature` takes it out of the graph; rename it back to
 `.sdp.gherkin` to restore discovery. `.sdp.gherkin` is not a Cucumber execution suffix.
 
-Associate `*.sdp.gherkin` with Gherkin in the editor when highlighting or formatting is needed. In
-VS Code / Cursor, map the suffix to the `cucumber` language id (this repository ships
-`.vscode/settings.json`):
-
-```json
-{
-  "files.associations": {
-    "*.sdp.gherkin": "cucumber"
-  }
-}
-```
-
-Adopters copy that association, or the equivalent mapping in another editor. Do not add a second
-Gherkin grammar; stock editor Gherkin/Cucumber support is enough for highlighting. Extraction uses
-the package runtime pins `@cucumber/gherkin@42.0.1` and `@cucumber/messages@34.2.1`, installed with
-the Protocol dependency even for Markdown-only corpora. Do not re-pin those packages for carrier
-support, and do not expect lazy loading.
-
-The closed carrier grammar is:
-
-1. One Feature is the behavior Spec; ordinary Scenarios are example Specs.
-2. Feature and Scenario tags carry exactly one `@spec.<id>`, `@altitude.<value>`, and
-   `@readiness.<value>`; kind is structural and Pack membership stays manifest-owned.
-3. Relation tags are only `@refines.`, `@depends-on.`, `@constrained-by.`, `@decided-by.`, and
-   `@verifies.`; Scenario nesting supplies missing `refines` and `verifies` relations.
-4. Keyed description lines populate existing intent and verification fields; remaining prose is
-   narrative. Unknown keys, heading-shaped lines, and open-question syntax are refused.
-5. Trailing title-only Rule blocks populate behavior rules; tagged, described, or nested Rules are
-   refused.
-6. At most one `@example-space` Scenario supplies parent vocabulary without creating a node.
-7. Steps use Protocol slot notation and inherited And/But phases; outlines, backgrounds, star
-   steps, doc strings, data tables, and leading conjunctions are refused.
-8. Delivery-fact, claim, lifecycle, and workflow tags are refused. Generated contracts and
-   resolving code-side anchors remain the execution boundary.
-
 Each ID still has one canonical carrier surface. Query
-`spec:carrier.gherkin-authoring` before authoring or changing this syntax.
+`spec:carrier.gherkin-authoring` for the closed grammar before authoring or
+changing this syntax.
 
 ## Author a Pack
 

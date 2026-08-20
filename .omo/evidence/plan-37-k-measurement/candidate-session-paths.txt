@@ -1,0 +1,13 @@
+.omo/senpi-task/children/st_01a01aba/sessions/st_01a01aba/2026-08-19T15-53-00-485Z_01a01ab9-d145-7964-aee6-2090a65204dc.jsonl
+.omo/senpi-task/children/st_01a01af0/sessions/st_01a01af0/2026-08-19T16-52-49-209Z_01a01af0-93b9-7bc1-a2fc-639a862e4cfc.jsonl
+.omo/senpi-task/children/st_01a01af1/sessions/st_01a01af1/2026-08-19T16-52-49-669Z_01a01af0-9585-7d7c-aecb-8d20ed3d74a8.jsonl
+.omo/senpi-task/children/st_01a01af2/sessions/st_01a01af2/2026-08-19T16-52-49-710Z_01a01af0-95ae-76f6-a2cf-67bb8fb1a74e.jsonl
+.omo/senpi-task/children/st_01a01af3/sessions/st_01a01af3/2026-08-19T16-52-49-756Z_01a01af0-95dc-78f5-8596-95bc3042383f.jsonl
+.omo/senpi-task/children/st_01a01af4/sessions/st_01a01af4/2026-08-19T16-56-49-634Z_01a01af4-3ee2-7d9d-9e90-bf9df739f5f7.jsonl
+.omo/senpi-task/children/st_01a01af5/sessions/st_01a01af5/2026-08-19T16-57-01-656Z_01a01af4-6dd8-7034-9be4-d73eb85bf8a7.jsonl
+.omo/senpi-task/children/st_01a01af6/sessions/st_01a01af6/2026-08-19T16-59-44-283Z_01a01af6-e91b-7f93-9af6-279096b73a30.jsonl
+.omo/senpi-task/children/st_01a01b21/sessions/st_01a01b21/2026-08-19T17-46-15-446Z_01a01b21-8016-7627-9d07-9205282567f2.jsonl
+.omo/senpi-task/children/st_01a01b22/sessions/st_01a01b22/2026-08-19T17-46-15-911Z_01a01b21-81e7-7a3b-89a8-e0ff3621616a.jsonl
+.omo/senpi-task/children/st_01a01b23/sessions/st_01a01b23/2026-08-19T17-46-15-963Z_01a01b21-821b-763c-abec-d0141c8924ee.jsonl
+.omo/senpi-task/children/st_01a01b24/sessions/st_01a01b24/2026-08-19T17-46-16-014Z_01a01b21-824e-7f5e-88ac-d1950ed1f39e.jsonl
+.omo/senpi-task/children/st_01a01dd3/sessions/st_01a01dd3/2026-08-20T06-19-58-660Z_01a01dd3-8d44-7638-ab70-355b65ca0ac7.jsonl

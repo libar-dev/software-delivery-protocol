@@ -2,7 +2,7 @@
 id: spec:carrier.markdown-authoring
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   dependsOn: spec:carrier.markdown-parser
   decidedBy:

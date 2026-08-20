@@ -153,3 +153,11 @@ pnpm --silent sdp:q 'const id = "spec:model.core-model"; const context = g.specC
 - **Owner decision:** Pending; both Ready and Defined readings remain visible.
 - **Decision date:** Pending owner checkpoint.
 - **Ratification/evidence reference:** Pending; this packet is the evidence reference for the checkpoint.
+
+## 6. Owner ratification
+
+- **Selected disposition:** `DEFINED`
+- **Owner decision:** `DEFINED`
+- **Decision date:** 2026-08-20
+- **Ratification reference:** `.omo/evidence/plan-37-j-packets/RATIFICATION-BUNDLE.md`, owner statement `Ratify proposed set`.
+- **Blocking reason:** Blocking enrichment-lifecycle question remains open.

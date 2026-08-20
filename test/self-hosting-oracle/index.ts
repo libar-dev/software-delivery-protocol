@@ -49,10 +49,41 @@ export const expectedSpecs: readonly ExpectedSpec[] = specFamilies.flatMap(
   (family) => family.specs,
 );
 
-// The corpus states nothing the honesty and conformance checks can object to: no orphan, no
-// unearned fact, no readiness above its floor. An empty expectation is the strongest one available
-// here — every finding, at any severity, is a failure.
-export const expectedWarnings = [] as const;
+// These four-field projections identify the five informative honesty gaps from owner-ratified
+// ready Specs without resolving verifier bindings. The CLI suite separately pins each diagnostic's
+// file, validator, and subject prefix.
+export const expectedWarnings = [
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:carrier.markdown-authoring",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:extraction.claim-taxonomy",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:model.pack-aggregate",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:model.relations",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:model.spec-sections",
+  },
+] as const;
 
 export { expectedAnchors } from "./anchors.js";
 export { expectedDeclaredRelations } from "./declared-relations.js";

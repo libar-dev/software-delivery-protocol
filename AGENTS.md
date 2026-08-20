@@ -16,15 +16,13 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
-> **plan 37 is EXECUTING** — the plan-36 arc is executing; briefs I–K are delivered per
+> **plan 37 is EXECUTED** — the plan-36 arc is closed; briefs I–K are delivered per
 > plan 36, with operational tracking in `.omo/plans/plan-37-settling-arc.md`.
 > **Status:** Specs and Packs default to the Markdown carrier; the TS DSL survives as import
 > source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax
 > ruling, MD-25). The Gherkin carrier option (MD-27) admits a graph-aware lawful per-ID option
-> for behavior and example Specs. **plan 36 is DRAFTED** — the next-arc briefs index and the
-> sole planning input for the next arc (briefs I–K: later registrar adoption tranches under
-> MD-31, honest dispositions for the eight drift-alarm Specs, and the context-bundle trigger
-> measurement); execution plans it commissions take 37 upward. Settled ground is
+> for behavior and example Specs. **plan 36 is DRAFTED** remains that arc's briefs index
+> (lineage). Settled ground is
 > **plan 35 is EXECUTED** — the plan-34 arc is closed (briefs E
 > through H: the diff-to-at-risk and structural recipes, `sdp new spec` and `sdp validate
 > --watch`, first-tranche registrar adoption under MD-31, the engine's own component/uses
@@ -259,3 +257,7 @@ self-hosting/example checks → preflight correctly, so prefer it after engine e
 The `check:example` step emits one intentional `verifies-linkage` warning (a declared-but-unbound
 verifier in the example corpus); the gate still exits 0. That warning is expected, not a
 regression.
+
+The `check:self-hosting` step emits five intentional `honesty/gaps` warnings for the owner-ratified
+ready Specs without resolving verifier bindings. The self-hosting oracle pins those warnings; they
+are expected, not a regression.

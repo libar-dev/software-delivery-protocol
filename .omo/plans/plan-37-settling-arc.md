@@ -31,9 +31,9 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
 - The plans/36 do-not-reopen list, verbatim: default-carrier flip; Gherkin kind expansion, DocStrings/DataTables, Gherkin Packs; an `implements` slot; the frozen registrar interface and its five adapters; O5 engine-side execution; Scenario Outlines as executable constructs; re-specifying the shipped Design Review / census / Mermaid / Gherkin projections; `bySymbol` and the impact graph; the `.sdp.gherkin` suffix; new query verbs; the E2 placement ruling; the E3 MCP non-ruling and the three event-triggered H deferrals.
 - No bundle implementation, no new projection, no new query verb, no new reader accessor — under ANY brief-K outcome. K's measurement is scripts and reading only, living under `.omo/evidence/`, never in `src/` or `package.json`.
 - No validator, floor, or check changes (a wrong floor clause is drift repair on its own evidence, never folded in); no readiness edits without owner ratification; no Spec demoted to silence the alarm (theme-9: enrichment on evidence, never retraction); no content invented to reach a rung.
-- Frozen for the whole arc: `docs/agent-surface/recipes.md` (K's measurement baseline), `test/helpers/generated-contract.ts` (shared read helper), `test/helpers/extract-corpus.ts` (callable, never edited), the ten tracked tranche-one registrars (byte-touch on an old sibling is a preflight fight with no owner), the corpus count pins in `test/self-hosting-graph.test.ts`.
+- Frozen for the whole arc: `docs/agent-surface/recipes.md` (K's measurement baseline), `test/helpers/generated-contract.ts` (shared read helper), `test/helpers/extract-corpus.ts` (callable, never edited), the ten tracked tranche-one registrars (byte-touch on an old sibling is a preflight fight with no owner), and the structural corpus count pins in `test/self-hosting-graph.test.ts`. Owner amendment (2026-08-20): Todo 16 may update only the exact authored-readiness histogram and exact warning oracle forced by the five ratified promotions; this does not loosen any structural pin, validator, floor, check, or assertion. Owner amendment (2026-08-20, P37-R1): Brief I may update `contract-dependent-suites.mjs` only to enumerate the exact 56 tracked generated registrar siblings and may disable `@typescript-eslint/no-redundant-type-constituents` only inside the existing contract-dependent-suite ESLint override, solely so clean-clone lint/check dependency discovery works before generation. This does not loosen later typecheck enforcement and authorizes no other check or configuration change.
 - No per-family adoption that authors a suite only to justify adoption; no "all 58 adopt" target; no mid-arc `AGENTS.md` drive-bys outside commission and close.
-- Single-writer map violations: the write unit is the suite FILE. I lanes never touch specs/, the oracle, corpus pins, or recipes.md. J lanes never touch test suites. K never touches any product surface. Only commission and close touch `plans/` and `AGENTS.md`.
+- Single-writer map violations: the write unit is the suite FILE. I lanes never touch specs/, the oracle, corpus pins, or recipes.md. J lanes never touch test suites, except Todo 16's owner-amended exact updates to `test/self-hosting-graph.test.ts` readiness histogram and `test/self-hosting-oracle/index.ts` warning oracle. K never touches any product surface. Only commission and close touch `plans/` and `AGENTS.md`; the Todo 16 plan amendment itself is orchestration state, not product scope.
 
 ## Verification strategy
 > Zero human intervention - all verification is agent-executed. The two human checkpoints are NOT verification labor: the J ratification checkpoint (owner ratifies or refuses each of the eight prepared `ready` statements) and the final wave's APPROVE/REJECT surfacing before the EXECUTED flip — both are governance gates, same shape as this plan's own approval gate.
@@ -212,15 +212,15 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
   QA scenarios: every expected old site matches exactly once in its owned entry; refused pins retained verbatim, Evidence `.omo/evidence/wave-2-anchor-pins-plan-37-settling-arc.md`
   Commit: N (lands with Wave-2 adoption commits)
   Recommended task executor category: `unspecified-low`.
-- [ ] 16. Apply ratified readiness statements (post-checkpoint)
-  What to do / Must NOT do: After the owner ratifies per-Spec at the batch checkpoint: apply ONLY the ratified one-rung carrier edits (`readiness: defined` → `ready` in the frontmatter of each ratified Spec) plus their matching oracle descriptor updates (`test/self-hosting-oracle/{model,extraction,consumers,carrier}.ts`); for every refused Spec, record the blocking reason in the packet and in the todo-18 disposition table — the carrier stays `defined`, untouched. Then regenerate (serialized) and re-run recipe 2, recording the new alarm membership. Must NOT: apply any unrated or refused Spec; touch floor/validator/check code; edit any other carrier content; move the corpus count pins in `test/self-hosting-graph.test.ts` (readiness flips must not change node/edge counts — if they do, stop and diagnose).
+- [x] 16. Apply ratified readiness statements (post-checkpoint)
+  What to do / Must NOT do: After the owner ratifies per-Spec at the batch checkpoint: apply ONLY the ratified one-rung carrier edits (`readiness: defined` → `ready` in the frontmatter of each ratified Spec) plus their matching oracle descriptor updates (`test/self-hosting-oracle/{model,extraction,consumers,carrier}.ts`); for every refused Spec, record the blocking reason in the packet and in the todo-18 disposition table — the carrier stays `defined`, untouched. Then regenerate (serialized) and re-run recipe 2, recording the new alarm membership. Owner amendment (2026-08-20): also update only the exact derived readiness histogram in `test/self-hosting-graph.test.ts` and the exact five-warning expectation in `test/self-hosting-oracle/index.ts` forced by the ratified rungs. Must NOT: apply any unrated or refused Spec; touch floor/validator/check code; edit any other carrier content; change structural pins at `test/self-hosting-graph.test.ts:142-147`; weaken, filter, derive, or delete either exact assertion; edit any other test or oracle.
   Parallelization: Wave 3 | Blocked by: 10, 11, 14, 15 + owner ratification | Blocks: 17, 18
   References (executor has NO interview context - be exhaustive): packets under `.omo/evidence/plan-37-j-packets/`; oracle modules `test/self-hosting-oracle/*.ts`; recipe 2 body `docs/agent-surface/recipes.md` §2; theme-9 posture plans/32 Theme 9.
-  Acceptance criteria (agent-executable): `git diff --name-only` shows exactly the ratified carriers + their oracle modules; `npm run --silent sdp -- validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity` exits 0; recipe-2 re-run recorded in evidence with the expected new membership.
-  QA scenarios: happy — validate green + recipe 2 shows exactly the ratified Specs leaving the alarm. failure — run `npx vitest run test/self-hosting-graph.test.ts` to prove count pins unmoved; if red, the flip leaked structure — revert and diagnose, Evidence `.omo/evidence/task-16-plan-37-settling-arc.md`
+  Acceptance criteria (agent-executable): the readiness delta contains exactly the five ratified carriers + matching family oracle modules; the owner-amended expectation delta contains only the exact readiness histogram and five full warning objects; `npm run --silent sdp -- validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity` exits 0; recipe-2 re-run records the expected three remaining alarms; `npx vitest run test/self-hosting-graph.test.ts` exits 0 with all structural pins unchanged.
+  QA scenarios: happy — validate green + recipe 2 shows exactly the five ratified Specs leaving the alarm + the focused graph test is green. failure — confirm the five-warning oracle is exact (not count-only or filtered) and structural pins remain byte-identical; any other test/oracle edit, weakened assertion, or structural change is red and reverted, Evidence `.omo/evidence/task-16-plan-37-settling-arc.md`
   Commit: Y | docs(specs): state ready on owner-ratified drift-alarm Specs (brief J)
   Recommended task executor category: `unspecified-low` — mechanical application of ratified diffs, gated on the human checkpoint.
-- [ ] 17. K gather + verdict: run the frozen measurement over this arc's sessions
+- [x] 17. K gather + verdict: run the frozen measurement over this arc's sessions
   What to do / Must NOT do: Inventory this arc's eligible I/J execution sessions from the plan-37 task records (every completed todo session, excluding planning/advisory/K-itself/review/close-gate reruns); run the frozen todo-4 census over each session's transcript (`~/.omo/agent/sessions/--home-darkomijic-dev-libar-software-delivery-protocol--/*.jsonl` joined via `.omo/boulder.json` session ids + `.omo/senpi-task/children/*/sessions/` + `.omo/start-work/ledger.jsonl`); manually adjudicate co-use per candidate window; apply the frozen verdict rule exactly (≥6 eligible sessions else UNDERPOWERED stand-down; trigger met = ≥3 qualifying episodes, different tasks, ≥2 shared normalized recipe ids, co-use, cross-brief or ≥50% stratum). Write the verdict record per the frozen stand-down/commission shape: baseline commit, catalog hashes, full session inventory with inclusion/exclusion reasons, per-session tables, exact verdict arithmetic, bounded conclusion. Trigger met → record the commissioned later-plan number in the verdict (never build anything). Trigger unmet / underpowered → recorded stand-down retaining the plan-35 re-entry trigger. Must NOT: weaken thresholds to manufacture a verdict; build any bundle/projection/verb/accessor; re-open the frozen definition mid-gather.
   Parallelization: Wave 3 | Blocked by: 4, 16 | Blocks: 18
   References (executor has NO interview context - be exhaustive): frozen definition + scripts `.omo/evidence/plan-37-k-measurement/`; trigger text plans/35 H record + plans/36 brief K; session stores per draft Findings "Brief K evidence surface".
@@ -228,7 +228,7 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
   QA scenarios: happy — re-run the census from scratch and diff the tables (byte-identical). failure — drop one session's transcript and confirm the inventory marks it as a missing-record row rather than silently shrinking the corpus, Evidence `.omo/evidence/task-17-plan-37-settling-arc.md`
   Commit: N (K record is `.omo` evidence; committed with the close record at todo 18/20)
   Recommended task executor category: `deep` — adjudication honesty is the whole deliverable.
-- [ ] 18. Close record: I ledger + J table + K verdict + re-derived measurements
+- [x] 18. Close record: I ledger + J table + K verdict + re-derived measurements
   What to do / Must NOT do: Write the plan-37 close record in the plan-35 shape into `plans/37-adoption-tranches-drift-maturation-and-bundle-measurement.md`: the per-family I adoption ledger (outcome, one-line evidence, generated siblings named — in the plans/35 F-ledger shape) including the accumulated freeze-friction record; the per-Spec J disposition table (eight rows: `ready` ratified by the owner, or the recorded blocking reason where the alarm points); the K verdict (commissioned plan number or stand-down). Re-derive the close measurements fresh — validate counts, recipes 1/2/8, the bindExample census (`rg -o 'bindExample\(' test/self-hosting-*.test.ts --count-matches`) — and label them re-derived, never inherited. Must NOT: quote this plan's commission numbers as close numbers; claim green without the todo-20 gate.
   Parallelization: Wave 3 | Blocked by: 5–17 | Blocks: 19
   References (executor has NO interview context - be exhaustive): plans/35 close record (§"Close record — 2026-08-16", re-derived table, delta table) as the shape; per-todo evidence files `.omo/evidence/task-*-plan-37-settling-arc.md`; plans/36 "What the arc must leave behind".
@@ -236,7 +236,7 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
   QA scenarios: happy — re-run each measurement command a second time, paste both runs. failure — if the bindExample census disagrees with the ledger's adopted/refused accounting, reconcile before proceeding (the census + the 10 first-tranche + refusals must explain all 68 manifest siblings), Evidence `.omo/evidence/task-18-plan-37-settling-arc.md`
   Commit: Y | docs(plans): plan-37 close record — I ledger, J dispositions, K verdict, re-derived measurements
   Recommended task executor category: `writing` — a curated record assembled from eighteen evidence files.
-- [ ] 19. Independent review in the plan-32 mold + closures
+- [x] 19. Independent review in the plan-32 mold + closures
   What to do / Must NOT do: Commission the arc's independent review (a fresh reviewer with no authorship stake in the arc) over the full plan-37 delta: the adoption ledger's honesty (each ADOPT verified against the byte-gates, each REFUSE against its quoted binding shape), the J dispositions (ratified rungs match the checkpoint record; refused Specs carry their reasons where the alarm points), the K verdict (definition frozen before results; arithmetic reproduces; disqualifiers honored), and the close measurements (independently re-run). Adjudicate every finding: ACCEPT (fix in-arc with evidence) or DO NOT ACCEPT (reason recorded). Must NOT: self-review; expand scope mid-review; accept a finding without re-checking it against the tree (a "verified" row is re-measured, never inherited).
   Parallelization: Wave 3 | Blocked by: 18 | Blocks: 20
   References (executor has NO interview context - be exhaustive): plan-32 mold `plans/32-universal-spec-review-followup-briefs.md` + the plan-35 review register `.omo/evidence/task-17-plan-35-agent-surface-arc.md` (finding register shape, ACCEPT / DO-NOT-ACCEPT dispositions); the full delta via git log/diff since the todo-1 commission commit.
@@ -244,7 +244,7 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
   QA scenarios: happy — register complete, closures re-run green. failure — re-measure one "verified" closure claim from scratch against the tree (the plan-35 phase-4 lesson: a verified row was false since the commit after the one it cited), Evidence `.omo/evidence/task-19-plan-37-settling-arc.md`
   Commit: Y | docs(plans): plan-37 independent review register and closures
   Recommended task executor category: `deep` — adversarial verification over the whole arc delta.
-- [ ] 20. Final gate: check ×2, statuses, AGENTS
+- [x] 20. Final gate: check ×2, statuses, AGENTS
   What to do / Must NOT do: After F1–F4 all APPROVE and the user gives the explicit okay on the surfaced final-wave results: run `npm run check` twice consecutively, both green. Flip statuses in one pass: `plans/37` header → ✅ EXECUTED with the close-summary paragraph (plan-35 shape); `plans/36` header notes the arc closed (its commissioned-plans line already names 37); `AGENTS.md` status block updated in the same pass (`plan 37 is EXECUTED`, plan 36 lineage retained); confirm the discovery pin test still passes unchanged. Must NOT: flip any status before the F-wave approvals + user okay; leave `AGENTS.md` and the plans/37 header disagreeing (the gate greps their agreement).
   Parallelization: Wave 3 | Blocked by: 19 + F1–F4 all APPROVE | Blocks: —
   References (executor has NO interview context - be exhaustive): gate agreement rule `check-self-hosting-gates.mjs` §4; pin test `test/check-self-hosting-gates.test.ts:78-84`; status-block shape `AGENTS.md` lines 22-36; plans/35 close-summary paragraph as the shape.
@@ -255,14 +255,34 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
 
 ## Final verification wave
 > Runs in parallel after ALL todos. ALL must APPROVE. Surface results and wait for the user's explicit okay before declaring complete.
-- [ ] F1. Plan compliance audit
-- [ ] F2. Code quality review
-- [ ] F3. Real manual QA
-- [ ] F4. Scope fidelity
-- [ ] F5. Open reviewer-ready pull request for plan 37
+- [x] F1. Plan compliance audit
+- [x] F2. Code quality review
+- [x] F3. Real manual QA
+- [x] F4. Scope fidelity
+- [x] F5. Open reviewer-ready pull request for plan 37
 
 ## Commit strategy
 One commit per I-lane todo (suite + force-added siblings land together, each green under the byte-gates before commit); J applies as one commit at todo 16 (only ratified rungs); commission (todo 1), close record (todo 18), review register (todo 19), and final status flips (todo 20) are their own commits. Evidence-only todos (3, 4, 10, 11, 14, 15, 17) carry `.omo/` state that rides the next coherent commit — `.omo` is recoverable project state, committed at checkpoints, never force-committed per todo. Never commit from a dirty baseline that mixes lanes; the wave-gate merge point is the natural commit boundary.
+
+## Accepted historical deviations — 2026-08-20
+Owner raw text: `pprove historical boundary deviations`.
+Normalized choice: `Approve historical boundary deviations`.
+Keep the typo. It is the actual statement.
+
+Second owner statement, exact: `Approve remaining historical deviations`.
+That statement follows the exhaustive census `.omo/evidence/f4-boundary-census-plan-37-settling-arc.md`.
+
+Commit-strategy requirements above were not met in history. History was not rewritten. No other exception is authorized.
+
+Accepted, and only these four. The 26-commit, 134-path census proves the set complete.
+
+1. F1-COMMIT-BOUNDARY / F4-B1. Todo 2's generated `test/carrier.markdown-parser.bounded-parity.test.generated.ts` landed in commission commit `1dae853a6f51bdcb8c4bde16d84dafda611e0fca`. Todo 2's authored activation and evidence landed in `e0810715e743862c79556241811c2b61f41dea55`.
+2. F4-B2. Tracer, Wave-1, and Wave-2 shared anchor-pin batches landed as standalone commits `4a451e2`, `0b098a3`, and `07098f3`, despite their `Commit: N` ride-along instructions.
+3. F4-B3-K-CLOSE-RIDE. Todo-4 definition/tooling/captures introduced in `c265f2d70c1a31ccd5976240e96ed8354a7bec13`, core corrections in `9218be999f1a1fcaad5a92019fe2b3d0836e6b1a` and `dfb899be41687a7b2aa6ff15b181c6754320f793`, none riding close `8e6a86b` despite Todo 4 Commit:N exact target.
+4. F4-B4-TODO8-Y. Todo-8 complete five-REFUSE evidence `.omo/evidence/task-8-plan-37-settling-arc.md` landed in mixed Wave-1 checkpoint `065a18f6120a266df0fab20927421d9967a2c7a6` instead of its own Commit:Y lane.
+
+F1 and F4 re-audited this complete four-row record and returned APPROVE. Todo 20 is closed, and
+this plan is EXECUTED. Evidence: `.omo/evidence/plan-37-historical-boundary-disposition.md`.
 
 ## Success criteria
 - Brief I: every one of the 58 deferred sites accounted for — adopted (byte-gates green, sibling tracked) or refused with a recorded reason; the per-family ledger stands in the plans/37 close record; the frozen interface untouched; `bindExample` census + refusals + first-tranche ten reconcile against the 68 owed siblings in `generated/registrars.json`.

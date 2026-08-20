@@ -300,6 +300,14 @@ Its kind and refusal boundaries are stated at line 21, and its carrier/default b
 - **Decision date:** Pending owner checkpoint.
 - **Ratification/evidence reference:** Pending; this packet is the evidence reference for the checkpoint.
 
+## 6. Owner ratification
+
+- **Selected disposition:** `READY`
+- **Owner decision:** `READY`
+- **Decision date:** 2026-08-20
+- **Ratification reference:** `.omo/evidence/plan-37-j-packets/RATIFICATION-BUNDLE.md`, owner statement `Ratify proposed set`.
+- **Reason:** Complete invariant with carrier surface refined by children; no blocker found.
+
 ## Adversarial and scope notes
 
 - **Raw-output honesty:** PASS — both complete JSON outputs are retained and explicitly labeled task-3 reuse; each is tied to the exact substituted catalog body above.

@@ -1,0 +1,312 @@
+================================================================
+kind            session
+file            /home/darkomijic/dev-libar/software-delivery-protocol/.omo/senpi-task/children/st_01a01aba/sessions/st_01a01aba/2026-08-19T15-53-00-485Z_01a01ab9-d145-7964-aee6-2090a65204dc.jsonl
+session_id      01a01ab9-d145-7964-aee6-2090a65204dc
+cwd             /home/darkomijic/dev-libar/software-delivery-protocol
+started         2026-08-19T15:53:00.485Z
+jsonl_lines     77
+malformed_lines 0
+catalog         /home/darkomijic/dev-libar/software-delivery-protocol/docs/agent-surface/recipes.md
+catalog_sha256  9571ac632a11cad25126e733a7ca5aa8ac5fc699a9d14369faff41b35bbd8b87
+invocations     0
+recipe_sequence (none)
+distinct_ids    (none)
+distinct_count  0
+
+seq recipe     ok       out_bytes   body_bytes body_sha256     runner
+--- ---------- -------- ----------- ---------- --------------- ------------------------------
+(no sdp q / sdp:q invocations)
+
+candidate_windows:
+  (none)
+================================================================
+================================================================
+kind            session
+file            /home/darkomijic/dev-libar/software-delivery-protocol/.omo/senpi-task/children/st_01a01af0/sessions/st_01a01af0/2026-08-19T16-52-49-209Z_01a01af0-93b9-7bc1-a2fc-639a862e4cfc.jsonl
+session_id      01a01af0-93b9-7bc1-a2fc-639a862e4cfc
+cwd             /home/darkomijic/dev-libar/software-delivery-protocol
+started         2026-08-19T16:52:49.209Z
+jsonl_lines     221
+malformed_lines 0
+catalog         /home/darkomijic/dev-libar/software-delivery-protocol/docs/agent-surface/recipes.md
+catalog_sha256  9571ac632a11cad25126e733a7ca5aa8ac5fc699a9d14369faff41b35bbd8b87
+invocations     0
+recipe_sequence (none)
+distinct_ids    (none)
+distinct_count  0
+
+seq recipe     ok       out_bytes   body_bytes body_sha256     runner
+--- ---------- -------- ----------- ---------- --------------- ------------------------------
+(no sdp q / sdp:q invocations)
+
+candidate_windows:
+  (none)
+================================================================
+================================================================
+kind            session
+file            /home/darkomijic/dev-libar/software-delivery-protocol/.omo/senpi-task/children/st_01a01af1/sessions/st_01a01af1/2026-08-19T16-52-49-669Z_01a01af0-9585-7d7c-aecb-8d20ed3d74a8.jsonl
+session_id      01a01af0-9585-7d7c-aecb-8d20ed3d74a8
+cwd             /home/darkomijic/dev-libar/software-delivery-protocol
+started         2026-08-19T16:52:49.669Z
+jsonl_lines     112
+malformed_lines 0
+catalog         /home/darkomijic/dev-libar/software-delivery-protocol/docs/agent-surface/recipes.md
+catalog_sha256  9571ac632a11cad25126e733a7ca5aa8ac5fc699a9d14369faff41b35bbd8b87
+invocations     0
+recipe_sequence (none)
+distinct_ids    (none)
+distinct_count  0
+
+seq recipe     ok       out_bytes   body_bytes body_sha256     runner
+--- ---------- -------- ----------- ---------- --------------- ------------------------------
+(no sdp q / sdp:q invocations)
+
+candidate_windows:
+  (none)
+================================================================
+================================================================
+kind            session
+file            /home/darkomijic/dev-libar/software-delivery-protocol/.omo/senpi-task/children/st_01a01af2/sessions/st_01a01af2/2026-08-19T16-52-49-710Z_01a01af0-95ae-76f6-a2cf-67bb8fb1a74e.jsonl
+session_id      01a01af0-95ae-76f6-a2cf-67bb8fb1a74e
+cwd             /home/darkomijic/dev-libar/software-delivery-protocol
+started         2026-08-19T16:52:49.710Z
+jsonl_lines     66
+malformed_lines 0
+catalog         /home/darkomijic/dev-libar/software-delivery-protocol/docs/agent-surface/recipes.md
+catalog_sha256  9571ac632a11cad25126e733a7ca5aa8ac5fc699a9d14369faff41b35bbd8b87
+invocations     0
+recipe_sequence (none)
+distinct_ids    (none)
+distinct_count  0
+
+seq recipe     ok       out_bytes   body_bytes body_sha256     runner
+--- ---------- -------- ----------- ---------- --------------- ------------------------------
+(no sdp q / sdp:q invocations)
+
+candidate_windows:
+  (none)
+================================================================
+================================================================
+kind            session
+file            /home/darkomijic/dev-libar/software-delivery-protocol/.omo/senpi-task/children/st_01a01af3/sessions/st_01a01af3/2026-08-19T16-52-49-756Z_01a01af0-95dc-78f5-8596-95bc3042383f.jsonl
+session_id      01a01af0-95dc-78f5-8596-95bc3042383f
+cwd             /home/darkomijic/dev-libar/software-delivery-protocol
+started         2026-08-19T16:52:49.756Z
+jsonl_lines     132
+malformed_lines 0
+catalog         /home/darkomijic/dev-libar/software-delivery-protocol/docs/agent-surface/recipes.md
+catalog_sha256  9571ac632a11cad25126e733a7ca5aa8ac5fc699a9d14369faff41b35bbd8b87
+invocations     0
+recipe_sequence (none)
+distinct_ids    (none)
+distinct_count  0
+
+seq recipe     ok       out_bytes   body_bytes body_sha256     runner
+--- ---------- -------- ----------- ---------- --------------- ------------------------------
+(no sdp q / sdp:q invocations)
+
+candidate_windows:
+  (none)
+================================================================
+================================================================
+kind            session
+file            /home/darkomijic/dev-libar/software-delivery-protocol/.omo/senpi-task/children/st_01a01af4/sessions/st_01a01af4/2026-08-19T16-56-49-634Z_01a01af4-3ee2-7d9d-9e90-bf9df739f5f7.jsonl
+session_id      01a01af4-3ee2-7d9d-9e90-bf9df739f5f7
+cwd             /home/darkomijic/dev-libar/software-delivery-protocol
+started         2026-08-19T16:56:49.634Z
+jsonl_lines     76
+malformed_lines 0
+catalog         /home/darkomijic/dev-libar/software-delivery-protocol/docs/agent-surface/recipes.md
+catalog_sha256  9571ac632a11cad25126e733a7ca5aa8ac5fc699a9d14369faff41b35bbd8b87
+invocations     0
+recipe_sequence (none)
+distinct_ids    (none)
+distinct_count  0
+
+seq recipe     ok       out_bytes   body_bytes body_sha256     runner
+--- ---------- -------- ----------- ---------- --------------- ------------------------------
+(no sdp q / sdp:q invocations)
+
+candidate_windows:
+  (none)
+================================================================
+================================================================
+kind            session
+file            /home/darkomijic/dev-libar/software-delivery-protocol/.omo/senpi-task/children/st_01a01af5/sessions/st_01a01af5/2026-08-19T16-57-01-656Z_01a01af4-6dd8-7034-9be4-d73eb85bf8a7.jsonl
+session_id      01a01af4-6dd8-7034-9be4-d73eb85bf8a7
+cwd             /home/darkomijic/dev-libar/software-delivery-protocol
+started         2026-08-19T16:57:01.656Z
+jsonl_lines     49
+malformed_lines 0
+catalog         /home/darkomijic/dev-libar/software-delivery-protocol/docs/agent-surface/recipes.md
+catalog_sha256  9571ac632a11cad25126e733a7ca5aa8ac5fc699a9d14369faff41b35bbd8b87
+invocations     0
+recipe_sequence (none)
+distinct_ids    (none)
+distinct_count  0
+
+seq recipe     ok       out_bytes   body_bytes body_sha256     runner
+--- ---------- -------- ----------- ---------- --------------- ------------------------------
+(no sdp q / sdp:q invocations)
+
+candidate_windows:
+  (none)
+================================================================
+================================================================
+kind            session
+file            /home/darkomijic/dev-libar/software-delivery-protocol/.omo/senpi-task/children/st_01a01af6/sessions/st_01a01af6/2026-08-19T16-59-44-283Z_01a01af6-e91b-7f93-9af6-279096b73a30.jsonl
+session_id      01a01af6-e91b-7f93-9af6-279096b73a30
+cwd             /home/darkomijic/dev-libar/software-delivery-protocol
+started         2026-08-19T16:59:44.283Z
+jsonl_lines     65
+malformed_lines 0
+catalog         /home/darkomijic/dev-libar/software-delivery-protocol/docs/agent-surface/recipes.md
+catalog_sha256  9571ac632a11cad25126e733a7ca5aa8ac5fc699a9d14369faff41b35bbd8b87
+invocations     0
+recipe_sequence (none)
+distinct_ids    (none)
+distinct_count  0
+
+seq recipe     ok       out_bytes   body_bytes body_sha256     runner
+--- ---------- -------- ----------- ---------- --------------- ------------------------------
+(no sdp q / sdp:q invocations)
+
+candidate_windows:
+  (none)
+================================================================
+================================================================
+kind            session
+file            /home/darkomijic/dev-libar/software-delivery-protocol/.omo/senpi-task/children/st_01a01b21/sessions/st_01a01b21/2026-08-19T17-46-15-446Z_01a01b21-8016-7627-9d07-9205282567f2.jsonl
+session_id      01a01b21-8016-7627-9d07-9205282567f2
+cwd             /home/darkomijic/dev-libar/software-delivery-protocol
+started         2026-08-19T17:46:15.446Z
+jsonl_lines     133
+malformed_lines 0
+catalog         /home/darkomijic/dev-libar/software-delivery-protocol/docs/agent-surface/recipes.md
+catalog_sha256  9571ac632a11cad25126e733a7ca5aa8ac5fc699a9d14369faff41b35bbd8b87
+invocations     0
+recipe_sequence (none)
+distinct_ids    (none)
+distinct_count  0
+
+seq recipe     ok       out_bytes   body_bytes body_sha256     runner
+--- ---------- -------- ----------- ---------- --------------- ------------------------------
+(no sdp q / sdp:q invocations)
+
+candidate_windows:
+  (none)
+================================================================
+================================================================
+kind            session
+file            /home/darkomijic/dev-libar/software-delivery-protocol/.omo/senpi-task/children/st_01a01b22/sessions/st_01a01b22/2026-08-19T17-46-15-911Z_01a01b21-81e7-7a3b-89a8-e0ff3621616a.jsonl
+session_id      01a01b21-81e7-7a3b-89a8-e0ff3621616a
+cwd             /home/darkomijic/dev-libar/software-delivery-protocol
+started         2026-08-19T17:46:15.911Z
+jsonl_lines     150
+malformed_lines 0
+catalog         /home/darkomijic/dev-libar/software-delivery-protocol/docs/agent-surface/recipes.md
+catalog_sha256  9571ac632a11cad25126e733a7ca5aa8ac5fc699a9d14369faff41b35bbd8b87
+invocations     0
+recipe_sequence (none)
+distinct_ids    (none)
+distinct_count  0
+
+seq recipe     ok       out_bytes   body_bytes body_sha256     runner
+--- ---------- -------- ----------- ---------- --------------- ------------------------------
+(no sdp q / sdp:q invocations)
+
+candidate_windows:
+  (none)
+================================================================
+================================================================
+kind            session
+file            /home/darkomijic/dev-libar/software-delivery-protocol/.omo/senpi-task/children/st_01a01b23/sessions/st_01a01b23/2026-08-19T17-46-15-963Z_01a01b21-821b-763c-abec-d0141c8924ee.jsonl
+session_id      01a01b21-821b-763c-abec-d0141c8924ee
+cwd             /home/darkomijic/dev-libar/software-delivery-protocol
+started         2026-08-19T17:46:15.963Z
+jsonl_lines     96
+malformed_lines 0
+catalog         /home/darkomijic/dev-libar/software-delivery-protocol/docs/agent-surface/recipes.md
+catalog_sha256  9571ac632a11cad25126e733a7ca5aa8ac5fc699a9d14369faff41b35bbd8b87
+invocations     2
+recipe_sequence missing,missing
+distinct_ids    (none)
+distinct_count  0
+
+seq recipe     ok       out_bytes   body_bytes body_sha256     runner
+--- ---------- -------- ----------- ---------- --------------- ------------------------------
+1   missing    yes      393         0                          pnpm --silent sdp:q
+2   missing    yes      4611        0                          pnpm --silent sdp:q
+
+candidate_windows:
+  W1 open_seq=1 open_ts=2026-08-19T18:05:57.052Z close=session-end close_seq=end recipes=missing,missing distinct=(none)
+================================================================
+================================================================
+kind            session
+file            /home/darkomijic/dev-libar/software-delivery-protocol/.omo/senpi-task/children/st_01a01b24/sessions/st_01a01b24/2026-08-19T17-46-16-014Z_01a01b21-824e-7f5e-88ac-d1950ed1f39e.jsonl
+session_id      01a01b21-824e-7f5e-88ac-d1950ed1f39e
+cwd             /home/darkomijic/dev-libar/software-delivery-protocol
+started         2026-08-19T17:46:16.014Z
+jsonl_lines     63
+malformed_lines 0
+catalog         /home/darkomijic/dev-libar/software-delivery-protocol/docs/agent-surface/recipes.md
+catalog_sha256  9571ac632a11cad25126e733a7ca5aa8ac5fc699a9d14369faff41b35bbd8b87
+invocations     0
+recipe_sequence (none)
+distinct_ids    (none)
+distinct_count  0
+
+seq recipe     ok       out_bytes   body_bytes body_sha256     runner
+--- ---------- -------- ----------- ---------- --------------- ------------------------------
+(no sdp q / sdp:q invocations)
+
+candidate_windows:
+  (none)
+================================================================
+================================================================
+kind            session
+file            /home/darkomijic/dev-libar/software-delivery-protocol/.omo/senpi-task/children/st_01a01dd3/sessions/st_01a01dd3/2026-08-20T06-19-58-660Z_01a01dd3-8d44-7638-ab70-355b65ca0ac7.jsonl
+session_id      01a01dd3-8d44-7638-ab70-355b65ca0ac7
+cwd             /home/darkomijic/dev-libar/software-delivery-protocol
+started         2026-08-20T06:19:58.660Z
+jsonl_lines     131
+malformed_lines 0
+catalog         /home/darkomijic/dev-libar/software-delivery-protocol/docs/agent-surface/recipes.md
+catalog_sha256  9571ac632a11cad25126e733a7ca5aa8ac5fc699a9d14369faff41b35bbd8b87
+invocations     9
+recipe_sequence unmatched,unmatched,unmatched,unmatched,unmatched,unmatched,unmatched,unmatched,unmatched
+distinct_ids    (none)
+distinct_count  0
+
+seq recipe     ok       out_bytes   body_bytes body_sha256     runner
+--- ---------- -------- ----------- ---------- --------------- ------------------------------
+1   unmatched  yes      unknown     751        5a82d944a8e531bd pnpm --silent sdp:q
+    note=- preview=const ready = g.specs().filter((spec) => spec.statedReadiness === "ready"); const backlog = read
+    shared_tool_result_bytes=372 (per-invocation stdout not separable)
+2   unmatched  yes      unknown     136        3199a9c3bfd529b8 pnpm --silent sdp:q
+    note=- preview=return g.specs().filter((spec) => spec.deliveryFacts.includes("implemented") && spec.statedReadi
+    shared_tool_result_bytes=372 (per-invocation stdout not separable)
+3   unmatched  yes      1544        699        5e05af93ec1ad009 pnpm --silent sdp:q
+    note=- preview=const rungs = ["idea", "scoped", "defined", "ready"]; const alarms = g.specs().filter((spec) => 
+4   unmatched  yes      604         699        5e05af93ec1ad009 pnpm --silent sdp:q
+    note=- preview=const rungs = ["idea", "scoped", "defined", "ready"]; const alarms = g.specs().filter((spec) => 
+5   unmatched  yes      604         699        5e05af93ec1ad009 pnpm --silent sdp:q
+    note=- preview=const rungs = ["idea", "scoped", "defined", "ready"]; const alarms = g.specs().filter((spec) => 
+6   unmatched  yes      unknown     751        5a82d944a8e531bd pnpm --silent sdp:q
+    note=- preview=const ready = g.specs().filter((spec) => spec.statedReadiness === "ready"); const backlog = read
+    shared_tool_result_bytes=212 (per-invocation stdout not separable)
+7   unmatched  yes      unknown     136        3199a9c3bfd529b8 pnpm --silent sdp:q
+    note=- preview=return g.specs().filter((spec) => spec.deliveryFacts.includes("implemented") && spec.statedReadi
+    shared_tool_result_bytes=212 (per-invocation stdout not separable)
+8   unmatched  yes      604         699        5e05af93ec1ad009 pnpm --silent sdp:q
+    note=- preview=const rungs = ["idea", "scoped", "defined", "ready"]; const alarms = g.specs().filter((spec) => 
+9   unmatched  yes      604         699        5e05af93ec1ad009 pnpm --silent sdp:q
+    note=- preview=const rungs = ["idea", "scoped", "defined", "ready"]; const alarms = g.specs().filter((spec) => 
+
+candidate_windows:
+  W1 open_seq=1 open_ts=2026-08-20T06:20:17.088Z close=edit:specs/model/pack-aggregate.sdp.md close_seq=3 recipes=unmatched,unmatched,unmatched distinct=(none)
+  W2 open_seq=4 open_ts=2026-08-20T06:22:45.998Z close=bash:npm run generate:self-hosting close_seq=4 recipes=unmatched distinct=(none)
+  W3 open_seq=5 open_ts=2026-08-20T06:23:13.343Z close=edit:test/self-hosting-graph.test.ts close_seq=7 recipes=unmatched,unmatched,unmatched distinct=(none)
+  W4 open_seq=8 open_ts=2026-08-20T06:39:22.226Z close=bash:git commit -m 'docs(specs): state ready on owner-ratified drift-alarm Specs (bri close_seq=8 recipes=unmatched distinct=(none)
+  W5 open_seq=9 open_ts=2026-08-20T06:40:53.370Z close=session-end close_seq=end recipes=unmatched distinct=(none)
+================================================================

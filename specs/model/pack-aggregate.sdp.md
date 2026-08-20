@@ -2,7 +2,7 @@
 id: spec:model.pack-aggregate
 kind: model
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.core-model
   decidedBy: spec:decisions.pack-reified

@@ -423,6 +423,14 @@ diff --git a/test/self-hosting-oracle/consumers.ts b/test/self-hosting-oracle/co
 - **Decision date:** pending
 - **Ratification/evidence reference:** pending owner checkpoint
 
+## 6. Owner ratification
+
+- **Selected disposition:** `DEFINED`
+- **Owner decision:** `DEFINED`
+- **Decision date:** 2026-08-20
+- **Ratification reference:** `.omo/evidence/plan-37-j-packets/RATIFICATION-BUNDLE.md`, owner statement `Ratify proposed set`.
+- **Blocking reason:** Impact-graph and measurement work remain unlanded; plan 35 explicitly retained `defined`.
+
 ## Template field audit
 
 | TEMPLATE.md field | Packet location | Status |
