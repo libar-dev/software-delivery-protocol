@@ -25,6 +25,7 @@ specs:
   - spec:carrier.gherkin-authoring.step-less-scenario-refused
   - spec:carrier.gherkin-authoring.multi-finding-bounded
   - spec:protocol.self-hosting
+  - spec:protocol.structural-self-binding
   - spec:observation.runtime-overlay
   - spec:extraction.derive-graph
   - spec:extraction.determinism
@@ -61,6 +62,7 @@ specs:
   - spec:consumers.delivery-session-on-ramp
   - spec:consumers.agent-surface.authoring-recipes
   - spec:consumers.intent-composition
+  - spec:consumers.graph-first-planning
   - spec:model.protocol-domain
   - spec:model.core-model
   - spec:model.enrichment-lifecycle
@@ -69,6 +71,7 @@ specs:
   - spec:model.stable-ids
   - spec:model.pack-aggregate
   - spec:model.anchors
+  - spec:model.structural-patterns
   - spec:validation.duplicate-ids.dual-carrier
   - spec:validation.warn-level-signals.orphan-signal
   - spec:validation.warn-level-signals.ready-gap-signal

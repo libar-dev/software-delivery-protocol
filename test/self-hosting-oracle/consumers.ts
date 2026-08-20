@@ -1027,6 +1027,40 @@ export const consumersSpecs = [
     deliveryFacts: ["implemented", "has-verifier"],
   },
   {
+    id: "spec:consumers.graph-first-planning",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    file: "specs/consumers/graph-first-planning.sdp.md",
+    title: "Arc intent is planned from the graph, not a prose briefs index",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Forward arc intent is captured as sub-ready Specs so planning sessions derive the backlog, sequencing, and readiness from the graph, with plans reduced to thin lineage pointers.",
+        openQuestions: [
+          {
+            question:
+              "Which truths a prose briefs index carries today — dependency maps between work items, decision gates, do-not-reopen rows — belong in Spec relations and prose, and which remain in a thin plan lineage pointer?",
+            blocking: true,
+          },
+          {
+            question:
+              "How does an arc boundary stay legible in the graph (a Pack, a relation cluster, a naming convention) without minting a workflow gate or an authored delivery fact?",
+            blocking: true,
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "`spec:consumers.delivery-session-on-ramp` owns per-session routing from graph state; this Spec owns only arc-scale commissioning — how the next arc's intent enters the corpus and is read back.",
+          "Planning remains advisory reading of the graph; no recipe, preflight, or plan document authorizes, blocks, or sequences delivery work.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
     id: "spec:consumers.impact-graph",
     specKind: "behavior",
     altitude: "feature",
