@@ -269,14 +269,19 @@ Owner raw text: `pprove historical boundary deviations`.
 Normalized choice: `Approve historical boundary deviations`.
 Keep the typo. It is the actual statement.
 
+Second owner statement, exact: `Approve remaining historical deviations`.
+That statement follows the exhaustive census `.omo/evidence/f4-boundary-census-plan-37-settling-arc.md`.
+
 Commit-strategy requirements above were not met in history. History was not rewritten. No other exception is authorized.
 
-Accepted, and only these:
+Accepted, and only these four. The 26-commit, 134-path census proves the set complete.
 
 1. F1-COMMIT-BOUNDARY / F4-B1. Todo 2's generated `test/carrier.markdown-parser.bounded-parity.test.generated.ts` landed in commission commit `1dae853a6f51bdcb8c4bde16d84dafda611e0fca`. Todo 2's authored activation and evidence landed in `e0810715e743862c79556241811c2b61f41dea55`.
 2. F4-B2. Tracer, Wave-1, and Wave-2 shared anchor-pin batches landed as standalone commits `4a451e2`, `0b098a3`, and `07098f3`, despite their `Commit: N` ride-along instructions.
+3. F4-B3-K-CLOSE-RIDE. Todo-4 definition/tooling/captures introduced in `c265f2d70c1a31ccd5976240e96ed8354a7bec13`, core corrections in `9218be999f1a1fcaad5a92019fe2b3d0836e6b1a` and `dfb899be41687a7b2aa6ff15b181c6754320f793`, none riding close `8e6a86b` despite Todo 4 Commit:N exact target.
+4. F4-B4-TODO8-Y. Todo-8 complete five-REFUSE evidence `.omo/evidence/task-8-plan-37-settling-arc.md` landed in mixed Wave-1 checkpoint `065a18f6120a266df0fab20927421d9967a2c7a6` instead of its own Commit:Y lane.
 
-F1 and F4 still REJECT on those findings. Same reviewers must re-audit before Todo 20. Evidence: `.omo/evidence/plan-37-historical-boundary-disposition.md`.
+F1 and F4 are reopened pending same-reviewer re-audit of this complete four-row record. Todo 20 stays blocked. Evidence: `.omo/evidence/plan-37-historical-boundary-disposition.md`.
 
 ## Success criteria
 - Brief I: every one of the 58 deferred sites accounted for — adopted (byte-gates green, sibling tracked) or refused with a recorded reason; the per-family ledger stands in the plans/37 close record; the frozen interface untouched; `bindExample` census + refusals + first-tranche ten reconcile against the 68 owed siblings in `generated/registrars.json`.

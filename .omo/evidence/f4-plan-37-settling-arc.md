@@ -1,6 +1,72 @@
 # F4 Plan 37 scope-fidelity audit
 
-## Verdict
+## Current final verdict at `28ec9d1`
+
+`REJECT`
+
+The owner disposition closes the two surfaced findings, F4-B1 and F4-B2, exactly as historical deviations. Re-audit found a third, unaccepted commit-strategy deviation: Todo 4 says its measurement tooling is `Commit: N` and will be committed at close with the K record, but dedicated commit `c265f2d` lands those files during Wave 0. The disposition says "These two, and no others" and does not authorize `c265f2d`.
+
+Open findings: **1** (`F4-B3`). Closed by owner disposition: **2** (`F4-B1`, `F4-B2`).
+
+## Re-audit at `28ec9d133999faf6c0aa52679c8aedff0a10c409`
+
+### Owner closure of the original findings
+
+Raw owner statement: `pprove historical boundary deviations`.
+
+Normalized accepted choice: `Approve historical boundary deviations`.
+
+The operational plan, primary Plan 37 record, and `.omo/evidence/plan-37-historical-boundary-disposition.md` all preserve the original rules and state that history was not rewritten. All five historical commits remain ancestors of HEAD with their original hashes.
+
+| Finding | Exact accepted scope | Re-audit disposition |
+| --- | --- | --- |
+| F4-B1 | The bounded-parity sibling in `1dae853` and authored activation/evidence in `e081071` | **CLOSED** by owner acceptance as a real historical deviation, not declared compliant |
+| F4-B2 | Standalone anchor-pin commits `4a451e2`, `0b098a3`, and `07098f3` | **CLOSED** by owner acceptance as real historical deviations, not declared compliant |
+
+The original commit strategy remains visible at `.omo/plans/plan-37-settling-arc.md:265`. Todo 2's `Commit: Y` remains visible. W1-B and W2-B still say `Commit: N`. The new disposition authorizes no other commit-strategy or product-scope exception.
+
+### Open finding F4-B3
+
+| Commit and exact manifest | Violated clause | Owner coverage | Result |
+| --- | --- | --- | --- |
+| `c265f2d70c1a31ccd5976240e96ed8354a7bec13`, subject `chore(evidence): plan-37 wave-0 K measurement definition, census tooling, task-4 record`, introduces `census.mjs`, `definition.md`, the seven Todo-4 QA/validation captures, and `task-4-plan-37-settling-arc.md`, while modifying the operational plan. The close commit `8e6a86b` contains none of `census.mjs`, `definition.md`, or the Todo-4 record. | Todo 4 at `.omo/plans/plan-37-settling-arc.md:113`: `Commit: N (measurement tooling is .omo workspace state; committed at close with the K record)`. The dedicated Wave-0 evidence commit did not ride the close record. | The disposition names only F4-B1 and F4-B2 and says "These two, and no others". It contains no `c265f2d`, Todo 4, or measurement-tooling exception. | **OPEN - REJECT** |
+
+This is another historical placement defect. The current K files remain within Brief K's authorized evidence paths, and no product bytes are implicated. Closing it requires an equally explicit owner disposition or a history correction; neither exists.
+
+### Commit `28ec9d1`
+
+Subject and footer are exact:
+
+```text
+docs(plans): record plan-37 historical boundary deviations
+
+Plan: .omo/plans/plan-37-settling-arc.md
+```
+
+Its exact eight-path manifest is:
+
+| Path | Change | Scope |
+| --- | --- | --- |
+| `.omo/evidence/f1-plan-37-settling-arc.md` | add | final-review evidence |
+| `.omo/evidence/f2-plan-37-settling-arc.md` | add | final-review evidence |
+| `.omo/evidence/f3-plan-37-settling-arc.md` | add | final-review evidence |
+| `.omo/evidence/f4-plan-37-settling-arc.md` | add | original final-review evidence |
+| `.omo/evidence/plan-37-historical-boundary-disposition.md` | add | exact owner disposition |
+| `.omo/evidence/task-19-verification-plan-37-settling-arc.md` | add | review verification evidence |
+| `.omo/plans/plan-37-settling-arc.md` | modify | orchestration checkboxes and bounded historical record |
+| `plans/37-adoption-tranches-drift-maturation-and-bundle-measurement.md` | modify | primary historical record |
+
+There is no product, test, generated, package, AGENTS, or public-status edit. Parent is exactly `a4a1468f59d199a1d381b23837ebcda9488f8614`; no rewrite occurred.
+
+### Current tree and prior path table
+
+The prior 128-path table was rechecked. Product/config bytes at current HEAD are identical to `a4a1468`: zero delta under `src/`, `specs/`, `test/`, `generated/`, package files, `.agents/`, AGENTS, recipes, P37-R1 config, and all frozen surfaces. Its Must NOT closure therefore remains current. The six newly tracked evidence paths listed above are authorized review/disposition records; the two modified plan paths were already classified and remain within orchestration/primary-record ownership. No dirty product path exists.
+
+At committed HEAD `28ec9d1`, F2 and F3 are checked and APPROVE while F1, F4, Todo 20, and F5 are unchecked. During this audit, the concurrent F1 reviewer revised F1 to APPROVE and checked F1 in the uncommitted operational plan. The current worktree therefore no longer satisfies the requested "F1 unchecked" snapshot; F4, Todo 20, and F5 remain unchecked. Plan 37 and AGENTS remain EXECUTING, and Plan 36 remains DRAFTED. No generation, test, build, validate, preflight, or full check was run in this re-audit.
+
+## Original audit at `a4a1468` preserved below
+
+### Original verdict
 
 `REJECT`
 

@@ -215,13 +215,19 @@ The independent review is complete with no open ACCEPT finding. Todo 19 stays un
 
 Owner raw text was `pprove historical boundary deviations`. The accepted choice is `Approve historical boundary deviations`. Keep the misspelling. It is what was typed.
 
-F1 and F4 rejected commit-boundary fidelity, not the current tree. `.omo/plans/plan-37-settling-arc.md` still requires each I-lane suite and its force-added siblings to land together, and still marks W1-B and W2-B `Commit: N` so the shared pins ride the adoption commits. Those requirements were not met in history. History was not rewritten. No other exception is authorized.
+Second owner statement, exact: `Approve remaining historical deviations`. That statement follows the exhaustive census `.omo/evidence/f4-boundary-census-plan-37-settling-arc.md`.
+
+F1 and F4 rejected commit-boundary fidelity, not the current tree. `.omo/plans/plan-37-settling-arc.md` still requires each I-lane suite and its force-added siblings to land together, still marks W1-B and W2-B `Commit: N` so the shared pins ride the adoption commits, still marks Todo 4 `Commit: N` at close with the K record, and still marks Todo 8 `Commit: Y`. Those requirements were not met in history. History was not rewritten. No other exception is authorized.
+
+The 26-commit, 134-path census proves this four-row set complete.
 
 | ID | What landed | Disposition |
 | --- | --- | --- |
 | F1-COMMIT-BOUNDARY / F4-B1 | Generated sibling `test/carrier.markdown-parser.bounded-parity.test.generated.ts` in commission `1dae853a6f51bdcb8c4bde16d84dafda611e0fca`. Authored activation and evidence in `e0810715e743862c79556241811c2b61f41dea55`. | **ACCEPT** the split as historical fact. The live sibling and suite activation remain tracked. |
 | F4-B2 | Standalone pin commits `4a451e2`, `0b098a3`, `07098f3` instead of riding the adoption commits. | **ACCEPT** the standalone batches as historical fact. Live `anchors.ts` stays inside product scope. |
+| F4-B3-K-CLOSE-RIDE | Todo-4 definition, tooling, and captures in `c265f2d70c1a31ccd5976240e96ed8354a7bec13`. Core corrections in `9218be999f1a1fcaad5a92019fe2b3d0836e6b1a` and `dfb899be41687a7b2aa6ff15b181c6754320f793`. None of those ten paths ride close `8e6a86b`. | **ACCEPT** the dedicated Wave-0 and A2/A3 placements as historical fact. Live K files stay under `.omo/evidence/`. |
+| F4-B4-TODO8-Y | Complete five-REFUSE evidence `.omo/evidence/task-8-plan-37-settling-arc.md` in mixed Wave-1 checkpoint `065a18f6120a266df0fab20927421d9967a2c7a6`. No Todo-8 lane commit exists. | **ACCEPT** the mixed-checkpoint placement as historical fact. Refusal remains a complete Brief I outcome. |
 
 Current bytes, file ownership, product scope, and byte gates are clean. F2 and F3 already APPROVE. The defects are commit placement only.
 
-Original F1 and F4 verdict artifacts stay REJECT. The same F1 and F4 reviewers must re-audit this owner record. Todo 20 stays blocked until they do. This plan remains EXECUTING. Full evidence: `.omo/evidence/plan-37-historical-boundary-disposition.md`.
+F1 and F4 are reopened pending same-reviewer re-audit of this complete four-row record. Todo 20 stays blocked until they APPROVE. This plan remains EXECUTING. Full evidence: `.omo/evidence/plan-37-historical-boundary-disposition.md`.
