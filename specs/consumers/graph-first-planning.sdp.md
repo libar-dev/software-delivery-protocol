@@ -14,10 +14,18 @@ relations:
 
 ### Open questions
 
-- [blocking] Which truths a prose briefs index carries today — dependency maps between work items, decision gates, do-not-reopen rows — belong in Spec relations and prose, and which remain in a thin plan lineage pointer?
-- [blocking] How does an arc boundary stay legible in the graph (a Pack, a relation cluster, a naming convention) without minting a workflow gate or an authored delivery fact?
+- [blocking] How does an arc boundary stay legible in the graph (a Pack, a relation cluster, a naming convention) without minting a workflow gate or an authored delivery fact? Evidence note: the briefs-index register's do-not-reopen rows land on existing decision-kind Specs and linked carriers, with a lawful non-decision staying in the plan record; that outcome is input to this question, not a ruling on it.
 
 ## Behavior
 
 - rule: `spec:consumers.delivery-session-on-ramp` owns per-session routing from graph state; this Spec owns only arc-scale commissioning — how the next arc's intent enters the corpus and is read back.
 - rule: Planning remains advisory reading of the graph; no recipe, preflight, or plan document authorizes, blocks, or sequences delivery work.
+- rule: A work-item dependency is authored only as a `dependsOn` edge between Specs whose truth genuinely needs the other to hold; independence is the absence of the edge, and no scheduling or sequencing phrase is ever authored.
+- rule: A decision gate is a `decision`-kind Spec joined to its subject by `decidedBy`; a lawful non-decision lives as decision content or a plan record, never as a gate, and it never mints an authored delivery fact.
+- rule: A do-not-reopen row lives in a `decision`-kind Spec, never a `constraint`; the reopen path is a later decision that `supersedes` it and passes the ADR three-part test.
+- rule: A re-entry trigger is the deferred Spec's own blocking open questions, plus a `dependsOn` edge when a true precondition exists; no plan document re-arms deferred work.
+- rule: A deliverable with exclusive cross-brief ownership has exactly one Spec identity; every consumer `dependsOn` that identity instead of restating the deliverable.
+- rule: Selection-pressure heuristics stay advisory, carried as behavior rules here or as recipes; they authorize, block, and sequence nothing.
+- rule: Session law re-measures from the graph first; a session never inherits readiness, backlog, or placement state from a prior plan, register, or summary.
+- rule: The thin plan file is a lineage pointer that carries plan numbering and staleness; numbering and staleness never become graph structure.
+- rule: The E2 placement ruling is a lawful non-decision that failed the ADR three-part test; it lives in the plan record and mints no Spec.
