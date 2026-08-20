@@ -501,3 +501,281 @@ The evidence file is now modified after checkpoint commit and intentionally rema
 ## Gate disposition
 
 Product, oracle, recipe, READ, temporal, focused self-hosting gate, and full `npm run check` results pass. The lawful checkpoint is `59f0fd563f5ef7c5ece16fb90c893d2e06cb54fa`; the only remaining action is independent T7 verification of this updated evidence before its final evidence landing. `AGENTS.md` remains the unrelated unstaged working-tree change. Landing remains pending.
+
+## Post-F2 correction gate-after rerun (2026-08-20)
+
+Verification-only rerun on HEAD `942c4c9e48bb827119e3e3ee1bfadccd3be3f184` (`docs(specs): correct planning-truth placement prose`). Graph skill `.agents/skills/sdp-agent-surface/SKILL.md` and unslop `~/.agents/skills/unslop/SKILL.md` loaded first. Nothing staged or committed. Plan checkboxes and Boulder were not touched. The unrelated `AGENTS.md` unslop hunk was left in the worktree.
+
+### Scope facts
+
+```text
+HEAD 942c4c9e48bb827119e3e3ee1bfadccd3be3f184
+branch feature/graph-first-planning-arc
+git status --short --branch:
+## feature/graph-first-planning-arc
+ M AGENTS.md
+```
+
+Plans 29-37 vs session base `20754a4b06bb49858df45bc4aa224d823e53f058`:
+
+```text
+git diff --name-only 20754a4b..HEAD -- 'plans/2[9]*' 'plans/3[0-7]*'
+(empty)
+```
+
+Only two authorized new decision Specs in the session diff:
+
+```text
+git diff --diff-filter=A --name-only 20754a4b..HEAD -- specs/
+specs/decisions/planning-truths-placement.sdp.md
+specs/decisions/shipped-projections-frozen.sdp.md
+```
+
+Plan 38 remains a DRAFTED thin lineage pointer. `check:self-hosting-gates` reported `currentRecord.status: DRAFTED` for `plans/38-graph-first-planning-arc.md`. Title and status header still call it a thin lineage pointer, not a briefs index.
+
+Correction commit `942c4c9e` scope, ten files, no `src/`, no historical plans 29-37, no `AGENTS.md`:
+
+```text
+.omo/evidence/briefs-index-into-spec-relations/task-2-gfp-enrichment.md
+.omo/evidence/briefs-index-into-spec-relations/task-4-placement-adr.md
+.omo/evidence/briefs-index-into-spec-relations/task-6-plan38-restructure.md
+plans/38-graph-first-planning-arc.md
+specs/consumers/delivery-session-on-ramp.sdp.md
+specs/consumers/graph-first-planning.sdp.md
+specs/decisions/planning-truths-placement.sdp.md
+specs/decisions/shipped-projections-frozen.sdp.md
+test/self-hosting-oracle/consumers.ts
+test/self-hosting-oracle/decisions.ts
+```
+
+### Commands and exit codes
+
+```text
+pnpm --silent sdp validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+```
+
+Exit code: `0`.
+
+```text
+161 specs · 1 packs · 157 anchors → 319 nodes · 675 edges (0 errors, 0 warnings)
+Wrote generated/graph.json
+Wrote generated/contracts (102 modules)
+specs/carrier/markdown-authoring.sdp.md — [warning] honesty/gaps — Spec "spec:carrier.markdown-authoring" states readiness "ready" with no resolving verifier — a gap, informative only (ready never requires delivery facts).
+specs/extraction/claim-taxonomy.sdp.md — [warning] honesty/gaps — Spec "spec:extraction.claim-taxonomy" states readiness "ready" with no resolving verifier — a gap, informative only (ready never requires delivery facts).
+specs/model/pack-aggregate.sdp.md — [warning] honesty/gaps — Spec "spec:model.pack-aggregate" states readiness "ready" with no resolving verifier — a gap, informative only (ready never requires delivery facts).
+specs/model/relations.sdp.md — [warning] honesty/gaps — Spec "spec:model.relations" states readiness "ready" with no resolving verifier — a gap, informative only (ready never requires delivery facts).
+specs/model/spec-sections.sdp.md — [warning] honesty/gaps — Spec "spec:model.spec-sections" states readiness "ready" with no resolving verifier — a gap, informative only (ready never requires delivery facts).
+validate: 0 errors · 5 warnings (conformance + honesty over the one graph)
+```
+
+```text
+npm run check
+```
+
+Exit code: `0`. Every leg ran: `check:temporal` exit 0, lint, format check, build, both generation passes, both typechecks, `npm test` (62 files, 839 passed, 1 skipped; package self-hosting suite 80 passed), `check:self-hosting-gates` with `temporal.exit: 0` and plan 38 `DRAFTED`, self-hosting `--check-clean`, example `--check-clean`, preflight PASS.
+
+Exact final preflight:
+
+```text
+preflight: semantic diff summary
+AGENTS.md
+preflight: tracked/untracked status inspected
+```
+
+Expected warnings, none treated as errors:
+
+- five self-hosting `honesty/gaps` warnings on markdown-authoring, claim-taxonomy, pack-aggregate, relations, spec-sections
+- one example `conformance/verifies-linkage` warning for `spec:orders.create-order.invalid-cart`
+- the existing non-failing esbuild CJS `import.meta` warning during build
+
+Recipes 1, 9, and 11 ran through `pnpm --silent sdp:q '<body>' --json`. Bodies copied from `docs/agent-surface/recipes.md`. Recipe 9 substituted only the documented parameter: `const id = "spec:consumers.graph-first-planning"`.
+
+### Recipe 1
+
+Exit code: `0`.
+
+```json
+{
+  "total": 0,
+  "byFamily": {},
+  "excludedReadyExamples": 66,
+  "excludedReadyDecisions": 33,
+  "excludedWithoutVerifier": []
+}
+```
+
+### Recipe 9 for `spec:consumers.graph-first-planning`
+
+Exit code: `0`.
+
+```json
+{
+  "id": "spec:consumers.graph-first-planning",
+  "found": true,
+  "statedReadiness": "idea",
+  "floorReached": "scoped",
+  "nextRung": "defined",
+  "currentFloorFailures": [],
+  "firstUnmetClause": null,
+  "promotionRequiresHumanStatement": true
+}
+```
+
+Live GFP open-questions probe, `g.specContext(...).sections.intent.openQuestions`:
+
+Exit code: `0`.
+
+```json
+{
+  "id": "spec:consumers.graph-first-planning",
+  "found": true,
+  "statedReadiness": "idea",
+  "deliveryFacts": [],
+  "openQuestionCount": 1,
+  "q1Present": false,
+  "q2Present": true,
+  "q2Blocking": true,
+  "questions": [
+    {
+      "question": "How does an arc boundary stay legible in the graph (a Pack, a relation cluster, a naming convention) without minting a workflow gate or an authored delivery fact? Evidence note: the briefs-index register's rows landed in four homes: tradeoff refusals on `decision`-kind Specs, existing behavior guarantees on their carrying Specs, holds as blocking open questions, and a lawful non-decision in the plan record; that split is observed evidence for this question, not a ruling on arc-boundary representation.",
+      "blocking": true
+    }
+  ]
+}
+```
+
+### Recipe 11
+
+Exit code: `0`.
+
+```json
+{
+  "total": 16,
+  "byFamily": {
+    "carrier": [
+      {
+        "id": "spec:carrier.markdown-pack-authoring.markdown-ts-parity",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "nextUnmetClause": null
+      },
+      {
+        "id": "spec:carrier.markdown-pack-authoring.spec-envelope-refused",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "nextUnmetClause": null
+      }
+    ],
+    "consumers": [
+      {
+        "id": "spec:consumers.edit-model",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "nextUnmetClause": null
+      },
+      {
+        "id": "spec:consumers.graph-first-planning",
+        "statedReadiness": "idea",
+        "floorReached": "scoped",
+        "nextUnmetClause": null
+      },
+      {
+        "id": "spec:consumers.impact-graph",
+        "statedReadiness": "idea",
+        "floorReached": "scoped",
+        "nextUnmetClause": null
+      },
+      {
+        "id": "spec:consumers.intent-composition",
+        "statedReadiness": "idea",
+        "floorReached": "ready",
+        "nextUnmetClause": null
+      },
+      {
+        "id": "spec:consumers.projections-model",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "nextUnmetClause": null
+      }
+    ],
+    "extraction": [
+      {
+        "id": "spec:extraction.regenerability",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "nextUnmetClause": null
+      }
+    ],
+    "model": [
+      {
+        "id": "spec:model.core-model",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "nextUnmetClause": null
+      },
+      {
+        "id": "spec:model.enrichment-lifecycle",
+        "statedReadiness": "scoped",
+        "floorReached": "scoped",
+        "nextUnmetClause": null
+      },
+      {
+        "id": "spec:model.protocol-domain",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "nextUnmetClause": null
+      },
+      {
+        "id": "spec:model.structural-patterns",
+        "statedReadiness": "idea",
+        "floorReached": "idea",
+        "nextUnmetClause": null
+      }
+    ],
+    "observation": [
+      {
+        "id": "spec:observation.runtime-overlay",
+        "statedReadiness": "idea",
+        "floorReached": "idea",
+        "nextUnmetClause": null
+      }
+    ],
+    "protocol": [
+      {
+        "id": "spec:protocol.self-hosting",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "nextUnmetClause": null
+      },
+      {
+        "id": "spec:protocol.structural-self-binding",
+        "statedReadiness": "idea",
+        "floorReached": "scoped",
+        "nextUnmetClause": null
+      }
+    ],
+    "validation": [
+      {
+        "id": "spec:validation.validator-self-testing",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "nextUnmetClause": null
+      }
+    ]
+  }
+}
+```
+
+### Manual QA of the live recipe outputs
+
+I read the JSON above, not a prior writeup.
+
+Backlog. Recipe 1's operational backlog is empty. There is no ready, unimplemented, non-example, non-decision Spec to pick up. Ready examples and ready decision records stay excluded, and no excluded example is missing a verifier. The F2 prose correction did not mint pickup-ready implementation work.
+
+Dependent and test impact. GFP still has empty `deliveryFacts`, so the correction bound no new code or tests. Recipe 9's empty `currentFloorFailures` plus the full gate's passing test and `--check-clean` projection legs are the proof that dependents of the edited carriers still match. Plan 38 still says those graph facts are advisory selection pressure, not authorization and not a sequence.
+
+Readiness and coverage. Recipe 9 keeps GFP at `idea` with floor already at `scoped` and no current-floor failure. Promotion still requires a human statement. Recipe 11 puts GFP on the lower ladder at that same `idea` / `scoped` pair. The live intent section has one open question, Q2, blocking. Q1 is gone. The Q2 evidence note records the four-home split as input, not a ruling on arc-boundary representation.
+
+### Gate disposition
+
+Validate exit 0, `npm run check` exit 0, recipes 1/9/11 exit 0, GFP Q2 blocking on an `idea` Spec with no delivery facts. Scope holds. This evidence append and the ledger records stay unstaged. `landing_pending: true`.
