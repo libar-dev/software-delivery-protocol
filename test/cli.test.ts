@@ -202,8 +202,23 @@ describe("sdp cli", () => {
       );
 
       expect(exitCode).toBe(0);
-      expect(capture.readStderr()).toBe("");
-      expect(capture.readStdout()).toContain("validate: 0 errors · 0 warnings");
+      const stderr = capture.readStderr();
+      expect(stderr).toContain(
+        'specs/carrier/markdown-authoring.sdp.md — [warning] honesty/gaps — Spec "spec:carrier.markdown-authoring"',
+      );
+      expect(stderr).toContain(
+        'specs/extraction/claim-taxonomy.sdp.md — [warning] honesty/gaps — Spec "spec:extraction.claim-taxonomy"',
+      );
+      expect(stderr).toContain(
+        'specs/model/pack-aggregate.sdp.md — [warning] honesty/gaps — Spec "spec:model.pack-aggregate"',
+      );
+      expect(stderr).toContain(
+        'specs/model/relations.sdp.md — [warning] honesty/gaps — Spec "spec:model.relations"',
+      );
+      expect(stderr).toContain(
+        'specs/model/spec-sections.sdp.md — [warning] honesty/gaps — Spec "spec:model.spec-sections"',
+      );
+      expect(capture.readStdout()).toContain("validate: 0 errors · 5 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
