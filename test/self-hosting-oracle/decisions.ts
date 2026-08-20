@@ -915,14 +915,14 @@ export const decisionsSpecs = [
       },
       decision: {
         context:
-          "The shipped-projections row in the 36 register has lineage to the 34 projection-settling record: it refused re-specifying the four shipped projections, but that refusal lived only as plan prose the graph could not check.",
+          "An earlier projection-settling record refused re-specifying the four shipped projections, and the adoption register carried that refusal as a standing do-not-reopen row, but the refusal lived only as plan prose the graph could not check.",
         decision:
-          "The shipped Design Review, census, Mermaid, and Gherkin projections are frozen as ruled. Re-specifying any of them is refused, and the ruling reopens only through a later decision Spec that supersedes this one and passes the ADR three-part test.",
+          "Re-specifying the shipped Design Review, census, Mermaid, or Gherkin projection is refused. These four projections are the ruled read surfaces over the one graph, and the ruling reopens only through a later decision Spec that supersedes this one and passes the ADR three-part test.",
         rationale: [
           "The four projections are shipped, curated read surfaces over the one graph. Re-specifying them re-litigates settled law and risks a second truth store, while a graph-checkable decision record carries the refusal where agents and validators can read it.",
         ],
         consequences: [
-          "Plans and briefs treat the four projections as settled read models. Any proposal to reshape one of them arrives as a superseding decision record, never as a follow-up todo.",
+          "Plans treat the four projections as settled read models. Any proposal to reshape one of them arrives as a superseding decision record, never as a follow-up work item.",
         ],
       },
     },
@@ -945,12 +945,12 @@ export const decisionsSpecs = [
         context:
           "The prose briefs index carried dependency maps, decision gates, do-not-reopen rows, re-entry triggers, ownership rulings, selection-pressure heuristics, and session law, but none of those truth types had a ruled home in the graph, so plan documents drifted into carrying law the graph could not check.",
         decision:
-          "Each planning-truth type lives in its ruled home. Work-item dependency truth rides `dependsOn` edges, with independence as absence of the edge and scheduling phrases never authored. Decision gates and do-not-reopen rows live on `decision`-kind Specs, linked by `decidedBy`, and a lawful non-decision stays in the plan record. Re-entry triggers are the deferred Spec's own blocking open questions plus `dependsOn` for a true precondition. Exclusive ownership is one Spec identity per deliverable with consumers depending on it. Selection-pressure heuristics and session law split across behavior rules on the graph-first planning Spec, the on-ramp handoff rule, and the thin plan file. The briefs index shape is retired as a carrier of law.",
+          "Each planning-truth type lives in its ruled home. Work-item dependency truth rides `dependsOn` edges, with independence as absence of the edge and scheduling phrases never authored. Decision gates live on `decision`-kind Specs, linked by `decidedBy`. Do-not-reopen rows split by what they carry: a tradeoff refusal becomes a `decision`-kind Spec and reopens only through a later decision that `supersedes` it under the ADR three-part test; a row that restates a behavior guarantee already homed on a carrying Spec, including the runnable-modules extraction rows, stays on that Spec and changes by ordinary Spec revision; the bySymbol impact-graph row remains a blocking hold on `spec:consumers.impact-graph` and is never minted as a decision. A lawful non-decision stays in the plan record as evidence. Re-entry triggers are the deferred Spec's own blocking open questions plus `dependsOn` for a true precondition. Exclusive ownership is one Spec identity per deliverable with consumers depending on it. Selection-pressure heuristics are advisory only, carried as behavior rules on the graph-first planning Spec or in recipes. Session law splits separately, across behavior rules on the graph-first planning Spec, the on-ramp handoff rule, and the thin plan file. The briefs index shape is retired as a carrier of law.",
         rationale: [
           "The closed six-relation vocabulary already expresses every ruled home, so the ruling costs no engine work and keeps planning prose free of sequencing authority. New relation types such as `precedes`, `inArc`, or `forbids` were refused: each one is engine surface across the model, parser, extraction, validators, oracle rosters, and agent-surface docs, buying machine-checkable planning relations the corpus does not need. A `constraint`-kind home for refusals was refused because refusals are decisions. A single session-law home was refused because the planning Spec must not own per-session routing.",
         ],
         consequences: [
-          "Plans stay thin lineage pointers and the do-not-reopen register lives in decision Specs. This ruling reopens only through a later `decision`-kind Spec that supersedes this one and itself passes the ADR three-part test.",
+          "Plans stay thin lineage pointers and the do-not-reopen register lives across its ruled homes: tradeoff refusals in decision Specs, already-homed guarantees on their carrying Specs, and the impact-graph row as a blocking hold. This ruling reopens only through a later `decision`-kind Spec that supersedes this one and itself passes the ADR three-part test.",
         ],
       },
     },

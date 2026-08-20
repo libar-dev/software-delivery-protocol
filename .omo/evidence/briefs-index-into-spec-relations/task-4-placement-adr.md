@@ -251,3 +251,93 @@ T3 follow-up owns the fix.
 
 None. No processes left running. Nothing staged or committed; landing is pending independent
 verification.
+
+---
+
+# F2 correction record (decision-prose fixes, no staging)
+
+The F2 review rejected the decision prose on two rulings. This run corrected the prose in
+place, synced the oracle descriptors, and validated. Nothing was staged or committed.
+
+## Corrections made
+
+1. `specs/decisions/planning-truths-placement.sdp.md`: removed the universal claim that every
+   do-not-reopen row becomes a `decision`-kind Spec and every reopen uses `supersedes`. The
+   decision text now states the lawful split explicitly: tradeoff refusals become
+   `decision`-kind Specs and reopen only through a later superseding decision under the ADR
+   three-part test; rows restating behavior guarantees already homed on a carrying Spec,
+   including the runnable-modules extraction rows, stay on that Spec and change by ordinary
+   Spec revision; the bySymbol impact-graph row remains a blocking hold on
+   `spec:consumers.impact-graph` and is never minted; lawful non-decisions stay in the plan
+   record as evidence. The consequence text now names all three ruled homes instead of
+   claiming the register lives in decision Specs alone.
+2. Same file: advisory selection-pressure heuristics and the session-law ownership split are
+   now stated as separate sentences instead of one mixed clause.
+3. Same file: the six-relation refusal and blast-radius rationale is unchanged; no new
+   relation type was introduced.
+4. `specs/decisions/shipped-projections-frozen.sdp.md`: the decision text now leads with the
+   concrete refusal in plain terms ("Re-specifying the shipped Design Review, census,
+   Mermaid, or Gherkin projection is refused"). Removed insider and status wording: "frozen
+   as ruled", the numbered-register lead-in ("the 36 register", "the 34 projection-settling
+   record"), "briefs", and "todo". The historical lineage meaning survives as "an earlier
+   projection-settling record" and "the adoption register carried that refusal as a standing
+   do-not-reopen row", with no banned temporal tokens. Decision section stays four-part,
+   readiness stays `ready`, relations unchanged.
+5. `test/self-hosting-oracle/decisions.ts`: the two descriptors were updated to the exact new
+   strings, field for field. No count, relation, readiness, or roster changes.
+
+## Failing-first proof
+
+F2's rejection is the failing-first proof: the rejected prose is quoted above as the before
+state (universal decision-kind claim, mixed heuristics/session-law clause, "frozen as ruled",
+plan-number lead-in, "briefs", "todo").
+
+## Verification
+
+- Scoped validate (`pnpm --silent sdp validate . --exclude explorations --exclude examples
+  --exclude test/fixtures/import/parity`): 0 errors, 5 pre-existing intentional warnings,
+  unchanged from the T4 baseline.
+- `npx vitest run test/self-hosting`: 110 passed, 14 files. This covers the graph literals,
+  the family oracle descriptors, and the declared-relations roster, so oracle parity is
+  machine-checked, not eyeballed.
+- Live `specContext` on both decision ids: `found: true`, kind `decision`, decision keys
+  `context, decision, rationale, consequences`, corrected text present verbatim, rationale
+  untouched on the placement ruling.
+- `node check-temporal.mjs`: exit 0; no banned temporal tokens in the rewritten context line.
+- `git diff --check`: clean. Diff on the three scoped files shows only the five intended
+  string pairs; no envelope, readiness, relation, or count lines moved.
+
+## Manual QA (each exception and reopen mechanism)
+
+- Tradeoff refusals: decision text says they become `decision`-kind Specs and reopen only via
+  a later superseding decision under the ADR three-part test. Accurate.
+- Already-homed guarantees: the text names the runnable-modules extraction rows explicitly
+  and states change happens by ordinary Spec revision, not by superseding decision. Accurate
+  per the register map (rows 4 and 5 link, no new Spec).
+- Impact-graph row: stated as a blocking hold on `spec:consumers.impact-graph`, never
+  minted. Matches the map's "link, never mint; do NOT answer the identity question".
+- Lawful non-decisions: stated as staying in the plan record as evidence. Accurate.
+- Shipped projections: the refusal leads in plain terms; the reopen path is unchanged
+  (superseding decision Spec, ADR three-part test).
+QA result: PASS.
+
+## Adversarial probes
+
+- stale_state: the corrected strings were re-read from live `specContext` output after the
+  edits, not trusted from the editor buffer; validate and the 110-test suite re-ran on the
+  current tree.
+- dirty_worktree: the pre-existing uncommitted hunks (`AGENTS.md`, `plans/38`, the two
+  consumers Specs, task-6 evidence) belong to other tasks and were left untouched; this run
+  modified only the two decision Specs, their oracle descriptors, and this evidence file.
+  Nothing staged or committed.
+- generated/cache: `generated/graph.json` and contracts were rewritten by validate as a
+  byproduct; no verification claim rests on them. Oracle parity rests on the vitest run
+  comparing live extraction against the descriptors.
+- misleading_success_output: PASS rests on asserted `specContext` fields and the 110-test
+  count, not exit codes alone; the one probe oddity (`specContext` does not surface
+  `readiness` under that key name) was checked against the untouched frontmatter and the
+  readiness-histogram tests instead of being smoothed over.
+
+## Cleanup
+
+None. No processes or resources left running.

@@ -156,3 +156,74 @@ landing_pending: true
   the register-pointer section now maps rows to carriers with the corrected H-trigger
   classification, and no section carries anything beyond the four retained truths plus the
   register pointer. PASS.
+
+## Revision 3 (F2 fix): three corrections to the plan 38 body
+
+> F2 review rejected the revision-2 body on three findings. Failing-first proof is that
+> rejection: the pre-fix body carried the universal-supersession reopen claim, the
+> sequencing phrase `expected to be worked this arc`, and the pointer that named the three
+> H triggers as only historical in plan 35 with GFP carrying only the generic re-entry rule.
+> Each is asserted ABSENT post-fix below. Skills loaded before editing: `unslop`
+> (`~/.agents/skills/unslop`) and the graph skill `sdp-agent-surface` (query contract,
+> recipes 1/9/11 stance). Only `plans/38-graph-first-planning-arc.md` body text and this
+> evidence file were edited. Nothing staged or committed. Carriers under sibling edit
+> (`specs/decisions/planning-truths-placement.sdp.md`,
+> `specs/decisions/shipped-projections-frozen.sdp.md`,
+> `test/self-hosting-oracle/decisions.ts`) were not touched.
+
+### The three corrections
+
+1. Universal-supersession claim replaced by the lawful split. Old: `Reopening any row is a
+   later decision Spec that supersedes the carrier and passes the ADR three-part test.` New:
+   reopening follows the home's kind: `supersedes` only for decision-kind homes (ADR
+   three-part test), behavior carriers change through ordinary Spec revision, holds stay
+   blocking until the open question is answered, lawful non-decisions remain plan evidence.
+2. Sequencing/authorization phrasing removed. `Already in the graph and expected to be worked
+   this arc:` became `Already in the graph:`, and the closing line now states these graph
+   facts are advisory selection pressure, not authorization and not a sequence.
+3. H-trigger pointer corrected. The three named H deferral triggers (Spec Studio, reference
+   projection, structural-edge Mermaid) are now pointed at
+   `spec:consumers.graph-first-planning`'s re-entry prose instead of being called only
+   historical in plan 35; plan 35 remains untouched historical evidence.
+
+Preserved: the title and DRAFTED status header byte-identical, the four retained truths plus
+the register pointer, both new decision ids (`planning-truths-placement`,
+`shipped-projections-frozen`), the plans-36/37-untouched sentence, and no machinery added.
+
+### Revision-3 check results (current tree)
+
+- `diff <(git show HEAD:plans/38-... | sed -n '1p;3p') <(sed -n '1p;3p' plans/38-...)`:
+  IDENTICAL (title and status first line byte-preserved).
+- Outline: unchanged five-section shape (Authority / Why / intent pointers / register pointer
+  / Discipline).
+- Forbidden/stale phrasing ABSENT: `Reopening any row`, `supersedes\` the carrier`,
+  `expected to be worked`, `remain historical evidence in the plan 35 record`,
+  `only the generic re-entry-trigger`, plus the nine revision-1 patterns and `Gate`,
+  `leave-behind`, `depends on plan`.
+- Required pointers PRESENT: both minted decision Specs, all linked carriers, GFP
+  `re-entry prose`, `advisory selection pressure`, `lawful non-decision`, the 36/37-untouched
+  sentence (verified across the line wrap via `tr`), `the graph wins`.
+- `git diff --check -- plans/38-graph-first-planning-arc.md`: CLEAN.
+- `npm run check:self-hosting-gates`: exit 0 on the current tree, zero fail/error/finding
+  lines (full output `/tmp/f2-gates.txt`, outside the repo).
+- Em-dash audit of body (lines 9+): none; em dashes only in the preserved title and status
+  header.
+- Manual section mapping re-read of the final rendered Markdown: Authority maps to truth 1,
+  Why to truth 2, intent pointers to truth 3, Discipline to truth 4, register section to the
+  pointer; nothing else present. PASS.
+
+### Adversarial probes (revision 3)
+
+- stale_state: assertions ran against the file as edited on the current tree, not a cached
+  outline; the sibling's carrier edits landed mid-session and the register bullet text was
+  written to name GFP's re-entry prose without asserting carrier internals.
+- dirty_worktree: `git status --porcelain` post-edit shows my changes as exactly plan 38 and
+  this evidence file; pre-existing sibling modifications (`AGENTS.md`, both decision Specs,
+  `test/self-hosting-oracle/decisions.ts`) untouched; `git diff --name-only` over plans 29-37
+  is empty.
+- misleading_success_output: the gate's exit 0 is corroborated by the explicit grep for
+  fail/error/finding lines returning nothing, not taken alone.
+
+Cleanup: none. No processes left running, no temporary files inside the repo.
+
+landing_pending: true
