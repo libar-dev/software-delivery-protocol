@@ -259,7 +259,7 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
 - [x] F2. Code quality review
 - [x] F3. Real manual QA
 - [x] F4. Scope fidelity
-- [ ] F5. Open reviewer-ready pull request for plan 37
+- [x] F5. Open reviewer-ready pull request for plan 37
 
 ## Commit strategy
 One commit per I-lane todo (suite + force-added siblings land together, each green under the byte-gates before commit); J applies as one commit at todo 16 (only ratified rungs); commission (todo 1), close record (todo 18), review register (todo 19), and final status flips (todo 20) are their own commits. Evidence-only todos (3, 4, 10, 11, 14, 15, 17) carry `.omo/` state that rides the next coherent commit — `.omo` is recoverable project state, committed at checkpoints, never force-committed per todo. Never commit from a dirty baseline that mixes lanes; the wave-gate merge point is the natural commit boundary.
