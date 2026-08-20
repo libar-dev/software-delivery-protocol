@@ -12,7 +12,8 @@ read the same shipped catalog at
 `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md`. The catalog is the
 sole owner of the bodies; copy from it, never from session notes or earlier prompts.
 
-At this repository root, the wrapper supplies the exact self-hosting exclusions:
+At this repository root, the `sdp:q` wrapper supplies the exact self-hosting exclusions. Paste the
+recipe body between the quotes; the probe below only proves the wrapper resolves:
 
 ```sh
 pnpm --silent sdp:q 'return g.specs().length'
@@ -111,20 +112,43 @@ membership order and point to `spec:carrier.markdown-pack-authoring` for the com
 ## Bind code, tests, and oracles
 
 Anchors are the only write path from code into the graph, and the two ways to get them wrong are
-both silent. Learn the hazards before the builders.
-
-Three builders exist, each carrying identity, an optional label, and one realization target:
+both silent: nothing fails, the binding just never exists. Three builders exist, each carrying
+identity, an optional label, and one realization target:
 
 - `codeAnchor` binds implementation code through `satisfies`, with IDs in the `impl:`, `api:`, or
   `component:` namespaces.
 - `specTest` binds a test through a non-empty `verifies`, in the `test:` namespace. A resolving
-  `specTest` anchor is the sole `has-verifier` source.
+  `specTest` anchor is the sole `has-verifier` source, conferring the fact directly on the Spec it
+  verifies or, through an enabled example, on the Spec that example verifies.
 - `specOracle` binds an oracle through `models`, in the `oracle:` namespace. It records that
   expected-outcome semantics exist and confers no delivery fact.
 
-The first hazard is form. The extractor reifies only the anchor-constant form: a top-level `const`
-initialized with the builder call. The decorator and JSDoc forms remain unextracted representations
-and mint nothing.
+The anchor-constant form, written out once:
+
+```ts
+import {
+  codeAnchor,
+  codeAnchorId,
+  componentAnchorId,
+  ref,
+} from "@libar-dev/software-delivery-protocol";
+
+const createOrderAnchor = codeAnchor({
+  id: codeAnchorId("impl:orders.create-order"),
+  label: "realizes order creation",
+  satisfies: ref("spec:orders.create-order"),
+  component: componentAnchorId("component:orders.api"),
+  uses: [codeAnchorId("impl:orders.repository")],
+});
+void createOrderAnchor;
+```
+
+A top-level `const`, a trusted package import, one realization target, and optional structure. The
+`void` reference keeps the unused constant past lint without exporting it.
+
+The first hazard is form. The extractor reifies only the anchor-constant form above: a top-level
+`const` initialized with the builder call. The decorator and JSDoc forms remain unextracted
+representations and mint nothing.
 
 The second hazard is trust. The builder import must be a Protocol builder binding: from the public
 package, or from a relative import that resolves to the package's `ids` or `model/code-anchor`
@@ -177,7 +201,9 @@ coverage-unknown for the Markdown file. This repository binds its own skills exa
    Diagnose contract refusals from `sdp build`; `sdp q` receives graph-validation findings, not
    codegen findings.
 
-   The build emits one `*.generated.ts` registrar sibling per bindable example, keyed by Spec ID.
+   The build emits one registrar per bindable example, named `<spec-id-path>.test.generated.ts`
+   and placed beside the authored suite whose `specTest` anchor verifies that example; the Spec ID
+   owns the filename, so one consolidated suite can bind many examples without collisions.
    Repository generation also publishes the independent Design Review, census, Mermaid, and
    Gherkin-shaped read roots. Use the repository generate/check scripts to certify the complete
    projection suite; do not treat the Gherkin read root as an authored carrier.

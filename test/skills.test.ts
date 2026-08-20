@@ -8,6 +8,9 @@ import { describe, expect, it } from "vitest";
 import {
   codeAnchor,
   codeAnchorId,
+  graphClaims,
+  graphEdgeTypes,
+  graphNodeTypes,
   ref,
   specTest,
   testAnchorId,
@@ -158,7 +161,9 @@ describe("Protocol skill assets", () => {
       "specTest",
       "specOracle",
       "codeAnchor",
+      "componentAnchorId",
       "anchor-constant",
+      ".test.generated.ts",
       "mints nothing and reports nothing",
       "document-realization",
       "registrar",
@@ -180,6 +185,17 @@ describe("Protocol skill assets", () => {
       "designed-and-deferred",
     ]) {
       expect(surface).toContain(required);
+    }
+  });
+
+  it("names the complete closed graph schema in the shape section", () => {
+    // Lockstep with the engine: adding or removing a node type, edge type, or claim must
+    // force this prose to move with it, exactly as the recipe-count test pins the catalog.
+    const surface = readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source;
+
+    expect(surface).toContain("The shape of the graph");
+    for (const name of [...graphNodeTypes, ...graphEdgeTypes, ...graphClaims]) {
+      expect(surface).toContain(`\`${name}\``);
     }
   });
 

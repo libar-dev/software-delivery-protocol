@@ -29,7 +29,7 @@ code behavior into intent.
 > EXECUTED** (the canonical `.sdp.gherkin` suffix, MD-28); **plan 28 is EXECUTED** (bounded carrier
 > pipeline, parity proof, reader-family tracer bullet); **plan 27 is EXECUTED** (v0 lineage
 > restored, the Gherkin option selected). Plans 36 and 34 are DRAFTED briefs indexes; plans 32 and
-> 29 are briefs-only planning inputs — lineage, never execution plans. Earlier arcs (plans 24–33)
+> 29 are briefs-only planning inputs — lineage, never execution plans. Earlier arcs (plans 24–26)
 > stand as recorded in `plans/`. Plan 24's inward turn remains the standing practice: forward
 > intent lives in the graph, so the live backlog is a graph query, not a document.
 > Corpus counts, readiness, and findings are **derived, never quoted** — re-run
@@ -71,7 +71,7 @@ Progressive disclosure — start at the top, follow the pointers down.
 | Look here | What you get | Read |
 |---|---|---|
 | `CONTEXT.md` (repo root) | **the vocabulary** — the ratified lean glossary (terms · relations · a worked dialogue · flagged ambiguities); sole source of truth for terminology; the model exposition lives in the Specs under `specs/` and in the surviving concept docs | **first, always** |
-| `.agents/skills/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — three repository-owned skills: `sdp-agent-surface` (reading the graph), `sdp-authoring` (authoring intent), `sdp-sessions` (advisory delivery-session routing), also exposed to Claude through the `.claude/skills` symlink; plus the sixteen runnable `sdp q` bodies | **mandatory** — load the matching skill before any corpus question, Spec authoring, or delivery-session routing; see "Query the graph first" |
+| `.agents/skills/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — three repository-owned skills: `sdp-agent-surface` (reading the graph), `sdp-authoring` (authoring intent), `sdp-sessions` (advisory delivery-session routing), also exposed to Claude through the `.claude/skills` symlink; plus the sixteen runnable `sdp q` bodies | **mandatory** — after `CONTEXT.md`, load the matching skill before any corpus question, Spec authoring, or delivery-session routing; see "Query the graph first" |
 | `specs/` | **the self-hosted corpus** — the Protocol's own Specs in its own carrier (families: `model` · `extraction` · `validation` · `carrier` · `consumers` · `protocol` · `observation` · `decisions`, plus the self-hosting Pack); the primary carrier of intended truth | when design truth is in question — but query it through `sdp q` first, then read the carrying Spec |
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
 | `docs/concept/` (+ README) | **the technical design** — the surviving principle-led docs: vision & MVP boundary, founding principles (P1–P10), authoring & binding, consumers, roadmap; the core model, the one graph, and validation & honesty dissolved into the `model.*`, `extraction.*`, and `validation.*` Spec families — locate any of them with concept search (recipe 6) | to know *how* it is designed |

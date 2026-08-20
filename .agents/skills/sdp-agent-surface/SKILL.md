@@ -11,6 +11,29 @@ is `spec:consumers.agent-surface`, realized by the front door
 `spec:decisions.agent-front-door` (MD-22): the package exports the reader, and the CLI carries one
 evaluation sink. There is no verb wall — you script the graph.
 
+## The shape of the graph
+
+The graph is flat: one array of nodes, one array of edges, nothing nested. Hierarchy is edges, so
+every question is a filter or a join, never a tree walk. Four node types exist:
+
+- `Primitive` — one authored Spec, positioned by `specKind` × `altitude` × `readiness`, carrying
+  its title, narrative, reified section content, and the derived `deliveryFacts`. Use case, NFR,
+  decision record, epic, and story are coordinates on this one type, never separate node types.
+- `Pack` — the review grouping: title, framing prose, `modelRefs`. Membership is `belongsTo`
+  edges. A Pack states no system truth.
+- `Anchor` — a test or oracle binding, with the `file` and `line` of the binding itself.
+- `CodeNode` — the code identity a `codeAnchor` mints; structural `memberOf` and `uses` edges run
+  between these.
+
+Eleven edge types exist, and the list is closed. Six are authored Spec relations: `refines`,
+`dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, `supersedes`. Five are derived by
+extraction: `belongsTo` (Pack membership), `satisfies` (code realization), `models` (oracle
+binding), `memberOf` and `uses` (anchored structure). A relation name outside this list is a bug
+in whatever prose named it, not a query to attempt. IDs are namespaced (`spec:` · `pack:` ·
+`impl:` · `api:` · `component:` · `test:` · `oracle:`), and an edge whose target does not resolve
+confers no delivery fact. Every node and edge carries exactly one claim; the edge contract is
+`spec:extraction.derive-graph`, the claim law is `spec:extraction.claim-taxonomy`.
+
 ## How delivery state derives
 
 Every fact enters the graph through one of three claims, and the claims are never collapsed.
