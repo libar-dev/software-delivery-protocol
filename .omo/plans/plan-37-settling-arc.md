@@ -236,7 +236,7 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
   QA scenarios: happy — re-run each measurement command a second time, paste both runs. failure — if the bindExample census disagrees with the ledger's adopted/refused accounting, reconcile before proceeding (the census + the 10 first-tranche + refusals must explain all 68 manifest siblings), Evidence `.omo/evidence/task-18-plan-37-settling-arc.md`
   Commit: Y | docs(plans): plan-37 close record — I ledger, J dispositions, K verdict, re-derived measurements
   Recommended task executor category: `writing` — a curated record assembled from eighteen evidence files.
-- [ ] 19. Independent review in the plan-32 mold + closures
+- [x] 19. Independent review in the plan-32 mold + closures
   What to do / Must NOT do: Commission the arc's independent review (a fresh reviewer with no authorship stake in the arc) over the full plan-37 delta: the adoption ledger's honesty (each ADOPT verified against the byte-gates, each REFUSE against its quoted binding shape), the J dispositions (ratified rungs match the checkpoint record; refused Specs carry their reasons where the alarm points), the K verdict (definition frozen before results; arithmetic reproduces; disqualifiers honored), and the close measurements (independently re-run). Adjudicate every finding: ACCEPT (fix in-arc with evidence) or DO NOT ACCEPT (reason recorded). Must NOT: self-review; expand scope mid-review; accept a finding without re-checking it against the tree (a "verified" row is re-measured, never inherited).
   Parallelization: Wave 3 | Blocked by: 18 | Blocks: 20
   References (executor has NO interview context - be exhaustive): plan-32 mold `plans/32-universal-spec-review-followup-briefs.md` + the plan-35 review register `.omo/evidence/task-17-plan-35-agent-surface-arc.md` (finding register shape, ACCEPT / DO-NOT-ACCEPT dispositions); the full delta via git log/diff since the todo-1 commission commit.
@@ -256,13 +256,27 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
 ## Final verification wave
 > Runs in parallel after ALL todos. ALL must APPROVE. Surface results and wait for the user's explicit okay before declaring complete.
 - [ ] F1. Plan compliance audit
-- [ ] F2. Code quality review
-- [ ] F3. Real manual QA
+- [x] F2. Code quality review
+- [x] F3. Real manual QA
 - [ ] F4. Scope fidelity
 - [ ] F5. Open reviewer-ready pull request for plan 37
 
 ## Commit strategy
 One commit per I-lane todo (suite + force-added siblings land together, each green under the byte-gates before commit); J applies as one commit at todo 16 (only ratified rungs); commission (todo 1), close record (todo 18), review register (todo 19), and final status flips (todo 20) are their own commits. Evidence-only todos (3, 4, 10, 11, 14, 15, 17) carry `.omo/` state that rides the next coherent commit — `.omo` is recoverable project state, committed at checkpoints, never force-committed per todo. Never commit from a dirty baseline that mixes lanes; the wave-gate merge point is the natural commit boundary.
+
+## Accepted historical deviations — 2026-08-20
+Owner raw text: `pprove historical boundary deviations`.
+Normalized choice: `Approve historical boundary deviations`.
+Keep the typo. It is the actual statement.
+
+Commit-strategy requirements above were not met in history. History was not rewritten. No other exception is authorized.
+
+Accepted, and only these:
+
+1. F1-COMMIT-BOUNDARY / F4-B1. Todo 2's generated `test/carrier.markdown-parser.bounded-parity.test.generated.ts` landed in commission commit `1dae853a6f51bdcb8c4bde16d84dafda611e0fca`. Todo 2's authored activation and evidence landed in `e0810715e743862c79556241811c2b61f41dea55`.
+2. F4-B2. Tracer, Wave-1, and Wave-2 shared anchor-pin batches landed as standalone commits `4a451e2`, `0b098a3`, and `07098f3`, despite their `Commit: N` ride-along instructions.
+
+F1 and F4 still REJECT on those findings. Same reviewers must re-audit before Todo 20. Evidence: `.omo/evidence/plan-37-historical-boundary-disposition.md`.
 
 ## Success criteria
 - Brief I: every one of the 58 deferred sites accounted for — adopted (byte-gates green, sibling tracked) or refused with a recorded reason; the per-family ledger stands in the plans/37 close record; the frozen interface untouched; `bindExample` census + refusals + first-tranche ten reconcile against the 68 owed siblings in `generated/registrars.json`.

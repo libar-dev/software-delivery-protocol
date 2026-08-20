@@ -210,3 +210,18 @@ Finding counts: **1 total, 1 ACCEPT, 0 DO NOT ACCEPT, 0 open, 1 closed**.
 The substantive I, J, K, and close claims re-measure true. Current accounting is 56 tracked/live registrar activations plus 12 live refusals against 68 owed siblings; `10 + 46 + 12 = 68`. The owner record, carriers, oracles, and graph agree on five READY and three DEFINED Specs. Recipe 2 contains the three DEFINED rows; recipe 8 contains the five honest warnings. The frozen K census reproduces byte-for-byte with 12 eligible sessions, zero qualifying episodes, and `STAND-DOWN (unmet)`. Validate remains 156 Specs, 1 Pack, 157 anchors, 314 nodes, 660 edges, 0 errors, and 5 warnings. The focused graph and eight changed self-hosting suites pass. Fresh P37-R1 closure reruns passed lint, the contract-dependent wrapper path, generation, self-hosting check-clean, and typecheck.
 
 The independent review is complete with no open ACCEPT finding. Todo 19 stays unchecked for orchestrator verification. Todo 20 remains separate. This plan remains EXECUTING and makes no final-gate claim.
+
+## Accepted historical deviations, 2026-08-20
+
+Owner raw text was `pprove historical boundary deviations`. The accepted choice is `Approve historical boundary deviations`. Keep the misspelling. It is what was typed.
+
+F1 and F4 rejected commit-boundary fidelity, not the current tree. `.omo/plans/plan-37-settling-arc.md` still requires each I-lane suite and its force-added siblings to land together, and still marks W1-B and W2-B `Commit: N` so the shared pins ride the adoption commits. Those requirements were not met in history. History was not rewritten. No other exception is authorized.
+
+| ID | What landed | Disposition |
+| --- | --- | --- |
+| F1-COMMIT-BOUNDARY / F4-B1 | Generated sibling `test/carrier.markdown-parser.bounded-parity.test.generated.ts` in commission `1dae853a6f51bdcb8c4bde16d84dafda611e0fca`. Authored activation and evidence in `e0810715e743862c79556241811c2b61f41dea55`. | **ACCEPT** the split as historical fact. The live sibling and suite activation remain tracked. |
+| F4-B2 | Standalone pin commits `4a451e2`, `0b098a3`, `07098f3` instead of riding the adoption commits. | **ACCEPT** the standalone batches as historical fact. Live `anchors.ts` stays inside product scope. |
+
+Current bytes, file ownership, product scope, and byte gates are clean. F2 and F3 already APPROVE. The defects are commit placement only.
+
+Original F1 and F4 verdict artifacts stay REJECT. The same F1 and F4 reviewers must re-audit this owner record. Todo 20 stays blocked until they do. This plan remains EXECUTING. Full evidence: `.omo/evidence/plan-37-historical-boundary-disposition.md`.
