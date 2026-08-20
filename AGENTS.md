@@ -20,7 +20,7 @@ code behavior into intent.
 > index: the arc's forward intent is authored as capture-rung Specs
 > (`spec:consumers.graph-first-planning`, `spec:model.structural-patterns`,
 > `spec:protocol.structural-self-binding`) and the backlog, readiness, and sequencing are read
-> from the graph (recipes 1, 9, 11). Settled ground is
+> from the graph (recipes 1, 9, 11). Settled ground:
 > **plan 37 is EXECUTED** — the plan-36 arc is closed; briefs I–K are delivered per
 > plan 36, with operational tracking in `.omo/plans/plan-37-settling-arc.md`.
 > **Status:** Specs and Packs default to the Markdown carrier (the carrier ruling, MD-18, completed

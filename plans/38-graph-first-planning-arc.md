@@ -6,11 +6,6 @@
 > graph (recipes 1, 9, 11) rather than from this file. If this file and the graph disagree, the
 > graph wins and this file is stale.
 
-## Authority
-
-The graph is the read model for this arc. If this file and the graph disagree, the graph wins
-and this file is stale.
-
 ## Why this arc
 
 Plan 37 closed the plan-36 arc with an empty operational backlog and no open briefs. The next
