@@ -18,37 +18,28 @@ code behavior into intent.
 
 > **plan 37 is EXECUTED** — the plan-36 arc is closed; briefs I–K are delivered per
 > plan 36, with operational tracking in `.omo/plans/plan-37-settling-arc.md`.
-> **Status:** Specs and Packs default to the Markdown carrier; the TS DSL survives as import
-> source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax
-> ruling, MD-25). The Gherkin carrier option (MD-27) admits a graph-aware lawful per-ID option
-> for behavior and example Specs. **plan 36 is DRAFTED** remains that arc's briefs index
-> (lineage). Settled ground is
-> **plan 35 is EXECUTED** — the plan-34 arc is closed (briefs E
-> through H: the diff-to-at-risk and structural recipes, `sdp new spec` and `sdp validate
-> --watch`, first-tranche registrar adoption under MD-31, the engine's own component/uses
-> self-binding, and recorded E3/H dispositions); the adjudicated independent review is closed
-> and the gate re-measured. **plan 34 is DRAFTED** remains that arc's briefs index (lineage).
-> Beneath it, **plan 33 is EXECUTED** — the
-> adjudicated plan-31 review is closed, the graph and gate are freshly re-measured, and the ready
-> PR is prepared; plan 32 remains its review brief. Beneath it, **plan 31 is EXECUTED** —
-> carrier universality, derived runnable modules, census/Mermaid projections, and structural
-> anchor semantics (briefs A/B/C/D). Earlier settled ground remains
-> **plan 30 is EXECUTED** (MD-28 settles the canonical suffix as `.sdp.gherkin` and hardens
-> locations, closed grammar, and bounded multi-finding diagnostics), **plan 28 is EXECUTED**
-> (bounded carrier pipeline, parity proof, reader-family tracer bullet, guidance) and **plan 27
-> is EXECUTED** (v0 lineage restored; executable-verification review selected the Gherkin
-> option). Plan 29 is the next-arc briefs index (not an execution plan). Plan 26 completed native
-> Packs, annotation coverage, and decision readiness. Plan 25 recovered the guidance layer and
-> packaged the `sdp-sessions` on-ramp; plan 24's inward turn remains the standing practice:
-> forward intent lives in the graph, so the live backlog is a graph query, not a document.
+> **Status:** Specs and Packs default to the Markdown carrier (the carrier ruling, MD-18, completed
+> by the Pack syntax ruling, MD-25); the TS DSL survives as import source and a lawful per-ID
+> option, and the Gherkin carrier option (MD-27) admits a graph-aware lawful per-ID option for
+> behavior and example Specs. Settled ground: **plan 35 is EXECUTED** (the plan-34 arc: structural
+> recipes, `sdp new spec`, `sdp validate --watch`, first-tranche registrar adoption under MD-31,
+> the engine's own component/uses self-binding); **plan 33 is EXECUTED** (the adjudicated plan-31
+> review closed, graph and gate re-measured); **plan 31 is EXECUTED** (carrier universality,
+> derived runnable modules, census/Mermaid projections, structural anchor semantics); **plan 30 is
+> EXECUTED** (the canonical `.sdp.gherkin` suffix, MD-28); **plan 28 is EXECUTED** (bounded carrier
+> pipeline, parity proof, reader-family tracer bullet); **plan 27 is EXECUTED** (v0 lineage
+> restored, the Gherkin option selected). Plans 36 and 34 are DRAFTED briefs indexes; plans 32 and
+> 29 are briefs-only planning inputs — lineage, never execution plans. Earlier arcs (plans 24–33)
+> stand as recorded in `plans/`. Plan 24's inward turn remains the standing practice: forward
+> intent lives in the graph, so the live backlog is a graph query, not a document.
 > Corpus counts, readiness, and findings are **derived, never quoted** — re-run
 > `pnpm --silent sdp validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity`
 > (or `npm run --silent sdp --` with the same argv) and read recipes 8 and 11. Recipe 1 is the
-> operational backlog, not the census. Never invoke a bare `sdp`. Build state lives in **`plans/`** — read the highest
-> **primary-numbered** plan's status header, plus any **active subplans it (or its parent family)
-> explicitly designates as current**; ignore unnumbered files and letter-suffixed plans only when
-> no primary/active plan designates them. If that plan is DRAFTED, also read the latest ✅
-> EXECUTED/RUN plan for settled ground.
+> operational backlog, not the census. Never invoke a bare `sdp`. Build state lives in
+> **`plans/`** — read the highest **primary-numbered** plan's status header, plus any **active
+> subplans it (or its parent family) explicitly designates as current**; ignore unnumbered files
+> and letter-suffixed plans only when no primary/active plan designates them. If that plan is
+> DRAFTED, also read the latest ✅ EXECUTED/RUN plan for settled ground.
 
 ## The frame
 
@@ -80,12 +71,12 @@ Progressive disclosure — start at the top, follow the pointers down.
 | Look here | What you get | Read |
 |---|---|---|
 | `CONTEXT.md` (repo root) | **the vocabulary** — the ratified lean glossary (terms · relations · a worked dialogue · flagged ambiguities); sole source of truth for terminology; the model exposition lives in the Specs under `specs/` and in the surviving concept docs | **first, always** |
+| `.agents/skills/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — three repository-owned skills: `sdp-agent-surface` (reading the graph), `sdp-authoring` (authoring intent), `sdp-sessions` (advisory delivery-session routing), also exposed to Claude through the `.claude/skills` symlink; plus the sixteen runnable `sdp q` bodies | **mandatory** — load the matching skill before any corpus question, Spec authoring, or delivery-session routing; see "Query the graph first" |
 | `specs/` | **the self-hosted corpus** — the Protocol's own Specs in its own carrier (families: `model` · `extraction` · `validation` · `carrier` · `consumers` · `protocol` · `observation` · `decisions`, plus the self-hosting Pack); the primary carrier of intended truth | when design truth is in question — but query it through `sdp q` first, then read the carrying Spec |
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
 | `docs/concept/` (+ README) | **the technical design** — the surviving principle-led docs: vision & MVP boundary, founding principles (P1–P10), authoring & binding, consumers, roadmap; the core model, the one graph, and validation & honesty dissolved into the `model.*`, `extraction.*`, and `validation.*` Spec families — locate any of them with concept search (recipe 6) | to know *how* it is designed |
 | `docs/concept/DECISIONS.md` | **the lean decision registry** — ratified names, one-line glosses, carrying Specs, and the D1–D6 lookup; historical rationale lives in git, plans, and the Specs themselves | when resolving a decision name or following its canonical pointer |
 | `src/` | **the engine** — `model` (Spec/descriptors/pack/anchors) · `extract` · `graph` · `validate` · `reader` (agent surface) · `projections` (Design Review) · `cli` (`sdp build` · `validate` · `view` · `census` · `mermaid` · `gherkin` · `import` · `new spec` · `q`) · `runner` / `codegen` / `notation` / `adapters` | when implementing or verifying **current engine** behavior |
-| `.agents/skills/sdp-agent-surface/` + `.agents/skills/sdp-authoring/` + `.agents/skills/sdp-sessions/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — repository-owned reading, authoring, and advisory delivery-session skills (also exposed to Claude through the `.claude/skills` symlink) plus the sixteen runnable `sdp q` bodies; see "Query the graph first" below | before answering a corpus question, authoring intent, or routing delivery work — query the graph, then follow the carrying Specs |
 | `examples/checkout-v1` | **the worked MVP example** (TS DSL tracer bullet) — specs, anchors, untracked `generated/` (regenerated in-pipeline); walkthrough in its README | when proving the loop end-to-end |
 | `explorations/` | **evidence only** (carrier exhibits, executable-example findings) — mapping evidence for design; **never promote spike code into product** | when judging design evidence; not a source tree to ship |
 | `docs/lineage/` | restored historical design documents — the v0 concept set, verbatim with lineage headers; evidence for design reviews, never intended truth | when a review needs superseded design on the table rather than in git history |
@@ -100,12 +91,18 @@ Progressive disclosure — start at the top, follow the pointers down.
 
 ## Query the graph first
 
-The graph is the sole read model, and `sdp q` is the agent front door (MD-22): it derives the
-graph in process and evaluates a plain JavaScript async-function body you supply, with three
-bindings injected — `g` (the reader), `graph` (the raw schema), `report` (the validation
-report). `return` is the output contract; add `--json` for machine-readable output. For any
-corpus question — what a Spec guarantees, what is ready but unimplemented, what a change
-touches, where a concept lives — script the graph instead of reading `.sdp.md` files by hand:
+**The skills are mandatory on-ramps; the graph is the sole read model.** Before any corpus
+question, load `.agents/skills/sdp-agent-surface/SKILL.md`. Before authoring or editing a carrier,
+load `.agents/skills/sdp-authoring/SKILL.md`. Before routing delivery work, load
+`.agents/skills/sdp-sessions/SKILL.md`. The skills teach the workflow; the graph answers the
+questions.
+
+`sdp q` is the agent front door (MD-22): it derives the graph in process and evaluates a plain
+JavaScript async-function body you supply, with three bindings injected — `g` (the reader),
+`graph` (the raw schema), `report` (the validation report). `return` is the output contract; add
+`--json` for machine-readable output. For any corpus question — what a Spec guarantees, what is
+ready but unimplemented, what a change touches, where a concept lives — script the graph instead
+of reading `.sdp.md` files by hand:
 
 ```bash
 # The build backlog (recipe 1, condensed): ready implementation work, excluding examples and decisions
@@ -161,9 +158,10 @@ Every doc honours both — never mistake one half for the other:
 
 ## Working discipline
 
-- **Query before you read.** A corpus question goes to the graph first (`pnpm --silent sdp:q`
-  with a recipe body), then to the carrying Spec it points at. Scanning `specs/` files to learn
-  state is a smell — the graph is derived from the same carrier and is always current.
+- **Skills first, graph second, files last.** Load the matching skill before the work starts; then
+  query the graph (`pnpm --silent sdp:q` with a recipe body); then read the carrying Spec it points
+  at. Scanning `specs/` files to learn state is a smell — the graph is derived from the same
+  carrier and is always current.
 - **Write lean, and write for outsiders.** Cut unnecessary verbosity and noise in every session
   artifact — plans, records, summaries, spec prose. Use technical but plain language a wider
   open-source audience can follow: the ratified terms are the shared vocabulary, not a license

@@ -144,19 +144,42 @@ describe("Protocol skill assets", () => {
     for (const required of [
       "spec:validation.readiness-floor",
       "spec:validation.kind-evidence",
+      "spec:validation.oracle-target-eligibility",
       "spec:decisions.content-only-sections",
       "spec:decisions.point-per-example",
       "spec:decisions.binding-not-liveness",
+      "spec:decisions.structural-anchor-semantics",
+      "spec:decisions.adopted-registrars-committed",
+      "spec:extraction.runnable-modules",
       "sdp build",
       "generate:self-hosting",
       "generate:example",
       "bindExample",
       "specTest",
+      "specOracle",
+      "codeAnchor",
+      "anchor-constant",
+      "mints nothing and reports nothing",
+      "document-realization",
+      "registrar",
       "contract-dependent-suites.mjs",
       "mutation",
       "cannot detect",
     ]) {
       expect(authoring).toContain(required);
+    }
+
+    const surface = readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source;
+    for (const required of [
+      "How delivery state derives",
+      "declared",
+      "anchored",
+      "inferred",
+      "verifies the Spec directly",
+      "enabled verifier",
+      "designed-and-deferred",
+    ]) {
+      expect(surface).toContain(required);
     }
   });
 
