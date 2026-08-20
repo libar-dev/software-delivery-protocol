@@ -779,3 +779,17 @@ Readiness and coverage. Recipe 9 keeps GFP at `idea` with floor already at `scop
 ### Gate disposition
 
 Validate exit 0, `npm run check` exit 0, recipes 1/9/11 exit 0, GFP Q2 blocking on an `idea` Spec with no delivery facts. Scope holds. This evidence append and the ledger records stay unstaged. `landing_pending: true`.
+
+## Final audit close
+
+Administrative close of `.omo/plans/briefs-index-into-spec-relations.md` after all 13 session todos completed. Product tree was not edited in this close. Historical plans 29-37 and the unrelated unstaged `AGENTS.md` unslop hunk were left untouched.
+
+| Reviewer | Worker | Verdict | Confidence | Notes |
+| --- | --- | --- | --- | --- |
+| F1 plan compliance | `st_01a02069` | APPROVE | 0.92 | Every execution todo complete; plan 38 carries the four retained truths; historical plans 29-37 unedited. |
+| F2 code quality | `st_01a0206a` | APPROVE | 0.92 | Low non-blocking prose residuals only. |
+| F3 first parallel attempt | `st_01a0206b` | REJECT, then cancelled | n/a | Concurrent-build `MODULE_NOT_FOUND` while other final verifiers ran; non-product. Solo rerun channel later stuck with no process and was cancelled. Superseded. |
+| F3 replacement solo | `st_01a0206f` | APPROVE | 0.96 | Validate exit 0; `npm run check` exit 0 through preflight; recipes 1/9/11 match this evidence; only `AGENTS.md` dirt. |
+| F4 scope fidelity | `st_01a0206c` | APPROVE | 0.95 | Rung-(a) only; no new relation type; no `src/` edits; no pre-existing readiness-field change; GFP Q2 still blocking; no `AGENTS.md` unslop hunk in any commit. |
+
+The superseded F3 race is not a product defect: the first parallel attempt collided with a concurrent build, and the stranded solo rerun had no process, so a replacement solo F3 was the lawful QA channel. All four final verifiers now APPROVE. Seven top-level execution todos remain complete. Work is closed.

@@ -317,20 +317,28 @@ decision Spec (`spec:decisions.planning-truths-placement`) if it passes the ADR 
 
 ## Final verification wave
 > Runs in parallel after ALL todos. ALL must APPROVE. Surface results and wait for the user's explicit okay before declaring complete.
-- [ ] F1. Plan compliance audit: every todo executed or skipped with its recorded reason; every
+- [x] F1. Plan compliance audit: every todo executed or skipped with its recorded reason; every
   escape-hatch invocation has its contradiction recorded; the four retained truths are all plan
   38 carries; no historical plan file was edited (git diff --name-only against plans/29-37 is
   empty).
-- [ ] F2. Code quality review: the new and edited carriers read lean, speak ratified vocabulary
+- [x] F2. Code quality review: the new and edited carriers read lean, speak ratified vocabulary
   (CONTEXT.md), lead with meaning over MD-n codes, and carry no workflow-gate or authored-fact
   wording; DECISIONS.md rows (if any) are one-line glosses with carrying Spec links.
-- [ ] F3. Agent-executed QA evidence review: re-run the T7 commands (npm run check; recipes 1,
+- [x] F3. Agent-executed QA evidence review: re-run the T7 commands (npm run check; recipes 1,
   9, 11 bodies from docs/agent-surface/recipes.md) and confirm the evidence files' pasted
   outputs reproduce; confirm the agent READ verdict covers every GFP behavior rule against the
   placement map. (Replaces manual QA: this plan has zero human-intervention surface.)
-- [ ] F4. Scope fidelity: only rung-(a) deliverables exist; no new relation type, no engine
+- [x] F4. Scope fidelity: only rung-(a) deliverables exist; no new relation type, no engine
   edits (git diff --name-only shows no src/ changes), no readiness-field changes on pre-existing
   Specs, Q2 still blocking on the GFP carrier, no AGENTS.md unslop hunk in any commit.
+
+## Closure
+
+Final audit closed the plan: F1 `st_01a02069` APPROVE 0.92; F2 `st_01a0206a` APPROVE 0.92 (low
+non-blocking prose residuals only); F3 first parallel attempt `st_01a0206b` rejected for
+concurrent-build `MODULE_NOT_FOUND` (non-product), its solo rerun channel cancelled after the
+process disappeared, replacement solo F3 `st_01a0206f` APPROVE 0.96; F4 `st_01a0206c` APPROVE
+0.95. All seven execution todos were already complete. Work is closed.
 
 ## Commit strategy
 
