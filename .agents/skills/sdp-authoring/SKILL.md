@@ -12,18 +12,18 @@ read the same shipped catalog at
 `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md`. The catalog is the
 sole owner of the bodies; copy from it, never from session notes or earlier prompts.
 
-At this repository root, the `sdp:q` wrapper supplies the exact self-hosting exclusions. Paste the
-recipe body between the quotes; the probe below only proves the wrapper resolves:
+At this repository root, the `sdp:q` wrapper supplies the exact self-hosting exclusions. Paste each
+recipe body between the quotes:
 
 ```sh
-pnpm --silent sdp:q 'return g.specs().length'
+pnpm --silent sdp:q '<body>'
 ```
 
 For an adopter, select its root and exclusions explicitly:
 
 ```sh
-pnpm exec sdp q 'return g.specs().map((spec) => spec.id)' --root PATH
-pnpm exec sdp q 'return g.specs().map((spec) => spec.id)' --root PATH --exclude PATH --exclude PATH
+pnpm exec sdp q '<body>' --root PATH
+pnpm exec sdp q '<body>' --root PATH --exclude PATH --exclude PATH
 ```
 
 The Protocol wrapper supplies the root's three exclusions; run `npm run build` first if `dist/` is
