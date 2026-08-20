@@ -133,3 +133,11 @@ pnpm --silent sdp:q 'const id = "spec:model.pack-aggregate"; const context = g.s
 - **Owner decision:** Pending; the proposed Ready reading is not a human promotion.
 - **Decision date:** Pending owner checkpoint.
 - **Ratification/evidence reference:** Pending; this packet is the evidence reference for the checkpoint.
+
+## 6. Owner ratification
+
+- **Selected disposition:** `READY`
+- **Owner decision:** `READY`
+- **Decision date:** 2026-08-20
+- **Ratification reference:** `.omo/evidence/plan-37-j-packets/RATIFICATION-BUNDLE.md`, owner statement `Ratify proposed set`.
+- **Reason:** No blocking Pack contract found.

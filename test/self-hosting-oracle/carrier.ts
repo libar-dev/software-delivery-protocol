@@ -7,7 +7,7 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-authoring",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-authoring.sdp.md",
     title: "Markdown authoring enters the one graph",
     narrative: null,

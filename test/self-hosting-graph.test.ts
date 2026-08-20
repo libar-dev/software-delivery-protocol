@@ -194,7 +194,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 14, idea: 3, ready: 138, scoped: 1 });
+    ).toEqual({ defined: 9, idea: 3, ready: 143, scoped: 1 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {

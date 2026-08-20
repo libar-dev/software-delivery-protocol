@@ -27,14 +27,14 @@ Owner fills only the last two columns. Prepared-candidate text is the packet che
 
 | Spec id | Packet | Stated / floor / human | Prepared candidate (as authored) | Owner decision | Reason / reference |
 | --- | --- | --- | --- | --- | --- |
-| `spec:model.core-model` | `model/core-model.md` | stated `defined`, floor `ready`, `promotionRequiresHumanStatement: true` | Ready unchecked; Defined checked. Ready patch still shown. Owner fields pending; both readings remain visible. | `READY \| DEFINED` | |
-| `spec:model.pack-aggregate` | `model/pack-aggregate.md` | stated `defined`, floor `ready`, `promotionRequiresHumanStatement: true` | Ready checked; Defined unchecked. Owner fields pending; proposed Ready reading is not a human promotion. | `READY \| DEFINED` | |
-| `spec:model.relations` | `model/relations.md` | stated `defined`, floor `ready`, `promotionRequiresHumanStatement: true` | Ready checked; Defined unchecked. Owner fields pending; proposed Ready reading is not a human promotion. | `READY \| DEFINED` | |
-| `spec:model.spec-sections` | `model/spec-sections.md` | stated `defined`, floor `ready`, `promotionRequiresHumanStatement: true` | Ready checked; Defined unchecked. Owner fields pending; proposed Ready reading is not a human promotion. | `READY \| DEFINED` | |
-| `spec:extraction.claim-taxonomy` | `extraction/claim-taxonomy.md` | stated `defined`, floor `ready`, `promotionRequiresHumanStatement: true` | Ready candidate checked; Defined unchecked. Owner decision pending; prepared candidate, not a ratification. | `READY \| DEFINED` | |
-| `spec:extraction.regenerability` | `extraction/regenerability.md` | stated `defined`, floor `ready`, `promotionRequiresHumanStatement: true` | Ready unchecked (no primary patch). Defined candidate checked. Owner decision pending; blocking-reason candidate, not a ratification. | `READY \| DEFINED` | |
-| `spec:consumers.projections-model` | `consumers/projections-model.md` | stated `defined`, floor `ready`, `promotionRequiresHumanStatement: true` | No disposition selected. Both Ready and Defined alternatives prepared and marked UNAPPLIED. Owner decision pending; both readings remain live. | `READY \| DEFINED` | |
-| `spec:carrier.markdown-authoring` | `carrier/markdown-authoring.md` | stated `defined`, floor `ready`, `promotionRequiresHumanStatement: true` | Ready candidate checked; Defined alternative unchecked. Owner fields pending; proposed Ready reading is not a human promotion. | `READY \| DEFINED` | |
+| `spec:model.core-model` | `model/core-model.md` | stated `defined`, floor `ready`, `promotionRequiresHumanStatement: true` | Ready unchecked; Defined checked. Ready patch still shown. Owner fields pending; both readings remain visible. | `DEFINED` | Blocking enrichment-lifecycle question remains open. |
+| `spec:model.pack-aggregate` | `model/pack-aggregate.md` | stated `defined`, floor `ready`, `promotionRequiresHumanStatement: true` | Ready checked; Defined unchecked. Owner fields pending; proposed Ready reading is not a human promotion. | `READY` | No blocking Pack contract found. |
+| `spec:model.relations` | `model/relations.md` | stated `defined`, floor `ready`, `promotionRequiresHumanStatement: true` | Ready checked; Defined unchecked. Owner fields pending; proposed Ready reading is not a human promotion. | `READY` | Complete typed relation vocabulary; no blocker found. |
+| `spec:model.spec-sections` | `model/spec-sections.md` | stated `defined`, floor `ready`, `promotionRequiresHumanStatement: true` | Ready checked; Defined unchecked. Owner fields pending; proposed Ready reading is not a human promotion. | `READY` | Strongest packet; no blocker found. |
+| `spec:extraction.claim-taxonomy` | `extraction/claim-taxonomy.md` | stated `defined`, floor `ready`, `promotionRequiresHumanStatement: true` | Ready candidate checked; Defined unchecked. Owner decision pending; prepared candidate, not a ratification. | `READY` | Complete bounded claims glossary; no blocker found. |
+| `spec:extraction.regenerability` | `extraction/regenerability.md` | stated `defined`, floor `ready`, `promotionRequiresHumanStatement: true` | Ready unchecked (no primary patch). Defined candidate checked. Owner decision pending; blocking-reason candidate, not a ratification. | `DEFINED` | Quoted thresholds lack their measurement artifact. |
+| `spec:consumers.projections-model` | `consumers/projections-model.md` | stated `defined`, floor `ready`, `promotionRequiresHumanStatement: true` | No disposition selected. Both Ready and Defined alternatives prepared and marked UNAPPLIED. Owner decision pending; both readings remain live. | `DEFINED` | Impact-graph and measurement work remain unlanded; plan 35 explicitly retained `defined`. |
+| `spec:carrier.markdown-authoring` | `carrier/markdown-authoring.md` | stated `defined`, floor `ready`, `promotionRequiresHumanStatement: true` | Ready candidate checked; Defined alternative unchecked. Owner fields pending; proposed Ready reading is not a human promotion. | `READY` | Complete invariant with carrier surface refined by children; no blocker found. |
 
 ## 1. `spec:model.core-model`
 
@@ -56,9 +56,9 @@ Stated `defined`. Floor `ready`. Promotion requires a human statement.
 
 **Prepared candidate (as authored):** Ready unchecked, with the unapplied one-rung carrier/oracle diff still shown. Defined checked: keep `readiness: defined` because of the quoted blocking OQ. Owner/rater, decision, date, and ratification reference are pending.
 
-**Owner decision:** `READY | DEFINED`
+**Owner decision:** `DEFINED`
 
-**Reason / reference:**
+**Reason / reference:** Blocking enrichment-lifecycle question remains open.
 
 ## 2. `spec:model.pack-aggregate`
 
@@ -80,9 +80,9 @@ Stated `defined`. Floor `ready`. Promotion requires a human statement.
 
 **Prepared candidate (as authored):** Ready checked (unapplied one-rung carrier/oracle diff). Defined unchecked; alternative stays available if the owner identifies a concrete missing contract. Owner fields pending; the proposed Ready reading is not a human promotion.
 
-**Owner decision:** `READY | DEFINED`
+**Owner decision:** `READY`
 
-**Reason / reference:**
+**Reason / reference:** No blocking Pack contract found.
 
 ## 3. `spec:model.relations`
 
@@ -104,9 +104,9 @@ Stated `defined`. Floor `ready`. Promotion requires a human statement.
 
 **Prepared candidate (as authored):** Ready checked (unapplied one-rung carrier/oracle diff). Defined unchecked; alternative stays available if the owner identifies explicit blocking evidence. Owner fields pending; the proposed Ready reading is not a human promotion.
 
-**Owner decision:** `READY | DEFINED`
+**Owner decision:** `READY`
 
-**Reason / reference:**
+**Reason / reference:** Complete typed relation vocabulary; no blocker found.
 
 ## 4. `spec:model.spec-sections`
 
@@ -128,9 +128,9 @@ Stated `defined`. Floor `ready`. Promotion requires a human statement.
 
 **Prepared candidate (as authored):** Ready checked (unapplied one-rung carrier/oracle diff). Defined unchecked; alternative stays available if the owner identifies explicit blocking evidence. Owner fields pending; the proposed Ready reading is not a human promotion.
 
-**Owner decision:** `READY | DEFINED`
+**Owner decision:** `READY`
 
-**Reason / reference:**
+**Reason / reference:** Strongest packet; no blocker found.
 
 ## 5. `spec:extraction.claim-taxonomy`
 
@@ -152,9 +152,9 @@ Stated `defined`. Floor `ready`. Promotion requires a human statement.
 
 **Prepared candidate (as authored):** Ready candidate checked (unapplied one-rung carrier/oracle diff). Defined unchecked: "no blocking reason found for this candidate; owner may instead retain `defined` deliberately." Owner decision pending; this is a prepared candidate, not a ratification.
 
-**Owner decision:** `READY | DEFINED`
+**Owner decision:** `READY`
 
-**Reason / reference:**
+**Reason / reference:** Complete bounded claims glossary; no blocker found.
 
 ## 6. `spec:extraction.regenerability`
 
@@ -176,9 +176,9 @@ Stated `defined`. Floor `ready`. Promotion requires a human statement.
 
 **Prepared candidate (as authored):** Ready unchecked: no carrier/oracle patch is proposed as the primary candidate because the threshold evidence is not measured. Defined candidate checked, with the missing measurement artifact as the blocking reason for the approximate thresholds only. Owner decision pending; this is a blocking-reason candidate, not a ratification.
 
-**Owner decision:** `READY | DEFINED`
+**Owner decision:** `DEFINED`
 
-**Reason / reference:**
+**Reason / reference:** Quoted thresholds lack their measurement artifact.
 
 ## 7. `spec:consumers.projections-model`
 
@@ -200,9 +200,9 @@ Stated `defined`. Floor `ready`. Promotion requires a human statement.
 
 **Prepared candidate (as authored):** No disposition is selected. Prepared Ready alternative is UNAPPLIED (`readiness: defined` to `readiness: ready`, plus matching oracle row). The Defined alternative is also UNAPPLIED (keep both current lines; recorded reason is the partially evidenced roadmap/process and measured vocabulary). Owner/rater pending; both `ready` and `defined` remain live readings.
 
-**Owner decision:** `READY | DEFINED`
+**Owner decision:** `DEFINED`
 
-**Reason / reference:**
+**Reason / reference:** Impact-graph and measurement work remain unlanded; plan 35 explicitly retained `defined`.
 
 ## 8. `spec:carrier.markdown-authoring`
 
@@ -224,21 +224,23 @@ Stated `defined`. Floor `ready`. Promotion requires a human statement.
 
 **Prepared candidate (as authored):** Ready candidate checked (unapplied one-rung carrier/oracle diff; oracle target named as the real row at `test/self-hosting-oracle/carrier.ts:7-12`). Defined alternative unchecked: retain `defined` only if the checkpoint records explicit blocking evidence; none is present in this packet. Owner fields pending; the proposed Ready reading is not a human promotion.
 
-**Owner decision:** `READY | DEFINED`
+**Owner decision:** `READY`
 
-**Reason / reference:**
+**Reason / reference:** Complete invariant with carrier surface refined by children; no blocker found.
 
 ## Owner response template
 
 Exactly eight lines. Replace `READY|DEFINED` and fill `<reason/reference>`.
 
 ```
-spec:model.core-model: READY|DEFINED — <reason/reference>
-spec:model.pack-aggregate: READY|DEFINED — <reason/reference>
-spec:model.relations: READY|DEFINED — <reason/reference>
-spec:model.spec-sections: READY|DEFINED — <reason/reference>
-spec:extraction.claim-taxonomy: READY|DEFINED — <reason/reference>
-spec:extraction.regenerability: READY|DEFINED — <reason/reference>
-spec:consumers.projections-model: READY|DEFINED — <reason/reference>
-spec:carrier.markdown-authoring: READY|DEFINED — <reason/reference>
+spec:model.core-model: DEFINED — blocking enrichment-lifecycle question remains open
+spec:model.pack-aggregate: READY — no blocking Pack contract found
+spec:model.relations: READY — complete typed relation vocabulary; no blocker found
+spec:model.spec-sections: READY — strongest packet; no blocker found
+spec:extraction.claim-taxonomy: READY — complete bounded claims glossary; no blocker found
+spec:extraction.regenerability: DEFINED — quoted thresholds lack their measurement artifact
+spec:consumers.projections-model: DEFINED — impact-graph and measurement work remain unlanded; plan 35 explicitly retained defined
+spec:carrier.markdown-authoring: READY — complete invariant with carrier surface refined by children; no blocker found
 ```
+
+Ratified by the repository owner on 2026-08-20 with the statement `Ratify proposed set`.

@@ -171,6 +171,14 @@ return {
 - **Decision date:** pending
 - **Ratification/evidence reference:** pending owner ratification; this packet is the evidence reference
 
+## 6. Owner ratification
+
+- **Selected disposition:** `DEFINED`
+- **Owner decision:** `DEFINED`
+- **Decision date:** 2026-08-20
+- **Ratification reference:** `.omo/evidence/plan-37-j-packets/RATIFICATION-BUNDLE.md`, owner statement `Ratify proposed set`.
+- **Blocking reason:** Quoted thresholds lack their measurement artifact.
+
 ## Adversarial QA
 
 - **misleading_success_output:** complete raw Recipe 9 and Recipe 3 JSON is retained above; summary fields were not used alone.
