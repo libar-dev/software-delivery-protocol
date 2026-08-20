@@ -1,39 +1,52 @@
-# Task 1 evidence: sdp-skills-gen1-parity
+# Task 1 parity gate evidence
 
-## Baseline
+Date: 2026-08-20
+Task: `sdp-skills-gen1-parity Todo 1`
+Phase: Wave 0 read-only close gate
 
-Fresh reads and the gate command characterize the unchanged dependency state before any Wave 1 edit. The required plan-37 status sources both report `EXECUTING`, not `EXECUTED`. The plan-37 execution and final-verification checkboxes are not all closed.
+## Plan and status checks
 
-## Required status sources
-
-Exact required status-line read:
-
-```text
-AGENTS.md:19:> **plan 37 is EXECUTING** — the plan-36 arc is executing; briefs I–K are delivered per
-AGENTS.md:20:> plan 36, with operational tracking in `.omo/plans/plan-37-settling-arc.md`.
-plans/37-adoption-tranches-drift-maturation-and-bundle-measurement.md:3:> **Status:** 🔄 EXECUTING — the plan-36 arc is executing; briefs I–K delivered per plans/36; operational tracking in `.omo/plans/plan-37-settling-arc.md`
-```
-
-The plan-37 primary record and the `AGENTS.md` current-plan block therefore fail the required `EXECUTED` status condition.
-
-## Open-checkbox evidence
-
-The checkbox scan found 27 plan-37 checkbox lines: 17 closed and 10 open. The 10 open lines are:
+Exact status line in `plans/37-adoption-tranches-drift-maturation-and-bundle-measurement.md`:
 
 ```text
-215:- [ ] 16. Apply ratified readiness statements (post-checkpoint)
-223:- [ ] 17. K gather + verdict: run the frozen measurement over this arc's sessions
-231:- [ ] 18. Close record: I ledger + J table + K verdict + re-derived measurements
-239:- [ ] 19. Independent review in the plan-32 mold + closures
-247:- [ ] 20. Final gate: check ×2, statuses, AGENTS
-258:- [ ] F1. Plan compliance audit
-259:- [ ] F2. Code quality review
-260:- [ ] F3. Real manual QA
-261:- [ ] F4. Scope fidelity
-262:- [ ] F5. Open reviewer-ready pull request for plan 37
+> **Status:** ✅ EXECUTED — the plan-36 arc is closed; briefs I–K delivered per plans/36; operational tracking in `.omo/plans/plan-37-settling-arc.md`
 ```
 
-Execution todos 16-20 and final verification F1-F5 remain open.
+The operational plan `.omo/plans/plan-37-settling-arc.md` has these exact checked entries:
+
+```text
+- [x] 1. Commission plan 37 across the four repo surfaces
+- [x] 2. I-0 tracer: adopt `carrier.markdown-parser` bounded-parity beside existing registrars
+- [x] 3. J preflight: recipe 9 ×8 and the evidence-packet template
+- [x] 4. K measurement definition (frozen) + read-only census scripts
+- [x] 5. I-1 validators: adopt the remaining 16 sites across 9 validation families
+- [x] 6. I-2 Gherkin: the shape-stressing tranche, alone
+- [x] 7. I-5a tail: pack-markdown (2 sites)
+- [x] 8. I-5b tail: consumers (5 sites)
+- [x] 9. I-5c tail: sdp-import (1 site)
+- [x] 10. J-model: evidence packets + prepared diffs for the four model Specs
+- [x] 11. J-extraction: evidence packets + prepared diffs for the two extraction Specs
+- [x] 12. I-3 projections: adopt-or-refuse 11 sites across 5 families
+- [x] 13. I-4 extraction: adopt-or-refuse 9 sites across 5 families
+- [x] 14. J-consumers: evidence packet + prepared diff for projections-model
+- [x] 15. J-carrier: evidence packet + prepared diff for markdown-authoring
+- [x] 16. Apply ratified readiness statements (post-checkpoint)
+- [x] 17. K gather + verdict: run the frozen measurement over this arc's sessions
+- [x] 18. Close record: I ledger + J table + K verdict + re-derived measurements
+- [x] 19. Independent review in the plan-32 mold + closures
+- [x] 20. Final gate: check ×2, statuses, AGENTS
+- [x] F1. Plan compliance audit
+- [x] F2. Code quality review
+- [x] F3. Real manual QA
+- [x] F4. Scope fidelity
+- [x] F5. Open reviewer-ready pull request for plan 37
+```
+
+Exact `AGENTS.md` status line:
+
+```text
+> **plan 37 is EXECUTED** — the plan-36 arc is closed; briefs I–K are delivered per
+```
 
 ## Self-hosting gate
 
@@ -43,9 +56,9 @@ Command:
 node check-self-hosting-gates.mjs .
 ```
 
-Exit code: `0`.
+Result: exit `0`; stderr was empty (`0` bytes).
 
-Exact stdout (`4695` bytes):
+Exact stdout:
 
 ```json
 {
@@ -60,7 +73,7 @@ Exact stdout (`4695` bytes):
     "package": "package.json"
   },
   "currentRecord": {
-    "status": "EXECUTING",
+    "status": "EXECUTED",
     "gateLegs": [
       "check:temporal",
       "lint",
@@ -218,7 +231,7 @@ Exact stdout (`4695` bytes):
       "meaning": "whole-phase review and the phase-2 disposition",
       "disposition": "accepted",
       "date": "2026-07-18",
-      "sha": "1d9f38c7a993f9cdc27cc4e178e211e33286758b",
+      "sha": "1d9f38c7a993f9cdc27cc4e178e211e33286758",
       "corrections": "24f9978: docs(concept): record the landed prose projection in 06"
     }
   },
@@ -226,49 +239,29 @@ Exact stdout (`4695` bytes):
 }
 ```
 
-Exact stderr (`0` bytes): empty
+## Working-tree and overlap check
 
-The process exit and empty stderr satisfy the command leg, but stdout identifies the current record as `EXECUTING`; it does not establish plan-37 closure.
-
-## Worktree overlap
-
-Exact baseline `git status --short --untracked-files=all`:
+Exact status before this evidence file was written:
 
 ```text
  M .omo/boulder.json
-?? .omo/drafts/sdp-skills-gen1-parity.md
-?? .omo/plans/sdp-skills-gen1-parity.md
+ M .omo/evidence/ulw-20260820-081346.05dmOx.md
 ```
 
-Exact status scoped to the three future edit files:
+Exact full diff summary at verification time:
 
 ```text
+ .omo/boulder.json                           |  7 +++----
+ .omo/evidence/ulw-20260820-081346.05dmOx.md | 10 ++++++++++
+ 2 files changed, 13 insertions(+), 4 deletions(-)
 ```
 
-Overlap verdict: PASS. No live plan-37 edit overlaps `.agents/skills/sdp-agent-surface/SKILL.md`, `.agents/skills/sdp-authoring/SKILL.md`, or `README.md`.
+Exact targeted diff summary for the three files this plan will change:
 
-## Adversarial classes
+```text
+--- target diff --name-status ---
 
-- `stale_state`: probed with fresh reads of both status sources, a fresh checkbox scan, and a fresh gate invocation; the result remains `EXECUTING` with open closure work.
-- `dirty_worktree`: probed by exact scoped status; no overlap with the three future edit files.
-- `misleading_success_output`: probed by comparing status words, checkbox counts, exit code, stdout, and stderr; exit 0 and empty stderr coexist with `EXECUTING` and 10 open checkboxes, so exit 0 alone is not closure evidence.
-- `malformed_input`: not applicable; this is a fixed-tree status audit with no user payload to parse.
-- `prompt_injection`: not applicable; only repository records and the named command were used as evidence.
-- `cancel_resume`: not applicable; the audit did not pause, cancel, or resume work.
-- `hung_or_long_commands`: not applicable; the single Node gate completed with exit 0.
-- `flaky_tests`: not applicable; no tests are part of this read-only dependency gate.
-- `repeated_interruptions`: not applicable; no command was interrupted or retried.
-- Generated/cached artifacts: not applicable; the gate output revealed no generated or cached artifact dependency.
+--- target diff --stat ---
+```
 
-## Verdict
-
-`BLOCKED`
-
-Current blocker: plan 37 is still `EXECUTING` in both required status sources, with execution todos 16-20 and final-verification F1-F5 open. The self-hosting command and overlap leg pass, but the conjunctive closure gate does not.
-
-## Cleanup receipt
-
-- Changed by this task: `.omo/evidence/task-1-sdp-skills-gen1-parity.md` only.
-- No product, guidance, plan-37, `AGENTS.md`, test, runtime, spec, or package file was edited.
-- No staging, commit, push, or destructive Git command was performed.
-- No in-repository temporary artifact was created.
+Conclusion: no live plan-37 edit overlaps `.agents/skills/sdp-agent-surface/SKILL.md`, `.agents/skills/sdp-authoring/SKILL.md`, or `README.md`. Wave 1 was not started, and no plan-37 file was advanced by this task.

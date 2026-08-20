@@ -1,5 +1,7 @@
 # sdp-skills-gen1-parity - Work Plan
 
+✅ COMPLETED
+
 ## TL;DR (For humans)
 <!-- Fill this LAST, after the detailed plan below is written, so it summarizes the REAL plan. -->
 <!-- Plain English for a non-engineer: NO file paths, NO todo numbers, NO wave/agent/tool names. -->
@@ -69,7 +71,7 @@ Your next move: after the required high-accuracy review passes, run `/start-work
 ## Todos
 > Implementation + Test = ONE todo. Never separate.
 <!-- APPEND TASK BATCHES BELOW THIS LINE WITH edit/apply_patch - never rewrite the headers above. -->
-- [ ] 1. Wait for plan 37 to close cleanly
+- [x] 1. Wait for plan 37 to close cleanly
   What to do / Must NOT do: Before editing any in-scope file, verify that plan 37 completed its remaining owner-ratification, K measurement, close record, independent review, final gate, and status flip. Require `plans/37-adoption-tranches-drift-maturation-and-bundle-measurement.md` and the current-plan entry in `AGENTS.md` to say `EXECUTED`, and require `node check-self-hosting-gates.mjs .` to exit 0. Record the exact status lines and command output. Must NOT advance plan 37, edit its records, infer closure from one completed todo, or start this plan while any plan-37 task still measures the current skill guidance.
   Parallelization: Wave 0 | Blocked by: - | Blocks: 2, 3, 4
   References (executor has NO interview context - be exhaustive): `plans/37-adoption-tranches-drift-maturation-and-bundle-measurement.md:1-24` execution status and frozen scope; `.omo/plans/plan-37-settling-arc.md` open todos 16-20 and final verification wave; `.omo/evidence/plan-37-k-measurement/definition.md:205-213` current skill chains as corroborating evidence; `check-self-hosting-gates.mjs` current-record gate; `AGENTS.md` current-plan status block.
@@ -78,7 +80,7 @@ Your next move: after the required high-accuracy review passes, run `/start-work
   Commit: N | read-only gate
   Recommended task executor category: `quick` - a mechanical status and gate check with no edits.
 
-- [ ] 2. Correct the graph-read skill's stdout contract
+- [x] 2. Correct the graph-read skill's stdout contract
   What to do / Must NOT do: Make a surgical edit to `.agents/skills/sdp-agent-surface/SKILL.md`. Keep its frontmatter, bootstrap, exactly two adopter `pnpm exec sdp q` examples, at least one source-checkout `pnpm --silent sdp:q` example, sixteen-recipe description, five structural phrases, `g` / `graph` / `report` contract, trusted-code warning, claim/readiness/delivery-fact distinctions, anti-anecdote rule, and refused actions. Replace the false statement that `return` means nothing else prints with the observed contract: `return` is the machine output contract, but the runtime does not suppress `console.*`, so machine-consumed bodies must avoid console output. Tighten nearby prose if needed so the file does not grow. Must NOT add a section, standalone guide, third adopter example, bare `sdp`, `bySymbol`, recipe, product change, or copied carrying law.
   Parallelization: Wave 1 | Blocked by: 1 | Blocks: 5 | Can parallelize with: 3, 4
   References (executor has NO interview context - be exhaustive): `.agents/skills/sdp-agent-surface/SKILL.md:1-120`, especially bootstrap `:14-47`, catalog `:48-59`, output overstatement `:60-75`, anti-anecdote and refusals `:83-120`; `src/cli/q-command.ts:73-82` compilation and `:240-275` execution/rendering; `specs/consumers/agent-surface.sdp.md:13-26`; `test/skills.test.ts:116-140,218-270`; `test/recipes.test.ts:259-368`.
@@ -87,7 +89,7 @@ Your next move: after the required high-accuracy review passes, run `/start-work
   Commit: N | no commit without explicit user authorization
   Recommended task executor category: `writing` - one small truth correction in a user-facing skill.
 
-- [ ] 3. Remove duplicated carrier law from authoring guidance
+- [x] 3. Remove duplicated carrier law from authoring guidance
   What to do / Must NOT do: Slim `.agents/skills/sdp-authoring/SKILL.md` by deleting only the duplicated Gherkin carrier grammar, editor `files.associations` example, and pinned `@cucumber/gherkin` / `@cucumber/messages` version guidance. Replace those blocks with a short operational pointer to `spec:carrier.gherkin-authoring`, while keeping the canonical `.sdp.gherkin` suffix and one-carrier-per-id warning. Preserve every behavior required by `spec:consumers.authoring-on-ramp`: backlog and drift orientation; `sdp new spec`; cheap idea shape; `constraint` no-twin exception; promotion preflight; one-kind and split-straddling-fact rule; `sdp validate --watch`; parent example space, child bound point, `sdp build`, `bindExample`, `specTest`, `contract-dependent-suites.mjs`, mutation probe; graph blind spot for unbound contracts; identity-only anchors; Design Review without a gate. Preserve current command cardinality and keep `new` / `validate` in prose rather than adding shell fences. Must NOT rewrite the whole skill, create references, remove an existing test token, mention dashed `--dry-run`, or move carrier law into another guidance file.
   Parallelization: Wave 1 | Blocked by: 1 | Blocks: 5 | Can parallelize with: 2, 4
   References (executor has NO interview context - be exhaustive): `.agents/skills/sdp-authoring/SKILL.md:1-197`; carrying workflow `:33-92,138-197`; duplicated Gherkin/editor/parser blocks `:93-137`; `specs/consumers/authoring-on-ramp.sdp.md:13-18`; `specs/carrier/gherkin-authoring.sdp.md:13-26`; `test/skills.test.ts:142-172,207-241`; `test/recipes.test.ts:259-356`.
@@ -96,7 +98,7 @@ Your next move: after the required high-accuracy review passes, run `/start-work
   Commit: N | no commit without explicit user authorization
   Recommended task executor category: `writing` - one deletion-focused edit whose carrying workflow is already pinned.
 
-- [ ] 4. Correct both public recipe counts
+- [x] 4. Correct both public recipe counts
   What to do / Must NOT do: Change only the two live README recipe-count phrases from eleven to sixteen. Preserve the nearby source-checkout commands, installed-package guidance, and the exact three on-ramp names. Derive sixteen from the numbered catalog, not from an old plan. Must NOT edit `AGENTS.md`, historical plan prose, CLI examples, package metadata, tests, or any skill.
   Parallelization: Wave 1 | Blocked by: 1 | Blocks: 5 | Can parallelize with: 2, 3
   References (executor has NO interview context - be exhaustive): `README.md:26-33` source-checkout recipe pointer; `README.md:142-150` installed-package on-ramp paragraph; `docs/agent-surface/recipes.md` numbered headings 1-16; `test/recipes.test.ts` ordinal-contiguity parser.
@@ -105,7 +107,7 @@ Your next move: after the required high-accuracy review passes, run `/start-work
   Commit: N | no commit without explicit user authorization
   Recommended task executor category: `quick` - two exact substitutions in one file.
 
-- [ ] 5. Run the merged skill and package gates
+- [x] 5. Run the merged skill and package gates
   What to do / Must NOT do: After todos 2-4 merge, verify the complete three-file diff without editing tests, package metadata, sessions, or product code. Re-read both changed skills against their carrying Specs and confirm `.agents/skills/sdp-sessions/SKILL.md` is byte-for-byte unchanged from the pre-plan baseline. Run focused tests, the full repository gate, package dry-run, and the real CLI probes. Record outputs and the final changed-file list. Must NOT fix a failure outside the three planned files unless it is proven to be caused by these edits; report pre-existing failures separately.
   Parallelization: Wave 2 | Blocked by: 2, 3, 4 | Blocks: F1-F4 | Can parallelize with: -
   References (executor has NO interview context - be exhaustive): changed files from todos 2-4; `specs/consumers/agent-surface.sdp.md:13-26`; `specs/consumers/authoring-on-ramp.sdp.md:13-18`; `specs/consumers/delivery-session-on-ramp.sdp.md:13-20`; `test/skills.test.ts`; `test/recipes.test.ts`; `test/cli-q.test.ts`; `test/package-smoke.test.ts`; `package.json:11-17`; `AGENTS.md` documented green gate.
@@ -116,14 +118,18 @@ Your next move: after the required high-accuracy review passes, run `/start-work
 
 ## Final verification wave
 > Runs in parallel after ALL todos. ALL must APPROVE. Surface results and wait for the user's explicit okay before declaring complete.
-- [ ] F1. Plan compliance audit
+- [x] F1. Plan compliance audit
   Review every changed hunk against todos 1-5 and the draft decisions. Confirm the plan-37 start gate was honored, all acceptance and failure scenarios have evidence, `sdp-sessions` and package topology are unchanged, and no accepted authoring behavior was deleted. Run `git diff --check` and inspect `git diff --name-only`. APPROVE only when all plan rows are satisfied.
-- [ ] F2. Code quality review
+- [x] F2. Code quality review
   Compare the changed skills with `CONTEXT.md` and their carrying consumer Specs. Check plain language with the unslop rules, no copied carrier law, no contradictory claim/readiness/delivery-fact wording, and no new workflow language. Confirm the unchanged tests still cover every required token and command form. Run `npm run lint`, `npm run format:check`, and the focused Vitest command. APPROVE only on clean exits and a finding-free semantic review.
-- [ ] F3. Real manual QA
+- [x] F3. Real manual QA
   Use the deliverable through the documented source surface. Run `pnpm --silent sdp --help`; a successful source query with `--json`; the console-output probe; and a throwing query body. Run the existing package-smoke suite and read its disposable-consumer install, installed CLI help/import, and installed skill checks. APPROVE only when happy, bad-input, help, and installed-package paths match the guidance.
-- [ ] F4. Scope fidelity
+- [x] F4. Scope fidelity
   Require the changed-file set to be exactly `.agents/skills/sdp-agent-surface/SKILL.md`, `.agents/skills/sdp-authoring/SKILL.md`, and `README.md`. Confirm no new file under `.agents/skills`, no protected-path change, no growth in the read skill, a net deletion in authoring, `npm run check` exit 0, and unchanged packed non-`dist` assets. APPROVE only when the implementation is the accepted small first version.
+
+## Closure
+
+Todos 1-5 passed, and F1-F4 each returned APPROVE in the parity evidence files. The product diff is limited to the two skills and README; no commit was made.
 
 ## Commit strategy
 - No commits are authorized by this plan. The executor leaves a verified working-tree diff and asks separately if the user wants commits, a worktree, or a PR.

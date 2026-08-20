@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "active_work_id": "plan-37-settling-arc",
+  "active_work_id": null,
   "works": {
     "pr-17-gherkin-carrier-hardening": {
       "work_id": "pr-17-gherkin-carrier-hardening",
@@ -56,14 +56,13 @@
       "work_id": "sdp-skills-gen1-parity",
       "active_plan": ".omo/plans/sdp-skills-gen1-parity.md",
       "plan_name": "sdp-skills-gen1-parity",
-      "session_ids": [
-        "senpi:01a01dbd-9d4b-71fb-969c-e5de40ffb83e"
-      ],
-      "status": "paused",
+      "session_ids": [],
+      "status": "completed",
+      "completed_at": "2026\u002d08\u002d20T13:07:13+02:00",
+      "current_commit": "8df0d8096b476408ec364b884155537d74c7603e",
       "worktree_path": null,
       "delivery_mode": "direct",
-      "make_pr": false,
-      "blocked_on": "plan-37-settling-arc closure"
+      "make_pr": false
     }
   }
 }

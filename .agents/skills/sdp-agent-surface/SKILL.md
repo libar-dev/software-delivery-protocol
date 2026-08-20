@@ -68,11 +68,11 @@ Three bindings are injected:
 - `report` — the validation report, so findings are queryable data, never a gate
 
 Body rules: a plain JavaScript **async function body**. No `import`/`export`, no TypeScript-only
-syntax; `await` is fine. `return` is the output contract — nothing else is printed. **Pre-shape the
-return**: return counts, ids, and decoded reasons, not whole nodes. Default output is bounded
-`util.inspect`; `--json` is the machine form.
-
-`--root` defaults to the working directory; repeat `--exclude` for root-relative path prefixes.
+syntax; `await` is fine. `return` is the machine output contract, but `sdp q` does not suppress
+`console.*`, so machine-consumed bodies and shipped recipes must avoid console output. **Pre-shape
+the return**: counts, ids, and decoded reasons, not whole nodes. Default output is bounded
+`util.inspect`; `--json` is the machine form. `--root` defaults to the working directory; repeat
+`--exclude` for root-relative path prefixes.
 
 The graph is derived on every invocation, so a Spec you just authored is queryable immediately and
 no committed artifact answers in the graph's name. The sink writes nothing. It evaluates local
