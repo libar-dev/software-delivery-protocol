@@ -1,6 +1,72 @@
 # F4 Plan 37 scope-fidelity audit
 
-## Current final verdict at `28ec9d1`
+## Current final verdict at `5e66140978f50258025a557180a8f0c3bc63b1de`
+
+`APPROVE`
+
+Open findings: **0**.
+
+All four historical boundary findings remain recorded as unmet requirements in the original audits, the prior correction, and the exhaustive census. The two exact owner statements accept those historical placements without rewriting history or declaring the original strategy compliant. No fifth boundary defect exists, and product scope remains closed.
+
+## Final exhaustive re-audit
+
+### Census completeness
+
+`.omo/evidence/f4-boundary-census-plan-37-settling-arc.md` is the controlling completeness baseline for this verdict, replacing the earlier incomplete path table as a boundary census.
+
+Independent read-only reconciliation reproduced:
+
+- **26 ancestry commits** from commission parent `a8d5898` through `28ec9d1`. The census has 26 commit rows and every short hash. Its balance is 16 compliant ordinary commits, five B1/B2-implicated commits, four B3/B4-implicated placements, and one merge: `16 + 5 + 4 + 1 = 26`.
+- **134 first-parent manifest paths**. Every path appears in the census. The balance is 115 compliant Plan 37 paths, seven B1/B2 paths, eleven B3/B4 paths, and one unrelated Boulder path: `115 + 7 + 11 + 1 = 134`.
+- **All 20 Todos**, 13 Todo-level `Commit: Y` instructions, seven Todo-level `Commit: N` instructions, and both shared-writer `Commit: N` instructions. Todo 20 is correctly not yet applicable.
+- Every commit subject/body/footer, manifest owner, correction, checkpoint, owner amendment, and both sides of merge `7b99baa` are classified. The merge remains empty against second parent `dfb899b`.
+- The complete boundary ID set is exactly F4-B1, F4-B2, F4-B3-K-CLOSE-RIDE, and F4-B4-TODO8-Y. No fifth row appears in the census, disposition, operational plan, or primary Plan 37 record.
+
+### Exact owner coverage
+
+| Finding | Historical unmet boundary | Accepting statement | Final status |
+| --- | --- | --- | --- |
+| F4-B1 / F1-COMMIT-BOUNDARY | Bounded-parity sibling in `1dae853`; authored activation/evidence in `e081071` | First owner statement, raw `pprove historical boundary deviations`, normalized to `Approve historical boundary deviations` | **ACCEPTED/CLOSED** |
+| F4-B2 | Standalone anchor-pin commits `4a451e2`, `0b098a3`, `07098f3` | First owner statement only | **ACCEPTED/CLOSED** |
+| F4-B3-K-CLOSE-RIDE | Ten Todo-4 paths introduced by `c265f2d`, with core corrections in `9218be9` and `dfb899b`, none riding close `8e6a86b` | Exact second statement `Approve remaining historical deviations`, made after the exhaustive census | **ACCEPTED/CLOSED** |
+| F4-B4-TODO8-Y | Todo-8 five-REFUSE evidence in mixed checkpoint `065a18f`; no Todo-8 `Commit: Y` lane | Exact second statement only | **ACCEPTED/CLOSED** |
+
+The first statement remains bounded to B1/B2. The second statement closes only the two remaining rows established by the complete census, B3/B4. The operational and primary records still show the original commit requirements, say those requirements were not met, say history was not rewritten, and authorize no other exception. Every implicated historical hash remains an ancestor of HEAD.
+
+### Disposition commit `5e661409`
+
+Subject and footer are exact:
+
+```text
+docs(plans): complete plan-37 historical deviation record
+
+Plan: .omo/plans/plan-37-settling-arc.md
+```
+
+Its exact six-path manifest is records-only:
+
+| Path | Change | Scope |
+| --- | --- | --- |
+| `.omo/evidence/f1-plan-37-settling-arc.md` | modify | same-reviewer F1 re-audit record |
+| `.omo/evidence/f4-boundary-census-plan-37-settling-arc.md` | add | exhaustive boundary census |
+| `.omo/evidence/f4-plan-37-settling-arc.md` | modify | prior F4 correction recorded before final re-audit |
+| `.omo/evidence/plan-37-historical-boundary-disposition.md` | modify | two-statement, four-row owner disposition |
+| `.omo/plans/plan-37-settling-arc.md` | modify | bounded historical record only |
+| `plans/37-adoption-tranches-drift-maturation-and-bundle-measurement.md` | modify | bounded primary historical record only |
+
+Parent is exactly `28ec9d133999faf6c0aa52679c8aedff0a10c409`. The commit has no `src/`, Spec, test, generated, package, config, helper, recipe, AGENTS, Plan 36, or public-status change. Diff check is clean.
+
+### Product scope, Must NOT closure, and current status
+
+The product/config tree at HEAD is byte-identical to prior scope head `a4a1468`. The exhaustive 134-path census covers every path in the prior product table plus the final-review records through `28ec9d1`; `5e661409` adds only the census and record updates listed above. Read-only checks show zero later delta under `src/`, `specs/`, `test/`, `generated/`, package files, `.agents/`, AGENTS, recipes, helpers, P37-R1 config, or any frozen surface. All ten tranche-one registrar blob IDs still equal the commission baseline. The original Must NOT table below therefore remains current in full.
+
+F2 and F3 are checked and their artifacts say APPROVE. F1's artifact says APPROVE but F1 is intentionally unchecked pending orchestration; F4, Todo 20, and F5 are also unchecked. Plan 37 and AGENTS remain EXECUTING. Plan 36 remains DRAFTED. No product path is dirty.
+
+This final re-audit ran no generation, test, build, validate, preflight, or full check. It marked no checkbox and changed only this F4 artifact.
+
+## Historical audits and correction preserved below
+
+## Prior correction verdict at `28ec9d1`
 
 `REJECT`
 

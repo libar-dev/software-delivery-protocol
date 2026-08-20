@@ -16,8 +16,8 @@
 > **37 upward**, one primary number each; this header gains a commissioned-plans line as they
 > are cut. Brief lettering continues plan 34's: **I**, **J**, **K**.
 >
-> **Commissioned plans.** **Plan 37** (`37-adoption-tranches-drift-maturation-and-bundle-measurement.md`, executing)
-> runs briefs I through K. Operational tracking lives in `.omo/plans/plan-37-settling-arc.md`.
+> **Commissioned plans.** **Plan 37** (`37-adoption-tranches-drift-maturation-and-bundle-measurement.md`, EXECUTED)
+> closed briefs I through K. Operational tracking lives in `.omo/plans/plan-37-settling-arc.md`.
 
 ## How to consume this brief (binding on the planning session)
 

@@ -1,6 +1,8 @@
 # Plan 37 — Adoption tranches, drift maturation, and bundle measurement
 
-> **Status:** 🔄 EXECUTING — the plan-36 arc is executing; briefs I–K delivered per plans/36; operational tracking in `.omo/plans/plan-37-settling-arc.md`
+> **Status:** ✅ EXECUTED — the plan-36 arc is closed; briefs I–K delivered per plans/36; operational tracking in `.omo/plans/plan-37-settling-arc.md`
+
+Close summary. **I** adopted 46 of 58 deferred `bindExample` sites onto generated registrars and refused 12 with recorded reasons; the frozen five-adapter interface was not edited. **J** owner-ratified `ready` on five already-implemented Specs and left three `defined` with written blocking reasons where the alarm points; no Spec was demoted. **K** measured the context-bundle deferral, found zero qualifying episodes, and stood down. The independent review accepted one finding (P37-R1) and closed it. F1–F4 APPROVE. The gate ran green twice consecutively at close.
 
 **In.** Briefs **I** through **K** from `plans/36-adoption-tranches-maturation-and-bundle-evidence-briefs.md`:
 
@@ -193,7 +195,7 @@ Commission, Todo 1 live run, recorded on this stamp and in `.omo/evidence/task-1
 | Tracked generated siblings | 10 | 56 | +46 later-tranche adoptions |
 | Owed `generated/registrars.json` files | 68 | 68 | unchanged |
 
-Cause, grounded in this arc's landed changes: Brief I is test-side registrar adoption. Graph identity did not move. Brief J stated `ready` on five already-`implemented` Specs. They leave recipe 2 and appear as `honesty/gaps` because they have no verifier binding. Brief K measured sessions and built nothing. Todo 20 still owns the consecutive full-gate runs and the EXECUTED status flip.
+Cause, grounded in this arc's landed changes: Brief I is test-side registrar adoption. Graph identity did not move. Brief J stated `ready` on five already-`implemented` Specs. They leave recipe 2 and appear as `honesty/gaps` because they have no verifier binding. Brief K measured sessions and built nothing. Todo 20 ran the consecutive full-gate runs and flipped this stamp to EXECUTED.
 
 ## Independent review register, Todo 19
 
@@ -209,7 +211,7 @@ Finding counts: **1 total, 1 ACCEPT, 0 DO NOT ACCEPT, 0 open, 1 closed**.
 
 The substantive I, J, K, and close claims re-measure true. Current accounting is 56 tracked/live registrar activations plus 12 live refusals against 68 owed siblings; `10 + 46 + 12 = 68`. The owner record, carriers, oracles, and graph agree on five READY and three DEFINED Specs. Recipe 2 contains the three DEFINED rows; recipe 8 contains the five honest warnings. The frozen K census reproduces byte-for-byte with 12 eligible sessions, zero qualifying episodes, and `STAND-DOWN (unmet)`. Validate remains 156 Specs, 1 Pack, 157 anchors, 314 nodes, 660 edges, 0 errors, and 5 warnings. The focused graph and eight changed self-hosting suites pass. Fresh P37-R1 closure reruns passed lint, the contract-dependent wrapper path, generation, self-hosting check-clean, and typecheck.
 
-The independent review is complete with no open ACCEPT finding. Todo 19 stays unchecked for orchestrator verification. Todo 20 remains separate. This plan remains EXECUTING and makes no final-gate claim.
+The independent review is complete with no open ACCEPT finding. Todo 19 is closed. Todo 20 ran the consecutive full-gate runs. This plan is EXECUTED.
 
 ## Accepted historical deviations, 2026-08-20
 
@@ -230,4 +232,4 @@ The 26-commit, 134-path census proves this four-row set complete.
 
 Current bytes, file ownership, product scope, and byte gates are clean. F2 and F3 already APPROVE. The defects are commit placement only.
 
-F1 and F4 are reopened pending same-reviewer re-audit of this complete four-row record. Todo 20 stays blocked until they APPROVE. This plan remains EXECUTING. Full evidence: `.omo/evidence/plan-37-historical-boundary-disposition.md`.
+F1 and F4 re-audited the complete four-row record and APPROVE. Todo 20 is closed. This plan is EXECUTED. Full evidence: `.omo/evidence/plan-37-historical-boundary-disposition.md`.

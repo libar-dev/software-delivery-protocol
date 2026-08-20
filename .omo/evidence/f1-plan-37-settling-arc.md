@@ -63,6 +63,65 @@ Normalized accepted choice: `Approve historical boundary deviations`.
 
 F1-COMMIT-BOUNDARY is **ACCEPTED/CLOSED** by the owner disposition. The historical noncompliance remains recorded in the original verdict and finding above. F1 now has zero open findings and APPROVES Plan 37 through Todo 19. Todo 20 remains blocked on the unchecked F4 review, F1-F4 checkbox completion, and the separate final owner okay.
 
+## Final census-backed re-audit at `5e66140978f50258025a557180a8f0c3bc63b1de`
+
+This re-audit independently read the current operational and primary Plan 37 records, both exact owner statements, the complete boundary census, the current F4 artifact, and the full disposition-commit diff and manifest. The census closes the gap left by the prior F1 re-audit: B3 and B4 are additional historical placement defects, and the second owner statement accepts them without broadening the first statement or declaring any original requirement met.
+
+### Complete boundary census
+
+| Census check | Independent reproduction | Result |
+| --- | --- | --- |
+| Commit and path totals | The ancestry path from commission parent `a8d5898f549778d5841653dc81730a0c5810e446` through `28ec9d133999faf6c0aa52679c8aedff0a10c409` contains 26 commits, including one merge. The union of first-parent manifests is 134 paths. Merge `7b99baa` has the same tree as `dfb899b`, an empty second-parent diff, and 102 already-classified first-parent paths. | Pass |
+| Complete plan inventory | All 20 numbered Todos are present. Parsing their own blocks yields 13 `Commit: Y` and seven Todo `Commit: N` instructions. W1-B and W2-B add exactly two shared-writer `Commit: N` instructions. | Pass |
+| Exhaustive classification | The census balances `16 compliant ordinary + 5 B1/B2 commits + 4 B3/B4 placements + 1 merge = 26` and `115 compliant paths + 7 B1/B2 paths + 11 B3/B4 paths + 1 Boulder path = 134`. The eleven B3/B4 paths are exactly the ten Todo-4 paths and Todo-8 evidence. Every Todo, writer, commit, and path is classified. | Pass |
+| No fifth deviation | Rechecking the 26 subjects/manifests and the plan's complete Y/N inventory reproduces only B1, B2, B3-K-CLOSE-RIDE, and B4-TODO8-Y. Corrections, evidence checkpoints, Todo 16, close, and review commits fit their recorded owners; Todo 20 is not yet applicable. No uncovered fifth row remains. | Pass |
+
+### Exact owner closure of B1-B4
+
+First owner raw statement: `pprove historical boundary deviations`.
+
+Normalized accepted choice: `Approve historical boundary deviations`.
+
+That first statement closes only B1 and B2: the bounded-parity sibling/activation split across `1dae853` and `e081071`, and the standalone anchor-pin commits `4a451e2`, `0b098a3`, and `07098f3`.
+
+Second owner statement, exact: `Approve remaining historical deviations`.
+
+That statement follows the exhaustive census and closes only the remaining rows: B3-K-CLOSE-RIDE, covering Todo-4 state in `c265f2d`, `9218be9`, and `dfb899b` rather than close `8e6a86b`; and B4-TODO8-Y, covering the complete five-REFUSE Todo-8 evidence in mixed checkpoint `065a18f` rather than its own lane commit.
+
+| Finding | Final disposition |
+| --- | --- |
+| F1-COMMIT-BOUNDARY / F4-B1 | **ACCEPTED/CLOSED** under `pprove historical boundary deviations`, normalized as `Approve historical boundary deviations` |
+| F4-B2 | **ACCEPTED/CLOSED** under the same first owner statement |
+| F4-B3-K-CLOSE-RIDE | **ACCEPTED/CLOSED** under exact second statement `Approve remaining historical deviations` |
+| F4-B4-TODO8-Y | **ACCEPTED/CLOSED** under the same second owner statement |
+
+The operational plan still contains Todo 1's suite prohibition, Todo 4's exact close ride target, Todo 8's `Commit: Y`, W1-B/W2-B ride targets, and the one-commit-per-I-lane strategy. Its accepted-deviations section and the primary record state explicitly that those requirements were not met in history, history was not rewritten, and no other exception is authorized. Acceptance closes the four historical findings; it does not create retroactive compliance or a fifth exception.
+
+### Disposition completion commit
+
+Commit `5e66140978f50258025a557180a8f0c3bc63b1de` has exact subject `docs(plans): complete plan-37 historical deviation record` and exact footer `Plan: .omo/plans/plan-37-settling-arc.md`. Its parent is `28ec9d133999faf6c0aa52679c8aedff0a10c409`. Its exact six-path manifest is records-only:
+
+- `.omo/evidence/f1-plan-37-settling-arc.md`
+- `.omo/evidence/f4-boundary-census-plan-37-settling-arc.md`
+- `.omo/evidence/f4-plan-37-settling-arc.md`
+- `.omo/evidence/plan-37-historical-boundary-disposition.md`
+- `.omo/plans/plan-37-settling-arc.md`
+- `plans/37-adoption-tranches-drift-maturation-and-bundle-measurement.md`
+
+There is no `src/`, Spec, test, generated, package, `AGENTS.md`, Plan 36, checklist, or status-header change in that commit.
+
+### Current matrix and gate state
+
+The earlier passing compliance matrix remains valid. Fresh `sdp q` reads report 156 Specs, 1 Pack, 314 nodes, 660 edges, 0 errors, and 5 warnings. Exact live recipe bodies reproduce recipe 1 at total 0 with exclusions 66/31, recipe 2 at exactly the three DEFINED alarms with floor `ready` and no unmet clause, and recipe 8 at five `honesty/gaps` warnings. Registrar accounting remains 56 tracked plus 12 live refusals against 68 owed siblings. The frozen K census rerun and both stored runs share SHA-256 `1ea79c750c2d14e6df9c8006d96d3beb8e4f9f948e6e3cee76de51e6ed73de66`.
+
+At audited commit `5e661409`, F2 and F3 are checked and their artifacts say APPROVE; F1, F4, Todo 20, and F5 are unchecked. Plan 37 and `AGENTS.md` remain EXECUTING; Plan 36 remains DRAFTED. No task-20 artifact, final owner okay, or EXECUTED claim exists.
+
+During this audit's verification, the concurrent same-reviewer F4 re-audit updated only the F4 artifact to APPROVE and the operational-plan F4 checkbox to checked. This F1 audit did not edit or revert either concurrent path. The live worktree now has F1, Todo 20, and F5 unchecked, while status remains EXECUTING. Todo 20 therefore remains blocked on F1-F4 checkbox completion and the separate final owner okay.
+
+### Final closure
+
+All four historical boundary findings are **ACCEPTED/CLOSED** under the two exact owner statements. Open F1 findings: **0**. Final F1 verdict at `5e66140978f50258025a557180a8f0c3bc63b1de`: `APPROVE`.
+
 ## Audit discipline
 
 I read the operational plan, Plans 36/37, task 1-19 evidence and verifier artifacts, J packets and owner statements, all K artifacts, the ledger, commit history/manifests, and current status. Corpus claims were queried through `sdp q` before carrier inspection. I ran no build, generation, validation, preflight, full check, test, staging, or history-writing command. The only audit write is this file. No scratch file or process remains.

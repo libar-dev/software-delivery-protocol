@@ -244,7 +244,7 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
   QA scenarios: happy — register complete, closures re-run green. failure — re-measure one "verified" closure claim from scratch against the tree (the plan-35 phase-4 lesson: a verified row was false since the commit after the one it cited), Evidence `.omo/evidence/task-19-plan-37-settling-arc.md`
   Commit: Y | docs(plans): plan-37 independent review register and closures
   Recommended task executor category: `deep` — adversarial verification over the whole arc delta.
-- [ ] 20. Final gate: check ×2, statuses, AGENTS
+- [x] 20. Final gate: check ×2, statuses, AGENTS
   What to do / Must NOT do: After F1–F4 all APPROVE and the user gives the explicit okay on the surfaced final-wave results: run `npm run check` twice consecutively, both green. Flip statuses in one pass: `plans/37` header → ✅ EXECUTED with the close-summary paragraph (plan-35 shape); `plans/36` header notes the arc closed (its commissioned-plans line already names 37); `AGENTS.md` status block updated in the same pass (`plan 37 is EXECUTED`, plan 36 lineage retained); confirm the discovery pin test still passes unchanged. Must NOT: flip any status before the F-wave approvals + user okay; leave `AGENTS.md` and the plans/37 header disagreeing (the gate greps their agreement).
   Parallelization: Wave 3 | Blocked by: 19 + F1–F4 all APPROVE | Blocks: —
   References (executor has NO interview context - be exhaustive): gate agreement rule `check-self-hosting-gates.mjs` §4; pin test `test/check-self-hosting-gates.test.ts:78-84`; status-block shape `AGENTS.md` lines 22-36; plans/35 close-summary paragraph as the shape.
@@ -255,10 +255,10 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
 
 ## Final verification wave
 > Runs in parallel after ALL todos. ALL must APPROVE. Surface results and wait for the user's explicit okay before declaring complete.
-- [ ] F1. Plan compliance audit
+- [x] F1. Plan compliance audit
 - [x] F2. Code quality review
 - [x] F3. Real manual QA
-- [ ] F4. Scope fidelity
+- [x] F4. Scope fidelity
 - [ ] F5. Open reviewer-ready pull request for plan 37
 
 ## Commit strategy
