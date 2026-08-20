@@ -166,7 +166,7 @@ Every doc honours both — never mistake one half for the other:
 - **Skills first, graph second, files last.** Load the matching skill before the work starts; then
   query the graph (`pnpm --silent sdp:q` with a recipe body); then read the carrying Spec it points
   at. Scanning `specs/` files to learn state is a smell — the graph is derived from the same
-  carrier and is always current.
+  carrier and is always current. Always use `unslop` skill.
 - **Write lean, and write for outsiders.** Cut unnecessary verbosity and noise in every session
   artifact — plans, records, summaries, spec prose. Use technical but plain language a wider
   open-source audience can follow: the ratified terms are the shared vocabulary, not a license
