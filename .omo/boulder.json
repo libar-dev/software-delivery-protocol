@@ -88,8 +88,8 @@
       "worktree_path": null,
       "delivery_mode": "direct",
       "make_pr": false,
-      "active_task": "Run gate-after QA and record evidence",
-      "completed_todo": 6
+      "active_task": "Audit execution against every plan constraint",
+      "completed_todo": 7
     }
   }
 }

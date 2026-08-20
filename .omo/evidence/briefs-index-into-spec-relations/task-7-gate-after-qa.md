@@ -446,6 +446,58 @@ Exit code: `0`. Exact temporal confirmation from its JSON surface:
 
 All previously recorded recipe and READ evidence remains preserved and valid.
 
+## Lawful checkpoint and final T7 rerun
+
+Checkpoint commit:
+
+```text
+59f0fd563f5ef7c5ece16fb90c893d2e06cb54fa
+chore(evidence): checkpoint graph-first planning QA state
+```
+
+Before commit, the staged-name proof listed only these paths:
+
+```text
+.omo/boulder.json
+.omo/drafts/briefs-index-into-spec-relations.md
+.omo/evidence/briefs-index-into-spec-relations/task-1-register-coverage.md
+.omo/evidence/briefs-index-into-spec-relations/task-2-gfp-enrichment.md
+.omo/evidence/briefs-index-into-spec-relations/task-3-register-mint.md
+.omo/evidence/briefs-index-into-spec-relations/task-4-placement-adr.md
+.omo/evidence/briefs-index-into-spec-relations/task-5-onramp-clause.md
+.omo/evidence/briefs-index-into-spec-relations/task-6-baseline.txt
+.omo/evidence/briefs-index-into-spec-relations/task-6-plan38-restructure.md
+.omo/evidence/briefs-index-into-spec-relations/task-7-gate-after-qa.md
+.omo/evidence/briefs-index-into-spec-relations/task-7-temporal-lineage-repair.md
+.omo/plans/briefs-index-into-spec-relations.md
+.omo/start-work/ledger.jsonl
+specs/decisions/shipped-projections-frozen.sdp.md
+test/self-hosting-oracle/decisions.ts
+```
+
+The staged `AGENTS.md` diff was empty; staged forbidden-path probes for `src/` and plans 29-37 were empty; and the temporal carrier/oracle parity probe returned `carrierExact: true` and `oracleExact: true`.
+
+After that checkpoint, `npm run check` was rerun once on the tracked state.
+
+Exit code: `0`. Exact final preflight output:
+
+```text
+> @libar-dev/software-delivery-protocol@0.0.0 preflight
+> node ./preflight.mjs
+
+preflight: semantic diff summary
+AGENTS.md
+preflight: tracked/untracked status inspected
+```
+
+This is a preflight PASS: no nonignored untracked runtime garbage, generated drift, tracked generated writes, or registrar drift was reported. The full gate also passed temporal, lint, format, build, generation, typechecks, tests (`62` files, `839` passed, `1` skipped; package self-hosting suite `80` passed), self-hosting gates, self-hosting projections, and example projections.
+
+Warning classification on the green run is unchanged: five expected self-hosting `honesty/gaps` warnings, one expected example `conformance/verifies-linkage` warning, and the existing non-failing esbuild CJS `import.meta` warning. No errors occurred.
+
+Recipe 1, recipe 9, recipe 11, and the READ table were not rerun. The checkpoint changed only durable tracking state and the already verified temporal mirror; it did not change graph inputs, descriptors, relations, readiness, or behavior rules. Their exact captured outputs therefore remain current.
+
+The evidence file is now modified after checkpoint commit and intentionally remains unstaged. No second commit was made.
+
 ## Gate disposition
 
-Product, oracle, recipe, READ, temporal, and focused self-hosting gate results pass. The sole remaining state blocker is preflight's rejection of the listed untracked task-owned `.omo` artifacts. No stage or commit was performed; landing remains pending independent verifier confirmation and lawful tracking of that state.
+Product, oracle, recipe, READ, temporal, focused self-hosting gate, and full `npm run check` results pass. The lawful checkpoint is `59f0fd563f5ef7c5ece16fb90c893d2e06cb54fa`; the only remaining action is independent T7 verification of this updated evidence before its final evidence landing. `AGENTS.md` remains the unrelated unstaged working-tree change. Landing remains pending.

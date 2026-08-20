@@ -285,7 +285,7 @@ decision Spec (`spec:decisions.planning-truths-placement`) if it passes the ADR 
   Commit: Y | docs(plans): slim plan 38 to the ruled lineage-pointer shape
   Recommended task executor category: writing - one plan document restructure.
 
-- [ ] 7. Gate-after QA: oracle sync verification, green gate, advisory recipes, evidence commit
+- [x] 7. Gate-after QA: oracle sync verification, green gate, advisory recipes, evidence commit
   What to do / Must NOT do: (a) Verify the full oracle surface matches the live corpus:
   test/self-hosting-graph.test.ts literals (spec/pack/anchor counts, expectedPackMembers,
   declared-relations roster, readiness histogram at :142-196) and every touched family oracle
