@@ -203,21 +203,15 @@ describe("sdp cli", () => {
 
       expect(exitCode).toBe(0);
       const stderr = capture.readStderr();
-      expect(stderr).toContain(
-        'specs/carrier/markdown-authoring.sdp.md — [warning] honesty/gaps — Spec "spec:carrier.markdown-authoring"',
-      );
-      expect(stderr).toContain(
-        'specs/extraction/claim-taxonomy.sdp.md — [warning] honesty/gaps — Spec "spec:extraction.claim-taxonomy"',
-      );
-      expect(stderr).toContain(
-        'specs/model/pack-aggregate.sdp.md — [warning] honesty/gaps — Spec "spec:model.pack-aggregate"',
-      );
-      expect(stderr).toContain(
-        'specs/model/relations.sdp.md — [warning] honesty/gaps — Spec "spec:model.relations"',
-      );
-      expect(stderr).toContain(
-        'specs/model/spec-sections.sdp.md — [warning] honesty/gaps — Spec "spec:model.spec-sections"',
-      );
+      for (const [file, specId] of [
+        ["specs/carrier/markdown-authoring.sdp.md", "spec:carrier.markdown-authoring"],
+        ["specs/extraction/claim-taxonomy.sdp.md", "spec:extraction.claim-taxonomy"],
+        ["specs/model/pack-aggregate.sdp.md", "spec:model.pack-aggregate"],
+        ["specs/model/relations.sdp.md", "spec:model.relations"],
+        ["specs/model/spec-sections.sdp.md", "spec:model.spec-sections"],
+      ] as const) {
+        expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
+      }
       expect(capture.readStdout()).toContain("validate: 0 errors · 5 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',

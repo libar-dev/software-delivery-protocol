@@ -49,8 +49,9 @@ export const expectedSpecs: readonly ExpectedSpec[] = specFamilies.flatMap(
   (family) => family.specs,
 );
 
-// These five informative honesty gaps are the exact findings from the five owner-ratified ready
-// Specs without resolving verifier bindings. The full objects remain an exact drift alarm.
+// These four-field projections identify the five informative honesty gaps from owner-ratified
+// ready Specs without resolving verifier bindings. The CLI suite separately pins each diagnostic's
+// file, validator, and subject prefix.
 export const expectedWarnings = [
   {
     validatorId: "honesty/gaps",

@@ -281,7 +281,8 @@ Accepted, and only these four. The 26-commit, 134-path census proves the set com
 3. F4-B3-K-CLOSE-RIDE. Todo-4 definition/tooling/captures introduced in `c265f2d70c1a31ccd5976240e96ed8354a7bec13`, core corrections in `9218be999f1a1fcaad5a92019fe2b3d0836e6b1a` and `dfb899be41687a7b2aa6ff15b181c6754320f793`, none riding close `8e6a86b` despite Todo 4 Commit:N exact target.
 4. F4-B4-TODO8-Y. Todo-8 complete five-REFUSE evidence `.omo/evidence/task-8-plan-37-settling-arc.md` landed in mixed Wave-1 checkpoint `065a18f6120a266df0fab20927421d9967a2c7a6` instead of its own Commit:Y lane.
 
-F1 and F4 are reopened pending same-reviewer re-audit of this complete four-row record. Todo 20 stays blocked. Evidence: `.omo/evidence/plan-37-historical-boundary-disposition.md`.
+F1 and F4 re-audited this complete four-row record and returned APPROVE. Todo 20 is closed, and
+this plan is EXECUTED. Evidence: `.omo/evidence/plan-37-historical-boundary-disposition.md`.
 
 ## Success criteria
 - Brief I: every one of the 58 deferred sites accounted for — adopted (byte-gates green, sibling tracked) or refused with a recorded reason; the per-family ledger stands in the plans/37 close record; the frozen interface untouched; `bindExample` census + refusals + first-tranche ten reconcile against the 68 owed siblings in `generated/registrars.json`.
