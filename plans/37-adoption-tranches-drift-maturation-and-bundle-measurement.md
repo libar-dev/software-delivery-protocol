@@ -194,3 +194,19 @@ Commission, Todo 1 live run, recorded on this stamp and in `.omo/evidence/task-1
 | Owed `generated/registrars.json` files | 68 | 68 | unchanged |
 
 Cause, grounded in this arc's landed changes: Brief I is test-side registrar adoption. Graph identity did not move. Brief J stated `ready` on five already-`implemented` Specs. They leave recipe 2 and appear as `honesty/gaps` because they have no verifier binding. Brief K measured sessions and built nothing. Todo 20 still owns the consecutive full-gate runs and the EXECUTED status flip.
+
+## Independent review register, Todo 19
+
+Review boundary: commission baseline `a8d5898f549778d5841653dc81730a0c5810e446`, commission commit `1dae853a6f51bdcb8c4bde16d84dafda611e0fca`, reviewed head `8e6a86bf946dd28958a01d5034ce849d97d88731`. The reviewer inspected every ancestry-path commit and re-ran the current-tree measurements. Full evidence: `.omo/evidence/task-19-plan-37-settling-arc.md`.
+
+| ID | Severity | Finding | Disposition | Owner | Closure evidence | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| P37-R1 | MEDIUM | Commit `4851740` changed `contract-dependent-suites.mjs` and `eslint.config.js` without the original Plan 37 no-check-change boundary authorizing it. | **ACCEPT** | Plan 37 owner; independently closed in Todo 19 | Owner statement `Approve Brief-I exception` (2026-08-20) and the operational-plan amendment authorize only the exact 56 tracked generated siblings and the one rule disable inside the existing contract-dependent-suite override. Current inventory equals the tracked set with no leak. No other check/config implementation changed. Lint, wrapper success and missing-dependency paths, generation, check-clean, and typecheck passed. Preflight's only failure is disclosed unrelated/uncommitted `.omo` state; it reports no registrar/product/generated drift. | **CLOSED** |
+
+Finding counts: **1 total, 1 ACCEPT, 0 DO NOT ACCEPT, 0 open, 1 closed**.
+
+### Review closure summary
+
+The substantive I, J, K, and close claims re-measure true. Current accounting is 56 tracked/live registrar activations plus 12 live refusals against 68 owed siblings; `10 + 46 + 12 = 68`. The owner record, carriers, oracles, and graph agree on five READY and three DEFINED Specs. Recipe 2 contains the three DEFINED rows; recipe 8 contains the five honest warnings. The frozen K census reproduces byte-for-byte with 12 eligible sessions, zero qualifying episodes, and `STAND-DOWN (unmet)`. Validate remains 156 Specs, 1 Pack, 157 anchors, 314 nodes, 660 edges, 0 errors, and 5 warnings. The focused graph and eight changed self-hosting suites pass. Fresh P37-R1 closure reruns passed lint, the contract-dependent wrapper path, generation, self-hosting check-clean, and typecheck.
+
+The independent review is complete with no open ACCEPT finding. Todo 19 stays unchecked for orchestrator verification. Todo 20 remains separate. This plan remains EXECUTING and makes no final-gate claim.
