@@ -720,9 +720,9 @@ const components = [...componentIds].sort().map((id) => {
       const member = codeNodesById.get(memberId);
       return {
         id: memberId,
-        label: member.label ?? null,
-        file: member.file ?? null,
-        line: member.line ?? null,
+        label: member?.label ?? null,
+        file: member?.file ?? null,
+        line: member?.line ?? null,
       };
     }),
     fanOut: usesOut.length,

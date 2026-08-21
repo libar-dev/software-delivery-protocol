@@ -947,10 +947,73 @@ describe("the agent-surface recipe corpus", () => {
       const id = stringAt(row, "id");
       const expectedOut = [...(usesOutByComponent.get(id) ?? [])].sort();
       const expectedIn = [...(usedByByComponent.get(id) ?? [])].sort();
+      const expectedMemberIds = expected.memberOfEdges
+        .filter((edge) => edge.to === id)
+        .map((edge) => edge.from)
+        .sort();
+      const members = asArray(row.members).map(asRecord);
 
       expect(numberAt(row, "fanOut")).toBe(expectedOut.length);
       expect(numberAt(row, "fanIn")).toBe(expectedIn.length);
+      expect(members.map((member) => stringAt(member, "id")).sort()).toEqual(expectedMemberIds);
     }
+  });
+
+  // Given: a clone of the live ExtractionResult with impl:protocol.agent-surface removed
+  // and its memberOf edge retained — invalid, but still a graph validateGraph can report.
+  // When: catalog recipe 17 runs through real runSdpCli on that override.
+  // Then: validateGraph reports conformance/referential-integrity, the sink exits 0, and
+  // the unresolved member row keeps null label/file/line under component:protocol.reader.
+  it("preserves an unresolved architecture-map member when memberOf outlives the node", async () => {
+    const missingMemberId = "impl:protocol.agent-surface";
+    const ownerComponentId = "component:protocol.reader";
+    const dirty: ExtractionResult = {
+      counts: derived.counts,
+      report: derived.report,
+      graph: {
+        schemaVersion: derived.graph.schemaVersion,
+        nodes: derived.graph.nodes.filter((node) => node.id !== missingMemberId),
+        edges: derived.graph.edges,
+      },
+    };
+
+    expect(dirty.graph.nodes.some((node) => node.id === missingMemberId)).toBe(false);
+    expect(
+      dirty.graph.edges.some(
+        (edge) =>
+          edge.type === "memberOf" && edge.from === missingMemberId && edge.to === ownerComponentId,
+      ),
+    ).toBe(true);
+
+    const graphReport = validateGraph(dirty.graph);
+    expect(
+      graphReport.findings.some(
+        (finding) =>
+          finding.family === "conformance" &&
+          finding.validatorId === "conformance/referential-integrity" &&
+          (finding.subjectId === missingMemberId || finding.relatedId === missingMemberId),
+      ),
+    ).toBe(true);
+
+    const result = asRecord(await runRecipe(recipeByOrdinal(17), undefined, dirty));
+    const owner = asArray(result.components)
+      .map(asRecord)
+      .find((row) => stringAt(row, "id") === ownerComponentId);
+
+    if (owner === undefined) {
+      throw new Error(`architecture map has no row for ${ownerComponentId}`);
+    }
+
+    const unresolved = asArray(owner.members)
+      .map(asRecord)
+      .find((row) => stringAt(row, "id") === missingMemberId);
+
+    expect(unresolved).toEqual({
+      id: missingMemberId,
+      label: null,
+      file: null,
+      line: null,
+    });
   });
 
   it("returns the decision map ranked by live inbound fan-in", async () => {
