@@ -1,7 +1,7 @@
 # PR 25 publication and cleanup receipt
 
-Plan: `.omo/plans/pr-25-review-remediation.md` · Todo 8  
-Session: `senpi:01a02484-8a26-71b5-be12-039515d854cc`  
+Plan: `.omo/plans/pr-25-review-remediation.md` · Todo 8
+Session: `senpi:01a02484-8a26-71b5-be12-039515d854cc`
 PR: https://github.com/libar-dev/software-delivery-protocol/pull/25
 
 ## Fast-forward proof
