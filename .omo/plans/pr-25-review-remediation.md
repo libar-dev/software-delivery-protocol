@@ -291,7 +291,7 @@ Your next move: complete the required independent plan review, then begin execut
   Commit: Y | `chore: remeasure PR 25 remediation close`
   Recommended task executor category: `unspecified-high` — cross-lane integration, full-system verification, and durable PR narrative require broad repository context.
 
-- [ ] 8. Fast-forward the existing PR branch, publish the verified body, and clean lanes
+- [x] 8. Fast-forward the existing PR branch, publish the verified body, and clean lanes
   What to do / Must NOT do:
   - Re-fetch `origin/feature/architectural-patterns-views`; require its head to be the recorded todo-1 ancestor of the verified integration head. Stop on divergence.
   - Confirm `gh auth status` still reports SSH and the remote remains the expected SSH URL.
@@ -322,17 +322,17 @@ Your next move: complete the required independent plan review, then begin execut
 
 ## Final verification wave
 > Runs in parallel after ALL todos. ALL must APPROVE. Surface results and wait for the user's explicit okay before declaring complete.
-- [ ] F1. Plan compliance audit
+- [x] F1. Plan compliance audit
   Verify every todo, dependency, file boundary, evidence receipt, commit, and publication step against this exact plan; reject missing ledger segments, unreviewed commits, skipped failure QA, or incomplete PR/body receipts.
   Evidence: `.omo/evidence/pr-25-review-remediation/f1-plan-compliance.md`.
-- [ ] F2. Code quality review
+- [x] F2. Code quality review
   Review prototype-safe recipe behavior, TypeScript symbol-resolution helper correctness, deterministic tests, error messages, no hidden graph inference, no source/corpus/contract drift, and no unnecessary abstraction/dependency.
   Re-run focused recipe/structural tests and typecheck.
   Evidence: `.omo/evidence/pr-25-review-remediation/f2-code-quality.md`.
-- [ ] F3. Real manual QA
+- [x] F3. Real manual QA
   In a fresh clean worktree at the published PR head, run help, bad input, validation, recipes 17-19, hostile-family recipe probes, non-empty dependency output, ledger hashes/counts, and the PR try-it block; compare actual output with the published body.
   Evidence: `.omo/evidence/pr-25-review-remediation/f3-manual-qa.md`.
-- [ ] F4. Scope fidelity
+- [x] F4. Scope fidelity
   Diff exact base-to-published-head and verify no `src/`, Spec, graph, package, generated, projection, validator, completed-plan, or unrelated cleanup changes; verify the runtime ledger is ignored/untracked, the three archives are lossless, the PR claims are supported, and security attack surface/dependencies remain unchanged.
   Evidence: `.omo/evidence/pr-25-review-remediation/f4-scope-fidelity.md`.
 

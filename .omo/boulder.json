@@ -128,12 +128,12 @@
         "senpi:01a02484-8a26-71b5-be12-039515d854cc"
       ],
       "status": "completed",
-      "worktree_path": "/home/darkomijic/dev-libar/software-delivery-protocol-pr-25-review-remediation",
+      "worktree_path": null,
       "delivery_mode": "make-pr",
       "make_pr": true,
-      "current_commit": "6a35bd29fe8d4e236d1290529f045fcbc5875e71",
+      "current_commit": "2ef4a7afd55a471a136ced9f0bbbdf65b60bda4c",
       "active_task": null,
-      "completed_todo": 6
+      "completed_todo": 8
     }
   }
 }
