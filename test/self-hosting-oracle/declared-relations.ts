@@ -166,6 +166,9 @@ export const expectedDeclaredRelations = [
   ],
   ["spec:extraction.derive-graph", "refines", "spec:protocol.self-hosting"],
   ["spec:extraction.derive-graph", "constrainedBy", "spec:extraction.determinism"],
+  ["spec:extraction.derive-graph", "decidedBy", "spec:decisions.one-validation-path"],
+  ["spec:extraction.delivery-facts", "refines", "spec:extraction.derive-graph"],
+  ["spec:extraction.delivery-facts", "decidedBy", "spec:decisions.binding-not-liveness"],
   ["spec:extraction.determinism", "refines", "spec:protocol.self-hosting"],
   ["spec:extraction.build-pipeline", "refines", "spec:protocol.self-hosting"],
   ["spec:extraction.build-pipeline", "dependsOn", "spec:extraction.derive-graph"],
@@ -191,6 +194,7 @@ export const expectedDeclaredRelations = [
     "spec:extraction.schema-versioning",
   ],
   ["spec:extraction.executable-contracts", "refines", "spec:extraction.build-pipeline"],
+  ["spec:extraction.executable-contracts", "decidedBy", "spec:decisions.point-per-example"],
   [
     "spec:extraction.executable-contracts.concreteness-refusal",
     "refines",
@@ -362,6 +366,7 @@ export const expectedDeclaredRelations = [
     "spec:validation.pack-coherence",
   ],
   ["spec:validation.authored-honesty", "refines", "spec:validation.two-check-families"],
+  ["spec:validation.authored-honesty", "decidedBy", "spec:decisions.binding-not-liveness"],
   [
     "spec:validation.authored-honesty.section-authored-fact",
     "refines",
@@ -415,6 +420,7 @@ export const expectedDeclaredRelations = [
   ["spec:consumers.gherkin-view", "refines", "spec:consumers.projections-model"],
   ["spec:consumers.gherkin-view", "decidedBy", "spec:decisions.carrier-universality"],
   ["spec:consumers.reader", "refines", "spec:consumers.agent-surface"],
+  ["spec:consumers.reader", "decidedBy", "spec:decisions.agent-surface-scripts-graph"],
   ["spec:consumers.edit-model", "refines", "spec:consumers.projections-model"],
   ["spec:consumers.authoring-on-ramp", "refines", "spec:consumers.edit-model"],
   ["spec:consumers.delivery-session-on-ramp", "refines", "spec:consumers.authoring-on-ramp"],
@@ -705,5 +711,16 @@ export const expectedDeclaredRelations = [
     "spec:decisions.architectural-significance-rides-primitives",
     "dependsOn",
     "spec:decisions.binding-not-liveness",
+  ],
+  ["spec:decisions.jsdoc-graph-extraction-refused", "refines", "spec:model.anchors"],
+  [
+    "spec:decisions.jsdoc-graph-extraction-refused",
+    "dependsOn",
+    "spec:decisions.one-validation-path",
+  ],
+  [
+    "spec:decisions.jsdoc-graph-extraction-refused",
+    "dependsOn",
+    "spec:decisions.structural-anchor-semantics",
   ],
 ] as const;

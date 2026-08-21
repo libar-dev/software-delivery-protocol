@@ -29,6 +29,7 @@ export const expectedPackMembers = [
   "spec:protocol.structural-self-binding",
   "spec:observation.runtime-overlay",
   "spec:extraction.derive-graph",
+  "spec:extraction.delivery-facts",
   "spec:extraction.determinism",
   "spec:extraction.build-pipeline",
   "spec:extraction.build-pipeline.same-invocation",
@@ -164,4 +165,5 @@ export const expectedPackMembers = [
   "spec:decisions.shipped-projections-frozen",
   "spec:decisions.planning-truths-placement",
   "spec:decisions.architectural-significance-rides-primitives",
+  "spec:decisions.jsdoc-graph-extraction-refused",
 ] as const;
