@@ -292,15 +292,15 @@ describe("the self-hosting corpus", () => {
   });
 
   it("covers every accepted architecturally significant unit", () => {
-    const acceptedIds = new Set(acceptedArchitecturalUnits.map((row) => row.anchorId));
+    const acceptedIds = new Set<string>(acceptedArchitecturalUnits.map((row) => row.anchorId));
     const exceptionIds = new Set<string>(structuralMembershipExceptions);
     const componentIds = new Set<string>(expectedComponentIds);
-    const mismatches: Array<{
+    const mismatches: {
       unit: string;
       anchorId: string;
       target: string;
       reason: string;
-    }> = [];
+    }[] = [];
 
     for (const row of acceptedArchitecturalUnits) {
       const path = row.unit.slice(0, row.unit.indexOf("#"));
@@ -334,7 +334,7 @@ describe("the self-hosting corpus", () => {
           unit: row.unit,
           anchorId: row.anchorId,
           target,
-          reason: `memberOf count ${memberships.length}`,
+          reason: `memberOf count ${String(memberships.length)}`,
         });
       } else {
         if (target !== row.componentId) {
