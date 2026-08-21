@@ -28,6 +28,7 @@ specs:
   - spec:protocol.structural-self-binding
   - spec:observation.runtime-overlay
   - spec:extraction.derive-graph
+  - spec:extraction.delivery-facts
   - spec:extraction.determinism
   - spec:extraction.build-pipeline
   - spec:extraction.build-pipeline.same-invocation
