@@ -112,13 +112,13 @@
       "session_ids": [
         "senpi:01a023a8-efe9-7fad-8e3c-a5e07a2fb2a4"
       ],
-      "status": "active",
+      "status": "completed",
       "worktree_path": "/home/darkomijic/dev-libar/software-delivery-protocol",
       "delivery_mode": "make-pr",
       "make_pr": true,
       "current_commit": "315a0d8",
-      "active_task": "F1 Plan compliance audit",
-      "completed_todo": 9
+      "active_task": null,
+      "completed_todo": 14
     }
   }
 }

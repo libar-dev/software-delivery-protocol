@@ -246,18 +246,21 @@ Your next move: high-accuracy momus review runs now (required, default-on). Full
 
 ## Final verification wave
 > Runs in parallel after ALL todos. ALL must APPROVE. Surface results and wait for the user's explicit okay before declaring complete.
-- [ ] F1. Plan compliance audit
+- [x] F1. Plan compliance audit
   Verify every todo's evidence file exists at `.omo/evidence/task-<N>-design-law-transfer.md` and matches its acceptance criteria. Confirm the dependency matrix was respected (todo 7 after todo 3; todo 8 after todos 1, 3, 4, 5; todo 9 last). Confirm no file outside Scope IN was edited. Audit the branch's commit messages for coherent boundaries (one domain per commit; todo 1's Spec + MD-35 row in the same commit).
   Recommended task executor category: unspecified-high
-- [ ] F2. Code quality review
+- [x] F2. Code quality review
   Verify the two new Specs and the amended ones speak ratified terminology (CONTEXT.md; no invented terms — "comment promotion" cites the promotion law). Verify the demoted JSDoc in `src/graph/delivery-facts.ts` restates none of the ten rules (MD-10 exclusive promotion). Verify the refusal Spec passes the ADR three-part test in its own text. Verify CONTEXT.md carries no temporal/plan-status tokens. Verify the decidedBy fills that landed are exactly the surviving candidates with evidence-file reasons for any drops.
   Recommended task executor category: unspecified-high
-- [ ] F3. Real manual QA
+- [x] F3. Real manual QA
   Run the recipe 17 body via `pnpm --silent sdp:q` and confirm every surviving todo-5 fill appears on its components' shapingDecisions rows; for any candidate that failed its verify-first bar, confirm the evidence file records the reason. Record honestly in the close evidence which rulings still do not surface on component rows (a ruling whose subjects are structural Specs, not realized carrier Specs, belongs to the decision map — recipe 18 — not the component join). Run recipe 19 on `spec:extraction.delivery-facts` and confirm the implementation, verifier, and parent neighborhood render. Run `pnpm --silent sdp validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity` (exit 0). Spot-check `generated/design-review/spec/extraction.delivery-facts.md` exists after regeneration.
   Recommended task executor category: unspecified-high
-- [ ] F4. Scope fidelity
-  Diff the branch against Scope IN/OUT: exactly one re-targeted `satisfies` edge (`git diff main -- src/` shows only the anchor line and JSDoc demotion in `src/graph/delivery-facts.ts`); no new relation types, reader methods, projections, or validator families; no anchors on the three marginal files; no `[blocking]` open questions added; `spec:protocol.structural-self-binding` and `spec:model.structural-patterns` still `defined`; no new `plans/` file.
+- [x] F4. Scope fidelity
+  Diff the design-law slice against its pre-slice branch head `ed77ee75145a414e496f71865f4ea3b97a38f17d`: exactly one re-targeted `satisfies` edge (`git diff ed77ee75145a414e496f71865f4ea3b97a38f17d -- src/` shows only the anchor line and JSDoc demotion in `src/graph/delivery-facts.ts`; the full PR diff against `main` also contains the earlier architectural-patterns source-anchor work); no new relation types, reader methods, projections, or validator families; no anchors on the three marginal files; no `[blocking]` open questions added; `spec:protocol.structural-self-binding` and `spec:model.structural-patterns` still `defined`; no new `plans/` file.
   Recommended task executor category: unspecified-high
+- [x] C1. Remove completed lane worktrees and record receipts
+  Remove the nine task-owned `design-law-transfer/todo-*` worktrees after every lane is integrated and independently verified. Preserve their local branches; do not force-delete branch history. Record `git worktree list --porcelain` after cleanup.
+  Recommended task executor category: quick
 
 ## Commit strategy
 Commits at coherent boundaries on `feature/architectural-patterns-views`, one domain per commit:
