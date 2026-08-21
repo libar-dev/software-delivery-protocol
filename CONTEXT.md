@@ -64,6 +64,7 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 |---|---|---|
 | **`Pack`** | the authored grouping / review **aggregate** over `Spec`s; states **no truth of its own**; its `framing` is a plain descriptive note; a spec may belong to many packs; membership lives on the manifest, the `belongsTo` edge is derived from it | "SpecPack" |
 | **anchor** | a human-written pointer **in source code**: *"this code location is the implementation/test **binding** for this Spec ID"* — a binding assertion only, never system-truth content (no behavior, rationale, readiness, acceptance criteria, or delivery facts); yields `anchored`-claim edges | "marker" |
+| **architecturally significant unit** | a code unit with exported public surface or cross-component reach that warrants graph-visible structural binding — component membership, and uses declarations for its architectural dependencies; the accepted set is an owner-reviewed declaration, never derived from imports (carried by `spec:model.structural-patterns`) | "pattern" (refused, MD-34) |
 
 **Two grouping mechanisms, kept distinct:** *refinement* (parent `Spec` → children — authored truth with
 descendants) vs *the aggregate* (the `Pack` — a cross-cutting review collection, no truth of its own).
