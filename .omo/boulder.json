@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "active_work_id": "architectural-patterns-views",
+  "active_work_id": "design-law-transfer",
   "works": {
     "pr-17-gherkin-carrier-hardening": {
       "work_id": "pr-17-gherkin-carrier-hardening",
@@ -104,6 +104,21 @@
       "make_pr": false,
       "active_task": null,
       "completed_todo": 19
+    },
+    "design-law-transfer": {
+      "work_id": "design-law-transfer",
+      "active_plan": ".omo/plans/design-law-transfer.md",
+      "plan_name": "design-law-transfer",
+      "session_ids": [
+        "senpi:01a023a8-efe9-7fad-8e3c-a5e07a2fb2a4"
+      ],
+      "status": "active",
+      "worktree_path": "/home/darkomijic/dev-libar/software-delivery-protocol",
+      "delivery_mode": "make-pr",
+      "make_pr": true,
+      "current_commit": "13538b0",
+      "active_task": "Author the refusal ruling (MD-35) + pack + oracle",
+      "completed_todo": 1
     }
   }
 }
