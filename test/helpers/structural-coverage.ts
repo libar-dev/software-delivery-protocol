@@ -2,49 +2,17 @@ import { resolve } from "node:path";
 
 import ts from "typescript";
 
+import { createRuntimeExportResolver, referencedModuleSource } from "./runtime-export-resolver.js";
+
 export type StructuralCoverageResult =
   | "ok"
   | "exported unit missing"
   | "covering source does not value-consume unit";
 
-function resolvedSymbol(checker: ts.TypeChecker, symbol: ts.Symbol): ts.Symbol {
-  return symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
-}
-
-function runtimeFunctionExport(
-  program: ts.Program,
-  sourcePath: string,
-  exportName: string,
-): ts.Symbol | undefined {
-  const source = program.getSourceFile(resolve(program.getCurrentDirectory(), sourcePath));
-  if (source === undefined) {
-    return undefined;
-  }
-
-  const checker = program.getTypeChecker();
-  const moduleSymbol = checker.getSymbolAtLocation(source);
-  const exported = moduleSymbol
-    ? checker.getExportsOfModule(moduleSymbol).find((symbol) => symbol.name === exportName)
-    : undefined;
-  if (exported === undefined) {
-    return undefined;
-  }
-
-  const target = resolvedSymbol(checker, exported);
-  const declaration = target.valueDeclaration ?? target.declarations?.[0];
-  if (declaration === undefined || !(target.flags & ts.SymbolFlags.Value)) {
-    return undefined;
-  }
-
-  return checker.getTypeOfSymbolAtLocation(target, declaration).getCallSignatures().length > 0
-    ? target
-    : undefined;
-}
-
 function valueImportedLocals(
   checker: ts.TypeChecker,
   source: ts.SourceFile,
-  target: ts.Symbol,
+  isRuntimeUnitImport: (source: ts.SourceFile, exportName: string) => boolean,
 ): ReadonlySet<ts.Symbol> {
   const locals = new Set<ts.Symbol>();
 
@@ -55,21 +23,24 @@ function valueImportedLocals(
 
     const clause = statement.importClause;
     const bindings = clause?.namedBindings;
+    const importedSource = referencedModuleSource(checker, statement.moduleSpecifier);
     if (
       clause?.phaseModifier === ts.SyntaxKind.TypeKeyword ||
       bindings === undefined ||
-      !ts.isNamedImports(bindings)
+      !ts.isNamedImports(bindings) ||
+      importedSource === undefined
     ) {
       continue;
     }
 
     for (const specifier of bindings.elements) {
-      if (specifier.isTypeOnly) {
-        continue;
-      }
-
+      const importedName = specifier.propertyName?.text ?? specifier.name.text;
       const local = checker.getSymbolAtLocation(specifier.name);
-      if (local !== undefined && resolvedSymbol(checker, local) === target) {
+      if (
+        !specifier.isTypeOnly &&
+        local !== undefined &&
+        isRuntimeUnitImport(importedSource, importedName)
+      ) {
         locals.add(local);
       }
     }
@@ -88,12 +59,27 @@ export function auditStructuralCoverage(
     return "exported unit missing";
   }
 
-  const target = runtimeFunctionExport(
-    program,
-    unit.slice(0, separator),
-    unit.slice(separator + 1),
+  const source = program.getSourceFile(
+    resolve(program.getCurrentDirectory(), unit.slice(0, separator)),
   );
-  if (target === undefined) {
+  if (source === undefined) {
+    return "exported unit missing";
+  }
+
+  const checker = program.getTypeChecker();
+  const resolveRuntimeExport = createRuntimeExportResolver(checker);
+  const resolution = resolveRuntimeExport(source, unit.slice(separator + 1));
+  if (resolution.cyclic || resolution.candidates.size !== 1) {
+    return "exported unit missing";
+  }
+
+  const target = resolution.candidates.values().next().value;
+  const declaration = target?.valueDeclaration ?? target?.declarations?.[0];
+  if (
+    target === undefined ||
+    declaration === undefined ||
+    checker.getTypeOfSymbolAtLocation(target, declaration).getCallSignatures().length === 0
+  ) {
     return "exported unit missing";
   }
 
@@ -104,8 +90,10 @@ export function auditStructuralCoverage(
     return "covering source does not value-consume unit";
   }
 
-  const checker = program.getTypeChecker();
-  const importedLocals = valueImportedLocals(checker, coveringSource, target);
+  const importedLocals = valueImportedLocals(checker, coveringSource, (importedSource, name) => {
+    const imported = resolveRuntimeExport(importedSource, name);
+    return !imported.cyclic && imported.candidates.size === 1 && imported.candidates.has(target);
+  });
   const calledLocals = new Set<ts.Symbol>();
 
   const visit = (node: ts.Node): void => {
@@ -119,7 +107,6 @@ export function auditStructuralCoverage(
         calledLocals.add(local);
       }
     }
-
     ts.forEachChild(node, visit);
   };
 
