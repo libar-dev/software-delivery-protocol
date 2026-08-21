@@ -254,7 +254,7 @@ Your next move: complete the required independent plan review, then begin execut
   Commit: Y | `style(evidence): clear PR 25 review whitespace`
   Recommended task executor category: `writing` — the work is evidence accuracy plus byte-exact prose hygiene.
 
-- [ ] 7. Integrate verified lanes, run the full gate, and prepare the final PR record
+- [x] 7. Integrate verified lanes, run the full gate, and prepare the final PR record
   What to do / Must NOT do:
   - Confirm every lane commit is based on todo 1 and carries its focused green evidence; cherry-pick in dependency order: todo 2, todo 3, todo 4, todo 5, todo 6.
   - Resolve no conflict by dropping another lane's assertion or evidence; stop and return to the owning lane if file ownership differs from this plan.
