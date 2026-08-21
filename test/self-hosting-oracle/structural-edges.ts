@@ -424,37 +424,38 @@ export const coarseGrainCoverage = [
     unit: "src/cli/validate-watch.ts#runValidateWatch",
     coveredBy: "impl:protocol.agent-surface-cli",
     componentId: "component:protocol.cli",
-    rationale: "dispatched at src/cli/sdp.ts:198-201",
+    rationale: "src/cli/sdp.ts#runSdpCli value-calls runValidateWatch",
   },
   {
     unit: "src/import/markdown-fidelity.ts#assertMarkdownEmissionFidelity",
     coveredBy: "impl:protocol.sdp-import-markdown-emit",
     componentId: "component:protocol.import",
-    rationale: "consumed at src/import/emit-markdown.ts:4-7,197-205",
+    rationale:
+      "src/import/emit-markdown.ts#emitMarkdownSpec value-calls assertMarkdownEmissionFidelity",
   },
   {
     unit: "src/import/data-access.ts#importData",
     coveredBy: "impl:protocol.sdp-import-markdown-emit",
     componentId: "component:protocol.import",
-    rationale: "imported by emitMarkdownSpec at src/import/emit-markdown.ts:4",
+    rationale: "src/import/emit-markdown.ts#emitMarkdownSpec value-calls importData",
   },
   {
     unit: "src/import/data-access.ts#importText",
     coveredBy: "impl:protocol.sdp-import-markdown-emit",
     componentId: "component:protocol.import",
-    rationale: "imported by emitMarkdownSpec at src/import/emit-markdown.ts:4",
+    rationale: "src/import/emit-markdown.ts#emitMarkdownSpec value-calls importText",
   },
   {
     unit: "src/import/data-access.ts#importTexts",
     coveredBy: "impl:protocol.sdp-import-markdown-emit",
     componentId: "component:protocol.import",
-    rationale: "imported by emitMarkdownSpec at src/import/emit-markdown.ts:4",
+    rationale: "src/import/emit-markdown.ts#emitMarkdownSpec value-calls importTexts",
   },
   {
     unit: "src/import/data-access.ts#targetsForRelationType",
     coveredBy: "impl:protocol.sdp-import-markdown-emit",
     componentId: "component:protocol.import",
-    rationale: "imported by emitMarkdownSpec at src/import/emit-markdown.ts:4",
+    rationale: "src/import/emit-markdown.ts#emitMarkdownSpec value-calls targetsForRelationType",
   },
 ] as const;
 

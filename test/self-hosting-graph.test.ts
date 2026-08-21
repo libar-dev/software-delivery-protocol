@@ -3,19 +3,25 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  createCompilerHost,
+  createProgram,
   createSourceFile,
+  flattenDiagnosticMessageText,
   forEachChild,
+  getParsedCommandLineOfConfigFile,
   isCallExpression,
   isExpressionStatement,
   isIdentifier,
   ScriptKind,
   ScriptTarget,
+  sys,
 } from "typescript";
 import { describe, expect, it } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
 import { extract, validateGraph } from "../src/index.js";
+import { auditStructuralCoverage } from "./helpers/structural-coverage.js";
 import type { ExpectedSpec } from "./self-hosting-oracle/index.js";
 import {
   acceptedArchitecturalUnits,
@@ -33,6 +39,27 @@ import {
 } from "./self-hosting-oracle/index.js";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
+const parsedCompilerConfig = getParsedCommandLineOfConfigFile(
+  join(repoRoot, "tsconfig.json"),
+  {},
+  {
+    ...sys,
+    onUnRecoverableConfigFileDiagnostic(diagnostic) {
+      throw new Error(flattenDiagnosticMessageText(diagnostic.messageText, "\n"));
+    },
+  },
+);
+if (parsedCompilerConfig === undefined) {
+  throw new Error("the repository TypeScript project could not be parsed");
+}
+const structuralCoverageCompilerHost = createCompilerHost(parsedCompilerConfig.options);
+structuralCoverageCompilerHost.getCurrentDirectory = () => repoRoot;
+const structuralCoverageProgram = createProgram({
+  rootNames: parsedCompilerConfig.fileNames,
+  options: parsedCompilerConfig.options,
+  projectReferences: parsedCompilerConfig.projectReferences,
+  host: structuralCoverageCompilerHost,
+});
 
 const structuralSelfBindingTestAnchor = specTest({
   id: testAnchorId("test:protocol.structural-self-binding"),
@@ -392,6 +419,16 @@ describe("the self-hosting corpus", () => {
           anchorId: row.coveredBy,
           target,
           reason: `covering anchor not a member of ${row.componentId}`,
+        });
+      }
+
+      const coverage = auditStructuralCoverage(structuralCoverageProgram, row.unit, covering.file);
+      if (coverage !== "ok") {
+        mismatches.push({
+          unit: row.unit,
+          anchorId: row.coveredBy,
+          target,
+          reason: coverage,
         });
       }
     }
