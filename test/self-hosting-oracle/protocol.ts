@@ -27,7 +27,7 @@ export const protocolSpecs = [
     id: "spec:protocol.structural-self-binding",
     specKind: "behavior",
     altitude: "story",
-    readiness: "idea",
+    readiness: "defined",
     file: "specs/protocol/structural-self-binding.sdp.md",
     title: "The engine's structural self-binding covers its architecturally significant units",
     narrative: null,
@@ -35,17 +35,11 @@ export const protocolSpecs = [
       intent: {
         outcome:
           "Every architecturally significant engine unit carries component membership and uses declarations so structural recipes and the census answer architecture questions about the engine itself.",
-        openQuestions: [
-          {
-            question:
-              "Which anchors outside the current component memberships are architecturally significant, and by what criterion — public surface, cross-component reach, or another boundary the owner ratifies?",
-            blocking: true,
-          },
-        ],
       },
       behavior: {
         rules: [
-          "Structural edges stay identity-only under the structural anchor semantics ruling; wider coverage confers no intent, delivery fact, or readiness effect.",
+          "The significance criterion for engine self-binding is exported public surface plus cross-component reach.",
+          "Every architecturally significant unit carries component membership; it also carries uses declarations for each component it architecturally depends on, so structural recipes answer dependency questions about the engine itself.",
         ],
       },
     },

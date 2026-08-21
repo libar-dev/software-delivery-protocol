@@ -2,9 +2,10 @@
 id: spec:protocol.structural-self-binding
 kind: behavior
 altitude: story
-readiness: idea
+readiness: defined
 relations:
   refines: spec:protocol.self-hosting
+  decidedBy: spec:decisions.architectural-significance-rides-primitives
 ---
 # The engine's structural self-binding covers its architecturally significant units
 
@@ -12,10 +13,7 @@ relations:
 
 - outcome: Every architecturally significant engine unit carries component membership and uses declarations so structural recipes and the census answer architecture questions about the engine itself.
 
-### Open questions
-
-- [blocking] Which anchors outside the current component memberships are architecturally significant, and by what criterion — public surface, cross-component reach, or another boundary the owner ratifies?
-
 ## Behavior
 
-- rule: Structural edges stay identity-only under the structural anchor semantics ruling; wider coverage confers no intent, delivery fact, or readiness effect.
+- rule: The significance criterion for engine self-binding is exported public surface plus cross-component reach.
+- rule: Every architecturally significant unit carries component membership; it also carries uses declarations for each component it architecturally depends on, so structural recipes answer dependency questions about the engine itself.
