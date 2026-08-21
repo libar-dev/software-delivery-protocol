@@ -1,75 +1,86 @@
-# F4 Scope Fidelity - Final Audit
+# F4 Scope Fidelity - Final Re-audit
+
+## Findings
+
+None.
 
 ## Verdict
 
-**APPROVE** for `bb97d829eea7b3689d5d8569d307e1bb5e77fd0d..aa54e86a40943f555f03f8ce57eb32bd0036b0de` on `feature/architectural-patterns-views`.
+**PASS** for `bb97d829eea7b3689d5d8569d307e1bb5e77fd0d..c244bf06125481f4e01b1a9d197b0925c4088731` on `feature/architectural-patterns-views`.
 
-No blocking or advisory product-scope finding. The one non-Scope-IN product-path delta is the explicitly user-authorized formatting-only recovery at `77c6655`; it is isolated and semantically neutral. `.omo` lifecycle state is classified separately below.
+The F2 remediation in `c244bf0` is a coherent root-fix commit for the final-review findings. It does not expand engine, graph, schema, relation, reader, readiness, anchor, component, or projection behavior. The previously authorized Cursor formatting exception remains isolated and exact.
 
 ## Independent verification
 
-- Base is the merge base; HEAD is a linear 16-commit descendant on the named branch.
-- Focused verification: `npx vitest run test/self-hosting-graph.test.ts test/recipes.test.ts --pool=forks --maxWorkers=1` -> **2 files / 51 tests passed**.
-- Live `sdp:q` found 13 components, 12 inter-decision `dependsOn`, 0 `supersedes`, no scheduling edge, and both enriched Specs at stated `defined` with no floor failures.
-- Recipe bodies 17/18/19 are byte-exact against the plan bodies (2860/2475/4023 bytes).
-- No delta exists under repo `plans/`, `generated/`, or `src/projections/`; no forbidden incidental-plumbing path changed.
+- Requested base is the merge base; landed HEAD is a linear 17-commit descendant.
+- `c244bf0` is a direct child of prior audited HEAD `aa54e86` and is the sole remediation commit.
+- Independent focused run: `npx vitest run test/self-hosting-graph.test.ts test/self-hosting-model.test.ts test/readiness.test.ts test/recipes.test.ts --pool=forks --maxWorkers=1` -> **4 files / 76 tests passed**.
+- Live `sdp:q`: 162 Specs, 172 anchors, 335 nodes, 731 edges, 13 components, 12 inter-decision `dependsOn`, 0 `supersedes`, 0 scheduling edges.
+- Recipes 17/18/19 remain byte-equal between plan and catalog. Recipe 19 is 3984 bytes, SHA-256 `9e2b1cdf2c093667ed6a7d7af8603bef9af43dd0abb2e29b673cca0e0054c50e`, with zero `abstractions` tokens and three nullable component accesses.
 
-## Guardrail matrix
+## Updated guardrail matrix
 
-| Guardrail | Result | Proof |
+| Guardrail | Result | Re-audit proof |
 | --- | --- | --- |
-| No new relation types | PASS | `src/model/relations.ts`, graph schema, ids, and anchor model are unchanged; base/HEAD `SPEC_RELATION_TYPES` are identical. |
-| No reader methods | PASS | `Reader` interfaces are byte-equivalent; the only reader delta is the planned `reader -> model` anchor `uses`. |
-| No component semantic change | PASS | Component/anchor semantic implementation files are unchanged; only declarations mint `import` and `testing`. |
-| Zero `supersedes`; no scheduling edges | PASS | Live graph has 0 `supersedes`; no authored scheduling relation or scheduling edge type was added. |
-| No decision/idea anchors | PASS | All 15 new anchors satisfy non-decision Specs at stated `ready`; live query returned no decision or `idea` target. |
-| No incidental-plumbing anchors | PASS | Every Scope-OUT source path is unchanged, including `src/index.ts`, `src/model/code-anchor.ts`, listed extract/CLI/projection/import plumbing, and `new-spec-command.ts`. |
-| No committed derived view rendering | PASS | No `generated/` or projection delta; only live-derived recipe source was committed. |
-| No `ready` promotion of enriched Specs | PASS | `structural-patterns` and `structural-self-binding` are exactly `idea -> defined`; the only new `ready` line belongs to planned decision MD-34. |
-| No engine behavior change | PASS | The complete `src/` diff is declaration-support imports, `codeAnchor` blocks, component/uses fields, and one import-order move; no executable body or public declaration changed. |
-| No new repo `plans/` file | PASS | `git diff --name-status ... -- plans/` is empty. |
+| No new relation types | PASS | Remediation touches no relation/schema implementation or Spec frontmatter; live edge vocabulary is unchanged. |
+| No reader methods | PASS | No remediation delta under `src/`; base-to-HEAD `Reader` surface remains the previously audited one. |
+| No component semantic change | PASS | No remediation delta under `src/`, anchor model, ids, or graph schema; component count remains 13. |
+| Zero `supersedes`; no scheduling edges | PASS | Live graph reports 0 and 0; the exact 12-edge inter-decision set is unchanged. |
+| No decision/idea anchors | PASS | Anchor roster and targets are unchanged; live query still returns no new anchor targeting a decision or `idea` Spec. |
+| No incidental-plumbing anchors | PASS | Full base-to-HEAD forbidden-path query is empty. |
+| No committed derived view rendering | PASS | No remediation or full-range delta under `generated/` or `src/projections/`. |
+| No readiness change | PASS | Remediation changes no `readiness:` line. Structural-patterns and structural-self-binding remain `defined`; MD-34 remains `ready`. |
+| No relation/anchor graph change | PASS | Counts remain 172 anchors / 335 nodes / 731 edges; frontmatter and API-line audit is empty. |
+| No engine behavior change | PASS | `aa54e86..c244bf0 -- src` is empty. Recipe 19's documented query body changed, not engine code. |
+| No new repo `plans/` file | PASS | Both remediation and full base-to-HEAD diffs under repo `plans/` are empty. |
+| No unrelated user work absorbed | PASS | The only non-`.omo` remediation paths are the eight review-fix paths enumerated below; gate evidence records a clean tree before execution. |
 
-## Exact scope proof
+## Original implementation scope remains exact
 
-### Ruling and Spec enrichment
+The original F4 proof remains unchanged: MD-34 plus Pack/oracle lockstep; two enriched Specs at `defined`; 13-component allowlist; 15 new anchors; existing `impl:protocol.sdp-import` membership; six new `uses`; nine adjudicated task-8 `dependsOn` plus six `decidedBy` fills; three rejected candidate edges absent; recipes 17-19; planned tests/oracles/on-ramps; no incidental anchors, derived renderings, engine behavior, or repo `plans/` file.
 
-- Added exactly MD-34, its decision Spec, Pack member, and decision/pack oracle entries.
-- `spec:model.structural-patterns`: exact planned title/outcome/model terms, MD-34 `decidedBy`, no open questions, `defined`.
-- `spec:protocol.structural-self-binding`: exact two planned rules, MD-34 `decidedBy`, no open question, `defined`.
+Task-5 target mismatches (`src/extract/carrier.ts`, `src/extract/reify.ts`) and `new-spec-command.ts` remain untouched. The full inter-decision graph remains the 11 branch-added edges plus the base `sdp-gherkin-extension -> sdp-ts-extension` edge.
 
-### Relations
+## F2 remediation proof
 
-- MD-34 adds exactly `refines -> model.anchors` and two `dependsOn` edges to `structural-anchor-semantics` and `binding-not-liveness`.
-- Task 8 adds exactly nine adjudicated `dependsOn`: agent-front-door -> agent-surface-scripts-graph; carried-evidence -> content-only-sections/kind-conditional-floor; carrier-universality -> pack-markdown-carrier/prose-ownership; decision-readiness-posture -> kind-conditional-floor; example-realization-posture, structural-anchor-semantics, and verification-posture-not-realization -> binding-not-liveness.
-- Its six planned `decidedBy` fills are present on agent-surface, warn-level-signals, core-model, self-hosting, gherkin-authoring, and anchors.
-- The three plan-permitted rejected candidates remain absent: carrier-universality -> carrier-ruling, mcp-deferred -> agent-surface-scripts-graph, planning-truths-placement -> shipped-projections-frozen.
-- Current inter-decision set is exactly the above 11 branch-added edges plus the base sdp-gherkin-extension -> sdp-ts-extension edge = 12.
+Commit `c244bf06125481f4e01b1a9d197b0925c4088731` changes exactly eight non-orchestration paths:
 
-### Components, anchors, and structural edges
+1. `CONTEXT.md`
+2. `docs/agent-surface/recipes.md`
+3. `docs/concept/DECISIONS.md`
+4. `specs/decisions/architectural-significance-rides-primitives.sdp.md`
+5. `specs/model/structural-patterns.sdp.md`
+6. `test/recipes.test.ts`
+7. `test/self-hosting-oracle/decisions.ts`
+8. `test/self-hosting-oracle/model.ts`
 
-- Current component allowlist is exactly 13: adapters, cli, codegen, extract, graph, import, model, notation, projections, reader, runner, testing, validate.
-- Exactly 15 new anchors exist: components `protocol.import` and `protocol.testing`; implementations `sdp-import-core`, `sdp-import-markdown-emit`, `example-testing-helpers`, `discover-files`, `protocol-bindings`, `delivery-facts`, `example-space`, `graph-index`, `validation-contracts`, `agent-surface-cli`, `census-page-cli`, `mermaid-view-cli`, and `gherkin-view-cli`.
-- Existing `impl:protocol.sdp-import` gained only planned import membership.
-- Exact new `uses`: cli -> import; import -> extract/model; reader -> model; testing -> adapters/runner.
-- Planned `carrier.ts` and `reify.ts` candidates were left unchanged after the plan-authorized target-text mismatch gate; the skip and reasons are recorded in task-5 evidence. `new-spec-command.ts` was likewise intentionally untouched.
+These are root fixes, not unrelated expansion:
 
-### Recipes, tests, and on-ramps
+- **Terminology:** CONTEXT records `pattern` as refused architectural vocabulary; MD-34, structural-patterns, registry, and exact oracles replace positive pattern-layer wording with existing Spec primitives. Stable ids, kinds, readiness, and relations are unchanged. `model.terms.pattern` is removed; only `architecturally significant unit` remains.
+- **Validator-family claim:** the invented deferred architecture-enforcement family is removed in canonical decision prose, oracle, and plan copy. Negative constraints now remain declared intent rather than promised machine findings. No validator or engine code changes.
+- **Recipe 19 contract:** catalog output uses `implementations`, not the rejected `abstractions` key; unresolved component metadata uses optional access and remains represented with null metadata instead of throwing.
+- **Regression tests:** two deterministic real-CLI tests cover the implementations-only machine contract and an invalid-but-reportable dangling `memberOf` graph. No sleep, polling, retry, or production mock bypass.
+- **Plan lockstep:** the embedded recipe-19 body is byte-exact with the catalog; recipes 17/18 are unchanged. Canonical Spec/decision snippets and MD-34 row are synchronized with the repaired wording.
 
-- Recipes 17-19 and recipe-19 parameter list are exact; no reader accessor was introduced.
-- `test/recipes.test.ts` has exactly the phrase pins, session ordinal extension, and three live-derived ground-truth blocks requested. Oracle changes are confined to the planned descriptor/shared-roster files and frozen totals.
-- On-ramps are exactly the two named skills plus `AGENTS.md` and `README.md`: count 19, literal recipe 17/18/19 routing, and the exact eight-item key-decision list.
+The remediation changes recipe behavior only at the review-identified output/totality seams. It adds no engine method, reader accessor, graph relation, schema field, anchor, component, projection, or readiness transition.
 
-## Authorized exception proof
+## Authorized Cursor exception
 
-Commit `77c6655ac2bf341a403da7ef7feb0bb404660475` changes only `.cursor/plans/architectural_patterns_arc_7a1015f0.plan.md` (`1 insertion, 2 deletions`): YAML quote style and removal of the final blank line. Parsed frontmatter before/after is deeply equal; file mode remains `100644`. It is a separate commit between recipe tests and `.omo` close checkpoints, matching the explicit user authorization rather than silent scope expansion.
+Commit `77c6655ac2bf341a403da7ef7feb0bb404660475` still changes only `.cursor/plans/architectural_patterns_arc_7a1015f0.plan.md` (`1 insertion, 2 deletions`): YAML quote style and final blank-line removal. Parsed frontmatter before/after is equal, mode stays `100644`, and the blob is byte-identical from `77c6655` through `c244bf0`. No remediation touched it.
 
-## Orchestration-state classification
+## Commit, evidence, and state boundaries
 
-- `.omo` baseline-to-HEAD changes are orchestration only: 27 evidence files, 15 task checkbox flips, Boulder registration/progress, and ledger events.
-- `1f09c39` and `aa54e86` are `.omo`-only checkpoint/close commits; neither absorbs product files.
-- Before this evidence was created, the only worktree delta was three post-HEAD ledger events for close/final-verification startup. It is orchestration state, not an unrelated user/product change, and was left untouched.
-- Committed `.omo` evidence contains pre-existing `git diff --check` whitespace diagnostics in several evidence records. This does not affect shipped code or the F4 scope verdict and is not cleaned under this file-only assignment.
+- `c244bf0` contains the eight root-fix paths plus `.omo` final-review evidence, plan synchronization/checkmarks, Boulder progress, and ledger events. No unrelated product path is present.
+- The committed F1/F2/F3/F4 and remediation evidence explains the review finding -> failing test -> root fix -> independent review chain. `.omo` remains orchestration state, not shipped engine surface.
+- `post-remediation-gate.md` is current untracked orchestration evidence created after the landed commit. It records a clean pre-gate tree at `c244bf0`, one `npm run check` invocation, no retry, exit 0, all 13 stages, 62+1 Vitest files with 844 passed/1 skipped plus 80 passed, expected warning classes only, and matching live graph/recipe measurements.
+- Current pre-audit worktree dirt was limited to the orchestrator ledger and that post-gate evidence. Neither is unrelated user/product work, neither was absorbed into `c244bf0`, and both were left untouched.
 
-## Commit-boundary and cleanup conclusion
+## Residual risks
 
-All product commits have coherent task-local path sets; task 9 follows landed anchor coverage, shared oracle sync follows tasks 3-9, recipe tests follow oracle sync, and close follows implementation/tests. No unrelated product/user change was absorbed. No stage, commit, push, stash, generated rendering, or cleanup mutation was performed by this audit; the pre-existing ledger delta remains for the parent orchestrator.
+- Post-gate repository validation intentionally stripped ignored projection trees after the already-green full gate; the gate evidence records this and assigns restoration to final F3. This is ignored workspace state, not a committed projection or F4 scope violation.
+- Historical committed `.omo` evidence retains pre-existing `git diff --check` whitespace diagnostics. Product paths and this owned evidence file are clean.
+- Markdown LSP availability is environment-dependent; behavioral confidence comes from the focused 76-test run, live graph queries, exact body hashes, and the recorded full post-remediation gate.
+
+## Cleanup
+
+Only this owned F4 evidence file was updated. No other file was edited; no stage, commit, push, stash, reset, checkout, generated write, or other Git mutation was performed.

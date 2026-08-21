@@ -98,11 +98,11 @@
       "session_ids": [
         "senpi:934d69c5-e852-4d2a-962d-f5732fea60ed"
       ],
-      "status": "active",
+      "status": "completed",
       "worktree_path": null,
       "delivery_mode": "direct",
       "make_pr": false,
-      "active_task": "Post-remediation gate and final audits",
+      "active_task": null,
       "completed_todo": 19
     }
   }
