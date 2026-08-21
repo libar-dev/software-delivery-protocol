@@ -388,28 +388,23 @@ export const modelSpecs = [
     id: "spec:model.structural-patterns",
     specKind: "model",
     altitude: "feature",
-    readiness: "idea",
+    readiness: "defined",
     file: "specs/model/structural-patterns.sdp.md",
-    title: "Structural anchors can express architecturally significant patterns",
+    title: "Architecturally significant patterns dissolve into existing primitives",
     narrative: null,
     sections: {
       intent: {
         outcome:
-          "Architecturally significant patterns and relationships in bound code are expressible through anchor structure so the graph answers architecture questions beyond component membership and uses edges.",
-        openQuestions: [
-          {
-            question:
-              "Does a vocabulary beyond `component` and `uses` pass the ADR three-part test at all, and which carrier would hold it without promoting mechanical structure into curated intent — new anchor fields, `component:` namespace conventions, or relations on Specs?",
-            blocking: true,
-          },
-          {
-            question:
-              '"Pattern" is not a ratified term in the language base; the concept needs a ratified name and a boundary against the anchor law\'s identity-only contract before any field is designed.',
-            blocking: true,
-          },
-        ],
+          "Patterns and their relationships are authored as decision/model-kind Specs, existing relations, and the satisfies→decidedBy join — no new vocabulary is needed beyond the structural anchors already in the graph.",
       },
-      model: {},
+      model: {
+        terms: {
+          "architecturally significant unit":
+            "a code unit with exported public surface or cross-component reach that warrants graph-visible structural binding.",
+          pattern:
+            "not a ratified term — a named coordinate carried by decision/model-kind Specs and their decidedBy edges.",
+        },
+      },
     },
     deliveryFacts: [],
   },
