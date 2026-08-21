@@ -72,7 +72,7 @@ Your next move: high-accuracy momus review runs now (required, default-on). Full
 ## Todos
 > Implementation + Test = ONE todo. Never separate.
 <!-- APPEND TASK BATCHES BELOW THIS LINE WITH edit/apply_patch - never rewrite the headers above. -->
-- [ ] 1. Author the refusal ruling — decision Spec + MD-35 + pack manifest + per-Spec oracle lockstep
+- [x] 1. Author the refusal ruling — decision Spec + MD-35 + pack manifest + per-Spec oracle lockstep
   What to do: Write `specs/decisions/jsdoc-graph-extraction-refused.sdp.md` (full text below). Append the MD-35 row to `docs/concept/DECISIONS.md` (after the MD-34 row, line 45). Append `spec:decisions.jsdoc-graph-extraction-refused` to the decisions block of `specs/self-hosting.pack.sdp.md` (after `spec:decisions.architectural-significance-rides-primitives`). Add the full descriptor to `test/self-hosting-oracle/decisions.ts` (transcribe the sections exactly, mirroring the existing entries' shape). Shared rosters (`declared-relations.ts`, `pack-members.ts`, frozen totals) are updated in todo 8, not here. Must NOT change other decision Specs; no `supersedes` edges.
   Parallelization: Wave 1 | Blocked by: — | Blocks: 8
   References:

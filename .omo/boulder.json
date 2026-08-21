@@ -116,9 +116,9 @@
       "worktree_path": "/home/darkomijic/dev-libar/software-delivery-protocol",
       "delivery_mode": "make-pr",
       "make_pr": true,
-      "current_commit": "13538b0",
-      "active_task": "Author the refusal ruling (MD-35) + pack + oracle",
-      "completed_todo": 1
+      "current_commit": "1ea9741",
+      "active_task": "Run delivery-facts tracer: Spec + anchor retarget + JSDoc demotion + specTest",
+      "completed_todo": 2
     }
   }
 }
