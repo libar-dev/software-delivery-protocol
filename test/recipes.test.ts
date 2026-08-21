@@ -207,6 +207,68 @@ function edgeId(edge: { readonly from: string; readonly to: string }): string {
   return `${edge.from} -> ${edge.to}`;
 }
 
+// Lawful first path segments that collide with Object.prototype own/inherited keys. The ID
+// grammar admits them (`src/ids.ts`); family maps built as `{}` do not.
+const HOSTILE_PATH_SEGMENTS = [
+  "constructor",
+  "toString",
+  "valueOf",
+  "hasOwnProperty",
+] as const;
+
+type HostilePathSegment = (typeof HOSTILE_PATH_SEGMENTS)[number];
+
+function hostileSpecId(family: HostilePathSegment, leaf: string): string {
+  return `spec:${family}.${leaf}`;
+}
+
+function extractionWithHostilePrimitives(input: {
+  readonly leaf: string;
+  readonly readiness: "idea" | "scoped" | "defined" | "ready";
+  readonly decidedByTarget?: string;
+}): ExtractionResult {
+  const nodes = HOSTILE_PATH_SEGMENTS.map((family) => ({
+    id: hostileSpecId(family, input.leaf),
+    nodeType: "Primitive" as const,
+    claim: "declared" as const,
+    specKind: "rule" as const,
+    altitude: "story" as const,
+    readiness: input.readiness,
+    title: `hostile family fixture ${family}`,
+    file: "specs/fixture-hostile-family.sdp.md",
+  }));
+  const edges =
+    input.decidedByTarget === undefined
+      ? []
+      : HOSTILE_PATH_SEGMENTS.map((family) => ({
+          from: hostileSpecId(family, input.leaf),
+          type: "decidedBy" as const,
+          to: input.decidedByTarget,
+          claim: "declared" as const,
+        }));
+
+  return {
+    counts: derived.counts,
+    report: derived.report,
+    graph: {
+      schemaVersion: derived.graph.schemaVersion,
+      nodes: [...derived.graph.nodes, ...nodes],
+      edges: [...derived.graph.edges, ...edges],
+    },
+  };
+}
+
+function assertOwnHostileFamilyIds(
+  byFamily: Record<string, unknown>,
+  leaf: string,
+): void {
+  for (const family of HOSTILE_PATH_SEGMENTS) {
+    expect(Object.hasOwn(byFamily, family), `missing own family key ${family}`).toBe(true);
+    const ids = asArray(byFamily[family]).map((row) => stringAt(asRecord(row), "id"));
+    expect(ids).toContain(hostileSpecId(family, leaf));
+  }
+}
+
 function structuralGroundTruth() {
   const components = derived.graph.nodes
     .filter((node) => node.nodeType === "CodeNode" && node.id.startsWith("component:"))
@@ -1332,5 +1394,66 @@ describe("the agent-surface recipe corpus", () => {
             stringAt(entry, "role") === "component" && stringAt(entry, "id") === missingComponentId,
         ),
     ).toEqual([]);
+  });
+
+  // Given: the live graph plus ready non-example/non-decision primitives whose first path segments
+  // are Object.prototype keys, with no resolving implementation.
+  // When: catalog recipe 1 runs through real runSdpCli on that override.
+  // Then: each hostile family is an own byFamily key carrying the exact synthetic Spec id.
+  it("groups backlog rows under lawful Object.prototype path segments", async () => {
+    const leaf = "hostile-backlog";
+    const extraction = extractionWithHostilePrimitives({ leaf, readiness: "ready" });
+    const result = asRecord(await runRecipe(recipeByOrdinal(1), undefined, extraction));
+    assertOwnHostileFamilyIds(asRecord(result.byFamily), leaf);
+  });
+
+  // Given: the live graph plus below-ready primitives whose first path segments are
+  // Object.prototype keys.
+  // When: catalog recipe 11 runs through real runSdpCli on that override.
+  // Then: each hostile family is an own byFamily key carrying the exact synthetic Spec id.
+  it("groups lower-ladder rows under lawful Object.prototype path segments", async () => {
+    const leaf = "hostile-lower";
+    const extraction = extractionWithHostilePrimitives({ leaf, readiness: "idea" });
+    const result = asRecord(await runRecipe(recipeByOrdinal(11), undefined, extraction));
+    assertOwnHostileFamilyIds(asRecord(result.byFamily), leaf);
+  });
+
+  // Given: the live graph plus primitives that declare decidedBy to an existing ready decision,
+  // with first path segments that collide with Object.prototype.
+  // When: catalog recipe 18 runs through real runSdpCli on that override.
+  // Then: the decision's decidedSubjectsByFamily keeps each hostile family as an own key with the
+  // exact synthetic Spec id.
+  it("groups decided subjects under lawful Object.prototype path segments", async () => {
+    const leaf = "hostile-decided-subject";
+    const decisionId = "spec:decisions.agent-front-door";
+    const decision = derived.graph.nodes.find(
+      (node) =>
+        node.nodeType === "Primitive" &&
+        node.id === decisionId &&
+        node.specKind === "decision" &&
+        node.readiness === "ready",
+    );
+    if (decision === undefined) {
+      throw new Error(`live graph has no ready decision ${decisionId}`);
+    }
+
+    const extraction = extractionWithHostilePrimitives({
+      leaf,
+      readiness: "ready",
+      decidedByTarget: decisionId,
+    });
+    const result = asRecord(await runRecipe(recipeByOrdinal(18), undefined, extraction));
+    const row = asArray(result.decisions)
+      .map(asRecord)
+      .find((entry) => stringAt(entry, "id") === decisionId);
+    if (row === undefined) {
+      throw new Error(`decision map has no row for ${decisionId}`);
+    }
+
+    const byFamily = asRecord(row.decidedSubjectsByFamily);
+    for (const family of HOSTILE_PATH_SEGMENTS) {
+      expect(Object.hasOwn(byFamily, family), `missing own family key ${family}`).toBe(true);
+      expect(asArray(byFamily[family])).toContain(hostileSpecId(family, leaf));
+    }
   });
 });

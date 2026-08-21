@@ -96,7 +96,7 @@ const excludedExamples = ready.filter(
 const excludedDecisions = ready.filter(
   (spec) => spec.specKind === "decision" && !spec.deliveryFacts.includes("implemented"),
 );
-const byFamily = {};
+const byFamily = Object.create(null);
 
 for (const spec of backlog) {
   const family = spec.id.slice("spec:".length).split(".")[0];
@@ -444,7 +444,7 @@ visible instead of hidden in plan prose.*
 
 ```js
 const lower = g.specs().filter((spec) => spec.statedReadiness !== "ready");
-const byFamily = {};
+const byFamily = Object.create(null);
 
 for (const spec of lower) {
   const family = spec.id.slice("spec:".length).split(".")[0];
@@ -795,7 +795,7 @@ const decisions = decisionNodes.map((node) => {
   const outgoing = interDecisionEdges.filter((edge) => edge.from === node.id);
   const incoming = interDecisionEdges.filter((edge) => edge.to === node.id);
   const decidedSubjects = [...new Set(subjectsByDecision.get(node.id) ?? [])].sort();
-  const decidedSubjectsByFamily = {};
+  const decidedSubjectsByFamily = Object.create(null);
 
   for (const subjectId of decidedSubjects) {
     const family = familyOf(subjectId);
