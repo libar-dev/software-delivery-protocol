@@ -205,6 +205,9 @@ Every doc honours both — never mistake one half for the other:
   `evidence/`). Commit coherent checkpoints when that state is created or materially changed; a plan may mark
   narrowly named runtime evidence as workspace-local. Never delete, prune, overwrite, or blanket-ignore
   unfamiliar `.omo/` state as cleanup — inspect it and preserve it until its owner and recovery value are clear.
+- **Checkpoint runtime ledgers before destructive changes.** `.omo/start-work/ledger.jsonl` is ignored runtime
+  state; before replacing or deleting it, preserve required recovery records under `.omo/evidence/<work-id>/`
+  with source provenance and hashes.
 - **Commits are recovery boundaries, not workflow gates.** An execution plan's explicit commit strategy counts
   as authorization on its work branch; otherwise ask before committing. Prefer a commit after a coherent
   logical unit and its relevant quality gate, but never force one per todo, create empty commits, absorb
