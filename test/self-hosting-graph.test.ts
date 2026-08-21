@@ -13,9 +13,13 @@ import {
 } from "typescript";
 import { describe, expect, it } from "vitest";
 
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+
 import { extract, validateGraph } from "../src/index.js";
 import type { ExpectedSpec } from "./self-hosting-oracle/index.js";
 import {
+  acceptedArchitecturalUnits,
+  coarseGrainCoverage,
   expectedAnchors,
   expectedComponentIds,
   expectedDeclaredRelations,
@@ -29,6 +33,13 @@ import {
 } from "./self-hosting-oracle/index.js";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
+
+const structuralSelfBindingTestAnchor = specTest({
+  id: testAnchorId("test:protocol.structural-self-binding"),
+  label: "verifies the accepted significant-unit set carries its declared membership",
+  verifies: ref("spec:protocol.structural-self-binding"),
+});
+void structuralSelfBindingTestAnchor;
 
 // An oracle site written as a bare `register<Example>(` call names an adopted generated-registrar
 // activation. Its identifier resolves through the executable AST probe below, so a comment or a
@@ -116,6 +127,17 @@ function lineContaining(source: string, token: string): number {
   const line = source.split("\n").findIndex((entry) => entry.includes(token));
 
   return line + 1;
+}
+
+function compareCoverageMismatch(
+  left: { unit: string; anchorId: string; target: string },
+  right: { unit: string; anchorId: string; target: string },
+): number {
+  return (
+    left.unit.localeCompare(right.unit) ||
+    left.anchorId.localeCompare(right.anchorId) ||
+    left.target.localeCompare(right.target)
+  );
 }
 
 describe("the self-hosting corpus", () => {
@@ -267,6 +289,120 @@ describe("the self-hosting corpus", () => {
         .map((edge) => [edge.from, edge.to])
         .sort(),
     ).toEqual([...expectedUsesEdges].sort());
+  });
+
+  it("covers every accepted architecturally significant unit", () => {
+    const acceptedIds = new Set(acceptedArchitecturalUnits.map((row) => row.anchorId));
+    const exceptionIds = new Set<string>(structuralMembershipExceptions);
+    const componentIds = new Set<string>(expectedComponentIds);
+    const mismatches: Array<{
+      unit: string;
+      anchorId: string;
+      target: string;
+      reason: string;
+    }> = [];
+
+    for (const row of acceptedArchitecturalUnits) {
+      const path = row.unit.slice(0, row.unit.indexOf("#"));
+      const node = result.graph.nodes.find((entry) => entry.id === row.anchorId);
+      const memberships = result.graph.edges.filter(
+        (edge) => edge.from === row.anchorId && edge.type === "memberOf",
+      );
+      const target = memberships[0]?.to ?? "";
+
+      if (node?.nodeType !== "CodeNode") {
+        mismatches.push({
+          unit: row.unit,
+          anchorId: row.anchorId,
+          target,
+          reason: "anchor is not a CodeNode",
+        });
+        continue;
+      }
+
+      if (node.file !== path) {
+        mismatches.push({
+          unit: row.unit,
+          anchorId: row.anchorId,
+          target,
+          reason: `file ${node.file} !== ${path}`,
+        });
+      }
+
+      if (memberships.length !== 1) {
+        mismatches.push({
+          unit: row.unit,
+          anchorId: row.anchorId,
+          target,
+          reason: `memberOf count ${memberships.length}`,
+        });
+      } else {
+        if (target !== row.componentId) {
+          mismatches.push({
+            unit: row.unit,
+            anchorId: row.anchorId,
+            target,
+            reason: `memberOf target ${target} !== ${row.componentId}`,
+          });
+        }
+
+        if (!componentIds.has(target)) {
+          mismatches.push({
+            unit: row.unit,
+            anchorId: row.anchorId,
+            target,
+            reason: "target not in expectedComponentIds",
+          });
+        }
+      }
+    }
+
+    for (const edge of result.graph.edges.filter((entry) => entry.type === "memberOf")) {
+      if (!acceptedIds.has(edge.from) && !exceptionIds.has(edge.from)) {
+        const node = result.graph.nodes.find((entry) => entry.id === edge.from);
+        mismatches.push({
+          unit: node && "file" in node ? node.file : edge.from,
+          anchorId: edge.from,
+          target: edge.to,
+          reason: "unrostered memberOf",
+        });
+      }
+    }
+
+    for (const row of coarseGrainCoverage) {
+      const memberships = result.graph.edges.filter(
+        (edge) => edge.from === row.coveredBy && edge.type === "memberOf",
+      );
+      const covering = result.graph.nodes.find((entry) => entry.id === row.coveredBy);
+      const target = memberships[0]?.to ?? "";
+
+      if (covering === undefined) {
+        mismatches.push({
+          unit: row.unit,
+          anchorId: row.coveredBy,
+          target,
+          reason: "covering anchor missing",
+        });
+        continue;
+      }
+
+      if (memberships.length !== 1 || target !== row.componentId) {
+        mismatches.push({
+          unit: row.unit,
+          anchorId: row.coveredBy,
+          target,
+          reason: `covering anchor not a member of ${row.componentId}`,
+        });
+      }
+    }
+
+    mismatches.sort(compareCoverageMismatch);
+    const message = [
+      "structural self-binding coverage failed:",
+      ...mismatches.map((row) => `${row.unit} ${row.anchorId} → ${row.target}: ${row.reason}`),
+    ].join("\n");
+
+    expect(mismatches, message).toEqual([]);
   });
 
   it("projects every anchor and code node at the line its declaration occupies", () => {
