@@ -162,6 +162,7 @@ specs:
   - spec:decisions.adopted-registrars-committed
   - spec:decisions.shipped-projections-frozen
   - spec:decisions.planning-truths-placement
+  - spec:decisions.architectural-significance-rides-primitives
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model
