@@ -359,11 +359,14 @@ describe("the agent-surface recipe corpus", () => {
       "structural neighborhood",
       "census structural coverage",
       "projection-coverage upper bound",
+      "architecture map",
+      "decision map",
+      "planning slice",
     ]) {
       expect(agentSurfaceProse).toContain(phrase);
     }
 
-    for (const ordinal of [12, 13, 14, 15, 16]) {
+    for (const ordinal of [12, 13, 14, 15, 16, 17, 18, 19]) {
       expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
     }
   });
@@ -895,5 +898,110 @@ describe("the agent-surface recipe corpus", () => {
       mermaid: { diagramSubjects: diagramSubjectCount },
       gherkin: { specs: primitiveCount },
     });
+  });
+
+  it("returns the architecture map of every live component with recomputed fan-in and fan-out", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(17)));
+    const rows = asArray(result.components).map(asRecord);
+    const expected = structuralGroundTruth();
+    const componentIds = new Set(expected.components);
+    const ownerByMember = new Map(
+      expected.memberOfEdges.map((edge) => [edge.from, edge.to] as const),
+    );
+    const ownerOf = (id: string): string | undefined =>
+      componentIds.has(id) ? id : ownerByMember.get(id);
+    const usesOutByComponent = new Map<string, Set<string>>();
+    const usedByByComponent = new Map<string, Set<string>>();
+
+    for (const edge of expected.usesEdges) {
+      const from = ownerOf(edge.from);
+      const to = ownerOf(edge.to);
+      if (from === undefined || to === undefined) {
+        continue;
+      }
+
+      const outgoing = usesOutByComponent.get(from) ?? new Set<string>();
+      outgoing.add(to);
+      usesOutByComponent.set(from, outgoing);
+      const incoming = usedByByComponent.get(to) ?? new Set<string>();
+      incoming.add(from);
+      usedByByComponent.set(to, incoming);
+    }
+
+    const ids = rows.map((row) => stringAt(row, "id")).sort();
+    expect(ids).toEqual(expected.components);
+    expect(ids).toContain("component:protocol.import");
+    expect(ids).toContain("component:protocol.testing");
+
+    for (const row of rows) {
+      const id = stringAt(row, "id");
+      const expectedOut = [...(usesOutByComponent.get(id) ?? [])].sort();
+      const expectedIn = [...(usedByByComponent.get(id) ?? [])].sort();
+
+      expect(numberAt(row, "fanOut")).toBe(expectedOut.length);
+      expect(numberAt(row, "fanIn")).toBe(expectedIn.length);
+    }
+  });
+
+  it("returns the decision map ranked by live inbound fan-in", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(18)));
+    const ranking = asArray(result.ranking).map(asRecord);
+    const decisionIds = new Set(
+      derived.graph.nodes
+        .filter((node) => node.nodeType === "Primitive" && node.specKind === "decision")
+        .map((node) => node.id),
+    );
+    const interDecisionFanIn = (id: string): number =>
+      derived.graph.edges.filter(
+        (edge) =>
+          (edge.type === "dependsOn" || edge.type === "supersedes") &&
+          edge.to === id &&
+          decisionIds.has(edge.from) &&
+          decisionIds.has(edge.to),
+      ).length;
+
+    expect(numberAt(result, "total")).toBe(decisionIds.size);
+    expect(ranking.length).toBe(decisionIds.size);
+
+    const fanIns = ranking.map((row) => numberAt(row, "fanIn"));
+    expect(fanIns).toEqual([...fanIns].sort((left, right) => right - left));
+
+    const top = ranking[0];
+    if (top === undefined) {
+      throw new Error("decision map ranking is empty");
+    }
+
+    expect(numberAt(top, "fanIn")).toBe(interDecisionFanIn(stringAt(top, "id")));
+  });
+
+  it("returns a planning-slice neighborhood and an exact absent shape", async () => {
+    const recipe = recipeByOrdinal(19);
+    const result = asRecord(await runRecipe(recipe));
+    const id = "spec:consumers.agent-surface";
+    const parents = [
+      ...new Set(
+        derived.graph.edges
+          .filter((edge) => edge.type === "refines" && edge.from === id)
+          .map((edge) => edge.to),
+      ),
+    ].sort();
+    const children = [
+      ...new Set(
+        derived.graph.edges
+          .filter((edge) => edge.type === "refines" && edge.to === id)
+          .map((edge) => edge.from),
+      ),
+    ].sort();
+
+    expect(result.found).toBe(true);
+    expect(stringAt(result, "id")).toBe(id);
+    expect(asRecord(result.refinementNeighborhood)).toEqual({ parents, children });
+
+    const unknownId = "spec:consumers.nonexistent";
+    const absent = await runRecipe({
+      ...recipe,
+      body: recipe.body.replace(id, unknownId),
+    });
+    expect(absent).toEqual({ id: unknownId, found: false });
   });
 });
