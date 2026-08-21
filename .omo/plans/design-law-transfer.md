@@ -123,7 +123,7 @@ Your next move: high-accuracy momus review runs now (required, default-on). Full
   Commit: Y | docs(specs): land the comment-promotion filter on spec-sections
   Recommended task executor category: quick
 
-- [ ] 3. Run the delivery-facts tracer — new Spec + anchor re-target + JSDoc demotion + specTest + oracle lockstep
+- [x] 3. Run the delivery-facts tracer — new Spec + anchor re-target + JSDoc demotion + specTest + oracle lockstep
   What to do (atomic, one commit):
   (a) Write `specs/extraction/delivery-facts.sdp.md` (full text below). Append its id to the extraction block of `specs/self-hosting.pack.sdp.md`.
   (b) Re-target the anchor in `src/graph/delivery-facts.ts:74-79`: `satisfies: ref("spec:extraction.derive-graph")` → `ref("spec:extraction.delivery-facts")`. Nothing else in `src/` changes behaviorally.
@@ -165,7 +165,7 @@ Your next move: high-accuracy momus review runs now (required, default-on). Full
   Commit: Y | feat(specs): promote delivery-fact conferral law to spec:extraction.delivery-facts
   Recommended task executor category: unspecified-high
 
-- [ ] 4. Give the self-binding universal its verifier — oracle census rosters + suite assertion + specTest + Spec amendment
+- [x] 4. Give the self-binding universal its verifier — oracle census rosters + suite assertion + specTest + Spec amendment
   What to do:
   (a) Restructure `test/self-hosting-oracle/structural-edges.ts`: introduce `acceptedArchitecturalUnits` — rows `{ unit: "<path>#<exportedSymbol>", anchorId, componentId }` covering every row of today's `expectedMemberOfEdges` (same values, one roster); export `expectedMemberOfEdges` derived from it (`map` to `[anchorId, componentId]`) so membership stays a single oracle statement, never re-transcribed. Add `coarseGrainCoverage` — rows `{ unit, coveredBy, componentId, rationale }`, with `unit` ALWAYS in `<path>#<exportedSymbol>` form — for exactly these units: `src/cli/validate-watch.ts#runValidateWatch` → coveredBy `impl:protocol.agent-surface-cli` / `component:protocol.cli` (dispatched at `src/cli/sdp.ts:198-201`); `src/import/markdown-fidelity.ts#assertMarkdownEmissionFidelity` → coveredBy `impl:protocol.sdp-import-markdown-emit` / `component:protocol.import` (consumed at `src/import/emit-markdown.ts:4-7,197-205`); and for `src/import/data-access.ts`, ONE row per exported symbol the covering realization actually consumes — read the import statement at `src/import/emit-markdown.ts:4-5` and roster exactly that imported set (expected members include `importData`, `importText`, `importTexts`, `targetsForRelationType` — verify, never assume), each coveredBy `impl:protocol.sdp-import-markdown-emit` / `component:protocol.import`. Keep `structuralMembershipExceptions` and `expectedUsesEdges` unchanged.
   (b) Extend `test/self-hosting-graph.test.ts`: a new `it` block ("covers every accepted architecturally significant unit") asserting per roster row: (1) `anchorId` resolves to a CodeNode; (2) its graph `file` matches the rostered path; (3) exactly one `memberOf` edge exists from it; (4) its target equals `componentId`; (5) the target is one of `expectedComponentIds`; plus (6) no graph `memberOf` source exists outside the roster and `structuralMembershipExceptions`; and per coarse-grain row: the covering anchor resolves and is a member of the named component. Mismatches aggregate into sorted mismatch objects (by unit, then anchorId, then target) and fail once with a human message of the form `structural self-binding coverage failed:` followed by one line per mismatch — the assertion is over the structured objects; the text is only the vitest message.
@@ -197,7 +197,7 @@ Your next move: high-accuracy momus review runs now (required, default-on). Full
   Commit: Y | feat(specs): decidedBy fills so rulings surface in the architecture map
   Recommended task executor category: unspecified-low
 
-- [ ] 6. Register "architecturally significant unit" in CONTEXT.md
+- [x] 6. Register "architecturally significant unit" in CONTEXT.md
   What to do: Insert one row into the `## The other authored things` glossary table in `CONTEXT.md`, immediately after the **anchor** row (lines 61-67):
     `| **architecturally significant unit** | a code unit with exported public surface or cross-component reach that warrants graph-visible structural binding — component membership, and uses declarations for its architectural dependencies; the accepted set is an owner-reviewed declaration, never derived from imports (carried by ` + "`" + `spec:model.structural-patterns` + "`" + `) | "pattern" (refused, MD-34) |`
   Must NOT change any other row, header, or section; the term's definition must match `spec:model.structural-patterns`' `model.terms` wording.
