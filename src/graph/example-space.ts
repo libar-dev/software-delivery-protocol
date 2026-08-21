@@ -1,3 +1,5 @@
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import { parseSlots, stepSkeleton } from "../notation/slots.js";
 import type { SlotDeclaredType } from "../notation/slots.js";
 import type { GraphEdge, PrimitiveNode } from "./schema.js";
@@ -111,6 +113,14 @@ function compatibleWithChild(text: string, matches: readonly VocabularyStep[]): 
 
   return true;
 }
+
+const exampleSpaceAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.example-space"),
+  label: "resolves example-space vocabulary for contracts and floors",
+  satisfies: ref("spec:extraction.executable-contracts"),
+  component: componentAnchorId("component:protocol.graph"),
+});
+void exampleSpaceAnchor;
 
 /**
  * Resolve an example's used step skeletons against the example spaces of its direct declared

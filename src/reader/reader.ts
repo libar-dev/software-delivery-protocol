@@ -356,6 +356,7 @@ const readerComponentAnchor = codeAnchor({
   uses: [
     componentAnchorId("component:protocol.graph"),
     componentAnchorId("component:protocol.validate"),
+    componentAnchorId("component:protocol.model"),
   ],
 });
 const agentSurfaceAnchor = codeAnchor({

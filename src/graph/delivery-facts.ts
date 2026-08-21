@@ -1,3 +1,5 @@
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type { DeliveryFactName, GraphEdge, GraphNode, PrimitiveNode } from "./schema.js";
 
 /**
@@ -68,6 +70,14 @@ export function isEnabledExampleVerify(
     source?.nodeType === "Primitive" && source.specKind === "example" && anchorVerified(source.id)
   );
 }
+
+const deliveryFactsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.delivery-facts"),
+  label: "computes delivery facts from resolving binding edges",
+  satisfies: ref("spec:extraction.derive-graph"),
+  component: componentAnchorId("component:protocol.graph"),
+});
+void deliveryFactsAnchor;
 
 export function computeDeliveryFacts(
   nodes: readonly GraphNode[],
