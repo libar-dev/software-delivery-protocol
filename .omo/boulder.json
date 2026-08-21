@@ -102,8 +102,8 @@
       "worktree_path": null,
       "delivery_mode": "direct",
       "make_pr": false,
-      "active_task": "14. Run npm run check, re-measure graph, and close",
-      "completed_todo": 14
+      "active_task": "F1–F4 final verification",
+      "completed_todo": 15
     }
   }
 }

@@ -594,7 +594,7 @@ Your next move: high-accuracy momus review (required). Full execution detail fol
   Commit: Y | docs: update recipe counts and key-decision highlights
   Recommended task executor category: quick
 
-- [ ] 14. Run npm run check, re-measure graph, and close
+- [x] 14. Run npm run check, re-measure graph, and close
   What to do: Run `npm run check` on the branch. Re-measure counts with `pnpm --silent sdp:q` and label them re-derived. Record close-out evidence at `.omo/evidence/task-14-architectural-patterns-views.md`. Commit any final coherence. No new plans/ file. Must NOT ignore intentional warnings (5 `honesty/gaps` + 1 `verifies-linkage` are expected).
   Parallelization: Wave 7 | Blocked by: all | Blocks: —
   References: `package.json` check script; AGENTS.md gate description.
