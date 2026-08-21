@@ -5,6 +5,7 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:validation.warn-level-signals
+  dependsOn: spec:decisions.kind-conditional-floor
 ---
 # Decision records state readiness from ratification evidence
 

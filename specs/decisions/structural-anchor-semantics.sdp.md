@@ -5,6 +5,7 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:model.anchors
+  dependsOn: spec:decisions.binding-not-liveness
 ---
 # Structural anchor semantics
 
