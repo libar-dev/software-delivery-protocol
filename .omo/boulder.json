@@ -116,9 +116,9 @@
       "worktree_path": "/home/darkomijic/dev-libar/software-delivery-protocol",
       "delivery_mode": "make-pr",
       "make_pr": true,
-      "current_commit": "9e0f7e4",
-      "active_task": "Run full gate, re-measure, and close branch/PR slice",
-      "completed_todo": 8
+      "current_commit": "315a0d8",
+      "active_task": "F1 Plan compliance audit",
+      "completed_todo": 9
     }
   }
 }

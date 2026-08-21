@@ -234,7 +234,7 @@ Your next move: high-accuracy momus review runs now (required, default-on). Full
   Commit: Y | chore: sync self-hosting oracles and frozen totals
   Recommended task executor category: unspecified-high
 
-- [ ] 9. Run the full gate, re-measure, and close the branch/PR slice
+- [x] 9. Run the full gate, re-measure, and close the branch/PR slice
   What to do: Run `npm run check` on the branch (expected warnings only: the pinned `honesty/gaps` set and the intentional `verifies-linkage` example warning). Re-measure with `pnpm --silent sdp:q` — corpus counts, recipe 17 spot-check (every surviving todo-5 fill renders on its components' shapingDecisions rows), recipe 1 backlog unchanged apart from intended moves — and label every number re-derived in the close evidence. Update the PR #25 description's forward section with this slice via `gh pr edit 25`. PR-description wording guards: the verifier claim must carry the grain caveat — the census checks the ACCEPTED SET's conformance, never significance discovery (acceptance stays a human act) — and the recipe-17 claim names only the surviving fills, never pre-committed decision ids. Push the branch: `git push origin feature/architectural-patterns-views` (SSH transport per AGENTS.md — the user authorized extending this PR). Record close evidence.
   Must NOT ignore or pin unexplained warnings; must NOT force-push; must NOT merge the PR.
   Parallelization: Wave 3 | Blocked by: all | Blocks: —
