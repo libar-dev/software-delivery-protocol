@@ -9,6 +9,8 @@ import {
 } from "node:fs";
 import { dirname, join, relative } from "node:path";
 
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import { renderCensus } from "../projections/census.js";
 import type { CensusPage } from "../projections/census.js";
 import { createReader } from "../reader/reader.js";
@@ -59,6 +61,14 @@ function readPublishedPages(root: string): readonly CensusPage[] | undefined {
 function pagesEqual(left: readonly CensusPage[], right: readonly CensusPage[]): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
 }
+
+const censusPageCliAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.census-page-cli"),
+  label: "publishes the census through the explicit `sdp census` surface",
+  satisfies: ref("spec:consumers.census-page"),
+  component: componentAnchorId("component:protocol.cli"),
+});
+void censusPageCliAnchor;
 
 /** Publishes the census independently of Design Review as one wholesale tmp-to-rename root. */
 export function runCensus(parsed: BuildArgs, output: CliOutput, hooks: CensusHooks): number {
