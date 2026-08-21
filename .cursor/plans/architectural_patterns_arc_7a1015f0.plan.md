@@ -6,7 +6,7 @@ todos:
     content: Create feature branch before any changes
     status: pending
   - id: ruling
-    content: "Rule \"architectural significance rides existing primitives\": decision Spec + MD-34 registry row, resolve structural-patterns' blocking questions, enrich the Spec"
+    content: 'Rule "architectural significance rides existing primitives": decision Spec + MD-34 registry row, resolve structural-patterns'' blocking questions, enrich the Spec'
     status: pending
   - id: self-binding
     content: Define the significance criterion and widen component/uses anchor coverage across src/; enrich structural-self-binding
@@ -77,4 +77,3 @@ Recipe bodies are executed verbatim by [test/recipes.test.ts](test/recipes.test.
 - No new `plans/` file — plan 38 is the arc pointer; the graph carries the backlog.
 - Gate: `npm run check` before any green claim; re-measure counts at close and label them re-derived.
 - No engine `src/` behavior changes expected beyond anchor annotations; if a recipe join proves impossible without one, stop and surface it rather than minting reader surface (second-caller bar).
-
