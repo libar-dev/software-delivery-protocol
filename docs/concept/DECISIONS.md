@@ -43,6 +43,7 @@ positions and are never reused.
 | MD-32 | the shipped projections stay frozen | durable | The shipped Design Review, census, Mermaid, and Gherkin projections are settled read models; re-specifying them is refused, and reopening needs a superseding decision that passes the ADR test. | [Spec](../../specs/decisions/shipped-projections-frozen.sdp.md) (`spec:decisions.shipped-projections-frozen`) |
 | MD-33 | planning truths live in ruled graph homes | durable | Each planning-truth type has one ruled home in the graph, the briefs index shape is retired as a carrier of law, and reopening needs a superseding decision that passes the ADR test. | [Spec](../../specs/decisions/planning-truths-placement.sdp.md) (`spec:decisions.planning-truths-placement`) |
 | MD-34 | architectural significance rides existing primitives | durable | Specs carrying architectural significance are linked by the existing relations, code linkage rides the satisfies → decidedBy join, and grouping is derived — no pattern vocabulary is admitted. | [Spec](../../specs/decisions/architectural-significance-rides-primitives.sdp.md) (`spec:decisions.architectural-significance-rides-primitives`) |
+| MD-35 | source commentary never enters the graph | durable | JSDoc and doc comments author no graph content; the statically reified anchor constant is the only write path from code, and law-carrying comments promote into Specs. | [Spec](../../specs/decisions/jsdoc-graph-extraction-refused.sdp.md) (`spec:decisions.jsdoc-graph-extraction-refused`) |
 
 ### Current executable decision-spec pointers
 
