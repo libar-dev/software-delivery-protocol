@@ -86,7 +86,7 @@ Your next move: complete the required independent plan review, then begin execut
 ## Todos
 > Implementation + Test = ONE todo. Never separate.
 <!-- APPEND TASK BATCHES BELOW THIS LINE WITH edit/apply_patch - never rewrite the headers above. -->
-- [ ] 1. Checkpoint the approved remediation state and exact PR baseline
+- [x] 1. Checkpoint the approved remediation state and exact PR baseline
   What to do / Must NOT do:
   - In the task-owned integration worktree, preserve `.omo/drafts/design-law-transfer.md` byte-for-byte and add the approved `.omo/drafts/pr-25-review-remediation.md` plus this plan.
   - Let start-work create/update only the `pr-25-review-remediation` entry in `.omo/boulder.json`; preserve completed work entries, especially `architectural-patterns-views` and `design-law-transfer`.
@@ -110,7 +110,7 @@ Your next move: complete the required independent plan review, then begin execut
   Commit: Y | `chore(omo): checkpoint PR 25 remediation plan`
   Recommended task executor category: `git` — this is a bounded repository-state and baseline checkpoint with no implementation.
 
-- [ ] 2. Make recipe family grouping total for lawful IDs
+- [x] 2. Make recipe family grouping total for lawful IDs
   What to do / Must NOT do:
   - First add failing real-CLI tests in `test/recipes.test.ts` for recipes 1, 11, and 18 using cloned graph primitives whose first path segments are `constructor`, `toString`, `valueOf`, and `hasOwnProperty`.
   - Recipe 1 fixtures are stated `ready`, non-example/non-decision, and lack a resolving implementation so they appear in the operational backlog.
@@ -140,7 +140,7 @@ Your next move: complete the required independent plan review, then begin execut
   Commit: Y | `fix(agent-surface): make recipe family maps prototype-safe`
   Recommended task executor category: `unspecified-low` — two-file behavior fix with precise production-CLI tests and no engine change.
 
-- [ ] 3. Exercise both recipe 19 dependency directions non-vacuously
+- [x] 3. Exercise both recipe 19 dependency directions non-vacuously
   What to do / Must NOT do:
   - Add a characterization test in `test/recipes.test.ts` that changes recipe 19's opening ID only to `spec:decisions.structural-anchor-semantics`.
   - Execute the unchanged catalog body through the production `runSdpCli` seam.
@@ -164,7 +164,7 @@ Your next move: complete the required independent plan review, then begin execut
   Commit: Y | `test(agent-surface): exercise planning-slice dependencies`
   Recommended task executor category: `quick` — one contained characterization test on an existing CLI seam.
 
-- [ ] 4. Give coarse-grain self-binding referential and consumption teeth
+- [x] 4. Give coarse-grain self-binding referential and consumption teeth
   What to do / Must NOT do:
   - Add `test/helpers/structural-coverage.ts`, a test-only helper using the repository's existing TypeScript compiler API.
   - Its input contract is a `ts.Program`, repository-relative `<path>#<symbol>`, and covering source path. Its result is `ok`, `exported unit missing`, or `covering source does not value-consume unit`.
@@ -196,7 +196,7 @@ Your next move: complete the required independent plan review, then begin execut
   Commit: Y | `test(structure): audit coarse helper consumption`
   Recommended task executor category: `deep` — symbol identity, module resolution, and mutation-proof diagnostics require careful cross-file reasoning.
 
-- [ ] 5. Archive every lost ledger segment and clarify the checkpoint rule
+- [x] 5. Archive every lost ledger segment and clarify the checkpoint rule
   What to do / Must NOT do:
   - Add `.omo/evidence/pr-25-review-remediation/ledger/architecture-and-prior.jsonl` from `git show 5c15962584f5d21f9a2be0cb0f7a325c21a9267f:.omo/start-work/ledger.jsonl` byte-for-byte: 135 records, SHA-256 `6f59f9ad05bd7240531f31f7b424b01dde036f07edab771ffd6955ec27b29719`.
   - Add `design-law-transfer-pre-delete.jsonl` from `git show d8d4e5f50b2802ea9127819c6953578cfe9618f5:.omo/start-work/ledger.jsonl`: 20 records, SHA-256 `df465ad50f857996954b6439bcb900ebcde85e6ae4c0656b1a8e32bce6eb3d90`.
@@ -227,7 +227,7 @@ Your next move: complete the required independent plan review, then begin execut
   Commit: Y | `chore(omo): preserve PR 25 ledger recovery history`
   Recommended task executor category: `deep` — exact git-object recovery and policy reconciliation are data-integrity work.
 
-- [ ] 6. Record the failed review and clear only its proven whitespace debt
+- [x] 6. Record the failed review and clear only its proven whitespace debt
   What to do / Must NOT do:
   - Add `.omo/evidence/pr-25-review-remediation/review-findings.md` summarizing the exact reviewed base/head, six review lanes, blockers, verified strengths, isolated gate result, and this plan's remediation mapping.
   - Use evidence-backed role names, verdicts, commands, and artifact paths; do not claim unavailable transcripts or model-specific review history.

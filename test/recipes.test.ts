@@ -209,12 +209,7 @@ function edgeId(edge: { readonly from: string; readonly to: string }): string {
 
 // Lawful first path segments that collide with Object.prototype own/inherited keys. The ID
 // grammar admits them (`src/ids.ts`); family maps built as `{}` do not.
-const HOSTILE_PATH_SEGMENTS = [
-  "constructor",
-  "toString",
-  "valueOf",
-  "hasOwnProperty",
-] as const;
+const HOSTILE_PATH_SEGMENTS = ["constructor", "toString", "valueOf", "hasOwnProperty"] as const;
 
 type HostilePathSegment = (typeof HOSTILE_PATH_SEGMENTS)[number];
 
@@ -237,13 +232,14 @@ function extractionWithHostilePrimitives(input: {
     title: `hostile family fixture ${family}`,
     file: "specs/fixture-hostile-family.sdp.md",
   }));
+  const decidedByTarget = input.decidedByTarget;
   const edges =
-    input.decidedByTarget === undefined
+    decidedByTarget === undefined
       ? []
       : HOSTILE_PATH_SEGMENTS.map((family) => ({
           from: hostileSpecId(family, input.leaf),
           type: "decidedBy" as const,
-          to: input.decidedByTarget,
+          to: decidedByTarget,
           claim: "declared" as const,
         }));
 
@@ -258,10 +254,7 @@ function extractionWithHostilePrimitives(input: {
   };
 }
 
-function assertOwnHostileFamilyIds(
-  byFamily: Record<string, unknown>,
-  leaf: string,
-): void {
+function assertOwnHostileFamilyIds(byFamily: Record<string, unknown>, leaf: string): void {
   for (const family of HOSTILE_PATH_SEGMENTS) {
     expect(Object.hasOwn(byFamily, family), `missing own family key ${family}`).toBe(true);
     const ids = asArray(byFamily[family]).map((row) => stringAt(asRecord(row), "id"));
