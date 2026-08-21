@@ -72,6 +72,8 @@ export const modelSpecs = [
       },
       model: {
         terms: {
+          "comment promotion":
+            "Source commentary that states rules other surfaces depend on is a promotion trigger: those rules promote into a standalone Spec under the promotion law, and the comment demotes to local commentary plus a Spec pointer; restating the promoted rules in the comment violates exclusive promotion.",
           "content-only section":
             "A section carries local content, while relations carry links to promoted standalone Specs.",
           "enabled verifier":
