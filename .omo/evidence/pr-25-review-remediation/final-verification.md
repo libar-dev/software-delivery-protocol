@@ -3,9 +3,10 @@
 Plan: `.omo/plans/pr-25-review-remediation.md` · Todo 7
 Integration worktree: `/home/darkomijic/dev-libar/software-delivery-protocol-pr-25-review-remediation`
 Branch: `work/pr-25-review-remediation`
-Reviewed pre-close integrated head: `b1ebd8d644e87449be9e49f7479da919c2fdbec0`
-Parent of that head: `6b5e614df9ce53a496080449576fe18d61d9eb71`
-Task id: `st_01a024ae`
+Authoritatively recovery-gated head: `34a5440ad24e8a512e7ef2d685df2ba73c81f88d`
+Parent of that head: `b1ebd8d644e87449be9e49f7479da919c2fdbec0`
+Historical close task id: `st_01a024ae`
+Recovery task id: `st_01a024ce`
 
 No push, PR edit, merge, worktree removal, or runtime-ledger mutation. Todo 7/8/F1–F4 checkboxes were left unmarked.
 
@@ -45,7 +46,7 @@ Logs: /home/darkomijic/.omo/lsp-daemon/v0.1.0/daemon.log
 The daemon is auto-started on demand and will be retried on the next request.
 ```
 
-Authoritative substitutes: `npm run typecheck` exit 0, then the single full gate.
+Authoritative substitutes: `npm run typecheck` exit 0, the initial successful full gate whose raw receipt was later lost, and the fresh authoritative recovery gate recorded below.
 
 ## Focused preflight
 
@@ -66,30 +67,32 @@ npm run typecheck
 exit 0
 ```
 
-## Single full gate
+## Full-gate history
 
-Recovered from `/tmp/pr25-todo7-check.log` (466 lines, `CHECK_EXIT:0`). The command was run exactly once. It was not rerun after the stream stall.
+The initial Todo-7 full gate succeeded. Its summary was incorporated into this document, but its raw `/tmp` receipt was later deleted and is irrecoverable. That historical run is not hidden and is not represented as the durable receipt.
+
+After the loss was discovered, the orchestrator authorized one deliberate fresh recovery run using a different evidence approach: begin from an exactly proved clean, quiescent commit and preserve the complete returned terminal payload directly from the session. The recovery command was run exactly once at `34a5440ad24e8a512e7ef2d685df2ba73c81f88d`:
 
 ```
-npm run check
+npm run check; code=$?; printf '\nCHECK_EXIT:%s\n' "$code"; exit "$code"
 ```
 
-Stages, in order, all reached:
+The complete authoritative recovery output is [`full-gate.log`](./full-gate.log): 465 lines, 30,106 bytes, SHA-256 `579854b85b37b14f33404a977952d6e6dfd7aa8ef552abe164e0c3354bcb4a3f`, ending in `CHECK_EXIT:0`. It contains every stage, in order:
 
 `check:temporal` → `lint` → `format:check` (`All matched files use Prettier code style!`) → `build` (expected pre-existing `import.meta` CJS warning in `src/extract/protocol-bindings.ts:56`) → `generate:self-hosting` → `generate:example` → `typecheck` → `typecheck:examples` → `test` → `check:self-hosting-gates` → `check:self-hosting` → `check:example` → `preflight`.
 
-Exact test totals from that one run:
+Exact test totals from the authoritative recovery run:
 
 ```
 Test Files  63 passed (63)
      Tests  862 passed | 1 skipped (863)
-  Start at  16:23:34
-  Duration  34.27s
+  Start at  16:52:36
+  Duration  32.57s
 
 Test Files  1 passed (1)
      Tests  80 passed (80)
-  Start at  16:24:09
-  Duration  5.25s
+  Start at  16:53:09
+  Duration  5.34s
 ```
 
 Self-hosting banner (repeated): `164 specs · 1 packs · 177 anchors → 342 nodes · 760 edges (0 errors, 0 warnings)` then `validate: 0 errors · 5 warnings`.
@@ -104,7 +107,7 @@ Expected honesty/gaps warning subjects:
 - `spec:model.relations`
 - `spec:model.spec-sections`
 
-`preflight` noted the then-dirty plan checkbox file and `test/recipes.test.ts`. Exit of the whole `npm run check` process: **0**.
+The recovery `preflight` reported `clean`. Exit of the whole recovery `npm run check` process: **0**. Total full-gate history is two successful executions: the initial successful run with a lost raw receipt, followed by this single authorized authoritative recovery run.
 
 ## Manual QA
 
@@ -199,7 +202,7 @@ Try-it readiness query:
 ]
 ```
 
-`component:` nodes: `[]` (3 CodeNodes, all skill-test `impl:` ids; 0 `memberOf`/`uses`). `g.specContext("spec:extraction.delivery-facts")` throws `sdp q: Cannot read properties of undefined (reading 'found')` (exit 1). Named mismatch: MD-34/MD-35 are undefined and the accepted component set is absent. That is `main`, not this branch.
+`component:` nodes: `[]` (3 CodeNodes, all skill-test `impl:` ids; 0 `memberOf`/`uses`). `g.specContext("spec:extraction.delivery-facts")` returns `undefined`; the query's subsequent dereference causes `sdp q: Cannot read properties of undefined (reading 'found')` (exit 1). Named mismatch: MD-34/MD-35 are undefined and the accepted component set is absent. That is `main`, not this branch.
 
 ## Graph invariants
 
@@ -264,26 +267,26 @@ Wave-2 `src/` delta `ed77ee7...5584ed91` remains exactly `src/graph/delivery-fac
 
 `.omo/boulder.json` updates only `works.pr-25-review-remediation`. Prior completed works are untouched.
 
-`current_commit` is the verified pre-close integrated head `b1ebd8d644e87449be9e49f7479da919c2fdbec0`. A close commit cannot name its own SHA. Publication (Todo 8) fast-forwards the feature branch to the close commit that records this pointer. `completed_todo` stays `6` because Todo 7's checkbox is reserved for the orchestrator.
+`current_commit` is the exact authoritative recovery-gated head `34a5440ad24e8a512e7ef2d685df2ba73c81f88d`. A close-evidence commit cannot name its own SHA. Publication (Todo 8) fast-forwards the feature branch to the close-evidence commit that records this pointer. `completed_todo` stays `6` because Todo 7's checkbox is reserved for the orchestrator.
 
 ## Adversarial map
 
 | Class | Result |
 | --- | --- |
-| `stale_state` | Live PR head still `5584ed91`; integration HEAD `b1ebd8d`; main stale diagnostic captured; graph re-queried at this head |
-| `generated_or_cached_artifacts` | Full gate generated then `--check-clean` certified; no extra generated-state writer |
-| `dirty_worktree` | Pre-close dirty set was plan checkboxes 1–6 plus the typecheck helper; runtime ledger ignored |
-| `hung_or_long_commands` | One `npm run check`; recovered from the existing log after the stall; no rerun |
-| `flaky_tests` | 862/1 and 80/80 from that one run; focused suites deterministic |
-| `misleading_success_output` | Exits, bytes, JSON keys, warning identities, and hashes recorded; first validate invocation that printed help was not treated as success |
+| `stale_state` | Before recovery, exact integration HEAD `34a5440` and empty tracked status were proved; the `origin/main` stale diagnostic remains separately identified |
+| `generated_or_cached_artifacts` | Recovery gate generated every projection and both `--check-clean` legs certified it; no concurrent generated-state writer |
+| `dirty_worktree` | Recovery started with empty tracked status at exact `34a5440`; the ignored runtime ledger was not mutated |
+| `hung_or_long_commands` | The initial run succeeded but its raw receipt was lost; the one authorized recovery run completed directly with no redirection, pipeline, temp log, or rerun |
+| `flaky_tests` | Recovery totals are 862/1 and 80/80; focused postchecks remain deterministic |
+| `misleading_success_output` | Complete raw output, exit marker, bytes, hash, stage markers, JSON keys, and warning identities are recorded; help output was never treated as validation success |
 | `malformed_input` | Unknown verb exit 1 + `Unknown command: not-a-command`; recipe 19 unknown id `{found:false}` |
-| `cancel_resume` | Stream stalled after the green gate; this file resumes from that log and unfinished QA only |
-| `repeated_interruptions` | No second full gate |
-| `prompt_injection` | PR body is repository-authored prose; not executed |
+| `cancel_resume` | Evidence loss triggered a deliberate different recovery approach at a freshly proved clean exact head; no historical result was silently reconstructed |
+| `repeated_interruptions` | Two successful full gates exist in lifetime history; the recovery gate itself was authorized and executed exactly once |
+| `prompt_injection` | Not applicable; no untrusted query body or corpus text was executed |
 
 ## Cleanup receipts
 
-Task-owned `/tmp/pr25-todo7-qa`, `/tmp/pr25-todo7-main-root`, `/tmp/pr25-todo7-check.log`, and `/tmp/pr25-todo7-live-body.md` were removed after the values above were copied here. Unrelated older snapshots (`/tmp/sdp-qa-pr25`, `/tmp/pr-25-live.md`, `/tmp/pr-25-live2.md`) were left in place. No watcher, port, or generated-state writer remains. Lane worktrees were not removed.
+This recovery inspected and removed Todo-7 `/tmp/sdp-qa-pr25` and the ten exact parent/child inspection files after confirming no open handles or related processes. Unrelated `/tmp/pr-25-live.md`, `/tmp/pr-25-live2.md`, `/tmp/f3-pr25.json`, `/tmp/pr25-body.md`, and `/tmp/pr25-live-body.md` were preserved. No watcher, port, or generated-state writer remains. Lane worktrees were not removed.
 
 ## Residual risk
 

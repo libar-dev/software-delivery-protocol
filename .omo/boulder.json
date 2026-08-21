@@ -131,7 +131,7 @@
       "worktree_path": "/home/darkomijic/dev-libar/software-delivery-protocol-pr-25-review-remediation",
       "delivery_mode": "make-pr",
       "make_pr": true,
-      "current_commit": "b1ebd8d644e87449be9e49f7479da919c2fdbec0",
+      "current_commit": "34a5440ad24e8a512e7ef2d685df2ba73c81f88d",
       "active_task": null,
       "completed_todo": 6
     }

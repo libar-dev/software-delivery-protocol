@@ -54,15 +54,15 @@ These commands only produce these results on the branch. Check out `feature/arch
 ```bash
 git fetch origin
 git checkout -B feature/architectural-patterns-views origin/feature/architectural-patterns-views
-git merge-base --is-ancestor b1ebd8d644e87449be9e49f7479da919c2fdbec0 HEAD
+git merge-base --is-ancestor 34a5440ad24e8a512e7ef2d685df2ba73c81f88d HEAD
 npm ci && npm run build
 ```
 
 `git checkout -B` matters: a plain `git checkout` reuses a stale local branch and stays behind the PR head, which makes every query below fail or return old values. `npm ci` may report audit findings and `tsup` prints an `import.meta` CJS warning; both predate this branch.
 
-Expected outputs below were captured at the verified pre-close integrated head `b1ebd8d644e87449be9e49f7479da919c2fdbec0` after the one authorized `npm run check` (CLI-identical to the publication close). If yours differ, check `git rev-parse HEAD` and ancestry first.
+Expected outputs below were captured at the authoritative recovery-gated head `34a5440ad24e8a512e7ef2d685df2ba73c81f88d`. The initial Todo-7 full gate succeeded but its raw receipt was lost; one fresh recovery gate was deliberately authorized and run once at this clean exact head, and its complete output is the durable receipt. If yours differ, check `git rev-parse HEAD` and ancestry first.
 
-Two stale signals from the same try-it queries against `origin/main` (`bb97d829eea7b3689d5d8569d307e1bb5e77fd0d`): the readiness query returns `undefined` for the two decision Specs, and there are no `component:` nodes (that is `main`). If the decision Specs resolve but `g.specContext("spec:extraction.delivery-facts")` throws `Cannot read properties of undefined (reading 'found')`, that is a checkout from before Wave 2.
+Three stale signals from the same try-it queries against `origin/main` (`bb97d829eea7b3689d5d8569d307e1bb5e77fd0d`): the readiness query returns `undefined` for the two decision Specs, there are no `component:` nodes, and `g.specContext("spec:extraction.delivery-facts")` returns `undefined`; dereferencing that result causes `Cannot read properties of undefined (reading 'found')`. That is `main`, not this branch.
 
 Conformance and honesty over the one graph:
 
@@ -145,7 +145,7 @@ Feedback is most wanted on four points: whether the inter-decision `dependsOn` e
 
 ## Numbers
 
-Re-derived on the integrated tree from the worktree-local CLI after the one `npm run check` at `b1ebd8d644e87449be9e49f7479da919c2fdbec0`; re-run the commands above rather than inheriting these. 164 Specs · 1 Pack · 177 anchors → 342 nodes · 760 edges; 13 components · 76 `memberOf` · 35 `uses`; 35 decision Specs · 14 inter-decision `dependsOn` · 0 `supersedes` · 46 `decidedBy`; readiness 148 `ready` / 11 `defined` / 4 `idea` / 1 `scoped`. Validate reports 0 errors, the 5 pinned honesty-gap warnings, and the one intentional `verifies-linkage` example warning. Recipe 1 operational backlog is empty (66 ready examples and 35 ready decisions excluded). `npm test` from that gate: 862 passed, 1 skipped; CLI suite 80 passed.
+Re-derived on the integrated tree from the worktree-local CLI during the authoritative recovery gate at `34a5440ad24e8a512e7ef2d685df2ba73c81f88d`; re-run the commands above rather than inheriting these. Full-gate history is the initial successful run whose raw receipt was lost plus the single fresh authorized recovery run at this clean head. 164 Specs · 1 Pack · 177 anchors → 342 nodes · 760 edges; 13 components · 76 `memberOf` · 35 `uses`; 35 decision Specs · 14 inter-decision `dependsOn` · 0 `supersedes` · 46 `decidedBy`; readiness 148 `ready` / 11 `defined` / 4 `idea` / 1 `scoped`. Validate reports 0 errors, the 5 pinned honesty-gap warnings, and the one intentional `verifies-linkage` example warning. Recipe 1 operational backlog is empty (66 ready examples and 35 ready decisions excluded). `npm test` from the recovery gate: 862 passed, 1 skipped; CLI suite 80 passed.
 
 ## Upcoming work
 
