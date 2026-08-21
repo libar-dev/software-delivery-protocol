@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { importFindingIds, importTypeScriptSpec } from "../index.js";
-import { codeAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { Finding } from "../validate/contracts.js";
 import { publishImports } from "./import-publish.js";
@@ -72,6 +72,7 @@ const sdpImportAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.sdp-import"),
   label: "plans, refuses, and publishes TypeScript-to-Markdown Spec imports",
   satisfies: ref("spec:carrier.sdp-import"),
+  component: componentAnchorId("component:protocol.import"),
 });
 void sdpImportAnchor;
 

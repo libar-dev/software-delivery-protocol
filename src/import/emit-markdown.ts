@@ -1,4 +1,6 @@
 import type { ReifiedSpec } from "../extract/reify.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import { importData, importText, importTexts, targetsForRelationType } from "./data-access.js";
 import type { ImportData } from "./data-access.js";
 import { assertMarkdownEmissionFidelity } from "./markdown-fidelity.js";
@@ -191,6 +193,14 @@ function scaffoldBehaviorHeading(kind: string | undefined): string | undefined {
   if (kind === "contract") return "## Contract";
   return undefined;
 }
+
+const sdpImportMarkdownEmitAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.sdp-import-markdown-emit"),
+  label: "emits the Markdown document twin for an imported Spec",
+  satisfies: ref("spec:carrier.sdp-import"),
+  component: componentAnchorId("component:protocol.import"),
+});
+void sdpImportMarkdownEmitAnchor;
 
 export function emitMarkdownSpec(reified: ReifiedSpec, options: EmitMarkdownOptions = {}): string {
   const data = reified.data;

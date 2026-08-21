@@ -31,6 +31,7 @@ const cliComponentAnchor = codeAnchor({
     componentAnchorId("component:protocol.projections"),
     componentAnchorId("component:protocol.codegen"),
     componentAnchorId("component:protocol.validate"),
+    componentAnchorId("component:protocol.import"),
   ],
 });
 
