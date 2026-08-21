@@ -8,22 +8,23 @@ export const expectedComponentIds = [
   "component:protocol.codegen",
   "component:protocol.extract",
   "component:protocol.graph",
+  "component:protocol.import",
   "component:protocol.model",
   "component:protocol.notation",
   "component:protocol.projections",
   "component:protocol.reader",
   "component:protocol.runner",
+  "component:protocol.testing",
   "component:protocol.validate",
 ] as const;
 
-// These impl anchors deliberately have no component. Import is a bounded carrier capability, not
-// a separate engine seam; the skill/document realization anchors live outside the engine source
-// seams and therefore have no truthful owner among the accepted component set.
+// These impl anchors deliberately have no component. The skill/document realization anchors live
+// outside the engine source seams and therefore have no truthful owner among the accepted
+// component set.
 export const structuralMembershipExceptions = [
   "impl:protocol.authoring-on-ramp",
   "impl:protocol.authoring-recipes",
   "impl:protocol.delivery-session-on-ramp",
-  "impl:protocol.sdp-import",
 ] as const;
 
 export const expectedMemberOfEdges = [
@@ -35,6 +36,10 @@ export const expectedMemberOfEdges = [
   ["impl:protocol.diagnostic-rendering-cli", "component:protocol.cli"],
   ["impl:protocol.build-pipeline-query", "component:protocol.cli"],
   ["impl:protocol.wholesale-view-rewrite", "component:protocol.cli"],
+  ["impl:protocol.agent-surface-cli", "component:protocol.cli"],
+  ["impl:protocol.census-page-cli", "component:protocol.cli"],
+  ["impl:protocol.gherkin-view-cli", "component:protocol.cli"],
+  ["impl:protocol.mermaid-view-cli", "component:protocol.cli"],
   ["impl:protocol.executable-contracts", "component:protocol.codegen"],
   ["impl:protocol.runnable-modules", "component:protocol.codegen"],
   ["impl:protocol.anchor-extraction", "component:protocol.extract"],
@@ -48,9 +53,16 @@ export const expectedMemberOfEdges = [
   ["impl:protocol.prose-ownership", "component:protocol.extract"],
   ["impl:protocol.markdown-authoring", "component:protocol.extract"],
   ["impl:protocol.markdown-parser", "component:protocol.extract"],
+  ["impl:protocol.discover-files", "component:protocol.extract"],
+  ["impl:protocol.protocol-bindings", "component:protocol.extract"],
   ["impl:protocol.oracle-target-eligibility", "component:protocol.graph"],
   ["impl:protocol.schema-version", "component:protocol.graph"],
   ["impl:protocol.graph-claims", "component:protocol.graph"],
+  ["impl:protocol.delivery-facts", "component:protocol.graph"],
+  ["impl:protocol.example-space", "component:protocol.graph"],
+  ["impl:protocol.sdp-import", "component:protocol.import"],
+  ["impl:protocol.sdp-import-core", "component:protocol.import"],
+  ["impl:protocol.sdp-import-markdown-emit", "component:protocol.import"],
   ["impl:protocol.stable-ids", "component:protocol.model"],
   ["impl:protocol.anchor-model", "component:protocol.model"],
   ["impl:protocol.spec-descriptors", "component:protocol.model"],
@@ -73,6 +85,7 @@ export const expectedMemberOfEdges = [
   ["impl:protocol.agent-surface", "component:protocol.reader"],
   ["impl:protocol.reader", "component:protocol.reader"],
   ["impl:protocol.example-runner", "component:protocol.runner"],
+  ["impl:protocol.example-testing-helpers", "component:protocol.testing"],
   ["impl:protocol.kind-evidence", "component:protocol.validate"],
   ["impl:protocol.readiness-floor", "component:protocol.validate"],
   ["impl:protocol.verifier-semantics", "component:protocol.validate"],
@@ -86,12 +99,15 @@ export const expectedMemberOfEdges = [
   ["impl:protocol.authored-honesty-shape", "component:protocol.validate"],
   ["impl:protocol.authored-honesty-delivery-facts", "component:protocol.validate"],
   ["impl:protocol.verifier-gap-signal", "component:protocol.validate"],
+  ["impl:protocol.graph-index", "component:protocol.validate"],
+  ["impl:protocol.validation-contracts", "component:protocol.validate"],
 ] as const;
 
 export const expectedUsesEdges = [
   ["component:protocol.adapters", "component:protocol.runner"],
   ["component:protocol.cli", "component:protocol.codegen"],
   ["component:protocol.cli", "component:protocol.extract"],
+  ["component:protocol.cli", "component:protocol.import"],
   ["component:protocol.cli", "component:protocol.projections"],
   ["component:protocol.cli", "component:protocol.reader"],
   ["component:protocol.cli", "component:protocol.validate"],
@@ -101,11 +117,16 @@ export const expectedUsesEdges = [
   ["component:protocol.extract", "component:protocol.model"],
   ["component:protocol.extract", "component:protocol.validate"],
   ["component:protocol.graph", "component:protocol.model"],
+  ["component:protocol.import", "component:protocol.extract"],
+  ["component:protocol.import", "component:protocol.model"],
   ["component:protocol.notation", "component:protocol.model"],
   ["component:protocol.projections", "component:protocol.graph"],
   ["component:protocol.projections", "component:protocol.reader"],
   ["component:protocol.reader", "component:protocol.graph"],
+  ["component:protocol.reader", "component:protocol.model"],
   ["component:protocol.reader", "component:protocol.validate"],
   ["component:protocol.runner", "component:protocol.model"],
+  ["component:protocol.testing", "component:protocol.adapters"],
+  ["component:protocol.testing", "component:protocol.runner"],
   ["component:protocol.validate", "component:protocol.graph"],
 ] as const;
