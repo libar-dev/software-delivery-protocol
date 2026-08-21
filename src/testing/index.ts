@@ -1,6 +1,8 @@
 import { isDeepStrictEqual } from "node:util";
 
 import { bindExample } from "../adapters/vitest.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type { ContractStep, ExampleContract, ParamShape, StepBindings } from "../runner/index.js";
 
 export interface RunnableOutcome {
@@ -27,6 +29,24 @@ export interface RunnableExampleWorld<W, C, O extends RunnableOutcome> {
   compared: boolean;
   observed?: O;
 }
+
+const testingComponentAnchor = codeAnchor({
+  id: codeAnchorId("component:protocol.testing"),
+  label: "Protocol testing seam",
+  satisfies: ref("spec:extraction.example-runner"),
+  uses: [
+    componentAnchorId("component:protocol.adapters"),
+    componentAnchorId("component:protocol.runner"),
+  ],
+});
+const exampleTestingHelpersAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.example-testing-helpers"),
+  label: "adapter-lifecycle and oracle-comparison helpers for bound examples",
+  satisfies: ref("spec:extraction.example-runner"),
+  component: componentAnchorId("component:protocol.testing"),
+});
+void testingComponentAnchor;
+void exampleTestingHelpersAnchor;
 
 export function createRunnableExample<W, C, O extends RunnableOutcome>(
   spec: string,

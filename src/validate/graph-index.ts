@@ -1,4 +1,6 @@
 import type { GraphEdge, GraphNode, GraphSchema, PrimitiveNode } from "../graph/schema.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 
 /**
  * The indexed view of the one graph the validators read — built once per `validateGraph` run.
@@ -22,6 +24,14 @@ function appendEdge(map: Map<string, GraphEdge[]>, key: string, edge: GraphEdge)
 
   list.push(edge);
 }
+
+const graphIndexAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.graph-index"),
+  label: "builds the one-graph index validators and the reader share",
+  satisfies: ref("spec:validation.two-check-families"),
+  component: componentAnchorId("component:protocol.validate"),
+});
+void graphIndexAnchor;
 
 export function buildGraphIndex(graph: GraphSchema): GraphIndex {
   const nodesById = new Map<string, GraphNode>();

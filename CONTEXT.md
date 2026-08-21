@@ -64,6 +64,7 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 |---|---|---|
 | **`Pack`** | the authored grouping / review **aggregate** over `Spec`s; states **no truth of its own**; its `framing` is a plain descriptive note; a spec may belong to many packs; membership lives on the manifest, the `belongsTo` edge is derived from it | "SpecPack" |
 | **anchor** | a human-written pointer **in source code**: *"this code location is the implementation/test **binding** for this Spec ID"* — a binding assertion only, never system-truth content (no behavior, rationale, readiness, acceptance criteria, or delivery facts); yields `anchored`-claim edges | "marker" |
+| **architecturally significant unit** | a code unit with exported public surface or cross-component reach that warrants graph-visible structural binding — component membership, and uses declarations for its architectural dependencies; the accepted set is an owner-reviewed declaration, never derived from imports (carried by `spec:model.structural-patterns`) | "pattern" (refused, MD-34) |
 
 **Two grouping mechanisms, kept distinct:** *refinement* (parent `Spec` → children — authored truth with
 descendants) vs *the aggregate* (the `Pack` — a cross-cutting review collection, no truth of its own).
@@ -244,7 +245,8 @@ delivery fact, workflow state, or graph state.
   status-FSM · `model element` (as the primitive's name) · `genus`/`species` · `Scenario`/`capability`/`NFR`
   as descriptors (labels / projections, not descriptors) · `exemplifies` (relation) · `status` (on the
   `decision` section — FSM imprint; adoption arc = `readiness`, replacement = `supersedes`, rejected paths =
-  `alternatives`/`consequences` — MD-11).
+  `alternatives`/`consequences` — MD-11) · `pattern` (as an architectural primitive, kind, or
+  `pattern:` namespace — ordinary English remains; MD-34).
 - **Locked usage:** readiness is **"stated/asserted," never "claimed"** ("claim" is reserved for the `claim`
   taxonomy) · the meta-model defines the **contract**, **instances conform**; "govern"/"police" retired ·
   checks are **conformance checks + honesty checks** · **pre-graph** = upstream of graph derivation in the

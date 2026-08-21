@@ -5,6 +5,7 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:model.core-model
+  dependsOn: spec:decisions.binding-not-liveness
 ---
 # Example realization stays evidence, not backlog work
 

@@ -8,7 +8,8 @@ import type {
 } from "ts-morph";
 
 import { deliveryFactNames } from "../graph/schema.js";
-import { CODE_ANCHOR_NAMESPACES, parseId } from "../ids.js";
+import { CODE_ANCHOR_NAMESPACES, codeAnchorId, componentAnchorId, parseId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import { SPEC_ALTITUDES, SPEC_KINDS, SPEC_READINESS } from "../model/descriptors.js";
 import { SPEC_RELATION_TYPES } from "../model/relations.js";
 import { SPEC_SECTION_NAMES } from "../model/sections.js";
@@ -1637,6 +1638,14 @@ function unrecognizedStatement(file: string, line: number, message: string): Fin
     line,
   );
 }
+
+const staticReificationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.static-reification"),
+  label: "reifies authored carriers from the AST and never evaluates them",
+  satisfies: ref("spec:extraction.determinism"),
+  component: componentAnchorId("component:protocol.extract"),
+});
+void staticReificationAnchor;
 
 /**
  * Reifies one `*.sdp.ts` file standalone — no type checker, no import following. Anything outside

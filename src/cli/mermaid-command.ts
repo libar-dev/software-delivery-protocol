@@ -9,6 +9,8 @@ import {
 } from "node:fs";
 import { dirname, join, relative } from "node:path";
 
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import { renderMermaid } from "../projections/mermaid.js";
 import { createReader } from "../reader/reader.js";
 import type { Reader } from "../reader/reader.js";
@@ -75,6 +77,14 @@ function normalizePages(output: MermaidOutput): readonly MermaidPage[] {
 function pagesEqual(left: readonly MermaidPage[], right: readonly MermaidPage[]): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
 }
+
+const mermaidViewCliAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.mermaid-view-cli"),
+  label: "publishes Mermaid through the explicit `sdp mermaid` surface",
+  satisfies: ref("spec:consumers.mermaid-view"),
+  component: componentAnchorId("component:protocol.cli"),
+});
+void mermaidViewCliAnchor;
 
 /** Publishes Mermaid independently as one wholesale tmp-to-rename root. */
 export function runMermaid(parsed: BuildArgs, output: CliOutput, hooks: MermaidHooks): number {

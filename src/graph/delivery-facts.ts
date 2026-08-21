@@ -1,36 +1,13 @@
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type { DeliveryFactName, GraphEdge, GraphNode, PrimitiveNode } from "./schema.js";
 
 /**
- * Delivery facts, computed exactly per `spec:model.core-model` — derived from edges, never authored. This is the
- * one derivation rule, shared by the extractor (which decorates `Primitive` nodes with it) and
- * the delivery-facts honesty check (which recomputes it over the same graph and compares) — one
- * derivation path, never two:
- *
- * - `implemented` — ≥1 `satisfies` edge resolves to the spec along its
- *   `spec:extraction.derive-graph` contract row
- *   (anchored, from a `CodeNode` present in the graph). A dangling or off-contract binding
- *   confers nothing.
- * - `has-verifier` — an **anchored** `verifies` edge resolves to the spec along its contract row
- *   (from an `Anchor` node present in the graph — a test anchored to the spec), or a **declared**
- *   `verifies` edge from an *enabled* example resolves to it — enabled = an `example`-kind spec
- *   that is itself the target of a resolving anchored `verifies` edge. Direct, per-spec, never
- *   propagated up `refines`; a declared `verifies` from a verifier that is not enabled confers
- *   nothing (binding, never liveness — MD-7).
- * - `observed` — never computed (aspirational, the liveness rung).
- *
- * Extractor output satisfies the contract-row conditions by construction (a binding node and its
- * edge derive together, claims assigned by flavor); the conditions have teeth for any other graph
- * producer — an edge the claim-separation check would reject never confers a fact (fail closed).
- *
- * Facts are listed in ladder order (`implemented` → `has-verifier`).
+ * Conferral law: `spec:extraction.delivery-facts`.
  */
 /**
- * The one resolving-test-anchor rule: an anchored `verifies` edge counts only along its
- * `spec:extraction.derive-graph`
- * contract row — its source resolves to an `Anchor` node present in the graph. Shared by
- * delivery-fact derivation, the verifies-linkage check, and the reader's enabled decode so the
- * three surfaces can never disagree: on a malformed or foreign graph an off-contract edge (wrong
- * claim, non-Anchor source) confers nothing (fail closed).
+ * Returns whether `edge` is a resolving test-anchor `verifies` edge.
+ * Shared by `computeDeliveryFacts`, the verifies-linkage check, and the reader's enabled decode.
  */
 export function isResolvingTestAnchorVerify(
   edge: GraphEdge,
@@ -44,14 +21,9 @@ export function isResolvingTestAnchorVerify(
 }
 
 /**
- * The one enabled-example rule — the declared twin of the resolving-test-anchor rule: a declared
- * `verifies` edge confers the binding only along its `spec:model.spec-sections` contract row — its source resolves,
- * by first carrier exactly as the graph index keys, to an `example`-kind `Primitive` that a
- * resolving test anchor binds. Shared by delivery-fact derivation and the reader's enabled decode
- * so the two conferral surfaces can never disagree — including on a duplicate-id graph, where
- * both key the same first carrier (the duplicate-ids check reports the ambiguity loudly, L2).
- * The verifies-linkage check stays the per-cause loud twin: it names *why* a declared verifier
- * confers nothing; this predicate only decides *whether*.
+ * Returns whether `edge` is an enabled-example `verifies` edge.
+ * Shared by `computeDeliveryFacts` and the reader's enabled decode; the verifies-linkage check
+ * names why a declared verifier confers nothing, while this predicate only decides whether.
  */
 export function isEnabledExampleVerify(
   edge: GraphEdge,
@@ -68,6 +40,14 @@ export function isEnabledExampleVerify(
     source?.nodeType === "Primitive" && source.specKind === "example" && anchorVerified(source.id)
   );
 }
+
+const deliveryFactsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.delivery-facts"),
+  label: "computes delivery facts from resolving binding edges",
+  satisfies: ref("spec:extraction.delivery-facts"),
+  component: componentAnchorId("component:protocol.graph"),
+});
+void deliveryFactsAnchor;
 
 export function computeDeliveryFacts(
   nodes: readonly GraphNode[],
@@ -124,6 +104,7 @@ export function computeDeliveryFacts(
   const facts = new Map<string, readonly DeliveryFactName[]>();
 
   for (const id of primitivesById.keys()) {
+    // Implements the Spec's ladder order.
     const ladder: DeliveryFactName[] = [];
 
     if (implemented.has(id)) {

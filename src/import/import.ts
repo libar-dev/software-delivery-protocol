@@ -1,7 +1,9 @@
 import { reifyTypeScriptCarrier } from "../extract/carrier.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
+import type { Finding } from "../validate/contracts.js";
 import { emitMarkdownSpec } from "./emit-markdown.js";
 import { MarkdownEmissionError } from "./markdown-fidelity.js";
-import type { Finding } from "../validate/contracts.js";
 
 export const importFindingIds = {
   refusal: "import/refusal",
@@ -34,6 +36,24 @@ function importFinding(
     file,
   };
 }
+
+const importComponentAnchor = codeAnchor({
+  id: codeAnchorId("component:protocol.import"),
+  label: "Protocol import seam",
+  satisfies: ref("spec:carrier.sdp-import"),
+  uses: [
+    componentAnchorId("component:protocol.extract"),
+    componentAnchorId("component:protocol.validate"),
+  ],
+});
+const sdpImportCoreAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.sdp-import-core"),
+  label: "converts a TypeScript-carrier Spec into an idiomatic Markdown twin",
+  satisfies: ref("spec:carrier.sdp-import"),
+  component: componentAnchorId("component:protocol.import"),
+});
+void importComponentAnchor;
+void sdpImportCoreAnchor;
 
 export function importTypeScriptSpec(sourceText: string, relativePath: string): ImportResult {
   if (!relativePath.endsWith(".sdp.ts")) {

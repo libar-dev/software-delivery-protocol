@@ -15,6 +15,9 @@ relations:
 ## Intent
 - outcome: Refuse maturity claims that their authored evidence does not support.
 
+### Open questions
+- [non-blocking] Does any remaining law in the src/validate/readiness-floor.ts file header promote here under comment promotion?
+
 ## Rule
 - A Spec may state a readiness only when every clause in that readiness floor passes.
 - Floors are cumulative: a stated rung is checked against its own clauses and every lower rung's, so a Spec that clears a higher rung has cleared each one beneath it.

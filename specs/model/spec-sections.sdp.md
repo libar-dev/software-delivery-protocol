@@ -21,6 +21,7 @@ relations:
 - **typing law** — Every section read by a readiness-floor clause has a closed typed shape; unsettled design and ui surfaces remain open bags.
 - **content-only section** — A section carries local content, while relations carry links to promoted standalone Specs.
 - **promotion** — Moving shared or independently reviewed content into a standalone Spec of the matching kind, exclusively rather than alongside inline content.
+- **comment promotion** — Source commentary that states rules other surfaces depend on is a promotion trigger: those rules promote into a standalone Spec under the promotion law, and the comment demotes to local commentary plus a Spec pointer; restating the promoted rules in the comment violates exclusive promotion.
 - **verifies** — A direct verifier-to-target relation whose enabled test binding can derive has-verifier only for that stated target.
 - **enabled verifier** — An example or direct test with a linked, resolvable test anchor; runner execution and pass state remain outside the graph.
 - **verification mode** — Authored intended posture such as executable; it never stands in for the derived enabled-verifier realization.

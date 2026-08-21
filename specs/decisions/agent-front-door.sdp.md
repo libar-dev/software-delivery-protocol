@@ -5,6 +5,7 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:consumers.agent-surface
+  dependsOn: spec:decisions.agent-surface-scripts-graph
 ---
 # The agent front door is one evaluation sink over the exported reader
 

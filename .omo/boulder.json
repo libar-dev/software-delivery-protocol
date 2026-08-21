@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "active_work_id": null,
+  "active_work_id": "pr-25-review-remediation",
   "works": {
     "pr-17-gherkin-carrier-hardening": {
       "work_id": "pr-17-gherkin-carrier-hardening",
@@ -90,6 +90,50 @@
       "make_pr": false,
       "active_task": null,
       "completed_todo": 7
+    },
+    "architectural-patterns-views": {
+      "work_id": "architectural-patterns-views",
+      "active_plan": ".omo/plans/architectural-patterns-views.md",
+      "plan_name": "architectural-patterns-views",
+      "session_ids": [
+        "senpi:934d69c5-e852-4d2a-962d-f5732fea60ed"
+      ],
+      "status": "completed",
+      "worktree_path": null,
+      "delivery_mode": "direct",
+      "make_pr": false,
+      "active_task": null,
+      "completed_todo": 19
+    },
+    "design-law-transfer": {
+      "work_id": "design-law-transfer",
+      "active_plan": ".omo/plans/design-law-transfer.md",
+      "plan_name": "design-law-transfer",
+      "session_ids": [
+        "senpi:01a023a8-efe9-7fad-8e3c-a5e07a2fb2a4"
+      ],
+      "status": "completed",
+      "worktree_path": "/home/darkomijic/dev-libar/software-delivery-protocol",
+      "delivery_mode": "make-pr",
+      "make_pr": true,
+      "current_commit": "315a0d8",
+      "active_task": null,
+      "completed_todo": 14
+    },
+    "pr-25-review-remediation": {
+      "work_id": "pr-25-review-remediation",
+      "active_plan": ".omo/plans/pr-25-review-remediation.md",
+      "plan_name": "pr-25-review-remediation",
+      "session_ids": [
+        "senpi:01a02484-8a26-71b5-be12-039515d854cc"
+      ],
+      "status": "completed",
+      "worktree_path": null,
+      "delivery_mode": "make-pr",
+      "make_pr": true,
+      "current_commit": "2ef4a7afd55a471a136ced9f0bbbdf65b60bda4c",
+      "active_task": null,
+      "completed_todo": 8
     }
   }
 }

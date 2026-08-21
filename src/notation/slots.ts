@@ -257,7 +257,6 @@ const notationComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.notation"),
   label: "Protocol slot notation seam",
   satisfies: ref("spec:carrier.slot-notation"),
-  uses: [componentAnchorId("component:protocol.model")],
 });
 const slotNotationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.slot-notation"),

@@ -956,4 +956,72 @@ export const decisionsSpecs = [
     },
     deliveryFacts: [],
   },
+  {
+    id: "spec:decisions.architectural-significance-rides-primitives",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/decisions/architectural-significance-rides-primitives.sdp.md",
+    title: "Architectural significance rides existing primitives",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Rule that Specs carrying architectural significance, and relationships among those Specs, are authored on the existing Spec primitive, relation vocabulary, and structural anchors, so the graph answers architecture questions without a second architecture vocabulary.",
+      },
+      decision: {
+        context:
+          '`spec:model.structural-patterns` asked whether a vocabulary beyond `component` and `uses` passes the ADR three-part test, and "pattern" is not a ratified term; gen-1\'s tag-registry drift (~50→~26 tags) is the recorded failure of an open structural vocabulary (MD-30 cites it).',
+        decision:
+          'Architectural significance is authored on existing primitives, in order. First, Specs carrying architectural significance are `decision`-kind or `model`-kind Specs; no "pattern" term or kind is ratified. Second, relationships among those Specs are the existing relations — `dependsOn`, `supersedes`, `refines`, `decidedBy` — with `dependsOn` reserved for genuine semantic need and `supersedes` for actual replacement under the ADR test; scheduling-flavored edges stay refused (MD-33). Third, code linkage rides the `satisfies` → `decidedBy` join: a component or member anchor satisfies the Spec it realizes, and that Spec names its shaping decisions by `decidedBy`; code never satisfies a decision Spec directly (MD-26). Fourth, grouping is derived from id families and the component graph, not new Packs. Fifth, the significance criterion for engine self-binding is exported public surface plus cross-component reach; under it `component:protocol.import` and `component:protocol.testing` enter the accepted component set.',
+        rationale: [
+          'Hard to reverse — it permanently closes the vocabulary question and sets the grain at which architecture is authored; surprising without context — the concept "pattern" dissolves into named coordinates rather than gaining a word; real trade-off — CodeNode-grain roles for Specs carrying architectural significance and machine-checked forbidden dependencies are given up to preserve one graph language.',
+        ],
+        consequences: [
+          'The two blocking open questions on `spec:model.structural-patterns` resolve: no vocabulary beyond `component`/`uses` passes the ADR test, and no "pattern" term is ratified.',
+          "Two documented grain limits stand as named limits, not holes: membership of Specs carrying architectural significance is Spec-grain (one `codeAnchor` carries one `satisfies`), and negative constraints remain declared intent, not machine-enforced graph findings.",
+          "New `codeAnchor`s minted under this ruling satisfy only Specs the unit already realizes; anchors are never pointed at decision Specs or unfinished Specs to manufacture coverage.",
+          "`component:protocol.import` and `component:protocol.testing` join the accepted component set; the structural-edges oracle's import exception comment is retired by this ruling.",
+        ],
+        alternatives: [
+          "A dedicated pattern layer (`participatesIn` fields, `pattern:` ids, an architecture validator) was refused — it recreates the MD-30/MD-33-refused engine surface and the gen-1 taxonomy drift.",
+          "Deriving architecture from imports stays refused (MD-30): structural edges are authored declarations, never inference.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.jsdoc-graph-extraction-refused",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/decisions/jsdoc-graph-extraction-refused.sdp.md",
+    title: "Source commentary never enters the graph",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Rule that JSDoc, doc comments, and other source commentary never author graph nodes, relations, membership, or Spec intent, so the statically reified anchor constant remains the only write path from code into the graph.",
+      },
+      decision: {
+        context:
+          "The v0 lineage supported three marker styles — decorators, JSDoc tags, and marker constants — all extracted (docs/lineage/v0-design/04-authoring-surfaces.md §2, 06-extraction-and-validation.md). The landed corpus keeps only the statically reified anchor constant; decorator and JSDoc forms remain unextracted representations (`spec:model.anchors`). Law-grade prose now sits in some engine file headers (for example `src/graph/delivery-facts.ts`), which raises whether the extractor should parse that prose into the graph. The ratified base rules which binding syntaxes extract (`spec:model.anchors`, MD-30); whether comment prose may author graph content is unruled until this decision, and the PR #25 review session genuinely deliberated that fork — this rules an open question, it does not repair drift.",
+        decision:
+          "Ordinary JSDoc and local commentary never author graph content — no nodes, no relations, no component membership, no delivery facts, no Spec intent. The only write path from source into the graph is the statically reified anchor constant under `spec:model.anchors`, and it is identity only. When a comment states rules other surfaces depend on, those rules promote into a Spec under the promotion law (`spec:model.spec-sections`) and the comment demotes to local commentary plus a Spec pointer.",
+        rationale: [
+          "Hard to reverse — a comment-parsing write path would become a contract for source, extractor, and validators. Surprising without context — the lineage tool extracted identity tags from JSDoc, so the obvious parity move looks like extracting prose too; this refusal is about prose, not identity. Real trade-off — comment-prose extraction would make implementation files authoritative for intent (lineage 04 §2.4: markers are read-only pointers from code to spec, never the reverse) and would create a second, silently divergent read model beside the one extraction path (MD-14); giving that up keeps one graph language.",
+        ],
+        consequences: [
+          "The extractor never reads comment content; a comment's presence, absence, or wording produces no graph finding.",
+          "A comment may explain the implementation and point at a Spec id; it confers nothing, and restating promoted law in the comment violates exclusive promotion (MD-10).",
+        ],
+        alternatives: [
+          "Extracting identity tags from JSDoc (the v0 JSDoc marker style) stays refused with the decorator form — both are unextracted representations, and the anchor constant is the single binding syntax.",
+          "Parsing law-grade prose comments into Spec sections was refused — it inverts the separation of intent from binding and recreates a shadow intent carrier beside the Specs.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
 ] as const;

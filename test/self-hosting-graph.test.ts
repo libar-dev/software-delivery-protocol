@@ -3,19 +3,29 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  createCompilerHost,
+  createProgram,
   createSourceFile,
+  flattenDiagnosticMessageText,
   forEachChild,
+  getParsedCommandLineOfConfigFile,
   isCallExpression,
   isExpressionStatement,
   isIdentifier,
   ScriptKind,
   ScriptTarget,
+  sys,
 } from "typescript";
 import { describe, expect, it } from "vitest";
 
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+
 import { extract, validateGraph } from "../src/index.js";
+import { auditStructuralCoverage } from "./helpers/structural-coverage.js";
 import type { ExpectedSpec } from "./self-hosting-oracle/index.js";
 import {
+  acceptedArchitecturalUnits,
+  coarseGrainCoverage,
   expectedAnchors,
   expectedComponentIds,
   expectedDeclaredRelations,
@@ -29,6 +39,34 @@ import {
 } from "./self-hosting-oracle/index.js";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
+const parsedCompilerConfig = getParsedCommandLineOfConfigFile(
+  join(repoRoot, "tsconfig.json"),
+  {},
+  {
+    ...sys,
+    onUnRecoverableConfigFileDiagnostic(diagnostic) {
+      throw new Error(flattenDiagnosticMessageText(diagnostic.messageText, "\n"));
+    },
+  },
+);
+if (parsedCompilerConfig === undefined) {
+  throw new Error("the repository TypeScript project could not be parsed");
+}
+const structuralCoverageCompilerHost = createCompilerHost(parsedCompilerConfig.options);
+structuralCoverageCompilerHost.getCurrentDirectory = () => repoRoot;
+const structuralCoverageProgram = createProgram({
+  rootNames: parsedCompilerConfig.fileNames,
+  options: parsedCompilerConfig.options,
+  projectReferences: parsedCompilerConfig.projectReferences,
+  host: structuralCoverageCompilerHost,
+});
+
+const structuralSelfBindingTestAnchor = specTest({
+  id: testAnchorId("test:protocol.structural-self-binding"),
+  label: "verifies the accepted significant-unit set carries its declared membership",
+  verifies: ref("spec:protocol.structural-self-binding"),
+});
+void structuralSelfBindingTestAnchor;
 
 // An oracle site written as a bare `register<Example>(` call names an adopted generated-registrar
 // activation. Its identifier resolves through the executable AST probe below, so a comment or a
@@ -118,6 +156,17 @@ function lineContaining(source: string, token: string): number {
   return line + 1;
 }
 
+function compareCoverageMismatch(
+  left: { unit: string; anchorId: string; target: string },
+  right: { unit: string; anchorId: string; target: string },
+): number {
+  return (
+    left.unit.localeCompare(right.unit) ||
+    left.anchorId.localeCompare(right.anchorId) ||
+    left.target.localeCompare(right.target)
+  );
+}
+
 describe("the self-hosting corpus", () => {
   // Then: the frozen corpus enters one graph with exact descriptors and its direct bindings.
   it("reifies the root corpus without an extraction finding", () => {
@@ -139,12 +188,12 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    expect(result.counts).toEqual({ specs: 161, packs: 1, anchors: 157 });
-    expect(expectedSpecs).toHaveLength(161);
-    expect(expectedPackMembers).toHaveLength(161);
-    expect(expectedAnchors).toHaveLength(157);
-    expect(result.graph.nodes).toHaveLength(319);
-    expect(result.graph.edges).toHaveLength(675);
+    expect(result.counts).toEqual({ specs: 164, packs: 1, anchors: 177 });
+    expect(expectedSpecs).toHaveLength(164);
+    expect(expectedPackMembers).toHaveLength(164);
+    expect(expectedAnchors).toHaveLength(177);
+    expect(result.graph.nodes).toHaveLength(342);
+    expect(result.graph.edges).toHaveLength(760);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -194,7 +243,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 9, idea: 6, ready: 145, scoped: 1 });
+    ).toEqual({ defined: 11, idea: 4, ready: 148, scoped: 1 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {
@@ -267,6 +316,130 @@ describe("the self-hosting corpus", () => {
         .map((edge) => [edge.from, edge.to])
         .sort(),
     ).toEqual([...expectedUsesEdges].sort());
+  });
+
+  it("covers every accepted architecturally significant unit", () => {
+    const acceptedIds = new Set<string>(acceptedArchitecturalUnits.map((row) => row.anchorId));
+    const exceptionIds = new Set<string>(structuralMembershipExceptions);
+    const componentIds = new Set<string>(expectedComponentIds);
+    const mismatches: {
+      unit: string;
+      anchorId: string;
+      target: string;
+      reason: string;
+    }[] = [];
+
+    for (const row of acceptedArchitecturalUnits) {
+      const path = row.unit.slice(0, row.unit.indexOf("#"));
+      const node = result.graph.nodes.find((entry) => entry.id === row.anchorId);
+      const memberships = result.graph.edges.filter(
+        (edge) => edge.from === row.anchorId && edge.type === "memberOf",
+      );
+      const target = memberships[0]?.to ?? "";
+
+      if (node?.nodeType !== "CodeNode") {
+        mismatches.push({
+          unit: row.unit,
+          anchorId: row.anchorId,
+          target,
+          reason: "anchor is not a CodeNode",
+        });
+        continue;
+      }
+
+      if (node.file !== path) {
+        mismatches.push({
+          unit: row.unit,
+          anchorId: row.anchorId,
+          target,
+          reason: `file ${node.file} !== ${path}`,
+        });
+      }
+
+      if (memberships.length !== 1) {
+        mismatches.push({
+          unit: row.unit,
+          anchorId: row.anchorId,
+          target,
+          reason: `memberOf count ${String(memberships.length)}`,
+        });
+      } else {
+        if (target !== row.componentId) {
+          mismatches.push({
+            unit: row.unit,
+            anchorId: row.anchorId,
+            target,
+            reason: `memberOf target ${target} !== ${row.componentId}`,
+          });
+        }
+
+        if (!componentIds.has(target)) {
+          mismatches.push({
+            unit: row.unit,
+            anchorId: row.anchorId,
+            target,
+            reason: "target not in expectedComponentIds",
+          });
+        }
+      }
+    }
+
+    for (const edge of result.graph.edges.filter((entry) => entry.type === "memberOf")) {
+      if (!acceptedIds.has(edge.from) && !exceptionIds.has(edge.from)) {
+        const node = result.graph.nodes.find((entry) => entry.id === edge.from);
+        mismatches.push({
+          unit: node && "file" in node ? node.file : edge.from,
+          anchorId: edge.from,
+          target: edge.to,
+          reason: "unrostered memberOf",
+        });
+      }
+    }
+
+    for (const row of coarseGrainCoverage) {
+      const memberships = result.graph.edges.filter(
+        (edge) => edge.from === row.coveredBy && edge.type === "memberOf",
+      );
+      const covering = result.graph.nodes.find((entry) => entry.id === row.coveredBy);
+      const target = memberships[0]?.to ?? "";
+
+      if (covering === undefined) {
+        mismatches.push({
+          unit: row.unit,
+          anchorId: row.coveredBy,
+          target,
+          reason: "covering anchor missing",
+        });
+        continue;
+      }
+
+      if (memberships.length !== 1 || target !== row.componentId) {
+        mismatches.push({
+          unit: row.unit,
+          anchorId: row.coveredBy,
+          target,
+          reason: `covering anchor not a member of ${row.componentId}`,
+        });
+      }
+
+      const coverage = auditStructuralCoverage(structuralCoverageProgram, row.unit, covering.file);
+      if (coverage !== "ok") {
+        mismatches.push({
+          unit: row.unit,
+          anchorId: row.coveredBy,
+          target,
+          reason: coverage,
+        });
+      }
+    }
+
+    mismatches.sort(compareCoverageMismatch);
+    const message = [
+      "structural self-binding coverage failed:",
+      ...mismatches.map((row) => `${row.unit} ${row.anchorId} → ${row.target}: ${row.reason}`),
+    ].join("\n");
+
+    expect(mismatches, message).toEqual([]);
   });
 
   it("projects every anchor and code node at the line its declaration occupies", () => {

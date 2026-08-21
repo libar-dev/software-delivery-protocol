@@ -1,6 +1,9 @@
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
+
 /** Spec carriers (MD-15): discovery reads spec files and pack manifests by suffix alone. */
 const SPEC_FILE_SUFFIXES = [".sdp.ts", ".sdp.md", ".sdp.gherkin"] as const;
 
@@ -28,6 +31,14 @@ export class InvalidExcludePathError extends Error {
     super(`normalizeExcludes: invalid exclusion path "${path}"`);
   }
 }
+
+const discoverFilesAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.discover-files"),
+  label: "realizes exclusion-aware discovery (normalizeExcludes / discoverFiles)",
+  satisfies: ref("spec:extraction.excludes"),
+  component: componentAnchorId("component:protocol.extract"),
+});
+void discoverFilesAnchor;
 
 export function normalizeExcludes(exclude: readonly string[] | undefined): readonly string[] {
   const normalized: string[] = [];

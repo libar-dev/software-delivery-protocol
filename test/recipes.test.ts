@@ -5,7 +5,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { runSdpCli } from "../src/cli/sdp.js";
-import { createReader, extract } from "../src/index.js";
+import { createReader, extract, validateGraph } from "../src/index.js";
+import type { ExtractionResult } from "../src/index.js";
 import { expectedComponentIds, expectedUsesEdges } from "./self-hosting-oracle/structural-edges.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 
@@ -110,7 +111,11 @@ const queryHooks = {
   },
 };
 
-async function runRecipe(recipe: Recipe, changedFiles?: readonly string[]): Promise<unknown> {
+async function runRecipe(
+  recipe: Recipe,
+  changedFiles?: readonly string[],
+  extraction: ExtractionResult = derived,
+): Promise<unknown> {
   const previousChangedFiles = process.env.SDP_CHANGED_FILES_JSON;
   if (changedFiles === undefined) {
     delete process.env.SDP_CHANGED_FILES_JSON;
@@ -123,7 +128,12 @@ async function runRecipe(recipe: Recipe, changedFiles?: readonly string[]): Prom
     const exitCode = await runSdpCli(
       ["q", recipe.body, "--root", repoRoot, "--json"],
       capture.output,
-      queryHooks,
+      {
+        query: {
+          ...queryHooks.query,
+          extract: () => extraction,
+        },
+      },
     );
 
     // The expected stderr is the empty string, not a self-comparison: a recipe run over the green
@@ -195,6 +205,61 @@ function recipeByOrdinal(ordinal: number): Recipe {
 
 function edgeId(edge: { readonly from: string; readonly to: string }): string {
   return `${edge.from} -> ${edge.to}`;
+}
+
+// Lawful first path segments that collide with Object.prototype own/inherited keys. The ID
+// grammar admits them (`src/ids.ts`); family maps built as `{}` do not.
+const HOSTILE_PATH_SEGMENTS = ["constructor", "toString", "valueOf", "hasOwnProperty"] as const;
+
+type HostilePathSegment = (typeof HOSTILE_PATH_SEGMENTS)[number];
+
+function hostileSpecId(family: HostilePathSegment, leaf: string): string {
+  return `spec:${family}.${leaf}`;
+}
+
+function extractionWithHostilePrimitives(input: {
+  readonly leaf: string;
+  readonly readiness: "idea" | "scoped" | "defined" | "ready";
+  readonly decidedByTarget?: string;
+}): ExtractionResult {
+  const nodes = HOSTILE_PATH_SEGMENTS.map((family) => ({
+    id: hostileSpecId(family, input.leaf),
+    nodeType: "Primitive" as const,
+    claim: "declared" as const,
+    specKind: "rule" as const,
+    altitude: "story" as const,
+    readiness: input.readiness,
+    title: `hostile family fixture ${family}`,
+    file: "specs/fixture-hostile-family.sdp.md",
+  }));
+  const decidedByTarget = input.decidedByTarget;
+  const edges =
+    decidedByTarget === undefined
+      ? []
+      : HOSTILE_PATH_SEGMENTS.map((family) => ({
+          from: hostileSpecId(family, input.leaf),
+          type: "decidedBy" as const,
+          to: decidedByTarget,
+          claim: "declared" as const,
+        }));
+
+  return {
+    counts: derived.counts,
+    report: derived.report,
+    graph: {
+      schemaVersion: derived.graph.schemaVersion,
+      nodes: [...derived.graph.nodes, ...nodes],
+      edges: [...derived.graph.edges, ...edges],
+    },
+  };
+}
+
+function assertOwnHostileFamilyIds(byFamily: Record<string, unknown>, leaf: string): void {
+  for (const family of HOSTILE_PATH_SEGMENTS) {
+    expect(Object.hasOwn(byFamily, family), `missing own family key ${family}`).toBe(true);
+    const ids = asArray(byFamily[family]).map((row) => stringAt(asRecord(row), "id"));
+    expect(ids).toContain(hostileSpecId(family, leaf));
+  }
 }
 
 function structuralGroundTruth() {
@@ -359,11 +424,14 @@ describe("the agent-surface recipe corpus", () => {
       "structural neighborhood",
       "census structural coverage",
       "projection-coverage upper bound",
+      "architecture map",
+      "decision map",
+      "planning slice",
     ]) {
       expect(agentSurfaceProse).toContain(phrase);
     }
 
-    for (const ordinal of [12, 13, 14, 15, 16]) {
+    for (const ordinal of [12, 13, 14, 15, 16, 17, 18, 19]) {
       expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
     }
   });
@@ -895,5 +963,529 @@ describe("the agent-surface recipe corpus", () => {
       mermaid: { diagramSubjects: diagramSubjectCount },
       gherkin: { specs: primitiveCount },
     });
+  });
+
+  it("returns the architecture map of every live component with recomputed fan-in and fan-out", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(17)));
+    const rows = asArray(result.components).map(asRecord);
+    const expected = structuralGroundTruth();
+    const componentIds = new Set(expected.components);
+    const ownerByMember = new Map(
+      expected.memberOfEdges.map((edge) => [edge.from, edge.to] as const),
+    );
+    const ownerOf = (id: string): string | undefined =>
+      componentIds.has(id) ? id : ownerByMember.get(id);
+    const usesOutByComponent = new Map<string, Set<string>>();
+    const usedByByComponent = new Map<string, Set<string>>();
+
+    for (const edge of expected.usesEdges) {
+      const from = ownerOf(edge.from);
+      const to = ownerOf(edge.to);
+      if (from === undefined || to === undefined) {
+        continue;
+      }
+
+      const outgoing = usesOutByComponent.get(from) ?? new Set<string>();
+      outgoing.add(to);
+      usesOutByComponent.set(from, outgoing);
+      const incoming = usedByByComponent.get(to) ?? new Set<string>();
+      incoming.add(from);
+      usedByByComponent.set(to, incoming);
+    }
+
+    const ids = rows.map((row) => stringAt(row, "id")).sort();
+    expect(ids).toEqual(expected.components);
+    expect(ids).toContain("component:protocol.import");
+    expect(ids).toContain("component:protocol.testing");
+
+    for (const row of rows) {
+      const id = stringAt(row, "id");
+      const expectedOut = [...(usesOutByComponent.get(id) ?? [])].sort();
+      const expectedIn = [...(usedByByComponent.get(id) ?? [])].sort();
+      const expectedMemberIds = expected.memberOfEdges
+        .filter((edge) => edge.to === id)
+        .map((edge) => edge.from)
+        .sort();
+      const members = asArray(row.members).map(asRecord);
+
+      expect(row.declared).toBe(true);
+      expect(numberAt(row, "fanOut")).toBe(expectedOut.length);
+      expect(numberAt(row, "fanIn")).toBe(expectedIn.length);
+      expect(members.map((member) => stringAt(member, "id")).sort()).toEqual(expectedMemberIds);
+
+      const anchorIds = new Set([id, ...expectedMemberIds]);
+      const expectedSatisfied = [
+        ...new Set(
+          derived.graph.edges
+            .filter((edge) => edge.type === "satisfies" && anchorIds.has(edge.from))
+            .map((edge) => edge.to),
+        ),
+      ].sort();
+      expect(asArray(row.satisfiedSpecs)).toEqual(expectedSatisfied);
+
+      const expectedShaping = new Map<string, string[]>();
+      for (const edge of derived.graph.edges.filter(
+        (candidate) => candidate.type === "decidedBy" && expectedSatisfied.includes(candidate.from),
+      )) {
+        const subjects = expectedShaping.get(edge.to) ?? [];
+        subjects.push(edge.from);
+        expectedShaping.set(edge.to, subjects);
+      }
+      expect(asArray(row.shapingDecisions).map(asRecord)).toEqual(
+        [...expectedShaping]
+          .sort(([left], [right]) => left.localeCompare(right))
+          .map(([decisionId, subjects]) => ({
+            id: decisionId,
+            subjects: [...new Set(subjects)].sort(),
+          })),
+      );
+    }
+
+    expect(asArray(result.unresolvedUses)).toEqual([]);
+  });
+
+  // Given: a clone of the live ExtractionResult with component:protocol.testing removed while its
+  // memberOf edge survives, plus one synthetic uses edge aimed at a component id no node declares.
+  // When: catalog recipe 17 runs through real runSdpCli on that override.
+  // Then: the dangling component keeps a declared:false row with its members, and the uses edge
+  // with no resolvable owner surfaces in unresolvedUses instead of silently dropping.
+  it("keeps a dangling component row and surfaces unresolved uses edges", async () => {
+    const missingComponentId = "component:protocol.testing";
+    const retainedMemberId = "impl:protocol.example-testing-helpers";
+    const usesEdgeTemplate = derived.graph.edges.find((edge) => edge.type === "uses");
+    if (usesEdgeTemplate === undefined) {
+      throw new Error("live graph has no uses edge to clone");
+    }
+
+    const ghostTargetId = "component:protocol.nonexistent";
+    const dirty: ExtractionResult = {
+      counts: derived.counts,
+      report: derived.report,
+      graph: {
+        schemaVersion: derived.graph.schemaVersion,
+        nodes: derived.graph.nodes.filter((node) => node.id !== missingComponentId),
+        edges: [
+          ...derived.graph.edges,
+          { ...usesEdgeTemplate, from: "component:protocol.cli", to: ghostTargetId },
+        ],
+      },
+    };
+
+    const result = asRecord(await runRecipe(recipeByOrdinal(17), undefined, dirty));
+    const dangling = asArray(result.components)
+      .map(asRecord)
+      .find((row) => stringAt(row, "id") === missingComponentId);
+
+    if (dangling === undefined) {
+      throw new Error(`architecture map dropped the dangling ${missingComponentId} row`);
+    }
+
+    expect(dangling.declared).toBe(false);
+    expect(asArray(dangling.members).map((member) => stringAt(asRecord(member), "id"))).toContain(
+      retainedMemberId,
+    );
+    expect(asArray(result.unresolvedUses).map(asRecord)).toContainEqual({
+      from: "component:protocol.cli",
+      to: ghostTargetId,
+    });
+  });
+
+  // Given: a clone of the live ExtractionResult with impl:protocol.agent-surface removed
+  // and its memberOf edge retained — invalid, but still a graph validateGraph can report.
+  // When: catalog recipe 17 runs through real runSdpCli on that override.
+  // Then: validateGraph reports conformance/referential-integrity, the sink exits 0, and
+  // the unresolved member row keeps null label/file/line under component:protocol.reader.
+  it("preserves an unresolved architecture-map member when memberOf outlives the node", async () => {
+    const missingMemberId = "impl:protocol.agent-surface";
+    const ownerComponentId = "component:protocol.reader";
+    const dirty: ExtractionResult = {
+      counts: derived.counts,
+      report: derived.report,
+      graph: {
+        schemaVersion: derived.graph.schemaVersion,
+        nodes: derived.graph.nodes.filter((node) => node.id !== missingMemberId),
+        edges: derived.graph.edges,
+      },
+    };
+
+    expect(dirty.graph.nodes.some((node) => node.id === missingMemberId)).toBe(false);
+    expect(
+      dirty.graph.edges.some(
+        (edge) =>
+          edge.type === "memberOf" && edge.from === missingMemberId && edge.to === ownerComponentId,
+      ),
+    ).toBe(true);
+
+    const graphReport = validateGraph(dirty.graph);
+    expect(
+      graphReport.findings.some(
+        (finding) =>
+          finding.family === "conformance" &&
+          finding.validatorId === "conformance/referential-integrity" &&
+          (finding.subjectId === missingMemberId || finding.relatedId === missingMemberId),
+      ),
+    ).toBe(true);
+
+    const result = asRecord(await runRecipe(recipeByOrdinal(17), undefined, dirty));
+    const owner = asArray(result.components)
+      .map(asRecord)
+      .find((row) => stringAt(row, "id") === ownerComponentId);
+
+    if (owner === undefined) {
+      throw new Error(`architecture map has no row for ${ownerComponentId}`);
+    }
+
+    const unresolved = asArray(owner.members)
+      .map(asRecord)
+      .find((row) => stringAt(row, "id") === missingMemberId);
+
+    expect(unresolved).toEqual({
+      id: missingMemberId,
+      label: null,
+      file: null,
+      line: null,
+    });
+  });
+
+  it("returns the decision map ranked by live shaping fan-in", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(18)));
+    const ranking = asArray(result.ranking).map(asRecord);
+    const decisionIds = new Set(
+      derived.graph.nodes
+        .filter((node) => node.nodeType === "Primitive" && node.specKind === "decision")
+        .map((node) => node.id),
+    );
+    const interDecisionFanIn = (id: string, type: string): number =>
+      derived.graph.edges.filter(
+        (edge) =>
+          edge.type === type &&
+          edge.to === id &&
+          decisionIds.has(edge.from) &&
+          decisionIds.has(edge.to),
+      ).length;
+    const decidedSubjectCount = (id: string): number =>
+      new Set(
+        derived.graph.edges
+          .filter((edge) => edge.type === "decidedBy" && edge.to === id)
+          .map((edge) => edge.from),
+      ).size;
+    const shapingFanIn = (id: string): number =>
+      interDecisionFanIn(id, "dependsOn") +
+      interDecisionFanIn(id, "refines") +
+      decidedSubjectCount(id);
+
+    expect(numberAt(result, "total")).toBe(decisionIds.size);
+    expect(ranking.length).toBe(decisionIds.size);
+
+    const fanIns = ranking.map((row) => numberAt(row, "fanIn"));
+    expect(fanIns).toEqual([...fanIns].sort((left, right) => right - left));
+
+    const top = ranking[0];
+    if (top === undefined) {
+      throw new Error("decision map ranking is empty");
+    }
+
+    expect(numberAt(top, "fanIn")).toBe(shapingFanIn(stringAt(top, "id")));
+
+    for (const row of ranking) {
+      expect(numberAt(row, "fanIn")).toBe(shapingFanIn(stringAt(row, "id")));
+    }
+  });
+
+  it("returns a planning-slice neighborhood and an exact absent shape", async () => {
+    const recipe = recipeByOrdinal(19);
+    const result = asRecord(await runRecipe(recipe));
+    const id = "spec:consumers.agent-surface";
+    const parents = [
+      ...new Set(
+        derived.graph.edges
+          .filter((edge) => edge.type === "refines" && edge.from === id)
+          .map((edge) => edge.to),
+      ),
+    ].sort();
+    const children = [
+      ...new Set(
+        derived.graph.edges
+          .filter((edge) => edge.type === "refines" && edge.to === id)
+          .map((edge) => edge.from),
+      ),
+    ].sort();
+
+    expect(result.found).toBe(true);
+    expect(stringAt(result, "id")).toBe(id);
+    expect(asRecord(result.refinementNeighborhood)).toEqual({ parents, children });
+
+    const readinessById = new Map(
+      derived.graph.nodes
+        .filter((node) => node.nodeType === "Primitive")
+        .map((node) => [node.id, node.readiness] as const),
+    );
+    const dependencyNeighbors = (end: "from" | "to"): readonly Record<string, unknown>[] =>
+      [
+        ...new Set(
+          derived.graph.edges
+            .filter(
+              (edge) => edge.type === "dependsOn" && edge[end === "to" ? "from" : "to"] === id,
+            )
+            .map((edge) => edge[end]),
+        ),
+      ]
+        .sort()
+        .map((specId) => ({
+          id: specId,
+          statedReadiness: readinessById.get(specId) ?? null,
+        }));
+    expect(asRecord(result.dependencies)).toEqual({
+      dependsOn: dependencyNeighbors("to"),
+      dependedOnBy: dependencyNeighbors("from"),
+    });
+
+    const expectedShaping = new Map<string, string[]>();
+    for (const edge of derived.graph.edges.filter(
+      (candidate) =>
+        candidate.type === "decidedBy" && [id, ...parents, ...children].includes(candidate.from),
+    )) {
+      const subjects = expectedShaping.get(edge.to) ?? [];
+      subjects.push(edge.from);
+      expectedShaping.set(edge.to, subjects);
+    }
+    expect(asArray(result.shapingDecisions).map(asRecord)).toEqual(
+      [...expectedShaping]
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([decisionId, subjects]) => ({
+          id: decisionId,
+          subjects: [...new Set(subjects)].sort(),
+        })),
+    );
+    expect(Object.keys(result)).not.toContain("constrainingDecisions");
+    expect(Object.keys(result)).not.toContain("blastRadiusEntryPoints");
+
+    const unknownId = "spec:consumers.nonexistent";
+    const absent = await runRecipe({
+      ...recipe,
+      body: recipe.body.replace(id, unknownId),
+    });
+    expect(absent).toEqual({ id: unknownId, found: false });
+  });
+
+  // Given: catalog recipe 19 with only the opening id retargeted to the structural-anchor
+  // decision (live graph: one outgoing dependsOn, two inbound dependsOn from MD-34/MD-35).
+  // When: the otherwise unchanged body runs through real runSdpCli.
+  // Then: dependencies.dependsOn and dependencies.dependedOnBy are both non-empty and name the
+  // exact ready decision neighbors — so dropping, reversing, renaming, or readiness-skewing either
+  // direction reddens this characterization.
+  it("returns non-empty bidirectional dependencies for the structural-anchor planning slice", async () => {
+    const recipe = recipeByOrdinal(19);
+    const catalogId = "spec:consumers.agent-surface";
+    const id = "spec:decisions.structural-anchor-semantics";
+    expect(recipe.body).toContain(`const id = "${catalogId}";`);
+
+    const result = asRecord(
+      await runRecipe({
+        ...recipe,
+        body: recipe.body.replace(catalogId, id),
+      }),
+    );
+    const dependencies = asRecord(result.dependencies);
+    const dependsOn = asArray(dependencies.dependsOn).map(asRecord);
+    const dependedOnBy = asArray(dependencies.dependedOnBy).map(asRecord);
+
+    expect(dependsOn.length).toBeGreaterThan(0);
+    expect(dependedOnBy.length).toBeGreaterThan(0);
+    expect(dependsOn).toEqual([
+      { id: "spec:decisions.binding-not-liveness", statedReadiness: "ready" },
+    ]);
+    expect(dependedOnBy).toEqual([
+      {
+        id: "spec:decisions.architectural-significance-rides-primitives",
+        statedReadiness: "ready",
+      },
+      {
+        id: "spec:decisions.jsdoc-graph-extraction-refused",
+        statedReadiness: "ready",
+      },
+    ]);
+  });
+
+  // Given: the live planning-slice Spec and its SpecContext bindings.
+  // When: catalog recipe 19 is evaluated through the real CLI runner.
+  // Then: the machine contract names `implementations` at the top level and on each
+  // component row — never `abstractions` — and those ids equal live SpecContext
+  // implementations plus memberOf-derived component ownership.
+  it("returns planning-slice implementations, never abstractions", async () => {
+    const id = "spec:consumers.agent-surface";
+    const context = reader.specContext(id);
+    if (context === undefined) {
+      throw new Error(`live graph has no SpecContext for ${id}`);
+    }
+
+    const result = asRecord(await runRecipe(recipeByOrdinal(19)));
+    const componentRows = asArray(result.components).map(asRecord);
+    const expectedImplIds = context.implementations.map((binding) => binding.codeId).sort();
+    const ownedByComponent = (componentId: string): readonly string[] =>
+      expectedImplIds.filter((codeId) =>
+        derived.graph.edges.some(
+          (edge) => edge.type === "memberOf" && edge.from === codeId && edge.to === componentId,
+        ),
+      );
+
+    expect(Object.keys(result)).toContain("implementations");
+    expect(Object.keys(result)).not.toContain("abstractions");
+
+    const topLevelIds = asArray(result.implementations).map((entry) =>
+      stringAt(asRecord(entry), "id"),
+    );
+    expect([...topLevelIds].sort()).toEqual(expectedImplIds);
+
+    for (const row of componentRows) {
+      expect(Object.keys(row)).toContain("implementations");
+      expect(Object.keys(row)).not.toContain("abstractions");
+      expect(
+        asArray(row.implementations)
+          .map((entry) => stringAt({ entry }, "entry"))
+          .sort(),
+      ).toEqual(ownedByComponent(stringAt(row, "id")));
+    }
+
+    const ownedImplIds = componentRows.flatMap((row) =>
+      asArray(row.implementations).map((entry) => stringAt({ entry }, "entry")),
+    );
+    const directlySatisfyingComponents = componentRows
+      .filter((row) => row.directlySatisfies === true)
+      .map((row) => stringAt(row, "id"));
+    expect(
+      [...new Set([...topLevelIds, ...ownedImplIds, ...directlySatisfyingComponents])].sort(),
+    ).toEqual(expectedImplIds);
+  });
+
+  // Given: a clone of the live ExtractionResult with component:protocol.reader removed and its
+  // memberOf edges retained — invalid, but still a graph validateGraph can report.
+  // When: catalog recipe 19 runs through real runSdpCli on that override.
+  // Then: validateGraph reports conformance/referential-integrity, the sink exits 0, the
+  // unresolved component row keeps null label/file/line, impl:protocol.agent-surface is retained,
+  // and that component contributes no entry point.
+  it("preserves an unresolved component row when memberOf outlives the node", async () => {
+    const missingComponentId = "component:protocol.reader";
+    const retainedImplId = "impl:protocol.agent-surface";
+    const dirty: ExtractionResult = {
+      counts: derived.counts,
+      report: derived.report,
+      graph: {
+        schemaVersion: derived.graph.schemaVersion,
+        nodes: derived.graph.nodes.filter((node) => node.id !== missingComponentId),
+        edges: derived.graph.edges,
+      },
+    };
+
+    expect(dirty.graph.nodes.some((node) => node.id === missingComponentId)).toBe(false);
+    expect(
+      dirty.graph.edges.some(
+        (edge) =>
+          edge.type === "memberOf" &&
+          edge.from === retainedImplId &&
+          edge.to === missingComponentId,
+      ),
+    ).toBe(true);
+
+    const graphReport = validateGraph(dirty.graph);
+    expect(
+      graphReport.findings.some(
+        (finding) =>
+          finding.family === "conformance" &&
+          finding.validatorId === "conformance/referential-integrity" &&
+          (finding.subjectId === missingComponentId || finding.relatedId === missingComponentId),
+      ),
+    ).toBe(true);
+
+    const result = asRecord(await runRecipe(recipeByOrdinal(19), undefined, dirty));
+    const unresolved = asArray(result.components)
+      .map(asRecord)
+      .find((row) => stringAt(row, "id") === missingComponentId);
+
+    expect(unresolved).toEqual(
+      expect.objectContaining({
+        id: missingComponentId,
+        label: null,
+        file: null,
+        line: null,
+      }),
+    );
+    expect(
+      asArray(result.implementations).map((entry) => stringAt(asRecord(entry), "id")),
+    ).toContain(retainedImplId);
+    expect(
+      unresolved === undefined
+        ? []
+        : asArray(unresolved.implementations).map((entry) => stringAt({ entry }, "entry")),
+    ).toContain(retainedImplId);
+    expect(
+      asArray(result.entryPoints)
+        .map(asRecord)
+        .filter(
+          (entry) =>
+            stringAt(entry, "role") === "component" && stringAt(entry, "id") === missingComponentId,
+        ),
+    ).toEqual([]);
+  });
+
+  // Given: the live graph plus ready non-example/non-decision primitives whose first path segments
+  // are Object.prototype keys, with no resolving implementation.
+  // When: catalog recipe 1 runs through real runSdpCli on that override.
+  // Then: each hostile family is an own byFamily key carrying the exact synthetic Spec id.
+  it("groups backlog rows under lawful Object.prototype path segments", async () => {
+    const leaf = "hostile-backlog";
+    const extraction = extractionWithHostilePrimitives({ leaf, readiness: "ready" });
+    const result = asRecord(await runRecipe(recipeByOrdinal(1), undefined, extraction));
+    assertOwnHostileFamilyIds(asRecord(result.byFamily), leaf);
+  });
+
+  // Given: the live graph plus below-ready primitives whose first path segments are
+  // Object.prototype keys.
+  // When: catalog recipe 11 runs through real runSdpCli on that override.
+  // Then: each hostile family is an own byFamily key carrying the exact synthetic Spec id.
+  it("groups lower-ladder rows under lawful Object.prototype path segments", async () => {
+    const leaf = "hostile-lower";
+    const extraction = extractionWithHostilePrimitives({ leaf, readiness: "idea" });
+    const result = asRecord(await runRecipe(recipeByOrdinal(11), undefined, extraction));
+    assertOwnHostileFamilyIds(asRecord(result.byFamily), leaf);
+  });
+
+  // Given: the live graph plus primitives that declare decidedBy to an existing ready decision,
+  // with first path segments that collide with Object.prototype.
+  // When: catalog recipe 18 runs through real runSdpCli on that override.
+  // Then: the decision's decidedSubjectsByFamily keeps each hostile family as an own key with the
+  // exact synthetic Spec id.
+  it("groups decided subjects under lawful Object.prototype path segments", async () => {
+    const leaf = "hostile-decided-subject";
+    const decisionId = "spec:decisions.agent-front-door";
+    const decision = derived.graph.nodes.find(
+      (node) =>
+        node.nodeType === "Primitive" &&
+        node.id === decisionId &&
+        node.specKind === "decision" &&
+        node.readiness === "ready",
+    );
+    if (decision === undefined) {
+      throw new Error(`live graph has no ready decision ${decisionId}`);
+    }
+
+    const extraction = extractionWithHostilePrimitives({
+      leaf,
+      readiness: "ready",
+      decidedByTarget: decisionId,
+    });
+    const result = asRecord(await runRecipe(recipeByOrdinal(18), undefined, extraction));
+    const row = asArray(result.decisions)
+      .map(asRecord)
+      .find((entry) => stringAt(entry, "id") === decisionId);
+    if (row === undefined) {
+      throw new Error(`decision map has no row for ${decisionId}`);
+    }
+
+    const byFamily = asRecord(row.decidedSubjectsByFamily);
+    for (const family of HOSTILE_PATH_SEGMENTS) {
+      expect(Object.hasOwn(byFamily, family), `missing own family key ${family}`).toBe(true);
+      expect(asArray(byFamily[family])).toContain(hostileSpecId(family, leaf));
+    }
   });
 });

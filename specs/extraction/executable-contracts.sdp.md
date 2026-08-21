@@ -5,11 +5,15 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:extraction.build-pipeline
+  decidedBy: spec:decisions.point-per-example
 ---
 # The build derives executable contracts from graph examples
 
 ## Intent
 - outcome: Give bound tests typed step and example-space contracts without reading authored Specs directly.
+
+### Open questions
+- [non-blocking] Do the concreteness-refusal and no-guessing outcome-identity laws stated in src/codegen/contracts.ts commentary promote here or to a story-altitude child under comment promotion?
 
 ## Behavior
 - rule: `generateContracts` derives per-example step contracts and per-parent space contracts solely from the extracted graph.

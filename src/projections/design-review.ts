@@ -31,6 +31,10 @@ const projectionsComponentAnchor = codeAnchor({
   uses: [
     componentAnchorId("component:protocol.reader"),
     componentAnchorId("component:protocol.graph"),
+    componentAnchorId("component:protocol.extract"),
+    componentAnchorId("component:protocol.model"),
+    componentAnchorId("component:protocol.notation"),
+    componentAnchorId("component:protocol.validate"),
   ],
 });
 const projectionModelAnchor = codeAnchor({

@@ -32,7 +32,7 @@ pnpm exec sdp q '<body>' --root PATH --exclude PATH --exclude PATH
 `--root PATH` picks the extraction root (default: the working directory) and `--exclude` is
 repeatable for root-relative path prefixes. `PATH` is a placeholder, not a literal directory.
 
-**Some recipes open with a parameter.** Recipes 3, 6, 9, and 14 take their subject on the opening
+**Some recipes open with a parameter.** Recipes 3, 6, 9, 14, and 19 take their subject on the opening
 `const` line(s): a Spec id, a search term, or a component id. Those lines name *this* repository's
 corpus so every body runs as written here (the recipe check executes each one verbatim); in your
 own corpus, substitute your subject on that line before running. A Spec id or component id absent
@@ -96,7 +96,7 @@ const excludedExamples = ready.filter(
 const excludedDecisions = ready.filter(
   (spec) => spec.specKind === "decision" && !spec.deliveryFacts.includes("implemented"),
 );
-const byFamily = {};
+const byFamily = Object.create(null);
 
 for (const spec of backlog) {
   const family = spec.id.slice("spec:".length).split(".")[0];
@@ -444,7 +444,7 @@ visible instead of hidden in plan prose.*
 
 ```js
 const lower = g.specs().filter((spec) => spec.statedReadiness !== "ready");
-const byFamily = {};
+const byFamily = Object.create(null);
 
 for (const spec of lower) {
   const family = spec.id.slice("spec:".length).split(".")[0];
@@ -643,3 +643,375 @@ return {
 This is a graph-side **upper bound**, not a rendered-page census. Mermaid's per-diagram refusal can
 withhold graph rows, and census inclusion rules can withhold rows the graph contains; projection
 refusal or inclusion can therefore make rendered output smaller than these counts.
+
+## 17. Architecture map
+
+*When you need this: you want every declared component with its members, uses neighbors,
+satisfied Specs, and shaping decisions in one map.*
+
+```js
+const nodes = graph.nodes;
+const edges = graph.edges;
+const codeNodesById = new Map(
+  nodes
+    .filter((node) => node.nodeType === "CodeNode")
+    .map((node) => [node.id, node]),
+);
+const membersByComponent = new Map();
+const ownerByMember = new Map();
+
+for (const edge of edges.filter((edge) => edge.type === "memberOf")) {
+  const members = membersByComponent.get(edge.to) ?? [];
+  members.push(edge.from);
+  membersByComponent.set(edge.to, members);
+  ownerByMember.set(edge.from, edge.to);
+}
+
+// Declared components plus memberOf targets whose component node is missing: a dangling
+// component keeps its row (declared: false) instead of hiding its members from the map.
+const componentIds = new Set([
+  ...[...codeNodesById.keys()].filter((id) => id.startsWith("component:")),
+  ...membersByComponent.keys(),
+]);
+const ownerOf = (id) => componentIds.has(id) ? id : ownerByMember.get(id);
+const usesOutByComponent = new Map();
+const usedByByComponent = new Map();
+const unresolvedUses = [];
+
+for (const edge of edges.filter((edge) => edge.type === "uses")) {
+  const from = ownerOf(edge.from);
+  const to = ownerOf(edge.to);
+  if (from === undefined || to === undefined) {
+    unresolvedUses.push({ from: edge.from, to: edge.to });
+    continue;
+  }
+  const outgoing = usesOutByComponent.get(from) ?? new Set();
+  outgoing.add(to);
+  usesOutByComponent.set(from, outgoing);
+  const incoming = usedByByComponent.get(to) ?? new Set();
+  incoming.add(from);
+  usedByByComponent.set(to, incoming);
+}
+
+const decisionsBySubject = new Map();
+for (const edge of edges.filter((edge) => edge.type === "decidedBy")) {
+  const decisions = decisionsBySubject.get(edge.from) ?? new Set();
+  decisions.add(edge.to);
+  decisionsBySubject.set(edge.from, decisions);
+}
+
+const components = [...componentIds].sort().map((id) => {
+  const memberIds = [...new Set(membersByComponent.get(id) ?? [])].sort();
+  const anchors = new Set([id, ...memberIds]);
+  const satisfiedSpecs = [...new Set(
+    edges
+      .filter((edge) => edge.type === "satisfies" && anchors.has(edge.from))
+      .map((edge) => edge.to),
+  )].sort();
+  const decisionSubjects = new Map();
+
+  for (const specId of satisfiedSpecs) {
+    for (const decisionId of decisionsBySubject.get(specId) ?? []) {
+      const subjects = decisionSubjects.get(decisionId) ?? [];
+      subjects.push(specId);
+      decisionSubjects.set(decisionId, subjects);
+    }
+  }
+
+  const usesOut = [...(usesOutByComponent.get(id) ?? [])].sort();
+  const usedBy = [...(usedByByComponent.get(id) ?? [])].sort();
+
+  return {
+    id,
+    declared: codeNodesById.has(id),
+    members: memberIds.map((memberId) => {
+      const member = codeNodesById.get(memberId);
+      return {
+        id: memberId,
+        label: member?.label ?? null,
+        file: member?.file ?? null,
+        line: member?.line ?? null,
+      };
+    }),
+    fanOut: usesOut.length,
+    fanIn: usedBy.length,
+    usesOut,
+    usedBy,
+    satisfiedSpecs,
+    shapingDecisions: [...decisionSubjects]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([decisionId, subjects]) => ({
+        id: decisionId,
+        subjects: [...new Set(subjects)].sort(),
+      })),
+  };
+});
+
+return { components, unresolvedUses };
+```
+
+Membership, uses, and satisfies remain the derived structural edges; shaping decisions are the
+`decidedBy` targets of Specs those members realize. Fan counts are graph-side composition, not a
+new reader accessor. A `memberOf` target with no component node keeps a `declared: false` row, and
+a `uses` edge with no resolvable owner on either end lands in `unresolvedUses` — dangling structure
+stays visible instead of silently dropping out of the map.
+
+## 18. Decision map
+
+*When you need this: you want every decision record with its inter-decision relations
+(dependsOn, refines, supersedes) and the Specs it decides, ranked by how much it shapes.*
+
+```js
+const decisionNodes = graph.nodes
+  .filter(
+    (node) =>
+      node.nodeType === "Primitive" &&
+      node.specKind === "decision" &&
+      typeof node.id === "string",
+  )
+  .sort((left, right) => left.id.localeCompare(right.id));
+const decisionIds = new Set(decisionNodes.map((node) => node.id));
+const interDecisionEdges = graph.edges.filter(
+  (edge) =>
+    (edge.type === "dependsOn" || edge.type === "supersedes" || edge.type === "refines") &&
+    decisionIds.has(edge.from) &&
+    decisionIds.has(edge.to),
+);
+const subjectsByDecision = new Map();
+
+for (const edge of graph.edges.filter(
+  (edge) => edge.type === "decidedBy" && decisionIds.has(edge.to),
+)) {
+  const subjects = subjectsByDecision.get(edge.to) ?? [];
+  subjects.push(edge.from);
+  subjectsByDecision.set(edge.to, subjects);
+}
+
+const familyOf = (id) => {
+  const unprefixed = id.startsWith("spec:") ? id.slice("spec:".length) : id;
+  return unprefixed.split(".")[0] || "unknown";
+};
+const decisions = decisionNodes.map((node) => {
+  const outgoing = interDecisionEdges.filter((edge) => edge.from === node.id);
+  const incoming = interDecisionEdges.filter((edge) => edge.to === node.id);
+  const decidedSubjects = [...new Set(subjectsByDecision.get(node.id) ?? [])].sort();
+  const decidedSubjectsByFamily = Object.create(null);
+
+  for (const subjectId of decidedSubjects) {
+    const family = familyOf(subjectId);
+    decidedSubjectsByFamily[family] = decidedSubjectsByFamily[family] ?? [];
+    decidedSubjectsByFamily[family].push(subjectId);
+  }
+
+  const fanInByType = {
+    dependsOn: incoming.filter((edge) => edge.type === "dependsOn").length,
+    refines: incoming.filter((edge) => edge.type === "refines").length,
+    supersedes: incoming.filter((edge) => edge.type === "supersedes").length,
+    decidedBy: decidedSubjects.length,
+  };
+
+  return {
+    id: node.id,
+    title: node.title ?? null,
+    fanIn: fanInByType.dependsOn + fanInByType.refines + fanInByType.decidedBy,
+    fanInByType,
+    dependsOn: outgoing
+      .filter((edge) => edge.type === "dependsOn")
+      .map((edge) => edge.to)
+      .sort(),
+    dependedOnBy: incoming
+      .filter((edge) => edge.type === "dependsOn")
+      .map((edge) => edge.from)
+      .sort(),
+    refines: outgoing
+      .filter((edge) => edge.type === "refines")
+      .map((edge) => edge.to)
+      .sort(),
+    refinedBy: incoming
+      .filter((edge) => edge.type === "refines")
+      .map((edge) => edge.from)
+      .sort(),
+    supersedes: outgoing
+      .filter((edge) => edge.type === "supersedes")
+      .map((edge) => edge.to)
+      .sort(),
+    supersededBy: incoming
+      .filter((edge) => edge.type === "supersedes")
+      .map((edge) => edge.from)
+      .sort(),
+    decidedSubjectsByFamily,
+  };
+});
+const ranking = decisions
+  .map((decision) => ({ id: decision.id, fanIn: decision.fanIn }))
+  .sort((left, right) => right.fanIn - left.fanIn || left.id.localeCompare(right.id));
+
+return { total: decisions.length, ranking, decisions };
+```
+
+Ranking is the shaping fan-in: inbound `dependsOn` and `refines` among decision Specs plus the
+`decidedBy` subjects the decision shapes. Being superseded is replacement, not load-bearing weight,
+so `supersedes` is reported per row and in `fanInByType` but excluded from the rank. Independence
+is the absence of an edge; `decidedBy` subjects stay grouped by family.
+
+## 19. Planning slice
+
+*When you need this: you want one Spec's refinement and dependency neighborhood, shaping
+decisions, bound components, verifiers, and file-level entry points.*
+
+The opening `const id` is the parameter. Replace it with the Spec you are planning around; an
+unknown id returns `{ found: false }` rather than failing.
+
+```js
+const id = "spec:consumers.agent-surface";
+const context = g.specContext(id);
+
+if (context === undefined) {
+  return { id, found: false };
+}
+
+const implementations = context.implementations;
+const verifiers = context.verifiers;
+const parents = [...new Set(
+  graph.edges
+    .filter((edge) => edge.type === "refines" && edge.from === id)
+    .map((edge) => edge.to),
+)].sort();
+const children = [...new Set(
+  graph.edges
+    .filter((edge) => edge.type === "refines" && edge.to === id)
+    .map((edge) => edge.from),
+)].sort();
+const readinessById = new Map(g.specs().map((spec) => [spec.id, spec.statedReadiness]));
+const dependencyNeighbors = (type, end) => [...new Set(
+  graph.edges
+    .filter((edge) => edge.type === type && edge[end === "to" ? "from" : "to"] === id)
+    .map((edge) => edge[end]),
+)].sort().map((specId) => ({
+  id: specId,
+  statedReadiness: readinessById.get(specId) ?? null,
+}));
+const dependsOn = dependencyNeighbors("dependsOn", "to");
+const dependedOnBy = dependencyNeighbors("dependsOn", "from");
+const neighborhoodIds = new Set([id, ...parents, ...children]);
+const decisionsById = new Map();
+
+for (const edge of graph.edges.filter(
+  (edge) => edge.type === "decidedBy" && neighborhoodIds.has(edge.from),
+)) {
+  const subjects = decisionsById.get(edge.to) ?? [];
+  subjects.push(edge.from);
+  decisionsById.set(edge.to, subjects);
+}
+
+const codeNodesById = new Map(
+  graph.nodes
+    .filter((node) => node.nodeType === "CodeNode")
+    .map((node) => [node.id, node]),
+);
+const componentIds = new Set(
+  [...codeNodesById.keys()].filter((nodeId) => nodeId.startsWith("component:")),
+);
+const componentsById = new Map();
+
+for (const binding of implementations) {
+  if (componentIds.has(binding.codeId)) {
+    const bound = componentsById.get(binding.codeId) ?? {
+      direct: false,
+      implementations: new Set(),
+    };
+    bound.direct = true;
+    componentsById.set(binding.codeId, bound);
+    continue;
+  }
+
+  for (const edge of graph.edges.filter(
+    (edge) => edge.type === "memberOf" && edge.from === binding.codeId,
+  )) {
+    const bound = componentsById.get(edge.to) ?? {
+      direct: false,
+      implementations: new Set(),
+    };
+    bound.implementations.add(binding.codeId);
+    componentsById.set(edge.to, bound);
+  }
+}
+
+const components = [...componentsById]
+  .sort(([left], [right]) => left.localeCompare(right))
+  .map(([componentId, bound]) => {
+    const component = codeNodesById.get(componentId);
+    return {
+      id: componentId,
+      label: component?.label ?? null,
+      file: component?.file ?? null,
+      line: component?.line ?? null,
+      directlySatisfies: bound.direct,
+      implementations: [...bound.implementations].sort(),
+    };
+  });
+const entryPoints = [];
+const addEntryPoint = (role, subjectId, file, line) => {
+  if (typeof file !== "string") return;
+  entryPoints.push({ role, id: subjectId, file, line: line ?? null });
+};
+
+addEntryPoint("spec", id, context.file);
+for (const binding of implementations) {
+  addEntryPoint("implementation", binding.codeId, binding.file, binding.line);
+}
+for (const binding of verifiers) {
+  addEntryPoint("verifier", binding.verifierId, binding.file, binding.line);
+}
+for (const component of components) {
+  addEntryPoint("component", component.id, component.file, component.line);
+}
+
+const uniqueEntryPoints = [...new Map(
+  entryPoints.map((entry) => [`${entry.role}:${entry.id}:${entry.file}:${entry.line}`, entry]),
+).values()].sort(
+  (left, right) =>
+    left.file.localeCompare(right.file) ||
+    left.role.localeCompare(right.role) ||
+    String(left.id).localeCompare(String(right.id)),
+);
+
+return {
+  id,
+  found: true,
+  refinementNeighborhood: { parents, children },
+  dependencies: { dependsOn, dependedOnBy },
+  shapingDecisions: [...decisionsById]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([decisionId, subjects]) => ({
+      id: decisionId,
+      subjects: [...new Set(subjects)].sort(),
+    })),
+  implementations: implementations
+    .map((binding) => ({
+      id: binding.codeId,
+      claim: binding.claim,
+      file: binding.file ?? null,
+      line: binding.line ?? null,
+    })),
+  components,
+  verifiers: verifiers.map((binding) => ({
+    id: binding.verifierId,
+    via: binding.via,
+    claim: binding.claim,
+    enabled: binding.enabled,
+    file: binding.file ?? null,
+    line: binding.line ?? null,
+  })),
+  entryPoints: uniqueEntryPoints,
+  entryPointsLimit: "file-level graph-recorded paths only; no symbol-level impact graph",
+};
+```
+
+`entryPoints` is file-level graph-recorded paths only — carrier, implementation, verifier, and
+component files. It is not the impact contract; whole-corpus blast radius over changed files stays
+recipe 4 (`g.blastRadius`). Shaping decisions are the `decidedBy` targets across the refinement
+neighborhood; a decision record that also `refines` the subject appears both as a refinement child
+and as a shaping decision. Dependency neighbors carry `statedReadiness` because an unready
+`dependsOn` target is the planning signal. The graph does not derive symbol-level impact;
+`implemented` still means a code anchor binds, never that the code is live.

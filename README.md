@@ -28,7 +28,7 @@ pnpm --silent sdp:q 'return g.specs().length'
 ```
 
 The `sdp:q` script supplies this repository's required fixture exclusions. Use the
-[sixteen graph-first recipes](docs/agent-surface/recipes.md) for backlog, drift, verifier, impact,
+[nineteen graph-first recipes](docs/agent-surface/recipes.md) for backlog, drift, verifier, impact,
 Pack, readiness, and promotion queries.
 
 The full CLI is available in the checkout through the `sdp` script; graph-deriving verbs at this
@@ -144,4 +144,4 @@ for carrier support.
 The package installs three agent on-ramps as `SKILL.md` files under
 `node_modules/@libar-dev/software-delivery-protocol/.agents/skills/`. Use `sdp-agent-surface` to read
 the graph, `sdp-authoring` to author intent, and `sdp-sessions` for advisory delivery-session
-routing. The same package includes the sixteen recipe bodies at `docs/agent-surface/recipes.md`.
+routing. The same package includes the nineteen recipe bodies at `docs/agent-surface/recipes.md`.
