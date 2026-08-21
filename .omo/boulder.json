@@ -102,8 +102,8 @@
       "worktree_path": null,
       "delivery_mode": "direct",
       "make_pr": false,
-      "active_task": "F1–F4 final verification",
-      "completed_todo": 15
+      "active_task": "Post-remediation gate and final audits",
+      "completed_todo": 19
     }
   }
 }

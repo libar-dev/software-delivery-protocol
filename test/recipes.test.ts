@@ -5,7 +5,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { runSdpCli } from "../src/cli/sdp.js";
-import { createReader, extract } from "../src/index.js";
+import { createReader, extract, validateGraph } from "../src/index.js";
+import type { ExtractionResult } from "../src/index.js";
 import { expectedComponentIds, expectedUsesEdges } from "./self-hosting-oracle/structural-edges.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 
@@ -110,7 +111,11 @@ const queryHooks = {
   },
 };
 
-async function runRecipe(recipe: Recipe, changedFiles?: readonly string[]): Promise<unknown> {
+async function runRecipe(
+  recipe: Recipe,
+  changedFiles?: readonly string[],
+  extraction: ExtractionResult = derived,
+): Promise<unknown> {
   const previousChangedFiles = process.env.SDP_CHANGED_FILES_JSON;
   if (changedFiles === undefined) {
     delete process.env.SDP_CHANGED_FILES_JSON;
@@ -123,7 +128,12 @@ async function runRecipe(recipe: Recipe, changedFiles?: readonly string[]): Prom
     const exitCode = await runSdpCli(
       ["q", recipe.body, "--root", repoRoot, "--json"],
       capture.output,
-      queryHooks,
+      {
+        query: {
+          ...queryHooks.query,
+          extract: () => extraction,
+        },
+      },
     );
 
     // The expected stderr is the empty string, not a self-comparison: a recipe run over the green
@@ -1003,5 +1013,126 @@ describe("the agent-surface recipe corpus", () => {
       body: recipe.body.replace(id, unknownId),
     });
     expect(absent).toEqual({ id: unknownId, found: false });
+  });
+
+  // Given: the live planning-slice Spec and its SpecContext bindings.
+  // When: catalog recipe 19 is evaluated through the real CLI runner.
+  // Then: the machine contract names `implementations` at the top level and on each
+  // component row — never `abstractions` — and those ids equal live SpecContext
+  // implementations plus memberOf-derived component ownership.
+  it("returns planning-slice implementations, never abstractions", async () => {
+    const id = "spec:consumers.agent-surface";
+    const context = reader.specContext(id);
+    if (context === undefined) {
+      throw new Error(`live graph has no SpecContext for ${id}`);
+    }
+
+    const result = asRecord(await runRecipe(recipeByOrdinal(19)));
+    const componentRows = asArray(result.components).map(asRecord);
+    const expectedImplIds = context.implementations.map((binding) => binding.codeId).sort();
+    const ownedByComponent = (componentId: string): readonly string[] =>
+      expectedImplIds.filter((codeId) =>
+        derived.graph.edges.some(
+          (edge) => edge.type === "memberOf" && edge.from === codeId && edge.to === componentId,
+        ),
+      );
+
+    expect(Object.keys(result)).toContain("implementations");
+    expect(Object.keys(result)).not.toContain("abstractions");
+
+    const topLevelIds = asArray(result.implementations).map((entry) =>
+      stringAt(asRecord(entry), "id"),
+    );
+    expect([...topLevelIds].sort()).toEqual(expectedImplIds);
+
+    for (const row of componentRows) {
+      expect(Object.keys(row)).toContain("implementations");
+      expect(Object.keys(row)).not.toContain("abstractions");
+      expect(
+        asArray(row.implementations)
+          .map((entry) => stringAt({ entry }, "entry"))
+          .sort(),
+      ).toEqual(ownedByComponent(stringAt(row, "id")));
+    }
+
+    const ownedImplIds = componentRows.flatMap((row) =>
+      asArray(row.implementations).map((entry) => stringAt({ entry }, "entry")),
+    );
+    const directlySatisfyingComponents = componentRows
+      .filter((row) => row.directlySatisfies === true)
+      .map((row) => stringAt(row, "id"));
+    expect(
+      [...new Set([...topLevelIds, ...ownedImplIds, ...directlySatisfyingComponents])].sort(),
+    ).toEqual(expectedImplIds);
+  });
+
+  // Given: a clone of the live ExtractionResult with component:protocol.reader removed and its
+  // memberOf edges retained — invalid, but still a graph validateGraph can report.
+  // When: catalog recipe 19 runs through real runSdpCli on that override.
+  // Then: validateGraph reports conformance/referential-integrity, the sink exits 0, the
+  // unresolved component row keeps null label/file/line, impl:protocol.agent-surface is retained,
+  // and that component contributes no blast-radius entry point.
+  it("preserves an unresolved component row when memberOf outlives the node", async () => {
+    const missingComponentId = "component:protocol.reader";
+    const retainedImplId = "impl:protocol.agent-surface";
+    const dirty: ExtractionResult = {
+      counts: derived.counts,
+      report: derived.report,
+      graph: {
+        schemaVersion: derived.graph.schemaVersion,
+        nodes: derived.graph.nodes.filter((node) => node.id !== missingComponentId),
+        edges: derived.graph.edges,
+      },
+    };
+
+    expect(dirty.graph.nodes.some((node) => node.id === missingComponentId)).toBe(false);
+    expect(
+      dirty.graph.edges.some(
+        (edge) =>
+          edge.type === "memberOf" &&
+          edge.from === retainedImplId &&
+          edge.to === missingComponentId,
+      ),
+    ).toBe(true);
+
+    const graphReport = validateGraph(dirty.graph);
+    expect(
+      graphReport.findings.some(
+        (finding) =>
+          finding.family === "conformance" &&
+          finding.validatorId === "conformance/referential-integrity" &&
+          (finding.subjectId === missingComponentId || finding.relatedId === missingComponentId),
+      ),
+    ).toBe(true);
+
+    const result = asRecord(await runRecipe(recipeByOrdinal(19), undefined, dirty));
+    const unresolved = asArray(result.components)
+      .map(asRecord)
+      .find((row) => stringAt(row, "id") === missingComponentId);
+
+    expect(unresolved).toEqual(
+      expect.objectContaining({
+        id: missingComponentId,
+        label: null,
+        file: null,
+        line: null,
+      }),
+    );
+    expect(
+      asArray(result.implementations).map((entry) => stringAt(asRecord(entry), "id")),
+    ).toContain(retainedImplId);
+    expect(
+      unresolved === undefined
+        ? []
+        : asArray(unresolved.implementations).map((entry) => stringAt({ entry }, "entry")),
+    ).toContain(retainedImplId);
+    expect(
+      asArray(result.blastRadiusEntryPoints)
+        .map(asRecord)
+        .filter(
+          (entry) =>
+            stringAt(entry, "role") === "component" && stringAt(entry, "id") === missingComponentId,
+        ),
+    ).toEqual([]);
   });
 });

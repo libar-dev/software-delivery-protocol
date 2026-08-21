@@ -113,20 +113,20 @@ Your next move: high-accuracy momus review (required). Full execution detail fol
     ---
     # Architectural significance rides existing primitives
     ## Intent
-    - outcome: Rule that architecturally significant patterns and their relationships are authored on the existing Spec primitive, relation vocabulary, and structural anchors, so the graph answers architecture questions without a second architecture vocabulary.
+    - outcome: Rule that Specs carrying architectural significance, and relationships among those Specs, are authored on the existing Spec primitive, relation vocabulary, and structural anchors, so the graph answers architecture questions without a second architecture vocabulary.
     ## Decision
     - context: `spec:model.structural-patterns` asked whether a vocabulary beyond `component` and `uses` passes the ADR three-part test, and "pattern" is not a ratified term; gen-1's tag-registry drift (~50→~26 tags) is the recorded failure of an open structural vocabulary (MD-30 cites it).
-    - decision: Architectural significance is authored on existing primitives, in order. First, a pattern is a `decision`-kind or `model`-kind Spec; no "pattern" term or kind is ratified. Second, relationships between patterns are the existing relations — `dependsOn`, `supersedes`, `refines`, `decidedBy` — with `dependsOn` reserved for genuine semantic need and `supersedes` for actual replacement under the ADR test; scheduling-flavored edges stay refused (MD-33). Third, code linkage rides the `satisfies` → `decidedBy` join: a component or member anchor satisfies the Spec it realizes, and that Spec names its shaping decisions by `decidedBy`; code never satisfies a decision Spec directly (MD-26). Fourth, grouping is derived from id families and the component graph, not new Packs. Fifth, the significance criterion for engine self-binding is exported public surface plus cross-component reach; under it `component:protocol.import` and `component:protocol.testing` enter the accepted component set.
-    - rationale: Hard to reverse — it permanently closes the vocabulary question and sets the grain at which architecture is authored; surprising without context — the concept "pattern" dissolves into named coordinates rather than gaining a word; real trade-off — CodeNode-grain pattern roles and machine-checked forbidden dependencies are given up to preserve one graph language.
+    - decision: Architectural significance is authored on existing primitives, in order. First, Specs carrying architectural significance are `decision`-kind or `model`-kind Specs; no "pattern" term or kind is ratified. Second, relationships among those Specs are the existing relations — `dependsOn`, `supersedes`, `refines`, `decidedBy` — with `dependsOn` reserved for genuine semantic need and `supersedes` for actual replacement under the ADR test; scheduling-flavored edges stay refused (MD-33). Third, code linkage rides the `satisfies` → `decidedBy` join: a component or member anchor satisfies the Spec it realizes, and that Spec names its shaping decisions by `decidedBy`; code never satisfies a decision Spec directly (MD-26). Fourth, grouping is derived from id families and the component graph, not new Packs. Fifth, the significance criterion for engine self-binding is exported public surface plus cross-component reach; under it `component:protocol.import` and `component:protocol.testing` enter the accepted component set.
+    - rationale: Hard to reverse — it permanently closes the vocabulary question and sets the grain at which architecture is authored; surprising without context — the concept "pattern" dissolves into named coordinates rather than gaining a word; real trade-off — CodeNode-grain roles for Specs carrying architectural significance and machine-checked forbidden dependencies are given up to preserve one graph language.
     - consequence: The two blocking open questions on `spec:model.structural-patterns` resolve: no vocabulary beyond `component`/`uses` passes the ADR test, and no "pattern" term is ratified.
-    - consequence: Two documented grain limits stand as named limits, not holes: pattern membership is Spec-grain (one `codeAnchor` carries one `satisfies`), and negative constraints are claimable but not enforced until the deferred architecture-enforcement validator family lands.
+    - consequence: Two documented grain limits stand as named limits, not holes: membership of Specs carrying architectural significance is Spec-grain (one `codeAnchor` carries one `satisfies`), and negative constraints remain declared intent, not machine-enforced graph findings.
     - consequence: New `codeAnchor`s minted under this ruling satisfy only Specs the unit already realizes; anchors are never pointed at decision Specs or unfinished Specs to manufacture coverage.
     - consequence: `component:protocol.import` and `component:protocol.testing` join the accepted component set; the structural-edges oracle's import exception comment is retired by this ruling.
     - alternative: A dedicated pattern layer (`participatesIn` fields, `pattern:` ids, an architecture validator) was refused — it recreates the MD-30/MD-33-refused engine surface and the gen-1 taxonomy drift.
     - alternative: Deriving architecture from imports stays refused (MD-30): structural edges are authored declarations, never inference.
     ```
   - MD-34 row to append:
-    `| MD-34 | architectural significance rides existing primitives | durable | Patterns are decision/model-kind Specs linked by the existing relations, code linkage rides the satisfies → decidedBy join, and grouping is derived — no pattern vocabulary is admitted. | [Spec](../../specs/decisions/architectural-significance-rides-primitives.sdp.md) (`spec:decisions.architectural-significance-rides-primitives`) |`
+    `| MD-34 | architectural significance rides existing primitives | durable | Specs carrying architectural significance are linked by the existing relations, code linkage rides the satisfies → decidedBy join, and grouping is derived — no pattern vocabulary is admitted. | [Spec](../../specs/decisions/architectural-significance-rides-primitives.sdp.md) (`spec:decisions.architectural-significance-rides-primitives`) |`
   Acceptance criteria: `pnpm --silent sdp validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity` exits 0; the new decision appears in `g.specs().filter(s => s.id === "spec:decisions.architectural-significance-rides-primitives")` with readiness `ready` and 3 relations.
   QA happy: new Spec extracted, oracle suite passes. QA failure: extraction error or oracle mismatch — fix frontmatter or transcription.
   Commit: Y | feat(specs): rule architectural significance rides existing primitives (MD-34)
@@ -136,12 +136,11 @@ Your next move: high-accuracy momus review (required). Full execution detail fol
   What to do: Edit `specs/model/structural-patterns.sdp.md`: rewrite the title and outcome so they do not assert that patterns live "beyond component membership and uses edges" — MD-34 rules they dissolve into existing primitives. Remove/resolve the two blocking open questions. Add `model.terms` content. Add `decidedBy` relation to the new decision Spec. Change readiness `idea` → `defined`. Update per-Spec oracle: `test/self-hosting-oracle/model.ts` (readiness, sections). Shared rosters are updated in todo 15. Must NOT change the Spec id or kind; do not claim ready.
   Parallelization: Wave 3 | Blocked by: 2 | Blocks: 15
   References: `specs/model/structural-patterns.sdp.md`, `test/self-hosting-oracle/model.ts:388+`
-  - Title/outcome rewrite target: title becomes "Architecturally significant patterns dissolve into existing primitives"; outcome becomes "Patterns and their relationships are authored as decision/model-kind Specs, existing relations, and the satisfies→decidedBy join — no new vocabulary is needed beyond the structural anchors already in the graph."
+  - Title/outcome rewrite target: title becomes "Architectural significance dissolves into existing primitives"; outcome becomes "Specs carrying architectural significance, and relationships among those Specs, are authored as decision/model-kind Specs, existing relations, and the satisfies→decidedBy join — no new vocabulary is needed beyond the structural anchors already in the graph."
   - `model.terms` to add:
     ```
     ## Model
     - architecturally significant unit: a code unit with exported public surface or cross-component reach that warrants graph-visible structural binding.
-    - pattern: not a ratified term — a named coordinate carried by decision/model-kind Specs and their decidedBy edges.
     ```
   Acceptance criteria: `pnpm --silent sdp validate ...` exits 0; `g.specContext("spec:model.structural-patterns").statedReadiness === "defined"` and floorFailures empty. Also delete the now-empty `### Open questions` heading in the Spec file.
   QA happy: derived readiness matches stated. QA failure: floor failure (e.g. model.terms empty) — add terms.
@@ -469,7 +468,7 @@ Your next move: high-accuracy momus review (required). Full execution detail fol
       if (componentIds.has(binding.codeId)) {
         const bound = componentsById.get(binding.codeId) ?? {
           direct: false,
-          abstractions: new Set(),
+          implementations: new Set(),
         };
         bound.direct = true;
         componentsById.set(binding.codeId, bound);
@@ -481,9 +480,9 @@ Your next move: high-accuracy momus review (required). Full execution detail fol
       )) {
         const bound = componentsById.get(edge.to) ?? {
           direct: false,
-          abstractions: new Set(),
+          implementations: new Set(),
         };
-        bound.abstractions.add(binding.codeId);
+        bound.implementations.add(binding.codeId);
         componentsById.set(edge.to, bound);
       }
     }
@@ -494,11 +493,11 @@ Your next move: high-accuracy momus review (required). Full execution detail fol
         const component = codeNodesById.get(componentId);
         return {
           id: componentId,
-          label: component.label ?? null,
-          file: component.file ?? null,
-          line: component.line ?? null,
+          label: component?.label ?? null,
+          file: component?.file ?? null,
+          line: component?.line ?? null,
           directlySatisfies: bound.direct,
-          abstractions: [...bound.abstractions].sort(),
+          implementations: [...bound.implementations].sort(),
         };
       });
     const entryPoints = [];
@@ -537,8 +536,7 @@ Your next move: high-accuracy momus review (required). Full execution detail fol
           id: decisionId,
           subjects: [...new Set(subjects)].sort(),
         })),
-      abstractions: implementations
-        .filter((binding) => !componentIds.has(binding.codeId))
+      implementations: implementations
         .map((binding) => ({
           id: binding.codeId,
           claim: binding.claim,
@@ -615,16 +613,16 @@ Your next move: high-accuracy momus review (required). Full execution detail fol
 
 ## Final verification wave
 > Runs in parallel after ALL todos. ALL must APPROVE. Surface results and wait for the user's explicit okay before declaring complete.
-- [ ] F1. Plan compliance audit
+- [x] F1. Plan compliance audit
   Verify every todo's acceptance evidence file exists and matches the acceptance criteria. Confirm the dependency matrix was respected (no todo started before its blockers). Confirm no file outside Scope IN was edited except for oracle lockstep. Audit the commit history on the branch for coherent messages.
   Recommended task executor category: unspecified-high
-- [ ] F2. Code quality review
+- [x] F2. Code quality review
   Review Spec prose for ratified terminology (no invented terms), ADR-test coverage in the new decision Spec, and anchor locality (≤24 lines per anchor). Confirm no single quotes in recipe bodies. Confirm no stale "sixteen" in AGENTS.md/README.md/skills.
   Recommended task executor category: unspecified-high
-- [ ] F3. Real manual QA
+- [x] F3. Real manual QA
   Run recipes 17, 18, 19 via `pnpm --silent sdp:q` and eyeball output for sanity (non-empty, no throws). Run `sdp validate` on the branch. Spot-check `generated/census/` and Design Review binding tables for new components/decisions.
   Recommended task executor category: unspecified-high
-- [ ] F4. Scope fidelity
+- [x] F4. Scope fidelity
   Diff against Scope IN/OUT: confirm no engine `src/` behavior changes (only `codeAnchor` declarations), no new relation types, no reader methods, no ready promotion, no new plans file. Confirm `supersedes` remains 0.
   Recommended task executor category: unspecified-high
 

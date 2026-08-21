@@ -882,7 +882,7 @@ for (const binding of implementations) {
   if (componentIds.has(binding.codeId)) {
     const bound = componentsById.get(binding.codeId) ?? {
       direct: false,
-      abstractions: new Set(),
+      implementations: new Set(),
     };
     bound.direct = true;
     componentsById.set(binding.codeId, bound);
@@ -894,9 +894,9 @@ for (const binding of implementations) {
   )) {
     const bound = componentsById.get(edge.to) ?? {
       direct: false,
-      abstractions: new Set(),
+      implementations: new Set(),
     };
-    bound.abstractions.add(binding.codeId);
+    bound.implementations.add(binding.codeId);
     componentsById.set(edge.to, bound);
   }
 }
@@ -907,11 +907,11 @@ const components = [...componentsById]
     const component = codeNodesById.get(componentId);
     return {
       id: componentId,
-      label: component.label ?? null,
-      file: component.file ?? null,
-      line: component.line ?? null,
+      label: component?.label ?? null,
+      file: component?.file ?? null,
+      line: component?.line ?? null,
       directlySatisfies: bound.direct,
-      abstractions: [...bound.abstractions].sort(),
+      implementations: [...bound.implementations].sort(),
     };
   });
 const entryPoints = [];
@@ -950,8 +950,7 @@ return {
       id: decisionId,
       subjects: [...new Set(subjects)].sort(),
     })),
-  abstractions: implementations
-    .filter((binding) => !componentIds.has(binding.codeId))
+  implementations: implementations
     .map((binding) => ({
       id: binding.codeId,
       claim: binding.claim,

@@ -244,7 +244,8 @@ delivery fact, workflow state, or graph state.
   status-FSM · `model element` (as the primitive's name) · `genus`/`species` · `Scenario`/`capability`/`NFR`
   as descriptors (labels / projections, not descriptors) · `exemplifies` (relation) · `status` (on the
   `decision` section — FSM imprint; adoption arc = `readiness`, replacement = `supersedes`, rejected paths =
-  `alternatives`/`consequences` — MD-11).
+  `alternatives`/`consequences` — MD-11) · `pattern` (as an architectural primitive, kind, or
+  `pattern:` namespace — ordinary English remains; MD-34).
 - **Locked usage:** readiness is **"stated/asserted," never "claimed"** ("claim" is reserved for the `claim`
   taxonomy) · the meta-model defines the **contract**, **instances conform**; "govern"/"police" retired ·
   checks are **conformance checks + honesty checks** · **pre-graph** = upstream of graph derivation in the

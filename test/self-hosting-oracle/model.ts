@@ -390,19 +390,17 @@ export const modelSpecs = [
     altitude: "feature",
     readiness: "defined",
     file: "specs/model/structural-patterns.sdp.md",
-    title: "Architecturally significant patterns dissolve into existing primitives",
+    title: "Architectural significance dissolves into existing primitives",
     narrative: null,
     sections: {
       intent: {
         outcome:
-          "Patterns and their relationships are authored as decision/model-kind Specs, existing relations, and the satisfies→decidedBy join — no new vocabulary is needed beyond the structural anchors already in the graph.",
+          "Specs carrying architectural significance, and relationships among those Specs, are authored as decision/model-kind Specs, existing relations, and the satisfies→decidedBy join — no new vocabulary is needed beyond the structural anchors already in the graph.",
       },
       model: {
         terms: {
           "architecturally significant unit":
             "a code unit with exported public surface or cross-component reach that warrants graph-visible structural binding.",
-          pattern:
-            "not a ratified term — a named coordinate carried by decision/model-kind Specs and their decidedBy edges.",
         },
       },
     },
