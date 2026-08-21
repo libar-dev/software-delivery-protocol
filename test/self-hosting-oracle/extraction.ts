@@ -303,6 +303,13 @@ export const extractionSpecs = [
       intent: {
         outcome:
           "Give bound tests typed step and example-space contracts without reading authored Specs directly.",
+        openQuestions: [
+          {
+            question:
+              "Do the concreteness-refusal and no-guessing outcome-identity laws stated in src/codegen/contracts.ts commentary promote here or to a story-altitude child under comment promotion?",
+            blocking: false,
+          },
+        ],
       },
       behavior: {
         rules: [
@@ -502,6 +509,13 @@ export const extractionSpecs = [
           "Run a generated contract's steps in authored order and make a red step name itself in the Spec's own words.",
         value:
           "A failing example reads as the Spec that failed rather than as an anonymous assertion.",
+        openQuestions: [
+          {
+            question:
+              "Do the every-step-and-only-the-steps and fresh-world-per-example laws stated in the runner and vitest-adapter commentary promote here or to story-altitude children under comment promotion?",
+            blocking: false,
+          },
+        ],
       },
       behavior: {
         rules: [
@@ -599,7 +613,16 @@ export const extractionSpecs = [
     title: "The build pipeline has one ordered flow",
     narrative: null,
     sections: {
-      intent: { outcome: "Turn authored carriers into validated derived artifacts." },
+      intent: {
+        outcome: "Turn authored carriers into validated derived artifacts.",
+        openQuestions: [
+          {
+            question:
+              "Does the derive-in-process freshness law stated in src/cli/q-command.ts commentary promote here or to a story-altitude child under comment promotion?",
+            blocking: false,
+          },
+        ],
+      },
       behavior: {
         rules: ["Every command uses the same extracted graph and validation seam."],
         flows: [

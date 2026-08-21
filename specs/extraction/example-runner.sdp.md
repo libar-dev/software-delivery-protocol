@@ -13,6 +13,9 @@ relations:
 - outcome: Run a generated contract's steps in authored order and make a red step name itself in the Spec's own words.
 - value: A failing example reads as the Spec that failed rather than as an anonymous assertion.
 
+### Open questions
+- [non-blocking] Do the every-step-and-only-the-steps and fresh-world-per-example laws stated in the runner and vitest-adapter commentary promote here or to story-altitude children under comment promotion?
+
 ## Behavior
 - rule: The core plans every contract step in authored order and runs it against the world the caller hands in; creating a fresh world per example is the adapter's lifecycle, never the core's.
 - rule: Duplicate step text within one example binds one handler, and every occurrence runs that one handler with its own authored params.

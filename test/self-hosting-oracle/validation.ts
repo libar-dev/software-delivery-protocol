@@ -12,7 +12,16 @@ export const validationSpecs = [
     title: "Stated readiness must clear its floor",
     narrative: null,
     sections: {
-      intent: { outcome: "Refuse maturity claims that their authored evidence does not support." },
+      intent: {
+        outcome: "Refuse maturity claims that their authored evidence does not support.",
+        openQuestions: [
+          {
+            question:
+              "Does any remaining law in the src/validate/readiness-floor.ts file header promote here under comment promotion?",
+            blocking: false,
+          },
+        ],
+      },
       behavior: {
         rules: [
           "A Spec may state a readiness only when every clause in that readiness floor passes.",
@@ -315,6 +324,13 @@ export const validationSpecs = [
       intent: {
         outcome:
           "Keep the graph trustworthy by checking conformance and honesty without judging content quality or enforcing workflow.",
+        openQuestions: [
+          {
+            question:
+              "Does the one-validation-path registry law stated in the src/validate/validators.ts file header promote here or to a story-altitude child under comment promotion?",
+            blocking: false,
+          },
+        ],
       },
       behavior: {
         rules: [
