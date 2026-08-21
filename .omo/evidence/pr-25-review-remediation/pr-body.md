@@ -16,6 +16,8 @@ The gen-1 comparison is worth stating plainly, because this branch is where the 
 
 **Remediation after the failed merge review.** Review at `5584ed91cf2c3efbf31ad83c28054febd0ec62b7` failed on recipe family-map totality, coarse-grain helper consumption, lost OmO ledger history, trailing-space hygiene, and publication claims. This follow-through keeps the two-wave product story and repairs those seams without changing the engine, corpus, or graph contract. Recipes 1, 11, and 18 now group lawful families (`constructor`, `toString`, `valueOf`, `hasOwnProperty`) with `Object.create(null)`. Recipe 19 has a non-empty bidirectional dependency characterization on `spec:decisions.structural-anchor-semantics`. The accepted-set census now proves each rostered `path#symbol` is a runtime export value-consumed by its covering source. Three ledger snapshots (135 + 20 + 12) live under durable evidence. The 13 proven trailing spaces are gone.
 
+**Final-review remediation.** The structural audit now treats type-only named exports and type-only export stars as erased, rejects ambiguous runtime origins, and fails closed on candidate-relevant export-star cycles. It is deliberately conservative certification rather than a TypeScript linker: direct declarations, non-type named paths, and acyclic value stars may certify one callable origin; explicit named value exports retain precedence over unrelated cyclic stars. This is test-only audit logic and changes no product graph contract. The stale-main Try-it diagnosis was also corrected to the exact published query failure on `c.statedReadiness`.
+
 ## The new surfaces
 
 **Two ratified rulings.** [`spec:decisions.architectural-significance-rides-primitives`](https://github.com/libar-dev/software-delivery-protocol/blob/feature/architectural-patterns-views/specs/decisions/architectural-significance-rides-primitives.sdp.md) (MD-34) keeps architectural significance on existing primitives. [`spec:decisions.jsdoc-graph-extraction-refused`](https://github.com/libar-dev/software-delivery-protocol/blob/feature/architectural-patterns-views/specs/decisions/jsdoc-graph-extraction-refused.sdp.md) (MD-35) refuses comment prose as graph input. Both are answerable by graph query from now on.
@@ -54,13 +56,13 @@ These commands only produce these results on the branch. Check out `feature/arch
 ```bash
 git fetch origin
 git checkout -B feature/architectural-patterns-views origin/feature/architectural-patterns-views
-git merge-base --is-ancestor 34a5440ad24e8a512e7ef2d685df2ba73c81f88d HEAD
+git merge-base --is-ancestor 6a35bd29fe8d4e236d1290529f045fcbc5875e71 HEAD
 npm ci && npm run build
 ```
 
 `git checkout -B` matters: a plain `git checkout` reuses a stale local branch and stays behind the PR head, which makes every query below fail or return old values. `npm ci` may report audit findings and `tsup` prints an `import.meta` CJS warning; both predate this branch.
 
-Expected outputs below were captured at the authoritative recovery-gated head `34a5440ad24e8a512e7ef2d685df2ba73c81f88d`. The initial Todo-7 full gate succeeded but its raw receipt was lost; one fresh recovery gate was deliberately authorized and run once at this clean exact head, and its complete output is the durable receipt. If yours differ, check `git rev-parse HEAD` and ancestry first.
+Expected outputs below were re-confirmed at the authoritative post-F2/F3 gated head `6a35bd29fe8d4e236d1290529f045fcbc5875e71`. The initial Todo-7 full gate succeeded but its raw receipt was lost; a fresh recovery gate retained its receipt. In the final-integration worktree, one pre-install attempt exited 127 before lint because dependencies were absent and is preserved honestly as a setup probe; after `npm ci`, one environment-corrected actual final gate ran once and its complete output is the current durable receipt. If yours differ, check `git rev-parse HEAD` and ancestry first.
 
 Three stale signals from the same try-it queries against `origin/main` (`bb97d829eea7b3689d5d8569d307e1bb5e77fd0d`): the readiness query returns `undefined` for the two decision Specs, there are no `component:` nodes, and `g.specContext("spec:extraction.delivery-facts")` returns `undefined`; the published delivery-facts query then dereferences `c.statedReadiness` and fails with `Cannot read properties of undefined (reading 'statedReadiness')`. That is `main`, not this branch.
 
@@ -145,7 +147,7 @@ Feedback is most wanted on four points: whether the inter-decision `dependsOn` e
 
 ## Numbers
 
-Re-derived on the integrated tree from the worktree-local CLI during the authoritative recovery gate at `34a5440ad24e8a512e7ef2d685df2ba73c81f88d`; re-run the commands above rather than inheriting these. Full-gate history is the initial successful run whose raw receipt was lost plus the single fresh authorized recovery run at this clean head. 164 Specs · 1 Pack · 177 anchors → 342 nodes · 760 edges; 13 components · 76 `memberOf` · 35 `uses`; 35 decision Specs · 14 inter-decision `dependsOn` · 0 `supersedes` · 46 `decidedBy`; readiness 148 `ready` / 11 `defined` / 4 `idea` / 1 `scoped`. Validate reports 0 errors, the 5 pinned honesty-gap warnings, and the one intentional `verifies-linkage` example warning. Recipe 1 operational backlog is empty (66 ready examples and 35 ready decisions excluded). `npm test` from the recovery gate: 862 passed, 1 skipped; CLI suite 80 passed.
+Re-derived on the integrated tree from the worktree-local CLI during the authoritative post-F2/F3 gate at `6a35bd29fe8d4e236d1290529f045fcbc5875e71`; re-run the commands above rather than inheriting these. The retained history is the initial successful run whose raw receipt was lost, the authorized recovery run, one exit-127 setup probe before dependencies existed in the final worktree, and one environment-corrected actual final gate. 164 Specs · 1 Pack · 177 anchors → 342 nodes · 760 edges; 13 components · 76 `memberOf` · 35 `uses`; 35 decision Specs · 14 inter-decision `dependsOn` · 0 `supersedes` · 46 `decidedBy`; readiness 148 `ready` / 11 `defined` / 4 `idea` / 1 `scoped`. Validate reports 0 errors, the 5 pinned honesty-gap warnings, and the one intentional `verifies-linkage` example warning. Recipe 1 operational backlog is empty (66 ready examples and 35 ready decisions excluded). `npm test` from the final gate: 874 passed, 1 skipped; CLI suite 80 passed.
 
 ## Upcoming work
 

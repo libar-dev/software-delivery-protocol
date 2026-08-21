@@ -1,12 +1,16 @@
 # PR 25 remediation final verification
 
 Plan: `.omo/plans/pr-25-review-remediation.md` · Todo 7
-Integration worktree: `/home/darkomijic/dev-libar/software-delivery-protocol-pr-25-review-remediation`
-Branch: `work/pr-25-review-remediation`
-Authoritatively recovery-gated head: `34a5440ad24e8a512e7ef2d685df2ba73c81f88d`
-Parent of that head: `b1ebd8d644e87449be9e49f7479da919c2fdbec0`
+Historical integration worktree: `/home/darkomijic/dev-libar/software-delivery-protocol-pr-25-review-remediation`
+Historical recovery branch: `work/pr-25-review-remediation`
+Historical recovery-gated head: `34a5440ad24e8a512e7ef2d685df2ba73c81f88d`
+Current final-integration worktree: `/home/darkomijic/dev-libar/software-delivery-protocol-pr25-final-integration`
+Current branch: `work/pr25-final-integration`
+Current authoritative post-F2/F3 gated head: `6a35bd29fe8d4e236d1290529f045fcbc5875e71`
+Parent at that gate: `00c6354048c9ce3ea0473847c75e78bf2bf322be`
 Historical close task id: `st_01a024ae`
 Recovery task id: `st_01a024ce`
+Final-integration task id: `st_01a02527`
 
 No push, PR edit, merge, worktree removal, or runtime-ledger mutation. Todo 7/8/F1–F4 checkboxes were left unmarked.
 
@@ -107,7 +111,31 @@ Expected honesty/gaps warning subjects:
 - `spec:model.relations`
 - `spec:model.spec-sections`
 
-The recovery `preflight` reported `clean`. Exit of the whole recovery `npm run check` process: **0**. Total full-gate history is two successful executions: the initial successful run with a lost raw receipt, followed by this single authorized authoritative recovery run.
+The recovery `preflight` reported `clean`. Exit of the whole recovery `npm run check` process: **0**. Total full-gate history at that point was two successful executions: the initial successful run with a lost raw receipt, followed by this single authorized authoritative recovery run.
+
+## Post-F2/F3 authoritative final gate
+
+The current authoritative result is the environment-corrected final gate at exact clean head `6a35bd29fe8d4e236d1290529f045fcbc5875e71`. Its parent, `00c6354048c9ce3ea0473847c75e78bf2bf322be`, integrates the F2 structural audit; the head itself integrates the F3 prose correction.
+
+F2 is test-only conservative certification, not a TypeScript linker. The Oracle contract accepts exactly one callable runtime value reached through direct declarations, non-type named aliases/re-exports, or acyclic non-type export-star paths. Type-only named and star exports contribute no candidate. Missing or malformed input, multiple runtime origins, and candidate-relevant export-star cycles fail closed as `exported unit missing`; an explicit non-type named export keeps TypeScript precedence over unrelated cyclic stars. Consumption remains a separate exact-local-binding direct-call proof. Failing-first evidence was 7 failed / 16 passed against the published helper. Three rejected resolver histories (`79d7529`, `e864410`, `7f6151c`) retained type-only, declaration-order, or cycle-partial-success defects. The accepted fix and review evidence are in [`f2-remediation.md`](./f2-remediation.md); focused structural plus self-hosting verification is 50/50.
+
+F3 changed no code or expected branch output. It corrected the stale-main diagnostic to the exact published query failure: `g.specContext("spec:extraction.delivery-facts")` is `undefined` on `origin/main`, and the query first dereferences `c.statedReadiness`, yielding `Cannot read properties of undefined (reading 'statedReadiness')`. The live archive proof is in [`f3-remediation.md`](./f3-remediation.md).
+
+The first command attempt at this fresh worktree exited 127 before lint because dependencies were absent. It was an environmental setup probe, not a code/test gate. No tracked edit occurred. After `npm ci`, local ESLint 9.39.4, TypeScript 5.9.3, and Vitest 4.1.10 resolved; exact HEAD, clean tracked state, and writer quiescence were re-proved. The one authorized environment-corrected actual final gate then ran directly, once, with no tee, redirection, pipeline, or temp script.
+
+The complete current authoritative output is [`full-gate-final.log`](./full-gate-final.log): 465 lines, 30,002 bytes, SHA-256 `07f43f8d58d59eebc4d2d0048c9e872f80b900b5e2d99f77148b519dcfb00914`, ending in `CHECK_EXIT:0`. Every gate stage appears once and in order. Exact test totals:
+
+```text
+Test Files  63 passed (63)
+     Tests  874 passed | 1 skipped (875)
+
+Test Files  1 passed (1)
+     Tests  80 passed (80)
+```
+
+The self-hosting and example graph totals are unchanged. Expected warnings remain the pre-existing `import.meta` CJS warning, the five named self-hosting honesty/gaps warnings, and the intentional checkout example `verifies-linkage` warning. `preflight` reported `clean`.
+
+For the final-integration sequence specifically, historical run count is one exit-127 setup probe followed by one actual final gate. Across the longer Todo-7/recovery history retained above, there are now three successful full gates total (one historical receipt lost, one recovery receipt retained, one current final receipt retained) plus the explicitly non-gate setup probe.
 
 ## Manual QA
 
@@ -267,7 +295,7 @@ Wave-2 `src/` delta `ed77ee7...5584ed91` remains exactly `src/graph/delivery-fac
 
 `.omo/boulder.json` updates only `works.pr-25-review-remediation`. Prior completed works are untouched.
 
-`current_commit` is the exact authoritative recovery-gated head `34a5440ad24e8a512e7ef2d685df2ba73c81f88d`. A close-evidence commit cannot name its own SHA. Publication (Todo 8) fast-forwards the feature branch to the close-evidence commit that records this pointer. `completed_todo` stays `6` because Todo 7's checkbox is reserved for the orchestrator.
+`current_commit` is the exact current authoritative post-F2/F3 gated head `6a35bd29fe8d4e236d1290529f045fcbc5875e71`. A close-evidence commit cannot name its own SHA. Publication (Todo 8) fast-forwards the feature branch to the close-evidence commit that records this pointer. `completed_todo` stays `6` because Todo 7's checkbox is reserved for the orchestrator.
 
 ## Adversarial map
 
