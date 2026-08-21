@@ -208,7 +208,7 @@ Your next move: high-accuracy momus review runs now (required, default-on). Full
   Commit: Y | docs(glossary): register architecturally significant unit
   Recommended task executor category: quick
 
-- [ ] 7. Record the promotion worklist as graph-visible backlog
+- [x] 7. Record the promotion worklist as graph-visible backlog
   What to do: Add a `### Open questions` subsection under `## Intent` of each carrier Spec below, with exactly one `- [non-blocking]` entry (format: `src/extract/markdown-body-owner-behavior.ts:88-96`; exemplar: `specs/consumers/impact-graph.sdp.md:15-16`). Lockstep each Spec's oracle descriptor (exemplar for an intent with openQuestions: the `spec:consumers.impact-graph` entry in `test/self-hosting-oracle/consumers.ts`). Entries:
     1. `specs/validation/two-check-families.sdp.md`: `- [non-blocking] Does the one-validation-path registry law stated in the src/validate/validators.ts file header promote here or to a story-altitude child under comment promotion?`
     2. `specs/validation/readiness-floor.sdp.md`: `- [non-blocking] Does any remaining law in the src/validate/readiness-floor.ts file header promote here under comment promotion?`

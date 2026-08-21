@@ -116,9 +116,9 @@
       "worktree_path": "/home/darkomijic/dev-libar/software-delivery-protocol",
       "delivery_mode": "make-pr",
       "make_pr": true,
-      "current_commit": "9879800",
-      "active_task": "Record promotion worklist as graph-visible backlog",
-      "completed_todo": 7
+      "current_commit": "9e0f7e4",
+      "active_task": "Run full gate, re-measure, and close branch/PR slice",
+      "completed_todo": 8
     }
   }
 }
