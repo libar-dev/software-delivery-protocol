@@ -1275,6 +1275,45 @@ describe("the agent-surface recipe corpus", () => {
     expect(absent).toEqual({ id: unknownId, found: false });
   });
 
+  // Given: catalog recipe 19 with only the opening id retargeted to the structural-anchor
+  // decision (live graph: one outgoing dependsOn, two inbound dependsOn from MD-34/MD-35).
+  // When: the otherwise unchanged body runs through real runSdpCli.
+  // Then: dependencies.dependsOn and dependencies.dependedOnBy are both non-empty and name the
+  // exact ready decision neighbors — so dropping, reversing, renaming, or readiness-skewing either
+  // direction reddens this characterization.
+  it("returns non-empty bidirectional dependencies for the structural-anchor planning slice", async () => {
+    const recipe = recipeByOrdinal(19);
+    const catalogId = "spec:consumers.agent-surface";
+    const id = "spec:decisions.structural-anchor-semantics";
+    expect(recipe.body).toContain(`const id = "${catalogId}";`);
+
+    const result = asRecord(
+      await runRecipe({
+        ...recipe,
+        body: recipe.body.replace(catalogId, id),
+      }),
+    );
+    const dependencies = asRecord(result.dependencies);
+    const dependsOn = asArray(dependencies.dependsOn).map(asRecord);
+    const dependedOnBy = asArray(dependencies.dependedOnBy).map(asRecord);
+
+    expect(dependsOn.length).toBeGreaterThan(0);
+    expect(dependedOnBy.length).toBeGreaterThan(0);
+    expect(dependsOn).toEqual([
+      { id: "spec:decisions.binding-not-liveness", statedReadiness: "ready" },
+    ]);
+    expect(dependedOnBy).toEqual([
+      {
+        id: "spec:decisions.architectural-significance-rides-primitives",
+        statedReadiness: "ready",
+      },
+      {
+        id: "spec:decisions.jsdoc-graph-extraction-refused",
+        statedReadiness: "ready",
+      },
+    ]);
+  });
+
   // Given: the live planning-slice Spec and its SpecContext bindings.
   // When: catalog recipe 19 is evaluated through the real CLI runner.
   // Then: the machine contract names `implementations` at the top level and on each
