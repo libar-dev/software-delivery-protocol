@@ -202,7 +202,7 @@ Try-it readiness query:
 ]
 ```
 
-`component:` nodes: `[]` (3 CodeNodes, all skill-test `impl:` ids; 0 `memberOf`/`uses`). `g.specContext("spec:extraction.delivery-facts")` returns `undefined`; the query's subsequent dereference causes `sdp q: Cannot read properties of undefined (reading 'found')` (exit 1). Named mismatch: MD-34/MD-35 are undefined and the accepted component set is absent. That is `main`, not this branch.
+`component:` nodes: `[]` (3 CodeNodes, all skill-test `impl:` ids; 0 `memberOf`/`uses`). `g.specContext("spec:extraction.delivery-facts")` returns `undefined`; the published Try-it delivery-facts query then dereferences `c.statedReadiness` and fails with `sdp q: Cannot read properties of undefined (reading 'statedReadiness')` (exit 1). Named mismatch: MD-34/MD-35 are undefined and the accepted component set is absent. That is `main`, not this branch.
 
 ## Graph invariants
 

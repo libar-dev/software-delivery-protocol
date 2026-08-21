@@ -62,7 +62,7 @@ npm ci && npm run build
 
 Expected outputs below were captured at the authoritative recovery-gated head `34a5440ad24e8a512e7ef2d685df2ba73c81f88d`. The initial Todo-7 full gate succeeded but its raw receipt was lost; one fresh recovery gate was deliberately authorized and run once at this clean exact head, and its complete output is the durable receipt. If yours differ, check `git rev-parse HEAD` and ancestry first.
 
-Three stale signals from the same try-it queries against `origin/main` (`bb97d829eea7b3689d5d8569d307e1bb5e77fd0d`): the readiness query returns `undefined` for the two decision Specs, there are no `component:` nodes, and `g.specContext("spec:extraction.delivery-facts")` returns `undefined`; dereferencing that result causes `Cannot read properties of undefined (reading 'found')`. That is `main`, not this branch.
+Three stale signals from the same try-it queries against `origin/main` (`bb97d829eea7b3689d5d8569d307e1bb5e77fd0d`): the readiness query returns `undefined` for the two decision Specs, there are no `component:` nodes, and `g.specContext("spec:extraction.delivery-facts")` returns `undefined`; the published delivery-facts query then dereferences `c.statedReadiness` and fails with `Cannot read properties of undefined (reading 'statedReadiness')`. That is `main`, not this branch.
 
 Conformance and honesty over the one graph:
 
