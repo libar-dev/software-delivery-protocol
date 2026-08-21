@@ -29,9 +29,9 @@ Not touched: oracle (`test/self-hosting-oracle/model.ts`), shared declared-relat
  ---
 -# Structural anchors can express architecturally significant patterns
 +# Architecturally significant patterns dissolve into existing primitives
- 
+
  ## Intent
- 
+
 -- outcome: Architecturally significant patterns and relationships in bound code are expressible through anchor structure so the graph answers architecture questions beyond component membership and uses edges.
 -
 -### Open questions
@@ -39,7 +39,7 @@ Not touched: oracle (`test/self-hosting-oracle/model.ts`), shared declared-relat
 -- [blocking] Does a vocabulary beyond `component` and `uses` pass the ADR three-part test at all, and which carrier would hold it without promoting mechanical structure into curated intent — new anchor fields, `component:` namespace conventions, or relations on Specs?
 -- [blocking] "Pattern" is not a ratified term in the language base; the concept needs a ratified name and a boundary against the anchor law's identity-only contract before any field is designed.
 +- outcome: Patterns and their relationships are authored as decision/model-kind Specs, existing relations, and the satisfies→decidedBy join — no new vocabulary is needed beyond the structural anchors already in the graph.
- 
+
  ## Model
 +
 +- **architecturally significant unit** — a code unit with exported public surface or cross-component reach that warrants graph-visible structural binding.

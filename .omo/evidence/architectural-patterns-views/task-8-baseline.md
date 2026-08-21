@@ -45,9 +45,9 @@ pre-existing + todo-2's two MD-34 edges + accepted tranche), never a hardcoded f
 - Decision head (live): pattern relationships use existing relations; **`dependsOn` reserved for
   genuine semantic need**; `supersedes` for actual replacement under ADR; scheduling-flavored edges
   refused (MD-33).
-- Relations out today (todo 2 already landed):  
-  `dependsOn → structural-anchor-semantics`,  
-  `dependsOn → binding-not-liveness`,  
+- Relations out today (todo 2 already landed):
+  `dependsOn → structural-anchor-semantics`,
+  `dependsOn → binding-not-liveness`,
   `refines → spec:model.anchors`.
 
 ### Genuineness bar applied here
@@ -191,8 +191,8 @@ Plan flag: *"reaffirms MD-18 default; drop if it cannot survive the genuinely-ne
 - Target (MD-18): "Specs default to Markdown…".
 - Carrier-ruling consequences already say universality **reaffirms** the default — reaffirmation is
   not semantic need of MD-18's full content (Packs-until-ruling, TS DSL escape hatch).
-- Lineage already exists:  
-  `carrier-universality --refines→ gherkin-carrier-option --refines→ carrier-ruling`.  
+- Lineage already exists:
+  `carrier-universality --refines→ gherkin-carrier-option --refines→ carrier-ruling`.
   A parallel `dependsOn` would ceremonialize what `refines` already places in the carrier stack.
 - **Drop reason:** reaffirms ≠ needs; existing `refines` chain; plan-named drop candidate fails the bar.
 - Present today: **no** (and must stay absent).
@@ -557,7 +557,7 @@ No temp files, no partial frontmatter drafts, no carrier touches. No `git` mutat
 3. **Do not** author the 3 dropped dependsOn edges; keep reasons in evidence.
 4. **Do not** author `supersedes` or scheduling-flavored edges.
 5. Leave shared oracle/roster updates to **task 15**.
-6. Re-run the Manual QA body: sentinel must clear only when all 15 accepted edges resolve;  
+6. Re-run the Manual QA body: sentinel must clear only when all 15 accepted edges resolve;
    measured inter-decision `dependsOn` becomes **12** (= 3 + 9), not a hardcoded 15.
 7. `pnpm --silent sdp validate …` (three exclusions) must stay exit 0 after edits.
 
