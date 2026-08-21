@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "active_work_id": "design-law-transfer",
+  "active_work_id": "pr-25-review-remediation",
   "works": {
     "pr-17-gherkin-carrier-hardening": {
       "work_id": "pr-17-gherkin-carrier-hardening",
@@ -119,6 +119,18 @@
       "current_commit": "315a0d8",
       "active_task": null,
       "completed_todo": 14
+    },
+    "pr-25-review-remediation": {
+      "work_id": "pr-25-review-remediation",
+      "active_plan": ".omo/plans/pr-25-review-remediation.md",
+      "plan_name": "pr-25-review-remediation",
+      "session_ids": [
+        "senpi:01a02484-8a26-71b5-be12-039515d854cc"
+      ],
+      "status": "active",
+      "worktree_path": "/home/darkomijic/dev-libar/software-delivery-protocol-pr-25-review-remediation",
+      "delivery_mode": "make-pr",
+      "make_pr": true
     }
   }
 }
