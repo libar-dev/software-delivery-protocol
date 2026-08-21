@@ -2,6 +2,7 @@
 @altitude.feature
 @readiness.ready
 @refines.spec:consumers.agent-surface
+@decided-by.spec:decisions.agent-surface-scripts-graph
 Feature: The reader bridges agent entry points to composable graph context
   - outcome: Let agents enter the curated graph from the strings, files, and changesets they already have without rebuilding its joins or taxonomy.
 

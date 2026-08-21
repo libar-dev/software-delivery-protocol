@@ -6,6 +6,7 @@ readiness: ready
 relations:
   refines: spec:protocol.self-hosting
   constrainedBy: spec:extraction.determinism
+  decidedBy: spec:decisions.one-validation-path
 ---
 # Carrier reification derives the one graph
 

@@ -5,6 +5,7 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:extraction.build-pipeline
+  decidedBy: spec:decisions.point-per-example
 ---
 # The build derives executable contracts from graph examples
 
