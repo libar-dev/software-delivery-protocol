@@ -657,9 +657,6 @@ const codeNodesById = new Map(
     .filter((node) => node.nodeType === "CodeNode")
     .map((node) => [node.id, node]),
 );
-const componentIds = new Set(
-  [...codeNodesById.keys()].filter((id) => id.startsWith("component:")),
-);
 const membersByComponent = new Map();
 const ownerByMember = new Map();
 
@@ -670,14 +667,24 @@ for (const edge of edges.filter((edge) => edge.type === "memberOf")) {
   ownerByMember.set(edge.from, edge.to);
 }
 
+// Declared components plus memberOf targets whose component node is missing: a dangling
+// component keeps its row (declared: false) instead of hiding its members from the map.
+const componentIds = new Set([
+  ...[...codeNodesById.keys()].filter((id) => id.startsWith("component:")),
+  ...membersByComponent.keys(),
+]);
 const ownerOf = (id) => componentIds.has(id) ? id : ownerByMember.get(id);
 const usesOutByComponent = new Map();
 const usedByByComponent = new Map();
+const unresolvedUses = [];
 
 for (const edge of edges.filter((edge) => edge.type === "uses")) {
   const from = ownerOf(edge.from);
   const to = ownerOf(edge.to);
-  if (from === undefined || to === undefined) continue;
+  if (from === undefined || to === undefined) {
+    unresolvedUses.push({ from: edge.from, to: edge.to });
+    continue;
+  }
   const outgoing = usesOutByComponent.get(from) ?? new Set();
   outgoing.add(to);
   usesOutByComponent.set(from, outgoing);
@@ -695,10 +702,10 @@ for (const edge of edges.filter((edge) => edge.type === "decidedBy")) {
 
 const components = [...componentIds].sort().map((id) => {
   const memberIds = [...new Set(membersByComponent.get(id) ?? [])].sort();
-  const anchors = [id, ...memberIds];
+  const anchors = new Set([id, ...memberIds]);
   const satisfiedSpecs = [...new Set(
     edges
-      .filter((edge) => edge.type === "satisfies" && anchors.includes(edge.from))
+      .filter((edge) => edge.type === "satisfies" && anchors.has(edge.from))
       .map((edge) => edge.to),
   )].sort();
   const decisionSubjects = new Map();
@@ -716,6 +723,7 @@ const components = [...componentIds].sort().map((id) => {
 
   return {
     id,
+    declared: codeNodesById.has(id),
     members: memberIds.map((memberId) => {
       const member = codeNodesById.get(memberId);
       return {
@@ -739,17 +747,19 @@ const components = [...componentIds].sort().map((id) => {
   };
 });
 
-return { components };
+return { components, unresolvedUses };
 ```
 
 Membership, uses, and satisfies remain the derived structural edges; shaping decisions are the
 `decidedBy` targets of Specs those members realize. Fan counts are graph-side composition, not a
-new reader accessor.
+new reader accessor. A `memberOf` target with no component node keeps a `declared: false` row, and
+a `uses` edge with no resolvable owner on either end lands in `unresolvedUses` — dangling structure
+stays visible instead of silently dropping out of the map.
 
 ## 18. Decision map
 
-*When you need this: you want every decision record with inter-decision dependsOn and
-supersedes, plus the Specs it decides, ranked by inbound fan-in.*
+*When you need this: you want every decision record with its inter-decision relations
+(dependsOn, refines, supersedes) and the Specs it decides, ranked by how much it shapes.*
 
 ```js
 const decisionNodes = graph.nodes
@@ -763,7 +773,7 @@ const decisionNodes = graph.nodes
 const decisionIds = new Set(decisionNodes.map((node) => node.id));
 const interDecisionEdges = graph.edges.filter(
   (edge) =>
-    (edge.type === "dependsOn" || edge.type === "supersedes") &&
+    (edge.type === "dependsOn" || edge.type === "supersedes" || edge.type === "refines") &&
     decisionIds.has(edge.from) &&
     decisionIds.has(edge.to),
 );
@@ -784,28 +794,41 @@ const familyOf = (id) => {
 const decisions = decisionNodes.map((node) => {
   const outgoing = interDecisionEdges.filter((edge) => edge.from === node.id);
   const incoming = interDecisionEdges.filter((edge) => edge.to === node.id);
+  const decidedSubjects = [...new Set(subjectsByDecision.get(node.id) ?? [])].sort();
   const decidedSubjectsByFamily = {};
 
-  for (const subjectId of [...new Set(subjectsByDecision.get(node.id) ?? [])].sort()) {
+  for (const subjectId of decidedSubjects) {
     const family = familyOf(subjectId);
     decidedSubjectsByFamily[family] = decidedSubjectsByFamily[family] ?? [];
     decidedSubjectsByFamily[family].push(subjectId);
   }
 
+  const fanInByType = {
+    dependsOn: incoming.filter((edge) => edge.type === "dependsOn").length,
+    refines: incoming.filter((edge) => edge.type === "refines").length,
+    supersedes: incoming.filter((edge) => edge.type === "supersedes").length,
+    decidedBy: decidedSubjects.length,
+  };
+
   return {
     id: node.id,
     title: node.title ?? null,
-    fanIn: incoming.length,
-    fanInByType: {
-      dependsOn: incoming.filter((edge) => edge.type === "dependsOn").length,
-      supersedes: incoming.filter((edge) => edge.type === "supersedes").length,
-    },
+    fanIn: fanInByType.dependsOn + fanInByType.refines + fanInByType.decidedBy,
+    fanInByType,
     dependsOn: outgoing
       .filter((edge) => edge.type === "dependsOn")
       .map((edge) => edge.to)
       .sort(),
     dependedOnBy: incoming
       .filter((edge) => edge.type === "dependsOn")
+      .map((edge) => edge.from)
+      .sort(),
+    refines: outgoing
+      .filter((edge) => edge.type === "refines")
+      .map((edge) => edge.to)
+      .sort(),
+    refinedBy: incoming
+      .filter((edge) => edge.type === "refines")
       .map((edge) => edge.from)
       .sort(),
     supersedes: outgoing
@@ -826,13 +849,15 @@ const ranking = decisions
 return { total: decisions.length, ranking, decisions };
 ```
 
-Ranking is inbound `dependsOn` plus `supersedes` among decision Specs only. Independence is the
-absence of an edge; `decidedBy` subjects stay grouped by family.
+Ranking is the shaping fan-in: inbound `dependsOn` and `refines` among decision Specs plus the
+`decidedBy` subjects the decision shapes. Being superseded is replacement, not load-bearing weight,
+so `supersedes` is reported per row and in `fanInByType` but excluded from the rank. Independence
+is the absence of an edge; `decidedBy` subjects stay grouped by family.
 
 ## 19. Planning slice
 
-*When you need this: you want one Spec's refinement neighborhood, constraining decisions, bound
-components, verifiers, and file-level blast-radius entry points.*
+*When you need this: you want one Spec's refinement and dependency neighborhood, shaping
+decisions, bound components, verifiers, and file-level entry points.*
 
 The opening `const id` is the parameter. Replace it with the Spec you are planning around; an
 unknown id returns `{ found: false }` rather than failing.
@@ -857,6 +882,17 @@ const children = [...new Set(
     .filter((edge) => edge.type === "refines" && edge.to === id)
     .map((edge) => edge.from),
 )].sort();
+const readinessById = new Map(g.specs().map((spec) => [spec.id, spec.statedReadiness]));
+const dependencyNeighbors = (type, end) => [...new Set(
+  graph.edges
+    .filter((edge) => edge.type === type && edge[end === "to" ? "from" : "to"] === id)
+    .map((edge) => edge[end]),
+)].sort().map((specId) => ({
+  id: specId,
+  statedReadiness: readinessById.get(specId) ?? null,
+}));
+const dependsOn = dependencyNeighbors("dependsOn", "to");
+const dependedOnBy = dependencyNeighbors("dependsOn", "from");
 const neighborhoodIds = new Set([id, ...parents, ...children]);
 const decisionsById = new Map();
 
@@ -944,7 +980,8 @@ return {
   id,
   found: true,
   refinementNeighborhood: { parents, children },
-  constrainingDecisions: [...decisionsById]
+  dependencies: { dependsOn, dependedOnBy },
+  shapingDecisions: [...decisionsById]
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([decisionId, subjects]) => ({
       id: decisionId,
@@ -966,10 +1003,15 @@ return {
     file: binding.file ?? null,
     line: binding.line ?? null,
   })),
-  blastRadiusEntryPoints: uniqueEntryPoints,
-  blastRadiusLimit: "file-level graph-recorded paths only; no symbol-level impact graph",
+  entryPoints: uniqueEntryPoints,
+  entryPointsLimit: "file-level graph-recorded paths only; no symbol-level impact graph",
 };
 ```
 
-`blastRadiusLimit` is file-level graph-recorded paths only. The graph does not derive symbol-level
-impact; `implemented` still means a code anchor binds, never that the code is live.
+`entryPoints` is file-level graph-recorded paths only — carrier, implementation, verifier, and
+component files. It is not the impact contract; whole-corpus blast radius over changed files stays
+recipe 4 (`g.blastRadius`). Shaping decisions are the `decidedBy` targets across the refinement
+neighborhood; a decision record that also `refines` the subject appears both as a refinement child
+and as a shaping decision. Dependency neighbors carry `statedReadiness` because an unready
+`dependsOn` target is the planning signal. The graph does not derive symbol-level impact;
+`implemented` still means a code anchor binds, never that the code is live.

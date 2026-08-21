@@ -56,7 +56,11 @@ const validateComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.validate"),
   label: "Protocol validation seam",
   satisfies: ref("spec:validation.two-check-families"),
-  uses: [componentAnchorId("component:protocol.graph")],
+  uses: [
+    componentAnchorId("component:protocol.graph"),
+    componentAnchorId("component:protocol.model"),
+    componentAnchorId("component:protocol.notation"),
+  ],
 });
 
 void validationFamiliesAnchor;

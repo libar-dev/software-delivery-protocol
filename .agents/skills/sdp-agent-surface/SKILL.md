@@ -97,8 +97,9 @@ the planning slice. Every body there runs verbatim and a test proves it. Start f
 it in place.
 
 For architecture questions, use the architecture map to see components and their shaping decisions
-together, the decision map to rank inter-decision relationships by inbound fan-in, or the planning
-slice to see refinement neighbors, bound components, and entry points before editing.
+together, the decision map to rank decisions by shaping fan-in (decided subjects plus inter-decision
+dependsOn and refines), or the planning slice to see refinement and dependency neighbors, shaping
+decisions, bound components, and entry points before editing.
 
 Reach for the files only when you need the authored prose itself — the exact words to edit.
 

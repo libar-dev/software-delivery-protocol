@@ -185,6 +185,7 @@ const extractComponentAnchor = codeAnchor({
     componentAnchorId("component:protocol.graph"),
     componentAnchorId("component:protocol.validate"),
     componentAnchorId("component:protocol.model"),
+    componentAnchorId("component:protocol.notation"),
   ],
 });
 void extractComponentAnchor;

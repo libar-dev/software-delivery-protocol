@@ -32,6 +32,8 @@ const cliComponentAnchor = codeAnchor({
     componentAnchorId("component:protocol.codegen"),
     componentAnchorId("component:protocol.validate"),
     componentAnchorId("component:protocol.import"),
+    componentAnchorId("component:protocol.graph"),
+    componentAnchorId("component:protocol.model"),
   ],
 });
 

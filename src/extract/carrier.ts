@@ -1,5 +1,7 @@
 import { Project } from "ts-morph";
 
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type { Finding } from "../validate/contracts.js";
 export { reifyMarkdownCarrier } from "./markdown.js";
 export { reifyGherkinCarrier } from "./gherkin.js";
@@ -48,6 +50,14 @@ function reificationFailure(
     ],
   };
 }
+
+const carrierReificationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.carrier-reification"),
+  label: "reifies each canonical carrier surface into specs, packs, and findings",
+  satisfies: ref("spec:extraction.derive-graph"),
+  component: componentAnchorId("component:protocol.extract"),
+});
+void carrierReificationAnchor;
 
 /**
  * Reifies exactly one TypeScript carrier from source text. Source construction, syntax diagnostics,

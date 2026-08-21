@@ -42,8 +42,8 @@ const importComponentAnchor = codeAnchor({
   label: "Protocol import seam",
   satisfies: ref("spec:carrier.sdp-import"),
   uses: [
-    componentAnchorId("component:protocol.model"),
     componentAnchorId("component:protocol.extract"),
+    componentAnchorId("component:protocol.validate"),
   ],
 });
 const sdpImportCoreAnchor = codeAnchor({

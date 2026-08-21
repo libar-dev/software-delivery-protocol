@@ -47,8 +47,8 @@ carrier, `sdp new spec`, the `validate --watch` loop, and the one-kind rule.
 
 ### Design
 
-Use promotion preflight (recipe 9) on the target, the planning slice (recipe 19) for neighborhood
-and constraining decisions, and readiness divergence (recipe 7) across the corpus. Resolve blocking
+Use promotion preflight (recipe 9) on the target, the planning slice (recipe 19) for neighborhood,
+dependency readiness, and shaping decisions, and readiness divergence (recipe 7) across the corpus. Resolve blocking
 open questions and review the carrying Specs. A clear floor is evidence, not an automatic `ready`
 statement.
 
