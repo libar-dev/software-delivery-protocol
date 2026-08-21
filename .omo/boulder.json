@@ -116,9 +116,9 @@
       "worktree_path": "/home/darkomijic/dev-libar/software-delivery-protocol",
       "delivery_mode": "make-pr",
       "make_pr": true,
-      "current_commit": "d97faef",
-      "active_task": "Author the decidedBy fill tranche",
-      "completed_todo": 5
+      "current_commit": "f0c12c2",
+      "active_task": "Record promotion worklist as graph-visible backlog",
+      "completed_todo": 6
     }
   }
 }
