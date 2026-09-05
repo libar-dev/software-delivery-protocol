@@ -169,6 +169,7 @@ describe("published package surface", () => {
         ".agents/skills/sdp-authoring/SKILL.md",
         ".agents/skills/sdp-sessions/SKILL.md",
         "docs/agent-surface/recipes.md",
+        "docs/agent-surface/architecture.md",
       ];
 
       expect(dryRunPaths).toEqual(expect.arrayContaining(adopterAssets));

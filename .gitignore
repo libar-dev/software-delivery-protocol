@@ -20,7 +20,7 @@ generated/
 **/*.test.generated.ts
 .sisyphus/evidence/
 
-# OmO plans and state
+# OmO runtime state is ignored; durable plans and recovery evidence are tracked below
 .sisyphus/
 .omo/*
 !.omo/boulder.json

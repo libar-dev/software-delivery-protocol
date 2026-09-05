@@ -5,6 +5,9 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:validation.readiness-floor
+  dependsOn:
+    - spec:decisions.kind-conditional-floor
+    - spec:decisions.content-only-sections
 ---
 # Promoted evidence must carry its own evidence
 

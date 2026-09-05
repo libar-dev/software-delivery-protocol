@@ -677,7 +677,7 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
         ],
       });
       // A foreign producer points an anchored verifies edge from the CodeNode at the example —
-      // off-contract (`spec:extraction.derive-graph`: an anchored verifies edge resolves from an
+      // off-contract (`spec:extraction.delivery-facts`: an anchored verifies edge resolves from an
       // Anchor node only).
       const foreign: GraphSchema = {
         ...graph,
@@ -734,7 +734,7 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
         ],
       });
       // A foreign producer points an inferred verifies edge from the anchor-bound example at the
-      // parent — off-contract (`spec:extraction.derive-graph`: an example's verifies edge confers
+      // parent — off-contract (`spec:extraction.delivery-facts`: an example's verifies edge confers
       // the binding only as
       // `declared`); the claim taxonomy is never collapsed into "an example, so enabled".
       const foreign: GraphSchema = {

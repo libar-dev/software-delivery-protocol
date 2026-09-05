@@ -85,15 +85,21 @@ The public projection publishers are `sdp view`, `sdp census`, `sdp mermaid`, an
 In this source checkout, use `npm run generate:self-hosting` or `npm run check:self-hosting` when
 all four roots must be published or certified together.
 
-The catalog contains sixteen ready-made bodies in `docs/agent-surface/recipes.md` in the Protocol
+The catalog contains nineteen ready-made bodies in `docs/agent-surface/recipes.md` in the Protocol
 repository and
 `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an adopter.
-Recipes 1-16 cover the existing read path plus the structural and projection slice: build backlog,
+Recipes 1-19 cover the existing read path plus the structural and projection slice: build backlog,
 drift alarm, per-Spec guarantees and verifiers, blast radius, Pack review backbone, concept search,
 readiness divergence, warn-level signals, promotion preflight, declared-versus-enabled verifiers,
 the lower ladder, component membership, uses fan-in and fan-out, structural neighborhood, census
-structural coverage, and the projection-coverage upper bound. Every body there runs verbatim and a
-test proves it. Start from a recipe; adapt it in place.
+structural coverage, the projection-coverage upper bound, architecture map, decision map, and
+the planning slice. Every body there runs verbatim and a test proves it. Start from a recipe; adapt
+it in place.
+
+For architecture questions, use the architecture map to see components and their shaping decisions
+together, the decision map to rank decisions by shaping fan-in (decided subjects plus inter-decision
+dependsOn and refines), or the planning slice to see refinement and dependency neighbors, shaping
+decisions, bound components, and entry points before editing.
 
 Reach for the files only when you need the authored prose itself — the exact words to edit.
 

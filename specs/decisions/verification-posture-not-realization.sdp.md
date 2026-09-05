@@ -5,6 +5,7 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:model.spec-sections
+  dependsOn: spec:decisions.binding-not-liveness
 ---
 # Verification mode states posture, not realization
 

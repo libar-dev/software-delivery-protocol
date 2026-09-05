@@ -5,7 +5,9 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:consumers.projections-model
-  decidedBy: spec:decisions.agent-surface-scripts-graph
+  decidedBy:
+    - spec:decisions.agent-surface-scripts-graph
+    - spec:decisions.agent-front-door
 ---
 # Agents script a visible typed graph
 

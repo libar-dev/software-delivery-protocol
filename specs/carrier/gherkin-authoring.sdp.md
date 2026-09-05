@@ -8,6 +8,7 @@ relations:
   decidedBy:
     - spec:decisions.gherkin-carrier-option
     - spec:decisions.carrier-universality
+    - spec:decisions.sdp-gherkin-extension
   dependsOn: spec:carrier.slot-notation
 ---
 # Gherkin authoring enters the one graph

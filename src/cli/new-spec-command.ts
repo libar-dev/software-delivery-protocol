@@ -4,8 +4,9 @@ import { basename, dirname, isAbsolute, relative, resolve, sep } from "node:path
 
 import { reifyMarkdownCarrier } from "../extract/markdown.js";
 import type { ReifiedSpec } from "../extract/reify.js";
-import { specId } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref, specId } from "../ids.js";
 import { emitMarkdownSpec } from "../import/emit-markdown.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import { SPEC_ALTITUDES, SPEC_KINDS } from "../model/descriptors.js";
 import type { SpecAltitude, SpecKind } from "../model/descriptors.js";
 import type { CliOutput } from "./output.js";
@@ -354,6 +355,14 @@ function acceptScaffoldDocument(
 
   return document;
 }
+
+const specScaffolderAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.spec-scaffolder"),
+  label: "scaffolds an honest idea-rung Markdown Spec through `sdp new spec`",
+  satisfies: ref("spec:consumers.authoring-on-ramp"),
+  component: componentAnchorId("component:protocol.cli"),
+});
+void specScaffolderAnchor;
 
 export function runNewSpec(
   parsed: NewSpecArgs,

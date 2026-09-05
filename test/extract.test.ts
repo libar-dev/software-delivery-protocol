@@ -812,8 +812,15 @@ const extractContractTestAnchor = specTest({
 });
 void extractContractTestAnchor;
 
+const deliveryFactsTestAnchor = specTest({
+  id: testAnchorId("test:protocol.delivery-facts"),
+  label: "verifies the delivery-fact conferral ladder and fail-closed posture",
+  verifies: ref("spec:extraction.delivery-facts"),
+});
+void deliveryFactsTestAnchor;
+
 describe("anchor extraction corpora", () => {
-  it("anchored-binding: the full ladder — anchored edges and delivery facts per `spec:extraction.derive-graph`", () => {
+  it("anchored-binding: the full ladder — anchored edges and delivery facts per `spec:extraction.delivery-facts`", () => {
     const result = extract({ root: corpusRoot("anchored-binding") });
 
     expect(result.report.findings).toEqual([]);

@@ -93,7 +93,7 @@ const runnerComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.runner"),
   label: "Protocol example runner seam",
   satisfies: ref("spec:extraction.example-runner"),
-  uses: [componentAnchorId("component:protocol.model")],
+  uses: [componentAnchorId("component:protocol.notation")],
 });
 const exampleRunnerAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.example-runner"),

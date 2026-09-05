@@ -117,6 +117,7 @@ export const deriveGraphAnchor = codeAnchor({
   label: "derives the graph from reified carriers and bindings",
   satisfies: ref("spec:extraction.derive-graph"),
   component: componentAnchorId("component:protocol.extract"),
+  uses: [codeAnchorId("impl:protocol.delivery-facts")],
 });
 
 export function deriveGraph(

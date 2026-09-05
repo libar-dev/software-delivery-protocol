@@ -4,6 +4,9 @@ import { fileURLToPath } from "node:url";
 
 import type { SourceFile } from "ts-morph";
 
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
+
 /** The one public package specifier whose imports bind Protocol authoring builders. */
 export const PROTOCOL_MODULE_SPECIFIER = "@libar-dev/software-delivery-protocol";
 
@@ -75,6 +78,14 @@ function trustedBuilderModules(): ReadonlySet<string> {
 }
 
 const runtimeBuilderModules = trustedBuilderModules();
+
+const protocolBindingsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.protocol-bindings"),
+  label: "Protocol builder-import trust (protocolBindingScopeFor / collectProtocolBindings)",
+  satisfies: ref("spec:model.anchors"),
+  component: componentAnchorId("component:protocol.extract"),
+});
+void protocolBindingsAnchor;
 
 export function protocolBindingScopeFor(importerPath: string): ProtocolBindingScope {
   return {

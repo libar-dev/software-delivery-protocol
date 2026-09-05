@@ -3,6 +3,8 @@
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import { parseBuildArgs } from "./build-args.js";
 import { runBuild } from "./build-command.js";
 import { runCensus } from "./census-command.js";
@@ -94,6 +96,14 @@ interface CliHooks extends CensusHooks, MermaidHooks, GherkinViewHooks, Validate
   readonly import?: ImportHooks;
   readonly query?: QueryHooks;
 }
+
+const agentSurfaceCliAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.agent-surface-cli"),
+  label: "CLI verb dispatcher and agent-surface front of the package CLI",
+  satisfies: ref("spec:consumers.agent-surface"),
+  component: componentAnchorId("component:protocol.cli"),
+});
+void agentSurfaceCliAnchor;
 
 /**
  * Every verb but `q` and `validate --watch` completes synchronously. `q` awaits an

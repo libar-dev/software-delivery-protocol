@@ -966,6 +966,7 @@ const codegenComponentAnchor = codeAnchor({
   uses: [
     componentAnchorId("component:protocol.graph"),
     componentAnchorId("component:protocol.notation"),
+    componentAnchorId("component:protocol.validate"),
   ],
 });
 const executableContractsAnchor = codeAnchor({

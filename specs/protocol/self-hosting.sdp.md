@@ -12,6 +12,7 @@ relations:
     - spec:decisions.executable-meta-model
     - spec:decisions.adopt-the-nouns
     - spec:decisions.protocol-naming
+    - spec:decisions.plain-language-references
 ---
 # The Protocol authors and validates itself
 

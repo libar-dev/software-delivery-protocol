@@ -56,7 +56,11 @@ const validateComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.validate"),
   label: "Protocol validation seam",
   satisfies: ref("spec:validation.two-check-families"),
-  uses: [componentAnchorId("component:protocol.graph")],
+  uses: [
+    componentAnchorId("component:protocol.graph"),
+    componentAnchorId("component:protocol.model"),
+    componentAnchorId("component:protocol.notation"),
+  ],
 });
 
 void validationFamiliesAnchor;
@@ -1069,6 +1073,7 @@ const deliveryFactsHonestyAnchor = codeAnchor({
   label: "checks stated delivery facts equal the one recomputed derivation",
   satisfies: ref("spec:validation.authored-honesty"),
   component: componentAnchorId("component:protocol.validate"),
+  uses: [codeAnchorId("impl:protocol.delivery-facts")],
 });
 void deliveryFactsHonestyAnchor;
 

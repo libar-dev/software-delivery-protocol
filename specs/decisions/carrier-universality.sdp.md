@@ -5,6 +5,9 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:decisions.gherkin-carrier-option
+  dependsOn:
+    - spec:decisions.prose-ownership
+    - spec:decisions.pack-markdown-carrier
 ---
 # Carrier universality is bounded by honest kind structure
 

@@ -5,6 +5,7 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:validation.two-check-families
+  decidedBy: spec:decisions.decision-readiness-posture
 ---
 # Missing connective evidence warns without failing
 

@@ -9,6 +9,8 @@ import {
 } from "node:fs";
 import { dirname, join, relative } from "node:path";
 
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import { renderGherkinView } from "../projections/gherkin-view.js";
 import type { GherkinViewPage } from "../projections/gherkin-view.js";
 import { createReader } from "../reader/reader.js";
@@ -59,6 +61,14 @@ function readPublishedPages(root: string): readonly GherkinViewPage[] | undefine
 function pagesEqual(left: readonly GherkinViewPage[], right: readonly GherkinViewPage[]): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
 }
+
+const gherkinViewCliAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.gherkin-view-cli"),
+  label: "publishes the Gherkin view through the explicit `sdp gherkin` surface",
+  satisfies: ref("spec:consumers.gherkin-view"),
+  component: componentAnchorId("component:protocol.cli"),
+});
+void gherkinViewCliAnchor;
 
 /** Publishes the Gherkin-shaped READ projection independently as one wholesale tmp-to-rename root. */
 export function runGherkinView(

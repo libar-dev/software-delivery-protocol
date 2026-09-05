@@ -89,6 +89,8 @@ export { expectedAnchors } from "./anchors.js";
 export { expectedDeclaredRelations } from "./declared-relations.js";
 export { expectedPackMembers } from "./pack-members.js";
 export {
+  acceptedArchitecturalUnits,
+  coarseGrainCoverage,
   expectedComponentIds,
   expectedMemberOfEdges,
   expectedUsesEdges,

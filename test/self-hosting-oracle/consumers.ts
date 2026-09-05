@@ -118,6 +118,13 @@ export const consumersSpecs = [
       intent: {
         outcome:
           "Give agents and humans consumer-specific views while preserving the repository as the only canonical source.",
+        openQuestions: [
+          {
+            question:
+              "Does the pure-projection binding-language law stated in src/projections/design-review.ts commentary promote here or to a story-altitude child under comment promotion?",
+            blocking: false,
+          },
+        ],
       },
       model: {
         terms: {

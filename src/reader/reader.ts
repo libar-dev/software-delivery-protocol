@@ -356,6 +356,7 @@ const readerComponentAnchor = codeAnchor({
   uses: [
     componentAnchorId("component:protocol.graph"),
     componentAnchorId("component:protocol.validate"),
+    componentAnchorId("component:protocol.model"),
   ],
 });
 const agentSurfaceAnchor = codeAnchor({
@@ -372,6 +373,7 @@ const readerAnchor = codeAnchor({
   label: "thin typed graph reader construction",
   satisfies: ref("spec:consumers.reader"),
   component: componentAnchorId("component:protocol.reader"),
+  uses: [codeAnchorId("impl:protocol.delivery-facts")],
 });
 
 void readerComponentAnchor;

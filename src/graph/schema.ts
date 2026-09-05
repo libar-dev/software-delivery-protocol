@@ -23,7 +23,10 @@ const graphComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.graph"),
   label: "Protocol graph seam",
   satisfies: ref("spec:extraction.claim-taxonomy"),
-  uses: [componentAnchorId("component:protocol.model")],
+  uses: [
+    componentAnchorId("component:protocol.model"),
+    componentAnchorId("component:protocol.notation"),
+  ],
 });
 const graphClaimsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.graph-claims"),

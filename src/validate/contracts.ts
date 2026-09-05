@@ -1,4 +1,14 @@
 import type { GraphSchema } from "../graph/schema.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
+
+const validationContractsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.validation-contracts"),
+  label: "conformance/honesty family currency and finding shapes",
+  satisfies: ref("spec:validation.two-check-families"),
+  component: componentAnchorId("component:protocol.validate"),
+});
+void validationContractsAnchor;
 
 export const validatorFamilies = ["conformance", "honesty"] as const;
 export type ValidatorFamily = (typeof validatorFamilies)[number];
