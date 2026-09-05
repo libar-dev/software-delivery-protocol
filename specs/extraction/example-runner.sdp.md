@@ -34,3 +34,7 @@ Then the run {outcome:"completes"|"fails"}
 Then the failure names the step in the Spec's own words as {failureLabel:string}
 Then the failure preserves the original detail {detail:string}
 ```
+
+## Design
+
+Ports and adapters. The runner accepts a generated contract, step handlers, and a caller-owned world. The Vitest adapter registers tests and creates each world before calling the runner. Framework dependencies point from the adapter toward the runner; the runner remains usable without a test framework. Step ordering and failure labels belong to the core, while test registration and world lifecycle belong to the adapter.

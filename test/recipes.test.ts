@@ -981,7 +981,7 @@ describe("the agent-surface recipe corpus", () => {
     for (const edge of expected.usesEdges) {
       const from = ownerOf(edge.from);
       const to = ownerOf(edge.to);
-      if (from === undefined || to === undefined) {
+      if (from === undefined || to === undefined || from === to) {
         continue;
       }
 
@@ -1042,6 +1042,125 @@ describe("the agent-surface recipe corpus", () => {
     }
 
     expect(asArray(result.unresolvedUses)).toEqual([]);
+  });
+
+  it("explains the shared policy and adapter collaborations from graph intent and binding claims", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(17)));
+    const uses = asArray(result.usesEdges).map(asRecord);
+    expect(uses.filter((edge) => edge.to === "impl:protocol.delivery-facts")).toEqual(
+      [
+        "impl:protocol.authored-honesty-delivery-facts",
+        "impl:protocol.derive-graph",
+        "impl:protocol.reader",
+      ].map((from) => ({ from, to: "impl:protocol.delivery-facts", claim: "anchored" })),
+    );
+    expect(uses).toContainEqual({
+      from: "impl:protocol.example-runner-adapter",
+      to: "impl:protocol.example-runner",
+      claim: "anchored",
+    });
+
+    const subjects = asArray(result.subjects).map(asRecord);
+    for (const [id, concept] of [
+      ["spec:extraction.delivery-facts", "Shared policy"],
+      ["spec:extraction.example-runner", "Ports and adapters"],
+      ["spec:extraction.derive-graph", "One read model"],
+    ] as const) {
+      const subject = subjects.find((row) => row.id === id);
+      expect(subject).toMatchObject({ id, resolved: true, specKind: "behavior" });
+      expect(subject?.design).toContain(concept);
+      expect(reader.findByConcept(concept).map((node) => node.id)).toContain(id);
+    }
+
+    for (const id of [
+      "spec:extraction.derive-graph",
+      "spec:consumers.reader",
+      "spec:validation.authored-honesty",
+    ]) {
+      const subject = subjects.find((row) => row.id === id);
+      expect(asArray(subject?.relations)).toContainEqual(
+        expect.objectContaining({
+          type: "dependsOn",
+          otherId: "spec:extraction.delivery-facts",
+          claim: "declared",
+          resolved: true,
+        }),
+      );
+    }
+
+    const graphComponent = asArray(result.components)
+      .map(asRecord)
+      .find((row) => row.id === "component:protocol.graph");
+    expect(asArray(graphComponent?.realizations)).toContainEqual({
+      from: "impl:protocol.delivery-facts",
+      to: "spec:extraction.delivery-facts",
+      claim: "anchored",
+    });
+    expect(asArray(graphComponent?.usedBy)).toEqual([
+      "component:protocol.cli",
+      "component:protocol.codegen",
+      "component:protocol.extract",
+      "component:protocol.projections",
+      "component:protocol.reader",
+      "component:protocol.validate",
+    ]);
+    const derivation = subjects.find((row) => row.id === "spec:extraction.derive-graph");
+    expect(asArray(derivation?.relations)).toContainEqual(
+      expect.objectContaining({
+        type: "constrainedBy",
+        otherId: "spec:extraction.determinism",
+        claim: "declared",
+      }),
+    );
+  });
+
+  it("retains local uses and their claims without counting a component as its own dependency", async () => {
+    const template = derived.graph.edges.find((edge) => edge.type === "uses");
+    if (template === undefined) throw new Error("expected a uses edge template");
+    const localUse = {
+      ...template,
+      from: "impl:protocol.delivery-facts",
+      to: "impl:protocol.example-space",
+      claim: "inferred" as const,
+    };
+    const dirty = {
+      ...derived,
+      graph: { ...derived.graph, edges: [...derived.graph.edges, localUse] },
+    };
+    const result = asRecord(await runRecipe(recipeByOrdinal(17), undefined, dirty));
+    expect(asArray(result.usesEdges)).toContainEqual({
+      from: localUse.from,
+      to: localUse.to,
+      claim: "inferred",
+    });
+    const component = asArray(result.components)
+      .map(asRecord)
+      .find((row) => row.id === "component:protocol.graph");
+    expect(asArray(component?.usesOut)).not.toContain("component:protocol.graph");
+    expect(asArray(component?.usedBy)).not.toContain("component:protocol.graph");
+    expect(component?.fanOut).toBe(2);
+    expect(component?.fanIn).toBe(6);
+  });
+
+  it("preserves an unresolved responsibility without inventing its design", async () => {
+    const missingId = "spec:extraction.delivery-facts";
+    const dirty = {
+      ...derived,
+      graph: {
+        ...derived.graph,
+        nodes: derived.graph.nodes.filter((node) => node.id !== missingId),
+      },
+    };
+    const result = asRecord(await runRecipe(recipeByOrdinal(17), undefined, dirty));
+    expect(asArray(result.subjects)).toContainEqual({
+      id: missingId,
+      resolved: false,
+      title: null,
+      specKind: null,
+      outcome: null,
+      design: null,
+      relations: [],
+    });
   });
 
   // Given: a clone of the live ExtractionResult with component:protocol.testing removed while its

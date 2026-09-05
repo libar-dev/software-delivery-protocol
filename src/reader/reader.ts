@@ -373,6 +373,7 @@ const readerAnchor = codeAnchor({
   label: "thin typed graph reader construction",
   satisfies: ref("spec:consumers.reader"),
   component: componentAnchorId("component:protocol.reader"),
+  uses: [codeAnchorId("impl:protocol.delivery-facts")],
 });
 
 void readerComponentAnchor;

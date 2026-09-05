@@ -11,6 +11,7 @@
   "files": [
     "dist/**",
     "docs/agent-surface/recipes.md",
+    "docs/agent-surface/architecture.md",
     ".agents/skills/sdp-agent-surface/SKILL.md",
     ".agents/skills/sdp-authoring/SKILL.md",
     ".agents/skills/sdp-sessions/SKILL.md"

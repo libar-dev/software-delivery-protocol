@@ -685,6 +685,8 @@ for (const edge of edges.filter((edge) => edge.type === "uses")) {
     unresolvedUses.push({ from: edge.from, to: edge.to });
     continue;
   }
+  // Local collaborations remain in usesEdges; component fan counts measure boundary crossings.
+  if (from === to) continue;
   const outgoing = usesOutByComponent.get(from) ?? new Set();
   outgoing.add(to);
   usesOutByComponent.set(from, outgoing);
@@ -738,6 +740,9 @@ const components = [...componentIds].sort().map((id) => {
     usesOut,
     usedBy,
     satisfiedSpecs,
+    realizations: edges
+      .filter((edge) => edge.type === "satisfies" && anchors.has(edge.from))
+      .map((edge) => ({ from: edge.from, to: edge.to, claim: edge.claim })),
     shapingDecisions: [...decisionSubjects]
       .sort(([left], [right]) => left.localeCompare(right))
       .map(([decisionId, subjects]) => ({
@@ -747,7 +752,31 @@ const components = [...componentIds].sort().map((id) => {
   };
 });
 
-return { components, unresolvedUses };
+// Retain the unit relationships that aggregation would otherwise erase, including anchored
+// or inferred claims as supplied by the graph, never a reconstruction of imports or calls.
+const usesEdges = edges
+  .filter((edge) => edge.type === "uses")
+  .map((edge) => ({ from: edge.from, to: edge.to, claim: edge.claim }))
+  .sort((left, right) =>
+    left.from.localeCompare(right.from) ||
+    left.to.localeCompare(right.to) ||
+    left.claim.localeCompare(right.claim),
+  );
+const subjectIds = [...new Set(components.flatMap((component) => component.satisfiedSpecs))].sort();
+const subjects = subjectIds.map((id) => {
+  const context = g.specContext(id);
+  return {
+    id,
+    resolved: context !== undefined,
+    title: context?.title ?? null,
+    specKind: context?.specKind ?? null,
+    outcome: context?.sections.intent?.outcome ?? null,
+    design: context?.sections.design?.description ?? null,
+    relations: context?.relationsOut ?? [],
+  };
+});
+
+return { components, subjects, usesEdges, unresolvedUses };
 ```
 
 Membership, uses, and satisfies remain the derived structural edges; shaping decisions are the
@@ -755,6 +784,16 @@ Membership, uses, and satisfies remain the derived structural edges; shaping dec
 new reader accessor. A `memberOf` target with no component node keeps a `declared: false` row, and
 a `uses` edge with no resolvable owner on either end lands in `unresolvedUses` — dangling structure
 stays visible instead of silently dropping out of the map.
+
+`subjects` supplies each realized Spec's title, kind, outcome, design description, and outgoing
+relations with claims and resolution. `realizations` keeps the binding from each component or
+member to its responsibility. `usesEdges` retains original endpoints and claims, so shared policy
+and adapter collaborations remain visible below component grain. Fan counts count distinct other
+components; a collaboration within a component stays in `usesEdges` without making the component
+its own dependency. The live corpus carries anchored structural declarations; the query preserves
+any claim supplied by the graph. It does not compute exhaustive import reach.
+
+For worked examples and the gen-1 design comparison, see [Architecture through the graph](architecture.md).
 
 ## 18. Decision map
 

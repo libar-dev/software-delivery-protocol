@@ -4,6 +4,7 @@ kind: rule
 altitude: feature
 readiness: ready
 relations:
+  dependsOn: spec:extraction.delivery-facts
   refines: spec:validation.two-check-families
   decidedBy: spec:decisions.binding-not-liveness
 ---

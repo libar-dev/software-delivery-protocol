@@ -26,6 +26,7 @@ const exampleRunnerAdapterAnchor = codeAnchor({
   label: "registers one test per example and owns the fresh world lifecycle",
   satisfies: ref("spec:extraction.example-runner"),
   component: componentAnchorId("component:protocol.adapters"),
+  uses: [codeAnchorId("impl:protocol.example-runner")],
 });
 void adaptersComponentAnchor;
 void exampleRunnerAdapterAnchor;

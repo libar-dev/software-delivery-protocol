@@ -6,6 +6,7 @@ readiness: ready
 relations:
   refines: spec:model.core-model
   decidedBy:
+    - spec:decisions.jsdoc-graph-extraction-refused
     - spec:decisions.binding-not-liveness
     - spec:decisions.structural-anchor-semantics
 ---

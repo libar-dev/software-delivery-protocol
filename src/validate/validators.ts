@@ -1073,6 +1073,7 @@ const deliveryFactsHonestyAnchor = codeAnchor({
   label: "checks stated delivery facts equal the one recomputed derivation",
   satisfies: ref("spec:validation.authored-honesty"),
   component: componentAnchorId("component:protocol.validate"),
+  uses: [codeAnchorId("impl:protocol.delivery-facts")],
 });
 void deliveryFactsHonestyAnchor;
 

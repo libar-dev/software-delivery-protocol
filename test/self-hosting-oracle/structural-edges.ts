@@ -463,6 +463,10 @@ export const coarseGrainCoverage = [
 // that exist only to author the anchors themselves (the stable-id and anchor-builder modules)
 // confer no edge. The convention is stated in spec:protocol.structural-self-binding.
 export const expectedUsesEdges = [
+  ["impl:protocol.example-runner-adapter", "impl:protocol.example-runner"],
+  ["impl:protocol.authored-honesty-delivery-facts", "impl:protocol.delivery-facts"],
+  ["impl:protocol.reader", "impl:protocol.delivery-facts"],
+  ["impl:protocol.derive-graph", "impl:protocol.delivery-facts"],
   ["component:protocol.adapters", "component:protocol.runner"],
   ["component:protocol.cli", "component:protocol.codegen"],
   ["component:protocol.cli", "component:protocol.extract"],

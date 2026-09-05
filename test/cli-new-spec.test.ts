@@ -400,7 +400,9 @@ describe("sdp new spec", () => {
   });
 
   it("rechecks the created parent boundary after mkdir and refuses a swapped outside parent", () => {
-    const workspace = mkdtempSync(join(tmpdir(), "sdp-new-spec-postmkdir-"));
+    // process.cwd() resolves aliases such as macOS /var -> /private/var. Use the same
+    // physical path so the injected swap runs on the directory the command creates.
+    const workspace = realpathSync(mkdtempSync(join(tmpdir(), "sdp-new-spec-postmkdir-")));
     const outside = join(workspace, "outside");
     const root = join(workspace, "root");
     const parent = join(root, "specs");
@@ -423,17 +425,20 @@ describe("sdp new spec", () => {
         return;
       }
 
+      let swapped = false;
       const exitCode = executeNewSpec(parsed, capture.output, {
         mkdirSync(target, options) {
           const created = mkdirSync(target, options);
           if (String(target) === parent) {
             rmSync(parent, { recursive: true, force: true });
             symlinkSync(outside, parent);
+            swapped = true;
           }
           return created;
         },
       });
 
+      expect(swapped).toBe(true);
       expect(exitCode).toBe(1);
       expect(capture.readStderr()).toMatch(/cwd-relative|symlink|escapes|outside/u);
       expect(existsSync(escapedTarget)).toBe(false);

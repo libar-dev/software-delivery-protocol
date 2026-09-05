@@ -23,3 +23,7 @@ relations:
 - rule: A duplicate-id verifier keys the same first carrier exactly as the graph index keys it, and the duplicate-ids check reports the ambiguity loudly.
 - rule: The extractor, the delivery-facts honesty check, and the reader's enabled decode share the one conferral computation and its two eligibility predicates, so the three surfaces can never disagree.
 - rule: Facts are emitted in ladder order — `implemented`, then `has-verifier`.
+
+## Design
+
+Shared policy. Extraction, validation, and the reader use one graph-level delivery-fact computation and its eligibility predicates. The graph component owns the policy; callers own graph construction, diagnostics, and decoded views. Keeping that computation below its callers prevents each consumer from maintaining a separate interpretation of binding eligibility.

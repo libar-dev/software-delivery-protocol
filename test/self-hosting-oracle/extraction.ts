@@ -13,6 +13,10 @@ export const extractionSpecs = [
     narrative:
       "The graph is the current projection of the repository at a commit. Git holds lifecycle history, so removed records disappear from the current graph and a current `supersedes` relation is the only forward pointer between records that still exist.",
     sections: {
+      design: {
+        description:
+          "One read model. Carrier reifiers translate each supported syntax into common reified input. Graph derivation joins that input with bindings and computes delivery facts before consumers read it. Adding a carrier changes the input boundary; validators and projections continue to consume the same graph. The shared delivery-fact policy belongs to the graph component so graph construction does not define a competing policy.",
+      },
       intent: { outcome: "Expose one carrier-neutral derivation seam." },
       behavior: {
         rules: [
@@ -35,6 +39,10 @@ export const extractionSpecs = [
     title: "Resolving bindings confer direct delivery facts",
     narrative: null,
     sections: {
+      design: {
+        description:
+          "Shared policy. Extraction, validation, and the reader use one graph-level delivery-fact computation and its eligibility predicates. The graph component owns the policy; callers own graph construction, diagnostics, and decoded views. Keeping that computation below its callers prevents each consumer from maintaining a separate interpretation of binding eligibility.",
+      },
       intent: {
         outcome:
           "State the one delivery-fact conferral law shared by the extractor, the delivery-facts honesty check, and the reader's enabled decode, so the three surfaces can never disagree.",
@@ -502,6 +510,10 @@ export const extractionSpecs = [
     title: "A bound example runs its contract steps against a fresh world",
     narrative: null,
     sections: {
+      design: {
+        description:
+          "Ports and adapters. The runner accepts a generated contract, step handlers, and a caller-owned world. The Vitest adapter registers tests and creates each world before calling the runner. Framework dependencies point from the adapter toward the runner; the runner remains usable without a test framework. Step ordering and failure labels belong to the core, while test registration and world lifecycle belong to the adapter.",
+      },
       intent: {
         problem:
           "A bound test must execute a Spec's own steps without the executing core learning any test framework.",

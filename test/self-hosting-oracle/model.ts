@@ -397,7 +397,7 @@ export const modelSpecs = [
     sections: {
       intent: {
         outcome:
-          "Specs carrying architectural significance, and relationships among those Specs, are authored as decision/model-kind Specs, existing relations, and the satisfies→decidedBy join — no new vocabulary is needed beyond the structural anchors already in the graph.",
+          "Express architectural responsibilities in Specs of the appropriate kind, connect their semantic dependencies with existing relations, and bind their implementations through structural anchors. Architectural significance adds no kind or vocabulary.",
       },
       model: {
         terms: {

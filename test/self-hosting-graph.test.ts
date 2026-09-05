@@ -193,7 +193,7 @@ describe("the self-hosting corpus", () => {
     expect(expectedPackMembers).toHaveLength(164);
     expect(expectedAnchors).toHaveLength(177);
     expect(result.graph.nodes).toHaveLength(342);
-    expect(result.graph.edges).toHaveLength(760);
+    expect(result.graph.edges).toHaveLength(768);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {

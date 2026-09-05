@@ -3,6 +3,10 @@
 // the extractor may neither add to it nor drop from it.
 
 export const expectedDeclaredRelations = [
+  ["spec:extraction.derive-graph", "dependsOn", "spec:extraction.delivery-facts"],
+  ["spec:consumers.reader", "dependsOn", "spec:extraction.delivery-facts"],
+  ["spec:validation.authored-honesty", "dependsOn", "spec:extraction.delivery-facts"],
+  ["spec:model.anchors", "decidedBy", "spec:decisions.jsdoc-graph-extraction-refused"],
   ["spec:carrier.markdown-authoring", "dependsOn", "spec:carrier.markdown-parser"],
   ["spec:carrier.markdown-authoring", "decidedBy", "spec:decisions.sdp-ts-extension"],
   ["spec:carrier.markdown-authoring", "decidedBy", "spec:decisions.carrier-ruling"],

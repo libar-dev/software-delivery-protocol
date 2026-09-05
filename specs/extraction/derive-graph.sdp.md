@@ -4,6 +4,7 @@ kind: behavior
 altitude: feature
 readiness: ready
 relations:
+  dependsOn: spec:extraction.delivery-facts
   refines: spec:protocol.self-hosting
   constrainedBy: spec:extraction.determinism
   decidedBy: spec:decisions.one-validation-path
@@ -23,3 +24,7 @@ forward pointer between records that still exist.
 - rule: Declared relations resolve Primitive to Primitive, while `satisfies` and test `verifies` edges derive from anchors and run from their binding node to the direct Spec target.
 - rule: Delivery facts are computed node facts: a resolving `satisfies` edge contributes `implemented`, and an enabled direct verifier contributes `has-verifier` only to its target.
 - rule: Inferred structural edges are advisory inputs to impact analysis and never become authoritative graph truth.
+
+## Design
+
+One read model. Carrier reifiers translate each supported syntax into common reified input. Graph derivation joins that input with bindings and computes delivery facts before consumers read it. Adding a carrier changes the input boundary; validators and projections continue to consume the same graph. The shared delivery-fact policy belongs to the graph component so graph construction does not define a competing policy.
