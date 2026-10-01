@@ -1124,4 +1124,87 @@ export const consumersSpecs = [
     },
     deliveryFacts: [],
   },
+  {
+    id: "spec:consumers.adopter-on-ramp",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/adopter-on-ramp.sdp.md",
+    title: "An adopter learns the ruled graph homes from the shipped on-ramps",
+    narrative: null,
+    sections: {
+      intent: {
+        problem:
+          "An adopter that follows the shipped on-ramps cannot learn where a deferral, an unsettled fact, a ruling awaiting its owner, a probe, or a count belongs, so it invents marker conventions, hand-kept registers, and scripts that keep them true.",
+        outcome:
+          "Teach each ruled home in the shipped skills, one line each with its carrying Spec, so an adopter states those truths in the graph and not beside it.",
+      },
+      behavior: {
+        rules: [
+          "The authoring skill teaches a deferral as a blocking open question that names its re-entry trigger, plus `dependsOn` for a true precondition. The floor then holds the Spec below `defined` without a marker, and because readiness is independent across refinement, the deferred Spec's own example children still state the rung their bound points clear.",
+          "It teaches an unsettled fact as a constraint Spec that records a blocking open question naming its probe. Specs bounded by it declare `constrainedBy`, and the floor refuses their `ready` statement.",
+          "It teaches a ruling that awaits its owner as a decision Spec below `ready`, with `decidedBy` from each Spec the ruling shapes.",
+          "It teaches a probe as an example that `verifies` its fact. `has-verifier` is derived once a test anchor binds the example, and a probed status is never authored.",
+          "It teaches that counts, registers, and review scope are derived. Census counts come from `sdp census`, open-question and mention registers from catalog recipes, and delta review scope from changed-file blast radius. None is quoted into prose.",
+          "`sdp --help` names the shipped skills, the recipe catalog, and the Protocol's own `specs/` by package-relative path, so an operator who reaches the CLI without a package runner still finds the on-ramps and the law they cite.",
+          "The skills teach and never check. No validator reads an adopter's marker convention, and an adopter's own policy checks stay the adopter's.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.agent-surface.register-recipes",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/agent-surface.register-recipes.sdp.md",
+    title: "Register questions stay executable graph recipes",
+    narrative: null,
+    sections: {
+      intent: {
+        problem:
+          "An adopter keeps open-question tables, dependency lists, and reference checks by hand because the catalog ships no body for them, and each hand-kept copy goes stale.",
+        outcome:
+          "Answer register, dependency, and mention questions with catalog recipes, so the tables an adopter would keep by hand are derived on demand.",
+      },
+      behavior: {
+        rules: [
+          "The open-question register lists every open question by Spec with its blocking flag and reports the totals.",
+          "The dependency footing lists what one Spec rests on across `refines`, `dependsOn`, `constrainedBy`, and `decidedBy`, with each target's stated and derived readiness.",
+          "The mention audit lists Spec ids written in narrative and section text, outside `gwt` and `gwt-vocabulary` fences, that do not resolve or that no declared relation from the mentioning Spec backs.",
+          "Entry search matches whole tokens and answers with the Spec, the section, and the matching entry's key or text, where concept search answers with the Spec and the section only.",
+          "Each body composes the existing reader. None adds a reader join or a CLI verb, because a join freezes into the reader only at the second-caller bar.",
+          "The recipe check executes each body as written, and every document that states the catalog's size moves with the catalog.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.shipped-protocol-corpus",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/shipped-protocol-corpus.sdp.md",
+    title: "The package ships the Specs its skills cite",
+    narrative: null,
+    sections: {
+      intent: {
+        problem:
+          "The shipped skills and recipes cite Specs by id. An adopter that installs the package has no Spec to read, and an adopter that runs the CLI from a source checkout has the Specs on disk and no pointer to them.",
+        outcome:
+          "Ship the Protocol's own corpus in the package and point at it from the CLI, so every cited Spec id leads either adopter to a readable carrier.",
+      },
+      behavior: {
+        rules: [
+          "The published package includes the Protocol's Spec and Pack carriers under `specs/`.",
+          "An adopter reads a cited Spec through the front door by selecting the package directory, installed or checked out, as the root, or by opening the carrier file. `sdp --help` names that path, as `spec:consumers.adopter-on-ramp` requires.",
+          "Discovery never descends into `node_modules`, so the shipped corpus never enters an adopter's own graph.",
+          "The package ships no source anchors. A graph derived from the shipped corpus answers what the Protocol intends and never what it has realized, so its delivery facts and gap warnings are not evidence about the Protocol.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
 ] as const;

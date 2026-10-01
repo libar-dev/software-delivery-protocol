@@ -17,6 +17,7 @@ relations:
 
 ### Open questions
 - [non-blocking] Does any remaining law in the src/validate/readiness-floor.ts file header promote here under comment promotion?
+- [non-blocking] `spec:validation.typed-dependency-floor` widens the `ready` target clause to `constrainedBy` and `decidedBy`. Its implementing change edits the clause sentence here and the floor table together.
 
 ## Rule
 - A Spec may state a readiness only when every clause in that readiness floor passes.

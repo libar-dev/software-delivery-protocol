@@ -11,6 +11,9 @@ relations:
 ## Intent
 - outcome: Keep verification relationships meaningful by requiring declared test and oracle traces to resolve to their enabled bindings.
 
+### Open questions
+- [non-blocking] `spec:validation.unbound-example-posture` limits the unbound-example warning to examples that state `ready`. Its implementing change edits the loud-naming sentence here and `checkVerifiesLinkage` together.
+
 ## Rule
 - A declared verifies relation and an oracle model relation must resolve through their respective binding traces before either can stand as verification evidence.
 - A non-resolving trace is named loudly and confers no delivery fact, because silence would read as verification the graph never earned.

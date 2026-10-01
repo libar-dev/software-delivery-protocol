@@ -1024,4 +1024,87 @@ export const decisionsSpecs = [
     },
     deliveryFacts: [],
   },
+  {
+    id: "spec:decisions.checked-mentions",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/checked-mentions.sdp.md",
+    title: "A Spec id written in prose is a checked mention",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Make a Spec id written in prose resolve, and make one keyed entry of an open section addressable, so a reference below the Spec level can be checked.",
+        openQuestions: [
+          {
+            question:
+              "`mention` and `entry address` are candidate terms. They enter the glossary when this record is ratified.",
+            blocking: false,
+          },
+        ],
+      },
+      decision: {
+        context:
+          "Specs name other Specs, and single entries of them, in prose. Referential integrity reads edges and Pack references only. A prose id that does not resolve passes validation, a mention that no relation backs hides a dependent from blast radius, and finding every Spec that repeats an entry is a text search. The first adopter corpus carried its design as keyed entries, and most of its prose mentions had no declared relation.",
+        decision:
+          "A Spec id in narrative or section text, outside `gwt` and `gwt-vocabulary` fences, is a mention. A mention that does not resolve is a conformance error. A mention with no declared relation from its Spec to the target is a warning. An id that adds `#` and a key to a Spec id addresses one keyed entry of that Spec's `design` or `ui` section and resolves when the key exists. A mention mints no edge, and the reader gains no join.",
+        rationale: [
+          "The warning asks for a relation that already exists, so linkage keeps one home. Open-section keys are already unique within a Spec and already fit the sub-part form, so the address costs no carrier grammar.",
+          "This applies the content-only sections ruling rather than contradicting it. A mention mints no edge, so no consumer branches on a reference union, and the warning names exactly the double-linkage drift that ruling calls legal and silent today. The id grammar already parses and formats the sub-part; this record gives it its first meaning.",
+        ],
+        alternatives: [
+          "A new edge type for mentions costs the schema, the edge contract, the census, the Mermaid view, and every recipe that filters edges. The warning reaches the same dependents through relations that exist.",
+          "Leaving the check to each adopter's own lint fixes one corpus and no other.",
+          "A positional address for an unkeyed bullet, such as the third flow of a Workflow, was refused. Positions move with every edit above them, so such an address would break silently where a key breaks loudly.",
+        ],
+        consequences: [
+          "Only a keyed entry of `design` or `ui` is addressable. A Workflow flow, a Rule or Contract bullet, a Model term, and an open question have no address; a reference to one of them stays a Spec-level mention, and a sequence that must be addressed is authored as keyed entries.",
+          "A renamed open-section key fails validation in every Spec that addresses it.",
+          "Blast radius and delta review scope include a mentioning Spec once a declared relation backs its mention.",
+          "A family pattern written in id form reads as an unresolved mention, so such a pattern is written as plain words.",
+          "No reference check detects two Specs that restate one shape in their own words. The check narrows that defect class and never closes it.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.authored-entry-order",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "scoped",
+    file: "specs/decisions/authored-entry-order.sdp.md",
+    title: "The Design Review renders open-section entries as a list",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Render the entries of an open section as a readable list in authored order, so a signature or a step reads as text and not as an escaped JSON string.",
+        openQuestions: [
+          {
+            question:
+              "This record changes a stated rule of the Design Review, so it supersedes the shipped-projections freeze for open-section rendering and must pass the ADR three-part test. Does the owner reopen the freeze now, or after `spec:extraction.open-section-order` has landed and the ordered JSON has been read?",
+            blocking: true,
+          },
+        ],
+      },
+      decision: {
+        context:
+          "The Design Review prints an open section as one fenced JSON object, so each entry's value is an escaped string. Authored order is restored by `spec:extraction.open-section-order` as an ordinary revision, because no Spec states the sort. Rendering is different: `spec:consumers.design-review` states that fenced JSON preserves authored keys and values, and the shipped projections are frozen, so a list rendering needs a superseding record. The first adopter corpus carries 762 keyed entries, and its reviewers read the carrier files instead of the review.",
+        decision:
+          "The Design Review renders each entry of a `design` or `ui` section as a list item, its key as inline code and its value as Markdown text, in authored order. The fenced-JSON rule of the Design Review stops covering open sections. The freeze on the four shipped projections stands for everything else.",
+        rationale: [
+          "A list reads as the author wrote it and escapes through the prose rules the Design Review already has for every rendered field, where fenced JSON turns a one-line signature into an escaped string nobody can paste.",
+        ],
+        alternatives: [
+          "Keeping fenced JSON in authored order makes a sequence readable and leaves every value escaped.",
+        ],
+        consequences: [
+          "The Design Review Spec's encoding rule gains a list case for open sections, and the golden Design Review pages regenerate.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
 ] as const;

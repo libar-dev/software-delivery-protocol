@@ -16,6 +16,12 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
+> **plan 39 is DRAFTED**. The first-adopter arc, a thin lineage pointer in the plan-38 shape: one
+> reader's analysis of the first outside corpus is authored as sub-ready Specs (the Markdown body
+> grammar with twelve bound refusal examples, inline code spans, the typed-dependency floor, the
+> unbound-example posture, the adopter on-ramp, register recipes, the shipped corpus, authored
+> entry order, and two decision records), and the backlog and readiness are read from the graph
+> (recipes 1, 9, 11).
 > **plan 38 is DRAFTED** — the graph-first planning arc, a thin lineage pointer, not a briefs
 > index: the arc's forward intent is authored as capture-rung Specs
 > (`spec:consumers.graph-first-planning`, `spec:model.structural-patterns`,

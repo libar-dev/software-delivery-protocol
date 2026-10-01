@@ -20,6 +20,11 @@ export const validationSpecs = [
               "Does any remaining law in the src/validate/readiness-floor.ts file header promote here under comment promotion?",
             blocking: false,
           },
+          {
+            question:
+              "`spec:validation.typed-dependency-floor` widens the `ready` target clause to `constrainedBy` and `decidedBy`. Its implementing change edits the clause sentence here and the floor table together.",
+            blocking: false,
+          },
         ],
       },
       behavior: {
@@ -593,6 +598,13 @@ export const validationSpecs = [
       intent: {
         outcome:
           "Keep verification relationships meaningful by requiring declared test and oracle traces to resolve to their enabled bindings.",
+        openQuestions: [
+          {
+            question:
+              "`spec:validation.unbound-example-posture` limits the unbound-example warning to examples that state `ready`. Its implementing change edits the loud-naming sentence here and `checkVerifiesLinkage` together.",
+            blocking: false,
+          },
+        ],
       },
       behavior: {
         rules: [
@@ -1154,6 +1166,79 @@ export const validationSpecs = [
           "The discipline is cheap by construction — a probe world per direction — and it is stated here so the two families are read as checks that are themselves checked.",
         ],
       },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.typed-dependency-floor",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/typed-dependency-floor.sdp.md",
+    title: "A ready Spec rests only on settled dependencies",
+    narrative: null,
+    sections: {
+      intent: {
+        problem:
+          "The `ready` floor reads `refines` and `dependsOn` targets only, so a Spec bounded by an unsettled constraint or shaped by an unsettled decision can still state `ready`.",
+        outcome:
+          "Refuse a `ready` statement while any Spec it depends on, through any typed dependency, stands below `defined`.",
+      },
+      behavior: {
+        rules: [
+          "The `ready` floor's target clause reads every typed dependency the Spec declares. Each `refines`, `dependsOn`, `constrainedBy`, and `decidedBy` target itself states at least `defined`.",
+          "The threshold is `defined` for all four relations. A `decidedBy` target at `defined` is a complete decision record awaiting ratification, and demanding `ready` of it would make `ready` on every shaped Spec a transitive registry fact, so a design can state `ready` while the decisions that shape it stay proposals.",
+          "The clause stays kind-blind and reads resolving targets only. An unresolved target remains the relation-resolution clause's failure, never a second one.",
+          "`verifies` and `supersedes` stay outside the clause. A verifier's rung is independent of the Spec it verifies, and a replacement decision does not rest on the record it supersedes.",
+          "An unsettled fact is stated the way any unsettled truth is. A constraint Spec that records a blocking open question stays below `defined`, and every Spec bounded by it can state `defined` and cannot state `ready`.",
+          "This clause replaces the `refines` and `dependsOn` sentence of `spec:validation.readiness-floor` and its row in the floor table of `src/validate/readiness-floor.ts`. The floor keeps one target clause, never two.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.unbound-example-posture",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/unbound-example-posture.sdp.md",
+    title: "An unbound example below ready is data, not a warning",
+    narrative: null,
+    sections: {
+      intent: {
+        problem:
+          "A corpus designed before its code exists gets one verifies-linkage warning per example for a state that is honest at the rung the example states, so a real warning hides among them.",
+        outcome:
+          "Keep the unbound state of an example visible as data, and reserve the warning for an example that states `ready`.",
+      },
+      behavior: {
+        rules: [
+          "An example that declares `verifies` and has no resolving test anchor is named by the verifies-linkage warning only when the example states `ready`.",
+          "Below `ready` the same state is data. The reader reports the example's verifier binding as declared and not enabled, the declared-versus-enabled recipe lists it, and it confers no `has-verifier`.",
+          "A Spec of any other kind that declares `verifies` keeps its warning at every rung, and the oracle-linkage check is unchanged.",
+          "A `ready` Spec with no enabled verifier is still named by the gap signal, so an unbound example beneath a ready parent stays loud at the parent.",
+          "The worked example teaches the incomplete trace through the verifier bindings its Design Review page renders and through the declared-versus-enabled recipe, not through a warning. Its walkthrough and example check move with this rule.",
+          "This rule revises the sentence of `spec:validation.verification-linkage` that names every non-resolving trace loudly. The realizing entrypoint stays `checkVerifiesLinkage` in `src/validate/validators.ts`.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.prose-mentions",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/validation/prose-mentions.sdp.md",
+    title: "Every Spec id written in prose resolves",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Refuse a prose reference to an absent Spec or entry, and report a prose reference that no declared relation backs.",
+      },
+      behavior: {},
     },
     deliveryFacts: [],
   },

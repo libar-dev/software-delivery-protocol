@@ -688,4 +688,67 @@ export const extractionSpecs = [
     },
     deliveryFacts: ["has-verifier"],
   },
+  {
+    id: "spec:extraction.open-section-order",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/extraction/open-section-order.sdp.md",
+    title: "Serialization preserves authored entry order",
+    narrative: null,
+    sections: {
+      intent: {
+        problem:
+          "Canonical serialization and the Design Review sort the keys of `design`, `ui`, and `model` terms by code unit, so a ten-step sequence reads as step 1, step 10, step 2 and an author's grouping is lost, while the in-memory graph keeps the authored order.",
+        outcome:
+          "Carry the authored order of open-section entries and model terms through the serialized graph and the Design Review's key order.",
+      },
+      behavior: {
+        rules: [
+          "The entry order of `design`, `ui`, and `model` terms is authored content. Extraction keeps it, the serialized graph emits it, and the Design Review's fenced JSON follows it.",
+          "Authored order is a function of the committed source, so two derivations of one commit stay byte-identical. The sort guarded against property-order nondeterminism, and the lower-camel key rule already removes that: no key is integer-like, so both carriers hold keys in insertion order.",
+          "Two carriers that author the same entries in different orders derive different graph bytes. Parity for an open section means the same entries in the same order.",
+          "The serialized graph changes for every Spec with an open section or model terms, so the schema version moves and the golden trees regenerate.",
+          "This rule is an ordinary revision. No Spec states the sort; it lives in `canonicalDynamicSection` in `src/extract/serialize.ts` and `renderDynamicRecord` in `src/projections/design-review-markdown.ts`, which are the realizing sites. The Design Review's encoding rule is untouched; rendering entries as a list is `spec:decisions.authored-entry-order`.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:extraction.contract-declarations",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    file: "specs/extraction/contract-declarations.sdp.md",
+    title: "Contract declarations derive a compilable module",
+    narrative: null,
+    sections: {
+      intent: {
+        problem:
+          "Signatures and types in a design are code, yet an author writes them as prose entries no compiler reads, so a name used and never declared, or declared twice, is found only by a reviewer.",
+        outcome:
+          "Give contract content a closed typed section whose declarations derive one compilable module per corpus, so a Spec that disagrees with its code fails the build the way a step contract does.",
+        openQuestions: [
+          {
+            question:
+              "This Spec re-enters on evidence. Has code first had to agree with signatures authored at design time, or has a second adopter authored signatures in a Design section? Until one holds, the declaration shape stays unruled.",
+            blocking: true,
+          },
+          {
+            question:
+              "Does an opaque, language-tagged fence owned by one keyed entry fit the carrier ruling's small owned grammar, or does it need a decision of its own?",
+            blocking: true,
+          },
+          {
+            question:
+              "When the contract section lands, the `contract` row of the kind-evidence table repoints to it. Which evidence counts as present, and which as complete?",
+            blocking: false,
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
 ] as const;
