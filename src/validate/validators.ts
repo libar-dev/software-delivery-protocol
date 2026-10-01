@@ -724,8 +724,8 @@ export function validateStructuralAnchorEdges(graph: GraphSchema): readonly Find
  * The missing-target half of the check is referential integrity's (it is reference resolution).
  * What is surfaced here is the incomplete bidirectional trace — informative, never a gate:
  * a declared `verifies` confers `has-verifier` only from an *enabled* example (an example-kind
- * spec a resolving test anchor binds), so an unenabled or wrong-kind verifier is named loudly
- * instead of silently conferring nothing.
+ * spec a resolving test anchor binds). An unbound example warns at ready; a wrong-kind
+ * verifier warns at every rung. Below-ready examples retain declared verifier data.
  */
 const verifiesLinkageAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.verifies-linkage"),
@@ -734,6 +734,14 @@ const verifiesLinkageAnchor = codeAnchor({
   component: componentAnchorId("component:protocol.validate"),
 });
 void verifiesLinkageAnchor;
+
+const unboundExamplePostureAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.unbound-example-posture"),
+  label: "limits unbound example warnings to stated ready",
+  satisfies: ref("spec:validation.unbound-example-posture"),
+  component: componentAnchorId("component:protocol.validate"),
+});
+void unboundExamplePostureAnchor;
 
 function checkVerifiesLinkage(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
   const anchorVerified = new Set<string>();
@@ -774,7 +782,7 @@ function checkVerifiesLinkage(graph: GraphSchema, index: GraphIndex): readonly F
       continue;
     }
 
-    if (!anchorVerified.has(verifier.id)) {
+    if (verifier.readiness === "ready" && !anchorVerified.has(verifier.id)) {
       findings.push(
         createFinding({
           validatorId: graphValidatorIds.verifiesLinkage,

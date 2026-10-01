@@ -372,6 +372,11 @@ export const acceptedArchitecturalUnits = [
   },
   {
     unit: "src/validate/validators.ts#checkVerifiesLinkage",
+    anchorId: "impl:protocol.unbound-example-posture",
+    componentId: "component:protocol.validate",
+  },
+  {
+    unit: "src/validate/validators.ts#checkVerifiesLinkage",
     anchorId: "impl:protocol.verifies-linkage",
     componentId: "component:protocol.validate",
   },

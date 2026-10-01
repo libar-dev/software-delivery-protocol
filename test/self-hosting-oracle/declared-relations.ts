@@ -890,4 +890,34 @@ export const expectedDeclaredRelations = [
   ["spec:carrier.inline-code-spans.list", "verifies", "spec:carrier.inline-code-spans"],
   ["spec:carrier.inline-code-spans.pack", "refines", "spec:carrier.inline-code-spans"],
   ["spec:carrier.inline-code-spans.pack", "verifies", "spec:carrier.inline-code-spans"],
+  [
+    "spec:validation.unbound-example-posture.lower-rungs",
+    "refines",
+    "spec:validation.unbound-example-posture",
+  ],
+  [
+    "spec:validation.unbound-example-posture.lower-rungs",
+    "verifies",
+    "spec:validation.unbound-example-posture",
+  ],
+  [
+    "spec:validation.unbound-example-posture.warning-cases",
+    "refines",
+    "spec:validation.unbound-example-posture",
+  ],
+  [
+    "spec:validation.unbound-example-posture.warning-cases",
+    "verifies",
+    "spec:validation.unbound-example-posture",
+  ],
+  [
+    "spec:validation.unbound-example-posture.parent-traces",
+    "refines",
+    "spec:validation.unbound-example-posture",
+  ],
+  [
+    "spec:validation.unbound-example-posture.parent-traces",
+    "verifies",
+    "spec:validation.unbound-example-posture",
+  ],
 ] as const;

@@ -265,9 +265,8 @@ Non-obvious gotcha: `npm test` refuses to run until the generated contracts exis
 documented green gate `npm run check` already sequences build → generate → typecheck → test →
 self-hosting/example checks → preflight correctly, so prefer it after engine edits.
 
-The `check:example` step emits one intentional `verifies-linkage` warning (a declared-but-unbound
-verifier in the example corpus); the gate still exits 0. That warning is expected, not a
-regression.
+The `check:example` step reports 0 errors and 0 warnings. The unbound `defined` example stays
+visible in the Design Review verifier bindings and recipe 10, declared versus enabled verifiers.
 
 The `check:self-hosting` step emits five intentional `honesty/gaps` warnings for the owner-ratified
 ready Specs without resolving verifier bindings. The self-hosting oracle pins those warnings; they

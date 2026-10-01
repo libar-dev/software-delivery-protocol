@@ -80,19 +80,17 @@ the test or reject a stale handler key without changing the test.
 
 The oracle is typed against the same space, while outcome faithfulness stays human-reviewed.
 
-`validate` runs one validation path over the graph. It reports **0 errors and exactly 1 warning**:
+`validate` reports 0 errors and 0 warnings. `invalid-cart` states `defined` and declares
+`verifies`, but no test anchor binds it. Its incomplete trace stays visible in the parent page's
+verifier bindings as `[declared]` and not enabled. It confers no `has-verifier`.
 
-```
-specs/orders/create-order-invalid-cart.sdp.md — [warning] conformance/verifies-linkage —
-Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order"
-but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete
-and it confers no has-verifier.
-validate: 0 errors · 1 warnings (conformance + honesty over the one graph)
-```
+Run recipe 10, declared versus enabled verifiers, from
+[`docs/agent-surface/recipes.md`](../../docs/agent-surface/recipes.md) against this example root.
+Pass its body to `node dist/cli/sdp.js q` with `--root examples/checkout-v1 --json`.
 
-The warning is deliberate. `invalid-cart` declares that it verifies its parent, but no test anchor
-binds it. The graph reports the incomplete trace, and the exit code stays 0 because this absence is
-informative rather than a gate.
+The `spec:orders.create-order` row declares both `valid-cart` and `invalid-cart`; only
+`valid-cart` is enabled. Its resolving test anchor gives the parent `has-verifier`, so the
+parent has no gap. An unbound example that states `ready` still gets a verifies-linkage warning.
 
 `view` regenerates `generated/design-review/`: an index and one page per Spec and Pack. Open
 `generated/design-review/spec/orders.create-order.md` and look for:

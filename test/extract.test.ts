@@ -868,7 +868,7 @@ describe("anchor extraction corpora", () => {
     expect(validateGraph(result.graph).findings).toEqual([]);
   });
 
-  it("unenabled-verifier: a declared verifies without a test binding confers nothing (MD-7) and is surfaced", () => {
+  it("unenabled-verifier: a below-ready example confers nothing; a wrong-kind verifier still warns", () => {
     const result = extract({ root: corpusRoot("unenabled-verifier") });
 
     expect(result.report.findings).toEqual([]);
@@ -879,8 +879,17 @@ describe("anchor extraction corpora", () => {
       }
     }
 
-    // The verifies-linkage check names the incomplete spec↔test trace — informative, never a gate.
-    const validation = validateGraph(result.graph).findings;
+    expect(validateGraph(result.graph).findings).toEqual([]);
+    // A deliberate wrong-kind declaration keeps the linkage finding under test.
+    const graph = {
+      ...result.graph,
+      nodes: result.graph.nodes.map((node) =>
+        node.id === "spec:orders.unverified-parent.example" && node.nodeType === "Primitive"
+          ? { ...node, specKind: "behavior" as const }
+          : node,
+      ),
+    };
+    const validation = validateGraph(graph).findings;
     expect(validation.filter((finding) => finding.severity === "error")).toEqual([]);
     expect(validation).toHaveLength(1);
     expect(validation[0]?.validatorId).toBe(graphValidatorIds.verifiesLinkage);

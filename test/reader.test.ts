@@ -104,13 +104,16 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
         },
       ]);
 
-      // The example's standing surfaced absence: the invalid-cart example's unenabled verifier.
-      expect(reader.findings()).toHaveLength(1);
-      expect(reader.findings()[0]).toMatchObject({
-        validatorId: graphValidatorIds.verifiesLinkage,
-        severity: "warning",
-        subjectId: "spec:orders.create-order.invalid-cart",
-      });
+      expect(reader.findings()).toEqual([]);
+      expect(reader.specContext("spec:orders.create-order")?.verifiers).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            verifierId: "spec:orders.create-order.invalid-cart",
+            claim: "declared",
+            enabled: false,
+          }),
+        ]),
+      );
     });
   });
 
@@ -413,10 +416,7 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
       ]);
 
       expect(context?.floorFailures).toEqual([]);
-      // The unenabled-verifier warning names this spec as related — visible from here too.
-      expect(context?.findings.map((finding) => finding.validatorId)).toEqual([
-        graphValidatorIds.verifiesLinkage,
-      ]);
+      expect(context?.findings).toEqual([]);
     });
 
     it("decodes a test anchor as an enabled verifier binding with its source location", () => {

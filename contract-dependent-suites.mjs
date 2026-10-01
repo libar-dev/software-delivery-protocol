@@ -92,6 +92,11 @@ export const contractDependentSuites = [
       "test/self-hosting-validators-oracle.test.ts",
       "test/self-hosting-validators.oracle.ts",
       "test/self-hosting-validators.test.ts",
+      "test/self-hosting-unbound-example.test.ts",
+      "test/validation.unbound-example-posture.lower-rungs.test.generated.ts",
+      "test/validation.unbound-example-posture.warning-cases.test.generated.ts",
+      "test/validation.unbound-example-posture.parent-traces.test.generated.ts",
+
       "test/validation.authored-honesty.section-authored-fact.test.generated.ts",
       "test/validation.authored-honesty.unearned-stated-fact.test.generated.ts",
       "test/validation.claim-separation.collapsed-edge-claim.test.generated.ts",

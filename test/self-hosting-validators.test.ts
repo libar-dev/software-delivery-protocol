@@ -953,7 +953,7 @@ function createVerificationLinkageWorld(
   world.nodes.push(probeSpec(parentId));
 
   if (verifierKind === "example spec") {
-    world.nodes.push(probeSpec(verifierId, { kind: "example" }));
+    world.nodes.push(probeSpec(verifierId, { kind: "example", readiness: "ready" }));
     world.edges.push({
       from: verifierId,
       type: "verifies",

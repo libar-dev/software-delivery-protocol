@@ -172,6 +172,13 @@ function createProjectionWorld(_point: Partial<DesignReviewConditions>): Project
   const root = materializeExtractCorpus("consumer-surface");
   temporaryRoots.add(root);
 
+  // A non-example verifies declaration deliberately warns at every rung. Keep the
+  // projection finding independent of the below-ready example posture.
+  const verifierFile = join(root, "specs/create-order.empty-cart.sdp.md");
+  writeFileSync(
+    verifierFile,
+    readFileSync(verifierFile, "utf8").replace("kind: example", "kind: behavior"),
+  );
   const derived = extract({ root });
   expect(derived.report.findings).toEqual([]);
   const specIds = derived.graph.nodes

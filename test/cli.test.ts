@@ -1112,7 +1112,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
     expect(exits).toEqual([0]);
   });
 
-  it("validates the example: exit 0, the artifact written, and exactly the one surfaced warning", () => {
+  it("validates the example: exit 0, the artifact written, and no warning", () => {
     const root = materializeExampleCopy();
 
     try {
@@ -1126,12 +1126,9 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
         "11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges",
       );
       expect(capture.readStdout()).toContain(
-        "validate: 0 errors · 1 warnings (conformance + honesty over the one graph)",
+        "validate: 0 errors · 0 warnings (conformance + honesty over the one graph)",
       );
-      // The standing warning is the invalid-cart example's unenabled verifier — informative,
-      // never a gate (it is the surfaced absence the check exists for, not noise to silence).
-      expect(capture.readStderr()).toContain("conformance/verifies-linkage");
-      expect(capture.readStderr()).not.toContain("[error]");
+      expect(capture.readStderr()).toBe("");
       expect(existsSync(join(root, "generated", "graph.json"))).toBe(true);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -1185,7 +1182,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
     expect(capture.readStderr()).toBe(`${SDP_HELP_TEXT}\n\nUnknown command: bogus\n`);
   });
 
-  it("views the example: validate + the Design Review written, with the one standing warning", () => {
+  it("views the example: validate + the Design Review written, with no warning", () => {
     const root = materializeExampleCopy();
 
     try {
@@ -1196,7 +1193,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
 
       expect(exitCode).toBe(0);
       expect(capture.readStdout()).toContain(
-        "validate: 0 errors · 1 warnings (conformance + honesty over the one graph)",
+        "validate: 0 errors · 0 warnings (conformance + honesty over the one graph)",
       );
       expect(capture.readStdout()).toContain("(13 pages)");
 

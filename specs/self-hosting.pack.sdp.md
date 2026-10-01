@@ -194,6 +194,9 @@ specs:
   - spec:decisions.jsdoc-graph-extraction-refused
   - spec:decisions.checked-mentions
   - spec:decisions.authored-entry-order
+  - spec:validation.unbound-example-posture.lower-rungs
+  - spec:validation.unbound-example-posture.warning-cases
+  - spec:validation.unbound-example-posture.parent-traces
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model

@@ -598,18 +598,11 @@ export const validationSpecs = [
       intent: {
         outcome:
           "Keep verification relationships meaningful by requiring declared test and oracle traces to resolve to their enabled bindings.",
-        openQuestions: [
-          {
-            question:
-              "`spec:validation.unbound-example-posture` limits the unbound-example warning to examples that state `ready`. Its implementing change edits the loud-naming sentence here and `checkVerifiesLinkage` together.",
-            blocking: false,
-          },
-        ],
       },
       behavior: {
         rules: [
           "A declared verifies relation and an oracle model relation must resolve through their respective binding traces before either can stand as verification evidence.",
-          "A non-resolving trace is named loudly and confers no delivery fact, because silence would read as verification the graph never earned.",
+          "A non-resolving trace confers no delivery fact. The verifies-linkage warning names an unbound example only when it states `ready`, and names a non-example Spec that declares `verifies` at every rung. The oracle-linkage check continues to name a non-resolving oracle trace.",
           "At most one expected-outcome authority may model an example space: a second resolving oracle binding on the same space is an error, because two authorities leave the modeled outcome ambiguous.",
           "The realizing validator entrypoints are `checkVerifiesLinkage` and `checkOracleLinkage` in `src/validate/validators.ts`.",
         ],
@@ -1217,13 +1210,20 @@ export const validationSpecs = [
           "An example that declares `verifies` and has no resolving test anchor is named by the verifies-linkage warning only when the example states `ready`.",
           "Below `ready` the same state is data. The reader reports the example's verifier binding as declared and not enabled, the declared-versus-enabled recipe lists it, and it confers no `has-verifier`.",
           "A Spec of any other kind that declares `verifies` keeps its warning at every rung, and the oracle-linkage check is unchanged.",
-          "A `ready` Spec with no enabled verifier is still named by the gap signal. An unbound example beneath a ready parent therefore stays loud at the parent only while nothing else verifies the parent; once another example or a direct test anchor does, the unbound example is visible as data alone.",
+          "The gap signal still names a `ready` Spec with no enabled verifier, except kind `decision`. A ready parent of any other kind keeps its gap while no enabled verifier verifies it. Once another enabled example or a direct test anchor verifies the parent, an unbound example below `ready` is visible as data alone. An unbound `ready` example keeps its own verifies-linkage warning even when the parent has another verifier.",
           "The worked example teaches the incomplete trace through the verifier bindings its Design Review page renders and through the declared-versus-enabled recipe, not through a warning. Its walkthrough and example check move with this rule.",
           "This rule revises the sentence of `spec:validation.verification-linkage` that names every non-resolving trace loudly. The realizing entrypoint stays `checkVerifiesLinkage` in `src/validate/validators.ts`.",
         ],
+        exampleSpace: {
+          given: ["the verification posture matrix {matrix:string}"],
+          when: ["the reader derives the verification signals"],
+          then: [
+            "the matrix reports {warnings:number} linkage warnings and {gaps:number} parent gaps and {oracleErrors:number} oracle errors",
+          ],
+        },
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.prose-mentions",
@@ -1248,5 +1248,82 @@ export const validationSpecs = [
       behavior: {},
     },
     deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.unbound-example-posture.lower-rungs",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/unbound-example-posture.lower-rungs.sdp.md",
+    title: "Below-ready examples keep declared verifier data",
+    narrative: null,
+    sections: {
+      intent: { outcome: "Check all three lower rungs without enabling an unbound example." },
+      behavior: {
+        examples: [
+          {
+            given: ['the verification posture matrix {matrix: "lower-rungs"}'],
+            when: ["the reader derives the verification signals"],
+            then: [
+              "the matrix reports {warnings: 0} linkage warnings and {gaps: 0} parent gaps and {oracleErrors: 0} oracle errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.unbound-example-posture.warning-cases",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/unbound-example-posture.warning-cases.sdp.md",
+    title: "Ready examples and non-example verifiers keep warnings",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Check an unbound ready example and every non-example kind at every rung.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the verification posture matrix {matrix: "warning-cases"}'],
+            when: ["the reader derives the verification signals"],
+            then: [
+              "the matrix reports {warnings: 29} linkage warnings and {gaps: 0} parent gaps and {oracleErrors: 0} oracle errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.unbound-example-posture.parent-traces",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/unbound-example-posture.parent-traces.sdp.md",
+    title: "Parent gaps follow enabled bindings and preserve the decision exemption",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Check parent gaps with no binding, a sibling binding, and a direct binding, the decision exemption, a ready child warning, and an unresolved oracle.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the verification posture matrix {matrix: "parent-traces"}'],
+            when: ["the reader derives the verification signals"],
+            then: [
+              "the matrix reports {warnings: 1} linkage warnings and {gaps: 1} parent gaps and {oracleErrors: 1} oracle errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
 ] as const;

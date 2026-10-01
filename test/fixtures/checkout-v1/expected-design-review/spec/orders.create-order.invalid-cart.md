@@ -47,9 +47,7 @@ Every line is a one-hop neighbor over the curated graph: changing this spec touc
 
 ## Findings
 
-| Severity | Check | Message | Where |
-|---|---|---|---|
-| warning | `conformance/verifies-linkage` | Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier. | `specs/orders/create-order-invalid-cart.sdp.md` |
+None — conformance + honesty clean for this page's subject.
 
 ---
 
