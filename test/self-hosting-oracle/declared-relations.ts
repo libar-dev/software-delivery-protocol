@@ -872,4 +872,14 @@ export const expectedDeclaredRelations = [
     "verifies",
     "spec:carrier.markdown-body-grammar",
   ],
+  [
+    "spec:carrier.markdown-body-grammar.shared-description-refused",
+    "refines",
+    "spec:carrier.markdown-body-grammar",
+  ],
+  [
+    "spec:carrier.markdown-body-grammar.shared-description-refused",
+    "verifies",
+    "spec:carrier.markdown-body-grammar",
+  ],
 ] as const;

@@ -23,6 +23,7 @@ specs:
   - spec:carrier.markdown-body-grammar.unrecognized-heading-refused
   - spec:carrier.markdown-body-grammar.second-primary-owner-refused
   - spec:carrier.markdown-body-grammar.raw-html-refused
+  - spec:carrier.markdown-body-grammar.shared-description-refused
   - spec:carrier.inline-code-spans
   - spec:carrier.gherkin-authoring
   - spec:carrier.gherkin-authoring.parent-child-extraction

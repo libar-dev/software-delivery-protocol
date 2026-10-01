@@ -44,6 +44,7 @@ export const contractDependentSuites = [
       "test/carrier.markdown-body-grammar.raw-html-refused.test.generated.ts",
       "test/carrier.markdown-body-grammar.repeated-field-refused.test.generated.ts",
       "test/carrier.markdown-body-grammar.second-primary-owner-refused.test.generated.ts",
+      "test/carrier.markdown-body-grammar.shared-description-refused.test.generated.ts",
       "test/carrier.markdown-body-grammar.table-refused.test.generated.ts",
       "test/carrier.markdown-body-grammar.trailing-prose-refused.test.generated.ts",
       "test/carrier.markdown-body-grammar.unrecognized-heading-refused.test.generated.ts",

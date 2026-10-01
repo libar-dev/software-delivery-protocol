@@ -875,11 +875,11 @@ export const carrierSpecs = [
         rules: [
           "The body opens with one H1 title. Text between the title and the first H2 is the Spec's narrative, and narrative accepts plain paragraphs only.",
           "Each H2 names one section owner from a closed set of Intent, Behavior, Rule, Workflow, Contract, Example space, Constraints, Model, Design, Decision, UI, and `Verification — manual`, `reviewed`, `contract`, or `executable`, spelled with the em dash. An unrecognized heading is refused, with the nearest known name offered when it lies within edit distance two; an owner appears at most once, and a Spec carries at most one of Behavior, Rule, Workflow, and Contract.",
-          "A section holds optional leading paragraphs and then structured content. Prose after the first list entry, fence, or H3 is refused as unowned.",
+          "A section holds optional leading paragraphs and then structured content. Prose after the first list entry, fence, or H3 is refused as unowned. The primary behavior owner, whichever of Behavior, Rule, Workflow, or Contract the Spec uses, and Example space share one description: leading prose may stand under one of them, and prose under both is refused.",
           "A list entry is one line that starts with a hyphen and a space. A wrapped or indented continuation, a nested list, a star or plus bullet, and an ordered list are refused.",
           "The refused block shapes are read line by line in narrative, section prose, and list text: a line that opens with a pipe, a block-quote marker, whitespace, a star or plus bullet, an ordered-list marker, or a `<`, and a line that is only a thematic break or a setext underline. A table without outer pipes is prose to the parser.",
           "Raw HTML is refused in narrative, section prose, and list text, and is not scanned in the H1 title or inside fence steps. The test matches an HTML tag with its closing `>`, a comment delimiter, a declaration, or a processing instruction, so `a < b` and an unclosed `Promise<T` pass. Whether the test reads inside a code span is ruled by `spec:carrier.inline-code-spans`.",
-          "The only fences are `gwt` and `gwt-vocabulary`. A fence holds Given steps, exactly one When step, and Then steps in that order, with no blank or indented line, and its slot syntax is `spec:carrier.slot-notation`. An example's Intent owns one `gwt` fence that closes the section. Example space owns optional leading prose and then exactly one `gwt-vocabulary` fence, with no list entry or H3.",
+          "The only fences are `gwt` and `gwt-vocabulary`. A fence holds Given steps, exactly one When step, and Then steps in that order, with no blank or indented line, and its slot syntax is `spec:carrier.slot-notation`. An example's Intent owns one `gwt` fence that closes the section. Example space owns optional leading prose, which counts as the shared description above, and then exactly one `gwt-vocabulary` fence, with no list entry or H3.",
           "Intent accepts `actor`, `problem`, `outcome`, and `value` once each and `risk` and `assumption` repeatedly. One `### Open questions` heading may follow those fields, each of its entries opens with `[blocking]` or `[non-blocking]`, and it is the only H3 any section accepts.",
           "Behavior entries are keyed `rule` or `flow`. Rule and Contract entries are plain bullets, each one rule. Workflow entries are plain bullets, each one flow, plus keyed `rule` entries. Verification entries are plain criteria.",
           "A keyed entry is one ASCII word, a colon, and a space before its value. Where a section takes plain bullets, a bullet of that shape is read as a key and refused unless the section names that key, so a plain bullet never opens with a single word and a colon.",
@@ -1264,6 +1264,35 @@ export const carrierSpecs = [
             when: ["the extractor reifies the carrier"],
             then: [
               'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "raw HTML is unsupported"} at line {line: 14}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-body-grammar.shared-description-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/markdown-body-grammar.shared-description-refused.sdp.md",
+    title: "A second description across Behavior and Example space is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the shared-owner rule when both the primary behavior heading and Example space carry leading prose.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier whose {owner: "Example space"} section holds {construct: "a description when Behavior already has one"}',
+            ],
+            when: ["the extractor reifies the carrier"],
+            then: [
+              'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "behavior description has more than one owner"} at line {line: 19}',
             ],
           },
         ],

@@ -90,7 +90,7 @@ Three `ready` parents now carry a non-blocking question naming the child that re
 their sentences: `spec:validation.readiness-floor`, `spec:validation.verification-linkage`, and
 `spec:carrier.markdown-parser`. The implementing commit edits parent and child together.
 
-## The two read-only reviews of the capture commit
+## The three read-only reviews of the capture
 
 The capture commit (`11494af`) was reviewed read-only by two GPT models through the Codex
 runtime, same brief, goals and decision criteria only: `gpt-6-astra` at high (7 minutes 8
@@ -109,6 +109,8 @@ parent; sol the missing graph-visible hold on `spec:validation.prose-mentions` a
 narrowed in silence. Every claim about the engine was re-checked against the tree before the
 fix; all held. The fixes are in the commit after the capture. What the reviewers disagree with
 in the rulings sits on the Specs as open questions, so the owner reads it there.
+
+A third review, Codex's adversarial reviewer on its default model, read the whole branch against main after the fixes and found two more: the grammar let both the primary behavior heading and Example space carry leading prose while the parser maps both to one description and refuses the second, and the list-rendering decision assumed string values while the TypeScript carrier admits nested ones. Both are fixed in the commit after the review fixes: the grammar states the shared owner and a thirteenth bound example pins the refusal, and the decision defines the rendering of every lawful value shape.
 
 ## What was re-measured at capture
 

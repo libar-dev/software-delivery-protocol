@@ -1897,4 +1897,14 @@ export const expectedAnchors = [
     constant: "rawHtmlRefusedTestAnchor",
     site: "registerRawHtmlRefused(",
   },
+  {
+    id: "test:protocol.markdown-body-grammar.shared-description-refused",
+    nodeType: "Anchor",
+    label: "the shared-description point verifies the one-description-owner rule",
+    type: "verifies",
+    target: "spec:carrier.markdown-body-grammar.shared-description-refused",
+    file: "test/self-hosting-markdown-grammar.test.ts",
+    constant: "sharedDescriptionRefusedTestAnchor",
+    site: "registerSharedDescriptionRefused(",
+  },
 ] as const;

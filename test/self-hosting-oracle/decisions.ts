@@ -1103,15 +1103,17 @@ export const decisionsSpecs = [
         context:
           "The Design Review prints an open section as one fenced JSON object, so each entry's value is an escaped string. Authored order is restored by `spec:extraction.open-section-order` as an ordinary revision, because no Spec states the sort. Rendering is different: `spec:consumers.design-review` states that fenced JSON preserves authored keys and values, and the shipped projections are frozen, so a list rendering needs a superseding record. The first adopter corpus carries 762 keyed entries, and its reviewers read the carrier files instead of the review.",
         decision:
-          "The Design Review renders each entry of a `design` or `ui` section as a list item, its key as inline code and its value as Markdown text, in authored order. The fenced-JSON rule of the Design Review stops covering open sections. The freeze on the four shipped projections stands for everything else.",
+          "The Design Review renders each entry of a `design` or `ui` section as a list item in authored order, its key as inline code. A string value renders as Markdown text through the prose escaping rule; a number or boolean renders as inline code; an array or object renders as a fenced JSON block nested under its item, so a structured value the TypeScript carrier admits survives without loss. The fenced-JSON rule of the Design Review stops covering an open section as a whole and keeps covering a structured value inside one entry. The freeze on the four shipped projections stands for everything else.",
         rationale: [
           "A list reads as the author wrote it and escapes through the prose rules the Design Review already has for every rendered field, where fenced JSON turns a one-line signature into an escaped string nobody can paste.",
         ],
         alternatives: [
           "Keeping fenced JSON in authored order makes a sequence readable and leaves every value escaped.",
+          "Narrowing open-section values to strings would make the list rendering total, but it is a model change to the open bag and belongs in its own record, not here.",
         ],
         consequences: [
           "The Design Review Spec's encoding rule gains a list case for open sections, and the golden Design Review pages regenerate.",
+          "The Markdown carrier yields string values only, so its entries always render as text; the TypeScript carrier's nested values keep their shape through the per-entry fence.",
         ],
       },
     },

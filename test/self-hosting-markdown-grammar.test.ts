@@ -17,6 +17,7 @@ import { plainBulletRefusedContract } from "../generated/contracts/carrier.markd
 import { rawHtmlRefusedContract } from "../generated/contracts/carrier.markdown-body-grammar.raw-html-refused.contract.js";
 import { repeatedFieldRefusedContract } from "../generated/contracts/carrier.markdown-body-grammar.repeated-field-refused.contract.js";
 import { secondPrimaryOwnerRefusedContract } from "../generated/contracts/carrier.markdown-body-grammar.second-primary-owner-refused.contract.js";
+import { sharedDescriptionRefusedContract } from "../generated/contracts/carrier.markdown-body-grammar.shared-description-refused.contract.js";
 import type {
   MarkdownBodyGrammarConditions,
   MarkdownBodyGrammarOutcome,
@@ -39,6 +40,7 @@ import { registerPlainBulletRefused } from "./carrier.markdown-body-grammar.plai
 import { registerRawHtmlRefused } from "./carrier.markdown-body-grammar.raw-html-refused.test.generated.js";
 import { registerRepeatedFieldRefused } from "./carrier.markdown-body-grammar.repeated-field-refused.test.generated.js";
 import { registerSecondPrimaryOwnerRefused } from "./carrier.markdown-body-grammar.second-primary-owner-refused.test.generated.js";
+import { registerSharedDescriptionRefused } from "./carrier.markdown-body-grammar.shared-description-refused.test.generated.js";
 import { registerTableRefused } from "./carrier.markdown-body-grammar.table-refused.test.generated.js";
 import { registerTrailingProseRefused } from "./carrier.markdown-body-grammar.trailing-prose-refused.test.generated.js";
 import { registerUnrecognizedHeadingRefused } from "./carrier.markdown-body-grammar.unrecognized-heading-refused.test.generated.js";
@@ -102,6 +104,8 @@ const constructTails: Record<string, (owner: string) => string> = {
   "a plain bullet after a Behavior section": (owner) =>
     `## Behavior\n- rule: The first rule.\n\n## ${owner}\n- The second rule.\n`,
   "a line break tag": (owner) => `## ${owner}\n- rule: A rule with a <br> inside.\n`,
+  "a description when Behavior already has one": (owner) =>
+    `## Behavior\nThe primary behavior description.\n\n- rule: The first rule.\n\n## ${owner}\nThe example space description.\n\n\`\`\`gwt-vocabulary\nGiven a probe\nWhen the probe runs\nThen the probe finishes\n\`\`\`\n`,
 };
 
 interface GrammarWorld {
@@ -266,3 +270,11 @@ const rawHtmlRefusedTestAnchor = specTest({
 });
 void rawHtmlRefusedTestAnchor;
 registerRawHtmlRefused(adaptersFor(rawHtmlRefusedContract));
+
+const sharedDescriptionRefusedTestAnchor = specTest({
+  id: testAnchorId("test:protocol.markdown-body-grammar.shared-description-refused"),
+  label: "the shared-description point verifies the one-description-owner rule",
+  verifies: ref("spec:carrier.markdown-body-grammar.shared-description-refused"),
+});
+void sharedDescriptionRefusedTestAnchor;
+registerSharedDescriptionRefused(adaptersFor(sharedDescriptionRefusedContract));
