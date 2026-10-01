@@ -112,6 +112,12 @@ describe("sdp cli", () => {
       expect(existsSync(join(repoRoot, path))).toBe(true);
     }
     expect(SDP_HELP_TEXT).toContain("--root PKG/specs");
+    expect(SDP_HELP_TEXT.replaceAll(/\s+/gu, " ")).toMatch(/That graph holds intent only\./u);
+    expect(SDP_HELP_TEXT.replaceAll(/\s+/gu, " ")).toMatch(/The package ships no source anchors/u);
+    expect(SDP_HELP_TEXT.replaceAll(/\s+/gu, " ")).toMatch(/its delivery facts are empty/u);
+    expect(SDP_HELP_TEXT.replaceAll(/\s+/gu, " ")).toMatch(
+      /its gap warnings are not evidence about what the Protocol has realized/u,
+    );
   });
 
   it("prints the exact help text for --help", () => {

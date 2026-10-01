@@ -2,6 +2,8 @@ import { lstatSync, readFileSync, readlinkSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { parseMarkdownBody } from "../src/extract/markdown-body.js";
+
 import { parse } from "yaml";
 import { describe, expect, it } from "vitest";
 
@@ -374,5 +376,199 @@ describe("adopter teaching", () => {
       expect(authoring).toContain(`\`## ${owner}`);
     }
     expect(authoring).toContain("spec:carrier.markdown-body-grammar");
+  });
+});
+
+// Match the teaching clause, not a nearby citation or an unrelated use of its terms.
+// Whitespace and Markdown emphasis are incidental; polarity, homes, and thresholds are not.
+function teachingText(source: string): string {
+  return source.replaceAll(/[`*_]/gu, "").replaceAll(/\s+/gu, " ");
+}
+
+const adopterClauses = [
+  ["open-question home", /An open question goes under Intent's ### Open questions\./u],
+  ["blocking floor", /A \[blocking\] entry holds the Spec below defined/u],
+  ["blocking deferral", /A deferral (?:is|belongs in) a \[blocking\] open question/u],
+  ["deferral trigger", /A deferral[^.]*that names its re-entry trigger/u],
+  ["deferral precondition", /plus dependsOn when another Spec must hold first/u],
+  ["independent defined floor", /The defined floor does not read the parent/u],
+  [
+    "complete example children",
+    /example children can still state defined once their bound points are complete/u,
+  ],
+  ["ready reads parent", /The ready floor does read the parent/u],
+  ["ready waits for defined parent", /their ready waits until the parent states defined/u],
+  ["unsettled constraint home", /An unsettled fact that bounds other Specs is a constraint Spec/u],
+  [
+    "unsettled blocking check",
+    /constraint Spec whose \[blocking\] open question names the check that would settle it/u,
+  ],
+  ["bounded relation", /Each Spec it bounds declares constrainedBy/u],
+  ["bounded defined allowed", /A bounded Spec can still state defined/u],
+  ["bounded ready waits", /the floor refuses its ready until the constraint states defined/u],
+  [
+    "pending decision below ready",
+    /A ruling that awaits its owner is a decision Spec below ready/u,
+  ],
+  ["shaping relation", /with decidedBy from each Spec it shapes/u],
+  ["owner states ready", /The owner's ratification is the edit that states ready/u],
+  ["checked statement home", /A statement a test checks lives in the Spec that states it/u],
+  ["checking example relation", /plus an example Spec that verifies it/u],
+  ["example test binding", /Bind the example with a specTest anchor/u],
+  ["derived verifier fact", /The graph (?:then )?derives has-verifier on the Spec/u],
+  [
+    "verifier existence versus passing",
+    /has-verifier (?:says|means) a bound verifier exists, not that it (?:passed|has passed)/u,
+  ],
+  ["CI owns outcomes", /pass and fail stay in CI/u],
+  ["no authored checked status", /Author no checked or verified status/u],
+  [
+    "fresh derived counts registers scope",
+    /Derive a count, a register, or a review scope each time you need it/u,
+  ],
+  ["census source", /census counts from sdp census/u],
+  ["open-question register source", /open questions from recipe 20/u],
+  ["dependency register source", /one Spec's dependencies from recipe 21/u],
+  ["mention register source", /prose mentions from recipe 22/u],
+  ["delta scope source", /a change's review scope from changed-file blast radius \(recipe 4\)/u],
+  ["no quoted counts", /In prose, name the recipe and leave the number out/u],
+  ["checks only ruled homes", /sdp validate checks these homes and nothing your project adds/u],
+  ["adopter owns policy", /Keep a project policy,[^.]*as a script in your own repository/u],
+  [
+    "Constraints leading-prose exception",
+    /A section may open with paragraphs, except Constraints, which takes its entries only/u,
+  ],
+  ["one primary owner", /A Spec carries at most one of Behavior, Rule, Workflow, and Contract/u],
+] as const;
+
+const grammarRows = [
+  ["Intent", /actor:, problem:, outcome:, value: at most once each/u],
+  ["Intent", /risk: and assumption: any number of times/u],
+  ["Behavior", /rule: and flow: entries/u],
+  ["Rule", /plain entries, one rule each/u],
+  ["Workflow", /plain entries, one flow each/u],
+  ["Workflow", /plus rule: entries/u],
+  ["Contract", /plain entries, one rule each/u],
+  ["Example space", /one gwt-vocabulary fence/u],
+  ["Example space", /and no entries/u],
+  ["Constraints", /one constraint:/u],
+  ["Constraints", /statement: \(required\)/u],
+  ["Constraints", /statement: \(required\), flavor:, target:, measurableBy:, once each/u],
+  ["Model", /\*\*term\*\* — definition/u],
+  ["Model", /terms (?:are|must be) unique/u],
+  ["Design", /lowerCamelKey: one-line value/u],
+  ["Design", /keys (?:are|must be) unique/u],
+  ["Decision", /context: and decision: once each/u],
+  ["Decision", /rationale:, alternative:, consequence: repeated/u],
+  ["UI", /the Design form/u],
+  ["Verification — <mode>", /plain entries, one criterion each/u],
+  ["Verification — <mode>", /the mode is manual, reviewed, contract, or executable/u],
+  ["Verification — <mode>", /after an em dash/u],
+] as const;
+
+describe("adopter rule meanings", () => {
+  it.each(adopterClauses)("teaches %s", (_clause, pattern) => {
+    const authoring = readSkill(".agents/skills/sdp-authoring/SKILL.md").source;
+    expect(teachingText(authoring)).toMatch(pattern);
+  });
+
+  it.each(grammarRows)("teaches the %s grammar row", (heading, pattern) => {
+    const authoring = readSkill(".agents/skills/sdp-authoring/SKILL.md").source;
+    const rows = authoring.split("\n").filter((line) => line.startsWith(`| \`## ${heading}\``));
+    expect(rows).toHaveLength(1);
+    // Preserve Model's bold-term syntax while ignoring the table's code-span delimiters.
+    expect((rows[0] ?? "").replaceAll("`", "").replaceAll(/\s+/gu, " ")).toMatch(pattern);
+  });
+
+  it("keeps graph-reader verifier teaching about existence and CI outcomes", () => {
+    const surface = teachingText(readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source);
+    expect(surface).toMatch(/It says a resolving verifier binding exists/u);
+    expect(surface).toMatch(/Pass, fail, skip, and quarantine are CI's/u);
+  });
+
+  it("keeps session teaching advisory and separate from permission", () => {
+    const sessions = teachingText(readSkill(".agents/skills/sdp-sessions/SKILL.md").source);
+    expect(sessions).toMatch(/All preflights are advisory/u);
+    expect(sessions).toMatch(
+      /They never authorize, block, scope, unlock, or advance delivery work/u,
+    );
+  });
+});
+
+function grammarProbe(section: string) {
+  return parseMarkdownBody(
+    `# Teaching probe\n\n${section}\n`,
+    1,
+    "teaching-probe.sdp.md",
+    "behavior",
+  );
+}
+
+// Each pair changes only the cardinality or prose permission taught in the table.
+// The text checks above and these parser checks must both pass: neither alone binds the teaching.
+describe("taught grammar agrees with parser behavior", () => {
+  it.each([
+    [
+      "unique Model terms",
+      "## Model\n- **Term** — A definition.",
+      "\n- **Term** — Another definition.",
+    ],
+    ["unique Design keys", "## Design\n- choice: A value.", "\n- choice: Another value."],
+    ["unique UI keys via Design form", "## UI\n- choice: A value.", "\n- choice: Another value."],
+    ...["actor", "problem", "outcome", "value"].map((key) => [
+      `single Intent ${key}`,
+      `## Intent\n- ${key}: A value.`,
+      `\n- ${key}: Another value.`,
+    ]),
+    ...["statement", "flavor", "target", "measurableBy"].map((key) => [
+      `single Constraints ${key}`,
+      `## Constraints\n- statement: A constraint.${key === "statement" ? "" : `\n- ${key}: A value.`}`,
+      `\n- ${key}: Another value.`,
+    ]),
+    ...["context", "decision"].map((key) => [
+      `single Decision ${key}`,
+      `## Decision\n- ${key}: A value.`,
+      `\n- ${key}: Another value.`,
+    ]),
+  ])("refuses %s duplicates", (_label, lawful, duplicate) => {
+    expect(grammarProbe(lawful).findings).toEqual([]);
+    expect(grammarProbe(`${lawful}${duplicate}`).ok).toBe(false);
+  });
+
+  it.each(["Behavior", "Rule", "Workflow", "Contract"])(
+    "allows %s alone and refuses a second primary owner",
+    (owner) => {
+      const entry = owner === "Behavior" ? "rule: A rule." : "A plain rule.";
+      const section = `## ${owner}\n- ${entry}`;
+      expect(grammarProbe(section).findings).toEqual([]);
+      const other = owner === "Behavior" ? "Rule" : "Behavior";
+      const otherEntry = other === "Behavior" ? "rule: Another rule." : "Another plain rule.";
+      const second = `## ${other}\n- ${otherEntry}`;
+      expect(grammarProbe(second).findings).toEqual([]);
+      expect(grammarProbe(`${section}\n\n${second}`).findings).toContainEqual(
+        expect.objectContaining({
+          message: "a single-valued Markdown owner is authored more than once",
+        }),
+      );
+    },
+  );
+
+  it("allows leading prose in Design and refuses it in Constraints", () => {
+    expect(grammarProbe("## Design\nLeading prose.\n\n- choice: A value.").findings).toEqual([]);
+    expect(grammarProbe("## Constraints\n- statement: A constraint.").findings).toEqual([]);
+    expect(grammarProbe("## Constraints\nLeading prose.\n\n- statement: A constraint.").ok).toBe(
+      false,
+    );
+  });
+
+  it.each([
+    ["Intent", "risk", "assumption"],
+    ["Decision", "rationale", "alternative", "consequence"],
+  ])("allows the taught repeatable %s entries", (owner, ...keys) => {
+    for (const key of keys) {
+      expect(
+        grammarProbe(`## ${owner}\n- ${key}: A value.\n- ${key}: Another value.`).findings,
+      ).toEqual([]);
+    }
   });
 });

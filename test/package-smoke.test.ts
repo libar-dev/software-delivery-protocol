@@ -285,6 +285,12 @@ void [${expectedRootExports.join(", ")}];
       ]) {
         expect(sdpHelp).toContain(path);
       }
+      expect(sdpHelp.replaceAll(/\s+/gu, " ")).toMatch(/That graph holds intent only\./u);
+      expect(sdpHelp.replaceAll(/\s+/gu, " ")).toMatch(/The package ships no source anchors/u);
+      expect(sdpHelp.replaceAll(/\s+/gu, " ")).toMatch(/its delivery facts are empty/u);
+      expect(sdpHelp.replaceAll(/\s+/gu, " ")).toMatch(
+        /its gap warnings are not evidence about what the Protocol has realized/u,
+      );
       const installedCli = join(consumer, "node_modules", ".bin", "sdp");
       const intentOnly = JSON.parse(
         run(
