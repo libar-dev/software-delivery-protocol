@@ -882,4 +882,12 @@ export const expectedDeclaredRelations = [
     "verifies",
     "spec:carrier.markdown-body-grammar",
   ],
+  ["spec:carrier.inline-code-spans.narrative", "refines", "spec:carrier.inline-code-spans"],
+  ["spec:carrier.inline-code-spans.narrative", "verifies", "spec:carrier.inline-code-spans"],
+  ["spec:carrier.inline-code-spans.description", "refines", "spec:carrier.inline-code-spans"],
+  ["spec:carrier.inline-code-spans.description", "verifies", "spec:carrier.inline-code-spans"],
+  ["spec:carrier.inline-code-spans.list", "refines", "spec:carrier.inline-code-spans"],
+  ["spec:carrier.inline-code-spans.list", "verifies", "spec:carrier.inline-code-spans"],
+  ["spec:carrier.inline-code-spans.pack", "refines", "spec:carrier.inline-code-spans"],
+  ["spec:carrier.inline-code-spans.pack", "verifies", "spec:carrier.inline-code-spans"],
 ] as const;

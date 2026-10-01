@@ -18,3 +18,10 @@ relations:
 - Raw HTML outside a code span stays refused, with the same finding and message as before.
 - The graph stores the line as authored, backticks included. Each projection renders it through the encoding its own Spec already requires for that field.
 - The realizing sites are the raw-HTML guards in `src/extract/markdown-body.ts`, `src/extract/markdown-body-content.ts`, and `src/extract/markdown-pack.ts`.
+
+## Example space
+```gwt-vocabulary
+Given the code-span matrix in {location:string}
+When the extractor reifies the probes
+Then matched spans preserve {accepted:number} carriers and exposed HTML refuses {refused:number} carriers
+```

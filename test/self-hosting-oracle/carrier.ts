@@ -604,17 +604,10 @@ export const carrierSpecs = [
         problem: "Prevent carrier-specific graph and validation paths from diverging.",
         outcome: "Reify authored Markdown without a second graph or validation path.",
         value: "Markdown-carried intent remains subject to the Protocol's deterministic checks.",
-        openQuestions: [
-          {
-            question:
-              "`spec:carrier.inline-code-spans` narrows the raw-HTML refusal, which no Spec carried before `spec:carrier.markdown-body-grammar`, so that it never reads inside a code span. Its implementing change edits the three guards and the parity probes together.",
-            blocking: false,
-          },
-        ],
       },
       behavior: {
         rules: [
-          "The parser accepts only the ruled heading grammar and excludes one malformed carrier while continuing healthy siblings.",
+          "The parser accepts only the ruled heading grammar, keeps matched code spans literal at its raw-HTML guards under `spec:carrier.inline-code-spans`, and excludes one malformed carrier while continuing healthy siblings.",
           "The ruled Markdown parser has bounded finding-class parity with the TypeScript carrier for `extract/non-static-envelope`, `extract/invalid-id`, `extract/duplicate-id`, `extract/reserved-property`, `extract/unowned-prose`, and `extract/unrecognized-property`; the shared validator ID is the claim, while severity and extract-versus-refuse outcomes remain carrier-specific.",
           "Named non-claim — `extract/parse-error` remains distinct because YAML/frontmatter parsing has no TypeScript parser-diagnostic analogue.",
           "Named non-claim — `extract/non-static-section` remains distinct because TypeScript degrades optional section properties while Markdown refuses malformed documents whole.",
@@ -878,7 +871,7 @@ export const carrierSpecs = [
           "A section holds optional leading paragraphs and then structured content. Prose after the first list entry, fence, or H3 is refused as unowned. The primary behavior owner, whichever of Behavior, Rule, Workflow, or Contract the Spec uses, and Example space share one description: leading prose may stand under one of them, and prose under both is refused.",
           "A list entry is one line that starts with a hyphen and a space. A wrapped or indented continuation, a nested list, a star or plus bullet, and an ordered list are refused.",
           "The refused block shapes are read line by line in narrative, section prose, and list text: a line that opens with a pipe, a block-quote marker, whitespace, a star or plus bullet, an ordered-list marker, or a `<`, and a line that is only a thematic break or a setext underline. A table without outer pipes is prose to the parser.",
-          "Raw HTML is refused in narrative, section prose, and list text, and is not scanned in the H1 title or inside fence steps. The test matches an HTML tag with its closing `>`, a comment delimiter, a declaration, or a processing instruction, so `a < b` and an unclosed `Promise<T` pass. Whether the test reads inside a code span is ruled by `spec:carrier.inline-code-spans`.",
+          "Raw HTML is refused in narrative, section prose, and list text, and is not scanned in the H1 title or inside fence steps. The test matches an HTML tag with its closing `>`, a comment delimiter, a declaration, or a processing instruction, so `a < b` and an unclosed `Promise<T` pass. The test ignores matched code spans, as ruled by `spec:carrier.inline-code-spans`.",
           "The only fences are `gwt` and `gwt-vocabulary`. A fence holds Given steps, exactly one When step, and Then steps in that order, with no blank or indented line, and its slot syntax is `spec:carrier.slot-notation`. An example's Intent owns one `gwt` fence that closes the section. Example space owns optional leading prose, which counts as the shared description above, and then exactly one `gwt-vocabulary` fence, with no list entry or H3.",
           "Intent accepts `actor`, `problem`, `outcome`, and `value` once each and `risk` and `assumption` repeatedly. One `### Open questions` heading may follow those fields, each of its entries opens with `[blocking]` or `[non-blocking]`, and it is the only H3 any section accepts.",
           "Behavior entries are keyed `rule` or `flow`. Rule and Contract entries are plain bullets, each one rule. Workflow entries are plain bullets, each one flow, plus keyed `rule` entries. Verification entries are plain criteria.",
@@ -924,9 +917,16 @@ export const carrierSpecs = [
           "The graph stores the line as authored, backticks included. Each projection renders it through the encoding its own Spec already requires for that field.",
           "The realizing sites are the raw-HTML guards in `src/extract/markdown-body.ts`, `src/extract/markdown-body-content.ts`, and `src/extract/markdown-pack.ts`.",
         ],
+        exampleSpace: {
+          given: ["the code-span matrix in {location:string}"],
+          when: ["the extractor reifies the probes"],
+          then: [
+            "matched spans preserve {accepted:number} carriers and exposed HTML refuses {refused:number} carriers",
+          ],
+        },
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:carrier.markdown-body-grammar.table-refused",
@@ -1293,6 +1293,114 @@ export const carrierSpecs = [
             when: ["the extractor reifies the carrier"],
             then: [
               'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "behavior description has more than one owner"} at line {line: 19}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.inline-code-spans.narrative",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/inline-code-spans.narrative.sdp.md",
+    title: "Code spans in a Spec narrative are literal",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Check matched and unmatched runs, literal HTML, exposed HTML on the same line, and authored text in the narrative probes.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the code-span matrix in {location: "narrative"}'],
+            when: ["the extractor reifies the probes"],
+            then: [
+              "matched spans preserve {accepted: 11} carriers and exposed HTML refuses {refused: 15} carriers",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.inline-code-spans.description",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/inline-code-spans.description.sdp.md",
+    title: "Code spans in section descriptions are literal",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Check matched and unmatched runs, literal HTML, exposed HTML on the same line, and authored text in the description probes.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the code-span matrix in {location: "description"}'],
+            when: ["the extractor reifies the probes"],
+            then: [
+              "matched spans preserve {accepted: 11} carriers and exposed HTML refuses {refused: 15} carriers",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.inline-code-spans.list",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/inline-code-spans.list.sdp.md",
+    title: "Code spans in list entries are literal",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Check matched and unmatched runs, literal HTML, exposed HTML on the same line, and authored text in the list probes.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the code-span matrix in {location: "list"}'],
+            when: ["the extractor reifies the probes"],
+            then: [
+              "matched spans preserve {accepted: 11} carriers and exposed HTML refuses {refused: 15} carriers",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.inline-code-spans.pack",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/inline-code-spans.pack.sdp.md",
+    title: "Code spans in Pack framing are literal",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Check matched and unmatched runs, literal HTML, exposed HTML on the same line, and authored text in the pack probes.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the code-span matrix in {location: "pack"}'],
+            when: ["the extractor reifies the probes"],
+            then: [
+              "matched spans preserve {accepted: 11} carriers and exposed HTML refuses {refused: 15} carriers",
             ],
           },
         ],

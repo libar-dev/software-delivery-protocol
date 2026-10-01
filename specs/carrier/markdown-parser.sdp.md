@@ -14,11 +14,8 @@ relations:
 - outcome: Reify authored Markdown without a second graph or validation path.
 - value: Markdown-carried intent remains subject to the Protocol's deterministic checks.
 
-### Open questions
-- [non-blocking] `spec:carrier.inline-code-spans` narrows the raw-HTML refusal, which no Spec carried before `spec:carrier.markdown-body-grammar`, so that it never reads inside a code span. Its implementing change edits the three guards and the parity probes together.
-
 ## Behavior
-- rule: The parser accepts only the ruled heading grammar and excludes one malformed carrier while continuing healthy siblings.
+- rule: The parser accepts only the ruled heading grammar, keeps matched code spans literal at its raw-HTML guards under `spec:carrier.inline-code-spans`, and excludes one malformed carrier while continuing healthy siblings.
 - rule: The ruled Markdown parser has bounded finding-class parity with the TypeScript carrier for `extract/non-static-envelope`, `extract/invalid-id`, `extract/duplicate-id`, `extract/reserved-property`, `extract/unowned-prose`, and `extract/unrecognized-property`; the shared validator ID is the claim, while severity and extract-versus-refuse outcomes remain carrier-specific.
 - rule: Named non-claim — `extract/parse-error` remains distinct because YAML/frontmatter parsing has no TypeScript parser-diagnostic analogue.
 - rule: Named non-claim — `extract/non-static-section` remains distinct because TypeScript degrades optional section properties while Markdown refuses malformed documents whole.

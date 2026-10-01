@@ -31,6 +31,11 @@ export const structuralMembershipExceptions = [
 
 export const acceptedArchitecturalUnits = [
   {
+    unit: "src/extract/markdown-inline-code.ts#hasRawHtmlOutsideCodeSpans",
+    anchorId: "impl:protocol.inline-code-spans",
+    componentId: "component:protocol.extract",
+  },
+  {
     unit: "src/adapters/vitest.ts#bindExample",
     anchorId: "impl:protocol.example-runner-adapter",
     componentId: "component:protocol.adapters",
