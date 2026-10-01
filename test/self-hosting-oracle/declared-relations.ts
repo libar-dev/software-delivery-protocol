@@ -960,4 +960,6 @@ export const expectedDeclaredRelations = [
     "verifies",
     "spec:validation.typed-dependency-floor",
   ],
+  ["spec:consumers.adopter-on-ramp", "dependsOn", "spec:consumers.agent-surface.register-recipes"],
+  ["spec:consumers.adopter-on-ramp", "dependsOn", "spec:consumers.shipped-protocol-corpus"],
 ] as const;

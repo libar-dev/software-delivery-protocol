@@ -32,7 +32,7 @@ pnpm exec sdp q '<body>' --root PATH --exclude PATH --exclude PATH
 `--root PATH` picks the extraction root (default: the working directory) and `--exclude` is
 repeatable for root-relative path prefixes. `PATH` is a placeholder, not a literal directory.
 
-**Some recipes open with a parameter.** Recipes 3, 6, 9, 14, and 19 take their subject on the opening
+**Some recipes open with a parameter.** Recipes 3, 6, 9, 14, 19, 21, and 23 take their subject on the opening
 `const` line(s): a Spec id, a search term, or a component id. Those lines name *this* repository's
 corpus so every body runs as written here (the recipe check executes each one verbatim); in your
 own corpus, substitute your subject on that line before running. A Spec id or component id absent
@@ -69,7 +69,7 @@ restate them: the surface itself is [`spec:consumers.agent-surface`](../../specs
 and [`spec:consumers.reader`](../../specs/consumers/reader.sdp.gherkin); the front door is
 [`spec:decisions.agent-front-door`](../../specs/decisions/agent-front-door.sdp.md). The vocabulary
 these bodies speak — claims, delivery facts, stated versus derived readiness, blast radius,
-coverage-unknown, at-risk — is ratified in `CONTEXT.md`.
+coverage-unknown, at-risk — is ratified in [`CONTEXT.md`](../../CONTEXT.md).
 
 **Recipes are the growth valve.** When a question is not answered below, script it; do not reach
 for a new query verb. A join freezes into the reader only when a second machine consumer needs it
@@ -1051,6 +1051,337 @@ return {
 component files. It is not the impact contract; whole-corpus blast radius over changed files stays
 recipe 4 (`g.blastRadius`). Shaping decisions are the `decidedBy` targets across the refinement
 neighborhood; a decision record that also `refines` the subject appears both as a refinement child
-and as a shaping decision. Dependency neighbors carry `statedReadiness` because an unready
-`dependsOn` target is the planning signal. The graph does not derive symbol-level impact;
+and as a shaping decision. Dependency neighbors carry `statedReadiness`: a `dependsOn` target below stated `defined`
+refuses the subject's `ready` floor. For what a Spec rests on across `refines`, `dependsOn`,
+`constrainedBy`, and `decidedBy`, use dependency footing (recipe 21); the `ready` floor requires
+each target to state at least `defined`. The graph does not derive symbol-level impact;
 `implemented` still means a code anchor binds, never that the code is live.
+
+## 20. Open-question register
+
+*When you need this: you want every open question in the corpus in one table, blocking ones
+first, without keeping that table by hand.*
+
+```js
+const rows = [];
+
+for (const spec of g.specs()) {
+  const authored = g.specContext(spec.id)?.sections?.intent?.openQuestions ?? [];
+  if (authored.length === 0) continue;
+
+  const questions = authored.map((entry) =>
+    typeof entry === "string"
+      ? { blocking: false, question: entry }
+      : { blocking: entry.blocking === true, question: entry.question },
+  );
+
+  rows.push({
+    id: spec.id,
+    statedReadiness: spec.statedReadiness,
+    blockingCount: questions.filter((entry) => entry.blocking).length,
+    questions,
+  });
+}
+
+const questionCount = rows.reduce((sum, row) => sum + row.questions.length, 0);
+const blockingCount = rows.reduce((sum, row) => sum + row.blockingCount, 0);
+const withBlocking = rows.filter((row) => row.blockingCount > 0);
+
+return {
+  totals: {
+    questions: questionCount,
+    blocking: blockingCount,
+    nonBlocking: questionCount - blockingCount,
+    specs: rows.length,
+    specsWithBlocking: withBlocking.length,
+  },
+  specs: [...withBlocking, ...rows.filter((row) => row.blockingCount === 0)],
+};
+```
+
+Each row is one Spec that records open questions under Intent: its stated readiness, how many of
+its questions block, and the questions in authored order with their flags. Specs that hold a
+blocking question come first, and each group keeps Spec id order. `totals` reports the question
+and Spec counts, so the size of the register never needs a second query or a number copied into
+prose. The recipe lists and does not judge: a blocking question holding its Spec below `defined`
+is the readiness floor's clause, which recipe 9 names for one Spec. A question authored as bare
+prose in a TypeScript carrier carries no flag and reads as non-blocking.
+
+## 21. Dependency footing
+
+*When you need this: you are weighing a rung on one Spec and want every Spec it rests on, with the
+rung each one states and the floor each one reaches.*
+
+The opening `const id` is the parameter. Replace it with the Spec you are weighing; an unknown id
+returns `{ id, found: false }` rather than failing.
+
+```js
+const id = "spec:extraction.derive-graph";
+const context = g.specContext(id);
+
+if (context === undefined) {
+  return { id, found: false };
+}
+
+const types = ["refines", "dependsOn", "constrainedBy", "decidedBy"];
+const rungs = ["idea", "scoped", "defined", "ready"];
+const specsById = new Map(g.specs().map((spec) => [spec.id, spec]));
+const footing = context.relationsOut
+  .filter((end) => types.includes(end.type))
+  .map((end) => {
+    const target = specsById.get(end.otherId);
+
+    return {
+      type: end.type,
+      id: end.otherId,
+      claim: end.claim,
+      resolved: end.resolved,
+      statedReadiness: target?.statedReadiness ?? null,
+      floorReached: target === undefined ? null : (target.derivedReadiness ?? "none"),
+    };
+  })
+  .sort(
+    (left, right) =>
+      types.indexOf(left.type) - types.indexOf(right.type) || left.id.localeCompare(right.id),
+  );
+const count = (key, value) => footing.filter((row) => row[key] === value).length;
+
+return {
+  id,
+  found: true,
+  statedReadiness: context.statedReadiness,
+  floorReached: context.derivedReadiness ?? "none",
+  total: footing.length,
+  byType: Object.fromEntries(types.map((type) => [type, count("type", type)])),
+  byStatedReadiness: Object.fromEntries([
+    ...rungs.map((rung) => [rung, count("statedReadiness", rung)]),
+    ["unresolved", count("statedReadiness", null)],
+  ]),
+  footing,
+};
+```
+
+`footing` holds one row per relation the Spec declares through `refines`, `dependsOn`,
+`constrainedBy`, or `decidedBy`, in that order and then by target id. The reach is one hop; run
+the recipe on a target to see what that target rests on. `floorReached` is the target's derived
+readiness, read beside the rung its author stated. A target that does not resolve keeps its row
+with `resolved: false` and null readiness, and counts under `byStatedReadiness.unresolved`. The
+recipe reports readiness and applies no threshold: which rung a target must state before this
+Spec can state `ready` is the floor clause carried by `spec:validation.typed-dependency-floor`.
+`verifies` and `supersedes` stay out, because a Spec does not rest on what it verifies or replaces.
+
+## 22. Mention audit
+
+*When you need this: you want every Spec id written in prose that does not resolve, or that no
+declared relation from the mentioning Spec backs.*
+
+```js
+const backingTypes = ["refines", "dependsOn", "constrainedBy", "decidedBy", "verifies", "supersedes"];
+const idPattern =
+  /(?<![A-Za-z0-9-])spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#[A-Za-z0-9][A-Za-z0-9-]*)?/gu;
+const specIds = new Set(g.specs().map((spec) => spec.id));
+const declared = new Map();
+
+for (const edge of graph.edges) {
+  if (edge.claim !== "declared" || !backingTypes.includes(edge.type)) continue;
+  const key = `${edge.from} ${edge.to}`;
+  declared.set(key, [...(declared.get(key) ?? []), edge.type]);
+}
+
+const pairs = new Map();
+let occurrences = 0;
+
+for (const spec of g.specs()) {
+  const context = g.specContext(spec.id);
+  if (context === undefined) continue;
+
+  const texts = [];
+  const collect = (value, at) => {
+    if (typeof value === "string") {
+      texts.push({ at, text: value });
+    } else if (Array.isArray(value)) {
+      value.forEach((entry, index) => collect(entry, `${at}[${index}]`));
+    } else if (typeof value === "object" && value !== null) {
+      for (const [key, entry] of Object.entries(value)) collect(entry, `${at}.${key}`);
+    }
+  };
+
+  collect(context.narrative, "narrative");
+
+  for (const [section, content] of Object.entries(context.sections ?? {})) {
+    if (section !== "behavior" || typeof content !== "object" || content === null) {
+      collect(content, section);
+      continue;
+    }
+
+    // The two fences are skipped by position, never by key name alone: `behavior.exampleSpace`
+    // is the gwt-vocabulary fence, and an object entry of `behavior.examples` is a gwt fence.
+    for (const [key, entry] of Object.entries(content)) {
+      if (key === "exampleSpace") continue;
+      if (key === "examples" && Array.isArray(entry)) {
+        entry.forEach((example, index) => {
+          if (typeof example === "string") collect(example, `behavior.examples[${index}]`);
+        });
+        continue;
+      }
+      collect(entry, `behavior.${key}`);
+    }
+  }
+
+  for (const { at, text } of texts) {
+    for (const match of text.matchAll(idPattern)) {
+      const to = match[0];
+      if (to === spec.id) continue;
+
+      occurrences += 1;
+      const key = `${spec.id} ${to}`;
+      const pair = pairs.get(key) ?? { from: spec.id, to, occurrences: 0, at: [] };
+      pair.occurrences += 1;
+      if (!pair.at.includes(at)) pair.at.push(at);
+      pairs.set(key, pair);
+    }
+  }
+}
+
+const rows = [...pairs.values()].sort(
+  (left, right) => left.from.localeCompare(right.from) || left.to.localeCompare(right.to),
+);
+const unresolved = rows.filter((row) => !specIds.has(row.to));
+const unbacked = rows
+  .filter((row) => specIds.has(row.to) && !declared.has(`${row.from} ${row.to}`))
+  .map((row) => ({
+    ...row,
+    declaredByTarget: [...(declared.get(`${row.to} ${row.from}`) ?? [])].sort(),
+  }));
+
+return {
+  totals: {
+    occurrences,
+    pairs: rows.length,
+    backed: rows.length - unresolved.length - unbacked.length,
+    unbacked: unbacked.length,
+    unbackedDeclaredByTarget: unbacked.filter((row) => row.declaredByTarget.length > 0).length,
+    unresolved: unresolved.length,
+  },
+  unresolved,
+  unbacked,
+};
+```
+
+A mention is a `spec:` id in a Spec's narrative or in the text of its sections, read by the id
+grammar. The title is not read. The two fences are skipped by position: `behavior.exampleSpace`
+is the `gwt-vocabulary` fence and a structured entry of `behavior.examples` is a `gwt` fence, so
+a key named `examples` in any other section is still read. A Spec that names itself is not a
+mention.
+
+Each row is one mentioning Spec and target pair, with its `occurrences` and the entries that hold
+them in `at`, written `section.field[index]` with zero-based indexes. `unresolved` rows name an id
+that no Spec carries. `unbacked` rows name a Spec that exists while the mentioning Spec declares
+none of `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, or `supersedes` toward
+it. `declaredByTarget` lists the relations the target declares back: a parent that names its child
+lands in `unbacked` with `refines` there, which tells you the pair is already joined from the
+other side. A `#` sub-part belongs to the id, so `spec:x#part` resolves only when a Spec carries
+exactly that id. A family pattern written in id form, such as `spec:probe.*`, reads as a mention
+of `spec:probe`. No validator reads prose mentions today, so this recipe is the whole check;
+`spec:validation.prose-mentions` carries the rule that would.
+
+## 23. Entry search
+
+*When you need this: you hold a word or a key and want the entries that carry it, where concept
+search (recipe 6) stops at the section.*
+
+The opening `const term` is the parameter. Replace it with your word or phrase; an empty term
+returns no matches.
+
+```js
+const term = "suffix";
+const tokensOf = (text) =>
+  text
+    .replace(/(\p{Lu}+)(\p{Lu}\p{Ll})/gu, "$1 $2")
+    .replace(/([\p{Ll}\p{N}])(\p{Lu})/gu, "$1 $2")
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((token) => token.length > 0);
+const wanted = tokensOf(term);
+const hits = (text) => {
+  const tokens = tokensOf(text);
+
+  return (
+    wanted.length > 0 &&
+    tokens.some((_token, start) => wanted.every((token, offset) => tokens[start + offset] === token))
+  );
+};
+const matches = [];
+
+for (const spec of g.specs()) {
+  const context = g.specContext(spec.id);
+  if (context === undefined) continue;
+
+  const visit = (section, entry, key, text) => {
+    const matchedIn = [
+      ...(key !== null && hits(key) ? ["key"] : []),
+      ...(hits(text) ? ["text"] : []),
+    ];
+    if (matchedIn.length > 0) matches.push({ id: spec.id, section, entry, matchedIn, text });
+  };
+  const walk = (section, value, entry, key) => {
+    if (typeof value === "string") {
+      visit(section, entry, key, value);
+    } else if (Array.isArray(value)) {
+      value.forEach((item, index) => walk(section, item, `${entry ?? ""}[${index}]`, null));
+    } else if (typeof value === "object" && value !== null) {
+      // A key the author coins is content: any key of the open sections (`design`, `ui`) except
+      // `description`, and a `model.terms` term. A key the carrier fixes (`outcome`, `rules`,
+      // `given`) is structure and never matches.
+      const coined =
+        section === "design" || section === "ui" || (section === "model" && entry === "terms");
+      for (const [name, item] of Object.entries(value)) {
+        walk(
+          section,
+          item,
+          entry === null ? name : `${entry}.${name}`,
+          coined && !(entry === null && name === "description") ? name : null,
+        );
+      }
+    }
+  };
+
+  if (typeof context.narrative === "string") visit("narrative", null, null, context.narrative);
+  for (const [section, content] of Object.entries(context.sections ?? {})) {
+    walk(section, content, null, null);
+  }
+}
+
+return {
+  term,
+  tokens: wanted,
+  total: matches.length,
+  specs: new Set(matches.map((match) => match.id)).size,
+  matches: matches.slice(0, 50),
+};
+```
+
+Matching is by whole token. The term and each entry are cut into tokens, which are runs of letters
+and digits split at every other character and at each camelCase hump, and compared without case.
+The term matches when its tokens appear in the entry as one consecutive run, in order.
+
+| Term | Entry | Result |
+|---|---|---|
+| `retry` | `retry` | match |
+| `retry` | `retryable` | no match, `retryable` is one token |
+| `retry` | `retry-worker` | match, the hyphen ends the token |
+| `retry` | `retryWorker` | match, the hump ends the token |
+| `Retry` | `RETRY.` | match, case and punctuation do not count |
+| `retry worker` | `retryWorker` | match, two tokens in order |
+| `retry worker` | `worker retry` | no match, the order differs |
+| `retry worker` | `retry the worker` | no match, the tokens are not adjacent |
+
+Each row names the Spec, the `section`, the `entry` inside it, and the entry's `text`. `entry` is
+the key for a keyed entry (`envelopeSketch`, `terms.claim inheritance`), the field and zero-based
+index for a list entry (`rules[2]`), and `null` for the Spec's narrative, which is reported under
+the section name `narrative`. `matchedIn` says whether the key, the text, or both matched. Keys
+match only where the author coins them: the keys of `design` and `ui` and the terms of `model`.
+Field names the carrier fixes, such as `outcome` or `rules`, never match. Step text inside `gwt`
+and `gwt-vocabulary` fences is searched like any other entry. Titles and ids stay with concept
+search. Rows keep Spec id order and then the order the graph holds the entries; `total` counts
+every matching entry and `matches` holds the first fifty.

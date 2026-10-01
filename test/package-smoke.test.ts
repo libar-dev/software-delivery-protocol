@@ -6,6 +6,14 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import {
+  codeAnchor,
+  codeAnchorId,
+  ref,
+  specTest,
+  testAnchorId,
+} from "@libar-dev/software-delivery-protocol";
+
 const packageName = "@libar-dev/software-delivery-protocol";
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 const importFixture = join(repositoryRoot, "test/fixtures/import/round-trip/behavior.sdp.ts.txt");
@@ -153,6 +161,20 @@ console.log(
 `;
 }
 
+const shippedProtocolCorpusImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.shipped-protocol-corpus"),
+  label: "asserts the published package ships the Protocol corpus",
+  satisfies: ref("spec:consumers.shipped-protocol-corpus"),
+});
+void shippedProtocolCorpusImplementationAnchor;
+
+const shippedProtocolCorpusTestAnchor = specTest({
+  id: testAnchorId("test:protocol.shipped-protocol-corpus"),
+  label: "package smoke checks verify the shipped corpus",
+  verifies: ref("spec:consumers.shipped-protocol-corpus"),
+});
+void shippedProtocolCorpusTestAnchor;
+
 describe("published package surface", () => {
   it("proves the installed tarball lists import, dry-runs conversion without writes, and exposes the barrel", async () => {
     const packageRoot = await mkdtemp(join(tmpdir(), "sdp-package-smoke-"));
@@ -165,6 +187,7 @@ describe("published package surface", () => {
       ) as readonly [{ readonly files: readonly { readonly path: string }[] }];
       const dryRunPaths = dryRun[0].files.map((file) => file.path);
       const adopterAssets = [
+        "CONTEXT.md",
         ".agents/skills/sdp-agent-surface/SKILL.md",
         ".agents/skills/sdp-authoring/SKILL.md",
         ".agents/skills/sdp-sessions/SKILL.md",
@@ -177,10 +200,30 @@ describe("published package surface", () => {
         dryRunPaths.filter(
           (path) =>
             !["LICENSE", "README.md", "package.json", ...adopterAssets].includes(path) &&
-            !path.startsWith("dist/"),
+            !path.startsWith("dist/") &&
+            !path.startsWith("specs/"),
         ),
       ).toEqual([]);
-      expect(dryRunPaths.some((path) => path.endsWith(".sdp.md"))).toBe(false);
+      const carrierPaths: string[] = [];
+      const walkCarriers = async (directory: string): Promise<void> => {
+        for (const entry of await readdir(join(repositoryRoot, directory), {
+          withFileTypes: true,
+        })) {
+          const path = `${directory}/${entry.name}`;
+          if (entry.isDirectory()) await walkCarriers(path);
+          else if (entry.name !== ".DS_Store" && !entry.name.startsWith("._")) {
+            expect(path.endsWith(".sdp.md") || path.endsWith(".sdp.gherkin")).toBe(true);
+            carrierPaths.push(path);
+          }
+        }
+      };
+      await walkCarriers("specs");
+      expect(dryRunPaths.filter((path) => path.startsWith("specs/")).sort()).toEqual(
+        carrierPaths.sort(),
+      );
+      expect(
+        dryRunPaths.filter((path) => !path.startsWith("dist/") && /\.tsx?$/u.test(path)),
+      ).toEqual([]);
 
       run("npm", ["pack", "--pack-destination", packageRoot], repositoryRoot);
 
@@ -236,6 +279,49 @@ void [${expectedRootExports.join(", ")}];
       );
 
       const sdpHelp = run(join(consumer, "node_modules", ".bin", "sdp"), ["--help"], consumer);
+      for (const path of [
+        ...adopterAssets.filter((path) => path !== "docs/agent-surface/architecture.md"),
+        "specs/",
+      ]) {
+        expect(sdpHelp).toContain(path);
+      }
+      const installedCli = join(consumer, "node_modules", ".bin", "sdp");
+      const intentOnly = JSON.parse(
+        run(
+          installedCli,
+          [
+            "q",
+            'return { specs: g.specs().length, anchors: graph.nodes.filter(n => n.nodeType === "Anchor").length, code: graph.nodes.filter(n => n.nodeType === "CodeNode").length, delivered: g.specs().filter(s => s.deliveryFacts.length > 0).length }',
+            "--root",
+            "node_modules/@libar-dev/software-delivery-protocol/specs",
+            "--json",
+          ],
+          consumer,
+        ),
+      ) as { specs: number; anchors: number; code: number; delivered: number };
+      expect(intentOnly.specs).toBeGreaterThan(0);
+      expect(intentOnly.anchors).toBe(0);
+      expect(intentOnly.code).toBe(0);
+      expect(intentOnly.delivered).toBe(0);
+      await writeFile(
+        join(consumer, "own.sdp.md"),
+        `---
+id: spec:package.own
+kind: behavior
+altitude: story
+readiness: idea
+relations: {}
+---
+# Own corpus
+
+## Intent
+- outcome: Discovery keeps the installed corpus outside this graph.
+`,
+      );
+      expect(
+        JSON.parse(run(installedCli, ["q", "return g.specs().map(s => s.id)", "--json"], consumer)),
+      ).toEqual(["spec:package.own"]);
+      await rm(join(consumer, "own.sdp.md"));
       await copyFile(importFixture, join(consumer, "behavior.sdp.ts"));
       const sdpImportDryRun = run(
         join(consumer, "node_modules", ".bin", "sdp"),

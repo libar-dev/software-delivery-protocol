@@ -25,6 +25,9 @@ export const expectedComponentIds = [
 // component set.
 export const structuralMembershipExceptions = [
   "impl:protocol.authoring-on-ramp",
+  "impl:protocol.register-recipes",
+  "impl:protocol.adopter-on-ramp",
+  "impl:protocol.shipped-protocol-corpus",
   "impl:protocol.authoring-recipes",
   "impl:protocol.delivery-session-on-ramp",
 ] as const;

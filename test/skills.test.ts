@@ -145,6 +145,16 @@ describe("Protocol skill assets", () => {
 
     const authoring = readSkill(".agents/skills/sdp-authoring/SKILL.md").source;
     for (const required of [
+      "Place what is not settled",
+      "Write the Markdown body",
+      "spec:carrier.markdown-body-grammar",
+      "spec:validation.typed-dependency-floor",
+      "spec:decisions.planning-truths-placement",
+      "spec:decisions.decision-readiness-posture",
+      "spec:extraction.delivery-facts",
+      "recipe 20",
+      "recipe 22",
+      "sdp census",
       "spec:validation.readiness-floor",
       "spec:validation.kind-evidence",
       "spec:validation.oracle-target-eligibility",
@@ -320,6 +330,9 @@ describe("Protocol skill assets", () => {
       "eighteen",
       "nineteen",
       "twenty",
+      "twenty-one",
+      "twenty-two",
+      "twenty-three",
     ] as const;
     const countWord = countWords[headings.length];
 
@@ -332,5 +345,34 @@ describe("Protocol skill assets", () => {
     const skill = readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source;
     expect(agents).toContain(`${countWord} runnable \`sdp q\` bodies`);
     expect(skill).toContain(`catalog contains ${countWord} ready-made bodies`);
+  });
+});
+
+const adopterOnRampImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.adopter-on-ramp"),
+  label: "asserts realization of the shipped adopter teaching in the authoring skill",
+  satisfies: ref("spec:consumers.adopter-on-ramp"),
+});
+void adopterOnRampImplementationAnchor;
+
+const adopterOnRampTestAnchor = specTest({
+  id: testAnchorId("test:protocol.adopter-on-ramp"),
+  label: "skill-asset checks verify the adopter on-ramp",
+  verifies: ref("spec:consumers.adopter-on-ramp"),
+});
+void adopterOnRampTestAnchor;
+
+describe("adopter teaching", () => {
+  it("teaches every Markdown section owner and links the carrying grammar", () => {
+    const authoring = readSkill(".agents/skills/sdp-authoring/SKILL.md").source;
+    const parser = readFileSync(join(repoRoot, "src/extract/markdown-body.ts"), "utf8");
+    const ownerList = /const recognized = \[([\s\S]*?)\] as const;/u.exec(parser)?.[1];
+    expect(ownerList).toBeDefined();
+    const owners = [...(ownerList ?? "").matchAll(/"([^"\n]+)"/gu)].map((match) => match[1] ?? "");
+    expect(owners.length).toBeGreaterThan(0);
+    for (const owner of [...owners, "Verification — "]) {
+      expect(authoring).toContain(`\`## ${owner}`);
+    }
+    expect(authoring).toContain("spec:carrier.markdown-body-grammar");
   });
 });

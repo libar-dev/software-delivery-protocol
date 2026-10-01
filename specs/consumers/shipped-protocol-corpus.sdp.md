@@ -14,6 +14,7 @@ relations:
 
 ## Behavior
 - rule: The published package includes the Protocol's Spec and Pack carriers under `specs/`.
-- rule: An adopter reads a cited Spec through the front door by selecting the package directory, installed or checked out, as the root, or by opening the carrier file. `sdp --help` names that path, as `spec:consumers.adopter-on-ramp` requires.
+- rule: An adopter reads a cited Spec through the front door by selecting the package's `specs/` directory, installed or checked out, as the root, or by opening the carrier file. `sdp --help` names that path, as `spec:consumers.adopter-on-ramp` requires.
 - rule: Discovery never descends into `node_modules`, so the shipped corpus never enters an adopter's own graph.
 - rule: The package ships no source anchors. A graph derived from the shipped corpus answers what the Protocol intends and never what it has realized, so its delivery facts and gap warnings are not evidence about the Protocol.
+- rule: The package ships the glossary `CONTEXT.md`, because the shipped skills and catalog send their reader to it.

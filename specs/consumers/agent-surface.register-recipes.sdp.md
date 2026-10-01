@@ -19,3 +19,5 @@ relations:
 - rule: Entry search matches whole tokens and answers with the Spec, the section, and the matching entry's key or text, where concept search answers with the Spec and the section only.
 - rule: Each body composes the existing reader. None adds a reader join or a CLI verb, because a join freezes into the reader only at the second-caller bar.
 - rule: The recipe check executes each body as written, and every document that states the catalog's size moves with the catalog.
+- rule: Whole tokens are maximal runs of Unicode letters and digits, split at camelCase humps and compared without case; a multiword term matches only as a consecutive run in the same order inside one key or text.
+- rule: The mention audit reports one row per mentioning Spec and target pair, with unresolved pairs separate from pairs that resolve but have no backing declared relation from the mentioning Spec.

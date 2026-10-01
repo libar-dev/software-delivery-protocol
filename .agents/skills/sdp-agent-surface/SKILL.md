@@ -85,21 +85,29 @@ The public projection publishers are `sdp view`, `sdp census`, `sdp mermaid`, an
 In this source checkout, use `npm run generate:self-hosting` or `npm run check:self-hosting` when
 all four roots must be published or certified together.
 
-The catalog contains nineteen ready-made bodies in `docs/agent-surface/recipes.md` in the Protocol
-repository and
+The catalog contains twenty-three ready-made bodies in `docs/agent-surface/recipes.md` in the
+Protocol repository and
 `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an adopter.
-Recipes 1-19 cover the existing read path plus the structural and projection slice: build backlog,
-drift alarm, per-Spec guarantees and verifiers, blast radius, Pack review backbone, concept search,
-readiness divergence, warn-level signals, promotion preflight, declared-versus-enabled verifiers,
-the lower ladder, component membership, uses fan-in and fan-out, structural neighborhood, census
-structural coverage, the projection-coverage upper bound, architecture map, decision map, and
-the planning slice. Every body there runs verbatim and a test proves it. Start from a recipe; adapt
-it in place.
+Recipes 1-23 cover the existing read path, the structural and projection slice, and the registers:
+build backlog, drift alarm, per-Spec guarantees and verifiers, blast radius, Pack review backbone,
+concept search, readiness divergence, warn-level signals, promotion preflight,
+declared-versus-enabled verifiers, the lower ladder, component membership, uses fan-in and fan-out,
+structural neighborhood, census structural coverage, the projection-coverage upper bound,
+architecture map, decision map, the planning slice, the open-question register, dependency footing,
+the mention audit, and entry search. Every body there runs verbatim and a test proves it. Start
+from a recipe; adapt it in place.
 
 For architecture questions, use the architecture map to see components and their shaping decisions
 together, the decision map to rank decisions by shaping fan-in (decided subjects plus inter-decision
 dependsOn and refines), or the planning slice to see refinement and dependency neighbors, shaping
 decisions, bound components, and entry points before editing.
+
+For a table you would otherwise keep by hand, run a register recipe each time you need it: the
+open-question register (recipe 20) for every open question and its blocking flag, dependency
+footing (recipe 21) for what one Spec rests on, and the mention audit (recipe 22) for Spec ids in
+prose that do not resolve or that no declared relation backs. When you hold a key or a term and
+need the entry that carries it, use entry search (recipe 23): it matches whole tokens and names
+the entry, where concept search stops at the section.
 
 Reach for the files only when you need the authored prose itself — the exact words to edit.
 
@@ -133,7 +141,11 @@ session and any paraphrase in any document. If the graph and this file disagree,
 and this file is the bug — report it rather than reconciling in your head.
 
 The same rule governs law: this skill cites Specs, it never restates them. When you need the law,
-read the carrying Spec.
+read the carrying Spec. In an adopter the Protocol's own Specs ship inside the package: query one
+with `--root node_modules/@libar-dev/software-delivery-protocol/specs`, or open its carrier under
+that directory. That graph holds intent only. The package ships no source anchors, so its delivery
+facts are empty and its gap warnings are not evidence about the Protocol, as
+`spec:consumers.shipped-protocol-corpus` states.
 
 ## What not to do
 
@@ -160,6 +172,8 @@ read the carrying Spec.
 
 ## Vocabulary
 
-The ratified glossary is `CONTEXT.md` — read it before inventing a term. The terms these queries
+The ratified glossary is `CONTEXT.md`, shipped at
+`node_modules/@libar-dev/software-delivery-protocol/CONTEXT.md` in an adopter. Read it before
+inventing a term. The terms these queries
 speak: `Spec` · `Pack` · `anchor` · `claim` · delivery facts · readiness floor · derived readiness ·
 blast radius · at-risk · coverage-unknown · gap · orphan.

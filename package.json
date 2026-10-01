@@ -10,6 +10,9 @@
   "type": "module",
   "files": [
     "dist/**",
+    "specs/**/*.sdp.md",
+    "specs/**/*.sdp.gherkin",
+    "CONTEXT.md",
     "docs/agent-surface/recipes.md",
     "docs/agent-surface/architecture.md",
     ".agents/skills/sdp-agent-surface/SKILL.md",

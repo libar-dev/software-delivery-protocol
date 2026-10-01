@@ -99,6 +99,21 @@ describe("sdp cli", () => {
     expect(capture.readStderr()).toBe("");
   });
 
+  it("points operators to the shipped on-ramps and Protocol corpus", () => {
+    for (const path of [
+      ".agents/skills/sdp-agent-surface/SKILL.md",
+      ".agents/skills/sdp-authoring/SKILL.md",
+      ".agents/skills/sdp-sessions/SKILL.md",
+      "docs/agent-surface/recipes.md",
+      "CONTEXT.md",
+      "specs/",
+    ]) {
+      expect(SDP_HELP_TEXT).toContain(path);
+      expect(existsSync(join(repoRoot, path))).toBe(true);
+    }
+    expect(SDP_HELP_TEXT).toContain("--root PKG/specs");
+  });
+
   it("prints the exact help text for --help", () => {
     const capture = createCaptureOutput();
 
