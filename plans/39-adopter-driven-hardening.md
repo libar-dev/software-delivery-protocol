@@ -104,8 +104,9 @@ Facts and questions the execution surfaced that no Spec carries. None is ruled h
   carrier refuse a relation name as a key?
 - Recipe 9 reports the current floor only, so it does not name what blocks the next rung. Recipe
   21 shows what a Spec rests on.
-- Shipped documents still hold a few pointers to files the package does not ship, such as
-  `docs/concept/` and `src/ids.ts`.
+- The shipped glossary's pointers to `docs/concept/` and `src/ids.ts` are now marked as
+  source-checkout only. Package readers reach `ref()`'s limit through
+  `spec:decisions.carried-evidence`.
 
 ## How it was built
 

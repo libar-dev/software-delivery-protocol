@@ -4,8 +4,9 @@
 > bounded context's vocabulary: **one concept → one word**; the rest are *aliases to avoid*.
 >
 > This document carries **terms only**; the model exposition lives in the authored Specs under
-> `specs/` and in the surviving design docs under `docs/concept/`. The lean decision registry
-> points to carrying Specs; historical rationale lives in git, plans, and those Specs.
+> `specs/` (shipped with the package) and, in a source checkout of the repository, in the surviving
+> design docs under `docs/concept/`. The lean decision registry points to carrying Specs;
+> historical rationale lives in git, plans, and those Specs.
 
 ## Governing rubric  [SETTLED]
 
@@ -215,7 +216,7 @@ delivery fact, workflow state, or graph state.
 - **"epistemic boundary"** is a *working name* for the humans-assert-intent / machines-assert-structure
   division (`01`); a friendlier Studio-facing name is a minor open item.
 - **`ref()`** in the DSL is a **spec-only** reference builder wearing a generic name (it rejects
-  `pack:`/`doc:` targets) — documented on the export (`src/ids.ts`). Consequently `decidedBy` → an
+  `pack:`/`doc:` targets); a source checkout also notes this on the export in `src/ids.ts`. Consequently `decidedBy` → an
   external `doc:` ADR is a **named deferral** (MD-16, stated in `spec:decisions.carried-evidence`);
   revisit when `doc:`-target
   relations or pack-targeting arrive.
