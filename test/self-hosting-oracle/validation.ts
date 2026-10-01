@@ -1264,7 +1264,14 @@ export const validationSpecs = [
     title: "Below-ready examples keep declared verifier data",
     narrative: null,
     sections: {
-      intent: { outcome: "Check all three lower rungs without enabling an unbound example." },
+      intent: {
+        outcome: "Check all three lower rungs without enabling an unbound example.",
+        assumptions: [
+          "The world has three behavior parents stating `defined`, each with one unbound example child, stating `idea`, `scoped`, or `defined`. No parent or child has a test binding or oracle binding.",
+          "All probes are story-altitude Specs with declared claims and an Intent outcome, with no other section evidence. Each child declares `verifies` to its resolving parent. A binding is a resolving `test:` Anchor with an anchored `verifies` edge. No other relations or anchors are present except those stated here. Outcome counts read only `conformance/verifies-linkage`, parent `honesty/gaps`, and `conformance/oracle-linkage`; other findings stay outside the counts.",
+          "Every child remains a declared, disabled verifier. Neither child nor parent derives `has-verifier`. No linkage warning, parent gap, or oracle error appears.",
+        ],
+      },
       behavior: {
         examples: [
           {
@@ -1290,6 +1297,11 @@ export const validationSpecs = [
     sections: {
       intent: {
         outcome: "Check an unbound ready example and every non-example kind at every rung.",
+        assumptions: [
+          "The world has one unbound example stating `ready` and 28 non-example children, one for each pairing of behavior, workflow, rule, constraint, model, decision, and contract with `idea`, `scoped`, `defined`, and `ready`. Each child verifies its own behavior parent stating `defined`. No parent or child has a test binding or oracle binding.",
+          "All probes are story-altitude Specs with declared claims and an Intent outcome, with no other section evidence. Each child declares `verifies` to its resolving parent. A binding is a resolving `test:` Anchor with an anchored `verifies` edge. No other relations or anchors are present except those stated here. Outcome counts read only `conformance/verifies-linkage`, parent `honesty/gaps`, and `conformance/oracle-linkage`; other findings stay outside the counts.",
+          "Each child remains a declared, disabled verifier and emits one conformance warning whose subject is the child and whose related Spec is its parent. Neither child nor parent derives `has-verifier`. No parent gap or oracle error appears.",
+        ],
       },
       behavior: {
         examples: [
@@ -1317,6 +1329,13 @@ export const validationSpecs = [
       intent: {
         outcome:
           "Check parent gaps with no binding, a sibling binding, and a direct binding, the decision exemption, a ready child warning, and an unresolved oracle.",
+        assumptions: [
+          "The world has six parents stating `ready`. Five are behaviors and one is a decision. Four example children state `defined`: one behavior parent has no binding, one has a bound `defined` example sibling, one has a direct test binding, and the decision parent has no binding. Two example children state `ready`: one is unbound beside a bound `defined` example sibling, and the other has its own resolving test binding.",
+          "All probes are story-altitude Specs with declared claims and an Intent outcome, with no other section evidence. Each child declares `verifies` to its resolving parent. A binding is a resolving `test:` Anchor with an anchored `verifies` edge. No other relations or anchors are present except those stated here. Outcome counts read only `conformance/verifies-linkage`, parent `honesty/gaps`, and `conformance/oracle-linkage`; other findings stay outside the counts.",
+          "The unbound children remain declared, disabled verifiers with no `has-verifier`. The bound `ready` child is a declared, enabled verifier, derives `has-verifier`, and emits no linkage warning. The direct binding, either sibling binding, and the bound `ready` child each confer `has-verifier` on their parent.",
+          "Only the unbound `ready` child emits a linkage warning, at warning severity in the conformance family, naming its behavior parent as the related Spec. Only the behavior parent with no binding emits a parent gap. The decision parent stays exempt.",
+          "An `oracle:` Anchor declares an anchored `models` edge to the behavior parent with no binding. That parent owns no example space, so the oracle emits one error naming the oracle as subject and that parent as related Spec.",
+        ],
       },
       behavior: {
         examples: [
@@ -1344,9 +1363,10 @@ export const validationSpecs = [
       intent: {
         outcome: "Check the relation-rungs matrix through the readiness floor.",
         assumptions: [
-          "The world has 24 rule subjects stating `ready`, one for each pairing of `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, and `supersedes` with a target stating `idea`, `scoped`, `defined`, or `ready`. Every target resolves. `constrainedBy` targets are constraints; `decidedBy` and `supersedes` targets are decisions; the other targets are rules. No Spec has a blocking open question.",
+          "The world has 24 single-relation rule subjects stating `ready`, one for each pairing of `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, and `supersedes` with a target stating `idea`, `scoped`, `defined`, or `ready`. Every target resolves. `constrainedBy` targets are constraints; `decidedBy` and `supersedes` targets are decisions; the other targets are rules. No Spec has a blocking open question.",
           "All probes are story-altitude Specs with declared relations and an Intent outcome. Rule subjects and rule targets carry a behavior rule; constraint targets carry a statement and target; decision targets carry a written decision. Each resolving target declares `dependsOn` back to its subject. No anchors are present. The expected counts include only `honesty/readiness-floor` findings, not findings from other validators.",
           "The four included relations each fail `typed-dependency-targets-are-defined` for their `idea` and `scoped` targets, giving eight target failures. Their `defined` and `ready` boundaries pass. `verifies` and `supersedes` pass at every target rung.",
+          "The world also has sixteen rule subjects stating `ready`. Each pairs `refines` or `dependsOn` with `constrainedBy` or `decidedBy`. One target states `defined` and the other states `scoped`. Each pair appears with the older relation passing and the newer relation failing, and with the older relation failing and the newer relation passing, in both declaration orders. Targets have the same kinds and evidence as the single-relation probes and declare `dependsOn` back to their subject. Every mixed subject fails `typed-dependency-targets-are-defined` once and derives `defined`, regardless of declaration order.",
         ],
       },
       behavior: {
@@ -1355,7 +1375,7 @@ export const validationSpecs = [
             given: ['the typed dependency matrix {matrix: "relation-rungs"}'],
             when: ["the reader checks the readiness floor"],
             then: [
-              "the matrix reports {targetFailures: 8} target failures and {resolutionFailures: 0} resolution failures and {questionFailures: 0} blocking question failures",
+              "the matrix reports {targetFailures: 24} target failures and {resolutionFailures: 0} resolution failures and {questionFailures: 0} blocking question failures",
             ],
           },
         ],

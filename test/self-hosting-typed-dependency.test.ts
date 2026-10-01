@@ -52,7 +52,7 @@ function expectedFloor(
 ): TypedDependencyFloorOutcome {
   switch (point.matrix) {
     case "relation-rungs":
-      return { kind: OUTCOME, targetFailures: 8, resolutionFailures: 0, questionFailures: 0 };
+      return { kind: OUTCOME, targetFailures: 24, resolutionFailures: 0, questionFailures: 0 };
     case "missing-targets":
       return { kind: OUTCOME, targetFailures: 0, resolutionFailures: 6, questionFailures: 0 };
     case "unsettled-fact":
@@ -162,12 +162,46 @@ function addTrace(
   });
   if (options.blocking && rungs.indexOf(rung) >= 2) world.questions.push(target);
 }
+function addMixedTrace(
+  world: World,
+  older: "refines" | "dependsOn",
+  newer: "constrainedBy" | "decidedBy",
+  olderFails: boolean,
+  newerFirst: boolean,
+): void {
+  const name = `mixed-${older}-${newer}-${olderFails}-${newerFirst}`;
+  const first = newerFirst ? newer : older;
+  const second = newerFirst ? older : newer;
+  const firstFails = newerFirst ? !olderFails : olderFails;
+  addTrace(world, name, first, firstFails ? "scoped" : "defined");
+  const trace = world.traces[world.traces.length - 1];
+  if (trace === undefined) throw new Error("The mixed subject requires a trace.");
+  const target = `${trace.subject}.second-target`;
+  world.nodes.push(
+    primitive(
+      target,
+      second === "constrainedBy" ? "constraint" : second === "decidedBy" ? "decision" : "rule",
+      firstFails ? "defined" : "scoped",
+    ),
+  );
+  world.edges.push(
+    { from: target, to: trace.subject, type: "dependsOn", claim: "declared" },
+    { from: trace.subject, to: target, type: second, claim: "declared" },
+  );
+  trace.targetFails = true;
+  trace.derivedTargetFails = true;
+}
 function createWorld(point: Partial<TypedDependencyFloorConditions>): World {
   const world: World = { nodes: [], edges: [], traces: [], questions: [] };
   switch (point.matrix) {
     case "relation-rungs":
       for (const relation of relations)
         for (const rung of rungs) addTrace(world, `${relation}-${rung}`, relation, rung);
+      for (const older of ["refines", "dependsOn"] as const)
+        for (const newer of ["constrainedBy", "decidedBy"] as const)
+          for (const olderFails of [false, true])
+            for (const newerFirst of [false, true])
+              addMixedTrace(world, older, newer, olderFails, newerFirst);
       break;
     case "missing-targets":
       for (const relation of relations)

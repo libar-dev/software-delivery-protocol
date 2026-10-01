@@ -9,7 +9,7 @@ relations:
 # Inline code is content, never markup
 
 ## Intent
-- problem: A type parameter written inside a code span is refused as raw HTML, so an author who writes signatures invents a private bracket notation that cannot be pasted into source.
+- problem: Authors need to write type parameters inside code spans without the raw-HTML guard forcing a private bracket notation that cannot be pasted into source.
 - outcome: Let a code span carry any literal text, angle brackets included, while raw HTML outside code spans stays refused.
 
 ### Open questions

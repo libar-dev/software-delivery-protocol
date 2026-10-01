@@ -55,6 +55,7 @@ interface Trace {
   parent: string;
   child: string;
   enabled: boolean;
+  childEnabled: boolean;
   warning: boolean;
   gap: boolean;
 }
@@ -94,7 +95,7 @@ function trace(
   kind: SpecKind,
   rung: SpecReadiness,
   parentRung: SpecReadiness = "defined",
-  binding: "none" | "sibling" | "direct" = "none",
+  binding: "none" | "sibling" | "direct" | "self" = "none",
   parentKind: SpecKind = "behavior",
 ): void {
   const parent = `spec:probe.${name}`;
@@ -102,6 +103,7 @@ function trace(
   world.nodes.push(primitive(parent, parentKind, parentRung), primitive(child, kind, rung));
   world.edges.push({ from: child, to: parent, type: "verifies", claim: "declared" });
   if (binding === "direct") bind(world, parent);
+  if (binding === "self") bind(world, child);
   if (binding === "sibling") {
     const sibling = `${parent}.sibling`;
     world.nodes.push(primitive(sibling, "example", "defined"));
@@ -112,7 +114,8 @@ function trace(
     parent,
     child,
     enabled: binding !== "none",
-    warning: kind !== "example" || rung === "ready",
+    childEnabled: binding === "self",
+    warning: kind !== "example" || (rung === "ready" && binding !== "self"),
     gap: parentRung === "ready" && parentKind !== "decision" && binding === "none",
   });
 }
@@ -132,6 +135,7 @@ function createWorld(point: Partial<UnboundExamplePostureConditions>): World {
       trace(world, "sibling-binding", "example", "defined", "ready", "sibling");
       trace(world, "direct-binding", "example", "defined", "ready", "direct");
       trace(world, "ready-child", "example", "ready", "ready", "sibling");
+      trace(world, "bound-ready-child", "example", "ready", "ready", "self");
       trace(world, "decision-parent", "example", "defined", "ready", "none", "decision");
       world.nodes.push({
         id: "oracle:probe.no-space",
@@ -168,11 +172,17 @@ function observe(world: World): UnboundExamplePostureOutcome {
   for (const entry of world.traces) {
     const parent = reader.specContext(entry.parent);
     const child = reader.specContext(entry.child);
-    expect(child?.deliveryFacts).not.toContain("has-verifier");
+    expect(child?.deliveryFacts.includes("has-verifier")).toBe(entry.childEnabled);
     const declared = parent?.verifiers.find((v) => v.verifierId === entry.child);
-    expect(declared).toMatchObject({ via: "example", claim: "declared", enabled: false });
+    expect(declared).toMatchObject({
+      via: "example",
+      claim: "declared",
+      enabled: entry.childEnabled,
+    });
     expect(parent?.deliveryFacts.includes("has-verifier")).toBe(entry.enabled);
-    expect(linkage.filter((f) => f.subjectId === entry.child)).toHaveLength(entry.warning ? 1 : 0);
+    const childWarnings = linkage.filter((f) => f.subjectId === entry.child);
+    expect(childWarnings).toHaveLength(entry.warning ? 1 : 0);
+    for (const warning of childWarnings) expect(warning.relatedId).toBe(entry.parent);
     expect(gaps.filter((f) => f.subjectId === entry.parent)).toHaveLength(entry.gap ? 1 : 0);
   }
   for (const finding of linkage)
