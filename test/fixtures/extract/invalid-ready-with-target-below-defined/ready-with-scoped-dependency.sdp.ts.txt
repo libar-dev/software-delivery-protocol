@@ -22,7 +22,7 @@ export const authorizePaymentSpec = spec({
 });
 
 // States ready while depending on a scoped target: every reference resolves, so the one floor
-// failure is depends-on-and-refines-targets-are-defined — the glossary's worked dialogue, pinned.
+// failure is typed-dependency-targets-are-defined — the glossary's worked dialogue, pinned.
 export const createOrderSpec = spec({
   id: specId("spec:orders.create-order"),
   title: "Create order",

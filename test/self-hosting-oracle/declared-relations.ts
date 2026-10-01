@@ -920,4 +920,44 @@ export const expectedDeclaredRelations = [
     "verifies",
     "spec:validation.unbound-example-posture",
   ],
+  [
+    "spec:validation.typed-dependency-floor.relation-rungs",
+    "refines",
+    "spec:validation.typed-dependency-floor",
+  ],
+  [
+    "spec:validation.typed-dependency-floor.relation-rungs",
+    "verifies",
+    "spec:validation.typed-dependency-floor",
+  ],
+  [
+    "spec:validation.typed-dependency-floor.missing-targets",
+    "refines",
+    "spec:validation.typed-dependency-floor",
+  ],
+  [
+    "spec:validation.typed-dependency-floor.missing-targets",
+    "verifies",
+    "spec:validation.typed-dependency-floor",
+  ],
+  [
+    "spec:validation.typed-dependency-floor.unsettled-fact",
+    "refines",
+    "spec:validation.typed-dependency-floor",
+  ],
+  [
+    "spec:validation.typed-dependency-floor.unsettled-fact",
+    "verifies",
+    "spec:validation.typed-dependency-floor",
+  ],
+  [
+    "spec:validation.typed-dependency-floor.stated-readiness",
+    "refines",
+    "spec:validation.typed-dependency-floor",
+  ],
+  [
+    "spec:validation.typed-dependency-floor.stated-readiness",
+    "verifies",
+    "spec:validation.typed-dependency-floor",
+  ],
 ] as const;

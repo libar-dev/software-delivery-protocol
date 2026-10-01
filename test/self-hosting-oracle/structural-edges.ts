@@ -31,6 +31,11 @@ export const structuralMembershipExceptions = [
 
 export const acceptedArchitecturalUnits = [
   {
+    unit: "src/validate/readiness-floor.ts#typedDependencyTargetsAreDefined",
+    anchorId: "impl:protocol.typed-dependency-floor",
+    componentId: "component:protocol.validate",
+  },
+  {
     unit: "src/extract/markdown-inline-code.ts#hasRawHtmlOutsideCodeSpans",
     anchorId: "impl:protocol.inline-code-spans",
     componentId: "component:protocol.extract",

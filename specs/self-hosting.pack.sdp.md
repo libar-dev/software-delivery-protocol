@@ -197,6 +197,10 @@ specs:
   - spec:validation.unbound-example-posture.lower-rungs
   - spec:validation.unbound-example-posture.warning-cases
   - spec:validation.unbound-example-posture.parent-traces
+  - spec:validation.typed-dependency-floor.relation-rungs
+  - spec:validation.typed-dependency-floor.missing-targets
+  - spec:validation.typed-dependency-floor.unsettled-fact
+  - spec:validation.typed-dependency-floor.stated-readiness
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model

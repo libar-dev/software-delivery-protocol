@@ -20,11 +20,6 @@ export const validationSpecs = [
               "Does any remaining law in the src/validate/readiness-floor.ts file header promote here under comment promotion?",
             blocking: false,
           },
-          {
-            question:
-              "`spec:validation.typed-dependency-floor` widens the `ready` target clause to `constrainedBy` and `decidedBy`. Its implementing change edits the clause sentence here and the floor table together.",
-            blocking: false,
-          },
         ],
       },
       behavior: {
@@ -34,7 +29,7 @@ export const validationSpecs = [
           "The `idea` floor reads the envelope through five clauses: the Spec carries a stable id, a human-readable title, a stated kind, and a stated altitude, and it either states its intended outcome or declares a parent relation through `refines`.",
           "The `scoped` floor adds three clauses: the intended outcome is stated, at least one authored relation is declared, and the kind's natural evidence is present.",
           "The `defined` floor adds two clauses: the kind's natural evidence is complete, and no open question the Spec records is flagged as blocking.",
-          "The `ready` floor reads the Spec's own edges through three clauses: every authored relation resolves to a known target, every `refines` and `dependsOn` target itself stands at least `defined`, and every anchor bound to the Spec resolves.",
+          "The `ready` floor reads the Spec's own edges through three clauses: every authored relation resolves to a known target, every resolving `refines`, `dependsOn`, `constrainedBy`, and `decidedBy` target itself states at least `defined`, and every anchor bound to the Spec resolves.",
           "Readiness is independent across a refinement relation: a child may be authored at a higher readiness than its parent. Only the child's own cumulative floor applies, including the `ready` target bound above when the child states `ready`.",
           "The anchor clause reads the bindings that are present, so a Spec carrying no anchor clears it — the floor never demands a binding an author has not made.",
           "Only relations the Spec itself declares count toward the relation clauses; membership of a Pack is derived from the manifest and never stands in for an authored relation.",
@@ -1179,16 +1174,25 @@ export const validationSpecs = [
       },
       behavior: {
         rules: [
-          "The `ready` floor's target clause reads every typed dependency the Spec declares. Each `refines`, `dependsOn`, `constrainedBy`, and `decidedBy` target itself states at least `defined`.",
+          "The `ready` floor's target clause reads every typed dependency the Spec declares. Each resolving `refines`, `dependsOn`, `constrainedBy`, and `decidedBy` target itself states at least `defined`. The clause reads stated readiness, so a dependent does not inherit a target's own floor failure.",
           "The threshold is `defined` for all four relations. A `decidedBy` target at `defined` is a complete decision record awaiting ratification, and demanding `ready` of it would make `ready` on every shaped Spec a transitive registry fact, so a design can state `ready` while the decisions that shape it stay proposals.",
           "The clause stays kind-blind and reads resolving targets only. An unresolved target remains the relation-resolution clause's failure, never a second one.",
           "`verifies` and `supersedes` stay outside the clause. A verifier's rung is independent of the Spec it verifies, and a replacement decision does not rest on the record it supersedes.",
-          "An unsettled fact is stated the way any unsettled truth is. A constraint Spec that records a blocking open question stays below `defined`, and every Spec bounded by it can state `defined` and cannot state `ready`.",
-          "This clause replaces the `refines` and `dependsOn` sentence of `spec:validation.readiness-floor` and its row in the floor table of `src/validate/readiness-floor.ts`. The floor keeps one target clause, never two.",
+          "An unsettled fact is stated the way any unsettled truth is. A constraint Spec that records a blocking open question clears at most `scoped`. When it states a rung below `defined`, a Spec bounded by it may state `defined` if its own floor clears, but cannot lawfully state `ready`.",
+          "The floor keeps one target clause, `typed-dependency-targets-are-defined`, in `src/validate/readiness-floor.ts`. Its parent `spec:validation.readiness-floor` states the same target bound.",
         ],
+        exampleSpace: {
+          given: [
+            'the typed dependency matrix {matrix:"relation-rungs"|"missing-targets"|"unsettled-fact"|"stated-readiness"}',
+          ],
+          when: ["the reader checks the readiness floor"],
+          then: [
+            "the matrix reports {targetFailures:number} target failures and {resolutionFailures:number} resolution failures and {questionFailures:number} blocking question failures",
+          ],
+        },
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.unbound-example-posture",
@@ -1319,6 +1323,110 @@ export const validationSpecs = [
             when: ["the reader derives the verification signals"],
             then: [
               "the matrix reports {warnings: 1} linkage warnings and {gaps: 1} parent gaps and {oracleErrors: 1} oracle errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.typed-dependency-floor.relation-rungs",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/typed-dependency-floor.relation-rungs.sdp.md",
+    title: "Every relation reads the four stated target rungs",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Check the relation-rungs matrix through the readiness floor.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the typed dependency matrix {matrix: "relation-rungs"}'],
+            when: ["the reader checks the readiness floor"],
+            then: [
+              "the matrix reports {targetFailures: 8} target failures and {resolutionFailures: 0} resolution failures and {questionFailures: 0} blocking question failures",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.typed-dependency-floor.missing-targets",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/typed-dependency-floor.missing-targets.sdp.md",
+    title: "Missing targets fail relation resolution once",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Check the missing-targets matrix through the readiness floor.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the typed dependency matrix {matrix: "missing-targets"}'],
+            when: ["the reader checks the readiness floor"],
+            then: [
+              "the matrix reports {targetFailures: 0} target failures and {resolutionFailures: 6} resolution failures and {questionFailures: 0} blocking question failures",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.typed-dependency-floor.unsettled-fact",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/typed-dependency-floor.unsettled-fact.sdp.md",
+    title: "An unsettled constraint bounds ready but permits defined",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Check the unsettled-fact matrix through the readiness floor.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the typed dependency matrix {matrix: "unsettled-fact"}'],
+            when: ["the reader checks the readiness floor"],
+            then: [
+              "the matrix reports {targetFailures: 1} target failures and {resolutionFailures: 0} resolution failures and {questionFailures: 1} blocking question failures",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.typed-dependency-floor.stated-readiness",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/typed-dependency-floor.stated-readiness.sdp.md",
+    title: "Target floor failures do not propagate across dependencies",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Check the stated-readiness matrix through the readiness floor.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the typed dependency matrix {matrix: "stated-readiness"}'],
+            when: ["the reader checks the readiness floor"],
+            then: [
+              "the matrix reports {targetFailures: 0} target failures and {resolutionFailures: 0} resolution failures and {questionFailures: 4} blocking question failures",
             ],
           },
         ],

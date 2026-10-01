@@ -1165,9 +1165,7 @@ describe("graph-validator corpora", () => {
     ]);
     // The target-rung clause evaluates resolving targets only — no third failure.
     expect(
-      validation.some(
-        (finding) => finding.relatedId === "depends-on-and-refines-targets-are-defined",
-      ),
+      validation.some((finding) => finding.relatedId === "typed-dependency-targets-are-defined"),
     ).toBe(false);
   });
 
@@ -1182,7 +1180,7 @@ describe("graph-validator corpora", () => {
     expect(errors).toHaveLength(1);
     expect(errors[0]?.validatorId).toBe(graphValidatorIds.readinessFloor);
     expect(errors[0]?.subjectId).toBe("spec:orders.create-order");
-    expect(errors[0]?.relatedId).toBe("depends-on-and-refines-targets-are-defined");
+    expect(errors[0]?.relatedId).toBe("typed-dependency-targets-are-defined");
   });
 
   it("invalid-hand-authored-delivery-fact-in-section: the smuggled key fails over the graph end-to-end (MD-16)", () => {
