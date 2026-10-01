@@ -143,9 +143,10 @@ so it needs no extra tag, status key, or side table.
   below `defined`, the floor clause in `spec:validation.readiness-floor`.
 - A deferral is a `[blocking]` open question that names its re-entry trigger, plus `dependsOn`
   when another Spec must hold first; `spec:decisions.planning-truths-placement` rules this home.
-  The `defined` floor does not read the parent, so the deferred Spec's example children can still
-  state `defined` once their bound points are complete. The `ready` floor does read the parent, so
-  their `ready` waits until the parent states `defined`.
+  The `defined` floor does not read the parent's readiness, so the deferred Spec's example children
+  can still state `defined` once their bound points are complete and match the parent's example
+  vocabulary, when it has one. The `ready` floor does read the parent's readiness, so their `ready`
+  waits until the parent states `defined`.
 - An unsettled fact that bounds other Specs is a `constraint` Spec whose `[blocking]` open
   question names the check that would settle it. Each Spec it bounds declares `constrainedBy`. A
   bounded Spec can still state `defined`; the floor refuses its `ready` until the constraint states

@@ -25,9 +25,9 @@ Authored for this arc, with the proposal each one answers. Where each Spec stand
 the graph: the drift alarm (recipe 2), promotion preflight (recipe 9), and the lower ladder
 (recipe 11).
 
-Implemented, one unit each, with bound examples as evidence. Each states `defined`, derives
-`ready`, and carries `implemented` and `has-verifier`, so the drift alarm names it until the owner
-states `ready`:
+Implemented with bound evidence: bound examples for the three engine changes, direct test anchors
+for the three consumer Specs. Each states `defined`, derives `ready`, and carries `implemented` and
+`has-verifier`, so the drift alarm names it until the owner states `ready`:
 
 - `spec:carrier.inline-code-spans` (P2, `839709d`). A code span is content, so a generic is not
   HTML.
@@ -41,10 +41,11 @@ states `ready`:
   adopter would otherwise track by hand, with `--help` pointing at the skills, the catalog, the
   glossary, and `specs/`; and a package that ships `specs/` and `CONTEXT.md`.
 
-Review findings on these units were folded in by `5076d88`, `9d70743`, `7ad70e7`, `4cf0b5a`, and `1df3c60`.
-Each implementing commit also moved the sentence its Spec revised in a `ready` parent, and removed
-the non-blocking question on that parent that named the child: `spec:validation.readiness-floor`,
-`spec:validation.verification-linkage`, and `spec:carrier.markdown-parser`.
+Review findings on these units were folded in by the `test` and `fix` commits that follow them on
+the branch. Each of the three engine commits also moved the sentence its Spec revised in a `ready`
+parent, and removed the non-blocking question on that parent that named the child:
+`spec:validation.readiness-floor`, `spec:validation.verification-linkage`, and
+`spec:carrier.markdown-parser`.
 
 Verified and waiting for the same statement:
 

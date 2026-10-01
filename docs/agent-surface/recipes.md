@@ -1093,12 +1093,12 @@ for (const spec of g.specs()) {
       (typeof entry !== "object" ||
         entry === null ||
         Array.isArray(entry) ||
-        typeof entry.blocking !== "boolean")
+        ("blocking" in entry && typeof entry.blocking !== "boolean"))
     ) {
       bad(`openQuestions[${index}]`, "Expected a question and boolean blocking flag");
       return;
     }
-    questions.push({ blocking: typeof entry === "string" ? false : entry.blocking, question });
+    questions.push({ blocking: typeof entry === "string" ? false : entry.blocking ?? false, question });
   });
   if (questions.length === 0) continue;
   rows.push({
@@ -1133,9 +1133,10 @@ blocking question come first, and each group keeps Spec id order. `totals` repor
 and Spec counts, so the size of the register never needs a second query or a number copied into
 prose. The recipe lists and does not judge: a blocking question holding its Spec below `defined`
 is the readiness floor's clause, which recipe 9 names for one Spec. A question authored as bare
-prose in a TypeScript carrier carries no flag and reads as non-blocking. `malformed`
-reports collections that are not lists and entries without non-empty question text or a boolean
-blocking flag. Those entries do not count as questions.
+prose or as an object with no `blocking` flag in a TypeScript carrier reads as non-blocking.
+`malformed` reports collections that are not lists, entries without non-empty question text,
+and entries whose `blocking` flag is present but is not a boolean. Those entries do not count
+as questions.
 
 ## 21. Dependency footing
 
@@ -1381,7 +1382,12 @@ for (const spec of g.specs()) {
   const walk = (section, value, entry, key) => {
     if (typeof value === "string") {
       visit(section, entry, key, value);
-    } else if (Array.isArray(value)) {
+      return;
+    }
+    if (key !== null && hits(key)) {
+      matches.push({ id: spec.id, section, entry, matchedIn: ["key"], text: JSON.stringify(value) });
+    }
+    if (Array.isArray(value)) {
       value.forEach((item, index) => walk(section, item, `${entry ?? ""}[${index}]`, null));
     } else if (typeof value === "object" && value !== null) {
       // A key the author coins is content: any key of the open sections (`design`, `ui`) except
@@ -1436,8 +1442,11 @@ The term matches when its tokens appear in the entry as one consecutive run, in 
 Each row names the Spec, the `section`, the `entry` inside it, and the entry's `text`. `entry` is
 the key for a keyed entry (`envelopeSketch`, `terms.claim inheritance`), the field and zero-based
 index for a list entry (`rules[2]`), and `null` for the Spec's narrative, which is reported under
-the section name `narrative`. `matchedIn` says whether the key, the text, or both matched. Keys
-match only where the author coins them: the keys of `design` and `ui` and the terms of `model`.
+the section name `narrative`. `matchedIn` says whether the key, the text, or both matched.
+A key matches whatever its value is. A non-string value renders as JSON and reports
+`matchedIn: ["key"]`; the front door shortens long text in default output just as it does for
+strings. Nested strings remain searchable at paths such as `retryPolicy.mode` or
+`retryWorkers[0]`. Keys match only where the author coins them: the keys of `design` and `ui` and the terms of `model`.
 Field names the carrier fixes, such as `outcome` or `rules`, never match. Step text inside `gwt`
 and `gwt-vocabulary` fences is searched like any other entry. Titles and ids stay with concept
 search. Rows keep Spec id order and then the order the graph holds the entries;

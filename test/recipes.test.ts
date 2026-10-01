@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -1742,7 +1742,231 @@ function registerProbe(): ExtractionResult {
   };
 }
 
+function carrierRegisterProbe(): ExtractionResult {
+  const root = mkdtempSync("/private/tmp/sdp-register-carrier-");
+  try {
+    writeFileSync(
+      join(root, "probe.sdp.ts"),
+      `
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const probe = spec({
+  id: specId("spec:probe.carrier"), title: "Carrier register probe",
+  kind: "behavior", altitude: "story", readiness: "idea",
+  intent: { outcome: "Search authored entries", openQuestions: [{ question: "Who owns this?" }] },
+  design: {
+    retryLimit: 3, retryEnabled: true, retryPolicy: { mode: "fixed" },
+    retryWorkers: ["alpha", "beta"], retryEmptyList: [], retryEmptyObject: {},
+    nested: { steps: ["retry later"] }, retryLong: { detail: ${JSON.stringify("x".repeat(300))} }
+  },
+  ui: { retryVisible: false }
+});`,
+    );
+    const extraction = extract({ root });
+    expect(extraction.report.findings).toEqual([]);
+    expect(extraction.graph.nodes.some((node) => node.id === "spec:probe.carrier")).toBe(true);
+    return extraction;
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
 describe("register recipe semantics", () => {
+  it.each([20, 21, 22, 23])("runs recipe %s as written in default output", async (ordinal) => {
+    const capture = createCaptureOutput();
+    expect(
+      await runSdpCli(
+        ["q", recipeByOrdinal(ordinal).body, "--root", repoRoot],
+        capture.output,
+        queryHooks,
+      ),
+    ).toBe(0);
+    expect(capture.readStderr()).toBe("");
+    expect(capture.readStdout()).toContain("totals:");
+  });
+
+  it("renders long JSON values with the same default text bound as strings", async () => {
+    const extraction = carrierRegisterProbe();
+    const node = extraction.graph.nodes.find((node) => node.nodeType === "Primitive");
+    if (node?.nodeType !== "Primitive") throw new Error("missing carrier probe");
+    const text = "x".repeat(5000);
+    const probe = {
+      ...extraction,
+      graph: {
+        ...extraction.graph,
+        nodes: [
+          { ...node, sections: { design: { retryText: text, retryObject: { detail: text } } } },
+        ],
+      },
+    };
+    const recipe = recipeByOrdinal(23);
+    const body = recipe.body.replace('const term = "suffix";', 'const term = "retry";');
+    const result = asRecord(await runRecipe({ ...recipe, body }, undefined, probe));
+    expect(
+      asArray(result.matches)
+        .map(asRecord)
+        .map((row) => row.text),
+    ).toEqual([text, JSON.stringify({ detail: text })]);
+    const capture = createCaptureOutput();
+    expect(
+      await runSdpCli(["q", body, "--root", repoRoot], capture.output, {
+        query: { ...queryHooks.query, extract: () => probe },
+      }),
+    ).toBe(0);
+    expect(capture.readStderr()).toBe("");
+    expect(capture.readStdout()).not.toContain(text);
+    expect(capture.readStdout()).toContain("... 1000 more characters");
+    expect(capture.readStdout()).toContain("... 1013 more characters");
+  });
+
+  it("registers an omitted blocking flag through a TypeScript carrier", async () => {
+    const result = asRecord(
+      await runRecipe(recipeByOrdinal(20), undefined, carrierRegisterProbe()),
+    );
+    expect(result.totals).toEqual({
+      questions: 1,
+      blocking: 0,
+      nonBlocking: 1,
+      specs: 1,
+      specsWithBlocking: 0,
+      malformed: 0,
+    });
+    expect(result.malformed).toEqual([]);
+    expect(asArray(result.specs).map(asRecord)[0]?.questions).toEqual([
+      { question: "Who owns this?", blocking: false },
+    ]);
+  });
+
+  it("searches coined keys of every value shape through a TypeScript carrier", async () => {
+    const recipe = recipeByOrdinal(23);
+    const result = asRecord(
+      await runRecipe(
+        { ...recipe, body: recipe.body.replace('const term = "suffix";', 'const term = "retry";') },
+        undefined,
+        carrierRegisterProbe(),
+      ),
+    );
+    const expected = [
+      ["design", "retryLimit", "3"],
+      ["design", "retryEnabled", "true"],
+      ["design", "retryPolicy", '{"mode":"fixed"}'],
+      ["design", "retryWorkers", '["alpha","beta"]'],
+      ["design", "retryEmptyList", "[]"],
+      ["design", "retryEmptyObject", "{}"],
+      ["design", "retryLong", JSON.stringify({ detail: "x".repeat(300) })],
+      ["ui", "retryVisible", "false"],
+    ].map(([section, entry, text]) => ({
+      id: "spec:probe.carrier",
+      section,
+      entry,
+      text,
+      matchedIn: ["key"],
+    }));
+    expect(result.matches).toEqual([
+      ...expected.slice(0, 6),
+      {
+        id: "spec:probe.carrier",
+        section: "design",
+        entry: "nested.steps[0]",
+        text: "retry later",
+        matchedIn: ["text"],
+      },
+      ...expected.slice(6),
+    ]);
+    expect(result.totals).toEqual({ matches: 9, specs: 1, shown: 9 });
+  });
+
+  it("searches strings inside a matching coined list or object key", async () => {
+    const extraction = carrierRegisterProbe();
+    const node = extraction.graph.nodes.find((node) => node.nodeType === "Primitive");
+    if (node?.nodeType !== "Primitive") throw new Error("missing carrier probe");
+    const recipe = recipeByOrdinal(23);
+    const result = asRecord(
+      await runRecipe(
+        { ...recipe, body: recipe.body.replace('const term = "suffix";', 'const term = "retry";') },
+        undefined,
+        {
+          ...extraction,
+          graph: {
+            ...extraction.graph,
+            nodes: [
+              {
+                ...node,
+                sections: {
+                  design: {
+                    retryWorkers: ["retry later"],
+                    retryPolicy: { mode: "retry fixed", options: ["retry soon"] },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      ),
+    );
+    expect(result.matches).toEqual([
+      {
+        id: node.id,
+        section: "design",
+        entry: "retryWorkers",
+        matchedIn: ["key"],
+        text: '["retry later"]',
+      },
+      {
+        id: node.id,
+        section: "design",
+        entry: "retryWorkers[0]",
+        matchedIn: ["text"],
+        text: "retry later",
+      },
+      {
+        id: node.id,
+        section: "design",
+        entry: "retryPolicy",
+        matchedIn: ["key"],
+        text: '{"mode":"retry fixed","options":["retry soon"]}',
+      },
+      {
+        id: node.id,
+        section: "design",
+        entry: "retryPolicy.mode",
+        matchedIn: ["text"],
+        text: "retry fixed",
+      },
+      {
+        id: node.id,
+        section: "design",
+        entry: "retryPolicy.options[0]",
+        matchedIn: ["text"],
+        text: "retry soon",
+      },
+    ]);
+    expect(result.totals).toEqual({ matches: 5, specs: 1, shown: 5 });
+  });
+
+  it("searches a null coined-key value in the reader graph", async () => {
+    const extraction = carrierRegisterProbe();
+    const recipe = recipeByOrdinal(23);
+    const node = extraction.graph.nodes.find((node) => node.nodeType === "Primitive");
+    if (node?.nodeType !== "Primitive") throw new Error("missing carrier probe");
+    const result = asRecord(
+      await runRecipe(
+        { ...recipe, body: recipe.body.replace('const term = "suffix";', 'const term = "retry";') },
+        undefined,
+        {
+          ...extraction,
+          graph: {
+            ...extraction.graph,
+            nodes: [{ ...node, sections: { design: { retryNothing: null } } }],
+          },
+        },
+      ),
+    );
+    expect(result.matches).toEqual([
+      { id: node.id, section: "design", entry: "retryNothing", matchedIn: ["key"], text: "null" },
+    ]);
+    expect(result.totals).toEqual({ matches: 1, specs: 1, shown: 1 });
+  });
+
   it("keeps register counts under totals and top-level plural nouns as arrays", async () => {
     const check = (value: unknown, insideTotals = false): void => {
       if (typeof value === "number") {
@@ -2059,6 +2283,8 @@ describe("register recipe semantics", () => {
     [null],
     [""],
     [{ question: "valid", blocking: "yes" }],
+    [{ question: "valid", blocking: null }],
+    [{ question: "valid", blocking: undefined }],
   ])("reports malformed open questions without counting them: %j", async (authored) => {
     const probe = registerProbe();
     const node = probe.graph.nodes.find((node) => node.id === "spec:probe.a");

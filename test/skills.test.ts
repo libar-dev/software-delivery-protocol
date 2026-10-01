@@ -2,6 +2,16 @@ import { lstatSync, readFileSync, readlinkSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  buildGraphIndex,
+  deriveReadiness,
+  evaluateReadinessFloor,
+  refines,
+  spec,
+  specId,
+} from "../src/index.js";
+import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
+
 import { parseMarkdownBody } from "../src/extract/markdown-body.js";
 
 import { parse } from "yaml";
@@ -386,17 +396,27 @@ function teachingText(source: string): string {
 }
 
 const adopterClauses = [
-  ["open-question home", /An open question goes under Intent's ### Open questions\./u],
+  ["open-question home", /open question (?:goes )?under Intent's ### Open questions/u],
   ["blocking floor", /A \[blocking\] entry holds the Spec below defined/u],
   ["blocking deferral", /A deferral (?:is|belongs in) a \[blocking\] open question/u],
   ["deferral trigger", /A deferral[^.]*that names its re-entry trigger/u],
   ["deferral precondition", /plus dependsOn when another Spec must hold first/u],
-  ["independent defined floor", /The defined floor does not read the parent/u],
+  ["independent defined floor", /defined floor does not read the parent's readiness/u],
   [
     "complete example children",
     /example children can still state defined once their bound points are complete/u,
   ],
-  ["ready reads parent", /The ready floor does read the parent/u],
+  [
+    "example vocabulary agreement",
+    /bound points are complete and match the parent's example vocabulary, when it has one/u,
+  ],
+  ["physical entry line", /a wrapped or indented continuation is refused/u],
+  [
+    "one leading prose owner",
+    /Leading prose may stand under that owner or under Example space, not both/u,
+  ],
+  ["Note is refused", /parser reads - Note: x as a key and refuses it/u],
+  ["ready reads parent", /ready floor does read the parent's readiness/u],
   ["ready waits for defined parent", /their ready waits until the parent states defined/u],
   ["unsettled constraint home", /An unsettled fact that bounds other Specs is a constraint Spec/u],
   [
@@ -472,6 +492,108 @@ describe("adopter rule meanings", () => {
     expect(teachingText(authoring)).toMatch(pattern);
   });
 
+  it.each([
+    [
+      "independent defined floor",
+      "defined floor does not read the parent's readiness",
+      "defined floor does not read the parent",
+    ],
+    [
+      "independent defined floor",
+      "defined floor does not read the parent's readiness",
+      "defined floor does read the parent's readiness",
+    ],
+    [
+      "example vocabulary agreement",
+      "complete and match the parent's example vocabulary, when it has one",
+      "complete even when they do not match the parent's example vocabulary",
+    ],
+    [
+      "ready reads parent",
+      "ready floor does read the parent's readiness",
+      "ready floor does not read the parent's readiness",
+    ],
+    [
+      "physical entry line",
+      "a wrapped or indented continuation is refused",
+      "a wrapped or indented continuation is accepted",
+    ],
+    [
+      "one leading prose owner",
+      "Leading prose may stand under that owner or under Example space, not both",
+      "Leading prose may sit under both the behavior owner and Example space",
+    ],
+    [
+      "Note is refused",
+      "The parser reads - Note: x as a key and refuses it",
+      "The parser accepts - Note: x",
+    ],
+    [
+      "open-question home",
+      "An open question goes under Intent's ### Open questions.",
+      "An open question goes outside Intent's ### Open questions.",
+    ],
+  ])("rejects the opposite teaching for %s: %s", (name, original, opposite) => {
+    const text = teachingText(readSkill(".agents/skills/sdp-authoring/SKILL.md").source);
+    const pattern = adopterClauses.find(([clause]) => clause === name)?.[1];
+    expect(pattern).toBeDefined();
+    if (pattern === undefined) throw new Error("missing teaching clause");
+    expect(text).toContain(original);
+    expect(text).toMatch(pattern);
+    expect(text.replace(original, opposite)).not.toMatch(pattern);
+  });
+
+  it("accepts a harmless open-question instruction frame", () => {
+    const pattern = adopterClauses.find(([name]) => name === "open-question home")?.[1];
+    if (pattern === undefined) throw new Error("missing home clause");
+    const text = teachingText(readSkill(".agents/skills/sdp-authoring/SKILL.md").source);
+    expect(text.replace("An open question goes under", "Put an open question under")).toMatch(
+      pattern,
+    );
+  });
+
+  it.each([true, false])(
+    "defined examples ignore parent readiness but read its vocabulary: matches=%s",
+    (matches) => {
+      const parent = spec({
+        id: specId("spec:probe.parent"),
+        title: "Deferred parent",
+        kind: "behavior",
+        altitude: "feature",
+        readiness: "scoped",
+        intent: {
+          outcome: "Exercise the point",
+          openQuestions: [{ question: "When to return?", blocking: true }],
+        },
+        behavior: {
+          exampleSpace: {
+            given: [matches ? "a cart with {n:number} items" : "a basket with {n:number} items"],
+            when: ["submit"],
+            then: ["created"],
+          },
+        },
+      });
+      const example = spec({
+        id: specId("spec:probe.child"),
+        title: "Complete point",
+        kind: "example",
+        altitude: "story",
+        readiness: "defined",
+        relations: [refines(parent.id)],
+        intent: { outcome: "Created" },
+        behavior: {
+          examples: [{ given: ["a cart with {n: 2} items"], when: ["submit"], then: ["created"] }],
+        },
+      });
+      const index = buildGraphIndex(deriveFixtureGraph({ specs: [parent, example] }));
+      const node = index.primitivesById.get(example.id);
+      if (node === undefined) throw new Error("missing example probe");
+      expect(deriveReadiness(node, index)).toBe(matches ? "defined" : "scoped");
+      const clauses = evaluateReadinessFloor(node, index).map((failure) => failure.clauseId);
+      expect(clauses).toEqual(matches ? [] : ["kind-evidence-complete"]);
+    },
+  );
+
   it.each(grammarRows)("teaches the %s grammar row", (heading, pattern) => {
     const authoring = readSkill(".agents/skills/sdp-authoring/SKILL.md").source;
     const rows = authoring.split("\n").filter((line) => line.startsWith(`| \`## ${heading}\``));
@@ -507,6 +629,33 @@ function grammarProbe(section: string) {
 // Each pair changes only the cardinality or prose permission taught in the table.
 // The text checks above and these parser checks must both pass: neither alone binds the teaching.
 describe("taught grammar agrees with parser behavior", () => {
+  it.each(["wrapped continuation", "indented continuation"])("refuses %s", (label) => {
+    const entry = "## Design\n- choice: A value.";
+    expect(grammarProbe(entry).findings).toEqual([]);
+    expect(
+      grammarProbe(`${entry}\n${label.startsWith("indented") ? "  " : ""}More value.`).ok,
+    ).toBe(false);
+  });
+
+  it("allows leading prose under either owner and refuses it under both", () => {
+    const behavior = "## Behavior\n- rule: A rule.";
+    const space =
+      "## Example space\n```gwt-vocabulary\nGiven a cart\nWhen submit\nThen created\n```";
+    const behaviorProse = behavior.replace("\n-", "\nBehavior prose.\n\n-");
+    const spaceProse = space.replace("\n```", "\nSpace prose.\n\n```");
+    expect(grammarProbe(`${behaviorProse}\n\n${space}`).findings).toEqual([]);
+    expect(grammarProbe(`${behavior}\n\n${spaceProse}`).findings).toEqual([]);
+    expect(grammarProbe(`${behaviorProse}\n\n${spaceProse}`).ok).toBe(false);
+  });
+
+  it.each(["Rule", "Workflow", "Contract", "Verification — manual"])(
+    "refuses Note as a plain %s entry",
+    (owner) => {
+      expect(grammarProbe(`## ${owner}\n- A note: x`).findings).toEqual([]);
+      expect(grammarProbe(`## ${owner}\n- Note: x`).ok).toBe(false);
+    },
+  );
+
   it.each([
     [
       "unique Model terms",

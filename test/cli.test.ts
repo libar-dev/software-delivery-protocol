@@ -113,7 +113,23 @@ describe("sdp cli", () => {
     }
     expect(SDP_HELP_TEXT).toContain("--root PKG/specs");
     expect(SDP_HELP_TEXT.replaceAll(/\s+/gu, " ")).toMatch(/That graph holds intent only\./u);
-    expect(SDP_HELP_TEXT.replaceAll(/\s+/gu, " ")).toMatch(/The package ships no source anchors/u);
+    const anchorsClause =
+      /(?:package ships no source anchors|No source anchors ship in the package)/u;
+    const help = SDP_HELP_TEXT.replaceAll(/\s+/gu, " ");
+    expect(help).toMatch(anchorsClause);
+    for (const original of [
+      "The package ships no source anchors",
+      "No source anchors ship in the package",
+    ]) {
+      if (!help.includes(original)) continue;
+      expect(help.replace(original, "No source anchors ship in the package")).toMatch(
+        anchorsClause,
+      );
+      expect(help.replace(original, "The package ships source anchors")).not.toMatch(anchorsClause);
+      expect(help.replace(original, "Source anchors ship in the package")).not.toMatch(
+        anchorsClause,
+      );
+    }
     expect(SDP_HELP_TEXT.replaceAll(/\s+/gu, " ")).toMatch(/its delivery facts are empty/u);
     expect(SDP_HELP_TEXT.replaceAll(/\s+/gu, " ")).toMatch(
       /its gap warnings are not evidence about what the Protocol has realized/u,
