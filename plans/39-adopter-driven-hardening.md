@@ -1,9 +1,10 @@
 # Plan 39. The first-adopter arc
 
-> **Status:** 🧭 DRAFTED. A thin lineage pointer in the plan-38 shape, not a briefs index. The
-> arc's forward intent is authored as sub-ready Specs in the corpus, and the backlog and
-> readiness are read from the graph (recipes 1, 9, 11). If this file and the graph disagree, the
-> graph wins and this file is stale.
+> **Status:** 🧭 DRAFTED. A thin lineage pointer in the plan-38 shape, not a briefs index. Six of
+> the arc's Specs are implemented with bound evidence and, with the verified body grammar, wait
+> for the owner to state `ready`; five stay held by owner questions. The backlog and readiness are
+> read from the graph (recipes 1, 2, 9, 11). If this file and the graph disagree, the graph wins
+> and this file is stale.
 
 ## Why this arc
 
@@ -20,28 +21,43 @@ turns that evidence into Specs.
 
 ## The arc's intent lives in the graph
 
-Authored for this arc, with the proposal each one answers.
+Authored for this arc, with the proposal each one answers. Where each Spec stands is read from
+the graph: the drift alarm (recipe 2), promotion preflight (recipe 9), and the lower ladder
+(recipe 11).
 
-Stated without a blocking question. Their floors clear `ready`; what remains is the human
-statement, and for a decision record its registry row:
+Implemented, one unit each, with bound examples as evidence. Each states `defined`, derives
+`ready`, and carries `implemented` and `has-verifier`, so the drift alarm names it until the owner
+states `ready`:
+
+- `spec:carrier.inline-code-spans` (P2, `839709d`). A code span is content, so a generic is not
+  HTML.
+- `spec:validation.unbound-example-posture` (P4, `7b5fd68`). An unbound example below `ready` is
+  data, and the worked example teaches the incomplete trace through its bindings.
+- `spec:validation.typed-dependency-floor` (P3, `3561396`). The `ready` floor reads all four typed
+  dependencies, at a uniform `defined` threshold.
+- `spec:consumers.agent-surface.register-recipes` (P5, and P6 step 1),
+  `spec:consumers.adopter-on-ramp` (P5), and `spec:consumers.shipped-protocol-corpus` (P5), built
+  from one design in `728e3e5`. Recipes 20 to 23; skills that teach the ruled home for what an
+  adopter would otherwise track by hand, with `--help` pointing at the skills, the catalog, the
+  glossary, and `specs/`; and a package that ships `specs/` and `CONTEXT.md`.
+
+Review findings on these units were folded in by `5076d88`, `9d70743`, `7ad70e7`, `4cf0b5a`, and `1df3c60`.
+Each implementing commit also moved the sentence its Spec revised in a `ready` parent, and removed
+the non-blocking question on that parent that named the child: `spec:validation.readiness-floor`,
+`spec:validation.verification-linkage`, and `spec:carrier.markdown-parser`.
+
+Verified and waiting for the same statement:
 
 - `spec:carrier.markdown-body-grammar` (P1). The body grammar the parser enforces, written down,
-  with twelve refusal examples bound to the parser through
+  with thirteen refusal examples bound to the parser through
   `test/self-hosting-markdown-grammar.test.ts`, each pinned to the finding, its message, and the
-  line of the construct. The parent and its twelve children are the arc's Specs that already
-  carry `has-verifier`.
-- `spec:carrier.inline-code-spans` (P2). A code span is content, so a generic is not HTML.
-- `spec:validation.typed-dependency-floor` (P3). The `ready` floor reads all four typed
-  dependencies, at a uniform `defined` threshold.
-- `spec:validation.unbound-example-posture` (P4). An unbound example below `ready` is data, and
-  the worked example teaches the incomplete trace through its bindings.
-- `spec:consumers.adopter-on-ramp` (P5). The skills teach the ruled home for a deferral, an
-  unsettled fact, a pending ruling, a probe, and a count, and `--help` points at the skills, the
-  catalog, and `specs/`.
-- `spec:consumers.agent-surface.register-recipes` (P5, and P6 step 1). Four catalog recipes.
-- `spec:consumers.shipped-protocol-corpus` (P5). The package ships `specs/`, and the CLI points
-  at them for the adopter that already has them on disk.
-Held by a question the owner has not answered, carried as a blocking open question on the Spec:
+  line of the construct. It carries `has-verifier`.
+
+The bound examples under these Specs also state `defined` and derive `ready`. Stating `ready` is
+the owner's act, and this plan states it for none of them.
+
+Held by a question the owner has not answered, carried as a blocking open question on the Spec.
+The execution did not touch these:
 
 - `spec:extraction.open-section-order` (P7, first half). Authored order of `design`, `ui`, and
   `model` terms survives serialization and the Design Review's key order, an ordinary revision
@@ -62,8 +78,42 @@ Deferred, with its re-entry triggers as blocking open questions:
 
 - `spec:extraction.contract-declarations` (P8).
 
+The execution added two non-blocking questions on `spec:carrier.inline-code-spans`: a span that
+crosses a line ending, and two places where the scanner reads differently from CommonMark. The
+open-question register (recipe 20) lists them with every other open question in the corpus.
+
 Readiness and backlog for all of the above are read from the graph, never from this file. These
 facts are advisory selection pressure, not authorization and not a sequence.
+
+## For the owner, not on a Spec
+
+Facts and questions the execution surfaced that no Spec carries. None is ruled here.
+
+- The package now ships `CONTEXT.md` and `specs/`. The rule that it ships the glossary was added
+  to `spec:consumers.shipped-protocol-corpus` provisionally. Does it belong there?
+- `spec:consumers.adopter-on-ramp` gained `dependsOn` on the register-recipes Spec and the
+  shipped-corpus Spec.
+- The recipe names "entry search" and "dependency footing" were kept, against a review that
+  proposed plainer names.
+- `mention` is a candidate term, waiting on `spec:decisions.checked-mentions`. The shipped skills
+  and catalog already use it.
+- A TypeScript carrier admits a malformed open-questions value without a finding. Recipe 20
+  reports it instead of throwing; extraction is unchanged. Should extraction refuse it?
+- `refines` and `dependsOn` are accepted as plain Design keys and create no edge. Should the
+  carrier refuse a relation name as a key?
+- Recipe 9 reports the current floor only, so it does not name what blocks the next rung. Recipe
+  21 shows what a Spec rests on.
+- Shipped documents still hold a few pointers to files the package does not ship, such as
+  `docs/concept/` and `src/ids.ts`.
+
+## How it was built
+
+One Claude main thread orchestrated. `gpt-6.1-sol` implemented each unit and folded in the
+findings; `gpt-6-astra` scouted, reviewed engine behavior per unit, and reviewed the arc. A Fable
+agent designed the recipes, help text, and skill text before implementation, and Opus agents
+reviewed and wrote the agent-facing prose. Every unit passed `npm run check` before the next
+began. The method record lives outside this repository, in
+`~/dev-libar/gpt-models-from-the-claude-main-thread.md`.
 
 ## Rulings made at capture
 
@@ -85,10 +135,6 @@ forwarded. Each is written into its Spec; this list only says where it landed.
 - One constraint entry per Spec is the law, and the TypeScript model's list shape aligns to it.
   On `spec:carrier.markdown-body-grammar`, as a non-blocking question rather than a rule: both
   read-only reviewers below contest it, and the revision has not landed.
-
-Three `ready` parents now carry a non-blocking question naming the child that revises one of
-their sentences: `spec:validation.readiness-floor`, `spec:validation.verification-linkage`, and
-`spec:carrier.markdown-parser`. The implementing commit edits parent and child together.
 
 ## The three read-only reviews of the capture
 
@@ -115,7 +161,7 @@ A third review, Codex's adversarial reviewer on its default model, read the whol
 ## What was re-measured at capture
 
 The report says it ran no test and changed no file here. Its source claims were checked against
-this tree at `25d24f2` before anything was authored. All of them hold. Four findings add to it.
+this tree at `25d24f2` before anything was authored. All of them held. Four findings added to it.
 
 - **Why open-section keys are sorted.** The report could not find the reason (its appendix C).
   It is in `plans/17b-self-hosting-sessions-1-4.md`: dynamic `model.terms`, `design`, and `ui`
@@ -126,10 +172,11 @@ this tree at `25d24f2` before anything was authored. All of them hold. Four find
   revision and only the list rendering is a decision.
 - **A third HTML guard.** The report names two sites for the raw-HTML refusal. Pack framing
   prose has a third, in `src/extract/markdown-pack.ts`.
-- **The worked example pins the P4 warning.** `examples/checkout-v1` keeps one unbound example
-  at `defined`, and its README and `check:example` treat the warning as the teaching signal.
-  P4 changes that corpus, not only the adopter's.
-- **Mentions in this corpus.** The report's mention body, run here, finds 13 prose mentions, 9
+- **The worked example pinned the P4 warning.** At capture, `examples/checkout-v1` kept one
+  unbound example at `defined`, and its README and `check:example` treated the warning as the
+  teaching signal, so P4 had to change that corpus too. `7b5fd68` did: the example now validates
+  with no warning and teaches the trace through its verifier bindings.
+- **Mentions in this corpus.** The report's mention body, run here, found 13 prose mentions, 9
   with no declared relation across 7 Specs, and one id-shaped string that does not resolve (the
   decisions-family pattern in `spec:model.stable-ids`). Re-run it rather than inheriting these.
 
@@ -158,21 +205,27 @@ architectural-significance ruling (MD-34) refuses.
 
 ## Re-measuring on the adopter corpus
 
-The report gives an acceptance test per proposal, each a command on the adopter's corpus. The
-ones this arc can move:
+The report gives an acceptance test per proposal, each a command on the adopter's corpus at
+`497a642`. The ones this arc moved were re-measured in this session with the engine at
+`4cf0b5a`. Re-run them rather than inheriting these results.
 
-- P2: the adopter's Unicode angle brackets become real ones and validate stays clean.
-- P3: its three assumed facts state `scoped`, and readiness divergence (recipe 7) names any of
-  their eleven dependents that states `ready`.
-- P4: validate prints no warning on a corpus with no test anchors.
-- P5: its census sentence, open-question table, and extension register come from commands.
+- P2 (`839709d`): a scratch copy of the corpus with every Unicode angle bracket replaced by a real
+  one validates with zero errors and zero warnings.
+- P3 (`3561396`): in a scratch copy with its three assumed facts held at `scoped`, the eleven Specs
+  bounded by them through `constrainedBy` stop deriving `ready`. When those eleven state `ready`,
+  readiness divergence (recipe 7) names all eleven, each failing
+  `typed-dependency-targets-are-defined`.
+- P4 (`7b5fd68`): validate prints no warning. Its `verifies-linkage` warnings went from 54 with
+  the engine before `7b5fd68` to 0.
+- P5 and P6 step 1 (`728e3e5`): recipes 20 to 23 run on its corpus.
 
 The adopter also said what it needs first, as it opens its eight fix units. This is evidence
 about one consumer's pressure, not a sequence this plan authors: P2 before its first fix unit, so
 fixes are written as pasteable TypeScript; P4 before P6 step 2, so mention warnings never join
 the verifies warnings; P3 before the fix unit that touches its fact Specs; the mention recipe
 now, so delta review scope is right in its next round; the order half of P7 before anyone reads
-its fixed corpus; and P6 step 2 and P8 after that round.
+its fixed corpus; and P6 step 2 and P8 after that round. P2, P3, P4, and the mention recipe have
+landed; the rest are the held Specs above.
 
 ## Discipline (unchanged)
 
