@@ -605,6 +605,7 @@ export const validationSpecs = [
           given: [
             "the graph holds a parent spec {parentId:string}",
             'a non-resolving {verifierKind:"example spec"|"oracle anchor"} named {verifierId:string} points at it',
+            "the example verifier states ready",
           ],
           when: ["the graph is validated"],
           then: [
@@ -635,6 +636,7 @@ export const validationSpecs = [
             given: [
               'the graph holds a parent spec {parentId: "spec:probe.create-order"}',
               'a non-resolving {verifierKind: "example spec"} named {verifierId: "spec:probe.create-order.valid-cart"} points at it',
+              "the example verifier states ready",
             ],
             when: ["the graph is validated"],
             then: [

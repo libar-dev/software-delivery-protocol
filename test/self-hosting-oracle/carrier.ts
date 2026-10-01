@@ -908,14 +908,26 @@ export const carrierSpecs = [
           "A type parameter written inside a code span is refused as raw HTML, so an author who writes signatures invents a private bracket notation that cannot be pasted into source.",
         outcome:
           "Let a code span carry any literal text, angle brackets included, while raw HTML outside code spans stays refused.",
+        openQuestions: [
+          {
+            question:
+              "CommonMark lets a code span cross a line ending inside a paragraph, so a renderer and the Protocol can disagree about which text is inside a span. Should the owner keep the line-scoped rule or match spans across a paragraph?",
+            blocking: false,
+          },
+          {
+            question:
+              "A backslash-escaped backtick still opens a span, and a tag that starts before a backtick pair loses to the span. CommonMark decides both cases the other way. Should the owner keep these readings or follow CommonMark in these two cases?",
+            blocking: false,
+          },
+        ],
       },
       behavior: {
         rules: [
           "A code span is literal content. The raw-HTML refusal never reads inside one, whether the span sits in a Spec's narrative, a section description, a list entry, or a Pack's framing prose.",
-          "A code span opens at a backtick run and closes at the next run of the same length. An unmatched run is ordinary text and shields nothing.",
+          "A code span opens at a backtick run and closes at the next run of the same length on that same line. Both runs must sit on one line. An unmatched run is ordinary text and shields nothing.",
           "Raw HTML outside a code span stays refused, with the same finding and message as before.",
           "The graph stores the line as authored, backticks included. Each projection renders it through the encoding its own Spec already requires for that field.",
-          "The realizing sites are the raw-HTML guards in `src/extract/markdown-body.ts`, `src/extract/markdown-body-content.ts`, and `src/extract/markdown-pack.ts`.",
+          "The scanner in `src/extract/markdown-inline-code.ts` realizes this rule. The raw-HTML guards that call it live in `src/extract/markdown-body.ts`, `src/extract/markdown-body-content.ts`, and `src/extract/markdown-pack.ts`.",
         ],
         exampleSpace: {
           given: ["the code-span matrix in {location:string}"],
@@ -1312,6 +1324,11 @@ export const carrierSpecs = [
       intent: {
         outcome:
           "Check matched and unmatched runs, literal HTML, exposed HTML on the same line, and authored text in the narrative probes.",
+        assumptions: [
+          'The matrix uses matched and unmatched backtick runs of one, two, and three backticks, multiple spans, literal tags and comment delimiters inside spans, exposed HTML before and after spans, closing tags, declarations, processing instructions, and ordinary angle-bracket comparisons. It includes ``Use <T title=`value>.``, ``Use </T`>.``, and ``Use <img alt="`">.`` as refused tag bodies with an unmatched backtick, and ``Use <!-`x`-> here.`` as accepted text whose matched span separates the comment delimiter.',
+          "The paragraph probes split a single-backtick pair across two lines. One puts ``Use `Promise<T>.`` on the first line and ``Close here`.`` on the second; another puts ``Open here `.`` first and ``Use Promise<T>`.`` second. Neither pair shields HTML. A third puts ``Open here `.`` first and ``Use `Promise<T>`.`` second, so the pair on the second line shields that line despite the unmatched run on the first.",
+          "Each probe has its own carrier. Each Spec is a story-altitude behavior stating idea with no relations and an Intent outcome. The probe sits in narrative before Intent.",
+        ],
       },
       behavior: {
         examples: [
@@ -1319,7 +1336,7 @@ export const carrierSpecs = [
             given: ['the code-span matrix in {location: "narrative"}'],
             when: ["the extractor reifies the probes"],
             then: [
-              "matched spans preserve {accepted: 11} carriers and exposed HTML refuses {refused: 15} carriers",
+              "matched spans preserve {accepted: 13} carriers and exposed HTML refuses {refused: 20} carriers",
             ],
           },
         ],
@@ -1339,6 +1356,11 @@ export const carrierSpecs = [
       intent: {
         outcome:
           "Check matched and unmatched runs, literal HTML, exposed HTML on the same line, and authored text in the description probes.",
+        assumptions: [
+          'The matrix uses matched and unmatched backtick runs of one, two, and three backticks, multiple spans, literal tags and comment delimiters inside spans, exposed HTML before and after spans, closing tags, declarations, processing instructions, and ordinary angle-bracket comparisons. It includes ``Use <T title=`value>.``, ``Use </T`>.``, and ``Use <img alt="`">.`` as refused tag bodies with an unmatched backtick, and ``Use <!-`x`-> here.`` as accepted text whose matched span separates the comment delimiter.',
+          "The paragraph probes split a single-backtick pair across two lines. One puts ``Use `Promise<T>.`` on the first line and ``Close here`.`` on the second; another puts ``Open here `.`` first and ``Use Promise<T>`.`` second. Neither pair shields HTML. A third puts ``Open here `.`` first and ``Use `Promise<T>`.`` second, so the pair on the second line shields that line despite the unmatched run on the first.",
+          "Each probe has its own carrier. Each Spec is a story-altitude behavior stating idea with no relations and an Intent outcome. The probe sits in the Behavior description.",
+        ],
       },
       behavior: {
         examples: [
@@ -1346,7 +1368,7 @@ export const carrierSpecs = [
             given: ['the code-span matrix in {location: "description"}'],
             when: ["the extractor reifies the probes"],
             then: [
-              "matched spans preserve {accepted: 11} carriers and exposed HTML refuses {refused: 15} carriers",
+              "matched spans preserve {accepted: 13} carriers and exposed HTML refuses {refused: 20} carriers",
             ],
           },
         ],
@@ -1366,6 +1388,10 @@ export const carrierSpecs = [
       intent: {
         outcome:
           "Check matched and unmatched runs, literal HTML, exposed HTML on the same line, and authored text in the list probes.",
+        assumptions: [
+          'The matrix uses matched and unmatched backtick runs of one, two, and three backticks, multiple spans, literal tags and comment delimiters inside spans, exposed HTML before and after spans, closing tags, declarations, processing instructions, and ordinary angle-bracket comparisons. It includes ``Use <T title=`value>.``, ``Use </T`>.``, and ``Use <img alt="`">.`` as refused tag bodies with an unmatched backtick, and ``Use <!-`x`-> here.`` as accepted text whose matched span separates the comment delimiter.',
+          "Each probe has its own carrier. Each Spec is a story-altitude behavior stating idea with no relations and an Intent outcome. The probe sits in one Behavior rule entry.",
+        ],
       },
       behavior: {
         examples: [
@@ -1373,7 +1399,7 @@ export const carrierSpecs = [
             given: ['the code-span matrix in {location: "list"}'],
             when: ["the extractor reifies the probes"],
             then: [
-              "matched spans preserve {accepted: 11} carriers and exposed HTML refuses {refused: 15} carriers",
+              "matched spans preserve {accepted: 12} carriers and exposed HTML refuses {refused: 18} carriers",
             ],
           },
         ],
@@ -1393,6 +1419,11 @@ export const carrierSpecs = [
       intent: {
         outcome:
           "Check matched and unmatched runs, literal HTML, exposed HTML on the same line, and authored text in the pack probes.",
+        assumptions: [
+          'The matrix uses matched and unmatched backtick runs of one, two, and three backticks, multiple spans, literal tags and comment delimiters inside spans, exposed HTML before and after spans, closing tags, declarations, processing instructions, and ordinary angle-bracket comparisons. It includes ``Use <T title=`value>.``, ``Use </T`>.``, and ``Use <img alt="`">.`` as refused tag bodies with an unmatched backtick, and ``Use <!-`x`-> here.`` as accepted text whose matched span separates the comment delimiter.',
+          "The paragraph probes split a single-backtick pair across two lines. One puts ``Use `Promise<T>.`` on the first line and ``Close here`.`` on the second; another puts ``Open here `.`` first and ``Use Promise<T>`.`` second. Neither pair shields HTML. A third puts ``Open here `.`` first and ``Use `Promise<T>`.`` second, so the pair on the second line shields that line despite the unmatched run on the first.",
+          "Each probe has its own carrier. Each Pack has an empty membership list and puts the probe in framing prose.",
+        ],
       },
       behavior: {
         examples: [
@@ -1400,7 +1431,7 @@ export const carrierSpecs = [
             given: ['the code-span matrix in {location: "pack"}'],
             when: ["the extractor reifies the probes"],
             then: [
-              "matched spans preserve {accepted: 11} carriers and exposed HTML refuses {refused: 15} carriers",
+              "matched spans preserve {accepted: 13} carriers and exposed HTML refuses {refused: 20} carriers",
             ],
           },
         ],

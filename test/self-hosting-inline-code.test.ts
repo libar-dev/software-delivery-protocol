@@ -42,6 +42,7 @@ const probes = [
   { text: "`Promise<T>` is literal.", accepted: true },
   { text: "``Promise<T>`` is literal.", accepted: true },
   { text: "Use a < b and Promise<T.", accepted: true },
+  { text: "Use <!-`x`-> here.", accepted: true },
   { text: "Use Promise<T>.", accepted: false },
   { text: "Use `Promise<T>.", accepted: false },
   { text: "Use ``Promise<T> `.", accepted: false },
@@ -52,11 +53,20 @@ const probes = [
   { text: "Use <br> `literal`.", accepted: false },
   { text: "Use `literal` <br> `other`.", accepted: false },
   { text: "Use <T title=`value`>.", accepted: false },
+  { text: "Use <T title=`value>.", accepted: false },
+  { text: "Use </T`>.", accepted: false },
+  { text: 'Use <img alt="`">.', accepted: false },
   { text: "Use </T>.", accepted: false },
   { text: "Use <!--.", accepted: false },
   { text: "Use -->.", accepted: false },
   { text: "Use <!DOCTYPE.", accepted: false },
   { text: "Use <?xml.", accepted: false },
+] as const;
+
+const paragraphProbes = [
+  { text: "Use `Promise<T>.\nClose here`.", accepted: false, refusalOffset: 0 },
+  { text: "Open here `.\nUse Promise<T>`.", accepted: false, refusalOffset: 1 },
+  { text: "Open here `.\nUse `Promise<T>`.", accepted: true, refusalOffset: 0 },
 ] as const;
 
 const inlineCodeOracleAnchor = specOracle({
@@ -70,7 +80,11 @@ function expectedInlineCodeOutcome(
   point: Partial<InlineCodeSpansConditions>,
 ): InlineCodeSpansOutcome {
   return locations.some((location) => location === point.location)
-    ? { kind: OUTCOME, accepted: 11, refused: 15 }
+    ? {
+        kind: OUTCOME,
+        accepted: point.location === "list" ? 12 : 13,
+        refused: point.location === "list" ? 18 : 20,
+      }
     : unspecified;
 }
 
@@ -98,7 +112,8 @@ function createWorld(point: Partial<InlineCodeSpansConditions>): World {
   if (location === undefined) throw new Error(`Unknown probe location: ${String(point.location)}`);
   const root = mkdtempSync(join(tmpdir(), "sdp-inline-code-"));
   roots.add(root);
-  const carriers = probes.map((probe, index) => {
+  const matrix = location === "list" ? probes : [...probes, ...paragraphProbes];
+  const carriers = matrix.map((probe, index) => {
     const id = `${location === "pack" ? "pack" : "spec"}:probe.case-${String(index)}`;
     const file = `case-${String(index)}${location === "pack" ? ".pack" : ""}.sdp.md`;
     const envelope =
@@ -119,7 +134,10 @@ function createWorld(point: Partial<InlineCodeSpansConditions>): World {
       ...probe,
       id,
       file,
-      line: source.split("\n").findIndex((line) => line.includes(probe.text)) + 1,
+      line:
+        source.split("\n").findIndex((line) => line.includes(probe.text.split("\n")[0] ?? "")) +
+        1 +
+        ("refusalOffset" in probe ? probe.refusalOffset : 0),
     };
   });
   return { root, location, probes: carriers };
@@ -162,7 +180,7 @@ function observe(world: World): InlineCodeSpansOutcome {
           : world.location === "description"
             ? reader.specContext(probe.id)?.sections?.behavior?.description
             : reader.specContext(probe.id)?.sections?.behavior?.rules?.[0];
-    expect(stored, probe.text).toBe(probe.text);
+    expect(stored, probe.text).toBe(probe.text.replaceAll("\n", " "));
     // Pin the generic's existing field encodings independently of the renderer helpers.
     if (probe.text === "Use `Promise<T>`.") {
       expect(review.find((page) => page.path.includes("probe.case-0"))?.content).toContain(

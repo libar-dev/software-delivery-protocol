@@ -42,6 +42,9 @@ export function registerUnboundExample<World>(
     "a non-resolving {verifierKind} named {verifierId} points at it": () => {
       // Given state is materialized by createWorld from the generated point.
     },
+    "the example verifier states ready": () => {
+      // Given state is materialized by createWorld from the generated point.
+    },
     "the graph is validated": async (execution) => {
       await invokeRunnableExample(execution);
     },

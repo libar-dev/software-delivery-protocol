@@ -1051,10 +1051,11 @@ function assertVerificationLinkage(
     throw new Error("The reader context must be stored before the outcome is asserted.");
   }
 
-  const { conferred } = paramsForStep(
-    contract,
-    "the parent earns the delivery fact has-verifier: {conferred}",
-  );
+  const step = "the parent earns the delivery fact has-verifier: {conferred}";
+  const { conferred } =
+    contract === unboundExampleContract
+      ? paramsForStep(unboundExampleContract, step)
+      : paramsForStep(unresolvedOracleContract, step);
 
   expect(context.deliveryFacts.includes("has-verifier")).toBe(conferred);
 }

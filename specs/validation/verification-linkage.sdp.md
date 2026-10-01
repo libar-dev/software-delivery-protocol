@@ -21,6 +21,7 @@ relations:
 ```gwt-vocabulary
 Given the graph holds a parent spec {parentId:string}
 Given a non-resolving {verifierKind:"example spec"|"oracle anchor"} named {verifierId:string} points at it
+Given the example verifier states ready
 When the graph is validated
 Then the report names {findingId:string} at severity {severity:"warning"|"error"}
 Then the parent earns the delivery fact has-verifier: {conferred:boolean}
