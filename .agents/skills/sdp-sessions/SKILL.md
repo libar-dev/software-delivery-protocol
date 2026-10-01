@@ -50,9 +50,10 @@ carrier, `sdp new spec`, the `validate --watch` loop, and the one-kind rule.
 
 Use promotion preflight (recipe 9) on the target, the planning slice (recipe 19) for neighborhood
 and shaping decisions, dependency footing (recipe 21) for the stated and derived readiness of
-every Spec the target rests on, and readiness divergence (recipe 7) across the corpus. Resolve
-blocking open questions, which the open-question register (recipe 20) lists for the whole corpus,
-and review the carrying Specs. A clear floor is evidence, not an automatic `ready` statement.
+every Spec the target rests on, and readiness divergence (recipe 7) across the corpus. Resolve the
+target's blocking open questions and review the carrying Specs. The open-question register
+(recipe 20) lists every open question in the corpus when the neighbors matter too. A clear floor
+is evidence, not an automatic `ready` statement.
 
 ### Implement
 
@@ -68,11 +69,10 @@ a binding, not a passing or live system.
 ### Review
 
 For a Pack, use the Pack review backbone (recipe 5) and warn-level signals (recipe 8). Without a
-Pack, use the target Spec context (recipe 3) with warn-level signals (recipe 8).
-For a delta review, take the scope from changed-file blast radius (recipe 4) over the diff, and run
-the mention audit (recipe 22) for Spec ids in prose that do not resolve or that no declared
-relation backs.
-When reviewing component, architecture, or projection questions, use structural neighborhood (recipe 14), census
+Pack, use the target Spec context (recipe 3) with warn-level signals (recipe 8). To review a
+change, take the scope from changed-file blast radius (recipe 4) over the diff, then run the
+mention audit (recipe 22) with that scope as its parameter. When reviewing component,
+architecture, or projection questions, use structural neighborhood (recipe 14), census
 structural coverage (recipe 15), the projection-coverage upper bound (recipe 16), the architecture
 map (recipe 17), and the decision map (recipe 18). Review findings and gaps as data; the review
 never becomes a workflow gate.

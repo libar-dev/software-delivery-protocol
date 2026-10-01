@@ -29,7 +29,7 @@ pnpm --silent sdp:q 'return g.specs().length'
 
 The `sdp:q` script supplies this repository's required fixture exclusions. Use the
 [twenty-three graph-first recipes](docs/agent-surface/recipes.md) for backlog, drift, verifier, impact,
-Pack, readiness, and promotion queries.
+Pack, readiness, promotion, open-question, dependency, mention, and entry-search queries.
 
 The [architecture walkthrough](docs/agent-surface/architecture.md) follows shared policy,
 runner and adapter responsibilities, and the one read model through the graph.

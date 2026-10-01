@@ -32,11 +32,11 @@ pnpm exec sdp q '<body>' --root PATH --exclude PATH --exclude PATH
 `--root PATH` picks the extraction root (default: the working directory) and `--exclude` is
 repeatable for root-relative path prefixes. `PATH` is a placeholder, not a literal directory.
 
-**Some recipes open with a parameter.** Recipes 3, 6, 9, 14, 19, 21, and 23 take their subject on the opening
-`const` line(s): a Spec id, a search term, or a component id. Those lines name *this* repository's
-corpus so every body runs as written here (the recipe check executes each one verbatim); in your
-own corpus, substitute your subject on that line before running. A Spec id or component id absent
-from the graph returns `{ found: false }` rather than failing.
+**Some recipes open with a parameter.** Recipes 3, 6, 9, 14, 19, 21, 22, and 23 take their
+subject on the opening `const` line(s): a Spec id, a search term, a component id, or a list of
+Spec ids. Those lines name *this* repository's corpus so every body runs as written here (the
+recipe check executes each one verbatim); in your own corpus, substitute your subject on that
+line before running. A Spec id or component id absent from the graph returns `{ found: false }` rather than failing.
 
 **Recipe 4 is different.** Recipe 4 filenames travel via `SDP_CHANGED_FILES_JSON`; callers never
 substitute filenames into the JavaScript fence. Keep its query body static and pass changed paths
@@ -364,7 +364,7 @@ return {
 `report` is the same validation output `g.findings()` exposes — one validation path, never a second
 one. Gaps and orphans are warn-level by design: a `ready` Spec with no verifier and a Spec nothing
 points at are both worth surfacing and neither is a failure. Errors are the conformance and honesty
-refusals; on a green corpus both counts read zero.
+refusals; a green corpus has no errors, but may carry intentional warnings.
 
 ## 9. Promotion preflight
 
@@ -1051,10 +1051,10 @@ return {
 component files. It is not the impact contract; whole-corpus blast radius over changed files stays
 recipe 4 (`g.blastRadius`). Shaping decisions are the `decidedBy` targets across the refinement
 neighborhood; a decision record that also `refines` the subject appears both as a refinement child
-and as a shaping decision. Dependency neighbors carry `statedReadiness`: a `dependsOn` target below stated `defined`
-refuses the subject's `ready` floor. For what a Spec rests on across `refines`, `dependsOn`,
-`constrainedBy`, and `decidedBy`, use dependency footing (recipe 21); the `ready` floor requires
-each target to state at least `defined`. The graph does not derive symbol-level impact;
+and as a shaping decision. Dependency neighbors carry `statedReadiness` because an unready
+`dependsOn` target holds back the subject's `ready`. For every Spec the subject rests on, across `refines`, `dependsOn`,
+`constrainedBy`, and `decidedBy`, with the floor each one reaches, use dependency footing
+(recipe 21). The graph does not derive symbol-level impact;
 `implemented` still means a code anchor binds, never that the code is live.
 
 ## 20. Open-question register
@@ -1064,28 +1064,54 @@ first, without keeping that table by hand.*
 
 ```js
 const rows = [];
+const malformed = [];
 
 for (const spec of g.specs()) {
-  const authored = g.specContext(spec.id)?.sections?.intent?.openQuestions ?? [];
-  if (authored.length === 0) continue;
+  const authored = g.specContext(spec.id)?.sections?.intent?.openQuestions;
+  if (authored === undefined) continue;
+  const bad = (entry, reason) =>
+    malformed.push({
+      id: spec.id,
+      section: "intent",
+      entry,
+      reason,
+    });
+  if (!Array.isArray(authored)) {
+    bad("openQuestions", "Expected a list");
+    continue;
+  }
 
-  const questions = authored.map((entry) =>
-    typeof entry === "string"
-      ? { blocking: false, question: entry }
-      : { blocking: entry.blocking === true, question: entry.question },
-  );
-
+  const questions = [];
+  authored.forEach((entry, index) => {
+    const question = typeof entry === "string" ? entry : entry?.question;
+    if (typeof question !== "string" || question.trim().length === 0) {
+      bad(`openQuestions[${index}]`, "Expected non-empty question text");
+      return;
+    }
+    if (
+      typeof entry !== "string" &&
+      (typeof entry !== "object" ||
+        entry === null ||
+        Array.isArray(entry) ||
+        typeof entry.blocking !== "boolean")
+    ) {
+      bad(`openQuestions[${index}]`, "Expected a question and boolean blocking flag");
+      return;
+    }
+    questions.push({ blocking: typeof entry === "string" ? false : entry.blocking, question });
+  });
+  if (questions.length === 0) continue;
   rows.push({
     id: spec.id,
     statedReadiness: spec.statedReadiness,
-    blockingCount: questions.filter((entry) => entry.blocking).length,
+    totals: { blocking: questions.filter((entry) => entry.blocking).length },
     questions,
   });
 }
 
 const questionCount = rows.reduce((sum, row) => sum + row.questions.length, 0);
-const blockingCount = rows.reduce((sum, row) => sum + row.blockingCount, 0);
-const withBlocking = rows.filter((row) => row.blockingCount > 0);
+const blockingCount = rows.reduce((sum, row) => sum + row.totals.blocking, 0);
+const withBlocking = rows.filter((row) => row.totals.blocking > 0);
 
 return {
   totals: {
@@ -1094,23 +1120,28 @@ return {
     nonBlocking: questionCount - blockingCount,
     specs: rows.length,
     specsWithBlocking: withBlocking.length,
+    malformed: malformed.length,
   },
-  specs: [...withBlocking, ...rows.filter((row) => row.blockingCount === 0)],
+  specs: [...withBlocking, ...rows.filter((row) => row.totals.blocking === 0)],
+  malformed,
 };
 ```
 
-Each row is one Spec that records open questions under Intent: its stated readiness, how many of
-its questions block, and the questions in authored order with their flags. Specs that hold a
+Each row is one Spec that records open questions under Intent: its stated readiness,
+`totals.blocking`, and the questions in authored order with their flags. Specs that hold a
 blocking question come first, and each group keeps Spec id order. `totals` reports the question
 and Spec counts, so the size of the register never needs a second query or a number copied into
 prose. The recipe lists and does not judge: a blocking question holding its Spec below `defined`
 is the readiness floor's clause, which recipe 9 names for one Spec. A question authored as bare
-prose in a TypeScript carrier carries no flag and reads as non-blocking.
+prose in a TypeScript carrier carries no flag and reads as non-blocking. `malformed`
+reports collections that are not lists and entries without non-empty question text or a boolean
+blocking flag. Those entries do not count as questions.
 
 ## 21. Dependency footing
 
-*When you need this: you are weighing a rung on one Spec and want every Spec it rests on, with the
-rung each one states and the floor each one reaches.*
+*When you need this: you are weighing `ready` on one Spec and want every Spec it rests on, with
+the rung each one states and the floor each one reaches. For the floor's verdict on the Spec
+itself, run promotion preflight (recipe 9).*
 
 The opening `const id` is the parameter. Replace it with the Spec you are weighing; an unknown id
 returns `{ id, found: false }` rather than failing.
@@ -1151,12 +1182,18 @@ return {
   found: true,
   statedReadiness: context.statedReadiness,
   floorReached: context.derivedReadiness ?? "none",
-  total: footing.length,
-  byType: Object.fromEntries(types.map((type) => [type, count("type", type)])),
-  byStatedReadiness: Object.fromEntries([
-    ...rungs.map((rung) => [rung, count("statedReadiness", rung)]),
-    ["unresolved", count("statedReadiness", null)],
-  ]),
+  totals: {
+    relations: footing.length,
+    byType: Object.fromEntries(types.map((type) => [type, count("type", type)])),
+    byStatedReadiness: Object.fromEntries([
+      ...rungs.map((rung) => [rung, count("statedReadiness", rung)]),
+      ["unresolved", count("resolved", false)],
+      ["nonSpec", footing.filter((row) => row.resolved && row.statedReadiness === null).length],
+    ]),
+    byFloorReached: Object.fromEntries([
+      ...[...rungs, "none"].map((rung) => [rung, count("floorReached", rung)]),
+    ]),
+  },
   footing,
 };
 ```
@@ -1165,8 +1202,9 @@ return {
 `constrainedBy`, or `decidedBy`, in that order and then by target id. The reach is one hop; run
 the recipe on a target to see what that target rests on. `floorReached` is the target's derived
 readiness, read beside the rung its author stated. A target that does not resolve keeps its row
-with `resolved: false` and null readiness, and counts under `byStatedReadiness.unresolved`. The
-recipe reports readiness and applies no threshold: which rung a target must state before this
+with `resolved: false` and null readiness, and counts under `totals.byStatedReadiness.unresolved`.
+Resolved targets that are not Specs have null readiness and count under
+`totals.byStatedReadiness.nonSpec`. The recipe reports readiness and applies no threshold: which rung a target must state before this
 Spec can state `ready` is the floor clause carried by `spec:validation.typed-dependency-floor`.
 `verifies` and `supersedes` stay out, because a Spec does not rest on what it verifies or replaces.
 
@@ -1175,8 +1213,19 @@ Spec can state `ready` is the floor clause carried by `spec:validation.typed-dep
 *When you need this: you want every Spec id written in prose that does not resolve, or that no
 declared relation from the mentioning Spec backs.*
 
+The opening `const scope` is the parameter. Replace it with a list of Spec ids to audit
+mentions from those Specs only. An empty list audits the whole corpus.
+
 ```js
-const backingTypes = ["refines", "dependsOn", "constrainedBy", "decidedBy", "verifies", "supersedes"];
+const scope = [];
+const backingTypes = [
+  "refines",
+  "dependsOn",
+  "constrainedBy",
+  "decidedBy",
+  "verifies",
+  "supersedes",
+];
 const idPattern =
   /(?<![A-Za-z0-9-])spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#[A-Za-z0-9][A-Za-z0-9-]*)?/gu;
 const specIds = new Set(g.specs().map((spec) => spec.id));
@@ -1192,17 +1241,19 @@ const pairs = new Map();
 let occurrences = 0;
 
 for (const spec of g.specs()) {
+  if (scope.length > 0 && !scope.includes(spec.id)) continue;
   const context = g.specContext(spec.id);
   if (context === undefined) continue;
 
   const texts = [];
-  const collect = (value, at) => {
+  const collect = (value, section, entry = null) => {
     if (typeof value === "string") {
-      texts.push({ at, text: value });
+      texts.push({ at: { section, entry }, text: value });
     } else if (Array.isArray(value)) {
-      value.forEach((entry, index) => collect(entry, `${at}[${index}]`));
+      value.forEach((item, index) => collect(item, section, `${entry ?? ""}[${index}]`));
     } else if (typeof value === "object" && value !== null) {
-      for (const [key, entry] of Object.entries(value)) collect(entry, `${at}.${key}`);
+      for (const [key, item] of Object.entries(value))
+        collect(item, section, entry === null ? key : `${entry}.${key}`);
     }
   };
 
@@ -1220,11 +1271,11 @@ for (const spec of g.specs()) {
       if (key === "exampleSpace") continue;
       if (key === "examples" && Array.isArray(entry)) {
         entry.forEach((example, index) => {
-          if (typeof example === "string") collect(example, `behavior.examples[${index}]`);
+          if (typeof example === "string") collect(example, "behavior", `examples[${index}]`);
         });
         continue;
       }
-      collect(entry, `behavior.${key}`);
+      collect(entry, "behavior", key);
     }
   }
 
@@ -1235,9 +1286,12 @@ for (const spec of g.specs()) {
 
       occurrences += 1;
       const key = `${spec.id} ${to}`;
-      const pair = pairs.get(key) ?? { from: spec.id, to, occurrences: 0, at: [] };
-      pair.occurrences += 1;
-      if (!pair.at.includes(at)) pair.at.push(at);
+      const pair = pairs.get(key) ?? { from: spec.id, to, totals: { occurrences: 0 }, at: [] };
+      pair.totals.occurrences += 1;
+      if (
+        !pair.at.some((location) => location.section === at.section && location.entry === at.entry)
+      )
+        pair.at.push(at);
       pairs.set(key, pair);
     }
   }
@@ -1247,41 +1301,39 @@ const rows = [...pairs.values()].sort(
   (left, right) => left.from.localeCompare(right.from) || left.to.localeCompare(right.to),
 );
 const unresolved = rows.filter((row) => !specIds.has(row.to));
-const unbacked = rows
-  .filter((row) => specIds.has(row.to) && !declared.has(`${row.from} ${row.to}`))
-  .map((row) => ({
-    ...row,
-    declaredByTarget: [...(declared.get(`${row.to} ${row.from}`) ?? [])].sort(),
-  }));
+const withoutForward = rows.filter(
+  (row) => specIds.has(row.to) && !declared.has(`${row.from} ${row.to}`),
+);
+const unbacked = withoutForward.filter((row) => !declared.has(`${row.to} ${row.from}`));
+const reverseOnly = withoutForward.filter((row) => declared.has(`${row.to} ${row.from}`));
 
 return {
   totals: {
     occurrences,
     pairs: rows.length,
-    backed: rows.length - unresolved.length - unbacked.length,
+    backed: rows.length - unresolved.length - withoutForward.length,
     unbacked: unbacked.length,
-    unbackedDeclaredByTarget: unbacked.filter((row) => row.declaredByTarget.length > 0).length,
+    reverseOnly: reverseOnly.length,
     unresolved: unresolved.length,
   },
   unresolved,
   unbacked,
+  reverseOnly,
 };
 ```
 
 A mention is a `spec:` id in a Spec's narrative or in the text of its sections, read by the id
-grammar. The title is not read. The two fences are skipped by position: `behavior.exampleSpace`
-is the `gwt-vocabulary` fence and a structured entry of `behavior.examples` is a `gwt` fence, so
-a key named `examples` in any other section is still read. A Spec that names itself is not a
-mention.
+grammar. The title and the steps inside `gwt` and `gwt-vocabulary` fences are not read.
+A Spec that names itself is not a mention.
 
-Each row is one mentioning Spec and target pair, with its `occurrences` and the entries that hold
-them in `at`, written `section.field[index]` with zero-based indexes. `unresolved` rows name an id
-that no Spec carries. `unbacked` rows name a Spec that exists while the mentioning Spec declares
-none of `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, or `supersedes` toward
-it. `declaredByTarget` lists the relations the target declares back: a parent that names its child
-lands in `unbacked` with `refines` there, which tells you the pair is already joined from the
-other side. A `#` sub-part belongs to the id, so `spec:x#part` resolves only when a Spec carries
-exactly that id. A family pattern written in id form, such as `spec:probe.*`, reads as a mention
+Each row is one mentioning Spec and target pair, with its `totals.occurrences` and the entries
+that hold them in `at`, as `{ section, entry }`, with zero-based indexes inside `entry`.
+`unresolved` rows name an id that no Spec carries. `unbacked` rows name a Spec that exists with
+no declared relation in either direction.
+`reverseOnly` rows have no declared relation from the mentioning Spec, but the target declares
+one back. The backing relations are `refines`, `dependsOn`, `constrainedBy`, `decidedBy`,
+`verifies`, and `supersedes`. A parent that names its child lands in `reverseOnly`. A `#` sub-part
+belongs to the id, so `spec:x#part` resolves only when a Spec carries exactly that id. A family pattern written in id form, such as `spec:probe.*`, reads as a mention
 of `spec:probe`. No validator reads prose mentions today, so this recipe is the whole check;
 `spec:validation.prose-mentions` carries the rule that would.
 
@@ -1308,7 +1360,9 @@ const hits = (text) => {
 
   return (
     wanted.length > 0 &&
-    tokens.some((_token, start) => wanted.every((token, offset) => tokens[start + offset] === token))
+    tokens.some((_token, start) =>
+      wanted.every((token, offset) => tokens[start + offset] === token),
+    )
   );
 };
 const matches = [];
@@ -1355,8 +1409,11 @@ for (const spec of g.specs()) {
 return {
   term,
   tokens: wanted,
-  total: matches.length,
-  specs: new Set(matches.map((match) => match.id)).size,
+  totals: {
+    matches: matches.length,
+    specs: new Set(matches.map((match) => match.id)).size,
+    shown: Math.min(matches.length, 50),
+  },
   matches: matches.slice(0, 50),
 };
 ```
@@ -1383,5 +1440,6 @@ the section name `narrative`. `matchedIn` says whether the key, the text, or bot
 match only where the author coins them: the keys of `design` and `ui` and the terms of `model`.
 Field names the carrier fixes, such as `outcome` or `rules`, never match. Step text inside `gwt`
 and `gwt-vocabulary` fences is searched like any other entry. Titles and ids stay with concept
-search. Rows keep Spec id order and then the order the graph holds the entries; `total` counts
-every matching entry and `matches` holds the first fifty.
+search. Rows keep Spec id order and then the order the graph holds the entries;
+`totals.matches` counts every matching entry, `totals.specs` counts the matching Specs, and `totals.shown` counts
+the rows shown. `matches` holds the first fifty.

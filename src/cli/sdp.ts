@@ -92,7 +92,7 @@ Commands:
              --json prints JSON.stringify instead, unbounded. A body that throws exits 1, as does a
              graph that fails to derive.
 
-On-ramps:
+Agent skills and reference:
   Shipped in the package. Paths are relative to the package directory PKG, which is
   node_modules/@libar-dev/software-delivery-protocol in an adopter and the repository root in a
   source checkout.
@@ -100,7 +100,8 @@ On-ramps:
   .agents/skills/sdp-authoring/SKILL.md       the skill for authoring Specs, Packs, and anchors
   .agents/skills/sdp-sessions/SKILL.md        the skill for routing a delivery session
   docs/agent-surface/recipes.md               the recipe catalog: runnable q bodies
-  CONTEXT.md                                  the glossary the skills and recipes speak
+  CONTEXT.md                                  the Protocol's glossary, which the skills and
+                                              recipes use
   specs/                                      the Protocol's own Specs and Pack, which the skills
                                               and recipes cite by id
   Read a cited Protocol Spec: sdp q 'return g.specContext("spec:model.anchors")' --root PKG/specs

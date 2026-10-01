@@ -1178,7 +1178,7 @@ export const consumersSpecs = [
           "Each body composes the existing reader. None adds a reader join or a CLI verb, because a join freezes into the reader only at the second-caller bar.",
           "The recipe check executes each body as written, and every document that states the catalog's size moves with the catalog.",
           "Whole tokens are maximal runs of Unicode letters and digits, split at camelCase humps and compared without case; a multiword term matches only as a consecutive run in the same order inside one key or text.",
-          "The mention audit reports one row per mentioning Spec and target pair, with unresolved pairs separate from pairs that resolve but have no backing declared relation from the mentioning Spec.",
+          "The mention audit takes a list of mentioning Spec ids, with an empty list selecting the whole corpus. It reports one row per mentioning Spec and target pair, with locations as section and entry. Unresolved pairs, pairs with no declared relation in either direction, and pairs backed only by a declared relation from the target are separate lists.",
         ],
       },
     },
