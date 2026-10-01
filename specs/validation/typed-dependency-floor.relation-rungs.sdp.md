@@ -11,6 +11,9 @@ relations:
 
 ## Intent
 - outcome: Check the relation-rungs matrix through the readiness floor.
+- assumption: The world has 24 rule subjects stating `ready`, one for each pairing of `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, and `supersedes` with a target stating `idea`, `scoped`, `defined`, or `ready`. Every target resolves. `constrainedBy` targets are constraints; `decidedBy` and `supersedes` targets are decisions; the other targets are rules. No Spec has a blocking open question.
+- assumption: All probes are story-altitude Specs with declared relations and an Intent outcome. Rule subjects and rule targets carry a behavior rule; constraint targets carry a statement and target; decision targets carry a written decision. Each resolving target declares `dependsOn` back to its subject. No anchors are present. The expected counts include only `honesty/readiness-floor` findings, not findings from other validators.
+- assumption: The four included relations each fail `typed-dependency-targets-are-defined` for their `idea` and `scoped` targets, giving eight target failures. Their `defined` and `ready` boundaries pass. `verifies` and `supersedes` pass at every target rung.
 ```gwt
 Given the typed dependency matrix {matrix: "relation-rungs"}
 When the reader checks the readiness floor

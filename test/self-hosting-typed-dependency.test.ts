@@ -58,7 +58,7 @@ function expectedFloor(
     case "unsettled-fact":
       return { kind: OUTCOME, targetFailures: 1, resolutionFailures: 0, questionFailures: 1 };
     case "stated-readiness":
-      return { kind: OUTCOME, targetFailures: 0, resolutionFailures: 0, questionFailures: 4 };
+      return { kind: OUTCOME, targetFailures: 64, resolutionFailures: 0, questionFailures: 4 };
     default:
       return unspecified;
   }
@@ -188,10 +188,11 @@ function createWorld(point: Partial<TypedDependencyFloorConditions>): World {
     case "stated-readiness":
       for (const relation of dependencies)
         addTrace(world, `stated-${relation}`, relation, "defined", { blocking: true });
-      // Every Spec kind reads the same target clause, including excluded relations.
+      // Every Spec kind gets failing and passing targets, including excluded relations.
       for (const kind of kinds)
         for (const relation of relations)
-          addTrace(world, `${kind}-${relation}`, relation, "defined", { kind });
+          for (const rung of rungs)
+            addTrace(world, `${kind}-${relation}-${rung}`, relation, rung, { kind });
       break;
     default:
       throw new Error(`Unknown matrix: ${String(point.matrix)}`);

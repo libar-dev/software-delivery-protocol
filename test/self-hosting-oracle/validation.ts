@@ -1170,7 +1170,7 @@ export const validationSpecs = [
     sections: {
       intent: {
         problem:
-          "The `ready` floor reads `refines` and `dependsOn` targets only, so a Spec bounded by an unsettled constraint or shaped by an unsettled decision can still state `ready`.",
+          "A `ready` statement needs a settled basis across `refines`, `dependsOn`, `constrainedBy`, and `decidedBy`. Omitting any of these relations would let a Spec state `ready` while a dependency still stands below `defined`.",
         outcome:
           "Refuse a `ready` statement while any Spec it depends on, through any typed dependency, stands below `defined`.",
       },
@@ -1343,6 +1343,11 @@ export const validationSpecs = [
     sections: {
       intent: {
         outcome: "Check the relation-rungs matrix through the readiness floor.",
+        assumptions: [
+          "The world has 24 rule subjects stating `ready`, one for each pairing of `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, and `supersedes` with a target stating `idea`, `scoped`, `defined`, or `ready`. Every target resolves. `constrainedBy` targets are constraints; `decidedBy` and `supersedes` targets are decisions; the other targets are rules. No Spec has a blocking open question.",
+          "All probes are story-altitude Specs with declared relations and an Intent outcome. Rule subjects and rule targets carry a behavior rule; constraint targets carry a statement and target; decision targets carry a written decision. Each resolving target declares `dependsOn` back to its subject. No anchors are present. The expected counts include only `honesty/readiness-floor` findings, not findings from other validators.",
+          "The four included relations each fail `typed-dependency-targets-are-defined` for their `idea` and `scoped` targets, giving eight target failures. Their `defined` and `ready` boundaries pass. `verifies` and `supersedes` pass at every target rung.",
+        ],
       },
       behavior: {
         examples: [
@@ -1369,6 +1374,11 @@ export const validationSpecs = [
     sections: {
       intent: {
         outcome: "Check the missing-targets matrix through the readiness floor.",
+        assumptions: [
+          "The world has six rule subjects stating `ready`, one for each of `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, and `supersedes`. Each subject names a missing target. No target Spec exists, so no target states a rung or declares a reverse relation. No subject has a blocking open question.",
+          "All subjects are story-altitude Specs with declared relations, an Intent outcome, and a behavior rule. No anchors are present. The expected counts include only `honesty/readiness-floor` findings, not findings from other validators.",
+          "Each subject fails `all-relations-resolve` once. Missing targets never add a `typed-dependency-targets-are-defined` failure, including for the four included relations.",
+        ],
       },
       behavior: {
         examples: [
@@ -1395,6 +1405,11 @@ export const validationSpecs = [
     sections: {
       intent: {
         outcome: "Check the unsettled-fact matrix through the readiness floor.",
+        assumptions: [
+          'The world has three rule subjects, each declaring `constrainedBy` on its own resolving constraint target. The first subject states `defined` and its target states `scoped`; the second subject states `ready` and its target states `scoped`; the third subject states `defined` and its target states `defined`. Each target carries the blocking open question "Is this fact settled?". The subjects have no blocking open questions.',
+          "All probes are story-altitude Specs with declared relations and an Intent outcome. Each rule subject carries a behavior rule, and each constraint target carries a statement and target. Each resolving target declares `dependsOn` back to its subject. No anchors are present. The expected counts include only `honesty/readiness-floor` findings, not findings from other validators.",
+          "All three targets derive `scoped`. The first subject lawfully states `defined`; the second fails `typed-dependency-targets-are-defined`; the third target alone fails `no-blocking-open-questions` for stating `defined`. Both subjects with `scoped` targets derive `defined`, while the third derives `ready` because the target clause reads the target's stated rung. No target is missing.",
+        ],
       },
       behavior: {
         examples: [
@@ -1421,6 +1436,12 @@ export const validationSpecs = [
     sections: {
       intent: {
         outcome: "Check the stated-readiness matrix through the readiness floor.",
+        assumptions: [
+          'The world first pairs four rule subjects stating `ready` with targets stating `defined`, one through each of `refines`, `dependsOn`, `constrainedBy`, and `decidedBy`. Each target carries the blocking open question "Is this fact settled?", derives `scoped`, and fails `no-blocking-open-questions`. Each subject still derives `ready` because the target clause reads stated readiness.',
+          "The world also pairs every subject kind, `behavior`, `workflow`, `example`, `rule`, `constraint`, `model`, `decision`, and `contract`, with each of `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, and `supersedes`, and each target rung, `idea`, `scoped`, `defined`, and `ready`. These 192 subjects all state `ready`. These pairs have no blocking open questions. Every target in both groups resolves. `constrainedBy` targets are constraints, `decidedBy` and `supersedes` targets are decisions, and the other targets are rules.",
+          "All probes are story-altitude Specs with declared relations and an Intent outcome. Behavior, workflow, rule, and contract subjects carry a behavior rule; example subjects carry concrete Given, When, and Then steps; constraint subjects carry a statement and target; model subjects carry a term; decision subjects carry a written decision. Targets carry the same evidence for their kind. Each target declares `dependsOn` back to its subject. No anchors are present. The expected counts include only `honesty/readiness-floor` findings, not findings from other validators.",
+          "Every subject kind fails `typed-dependency-targets-are-defined` for `idea` and `scoped` targets across the four included relations. The `defined` and `ready` boundaries pass, and `verifies` and `supersedes` pass at every target rung. No target is missing.",
+        ],
       },
       behavior: {
         examples: [
@@ -1428,7 +1449,7 @@ export const validationSpecs = [
             given: ['the typed dependency matrix {matrix: "stated-readiness"}'],
             when: ["the reader checks the readiness floor"],
             then: [
-              "the matrix reports {targetFailures: 0} target failures and {resolutionFailures: 0} resolution failures and {questionFailures: 4} blocking question failures",
+              "the matrix reports {targetFailures: 64} target failures and {resolutionFailures: 0} resolution failures and {questionFailures: 4} blocking question failures",
             ],
           },
         ],

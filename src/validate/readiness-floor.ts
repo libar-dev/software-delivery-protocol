@@ -569,7 +569,9 @@ export function evaluateReadinessFloor(
 /**
  * Derived readiness (`spec:validation.readiness-floor`): the highest rung whose cumulative clauses all pass — what the spec
  * structurally *is*, beside what the author *states*. Same table, same predicates, no second
- * floor (MD-13); the stated rung is never consulted. Returns `undefined` when even the `idea`
+ * floor (MD-13). The subject's stated rung does not limit which floors are evaluated. The target
+ * clause reads each target's stated readiness, including when the subject is its own target.
+ * Returns `undefined` when even the `idea`
  * clauses fail. Total over foreign data: an unratified `specKind` cannot dereference the evidence
  * table, so no rung derives — the descriptor conformance error owns that finding, exactly as in
  * the evaluator. The divergence reading: derived *below* stated is the honesty signal the floor

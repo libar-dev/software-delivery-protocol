@@ -82,7 +82,7 @@ The graph is only valuable if humans and agents can actually consume it. The job
 
 **Acceptance criteria:**
 1. A spec (or `Pack`) renders *in context* — neighbors, relations, `claim`/delivery badges — reusing the one generated view (JS-E1), so review needs no separate tool.
-2. The review surfaces exactly what stands between the spec and the next rung: blocking open questions, unresolved relations, `dependsOn`/`refines` targets below `defined`, and `gap`s (missing verifier, unmeasured NFR target).
+2. The review surfaces exactly what stands between the spec and the next rung: blocking open questions, unresolved relations, `refines`, `dependsOn`, `constrainedBy`, and `decidedBy` targets below `defined`, and `gap`s (missing verifier, unmeasured NFR target).
 3. Stating `ready` is a deliberate human edit to the spec, checked against the `ready` floor (`spec:validation.readiness-floor`) — the review **never** states a rung on the author's behalf, and validators never adjudicate design quality.
 4. A `Pack` can be reviewed as a unit, so coherence and cross-member tensions (shared terms, conflicting constraints) are visible at the group level, not just per spec.
 5. Findings (the auto-generated design questions + findings table) resolve through the edit loop (Theme F) — there is no stored `Finding` type and no second store; re-running the build regenerates them.

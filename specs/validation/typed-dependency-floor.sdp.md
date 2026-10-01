@@ -10,7 +10,7 @@ relations:
 # A ready Spec rests only on settled dependencies
 
 ## Intent
-- problem: The `ready` floor reads `refines` and `dependsOn` targets only, so a Spec bounded by an unsettled constraint or shaped by an unsettled decision can still state `ready`.
+- problem: A `ready` statement needs a settled basis across `refines`, `dependsOn`, `constrainedBy`, and `decidedBy`. Omitting any of these relations would let a Spec state `ready` while a dependency still stands below `defined`.
 - outcome: Refuse a `ready` statement while any Spec it depends on, through any typed dependency, stands below `defined`.
 
 ## Rule
