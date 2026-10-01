@@ -1,4 +1,5 @@
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -1743,7 +1744,7 @@ function registerProbe(): ExtractionResult {
 }
 
 function carrierRegisterProbe(): ExtractionResult {
-  const root = mkdtempSync("/private/tmp/sdp-register-carrier-");
+  const root = mkdtempSync(join(tmpdir(), "sdp-register-carrier-"));
   try {
     writeFileSync(
       join(root, "probe.sdp.ts"),
