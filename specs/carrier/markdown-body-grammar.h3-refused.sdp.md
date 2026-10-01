@@ -15,5 +15,5 @@ relations:
 ```gwt
 Given a Markdown Spec carrier whose {owner: "Design"} section holds {construct: "an H3 heading"}
 When the extractor reifies the carrier
-Then the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "open sections do not accept an H3 or fence"}
+Then the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "open sections do not accept an H3 or fence"} at line {line: 14}
 ```

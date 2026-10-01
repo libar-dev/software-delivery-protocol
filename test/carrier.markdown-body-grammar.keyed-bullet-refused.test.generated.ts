@@ -42,16 +42,14 @@ export function registerKeyedBulletRefused<World>(
     "the extractor reifies the carrier": async (execution) => {
       await invokeRunnableExample(execution);
     },
-    "the carrier is refused whole with the finding {findingId} whose message contains {reason}": (
-      execution,
-      params,
-    ) => {
-      compareContractOutcome(execution, {
-        kind: "then",
-        text: "the carrier is refused whole with the finding {findingId} whose message contains {reason}",
-        params,
-      });
-    },
+    "the carrier is refused whole with the finding {findingId} whose message contains {reason} at line {line}":
+      (execution, params) => {
+        compareContractOutcome(execution, {
+          kind: "then",
+          text: "the carrier is refused whole with the finding {findingId} whose message contains {reason} at line {line}",
+          params,
+        });
+      },
   } satisfies StepBindings<Execution, Step, StepParams>;
 
   registerRunnableExample(

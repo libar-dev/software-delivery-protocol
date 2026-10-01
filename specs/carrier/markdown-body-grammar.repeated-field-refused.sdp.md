@@ -15,5 +15,5 @@ relations:
 ```gwt
 Given a Markdown Spec carrier whose {owner: "Constraints"} section holds {construct: "a second statement field"}
 When the extractor reifies the carrier
-Then the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "is authored more than once"}
+Then the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "is authored more than once"} at line {line: 15}
 ```

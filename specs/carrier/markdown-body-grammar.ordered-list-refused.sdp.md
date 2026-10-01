@@ -15,5 +15,5 @@ relations:
 ```gwt
 Given a Markdown Spec carrier whose {owner: "Contract"} section holds {construct: "an ordered list item"}
 When the extractor reifies the carrier
-Then the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "nested or unsupported Markdown structure"}
+Then the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "nested or unsupported Markdown structure"} at line {line: 14}
 ```

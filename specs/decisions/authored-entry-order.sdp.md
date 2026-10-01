@@ -15,7 +15,7 @@ relations:
 - outcome: Render the entries of an open section as a readable list in authored order, so a signature or a step reads as text and not as an escaped JSON string.
 
 ### Open questions
-- [blocking] This record changes a stated rule of the Design Review, so it supersedes the shipped-projections freeze for open-section rendering and must pass the ADR three-part test. Does the owner reopen the freeze now, or after `spec:extraction.open-section-order` has landed and the ordered JSON has been read?
+- [blocking] This record changes a stated rule of the Design Review, so on ratification it declares `supersedes` on the shipped-projections freeze for open-section rendering and must pass the ADR three-part test. The envelope declares `dependsOn` until then, so a draft never reads as a landed supersession in the graph. Does the owner reopen the freeze now, or after `spec:extraction.open-section-order` has landed and the ordered JSON has been read?
 
 ## Decision
 - context: The Design Review prints an open section as one fenced JSON object, so each entry's value is an escaped string. Authored order is restored by `spec:extraction.open-section-order` as an ordinary revision, because no Spec states the sort. Rendering is different: `spec:consumers.design-review` states that fenced JSON preserves authored keys and values, and the shipped projections are frozen, so a list rendering needs a superseding record. The first adopter corpus carries 762 keyed entries, and its reviewers read the carrier files instead of the review.

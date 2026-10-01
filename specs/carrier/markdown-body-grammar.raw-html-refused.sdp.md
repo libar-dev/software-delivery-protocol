@@ -15,5 +15,5 @@ relations:
 ```gwt
 Given a Markdown Spec carrier whose {owner: "Behavior"} section holds {construct: "a line break tag"}
 When the extractor reifies the carrier
-Then the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "raw HTML is unsupported"}
+Then the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "raw HTML is unsupported"} at line {line: 14}
 ```

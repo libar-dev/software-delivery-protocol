@@ -22,13 +22,14 @@ turns that evidence into Specs.
 
 Authored for this arc, with the proposal each one answers.
 
-Stated without a blocking question, so the floor is the only thing between them and a `ready`
-statement:
+Stated without a blocking question. Their floors clear `ready`; what remains is the human
+statement, and for a decision record its registry row:
 
 - `spec:carrier.markdown-body-grammar` (P1). The body grammar the parser enforces, written down,
   with twelve refusal examples bound to the parser through
-  `test/self-hosting-markdown-grammar.test.ts`. This is the one Spec of the arc that already
-  carries `has-verifier`.
+  `test/self-hosting-markdown-grammar.test.ts`, each pinned to the finding, its message, and the
+  line of the construct. The parent and its twelve children are the arc's Specs that already
+  carry `has-verifier`.
 - `spec:carrier.inline-code-spans` (P2). A code span is content, so a generic is not HTML.
 - `spec:validation.typed-dependency-floor` (P3). The `ready` floor reads all four typed
   dependencies, at a uniform `defined` threshold.
@@ -40,18 +41,22 @@ statement:
 - `spec:consumers.agent-surface.register-recipes` (P5, and P6 step 1). Four catalog recipes.
 - `spec:consumers.shipped-protocol-corpus` (P5). The package ships `specs/`, and the CLI points
   at them for the adopter that already has them on disk.
+Held by a question the owner has not answered, carried as a blocking open question on the Spec:
+
 - `spec:extraction.open-section-order` (P7, first half). Authored order of `design`, `ui`, and
-  `model` terms survives serialization and the Design Review's key order; an ordinary revision
-  with a schema bump.
-- `spec:decisions.checked-mentions` (P6 step 2). The ruling is written; it states `defined`
-  until the owner adds its registry row and states `ready`. It shapes
-  `spec:validation.prose-mentions`, which stays at `idea` until the decision is ratified.
-
-Held by a ruling the owner has not made, carried as a blocking open question:
-
+  `model` terms survives serialization and the Design Review's key order, an ordinary revision
+  with a schema bump. Open: an integer-like Model term or TypeScript key already loses its place
+  in the in-memory object, so either those keys are refused or the representation becomes a
+  list.
+- `spec:decisions.checked-mentions` (P6 step 2). The ruling on MD-10 and on the `#` sub-part is
+  written. Open: a key may repeat across Design and UI, so the address needs the section or the
+  carrier refuses the repeat; and `#` is already lawful inside a complete Spec id, so precedence
+  needs a rule. It shapes `spec:validation.prose-mentions`, which carries its own blocking
+  question naming ratification as the trigger.
 - `spec:decisions.authored-entry-order` (P7, second half). Rendering open-section entries as a
-  list changes a stated rule of the Design Review, so it needs a record that supersedes the
-  shipped-projections freeze (MD-32). The question is when to reopen the freeze.
+  list changes a stated rule of the Design Review, so on ratification it declares `supersedes`
+  on the shipped-projections freeze (MD-32); the draft declares `dependsOn` so the graph never
+  reads a landed supersession. The question is when to reopen the freeze.
 
 Deferred, with its re-entry triggers as blocking open questions:
 
@@ -78,11 +83,32 @@ forwarded. Each is written into its Spec; this list only says where it landed.
 - The worked example teaches the unbound trace through its bindings, not a warning. On
   `spec:validation.unbound-example-posture`.
 - One constraint entry per Spec is the law, and the TypeScript model's list shape aligns to it.
-  On `spec:carrier.markdown-body-grammar`.
+  On `spec:carrier.markdown-body-grammar`, as a non-blocking question rather than a rule: both
+  read-only reviewers below contest it, and the revision has not landed.
 
 Three `ready` parents now carry a non-blocking question naming the child that revises one of
 their sentences: `spec:validation.readiness-floor`, `spec:validation.verification-linkage`, and
 `spec:carrier.markdown-parser`. The implementing commit edits parent and child together.
+
+## The two read-only reviews of the capture commit
+
+The capture commit (`11494af`) was reviewed read-only by two GPT models through the Codex
+runtime, same brief, goals and decision criteria only: `gpt-6-astra` at high (7 minutes 8
+seconds) and `gpt-6.1-sol` at high (12 minutes 39 seconds). Both retained the commit as a
+checkpoint and refused it as implementation instructions. Their overlap was large: both found
+the grammar Spec overstating the parser (suggestion only within edit distance two, HTML not
+scanned in the H1 or fence steps and needing a closing `>`, Example space accepting leading
+prose, `uses` and `memberOf` not in the reserved set), the entry address ambiguous across
+Design and UI and colliding with a lawful `#` in a Spec id, the authored-order justification
+false for integer-like Model terms and TypeScript keys, the constraint-cardinality sentence
+presenting a ruling as realized law, the refusal assertions matching too loosely, the on-ramp
+misusing the glossary's `probe`, and the plan's stale lines. Each caught something the other did
+not: astra the Model table's own sort in `renderModel`, the parent-gap overstatement in the
+unbound-example posture, and the `ready` floor's `refines` clause on children of a deferred
+parent; sol the missing graph-visible hold on `spec:validation.prose-mentions` and the P8 scope
+narrowed in silence. Every claim about the engine was re-checked against the tree before the
+fix; all held. The fixes are in the commit after the capture. What the reviewers disagree with
+in the rulings sits on the Specs as open questions, so the owner reads it there.
 
 ## What was re-measured at capture
 
@@ -94,7 +120,8 @@ this tree at `25d24f2` before anything was authored. All of them hold. Four find
   keys sort by code unit so that permuting property order through both carriers yields
   byte-identical graphs. Slice 1 had said the opposite, that section content preserves authored
   order (`plans/06-slice1-extractor.md`). So P7 is not drift repair. It reverses a deliberate
-  rule that no Spec carries, which is why it is drafted as a decision.
+  rule that no Spec carries; after the adopter's ruling the order half is an ordinary rule
+  revision and only the list rendering is a decision.
 - **A third HTML guard.** The report names two sites for the raw-HTML refusal. Pack framing
   prose has a third, in `src/extract/markdown-pack.ts`.
 - **The worked example pins the P4 warning.** `examples/checkout-v1` keeps one unbound example

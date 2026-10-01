@@ -1028,7 +1028,7 @@ export const decisionsSpecs = [
     id: "spec:decisions.checked-mentions",
     specKind: "decision",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "scoped",
     file: "specs/decisions/checked-mentions.sdp.md",
     title: "A Spec id written in prose is a checked mention",
     narrative: null,
@@ -1037,6 +1037,16 @@ export const decisionsSpecs = [
         outcome:
           "Make a Spec id written in prose resolve, and make one keyed entry of an open section addressable, so a reference below the Spec level can be checked.",
         openQuestions: [
+          {
+            question:
+              "Open-section keys are unique within a section, not within a Spec: one carrier may hold `shared` under Design and again under UI, so `spec:x#shared` names two entries. Does the address carry the section, as in `spec:x#design.shared`, or does the carrier refuse a key that appears under both?",
+            blocking: true,
+          },
+          {
+            question:
+              "The id grammar already admits a `#` sub-part in a complete Spec identity, and the reifier accepts `spec:x#foo` as a Spec's own id. Does an entry address take precedence over such an identity, or is a `#` in a Spec id refused once it carries address meaning?",
+            blocking: true,
+          },
           {
             question:
               "`mention` and `entry address` are candidate terms. They enter the glossary when this record is ratified.",
@@ -1050,7 +1060,7 @@ export const decisionsSpecs = [
         decision:
           "A Spec id in narrative or section text, outside `gwt` and `gwt-vocabulary` fences, is a mention. A mention that does not resolve is a conformance error. A mention with no declared relation from its Spec to the target is a warning. An id that adds `#` and a key to a Spec id addresses one keyed entry of that Spec's `design` or `ui` section and resolves when the key exists. A mention mints no edge, and the reader gains no join.",
         rationale: [
-          "The warning asks for a relation that already exists, so linkage keeps one home. Open-section keys are already unique within a Spec and already fit the sub-part form, so the address costs no carrier grammar.",
+          "The warning asks for a relation that already exists, so linkage keeps one home. Open-section keys fit the sub-part form, so the address costs no carrier grammar once the two blocking questions are settled.",
           "This applies the content-only sections ruling rather than contradicting it. A mention mints no edge, so no consumer branches on a reference union, and the warning names exactly the double-linkage drift that ruling calls legal and silent today. The id grammar already parses and formats the sub-part; this record gives it its first meaning.",
         ],
         alternatives: [
@@ -1084,7 +1094,7 @@ export const decisionsSpecs = [
         openQuestions: [
           {
             question:
-              "This record changes a stated rule of the Design Review, so it supersedes the shipped-projections freeze for open-section rendering and must pass the ADR three-part test. Does the owner reopen the freeze now, or after `spec:extraction.open-section-order` has landed and the ordered JSON has been read?",
+              "This record changes a stated rule of the Design Review, so on ratification it declares `supersedes` on the shipped-projections freeze for open-section rendering and must pass the ADR three-part test. The envelope declares `dependsOn` until then, so a draft never reads as a landed supersession in the graph. Does the owner reopen the freeze now, or after `spec:extraction.open-section-order` has landed and the ordered JSON has been read?",
             blocking: true,
           },
         ],

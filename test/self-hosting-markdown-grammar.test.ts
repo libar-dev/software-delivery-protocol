@@ -49,7 +49,7 @@ import { paramsForStep } from "./helpers/generated-contract.js";
 // outcome is the refusal finding the parser reports while the sibling survives.
 
 const REFUSAL_STEP =
-  "the carrier is refused whole with the finding {findingId} whose message contains {reason}" as const;
+  "the carrier is refused whole with the finding {findingId} whose message contains {reason} at line {line}" as const;
 
 // Every sibling binds the same three vocabulary steps, so one contract shape types them all.
 type RefusalContract = ExampleContract<Step, StepParams>;
@@ -132,8 +132,8 @@ function invokeExtraction(world: GrammarWorld): void {
 function adaptersFor(contract: RefusalContract) {
   const step = REFUSAL_STEP;
   const outcome = (): MarkdownBodyGrammarOutcome => {
-    const { findingId, reason } = paramsForStep(contract, step);
-    return { kind: REFUSAL_STEP, findingId, reason };
+    const { findingId, reason, line } = paramsForStep(contract, step);
+    return { kind: REFUSAL_STEP, findingId, reason, line };
   };
 
   return {
@@ -142,14 +142,20 @@ function adaptersFor(contract: RefusalContract) {
     observe: (world: GrammarWorld): MarkdownBodyGrammarOutcome => {
       if (world.result === undefined) throw new Error("The refusal point requires an extraction.");
 
-      const { findingId, reason } = paramsForStep(contract, step);
+      // The line pins the construct that caused the finding, so a refusal of the same class at
+      // another line (the closing fence, a recovery diagnostic) cannot stand in for it.
+      const { findingId, reason, line } = paramsForStep(contract, step);
       const refusal = world.result.report.findings.find(
         (finding) =>
           finding.validatorId === findingId &&
           finding.message.includes(reason) &&
+          finding.line === line &&
           finding.file?.endsWith("refused.sdp.md") === true,
       );
-      expect(refusal, `${findingId} containing ${JSON.stringify(reason)}`).toBeDefined();
+      expect(
+        refusal,
+        `${findingId} containing ${JSON.stringify(reason)} at line ${String(line)}; got ${JSON.stringify(world.result.report.findings.map((finding) => [finding.validatorId, finding.line, finding.message]))}`,
+      ).toBeDefined();
       expect(refusal?.severity).toBe("error");
       expect(
         world.result.graph.nodes

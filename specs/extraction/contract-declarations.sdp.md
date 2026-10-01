@@ -18,5 +18,6 @@ relations:
 - [blocking] This Spec re-enters on evidence. Has code first had to agree with signatures authored at design time, or has a second adopter authored signatures in a Design section? Until one holds, the declaration shape stays unruled.
 - [blocking] Does an opaque, language-tagged fence owned by one keyed entry fit the carrier ruling's small owned grammar, or does it need a decision of its own?
 - [non-blocking] When the contract section lands, the `contract` row of the kind-evidence table repoints to it. Which evidence counts as present, and which as complete?
+- [non-blocking] The source report's full shape is kept here so the capture does not narrow it in silence: an opaque language-tagged fence as the value of one keyed entry, then the closed section whose declarations derive one module per corpus, then implementation code importing the derived types so that a Spec which disagrees with its code fails the build. Compiling the derived module alone finds only names used and never declared, and names declared twice.
 
 ## Behavior
