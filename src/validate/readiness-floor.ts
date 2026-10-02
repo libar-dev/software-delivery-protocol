@@ -267,14 +267,26 @@ function allRelationsResolve(node: PrimitiveNode, index: GraphIndex): boolean {
 
 const definedIndex = SPEC_READINESS.indexOf("defined");
 
+const typedDependencyFloorAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.typed-dependency-floor"),
+  label: "checks stated readiness across all four typed dependencies",
+  satisfies: ref("spec:validation.typed-dependency-floor"),
+  component: componentAnchorId("component:protocol.validate"),
+});
+void typedDependencyFloorAnchor;
+
 /**
- * Evaluates resolving targets only — an unresolved target is `all-relations-resolve`'s failure,
- * never a second floor failure. A target resolving to a non-`Primitive` node is not a spec at
- * `defined` and fails (the edge contract makes that shape a conformance error besides).
+ * Reads stated readiness on resolving targets only. The relation-resolution clause owns missing
+ * targets. A resolving non-Primitive target fails this bound and the edge's conformance contract.
  */
-function dependsOnAndRefinesTargetsAreDefined(node: PrimitiveNode, index: GraphIndex): boolean {
+function typedDependencyTargetsAreDefined(node: PrimitiveNode, index: GraphIndex): boolean {
   return declaredRelationEdges(node, index).every((edge) => {
-    if (edge.type !== "dependsOn" && edge.type !== "refines") {
+    if (
+      edge.type !== "dependsOn" &&
+      edge.type !== "refines" &&
+      edge.type !== "constrainedBy" &&
+      edge.type !== "decidedBy"
+    ) {
       return true;
     }
 
@@ -480,9 +492,10 @@ export const readinessFloors = {
         predicate: allRelationsResolve,
       },
       {
-        id: "depends-on-and-refines-targets-are-defined",
-        description: "Every dependsOn and refines target is at least defined.",
-        predicate: dependsOnAndRefinesTargetsAreDefined,
+        id: "typed-dependency-targets-are-defined",
+        description:
+          "Every refines, dependsOn, constrainedBy, and decidedBy target states at least defined.",
+        predicate: typedDependencyTargetsAreDefined,
       },
       {
         id: "anchors-resolve",
@@ -556,7 +569,9 @@ export function evaluateReadinessFloor(
 /**
  * Derived readiness (`spec:validation.readiness-floor`): the highest rung whose cumulative clauses all pass — what the spec
  * structurally *is*, beside what the author *states*. Same table, same predicates, no second
- * floor (MD-13); the stated rung is never consulted. Returns `undefined` when even the `idea`
+ * floor (MD-13). The subject's stated rung does not limit which floors are evaluated. The target
+ * clause reads each target's stated readiness, including when the subject is its own target.
+ * Returns `undefined` when even the `idea`
  * clauses fail. Total over foreign data: an unratified `specKind` cannot dereference the evidence
  * table, so no rung derives — the descriptor conformance error owns that finding, exactly as in
  * the evaluator. The divergence reading: derived *below* stated is the honesty signal the floor

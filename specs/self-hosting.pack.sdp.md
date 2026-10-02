@@ -10,6 +10,25 @@ specs:
   - spec:carrier.markdown-pack-authoring
   - spec:carrier.markdown-pack-authoring.markdown-ts-parity
   - spec:carrier.markdown-pack-authoring.spec-envelope-refused
+  - spec:carrier.markdown-body-grammar
+  - spec:carrier.markdown-body-grammar.table-refused
+  - spec:carrier.markdown-body-grammar.continuation-line-refused
+  - spec:carrier.markdown-body-grammar.ordered-list-refused
+  - spec:carrier.markdown-body-grammar.foreign-fence-refused
+  - spec:carrier.markdown-body-grammar.h3-refused
+  - spec:carrier.markdown-body-grammar.plain-bullet-refused
+  - spec:carrier.markdown-body-grammar.keyed-bullet-refused
+  - spec:carrier.markdown-body-grammar.trailing-prose-refused
+  - spec:carrier.markdown-body-grammar.repeated-field-refused
+  - spec:carrier.markdown-body-grammar.unrecognized-heading-refused
+  - spec:carrier.markdown-body-grammar.second-primary-owner-refused
+  - spec:carrier.markdown-body-grammar.raw-html-refused
+  - spec:carrier.markdown-body-grammar.shared-description-refused
+  - spec:carrier.inline-code-spans
+  - spec:carrier.inline-code-spans.narrative
+  - spec:carrier.inline-code-spans.description
+  - spec:carrier.inline-code-spans.list
+  - spec:carrier.inline-code-spans.pack
   - spec:carrier.gherkin-authoring
   - spec:carrier.gherkin-authoring.parent-child-extraction
   - spec:carrier.gherkin-authoring.example-space-extraction
@@ -37,13 +56,18 @@ specs:
   - spec:extraction.regenerability
   - spec:extraction.schema-versioning
   - spec:extraction.executable-contracts
+  - spec:extraction.contract-declarations
+  - spec:extraction.open-section-order
   - spec:extraction.runnable-modules
   - spec:validation.readiness-floor
+  - spec:validation.typed-dependency-floor
   - spec:validation.duplicate-ids
   - spec:validation.two-check-families
   - spec:validation.referential-integrity
+  - spec:validation.prose-mentions
   - spec:validation.claim-separation
   - spec:validation.verification-linkage
+  - spec:validation.unbound-example-posture
   - spec:validation.oracle-target-eligibility
   - spec:validation.oracle-target-eligibility.rule-space-accepted
   - spec:validation.oracle-target-eligibility.missing-space-refused
@@ -62,8 +86,11 @@ specs:
   - spec:consumers.authoring-on-ramp
   - spec:consumers.delivery-session-on-ramp
   - spec:consumers.agent-surface.authoring-recipes
+  - spec:consumers.agent-surface.register-recipes
   - spec:consumers.intent-composition
   - spec:consumers.graph-first-planning
+  - spec:consumers.adopter-on-ramp
+  - spec:consumers.shipped-protocol-corpus
   - spec:model.protocol-domain
   - spec:model.core-model
   - spec:model.enrichment-lifecycle
@@ -165,6 +192,15 @@ specs:
   - spec:decisions.planning-truths-placement
   - spec:decisions.architectural-significance-rides-primitives
   - spec:decisions.jsdoc-graph-extraction-refused
+  - spec:decisions.checked-mentions
+  - spec:decisions.authored-entry-order
+  - spec:validation.unbound-example-posture.lower-rungs
+  - spec:validation.unbound-example-posture.warning-cases
+  - spec:validation.unbound-example-posture.parent-traces
+  - spec:validation.typed-dependency-floor.relation-rungs
+  - spec:validation.typed-dependency-floor.missing-targets
+  - spec:validation.typed-dependency-floor.unsettled-fact
+  - spec:validation.typed-dependency-floor.stated-readiness
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model

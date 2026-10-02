@@ -76,10 +76,10 @@ afterEach(() => {
 });
 
 describe("the self-hosting records gate", () => {
-  it("discovers plan 38 as the current primary plan", () => {
+  it("discovers plan 39 as the current primary plan", () => {
     expect(currentPlan).toMatchObject({
-      number: 38,
-      name: "38-graph-first-planning-arc.md",
+      number: 39,
+      name: "39-adopter-driven-hardening.md",
     });
   });
 

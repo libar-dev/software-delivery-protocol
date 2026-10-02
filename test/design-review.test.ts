@@ -384,22 +384,30 @@ describe("the Design Review — the one generated read-only view", () => {
     expect(createOrder).toContain("`[declared]`");
   });
 
-  it("renders the standing warning in context — the teaching surface, on both involved pages", () => {
+  it("keeps the incomplete trace in bindings without a below-ready warning", () => {
     const invalidCart = pageByPath(examplePages, "spec/orders.create-order.invalid-cart.md");
     const createOrder = pageByPath(examplePages, "spec/orders.create-order.md");
     const index = pageByPath(examplePages, "index.md");
-
     for (const content of [invalidCart, createOrder, index]) {
-      expect(content).toContain("conformance/verifies-linkage");
+      expect(content).not.toContain("conformance/verifies-linkage");
     }
+    expect(createOrder).toContain("**not enabled**");
+    expect(createOrder).toContain("`[declared]`");
   });
 
-  it("locates findings from the structured fields — the Where column (line-free for a Primitive)", () => {
-    const index = pageByPath(examplePages, "index.md");
-
+  it("locates a deliberate finding through structured Primitive fields", () => {
+    const graph = extract({ root: exampleRoot }).graph;
+    const probe = {
+      ...graph,
+      nodes: graph.nodes.map((node) =>
+        node.id === "spec:orders.create-order.invalid-cart" && node.nodeType === "Primitive"
+          ? { ...node, readiness: "ready" as const }
+          : node,
+      ),
+    };
+    const index = pageByPath(renderDesignReview(createReader(probe)), "index.md");
+    expect(index).toContain("conformance/verifies-linkage");
     expect(index).toContain("| Severity | Check | Message | Where |");
-    // The standing warning's subject is a spec file: `file` known, no line (Primitive nodes are
-    // line-free by design), and the location is never embedded in the message a second time.
     expect(index).toContain("| `specs/orders/create-order-invalid-cart.sdp.md` |");
   });
 

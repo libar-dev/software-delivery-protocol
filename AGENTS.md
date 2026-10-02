@@ -16,6 +16,12 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
+> **plan 39 is DRAFTED**. The first-adopter arc, a thin lineage pointer in the plan-38 shape. Six
+> of its Specs (inline code spans, the unbound-example posture, the typed-dependency floor, the
+> register recipes, the adopter on-ramp, the shipped corpus) are implemented with bound evidence
+> and, like the verified Markdown body grammar, wait for the owner to state `ready`; five more
+> stay held by owner questions. The backlog and readiness are read from the graph (recipes 1, 2,
+> 9, 11).
 > **plan 38 is DRAFTED** — the graph-first planning arc, a thin lineage pointer, not a briefs
 > index: the arc's forward intent is authored as capture-rung Specs
 > (`spec:consumers.graph-first-planning`, `spec:model.structural-patterns`,
@@ -76,7 +82,7 @@ Progressive disclosure — start at the top, follow the pointers down.
 | Look here | What you get | Read |
 |---|---|---|
 | `CONTEXT.md` (repo root) | **the vocabulary** — the ratified lean glossary (terms · relations · a worked dialogue · flagged ambiguities); sole source of truth for terminology; the model exposition lives in the Specs under `specs/` and in the surviving concept docs | **first, always** |
-| `.agents/skills/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — three repository-owned skills: `sdp-agent-surface` (reading the graph), `sdp-authoring` (authoring intent), `sdp-sessions` (advisory delivery-session routing), also exposed to Claude through the `.claude/skills` symlink; plus the nineteen runnable `sdp q` bodies | **mandatory** — after `CONTEXT.md`, load the matching skill before any corpus question, Spec authoring, or delivery-session routing; see "Query the graph first" |
+| `.agents/skills/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — three repository-owned skills: `sdp-agent-surface` (reading the graph), `sdp-authoring` (authoring intent), `sdp-sessions` (advisory delivery-session routing), also exposed to Claude through the `.claude/skills` symlink; plus the twenty-three runnable `sdp q` bodies | **mandatory** — after `CONTEXT.md`, load the matching skill before any corpus question, Spec authoring, or delivery-session routing; see "Query the graph first" |
 | `specs/` | **the self-hosted corpus** — the Protocol's own Specs in its own carrier (families: `model` · `extraction` · `validation` · `carrier` · `consumers` · `protocol` · `observation` · `decisions`, plus the self-hosting Pack); the primary carrier of intended truth | when design truth is in question — but query it through `sdp q` first, then read the carrying Spec |
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
 | `docs/concept/` (+ README) | **the technical design** — the surviving principle-led docs: vision & MVP boundary, founding principles (P1–P10), authoring & binding, consumers, roadmap; the core model, the one graph, and validation & honesty dissolved into the `model.*`, `extraction.*`, and `validation.*` Spec families — locate any of them with concept search (recipe 6) | to know *how* it is designed |
@@ -124,7 +130,7 @@ The full CLI surface is `sdp build · validate · view · census · mermaid · g
 and stays alive after findings; operator stop exits 0. `--watch` is validate-only and cannot combine
 with `--check-clean`. The four projection publishers remain independent public verbs; repository
 generation/check scripts certify all four roots through the private projection-suite driver. The
-nineteen runnable recipe bodies live in `docs/agent-surface/recipes.md` (each executed as written by
+twenty-three runnable recipe bodies live in `docs/agent-surface/recipes.md` (each executed as written by
 `test/recipes.test.ts`), and the repository-owned skills (`sdp-agent-surface` for reading,
 `sdp-authoring` for writing intent, `sdp-sessions` for advisory work-shape routing) are the
 on-ramps. In this checkout, always go through
@@ -259,9 +265,8 @@ Non-obvious gotcha: `npm test` refuses to run until the generated contracts exis
 documented green gate `npm run check` already sequences build → generate → typecheck → test →
 self-hosting/example checks → preflight correctly, so prefer it after engine edits.
 
-The `check:example` step emits one intentional `verifies-linkage` warning (a declared-but-unbound
-verifier in the example corpus); the gate still exits 0. That warning is expected, not a
-regression.
+The `check:example` step reports 0 errors and 0 warnings. The unbound `defined` example stays
+visible in the Design Review verifier bindings and recipe 10, declared versus enabled verifiers.
 
 The `check:self-hosting` step emits five intentional `honesty/gaps` warnings for the owner-ratified
 ready Specs without resolving verifier bindings. The self-hosting oracle pins those warnings; they

@@ -99,6 +99,43 @@ describe("sdp cli", () => {
     expect(capture.readStderr()).toBe("");
   });
 
+  it("points operators to the shipped on-ramps and Protocol corpus", () => {
+    for (const path of [
+      ".agents/skills/sdp-agent-surface/SKILL.md",
+      ".agents/skills/sdp-authoring/SKILL.md",
+      ".agents/skills/sdp-sessions/SKILL.md",
+      "docs/agent-surface/recipes.md",
+      "CONTEXT.md",
+      "specs/",
+    ]) {
+      expect(SDP_HELP_TEXT).toContain(path);
+      expect(existsSync(join(repoRoot, path))).toBe(true);
+    }
+    expect(SDP_HELP_TEXT).toContain("--root PKG/specs");
+    expect(SDP_HELP_TEXT.replaceAll(/\s+/gu, " ")).toMatch(/That graph holds intent only\./u);
+    const anchorsClause =
+      /(?:package ships no source anchors|No source anchors ship in the package)/u;
+    const help = SDP_HELP_TEXT.replaceAll(/\s+/gu, " ");
+    expect(help).toMatch(anchorsClause);
+    for (const original of [
+      "The package ships no source anchors",
+      "No source anchors ship in the package",
+    ]) {
+      if (!help.includes(original)) continue;
+      expect(help.replace(original, "No source anchors ship in the package")).toMatch(
+        anchorsClause,
+      );
+      expect(help.replace(original, "The package ships source anchors")).not.toMatch(anchorsClause);
+      expect(help.replace(original, "Source anchors ship in the package")).not.toMatch(
+        anchorsClause,
+      );
+    }
+    expect(SDP_HELP_TEXT.replaceAll(/\s+/gu, " ")).toMatch(/its delivery facts are empty/u);
+    expect(SDP_HELP_TEXT.replaceAll(/\s+/gu, " ")).toMatch(
+      /its gap warnings are not evidence about what the Protocol has realized/u,
+    );
+  });
+
   it("prints the exact help text for --help", () => {
     const capture = createCaptureOutput();
 
@@ -1112,7 +1149,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
     expect(exits).toEqual([0]);
   });
 
-  it("validates the example: exit 0, the artifact written, and exactly the one surfaced warning", () => {
+  it("validates the example: exit 0, the artifact written, and no warning", () => {
     const root = materializeExampleCopy();
 
     try {
@@ -1126,12 +1163,9 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
         "11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges",
       );
       expect(capture.readStdout()).toContain(
-        "validate: 0 errors · 1 warnings (conformance + honesty over the one graph)",
+        "validate: 0 errors · 0 warnings (conformance + honesty over the one graph)",
       );
-      // The standing warning is the invalid-cart example's unenabled verifier — informative,
-      // never a gate (it is the surfaced absence the check exists for, not noise to silence).
-      expect(capture.readStderr()).toContain("conformance/verifies-linkage");
-      expect(capture.readStderr()).not.toContain("[error]");
+      expect(capture.readStderr()).toBe("");
       expect(existsSync(join(root, "generated", "graph.json"))).toBe(true);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -1185,7 +1219,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
     expect(capture.readStderr()).toBe(`${SDP_HELP_TEXT}\n\nUnknown command: bogus\n`);
   });
 
-  it("views the example: validate + the Design Review written, with the one standing warning", () => {
+  it("views the example: validate + the Design Review written, with no warning", () => {
     const root = materializeExampleCopy();
 
     try {
@@ -1196,7 +1230,7 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
 
       expect(exitCode).toBe(0);
       expect(capture.readStdout()).toContain(
-        "validate: 0 errors · 1 warnings (conformance + honesty over the one graph)",
+        "validate: 0 errors · 0 warnings (conformance + honesty over the one graph)",
       );
       expect(capture.readStdout()).toContain("(13 pages)");
 

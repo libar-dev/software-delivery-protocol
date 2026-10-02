@@ -15,7 +15,7 @@ relations:
 - value: Markdown-carried intent remains subject to the Protocol's deterministic checks.
 
 ## Behavior
-- rule: The parser accepts only the ruled heading grammar and excludes one malformed carrier while continuing healthy siblings.
+- rule: The parser accepts only the ruled heading grammar, keeps matched code spans literal at its raw-HTML guards under `spec:carrier.inline-code-spans`, and excludes one malformed carrier while continuing healthy siblings.
 - rule: The ruled Markdown parser has bounded finding-class parity with the TypeScript carrier for `extract/non-static-envelope`, `extract/invalid-id`, `extract/duplicate-id`, `extract/reserved-property`, `extract/unowned-prose`, and `extract/unrecognized-property`; the shared validator ID is the claim, while severity and extract-versus-refuse outcomes remain carrier-specific.
 - rule: Named non-claim — `extract/parse-error` remains distinct because YAML/frontmatter parsing has no TypeScript parser-diagnostic analogue.
 - rule: Named non-claim — `extract/non-static-section` remains distinct because TypeScript degrades optional section properties while Markdown refuses malformed documents whole.

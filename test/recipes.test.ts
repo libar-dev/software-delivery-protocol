@@ -1,4 +1,5 @@
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -14,6 +15,14 @@ import { createCaptureOutput } from "./helpers/cli-capture.js";
 // verbatim through the real front door, or the catalog is lying about what an agent can paste.
 // Invariants below are shape-level only — the corpus grows every phase, so a frozen count in a
 // recipe check is rot with a timer on it.
+import {
+  codeAnchor,
+  codeAnchorId,
+  ref,
+  specTest,
+  testAnchorId,
+} from "@libar-dev/software-delivery-protocol";
+
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const recipesPath = "docs/agent-surface/recipes.md";
 
@@ -288,6 +297,20 @@ function structuralGroundTruth() {
   };
 }
 
+const registerRecipesImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.register-recipes"),
+  label: "asserts realization of the shipped register recipes",
+  satisfies: ref("spec:consumers.agent-surface.register-recipes"),
+});
+void registerRecipesImplementationAnchor;
+
+const registerRecipesTestAnchor = specTest({
+  id: testAnchorId("test:protocol.register-recipes"),
+  label: "recipe checks verify the register recipes",
+  verifies: ref("spec:consumers.agent-surface.register-recipes"),
+});
+void registerRecipesTestAnchor;
+
 describe("the agent-surface recipe corpus", () => {
   // Given: the catalog as authored. When: its structure is read. Then: every documented recipe
   // carries exactly one runnable body, so a new recipe cannot dodge the check by omitting one.
@@ -366,6 +389,9 @@ describe("the agent-surface recipe corpus", () => {
       "eighteen",
       "nineteen",
       "twenty",
+      "twenty-one",
+      "twenty-two",
+      "twenty-three",
     ] as const;
     const countWord = countWords[recipes.length];
     const lastOrdinal = recipes[recipes.length - 1]?.ordinal;
@@ -385,7 +411,8 @@ describe("the agent-surface recipe corpus", () => {
       sessions: readFileSync(join(repoRoot, ".agents/skills/sdp-sessions/SKILL.md"), "utf8"),
     };
     const parameterizedRecipes = recipes.filter(
-      (recipe) => recipe.ordinal !== 4 && /^(?:const (?:id|term|subject) = )/u.test(recipe.body),
+      (recipe) =>
+        recipe.ordinal !== 4 && /^(?:const (?:id|term|subject|scope) = )/u.test(recipe.body),
     );
 
     // Recipe 4 receives filenames as data. Intro guidance must never teach callers to construct
@@ -427,11 +454,15 @@ describe("the agent-surface recipe corpus", () => {
       "architecture map",
       "decision map",
       "planning slice",
+      "open-question register",
+      "dependency footing",
+      "mention audit",
+      "entry search",
     ]) {
       expect(agentSurfaceProse).toContain(phrase);
     }
 
-    for (const ordinal of [12, 13, 14, 15, 16, 17, 18, 19]) {
+    for (const ordinal of [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]) {
       expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
     }
   });
@@ -1606,5 +1637,747 @@ describe("the agent-surface recipe corpus", () => {
       expect(Object.hasOwn(byFamily, family), `missing own family key ${family}`).toBe(true);
       expect(asArray(byFamily[family])).toContain(hostileSpecId(family, leaf));
     }
+  });
+});
+
+function registerProbe(): ExtractionResult {
+  const primitive = (
+    id: string,
+    sections: Extract<
+      ExtractionResult["graph"]["nodes"][number],
+      { nodeType: "Primitive" }
+    >["sections"] = {},
+  ) => ({
+    id,
+    nodeType: "Primitive" as const,
+    claim: "declared" as const,
+    specKind: "behavior" as const,
+    altitude: "story" as const,
+    readiness: "defined" as const,
+    title: "Title retry spec:probe.TitleOnly",
+    file: "specs/probe.sdp.md",
+    sections,
+  });
+  return {
+    ...derived,
+    graph: {
+      schemaVersion: derived.graph.schemaVersion,
+      nodes: [
+        primitive("spec:probe.a", {
+          intent: {
+            outcome: "Probe",
+            openQuestions: ["bare", { question: "later", blocking: false }],
+          },
+        }),
+        primitive("spec:probe.b", {
+          intent: {
+            outcome: "Probe",
+            openQuestions: [
+              { question: "first", blocking: true },
+              { question: "second", blocking: false },
+            ],
+          },
+          behavior: {
+            rules: [
+              "spec:probe.child spec:probe.child spec:probe.b spec:probe.backed spec:probe.Target#part spec:probe.missing.",
+            ],
+            exampleSpace: { given: ["spec:probe.hiddenSpace"], when: ["act"], then: ["observe"] },
+            examples: [
+              { given: ["spec:probe.hiddenExample"], when: ["act"], then: ["observe"] },
+              "spec:probe.stringExample",
+            ],
+          },
+          design: { examples: "spec:probe.designMention spec:probe.child" },
+        }),
+        {
+          id: "pack:probe",
+          nodeType: "Pack",
+          claim: "declared",
+          title: "Probe pack",
+          file: "probe.pack.sdp.md",
+          modelRefs: [],
+        },
+        primitive("spec:probe.child"),
+        primitive("spec:probe.backed"),
+        primitive("spec:probe.Target#part"),
+        {
+          ...primitive("spec:probe.search", {
+            intent: {
+              outcome: "retry",
+              openQuestions: [
+                "retryable",
+                "retry-worker",
+                "RETRY.",
+                "worker retry",
+                "retry the worker",
+              ],
+            },
+            design: {
+              retryWorker: "retry-worker",
+              workerRetry: "unrelated",
+              description: "unrelated",
+            },
+            ui: { retryWorker: "retry" },
+            model: { terms: { retryWorker: "retry" } },
+            behavior: {
+              exampleSpace: { given: ["retry"], when: ["act"], then: ["observe"] },
+              examples: [{ given: ["retry"], when: ["act"], then: ["observe"] }],
+            },
+          }),
+          narrative: "retry",
+        },
+      ],
+      edges: [
+        { from: "spec:probe.b", to: "pack:probe", type: "dependsOn", claim: "declared" },
+        { from: "spec:probe.b", to: "spec:probe.Target#part", type: "verifies", claim: "inferred" },
+        { from: "spec:probe.b", to: "spec:probe.a", type: "refines", claim: "declared" },
+        { from: "spec:probe.b", to: "spec:probe.backed", type: "dependsOn", claim: "declared" },
+        { from: "spec:probe.b", to: "spec:probe.unresolved", type: "dependsOn", claim: "declared" },
+        { from: "spec:probe.b", to: "spec:probe.a", type: "constrainedBy", claim: "declared" },
+        { from: "spec:probe.b", to: "spec:probe.a", type: "decidedBy", claim: "declared" },
+        { from: "spec:probe.child", to: "spec:probe.b", type: "refines", claim: "declared" },
+        { from: "spec:probe.b", to: "spec:probe.a", type: "verifies", claim: "declared" },
+        { from: "spec:probe.b", to: "spec:probe.a", type: "supersedes", claim: "declared" },
+      ],
+    },
+  };
+}
+
+function carrierRegisterProbe(): ExtractionResult {
+  const root = mkdtempSync(join(tmpdir(), "sdp-register-carrier-"));
+  try {
+    writeFileSync(
+      join(root, "probe.sdp.ts"),
+      `
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const probe = spec({
+  id: specId("spec:probe.carrier"), title: "Carrier register probe",
+  kind: "behavior", altitude: "story", readiness: "idea",
+  intent: { outcome: "Search authored entries", openQuestions: [{ question: "Who owns this?" }] },
+  design: {
+    retryLimit: 3, retryEnabled: true, retryPolicy: { mode: "fixed" },
+    retryWorkers: ["alpha", "beta"], retryEmptyList: [], retryEmptyObject: {},
+    nested: { steps: ["retry later"] }, retryLong: { detail: ${JSON.stringify("x".repeat(300))} }
+  },
+  ui: { retryVisible: false }
+});`,
+    );
+    const extraction = extract({ root });
+    expect(extraction.report.findings).toEqual([]);
+    expect(extraction.graph.nodes.some((node) => node.id === "spec:probe.carrier")).toBe(true);
+    return extraction;
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+describe("register recipe semantics", () => {
+  it.each([20, 21, 22, 23])("runs recipe %s as written in default output", async (ordinal) => {
+    const capture = createCaptureOutput();
+    expect(
+      await runSdpCli(
+        ["q", recipeByOrdinal(ordinal).body, "--root", repoRoot],
+        capture.output,
+        queryHooks,
+      ),
+    ).toBe(0);
+    expect(capture.readStderr()).toBe("");
+    expect(capture.readStdout()).toContain("totals:");
+  });
+
+  it("renders long JSON values with the same default text bound as strings", async () => {
+    const extraction = carrierRegisterProbe();
+    const node = extraction.graph.nodes.find((node) => node.nodeType === "Primitive");
+    if (node?.nodeType !== "Primitive") throw new Error("missing carrier probe");
+    const text = "x".repeat(5000);
+    const probe = {
+      ...extraction,
+      graph: {
+        ...extraction.graph,
+        nodes: [
+          { ...node, sections: { design: { retryText: text, retryObject: { detail: text } } } },
+        ],
+      },
+    };
+    const recipe = recipeByOrdinal(23);
+    const body = recipe.body.replace('const term = "suffix";', 'const term = "retry";');
+    const result = asRecord(await runRecipe({ ...recipe, body }, undefined, probe));
+    expect(
+      asArray(result.matches)
+        .map(asRecord)
+        .map((row) => row.text),
+    ).toEqual([text, JSON.stringify({ detail: text })]);
+    const capture = createCaptureOutput();
+    expect(
+      await runSdpCli(["q", body, "--root", repoRoot], capture.output, {
+        query: { ...queryHooks.query, extract: () => probe },
+      }),
+    ).toBe(0);
+    expect(capture.readStderr()).toBe("");
+    expect(capture.readStdout()).not.toContain(text);
+    expect(capture.readStdout()).toContain("... 1000 more characters");
+    expect(capture.readStdout()).toContain("... 1013 more characters");
+  });
+
+  it("registers an omitted blocking flag through a TypeScript carrier", async () => {
+    const result = asRecord(
+      await runRecipe(recipeByOrdinal(20), undefined, carrierRegisterProbe()),
+    );
+    expect(result.totals).toEqual({
+      questions: 1,
+      blocking: 0,
+      nonBlocking: 1,
+      specs: 1,
+      specsWithBlocking: 0,
+      malformed: 0,
+    });
+    expect(result.malformed).toEqual([]);
+    expect(asArray(result.specs).map(asRecord)[0]?.questions).toEqual([
+      { question: "Who owns this?", blocking: false },
+    ]);
+  });
+
+  it("searches coined keys of every value shape through a TypeScript carrier", async () => {
+    const recipe = recipeByOrdinal(23);
+    const result = asRecord(
+      await runRecipe(
+        { ...recipe, body: recipe.body.replace('const term = "suffix";', 'const term = "retry";') },
+        undefined,
+        carrierRegisterProbe(),
+      ),
+    );
+    const expected = [
+      ["design", "retryLimit", "3"],
+      ["design", "retryEnabled", "true"],
+      ["design", "retryPolicy", '{"mode":"fixed"}'],
+      ["design", "retryWorkers", '["alpha","beta"]'],
+      ["design", "retryEmptyList", "[]"],
+      ["design", "retryEmptyObject", "{}"],
+      ["design", "retryLong", JSON.stringify({ detail: "x".repeat(300) })],
+      ["ui", "retryVisible", "false"],
+    ].map(([section, entry, text]) => ({
+      id: "spec:probe.carrier",
+      section,
+      entry,
+      text,
+      matchedIn: ["key"],
+    }));
+    expect(result.matches).toEqual([
+      ...expected.slice(0, 6),
+      {
+        id: "spec:probe.carrier",
+        section: "design",
+        entry: "nested.steps[0]",
+        text: "retry later",
+        matchedIn: ["text"],
+      },
+      ...expected.slice(6),
+    ]);
+    expect(result.totals).toEqual({ matches: 9, specs: 1, shown: 9 });
+  });
+
+  it("searches strings inside a matching coined list or object key", async () => {
+    const extraction = carrierRegisterProbe();
+    const node = extraction.graph.nodes.find((node) => node.nodeType === "Primitive");
+    if (node?.nodeType !== "Primitive") throw new Error("missing carrier probe");
+    const recipe = recipeByOrdinal(23);
+    const result = asRecord(
+      await runRecipe(
+        { ...recipe, body: recipe.body.replace('const term = "suffix";', 'const term = "retry";') },
+        undefined,
+        {
+          ...extraction,
+          graph: {
+            ...extraction.graph,
+            nodes: [
+              {
+                ...node,
+                sections: {
+                  design: {
+                    retryWorkers: ["retry later"],
+                    retryPolicy: { mode: "retry fixed", options: ["retry soon"] },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      ),
+    );
+    expect(result.matches).toEqual([
+      {
+        id: node.id,
+        section: "design",
+        entry: "retryWorkers",
+        matchedIn: ["key"],
+        text: '["retry later"]',
+      },
+      {
+        id: node.id,
+        section: "design",
+        entry: "retryWorkers[0]",
+        matchedIn: ["text"],
+        text: "retry later",
+      },
+      {
+        id: node.id,
+        section: "design",
+        entry: "retryPolicy",
+        matchedIn: ["key"],
+        text: '{"mode":"retry fixed","options":["retry soon"]}',
+      },
+      {
+        id: node.id,
+        section: "design",
+        entry: "retryPolicy.mode",
+        matchedIn: ["text"],
+        text: "retry fixed",
+      },
+      {
+        id: node.id,
+        section: "design",
+        entry: "retryPolicy.options[0]",
+        matchedIn: ["text"],
+        text: "retry soon",
+      },
+    ]);
+    expect(result.totals).toEqual({ matches: 5, specs: 1, shown: 5 });
+  });
+
+  it("searches a null coined-key value in the reader graph", async () => {
+    const extraction = carrierRegisterProbe();
+    const recipe = recipeByOrdinal(23);
+    const node = extraction.graph.nodes.find((node) => node.nodeType === "Primitive");
+    if (node?.nodeType !== "Primitive") throw new Error("missing carrier probe");
+    const result = asRecord(
+      await runRecipe(
+        { ...recipe, body: recipe.body.replace('const term = "suffix";', 'const term = "retry";') },
+        undefined,
+        {
+          ...extraction,
+          graph: {
+            ...extraction.graph,
+            nodes: [{ ...node, sections: { design: { retryNothing: null } } }],
+          },
+        },
+      ),
+    );
+    expect(result.matches).toEqual([
+      { id: node.id, section: "design", entry: "retryNothing", matchedIn: ["key"], text: "null" },
+    ]);
+    expect(result.totals).toEqual({ matches: 1, specs: 1, shown: 1 });
+  });
+
+  it("keeps register counts under totals and top-level plural nouns as arrays", async () => {
+    const check = (value: unknown, insideTotals = false): void => {
+      if (typeof value === "number") {
+        expect(insideTotals).toBe(true);
+      } else if (Array.isArray(value)) {
+        value.forEach((entry) => {
+          check(entry, insideTotals);
+        });
+      } else if (typeof value === "object" && value !== null) {
+        for (const [key, entry] of Object.entries(value))
+          check(entry, insideTotals || key === "totals");
+      }
+    };
+    for (const ordinal of [20, 21, 22, 23]) {
+      const output = asRecord(await runRecipe(recipeByOrdinal(ordinal)));
+      check(output);
+      for (const key of [
+        "specs",
+        "malformed",
+        "footing",
+        "unresolved",
+        "unbacked",
+        "reverseOnly",
+        "tokens",
+        "matches",
+      ]) {
+        if (key in output) expect(Array.isArray(output[key])).toBe(true);
+      }
+    }
+  });
+
+  it.each([
+    { term: "retry", key: "entry", text: "retry", matchedIn: ["text"] },
+    { term: "retry", key: "entry", text: "retryable", matchedIn: [] },
+    { term: "retry", key: "entry", text: "retry-worker", matchedIn: ["text"] },
+    { term: "retry", key: "retryWorker", text: "unrelated", matchedIn: ["key"] },
+    { term: "Retry", key: "entry", text: "RETRY.", matchedIn: ["text"] },
+    { term: "retry worker", key: "retryWorker", text: "retry-worker", matchedIn: ["key", "text"] },
+    { term: "retry worker", key: "entry", text: "worker retry", matchedIn: [] },
+    { term: "retry worker", key: "entry", text: "retry the worker", matchedIn: [] },
+    { term: "server", key: "entry", text: "HTTPServer", matchedIn: ["text"] },
+    { term: "v", key: "entry", text: "v2", matchedIn: [] },
+  ])(
+    "pins whole-token matching for $term in $key / $text",
+    async ({ term, key, text, matchedIn }) => {
+      const probe = registerProbe();
+      const node = probe.graph.nodes.find((entry) => entry.id === "spec:probe.search");
+      if (node?.nodeType !== "Primitive") throw new Error("entry-search probe is missing");
+      const extraction: ExtractionResult = {
+        ...probe,
+        graph: {
+          ...probe.graph,
+          nodes: [{ ...node, narrative: undefined, sections: { design: { [key]: text } } }],
+          edges: [],
+        },
+      };
+      const recipe = recipeByOrdinal(23);
+      const result = asRecord(
+        await runRecipe(
+          {
+            ...recipe,
+            body: recipe.body.replace('const term = "suffix";', `const term = "${term}";`),
+          },
+          undefined,
+          extraction,
+        ),
+      );
+      expect(asRecord(result.totals).matches).toBe(matchedIn.length === 0 ? 0 : 1);
+      expect(result.matches).toEqual(
+        matchedIn.length === 0
+          ? []
+          : [{ id: node.id, section: "design", entry: key, matchedIn, text }],
+      );
+    },
+  );
+
+  it("registers every authored question, blocking Specs first", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(20)));
+    const expected = derived.graph.nodes
+      .filter((node) => node.nodeType === "Primitive")
+      .flatMap((node) => node.sections?.intent?.openQuestions ?? []);
+    expect(asRecord(result.totals).questions).toBe(expected.length);
+    expect(asArray(result.specs)).toHaveLength(numberAt(asRecord(result.totals), "specs"));
+    const blocking = asArray(result.specs)
+      .map(asRecord)
+      .map((row) => numberAt(asRecord(row.totals), "blocking") > 0);
+    expect(blocking).toEqual([...blocking].sort((left, right) => Number(right) - Number(left)));
+    const synthetic = asRecord(await runRecipe(recipeByOrdinal(20), undefined, registerProbe()));
+    expect(synthetic).toEqual({
+      totals: {
+        questions: 9,
+        blocking: 1,
+        nonBlocking: 8,
+        specs: 3,
+        specsWithBlocking: 1,
+        malformed: 0,
+      },
+      malformed: [],
+      specs: [
+        {
+          id: "spec:probe.b",
+          statedReadiness: "defined",
+          totals: { blocking: 1 },
+          questions: [
+            { blocking: true, question: "first" },
+            { blocking: false, question: "second" },
+          ],
+        },
+        {
+          id: "spec:probe.a",
+          statedReadiness: "defined",
+          totals: { blocking: 0 },
+          questions: [
+            { blocking: false, question: "bare" },
+            { blocking: false, question: "later" },
+          ],
+        },
+        {
+          id: "spec:probe.search",
+          statedReadiness: "defined",
+          totals: { blocking: 0 },
+          questions: [
+            "retryable",
+            "retry-worker",
+            "RETRY.",
+            "worker retry",
+            "retry the worker",
+          ].map((question) => ({ blocking: false, question })),
+        },
+      ],
+    });
+    const empty = { ...registerProbe(), graph: { ...registerProbe().graph, nodes: [], edges: [] } };
+    expect(await runRecipe(recipeByOrdinal(20), undefined, empty)).toEqual({
+      totals: {
+        questions: 0,
+        blocking: 0,
+        nonBlocking: 0,
+        specs: 0,
+        specsWithBlocking: 0,
+        malformed: 0,
+      },
+      specs: [],
+      malformed: [],
+    });
+  });
+
+  it("reports one-hop footing of all four types, including unresolved targets", async () => {
+    const recipe = recipeByOrdinal(21);
+    const result = asRecord(await runRecipe(recipe));
+    const types = ["refines", "dependsOn", "constrainedBy", "decidedBy"];
+    const edges = derived.graph.edges.filter(
+      (edge) => edge.from === "spec:extraction.derive-graph" && types.includes(edge.type),
+    );
+    expect(
+      asArray(result.footing)
+        .map(asRecord)
+        .map((row) => ({ type: row.type, id: row.id, claim: row.claim })),
+    ).toEqual(
+      [...edges]
+        .sort(
+          (left, right) =>
+            types.indexOf(left.type) - types.indexOf(right.type) || left.to.localeCompare(right.to),
+        )
+        .map((edge) => ({ type: edge.type, id: edge.to, claim: edge.claim })),
+    );
+    const assertReadiness = (output: Record<string, unknown>, extraction: ExtractionResult) => {
+      const independent = createReader(extraction.graph);
+      const rows = asArray(output.footing).map(asRecord);
+      const expectedStated: Record<string, number> = {
+        idea: 0,
+        scoped: 0,
+        defined: 0,
+        ready: 0,
+        unresolved: 0,
+        nonSpec: 0,
+      };
+      const expectedFloor: Record<string, number> = {
+        idea: 0,
+        scoped: 0,
+        defined: 0,
+        ready: 0,
+        none: 0,
+      };
+      for (const row of rows) {
+        const target = independent.specContext(String(row.id));
+        expect(row.statedReadiness).toBe(target?.statedReadiness ?? null);
+        expect(row.floorReached).toBe(
+          target === undefined ? null : (target.derivedReadiness ?? "none"),
+        );
+        const stated = target?.statedReadiness ?? (row.resolved ? "nonSpec" : "unresolved");
+        expectedStated[stated] = (expectedStated[stated] ?? 0) + 1;
+        if (target !== undefined) {
+          const floor = target.derivedReadiness ?? "none";
+          expectedFloor[floor] = (expectedFloor[floor] ?? 0) + 1;
+        }
+      }
+      expect(asRecord(output.totals).byStatedReadiness).toEqual(expectedStated);
+      expect(asRecord(output.totals).byFloorReached).toEqual(expectedFloor);
+    };
+    assertReadiness(result, derived);
+    const retarget = (id: string) => ({
+      ...recipe,
+      body: recipe.body.replace(
+        'const id = "spec:extraction.derive-graph";',
+        `const id = "${id}";`,
+      ),
+    });
+    expect(await runRecipe(retarget("spec:probe.absent"), undefined, registerProbe())).toEqual({
+      id: "spec:probe.absent",
+      found: false,
+    });
+    const synthetic = asRecord(
+      await runRecipe(retarget("spec:probe.b"), undefined, registerProbe()),
+    );
+    assertReadiness(synthetic, registerProbe());
+    expect(asRecord(synthetic.totals).relations).toBe(6);
+    expect(asRecord(synthetic.totals).byType).toEqual({
+      refines: 1,
+      dependsOn: 3,
+      constrainedBy: 1,
+      decidedBy: 1,
+    });
+    expect(asArray(synthetic.footing).map(asRecord)).toContainEqual({
+      type: "dependsOn",
+      id: "spec:probe.unresolved",
+      claim: "declared",
+      resolved: false,
+      statedReadiness: null,
+      floorReached: null,
+    });
+    expect(
+      asArray(synthetic.footing)
+        .map(asRecord)
+        .map((row) => row.claim),
+    ).toEqual(["declared", "declared", "declared", "declared", "declared", "declared"]);
+    expect(asRecord(asRecord(synthetic.totals).byStatedReadiness).unresolved).toBe(1);
+    expect(asRecord(asRecord(synthetic.totals).byStatedReadiness).nonSpec).toBe(1);
+  });
+
+  it("audits mention pairs, skips fences, and preserves full ids and direction", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(22), undefined, registerProbe()));
+    expect(result.totals).toEqual({
+      occurrences: 8,
+      pairs: 6,
+      backed: 1,
+      unbacked: 1,
+      reverseOnly: 1,
+      unresolved: 3,
+    });
+    expect(result.unbacked).toEqual([
+      {
+        from: "spec:probe.b",
+        to: "spec:probe.Target#part",
+        totals: { occurrences: 1 },
+        at: [{ section: "behavior", entry: "rules[0]" }],
+      },
+    ]);
+    expect(result.reverseOnly).toEqual([
+      {
+        from: "spec:probe.b",
+        to: "spec:probe.child",
+        totals: { occurrences: 3 },
+        at: [
+          { section: "behavior", entry: "rules[0]" },
+          { section: "design", entry: "examples" },
+        ],
+      },
+    ]);
+    expect(
+      asArray(result.unresolved)
+        .map(asRecord)
+        .map((row) => row.to),
+    ).toEqual(["spec:probe.designMention", "spec:probe.missing", "spec:probe.stringExample"]);
+  });
+
+  it("scopes mentions by the mentioning Spec only", async () => {
+    const probe = registerProbe();
+    const recipe = recipeByOrdinal(22);
+    const scoped = async (scope: string[]) =>
+      asRecord(
+        await runRecipe(
+          {
+            ...recipe,
+            body: recipe.body.replace(
+              "const scope = [];",
+              `const scope = ${JSON.stringify(scope)};`,
+            ),
+          },
+          undefined,
+          probe,
+        ),
+      );
+    const all = asRecord(await runRecipe(recipe, undefined, probe));
+    expect(await scoped(["spec:probe.b"])).toEqual(all);
+    for (const scope of [
+      ["spec:probe.child"],
+      ["spec:probe.absent"],
+      ["spec:probe.a", "spec:probe.child"],
+    ]) {
+      expect(await scoped(scope)).toEqual({
+        totals: { occurrences: 0, pairs: 0, backed: 0, unbacked: 0, reverseOnly: 0, unresolved: 0 },
+        unresolved: [],
+        unbacked: [],
+        reverseOnly: [],
+      });
+    }
+  });
+
+  it.each([
+    "one question",
+    {},
+    [42],
+    [{ blocking: true }],
+    [null],
+    [""],
+    [{ question: "valid", blocking: "yes" }],
+    [{ question: "valid", blocking: null }],
+    [{ question: "valid", blocking: undefined }],
+  ])("reports malformed open questions without counting them: %j", async (authored) => {
+    const probe = registerProbe();
+    const node = probe.graph.nodes.find((node) => node.id === "spec:probe.a");
+    if (node?.nodeType !== "Primitive") throw new Error("missing question probe");
+    const malformed = {
+      ...node,
+      sections: { intent: { openQuestions: authored } },
+    } as unknown as typeof node;
+    const result = asRecord(
+      await runRecipe(recipeByOrdinal(20), undefined, {
+        ...probe,
+        graph: { ...probe.graph, nodes: [malformed], edges: [] },
+      }),
+    );
+    expect(asRecord(result.totals).questions).toBe(0);
+    expect(asRecord(result.totals).malformed).toBe(1);
+    expect(result.specs).toEqual([]);
+    expect(asArray(result.malformed).map(asRecord)).toEqual([
+      {
+        id: node.id,
+        section: "intent",
+        entry: Array.isArray(authored) ? "openQuestions[0]" : "openQuestions",
+        reason: !Array.isArray(authored)
+          ? "Expected a list"
+          : typeof authored[0] === "object" && authored[0] !== null && "question" in authored[0]
+            ? "Expected a question and boolean blocking flag"
+            : "Expected non-empty question text",
+      },
+    ]);
+  });
+
+  it("searches whole tokens, coined keys, narrative and fence steps", async () => {
+    const recipe = recipeByOrdinal(23);
+    const search = async (term: string, extraction = registerProbe()) =>
+      asRecord(
+        await runRecipe(
+          {
+            ...recipe,
+            body: recipe.body.replace('const term = "suffix";', `const term = "${term}";`),
+          },
+          undefined,
+          extraction,
+        ),
+      );
+    const retry = await search("retry");
+    const rows = asArray(retry.matches).map(asRecord);
+    const entries = rows.map((row) => row.entry);
+    expect(entries).toContain("outcome");
+    expect(entries).not.toContain("openQuestions[0]"); // retryable
+    expect(entries).toContain("openQuestions[1]"); // retry-worker
+    expect(rows).toContainEqual({
+      id: "spec:probe.search",
+      section: "design",
+      entry: "retryWorker",
+      matchedIn: ["key", "text"],
+      text: "retry-worker",
+    });
+    expect(asArray((await search("Retry")).matches)).toEqual(retry.matches);
+    expect(entries).toContain("openQuestions[2]"); // RETRY.
+    const phrase = await search("retry worker");
+    expect(phrase.tokens).toEqual(["retry", "worker"]);
+    expect(
+      asArray(phrase.matches)
+        .map(asRecord)
+        .map((row) => row.entry),
+    ).toEqual(["openQuestions[1]", "retryWorker", "retryWorker", "terms.retryWorker"]);
+    expect(entries).toContain(null);
+    expect(entries).toContain("exampleSpace.given[0]");
+    expect(entries).toContain("examples[0].given[0]");
+    expect(asArray((await search("outcome")).matches)).toEqual([]);
+    expect(asArray((await search("description")).matches)).toEqual([]);
+    expect(asArray((await search("try")).matches)).toEqual([]);
+    expect(asArray((await search("!!!")).matches)).toEqual([]);
+    const probe = registerProbe();
+    const capped: ExtractionResult = {
+      ...probe,
+      graph: {
+        ...probe.graph,
+        nodes: probe.graph.nodes.map((node) =>
+          node.id === "spec:probe.search" && node.nodeType === "Primitive"
+            ? {
+                ...node,
+                sections: { behavior: { rules: Array.from({ length: 60 }, () => "retry") } },
+                narrative: undefined,
+              }
+            : node,
+        ),
+      },
+    };
+    const many = await search("retry", capped);
+    expect(asRecord(many.totals).matches).toBe(60);
+    expect(asRecord(many.totals).specs).toBe(1);
+    expect(asArray(many.matches)).toHaveLength(50);
   });
 });

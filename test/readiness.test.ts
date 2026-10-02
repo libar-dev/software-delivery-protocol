@@ -88,7 +88,7 @@ describe("readiness and validation contracts", () => {
 
     expect(readinessFloors.ready.clauses.map((clause) => clause.id)).toEqual([
       "all-relations-resolve",
-      "depends-on-and-refines-targets-are-defined",
+      "typed-dependency-targets-are-defined",
       "anchors-resolve",
     ]);
   });

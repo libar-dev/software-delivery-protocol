@@ -12,6 +12,10 @@ read the same shipped catalog at
 `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md`. The catalog is the
 sole owner of the bodies; copy from it, never from session notes or earlier prompts.
 
+Every `spec:` id this skill cites is a Protocol Spec. In an adopter it is not in your graph. Read it
+with `sdp q 'return g.specContext("<id>")' --root node_modules/@libar-dev/software-delivery-protocol/specs`,
+or open its carrier under that directory.
+
 At this repository root, the `sdp:q` wrapper supplies the exact self-hosting exclusions. Paste each
 recipe body between the quotes:
 
@@ -34,7 +38,10 @@ runner.
 
 ## Create and enrich
 
-1. Read `CONTEXT.md`, then query nearby Specs with recipe 3 or 6. Do not parse the corpus by hand.
+1. Read the Protocol glossary. In the Protocol repository it is `CONTEXT.md` at the root. In an
+   adopter it is `node_modules/@libar-dev/software-delivery-protocol/CONTEXT.md`, separate from
+   any glossary your project keeps. Then query nearby Specs with recipe 3 or 6, or with entry
+   search (recipe 23) when you hold a key or a term. Do not parse the corpus by hand.
 2. Create the Markdown carrier with `sdp new spec PATH --id ID --kind KIND --altitude ALT --title TITLE --outcome OUTCOME`
    for every ratified Spec kind. That verb writes an idea-rung `.sdp.md` stub — envelope, Intent
    outcome, and the kind's empty typed heading — and refuses overwrite and invented content.
@@ -60,8 +67,7 @@ runner.
    `spec:validation.kind-evidence` for the clauses.
 4. Keep local detail inline. Promote it only when it needs shared identity, binding, or independent
    review; follow `spec:decisions.content-only-sections`.
-5. Put unresolved durable questions under Intent. A blocking question honestly keeps the Spec
-   below `defined`.
+5. Give each unsettled truth its graph home, listed under "Place what is not settled" below.
 
 ### Capture a cheap idea
 
@@ -91,6 +97,75 @@ The `idea` floor is the whole shape: stable envelope coordinates plus either an 
 `refines` parent. The template states the outcome explicitly so the capture remains intelligible
 without its parent. Before every later human readiness edit, run promotion preflight (recipe 9);
 the reported floor never makes the edit on the author's behalf.
+
+### Write the Markdown body
+
+The body is the H1 title, optional narrative paragraphs, and then `##` sections from the closed
+set below. Every entry is one physical line that starts with `- `, however long; a wrapped or
+indented continuation is refused. A section may open with paragraphs, except Constraints, which
+takes its entries only. Prose after a section's first entry, fence, or H3 is refused.
+
+| Heading                    | Entries                                                                                                            |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `## Intent`                | `actor:`, `problem:`, `outcome:`, `value:` at most once each; `risk:` and `assumption:` any number of times        |
+| `## Behavior`              | `rule:` and `flow:` entries                                                                                        |
+| `## Rule`                  | plain entries, one rule each                                                                                       |
+| `## Workflow`              | plain entries, one flow each, plus `rule:` entries                                                                 |
+| `## Contract`              | plain entries, one rule each                                                                                       |
+| `## Example space`         | one `gwt-vocabulary` fence and no entries                                                                          |
+| `## Constraints`           | one constraint: `statement:` (required), `flavor:`, `target:`, `measurableBy:`, once each                          |
+| `## Model`                 | `**term** — definition`, with the em dash; terms are unique                                                        |
+| `## Design`                | `lowerCamelKey: one-line value`; keys are unique                                                                   |
+| `## Decision`              | `context:` and `decision:` once each; `rationale:`, `alternative:`, `consequence:` repeated                        |
+| `## UI`                    | the Design form                                                                                                    |
+| `## Verification — <mode>` | plain entries, one criterion each; the mode is `manual`, `reviewed`, `contract`, or `executable`, after an em dash |
+
+Intent may end with an optional `### Open questions`, the only H3 the body accepts. Each of its
+entries opens with `[blocking]` or `[non-blocking]`. On an example, one `gwt` fence closes Intent.
+
+A Spec carries at most one of Behavior, Rule, Workflow, and Contract. Leading prose may stand under
+that owner or under Example space, not both. In Rule, Contract, Workflow, and Verification, open
+each plain entry with more than one word before any colon. The parser reads `- Note: x` as a key
+and refuses it. In Design and UI, whose keys are otherwise open, delivery-fact, edge, and
+graph-field names (`implemented`, `hasVerifier`, `satisfies`, `verifies`, and the rest the grammar
+lists) are refused as keys. A relation lives in the frontmatter; `dependsOn` as a Design key is
+plain text and creates no edge.
+
+The full grammar, with every refusal, is `spec:carrier.markdown-body-grammar`; each of its example
+children executes one refusal. Read it when `sdp validate` refuses a carrier.
+
+### Place what is not settled
+
+State each of these in its graph home. The readiness floor and the catalog recipes read it there,
+so it needs no extra tag, status key, or side table.
+
+- An open question goes under Intent's `### Open questions`. A `[blocking]` entry holds the Spec
+  below `defined`, the floor clause in `spec:validation.readiness-floor`.
+- A deferral is a `[blocking]` open question that names its re-entry trigger, plus `dependsOn`
+  when another Spec must hold first; `spec:decisions.planning-truths-placement` rules this home.
+  The `defined` floor does not read the parent's readiness, so the deferred Spec's example children
+  can still state `defined` once their bound points are complete and match the parent's example
+  vocabulary, when it has one. The `ready` floor does read the parent's readiness, so their `ready`
+  waits until the parent states `defined`.
+- An unsettled fact that bounds other Specs is a `constraint` Spec whose `[blocking]` open
+  question names the check that would settle it. Each Spec it bounds declares `constrainedBy`. A
+  bounded Spec can still state `defined`; the floor refuses its `ready` until the constraint states
+  `defined`, under `spec:validation.typed-dependency-floor`.
+- A ruling that awaits its owner is a `decision` Spec below `ready`, with `decidedBy` from each
+  Spec it shapes. The owner's ratification is the edit that states `ready`, under
+  `spec:decisions.decision-readiness-posture`.
+- A statement a test checks lives in the Spec that states it, plus an `example` Spec that
+  `verifies` it. Bind the example with a `specTest` anchor, as "Make an example executable" below
+  shows. The graph then derives `has-verifier` on the Spec, under
+  `spec:extraction.delivery-facts`. `has-verifier` says a bound verifier exists, not that it
+  passed; pass and fail stay in CI. Author no checked or verified status.
+- Derive a count, a register, or a review scope each time you need it: census counts from
+  `sdp census`, open questions from recipe 20, one Spec's dependencies from recipe 21, prose
+  mentions from recipe 22, and a change's review scope from changed-file blast radius (recipe 4).
+  In prose, name the recipe and leave the number out.
+
+`sdp validate` checks these homes and nothing your project adds. Keep a project policy, such as a
+required Design key or a naming rule, as a script in your own repository.
 
 ### Author behavior and examples in Gherkin
 

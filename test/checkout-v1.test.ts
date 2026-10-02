@@ -7,7 +7,7 @@ import {
   authoredEdgeTypes,
   extract,
   extractFindingIds,
-  graphValidatorIds,
+  createReader,
   serializeGraph,
   validateGraph,
 } from "../src/index.js";
@@ -27,17 +27,21 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
     expect(extraction.counts).toEqual({ specs: 11, packs: 1, anchors: 5 });
   });
 
-  it("validates with zero errors and exactly the one surfaced absence: the unenabled invalid-cart verifier", () => {
-    const validation = validateGraph(extraction.graph).findings;
-
-    expect(validation.filter((finding) => finding.severity === "error")).toEqual([]);
-    // The standing warning is deliberate: the invalid-cart example declares verifies without a
-    // test binding (the Slice-2 honesty showcase), and surfacing it is the check's job —
-    // informative, never a gate.
-    expect(validation).toHaveLength(1);
-    expect(validation[0]?.validatorId).toBe(graphValidatorIds.verifiesLinkage);
-    expect(validation[0]?.severity).toBe("warning");
-    expect(validation[0]?.subjectId).toBe("spec:orders.create-order.invalid-cart");
+  it("keeps the below-ready unbound verifier as data with no finding", () => {
+    expect(validateGraph(extraction.graph).findings).toEqual([]);
+    const reader = createReader(extraction.graph);
+    expect(reader.specContext("spec:orders.create-order.invalid-cart")).toMatchObject({
+      statedReadiness: "defined",
+      deliveryFacts: [],
+    });
+    expect(reader.specContext("spec:orders.create-order")?.verifiers).toContainEqual({
+      verifierId: "spec:orders.create-order.invalid-cart",
+      via: "example",
+      claim: "declared",
+      enabled: false,
+      label: "Invalid cart is rejected",
+      file: "specs/orders/create-order-invalid-cart.sdp.md",
+    });
   });
 
   it("drops no sections: the example survives static extraction whole", () => {

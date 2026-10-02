@@ -607,7 +607,7 @@ export const carrierSpecs = [
       },
       behavior: {
         rules: [
-          "The parser accepts only the ruled heading grammar and excludes one malformed carrier while continuing healthy siblings.",
+          "The parser accepts only the ruled heading grammar, keeps matched code spans literal at its raw-HTML guards under `spec:carrier.inline-code-spans`, and excludes one malformed carrier while continuing healthy siblings.",
           "The ruled Markdown parser has bounded finding-class parity with the TypeScript carrier for `extract/non-static-envelope`, `extract/invalid-id`, `extract/duplicate-id`, `extract/reserved-property`, `extract/unowned-prose`, and `extract/unrecognized-property`; the shared validator ID is the claim, while severity and extract-versus-refuse outcomes remain carrier-specific.",
           "Named non-claim — `extract/parse-error` remains distinct because YAML/frontmatter parsing has no TypeScript parser-diagnostic analogue.",
           "Named non-claim — `extract/non-static-section` remains distinct because TypeScript degrades optional section properties while Markdown refuses malformed documents whole.",
@@ -835,6 +835,603 @@ export const carrierSpecs = [
               "the notation finds {slotCount: 1} slot groups",
               'the first group has the form {form: "malformed"} and the name {slotName: "n"}',
               'the step skeleton is {skeleton: "a stray { then {n} line items"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-body-grammar",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/carrier/markdown-body-grammar.sdp.md",
+    title: "The Markdown body accepts one closed form per section",
+    narrative: null,
+    sections: {
+      intent: {
+        problem:
+          "The default carrier's body grammar is stated only in parser source, so an author learns it by probing refusals and keeps a private copy that drifts when the parser changes.",
+        outcome:
+          "State what each section of a Markdown Spec body accepts and refuses, so an author can write a lawful carrier from this Spec alone.",
+        openQuestions: [
+          {
+            question:
+              "The Markdown carrier admits one constraint entry per Spec; the TypeScript model and carrier admit several, and the kind-evidence law reads every entry. The owner's ruling makes one entry the law across carriers. Two reviewers contest it: a `constrainedBy` edge points at one Spec and says nothing about how many entries that Spec holds, and the narrowing would force a Spec with two bounds to promote or bundle them. The revision stays unlanded until that cost is weighed.",
+            blocking: false,
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "The body opens with one H1 title. Text between the title and the first H2 is the Spec's narrative, and narrative accepts plain paragraphs only.",
+          "Each H2 names one section owner from a closed set of Intent, Behavior, Rule, Workflow, Contract, Example space, Constraints, Model, Design, Decision, UI, and `Verification — manual`, `reviewed`, `contract`, or `executable`, spelled with the em dash. An unrecognized heading is refused, with the nearest known name offered when it lies within edit distance two; an owner appears at most once, and a Spec carries at most one of Behavior, Rule, Workflow, and Contract.",
+          "A section holds optional leading paragraphs and then structured content. Prose after the first list entry, fence, or H3 is refused as unowned. The primary behavior owner, whichever of Behavior, Rule, Workflow, or Contract the Spec uses, and Example space share one description: leading prose may stand under one of them, and prose under both is refused.",
+          "A list entry is one line that starts with a hyphen and a space. A wrapped or indented continuation, a nested list, a star or plus bullet, and an ordered list are refused.",
+          "The refused block shapes are read line by line in narrative, section prose, and list text: a line that opens with a pipe, a block-quote marker, whitespace, a star or plus bullet, an ordered-list marker, or a `<`, and a line that is only a thematic break or a setext underline. A table without outer pipes is prose to the parser.",
+          "Raw HTML is refused in narrative, section prose, and list text, and is not scanned in the H1 title or inside fence steps. The test matches an HTML tag with its closing `>`, a comment delimiter, a declaration, or a processing instruction, so `a < b` and an unclosed `Promise<T` pass. The test ignores matched code spans, as ruled by `spec:carrier.inline-code-spans`.",
+          "The only fences are `gwt` and `gwt-vocabulary`. A fence holds Given steps, exactly one When step, and Then steps in that order, with no blank or indented line, and its slot syntax is `spec:carrier.slot-notation`. An example's Intent owns one `gwt` fence that closes the section. Example space owns optional leading prose, which counts as the shared description above, and then exactly one `gwt-vocabulary` fence, with no list entry or H3.",
+          "Intent accepts `actor`, `problem`, `outcome`, and `value` once each and `risk` and `assumption` repeatedly. One `### Open questions` heading may follow those fields, each of its entries opens with `[blocking]` or `[non-blocking]`, and it is the only H3 any section accepts.",
+          "Behavior entries are keyed `rule` or `flow`. Rule and Contract entries are plain bullets, each one rule. Workflow entries are plain bullets, each one flow, plus keyed `rule` entries. Verification entries are plain criteria.",
+          "A keyed entry is one ASCII word, a colon, and a space before its value. Where a section takes plain bullets, a bullet of that shape is read as a key and refused unless the section names that key, so a plain bullet never opens with a single word and a colon.",
+          "Constraints accept one flat entry of `statement`, `flavor`, `target`, and `measurableBy`, each at most once, with `statement` required and no prose. A second entry is refused by this carrier; whether one entry becomes the law for every carrier is the open question above.",
+          "A Model entry is a bold term, the em dash character with a space on each side, and the definition; a hyphen is refused, and terms are unique. Decision accepts `context` and `decision` once each and `rationale`, `alternative`, and `consequence` repeatedly.",
+          "Design and UI are open sections. Each entry is a lower-camel ASCII key, unique within its section, and a one-line value; the same key may appear once under Design and once under UI.",
+          "The keys `implemented`, `hasVerifier`, `observed`, `claim`, `deliveryFacts`, `nodeType`, `specKind`, `satisfies`, `verifies`, `belongsTo`, and `models` are refused in every keyed section, under `spec:validation.authored-honesty`. The structural edge names `uses` and `memberOf` are not in that set and pass as ordinary keys.",
+          "A refused construct excludes its whole carrier from the graph, and healthy sibling carriers survive.",
+          "The realizing entrypoints are `parseSectionContent` in `src/extract/markdown-body-content.ts` and the per-owner mappers that `mapOwner` in `src/extract/markdown-body-owners.ts` dispatches to.",
+        ],
+        exampleSpace: {
+          given: ["a Markdown Spec carrier whose {owner:string} section holds {construct:string}"],
+          when: ["the extractor reifies the carrier"],
+          then: [
+            "the carrier is refused whole with the finding {findingId:string} whose message contains {reason:string} at line {line:number}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.inline-code-spans",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/inline-code-spans.sdp.md",
+    title: "Inline code is content, never markup",
+    narrative: null,
+    sections: {
+      intent: {
+        problem:
+          "Authors need to write type parameters inside code spans without the raw-HTML guard forcing a private bracket notation that cannot be pasted into source.",
+        outcome:
+          "Let a code span carry any literal text, angle brackets included, while raw HTML outside code spans stays refused.",
+        openQuestions: [
+          {
+            question:
+              "CommonMark lets a code span cross a line ending inside a paragraph, so a renderer and the Protocol can disagree about which text is inside a span. Should the owner keep the line-scoped rule or match spans across a paragraph?",
+            blocking: false,
+          },
+          {
+            question:
+              "A backslash-escaped backtick still opens a span, and a tag that starts before a backtick pair loses to the span. CommonMark decides both cases the other way. Should the owner keep these readings or follow CommonMark in these two cases?",
+            blocking: false,
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "A code span is literal content. The raw-HTML refusal never reads inside one, whether the span sits in a Spec's narrative, a section description, a list entry, or a Pack's framing prose.",
+          "A code span opens at a backtick run and closes at the next run of the same length on that same line. Both runs must sit on one line. An unmatched run is ordinary text and shields nothing.",
+          "Raw HTML outside a code span stays refused, with the same finding and message as before.",
+          "The graph stores the line as authored, backticks included. Each projection renders it through the encoding its own Spec already requires for that field.",
+          "The scanner in `src/extract/markdown-inline-code.ts` realizes this rule. The raw-HTML guards that call it live in `src/extract/markdown-body.ts`, `src/extract/markdown-body-content.ts`, and `src/extract/markdown-pack.ts`.",
+        ],
+        exampleSpace: {
+          given: ["the code-span matrix in {location:string}"],
+          when: ["the extractor reifies the probes"],
+          then: [
+            "matched spans preserve {accepted:number} carriers and exposed HTML refuses {refused:number} carriers",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-body-grammar.table-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/markdown-body-grammar.table-refused.sdp.md",
+    title: "A table under a section is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the block-structure refusal on a table row under an open section.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier whose {owner: "Design"} section holds {construct: "a table row"}',
+            ],
+            when: ["the extractor reifies the carrier"],
+            then: [
+              'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "nested or unsupported Markdown structure"} at line {line: 14}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-body-grammar.continuation-line-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/markdown-body-grammar.continuation-line-refused.sdp.md",
+    title: "A bullet wrapped onto a second line is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the one-line entry rule on a bullet whose text continues on an indented line.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier whose {owner: "Behavior"} section holds {construct: "a bullet wrapped onto an indented second line"}',
+            ],
+            when: ["the extractor reifies the carrier"],
+            then: [
+              'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "nested or unsupported Markdown structure"} at line {line: 15}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-body-grammar.ordered-list-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/markdown-body-grammar.ordered-list-refused.sdp.md",
+    title: "An ordered list is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the list-entry rule on an ordered list item under a primary owner.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier whose {owner: "Contract"} section holds {construct: "an ordered list item"}',
+            ],
+            when: ["the extractor reifies the carrier"],
+            then: [
+              'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "nested or unsupported Markdown structure"} at line {line: 14}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-body-grammar.foreign-fence-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/markdown-body-grammar.foreign-fence-refused.sdp.md",
+    title: "A fence other than gwt is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the closed fence set on a language-tagged code fence under an open section.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier whose {owner: "Design"} section holds {construct: "a ts fence"}',
+            ],
+            when: ["the extractor reifies the carrier"],
+            then: [
+              'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "fences must be exact gwt or gwt-vocabulary fences"} at line {line: 14}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-body-grammar.h3-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/markdown-body-grammar.h3-refused.sdp.md",
+    title: "An H3 outside Intent is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the single-H3 rule on a third-level heading under an open section.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier whose {owner: "Design"} section holds {construct: "an H3 heading"}',
+            ],
+            when: ["the extractor reifies the carrier"],
+            then: [
+              'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "open sections do not accept an H3 or fence"} at line {line: 14}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-body-grammar.plain-bullet-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/markdown-body-grammar.plain-bullet-refused.sdp.md",
+    title: "A plain bullet under an open section is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the keyed-entry rule of open sections on a bullet with no lower-camel key.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier whose {owner: "Design"} section holds {construct: "a plain bullet"}',
+            ],
+            when: ["the extractor reifies the carrier"],
+            then: [
+              'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "open section keys must be lower-camel ASCII"} at line {line: 14}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-body-grammar.keyed-bullet-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/markdown-body-grammar.keyed-bullet-refused.sdp.md",
+    title: "A keyed bullet under a plain-bullet owner is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the keyed-bullet rule on a Rule entry that opens with one word and a colon.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier whose {owner: "Rule"} section holds {construct: "a bullet opening with one word and a colon"}',
+            ],
+            when: ["the extractor reifies the carrier"],
+            then: [
+              'the carrier is refused whole with the finding {findingId: "extract/unrecognized-property"} whose message contains {reason: "is not accepted"} at line {line: 14}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-body-grammar.trailing-prose-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/markdown-body-grammar.trailing-prose-refused.sdp.md",
+    title: "Prose after structured content is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the prose-ownership rule on a paragraph that follows a section's first list entry.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier whose {owner: "Behavior"} section holds {construct: "a paragraph after the first bullet"}',
+            ],
+            when: ["the extractor reifies the carrier"],
+            then: [
+              'the carrier is refused whole with the finding {findingId: "extract/unowned-prose"} whose message contains {reason: "prose after structured content has no owner"} at line {line: 16}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-body-grammar.repeated-field-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/markdown-body-grammar.repeated-field-refused.sdp.md",
+    title: "A repeated single-valued field is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the at-most-once rule on a second statement under Constraints.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier whose {owner: "Constraints"} section holds {construct: "a second statement field"}',
+            ],
+            when: ["the extractor reifies the carrier"],
+            then: [
+              'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "is authored more than once"} at line {line: 15}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-body-grammar.unrecognized-heading-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/markdown-body-grammar.unrecognized-heading-refused.sdp.md",
+    title: "An unrecognized heading is refused with a suggestion",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the closed owner set on a misspelled heading and read the nearest known name back.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier whose {owner: "Behaviour"} section holds {construct: "a rule bullet"}',
+            ],
+            when: ["the extractor reifies the carrier"],
+            then: [
+              'the carrier is refused whole with the finding {findingId: "extract/unrecognized-heading"} whose message contains {reason: "did you mean"} at line {line: 13}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-body-grammar.second-primary-owner-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/markdown-body-grammar.second-primary-owner-refused.sdp.md",
+    title: "A second primary owner is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the one-primary-owner rule on a Rule section that follows a Behavior section.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier whose {owner: "Rule"} section holds {construct: "a plain bullet after a Behavior section"}',
+            ],
+            when: ["the extractor reifies the carrier"],
+            then: [
+              'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "a single-valued Markdown owner is authored more than once"} at line {line: 16}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-body-grammar.raw-html-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/markdown-body-grammar.raw-html-refused.sdp.md",
+    title: "Raw HTML outside a code span is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the raw-HTML refusal on a line break tag written in a rule.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier whose {owner: "Behavior"} section holds {construct: "a line break tag"}',
+            ],
+            when: ["the extractor reifies the carrier"],
+            then: [
+              'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "raw HTML is unsupported"} at line {line: 14}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-body-grammar.shared-description-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/markdown-body-grammar.shared-description-refused.sdp.md",
+    title: "A second description across Behavior and Example space is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the shared-owner rule when both the primary behavior heading and Example space carry leading prose.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier whose {owner: "Example space"} section holds {construct: "a description when Behavior already has one"}',
+            ],
+            when: ["the extractor reifies the carrier"],
+            then: [
+              'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "behavior description has more than one owner"} at line {line: 19}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.inline-code-spans.narrative",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/inline-code-spans.narrative.sdp.md",
+    title: "Code spans in a Spec narrative are literal",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Check matched and unmatched runs, literal HTML, exposed HTML on the same line, and authored text in the narrative probes.",
+        assumptions: [
+          'The matrix uses matched and unmatched backtick runs of one, two, and three backticks, multiple spans, literal tags and comment delimiters inside spans, exposed HTML before and after spans, closing tags, declarations, processing instructions, and ordinary angle-bracket comparisons. It includes ``Use <T title=`value>.``, ``Use </T`>.``, and ``Use <img alt="`">.`` as refused tag bodies with an unmatched backtick, and ``Use <!-`x`-> here.`` as accepted text whose matched span separates the comment delimiter.',
+          "The paragraph probes split a single-backtick pair across two lines. One puts ``Use `Promise<T>.`` on the first line and ``Close here`.`` on the second; another puts ``Open here `.`` first and ``Use Promise<T>`.`` second. Neither pair shields HTML. A third puts ``Open here `.`` first and ``Use `Promise<T>`.`` second, so the pair on the second line shields that line despite the unmatched run on the first.",
+          "Each probe has its own carrier. Each Spec is a story-altitude behavior stating idea with no relations and an Intent outcome. The probe sits in narrative before Intent.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the code-span matrix in {location: "narrative"}'],
+            when: ["the extractor reifies the probes"],
+            then: [
+              "matched spans preserve {accepted: 13} carriers and exposed HTML refuses {refused: 20} carriers",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.inline-code-spans.description",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/inline-code-spans.description.sdp.md",
+    title: "Code spans in section descriptions are literal",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Check matched and unmatched runs, literal HTML, exposed HTML on the same line, and authored text in the description probes.",
+        assumptions: [
+          'The matrix uses matched and unmatched backtick runs of one, two, and three backticks, multiple spans, literal tags and comment delimiters inside spans, exposed HTML before and after spans, closing tags, declarations, processing instructions, and ordinary angle-bracket comparisons. It includes ``Use <T title=`value>.``, ``Use </T`>.``, and ``Use <img alt="`">.`` as refused tag bodies with an unmatched backtick, and ``Use <!-`x`-> here.`` as accepted text whose matched span separates the comment delimiter.',
+          "The paragraph probes split a single-backtick pair across two lines. One puts ``Use `Promise<T>.`` on the first line and ``Close here`.`` on the second; another puts ``Open here `.`` first and ``Use Promise<T>`.`` second. Neither pair shields HTML. A third puts ``Open here `.`` first and ``Use `Promise<T>`.`` second, so the pair on the second line shields that line despite the unmatched run on the first.",
+          "Each probe has its own carrier. Each Spec is a story-altitude behavior stating idea with no relations and an Intent outcome. The probe sits in the Behavior description.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the code-span matrix in {location: "description"}'],
+            when: ["the extractor reifies the probes"],
+            then: [
+              "matched spans preserve {accepted: 13} carriers and exposed HTML refuses {refused: 20} carriers",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.inline-code-spans.list",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/inline-code-spans.list.sdp.md",
+    title: "Code spans in list entries are literal",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Check matched and unmatched runs, literal HTML, exposed HTML on the same line, and authored text in the list probes.",
+        assumptions: [
+          'The matrix uses matched and unmatched backtick runs of one, two, and three backticks, multiple spans, literal tags and comment delimiters inside spans, exposed HTML before and after spans, closing tags, declarations, processing instructions, and ordinary angle-bracket comparisons. It includes ``Use <T title=`value>.``, ``Use </T`>.``, and ``Use <img alt="`">.`` as refused tag bodies with an unmatched backtick, and ``Use <!-`x`-> here.`` as accepted text whose matched span separates the comment delimiter.',
+          "Each probe has its own carrier. Each Spec is a story-altitude behavior stating idea with no relations and an Intent outcome. The probe sits in one Behavior rule entry.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the code-span matrix in {location: "list"}'],
+            when: ["the extractor reifies the probes"],
+            then: [
+              "matched spans preserve {accepted: 12} carriers and exposed HTML refuses {refused: 18} carriers",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.inline-code-spans.pack",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/inline-code-spans.pack.sdp.md",
+    title: "Code spans in Pack framing are literal",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Check matched and unmatched runs, literal HTML, exposed HTML on the same line, and authored text in the pack probes.",
+        assumptions: [
+          'The matrix uses matched and unmatched backtick runs of one, two, and three backticks, multiple spans, literal tags and comment delimiters inside spans, exposed HTML before and after spans, closing tags, declarations, processing instructions, and ordinary angle-bracket comparisons. It includes ``Use <T title=`value>.``, ``Use </T`>.``, and ``Use <img alt="`">.`` as refused tag bodies with an unmatched backtick, and ``Use <!-`x`-> here.`` as accepted text whose matched span separates the comment delimiter.',
+          "The paragraph probes split a single-backtick pair across two lines. One puts ``Use `Promise<T>.`` on the first line and ``Close here`.`` on the second; another puts ``Open here `.`` first and ``Use Promise<T>`.`` second. Neither pair shields HTML. A third puts ``Open here `.`` first and ``Use `Promise<T>`.`` second, so the pair on the second line shields that line despite the unmatched run on the first.",
+          "Each probe has its own carrier. Each Pack has an empty membership list and puts the probe in framing prose.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the code-span matrix in {location: "pack"}'],
+            when: ["the extractor reifies the probes"],
+            then: [
+              "matched spans preserve {accepted: 13} carriers and exposed HTML refuses {refused: 20} carriers",
             ],
           },
         ],

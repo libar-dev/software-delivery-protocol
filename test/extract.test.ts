@@ -868,7 +868,7 @@ describe("anchor extraction corpora", () => {
     expect(validateGraph(result.graph).findings).toEqual([]);
   });
 
-  it("unenabled-verifier: a declared verifies without a test binding confers nothing (MD-7) and is surfaced", () => {
+  it("unenabled-verifier: a below-ready example confers nothing; a wrong-kind verifier still warns", () => {
     const result = extract({ root: corpusRoot("unenabled-verifier") });
 
     expect(result.report.findings).toEqual([]);
@@ -879,8 +879,17 @@ describe("anchor extraction corpora", () => {
       }
     }
 
-    // The verifies-linkage check names the incomplete spec↔test trace — informative, never a gate.
-    const validation = validateGraph(result.graph).findings;
+    expect(validateGraph(result.graph).findings).toEqual([]);
+    // A deliberate wrong-kind declaration keeps the linkage finding under test.
+    const graph = {
+      ...result.graph,
+      nodes: result.graph.nodes.map((node) =>
+        node.id === "spec:orders.unverified-parent.example" && node.nodeType === "Primitive"
+          ? { ...node, specKind: "behavior" as const }
+          : node,
+      ),
+    };
+    const validation = validateGraph(graph).findings;
     expect(validation.filter((finding) => finding.severity === "error")).toEqual([]);
     expect(validation).toHaveLength(1);
     expect(validation[0]?.validatorId).toBe(graphValidatorIds.verifiesLinkage);
@@ -1156,9 +1165,7 @@ describe("graph-validator corpora", () => {
     ]);
     // The target-rung clause evaluates resolving targets only — no third failure.
     expect(
-      validation.some(
-        (finding) => finding.relatedId === "depends-on-and-refines-targets-are-defined",
-      ),
+      validation.some((finding) => finding.relatedId === "typed-dependency-targets-are-defined"),
     ).toBe(false);
   });
 
@@ -1173,7 +1180,7 @@ describe("graph-validator corpora", () => {
     expect(errors).toHaveLength(1);
     expect(errors[0]?.validatorId).toBe(graphValidatorIds.readinessFloor);
     expect(errors[0]?.subjectId).toBe("spec:orders.create-order");
-    expect(errors[0]?.relatedId).toBe("depends-on-and-refines-targets-are-defined");
+    expect(errors[0]?.relatedId).toBe("typed-dependency-targets-are-defined");
   });
 
   it("invalid-hand-authored-delivery-fact-in-section: the smuggled key fails over the graph end-to-end (MD-16)", () => {

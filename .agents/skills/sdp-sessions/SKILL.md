@@ -40,17 +40,20 @@ result informs the session; it never grants permission or records a verdict.
 
 ### Capture / refine
 
-Use concept search (recipe 6) to find the existing family and avoid duplicate intent. Use the
+Use concept search (recipe 6) to find the existing family and avoid duplicate intent, and entry
+search (recipe 23) when you hold a key or a term and need the entry that already states it. Use the
 lower ladder (recipe 11) to see current stated and derived readiness, then promotion preflight
 (recipe 9) before a human changes a rung. Follow `sdp-authoring` for the minimal lawful `idea`
 carrier, `sdp new spec`, the `validate --watch` loop, and the one-kind rule.
 
 ### Design
 
-Use promotion preflight (recipe 9) on the target, the planning slice (recipe 19) for neighborhood,
-dependency readiness, and shaping decisions, and readiness divergence (recipe 7) across the corpus. Resolve blocking
-open questions and review the carrying Specs. A clear floor is evidence, not an automatic `ready`
-statement.
+Use promotion preflight (recipe 9) on the target, the planning slice (recipe 19) for neighborhood
+and shaping decisions, dependency footing (recipe 21) for the stated and derived readiness of
+every Spec the target rests on, and readiness divergence (recipe 7) across the corpus. Resolve the
+target's blocking open questions and review the carrying Specs. The open-question register
+(recipe 20) lists every open question in the corpus when the neighbors matter too. A clear floor
+is evidence, not an automatic `ready` statement.
 
 ### Implement
 
@@ -66,8 +69,10 @@ a binding, not a passing or live system.
 ### Review
 
 For a Pack, use the Pack review backbone (recipe 5) and warn-level signals (recipe 8). Without a
-Pack, use the target Spec context (recipe 3) with warn-level signals (recipe 8). When reviewing
-component, architecture, or projection questions, use structural neighborhood (recipe 14), census
+Pack, use the target Spec context (recipe 3) with warn-level signals (recipe 8). To review a
+change, take the scope from changed-file blast radius (recipe 4) over the diff, then run the
+mention audit (recipe 22) with that scope as its parameter. When reviewing component,
+architecture, or projection questions, use structural neighborhood (recipe 14), census
 structural coverage (recipe 15), the projection-coverage upper bound (recipe 16), the architecture
 map (recipe 17), and the decision map (recipe 18). Review findings and gaps as data; the review
 never becomes a workflow gate.

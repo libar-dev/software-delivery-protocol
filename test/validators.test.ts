@@ -568,6 +568,7 @@ describe("graph validators", () => {
     const parent = ideaPrimitive("spec:orders.create-order", "Turn a valid cart into an order.");
     const example: PrimitiveNode = {
       ...ideaPrimitive("spec:orders.create-order.valid-cart", "Verify the happy path."),
+      readiness: "ready",
       specKind: "example",
       altitude: "story",
     };

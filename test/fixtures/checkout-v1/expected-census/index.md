@@ -110,8 +110,6 @@ No structural bindings exist.
 
 ## Findings
 
-| Severity | Validator | Subject | Message |
-| --- | --- | --- | --- |
-| warning | `conformance/verifies-linkage` | spec:orders.create-order.invalid-cart | Example "spec:orders.create-order.invalid-cart" declares verifies → "spec:orders.create-order" but is not an enabled verifier — no test anchor binds it, so the spec↔test trace is incomplete and it confers no has-verifier. |
+No findings.
 
 *Generated from the one graph by `sdp census` — read-only; regenerate to update.*

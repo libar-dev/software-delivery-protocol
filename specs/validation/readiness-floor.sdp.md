@@ -24,7 +24,7 @@ relations:
 - The `idea` floor reads the envelope through five clauses: the Spec carries a stable id, a human-readable title, a stated kind, and a stated altitude, and it either states its intended outcome or declares a parent relation through `refines`.
 - The `scoped` floor adds three clauses: the intended outcome is stated, at least one authored relation is declared, and the kind's natural evidence is present.
 - The `defined` floor adds two clauses: the kind's natural evidence is complete, and no open question the Spec records is flagged as blocking.
-- The `ready` floor reads the Spec's own edges through three clauses: every authored relation resolves to a known target, every `refines` and `dependsOn` target itself stands at least `defined`, and every anchor bound to the Spec resolves.
+- The `ready` floor reads the Spec's own edges through three clauses: every authored relation resolves to a known target, every resolving `refines`, `dependsOn`, `constrainedBy`, and `decidedBy` target itself states at least `defined`, and every anchor bound to the Spec resolves.
 - Readiness is independent across a refinement relation: a child may be authored at a higher readiness than its parent. Only the child's own cumulative floor applies, including the `ready` target bound above when the child states `ready`.
 - The anchor clause reads the bindings that are present, so a Spec carrying no anchor clears it — the floor never demands a binding an author has not made.
 - Only relations the Spec itself declares count toward the relation clauses; membership of a Pack is derived from the manifest and never stands in for an authored relation.

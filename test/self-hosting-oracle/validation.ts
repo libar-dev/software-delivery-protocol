@@ -29,7 +29,7 @@ export const validationSpecs = [
           "The `idea` floor reads the envelope through five clauses: the Spec carries a stable id, a human-readable title, a stated kind, and a stated altitude, and it either states its intended outcome or declares a parent relation through `refines`.",
           "The `scoped` floor adds three clauses: the intended outcome is stated, at least one authored relation is declared, and the kind's natural evidence is present.",
           "The `defined` floor adds two clauses: the kind's natural evidence is complete, and no open question the Spec records is flagged as blocking.",
-          "The `ready` floor reads the Spec's own edges through three clauses: every authored relation resolves to a known target, every `refines` and `dependsOn` target itself stands at least `defined`, and every anchor bound to the Spec resolves.",
+          "The `ready` floor reads the Spec's own edges through three clauses: every authored relation resolves to a known target, every resolving `refines`, `dependsOn`, `constrainedBy`, and `decidedBy` target itself states at least `defined`, and every anchor bound to the Spec resolves.",
           "Readiness is independent across a refinement relation: a child may be authored at a higher readiness than its parent. Only the child's own cumulative floor applies, including the `ready` target bound above when the child states `ready`.",
           "The anchor clause reads the bindings that are present, so a Spec carrying no anchor clears it — the floor never demands a binding an author has not made.",
           "Only relations the Spec itself declares count toward the relation clauses; membership of a Pack is derived from the manifest and never stands in for an authored relation.",
@@ -597,7 +597,7 @@ export const validationSpecs = [
       behavior: {
         rules: [
           "A declared verifies relation and an oracle model relation must resolve through their respective binding traces before either can stand as verification evidence.",
-          "A non-resolving trace is named loudly and confers no delivery fact, because silence would read as verification the graph never earned.",
+          "A non-resolving trace confers no delivery fact. The verifies-linkage warning names an unbound example only when it states `ready`, and names a non-example Spec that declares `verifies` at every rung. The oracle-linkage check continues to name a non-resolving oracle trace.",
           "At most one expected-outcome authority may model an example space: a second resolving oracle binding on the same space is an error, because two authorities leave the modeled outcome ambiguous.",
           "The realizing validator entrypoints are `checkVerifiesLinkage` and `checkOracleLinkage` in `src/validate/validators.ts`.",
         ],
@@ -605,6 +605,7 @@ export const validationSpecs = [
           given: [
             "the graph holds a parent spec {parentId:string}",
             'a non-resolving {verifierKind:"example spec"|"oracle anchor"} named {verifierId:string} points at it',
+            "the example verifier states ready",
           ],
           when: ["the graph is validated"],
           then: [
@@ -635,6 +636,7 @@ export const validationSpecs = [
             given: [
               'the graph holds a parent spec {parentId: "spec:probe.create-order"}',
               'a non-resolving {verifierKind: "example spec"} named {verifierId: "spec:probe.create-order.valid-cart"} points at it',
+              "the example verifier states ready",
             ],
             when: ["the graph is validated"],
             then: [
@@ -1156,5 +1158,323 @@ export const validationSpecs = [
       },
     },
     deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.typed-dependency-floor",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/typed-dependency-floor.sdp.md",
+    title: "A ready Spec rests only on settled dependencies",
+    narrative: null,
+    sections: {
+      intent: {
+        problem:
+          "A `ready` statement needs a settled basis across `refines`, `dependsOn`, `constrainedBy`, and `decidedBy`. Omitting any of these relations would let a Spec state `ready` while a dependency still stands below `defined`.",
+        outcome:
+          "Refuse a `ready` statement while any Spec it depends on, through any typed dependency, stands below `defined`.",
+      },
+      behavior: {
+        rules: [
+          "The `ready` floor's target clause reads every typed dependency the Spec declares. Each resolving `refines`, `dependsOn`, `constrainedBy`, and `decidedBy` target itself states at least `defined`. The clause reads stated readiness, so a dependent does not inherit a target's own floor failure.",
+          "The threshold is `defined` for all four relations. A `decidedBy` target at `defined` is a complete decision record awaiting ratification, and demanding `ready` of it would make `ready` on every shaped Spec a transitive registry fact, so a design can state `ready` while the decisions that shape it stay proposals.",
+          "The clause stays kind-blind and reads resolving targets only. An unresolved target remains the relation-resolution clause's failure, never a second one.",
+          "`verifies` and `supersedes` stay outside the clause. A verifier's rung is independent of the Spec it verifies, and a replacement decision does not rest on the record it supersedes.",
+          "An unsettled fact is stated the way any unsettled truth is. A constraint Spec that records a blocking open question clears at most `scoped`. When it states a rung below `defined`, a Spec bounded by it may state `defined` if its own floor clears, but cannot lawfully state `ready`.",
+          "The floor keeps one target clause, `typed-dependency-targets-are-defined`, in `src/validate/readiness-floor.ts`. Its parent `spec:validation.readiness-floor` states the same target bound.",
+        ],
+        exampleSpace: {
+          given: [
+            'the typed dependency matrix {matrix:"relation-rungs"|"missing-targets"|"unsettled-fact"|"stated-readiness"}',
+          ],
+          when: ["the reader checks the readiness floor"],
+          then: [
+            "the matrix reports {targetFailures:number} target failures and {resolutionFailures:number} resolution failures and {questionFailures:number} blocking question failures",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:validation.unbound-example-posture",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/unbound-example-posture.sdp.md",
+    title: "An unbound example below ready is data, not a warning",
+    narrative: null,
+    sections: {
+      intent: {
+        problem:
+          "A corpus designed before its code exists gets one verifies-linkage warning per example for a state that is honest at the rung the example states, so a real warning hides among them.",
+        outcome:
+          "Keep the unbound state of an example visible as data, and reserve the warning for an example that states `ready`.",
+      },
+      behavior: {
+        rules: [
+          "An example that declares `verifies` and has no resolving test anchor is named by the verifies-linkage warning only when the example states `ready`.",
+          "Below `ready` the same state is data. The reader reports the example's verifier binding as declared and not enabled, the declared-versus-enabled recipe lists it, and it confers no `has-verifier`.",
+          "A Spec of any other kind that declares `verifies` keeps its warning at every rung, and the oracle-linkage check is unchanged.",
+          "The gap signal still names a `ready` Spec with no enabled verifier, except kind `decision`. A ready parent of any other kind keeps its gap while no enabled verifier verifies it. Once another enabled example or a direct test anchor verifies the parent, an unbound example below `ready` is visible as data alone. An unbound `ready` example keeps its own verifies-linkage warning even when the parent has another verifier.",
+          "The worked example teaches the incomplete trace through the verifier bindings its Design Review page renders and through the declared-versus-enabled recipe, not through a warning. Its walkthrough and example check move with this rule.",
+          "This rule revises the sentence of `spec:validation.verification-linkage` that names every non-resolving trace loudly. The realizing entrypoint stays `checkVerifiesLinkage` in `src/validate/validators.ts`.",
+        ],
+        exampleSpace: {
+          given: ["the verification posture matrix {matrix:string}"],
+          when: ["the reader derives the verification signals"],
+          then: [
+            "the matrix reports {warnings:number} linkage warnings and {gaps:number} parent gaps and {oracleErrors:number} oracle errors",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:validation.prose-mentions",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/validation/prose-mentions.sdp.md",
+    title: "Every Spec id written in prose resolves",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Refuse a prose reference to an absent Spec or entry, and report a prose reference that no declared relation backs.",
+        openQuestions: [
+          {
+            question:
+              "This rule is written only after `spec:decisions.checked-mentions` is ratified, because the entry-address form it must check is still open there. Until then the mention audit recipe is the whole check.",
+            blocking: true,
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.unbound-example-posture.lower-rungs",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/unbound-example-posture.lower-rungs.sdp.md",
+    title: "Below-ready examples keep declared verifier data",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Check all three lower rungs without enabling an unbound example.",
+        assumptions: [
+          "The world has three behavior parents stating `defined`, each with one unbound example child, stating `idea`, `scoped`, or `defined`. No parent or child has a test binding or oracle binding.",
+          "All probes are story-altitude Specs with declared claims and an Intent outcome, with no other section evidence. Each child declares `verifies` to its resolving parent. A binding is a resolving `test:` Anchor with an anchored `verifies` edge. No other relations or anchors are present except those stated here. Outcome counts read only `conformance/verifies-linkage`, parent `honesty/gaps`, and `conformance/oracle-linkage`; other findings stay outside the counts.",
+          "Every child remains a declared, disabled verifier. Neither child nor parent derives `has-verifier`. No linkage warning, parent gap, or oracle error appears.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the verification posture matrix {matrix: "lower-rungs"}'],
+            when: ["the reader derives the verification signals"],
+            then: [
+              "the matrix reports {warnings: 0} linkage warnings and {gaps: 0} parent gaps and {oracleErrors: 0} oracle errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.unbound-example-posture.warning-cases",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/unbound-example-posture.warning-cases.sdp.md",
+    title: "Ready examples and non-example verifiers keep warnings",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Check an unbound ready example and every non-example kind at every rung.",
+        assumptions: [
+          "The world has one unbound example stating `ready` and 28 non-example children, one for each pairing of behavior, workflow, rule, constraint, model, decision, and contract with `idea`, `scoped`, `defined`, and `ready`. Each child verifies its own behavior parent stating `defined`. No parent or child has a test binding or oracle binding.",
+          "All probes are story-altitude Specs with declared claims and an Intent outcome, with no other section evidence. Each child declares `verifies` to its resolving parent. A binding is a resolving `test:` Anchor with an anchored `verifies` edge. No other relations or anchors are present except those stated here. Outcome counts read only `conformance/verifies-linkage`, parent `honesty/gaps`, and `conformance/oracle-linkage`; other findings stay outside the counts.",
+          "Each child remains a declared, disabled verifier and emits one conformance warning whose subject is the child and whose related Spec is its parent. Neither child nor parent derives `has-verifier`. No parent gap or oracle error appears.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the verification posture matrix {matrix: "warning-cases"}'],
+            when: ["the reader derives the verification signals"],
+            then: [
+              "the matrix reports {warnings: 29} linkage warnings and {gaps: 0} parent gaps and {oracleErrors: 0} oracle errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.unbound-example-posture.parent-traces",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/unbound-example-posture.parent-traces.sdp.md",
+    title: "Parent gaps follow enabled bindings and preserve the decision exemption",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Check parent gaps with no binding, a sibling binding, and a direct binding, the decision exemption, a ready child warning, and an unresolved oracle.",
+        assumptions: [
+          "The world has six parents stating `ready`. Five are behaviors and one is a decision. Four example children state `defined`: one behavior parent has no binding, one has a bound `defined` example sibling, one has a direct test binding, and the decision parent has no binding. Two example children state `ready`: one is unbound beside a bound `defined` example sibling, and the other has its own resolving test binding.",
+          "All probes are story-altitude Specs with declared claims and an Intent outcome, with no other section evidence. Each child declares `verifies` to its resolving parent. A binding is a resolving `test:` Anchor with an anchored `verifies` edge. No other relations or anchors are present except those stated here. Outcome counts read only `conformance/verifies-linkage`, parent `honesty/gaps`, and `conformance/oracle-linkage`; other findings stay outside the counts.",
+          "The unbound children remain declared, disabled verifiers with no `has-verifier`. The bound `ready` child is a declared, enabled verifier, derives `has-verifier`, and emits no linkage warning. The direct binding, either sibling binding, and the bound `ready` child each confer `has-verifier` on their parent.",
+          "Only the unbound `ready` child emits a linkage warning, at warning severity in the conformance family, naming its behavior parent as the related Spec. Only the behavior parent with no binding emits a parent gap. The decision parent stays exempt.",
+          "An `oracle:` Anchor declares an anchored `models` edge to the behavior parent with no binding. That parent owns no example space, so the oracle emits one error naming the oracle as subject and that parent as related Spec.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the verification posture matrix {matrix: "parent-traces"}'],
+            when: ["the reader derives the verification signals"],
+            then: [
+              "the matrix reports {warnings: 1} linkage warnings and {gaps: 1} parent gaps and {oracleErrors: 1} oracle errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.typed-dependency-floor.relation-rungs",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/typed-dependency-floor.relation-rungs.sdp.md",
+    title: "Every relation reads the four stated target rungs",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Check the relation-rungs matrix through the readiness floor.",
+        assumptions: [
+          "The world has 24 single-relation rule subjects stating `ready`, one for each pairing of `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, and `supersedes` with a target stating `idea`, `scoped`, `defined`, or `ready`. Every target resolves. `constrainedBy` targets are constraints; `decidedBy` and `supersedes` targets are decisions; the other targets are rules. No Spec has a blocking open question.",
+          "All probes are story-altitude Specs with declared relations and an Intent outcome. Rule subjects and rule targets carry a behavior rule; constraint targets carry a statement and target; decision targets carry a written decision. Each resolving target declares `dependsOn` back to its subject. No anchors are present. The expected counts include only `honesty/readiness-floor` findings, not findings from other validators.",
+          "The four included relations each fail `typed-dependency-targets-are-defined` for their `idea` and `scoped` targets, giving eight target failures. Their `defined` and `ready` boundaries pass. `verifies` and `supersedes` pass at every target rung.",
+          "The world also has sixteen rule subjects stating `ready`. Each pairs `refines` or `dependsOn` with `constrainedBy` or `decidedBy`. One target states `defined` and the other states `scoped`. Each pair appears with the older relation passing and the newer relation failing, and with the older relation failing and the newer relation passing, in both declaration orders. Targets have the same kinds and evidence as the single-relation probes and declare `dependsOn` back to their subject. Every mixed subject fails `typed-dependency-targets-are-defined` once and derives `defined`, regardless of declaration order.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the typed dependency matrix {matrix: "relation-rungs"}'],
+            when: ["the reader checks the readiness floor"],
+            then: [
+              "the matrix reports {targetFailures: 24} target failures and {resolutionFailures: 0} resolution failures and {questionFailures: 0} blocking question failures",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.typed-dependency-floor.missing-targets",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/typed-dependency-floor.missing-targets.sdp.md",
+    title: "Missing targets fail relation resolution once",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Check the missing-targets matrix through the readiness floor.",
+        assumptions: [
+          "The world has six rule subjects stating `ready`, one for each of `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, and `supersedes`. Each subject names a missing target. No target Spec exists, so no target states a rung or declares a reverse relation. No subject has a blocking open question.",
+          "All subjects are story-altitude Specs with declared relations, an Intent outcome, and a behavior rule. No anchors are present. The expected counts include only `honesty/readiness-floor` findings, not findings from other validators.",
+          "Each subject fails `all-relations-resolve` once. Missing targets never add a `typed-dependency-targets-are-defined` failure, including for the four included relations.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the typed dependency matrix {matrix: "missing-targets"}'],
+            when: ["the reader checks the readiness floor"],
+            then: [
+              "the matrix reports {targetFailures: 0} target failures and {resolutionFailures: 6} resolution failures and {questionFailures: 0} blocking question failures",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.typed-dependency-floor.unsettled-fact",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/typed-dependency-floor.unsettled-fact.sdp.md",
+    title: "An unsettled constraint bounds ready but permits defined",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Check the unsettled-fact matrix through the readiness floor.",
+        assumptions: [
+          'The world has three rule subjects, each declaring `constrainedBy` on its own resolving constraint target. The first subject states `defined` and its target states `scoped`; the second subject states `ready` and its target states `scoped`; the third subject states `defined` and its target states `defined`. Each target carries the blocking open question "Is this fact settled?". The subjects have no blocking open questions.',
+          "All probes are story-altitude Specs with declared relations and an Intent outcome. Each rule subject carries a behavior rule, and each constraint target carries a statement and target. Each resolving target declares `dependsOn` back to its subject. No anchors are present. The expected counts include only `honesty/readiness-floor` findings, not findings from other validators.",
+          "All three targets derive `scoped`. The first subject lawfully states `defined`; the second fails `typed-dependency-targets-are-defined`; the third target alone fails `no-blocking-open-questions` for stating `defined`. Both subjects with `scoped` targets derive `defined`, while the third derives `ready` because the target clause reads the target's stated rung. No target is missing.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the typed dependency matrix {matrix: "unsettled-fact"}'],
+            when: ["the reader checks the readiness floor"],
+            then: [
+              "the matrix reports {targetFailures: 1} target failures and {resolutionFailures: 0} resolution failures and {questionFailures: 1} blocking question failures",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.typed-dependency-floor.stated-readiness",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/typed-dependency-floor.stated-readiness.sdp.md",
+    title: "Target floor failures do not propagate across dependencies",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Check the stated-readiness matrix through the readiness floor.",
+        assumptions: [
+          'The world first pairs four rule subjects stating `ready` with targets stating `defined`, one through each of `refines`, `dependsOn`, `constrainedBy`, and `decidedBy`. Each target carries the blocking open question "Is this fact settled?", derives `scoped`, and fails `no-blocking-open-questions`. Each subject still derives `ready` because the target clause reads stated readiness.',
+          "The world also pairs every subject kind, `behavior`, `workflow`, `example`, `rule`, `constraint`, `model`, `decision`, and `contract`, with each of `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, and `supersedes`, and each target rung, `idea`, `scoped`, `defined`, and `ready`. These 192 subjects all state `ready`. These pairs have no blocking open questions. Every target in both groups resolves. `constrainedBy` targets are constraints, `decidedBy` and `supersedes` targets are decisions, and the other targets are rules.",
+          "All probes are story-altitude Specs with declared relations and an Intent outcome. Behavior, workflow, rule, and contract subjects carry a behavior rule; example subjects carry concrete Given, When, and Then steps; constraint subjects carry a statement and target; model subjects carry a term; decision subjects carry a written decision. Targets carry the same evidence for their kind. Each target declares `dependsOn` back to its subject. No anchors are present. The expected counts include only `honesty/readiness-floor` findings, not findings from other validators.",
+          "Every subject kind fails `typed-dependency-targets-are-defined` for `idea` and `scoped` targets across the four included relations. The `defined` and `ready` boundaries pass, and `verifies` and `supersedes` pass at every target rung. No target is missing.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the typed dependency matrix {matrix: "stated-readiness"}'],
+            when: ["the reader checks the readiness floor"],
+            then: [
+              "the matrix reports {targetFailures: 64} target failures and {resolutionFailures: 0} resolution failures and {questionFailures: 4} blocking question failures",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
 ] as const;

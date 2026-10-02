@@ -25,11 +25,24 @@ export const expectedComponentIds = [
 // component set.
 export const structuralMembershipExceptions = [
   "impl:protocol.authoring-on-ramp",
+  "impl:protocol.register-recipes",
+  "impl:protocol.adopter-on-ramp",
+  "impl:protocol.shipped-protocol-corpus",
   "impl:protocol.authoring-recipes",
   "impl:protocol.delivery-session-on-ramp",
 ] as const;
 
 export const acceptedArchitecturalUnits = [
+  {
+    unit: "src/validate/readiness-floor.ts#typedDependencyTargetsAreDefined",
+    anchorId: "impl:protocol.typed-dependency-floor",
+    componentId: "component:protocol.validate",
+  },
+  {
+    unit: "src/extract/markdown-inline-code.ts#hasRawHtmlOutsideCodeSpans",
+    anchorId: "impl:protocol.inline-code-spans",
+    componentId: "component:protocol.extract",
+  },
   {
     unit: "src/adapters/vitest.ts#bindExample",
     anchorId: "impl:protocol.example-runner-adapter",
@@ -363,6 +376,11 @@ export const acceptedArchitecturalUnits = [
   {
     unit: "src/validate/validators.ts#checkClaimSeparation",
     anchorId: "impl:protocol.claim-separation",
+    componentId: "component:protocol.validate",
+  },
+  {
+    unit: "src/validate/validators.ts#checkVerifiesLinkage",
+    anchorId: "impl:protocol.unbound-example-posture",
     componentId: "component:protocol.validate",
   },
   {

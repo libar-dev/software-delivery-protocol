@@ -1,3 +1,4 @@
+import { hasRawHtmlOutsideCodeSpans } from "./markdown-inline-code.js";
 import type { Finding } from "../validate/contracts.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
@@ -69,7 +70,7 @@ function parseMarkdownPackBody(
 
   for (const line of prose) {
     if (line.text === "") continue;
-    if (/<\/?[A-Za-z][^>]*>|<!--|-->|<![A-Za-z]|<\?/u.test(line.text)) {
+    if (hasRawHtmlOutsideCodeSpans(line.text)) {
       addMarkdownFinding(findings, structure(file, line.line, "raw HTML is unsupported"));
       continue;
     }

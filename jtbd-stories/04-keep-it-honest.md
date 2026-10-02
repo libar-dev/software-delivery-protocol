@@ -17,7 +17,7 @@ A graph nobody trusts is worthless. The job here is to make the delivery state *
 **Acceptance criteria:**
 1. A reference to a non-existent spec, component, or test (in relations, `modelRefs`, or anchors) fails the build with a precise file/line and a "did you mean…?" suggestion where possible.
 2. Two nodes sharing the same ID is an error, not a last-write-wins silent merge.
-3. A spec that **states** `ready` but lacks its floor — unresolved relations, a `dependsOn`/`refines` target below `defined`, or a blocking open question — fails.
+3. A spec that **states** `ready` fails if it has unresolved relations, a target below `defined` through `refines`, `dependsOn`, `constrainedBy`, or `decidedBy`, or a blocking open question.
 4. Code **anchored** as satisfying a spec that does not exist is caught.
 5. A spec with no relations and nothing pointing at it is surfaced (orphan detection) so it cannot silently fall out of the graph's connective tissue.
 6. A genuine conflict — an **anchor** that contradicts a declaration — is a loud error; a deterministic precedence resolves only *layering* (declared over anchored over inferred), never a true contradiction.
@@ -40,7 +40,7 @@ A graph nobody trusts is worthless. The job here is to make the delivery state *
 1. Each readiness level has an explicit floor of required sections/relations: `idea` (id/title/kind/altitude + outcome-or-parent) → `scoped` → `defined` → `ready`.
 2. A spec stating a level it does not satisfy is flagged, with the specific missing pieces named.
 3. Low readiness is permissive — ideas and scoped specs are not punished for being incomplete; an open question only blocks stating `defined`/`ready` when it is explicitly marked `blocking`.
-4. High readiness is strict and **structural**: the `ready` floor requires resolved relations, every `dependsOn`/`refines` target at least `defined`, no blocking open questions, and any anchors present resolving. **Delivery facts** (`implemented`, `has-verifier`) are *derived* from edges — never required by the floor, never an ingested pass/fail verdict.
+4. High readiness is strict and **structural**: the `ready` floor requires resolved relations, every `refines`, `dependsOn`, `constrainedBy`, and `decidedBy` target at least `defined`, no blocking open questions, and any anchors present resolving. **Delivery facts** `implemented` and `has-verifier` derive from edges. The floor never requires them or ingests a pass/fail verdict.
 5. A quality constraint must carry a machine-readable `target` (e.g. `p95 < 300ms`, not "fast enough") before its spec can state `defined` or higher.
 6. The author's *stated* readiness and a *derived* readiness (computed from what the spec actually contains) can be compared, and a divergence (stated `defined`, derived `scoped`) is itself surfacable.
 7. The floor thresholds are config a team can override, and the MVP fails hard on a clean bounded context (a `--lenient` ratchet for gradual adoption is a later addition, not required here).

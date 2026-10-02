@@ -90,7 +90,23 @@ Commands:
              just-authored Spec is queryable immediately and no committed artifact answers in the
              graph's name; nothing is written anywhere. Output is bounded util.inspect (depth 4);
              --json prints JSON.stringify instead, unbounded. A body that throws exits 1, as does a
-             graph that fails to derive.`;
+             graph that fails to derive.
+
+Agent skills and reference:
+  Shipped in the package. Paths are relative to the package directory PKG, which is
+  node_modules/@libar-dev/software-delivery-protocol in an adopter and the repository root in a
+  source checkout.
+  .agents/skills/sdp-agent-surface/SKILL.md   the skill for reading the graph through q
+  .agents/skills/sdp-authoring/SKILL.md       the skill for authoring Specs, Packs, and anchors
+  .agents/skills/sdp-sessions/SKILL.md        the skill for routing a delivery session
+  docs/agent-surface/recipes.md               the recipe catalog: runnable q bodies
+  CONTEXT.md                                  the Protocol's glossary, which the skills and
+                                              recipes use
+  specs/                                      the Protocol's own Specs and Pack, which the skills
+                                              and recipes cite by id
+  Read a cited Protocol Spec: sdp q 'return g.specContext("spec:model.anchors")' --root PKG/specs
+  That graph holds intent only. The package ships no source anchors, so its delivery facts are
+  empty and its gap warnings are not evidence about what the Protocol has realized.`;
 
 interface CliHooks extends CensusHooks, MermaidHooks, GherkinViewHooks, ValidateWatchHooks {
   readonly import?: ImportHooks;

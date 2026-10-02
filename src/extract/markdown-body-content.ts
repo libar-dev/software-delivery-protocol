@@ -1,3 +1,4 @@
+import { hasRawHtmlOutsideCodeSpans } from "./markdown-inline-code.js";
 import { parseSlots } from "../notation/slots.js";
 import type { Finding } from "../validate/contracts.js";
 import { addMarkdownFinding, markdownFinding } from "./markdown-support.js";
@@ -42,10 +43,6 @@ export function normalizeProse(lines: readonly MarkdownLine[]): string {
   }
   if (paragraph.length > 0) paragraphs.push(paragraph.join(" "));
   return paragraphs.join("\n\n");
-}
-
-function isHtml(text: string): boolean {
-  return /(<\/?[A-Za-z][^>]*>)|<!--|-->|<![A-Za-z]|<\?/u.test(text);
 }
 
 export function isUnsupportedCommonMarkBlock(text: string): boolean {
@@ -181,7 +178,7 @@ export function parseSectionContent(
       if (!structured) prose.push(line);
       continue;
     }
-    if (isHtml(line.text)) {
+    if (hasRawHtmlOutsideCodeSpans(line.text)) {
       addMarkdownFinding(findings, bodyFinding(file, line.line, "raw HTML is unsupported"));
       continue;
     }
@@ -229,10 +226,6 @@ export function parseSectionContent(
       continue;
     }
     if (!structured) {
-      if (isHtml(line.text)) {
-        addMarkdownFinding(findings, bodyFinding(file, line.line, "raw HTML is unsupported"));
-        continue;
-      }
       prose.push(line);
       continue;
     }

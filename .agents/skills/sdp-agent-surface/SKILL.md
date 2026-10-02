@@ -1,6 +1,6 @@
 ---
 name: sdp-agent-surface
-description: Query this repository's Spec graph through `sdp q` instead of reading spec files by hand. Use whenever a question is about the authored corpus — what a Spec says or guarantees, who verifies it, what is ready but unimplemented, what a change touches, where a concept lives, which Specs are in a Pack, what a component contains or uses, what the census or projections will see, or what the validation report says. Also use before editing `.sdp.md` files, before writing a Spec citation, and before answering "is this implemented / verified / ready".
+description: Query this repository's Spec graph through `sdp q` instead of reading spec files by hand. Use whenever a question is about the authored corpus — what a Spec says or guarantees, who verifies it, what is ready but unimplemented, what a change touches, what is still open or blocking, what a Spec depends on, where a concept lives, which Specs are in a Pack, what a component contains or uses, what the census or projections will see, or what the validation report says. Also use before editing `.sdp.md` files, before writing a Spec citation, and before answering "is this implemented / verified / ready".
 ---
 
 # The agent surface
@@ -85,21 +85,25 @@ The public projection publishers are `sdp view`, `sdp census`, `sdp mermaid`, an
 In this source checkout, use `npm run generate:self-hosting` or `npm run check:self-hosting` when
 all four roots must be published or certified together.
 
-The catalog contains nineteen ready-made bodies in `docs/agent-surface/recipes.md` in the Protocol
-repository and
+The catalog contains twenty-three ready-made bodies in `docs/agent-surface/recipes.md` in the
+Protocol repository and
 `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an adopter.
-Recipes 1-19 cover the existing read path plus the structural and projection slice: build backlog,
-drift alarm, per-Spec guarantees and verifiers, blast radius, Pack review backbone, concept search,
-readiness divergence, warn-level signals, promotion preflight, declared-versus-enabled verifiers,
-the lower ladder, component membership, uses fan-in and fan-out, structural neighborhood, census
-structural coverage, the projection-coverage upper bound, architecture map, decision map, and
-the planning slice. Every body there runs verbatim and a test proves it. Start from a recipe; adapt
-it in place.
+Recipes 1-23 each open under a numbered heading that names the recipe. Every body there runs
+verbatim and a test proves it. Start from a recipe; adapt it in place.
 
+For structural questions, use component membership, uses fan-in and fan-out, structural
+neighborhood, census structural coverage, and the projection-coverage upper bound (recipes 12-16).
 For architecture questions, use the architecture map to see components and their shaping decisions
 together, the decision map to rank decisions by shaping fan-in (decided subjects plus inter-decision
 dependsOn and refines), or the planning slice to see refinement and dependency neighbors, shaping
 decisions, bound components, and entry points before editing.
+
+For a table you would otherwise keep by hand, run a register recipe each time you need it: the
+open-question register (recipe 20) for every open question and its blocking flag, dependency
+footing (recipe 21) for what one Spec rests on, and the mention audit (recipe 22) for Spec ids in
+prose. When you hold a key or a term and need the entry that carries it, use entry search
+(recipe 23): it matches whole tokens and names the entry, where concept search stops at the
+section.
 
 Reach for the files only when you need the authored prose itself — the exact words to edit.
 
@@ -133,7 +137,11 @@ session and any paraphrase in any document. If the graph and this file disagree,
 and this file is the bug — report it rather than reconciling in your head.
 
 The same rule governs law: this skill cites Specs, it never restates them. When you need the law,
-read the carrying Spec.
+read the carrying Spec. Every `spec:` id this skill or the catalog cites is a Protocol Spec. In an
+adopter, `g.specContext` on such an id returns `undefined` from your own root. Query it with
+`--root node_modules/@libar-dev/software-delivery-protocol/specs`, or open its carrier under that
+directory. That graph holds intent only. The package ships no source anchors, so its delivery facts
+are empty and its gap warnings say nothing about what the Protocol has built.
 
 ## What not to do
 
@@ -160,6 +168,8 @@ read the carrying Spec.
 
 ## Vocabulary
 
-The ratified glossary is `CONTEXT.md` — read it before inventing a term. The terms these queries
-speak: `Spec` · `Pack` · `anchor` · `claim` · delivery facts · readiness floor · derived readiness ·
+The Protocol's ratified glossary is `CONTEXT.md` at the Protocol repository's root, and
+`node_modules/@libar-dev/software-delivery-protocol/CONTEXT.md` in an adopter. It is separate from
+any glossary your project keeps. Read it before inventing a term. The terms these queries speak:
+`Spec` · `Pack` · `anchor` · `claim` · delivery facts · readiness floor · derived readiness ·
 blast radius · at-risk · coverage-unknown · gap · orphan.

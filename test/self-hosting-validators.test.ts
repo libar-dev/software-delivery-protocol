@@ -154,14 +154,19 @@ function findingsOf(world: ValidatorWorld, validatorId: string): readonly Findin
 }
 
 /**
- * A decision endpoint terminates the relation chain honestly: only the `ready` rung reads
- * dependsOn and refines targets, so a decidedBy edge satisfies the relation clause without adding
- * a second thing that could refuse below `ready`.
+ * A written decision at `defined`
+ * clears the typed dependency target bound, so a decidedBy edge satisfies the relation clause
+ * without adding a second floor failure.
  */
 function declareDecisionRelation(world: ValidatorWorld): void {
   const decisionId = `${world.subjectId}-decider`;
 
-  world.nodes.push(probeSpec(decisionId, { kind: "decision" }));
+  const decision = probeSpec(decisionId, { kind: "decision", readiness: "defined" });
+  world.nodes.push({
+    ...decision,
+    sections: { ...decision.sections, decision: { decision: "Choose the probe endpoint." } },
+  });
+  world.edges.push({ from: decisionId, type: "dependsOn", to: world.subjectId, claim: "declared" });
   world.edges.push({
     from: world.subjectId,
     type: "decidedBy",
@@ -572,8 +577,8 @@ function createWarnLevelWorld(point: Partial<WarnLevelSignalsConditions>): Valid
   world.nodes.push(probeSpec(specId, { readiness }));
 
   if (relations === "a decidedBy decision") {
-    // A decision endpoint terminates the chain honestly: the ready floor reads only dependsOn and
-    // refines targets, so the probe's single warning stays the one under test.
+    // The decision clears its own defined floor and the subject's typed dependency bound,
+    // so the missing verifier remains the probe's only warning.
     declareDecisionRelation(world);
   }
 
@@ -953,7 +958,7 @@ function createVerificationLinkageWorld(
   world.nodes.push(probeSpec(parentId));
 
   if (verifierKind === "example spec") {
-    world.nodes.push(probeSpec(verifierId, { kind: "example" }));
+    world.nodes.push(probeSpec(verifierId, { kind: "example", readiness: "ready" }));
     world.edges.push({
       from: verifierId,
       type: "verifies",
@@ -1046,10 +1051,11 @@ function assertVerificationLinkage(
     throw new Error("The reader context must be stored before the outcome is asserted.");
   }
 
-  const { conferred } = paramsForStep(
-    contract,
-    "the parent earns the delivery fact has-verifier: {conferred}",
-  );
+  const step = "the parent earns the delivery fact has-verifier: {conferred}";
+  const { conferred } =
+    contract === unboundExampleContract
+      ? paramsForStep(unboundExampleContract, step)
+      : paramsForStep(unresolvedOracleContract, step);
 
   expect(context.deliveryFacts.includes("has-verifier")).toBe(conferred);
 }
