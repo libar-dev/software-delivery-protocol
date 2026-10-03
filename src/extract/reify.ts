@@ -2,6 +2,7 @@ import { Node, SyntaxKind, VariableDeclarationKind } from "ts-morph";
 import type {
   ArrayLiteralExpression,
   CallExpression,
+  NumericLiteral,
   ObjectLiteralExpression,
   PropertyAssignment,
   SourceFile,
@@ -9,6 +10,7 @@ import type {
 
 import { deliveryFactNames } from "../graph/schema.js";
 import { CODE_ANCHOR_NAMESPACES, codeAnchorId, componentAnchorId, parseId, ref } from "../ids.js";
+import type { IdParts } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import { SPEC_ALTITUDES, SPEC_KINDS, SPEC_READINESS } from "../model/descriptors.js";
 import { SPEC_RELATION_TYPES } from "../model/relations.js";
@@ -312,6 +314,69 @@ export function readPropertyName(property: PropertyAssignment): string | undefin
 }
 
 /**
+ * The open sections and the Model terms keep authored key order, which a JavaScript object breaks
+ * for an integer-like key: it moves ahead of every other key. Those shapes read a numeric property
+ * name as the key evaluation gives it, so `1` and `"1"` name one key, and refuse it. A numeric
+ * name whose key is not integer-like, such as `1.5`, stays unread, as every numeric name was
+ * before the refusal.
+ */
+const INTEGER_KEY_SHAPE_PATHS: ReadonlySet<string> = new Set(["design", "ui", "model.terms"]);
+const INTEGER_LIKE_KEY = /^(0|[1-9][0-9]*)$/u;
+
+/**
+ * The key JavaScript gives a numeric property name: ToString of its numeric value, so `0x10` is
+ * `"16"`, `1e3` is `"1000"`, and `1e21` is `"1e+21"`. `getLiteralValue` parses the literal text
+ * as an integer and would read `1e21` as `1`.
+ */
+function numericPropertyKey(nameNode: NumericLiteral): string {
+  return String(Number(nameNode.getLiteralText()));
+}
+
+function readKeyedPropertyName(
+  property: PropertyAssignment,
+  shapePath: string,
+): string | undefined {
+  const nameNode = property.getNameNode();
+
+  if (INTEGER_KEY_SHAPE_PATHS.has(shapePath) && Node.isNumericLiteral(nameNode)) {
+    const key = numericPropertyKey(nameNode);
+
+    if (INTEGER_LIKE_KEY.test(key)) {
+      return key;
+    }
+  }
+
+  return readPropertyName(property);
+}
+
+function isRefusedIntegerKey(shapePath: string, name: string): boolean {
+  return INTEGER_KEY_SHAPE_PATHS.has(shapePath) && INTEGER_LIKE_KEY.test(name);
+}
+
+/**
+ * A method or accessor whose name is integer-like names the same key a property would, so those
+ * shapes refuse it as they refuse the property. Any other method or accessor drops as non-static.
+ */
+function refusedIntegerMemberName(member: Node, shapePath: string): string | undefined {
+  if (
+    !Node.isMethodDeclaration(member) &&
+    !Node.isGetAccessorDeclaration(member) &&
+    !Node.isSetAccessorDeclaration(member)
+  ) {
+    return undefined;
+  }
+
+  const nameNode = member.getNameNode();
+  const name = Node.isNumericLiteral(nameNode)
+    ? numericPropertyKey(nameNode)
+    : Node.isStringLiteral(nameNode)
+      ? nameNode.getLiteralValue()
+      : undefined;
+
+  return name !== undefined && isRefusedIntegerKey(shapePath, name) ? name : undefined;
+}
+
+/**
  * A property name authored twice at one object tier is ambiguity, never detail: evaluation keeps
  * the last value while diagnostics key on the first seen. tsc reports the duplication (TS1117) to
  * typechecking authors; the extractor reads files standalone, so it is the backstop — at every
@@ -343,6 +408,17 @@ export type IdReification =
       readonly line: number;
       readonly reason: string;
     };
+
+/**
+ * The one refusal every id slot gives an entry address. The `#` sub-part names an entry inside a
+ * Spec; `parseId` admits it so prose can carry it, and no Spec identity, relation target, Pack
+ * member, model reference, or anchor target ever holds one.
+ */
+export function entryAddressSlotReason(value: string, parsed: IdParts): string | undefined {
+  return parsed.subpath === undefined
+    ? undefined
+    : `id "${value}" is an entry address where a Spec id is required`;
+}
 
 function namespacesList(namespaces: readonly string[]): string {
   return namespaces.map((entry) => `"${entry}"`).join(" · ");
@@ -420,6 +496,12 @@ export function reifyStaticIdExpression(
         line,
         reason: `id "${idText}" carries namespace "${parsed.namespace}" where ${namespacesLabel(expectedNamespaces)}`,
       };
+    }
+
+    const addressReason = entryAddressSlotReason(idText, parsed);
+
+    if (addressReason !== undefined) {
+      return { ok: false, kind: "invalid", line, reason: addressReason };
     }
   } catch (error) {
     return {
@@ -609,7 +691,7 @@ interface LossyObjectResult {
 }
 
 interface SectionPropertyIssue {
-  readonly kind: "unrecognized" | "reserved";
+  readonly kind: "unrecognized" | "integer-like";
   readonly name: string;
   readonly path: string;
   readonly line: number;
@@ -672,6 +754,11 @@ function reifyObjectLossy(
   const seenNames = new Set<string>();
 
   for (const property of objectLiteral.getProperties()) {
+    // Reported once by the section check, like an integer-like property.
+    if (refusedIntegerMemberName(property, path) !== undefined) {
+      continue;
+    }
+
     if (!Node.isPropertyAssignment(property)) {
       const name = Node.isShorthandPropertyAssignment(property) ? property.getName() : "<entry>";
       drops.push({
@@ -684,7 +771,7 @@ function reifyObjectLossy(
       continue;
     }
 
-    const name = readPropertyName(property);
+    const name = readKeyedPropertyName(property, path);
 
     if (name === undefined) {
       drops.push({
@@ -714,6 +801,13 @@ function reifyObjectLossy(
     }
 
     seenNames.add(name);
+
+    // An integer-like key is refused whatever its value, so its value is never reified: the
+    // section check reports the one error, and no non-static warning joins it.
+    if (isRefusedIntegerKey(path, name)) {
+      continue;
+    }
+
     const initializer = property.getInitializer();
 
     if (initializer === undefined) {
@@ -779,9 +873,9 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
 
   const shapePath = path.replace(/\[\d+\]/g, "[]");
   const recognizedNames = RECOGNIZED_SECTION_PROPERTIES.get(shapePath);
-  const reservesDescription = shapePath === "model.terms";
+  const refusesIntegerKeys = INTEGER_KEY_SHAPE_PATHS.has(shapePath);
 
-  if (recognizedNames === undefined && !reservesDescription) {
+  if (recognizedNames === undefined && !refusesIntegerKeys) {
     return { value, issues: [] };
   }
 
@@ -790,28 +884,49 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
   const seenNames = new Set<string>();
 
   for (const property of unwrapped.getProperties()) {
+    const memberName = refusedIntegerMemberName(property, shapePath);
+
+    // One finding per method or accessor: a getter and a setter of one name are two members.
+    if (memberName !== undefined) {
+      issues.push({
+        kind: "integer-like",
+        name: memberName,
+        path: `${path}.${memberName}`,
+        line: property.getStartLineNumber(),
+      });
+      continue;
+    }
+
     if (!Node.isPropertyAssignment(property)) {
       continue;
     }
 
-    const name = readPropertyName(property);
+    const name = readKeyedPropertyName(property, shapePath);
 
-    if (name === undefined || seenNames.has(name) || !Object.hasOwn(value, name)) {
+    if (name === undefined || seenNames.has(name)) {
       continue;
     }
 
-    seenNames.add(name);
     const propertyPath = `${path}.${name}`;
 
-    if (reservesDescription && name === "description") {
+    // Checked before the value: lossy reification never reifies an integer-like key's value, so
+    // a static and a non-static value meet the same refusal.
+    if (isRefusedIntegerKey(shapePath, name)) {
+      seenNames.add(name);
       issues.push({
-        kind: "reserved",
+        kind: "integer-like",
         name,
         path: propertyPath,
         line: property.getStartLineNumber(),
       });
       continue;
     }
+
+    if (!Object.hasOwn(value, name)) {
+      continue;
+    }
+
+    seenNames.add(name);
 
     if (
       recognizedNames !== undefined &&
@@ -846,16 +961,15 @@ function appendSectionPropertyFindings(
   file: string,
   subjectId: string | undefined,
   findings: Finding[],
-): boolean {
-  let sectionOk = true;
-
+): void {
   for (const issue of issues) {
-    if (issue.kind === "unrecognized") {
+    // An integer-like key is an error that drops the one key and keeps the Spec and its other keys.
+    if (issue.kind === "integer-like") {
       findings.push(
         createExtractFinding(
           extractFindingIds.unrecognizedProperty,
-          "warning",
-          `property "${issue.path}" is outside the authored section shape and is dropped — authored content must never silently fall out of the graph (L2)`,
+          "error",
+          `property "${issue.name}" is refused: integer-like keys are not accepted in design, ui, or model terms`,
           file,
           issue.line,
           subjectId,
@@ -867,19 +981,16 @@ function appendSectionPropertyFindings(
 
     findings.push(
       createExtractFinding(
-        extractFindingIds.reservedProperty,
-        "error",
-        `property "${issue.path}" collides with the section's reserved "${issue.name}" field — a model term and section description must remain distinct, so the spec is not extracted`,
+        extractFindingIds.unrecognizedProperty,
+        "warning",
+        `property "${issue.path}" is outside the authored section shape and is dropped — authored content must never silently fall out of the graph (L2)`,
         file,
         issue.line,
         subjectId,
         issue.path,
       ),
     );
-    sectionOk = false;
   }
-
-  return sectionOk;
 }
 
 /* ----- spec() and pack() call reification ----- */
@@ -1324,9 +1435,7 @@ function reifySpecCall(
       const sanitized = sanitizeSectionValue(inner, lossy.value, name);
       data[name] = sanitized.value;
       appendDropFindings(lossy.drops, file, subjectId, findings);
-      if (!appendSectionPropertyFindings(sanitized.issues, file, subjectId, findings)) {
-        envelopeOk = false;
-      }
+      appendSectionPropertyFindings(sanitized.issues, file, subjectId, findings);
       continue;
     }
 
@@ -1351,9 +1460,7 @@ function reifySpecCall(
 
       const sanitized = sanitizeSectionValue(inner, result.value, name);
       data[name] = sanitized.value;
-      if (!appendSectionPropertyFindings(sanitized.issues, file, subjectId, findings)) {
-        envelopeOk = false;
-      }
+      appendSectionPropertyFindings(sanitized.issues, file, subjectId, findings);
       continue;
     }
 
@@ -1386,7 +1493,16 @@ function reifySpecCall(
     }
   }
 
-  if (!envelopeOk || findings.some((finding) => finding.severity === "error")) {
+  // An unrecognized property drops itself and never its carrier, at either severity: the
+  // integer-like key refusal is an error that keeps the Spec and its other keys.
+  if (
+    !envelopeOk ||
+    findings.some(
+      (finding) =>
+        finding.severity === "error" &&
+        finding.validatorId !== extractFindingIds.unrecognizedProperty,
+    )
+  ) {
     return { findings };
   }
 

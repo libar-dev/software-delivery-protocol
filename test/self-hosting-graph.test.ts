@@ -173,14 +173,17 @@ describe("the self-hosting corpus", () => {
     expect(result.report.findings).toEqual([]);
   });
 
-  it("reports exactly the five informative honesty gaps", () => {
+  it("reports exactly the five informative honesty gaps and the eight unbacked prose mentions", () => {
     expect(
-      validateGraph(result.graph).findings.map(({ validatorId, family, severity, subjectId }) => ({
-        validatorId,
-        family,
-        severity,
-        subjectId,
-      })),
+      validateGraph(result.graph).findings.map(
+        ({ validatorId, family, severity, subjectId, relatedId }) => ({
+          validatorId,
+          family,
+          severity,
+          subjectId,
+          relatedId,
+        }),
+      ),
     ).toEqual(expectedWarnings);
   });
 
@@ -188,12 +191,12 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    expect(result.counts).toEqual({ specs: 200, packs: 1, anchors: 213 });
-    expect(expectedSpecs).toHaveLength(200);
-    expect(expectedPackMembers).toHaveLength(200);
-    expect(expectedAnchors).toHaveLength(213);
-    expect(result.graph.nodes).toHaveLength(414);
-    expect(result.graph.edges).toHaveLength(918);
+    expect(result.counts).toEqual({ specs: 202, packs: 1, anchors: 220 });
+    expect(expectedSpecs).toHaveLength(202);
+    expect(expectedPackMembers).toHaveLength(202);
+    expect(expectedAnchors).toHaveLength(220);
+    expect(result.graph.nodes).toHaveLength(423);
+    expect(result.graph.edges).toHaveLength(934);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -243,7 +246,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 42, idea: 6, ready: 148, scoped: 4 });
+    ).toEqual({ defined: 48, idea: 4, ready: 148, scoped: 2 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {

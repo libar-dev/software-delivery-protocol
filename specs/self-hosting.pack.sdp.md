@@ -24,6 +24,7 @@ specs:
   - spec:carrier.markdown-body-grammar.second-primary-owner-refused
   - spec:carrier.markdown-body-grammar.raw-html-refused
   - spec:carrier.markdown-body-grammar.shared-description-refused
+  - spec:carrier.markdown-body-grammar.integer-term-refused
   - spec:carrier.inline-code-spans
   - spec:carrier.inline-code-spans.narrative
   - spec:carrier.inline-code-spans.description
@@ -117,6 +118,7 @@ specs:
   - spec:extraction.schema-versioning.declared-version
   - spec:model.stable-ids.namespaced-round-trip
   - spec:model.stable-ids.malformed-refusal
+  - spec:model.stable-ids.unsectioned-address-refused
   - spec:carrier.markdown-parser.bounded-parity
   - spec:extraction.example-runner
   - spec:extraction.example-runner.step-order

@@ -14,6 +14,9 @@ import { addMarkdownFinding, markdownFinding } from "./markdown-support.js";
 import { setOwn } from "./set-own.js";
 
 const camelKey = /^[a-z][A-Za-z0-9]*$/u;
+// An integer-like key would reorder ahead of every other key in a JavaScript object, so a term
+// that reads as an array index is refused rather than silently moved.
+const integerLikeKey = /^(0|[1-9][0-9]*)$/u;
 
 export function mapConstraints(
   target: Record<string, unknown>,
@@ -92,6 +95,11 @@ export function mapModel(
       addMarkdownFinding(
         findings,
         structureFinding(file, item.line, "Model entries require **TERM** — DEFINITION"),
+      );
+    else if (integerLikeKey.test(match[1]))
+      addMarkdownFinding(
+        findings,
+        structureFinding(file, item.line, "model terms must not be integer-like"),
       );
     else if (Object.hasOwn(terms, match[1]))
       addMarkdownFinding(findings, structureFinding(file, item.line, "model terms must be unique"));

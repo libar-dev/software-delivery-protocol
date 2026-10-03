@@ -13,11 +13,9 @@ export const extractionSpecs = [
     narrative:
       "The graph is the current projection of the repository at a commit. Git holds lifecycle history, so removed records disappear from the current graph and a current `supersedes` relation is the only forward pointer between records that still exist.",
     sections: {
-      design: {
-        description:
-          "One read model. Carrier reifiers translate each supported syntax into common reified input. Graph derivation joins that input with bindings and computes delivery facts before consumers read it. Adding a carrier changes the input boundary; validators and projections continue to consume the same graph. The shared delivery-fact policy belongs to the graph component so graph construction does not define a competing policy.",
+      intent: {
+        outcome: "Expose one carrier-neutral derivation seam.",
       },
-      intent: { outcome: "Expose one carrier-neutral derivation seam." },
       behavior: {
         rules: [
           "Carrier reification feeds deriveGraph once; no consumer creates a second graph.",
@@ -25,7 +23,12 @@ export const extractionSpecs = [
           "Declared relations resolve Primitive to Primitive, while `satisfies` and test `verifies` edges derive from anchors and run from their binding node to the direct Spec target.",
           "Delivery facts are computed node facts: a resolving `satisfies` edge contributes `implemented`, and an enabled direct verifier contributes `has-verifier` only to its target.",
           "Inferred structural edges are advisory inputs to impact analysis and never become authoritative graph truth.",
+          "The key order of `design`, `ui`, and `model.terms` is the authored order and part of the graph contract.",
         ],
+      },
+      design: {
+        description:
+          "One read model. Carrier reifiers translate each supported syntax into common reified input. Graph derivation joins that input with bindings and computes delivery facts before consumers read it. Adding a carrier changes the input boundary; validators and projections continue to consume the same graph. The shared delivery-fact policy belongs to the graph component so graph construction does not define a competing policy.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -282,9 +285,6 @@ export const extractionSpecs = [
     title: "A derived payload carries a schema version its consumer can read",
     narrative: null,
     sections: {
-      intent: {
-        outcome: "Execute the declared-version rule over a serialized graph payload.",
-      },
       behavior: {
         examples: [
           {
@@ -292,9 +292,12 @@ export const extractionSpecs = [
               'a graph derived from the authored spec {specId: "spec:probe.schema-versioning"}',
             ],
             when: ["the graph payload is serialized"],
-            then: ['the payload declares the schema version {schemaVersion: "0.5.0"}'],
+            then: ['the payload declares the schema version {schemaVersion: "0.6.0"}'],
           },
         ],
+      },
+      intent: {
+        outcome: "Execute the declared-version rule over a serialized graph payload.",
       },
     },
     deliveryFacts: ["has-verifier"],
@@ -692,63 +695,55 @@ export const extractionSpecs = [
     id: "spec:extraction.open-section-order",
     specKind: "rule",
     altitude: "story",
-    readiness: "scoped",
+    readiness: "defined",
     file: "specs/extraction/open-section-order.sdp.md",
     title: "Serialization preserves authored entry order",
     narrative: null,
     sections: {
       intent: {
         problem:
-          "Canonical serialization sorts the keys of `design`, `ui`, and `model` terms by code unit, and the Design Review sorts them again, so a ten-step sequence reads as step 1, step 10, step 2 and an author's grouping is lost.",
+          "Before schema `0.6.0`, canonical serialization sorted the keys of `design`, `ui`, and `model` terms by code unit, and the Design Review sorted them again, so a ten-step sequence read as step 1, step 10, step 2 and an author's grouping was lost.",
         outcome:
           "Carry the authored order of open-section entries and model terms through the serialized graph and the Design Review's key order.",
-        openQuestions: [
-          {
-            question:
-              "The in-memory graph holds these entries as plain objects, so an integer-like key already loses its place before serialization. Markdown `design` and `ui` keys are lower-camel and cannot be integer-like, but a Model term and a TypeScript open-section key can. Either the carriers refuse an integer-like key in those positions, or the representation becomes an ordered list. Which?",
-            blocking: true,
-          },
-        ],
       },
       behavior: {
         rules: [
           "The entry order of `design`, `ui`, and `model` terms is authored content. Extraction keeps it, the serialized graph emits it, the Design Review's fenced JSON follows it for open sections, and the Model table follows it for terms.",
           "Authored order is a function of the committed source, so two derivations of one commit stay byte-identical. What is given up is invariance under permutation: two carriers that author the same entries in different orders derive different graph bytes, and parity for these sections means the same entries in the same order.",
-          "The serialized graph changes for every Spec whose entries are not already in code-unit order, so the schema version moves and the golden trees regenerate.",
-          "This rule is an ordinary revision. No Spec states the sort; it lives in `canonicalDynamicSection` in `src/extract/serialize.ts`, `renderDynamicRecord` in `src/projections/design-review-markdown.ts`, and `renderModel` in `src/projections/design-review-section-content.ts`, which are the realizing sites. The Design Review's encoding rule is untouched; rendering entries as a list is `spec:decisions.authored-entry-order`.",
+          'A key is integer-like when it matches `^(0|[1-9][0-9]*)$`. The Markdown carrier refuses an integer-like Model term with the structure finding `model terms must not be integer-like` and drops the carrier, as it does for every structure refusal; its open-section keys are lower-camel and cannot be integer-like. The TypeScript carrier reads each name under `design`, `ui`, or `model.terms` as the key JavaScript gives it. A name written as an identifier or a string is its text, and a numeric name is the string form of its number, so `1e3` is `"1000"`, `0x10` is `"16"`, and `0.0000001` is `"1e-7"`. A property, method, getter, or setter whose key is integer-like is refused with the finding `extract/unrecognized-property` at severity error, where that finding is otherwise a warning, and the message `property "<key>" is refused: integer-like keys are not accepted in design, ui, or model terms`. Each refused member gets one finding whatever its value, and only that member drops; the Spec and its other keys stay. A numeric name whose key is not integer-like, such as `1.5`, drops as a non-static name, as it did before this rule. The Gherkin carrier has no open section. The owner ruled the refusal over an ordered-list representation; re-measured at `242d8e6`, neither this corpus nor the first adopter\'s carries such a key.',
+          "With integer-like keys refused, a plain object keeps insertion order, so the representation stays an object and no field shape changes. Authored key order is part of the graph contract. The derived graph establishes it, so the reader, the serialized graph, and the Design Review agree. In `design` and `ui` the section's own `description`, its leading prose, comes first, then every other key in authored order. `model.terms` keeps pure authored order, and a term named `description` is an ordinary term, because the Model section's prose lives at `model.description`.",
+          "The schema version moves from `0.5.0` to `0.6.0`, documented as a change of accepted ids, since the `#` sub-part becomes an entry address, and of ordering semantics, with unchanged field shapes. The serialized graph changes for every Spec whose entries are not already in code-unit order.",
+          "The reader exposes authored order as the key order of a Spec context's `sections.design`, `sections.ui`, and `sections.model.terms`; entry search rows follow it, and no reader method is added.",
+          "This rule is an ordinary revision, and no Spec stated the sort it replaced. `canonicalDynamicSection` in `src/extract/serialize.ts`, `renderDynamicRecord` in `src/projections/design-review-markdown.ts`, and `renderModel` in `src/projections/design-review-section-content.ts` are the sites that keep authored order. The Design Review's encoding rule is untouched; rendering entries as a list is `spec:decisions.authored-entry-order`.",
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:extraction.contract-declarations",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "idea",
+    readiness: "defined",
     file: "specs/extraction/contract-declarations.sdp.md",
     title: "Contract declarations derive a compilable module",
-    narrative: null,
+    narrative:
+      "The re-entry trigger held with the first adopter's rebuild package. At the adopter's commit `2b6b9db`, the package authored its design as keyed Design entries whose values open with a one-line code span, and a test author and a builder wrote 325 tests and the code from that text apart from each other. Every disagreement that went up for a ruling at the merge was a prose sentence with two readings, and none was a declaration. A long table was split across a table, a validator, and an index entry rather than wrapped. That evidence rules the declaration shape below, and the owner's ruling settles the module's emission as the adopter's own recipe.",
     sections: {
       intent: {
         problem:
           "Signatures and types in a design are code, yet an author writes them as prose entries no compiler reads, so a name used and never declared, or declared twice, is found only by a reviewer.",
         outcome:
-          "Give contract content a closed typed section whose declarations derive one compilable module per corpus, so a Spec that disagrees with its code fails the build the way a step contract does.",
+          "Give a declaration one ruled shape inside the Design section, so that a module derived from the graph can carry every pinned signature of a corpus and a Spec that disagrees with its code fails the adopter's typecheck the way a step contract does.",
         openQuestions: [
           {
             question:
-              "This Spec re-enters on evidence. Has code first had to agree with signatures authored at design time, or has a second adopter authored signatures in a Design section? Until one holds, the declaration shape stays unruled.",
-            blocking: true,
+              "The contract kind's evidence row in the kind-evidence table is unchanged by this Spec. A closed contract section is not planned; if an adopter asks for one, it enters as a Spec of its own.",
+            blocking: false,
           },
           {
             question:
-              "Does an opaque, language-tagged fence owned by one keyed entry fit the carrier ruling's small owned grammar, or does it need a decision of its own?",
-            blocking: true,
-          },
-          {
-            question:
-              "When the contract section lands, the `contract` row of the kind-evidence table repoints to it. Which evidence counts as present, and which as complete?",
+              "A compiled module finds a name used and never declared and a name declared twice. It does not find a bullet whose prose uses a declared name with another type, which is the drift the first adopter met at its merge. Checking a span used inside a step bullet as an expression is deferred until an adopter asks for it.",
             blocking: false,
           },
           {
@@ -758,7 +753,16 @@ export const extractionSpecs = [
           },
         ],
       },
-      behavior: {},
+      behavior: {
+        rules: [
+          "A declaration is the code span that opens the value of one keyed Design entry, written on one line in the language the adopter's code is written in. The Protocol parses no language inside the span and stores it as authored.",
+          "A fence is not the declaration shape. A declaration that does not fit one line is split across several keyed entries, each a declaration of its own.",
+          "The key names the declaration's role, and the Protocol fixes no key vocabulary. An adopter's prefix convention, such as `fn`, `type`, `table`, `validator`, and `index`, is a project policy that a recipe reads and never a carrier rule.",
+          "A declaration states a shape and never a delivery fact. The anchor's `satisfies` binds the code that claims to realize it and a test anchor binds the verifier that claims to check it, both outside the span.",
+          "The derived module is a projection: regenerable, never edited, imported by the adopter's tests and never by an authored Spec.",
+          "The adopter emits the derived module from the pinned declarations list with its own preamble of imports and placeholder declarations, until a second adopter needs the same preamble and the emitter freezes into `sdp build`. The module earns its place only when a changed pinned signature fails the adopter's typecheck against its implementation; a module that merely compiles proves nothing.",
+        ],
+      },
     },
     deliveryFacts: [],
   },

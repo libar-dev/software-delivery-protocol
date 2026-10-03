@@ -16,6 +16,7 @@ import type {
 } from "../generated/contracts/model.anchors.space.js";
 import { malformedRefusalContract } from "../generated/contracts/model.stable-ids.malformed-refusal.contract.js";
 import { namespacedRoundTripContract } from "../generated/contracts/model.stable-ids.namespaced-round-trip.contract.js";
+import { unsectionedAddressRefusedContract } from "../generated/contracts/model.stable-ids.unsectioned-address-refused.contract.js";
 import type {
   StableIdsConditions,
   StableIdsOutcome,
@@ -27,10 +28,12 @@ import { registerPhysicalIdentity } from "./model.anchors.physical-identity.test
 import { paramsForStep } from "./helpers/generated-contract.js";
 import { registerMalformedRefusal } from "./model.stable-ids.malformed-refusal.test.generated.js";
 import { registerNamespacedRoundTrip } from "./model.stable-ids.namespaced-round-trip.test.generated.js";
+import { registerUnsectionedAddressRefused } from "./model.stable-ids.unsectioned-address-refused.test.generated.js";
 
 /**
- * The bound executable points of the ID grammar: two representative shapes — the fullest
- * well-formed identifier the model allows, and one refusal that names its reason. The `it.each`
+ * The bound executable points of the ID grammar: three representative shapes — the fullest
+ * well-formed identifier the model allows, one refusal that names its reason, and the entry
+ * address refused when its `#` sub-part names no section. The `it.each`
  * tables in `test/ids.test.ts` stay as regression evidence over every accepted and rejected
  * spelling; a law is converted, never a table row.
  *
@@ -130,6 +133,29 @@ registerMalformedRefusal({
 
     expect(message).toContain(reason);
     expect(message).toContain(`"${world.identifier}"`);
+  },
+});
+
+const unsectionedAddressRefusedTestAnchor = specTest({
+  id: testAnchorId("test:protocol.stable-ids.unsectioned-address-refused"),
+  label: "the unsectioned point verifies the entry-address section refusal",
+  verifies: ref("spec:model.stable-ids.unsectioned-address-refused"),
+});
+void unsectionedAddressRefusedTestAnchor;
+registerUnsectionedAddressRefused({
+  createWorld: createIdentifierWorld,
+  invoke: invokeIdentifierParse,
+  observe: observeIdentifierParse,
+  expected: (point) => expectedParsingOutcome(point, "is refused"),
+  // Second Then (`the refusal names the reason`) is a different kind than the oracle's.
+  assertions: (world) => {
+    const message = world.refusal?.message ?? "the identifier refusal is missing";
+    const { reason } = paramsForStep(
+      unsectionedAddressRefusedContract,
+      "the refusal names the reason {reason}",
+    );
+
+    expect(message).toBe(`Invalid ID "${world.identifier}": ${reason}`);
   },
 });
 

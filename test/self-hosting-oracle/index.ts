@@ -49,15 +49,73 @@ export const expectedSpecs: readonly ExpectedSpec[] = specFamilies.flatMap(
   (family) => family.specs,
 );
 
-// These four-field projections identify the five informative honesty gaps from owner-ratified
-// ready Specs without resolving verifier bindings. The CLI suite separately pins each diagnostic's
-// file, validator, and subject prefix.
+// These projections identify the five informative honesty gaps from owner-ratified ready Specs
+// without resolving verifier bindings, and the eight informative prose-mention warnings, one per
+// mentioning and target Spec pair with no declared relation either way. A prose-mention row also
+// pins its target Spec as relatedId, so two pairs from one Spec differ in the pin. The CLI suite
+// separately pins each diagnostic's file, validator, and message prefix.
 export const expectedWarnings = [
   {
     validatorId: "honesty/gaps",
     family: "honesty",
     severity: "warning",
     subjectId: "spec:carrier.markdown-authoring",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:carrier.markdown-body-grammar",
+    relatedId: "spec:validation.authored-honesty",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:carrier.markdown-parser",
+    relatedId: "spec:carrier.inline-code-spans",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:consumers.adopter-on-ramp",
+    relatedId: "spec:carrier.markdown-body-grammar",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:consumers.delivery-session-on-ramp",
+    relatedId: "spec:decisions.planning-truths-placement",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:consumers.delivery-session-on-ramp",
+    relatedId: "spec:decisions.shipped-projections-frozen",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:decisions.carrier-ruling",
+    relatedId: "spec:decisions.carrier-universality",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:decisions.jsdoc-graph-extraction-refused",
+    relatedId: "spec:model.spec-sections",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:decisions.planning-truths-placement",
+    relatedId: "spec:consumers.impact-graph",
   },
   {
     validatorId: "honesty/gaps",

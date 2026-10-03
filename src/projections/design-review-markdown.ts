@@ -102,8 +102,6 @@ function renderDynamicValue(value: unknown): unknown {
 
 export function renderDynamicRecord(content: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(
-    Object.keys(content)
-      .sort()
-      .map((key) => [key, renderDynamicValue(content[key])]),
+    Object.keys(content).map((key) => [key, renderDynamicValue(content[key])]),
   );
 }

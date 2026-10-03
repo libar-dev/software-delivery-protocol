@@ -1028,7 +1028,7 @@ export const decisionsSpecs = [
     id: "spec:decisions.checked-mentions",
     specKind: "decision",
     altitude: "feature",
-    readiness: "scoped",
+    readiness: "defined",
     file: "specs/decisions/checked-mentions.sdp.md",
     title: "A Spec id written in prose is a checked mention",
     narrative: null,
@@ -1039,17 +1039,7 @@ export const decisionsSpecs = [
         openQuestions: [
           {
             question:
-              "Open-section keys are unique within a section, not within a Spec: one carrier may hold `shared` under Design and again under UI, so `spec:x#shared` names two entries. Does the address carry the section, as in `spec:x#design.shared`, or does the carrier refuse a key that appears under both?",
-            blocking: true,
-          },
-          {
-            question:
-              "The id grammar already admits a `#` sub-part in a complete Spec identity, and the reifier accepts `spec:x#foo` as a Spec's own id. Does an entry address take precedence over such an identity, or is a `#` in a Spec id refused once it carries address meaning?",
-            blocking: true,
-          },
-          {
-            question:
-              "`mention` and `entry address` are candidate terms. They enter the glossary when this record is ratified.",
+              "`mention` and `entry address` are candidate terms, defined in the glossary's flagged list. They move into the ratified tables when this record states `ready`.",
             blocking: false,
           },
         ],
@@ -1058,21 +1048,27 @@ export const decisionsSpecs = [
         context:
           "Specs name other Specs, and single entries of them, in prose. Referential integrity reads edges and Pack references only. A prose id that does not resolve passes validation, a mention that no relation backs hides a dependent from blast radius, and finding every Spec that repeats an entry is a text search. The first adopter corpus carried its design as keyed entries, and most of its prose mentions had no declared relation.",
         decision:
-          "A Spec id in narrative or section text, outside `gwt` and `gwt-vocabulary` fences, is a mention. A mention that does not resolve is a conformance error. A mention with no declared relation from its Spec to the target is a warning. An id that adds `#` and a key to a Spec id addresses one keyed entry of that Spec's `design` or `ui` section and resolves when the key exists. A mention mints no edge, and the reader gains no join.",
+          "A Spec id in narrative or section text, outside `gwt` and `gwt-vocabulary` fences, is a mention. A mention that does not resolve is a conformance error. A mention of another Spec that shares no declared relation with the mentioning Spec, in either direction, is one warning per mentioning Spec and target Spec pair, whatever the number of locations; an address on the mentioning Spec's own id is checked for its entry and never warned. An entry address is a Spec id followed by `#`, the section name `design` or `ui`, a dot, and the entry's lower-camel ASCII key, as in `spec:<id>#design.<key>`; it addresses one keyed entry of that Spec and resolves when the Spec exists and that section holds the key as its own key, other than `description`. The `#` sub-part is reserved for the entry address in every namespace: a Spec's own id, a relation target, a Pack member or model reference, an anchor id or target, and the `specId` and `ref` builders all refuse it. A mention mints no edge, and the reader gains no join.",
         rationale: [
-          "The warning asks for a relation that already exists, so linkage keeps one home. Open-section keys fit the sub-part form, so the address costs no carrier grammar once the two blocking questions are settled.",
-          "This applies the content-only sections ruling rather than contradicting it. A mention mints no edge, so no consumer branches on a reference union, and the warning names exactly the double-linkage drift that ruling calls legal and silent today. The id grammar already parses and formats the sub-part; this record gives it its first meaning.",
+          "The warning asks for a relation that already exists, so linkage keeps one home. A relation in either direction backs a mention because blast radius walks its one hop both ways, so a reverse edge already surfaces the dependent. One warning per pair keeps the report readable where a Spec names one neighbor in many bullets, and the mention audit keeps every location.",
+          "This applies the content-only sections ruling rather than contradicting it. A mention mints no edge, so no consumer branches on a reference union, and the warning names exactly the double-linkage drift that ruling calls legal and silent today. The id grammar already parses and formats a `#` sub-part; this record gives it its only meaning, and the dot inside the sub-part is the one grammar change.",
+          "The owner ruled that the address carries the section, because open-section keys are unique within a section and not within a Spec, so `spec:<id>#design.shared` and `spec:<id>#ui.shared` stay distinct when one carrier holds both; that `#` is refused in every identity, because neither this corpus nor the first adopter's carries one, re-measured as zero in both at `242d8e6`, and one meaning per sub-part keeps resolution a lookup instead of a precedence rule; and that one lower-camel key grammar serves every carrier, so an address is typeable from memory and a lawful TypeScript key outside it is simply unaddressable.",
         ],
         alternatives: [
           "A new edge type for mentions costs the schema, the edge contract, the census, the Mermaid view, and every recipe that filters edges. The warning reaches the same dependents through relations that exist.",
           "Leaving the check to each adopter's own lint fixes one corpus and no other.",
           "A positional address for an unkeyed bullet, such as the third flow of a Workflow, was refused. Positions move with every edit above them, so such an address would break silently where a key breaks loudly.",
+          "Refusing a key that appears under both Design and UI would shorten the address and make one section's keys depend on the other's. Refused by the owner.",
+          "Letting an identity with `#` outrank an address would keep today's grammar and make every address resolution a two-step lookup for a case no corpus has. Refused by the owner.",
+          "Warning only on a missing forward relation would turn a parent's mention of its own child into a finding the child's `refines` edge already answers. Refused by the owner.",
         ],
         consequences: [
           "Only a keyed entry of `design` or `ui` is addressable. A Workflow flow, a Rule or Contract bullet, a Model term, and an open question have no address; a reference to one of them stays a Spec-level mention, and a sequence that must be addressed is authored as keyed entries.",
+          "The key `description` names a section's leading prose and is never an entry, so an address ending in `.description` never resolves. A TypeScript key outside the lower-camel ASCII grammar is lawful and has no address.",
           "A renamed open-section key fails validation in every Spec that addresses it.",
           "Blast radius and delta review scope include a mentioning Spec once a declared relation backs its mention.",
           "A family pattern written in id form reads as an unresolved mention, so such a pattern is written as plain words.",
+          "The id contract and its test move together: the stable-ids round-trip example re-binds from a sectionless `#` sub-part to an entry address, and the id tests move the sectionless form to the refused list.",
           "No reference check detects two Specs that restate one shape in their own words. The check narrows that defect class and never closes it.",
         ],
       },

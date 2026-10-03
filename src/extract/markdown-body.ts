@@ -1,3 +1,5 @@
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import { hasRawHtmlOutsideCodeSpans } from "./markdown-inline-code.js";
 import type { Finding } from "../validate/contracts.js";
 import { addMarkdownFinding, capMarkdownFindings, markdownFinding } from "./markdown-support.js";
@@ -112,6 +114,14 @@ function narrative(lines: readonly MarkdownLine[], file: string, findings: Findi
   }
   return normalizeProse(lines);
 }
+
+const markdownBodyGrammarAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.markdown-body-grammar"),
+  label: "enforces the closed Markdown body grammar",
+  satisfies: ref("spec:carrier.markdown-body-grammar"),
+  component: componentAnchorId("component:protocol.extract"),
+});
+void markdownBodyGrammarAnchor;
 
 export function parseMarkdownBody(
   body: string,

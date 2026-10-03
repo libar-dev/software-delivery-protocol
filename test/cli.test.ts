@@ -249,7 +249,53 @@ describe("sdp cli", () => {
       ] as const) {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
       }
-      expect(capture.readStdout()).toContain("validate: 0 errors · 5 warnings");
+      for (const [file, target, specId] of [
+        [
+          "specs/carrier/markdown-body-grammar.sdp.md",
+          "spec:validation.authored-honesty",
+          "spec:carrier.markdown-body-grammar",
+        ],
+        [
+          "specs/carrier/markdown-parser.sdp.md",
+          "spec:carrier.inline-code-spans",
+          "spec:carrier.markdown-parser",
+        ],
+        [
+          "specs/consumers/adopter-on-ramp.sdp.md",
+          "spec:carrier.markdown-body-grammar",
+          "spec:consumers.adopter-on-ramp",
+        ],
+        [
+          "specs/consumers/delivery-session-on-ramp.sdp.md",
+          "spec:decisions.planning-truths-placement",
+          "spec:consumers.delivery-session-on-ramp",
+        ],
+        [
+          "specs/consumers/delivery-session-on-ramp.sdp.md",
+          "spec:decisions.shipped-projections-frozen",
+          "spec:consumers.delivery-session-on-ramp",
+        ],
+        [
+          "specs/decisions/carrier-ruling.sdp.md",
+          "spec:decisions.carrier-universality",
+          "spec:decisions.carrier-ruling",
+        ],
+        [
+          "specs/decisions/jsdoc-graph-extraction-refused.sdp.md",
+          "spec:model.spec-sections",
+          "spec:decisions.jsdoc-graph-extraction-refused",
+        ],
+        [
+          "specs/decisions/planning-truths-placement.sdp.md",
+          "spec:consumers.impact-graph",
+          "spec:decisions.planning-truths-placement",
+        ],
+      ] as const) {
+        expect(stderr).toContain(
+          `${file} — [warning] conformance/prose-mentions — Mention of "${target}" in "${specId}"`,
+        );
+      }
+      expect(capture.readStdout()).toContain("validate: 0 errors · 13 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
@@ -670,6 +716,45 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
       expect(existsSync(join(corpusRoot, "generated", "design-review"))).toBe(false);
     } finally {
       removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it.each([
+    ["a static value", '1: "static"'],
+    ["a non-static value", "1: compute()"],
+    ["a method", '1() { return "x"; }'],
+    ["an accessor", 'get 1() { return "x"; }'],
+  ])("fails build on an integer-like design key holding %s", (_valueForm, entry) => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-integer-key-build-"));
+
+    try {
+      writeFileSync(
+        join(root, "probe.sdp.ts"),
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const probe = spec({
+  id: specId("spec:probe.integer-key"),
+  title: "Integer key",
+  kind: "model",
+  altitude: "story",
+  readiness: "idea",
+  intent: { outcome: "Carry an integer-like Design key." },
+  design: { ${entry}, zeta: "kept" },
+});
+`,
+      );
+
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", root], capture.output);
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toContain(
+        'probe.sdp.ts:9 — [error] extract/unrecognized-property — property "1" is refused: integer-like keys are not accepted in design, ui, or model terms',
+      );
+      expect(capture.readStderr()).not.toContain("extract/non-static-section");
+      expect(capture.readStderr()).toContain("graph.json not written");
+      expect(existsSync(join(root, "generated", "graph.json"))).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
     }
   });
 

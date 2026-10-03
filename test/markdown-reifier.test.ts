@@ -474,6 +474,71 @@ relations:
     );
   });
 
+  it.each([
+    [
+      "the Spec id",
+      validFrontmatter.replace("id: spec:carrier.valid", "id: spec:carrier.valid#design.step1"),
+      "spec:carrier.valid#design.step1",
+      2,
+    ],
+    [
+      "a relation target",
+      validFrontmatter.replace(
+        "relations: {}",
+        "relations:\n  dependsOn: spec:carrier.target#design.step1",
+      ),
+      "spec:carrier.target#design.step1",
+      7,
+    ],
+    [
+      "a Pack member",
+      lawfulPack.replace("spec:probe.member", "spec:probe.member#design.step1"),
+      "spec:probe.member#design.step1",
+      4,
+    ],
+    [
+      "a Pack model reference",
+      lawfulPack.replace("spec:probe.model", "spec:probe.model#ui.panel"),
+      "spec:probe.model#ui.panel",
+      6,
+    ],
+  ])("refuses an entry address in %s at the field's line", (_slot, sourceText, address, line) => {
+    const result = reify(sourceText);
+
+    expect(result.specs).toEqual([]);
+    expect(result.packs).toEqual([]);
+    expect(result.findings).toEqual([
+      {
+        validatorId: "extract/invalid-id",
+        family: "conformance",
+        severity: "error",
+        message: `id "${address}" is an entry address where a Spec id is required`,
+        file: "carrier.sdp.md",
+        line,
+      },
+    ]);
+  });
+
+  it("refuses a Pack whose own id carries an entry address with the namespace reason", () => {
+    const result = reify(
+      lawfulPack.replace("id: pack:probe.parity", "id: pack:probe#design.step1"),
+    );
+
+    expect(result.specs).toEqual([]);
+    expect(result.packs).toEqual([]);
+    expect(result.findings).toEqual([
+      {
+        validatorId: "extract/invalid-id",
+        family: "conformance",
+        severity: "error",
+        message:
+          'Invalid ID "pack:probe#design.step1": the # sub-part is an entry address and is admitted only in the spec namespace',
+        file: "carrier.sdp.md",
+        line: 2,
+      },
+    ]);
+  });
+
   it("accepts distinct relation keys that share a target", () => {
     const result = reify(
       validFrontmatter.replace(
@@ -784,7 +849,7 @@ export const prose = spec({
     ]);
     expect(Object.keys(constraint)).toEqual(["flavor", "statement", "target", "measurableBy"]);
     expect(Object.keys(sections.model)).toEqual(["description", "terms"]);
-    expect(Object.keys(sections.model.terms)).toEqual(["Alpha", "Zeta"]);
+    expect(Object.keys(sections.model.terms)).toEqual(["Zeta", "Alpha"]);
   });
 
   it("serializes GWT and behavior key permutations to identical bytes", () => {

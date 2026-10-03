@@ -392,6 +392,7 @@ describe("the agent-surface recipe corpus", () => {
       "twenty-one",
       "twenty-two",
       "twenty-three",
+      "twenty-four",
     ] as const;
     const countWord = countWords[recipes.length];
     const lastOrdinal = recipes[recipes.length - 1]?.ordinal;
@@ -458,11 +459,12 @@ describe("the agent-surface recipe corpus", () => {
       "dependency footing",
       "mention audit",
       "entry search",
+      "pinned declarations",
     ]) {
       expect(agentSurfaceProse).toContain(phrase);
     }
 
-    for (const ordinal of [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]) {
+    for (const ordinal of [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]) {
       expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
     }
   });
@@ -1679,7 +1681,7 @@ function registerProbe(): ExtractionResult {
           },
           behavior: {
             rules: [
-              "spec:probe.child spec:probe.child spec:probe.b spec:probe.backed spec:probe.Target#part spec:probe.missing.",
+              "spec:probe.child spec:probe.child spec:probe.b spec:probe.backed spec:probe.Target spec:probe.missing.",
             ],
             exampleSpace: { given: ["spec:probe.hiddenSpace"], when: ["act"], then: ["observe"] },
             examples: [
@@ -1699,7 +1701,7 @@ function registerProbe(): ExtractionResult {
         },
         primitive("spec:probe.child"),
         primitive("spec:probe.backed"),
-        primitive("spec:probe.Target#part"),
+        primitive("spec:probe.Target"),
         {
           ...primitive("spec:probe.search", {
             intent: {
@@ -1729,7 +1731,7 @@ function registerProbe(): ExtractionResult {
       ],
       edges: [
         { from: "spec:probe.b", to: "pack:probe", type: "dependsOn", claim: "declared" },
-        { from: "spec:probe.b", to: "spec:probe.Target#part", type: "verifies", claim: "inferred" },
+        { from: "spec:probe.b", to: "spec:probe.Target", type: "verifies", claim: "inferred" },
         { from: "spec:probe.b", to: "spec:probe.a", type: "refines", claim: "declared" },
         { from: "spec:probe.b", to: "spec:probe.backed", type: "dependsOn", claim: "declared" },
         { from: "spec:probe.b", to: "spec:probe.unresolved", type: "dependsOn", claim: "declared" },
@@ -1772,7 +1774,7 @@ export const probe = spec({
 }
 
 describe("register recipe semantics", () => {
-  it.each([20, 21, 22, 23])("runs recipe %s as written in default output", async (ordinal) => {
+  it.each([20, 21, 22, 23, 24])("runs recipe %s as written in default output", async (ordinal) => {
     const capture = createCaptureOutput();
     expect(
       await runSdpCli(
@@ -1859,6 +1861,7 @@ describe("register recipe semantics", () => {
       id: "spec:probe.carrier",
       section,
       entry,
+      address: `spec:probe.carrier#${section ?? ""}.${entry ?? ""}`,
       text,
       matchedIn: ["key"],
     }));
@@ -1868,6 +1871,7 @@ describe("register recipe semantics", () => {
         id: "spec:probe.carrier",
         section: "design",
         entry: "nested.steps[0]",
+        address: null,
         text: "retry later",
         matchedIn: ["text"],
       },
@@ -1909,6 +1913,7 @@ describe("register recipe semantics", () => {
         id: node.id,
         section: "design",
         entry: "retryWorkers",
+        address: `${node.id}#design.retryWorkers`,
         matchedIn: ["key"],
         text: '["retry later"]',
       },
@@ -1916,6 +1921,7 @@ describe("register recipe semantics", () => {
         id: node.id,
         section: "design",
         entry: "retryWorkers[0]",
+        address: null,
         matchedIn: ["text"],
         text: "retry later",
       },
@@ -1923,6 +1929,7 @@ describe("register recipe semantics", () => {
         id: node.id,
         section: "design",
         entry: "retryPolicy",
+        address: `${node.id}#design.retryPolicy`,
         matchedIn: ["key"],
         text: '{"mode":"retry fixed","options":["retry soon"]}',
       },
@@ -1930,6 +1937,7 @@ describe("register recipe semantics", () => {
         id: node.id,
         section: "design",
         entry: "retryPolicy.mode",
+        address: null,
         matchedIn: ["text"],
         text: "retry fixed",
       },
@@ -1937,6 +1945,7 @@ describe("register recipe semantics", () => {
         id: node.id,
         section: "design",
         entry: "retryPolicy.options[0]",
+        address: null,
         matchedIn: ["text"],
         text: "retry soon",
       },
@@ -1963,7 +1972,14 @@ describe("register recipe semantics", () => {
       ),
     );
     expect(result.matches).toEqual([
-      { id: node.id, section: "design", entry: "retryNothing", matchedIn: ["key"], text: "null" },
+      {
+        id: node.id,
+        section: "design",
+        entry: "retryNothing",
+        address: `${node.id}#design.retryNothing`,
+        matchedIn: ["key"],
+        text: "null",
+      },
     ]);
     expect(result.totals).toEqual({ matches: 1, specs: 1, shown: 1 });
   });
@@ -1981,7 +1997,7 @@ describe("register recipe semantics", () => {
           check(entry, insideTotals || key === "totals");
       }
     };
-    for (const ordinal of [20, 21, 22, 23]) {
+    for (const ordinal of [20, 21, 22, 23, 24]) {
       const output = asRecord(await runRecipe(recipeByOrdinal(ordinal)));
       check(output);
       for (const key of [
@@ -2039,7 +2055,16 @@ describe("register recipe semantics", () => {
       expect(result.matches).toEqual(
         matchedIn.length === 0
           ? []
-          : [{ id: node.id, section: "design", entry: key, matchedIn, text }],
+          : [
+              {
+                id: node.id,
+                section: "design",
+                entry: key,
+                address: `${node.id}#design.${key}`,
+                matchedIn,
+                text,
+              },
+            ],
       );
     },
   );
@@ -2220,7 +2245,7 @@ describe("register recipe semantics", () => {
     expect(result.unbacked).toEqual([
       {
         from: "spec:probe.b",
-        to: "spec:probe.Target#part",
+        to: "spec:probe.Target",
         totals: { occurrences: 1 },
         at: [{ section: "behavior", entry: "rules[0]" }],
       },
@@ -2241,6 +2266,330 @@ describe("register recipe semantics", () => {
         .map(asRecord)
         .map((row) => row.to),
     ).toEqual(["spec:probe.designMention", "spec:probe.missing", "spec:probe.stringExample"]);
+  });
+
+  it("resolves entry mentions and retains every token and pair location through a probe root", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-entry-mentions-"));
+    try {
+      writeFileSync(
+        join(root, "probe.sdp.ts"),
+        `
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const target = spec({
+  id: specId("spec:probe.target"), title: "Target", kind: "behavior", altitude: "story", readiness: "idea",
+  design: { step1: "Present", description: "Leading prose" }
+});
+export const source = spec({
+  id: specId("spec:probe.source"), title: "spec:probe.titleOnly", kind: "behavior", altitude: "story", readiness: "idea",
+  intent: { outcome: "spec:probe.target#design.step1 spec:probe.target#design.missing.",
+    openQuestions: [{ question: "spec:probe.target#design.missing", blocking: false }] },
+  behavior: { rules: ["spec:probe.target#design.missing spec:probe.target#design.missing"],
+    exampleSpace: { given: ["spec:probe.hiddenSpace"], when: ["act"], then: ["observe"] },
+    examples: [{ given: ["spec:probe.hiddenExample"], when: ["act"], then: ["observe"] }] },
+  design: { malformed: "spec:x#foo spec:x#design.Foo spec:probe..broken spec:probe.target##design.step1",
+    absent: "spec:probe.absent#ui.step1", leading: "spec:probe.target#design.description",
+    own: "spec:probe.source#design.own spec:probe.source#ui.missing",
+    boundaries: "aspec:probe.ignore -spec:probe.ignore" }
+});`,
+      );
+      const result = asRecord(await runRecipe(recipeByOrdinal(22), undefined, extract({ root })));
+      const unresolved = asArray(result.unresolved).map(asRecord);
+      const at = [
+        { section: "intent", entry: "outcome" },
+        { section: "intent", entry: "openQuestions[0].question" },
+        { section: "behavior", entry: "rules[0]" },
+      ];
+      expect(unresolved).toContainEqual({
+        from: "spec:probe.source",
+        to: "spec:probe.target#design.missing",
+        reason: "entry",
+        totals: { occurrences: 4 },
+        at,
+      });
+      for (const to of [
+        "spec:x#foo",
+        "spec:x#design.Foo",
+        "spec:probe..broken",
+        "spec:probe.target##design.step1",
+      ])
+        expect(unresolved).toContainEqual({
+          from: "spec:probe.source",
+          to,
+          reason: "malformed",
+          totals: { occurrences: 1 },
+          at: [{ section: "design", entry: "malformed" }],
+        });
+      expect(unresolved).toContainEqual({
+        from: "spec:probe.source",
+        to: "spec:probe.absent#ui.step1",
+        reason: "spec",
+        totals: { occurrences: 1 },
+        at: [{ section: "design", entry: "absent" }],
+      });
+      for (const [to, entry] of [
+        ["spec:probe.target#design.description", "leading"],
+        ["spec:probe.source#ui.missing", "own"],
+      ])
+        expect(unresolved).toContainEqual({
+          from: "spec:probe.source",
+          to,
+          reason: "entry",
+          totals: { occurrences: 1 },
+          at: [{ section: "design", entry }],
+        });
+      expect(unresolved).toHaveLength(8);
+      expect(result.unbacked).toEqual([
+        {
+          from: "spec:probe.source",
+          to: "spec:probe.target",
+          totals: { occurrences: 6 },
+          at: [...at, { section: "design", entry: "leading" }],
+        },
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  function mentionTokenProbe(outcome: string): ExtractionResult {
+    const probe = registerProbe();
+    const primitive = (id: string, sections: Record<string, unknown>) => ({
+      id,
+      nodeType: "Primitive" as const,
+      claim: "declared" as const,
+      specKind: "behavior" as const,
+      altitude: "story" as const,
+      readiness: "idea" as const,
+      title: "Token probe",
+      file: "specs/probe.sdp.md",
+      sections,
+    });
+    const graph = {
+      schemaVersion: probe.graph.schemaVersion,
+      nodes: [
+        primitive("spec:probe.target", {
+          intent: { outcome: "Exist under the prefix." },
+          design: { step1: "One." },
+        }),
+        primitive("spec:probe.other", { intent: { outcome: "Exist as well." } }),
+        primitive("spec:probe.cafe", {
+          intent: { outcome: "Exist under a prefix too." },
+          design: { step1: "One." },
+        }),
+        primitive("spec:probe.mentioning", { intent: { outcome } }),
+      ],
+      edges: [],
+    };
+    return { ...probe, graph };
+  }
+
+  it.each([
+    ["an underscore", "spec:probe.target_v2", "spec:probe.target_v2"],
+    ["a slash", "spec:probe.target/extra", "spec:probe.target/extra"],
+    ["a comma", "spec:probe.target,spec:probe.other", "spec:probe.target,spec:probe.other"],
+    ["an underscore and a letter", "spec:probe.target_x", "spec:probe.target_x"],
+    ["a slash and a letter", "spec:probe.target/x", "spec:probe.target/x"],
+    ["a comma and a letter", "spec:probe.target,x", "spec:probe.target,x"],
+    ["a letter outside ASCII", "spec:probe.targeté", "spec:probe.targeté"],
+    // An escape is read as its punctuation, so the underscore stays inside the token.
+    ["an escaped underscore", "spec:probe.target\\_x", "spec:probe.target_x"],
+    // A character outside ASCII that is not a separator stays in the token, so a valid prefix
+    // never resolves on its own.
+    ["a combining mark", "spec:probe.cafe\u0301", "spec:probe.cafe\u0301"],
+    [
+      "a combining mark after an entry key",
+      "spec:probe.cafe#design.step1\u0301",
+      "spec:probe.cafe#design.step1\u0301",
+    ],
+    ["a zero-width space", "spec:probe.cafe\u200bx", "spec:probe.cafe\u200bx"],
+    ["fullwidth connector punctuation", "spec:probe.cafe\uff3fx", "spec:probe.cafe\uff3fx"],
+    // A control character other than whitespace stays in the token too.
+    ["a NUL", "spec:probe.cafe\u0000missing", "spec:probe.cafe\u0000missing"],
+    ["an escape character", "spec:probe.cafe\u001bmissing", "spec:probe.cafe\u001bmissing"],
+    ["a delete character", "spec:probe.cafe\u007fmissing", "spec:probe.cafe\u007fmissing"],
+    ["a C1 control character", "spec:probe.cafe\u0080missing", "spec:probe.cafe\u0080missing"],
+    [
+      "a hyphenated entry key",
+      "spec:probe.target#design.step-1",
+      "spec:probe.target#design.step-1",
+    ],
+    ["an entry suffix with no key", "spec:probe.target#design.", "spec:probe.target#design"],
+    [
+      "an entry suffix outside design and ui",
+      "spec:probe.target#model.x",
+      "spec:probe.target#model.x",
+    ],
+  ])(
+    "reads the whole mention token through %s as malformed, never the existing prefix",
+    async (_case, written, token) => {
+      const result = asRecord(
+        await runRecipe(recipeByOrdinal(22), undefined, mentionTokenProbe(`Read ${written} now`)),
+      );
+
+      expect(result).toEqual({
+        totals: {
+          occurrences: 1,
+          pairs: 1,
+          backed: 0,
+          unbacked: 0,
+          reverseOnly: 0,
+          unresolved: 1,
+        },
+        unresolved: [
+          {
+            from: "spec:probe.mentioning",
+            to: token,
+            reason: "malformed",
+            totals: { occurrences: 1 },
+            at: [{ section: "intent", entry: "outcome" }],
+          },
+        ],
+        unbacked: [],
+        reverseOnly: [],
+      });
+    },
+  );
+
+  it.each([
+    ["a sentence dot", "Read spec:probe.target."],
+    ["a comma", "Read spec:probe.target, then stop."],
+    ["a colon", "Read spec:probe.target: then stop."],
+    ["a closing parenthesis", "Read it (spec:probe.target) now."],
+    ["bold", "Read **spec:probe.target** now."],
+    ["emphasis", "Read _spec:probe.target_ now."],
+    ["strikethrough", "Read ~~spec:probe.target~~ now."],
+    ["backticks", "Read `spec:probe.target` now."],
+    ["ASCII double quotes", 'Read "spec:probe.target" now.'],
+    ["ASCII single quotes", "Read 'spec:probe.target' now."],
+    ["typographic double quotes", "Read “spec:probe.target” now."],
+    ["typographic single quotes", "Read ‘spec:probe.target’ now."],
+    ["an em dash", "Read spec:probe.target—see the rest."],
+    ["an en dash", "Read spec:probe.target–see the rest."],
+    ["an ellipsis", "Read spec:probe.target… and stop."],
+    ["an escaped star", "Read spec:probe.target\\* now."],
+    ["an escaped exclamation mark", "Read spec:probe.target\\! now."],
+    ["U+0085", "Read spec:probe.target\u0085then stop."],
+    ["a no-break space", "Read spec:probe.target\u00a0then stop."],
+    ["a tab", "Read spec:probe.target\tthen stop."],
+    ["an arrow", "Read spec:probe.target→then stop."],
+  ])("reads the clean id through Markdown punctuation: %s", async (_case, outcome) => {
+    const result = asRecord(
+      await runRecipe(recipeByOrdinal(22), undefined, mentionTokenProbe(outcome)),
+    );
+
+    expect(result).toEqual({
+      totals: { occurrences: 1, pairs: 1, backed: 0, unbacked: 1, reverseOnly: 0, unresolved: 0 },
+      unresolved: [],
+      unbacked: [
+        {
+          from: "spec:probe.mentioning",
+          to: "spec:probe.target",
+          totals: { occurrences: 1 },
+          at: [{ section: "intent", entry: "outcome" }],
+        },
+      ],
+      reverseOnly: [],
+    });
+  });
+
+  it("reads a placeholder or a bare prefix as prose, not a mention", async () => {
+    const result = asRecord(
+      await runRecipe(
+        recipeByOrdinal(22),
+        undefined,
+        mentionTokenProbe("Write spec:<id> for a Spec, or the bare spec: prefix, as prose."),
+      ),
+    );
+
+    expect(result).toEqual({
+      totals: { occurrences: 0, pairs: 0, backed: 0, unbacked: 0, reverseOnly: 0, unresolved: 0 },
+      unresolved: [],
+      unbacked: [],
+      reverseOnly: [],
+    });
+  });
+
+  it("scans nested arrays in examples while skipping object fences by position", async () => {
+    const probe = registerProbe();
+    const graph = {
+      ...probe.graph,
+      nodes: probe.graph.nodes.map((node) =>
+        node.id === "spec:probe.b" && node.nodeType === "Primitive"
+          ? {
+              ...node,
+              sections: {
+                behavior: { examples: [["spec:probe.arrayMention"]] },
+                design: { exampleSpace: "spec:probe.openMention" },
+              },
+            }
+          : node,
+      ),
+    };
+    const result = asRecord(
+      await runRecipe(recipeByOrdinal(22), undefined, {
+        ...probe,
+        graph: graph as unknown as ExtractionResult["graph"],
+      }),
+    );
+    expect(result.unresolved).toEqual([
+      {
+        from: "spec:probe.b",
+        to: "spec:probe.arrayMention",
+        reason: "spec",
+        totals: { occurrences: 1 },
+        at: [{ section: "behavior", entry: "examples[0][0]" }],
+      },
+      {
+        from: "spec:probe.b",
+        to: "spec:probe.openMention",
+        reason: "spec",
+        totals: { occurrences: 1 },
+        at: [{ section: "design", entry: "exampleSpace" }],
+      },
+    ]);
+  });
+
+  it("addresses only lawful Design and UI entry keys in search results", async () => {
+    const probe = registerProbe();
+    const graph = {
+      ...probe.graph,
+      nodes: probe.graph.nodes.map((node) =>
+        node.id === "spec:probe.search" && node.nodeType === "Primitive"
+          ? {
+              ...node,
+              narrative: undefined,
+              sections: {
+                design: {
+                  retryWorker: "needle",
+                  description: "needle",
+                  "retry-worker": "needle",
+                  RetryWorker: "needle",
+                },
+                ui: { retryWorker: "needle" },
+                behavior: { rules: ["needle"] },
+              },
+            }
+          : node,
+      ),
+    };
+    const recipe = recipeByOrdinal(23);
+    const result = asRecord(
+      await runRecipe(
+        {
+          ...recipe,
+          body: recipe.body.replace('const term = "suffix";', 'const term = "needle";'),
+        },
+        undefined,
+        { ...probe, graph },
+      ),
+    );
+    const rows = asArray(result.matches).map(asRecord);
+    for (const section of ["design", "ui"])
+      expect(
+        rows.find((row) => row.section === section && row.entry === "retryWorker")?.address,
+      ).toBe(`spec:probe.search#${section}.retryWorker`);
+    for (const entry of ["description", "retry-worker", "RetryWorker", "rules[0]"])
+      expect(rows.find((row) => row.entry === entry)?.address).toBeNull();
   });
 
   it("scopes mentions by the mentioning Spec only", async () => {
@@ -2340,6 +2689,7 @@ describe("register recipe semantics", () => {
       id: "spec:probe.search",
       section: "design",
       entry: "retryWorker",
+      address: "spec:probe.search#design.retryWorker",
       matchedIn: ["key", "text"],
       text: "retry-worker",
     });
@@ -2379,5 +2729,103 @@ describe("register recipe semantics", () => {
     expect(asRecord(many.totals).matches).toBe(60);
     expect(asRecord(many.totals).specs).toBe(1);
     expect(asArray(many.matches)).toHaveLength(50);
+  });
+
+  // Recipe 24 reads the span with the inline code span law: an opening run of any length closes
+  // at the next run of exactly that length. The independent scanner below states that law as a
+  // loop, so the corpus check holds whatever the corpus pins, with no frozen count.
+  it("lists every pinned declaration this corpus holds", async () => {
+    const leadingSpan = (value: string): string | undefined => {
+      const opening = /^`+/u.exec(value)?.[0].length ?? 0;
+      if (opening === 0) return undefined;
+      let index = opening;
+      while (index < value.length) {
+        // The span law closes a span on its own line, so a line ending before the closing run
+        // means the value opens with no span.
+        if (value[index] === "\n" || value[index] === "\r") return undefined;
+        if (value[index] !== "`") {
+          index += 1;
+          continue;
+        }
+        let end = index;
+        while (value[end] === "`") end += 1;
+        if (end - index === opening && index > opening) return value.slice(opening, index);
+        index = end;
+      }
+      return undefined;
+    };
+    const expected = reader.specs().flatMap((spec) =>
+      Object.entries(reader.specContext(spec.id)?.sections?.design ?? {}).flatMap(
+        ([key, value]) => {
+          if (key === "description" || typeof value !== "string") return [];
+          const declaration = leadingSpan(value);
+          return declaration === undefined ? [] : [{ spec: spec.id, key, declaration }];
+        },
+      ),
+    );
+    const result = asRecord(await runRecipe(recipeByOrdinal(24)));
+    const rows = asArray(result.rows).map(asRecord);
+    expect(result.totals).toEqual({
+      entries: rows.length,
+      specs: new Set(rows.map((row) => row.spec)).size,
+    });
+    expect(rows).toEqual(expected);
+  });
+
+  it("reads spans of any run length and skips every entry that pins nothing", async () => {
+    const probe = registerProbe();
+    const node = probe.graph.nodes.find((entry) => entry.id === "spec:probe.search");
+    const other = probe.graph.nodes.find((entry) => entry.id === "spec:probe.a");
+    if (node?.nodeType !== "Primitive" || other?.nodeType !== "Primitive") {
+      throw new Error("pinned-declarations probe is missing");
+    }
+    const extraction: ExtractionResult = {
+      ...probe,
+      graph: {
+        ...probe.graph,
+        nodes: [
+          {
+            ...node,
+            narrative: undefined,
+            sections: {
+              design: {
+                fnResume: "`resume(id: string): void` restarts generation",
+                typeTick: "``a`b`` keeps the single backtick",
+                typeFence: "`a``b` keeps the double run",
+                fnUnclosed: "`resume(id: string) never closes",
+                fnLater: "calls `resume(id)` later",
+                description: "`describe(): void` is framing",
+                tableNested: { inner: "`nested(): void`" },
+                fnList: ["`nested(): void`"],
+                typeTriple: "```a``b``` keeps the double run inside a triple run",
+                fnFirst: "`first` prose `last`",
+                fnOpenTwo: "``a`",
+                fnOpenTwoLonger: "``a`b```",
+                fnOpenThree: "```x`",
+                fnMultiline: "`a\nb`",
+                typeLineSep: '`type S = "\u2028"`',
+                typeParaSep: '`type S = "\u2029"`',
+              },
+            },
+          },
+          { ...other, sections: { design: { validatorId: "`isId(value: unknown): boolean`" } } },
+        ],
+        edges: [],
+      },
+    };
+    const recipe = recipeByOrdinal(24);
+    expect(await runRecipe(recipe, undefined, extraction)).toEqual({
+      totals: { entries: 8, specs: 2 },
+      rows: [
+        { spec: "spec:probe.a", key: "validatorId", declaration: "isId(value: unknown): boolean" },
+        { spec: "spec:probe.search", key: "fnResume", declaration: "resume(id: string): void" },
+        { spec: "spec:probe.search", key: "typeTick", declaration: "a`b" },
+        { spec: "spec:probe.search", key: "typeFence", declaration: "a``b" },
+        { spec: "spec:probe.search", key: "typeTriple", declaration: "a``b" },
+        { spec: "spec:probe.search", key: "fnFirst", declaration: "first" },
+        { spec: "spec:probe.search", key: "typeLineSep", declaration: 'type S = "\u2028"' },
+        { spec: "spec:probe.search", key: "typeParaSep", declaration: 'type S = "\u2029"' },
+      ],
+    });
   });
 });

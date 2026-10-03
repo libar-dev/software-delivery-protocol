@@ -14,7 +14,7 @@ import {
 
 const validIds = [
   "spec:orders.create-order",
-  "spec:orders.create-order#valid-cart",
+  "spec:orders.create-order#design.validCart",
   "pack:checkout-v1",
   "impl:orders.create-order-use-case",
   "test:orders.create-order.valid-cart",
@@ -26,8 +26,45 @@ const invalidIds = [
   "spec:orders.create order",
   "Spec:orders.create-order",
   "spec:orders.create-order#",
+  "spec:orders.create-order#valid-cart",
   "spec:orders.create-order#valid.cart",
 ] as const;
+
+// The entry-address refusal rows, in the order the parser tries them; the first match wins.
+const entryAddressRefusals = [
+  [
+    "impl:x#design.k",
+    "the # sub-part is an entry address and is admitted only in the spec namespace",
+  ],
+  ["pack:x#", "the # sub-part is an entry address and is admitted only in the spec namespace"],
+  ["spec:x#", "malformed # suffix"],
+  ["spec:x#a#b", "malformed # suffix"],
+  ["spec:x#foo", "entry address must be <section>.<key> with section design or ui"],
+  ["spec:x#model.foo", "entry address must be <section>.<key> with section design or ui"],
+  ["spec:x#design", "entry address must be <section>.<key> with section design or ui"],
+  [
+    "spec:orders.create-order#valid-cart",
+    "entry address must be <section>.<key> with section design or ui",
+  ],
+  ["spec:x#design.1", "entry address key must be lower-camel ASCII"],
+  ["spec:x#design.Foo", "entry address key must be lower-camel ASCII"],
+  ["spec:x#design.a-b", "entry address key must be lower-camel ASCII"],
+  ["spec:x#design.a.b", "entry address key must be lower-camel ASCII"],
+  ["spec:x#design.", "entry address key must be lower-camel ASCII"],
+  ["spec:x#design.éclair", "entry address key must be lower-camel ASCII"],
+  ["spec:x#design.café", "entry address key must be lower-camel ASCII"],
+] as const;
+
+/** The complete message a call throws; a substring match would let extra text through. */
+function thrownMessage(action: () => unknown): string {
+  try {
+    action();
+  } catch (error: unknown) {
+    return error instanceof Error ? error.message : String(error);
+  }
+
+  throw new Error("expected the call to throw");
+}
 
 describe("ids", () => {
   it.each(validIds)("round-trips %s", (value) => {
@@ -62,6 +99,30 @@ describe("ids", () => {
 
   it.each(invalidIds)("rejects malformed IDs: %s", (value) => {
     expect(() => parseId(value)).toThrow(value);
+  });
+
+  it.each(entryAddressRefusals)("refuses the entry address %s with its reason", (value, reason) => {
+    expect(thrownMessage(() => parseId(value))).toBe(`Invalid ID "${value}": ${reason}`);
+  });
+
+  it("parses an entry address with its sub-part verbatim", () => {
+    expect(parseId("spec:orders.create-order#ui.fnResume")).toEqual({
+      namespace: "spec",
+      path: "orders.create-order",
+      subpath: "ui.fnResume",
+    });
+  });
+
+  it("refuses an entry address where a Spec id is required", () => {
+    expect(thrownMessage(() => ref("spec:x#design.k"))).toBe(
+      'Invalid ID "spec:x#design.k": an entry address is not a Spec id',
+    );
+    expect(thrownMessage(() => specId("spec:x#design.k"))).toBe(
+      'Invalid ID "spec:x#design.k": an entry address is not a Spec id',
+    );
+    expect(thrownMessage(() => specId("spec:x#foo"))).toBe(
+      'Invalid ID "spec:x#foo": an entry address is not a Spec id',
+    );
   });
 
   it("rejects wrong namespaces in helper branding", () => {

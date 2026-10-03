@@ -135,4 +135,59 @@ relations: {}
       expect.objectContaining({ message: "model terms must be unique" }),
     );
   });
+
+  it("refuses an integer-like Model term and drops the carrier", () => {
+    const result = reifyMarkdownCarrier(
+      markdown(
+        "",
+        `
+## Model
+
+- **step** — A lawful term.
+- **1** — first
+- **01** — A leading zero is not integer-like.
+`,
+      ),
+      "integer-like-model-term.sdp.md",
+    );
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings).toEqual([
+      {
+        validatorId: "extract/invalid-markdown-structure",
+        family: "conformance",
+        severity: "error",
+        message: "model terms must not be integer-like",
+        file: "integer-like-model-term.sdp.md",
+        line: 14,
+      },
+    ]);
+  });
+
+  it.each(["0", "10"])("refuses the integer-like Model term %s and drops the carrier", (term) => {
+    const result = reifyMarkdownCarrier(
+      markdown(
+        "",
+        `
+## Model
+
+- **step** — A lawful term.
+- **${term}** — An integer-like term.
+`,
+      ),
+      "integer-like-model-term.sdp.md",
+    );
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings).toEqual([
+      {
+        validatorId: "extract/invalid-markdown-structure",
+        family: "conformance",
+        severity: "error",
+        message: "model terms must not be integer-like",
+        file: "integer-like-model-term.sdp.md",
+        line: 14,
+      },
+    ]);
+  });
 });

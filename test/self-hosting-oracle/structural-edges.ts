@@ -34,6 +34,11 @@ export const structuralMembershipExceptions = [
 
 export const acceptedArchitecturalUnits = [
   {
+    unit: "src/extract/serialize.ts#canonicalDynamicSection",
+    anchorId: "impl:protocol.open-section-order",
+    componentId: "component:protocol.extract",
+  },
+  {
     unit: "src/validate/readiness-floor.ts#typedDependencyTargetsAreDefined",
     anchorId: "impl:protocol.typed-dependency-floor",
     componentId: "component:protocol.validate",
@@ -41,6 +46,11 @@ export const acceptedArchitecturalUnits = [
   {
     unit: "src/extract/markdown-inline-code.ts#hasRawHtmlOutsideCodeSpans",
     anchorId: "impl:protocol.inline-code-spans",
+    componentId: "component:protocol.extract",
+  },
+  {
+    unit: "src/extract/markdown-body.ts#parseMarkdownBody",
+    anchorId: "impl:protocol.markdown-body-grammar",
     componentId: "component:protocol.extract",
   },
   {
@@ -401,6 +411,11 @@ export const acceptedArchitecturalUnits = [
   {
     unit: "src/validate/validators.ts#checkOrphans",
     anchorId: "impl:protocol.orphan-signal",
+    componentId: "component:protocol.validate",
+  },
+  {
+    unit: "src/validate/validators.ts#checkProseMentions",
+    anchorId: "impl:protocol.prose-mentions",
     componentId: "component:protocol.validate",
   },
   {

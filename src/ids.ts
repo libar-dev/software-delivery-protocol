@@ -7,6 +7,9 @@ type Brand<TBrand extends string> = string & {
 
 const LOWERCASE_NAMESPACE_PATTERN = /^[a-z][a-z0-9-]*$/u;
 const PATH_SEGMENT_PATTERN = /^[A-Za-z0-9][A-Za-z0-9-]*$/u;
+const ENTRY_ADDRESS_NAMESPACE = "spec";
+const ENTRY_ADDRESS_SECTIONS: readonly string[] = ["design", "ui"];
+const ENTRY_ADDRESS_KEY_PATTERN = /^[a-z][A-Za-z0-9]*$/u;
 
 export type SpecId = Brand<"SpecId">;
 export type PackId = Brand<"PackId">;
@@ -55,9 +58,30 @@ function validatePath(value: string, path: string): void {
   }
 }
 
-function validateSubpath(value: string, subpath: string): void {
-  if (!PATH_SEGMENT_PATTERN.test(subpath)) {
+/**
+ * The `#` sub-part is an entry address, `spec:<path>#<section>.<key>`, naming one keyed entry of a
+ * Spec's `design` or `ui` section. It is reserved in every namespace and never part of an
+ * identity: the parser admits it so prose can carry it, and every id slot refuses it. The refusal
+ * rows run in order and the first match wins.
+ */
+function validateEntryAddress(value: string, namespace: string, subpath: string): void {
+  if (namespace !== ENTRY_ADDRESS_NAMESPACE) {
+    failId(value, "the # sub-part is an entry address and is admitted only in the spec namespace");
+  }
+
+  if (subpath.length === 0 || subpath.includes("#")) {
     failId(value, "malformed # suffix");
+  }
+
+  const dotIndex = subpath.indexOf(".");
+  const section = dotIndex === -1 ? undefined : subpath.slice(0, dotIndex);
+
+  if (section === undefined || !ENTRY_ADDRESS_SECTIONS.includes(section)) {
+    failId(value, "entry address must be <section>.<key> with section design or ui");
+  }
+
+  if (!ENTRY_ADDRESS_KEY_PATTERN.test(subpath.slice(dotIndex + 1))) {
+    failId(value, "entry address key must be lower-camel ASCII");
   }
 }
 
@@ -101,12 +125,8 @@ function validateIdShape(value: string): IdParts {
 
   validatePath(value, path);
 
-  if (hashIndex !== -1) {
-    if (subpath === undefined || subpath.length === 0 || subpath.includes("#")) {
-      failId(value, "malformed # suffix");
-    }
-
-    validateSubpath(value, subpath);
+  if (subpath !== undefined) {
+    validateEntryAddress(value, namespace, subpath);
   }
 
   return subpath === undefined ? { namespace, path } : { namespace, path, subpath };
@@ -158,7 +178,15 @@ export function anchorId(value: string): AnchorId {
   return brandId<"AnchorId">(value);
 }
 
+/**
+ * A Spec id never carries `#`: the sub-part is an entry address, which names an entry inside a
+ * Spec and is admitted in prose and by `parseId`, never where a Spec id is required.
+ */
 export function specId(value: string): SpecId {
+  if (value.includes("#")) {
+    failId(value, "an entry address is not a Spec id");
+  }
+
   return requireNamespace<"SpecId">(value, ["spec"]);
 }
 

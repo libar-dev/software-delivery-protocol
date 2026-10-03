@@ -17,10 +17,42 @@ import type { ReifiedAnchor } from "./anchors.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { ReifiedPack, ReifiedSpec } from "./reify.js";
+import { setOwn } from "./set-own.js";
 
 interface ReifiedRelation {
   readonly type: GraphEdgeType;
   readonly target: string;
+}
+
+/**
+ * The one entry order (`spec:extraction.open-section-order`), established here so the reader, the
+ * serialized graph, and the Design Review agree: a `design` or `ui` section's own `description`,
+ * its leading prose, comes first, and every other key keeps its authored place. `model.terms`
+ * keeps pure authored order, since the Model section's prose lives at `model.description`.
+ */
+const DESCRIPTION_FIRST_SECTIONS: ReadonlySet<string> = new Set(["design", "ui"]);
+
+function descriptionFirst(section: unknown): unknown {
+  if (
+    typeof section !== "object" ||
+    section === null ||
+    Array.isArray(section) ||
+    !Object.hasOwn(section, "description")
+  ) {
+    return section;
+  }
+
+  const record = section as Readonly<Record<string, unknown>>;
+  const ordered: Record<string, unknown> = {};
+  setOwn(ordered, "description", record.description);
+
+  for (const key of Object.keys(record)) {
+    if (key !== "description") {
+      setOwn(ordered, key, record[key]);
+    }
+  }
+
+  return ordered;
 }
 
 function pickSections(data: Record<string, unknown>): SpecSections | undefined {
@@ -30,7 +62,7 @@ function pickSections(data: Record<string, unknown>): SpecSections | undefined {
 
   for (const key of Object.keys(data)) {
     if (sectionNames.has(key)) {
-      sections[key] = data[key];
+      sections[key] = DESCRIPTION_FIRST_SECTIONS.has(key) ? descriptionFirst(data[key]) : data[key];
       present = true;
     }
   }

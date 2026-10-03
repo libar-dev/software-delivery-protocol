@@ -1,7 +1,15 @@
 import { computeDeliveryFacts, isResolvingTestAnchorVerify } from "../graph/delivery-facts.js";
 import { isResolvingOracleModel, ownsExampleSpace } from "../graph/oracle-bindings.js";
 import { deliveryFactNames, graphClaims, graphEdgeTypes, graphNodeTypes } from "../graph/schema.js";
-import { CODE_ANCHOR_NAMESPACES, codeAnchorId, componentAnchorId, parseId, ref } from "../ids.js";
+import {
+  CODE_ANCHOR_NAMESPACES,
+  codeAnchorId,
+  componentAnchorId,
+  formatId,
+  parseId,
+  ref,
+} from "../ids.js";
+import type { IdParts } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type {
   DeliveryFactName,
@@ -40,6 +48,7 @@ export const graphValidatorIds = {
   oracleLinkage: "conformance/oracle-linkage",
   packCoherence: "conformance/pack-coherence",
   orphans: "conformance/orphans",
+  proseMentions: "conformance/prose-mentions",
   authoringShape: "honesty/authoring-shape",
   deliveryFacts: "honesty/delivery-facts",
   readinessFloor: "honesty/readiness-floor",
@@ -995,6 +1004,289 @@ function checkOrphans(graph: GraphSchema, index: GraphIndex): readonly Finding[]
   return findings;
 }
 
+/* ----- conformance/prose-mentions (`spec:validation.prose-mentions`) ----- */
+
+/** A backslash before ASCII punctuation is read as that punctuation, as Markdown reads an escape. */
+const MARKDOWN_ESCAPE = /\\([!-/:-@[-`{-~])/gu;
+
+/**
+ * A mention token starts at `spec:` where the character before it, if any, is not an ASCII letter,
+ * an ASCII digit, or `-`. It ends at whitespace, U+0085 included, at an ASCII delimiter (`` ` ``
+ * `"` `'` `(` `)` `[` `]` `{` `}` `<` `>` `|`), or at a character outside ASCII that is punctuation
+ * other than connector punctuation, a symbol, or a separator. Every other character stays in, so a
+ * control character other than whitespace, a combining mark, or a zero-width character makes
+ * `parseId` refuse the whole token instead of letting a valid prefix resolve.
+ */
+const MENTION_PATTERN =
+  /(?<![A-Za-z0-9-])spec:(?:[^\p{White_Space}\P{ASCII}`"'()[\]{}<>|]|[^\p{ASCII}\p{White_Space}\p{Pd}\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}\p{S}\p{Z}])*/gu;
+
+/** Trailing punctuation a sentence, a list, or emphasis may put after an id. */
+const MENTION_TRAILING_PUNCTUATION = /[.,;:!?*_~]+$/u;
+
+/** The six authored relations; a declared one in either direction backs a mention. */
+const BACKING_RELATIONS: ReadonlySet<string> = new Set([
+  "refines",
+  "dependsOn",
+  "constrainedBy",
+  "decidedBy",
+  "verifies",
+  "supersedes",
+]);
+
+interface MentionText {
+  readonly path: string;
+  readonly text: string;
+}
+
+/** The sections whose own `description`, their leading prose, is read before their entries. */
+const DESCRIPTION_FIRST_SECTIONS: ReadonlySet<string> = new Set(["design", "ui"]);
+
+/** Description first at the top level of a `design` or `ui` section only; nested data keeps its order. */
+function sectionKeys(
+  sectionName: string,
+  section: Readonly<Record<string, unknown>>,
+): readonly string[] {
+  const keys = Object.keys(section);
+
+  return DESCRIPTION_FIRST_SECTIONS.has(sectionName) && keys.includes("description")
+    ? ["description", ...keys.filter((key) => key !== "description")]
+    : keys;
+}
+
+function collectMentionTexts(value: unknown, path: string, texts: MentionText[]): void {
+  if (typeof value === "string") {
+    texts.push({ path, text: value });
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item: unknown, position) => {
+      collectMentionTexts(item, `${path}[${String(position)}]`, texts);
+    });
+    return;
+  }
+
+  if (isRecord(value)) {
+    for (const key of Object.keys(value)) {
+      collectMentionTexts(value[key], `${path}.${key}`, texts);
+    }
+  }
+}
+
+/**
+ * The scanned text of one Spec in scan order: the narrative, then the sections in the serialized
+ * graph's order. It walks the strings the mention audit recipe walks: every string under the
+ * sections, recursing into arrays, except two fences skipped by position, never by key name
+ * alone: `behavior.exampleSpace` is the gwt-vocabulary fence and an object entry of
+ * `behavior.examples` is a gwt fence.
+ */
+function proseMentionTexts(node: PrimitiveNode): readonly MentionText[] {
+  const texts: MentionText[] = [];
+
+  if (typeof node.narrative === "string") {
+    texts.push({ path: "narrative", text: node.narrative });
+  }
+
+  const sections = node.sections as Readonly<Record<string, unknown>> | undefined;
+
+  for (const sectionName of SPEC_SECTION_NAMES) {
+    const section = sections?.[sectionName];
+
+    if (!isRecord(section)) {
+      collectMentionTexts(section, sectionName, texts);
+      continue;
+    }
+
+    for (const key of sectionKeys(sectionName, section)) {
+      const entry = section[key];
+
+      if (sectionName === "behavior" && key === "exampleSpace") {
+        continue;
+      }
+
+      if (sectionName === "behavior" && key === "examples" && Array.isArray(entry)) {
+        entry.forEach((example: unknown, position) => {
+          if (!isRecord(example)) {
+            collectMentionTexts(example, `behavior.examples[${String(position)}]`, texts);
+          }
+        });
+        continue;
+      }
+
+      collectMentionTexts(entry, `${sectionName}.${key}`, texts);
+    }
+  }
+
+  return texts;
+}
+
+/**
+ * The punctuation is removed after the prefix only, so the prefix's own colon stays. A bare
+ * `spec:`, or a placeholder such as `spec:<id>`, leaves nothing after the prefix and is no mention.
+ */
+function mentionTokens(text: string): readonly string[] {
+  return [...text.replace(MARKDOWN_ESCAPE, "$1").matchAll(MENTION_PATTERN)]
+    .map((match) => match[0].slice("spec:".length).replace(MENTION_TRAILING_PUNCTUATION, ""))
+    .filter((rest) => rest.length > 0)
+    .map((rest) => `spec:${rest}`);
+}
+
+/** The token's id parts, or `parseId`'s refusal with its `Invalid ID "<token>": ` prefix stripped. */
+function parseMention(token: string): IdParts | string {
+  try {
+    return parseId(token);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const prefix = `Invalid ID "${token}": `;
+
+    return message.startsWith(prefix) ? message.slice(prefix.length) : message;
+  }
+}
+
+/** An entry address resolves to an own key of its section, never the section's `description`. */
+function hasAddressedEntry(target: PrimitiveNode, address: string): boolean {
+  const dotIndex = address.indexOf(".");
+  const key = address.slice(dotIndex + 1);
+  const sections = target.sections as Readonly<Record<string, unknown>> | undefined;
+  const section = sections?.[address.slice(0, dotIndex)];
+
+  return key !== "description" && isRecord(section) && Object.hasOwn(section, key);
+}
+
+function backingPairs(graph: GraphSchema): ReadonlySet<string> {
+  const pairs = new Set<string>();
+
+  for (const edge of graph.edges) {
+    if (edge.claim === "declared" && BACKING_RELATIONS.has(edge.type)) {
+      pairs.add(`${edge.from}\u0000${edge.to}`);
+      pairs.add(`${edge.to}\u0000${edge.from}`);
+    }
+  }
+
+  return pairs;
+}
+
+function proseMentionWarning(
+  node: PrimitiveNode,
+  targetId: string,
+  paths: readonly string[],
+): Finding {
+  const [first = ""] = paths;
+  const locations = paths.length === 1 ? "1 location" : `${String(paths.length)} locations`;
+
+  return createFinding({
+    validatorId: graphValidatorIds.proseMentions,
+    family: "conformance",
+    severity: "warning",
+    message: `Mention of "${targetId}" in "${node.id}" at ${locations}, first at ${first}, with no declared relation between them; informative only. Declare the relation that fits, or leave the mention as prose and let the warning stand when none does.`,
+    subjectId: node.id,
+    relatedId: targetId,
+    path: first,
+    file: node.file,
+  });
+}
+
+const proseMentionsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.prose-mentions"),
+  label: "checks that prose mentions resolve and warns once per unbacked Spec pair",
+  satisfies: ref("spec:validation.prose-mentions"),
+  component: componentAnchorId("component:protocol.validate"),
+});
+void proseMentionsAnchor;
+
+function checkProseMentions(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
+  const backed = backingPairs(graph);
+  const findings: Finding[] = [];
+
+  for (const node of graph.nodes) {
+    if (node.nodeType !== "Primitive") {
+      continue;
+    }
+
+    const reported = new Set<string>();
+    const unbacked = new Map<string, string[]>();
+    const reportError = (path: string, token: string, message: string): void => {
+      const key = `${path}\u0000${token}`;
+
+      if (reported.has(key)) {
+        return;
+      }
+
+      reported.add(key);
+      findings.push(
+        createFinding({
+          validatorId: graphValidatorIds.proseMentions,
+          family: "conformance",
+          severity: "error",
+          message,
+          subjectId: node.id,
+          relatedId: token,
+          path,
+          file: node.file,
+        }),
+      );
+    };
+
+    for (const { path, text } of proseMentionTexts(node)) {
+      for (const token of mentionTokens(text)) {
+        if (token === node.id) {
+          continue;
+        }
+
+        const parsed = parseMention(token);
+
+        if (typeof parsed === "string") {
+          reportError(
+            path,
+            token,
+            `Mention "${token}" in "${node.id}" at ${path} is not a Spec id or entry address: ${parsed}`,
+          );
+          continue;
+        }
+
+        const { namespace, path: idPath, subpath } = parsed;
+        const targetId = formatId({ namespace, path: idPath });
+        const target = index.primitivesById.get(targetId);
+
+        if (target === undefined) {
+          reportError(
+            path,
+            token,
+            `Mention in "${node.id}" at ${path} points to missing target "${token}".${describeMissingTarget(targetId, index)}`,
+          );
+          continue;
+        }
+
+        if (subpath !== undefined && !hasAddressedEntry(target, subpath)) {
+          reportError(
+            path,
+            token,
+            `Mention in "${node.id}" at ${path} points to missing entry "${subpath}" of "${targetId}".`,
+          );
+        }
+
+        if (targetId === node.id || backed.has(`${node.id}\u0000${targetId}`)) {
+          continue;
+        }
+
+        const paths = unbacked.get(targetId) ?? [];
+
+        if (!paths.includes(path)) {
+          paths.push(path);
+        }
+
+        unbacked.set(targetId, paths);
+      }
+    }
+
+    for (const [targetId, paths] of unbacked) {
+      findings.push(proseMentionWarning(node, targetId, paths));
+    }
+  }
+
+  return findings;
+}
+
 /* ----- honesty/authoring-shape (`spec:validation.authored-honesty`) ----- */
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -1273,6 +1565,7 @@ export function validateGraph(graph: GraphSchema): ValidationReport {
     ...checkOracleLinkage(graph, index),
     ...checkPackCoherence(graph, index),
     ...checkOrphans(graph, index),
+    ...checkProseMentions(graph, index),
     ...authoringShapeFindings,
     ...checkDeliveryFacts(graph, derivedFacts),
     ...checkReadinessFloors(graph, index),

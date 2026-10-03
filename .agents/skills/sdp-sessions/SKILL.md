@@ -53,7 +53,9 @@ and shaping decisions, dependency footing (recipe 21) for the stated and derived
 every Spec the target rests on, and readiness divergence (recipe 7) across the corpus. Resolve the
 target's blocking open questions and review the carrying Specs. The open-question register
 (recipe 20) lists every open question in the corpus when the neighbors matter too. A clear floor
-is evidence, not an automatic `ready` statement.
+is evidence, not an automatic `ready` statement. Use pinned declarations (recipe 24) to list every
+signature, type, validator or table the target and its neighbors pin as a code span opening a keyed
+Design entry, so a test author and a builder working apart read one list.
 
 ### Implement
 
