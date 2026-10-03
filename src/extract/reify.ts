@@ -313,6 +313,25 @@ export function readPropertyName(property: PropertyAssignment): string | undefin
 }
 
 /**
+ * The open sections and the Model terms keep authored key order, which a JavaScript object breaks
+ * for an integer-like key: it moves ahead of every other key. Those shapes read a numeric property
+ * name as the key evaluation gives it, so `1` and `"1"` name one key, and refuse it.
+ */
+const INTEGER_KEY_SHAPE_PATHS: ReadonlySet<string> = new Set(["design", "ui", "model.terms"]);
+const INTEGER_LIKE_KEY = /^(0|[1-9][0-9]*)$/u;
+
+function readKeyedPropertyName(
+  property: PropertyAssignment,
+  shapePath: string,
+): string | undefined {
+  const nameNode = property.getNameNode();
+
+  return INTEGER_KEY_SHAPE_PATHS.has(shapePath) && Node.isNumericLiteral(nameNode)
+    ? String(nameNode.getLiteralValue())
+    : readPropertyName(property);
+}
+
+/**
  * A property name authored twice at one object tier is ambiguity, never detail: evaluation keeps
  * the last value while diagnostics key on the first seen. tsc reports the duplication (TS1117) to
  * typechecking authors; the extractor reads files standalone, so it is the backstop — at every
@@ -627,7 +646,7 @@ interface LossyObjectResult {
 }
 
 interface SectionPropertyIssue {
-  readonly kind: "unrecognized" | "reserved";
+  readonly kind: "unrecognized" | "reserved" | "integer-like";
   readonly name: string;
   readonly path: string;
   readonly line: number;
@@ -702,7 +721,7 @@ function reifyObjectLossy(
       continue;
     }
 
-    const name = readPropertyName(property);
+    const name = readKeyedPropertyName(property, path);
 
     if (name === undefined) {
       drops.push({
@@ -798,8 +817,9 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
   const shapePath = path.replace(/\[\d+\]/g, "[]");
   const recognizedNames = RECOGNIZED_SECTION_PROPERTIES.get(shapePath);
   const reservesDescription = shapePath === "model.terms";
+  const refusesIntegerKeys = INTEGER_KEY_SHAPE_PATHS.has(shapePath);
 
-  if (recognizedNames === undefined && !reservesDescription) {
+  if (recognizedNames === undefined && !reservesDescription && !refusesIntegerKeys) {
     return { value, issues: [] };
   }
 
@@ -812,7 +832,7 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
       continue;
     }
 
-    const name = readPropertyName(property);
+    const name = readKeyedPropertyName(property, shapePath);
 
     if (name === undefined || seenNames.has(name) || !Object.hasOwn(value, name)) {
       continue;
@@ -820,6 +840,16 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
 
     seenNames.add(name);
     const propertyPath = `${path}.${name}`;
+
+    if (refusesIntegerKeys && INTEGER_LIKE_KEY.test(name)) {
+      issues.push({
+        kind: "integer-like",
+        name,
+        path: propertyPath,
+        line: property.getStartLineNumber(),
+      });
+      continue;
+    }
 
     if (reservesDescription && name === "description") {
       issues.push({
@@ -868,6 +898,22 @@ function appendSectionPropertyFindings(
   let sectionOk = true;
 
   for (const issue of issues) {
+    // An integer-like key is an error that drops the one key and keeps the Spec and its other keys.
+    if (issue.kind === "integer-like") {
+      findings.push(
+        createExtractFinding(
+          extractFindingIds.unrecognizedProperty,
+          "error",
+          `property "${issue.name}" is refused: integer-like keys are not accepted in design, ui, or model terms`,
+          file,
+          issue.line,
+          subjectId,
+          issue.path,
+        ),
+      );
+      continue;
+    }
+
     if (issue.kind === "unrecognized") {
       findings.push(
         createExtractFinding(
@@ -1404,7 +1450,16 @@ function reifySpecCall(
     }
   }
 
-  if (!envelopeOk || findings.some((finding) => finding.severity === "error")) {
+  // An unrecognized property drops itself and never its carrier, at either severity: the
+  // integer-like key refusal is an error that keeps the Spec and its other keys.
+  if (
+    !envelopeOk ||
+    findings.some(
+      (finding) =>
+        finding.severity === "error" &&
+        finding.validatorId !== extractFindingIds.unrecognizedProperty,
+    )
+  ) {
     return { findings };
   }
 

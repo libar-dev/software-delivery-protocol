@@ -343,6 +343,70 @@ export const carrier = spec({
     ]);
   });
 
+  it("integer-like keys: refuses numeric and string integer-like names in design and keeps the Spec with its other keys", () => {
+    const reified = reifyTypeScriptCarrier(
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:orders.integer-like-design"),
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  design: { step1: "a", 1: "b", "10": "c" },
+});`,
+      "integer-like-design.sdp.ts",
+    );
+    const refusal = (key: string) =>
+      `property "${key}" is refused: integer-like keys are not accepted in design, ui, or model terms`;
+
+    expect(reified.findings).toMatchObject([
+      {
+        validatorId: extractFindingIds.unrecognizedProperty,
+        severity: "error",
+        message: refusal("1"),
+        path: "design.1",
+        line: 7,
+      },
+      {
+        validatorId: extractFindingIds.unrecognizedProperty,
+        severity: "error",
+        message: refusal("10"),
+        path: "design.10",
+        line: 7,
+      },
+    ]);
+    expect(reified.findings).toHaveLength(2);
+    expect(reified.specs).toHaveLength(1);
+    expect(reified.specs[0]?.data.design).toEqual({ step1: "a" });
+  });
+
+  it.each([
+    ["ui", `ui: { panel: "p", 0: "zero" }`, "ui.0", { panel: "p" }],
+    [
+      "model terms",
+      `model: { terms: { apple: "fruit", "7": "seven" } }`,
+      "model.terms.7",
+      { terms: { apple: "fruit" } },
+    ],
+  ])("integer-like keys: refuses an integer-like name in %s", (_shape, section, path, kept) => {
+    const reified = reifyTypeScriptCarrier(
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:orders.integer-like-key"),
+  kind: "model",
+  altitude: "story",
+  readiness: "idea",
+  ${section},
+});`,
+      "integer-like-key.sdp.ts",
+    );
+
+    expect(reified.findings).toMatchObject([
+      { validatorId: extractFindingIds.unrecognizedProperty, severity: "error", path },
+    ]);
+    expect(reified.findings).toHaveLength(1);
+    expect(reified.specs[0]?.data[path.startsWith("ui") ? "ui" : "model"]).toEqual(kept);
+  });
+
   it("reserved camel delivery fact: rejects hasVerifier at the TS carrier envelope (R-6 parity)", () => {
     const reified = reifyTypeScriptCarrier(
       `import { spec, specId } from "@libar-dev/software-delivery-protocol";

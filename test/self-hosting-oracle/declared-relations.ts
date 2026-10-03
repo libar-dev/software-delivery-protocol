@@ -884,6 +884,16 @@ export const expectedDeclaredRelations = [
     "verifies",
     "spec:carrier.markdown-body-grammar",
   ],
+  [
+    "spec:carrier.markdown-body-grammar.integer-term-refused",
+    "refines",
+    "spec:carrier.markdown-body-grammar",
+  ],
+  [
+    "spec:carrier.markdown-body-grammar.integer-term-refused",
+    "verifies",
+    "spec:carrier.markdown-body-grammar",
+  ],
   ["spec:carrier.inline-code-spans.narrative", "refines", "spec:carrier.inline-code-spans"],
   ["spec:carrier.inline-code-spans.narrative", "verifies", "spec:carrier.inline-code-spans"],
   ["spec:carrier.inline-code-spans.description", "refines", "spec:carrier.inline-code-spans"],

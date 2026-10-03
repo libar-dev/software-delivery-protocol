@@ -877,7 +877,7 @@ export const carrierSpecs = [
           "Behavior entries are keyed `rule` or `flow`. Rule and Contract entries are plain bullets, each one rule. Workflow entries are plain bullets, each one flow, plus keyed `rule` entries. Verification entries are plain criteria.",
           "A keyed entry is one ASCII word, a colon, and a space before its value. Where a section takes plain bullets, a bullet of that shape is read as a key and refused unless the section names that key, so a plain bullet never opens with a single word and a colon.",
           "Constraints accept one flat entry of `statement`, `flavor`, `target`, and `measurableBy`, each at most once, with `statement` required and no prose. A second entry is refused by this carrier; whether one entry becomes the law for every carrier is the open question above.",
-          "A Model entry is a bold term, the em dash character with a space on each side, and the definition; a hyphen is refused, and terms are unique. Decision accepts `context` and `decision` once each and `rationale`, `alternative`, and `consequence` repeatedly.",
+          "A Model entry is a bold term, the em dash character with a space on each side, and the definition; a hyphen is refused, terms are unique, and an integer-like term is refused. Decision accepts `context` and `decision` once each and `rationale`, `alternative`, and `consequence` repeatedly.",
           "Design and UI are open sections. Each entry is a lower-camel ASCII key, unique within its section, and a one-line value; the same key may appear once under Design and once under UI.",
           "The keys `implemented`, `hasVerifier`, `observed`, `claim`, `deliveryFacts`, `nodeType`, `specKind`, `satisfies`, `verifies`, `belongsTo`, and `models` are refused in every keyed section, under `spec:validation.authored-honesty`. The structural edge names `uses` and `memberOf` are not in that set and pass as ordinary keys.",
           "A refused construct excludes its whole carrier from the graph, and healthy sibling carriers survive.",
@@ -1305,6 +1305,34 @@ export const carrierSpecs = [
             when: ["the extractor reifies the carrier"],
             then: [
               'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "behavior description has more than one owner"} at line {line: 19}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.markdown-body-grammar.integer-term-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/markdown-body-grammar.integer-term-refused.sdp.md",
+    title: "An integer-like Model term is refused",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the integer-like term refusal on a Model term written as a bare digit.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier whose {owner: "Model"} section holds {construct: "an integer-like term"}',
+            ],
+            when: ["the extractor reifies the carrier"],
+            then: [
+              'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "model terms must not be integer-like"} at line {line: 14}',
             ],
           },
         ],

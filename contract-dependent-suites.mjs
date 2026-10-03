@@ -42,6 +42,7 @@ export const contractDependentSuites = [
       "test/carrier.markdown-body-grammar.continuation-line-refused.test.generated.ts",
       "test/carrier.markdown-body-grammar.foreign-fence-refused.test.generated.ts",
       "test/carrier.markdown-body-grammar.h3-refused.test.generated.ts",
+      "test/carrier.markdown-body-grammar.integer-term-refused.test.generated.ts",
       "test/carrier.markdown-body-grammar.keyed-bullet-refused.test.generated.ts",
       "test/carrier.markdown-body-grammar.ordered-list-refused.test.generated.ts",
       "test/carrier.markdown-body-grammar.plain-bullet-refused.test.generated.ts",

@@ -11,6 +11,7 @@ import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
 import { continuationLineRefusedContract } from "../generated/contracts/carrier.markdown-body-grammar.continuation-line-refused.contract.js";
 import { foreignFenceRefusedContract } from "../generated/contracts/carrier.markdown-body-grammar.foreign-fence-refused.contract.js";
 import { h3RefusedContract } from "../generated/contracts/carrier.markdown-body-grammar.h3-refused.contract.js";
+import { integerTermRefusedContract } from "../generated/contracts/carrier.markdown-body-grammar.integer-term-refused.contract.js";
 import { keyedBulletRefusedContract } from "../generated/contracts/carrier.markdown-body-grammar.keyed-bullet-refused.contract.js";
 import { orderedListRefusedContract } from "../generated/contracts/carrier.markdown-body-grammar.ordered-list-refused.contract.js";
 import { plainBulletRefusedContract } from "../generated/contracts/carrier.markdown-body-grammar.plain-bullet-refused.contract.js";
@@ -34,6 +35,7 @@ import type { ExtractionResult } from "../src/index.js";
 import { registerContinuationLineRefused } from "./carrier.markdown-body-grammar.continuation-line-refused.test.generated.js";
 import { registerForeignFenceRefused } from "./carrier.markdown-body-grammar.foreign-fence-refused.test.generated.js";
 import { registerH3Refused } from "./carrier.markdown-body-grammar.h3-refused.test.generated.js";
+import { registerIntegerTermRefused } from "./carrier.markdown-body-grammar.integer-term-refused.test.generated.js";
 import { registerKeyedBulletRefused } from "./carrier.markdown-body-grammar.keyed-bullet-refused.test.generated.js";
 import { registerOrderedListRefused } from "./carrier.markdown-body-grammar.ordered-list-refused.test.generated.js";
 import { registerPlainBulletRefused } from "./carrier.markdown-body-grammar.plain-bullet-refused.test.generated.js";
@@ -106,6 +108,7 @@ const constructTails: Record<string, (owner: string) => string> = {
   "a line break tag": (owner) => `## ${owner}\n- rule: A rule with a <br> inside.\n`,
   "a description when Behavior already has one": (owner) =>
     `## Behavior\nThe primary behavior description.\n\n- rule: The first rule.\n\n## ${owner}\nThe example space description.\n\n\`\`\`gwt-vocabulary\nGiven a probe\nWhen the probe runs\nThen the probe finishes\n\`\`\`\n`,
+  "an integer-like term": (owner) => `## ${owner}\n- **1** — first\n`,
 };
 
 interface GrammarWorld {
@@ -278,3 +281,11 @@ const sharedDescriptionRefusedTestAnchor = specTest({
 });
 void sharedDescriptionRefusedTestAnchor;
 registerSharedDescriptionRefused(adaptersFor(sharedDescriptionRefusedContract));
+
+const integerTermRefusedTestAnchor = specTest({
+  id: testAnchorId("test:protocol.markdown-body-grammar.integer-term-refused"),
+  label: "the integer-term point verifies the integer-like Model term refusal",
+  verifies: ref("spec:carrier.markdown-body-grammar.integer-term-refused"),
+});
+void integerTermRefusedTestAnchor;
+registerIntegerTermRefused(adaptersFor(integerTermRefusedContract));

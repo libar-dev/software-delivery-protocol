@@ -1918,6 +1918,16 @@ export const expectedAnchors = [
     site: "registerSharedDescriptionRefused(",
   },
   {
+    id: "test:protocol.markdown-body-grammar.integer-term-refused",
+    nodeType: "Anchor",
+    label: "the integer-term point verifies the integer-like Model term refusal",
+    type: "verifies",
+    target: "spec:carrier.markdown-body-grammar.integer-term-refused",
+    file: "test/self-hosting-markdown-grammar.test.ts",
+    constant: "integerTermRefusedTestAnchor",
+    site: "registerIntegerTermRefused(",
+  },
+  {
     id: "impl:protocol.inline-code-spans",
     nodeType: "CodeNode",
     label: "scans raw HTML outside matched code spans",

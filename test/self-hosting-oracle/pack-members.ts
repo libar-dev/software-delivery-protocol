@@ -25,6 +25,7 @@ export const expectedPackMembers = [
   "spec:carrier.markdown-body-grammar.second-primary-owner-refused",
   "spec:carrier.markdown-body-grammar.raw-html-refused",
   "spec:carrier.markdown-body-grammar.shared-description-refused",
+  "spec:carrier.markdown-body-grammar.integer-term-refused",
   "spec:carrier.inline-code-spans",
   "spec:carrier.inline-code-spans.narrative",
   "spec:carrier.inline-code-spans.description",
