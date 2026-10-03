@@ -203,9 +203,9 @@ their commits onto this branch in unit order. Each new example states `defined`.
   the warning pin and totals from the integrated graph.
 
 `spec:validation.prose-mentions` and `spec:extraction.open-section-order` now carry `implemented`
-while they state `defined`, so the drift alarm (recipe 2) names them until the owner states
-`ready`. The order law also carries `has-verifier`; the validator's tests bind no `specTest`
-anchor to its Spec, so it does not. The self-hosting run now reports one prose-mention warning per
+and `has-verifier` while they state `defined`, so the drift alarm (recipe 2) names them until the
+owner states `ready`. Their verifiers are the test anchors `test:protocol.prose-mentions` and
+`test:protocol.open-section-order`. The self-hosting run now reports one prose-mention warning per
 pair that recipe 22 lists as `unbacked`, beside the pinned honesty gaps.
 
 ## Rulings made at capture

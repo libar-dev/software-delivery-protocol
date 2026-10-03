@@ -104,11 +104,13 @@ footing (recipe 21) for what one Spec rests on, and the mention audit (recipe 22
 prose. An entry address, `spec:<id>#design.<key>` or `spec:<id>#ui.<key>`, names one keyed entry
 of a Spec's Design or UI section; it belongs in prose, and `sdp validate` reports an address whose
 Spec or key does not exist as an error. When you hold a key or a term and need the entry that
-carries it, use entry search (recipe 23): it matches whole tokens and names the entry and, for a
-Design or UI key, its address, where concept search stops at the section. When a Design Review or
-a test author needs every signature a corpus has pinned, use pinned declarations (recipe 24): it
-lists each keyed Design entry whose value opens with a code span, with the Spec, the key and the
-span content as authored.
+carries it, use entry search (recipe 23): it matches whole tokens and names the entry, where
+concept search stops at the section. It also gives the entry's address when the entry is a
+top-level Design or UI key that starts with a lowercase ASCII letter and goes on in ASCII letters
+and digits, other than `description`. Every other entry, a lawful `"01"` key included, gets
+`address: null`. When a Design Review or a test author needs every signature a corpus has pinned,
+use pinned declarations (recipe 24): it lists each keyed Design entry whose value opens with a
+code span, with the Spec, the key and the span content as authored.
 
 Reach for the files only when you need the authored prose itself — the exact words to edit.
 
