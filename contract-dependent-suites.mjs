@@ -76,6 +76,7 @@ export const contractDependentSuites = [
       "test/model.anchors.physical-identity.test.generated.ts",
       "test/model.stable-ids.malformed-refusal.test.generated.ts",
       "test/model.stable-ids.namespaced-round-trip.test.generated.ts",
+      "test/model.stable-ids.unsectioned-address-refused.test.generated.ts",
       "test/self-hosting-carrier-gherkin.test.ts",
       "test/self-hosting-carrier.test.ts",
       "test/self-hosting-consumers-oracle.test.ts",

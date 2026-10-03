@@ -169,7 +169,7 @@ export const modelSpecs = [
       behavior: {
         rules: [
           "A Protocol ID is stable, unique, namespaced, human-readable, and the only binding between intent and code.",
-          "An ID uses a lowercase namespace and a dotted path whose segments admit mixed case (case binds only on the namespace), with an optional single `#` sub-part; referential-integrity checks reject malformed or unresolved references.",
+          "An ID uses a lowercase namespace and a dotted path whose segments admit mixed case (case binds only on the namespace), with an optional single `#` sub-part; the `#` sub-part is an entry address, reserved in every namespace and never part of an identity; referential-integrity checks reject malformed or unresolved references.",
           "IDs carry no history: a rename is a repository edit recorded by git rather than graph-resident bookkeeping.",
           "The builders reserve one namespace per binding direction — `spec:` for a Spec and for every Spec reference, `pack:` for the aggregate, `impl:` · `api:` · `component:` for a code anchor, `test:` for a verifying test anchor, and `oracle:` for an expected-outcome anchor — while the grammar itself admits any lowercase namespace, so the reserved set is the builders' law rather than the parser's.",
           "`doc:` is reserved for a genuinely external document a decision Spec links to, never for an in-system decision: in-system decisions are Specs, and this corpus places them by convention under a dotted path opening with the `decisions` segment. No builder mints a `doc:` identifier and the Spec-only reference builder refuses one, so the reservation is a named deferral rather than a landed namespace.",
@@ -203,11 +203,13 @@ export const modelSpecs = [
       behavior: {
         examples: [
           {
-            given: ['the authored identifier {identifier: "spec:orders.create-order#valid-cart"}'],
+            given: [
+              'the authored identifier {identifier: "spec:orders.create-order#design.validCart"}',
+            ],
             when: ["the identifier is parsed"],
             then: [
               'parsing {outcome: "resolves"}',
-              'reformatting the parsed parts restores {restored: "spec:orders.create-order#valid-cart"}',
+              'reformatting the parsed parts restores {restored: "spec:orders.create-order#design.validCart"}',
             ],
           },
         ],
@@ -235,6 +237,34 @@ export const modelSpecs = [
             then: [
               'parsing {outcome: "is refused"}',
               'the refusal names the reason {reason: "namespace must be lowercase"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:model.stable-ids.unsectioned-address-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/model/stable-ids.unsectioned-address-refused.sdp.md",
+    title: "A `#` sub-part without its section is refused with its reason named",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the entry-address clause of the ID grammar on a sub-part that names no section.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ['the authored identifier {identifier: "spec:orders.create-order#valid-cart"}'],
+            when: ["the identifier is parsed"],
+            then: [
+              'parsing {outcome: "is refused"}',
+              'the refusal names the reason {reason: "entry address must be <section>.<key> with section design or ui"}',
             ],
           },
         ],

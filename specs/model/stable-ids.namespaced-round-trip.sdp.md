@@ -13,8 +13,8 @@ relations:
 - outcome: Execute the ID grammar on the fullest well-formed shape the model allows.
 
 ```gwt
-Given the authored identifier {identifier: "spec:orders.create-order#valid-cart"}
+Given the authored identifier {identifier: "spec:orders.create-order#design.validCart"}
 When the identifier is parsed
 Then parsing {outcome: "resolves"}
-Then reformatting the parsed parts restores {restored: "spec:orders.create-order#valid-cart"}
+Then reformatting the parsed parts restores {restored: "spec:orders.create-order#design.validCart"}
 ```

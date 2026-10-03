@@ -117,6 +117,7 @@ specs:
   - spec:extraction.schema-versioning.declared-version
   - spec:model.stable-ids.namespaced-round-trip
   - spec:model.stable-ids.malformed-refusal
+  - spec:model.stable-ids.unsectioned-address-refused
   - spec:carrier.markdown-parser.bounded-parity
   - spec:extraction.example-runner
   - spec:extraction.example-runner.step-order

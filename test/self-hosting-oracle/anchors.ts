@@ -597,6 +597,16 @@ export const expectedAnchors = [
     site: "registerMalformedRefusal(",
   },
   {
+    id: "test:protocol.stable-ids.unsectioned-address-refused",
+    nodeType: "Anchor",
+    label: "the unsectioned point verifies the entry-address section refusal",
+    type: "verifies",
+    target: "spec:model.stable-ids.unsectioned-address-refused",
+    file: "test/self-hosting-model.test.ts",
+    constant: "unsectionedAddressRefusedTestAnchor",
+    site: "registerUnsectionedAddressRefused(",
+  },
+  {
     id: "test:protocol.markdown-parser.bounded-parity",
     nodeType: "Anchor",
     label: "the bounded-parity point verifies one shared finding class and its split outcomes",

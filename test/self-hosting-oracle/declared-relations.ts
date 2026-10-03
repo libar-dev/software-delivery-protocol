@@ -446,6 +446,8 @@ export const expectedDeclaredRelations = [
   ["spec:model.stable-ids.namespaced-round-trip", "verifies", "spec:model.stable-ids"],
   ["spec:model.stable-ids.malformed-refusal", "refines", "spec:model.stable-ids"],
   ["spec:model.stable-ids.malformed-refusal", "verifies", "spec:model.stable-ids"],
+  ["spec:model.stable-ids.unsectioned-address-refused", "refines", "spec:model.stable-ids"],
+  ["spec:model.stable-ids.unsectioned-address-refused", "verifies", "spec:model.stable-ids"],
   ["spec:model.pack-aggregate", "refines", "spec:model.core-model"],
   ["spec:model.pack-aggregate", "decidedBy", "spec:decisions.pack-reified"],
   ["spec:model.anchors", "refines", "spec:model.core-model"],
