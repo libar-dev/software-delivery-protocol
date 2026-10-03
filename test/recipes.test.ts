@@ -2392,6 +2392,9 @@ describe("register recipe semantics", () => {
       if (opening === 0) return undefined;
       let index = opening;
       while (index < value.length) {
+        // The span law closes a span on its own line, so a line ending before the closing run
+        // means the value opens with no span.
+        if (value[index] === "\n" || value[index] === "\r") return undefined;
         if (value[index] !== "`") {
           index += 1;
           continue;
@@ -2445,6 +2448,13 @@ describe("register recipe semantics", () => {
                 fnLater: "calls `resume(id)` later",
                 description: "`describe(): void` is framing",
                 tableNested: { inner: "`nested(): void`" },
+                fnList: ["`nested(): void`"],
+                typeTriple: "```a``b``` keeps the double run inside a triple run",
+                fnFirst: "`first` prose `last`",
+                fnOpenTwo: "``a`",
+                fnOpenTwoLonger: "``a`b```",
+                fnOpenThree: "```x`",
+                fnMultiline: "`a\nb`",
               },
             },
           },
@@ -2455,12 +2465,14 @@ describe("register recipe semantics", () => {
     };
     const recipe = recipeByOrdinal(24);
     expect(await runRecipe(recipe, undefined, extraction)).toEqual({
-      totals: { entries: 4, specs: 2 },
+      totals: { entries: 6, specs: 2 },
       rows: [
         { spec: "spec:probe.a", key: "validatorId", declaration: "isId(value: unknown): boolean" },
         { spec: "spec:probe.search", key: "fnResume", declaration: "resume(id: string): void" },
         { spec: "spec:probe.search", key: "typeTick", declaration: "a`b" },
         { spec: "spec:probe.search", key: "typeFence", declaration: "a``b" },
+        { spec: "spec:probe.search", key: "typeTriple", declaration: "a``b" },
+        { spec: "spec:probe.search", key: "fnFirst", declaration: "first" },
       ],
     });
   });
