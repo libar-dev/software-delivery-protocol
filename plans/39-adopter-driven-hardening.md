@@ -2,8 +2,9 @@
 
 > **Status:** 🧭 DRAFTED. A thin lineage pointer in the plan-38 shape, not a briefs index. Six of
 > the arc's Specs are implemented with bound evidence and, with the verified body grammar, wait
-> for the owner to state `ready`; five stay held by owner questions. The backlog and readiness are
-> read from the graph (recipes 1, 2, 9, 11). If this file and the graph disagree, the graph wins
+> for the owner to state `ready`; four more state `defined` and derive `ready` with no
+> implementation yet, and one stays held by an owner question. The backlog and readiness are read
+> from the graph (recipes 1, 2, 9, 11). If this file and the graph disagree, the graph wins
 > and this file is stale.
 
 ## Why this arc
@@ -57,29 +58,33 @@ Verified and waiting for the same statement:
 The bound examples under these Specs also state `defined` and derive `ready`. Stating `ready` is
 the owner's act, and this plan states it for none of them.
 
-Held by a question the owner has not answered, carried as a blocking open question on the Spec.
-The execution did not touch these:
+Ruled by the owner, with the Spec text applied in `30e19b4`. Each states `defined`, derives
+`ready` with no delivery fact, and waits for the engine units in the entry-address design and for
+the owner's `ready` statement:
 
-- `spec:extraction.open-section-order` (P7, first half). Authored order of `design`, `ui`, and
-  `model` terms survives serialization and the Design Review's key order, an ordinary revision
-  with a schema bump. Open: an integer-like Model term or TypeScript key already loses its place
-  in the in-memory object, so either those keys are refused or the representation becomes a
-  list.
-- `spec:decisions.checked-mentions` (P6 step 2). The ruling on MD-10 and on the `#` sub-part is
-  written. Open: a key may repeat across Design and UI, so the address needs the section or the
-  carrier refuses the repeat; and `#` is already lawful inside a complete Spec id, so precedence
-  needs a rule. It shapes `spec:validation.prose-mentions`, which carries its own blocking
-  question naming ratification as the trigger.
+- `spec:decisions.checked-mentions` (P6 step 2). The entry address carries the section, `#` is
+  reserved for it in every namespace, and a declared relation in either direction backs a mention.
+  Its glossary question stays non-blocking.
+- `spec:validation.prose-mentions`. The validator the decision shapes: one warning per
+  mentioning-Spec and target pair, and errors for a malformed token, a missing Spec, or a missing
+  entry.
+- `spec:extraction.open-section-order` (P7, first half). Authored key order of `design`, `ui`,
+  and `model` terms becomes part of the graph contract at schema `0.6.0`. Integer-like keys are
+  refused and the object representation stays.
+- `spec:extraction.contract-declarations` (P8). Deferred at `idea` until its re-entry trigger fired
+  on the first adopter's evidence, then moved to `scoped` by `03ce88e` with five rules on the
+  declaration shape. Item B below was ruled into its sixth rule: the adopter emits the derived
+  module from the pinned declarations list (recipe 24) with its own preamble until a second
+  adopter needs the same one, and the module earns its place only when a changed pinned signature
+  fails the adopter's typecheck against its implementation.
+
+Still held by a question the owner has not answered, carried as a blocking open question on the
+Spec:
+
 - `spec:decisions.authored-entry-order` (P7, second half). Rendering open-section entries as a
   list changes a stated rule of the Design Review, so on ratification it declares `supersedes`
   on the shipped-projections freeze (MD-32); the draft declares `dependsOn` so the graph never
   reads a landed supersession. The question is when to reopen the freeze.
-
-`spec:extraction.contract-declarations` (P8) was deferred at `idea` until its re-entry trigger
-fired on the first adopter's evidence, and `03ce88e` moved it to `scoped` with five rules on the
-declaration shape. It stays held by item B below, who owns the preamble of a derived declarations
-module, carried as a blocking question on the Spec. Until then, recipe 24 is the recipe-first list
-of the declarations a corpus has pinned.
 
 The execution added two non-blocking questions on `spec:carrier.inline-code-spans`: a span that
 crosses a line ending, and two places where the scanner reads differently from CommonMark. The
@@ -110,23 +115,29 @@ Facts and questions the execution surfaced that no Spec carries. None is ruled h
   source-checkout only. Package readers reach `ref()`'s limit through
   `spec:decisions.carried-evidence`.
 
-The design-stubs session put six questions to the owner. Each has two readings in
-`~/dev-libar/calibration/sdp-design-stubs-1/design-design-stubs.md`; the lean is given here.
+The design-stubs session put six questions to the owner, each with two readings in
+`~/dev-libar/calibration/sdp-design-stubs-1/design-design-stubs.md`. The owner ruled all six on the
+lean.
 
-- A. What does `ready` demand of an element's code? Lean: the Protocol's floor reports bindings
-  and never demands them, and the adopter's own gate requires them.
-- B. Who owns the derived declarations module and its preamble? Lean: a recipe in the adopter's
-  repository until a second adopter needs the same preamble. Blocking on
-  `spec:extraction.contract-declarations`.
-- C. How does an entry address tell a Design key from a UI key? Lean: the address carries the
-  section, `spec:x#design.key`.
-- D. What happens to a `#` in a Spec id once the address exists? Lean: the carrier refuses it.
-- E. How do integer-like keys keep authored order? Lean: refuse them in Model terms and TypeScript
-  open sections, and keep the object rather than move the schema to a list.
-- F. May an advisor state `ready` on a `decision` Spec by delegation? Lean: no, `ready` stays a
-  human's statement.
-- The entry-address design lists five more items, in
-  `~/dev-libar/calibration/sdp-entry-address-1/design-entry-address.md`.
+- A. Asked what `ready` demands of an element's code, the owner ruled that the Protocol's floor
+  reports bindings and never demands them, and the adopter's own gate requires them.
+- B. Asked who owns the derived declarations module and its preamble, the owner ruled that the
+  adopter emits it with its own preamble until a second adopter needs the same one, now the sixth
+  rule of `spec:extraction.contract-declarations`.
+- C. Asked how an entry address tells a Design key from a UI key, the owner ruled that the address
+  carries the section, as in `spec:<id>#design.<key>` and `spec:<id>#ui.<key>`.
+- D. Asked what happens to a `#` in a Spec id once the address exists, the owner ruled that `#` is
+  reserved for the entry address in every namespace and refused in every id slot.
+- E. Asked how integer-like keys keep authored order, the owner ruled that Model terms and
+  TypeScript open sections refuse them, the object representation stays, and authored key order
+  becomes part of the graph contract.
+- F. Asked whether an advisor may state `ready` on a `decision` Spec by delegation, the owner ruled
+  that it may not; `ready` stays a human's statement.
+- The five further items in `~/dev-libar/calibration/sdp-entry-address-1/design-entry-address.md`
+  were ruled on the lean, with two corrections from an outside read: mention warnings aggregate per
+  mentioning-Spec and target pair, and the second blocking question on
+  `spec:extraction.contract-declarations` became non-blocking because its rules refuse the closed
+  section it asked about.
 
 ## How it was built
 
@@ -157,6 +168,15 @@ A second design pass took the leans of items C, D, and E as labelled assumptions
 `~/dev-libar/calibration/sdp-entry-address-1/design-entry-address.md`, with a proven patch to
 three held Specs and two glossary candidates. Nothing from it is applied. It waits for the
 owner's answers.
+
+The owner then ruled on items A to F and on the design's five further items, listed under "For the
+owner, not on a Spec", and `30e19b4` applied the revised Spec text. Read from the graph (recipes 9
+and 11), `spec:decisions.checked-mentions`, `spec:validation.prose-mentions`,
+`spec:extraction.open-section-order`, and `spec:extraction.contract-declarations` now state
+`defined` and derive `ready` with no delivery fact, and `spec:decisions.authored-entry-order` stays
+`scoped` behind its blocking question on the shipped-projections freeze. Recipe 1 returns an empty
+backlog because none of the four states `ready`, so the next implementation unit is the engine work
+in the design's "Implementation units" section, units 1 to 5, with units 6 to 8 after them.
 
 ## Rulings made at capture
 

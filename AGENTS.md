@@ -19,9 +19,9 @@ code behavior into intent.
 > **plan 39 is DRAFTED**. The first-adopter arc, a thin lineage pointer in the plan-38 shape. Six
 > of its Specs (inline code spans, the unbound-example posture, the typed-dependency floor, the
 > register recipes, the adopter on-ramp, the shipped corpus) are implemented with bound evidence
-> and, like the verified Markdown body grammar, wait for the owner to state `ready`; five more
-> stay held by owner questions. The backlog and readiness are read from the graph (recipes 1, 2,
-> 9, 11).
+> and, like the verified Markdown body grammar, wait for the owner to state `ready`; four more
+> state `defined` and derive `ready` with no implementation yet, and one stays held by an owner
+> question. The backlog and readiness are read from the graph (recipes 1, 2, 9, 11).
 > **plan 38 is DRAFTED** — the graph-first planning arc, a thin lineage pointer, not a briefs
 > index: the arc's forward intent is authored as capture-rung Specs
 > (`spec:consumers.graph-first-planning`, `spec:model.structural-patterns`,
