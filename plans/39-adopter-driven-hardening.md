@@ -75,9 +75,11 @@ The execution did not touch these:
   on the shipped-projections freeze (MD-32); the draft declares `dependsOn` so the graph never
   reads a landed supersession. The question is when to reopen the freeze.
 
-Deferred, with its re-entry triggers as blocking open questions:
-
-- `spec:extraction.contract-declarations` (P8).
+`spec:extraction.contract-declarations` (P8) was deferred at `idea` until its re-entry trigger
+fired on the first adopter's evidence, and `03ce88e` moved it to `scoped` with five rules on the
+declaration shape. It stays held by item B below, who owns the preamble of a derived declarations
+module, carried as a blocking question on the Spec. Until then, recipe 24 is the recipe-first list
+of the declarations a corpus has pinned.
 
 The execution added two non-blocking questions on `spec:carrier.inline-code-spans`: a span that
 crosses a line ending, and two places where the scanner reads differently from CommonMark. The
@@ -108,6 +110,24 @@ Facts and questions the execution surfaced that no Spec carries. None is ruled h
   source-checkout only. Package readers reach `ref()`'s limit through
   `spec:decisions.carried-evidence`.
 
+The design-stubs session put six questions to the owner. Each has two readings in
+`~/dev-libar/calibration/sdp-design-stubs-1/design-design-stubs.md`; the lean is given here.
+
+- A. What does `ready` demand of an element's code? Lean: the Protocol's floor reports bindings
+  and never demands them, and the adopter's own gate requires them.
+- B. Who owns the derived declarations module and its preamble? Lean: a recipe in the adopter's
+  repository until a second adopter needs the same preamble. Blocking on
+  `spec:extraction.contract-declarations`.
+- C. How does an entry address tell a Design key from a UI key? Lean: the address carries the
+  section, `spec:x#design.key`.
+- D. What happens to a `#` in a Spec id once the address exists? Lean: the carrier refuses it.
+- E. How do integer-like keys keep authored order? Lean: refuse them in Model terms and TypeScript
+  open sections, and keep the object rather than move the schema to a list.
+- F. May an advisor state `ready` on a `decision` Spec by delegation? Lean: no, `ready` stays a
+  human's statement.
+- The entry-address design lists five more items, in
+  `~/dev-libar/calibration/sdp-entry-address-1/design-entry-address.md`.
+
 ## How it was built
 
 One Claude main thread orchestrated. `gpt-6.1-sol` implemented each unit and folded in the
@@ -116,6 +136,27 @@ agent designed the recipes, help text, and skill text before implementation, and
 reviewed and wrote the agent-facing prose. Every unit passed `npm run check` before the next
 began. The method record lives outside this repository, in
 `~/dev-libar/gpt-models-from-the-claude-main-thread.md`.
+
+## The design-stubs session
+
+A design brief asked where a Spec carries the design of an architecturally significant element,
+rung by rung. The answer is `~/dev-libar/calibration/sdp-design-stubs-1/design-design-stubs.md`,
+beside the brief. Three commits followed from it.
+
+- `03ce88e` moved `spec:extraction.contract-declarations` from `idea` to `scoped`, with five rules
+  on the declaration shape.
+- `5d66299` added recipe 24, pinned declarations, under a new rule of
+  `spec:consumers.agent-surface.register-recipes`.
+- `b4fe056` folded in the two unit reviews.
+
+Two review lanes, `gpt-6.1-sol` on mechanics and `gpt-6-astra` on behavior, found one defect in
+the recipe body, five mutations the tests let survive, and four Spec sentences that said more
+than the evidence.
+
+A second design pass took the leans of items C, D, and E as labelled assumptions and wrote
+`~/dev-libar/calibration/sdp-entry-address-1/design-entry-address.md`, with a proven patch to
+three held Specs and two glossary candidates. Nothing from it is applied. It waits for the
+owner's answers.
 
 ## Rulings made at capture
 
