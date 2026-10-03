@@ -1227,8 +1227,9 @@ const backingTypes = [
   "verifies",
   "supersedes",
 ];
-const idPattern =
-  /(?<![A-Za-z0-9-])spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#[A-Za-z0-9][A-Za-z0-9-]*)?/gu;
+const idPattern = /(?<![A-Za-z0-9-])spec:[A-Za-z0-9][A-Za-z0-9.#-]*/gu;
+const mentionPattern =
+  /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#(design|ui)\.([a-z][A-Za-z0-9]*))?$/u;
 const specIds = new Set(g.specs().map((spec) => spec.id));
 const declared = new Map();
 
@@ -1239,6 +1240,21 @@ for (const edge of graph.edges) {
 }
 
 const pairs = new Map();
+const unresolvedPairs = new Map();
+const record = (map, from, to, at, reason) => {
+  const key = `${from} ${to}`;
+  const pair = map.get(key) ?? {
+    from,
+    to,
+    ...(reason === undefined ? {} : { reason }),
+    totals: { occurrences: 0 },
+    at: [],
+  };
+  pair.totals.occurrences += 1;
+  if (!pair.at.some((location) => location.section === at.section && location.entry === at.entry))
+    pair.at.push(at);
+  map.set(key, pair);
+};
 let occurrences = 0;
 
 for (const spec of g.specs()) {
@@ -1272,7 +1288,8 @@ for (const spec of g.specs()) {
       if (key === "exampleSpace") continue;
       if (key === "examples" && Array.isArray(entry)) {
         entry.forEach((example, index) => {
-          if (typeof example === "string") collect(example, "behavior", `examples[${index}]`);
+          if (typeof example !== "object" || example === null || Array.isArray(example))
+            collect(example, "behavior", `examples[${index}]`);
         });
         continue;
       }
@@ -1282,18 +1299,26 @@ for (const spec of g.specs()) {
 
   for (const { at, text } of texts) {
     for (const match of text.matchAll(idPattern)) {
-      const to = match[0];
-      if (to === spec.id) continue;
-
+      const token = match[0].replace(/\.+$/u, "");
+      if (token === spec.id) continue;
       occurrences += 1;
-      const key = `${spec.id} ${to}`;
-      const pair = pairs.get(key) ?? { from: spec.id, to, totals: { occurrences: 0 }, at: [] };
-      pair.totals.occurrences += 1;
+      const parsed = mentionPattern.exec(token);
+      if (parsed === null) {
+        record(unresolvedPairs, spec.id, token, at, "malformed");
+        continue;
+      }
+      const to = token.split("#")[0];
+      if (!specIds.has(to)) {
+        record(unresolvedPairs, spec.id, token, at, "spec");
+        continue;
+      }
+      const [, section, key] = parsed;
       if (
-        !pair.at.some((location) => location.section === at.section && location.entry === at.entry)
+        section !== undefined &&
+        (key === "description" || !Object.hasOwn(g.specContext(to)?.sections?.[section] ?? {}, key))
       )
-        pair.at.push(at);
-      pairs.set(key, pair);
+        record(unresolvedPairs, spec.id, token, at, "entry");
+      if (to !== spec.id) record(pairs, spec.id, to, at);
     }
   }
 }
@@ -1301,7 +1326,9 @@ for (const spec of g.specs()) {
 const rows = [...pairs.values()].sort(
   (left, right) => left.from.localeCompare(right.from) || left.to.localeCompare(right.to),
 );
-const unresolved = rows.filter((row) => !specIds.has(row.to));
+const unresolved = [...unresolvedPairs.values()].sort(
+  (left, right) => left.from.localeCompare(right.from) || left.to.localeCompare(right.to),
+);
 const withoutForward = rows.filter(
   (row) => specIds.has(row.to) && !declared.has(`${row.from} ${row.to}`),
 );
@@ -1311,8 +1338,8 @@ const reverseOnly = withoutForward.filter((row) => declared.has(`${row.to} ${row
 return {
   totals: {
     occurrences,
-    pairs: rows.length,
-    backed: rows.length - unresolved.length - withoutForward.length,
+    pairs: rows.length + unresolved.length,
+    backed: rows.length - withoutForward.length,
     unbacked: unbacked.length,
     reverseOnly: reverseOnly.length,
     unresolved: unresolved.length,
@@ -1323,20 +1350,27 @@ return {
 };
 ```
 
-A mention is a `spec:` id in a Spec's narrative or in the text of its sections, read by the id
-grammar. The title and the steps inside `gwt` and `gwt-vocabulary` fences are not read.
-A Spec that names itself is not a mention.
+A mention is a maximal token matching `(?<![A-Za-z0-9-])spec:[A-Za-z0-9][A-Za-z0-9.#-]*`,
+with trailing dots stripped. The scan reads narrative and every string under sections, except
+`behavior.exampleSpace` and object entries of `behavior.examples`. Titles are not scanned.
+A token equal to the scanning Spec's own id is skipped; its own entry addresses are checked.
 
-Each row is one mentioning Spec and target pair, with its `totals.occurrences` and the entries
-that hold them in `at`, as `{ section, entry }`, with zero-based indexes inside `entry`.
-`unresolved` rows name an id that no Spec carries. `unbacked` rows name a Spec that exists with
-no declared relation in either direction.
-`reverseOnly` rows have no declared relation from the mentioning Spec, but the target declares
-one back. The backing relations are `refines`, `dependsOn`, `constrainedBy`, `decidedBy`,
-`verifies`, and `supersedes`. A parent that names its child lands in `reverseOnly`. A `#` sub-part
-belongs to the id, so `spec:x#part` resolves only when a Spec carries exactly that id. A family pattern written in id form, such as `spec:probe.*`, reads as a mention
-of `spec:probe`. No validator reads prose mentions today, so this recipe is the whole check;
-`spec:validation.prose-mentions` carries the rule that would.
+Each row keeps every distinct location in `at` as `{ section, entry }`, with zero-based indexes
+inside `entry`, and counts token occurrences in `totals.occurrences`.
+`unresolved` groups by mentioning Spec and token, with `reason: "malformed"` for a refused id or
+address, `"spec"` for an absent Spec, and `"entry"` for an absent own section key or `description`.
+An entry address is `spec:<id>#design.<key>` or `spec:<id>#ui.<key>`, with a key matching
+`^[a-z][A-Za-z0-9]*$`. It resolves against the named Spec's own section keys.
+
+`unbacked` and `reverseOnly` group valid mentions by mentioning Spec and target Spec, combining
+Spec-level mentions and addresses, including missing entries. Self-addresses never enter these
+lists. `unbacked` has no declared relation in either direction; `reverseOnly` has a relation only
+from the target. The backing relations are `refines`, `dependsOn`, `constrainedBy`, `decidedBy`,
+`verifies`, and `supersedes`. A parent naming its child lands in `reverseOnly`.
+`totals.pairs` counts target pairs plus unresolved token pairs, which may overlap for missing
+entries; `totals.backed` counts target pairs backed by a forward relation.
+The validator's unbacked-pair warnings follow `spec:validation.prose-mentions`; this audit keeps
+all locations and unresolved reasons as query data.
 
 ## 23. Entry search
 
@@ -1372,12 +1406,26 @@ for (const spec of g.specs()) {
   const context = g.specContext(spec.id);
   if (context === undefined) continue;
 
+  const addressOf = (section, entry) =>
+    (section === "design" || section === "ui") &&
+    entry !== "description" &&
+    /^[a-z][A-Za-z0-9]*$/u.test(entry ?? "")
+      ? `${spec.id}#${section}.${entry}`
+      : null;
   const visit = (section, entry, key, text) => {
     const matchedIn = [
       ...(key !== null && hits(key) ? ["key"] : []),
       ...(hits(text) ? ["text"] : []),
     ];
-    if (matchedIn.length > 0) matches.push({ id: spec.id, section, entry, matchedIn, text });
+    if (matchedIn.length > 0)
+      matches.push({
+        id: spec.id,
+        section,
+        entry,
+        address: addressOf(section, entry),
+        matchedIn,
+        text,
+      });
   };
   const walk = (section, value, entry, key) => {
     if (typeof value === "string") {
@@ -1385,7 +1433,14 @@ for (const spec of g.specs()) {
       return;
     }
     if (key !== null && hits(key)) {
-      matches.push({ id: spec.id, section, entry, matchedIn: ["key"], text: JSON.stringify(value) });
+      matches.push({
+        id: spec.id,
+        section,
+        entry,
+        address: addressOf(section, entry),
+        matchedIn: ["key"],
+        text: JSON.stringify(value),
+      });
     }
     if (Array.isArray(value)) {
       value.forEach((item, index) => walk(section, item, `${entry ?? ""}[${index}]`, null));
@@ -1439,6 +1494,9 @@ The term matches when its tokens appear in the entry as one consecutive run, in 
 | `retry worker` | `worker retry` | no match, the order differs |
 | `retry worker` | `retry the worker` | no match, the tokens are not adjacent |
 
+Each row carries `address: string | null`. A Design or UI entry with a key matching
+`^[a-z][A-Za-z0-9]*$` has address `spec:<id>#<section>.<key>`; `description`, off-grammar keys,
+nested paths, and all other sections have `null`.
 Each row names the Spec, the `section`, the `entry` inside it, and the entry's `text`. `entry` is
 the key for a keyed entry (`envelopeSketch`, `terms.claim inheritance`), the field and zero-based
 index for a list entry (`rules[2]`), and `null` for the Spec's narrative, which is reported under

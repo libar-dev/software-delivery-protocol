@@ -1681,7 +1681,7 @@ function registerProbe(): ExtractionResult {
           },
           behavior: {
             rules: [
-              "spec:probe.child spec:probe.child spec:probe.b spec:probe.backed spec:probe.Target#part spec:probe.missing.",
+              "spec:probe.child spec:probe.child spec:probe.b spec:probe.backed spec:probe.Target spec:probe.missing.",
             ],
             exampleSpace: { given: ["spec:probe.hiddenSpace"], when: ["act"], then: ["observe"] },
             examples: [
@@ -1701,7 +1701,7 @@ function registerProbe(): ExtractionResult {
         },
         primitive("spec:probe.child"),
         primitive("spec:probe.backed"),
-        primitive("spec:probe.Target#part"),
+        primitive("spec:probe.Target"),
         {
           ...primitive("spec:probe.search", {
             intent: {
@@ -1731,7 +1731,7 @@ function registerProbe(): ExtractionResult {
       ],
       edges: [
         { from: "spec:probe.b", to: "pack:probe", type: "dependsOn", claim: "declared" },
-        { from: "spec:probe.b", to: "spec:probe.Target#part", type: "verifies", claim: "inferred" },
+        { from: "spec:probe.b", to: "spec:probe.Target", type: "verifies", claim: "inferred" },
         { from: "spec:probe.b", to: "spec:probe.a", type: "refines", claim: "declared" },
         { from: "spec:probe.b", to: "spec:probe.backed", type: "dependsOn", claim: "declared" },
         { from: "spec:probe.b", to: "spec:probe.unresolved", type: "dependsOn", claim: "declared" },
@@ -1861,6 +1861,7 @@ describe("register recipe semantics", () => {
       id: "spec:probe.carrier",
       section,
       entry,
+      address: `spec:probe.carrier#${section ?? ""}.${entry ?? ""}`,
       text,
       matchedIn: ["key"],
     }));
@@ -1870,6 +1871,7 @@ describe("register recipe semantics", () => {
         id: "spec:probe.carrier",
         section: "design",
         entry: "nested.steps[0]",
+        address: null,
         text: "retry later",
         matchedIn: ["text"],
       },
@@ -1911,6 +1913,7 @@ describe("register recipe semantics", () => {
         id: node.id,
         section: "design",
         entry: "retryWorkers",
+        address: `${node.id}#design.retryWorkers`,
         matchedIn: ["key"],
         text: '["retry later"]',
       },
@@ -1918,6 +1921,7 @@ describe("register recipe semantics", () => {
         id: node.id,
         section: "design",
         entry: "retryWorkers[0]",
+        address: null,
         matchedIn: ["text"],
         text: "retry later",
       },
@@ -1925,6 +1929,7 @@ describe("register recipe semantics", () => {
         id: node.id,
         section: "design",
         entry: "retryPolicy",
+        address: `${node.id}#design.retryPolicy`,
         matchedIn: ["key"],
         text: '{"mode":"retry fixed","options":["retry soon"]}',
       },
@@ -1932,6 +1937,7 @@ describe("register recipe semantics", () => {
         id: node.id,
         section: "design",
         entry: "retryPolicy.mode",
+        address: null,
         matchedIn: ["text"],
         text: "retry fixed",
       },
@@ -1939,6 +1945,7 @@ describe("register recipe semantics", () => {
         id: node.id,
         section: "design",
         entry: "retryPolicy.options[0]",
+        address: null,
         matchedIn: ["text"],
         text: "retry soon",
       },
@@ -1965,7 +1972,14 @@ describe("register recipe semantics", () => {
       ),
     );
     expect(result.matches).toEqual([
-      { id: node.id, section: "design", entry: "retryNothing", matchedIn: ["key"], text: "null" },
+      {
+        id: node.id,
+        section: "design",
+        entry: "retryNothing",
+        address: `${node.id}#design.retryNothing`,
+        matchedIn: ["key"],
+        text: "null",
+      },
     ]);
     expect(result.totals).toEqual({ matches: 1, specs: 1, shown: 1 });
   });
@@ -2041,7 +2055,16 @@ describe("register recipe semantics", () => {
       expect(result.matches).toEqual(
         matchedIn.length === 0
           ? []
-          : [{ id: node.id, section: "design", entry: key, matchedIn, text }],
+          : [
+              {
+                id: node.id,
+                section: "design",
+                entry: key,
+                address: `${node.id}#design.${key}`,
+                matchedIn,
+                text,
+              },
+            ],
       );
     },
   );
@@ -2222,7 +2245,7 @@ describe("register recipe semantics", () => {
     expect(result.unbacked).toEqual([
       {
         from: "spec:probe.b",
-        to: "spec:probe.Target#part",
+        to: "spec:probe.Target",
         totals: { occurrences: 1 },
         at: [{ section: "behavior", entry: "rules[0]" }],
       },
@@ -2243,6 +2266,172 @@ describe("register recipe semantics", () => {
         .map(asRecord)
         .map((row) => row.to),
     ).toEqual(["spec:probe.designMention", "spec:probe.missing", "spec:probe.stringExample"]);
+  });
+
+  it("resolves entry mentions and retains every token and pair location through a probe root", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-entry-mentions-"));
+    try {
+      writeFileSync(
+        join(root, "probe.sdp.ts"),
+        `
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const target = spec({
+  id: specId("spec:probe.target"), title: "Target", kind: "behavior", altitude: "story", readiness: "idea",
+  design: { step1: "Present", description: "Leading prose" }
+});
+export const source = spec({
+  id: specId("spec:probe.source"), title: "spec:probe.titleOnly", kind: "behavior", altitude: "story", readiness: "idea",
+  intent: { outcome: "spec:probe.target#design.step1 spec:probe.target#design.missing.",
+    openQuestions: [{ question: "spec:probe.target#design.missing", blocking: false }] },
+  behavior: { rules: ["spec:probe.target#design.missing spec:probe.target#design.missing"],
+    exampleSpace: { given: ["spec:probe.hiddenSpace"], when: ["act"], then: ["observe"] },
+    examples: [{ given: ["spec:probe.hiddenExample"], when: ["act"], then: ["observe"] }] },
+  design: { malformed: "spec:x#foo spec:x#design.Foo spec:probe..broken spec:probe.target##design.step1",
+    absent: "spec:probe.absent#ui.step1", leading: "spec:probe.target#design.description",
+    own: "spec:probe.source#design.own spec:probe.source#ui.missing",
+    boundaries: "aspec:probe.ignore -spec:probe.ignore" }
+});`,
+      );
+      const result = asRecord(await runRecipe(recipeByOrdinal(22), undefined, extract({ root })));
+      const unresolved = asArray(result.unresolved).map(asRecord);
+      const at = [
+        { section: "intent", entry: "outcome" },
+        { section: "intent", entry: "openQuestions[0].question" },
+        { section: "behavior", entry: "rules[0]" },
+      ];
+      expect(unresolved).toContainEqual({
+        from: "spec:probe.source",
+        to: "spec:probe.target#design.missing",
+        reason: "entry",
+        totals: { occurrences: 4 },
+        at,
+      });
+      for (const to of [
+        "spec:x#foo",
+        "spec:x#design.Foo",
+        "spec:probe..broken",
+        "spec:probe.target##design.step1",
+      ])
+        expect(unresolved).toContainEqual({
+          from: "spec:probe.source",
+          to,
+          reason: "malformed",
+          totals: { occurrences: 1 },
+          at: [{ section: "design", entry: "malformed" }],
+        });
+      expect(unresolved).toContainEqual({
+        from: "spec:probe.source",
+        to: "spec:probe.absent#ui.step1",
+        reason: "spec",
+        totals: { occurrences: 1 },
+        at: [{ section: "design", entry: "absent" }],
+      });
+      for (const [to, entry] of [
+        ["spec:probe.target#design.description", "leading"],
+        ["spec:probe.source#ui.missing", "own"],
+      ])
+        expect(unresolved).toContainEqual({
+          from: "spec:probe.source",
+          to,
+          reason: "entry",
+          totals: { occurrences: 1 },
+          at: [{ section: "design", entry }],
+        });
+      expect(unresolved).toHaveLength(8);
+      expect(result.unbacked).toEqual([
+        {
+          from: "spec:probe.source",
+          to: "spec:probe.target",
+          totals: { occurrences: 6 },
+          at: [...at, { section: "design", entry: "leading" }],
+        },
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("scans nested arrays in examples while skipping object fences by position", async () => {
+    const probe = registerProbe();
+    const graph = {
+      ...probe.graph,
+      nodes: probe.graph.nodes.map((node) =>
+        node.id === "spec:probe.b" && node.nodeType === "Primitive"
+          ? {
+              ...node,
+              sections: {
+                behavior: { examples: [["spec:probe.arrayMention"]] },
+                design: { exampleSpace: "spec:probe.openMention" },
+              },
+            }
+          : node,
+      ),
+    };
+    const result = asRecord(
+      await runRecipe(recipeByOrdinal(22), undefined, {
+        ...probe,
+        graph: graph as unknown as ExtractionResult["graph"],
+      }),
+    );
+    expect(result.unresolved).toEqual([
+      {
+        from: "spec:probe.b",
+        to: "spec:probe.arrayMention",
+        reason: "spec",
+        totals: { occurrences: 1 },
+        at: [{ section: "behavior", entry: "examples[0][0]" }],
+      },
+      {
+        from: "spec:probe.b",
+        to: "spec:probe.openMention",
+        reason: "spec",
+        totals: { occurrences: 1 },
+        at: [{ section: "design", entry: "exampleSpace" }],
+      },
+    ]);
+  });
+
+  it("addresses only lawful Design and UI entry keys in search results", async () => {
+    const probe = registerProbe();
+    const graph = {
+      ...probe.graph,
+      nodes: probe.graph.nodes.map((node) =>
+        node.id === "spec:probe.search" && node.nodeType === "Primitive"
+          ? {
+              ...node,
+              narrative: undefined,
+              sections: {
+                design: {
+                  retryWorker: "needle",
+                  description: "needle",
+                  "retry-worker": "needle",
+                  RetryWorker: "needle",
+                },
+                ui: { retryWorker: "needle" },
+                behavior: { rules: ["needle"] },
+              },
+            }
+          : node,
+      ),
+    };
+    const recipe = recipeByOrdinal(23);
+    const result = asRecord(
+      await runRecipe(
+        {
+          ...recipe,
+          body: recipe.body.replace('const term = "suffix";', 'const term = "needle";'),
+        },
+        undefined,
+        { ...probe, graph },
+      ),
+    );
+    const rows = asArray(result.matches).map(asRecord);
+    for (const section of ["design", "ui"])
+      expect(
+        rows.find((row) => row.section === section && row.entry === "retryWorker")?.address,
+      ).toBe(`spec:probe.search#${section}.retryWorker`);
+    for (const entry of ["description", "retry-worker", "RetryWorker", "rules[0]"])
+      expect(rows.find((row) => row.entry === entry)?.address).toBeNull();
   });
 
   it("scopes mentions by the mentioning Spec only", async () => {
@@ -2342,6 +2531,7 @@ describe("register recipe semantics", () => {
       id: "spec:probe.search",
       section: "design",
       entry: "retryWorker",
+      address: "spec:probe.search#design.retryWorker",
       matchedIn: ["key", "text"],
       text: "retry-worker",
     });
