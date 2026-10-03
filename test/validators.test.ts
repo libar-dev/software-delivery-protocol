@@ -1506,6 +1506,31 @@ describe("conformance/prose-mentions — prose mentions and their entry addresse
       "spec:probe.cafe\uff3fx",
       "invalid path segment",
     ],
+    // A control character other than whitespace stays in the token too.
+    [
+      "a NUL",
+      "spec:probe.cafe\u0000missing",
+      "spec:probe.cafe\u0000missing",
+      "invalid path segment",
+    ],
+    [
+      "an escape character",
+      "spec:probe.cafe\u001bmissing",
+      "spec:probe.cafe\u001bmissing",
+      "invalid path segment",
+    ],
+    [
+      "a delete character",
+      "spec:probe.cafe\u007fmissing",
+      "spec:probe.cafe\u007fmissing",
+      "invalid path segment",
+    ],
+    [
+      "a C1 control character",
+      "spec:probe.cafe\u0080missing",
+      "spec:probe.cafe\u0080missing",
+      "invalid path segment",
+    ],
     [
       "a hyphenated entry key",
       "spec:probe.target#design.step-1",
@@ -1572,6 +1597,7 @@ describe("conformance/prose-mentions — prose mentions and their entry addresse
     ["an escaped exclamation mark", "Read spec:probe.target\\! now."],
     ["U+0085", "Read spec:probe.target\u0085then stop."],
     ["a no-break space", "Read spec:probe.target\u00a0then stop."],
+    ["a tab", "Read spec:probe.target\tthen stop."],
     ["an arrow", "Read spec:probe.target→then stop."],
   ])("reads the clean id through Markdown punctuation: %s", (_case, outcome) => {
     const findings = proseMentionFindings([

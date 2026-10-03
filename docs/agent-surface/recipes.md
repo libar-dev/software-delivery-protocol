@@ -1230,7 +1230,7 @@ const backingTypes = [
 ];
 const escapePattern = /\\([!-/:-@[-`{-~])/gu;
 const idPattern =
-  /(?<![A-Za-z0-9-])spec:(?:[!#-&*-;=?-Z\\^_a-z~]|[^\p{ASCII}\p{White_Space}\p{Pd}\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}\p{S}\p{Z}\p{Cc}])*/gu;
+  /(?<![A-Za-z0-9-])spec:(?:[^\p{White_Space}\P{ASCII}`"\u0027()[\]{}<>|]|[^\p{ASCII}\p{White_Space}\p{Pd}\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}\p{S}\p{Z}])*/gu;
 const mentionPattern =
   /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#(design|ui)\.([a-z][A-Za-z0-9]*))?$/u;
 const specIds = new Set(g.specs().map((spec) => spec.id));
@@ -1359,15 +1359,15 @@ A mention starts at `spec:` where the character before it, if any, is not an ASC
 ASCII digit, or `-`. A backslash before ASCII punctuation is read as that punctuation, as Markdown
 reads an escape. The token ends at ASCII whitespace, at one of the ASCII delimiters `` ` `` `"` `'`
 `(` `)` `[` `]` `{` `}` `<` `>` `|`, or at a character outside ASCII that is whitespace, U+0085
-included, punctuation other than connector punctuation, a symbol, a space, line, or paragraph
-separator, or a control character, so every dash, ellipsis, typographic quote, and arrow ends it.
-Every other character stays in the token, letters, combining marks, digits, connector punctuation,
-and format, private-use, and unassigned characters among them. Trailing `.` `,` `;` `:` `!` `?`
+included, punctuation other than connector punctuation, a symbol, or a space, line, or paragraph
+separator, so every dash, ellipsis, typographic quote, and arrow ends it. Every other character
+stays in the token, letters, combining marks, digits, connector punctuation, control characters
+other than whitespace, and format, private-use, and unassigned characters among them. Trailing `.` `,` `;` `:` `!` `?`
 `*` `_` `~` are then removed after the prefix, so a sentence, a list, or emphasis may end in an id.
 When nothing remains after `spec:`, there is no mention, so a bare prefix or a placeholder such as
 `spec:<id>` stays prose. The whole token is checked: `spec:foo_bar`, `spec:foo/bar`,
-`spec:foo,spec:bar`, `spec:fooé`, `spec:foo\_bar`, and `spec:foo` followed by a combining mark or
-a zero-width space are `"malformed"`, never read as `spec:foo`. The scan reads narrative and every
+`spec:foo,spec:bar`, `spec:fooé`, `spec:foo\_bar`, and `spec:foo` followed by a combining mark, a
+zero-width space, or a NUL are `"malformed"`, never read as `spec:foo`. The scan reads narrative and every
 string under sections, except `behavior.exampleSpace` and object entries of `behavior.examples`.
 Titles are not scanned.
 A token equal to the scanning Spec's own id is skipped; its own entry addresses are checked.

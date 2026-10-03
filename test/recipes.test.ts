@@ -2403,6 +2403,11 @@ export const source = spec({
     ],
     ["a zero-width space", "spec:probe.cafe\u200bx", "spec:probe.cafe\u200bx"],
     ["fullwidth connector punctuation", "spec:probe.cafe\uff3fx", "spec:probe.cafe\uff3fx"],
+    // A control character other than whitespace stays in the token too.
+    ["a NUL", "spec:probe.cafe\u0000missing", "spec:probe.cafe\u0000missing"],
+    ["an escape character", "spec:probe.cafe\u001bmissing", "spec:probe.cafe\u001bmissing"],
+    ["a delete character", "spec:probe.cafe\u007fmissing", "spec:probe.cafe\u007fmissing"],
+    ["a C1 control character", "spec:probe.cafe\u0080missing", "spec:probe.cafe\u0080missing"],
     [
       "a hyphenated entry key",
       "spec:probe.target#design.step-1",
@@ -2465,6 +2470,7 @@ export const source = spec({
     ["an escaped exclamation mark", "Read spec:probe.target\\! now."],
     ["U+0085", "Read spec:probe.target\u0085then stop."],
     ["a no-break space", "Read spec:probe.target\u00a0then stop."],
+    ["a tab", "Read spec:probe.target\tthen stop."],
     ["an arrow", "Read spec:probe.target→then stop."],
   ])("reads the clean id through Markdown punctuation: %s", async (_case, outcome) => {
     const result = asRecord(

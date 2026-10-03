@@ -1011,14 +1011,14 @@ const MARKDOWN_ESCAPE = /\\([!-/:-@[-`{-~])/gu;
 
 /**
  * A mention token starts at `spec:` where the character before it, if any, is not an ASCII letter,
- * an ASCII digit, or `-`. It ends at ASCII whitespace, at an ASCII delimiter (`` ` `` `"` `'` `(`
- * `)` `[` `]` `{` `}` `<` `>` `|`), or at a character outside ASCII that is whitespace, punctuation
- * other than connector punctuation, a symbol, a separator, or a control character. Every other
- * character stays in, so a combining mark or a zero-width character makes `parseId` refuse the
- * whole token instead of letting a valid prefix resolve.
+ * an ASCII digit, or `-`. It ends at whitespace, U+0085 included, at an ASCII delimiter (`` ` ``
+ * `"` `'` `(` `)` `[` `]` `{` `}` `<` `>` `|`), or at a character outside ASCII that is punctuation
+ * other than connector punctuation, a symbol, or a separator. Every other character stays in, so a
+ * control character other than whitespace, a combining mark, or a zero-width character makes
+ * `parseId` refuse the whole token instead of letting a valid prefix resolve.
  */
 const MENTION_PATTERN =
-  /(?<![A-Za-z0-9-])spec:(?:[!#-&*-;=?-Z\\^_a-z~]|[^\p{ASCII}\p{White_Space}\p{Pd}\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}\p{S}\p{Z}\p{Cc}])*/gu;
+  /(?<![A-Za-z0-9-])spec:(?:[^\p{White_Space}\P{ASCII}`"'()[\]{}<>|]|[^\p{ASCII}\p{White_Space}\p{Pd}\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}\p{S}\p{Z}])*/gu;
 
 /** Trailing punctuation a sentence, a list, or emphasis may put after an id. */
 const MENTION_TRAILING_PUNCTUATION = /[.,;:!?*_~]+$/u;
