@@ -473,6 +473,28 @@ Feature: Multiple findings
     },
   );
 
+  it.each([
+    [
+      "an identity tag",
+      feature("", "@spec.probe.parent#design.step1 @altitude.feature @readiness.defined"),
+      "@spec.probe.parent#design.step1",
+      "spec:probe.parent#design.step1",
+    ],
+    [
+      "a relation tag",
+      feature("", `${FEATURE_TAGS} @depends-on.spec:probe.dependency#ui.panel`),
+      "@depends-on.spec:probe.dependency#ui.panel",
+      "spec:probe.dependency#ui.panel",
+    ],
+  ])("refuses an entry address in %s", (_slot, sourceText, token, address) => {
+    const found = refusal(sourceText, extractFindingIds.invalidId);
+
+    expect(found?.message).toBe(
+      `Gherkin id token "${token}" is invalid: id "${address}" is an entry address where a Spec id is required`,
+    );
+    expect(found?.line).toBe(1);
+  });
+
   it("refuses a non-English language header at its source line", () => {
     const found = refusal(`# language: fr\n${FEATURE_TAGS}\nFonctionnalité: Essai\n`);
 

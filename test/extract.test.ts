@@ -592,6 +592,98 @@ relations: {}
     const node = primitiveNode(result.graph, "spec:orders.nested-duplicate");
     expect(node?.sections?.intent?.outcome).toBe("first authored value");
   });
+
+  it("entry-address-slots: every TypeScript id slot refuses an entry address, and no # reaches the graph", () => {
+    const root = temporaryCorpusRoot("entry-address-slots");
+    const builders = `import { codeAnchor, codeAnchorId, dependsOn, pack, packId, ref, spec, specId } from "@libar-dev/software-delivery-protocol";`;
+    const envelope = `title: "Probe", kind: "behavior", altitude: "story", readiness: "idea", intent: { outcome: "Probe an id slot." }`;
+    writeFileSync(
+      join(root, "specs", "target.sdp.ts"),
+      `${builders}\nexport const target = spec({ id: specId("spec:orders.target"), ${envelope} });\n`,
+    );
+    writeFileSync(
+      join(root, "specs", "addressed.sdp.ts"),
+      `${builders}\nexport const addressed = spec({ id: specId("spec:orders.target#design.step1"), ${envelope} });\n`,
+    );
+    writeFileSync(
+      join(root, "specs", "relating.sdp.ts"),
+      `${builders}\nexport const relating = spec({ id: specId("spec:orders.relating"), ${envelope}, relations: [dependsOn(ref("spec:orders.target#design.step1"))] });\n`,
+    );
+    writeFileSync(
+      join(root, "specs", "probe.pack.sdp.ts"),
+      `${builders}\nexport const probePack = pack({ id: packId("pack:probe"), title: "Probe", specs: [ref("spec:orders.target"), ref("spec:orders.target#ui.panel")], modelRefs: [ref("spec:orders.target#design.step1")] });\n`,
+    );
+    writeFileSync(
+      join(root, "bindings.ts"),
+      `${builders}\nexport const addressedTarget = codeAnchor({ id: codeAnchorId("impl:orders.binding"), satisfies: ref("spec:orders.target#design.step1") });\nexport const addressedId = codeAnchor({ id: codeAnchorId("impl:orders.binding#design.step1"), satisfies: ref("spec:orders.target") });\n`,
+    );
+
+    const result = extract({ root });
+    const slotRefusal = (address: string) =>
+      `id "${address}" is an entry address where a Spec id is required`;
+
+    expect(
+      result.report.findings
+        .map(({ validatorId, severity, file, path, message }) => ({
+          validatorId,
+          severity,
+          file,
+          path,
+          message,
+        }))
+        .sort((left, right) =>
+          `${String(left.file)} ${String(left.path)}`.localeCompare(
+            `${String(right.file)} ${String(right.path)}`,
+          ),
+        ),
+    ).toEqual([
+      {
+        validatorId: extractFindingIds.invalidId,
+        severity: "error",
+        file: "bindings.ts",
+        path: "id",
+        message:
+          'anchor field "id" did not reify: Invalid ID "impl:orders.binding#design.step1": the # sub-part is an entry address and is admitted only in the spec namespace',
+      },
+      {
+        validatorId: extractFindingIds.invalidId,
+        severity: "error",
+        file: "bindings.ts",
+        path: "satisfies",
+        message: `anchor field "satisfies" did not reify: ${slotRefusal("spec:orders.target#design.step1")}`,
+      },
+      {
+        validatorId: extractFindingIds.invalidId,
+        severity: "error",
+        file: "specs/addressed.sdp.ts",
+        path: "id",
+        message: `envelope field "id" did not reify: ${slotRefusal("spec:orders.target#design.step1")}`,
+      },
+      {
+        validatorId: extractFindingIds.invalidId,
+        severity: "error",
+        file: "specs/probe.pack.sdp.ts",
+        path: "modelRefs[0]",
+        message: `envelope field "modelRefs[0]" did not reify: ${slotRefusal("spec:orders.target#design.step1")}`,
+      },
+      {
+        validatorId: extractFindingIds.invalidId,
+        severity: "error",
+        file: "specs/probe.pack.sdp.ts",
+        path: "specs[1]",
+        message: `envelope field "specs[1]" did not reify: ${slotRefusal("spec:orders.target#ui.panel")}`,
+      },
+      {
+        validatorId: extractFindingIds.invalidId,
+        severity: "error",
+        file: "specs/relating.sdp.ts",
+        path: "relations[0].target",
+        message: `envelope field "relations[0].target" did not reify: ${slotRefusal("spec:orders.target#design.step1")}`,
+      },
+    ]);
+    expect(result.graph.nodes.map((node) => node.id)).toEqual(["spec:orders.target"]);
+    expect(result.graph.edges).toEqual([]);
+  });
 });
 
 describe("Markdown carrier discovery", () => {

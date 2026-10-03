@@ -18,7 +18,7 @@ import type { SpecRelationType } from "../model/relations.js";
 import type { Finding } from "../validate/contracts.js";
 import type { CarrierReification } from "./carrier.js";
 import { gherkinKindLieReason } from "./gherkin-kind-honesty.js";
-import { extractFindingIds, type ReifiedSpec } from "./reify.js";
+import { entryAddressSlotReason, extractFindingIds, type ReifiedSpec } from "./reify.js";
 
 const GHERKIN_RELATION_TAGS = {
   refines: "refines",
@@ -443,6 +443,10 @@ function parseSpecIdToken(
         ok: false,
         finding: invalidIdFinding(file, line, token, "the target must use the spec: namespace"),
       };
+    }
+    const addressReason = entryAddressSlotReason(fullId, parsed);
+    if (addressReason !== undefined) {
+      return { ok: false, finding: invalidIdFinding(file, line, token, addressReason) };
     }
     return { ok: true, value: fullId };
   } catch (error: unknown) {

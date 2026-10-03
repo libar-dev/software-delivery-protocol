@@ -474,6 +474,51 @@ relations:
     );
   });
 
+  it.each([
+    [
+      "the Spec id",
+      validFrontmatter.replace("id: spec:carrier.valid", "id: spec:carrier.valid#design.step1"),
+      "spec:carrier.valid#design.step1",
+      2,
+    ],
+    [
+      "a relation target",
+      validFrontmatter.replace(
+        "relations: {}",
+        "relations:\n  dependsOn: spec:carrier.target#design.step1",
+      ),
+      "spec:carrier.target#design.step1",
+      7,
+    ],
+    [
+      "a Pack member",
+      lawfulPack.replace("spec:probe.member", "spec:probe.member#design.step1"),
+      "spec:probe.member#design.step1",
+      4,
+    ],
+    [
+      "a Pack model reference",
+      lawfulPack.replace("spec:probe.model", "spec:probe.model#ui.panel"),
+      "spec:probe.model#ui.panel",
+      6,
+    ],
+  ])("refuses an entry address in %s at the field's line", (_slot, sourceText, address, line) => {
+    const result = reify(sourceText);
+
+    expect(result.specs).toEqual([]);
+    expect(result.packs).toEqual([]);
+    expect(result.findings).toEqual([
+      {
+        validatorId: "extract/invalid-id",
+        family: "conformance",
+        severity: "error",
+        message: `id "${address}" is an entry address where a Spec id is required`,
+        file: "carrier.sdp.md",
+        line,
+      },
+    ]);
+  });
+
   it("accepts distinct relation keys that share a target", () => {
     const result = reify(
       validFrontmatter.replace(

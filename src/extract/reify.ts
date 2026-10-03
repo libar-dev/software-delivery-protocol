@@ -9,6 +9,7 @@ import type {
 
 import { deliveryFactNames } from "../graph/schema.js";
 import { CODE_ANCHOR_NAMESPACES, codeAnchorId, componentAnchorId, parseId, ref } from "../ids.js";
+import type { IdParts } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import { SPEC_ALTITUDES, SPEC_KINDS, SPEC_READINESS } from "../model/descriptors.js";
 import { SPEC_RELATION_TYPES } from "../model/relations.js";
@@ -344,6 +345,17 @@ export type IdReification =
       readonly reason: string;
     };
 
+/**
+ * The one refusal every id slot gives an entry address. The `#` sub-part names an entry inside a
+ * Spec; `parseId` admits it so prose can carry it, and no Spec identity, relation target, Pack
+ * member, model reference, or anchor target ever holds one.
+ */
+export function entryAddressSlotReason(value: string, parsed: IdParts): string | undefined {
+  return parsed.subpath === undefined
+    ? undefined
+    : `id "${value}" is an entry address where a Spec id is required`;
+}
+
 function namespacesList(namespaces: readonly string[]): string {
   return namespaces.map((entry) => `"${entry}"`).join(" · ");
 }
@@ -420,6 +432,12 @@ export function reifyStaticIdExpression(
         line,
         reason: `id "${idText}" carries namespace "${parsed.namespace}" where ${namespacesLabel(expectedNamespaces)}`,
       };
+    }
+
+    const addressReason = entryAddressSlotReason(idText, parsed);
+
+    if (addressReason !== undefined) {
+      return { ok: false, kind: "invalid", line, reason: addressReason };
     }
   } catch (error) {
     return {

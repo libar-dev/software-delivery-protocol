@@ -15,6 +15,7 @@ import {
   markdownScalarLine,
   markdownSpecIdList,
 } from "./markdown-yaml-policy.js";
+import { entryAddressSlotReason } from "./reify.js";
 
 const relationTypes = new Set<string>(SPEC_RELATION_TYPES);
 const specEnvelopeKeys = new Set(["id", "kind", "altitude", "readiness", "relations"]);
@@ -180,7 +181,10 @@ export function parseMarkdownFrontmatter(
       if (name === "id") {
         idLine = line;
         try {
-          if (parseId(value).namespace !== carrierClass)
+          const parsed = parseId(value);
+          const addressReason = entryAddressSlotReason(value, parsed);
+          if (addressReason !== undefined) throw new Error(addressReason);
+          if (parsed.namespace !== carrierClass)
             throw new Error(`id must use the ${carrierClass} namespace`);
           data.id = value;
         } catch (error: unknown) {

@@ -6,6 +6,9 @@ import type { Node } from "yaml";
 import { parseId } from "../ids.js";
 import type { Finding } from "../validate/contracts.js";
 import { addMarkdownFinding, markdownFinding, markdownLine } from "./markdown-support.js";
+import { entryAddressSlotReason } from "./reify.js";
+
+const invalidIdFindingId = "extract/invalid-id";
 
 const nonStringPlainScalars =
   /^(?:true|false|null|~|0o[0-7]+|0x[0-9a-f]+|[-+]?[0-9]+|[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)[eE][-+]?[0-9]+|[-+]?(?:\.[0-9]+|[0-9]+\.[0-9]*)|[-+]?\.inf|\.nan)$/iu;
@@ -137,7 +140,10 @@ export function markdownSpecIdList(
       continue;
     }
     try {
-      if (parseId(entry.value).namespace !== "spec")
+      const parsed = parseId(entry.value);
+      const addressReason = entryAddressSlotReason(entry.value, parsed);
+      if (addressReason !== undefined) throw new Error(addressReason);
+      if (parsed.namespace !== "spec")
         throw new Error(`${field} entries must use the spec namespace`);
     } catch (error: unknown) {
       addMarkdownFinding(
@@ -146,7 +152,7 @@ export function markdownSpecIdList(
           file,
           line,
           error instanceof Error ? error.message : "invalid id",
-          "extract/invalid-id",
+          invalidIdFindingId,
         ),
       );
       continue;
@@ -193,7 +199,21 @@ export function markdownRelationTargets(
       continue;
     }
     try {
-      if (parseId(target.value).namespace !== "spec")
+      const parsed = parseId(target.value);
+      const addressReason = entryAddressSlotReason(target.value, parsed);
+      if (addressReason !== undefined) {
+        addMarkdownFinding(
+          findings,
+          markdownFinding(
+            file,
+            markdownScalarLine(target, source, baseLine),
+            addressReason,
+            invalidIdFindingId,
+          ),
+        );
+        continue;
+      }
+      if (parsed.namespace !== "spec")
         throw new Error("relation target must use the spec namespace");
       if (targets.includes(target.value))
         throw new Error("duplicate target within one relation type");
