@@ -320,27 +320,77 @@ export const carrier = spec({
     expect(serializeGraph(graph)).not.toContain("Must not disappear silently.");
   });
 
-  it("reserved model term: refuses a term key that collides with the section description field", () => {
-    const reified = reifyTypeScriptCarrier(
+  it("model term named description: both carriers extract it as an ordinary term in its authored place", () => {
+    const typeScriptRoot = temporaryCorpusRoot("description-term-ts");
+    const markdownRoot = temporaryCorpusRoot("description-term-md");
+    writeFileSync(
+      join(typeScriptRoot, "specs", "terms.sdp.ts"),
       `import { spec, specId } from "@libar-dev/software-delivery-protocol";
-export const carrier = spec({
-  id: specId("spec:orders.reserved-description-term"),
+export const terms = spec({
+  id: specId("spec:orders.description-term"),
+  title: "A Model term named description",
   kind: "model",
   altitude: "story",
   readiness: "idea",
-  model: { terms: { description: "A term that collides with section vocabulary." } },
-});`,
-      "reserved-description-term.sdp.ts",
+  intent: { outcome: "Carry a Model term named description." },
+  model: {
+    description: "The Model prose.",
+    terms: { zeta: "The last letter.", description: "An ordinary term.", alpha: "The first letter." },
+  },
+});
+`,
+    );
+    writeFileSync(
+      join(markdownRoot, "specs", "terms.sdp.md"),
+      `---
+id: spec:orders.description-term
+kind: model
+altitude: story
+readiness: idea
+relations: {}
+---
+# A Model term named description
+
+## Intent
+- outcome: Carry a Model term named description.
+
+## Model
+The Model prose.
+
+- **zeta** — The last letter.
+- **description** — An ordinary term.
+- **alpha** — The first letter.
+`,
     );
 
-    expect(reified.specs).toEqual([]);
-    expect(reified.findings).toMatchObject([
-      {
-        validatorId: extractFindingIds.reservedProperty,
-        severity: "error",
-        path: "model.terms.description",
-      },
-    ]);
+    const typeScript = extract({ root: typeScriptRoot });
+    const markdown = extract({ root: markdownRoot });
+    const model = (graph: GraphSchema) =>
+      primitiveNode(graph, "spec:orders.description-term")?.sections?.model;
+
+    expect(typeScript.report.findings).toEqual([]);
+    expect(markdown.report.findings).toEqual([]);
+    for (const result of [typeScript, markdown]) {
+      expect(model(result.graph)).toEqual({
+        description: "The Model prose.",
+        terms: {
+          zeta: "The last letter.",
+          description: "An ordinary term.",
+          alpha: "The first letter.",
+        },
+      });
+      expect(Object.keys(model(result.graph)?.terms ?? {})).toEqual([
+        "zeta",
+        "description",
+        "alpha",
+      ]);
+    }
+    expect(
+      serializeGraph(typeScript.graph).replace(
+        '"file": "specs/terms.sdp.ts"',
+        '"file": "specs/terms.sdp.md"',
+      ),
+    ).toBe(serializeGraph(markdown.graph));
   });
 
   it("integer-like keys: refuses numeric and string integer-like names in design and keeps the Spec with its other keys", () => {

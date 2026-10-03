@@ -691,7 +691,7 @@ interface LossyObjectResult {
 }
 
 interface SectionPropertyIssue {
-  readonly kind: "unrecognized" | "reserved" | "integer-like";
+  readonly kind: "unrecognized" | "integer-like";
   readonly name: string;
   readonly path: string;
   readonly line: number;
@@ -873,10 +873,9 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
 
   const shapePath = path.replace(/\[\d+\]/g, "[]");
   const recognizedNames = RECOGNIZED_SECTION_PROPERTIES.get(shapePath);
-  const reservesDescription = shapePath === "model.terms";
   const refusesIntegerKeys = INTEGER_KEY_SHAPE_PATHS.has(shapePath);
 
-  if (recognizedNames === undefined && !reservesDescription && !refusesIntegerKeys) {
+  if (recognizedNames === undefined && !refusesIntegerKeys) {
     return { value, issues: [] };
   }
 
@@ -929,16 +928,6 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
 
     seenNames.add(name);
 
-    if (reservesDescription && name === "description") {
-      issues.push({
-        kind: "reserved",
-        name,
-        path: propertyPath,
-        line: property.getStartLineNumber(),
-      });
-      continue;
-    }
-
     if (
       recognizedNames !== undefined &&
       !recognizedNames.has(name) &&
@@ -972,9 +961,7 @@ function appendSectionPropertyFindings(
   file: string,
   subjectId: string | undefined,
   findings: Finding[],
-): boolean {
-  let sectionOk = true;
-
+): void {
   for (const issue of issues) {
     // An integer-like key is an error that drops the one key and keeps the Spec and its other keys.
     if (issue.kind === "integer-like") {
@@ -992,36 +979,18 @@ function appendSectionPropertyFindings(
       continue;
     }
 
-    if (issue.kind === "unrecognized") {
-      findings.push(
-        createExtractFinding(
-          extractFindingIds.unrecognizedProperty,
-          "warning",
-          `property "${issue.path}" is outside the authored section shape and is dropped — authored content must never silently fall out of the graph (L2)`,
-          file,
-          issue.line,
-          subjectId,
-          issue.path,
-        ),
-      );
-      continue;
-    }
-
     findings.push(
       createExtractFinding(
-        extractFindingIds.reservedProperty,
-        "error",
-        `property "${issue.path}" collides with the section's reserved "${issue.name}" field — a model term and section description must remain distinct, so the spec is not extracted`,
+        extractFindingIds.unrecognizedProperty,
+        "warning",
+        `property "${issue.path}" is outside the authored section shape and is dropped — authored content must never silently fall out of the graph (L2)`,
         file,
         issue.line,
         subjectId,
         issue.path,
       ),
     );
-    sectionOk = false;
   }
-
-  return sectionOk;
 }
 
 /* ----- spec() and pack() call reification ----- */
@@ -1466,9 +1435,7 @@ function reifySpecCall(
       const sanitized = sanitizeSectionValue(inner, lossy.value, name);
       data[name] = sanitized.value;
       appendDropFindings(lossy.drops, file, subjectId, findings);
-      if (!appendSectionPropertyFindings(sanitized.issues, file, subjectId, findings)) {
-        envelopeOk = false;
-      }
+      appendSectionPropertyFindings(sanitized.issues, file, subjectId, findings);
       continue;
     }
 
@@ -1493,9 +1460,7 @@ function reifySpecCall(
 
       const sanitized = sanitizeSectionValue(inner, result.value, name);
       data[name] = sanitized.value;
-      if (!appendSectionPropertyFindings(sanitized.issues, file, subjectId, findings)) {
-        envelopeOk = false;
-      }
+      appendSectionPropertyFindings(sanitized.issues, file, subjectId, findings);
       continue;
     }
 
