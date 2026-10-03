@@ -2351,6 +2351,130 @@ export const source = spec({
     }
   });
 
+  function mentionTokenProbe(outcome: string): ExtractionResult {
+    const probe = registerProbe();
+    const primitive = (id: string, sections: Record<string, unknown>) => ({
+      id,
+      nodeType: "Primitive" as const,
+      claim: "declared" as const,
+      specKind: "behavior" as const,
+      altitude: "story" as const,
+      readiness: "idea" as const,
+      title: "Token probe",
+      file: "specs/probe.sdp.md",
+      sections,
+    });
+    const graph = {
+      schemaVersion: probe.graph.schemaVersion,
+      nodes: [
+        primitive("spec:probe.target", {
+          intent: { outcome: "Exist under the prefix." },
+          design: { step1: "One." },
+        }),
+        primitive("spec:probe.other", { intent: { outcome: "Exist as well." } }),
+        primitive("spec:probe.mentioning", { intent: { outcome } }),
+      ],
+      edges: [],
+    };
+    return { ...probe, graph };
+  }
+
+  it.each([
+    ["an underscore", "spec:probe.target_v2", "spec:probe.target_v2"],
+    ["a slash", "spec:probe.target/extra", "spec:probe.target/extra"],
+    ["a comma", "spec:probe.target,spec:probe.other", "spec:probe.target,spec:probe.other"],
+    [
+      "a hyphenated entry key",
+      "spec:probe.target#design.step-1",
+      "spec:probe.target#design.step-1",
+    ],
+    ["an entry suffix with no key", "spec:probe.target#design.", "spec:probe.target#design"],
+    [
+      "an entry suffix outside design and ui",
+      "spec:probe.target#model.x",
+      "spec:probe.target#model.x",
+    ],
+  ])(
+    "reads the whole mention token through %s as malformed, never the existing prefix",
+    async (_case, written, token) => {
+      const result = asRecord(
+        await runRecipe(recipeByOrdinal(22), undefined, mentionTokenProbe(`Read ${written} now`)),
+      );
+
+      expect(result).toEqual({
+        totals: {
+          occurrences: 1,
+          pairs: 1,
+          backed: 0,
+          unbacked: 0,
+          reverseOnly: 0,
+          unresolved: 1,
+        },
+        unresolved: [
+          {
+            from: "spec:probe.mentioning",
+            to: token,
+            reason: "malformed",
+            totals: { occurrences: 1 },
+            at: [{ section: "intent", entry: "outcome" }],
+          },
+        ],
+        unbacked: [],
+        reverseOnly: [],
+      });
+    },
+  );
+
+  it.each([
+    ["a sentence dot", "Read spec:probe.target."],
+    ["a comma", "Read spec:probe.target, then stop."],
+    ["a colon", "Read spec:probe.target: then stop."],
+    ["a closing parenthesis", "Read it (spec:probe.target) now."],
+    ["bold", "Read **spec:probe.target** now."],
+    ["emphasis", "Read _spec:probe.target_ now."],
+    ["strikethrough", "Read ~~spec:probe.target~~ now."],
+    ["backticks", "Read `spec:probe.target` now."],
+    ["ASCII double quotes", 'Read "spec:probe.target" now.'],
+    ["ASCII single quotes", "Read 'spec:probe.target' now."],
+    ["typographic double quotes", "Read “spec:probe.target” now."],
+    ["typographic single quotes", "Read ‘spec:probe.target’ now."],
+  ])("reads the clean id through Markdown punctuation: %s", async (_case, outcome) => {
+    const result = asRecord(
+      await runRecipe(recipeByOrdinal(22), undefined, mentionTokenProbe(outcome)),
+    );
+
+    expect(result).toEqual({
+      totals: { occurrences: 1, pairs: 1, backed: 0, unbacked: 1, reverseOnly: 0, unresolved: 0 },
+      unresolved: [],
+      unbacked: [
+        {
+          from: "spec:probe.mentioning",
+          to: "spec:probe.target",
+          totals: { occurrences: 1 },
+          at: [{ section: "intent", entry: "outcome" }],
+        },
+      ],
+      reverseOnly: [],
+    });
+  });
+
+  it("reads a placeholder or a bare prefix as prose, not a mention", async () => {
+    const result = asRecord(
+      await runRecipe(
+        recipeByOrdinal(22),
+        undefined,
+        mentionTokenProbe("Write spec:<id> for a Spec, or the bare spec: prefix, as prose."),
+      ),
+    );
+
+    expect(result).toEqual({
+      totals: { occurrences: 0, pairs: 0, backed: 0, unbacked: 0, reverseOnly: 0, unresolved: 0 },
+      unresolved: [],
+      unbacked: [],
+      reverseOnly: [],
+    });
+  });
+
   it("scans nested arrays in examples while skipping object fences by position", async () => {
     const probe = registerProbe();
     const graph = {

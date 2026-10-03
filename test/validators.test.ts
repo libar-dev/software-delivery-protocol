@@ -1460,6 +1460,89 @@ describe("conformance/prose-mentions — prose mentions and their entry addresse
     ]);
   });
 
+  it.each([
+    ["an underscore", "spec:probe.target_v2", "invalid path segment"],
+    ["a slash", "spec:probe.target/extra", "invalid path segment"],
+    ["a comma", "spec:probe.target,spec:probe.other", "invalid path segment"],
+    [
+      "a hyphenated entry key",
+      "spec:probe.target#design.step-1",
+      "entry address key must be lower-camel ASCII",
+    ],
+    [
+      "an entry suffix with no key",
+      "spec:probe.target#design",
+      "entry address must be <section>.<key> with section design or ui",
+    ],
+    [
+      "an entry suffix outside design and ui",
+      "spec:probe.target#model.x",
+      "entry address must be <section>.<key> with section design or ui",
+    ],
+  ])(
+    "reads the whole token through %s and refuses it, never the existing prefix",
+    (_case, token, reason) => {
+      // `#design.` loses its trailing dot as sentence punctuation and is refused as `#design`.
+      const written = token === "spec:probe.target#design" ? "spec:probe.target#design." : token;
+      const findings = proseMentionFindings([
+        mentionSpec("spec:probe.target", {
+          intent: { outcome: "Exist under the prefix." },
+          design: { step1: "One." },
+        }),
+        mentionSpec("spec:probe.other", { intent: { outcome: "Exist as well." } }),
+        mentionSpec("spec:probe.mentioning", { intent: { outcome: `Read ${written} now` } }),
+      ]);
+
+      expect(findings).toEqual([
+        mentionError(
+          "spec:probe.mentioning",
+          token,
+          "intent.outcome",
+          `Mention "${token}" in "spec:probe.mentioning" at intent.outcome is not a Spec id or entry address: ${reason}`,
+        ),
+      ]);
+    },
+  );
+
+  it.each([
+    ["a sentence dot", "Read spec:probe.target."],
+    ["a comma", "Read spec:probe.target, then stop."],
+    ["a colon", "Read spec:probe.target: then stop."],
+    ["a closing parenthesis", "Read it (spec:probe.target) now."],
+    ["bold", "Read **spec:probe.target** now."],
+    ["emphasis", "Read _spec:probe.target_ now."],
+    ["strikethrough", "Read ~~spec:probe.target~~ now."],
+    ["backticks", "Read `spec:probe.target` now."],
+    ["ASCII double quotes", 'Read "spec:probe.target" now.'],
+    ["ASCII single quotes", "Read 'spec:probe.target' now."],
+    ["typographic double quotes", "Read “spec:probe.target” now."],
+    ["typographic single quotes", "Read ‘spec:probe.target’ now."],
+  ])("reads the clean id through Markdown punctuation: %s", (_case, outcome) => {
+    const findings = proseMentionFindings([
+      mentionSpec("spec:probe.target", { intent: { outcome: "Be named once." } }),
+      mentionSpec("spec:probe.mentioning", { intent: { outcome } }),
+    ]);
+
+    expect(findings).toEqual([
+      mentionWarning(
+        "spec:probe.mentioning",
+        "spec:probe.target",
+        "intent.outcome",
+        `Mention of "spec:probe.target" in "spec:probe.mentioning" at 1 location, first at intent.outcome, ${warningTail}`,
+      ),
+    ]);
+  });
+
+  it("reads a placeholder or a bare prefix as prose, not a mention", () => {
+    const findings = proseMentionFindings([
+      mentionSpec("spec:probe.mentioning", {
+        intent: { outcome: "Write spec:<id> for a Spec, or the bare spec: prefix, as prose." },
+      }),
+    ]);
+
+    expect(findings).toEqual([]);
+  });
+
   it("strips a sentence-final dot from a token", () => {
     const findings = proseMentionFindings([
       mentionSpec("spec:probe.target", { intent: { outcome: "End a sentence." } }),

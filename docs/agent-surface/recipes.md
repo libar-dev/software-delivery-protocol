@@ -1228,7 +1228,7 @@ const backingTypes = [
   "verifies",
   "supersedes",
 ];
-const idPattern = /(?<![A-Za-z0-9-])spec:[A-Za-z0-9][A-Za-z0-9.#-]*/gu;
+const idPattern = /(?<![A-Za-z0-9-])spec:[^\s`"\u0027‘’“”()[\]{}<>|]*/gu;
 const mentionPattern =
   /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#(design|ui)\.([a-z][A-Za-z0-9]*))?$/u;
 const specIds = new Set(g.specs().map((spec) => spec.id));
@@ -1300,7 +1300,9 @@ for (const spec of g.specs()) {
 
   for (const { at, text } of texts) {
     for (const match of text.matchAll(idPattern)) {
-      const token = match[0].replace(/\.+$/u, "");
+      const rest = match[0].slice("spec:".length).replace(/[.,;:!?*_~]+$/u, "");
+      if (rest === "") continue;
+      const token = `spec:${rest}`;
       if (token === spec.id) continue;
       occurrences += 1;
       const parsed = mentionPattern.exec(token);
@@ -1351,8 +1353,13 @@ return {
 };
 ```
 
-A mention is a maximal token matching `(?<![A-Za-z0-9-])spec:[A-Za-z0-9][A-Za-z0-9.#-]*`,
-with trailing dots stripped. The scan reads narrative and every string under sections, except
+A mention starts at `spec:` where the character before it, if any, is not an ASCII letter, an
+ASCII digit, or `-`. It runs to the first whitespace character or delimiter, one of
+`` ` `` `"` `'` `‘` `’` `“` `”` `(` `)` `[` `]` `{` `}` `<` `>` `|`. Trailing `.` `,` `;` `:` `!`
+`?` `*` `_` `~` are then removed, so a sentence, a list, or emphasis may end in an id. When
+nothing remains after `spec:`, there is no mention, so a bare prefix or a placeholder such as
+`spec:<id>` stays prose. The whole token is checked: `spec:foo_bar`, `spec:foo/bar`, and
+`spec:foo,spec:bar` are `"malformed"`, never read as `spec:foo`. The scan reads narrative and every string under sections, except
 `behavior.exampleSpace` and object entries of `behavior.examples`. Titles are not scanned.
 A token equal to the scanning Spec's own id is skipped; its own entry addresses are checked.
 

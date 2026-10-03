@@ -1006,8 +1006,15 @@ function checkOrphans(graph: GraphSchema, index: GraphIndex): readonly Finding[]
 
 /* ----- conformance/prose-mentions (`spec:validation.prose-mentions`) ----- */
 
-/** A mention token; trailing dots are stripped after the match, so a sentence may end in an id. */
-const MENTION_PATTERN = /(?<![A-Za-z0-9-])spec:[A-Za-z0-9][A-Za-z0-9.#-]*/gu;
+/**
+ * A mention token starts at `spec:` where the character before it, if any, is not an ASCII letter,
+ * an ASCII digit, or `-`, and runs to the first whitespace character or delimiter. The whole token
+ * goes to `parseId`, so `spec:foo_bar` is refused whole, never read as `spec:foo`.
+ */
+const MENTION_PATTERN = /(?<![A-Za-z0-9-])spec:[^\s`"'‘’“”()[\]{}<>|]*/gu;
+
+/** Trailing punctuation a sentence, a list, or emphasis may put after an id. */
+const MENTION_TRAILING_PUNCTUATION = /[.,;:!?*_~]+$/u;
 
 /** The six authored relations; a declared one in either direction backs a mention. */
 const BACKING_RELATIONS: ReadonlySet<string> = new Set([
@@ -1106,8 +1113,15 @@ function proseMentionTexts(node: PrimitiveNode): readonly MentionText[] {
   return texts;
 }
 
+/**
+ * The punctuation is removed after the prefix only, so the prefix's own colon stays. A bare
+ * `spec:`, or a placeholder such as `spec:<id>`, leaves nothing after the prefix and is no mention.
+ */
 function mentionTokens(text: string): readonly string[] {
-  return [...text.matchAll(MENTION_PATTERN)].map((match) => match[0].replace(/\.+$/u, ""));
+  return [...text.matchAll(MENTION_PATTERN)]
+    .map((match) => match[0].slice("spec:".length).replace(MENTION_TRAILING_PUNCTUATION, ""))
+    .filter((rest) => rest.length > 0)
+    .map((rest) => `spec:${rest}`);
 }
 
 /** The token's id parts, or `parseId`'s refusal with its `Invalid ID "<token>": ` prefix stripped. */
