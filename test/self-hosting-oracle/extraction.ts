@@ -728,7 +728,7 @@ export const extractionSpecs = [
     file: "specs/extraction/contract-declarations.sdp.md",
     title: "Contract declarations derive a compilable module",
     narrative:
-      "The re-entry trigger held with the first adopter's rebuild package. libar-platform at `2b6b9db` authored its design as keyed Design entries whose values open with a one-line code span, and a test author and a builder wrote 325 tests and the code from that text apart from each other. Every disagreement that went up for a ruling at the merge was a prose sentence with two readings, and none was a declaration. A long table was split across a table, a validator, and an index entry rather than wrapped. That evidence rules the declaration shape below, and the owner's ruling settles the module's emission as the adopter's own recipe.",
+      "The re-entry trigger held with the first adopter's rebuild package. At the adopter's commit `2b6b9db`, the package authored its design as keyed Design entries whose values open with a one-line code span, and a test author and a builder wrote 325 tests and the code from that text apart from each other. Every disagreement that went up for a ruling at the merge was a prose sentence with two readings, and none was a declaration. A long table was split across a table, a validator, and an index entry rather than wrapped. That evidence rules the declaration shape below, and the owner's ruling settles the module's emission as the adopter's own recipe.",
     sections: {
       intent: {
         problem:

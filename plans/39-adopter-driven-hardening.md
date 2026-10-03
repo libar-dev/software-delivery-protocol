@@ -11,11 +11,11 @@
 
 ## Why this arc
 
-`application-platform` is the first corpus outside this repository to use the Protocol hard: 168
-Specs of design with no code, written by parallel work packages and reviewed for three rounds.
+The first adopter's design corpus is where the Protocol was first used hard outside this repository:
+168 Specs of design with no code, written by parallel work packages and reviewed for three rounds.
 One reader analysed that work and wrote eight proposals (P1 to P8) for the Protocol. The report
-is `docs/sdp-development-from-application-platform.md` in the `application-platform` repository,
-commit `497a642`, written 2026-10-01 against this repository at `25d24f2`.
+lives under `docs/` in the adopter's repository at commit `497a642`, written 2026-10-01 against this
+repository at `25d24f2`.
 
 The report's main point is that the adopter leans on the parts of the Protocol that the
 Protocol's own corpus barely uses. Its design lives in open `Design` sections, 380 of its 492
@@ -119,8 +119,8 @@ Facts and questions the execution surfaced that no Spec carries. None is ruled h
   `spec:decisions.carried-evidence`.
 
 The design-stubs session put six questions to the owner, each with two readings in
-`~/dev-libar/calibration/sdp-design-stubs-1/design-design-stubs.md`. The owner ruled all six on the
-lean.
+`design-design-stubs.md`, which is kept in the owner's context repository, outside this one. The
+owner ruled all six on the lean.
 
 - A. Asked what `ready` demands of an element's code, the owner ruled that the Protocol's floor
   reports bindings and never demands them, and the adopter's own gate requires them.
@@ -136,7 +136,7 @@ lean.
   becomes part of the graph contract.
 - F. Asked whether an advisor may state `ready` on a `decision` Spec by delegation, the owner ruled
   that it may not; `ready` stays a human's statement.
-- The five further items in `~/dev-libar/calibration/sdp-entry-address-1/design-entry-address.md`
+- The five further items in `design-entry-address.md`, also kept in the owner's context repository,
   were ruled on the lean, with two corrections from an outside read: mention warnings aggregate per
   mentioning-Spec and target pair, and the second blocking question on
   `spec:extraction.contract-declarations` became non-blocking because its rules refuse the closed
@@ -144,18 +144,17 @@ lean.
 
 ## How it was built
 
-One Claude main thread orchestrated. `gpt-6.1-sol` implemented each unit and folded in the
-findings; `gpt-6-astra` scouted, reviewed engine behavior per unit, and reviewed the arc. A Fable
-agent designed the recipes, help text, and skill text before implementation, and Opus agents
+One orchestrating thread ran the arc. The implementer built each unit and folded in the findings.
+The behavior reviewer scouted, reviewed engine behavior per unit, and reviewed the arc. A design
+agent designed the recipes, help text, and skill text before implementation, and editing agents
 reviewed and wrote the agent-facing prose. Every unit passed `npm run check` before the next
-began. The method record lives outside this repository, in
-`~/dev-libar/gpt-models-from-the-claude-main-thread.md`.
+began. The method record is a guide kept in the owner's context repository, outside this one.
 
 ## The design-stubs session
 
 A design brief asked where a Spec carries the design of an architecturally significant element,
-rung by rung. The answer is `~/dev-libar/calibration/sdp-design-stubs-1/design-design-stubs.md`,
-beside the brief. Three commits followed from it.
+rung by rung. The answer is `design-design-stubs.md`, kept beside the brief in the owner's context
+repository. Three commits followed from it.
 
 - `03ce88e` moved `spec:extraction.contract-declarations` from `idea` to `scoped`, with five rules
   on the declaration shape.
@@ -163,14 +162,13 @@ beside the brief. Three commits followed from it.
   `spec:consumers.agent-surface.register-recipes`.
 - `b4fe056` folded in the two unit reviews.
 
-Two review lanes, `gpt-6.1-sol` on mechanics and `gpt-6-astra` on behavior, found one defect in
-the recipe body, five mutations the tests let survive, and four Spec sentences that said more
+Two review lanes, the mechanics reviewer and the behavior reviewer, found one defect in the
+recipe body, five mutations the tests let survive, and four Spec sentences that said more
 than the evidence.
 
 A second design pass took the leans of items C, D, and E as labelled assumptions and wrote
-`~/dev-libar/calibration/sdp-entry-address-1/design-entry-address.md`, with a proven patch to
-three held Specs and two glossary candidates. Nothing from it is applied. It waits for the
-owner's answers.
+`design-entry-address.md` in the owner's context repository, with a proven patch to three held Specs
+and two glossary candidates. Nothing from it is applied. It waits for the owner's answers.
 
 The owner then ruled on items A to F and on the design's five further items, listed under "For the
 owner, not on a Spec", and `30e19b4` applied the revised Spec text. Read from the graph (recipes 9
@@ -231,25 +229,24 @@ forwarded. Each is written into its Spec; this list only says where it landed.
 
 ## The three read-only reviews of the capture
 
-The capture commit (`11494af`) was reviewed read-only by two GPT models through the Codex
-runtime, same brief, goals and decision criteria only: `gpt-6-astra` at high (7 minutes 8
-seconds) and `gpt-6.1-sol` at high (12 minutes 39 seconds). Both retained the commit as a
-checkpoint and refused it as implementation instructions. Their overlap was large: both found
-the grammar Spec overstating the parser (suggestion only within edit distance two, HTML not
-scanned in the H1 or fence steps and needing a closing `>`, Example space accepting leading
-prose, `uses` and `memberOf` not in the reserved set), the entry address ambiguous across
-Design and UI and colliding with a lawful `#` in a Spec id, the authored-order justification
-false for integer-like Model terms and TypeScript keys, the constraint-cardinality sentence
-presenting a ruling as realized law, the refusal assertions matching too loosely, the on-ramp
-misusing the glossary's `probe`, and the plan's stale lines. Each caught something the other did
-not: astra the Model table's own sort in `renderModel`, the parent-gap overstatement in the
-unbound-example posture, and the `ready` floor's `refines` clause on children of a deferred
-parent; sol the missing graph-visible hold on `spec:validation.prose-mentions` and the P8 scope
-narrowed in silence. Every claim about the engine was re-checked against the tree before the
-fix; all held. The fixes are in the commit after the capture. What the reviewers disagree with
-in the rulings sits on the Specs as open questions, so the owner reads it there.
+Two read-only reviewers read the capture commit (`11494af`) from the same brief, which gave goals
+and decision criteria only. Both retained the commit as a checkpoint and refused it as
+implementation instructions. Their overlap was large: both found the grammar Spec overstating the
+parser (suggestion only within edit distance two, HTML not scanned in the H1 or fence steps and
+needing a closing `>`, Example space accepting leading prose, `uses` and `memberOf` not in the
+reserved set), the entry address ambiguous across Design and UI and colliding with a lawful `#` in a
+Spec id, the authored-order justification false for integer-like Model terms and TypeScript keys,
+the constraint-cardinality sentence presenting a ruling as realized law, the refusal assertions
+matching too loosely, the on-ramp misusing the glossary's `probe`, and the plan's stale lines. Each
+caught something the other did not. The first caught the Model table's own sort in `renderModel`,
+the parent-gap overstatement in the unbound-example posture, and the `ready` floor's `refines`
+clause on children of a deferred parent. The second caught the missing graph-visible hold on
+`spec:validation.prose-mentions` and the P8 scope narrowed in silence. Every claim about the engine
+was re-checked against the tree before the fix; all held. The fixes are in the commit after the
+capture. What the reviewers disagree with in the rulings sits on the Specs as open questions, so the
+owner reads it there.
 
-A third review, Codex's adversarial reviewer on its default model, read the whole branch against main after the fixes and found two more: the grammar let both the primary behavior heading and Example space carry leading prose while the parser maps both to one description and refuses the second, and the list-rendering decision assumed string values while the TypeScript carrier admits nested ones. Both are fixed in the commit after the review fixes: the grammar states the shared owner and a thirteenth bound example pins the refusal, and the decision defines the rendering of every lawful value shape.
+A third, adversarial reviewer read the whole branch against main after the fixes and found two more: the grammar let both the primary behavior heading and Example space carry leading prose while the parser maps both to one description and refuses the second, and the list-rendering decision assumed string values while the TypeScript carrier admits nested ones. Both are fixed in the commit after the review fixes: the grammar states the shared owner and a thirteenth bound example pins the refusal, and the decision defines the rendering of every lawful value shape.
 
 ## What was re-measured at capture
 
