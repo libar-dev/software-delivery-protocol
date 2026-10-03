@@ -892,7 +892,7 @@ export const carrierSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:carrier.inline-code-spans",

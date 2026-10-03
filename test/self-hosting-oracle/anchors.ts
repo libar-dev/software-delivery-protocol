@@ -1948,6 +1948,16 @@ export const expectedAnchors = [
     site: "registerIntegerTermRefused(",
   },
   {
+    id: "impl:protocol.markdown-body-grammar",
+    nodeType: "CodeNode",
+    label: "enforces the closed Markdown body grammar",
+    type: "satisfies",
+    target: "spec:carrier.markdown-body-grammar",
+    file: "src/extract/markdown-body.ts",
+    constant: "markdownBodyGrammarAnchor",
+    site: "export function parseMarkdownBody",
+  },
+  {
     id: "impl:protocol.inline-code-spans",
     nodeType: "CodeNode",
     label: "scans raw HTML outside matched code spans",

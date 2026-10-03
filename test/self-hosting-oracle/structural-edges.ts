@@ -49,6 +49,11 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.extract",
   },
   {
+    unit: "src/extract/markdown-body.ts#parseMarkdownBody",
+    anchorId: "impl:protocol.markdown-body-grammar",
+    componentId: "component:protocol.extract",
+  },
+  {
     unit: "src/adapters/vitest.ts#bindExample",
     anchorId: "impl:protocol.example-runner-adapter",
     componentId: "component:protocol.adapters",
