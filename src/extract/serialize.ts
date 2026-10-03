@@ -17,8 +17,8 @@ import { setOwn } from "./set-own.js";
  * Every output byte is owned here, so no `ts-morph` upgrade can change them silently: nodes sorted
  * by `id`, edges by `(from, type, to)` (P3), one canonical key order per node/edge shape, 2-space
  * indent, LF, final newline, UTF-8 without BOM, no wall-clock timestamps, no run hashes, no
- * absolute paths (JS-C3). Typed section fields have a canonical order; open-section entries and model terms retain
- * authored order, with `description` first where present.
+ * absolute paths (JS-C3). Typed section fields have a canonical order. Open-section entries and
+ * model terms keep the order `deriveGraph` establishes, so serialization sorts none of them.
  *
  * Sorting is code-unit string comparison, never `localeCompare`: locale-aware collation is
  * environment-dependent and would break determinism.
@@ -29,10 +29,6 @@ function compareCodeUnits(left: string, right: string): number {
   }
 
   return left > right ? 1 : 0;
-}
-
-function defined(value: unknown): boolean {
-  return value !== undefined;
 }
 
 function canonicalIntent(section: IntentSection): Record<string, unknown> {
@@ -110,13 +106,8 @@ function canonicalDynamicSection(
   section: Readonly<Record<string, unknown>>,
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {};
-  const description = section.description;
 
-  if (defined(description)) {
-    result.description = description;
-  }
-
-  for (const key of Object.keys(section).filter((key) => key !== "description")) {
+  for (const key of Object.keys(section)) {
     setOwn(result, key, section[key]);
   }
 

@@ -719,6 +719,43 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
     }
   });
 
+  it.each([
+    ["a static value", '"static"'],
+    ["a non-static value", "compute()"],
+  ])("fails build on an integer-like design key holding %s", (_valueForm, value) => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-integer-key-build-"));
+
+    try {
+      writeFileSync(
+        join(root, "probe.sdp.ts"),
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const probe = spec({
+  id: specId("spec:probe.integer-key"),
+  title: "Integer key",
+  kind: "model",
+  altitude: "story",
+  readiness: "idea",
+  intent: { outcome: "Carry an integer-like Design key." },
+  design: { 1: ${value}, zeta: "kept" },
+});
+`,
+      );
+
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", root], capture.output);
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toContain(
+        'probe.sdp.ts:9 — [error] extract/unrecognized-property — property "1" is refused: integer-like keys are not accepted in design, ui, or model terms',
+      );
+      expect(capture.readStderr()).not.toContain("extract/non-static-section");
+      expect(capture.readStderr()).toContain("graph.json not written");
+      expect(existsSync(join(root, "generated", "graph.json"))).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("fails --check-clean on a diverging second extraction: exit 1, the stale graph.json removed", () => {
     const corpusRoot = materializeExtractCorpus("anchored-binding");
 

@@ -315,7 +315,9 @@ export function readPropertyName(property: PropertyAssignment): string | undefin
 /**
  * The open sections and the Model terms keep authored key order, which a JavaScript object breaks
  * for an integer-like key: it moves ahead of every other key. Those shapes read a numeric property
- * name as the key evaluation gives it, so `1` and `"1"` name one key, and refuse it.
+ * name as the key evaluation gives it, so `1` and `"1"` name one key, and refuse it. A numeric
+ * name whose key is not integer-like, such as `1.5`, stays unread, as every numeric name was
+ * before the refusal.
  */
 const INTEGER_KEY_SHAPE_PATHS: ReadonlySet<string> = new Set(["design", "ui", "model.terms"]);
 const INTEGER_LIKE_KEY = /^(0|[1-9][0-9]*)$/u;
@@ -326,9 +328,19 @@ function readKeyedPropertyName(
 ): string | undefined {
   const nameNode = property.getNameNode();
 
-  return INTEGER_KEY_SHAPE_PATHS.has(shapePath) && Node.isNumericLiteral(nameNode)
-    ? String(nameNode.getLiteralValue())
-    : readPropertyName(property);
+  if (INTEGER_KEY_SHAPE_PATHS.has(shapePath) && Node.isNumericLiteral(nameNode)) {
+    const key = String(nameNode.getLiteralValue());
+
+    if (INTEGER_LIKE_KEY.test(key)) {
+      return key;
+    }
+  }
+
+  return readPropertyName(property);
+}
+
+function isRefusedIntegerKey(shapePath: string, name: string): boolean {
+  return INTEGER_KEY_SHAPE_PATHS.has(shapePath) && INTEGER_LIKE_KEY.test(name);
 }
 
 /**
@@ -751,6 +763,13 @@ function reifyObjectLossy(
     }
 
     seenNames.add(name);
+
+    // An integer-like key is refused whatever its value, so its value is never reified: the
+    // section check reports the one error, and no non-static warning joins it.
+    if (isRefusedIntegerKey(path, name)) {
+      continue;
+    }
+
     const initializer = property.getInitializer();
 
     if (initializer === undefined) {
@@ -834,14 +853,16 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
 
     const name = readKeyedPropertyName(property, shapePath);
 
-    if (name === undefined || seenNames.has(name) || !Object.hasOwn(value, name)) {
+    if (name === undefined || seenNames.has(name)) {
       continue;
     }
 
-    seenNames.add(name);
     const propertyPath = `${path}.${name}`;
 
-    if (refusesIntegerKeys && INTEGER_LIKE_KEY.test(name)) {
+    // Checked before the value: lossy reification never reifies an integer-like key's value, so
+    // a static and a non-static value meet the same refusal.
+    if (isRefusedIntegerKey(shapePath, name)) {
+      seenNames.add(name);
       issues.push({
         kind: "integer-like",
         name,
@@ -850,6 +871,12 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
       });
       continue;
     }
+
+    if (!Object.hasOwn(value, name)) {
+      continue;
+    }
+
+    seenNames.add(name);
 
     if (reservesDescription && name === "description") {
       issues.push({

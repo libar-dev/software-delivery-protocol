@@ -407,6 +407,108 @@ export const carrier = spec({
     expect(reified.specs[0]?.data[path.startsWith("ui") ? "ui" : "model"]).toEqual(kept);
   });
 
+  const integerKeyOwners = [
+    [
+      "design",
+      (value: string) => `design: { 1: ${value}, zeta: "kept" }`,
+      "design",
+      { zeta: "kept" },
+    ],
+    ["ui", (value: string) => `ui: { "1": ${value}, panel: "kept" }`, "ui", { panel: "kept" }],
+    [
+      "model terms",
+      (value: string) => `model: { terms: { 1: ${value}, apple: "kept" } }`,
+      "model.terms",
+      { terms: { apple: "kept" } },
+    ],
+  ] as const;
+  const integerKeyValues = [
+    ["a static value", '"static"'],
+    ["a call", "compute()"],
+    ["an unbound identifier", "someBinding"],
+    ["a template with an expression", "`${someBinding}`"],
+    ["an object with a non-static entry", "{ nested: compute() }"],
+  ] as const;
+
+  it.each(
+    integerKeyOwners.flatMap(([owner, section, path, kept]) =>
+      integerKeyValues.map(
+        ([valueForm, value]) => [owner, valueForm, section(value), path, kept] as const,
+      ),
+    ),
+  )(
+    "integer-like keys: refuses the key in %s whatever its value (%s), with one error and the Spec kept",
+    (_owner, _valueForm, section, path, kept) => {
+      const reified = reifyTypeScriptCarrier(
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:orders.integer-like-value"),
+  kind: "model",
+  altitude: "story",
+  readiness: "idea",
+  ${section},
+});`,
+        "integer-like-value.sdp.ts",
+      );
+
+      expect(reified.findings).toEqual([
+        {
+          validatorId: extractFindingIds.unrecognizedProperty,
+          family: "conformance",
+          severity: "error",
+          message:
+            'property "1" is refused: integer-like keys are not accepted in design, ui, or model terms',
+          subjectId: "spec:orders.integer-like-value",
+          path: `${path}.1`,
+          file: "integer-like-value.sdp.ts",
+          line: 7,
+        },
+      ]);
+      expect(reified.specs).toHaveLength(1);
+      expect(reified.specs[0]?.data[path.split(".")[0] ?? ""]).toEqual(kept);
+    },
+  );
+
+  it.each([
+    ["design", `design: { 1.5: "fraction", zeta: "kept" }`, "design", { zeta: "kept" }],
+    ["ui", `ui: { 1.5: "fraction", panel: "kept" }`, "ui", { panel: "kept" }],
+    [
+      "model terms",
+      `model: { terms: { 1.5: "fraction", apple: "kept" } }`,
+      "model.terms",
+      { terms: { apple: "kept" } },
+    ],
+  ])(
+    "integer-like keys: a numeric name in %s whose key is not integer-like drops as a non-static name",
+    (_shape, section, path, kept) => {
+      const reified = reifyTypeScriptCarrier(
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:orders.fractional-key"),
+  kind: "model",
+  altitude: "story",
+  readiness: "idea",
+  ${section},
+});`,
+        "fractional-key.sdp.ts",
+      );
+
+      expect(reified.findings).toEqual([
+        {
+          validatorId: extractFindingIds.nonStaticSection,
+          family: "conformance",
+          severity: "warning",
+          message: `property "${path}" dropped: at "${path}", computed property names are non-static`,
+          subjectId: "spec:orders.fractional-key",
+          path,
+          file: "fractional-key.sdp.ts",
+          line: 7,
+        },
+      ]);
+      expect(reified.specs[0]?.data[path.split(".")[0] ?? ""]).toEqual(kept);
+    },
+  );
+
   it("reserved camel delivery fact: rejects hasVerifier at the TS carrier envelope (R-6 parity)", () => {
     const reified = reifyTypeScriptCarrier(
       `import { spec, specId } from "@libar-dev/software-delivery-protocol";
