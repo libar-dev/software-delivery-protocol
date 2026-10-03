@@ -2372,6 +2372,10 @@ export const source = spec({
           design: { step1: "One." },
         }),
         primitive("spec:probe.other", { intent: { outcome: "Exist as well." } }),
+        primitive("spec:probe.cafe", {
+          intent: { outcome: "Exist under a prefix too." },
+          design: { step1: "One." },
+        }),
         primitive("spec:probe.mentioning", { intent: { outcome } }),
       ],
       edges: [],
@@ -2389,6 +2393,16 @@ export const source = spec({
     ["a letter outside ASCII", "spec:probe.targeté", "spec:probe.targeté"],
     // An escape is read as its punctuation, so the underscore stays inside the token.
     ["an escaped underscore", "spec:probe.target\\_x", "spec:probe.target_x"],
+    // A character outside ASCII that is not a separator stays in the token, so a valid prefix
+    // never resolves on its own.
+    ["a combining mark", "spec:probe.cafe\u0301", "spec:probe.cafe\u0301"],
+    [
+      "a combining mark after an entry key",
+      "spec:probe.cafe#design.step1\u0301",
+      "spec:probe.cafe#design.step1\u0301",
+    ],
+    ["a zero-width space", "spec:probe.cafe\u200bx", "spec:probe.cafe\u200bx"],
+    ["fullwidth connector punctuation", "spec:probe.cafe\uff3fx", "spec:probe.cafe\uff3fx"],
     [
       "a hyphenated entry key",
       "spec:probe.target#design.step-1",

@@ -1485,6 +1485,27 @@ describe("conformance/prose-mentions — prose mentions and their entry addresse
       "spec:probe.target_x",
       "invalid path segment",
     ],
+    // A character outside ASCII that is not a separator stays in the token, so a valid prefix
+    // never resolves on its own.
+    ["a combining mark", "spec:probe.cafe\u0301", "spec:probe.cafe\u0301", "invalid path segment"],
+    [
+      "a combining mark after an entry key",
+      "spec:probe.cafe#design.step1\u0301",
+      "spec:probe.cafe#design.step1\u0301",
+      "entry address key must be lower-camel ASCII",
+    ],
+    [
+      "a zero-width space",
+      "spec:probe.cafe\u200bx",
+      "spec:probe.cafe\u200bx",
+      "invalid path segment",
+    ],
+    [
+      "fullwidth connector punctuation",
+      "spec:probe.cafe\uff3fx",
+      "spec:probe.cafe\uff3fx",
+      "invalid path segment",
+    ],
     [
       "a hyphenated entry key",
       "spec:probe.target#design.step-1",
@@ -1513,6 +1534,10 @@ describe("conformance/prose-mentions — prose mentions and their entry addresse
           design: { step1: "One." },
         }),
         mentionSpec("spec:probe.other", { intent: { outcome: "Exist as well." } }),
+        mentionSpec("spec:probe.cafe", {
+          intent: { outcome: "Exist under a prefix too." },
+          design: { step1: "One." },
+        }),
         mentionSpec("spec:probe.mentioning", { intent: { outcome: `Read ${written} now` } }),
       ]);
 

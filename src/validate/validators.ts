@@ -1011,12 +1011,14 @@ const MARKDOWN_ESCAPE = /\\([!-/:-@[-`{-~])/gu;
 
 /**
  * A mention token starts at `spec:` where the character before it, if any, is not an ASCII letter,
- * an ASCII digit, or `-`. It runs over printable ASCII other than the delimiters `` ` `` `"` `'`
- * `(` `)` `[` `]` `{` `}` `<` `>` `|`, and over letters and digits outside ASCII by Unicode
- * category, so whitespace, U+0085 included, and every other character outside ASCII end it. The
- * whole token goes to `parseId`, so an embedded `_` refuses it whole, never cut short to a valid id.
+ * an ASCII digit, or `-`. It ends at ASCII whitespace, at an ASCII delimiter (`` ` `` `"` `'` `(`
+ * `)` `[` `]` `{` `}` `<` `>` `|`), or at a character outside ASCII that is whitespace, punctuation
+ * other than connector punctuation, a symbol, a separator, or a control character. Every other
+ * character stays in, so a combining mark or a zero-width character makes `parseId` refuse the
+ * whole token instead of letting a valid prefix resolve.
  */
-const MENTION_PATTERN = /(?<![A-Za-z0-9-])spec:[!#-&*-;=?-Z\\^_a-z~\p{L}\p{Nd}]*/gu;
+const MENTION_PATTERN =
+  /(?<![A-Za-z0-9-])spec:(?:[!#-&*-;=?-Z\\^_a-z~]|[^\p{ASCII}\p{White_Space}\p{Pd}\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}\p{S}\p{Z}\p{Cc}])*/gu;
 
 /** Trailing punctuation a sentence, a list, or emphasis may put after an id. */
 const MENTION_TRAILING_PUNCTUATION = /[.,;:!?*_~]+$/u;
