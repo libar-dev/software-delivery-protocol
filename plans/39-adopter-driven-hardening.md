@@ -2,10 +2,12 @@
 
 > **Status:** 🧭 DRAFTED. A thin lineage pointer in the plan-38 shape, not a briefs index. Six of
 > the arc's Specs are implemented with bound evidence and, with the verified body grammar, wait
-> for the owner to state `ready`; four more state `defined` and derive `ready` with no
-> implementation yet, and one stays held by an owner question. The backlog and readiness are read
-> from the graph (recipes 1, 2, 9, 11). If this file and the graph disagree, the graph wins
-> and this file is stale.
+> for the owner to state `ready`. The entry-address engine is built: of the four Specs the owner
+> ruled, the prose-mentions validator and the open-section order carry `implemented` and wait for
+> the same statement, and the checked-mentions decision and contract declarations need no engine
+> binding. One Spec stays held by an owner question. The backlog and readiness are read from the
+> graph (recipes 1, 2, 9, 11). If this file and the graph disagree, the graph wins and this file
+> is stale.
 
 ## Why this arc
 
@@ -58,9 +60,10 @@ Verified and waiting for the same statement:
 The bound examples under these Specs also state `defined` and derive `ready`. Stating `ready` is
 the owner's act, and this plan states it for none of them.
 
-Ruled by the owner, with the Spec text applied in `30e19b4`. Each states `defined`, derives
-`ready` with no delivery fact, and waits for the engine units in the entry-address design and for
-the owner's `ready` statement:
+Ruled by the owner, with the Spec text applied in `30e19b4` and the engine built after it (see
+"The entry-address engine" below). Each states `defined`, derives `ready`, and waits for the
+owner's `ready` statement. The validator and the order law carry `implemented`; the decision and
+the contract declarations carry no delivery fact:
 
 - `spec:decisions.checked-mentions` (P6 step 2). The entry address carries the section, `#` is
   reserved for it in every namespace, and a declared relation in either direction backs a mention.
@@ -177,6 +180,33 @@ and 11), `spec:decisions.checked-mentions`, `spec:validation.prose-mentions`,
 `scoped` behind its blocking question on the shipped-projections freeze. Recipe 1 returns an empty
 backlog because none of the four states `ready`, so the next implementation unit is the engine work
 in the design's "Implementation units" section, units 1 to 5, with units 6 to 8 after them.
+
+## The entry-address engine
+
+Four lanes built the design's engine units in parallel worktrees, and one integrator cherry-picked
+their commits onto this branch in unit order. Each new example states `defined`.
+
+- `b806094` "feat(model): reserve # for the entry address in every namespace" and `b8b6a0f`
+  "feat(extraction): refuse an entry address in every id slot" realize the reservation that
+  `spec:decisions.checked-mentions` rules. `spec:model.stable-ids` names the address in its rule
+  and binds the refusal example `spec:model.stable-ids.unsectioned-address-refused`.
+- `e8b8590` "feat(carrier): refuse integer-like keys in Model terms and TypeScript open sections"
+  and `6b86c67` "feat(extraction): keep authored entry order and move the schema to 0.6.0" realize
+  `spec:extraction.open-section-order`. The body grammar binds the refusal example
+  `spec:carrier.markdown-body-grammar.integer-term-refused`, and `spec:extraction.derive-graph`
+  states the order rule.
+- `9952e9e` "feat(validation): check prose mentions and their entry addresses" realizes
+  `spec:validation.prose-mentions`.
+- `38a250a` "feat(consumers): teach recipes 22 and 23 the entry address" brings both recipes to the
+  validator's grammar under `spec:consumers.agent-surface.register-recipes`.
+- `44e0c04` "test(self-hosting): re-derive the pins across the entry-address units" regenerates
+  the warning pin and totals from the integrated graph.
+
+`spec:validation.prose-mentions` and `spec:extraction.open-section-order` now carry `implemented`
+while they state `defined`, so the drift alarm (recipe 2) names them until the owner states
+`ready`. The order law also carries `has-verifier`; the validator's tests bind no `specTest`
+anchor to its Spec, so it does not. The self-hosting run now reports one prose-mention warning per
+pair that recipe 22 lists as `unbacked`, beside the pinned honesty gaps.
 
 ## Rulings made at capture
 

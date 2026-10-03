@@ -1369,8 +1369,10 @@ from the target. The backing relations are `refines`, `dependsOn`, `constrainedB
 `verifies`, and `supersedes`. A parent naming its child lands in `reverseOnly`.
 `totals.pairs` counts target pairs plus unresolved token pairs, which may overlap for missing
 entries; `totals.backed` counts target pairs backed by a forward relation.
-The validator's unbacked-pair warnings follow `spec:validation.prose-mentions`; this audit keeps
-all locations and unresolved reasons as query data.
+`sdp validate` checks the same mentions under `spec:validation.prose-mentions`: an error for each
+unresolved token, and one warning per `unbacked` pair that gives its location count and its first
+location. This audit adds what the validator leaves out: a `scope` of chosen Specs, the `reverseOnly` list, and
+every location of every pair.
 
 ## 23. Entry search
 

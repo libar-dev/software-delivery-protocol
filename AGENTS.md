@@ -19,9 +19,11 @@ code behavior into intent.
 > **plan 39 is DRAFTED**. The first-adopter arc, a thin lineage pointer in the plan-38 shape. Six
 > of its Specs (inline code spans, the unbound-example posture, the typed-dependency floor, the
 > register recipes, the adopter on-ramp, the shipped corpus) are implemented with bound evidence
-> and, like the verified Markdown body grammar, wait for the owner to state `ready`; four more
-> state `defined` and derive `ready` with no implementation yet, and one stays held by an owner
-> question. The backlog and readiness are read from the graph (recipes 1, 2, 9, 11).
+> and, like the verified Markdown body grammar, wait for the owner to state `ready`. The
+> entry-address engine is built: the prose-mentions validator and the open-section order carry
+> `implemented` and wait for the same statement, the checked-mentions decision and contract
+> declarations need no engine binding, and one Spec stays held by an owner question. The backlog
+> and readiness are read from the graph (recipes 1, 2, 9, 11).
 > **plan 38 is DRAFTED** — the graph-first planning arc, a thin lineage pointer, not a briefs
 > index: the arc's forward intent is authored as capture-rung Specs
 > (`spec:consumers.graph-first-planning`, `spec:model.structural-patterns`,
@@ -268,6 +270,7 @@ self-hosting/example checks → preflight correctly, so prefer it after engine e
 The `check:example` step reports 0 errors and 0 warnings. The unbound `defined` example stays
 visible in the Design Review verifier bindings and recipe 10, declared versus enabled verifiers.
 
-The `check:self-hosting` step emits five intentional `honesty/gaps` warnings for the owner-ratified
-ready Specs without resolving verifier bindings. The self-hosting oracle pins those warnings; they
-are expected, not a regression.
+The `check:self-hosting` step emits two kinds of intentional warning: `honesty/gaps`, one per
+owner-ratified ready Spec without a resolving verifier binding, and `conformance/prose-mentions`,
+one per mentioning Spec and target pair with no declared relation either way (recipe 22 lists the
+pairs). The self-hosting oracle pins both sets; they are expected, not a regression.
