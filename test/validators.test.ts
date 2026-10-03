@@ -1290,6 +1290,59 @@ describe("conformance/prose-mentions — prose mentions and their entry addresse
     ]);
   });
 
+  it.each(["design", "ui"])(
+    "keeps authored order inside an object nested in %s, so a nested description is not read first",
+    (section) => {
+      const findings = proseMentionFindings([
+        mentionSpec("spec:probe.target", { intent: { outcome: "Be named in nested data." } }),
+        mentionSpec("spec:probe.mentioning", {
+          intent: { outcome: "Name the target in nested data." },
+          [section]: {
+            nested: {
+              zeta: "spec:probe.target",
+              description: "spec:probe.target",
+              alpha: "spec:probe.target",
+            },
+          },
+        }),
+      ]);
+
+      expect(findings).toEqual([
+        mentionWarning(
+          "spec:probe.mentioning",
+          "spec:probe.target",
+          `${section}.nested.zeta`,
+          `Mention of "spec:probe.target" in "spec:probe.mentioning" at 3 locations, first at ${section}.nested.zeta, ${warningTail}`,
+        ),
+      ]);
+    },
+  );
+
+  it("scans arrays nested in behavior examples, as the mention audit does", () => {
+    const findings = proseMentionFindings([
+      mentionSpec("spec:probe.target", { intent: { outcome: "Be named in an example array." } }),
+      mentionSpec("spec:probe.nested-examples", {
+        intent: { outcome: "Carry string arrays among the examples." },
+        behavior: { examples: [["spec:missing"], [["spec:probe.target"]]] },
+      }),
+    ]);
+
+    expect(findings).toEqual([
+      mentionError(
+        "spec:probe.nested-examples",
+        "spec:missing",
+        "behavior.examples[0][0]",
+        'Mention in "spec:probe.nested-examples" at behavior.examples[0][0] points to missing target "spec:missing".',
+      ),
+      mentionWarning(
+        "spec:probe.nested-examples",
+        "spec:probe.target",
+        "behavior.examples[1][0][0]",
+        `Mention of "spec:probe.target" in "spec:probe.nested-examples" at 1 location, first at behavior.examples[1][0][0], ${warningTail}`,
+      ),
+    ]);
+  });
+
   it("strips a sentence-final dot from a token", () => {
     const findings = proseMentionFindings([
       mentionSpec("spec:probe.target", { intent: { outcome: "End a sentence." } }),

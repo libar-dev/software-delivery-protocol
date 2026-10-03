@@ -1024,11 +1024,17 @@ interface MentionText {
   readonly text: string;
 }
 
-/** A section's leading prose comes first, as authored and as serialized; entries keep their order. */
-function keysDescriptionFirst(record: Readonly<Record<string, unknown>>): readonly string[] {
-  const keys = Object.keys(record);
+/** The sections whose own `description`, their leading prose, is read before their entries. */
+const DESCRIPTION_FIRST_SECTIONS: ReadonlySet<string> = new Set(["design", "ui"]);
 
-  return keys.includes("description")
+/** Description first at the top level of a `design` or `ui` section only; nested data keeps its order. */
+function sectionKeys(
+  sectionName: string,
+  section: Readonly<Record<string, unknown>>,
+): readonly string[] {
+  const keys = Object.keys(section);
+
+  return DESCRIPTION_FIRST_SECTIONS.has(sectionName) && keys.includes("description")
     ? ["description", ...keys.filter((key) => key !== "description")]
     : keys;
 }
@@ -1047,7 +1053,7 @@ function collectMentionTexts(value: unknown, path: string, texts: MentionText[])
   }
 
   if (isRecord(value)) {
-    for (const key of keysDescriptionFirst(value)) {
+    for (const key of Object.keys(value)) {
       collectMentionTexts(value[key], `${path}.${key}`, texts);
     }
   }
@@ -1055,9 +1061,10 @@ function collectMentionTexts(value: unknown, path: string, texts: MentionText[])
 
 /**
  * The scanned text of one Spec in scan order: the narrative, then the sections in the serialized
- * graph's order. The two fences are skipped by position, never by key name alone:
- * `behavior.exampleSpace` is the gwt-vocabulary fence and an object entry of `behavior.examples`
- * is a gwt fence.
+ * graph's order. It walks the strings the mention audit recipe walks: every string under the
+ * sections, recursing into arrays, except two fences skipped by position, never by key name
+ * alone: `behavior.exampleSpace` is the gwt-vocabulary fence and an object entry of
+ * `behavior.examples` is a gwt fence.
  */
 function proseMentionTexts(node: PrimitiveNode): readonly MentionText[] {
   const texts: MentionText[] = [];
@@ -1071,28 +1078,28 @@ function proseMentionTexts(node: PrimitiveNode): readonly MentionText[] {
   for (const sectionName of SPEC_SECTION_NAMES) {
     const section = sections?.[sectionName];
 
-    if (sectionName !== "behavior" || !isRecord(section)) {
+    if (!isRecord(section)) {
       collectMentionTexts(section, sectionName, texts);
       continue;
     }
 
-    for (const key of keysDescriptionFirst(section)) {
+    for (const key of sectionKeys(sectionName, section)) {
       const entry = section[key];
 
-      if (key === "exampleSpace") {
+      if (sectionName === "behavior" && key === "exampleSpace") {
         continue;
       }
 
-      if (key === "examples" && Array.isArray(entry)) {
+      if (sectionName === "behavior" && key === "examples" && Array.isArray(entry)) {
         entry.forEach((example: unknown, position) => {
-          if (typeof example === "string") {
-            texts.push({ path: `behavior.examples[${String(position)}]`, text: example });
+          if (!isRecord(example)) {
+            collectMentionTexts(example, `behavior.examples[${String(position)}]`, texts);
           }
         });
         continue;
       }
 
-      collectMentionTexts(entry, `behavior.${key}`, texts);
+      collectMentionTexts(entry, `${sectionName}.${key}`, texts);
     }
   }
 
