@@ -579,8 +579,11 @@ export const carrier = spec({
   const integerMembers = [
     ["a method", '1() { return "x"; }', ["1"]],
     ["a string-named method", '"4"() { return "x"; }', ["4"]],
+    ["a numeric-separator-named method", '1_0() { return "x"; }', ["10"]],
     ["a getter", 'get 2() { return "x"; }', ["2"]],
+    ["a numeric-separator-named getter", 'get 1_0() { return "x"; }', ["10"]],
     ["a setter", "set 3(value: string) {}", ["3"]],
+    ["a numeric-separator-named setter", "set 1_0(value: string) {}", ["10"]],
     [
       "a getter and a setter of one name",
       'get 5() { return "x"; }, set 5(value: string) {}',
@@ -664,7 +667,7 @@ export const carrier = spec({
 
   it.each(
     numericNameOwners.flatMap(([owner, section, path, kept]) =>
-      ["1.5", "0.0000001", "1e21"].flatMap((name) =>
+      ["1.5", "0.0000001", "0.000_000_1", "1e21", "1_0e21"].flatMap((name) =>
         numericNameValues.map(
           (value) => [owner, name, value, section(name, value), path, kept] as const,
         ),
@@ -696,6 +699,8 @@ export const carrier = spec({
       [
         ["1e3", "1000"],
         ["0x10", "16"],
+        ["1_0", "10"],
+        ["1_000", "1000"],
       ].flatMap(([name = "", key]) =>
         numericNameValues.map(
           (value) => [owner, name, value, section(name, value), path, key, kept] as const,
