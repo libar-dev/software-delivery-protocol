@@ -24,6 +24,7 @@ forward pointer between records that still exist.
 - rule: Declared relations resolve Primitive to Primitive, while `satisfies` and test `verifies` edges derive from anchors and run from their binding node to the direct Spec target.
 - rule: Delivery facts are computed node facts: a resolving `satisfies` edge contributes `implemented`, and an enabled direct verifier contributes `has-verifier` only to its target.
 - rule: Inferred structural edges are advisory inputs to impact analysis and never become authoritative graph truth.
+- rule: The key order of `design`, `ui`, and `model.terms` is the authored order and part of the graph contract.
 
 ## Design
 

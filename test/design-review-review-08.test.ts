@@ -20,7 +20,7 @@ describe("review-08 Design Review rendering", () => {
     expect(renderInlineCode(" padded ")).toBe("`  padded  `");
   });
 
-  it("preserves fenced JSON data while sorting raw keys by code unit", () => {
+  it("preserves fenced JSON data in authored key order", () => {
     const graph = deriveFixtureGraph({
       specs: [
         spec({
@@ -44,7 +44,7 @@ describe("review-08 Design Review rendering", () => {
       ab: "Keep `code` literal.",
       "a|x": "Review <design> & safely.",
     });
-    expect(fenced?.indexOf('"ab"')).toBeLessThan(fenced?.indexOf('"a|x"') ?? -1);
+    expect(fenced?.indexOf('"a|x"')).toBeLessThan(fenced?.indexOf('"ab"') ?? -1);
   });
 
   it("preserves literal finding locations inside delimiter-safe table code spans", () => {

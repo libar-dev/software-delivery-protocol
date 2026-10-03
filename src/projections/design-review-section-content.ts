@@ -145,7 +145,7 @@ export function renderConstraints(entries: readonly unknown[]): readonly string[
 
 export function renderModel(model: Record<string, unknown>): readonly string[] {
   const terms = asRecord(model.terms) ?? {};
-  const names = Object.keys(terms).sort();
+  const names = Object.keys(terms);
   const description = sectionDescription(model);
 
   if (names.length === 0 && description.length === 0) {

@@ -34,6 +34,44 @@ function exampleReader(): Reader {
 
 describe("the reader — the thin typed loader behind the agent surface", () => {
   describe("flat accessors", () => {
+    it("exposes authored open-section and model-term order in a Spec context", () => {
+      const graph = deriveFixtureGraph({
+        specs: [
+          spec({
+            id: specId("spec:probe.order"),
+            title: "Authored order",
+            kind: "model",
+            altitude: "story",
+            readiness: "idea",
+            design: {
+              description: "Design prose.",
+              zeta: "z",
+              alpha: "a",
+              mid10: "ten",
+              mid2: "two",
+            },
+            ui: { description: "UI prose.", zeta: "z", alpha: "a", mid10: "ten", mid2: "two" },
+            model: { terms: { zebra: "z", apple: "a" } },
+          }),
+        ],
+      });
+      const sections = createReader(graph).specContext("spec:probe.order")?.sections;
+      expect(Object.keys(sections?.design ?? {})).toEqual([
+        "description",
+        "zeta",
+        "alpha",
+        "mid10",
+        "mid2",
+      ]);
+      expect(Object.keys(sections?.ui ?? {})).toEqual([
+        "description",
+        "zeta",
+        "alpha",
+        "mid10",
+        "mid2",
+      ]);
+      expect(Object.keys(sections?.model?.terms ?? {})).toEqual(["zebra", "apple"]);
+    });
     it("carries owned prose in spec summaries and contexts", () => {
       const graph = deriveFixtureGraph({
         specs: [

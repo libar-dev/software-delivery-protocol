@@ -1,3 +1,5 @@
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type { GraphEdge, GraphNode, GraphSchema } from "../graph/schema.js";
 import type {
   ConstraintSection,
@@ -15,8 +17,8 @@ import { setOwn } from "./set-own.js";
  * Every output byte is owned here, so no `ts-morph` upgrade can change them silently: nodes sorted
  * by `id`, edges by `(from, type, to)` (P3), one canonical key order per node/edge shape, 2-space
  * indent, LF, final newline, UTF-8 without BOM, no wall-clock timestamps, no run hashes, no
- * absolute paths (JS-C3). Section content has its own exact recursive canonical order so both
- * carriers produce the same bytes regardless of authored property order.
+ * absolute paths (JS-C3). Typed section fields have a canonical order; open-section entries and model terms retain
+ * authored order, with `description` first where present.
  *
  * Sorting is code-unit string comparison, never `localeCompare`: locale-aware collation is
  * environment-dependent and would break determinism.
@@ -96,6 +98,14 @@ function canonicalConstraint(constraint: ConstraintSection): Record<string, unkn
   };
 }
 
+const openSectionOrderAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.open-section-order"),
+  label: "preserves authored open-section and model-term order",
+  satisfies: ref("spec:extraction.open-section-order"),
+  component: componentAnchorId("component:protocol.extract"),
+});
+void openSectionOrderAnchor;
+
 function canonicalDynamicSection(
   section: Readonly<Record<string, unknown>>,
 ): Record<string, unknown> {
@@ -106,9 +116,7 @@ function canonicalDynamicSection(
     result.description = description;
   }
 
-  for (const key of Object.keys(section)
-    .filter((key) => key !== "description")
-    .sort(compareCodeUnits)) {
+  for (const key of Object.keys(section).filter((key) => key !== "description")) {
     setOwn(result, key, section[key]);
   }
 

@@ -13,11 +13,9 @@ export const extractionSpecs = [
     narrative:
       "The graph is the current projection of the repository at a commit. Git holds lifecycle history, so removed records disappear from the current graph and a current `supersedes` relation is the only forward pointer between records that still exist.",
     sections: {
-      design: {
-        description:
-          "One read model. Carrier reifiers translate each supported syntax into common reified input. Graph derivation joins that input with bindings and computes delivery facts before consumers read it. Adding a carrier changes the input boundary; validators and projections continue to consume the same graph. The shared delivery-fact policy belongs to the graph component so graph construction does not define a competing policy.",
+      intent: {
+        outcome: "Expose one carrier-neutral derivation seam.",
       },
-      intent: { outcome: "Expose one carrier-neutral derivation seam." },
       behavior: {
         rules: [
           "Carrier reification feeds deriveGraph once; no consumer creates a second graph.",
@@ -25,7 +23,12 @@ export const extractionSpecs = [
           "Declared relations resolve Primitive to Primitive, while `satisfies` and test `verifies` edges derive from anchors and run from their binding node to the direct Spec target.",
           "Delivery facts are computed node facts: a resolving `satisfies` edge contributes `implemented`, and an enabled direct verifier contributes `has-verifier` only to its target.",
           "Inferred structural edges are advisory inputs to impact analysis and never become authoritative graph truth.",
+          "The key order of `design`, `ui`, and `model.terms` is the authored order and part of the graph contract.",
         ],
+      },
+      design: {
+        description:
+          "One read model. Carrier reifiers translate each supported syntax into common reified input. Graph derivation joins that input with bindings and computes delivery facts before consumers read it. Adding a carrier changes the input boundary; validators and projections continue to consume the same graph. The shared delivery-fact policy belongs to the graph component so graph construction does not define a competing policy.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -282,9 +285,6 @@ export const extractionSpecs = [
     title: "A derived payload carries a schema version its consumer can read",
     narrative: null,
     sections: {
-      intent: {
-        outcome: "Execute the declared-version rule over a serialized graph payload.",
-      },
       behavior: {
         examples: [
           {
@@ -292,9 +292,12 @@ export const extractionSpecs = [
               'a graph derived from the authored spec {specId: "spec:probe.schema-versioning"}',
             ],
             when: ["the graph payload is serialized"],
-            then: ['the payload declares the schema version {schemaVersion: "0.5.0"}'],
+            then: ['the payload declares the schema version {schemaVersion: "0.6.0"}'],
           },
         ],
+      },
+      intent: {
+        outcome: "Execute the declared-version rule over a serialized graph payload.",
       },
     },
     deliveryFacts: ["has-verifier"],
@@ -715,7 +718,7 @@ export const extractionSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:extraction.contract-declarations",

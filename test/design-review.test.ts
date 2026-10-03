@@ -95,7 +95,7 @@ describe("the Design Review — the one generated read-only view", () => {
       "## Narrative\n\nThe Protocol's own delivery model exercises the same carrier, graph, checks, and projections offered to consumers.\n\n**Readiness:",
     );
     expect(page).toContain("## Intent\n\n- **outcome:");
-    expect(index).toContain("schema `0.5.0`");
+    expect(index).toContain("schema `0.6.0`");
     expect(pack).toContain(
       "| [`spec:protocol.self-hosting`](../spec/protocol.self-hosting.md) The Protocol authors and validates itself | behavior | epic | defined | ready | none | none |",
     );
@@ -267,13 +267,45 @@ describe("the Design Review — the one generated read-only view", () => {
     }
   });
 
+  it("renders authored entry order in fenced JSON and the Model table", () => {
+    const graph = deriveFixtureGraph({
+      specs: [
+        spec({
+          id: specId("spec:probe.order"),
+          title: "Authored order",
+          kind: "model",
+          altitude: "story",
+          readiness: "idea",
+          design: {
+            description: "Design prose.",
+            zeta: "z",
+            alpha: "a",
+            mid10: "ten",
+            mid2: "two",
+          },
+          ui: { description: "UI prose.", zeta: "z", alpha: "a", mid10: "ten", mid2: "two" },
+          model: { terms: { zebra: "z", apple: "a" } },
+        }),
+      ],
+    });
+    const page = pageByPath(renderDesignReview(createReader(graph)), "spec/probe.order.md");
+    const fences = [...page.matchAll(/```json\n([\s\S]*?)\n```/gu)];
+    expect(fences).toHaveLength(2);
+    for (const fence of fences) {
+      const record = JSON.parse(fence[1] ?? "{}") as Record<string, unknown>;
+      expect(Object.keys(record)).toEqual(["zeta", "alpha", "mid10", "mid2"]);
+    }
+    const terms = page.split("\n").filter((line) => /^\| (?:zebra|apple) \|/u.test(line));
+    expect(terms).toEqual(["| zebra | z |", "| apple | a |"]);
+  });
+
   it("re-rendering from the same graph is byte-identical (a pure projection)", () => {
     const again = renderDesignReview(createReader(extract({ root: exampleRoot }).graph));
 
     expect(again).toEqual(examplePages);
   });
 
-  it("renders byte-identically when graph and dynamic-key insertion orders differ", () => {
+  it("renders byte-identically when graph node insertion order differs", () => {
     const first = deriveFixtureGraph({
       specs: [
         spec({
@@ -313,8 +345,8 @@ describe("the Design Review — the one generated read-only view", () => {
           altitude: "story",
           readiness: "idea",
           intent: { outcome: "Render dynamic fields deterministically." },
-          model: { terms: { Alpha: "First term.", Zebra: "Last term." } },
-          design: { alpha: "first value", zeta: "last value" },
+          model: { terms: { Zebra: "Last term.", Alpha: "First term." } },
+          design: { zeta: "last value", alpha: "first value" },
         }),
       ],
     });

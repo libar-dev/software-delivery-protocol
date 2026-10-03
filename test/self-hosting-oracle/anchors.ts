@@ -7,6 +7,26 @@
 
 export const expectedAnchors = [
   {
+    id: "test:protocol.open-section-order",
+    nodeType: "Anchor",
+    label: "verifies serialized authored entry order",
+    type: "verifies",
+    target: "spec:extraction.open-section-order",
+    file: "test/graph-schema.test.ts",
+    constant: "openSectionOrderTestAnchor",
+    site: 'it("serializes authored entry order',
+  },
+  {
+    id: "impl:protocol.open-section-order",
+    nodeType: "CodeNode",
+    label: "preserves authored open-section and model-term order",
+    type: "satisfies",
+    target: "spec:extraction.open-section-order",
+    file: "src/extract/serialize.ts",
+    constant: "openSectionOrderAnchor",
+    site: "function canonicalDynamicSection",
+  },
+  {
     id: "component:protocol.model",
     nodeType: "CodeNode",
     label: "Protocol model seam",

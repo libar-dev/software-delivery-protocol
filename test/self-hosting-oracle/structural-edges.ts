@@ -34,6 +34,11 @@ export const structuralMembershipExceptions = [
 
 export const acceptedArchitecturalUnits = [
   {
+    unit: "src/extract/serialize.ts#canonicalDynamicSection",
+    anchorId: "impl:protocol.open-section-order",
+    componentId: "component:protocol.extract",
+  },
+  {
     unit: "src/validate/readiness-floor.ts#typedDependencyTargetsAreDefined",
     anchorId: "impl:protocol.typed-dependency-floor",
     componentId: "component:protocol.validate",

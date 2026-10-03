@@ -829,7 +829,7 @@ export const prose = spec({
     ]);
     expect(Object.keys(constraint)).toEqual(["flavor", "statement", "target", "measurableBy"]);
     expect(Object.keys(sections.model)).toEqual(["description", "terms"]);
-    expect(Object.keys(sections.model.terms)).toEqual(["Alpha", "Zeta"]);
+    expect(Object.keys(sections.model.terms)).toEqual(["Zeta", "Alpha"]);
   });
 
   it("serializes GWT and behavior key permutations to identical bytes", () => {
