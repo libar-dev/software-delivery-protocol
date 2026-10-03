@@ -2,7 +2,7 @@
 id: spec:extraction.contract-declarations
 kind: behavior
 altitude: feature
-readiness: scoped
+readiness: defined
 relations:
   refines: spec:extraction.executable-contracts
   dependsOn: spec:carrier.inline-code-spans
@@ -17,8 +17,7 @@ The re-entry trigger held with the first adopter's rebuild package. libar-platfo
 - outcome: Give a declaration one ruled shape inside the Design section, so that a module derived from the graph can carry every pinned signature of a corpus and a Spec that disagrees with its code fails the adopter's typecheck the way a step contract does.
 
 ### Open questions
-- [blocking] The derived module needs a preamble the Spec cannot carry: the imports its spans assume and a declaration for each placeholder word such as `handler`. Does the adopter supply it as configuration to `sdp build`, or does a recipe emit the module inside the adopter's repository until a second adopter needs the same preamble? The lean is the recipe, with `sdp build` taking it over at the second-caller bar.
-- [blocking] When the contract section lands, the `contract` row of the kind-evidence table repoints to it. Which evidence counts as present, and which as complete?
+- [non-blocking] The contract kind's evidence row in the kind-evidence table is unchanged by this Spec. A closed contract section is not planned; if an adopter asks for one, it enters as a Spec of its own.
 - [non-blocking] A compiled module finds a name used and never declared and a name declared twice. It does not find a bullet whose prose uses a declared name with another type, which is the drift the first adopter met at its merge. Checking a span used inside a step bullet as an expression is deferred until an adopter asks for it.
 - [non-blocking] The source report's full shape is kept here so the capture does not narrow it in silence: an opaque language-tagged fence as the value of one keyed entry, then the closed section whose declarations derive one module per corpus, then implementation code importing the derived types so that a Spec which disagrees with its code fails the build. Compiling the derived module alone finds only names used and never declared, and names declared twice.
 
@@ -28,3 +27,4 @@ The re-entry trigger held with the first adopter's rebuild package. libar-platfo
 - rule: The key names the declaration's role, and the Protocol fixes no key vocabulary. An adopter's prefix convention, such as `fn`, `type`, `table`, `validator`, and `index`, is a project policy that a recipe reads and never a carrier rule.
 - rule: A declaration states a shape and never a delivery fact. The anchor's `satisfies` binds the code that claims to realize it and a test anchor binds the verifier that claims to check it, both outside the span.
 - rule: The derived module is a projection: regenerable, never edited, imported by the adopter's tests and never by an authored Spec.
+- rule: The adopter emits the derived module from the pinned declarations list with its own preamble of imports and placeholder declarations, until a second adopter needs the same preamble and the emitter freezes into `sdp build`. The module earns its place only when a changed pinned signature fails the adopter's typecheck against its implementation; a module that merely compiles proves nothing.

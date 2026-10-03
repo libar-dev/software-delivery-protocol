@@ -220,6 +220,15 @@ delivery fact, workflow state, or graph state.
   external `doc:` ADR is a **named deferral** (MD-16, stated in `spec:decisions.carried-evidence`);
   revisit when `doc:`-target
   relations or pack-targeting arrive.
+- **Candidate vocabulary from the checked-mentions record** (`spec:decisions.checked-mentions`, ruled
+  by the owner and stated `defined`; the two terms move into the **Validation & honesty** table and the
+  locked ledger when the record states `ready`). **mention**: a `spec:` id written in a Spec's
+  narrative or section text, outside the `gwt` and `gwt-vocabulary` fences; checked for resolution
+  and for a backing declared relation in either direction, and it mints no edge (aliases to avoid:
+  "reference" · "citation" · "link"). **entry address**: a Spec id followed by `#`, the open section's
+  name (`design` or `ui`), a dot, and the entry's lower-camel ASCII key, naming one keyed entry of
+  that Spec; admitted in prose and by `parseId`, refused in every id slot, so a Spec's own id never
+  carries `#` (aliases to avoid: "anchor", reserved for the in-code binding · "fragment" · "sub-id").
 - ~~Candidate vocabulary from the executable-spec exploration: *notation* · *carrier*~~ — **ratified
   by the carrier ruling (MD-18)**; see **The authoring carrier** above. The rest
   of the exploration's candidates ratified with their referents at the plan-12 session — see **The

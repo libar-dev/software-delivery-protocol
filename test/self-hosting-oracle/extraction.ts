@@ -692,7 +692,7 @@ export const extractionSpecs = [
     id: "spec:extraction.open-section-order",
     specKind: "rule",
     altitude: "story",
-    readiness: "scoped",
+    readiness: "defined",
     file: "specs/extraction/open-section-order.sdp.md",
     title: "Serialization preserves authored entry order",
     narrative: null,
@@ -702,19 +702,15 @@ export const extractionSpecs = [
           "Canonical serialization sorts the keys of `design`, `ui`, and `model` terms by code unit, and the Design Review sorts them again, so a ten-step sequence reads as step 1, step 10, step 2 and an author's grouping is lost.",
         outcome:
           "Carry the authored order of open-section entries and model terms through the serialized graph and the Design Review's key order.",
-        openQuestions: [
-          {
-            question:
-              "The in-memory graph holds these entries as plain objects, so an integer-like key already loses its place before serialization. Markdown `design` and `ui` keys are lower-camel and cannot be integer-like, but a Model term and a TypeScript open-section key can. Either the carriers refuse an integer-like key in those positions, or the representation becomes an ordered list. Which?",
-            blocking: true,
-          },
-        ],
       },
       behavior: {
         rules: [
           "The entry order of `design`, `ui`, and `model` terms is authored content. Extraction keeps it, the serialized graph emits it, the Design Review's fenced JSON follows it for open sections, and the Model table follows it for terms.",
           "Authored order is a function of the committed source, so two derivations of one commit stay byte-identical. What is given up is invariance under permutation: two carriers that author the same entries in different orders derive different graph bytes, and parity for these sections means the same entries in the same order.",
-          "The serialized graph changes for every Spec whose entries are not already in code-unit order, so the schema version moves and the golden trees regenerate.",
+          'A key is integer-like when it matches `^(0|[1-9][0-9]*)$`. The Markdown carrier refuses an integer-like Model term with the structure finding `model terms must not be integer-like` and drops the carrier, as it does for every structure refusal; its open-section keys are lower-camel and cannot be integer-like. The TypeScript carrier refuses an integer-like property under `design`, `ui`, or `model.terms` with the finding `extract/unrecognized-property` and the message `property "<key>" is refused: integer-like keys are not accepted in design, ui, or model terms`, dropping that property as it drops a non-static one. The Gherkin carrier has no open section. The owner ruled the refusal over an ordered-list representation; re-measured at `242d8e6`, neither this corpus nor the first adopter\'s carries such a key.',
+          "With integer-like keys refused, a plain object keeps insertion order, so the representation stays an object and no field shape changes. Authored key order is part of the graph contract: a consumer may rely on the key order of `design`, `ui`, and `model.terms` as the author's order, with `description` first where present.",
+          "The schema version moves from `0.5.0` to `0.6.0`, documented as a change of accepted ids, since the `#` sub-part becomes an entry address, and of ordering semantics, with unchanged field shapes. The serialized graph changes for every Spec whose entries are not already in code-unit order.",
+          "The reader exposes authored order as the key order of a Spec context's `sections.design`, `sections.ui`, and `sections.model.terms`; entry search rows follow it, and no reader method is added.",
           "This rule is an ordinary revision. No Spec states the sort; it lives in `canonicalDynamicSection` in `src/extract/serialize.ts`, `renderDynamicRecord` in `src/projections/design-review-markdown.ts`, and `renderModel` in `src/projections/design-review-section-content.ts`, which are the realizing sites. The Design Review's encoding rule is untouched; rendering entries as a list is `spec:decisions.authored-entry-order`.",
         ],
       },
@@ -725,7 +721,7 @@ export const extractionSpecs = [
     id: "spec:extraction.contract-declarations",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "scoped",
+    readiness: "defined",
     file: "specs/extraction/contract-declarations.sdp.md",
     title: "Contract declarations derive a compilable module",
     narrative:
@@ -739,13 +735,8 @@ export const extractionSpecs = [
         openQuestions: [
           {
             question:
-              "The derived module needs a preamble the Spec cannot carry: the imports its spans assume and a declaration for each placeholder word such as `handler`. Does the adopter supply it as configuration to `sdp build`, or does a recipe emit the module inside the adopter's repository until a second adopter needs the same preamble? The lean is the recipe, with `sdp build` taking it over at the second-caller bar.",
-            blocking: true,
-          },
-          {
-            question:
-              "When the contract section lands, the `contract` row of the kind-evidence table repoints to it. Which evidence counts as present, and which as complete?",
-            blocking: true,
+              "The contract kind's evidence row in the kind-evidence table is unchanged by this Spec. A closed contract section is not planned; if an adopter asks for one, it enters as a Spec of its own.",
+            blocking: false,
           },
           {
             question:
@@ -766,6 +757,7 @@ export const extractionSpecs = [
           "The key names the declaration's role, and the Protocol fixes no key vocabulary. An adopter's prefix convention, such as `fn`, `type`, `table`, `validator`, and `index`, is a project policy that a recipe reads and never a carrier rule.",
           "A declaration states a shape and never a delivery fact. The anchor's `satisfies` binds the code that claims to realize it and a test anchor binds the verifier that claims to check it, both outside the span.",
           "The derived module is a projection: regenerable, never edited, imported by the adopter's tests and never by an authored Spec.",
+          "The adopter emits the derived module from the pinned declarations list with its own preamble of imports and placeholder declarations, until a second adopter needs the same preamble and the emitter freezes into `sdp build`. The module earns its place only when a changed pinned signature fails the adopter's typecheck against its implementation; a module that merely compiles proves nothing.",
         ],
       },
     },
