@@ -230,7 +230,8 @@ forwarded. Each is written into its Spec; this list only says where it landed.
 ## The three read-only reviews of the capture
 
 Two read-only reviewers read the capture commit (`11494af`) from the same brief, which gave goals
-and decision criteria only. Both retained the commit as a checkpoint and refused it as
+and decision criteria only. Both ran at high reasoning effort; the first took 7 minutes 8 seconds
+and the second 12 minutes 39 seconds. Both retained the commit as a checkpoint and refused it as
 implementation instructions. Their overlap was large: both found the grammar Spec overstating the
 parser (suggestion only within edit distance two, HTML not scanned in the H1 or fence steps and
 needing a closing `>`, Example space accepting leading prose, `uses` and `memberOf` not in the
