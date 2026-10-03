@@ -2383,6 +2383,12 @@ export const source = spec({
     ["an underscore", "spec:probe.target_v2", "spec:probe.target_v2"],
     ["a slash", "spec:probe.target/extra", "spec:probe.target/extra"],
     ["a comma", "spec:probe.target,spec:probe.other", "spec:probe.target,spec:probe.other"],
+    ["an underscore and a letter", "spec:probe.target_x", "spec:probe.target_x"],
+    ["a slash and a letter", "spec:probe.target/x", "spec:probe.target/x"],
+    ["a comma and a letter", "spec:probe.target,x", "spec:probe.target,x"],
+    ["a letter outside ASCII", "spec:probe.targeté", "spec:probe.targeté"],
+    // An escape is read as its punctuation, so the underscore stays inside the token.
+    ["an escaped underscore", "spec:probe.target\\_x", "spec:probe.target_x"],
     [
       "a hyphenated entry key",
       "spec:probe.target#design.step-1",
@@ -2438,6 +2444,14 @@ export const source = spec({
     ["ASCII single quotes", "Read 'spec:probe.target' now."],
     ["typographic double quotes", "Read “spec:probe.target” now."],
     ["typographic single quotes", "Read ‘spec:probe.target’ now."],
+    ["an em dash", "Read spec:probe.target—see the rest."],
+    ["an en dash", "Read spec:probe.target–see the rest."],
+    ["an ellipsis", "Read spec:probe.target… and stop."],
+    ["an escaped star", "Read spec:probe.target\\* now."],
+    ["an escaped exclamation mark", "Read spec:probe.target\\! now."],
+    ["U+0085", "Read spec:probe.target\u0085then stop."],
+    ["a no-break space", "Read spec:probe.target\u00a0then stop."],
+    ["an arrow", "Read spec:probe.target→then stop."],
   ])("reads the clean id through Markdown punctuation: %s", async (_case, outcome) => {
     const result = asRecord(
       await runRecipe(recipeByOrdinal(22), undefined, mentionTokenProbe(outcome)),

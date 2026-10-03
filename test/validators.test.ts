@@ -1461,29 +1461,52 @@ describe("conformance/prose-mentions — prose mentions and their entry addresse
   });
 
   it.each([
-    ["an underscore", "spec:probe.target_v2", "invalid path segment"],
-    ["a slash", "spec:probe.target/extra", "invalid path segment"],
-    ["a comma", "spec:probe.target,spec:probe.other", "invalid path segment"],
+    ["an underscore", "spec:probe.target_v2", "spec:probe.target_v2", "invalid path segment"],
+    [
+      "an underscore and a letter",
+      "spec:probe.target_x",
+      "spec:probe.target_x",
+      "invalid path segment",
+    ],
+    ["a slash", "spec:probe.target/extra", "spec:probe.target/extra", "invalid path segment"],
+    ["a slash and a letter", "spec:probe.target/x", "spec:probe.target/x", "invalid path segment"],
+    [
+      "a comma",
+      "spec:probe.target,spec:probe.other",
+      "spec:probe.target,spec:probe.other",
+      "invalid path segment",
+    ],
+    ["a comma and a letter", "spec:probe.target,x", "spec:probe.target,x", "invalid path segment"],
+    ["a letter outside ASCII", "spec:probe.targeté", "spec:probe.targeté", "invalid path segment"],
+    // An escape is read as its punctuation, so the underscore stays inside the token.
+    [
+      "an escaped underscore",
+      "spec:probe.target\\_x",
+      "spec:probe.target_x",
+      "invalid path segment",
+    ],
     [
       "a hyphenated entry key",
+      "spec:probe.target#design.step-1",
       "spec:probe.target#design.step-1",
       "entry address key must be lower-camel ASCII",
     ],
     [
+      // The trailing dot is removed as sentence punctuation, leaving `#design`.
       "an entry suffix with no key",
+      "spec:probe.target#design.",
       "spec:probe.target#design",
       "entry address must be <section>.<key> with section design or ui",
     ],
     [
       "an entry suffix outside design and ui",
       "spec:probe.target#model.x",
+      "spec:probe.target#model.x",
       "entry address must be <section>.<key> with section design or ui",
     ],
   ])(
     "reads the whole token through %s and refuses it, never the existing prefix",
-    (_case, token, reason) => {
-      // `#design.` loses its trailing dot as sentence punctuation and is refused as `#design`.
-      const written = token === "spec:probe.target#design" ? "spec:probe.target#design." : token;
+    (_case, written, token, reason) => {
       const findings = proseMentionFindings([
         mentionSpec("spec:probe.target", {
           intent: { outcome: "Exist under the prefix." },
@@ -1517,6 +1540,14 @@ describe("conformance/prose-mentions — prose mentions and their entry addresse
     ["ASCII single quotes", "Read 'spec:probe.target' now."],
     ["typographic double quotes", "Read “spec:probe.target” now."],
     ["typographic single quotes", "Read ‘spec:probe.target’ now."],
+    ["an em dash", "Read spec:probe.target—see the rest."],
+    ["an en dash", "Read spec:probe.target–see the rest."],
+    ["an ellipsis", "Read spec:probe.target… and stop."],
+    ["an escaped star", "Read spec:probe.target\\* now."],
+    ["an escaped exclamation mark", "Read spec:probe.target\\! now."],
+    ["U+0085", "Read spec:probe.target\u0085then stop."],
+    ["a no-break space", "Read spec:probe.target\u00a0then stop."],
+    ["an arrow", "Read spec:probe.target→then stop."],
   ])("reads the clean id through Markdown punctuation: %s", (_case, outcome) => {
     const findings = proseMentionFindings([
       mentionSpec("spec:probe.target", { intent: { outcome: "Be named once." } }),

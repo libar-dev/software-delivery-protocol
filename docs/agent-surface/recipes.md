@@ -1228,7 +1228,8 @@ const backingTypes = [
   "verifies",
   "supersedes",
 ];
-const idPattern = /(?<![A-Za-z0-9-])spec:[^\s`"\u0027‘’“”()[\]{}<>|]*/gu;
+const escapePattern = /\\([!-/:-@[-`{-~])/gu;
+const idPattern = /(?<![A-Za-z0-9-])spec:[!#-&*-;=?-Z\\^_a-z~\p{L}\p{Nd}]*/gu;
 const mentionPattern =
   /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#(design|ui)\.([a-z][A-Za-z0-9]*))?$/u;
 const specIds = new Set(g.specs().map((spec) => spec.id));
@@ -1299,7 +1300,7 @@ for (const spec of g.specs()) {
   }
 
   for (const { at, text } of texts) {
-    for (const match of text.matchAll(idPattern)) {
+    for (const match of text.replace(escapePattern, "$1").matchAll(idPattern)) {
       const rest = match[0].slice("spec:".length).replace(/[.,;:!?*_~]+$/u, "");
       if (rest === "") continue;
       const token = `spec:${rest}`;
@@ -1354,12 +1355,15 @@ return {
 ```
 
 A mention starts at `spec:` where the character before it, if any, is not an ASCII letter, an
-ASCII digit, or `-`. It runs to the first whitespace character or delimiter, one of
-`` ` `` `"` `'` `‘` `’` `“` `”` `(` `)` `[` `]` `{` `}` `<` `>` `|`. Trailing `.` `,` `;` `:` `!`
-`?` `*` `_` `~` are then removed, so a sentence, a list, or emphasis may end in an id. When
-nothing remains after `spec:`, there is no mention, so a bare prefix or a placeholder such as
-`spec:<id>` stays prose. The whole token is checked: `spec:foo_bar`, `spec:foo/bar`, and
-`spec:foo,spec:bar` are `"malformed"`, never read as `spec:foo`. The scan reads narrative and every string under sections, except
+ASCII digit, or `-`. A backslash before ASCII punctuation is read as that punctuation, as Markdown
+reads an escape. The token runs to the first whitespace character, the first ASCII delimiter, one
+of `` ` `` `"` `'` `(` `)` `[` `]` `{` `}` `<` `>` `|`, or the first character outside ASCII that
+is not a letter or digit by Unicode category, so every dash, ellipsis, typographic quote, arrow,
+Unicode space, and control character ends it. Trailing `.` `,` `;` `:` `!` `?` `*` `_` `~` are
+then removed after the prefix, so a sentence, a list, or emphasis may end in an id. When nothing
+remains after `spec:`, there is no mention, so a bare prefix or a placeholder such as `spec:<id>`
+stays prose. The whole token is checked: `spec:foo_bar`, `spec:foo/bar`, `spec:foo,spec:bar`,
+`spec:fooé`, and `spec:foo\_bar` are `"malformed"`, never read as `spec:foo`. The scan reads narrative and every string under sections, except
 `behavior.exampleSpace` and object entries of `behavior.examples`. Titles are not scanned.
 A token equal to the scanning Spec's own id is skipped; its own entry addresses are checked.
 

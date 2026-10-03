@@ -1006,12 +1006,17 @@ function checkOrphans(graph: GraphSchema, index: GraphIndex): readonly Finding[]
 
 /* ----- conformance/prose-mentions (`spec:validation.prose-mentions`) ----- */
 
+/** A backslash before ASCII punctuation is read as that punctuation, as Markdown reads an escape. */
+const MARKDOWN_ESCAPE = /\\([!-/:-@[-`{-~])/gu;
+
 /**
  * A mention token starts at `spec:` where the character before it, if any, is not an ASCII letter,
- * an ASCII digit, or `-`, and runs to the first whitespace character or delimiter. The whole token
- * goes to `parseId`, so `spec:foo_bar` is refused whole, never read as `spec:foo`.
+ * an ASCII digit, or `-`. It runs over printable ASCII other than the delimiters `` ` `` `"` `'`
+ * `(` `)` `[` `]` `{` `}` `<` `>` `|`, and over letters and digits outside ASCII by Unicode
+ * category, so whitespace, U+0085 included, and every other character outside ASCII end it. The
+ * whole token goes to `parseId`, so an embedded `_` refuses it whole, never cut short to a valid id.
  */
-const MENTION_PATTERN = /(?<![A-Za-z0-9-])spec:[^\s`"'‘’“”()[\]{}<>|]*/gu;
+const MENTION_PATTERN = /(?<![A-Za-z0-9-])spec:[!#-&*-;=?-Z\\^_a-z~\p{L}\p{Nd}]*/gu;
 
 /** Trailing punctuation a sentence, a list, or emphasis may put after an id. */
 const MENTION_TRAILING_PUNCTUATION = /[.,;:!?*_~]+$/u;
@@ -1118,7 +1123,7 @@ function proseMentionTexts(node: PrimitiveNode): readonly MentionText[] {
  * `spec:`, or a placeholder such as `spec:<id>`, leaves nothing after the prefix and is no mention.
  */
 function mentionTokens(text: string): readonly string[] {
-  return [...text.matchAll(MENTION_PATTERN)]
+  return [...text.replace(MARKDOWN_ESCAPE, "$1").matchAll(MENTION_PATTERN)]
     .map((match) => match[0].slice("spec:".length).replace(MENTION_TRAILING_PUNCTUATION, ""))
     .filter((rest) => rest.length > 0)
     .map((rest) => `spec:${rest}`);
