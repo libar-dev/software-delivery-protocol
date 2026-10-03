@@ -1452,3 +1452,31 @@ and `gwt-vocabulary` fences is searched like any other entry. Titles and ids sta
 search. Rows keep Spec id order and then the order the graph holds the entries;
 `totals.matches` counts every matching entry, `totals.specs` counts the matching Specs, and `totals.shown` counts
 the rows shown. `matches` holds the first fifty.
+
+## 24. Pinned declarations
+
+*When you need this: you want every signature, type, validator or table a corpus pins as a
+one-line code span opening a keyed Design entry, which is the input to any derived declarations
+module and the list a Design Review reads before it compares code with the Spec.*
+
+A declaration is the code span that opens the value of one keyed Design entry
+(`spec:extraction.contract-declarations`). The body opens a span at a backtick run of any length
+and closes it at the next run of exactly that length on the same line, as the inline code span law
+states, and returns the content between the runs as authored; it parses no language inside it. The
+`description` entry and any value that is not a string are not declarations and are skipped. Keys
+carry the adopter's own role prefixes; the Protocol fixes no vocabulary, so group rows by prefix in
+your own corpus if you need to.
+
+```js
+const rows = [];
+for (const spec of g.specs()) {
+  const design = g.specContext(spec.id)?.sections?.design;
+  if (design === undefined) continue;
+  for (const [key, value] of Object.entries(design)) {
+    if (key === "description" || typeof value !== "string") continue;
+    const span = /^(`+)(.+?)(?<!`)\1(?!`)/u.exec(value);
+    if (span) rows.push({ spec: spec.id, key, declaration: span[2] });
+  }
+}
+return { totals: { entries: rows.length, specs: new Set(rows.map((row) => row.spec)).size }, rows };
+```

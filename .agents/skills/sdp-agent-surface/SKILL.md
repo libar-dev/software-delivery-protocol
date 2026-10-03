@@ -85,10 +85,10 @@ The public projection publishers are `sdp view`, `sdp census`, `sdp mermaid`, an
 In this source checkout, use `npm run generate:self-hosting` or `npm run check:self-hosting` when
 all four roots must be published or certified together.
 
-The catalog contains twenty-three ready-made bodies in `docs/agent-surface/recipes.md` in the
+The catalog contains twenty-four ready-made bodies in `docs/agent-surface/recipes.md` in the
 Protocol repository and
 `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an adopter.
-Recipes 1-23 each open under a numbered heading that names the recipe. Every body there runs
+Recipes 1-24 each open under a numbered heading that names the recipe. Every body there runs
 verbatim and a test proves it. Start from a recipe; adapt it in place.
 
 For structural questions, use component membership, uses fan-in and fan-out, structural
@@ -103,7 +103,9 @@ open-question register (recipe 20) for every open question and its blocking flag
 footing (recipe 21) for what one Spec rests on, and the mention audit (recipe 22) for Spec ids in
 prose. When you hold a key or a term and need the entry that carries it, use entry search
 (recipe 23): it matches whole tokens and names the entry, where concept search stops at the
-section.
+section. When a Design Review or a test author needs every signature a corpus has pinned, use
+pinned declarations (recipe 24): it lists each keyed Design entry whose value opens with a code
+span, with the Spec, the key and the span content as authored.
 
 Reach for the files only when you need the authored prose itself — the exact words to edit.
 

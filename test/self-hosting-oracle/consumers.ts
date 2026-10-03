@@ -1175,6 +1175,7 @@ export const consumersSpecs = [
           "The dependency footing lists what one Spec rests on across `refines`, `dependsOn`, `constrainedBy`, and `decidedBy`, with each target's stated and derived readiness.",
           "The mention audit lists Spec ids written in narrative and section text, outside `gwt` and `gwt-vocabulary` fences, that do not resolve or that no declared relation from the mentioning Spec backs.",
           "Entry search matches whole tokens and answers with the Spec, the section, and the matching entry's key or text, where concept search answers with the Spec and the section only.",
+          "The pinned declarations list reports each keyed Design entry whose value opens with a code span, giving the Spec, the key, and the span content as authored with the count of entries and of Specs, and parses no language inside the span.",
           "Each body composes the existing reader. None adds a reader join or a CLI verb, because a join freezes into the reader only at the second-caller bar.",
           "The recipe check executes each body as written, and every document that states the catalog's size moves with the catalog.",
           "Whole tokens are maximal runs of Unicode letters and digits, split at camelCase humps and compared without case; a multiword term matches only as a consecutive run in the same order inside one key or text.",

@@ -392,6 +392,7 @@ describe("the agent-surface recipe corpus", () => {
       "twenty-one",
       "twenty-two",
       "twenty-three",
+      "twenty-four",
     ] as const;
     const countWord = countWords[recipes.length];
     const lastOrdinal = recipes[recipes.length - 1]?.ordinal;
@@ -458,11 +459,12 @@ describe("the agent-surface recipe corpus", () => {
       "dependency footing",
       "mention audit",
       "entry search",
+      "pinned declarations",
     ]) {
       expect(agentSurfaceProse).toContain(phrase);
     }
 
-    for (const ordinal of [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]) {
+    for (const ordinal of [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]) {
       expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
     }
   });
@@ -1772,7 +1774,7 @@ export const probe = spec({
 }
 
 describe("register recipe semantics", () => {
-  it.each([20, 21, 22, 23])("runs recipe %s as written in default output", async (ordinal) => {
+  it.each([20, 21, 22, 23, 24])("runs recipe %s as written in default output", async (ordinal) => {
     const capture = createCaptureOutput();
     expect(
       await runSdpCli(
@@ -1981,7 +1983,7 @@ describe("register recipe semantics", () => {
           check(entry, insideTotals || key === "totals");
       }
     };
-    for (const ordinal of [20, 21, 22, 23]) {
+    for (const ordinal of [20, 21, 22, 23, 24]) {
       const output = asRecord(await runRecipe(recipeByOrdinal(ordinal)));
       check(output);
       for (const key of [
@@ -2379,5 +2381,87 @@ describe("register recipe semantics", () => {
     expect(asRecord(many.totals).matches).toBe(60);
     expect(asRecord(many.totals).specs).toBe(1);
     expect(asArray(many.matches)).toHaveLength(50);
+  });
+
+  // Recipe 24 reads the span with the inline code span law: an opening run of any length closes
+  // at the next run of exactly that length. The independent scanner below states that law as a
+  // loop, so the corpus check holds whatever the corpus pins, with no frozen count.
+  it("lists every pinned declaration this corpus holds", async () => {
+    const leadingSpan = (value: string): string | undefined => {
+      const opening = /^`+/u.exec(value)?.[0].length ?? 0;
+      if (opening === 0) return undefined;
+      let index = opening;
+      while (index < value.length) {
+        if (value[index] !== "`") {
+          index += 1;
+          continue;
+        }
+        let end = index;
+        while (value[end] === "`") end += 1;
+        if (end - index === opening && index > opening) return value.slice(opening, index);
+        index = end;
+      }
+      return undefined;
+    };
+    const expected = reader.specs().flatMap((spec) =>
+      Object.entries(reader.specContext(spec.id)?.sections?.design ?? {}).flatMap(
+        ([key, value]) => {
+          if (key === "description" || typeof value !== "string") return [];
+          const declaration = leadingSpan(value);
+          return declaration === undefined ? [] : [{ spec: spec.id, key, declaration }];
+        },
+      ),
+    );
+    const result = asRecord(await runRecipe(recipeByOrdinal(24)));
+    const rows = asArray(result.rows).map(asRecord);
+    expect(result.totals).toEqual({
+      entries: rows.length,
+      specs: new Set(rows.map((row) => row.spec)).size,
+    });
+    expect(rows).toEqual(expected);
+  });
+
+  it("reads spans of any run length and skips every entry that pins nothing", async () => {
+    const probe = registerProbe();
+    const node = probe.graph.nodes.find((entry) => entry.id === "spec:probe.search");
+    const other = probe.graph.nodes.find((entry) => entry.id === "spec:probe.a");
+    if (node?.nodeType !== "Primitive" || other?.nodeType !== "Primitive") {
+      throw new Error("pinned-declarations probe is missing");
+    }
+    const extraction: ExtractionResult = {
+      ...probe,
+      graph: {
+        ...probe.graph,
+        nodes: [
+          {
+            ...node,
+            narrative: undefined,
+            sections: {
+              design: {
+                fnResume: "`resume(id: string): void` restarts generation",
+                typeTick: "``a`b`` keeps the single backtick",
+                typeFence: "`a``b` keeps the double run",
+                fnUnclosed: "`resume(id: string) never closes",
+                fnLater: "calls `resume(id)` later",
+                description: "`describe(): void` is framing",
+                tableNested: { inner: "`nested(): void`" },
+              },
+            },
+          },
+          { ...other, sections: { design: { validatorId: "`isId(value: unknown): boolean`" } } },
+        ],
+        edges: [],
+      },
+    };
+    const recipe = recipeByOrdinal(24);
+    expect(await runRecipe(recipe, undefined, extraction)).toEqual({
+      totals: { entries: 4, specs: 2 },
+      rows: [
+        { spec: "spec:probe.a", key: "validatorId", declaration: "isId(value: unknown): boolean" },
+        { spec: "spec:probe.search", key: "fnResume", declaration: "resume(id: string): void" },
+        { spec: "spec:probe.search", key: "typeTick", declaration: "a`b" },
+        { spec: "spec:probe.search", key: "typeFence", declaration: "a``b" },
+      ],
+    });
   });
 });
