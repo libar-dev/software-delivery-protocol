@@ -173,7 +173,7 @@ describe("the self-hosting corpus", () => {
     expect(result.report.findings).toEqual([]);
   });
 
-  it("reports exactly the five informative honesty gaps", () => {
+  it("reports exactly the five informative honesty gaps and the eight unbacked prose mentions", () => {
     expect(
       validateGraph(result.graph).findings.map(({ validatorId, family, severity, subjectId }) => ({
         validatorId,
@@ -188,12 +188,12 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    expect(result.counts).toEqual({ specs: 202, packs: 1, anchors: 217 });
+    expect(result.counts).toEqual({ specs: 202, packs: 1, anchors: 218 });
     expect(expectedSpecs).toHaveLength(202);
     expect(expectedPackMembers).toHaveLength(202);
-    expect(expectedAnchors).toHaveLength(217);
-    expect(result.graph.nodes).toHaveLength(420);
-    expect(result.graph.edges).toHaveLength(929);
+    expect(expectedAnchors).toHaveLength(218);
+    expect(result.graph.nodes).toHaveLength(421);
+    expect(result.graph.edges).toHaveLength(931);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {

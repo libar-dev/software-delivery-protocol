@@ -2177,4 +2177,14 @@ export const expectedAnchors = [
     constant: "shippedProtocolCorpusTestAnchor",
     site: 'describe("published package surface",',
   },
+  {
+    id: "impl:protocol.prose-mentions",
+    nodeType: "CodeNode",
+    label: "checks that prose mentions resolve and warns once per unbacked Spec pair",
+    type: "satisfies",
+    target: "spec:validation.prose-mentions",
+    file: "src/validate/validators.ts",
+    constant: "proseMentionsAnchor",
+    site: "function checkProseMentions",
+  },
 ] as const;

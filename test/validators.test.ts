@@ -959,3 +959,358 @@ describe("the models edge — the oracle anchor's contract row", () => {
     expect(findings.length).toBeGreaterThan(0);
   });
 });
+
+describe("conformance/prose-mentions — prose mentions and their entry addresses", () => {
+  const file = "specs/probe/mentions.sdp.md";
+  const warningTail =
+    "with no declared relation between them; informative only. Declare the relation that fits, or leave the mention as prose and let the warning stand when none does.";
+
+  function mentionSpec(
+    id: string,
+    sections: Readonly<Record<string, unknown>>,
+    narrative?: string,
+  ): PrimitiveNode {
+    return {
+      id,
+      nodeType: "Primitive",
+      claim: "declared",
+      specKind: "behavior",
+      altitude: "feature",
+      readiness: "idea",
+      title: `Title for ${id}`,
+      ...(narrative === undefined ? {} : { narrative }),
+      file,
+      sections,
+    };
+  }
+
+  function dependsOnEdge(from: string, to: string): GraphEdge {
+    return { from, type: "dependsOn", to, claim: "declared" };
+  }
+
+  function proseMentionFindings(
+    nodes: readonly GraphNode[],
+    edges: readonly GraphEdge[] = [],
+  ): readonly Finding[] {
+    return validateGraph(syntheticGraph(nodes, edges)).findings.filter(
+      (finding) => finding.validatorId === graphValidatorIds.proseMentions,
+    );
+  }
+
+  function mentionError(subjectId: string, relatedId: string, path: string, message: string) {
+    return {
+      validatorId: "conformance/prose-mentions",
+      family: "conformance",
+      severity: "error",
+      message,
+      subjectId,
+      relatedId,
+      path,
+      file,
+    };
+  }
+
+  function mentionWarning(subjectId: string, relatedId: string, path: string, message: string) {
+    return { ...mentionError(subjectId, relatedId, path, message), severity: "warning" };
+  }
+
+  it("refuses a malformed token with the id grammar's own reason", () => {
+    const findings = proseMentionFindings([
+      mentionSpec("spec:probe.mentioning", {
+        intent: { outcome: "Mention a malformed address." },
+        design: { step1: "Read spec:x#foo before the next step." },
+      }),
+    ]);
+
+    expect(graphValidatorIds.proseMentions).toBe("conformance/prose-mentions");
+    expect(findings).toEqual([
+      mentionError(
+        "spec:probe.mentioning",
+        "spec:x#foo",
+        "design.step1",
+        'Mention "spec:x#foo" in "spec:probe.mentioning" at design.step1 is not a Spec id or entry address: entry address must be <section>.<key> with section design or ui',
+      ),
+    ]);
+  });
+
+  it("refuses a missing target and suggests the unique nearest id", () => {
+    const findings = proseMentionFindings([
+      mentionSpec("spec:orders.create-order", {
+        intent: { outcome: "Turn a cart into an order." },
+      }),
+      mentionSpec("spec:orders.place-order", {
+        intent: { outcome: "Follow spec:orders.create-ordr to the end." },
+      }),
+    ]);
+
+    expect(findings).toEqual([
+      mentionError(
+        "spec:orders.place-order",
+        "spec:orders.create-ordr",
+        "intent.outcome",
+        'Mention in "spec:orders.place-order" at intent.outcome points to missing target "spec:orders.create-ordr". Did you mean "spec:orders.create-order"?',
+      ),
+    ]);
+  });
+
+  it("refuses a missing target without a suggestion on a tie, once per path and distinct token", () => {
+    const findings = proseMentionFindings([
+      mentionSpec("spec:orders.create-order-a", { intent: { outcome: "First near miss." } }),
+      mentionSpec("spec:orders.create-order-b", { intent: { outcome: "Second near miss." } }),
+      mentionSpec("spec:orders.place-order", {
+        intent: {
+          outcome: "Follow spec:orders.create-order-x, then spec:orders.create-order-x again.",
+          risks: ["spec:orders.create-order-x may never exist."],
+        },
+      }),
+    ]);
+
+    expect(findings).toEqual([
+      mentionError(
+        "spec:orders.place-order",
+        "spec:orders.create-order-x",
+        "intent.outcome",
+        'Mention in "spec:orders.place-order" at intent.outcome points to missing target "spec:orders.create-order-x".',
+      ),
+      mentionError(
+        "spec:orders.place-order",
+        "spec:orders.create-order-x",
+        "intent.risks[0]",
+        'Mention in "spec:orders.place-order" at intent.risks[0] points to missing target "spec:orders.create-order-x".',
+      ),
+    ]);
+  });
+
+  it("refuses an entry address whose key the target's section does not hold", () => {
+    const findings = proseMentionFindings(
+      [
+        mentionSpec("spec:probe.target", {
+          intent: { outcome: "Hold six steps and one panel." },
+          design: {
+            step1: "One.",
+            step2: "Two.",
+            step3: "Three.",
+            step4: "Four.",
+            step5: "Five.",
+            step6: "Six.",
+          },
+          ui: { panel: "The panel." },
+        }),
+        mentionSpec("spec:probe.mentioning", {
+          intent: { outcome: "Address the target's entries." },
+          behavior: {
+            rules: ["Run spec:probe.target#design.step9 after spec:probe.target#ui.panel."],
+          },
+        }),
+      ],
+      [dependsOnEdge("spec:probe.mentioning", "spec:probe.target")],
+    );
+
+    expect(findings).toEqual([
+      mentionError(
+        "spec:probe.mentioning",
+        "spec:probe.target#design.step9",
+        "behavior.rules[0]",
+        'Mention in "spec:probe.mentioning" at behavior.rules[0] points to missing entry "design.step9" of "spec:probe.target".',
+      ),
+    ]);
+  });
+
+  it("never resolves an address to a section's description", () => {
+    const findings = proseMentionFindings(
+      [
+        mentionSpec("spec:probe.target", {
+          intent: { outcome: "Lead the design with prose." },
+          design: { description: "The leading prose.", step1: "One." },
+        }),
+        mentionSpec("spec:probe.mentioning", {
+          intent: { outcome: "Address the leading prose." },
+          behavior: { rules: ["Quote spec:probe.target#design.description in full."] },
+        }),
+      ],
+      [dependsOnEdge("spec:probe.mentioning", "spec:probe.target")],
+    );
+
+    expect(findings).toEqual([
+      mentionError(
+        "spec:probe.mentioning",
+        "spec:probe.target#design.description",
+        "behavior.rules[0]",
+        'Mention in "spec:probe.mentioning" at behavior.rules[0] points to missing entry "design.description" of "spec:probe.target".',
+      ),
+    ]);
+  });
+
+  it("checks a self-address for its entry and never warns on it", () => {
+    const findings = proseMentionFindings([
+      mentionSpec(
+        "spec:probe.self",
+        {
+          intent: { outcome: "Address my own entries." },
+          behavior: {
+            rules: ["Run spec:probe.self#design.step1, then spec:probe.self#design.step7."],
+          },
+          design: { step1: "One." },
+        },
+        "This Spec is spec:probe.self.",
+      ),
+    ]);
+
+    expect(findings).toEqual([
+      mentionError(
+        "spec:probe.self",
+        "spec:probe.self#design.step7",
+        "behavior.rules[0]",
+        'Mention in "spec:probe.self" at behavior.rules[0] points to missing entry "design.step7" of "spec:probe.self".',
+      ),
+    ]);
+  });
+
+  it("warns once for a pair across three locations, first in scan order", () => {
+    const findings = proseMentionFindings([
+      mentionSpec("spec:probe.target", { intent: { outcome: "Be named often." } }),
+      mentionSpec("spec:probe.mentioning", {
+        // Authored before behavior; the scan still reads sections in the serialized graph's order.
+        design: { step2: "Hand off to spec:probe.target." },
+        intent: { outcome: "Name the target three times." },
+        behavior: {
+          rules: [
+            "Read spec:probe.target, then read spec:probe.target again.",
+            "A rule without a mention.",
+            "Close with spec:probe.target as well.",
+          ],
+        },
+      }),
+    ]);
+
+    expect(findings).toEqual([
+      mentionWarning(
+        "spec:probe.mentioning",
+        "spec:probe.target",
+        "behavior.rules[0]",
+        `Mention of "spec:probe.target" in "spec:probe.mentioning" at 3 locations, first at behavior.rules[0], ${warningTail}`,
+      ),
+    ]);
+  });
+
+  it("writes one location in the singular", () => {
+    const findings = proseMentionFindings([
+      mentionSpec("spec:probe.target", { intent: { outcome: "Be named once." } }),
+      mentionSpec("spec:probe.mentioning", {
+        intent: { outcome: "Name spec:probe.target once." },
+      }),
+    ]);
+
+    expect(findings).toEqual([
+      mentionWarning(
+        "spec:probe.mentioning",
+        "spec:probe.target",
+        "intent.outcome",
+        `Mention of "spec:probe.target" in "spec:probe.mentioning" at 1 location, first at intent.outcome, ${warningTail}`,
+      ),
+    ]);
+  });
+
+  it("lets a declared relation in the reverse direction back the mention", () => {
+    const findings = proseMentionFindings(
+      [
+        mentionSpec("spec:probe.child", { intent: { outcome: "Rest on the parent." } }),
+        mentionSpec("spec:probe.parent", {
+          intent: { outcome: "Name the child spec:probe.child that rests on this Spec." },
+        }),
+      ],
+      [dependsOnEdge("spec:probe.child", "spec:probe.parent")],
+    );
+
+    expect(findings).toEqual([]);
+  });
+
+  it("counts an address mention toward its pair, resolved or not", () => {
+    const findings = proseMentionFindings([
+      mentionSpec("spec:probe.target", {
+        intent: { outcome: "Hold one step." },
+        design: { step1: "One." },
+      }),
+      mentionSpec(
+        "spec:probe.mentioning",
+        {
+          intent: { outcome: "Address the target's steps." },
+          behavior: {
+            rules: [
+              "Run spec:probe.target#design.step1 first.",
+              "Run spec:probe.target#design.missing next.",
+            ],
+          },
+        },
+        "This Spec leans on spec:probe.target.",
+      ),
+    ]);
+
+    expect(findings).toEqual([
+      mentionWarning(
+        "spec:probe.mentioning",
+        "spec:probe.target",
+        "narrative",
+        `Mention of "spec:probe.target" in "spec:probe.mentioning" at 3 locations, first at narrative, ${warningTail}`,
+      ),
+      mentionError(
+        "spec:probe.mentioning",
+        "spec:probe.target#design.missing",
+        "behavior.rules[1]",
+        'Mention in "spec:probe.mentioning" at behavior.rules[1] points to missing entry "design.missing" of "spec:probe.target".',
+      ),
+    ]);
+  });
+
+  it("never scans the gwt and gwt-vocabulary fences, and skips them by position only", () => {
+    const findings = proseMentionFindings([
+      mentionSpec("spec:probe.fenced", {
+        intent: { outcome: "Keep ids inside the fences." },
+        behavior: {
+          examples: [
+            {
+              given: ["spec:probe.absent holds"],
+              when: ["the step reads spec:probe.absent"],
+              then: ["spec:probe.absent stays unscanned"],
+            },
+          ],
+          exampleSpace: { given: ["spec:probe.absent is a {thing}"] },
+        },
+        design: { exampleSpace: "Outside a fence, spec:probe.absent is a mention." },
+      }),
+    ]);
+
+    expect(findings).toEqual([
+      mentionError(
+        "spec:probe.fenced",
+        "spec:probe.absent",
+        "design.exampleSpace",
+        'Mention in "spec:probe.fenced" at design.exampleSpace points to missing target "spec:probe.absent".',
+      ),
+    ]);
+  });
+
+  it("strips a sentence-final dot from a token", () => {
+    const findings = proseMentionFindings([
+      mentionSpec("spec:probe.target", { intent: { outcome: "End a sentence." } }),
+      mentionSpec("spec:probe.mentioning", {
+        intent: { outcome: "Read spec:probe.target. Then read spec:probe.absent." },
+      }),
+    ]);
+
+    expect(findings).toEqual([
+      mentionError(
+        "spec:probe.mentioning",
+        "spec:probe.absent",
+        "intent.outcome",
+        'Mention in "spec:probe.mentioning" at intent.outcome points to missing target "spec:probe.absent".',
+      ),
+      mentionWarning(
+        "spec:probe.mentioning",
+        "spec:probe.target",
+        "intent.outcome",
+        `Mention of "spec:probe.target" in "spec:probe.mentioning" at 1 location, first at intent.outcome, ${warningTail}`,
+      ),
+    ]);
+  });
+});

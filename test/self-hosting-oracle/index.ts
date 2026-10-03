@@ -50,14 +50,63 @@ export const expectedSpecs: readonly ExpectedSpec[] = specFamilies.flatMap(
 );
 
 // These four-field projections identify the five informative honesty gaps from owner-ratified
-// ready Specs without resolving verifier bindings. The CLI suite separately pins each diagnostic's
-// file, validator, and subject prefix.
+// ready Specs without resolving verifier bindings, and the eight informative prose-mention
+// warnings, one per mentioning and target Spec pair with no declared relation either way. The CLI
+// suite separately pins each diagnostic's file, validator, and message prefix.
 export const expectedWarnings = [
   {
     validatorId: "honesty/gaps",
     family: "honesty",
     severity: "warning",
     subjectId: "spec:carrier.markdown-authoring",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:carrier.markdown-body-grammar",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:carrier.markdown-parser",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:consumers.adopter-on-ramp",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:consumers.delivery-session-on-ramp",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:consumers.delivery-session-on-ramp",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:decisions.carrier-ruling",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:decisions.jsdoc-graph-extraction-refused",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:decisions.planning-truths-placement",
   },
   {
     validatorId: "honesty/gaps",

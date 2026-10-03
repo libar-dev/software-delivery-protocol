@@ -409,6 +409,11 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.validate",
   },
   {
+    unit: "src/validate/validators.ts#checkProseMentions",
+    anchorId: "impl:protocol.prose-mentions",
+    componentId: "component:protocol.validate",
+  },
+  {
     unit: "src/validate/validators.ts#checkAuthoringShape",
     anchorId: "impl:protocol.authored-honesty-shape",
     componentId: "component:protocol.validate",

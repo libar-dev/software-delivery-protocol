@@ -249,7 +249,53 @@ describe("sdp cli", () => {
       ] as const) {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
       }
-      expect(capture.readStdout()).toContain("validate: 0 errors · 5 warnings");
+      for (const [file, target, specId] of [
+        [
+          "specs/carrier/markdown-body-grammar.sdp.md",
+          "spec:validation.authored-honesty",
+          "spec:carrier.markdown-body-grammar",
+        ],
+        [
+          "specs/carrier/markdown-parser.sdp.md",
+          "spec:carrier.inline-code-spans",
+          "spec:carrier.markdown-parser",
+        ],
+        [
+          "specs/consumers/adopter-on-ramp.sdp.md",
+          "spec:carrier.markdown-body-grammar",
+          "spec:consumers.adopter-on-ramp",
+        ],
+        [
+          "specs/consumers/delivery-session-on-ramp.sdp.md",
+          "spec:decisions.planning-truths-placement",
+          "spec:consumers.delivery-session-on-ramp",
+        ],
+        [
+          "specs/consumers/delivery-session-on-ramp.sdp.md",
+          "spec:decisions.shipped-projections-frozen",
+          "spec:consumers.delivery-session-on-ramp",
+        ],
+        [
+          "specs/decisions/carrier-ruling.sdp.md",
+          "spec:decisions.carrier-universality",
+          "spec:decisions.carrier-ruling",
+        ],
+        [
+          "specs/decisions/jsdoc-graph-extraction-refused.sdp.md",
+          "spec:model.spec-sections",
+          "spec:decisions.jsdoc-graph-extraction-refused",
+        ],
+        [
+          "specs/decisions/planning-truths-placement.sdp.md",
+          "spec:consumers.impact-graph",
+          "spec:decisions.planning-truths-placement",
+        ],
+      ] as const) {
+        expect(stderr).toContain(
+          `${file} — [warning] conformance/prose-mentions — Mention of "${target}" in "${specId}"`,
+        );
+      }
+      expect(capture.readStdout()).toContain("validate: 0 errors · 13 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
