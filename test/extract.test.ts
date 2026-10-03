@@ -511,6 +511,72 @@ export const carrier = spec({
     },
   );
 
+  const integerMemberOwners = [
+    [
+      "design",
+      (member: string) => `design: { ${member}, zeta: "kept" }`,
+      "design",
+      { zeta: "kept" },
+    ],
+    ["ui", (member: string) => `ui: { ${member}, panel: "kept" }`, "ui", { panel: "kept" }],
+    [
+      "model terms",
+      (member: string) => `model: { terms: { ${member}, apple: "kept" } }`,
+      "model.terms",
+      { terms: { apple: "kept" } },
+    ],
+  ] as const;
+  const integerMembers = [
+    ["a method", '1() { return "x"; }', ["1"]],
+    ["a string-named method", '"4"() { return "x"; }', ["4"]],
+    ["a getter", 'get 2() { return "x"; }', ["2"]],
+    ["a setter", "set 3(value: string) {}", ["3"]],
+    [
+      "a getter and a setter of one name",
+      'get 5() { return "x"; }, set 5(value: string) {}',
+      ["5", "5"],
+    ],
+  ] as const;
+
+  it.each(
+    integerMemberOwners.flatMap(([owner, section, path, kept]) =>
+      integerMembers.map(
+        ([memberForm, member, keys]) =>
+          [owner, memberForm, section(member), path, keys, kept] as const,
+      ),
+    ),
+  )(
+    "integer-like keys: refuses %s's integer-like name on %s, one error per member and the Spec kept",
+    (_owner, _memberForm, section, path, keys, kept) => {
+      const reified = reifyTypeScriptCarrier(
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:orders.integer-like-member"),
+  kind: "model",
+  altitude: "story",
+  readiness: "idea",
+  ${section},
+});`,
+        "integer-like-member.sdp.ts",
+      );
+
+      expect(reified.findings).toEqual(
+        keys.map((key) => ({
+          validatorId: extractFindingIds.unrecognizedProperty,
+          family: "conformance",
+          severity: "error",
+          message: `property "${key}" is refused: integer-like keys are not accepted in design, ui, or model terms`,
+          subjectId: "spec:orders.integer-like-member",
+          path: `${path}.${key}`,
+          file: "integer-like-member.sdp.ts",
+          line: 7,
+        })),
+      );
+      expect(reified.specs).toHaveLength(1);
+      expect(reified.specs[0]?.data[path.split(".")[0] ?? ""]).toEqual(kept);
+    },
+  );
+
   it.each([
     ["design", `design: { 1.5: "fraction", zeta: "kept" }`, "design", { zeta: "kept" }],
     ["ui", `ui: { 1.5: "fraction", panel: "kept" }`, "ui", { panel: "kept" }],

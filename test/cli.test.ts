@@ -720,9 +720,11 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
   });
 
   it.each([
-    ["a static value", '"static"'],
-    ["a non-static value", "compute()"],
-  ])("fails build on an integer-like design key holding %s", (_valueForm, value) => {
+    ["a static value", '1: "static"'],
+    ["a non-static value", "1: compute()"],
+    ["a method", '1() { return "x"; }'],
+    ["an accessor", 'get 1() { return "x"; }'],
+  ])("fails build on an integer-like design key holding %s", (_valueForm, entry) => {
     const root = mkdtempSync(join(tmpdir(), "sdp-integer-key-build-"));
 
     try {
@@ -736,7 +738,7 @@ export const probe = spec({
   altitude: "story",
   readiness: "idea",
   intent: { outcome: "Carry an integer-like Design key." },
-  design: { 1: ${value}, zeta: "kept" },
+  design: { ${entry}, zeta: "kept" },
 });
 `,
       );

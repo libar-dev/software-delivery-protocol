@@ -344,6 +344,29 @@ function isRefusedIntegerKey(shapePath: string, name: string): boolean {
 }
 
 /**
+ * A method or accessor whose name is integer-like names the same key a property would, so those
+ * shapes refuse it as they refuse the property. Any other method or accessor drops as non-static.
+ */
+function refusedIntegerMemberName(member: Node, shapePath: string): string | undefined {
+  if (
+    !Node.isMethodDeclaration(member) &&
+    !Node.isGetAccessorDeclaration(member) &&
+    !Node.isSetAccessorDeclaration(member)
+  ) {
+    return undefined;
+  }
+
+  const nameNode = member.getNameNode();
+  const name = Node.isNumericLiteral(nameNode)
+    ? String(nameNode.getLiteralValue())
+    : Node.isStringLiteral(nameNode)
+      ? nameNode.getLiteralValue()
+      : undefined;
+
+  return name !== undefined && isRefusedIntegerKey(shapePath, name) ? name : undefined;
+}
+
+/**
  * A property name authored twice at one object tier is ambiguity, never detail: evaluation keeps
  * the last value while diagnostics key on the first seen. tsc reports the duplication (TS1117) to
  * typechecking authors; the extractor reads files standalone, so it is the backstop — at every
@@ -721,6 +744,11 @@ function reifyObjectLossy(
   const seenNames = new Set<string>();
 
   for (const property of objectLiteral.getProperties()) {
+    // Reported once by the section check, like an integer-like property.
+    if (refusedIntegerMemberName(property, path) !== undefined) {
+      continue;
+    }
+
     if (!Node.isPropertyAssignment(property)) {
       const name = Node.isShorthandPropertyAssignment(property) ? property.getName() : "<entry>";
       drops.push({
@@ -847,6 +875,19 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
   const seenNames = new Set<string>();
 
   for (const property of unwrapped.getProperties()) {
+    const memberName = refusedIntegerMemberName(property, shapePath);
+
+    // One finding per method or accessor: a getter and a setter of one name are two members.
+    if (memberName !== undefined) {
+      issues.push({
+        kind: "integer-like",
+        name: memberName,
+        path: `${path}.${memberName}`,
+        line: property.getStartLineNumber(),
+      });
+      continue;
+    }
+
     if (!Node.isPropertyAssignment(property)) {
       continue;
     }
