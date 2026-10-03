@@ -175,12 +175,15 @@ describe("the self-hosting corpus", () => {
 
   it("reports exactly the five informative honesty gaps and the eight unbacked prose mentions", () => {
     expect(
-      validateGraph(result.graph).findings.map(({ validatorId, family, severity, subjectId }) => ({
-        validatorId,
-        family,
-        severity,
-        subjectId,
-      })),
+      validateGraph(result.graph).findings.map(
+        ({ validatorId, family, severity, subjectId, relatedId }) => ({
+          validatorId,
+          family,
+          severity,
+          subjectId,
+          relatedId,
+        }),
+      ),
     ).toEqual(expectedWarnings);
   });
 
