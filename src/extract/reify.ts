@@ -2,6 +2,7 @@ import { Node, SyntaxKind, VariableDeclarationKind } from "ts-morph";
 import type {
   ArrayLiteralExpression,
   CallExpression,
+  NumericLiteral,
   ObjectLiteralExpression,
   PropertyAssignment,
   SourceFile,
@@ -322,6 +323,15 @@ export function readPropertyName(property: PropertyAssignment): string | undefin
 const INTEGER_KEY_SHAPE_PATHS: ReadonlySet<string> = new Set(["design", "ui", "model.terms"]);
 const INTEGER_LIKE_KEY = /^(0|[1-9][0-9]*)$/u;
 
+/**
+ * The key JavaScript gives a numeric property name: ToString of its numeric value, so `0x10` is
+ * `"16"`, `1e3` is `"1000"`, and `1e21` is `"1e+21"`. `getLiteralValue` parses the literal text
+ * as an integer and would read `1e21` as `1`.
+ */
+function numericPropertyKey(nameNode: NumericLiteral): string {
+  return String(Number(nameNode.getLiteralText()));
+}
+
 function readKeyedPropertyName(
   property: PropertyAssignment,
   shapePath: string,
@@ -329,7 +339,7 @@ function readKeyedPropertyName(
   const nameNode = property.getNameNode();
 
   if (INTEGER_KEY_SHAPE_PATHS.has(shapePath) && Node.isNumericLiteral(nameNode)) {
-    const key = String(nameNode.getLiteralValue());
+    const key = numericPropertyKey(nameNode);
 
     if (INTEGER_LIKE_KEY.test(key)) {
       return key;
@@ -358,7 +368,7 @@ function refusedIntegerMemberName(member: Node, shapePath: string): string | und
 
   const nameNode = member.getNameNode();
   const name = Node.isNumericLiteral(nameNode)
-    ? String(nameNode.getLiteralValue())
+    ? numericPropertyKey(nameNode)
     : Node.isStringLiteral(nameNode)
       ? nameNode.getLiteralValue()
       : undefined;

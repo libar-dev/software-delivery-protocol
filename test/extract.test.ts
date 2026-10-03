@@ -577,29 +577,53 @@ export const carrier = spec({
     },
   );
 
-  it.each([
-    ["design", `design: { 1.5: "fraction", zeta: "kept" }`, "design", { zeta: "kept" }],
-    ["ui", `ui: { 1.5: "fraction", panel: "kept" }`, "ui", { panel: "kept" }],
+  // A numeric name's key is the string JavaScript gives it, ToString of its numeric value.
+  const numericNameOwners = [
+    [
+      "design",
+      (name: string, value: string) => `design: { ${name}: ${value}, zeta: "kept" }`,
+      "design",
+      { zeta: "kept" },
+    ],
+    [
+      "ui",
+      (name: string, value: string) => `ui: { ${name}: ${value}, panel: "kept" }`,
+      "ui",
+      { panel: "kept" },
+    ],
     [
       "model terms",
-      `model: { terms: { 1.5: "fraction", apple: "kept" } }`,
+      (name: string, value: string) => `model: { terms: { ${name}: ${value}, apple: "kept" } }`,
       "model.terms",
       { terms: { apple: "kept" } },
     ],
-  ])(
-    "integer-like keys: a numeric name in %s whose key is not integer-like drops as a non-static name",
-    (_shape, section, path, kept) => {
-      const reified = reifyTypeScriptCarrier(
-        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+  ] as const;
+  const numericNameValues = ['"static"', "compute()"] as const;
+  const numericNameCarrier = (section: string) =>
+    reifyTypeScriptCarrier(
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
 export const carrier = spec({
-  id: specId("spec:orders.fractional-key"),
+  id: specId("spec:orders.numeric-key"),
   kind: "model",
   altitude: "story",
   readiness: "idea",
   ${section},
 });`,
-        "fractional-key.sdp.ts",
-      );
+      "numeric-key.sdp.ts",
+    );
+
+  it.each(
+    numericNameOwners.flatMap(([owner, section, path, kept]) =>
+      ["1.5", "0.0000001", "1e21"].flatMap((name) =>
+        numericNameValues.map(
+          (value) => [owner, name, value, section(name, value), path, kept] as const,
+        ),
+      ),
+    ),
+  )(
+    "integer-like keys: a numeric name in %s whose key is not integer-like (%s, value %s) drops as a non-static name",
+    (_owner, _name, _value, section, path, kept) => {
+      const reified = numericNameCarrier(section);
 
       expect(reified.findings).toEqual([
         {
@@ -607,12 +631,45 @@ export const carrier = spec({
           family: "conformance",
           severity: "warning",
           message: `property "${path}" dropped: at "${path}", computed property names are non-static`,
-          subjectId: "spec:orders.fractional-key",
+          subjectId: "spec:orders.numeric-key",
           path,
-          file: "fractional-key.sdp.ts",
+          file: "numeric-key.sdp.ts",
           line: 7,
         },
       ]);
+      expect(reified.specs[0]?.data[path.split(".")[0] ?? ""]).toEqual(kept);
+    },
+  );
+
+  it.each(
+    numericNameOwners.flatMap(([owner, section, path, kept]) =>
+      [
+        ["1e3", "1000"],
+        ["0x10", "16"],
+      ].flatMap(([name = "", key]) =>
+        numericNameValues.map(
+          (value) => [owner, name, value, section(name, value), path, key, kept] as const,
+        ),
+      ),
+    ),
+  )(
+    "integer-like keys: a numeric name in %s whose key is integer-like (%s, value %s) is refused under that key",
+    (_owner, _name, _value, section, path, key, kept) => {
+      const reified = numericNameCarrier(section);
+
+      expect(reified.findings).toEqual([
+        {
+          validatorId: extractFindingIds.unrecognizedProperty,
+          family: "conformance",
+          severity: "error",
+          message: `property "${String(key)}" is refused: integer-like keys are not accepted in design, ui, or model terms`,
+          subjectId: "spec:orders.numeric-key",
+          path: `${path}.${String(key)}`,
+          file: "numeric-key.sdp.ts",
+          line: 7,
+        },
+      ]);
+      expect(reified.specs).toHaveLength(1);
       expect(reified.specs[0]?.data[path.split(".")[0] ?? ""]).toEqual(kept);
     },
   );
