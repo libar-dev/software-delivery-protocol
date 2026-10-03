@@ -16,7 +16,7 @@ relations:
 - An ID uses a lowercase namespace and a dotted path whose segments admit mixed case (case binds only on the namespace), with an optional single `#` sub-part; referential-integrity checks reject malformed or unresolved references.
 - IDs carry no history: a rename is a repository edit recorded by git rather than graph-resident bookkeeping.
 - The builders reserve one namespace per binding direction — `spec:` for a Spec and for every Spec reference, `pack:` for the aggregate, `impl:` · `api:` · `component:` for a code anchor, `test:` for a verifying test anchor, and `oracle:` for an expected-outcome anchor — while the grammar itself admits any lowercase namespace, so the reserved set is the builders' law rather than the parser's.
-- `doc:` is reserved for a genuinely external document a decision Spec links to, never for an in-system decision: in-system decisions are Specs whose dotted path opens with the `decisions` segment. No builder mints a `doc:` identifier and the Spec-only reference builder refuses one, so the reservation is a named deferral rather than a landed namespace.
+- `doc:` is reserved for a genuinely external document a decision Spec links to, never for an in-system decision: in-system decisions are Specs, and this corpus places them by convention under a dotted path opening with the `decisions` segment. No builder mints a `doc:` identifier and the Spec-only reference builder refuses one, so the reservation is a named deferral rather than a landed namespace.
 - The realizing entrypoints are `parseId` and `formatId` in `src/ids.ts`.
 
 ## Example space
