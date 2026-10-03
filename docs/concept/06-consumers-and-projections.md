@@ -147,7 +147,7 @@ The flagship human view is the Design Review's relationship slice: a derived, re
 
 Owned prose is already available through the graph and Reader: `narrative` appears in a spec summary/context and concept search, while section descriptions remain in `SpecContext.sections` and are searchable. Design Review now renders `Spec.narrative` and the seven approved section descriptions from those Reader/graph values (schema `0.6.0`), with no source reparse and stable omission when prose is absent.
 
-Schema `0.6.0` changes accepted ids by reserving the `#` sub-part for an entry address and changes ordering semantics by preserving authored key order in `design`, `ui`, and `model.terms`, with `description` first where present. Field shapes are unchanged.
+Schema `0.6.0` changes accepted ids by reserving the `#` sub-part for an entry address and changes ordering semantics by preserving authored key order in `design`, `ui`, and `model.terms`, with a `design` or `ui` section's `description` first. Field shapes are unchanged.
 
 **Form is a Representation — settled for the MVP: generated Markdown.** An index plus one page per `Spec` and per `Pack` under `generated/design-review/` (`sdp view`), rewritten wholesale each run so no stale page survives; byte-exact regeneration is the same determinism discipline as the graph. The dev-mode and CI surfaces are the *same* generated artifact (no drift-prone "dev view"). The rich interactive **Spec Studio**, and HTML-over-Markdown as a product thesis, are aspirational (§8).
 

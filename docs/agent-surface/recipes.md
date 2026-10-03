@@ -1211,8 +1211,9 @@ Spec can state `ready` is the floor clause carried by `spec:validation.typed-dep
 
 ## 22. Mention audit
 
-*When you need this: you want every Spec id written in prose that does not resolve, or that no
-declared relation from the mentioning Spec backs.*
+*When you need this: you want every Spec id or entry address written in prose that does not
+resolve, or that no declared relation backs in either direction. The `reverseOnly` list stays a
+separate audit list, for mentions backed only by a relation from the target.*
 
 The opening `const scope` is the parameter. Replace it with a list of Spec ids to audit
 mentions from those Specs only. An empty list audits the whole corpus.
