@@ -1258,7 +1258,7 @@ export const validationSpecs = [
         ],
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:validation.unbound-example-posture.lower-rungs",

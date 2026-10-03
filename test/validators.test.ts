@@ -23,6 +23,13 @@ import {
   validateGraph,
 } from "../src/index.js";
 import type { Finding, GraphEdge, GraphNode, GraphSchema, PrimitiveNode } from "../src/index.js";
+// The package builders bind this suite's anchor; the fixtures above build probe values from the
+// source module, which the extractor does not read as authoring.
+import {
+  ref as anchorRef,
+  specTest as anchorSpecTest,
+  testAnchorId as anchorTestAnchorId,
+} from "@libar-dev/software-delivery-protocol";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
 /**
@@ -960,6 +967,13 @@ describe("the models edge — the oracle anchor's contract row", () => {
   });
 });
 
+const proseMentionsTestAnchor = anchorSpecTest({
+  id: anchorTestAnchorId("test:protocol.prose-mentions"),
+  label: "verifies prose-mention resolution and the unbacked-pair warning",
+  verifies: anchorRef("spec:validation.prose-mentions"),
+});
+void proseMentionsTestAnchor;
+
 describe("conformance/prose-mentions — prose mentions and their entry addresses", () => {
   const file = "specs/probe/mentions.sdp.md";
   const warningTail =
@@ -1339,6 +1353,109 @@ describe("conformance/prose-mentions — prose mentions and their entry addresse
         "spec:probe.target",
         "behavior.examples[1][0][0]",
         `Mention of "spec:probe.target" in "spec:probe.nested-examples" at 1 location, first at behavior.examples[1][0][0], ${warningTail}`,
+      ),
+    ]);
+  });
+
+  it.each(["anchored", "inferred"] as const)(
+    "still warns on a pair joined only by an edge whose claim is %s",
+    (claim) => {
+      const findings = proseMentionFindings(
+        [
+          mentionSpec("spec:probe.target", { intent: { outcome: "Be named." } }),
+          mentionSpec("spec:probe.mentioning", {
+            intent: { outcome: "Name spec:probe.target once." },
+          }),
+        ],
+        [{ from: "spec:probe.mentioning", type: "dependsOn", to: "spec:probe.target", claim }],
+      );
+
+      expect(findings).toEqual([
+        mentionWarning(
+          "spec:probe.mentioning",
+          "spec:probe.target",
+          "intent.outcome",
+          `Mention of "spec:probe.target" in "spec:probe.mentioning" at 1 location, first at intent.outcome, ${warningTail}`,
+        ),
+      ]);
+    },
+  );
+
+  it("resolves an address only to an own key, never an inherited one", () => {
+    const findings = proseMentionFindings(
+      [
+        mentionSpec("spec:probe.target", {
+          intent: { outcome: "Hold an empty Design record." },
+          design: {},
+        }),
+        mentionSpec("spec:probe.mentioning", {
+          intent: { outcome: "Address an inherited name." },
+          behavior: { rules: ["Read spec:probe.target#design.toString first."] },
+        }),
+      ],
+      [dependsOnEdge("spec:probe.mentioning", "spec:probe.target")],
+    );
+
+    expect(findings).toEqual([
+      mentionError(
+        "spec:probe.mentioning",
+        "spec:probe.target#design.toString",
+        "behavior.rules[0]",
+        'Mention in "spec:probe.mentioning" at behavior.rules[0] points to missing entry "design.toString" of "spec:probe.target".',
+      ),
+    ]);
+  });
+
+  it.each([
+    [
+      "authored entry order",
+      { zeta: "Run spec:probe.target.", alpha: "Then spec:probe.target." },
+      "design.zeta",
+    ],
+    [
+      "a description authored after another mentioning entry",
+      { step1: "Run spec:probe.target.", description: "Lead with spec:probe.target." },
+      "design.description",
+    ],
+  ])(
+    "puts the pair warning's first path in %s, with description first",
+    (_order, design, first) => {
+      const findings = proseMentionFindings([
+        mentionSpec("spec:probe.target", { intent: { outcome: "Be named twice." } }),
+        mentionSpec("spec:probe.mentioning", {
+          intent: { outcome: "Name the target in Design only." },
+          design,
+        }),
+      ]);
+
+      expect(findings).toEqual([
+        mentionWarning(
+          "spec:probe.mentioning",
+          "spec:probe.target",
+          first,
+          `Mention of "spec:probe.target" in "spec:probe.mentioning" at 2 locations, first at ${first}, ${warningTail}`,
+        ),
+      ]);
+    },
+  );
+
+  it("suggests the nearest Spec id for a missing target written as an address", () => {
+    const findings = proseMentionFindings([
+      mentionSpec("spec:orders.create-order", {
+        intent: { outcome: "Turn a cart into an order." },
+        design: { step1: "Validate the cart." },
+      }),
+      mentionSpec("spec:orders.place-order", {
+        intent: { outcome: "Follow spec:orders.create-ordr#design.step1 to the end." },
+      }),
+    ]);
+
+    expect(findings).toEqual([
+      mentionError(
+        "spec:orders.place-order",
+        "spec:orders.create-ordr#design.step1",
+        "intent.outcome",
+        'Mention in "spec:orders.place-order" at intent.outcome points to missing target "spec:orders.create-ordr#design.step1". Did you mean "spec:orders.create-order"?',
       ),
     ]);
   });

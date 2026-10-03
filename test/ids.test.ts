@@ -51,7 +51,20 @@ const entryAddressRefusals = [
   ["spec:x#design.a-b", "entry address key must be lower-camel ASCII"],
   ["spec:x#design.a.b", "entry address key must be lower-camel ASCII"],
   ["spec:x#design.", "entry address key must be lower-camel ASCII"],
+  ["spec:x#design.éclair", "entry address key must be lower-camel ASCII"],
+  ["spec:x#design.café", "entry address key must be lower-camel ASCII"],
 ] as const;
+
+/** The complete message a call throws; a substring match would let extra text through. */
+function thrownMessage(action: () => unknown): string {
+  try {
+    action();
+  } catch (error: unknown) {
+    return error instanceof Error ? error.message : String(error);
+  }
+
+  throw new Error("expected the call to throw");
+}
 
 describe("ids", () => {
   it.each(validIds)("round-trips %s", (value) => {
@@ -89,7 +102,7 @@ describe("ids", () => {
   });
 
   it.each(entryAddressRefusals)("refuses the entry address %s with its reason", (value, reason) => {
-    expect(() => parseId(value)).toThrow(`Invalid ID "${value}": ${reason}`);
+    expect(thrownMessage(() => parseId(value))).toBe(`Invalid ID "${value}": ${reason}`);
   });
 
   it("parses an entry address with its sub-part verbatim", () => {
@@ -101,13 +114,15 @@ describe("ids", () => {
   });
 
   it("refuses an entry address where a Spec id is required", () => {
-    expect(() => ref("spec:x#design.k")).toThrow(
+    expect(thrownMessage(() => ref("spec:x#design.k"))).toBe(
       'Invalid ID "spec:x#design.k": an entry address is not a Spec id',
     );
-    expect(() => specId("spec:x#design.k")).toThrow(
+    expect(thrownMessage(() => specId("spec:x#design.k"))).toBe(
       'Invalid ID "spec:x#design.k": an entry address is not a Spec id',
     );
-    expect(() => specId("spec:x#foo")).toThrow("an entry address is not a Spec id");
+    expect(thrownMessage(() => specId("spec:x#foo"))).toBe(
+      'Invalid ID "spec:x#foo": an entry address is not a Spec id',
+    );
   });
 
   it("rejects wrong namespaces in helper branding", () => {

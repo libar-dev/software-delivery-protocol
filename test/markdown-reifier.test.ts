@@ -519,6 +519,26 @@ relations:
     ]);
   });
 
+  it("refuses a Pack whose own id carries an entry address with the namespace reason", () => {
+    const result = reify(
+      lawfulPack.replace("id: pack:probe.parity", "id: pack:probe#design.step1"),
+    );
+
+    expect(result.specs).toEqual([]);
+    expect(result.packs).toEqual([]);
+    expect(result.findings).toEqual([
+      {
+        validatorId: "extract/invalid-id",
+        family: "conformance",
+        severity: "error",
+        message:
+          'Invalid ID "pack:probe#design.step1": the # sub-part is an entry address and is admitted only in the spec namespace',
+        file: "carrier.sdp.md",
+        line: 2,
+      },
+    ]);
+  });
+
   it("accepts distinct relation keys that share a target", () => {
     const result = reify(
       validFrontmatter.replace(

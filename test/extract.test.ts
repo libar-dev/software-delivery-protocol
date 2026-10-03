@@ -358,38 +358,36 @@ export const carrier = spec({
     const refusal = (key: string) =>
       `property "${key}" is refused: integer-like keys are not accepted in design, ui, or model terms`;
 
-    expect(reified.findings).toMatchObject([
-      {
+    expect(reified.findings).toEqual(
+      ["1", "10"].map((key) => ({
         validatorId: extractFindingIds.unrecognizedProperty,
+        family: "conformance",
         severity: "error",
-        message: refusal("1"),
-        path: "design.1",
+        message: refusal(key),
+        subjectId: "spec:orders.integer-like-design",
+        path: `design.${key}`,
+        file: "integer-like-design.sdp.ts",
         line: 7,
-      },
-      {
-        validatorId: extractFindingIds.unrecognizedProperty,
-        severity: "error",
-        message: refusal("10"),
-        path: "design.10",
-        line: 7,
-      },
-    ]);
-    expect(reified.findings).toHaveLength(2);
+      })),
+    );
     expect(reified.specs).toHaveLength(1);
     expect(reified.specs[0]?.data.design).toEqual({ step1: "a" });
   });
 
   it.each([
-    ["ui", `ui: { panel: "p", 0: "zero" }`, "ui.0", { panel: "p" }],
+    ["ui", `ui: { panel: "p", 0: "zero" }`, "0", "ui.0", { panel: "p" }],
     [
       "model terms",
       `model: { terms: { apple: "fruit", "7": "seven" } }`,
+      "7",
       "model.terms.7",
       { terms: { apple: "fruit" } },
     ],
-  ])("integer-like keys: refuses an integer-like name in %s", (_shape, section, path, kept) => {
-    const reified = reifyTypeScriptCarrier(
-      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+  ])(
+    "integer-like keys: refuses an integer-like name in %s",
+    (_shape, section, key, path, kept) => {
+      const reified = reifyTypeScriptCarrier(
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
 export const carrier = spec({
   id: specId("spec:orders.integer-like-key"),
   kind: "model",
@@ -397,15 +395,59 @@ export const carrier = spec({
   readiness: "idea",
   ${section},
 });`,
-      "integer-like-key.sdp.ts",
-    );
+        "integer-like-key.sdp.ts",
+      );
 
-    expect(reified.findings).toMatchObject([
-      { validatorId: extractFindingIds.unrecognizedProperty, severity: "error", path },
-    ]);
-    expect(reified.findings).toHaveLength(1);
-    expect(reified.specs[0]?.data[path.startsWith("ui") ? "ui" : "model"]).toEqual(kept);
-  });
+      expect(reified.findings).toEqual([
+        {
+          validatorId: extractFindingIds.unrecognizedProperty,
+          family: "conformance",
+          severity: "error",
+          message: `property "${key}" is refused: integer-like keys are not accepted in design, ui, or model terms`,
+          subjectId: "spec:orders.integer-like-key",
+          path,
+          file: "integer-like-key.sdp.ts",
+          line: 7,
+        },
+      ]);
+      expect(reified.specs[0]?.data[path.startsWith("ui") ? "ui" : "model"]).toEqual(kept);
+    },
+  );
+
+  it.each([
+    ["design", `design: { zeta: "z", "01": "one", "00": "zero", alpha: "a" }`, "design"],
+    ["ui", `ui: { zeta: "z", "01": "one", "00": "zero", alpha: "a" }`, "ui"],
+    [
+      "model terms",
+      `model: { terms: { zeta: "z", "01": "one", "00": "zero", alpha: "a" } }`,
+      "model.terms",
+    ],
+  ])(
+    "integer-like keys: the string keys 00 and 01 in %s are lawful and keep their values and order",
+    (_shape, section, path) => {
+      const reified = reifyTypeScriptCarrier(
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:orders.leading-zero-keys"),
+  kind: "model",
+  altitude: "story",
+  readiness: "idea",
+  ${section},
+});`,
+        "leading-zero-keys.sdp.ts",
+      );
+      const [owner = "", nested] = path.split(".");
+      const record = reified.specs[0]?.data[owner] as Record<string, unknown> | undefined;
+
+      expect(reified.findings).toEqual([]);
+      expect(Object.entries((nested === undefined ? record : record?.[nested]) ?? {})).toEqual([
+        ["zeta", "z"],
+        ["01", "one"],
+        ["00", "zero"],
+        ["alpha", "a"],
+      ]);
+    },
+  );
 
   const integerKeyOwners = [
     [
@@ -850,6 +892,111 @@ relations: {}
     expect(result.graph.nodes.map((node) => node.id)).toEqual(["spec:orders.target"]);
     expect(result.graph.edges).toEqual([]);
   });
+  const slotAddress = "spec:orders.target#design.step1";
+  const slotRefusal = `id "${slotAddress}" is an entry address where a Spec id is required`;
+  const namespaceRefusal = (id: string) =>
+    `Invalid ID "${id}": the # sub-part is an entry address and is admitted only in the spec namespace`;
+
+  it.each([
+    [
+      "anchor verifies",
+      "binding.ts",
+      `export const binding = specTest({ id: testAnchorId("test:orders.binding"), verifies: ref("${slotAddress}") });`,
+      "verifies",
+      `anchor field "verifies" did not reify: ${slotRefusal}`,
+      "test:orders.binding",
+    ],
+    [
+      "anchor models",
+      "binding.ts",
+      `export const binding = specOracle({ id: oracleAnchorId("oracle:orders.binding"), models: ref("${slotAddress}") });`,
+      "models",
+      `anchor field "models" did not reify: ${slotRefusal}`,
+      "oracle:orders.binding",
+    ],
+    [
+      "anchor component",
+      "binding.ts",
+      `export const binding = codeAnchor({ id: codeAnchorId("impl:orders.binding"), satisfies: ref("spec:orders.target"), component: componentAnchorId("component:orders.api#design.step1") });`,
+      "component",
+      `anchor field "component" did not reify: ${namespaceRefusal("component:orders.api#design.step1")}`,
+      "impl:orders.binding",
+    ],
+    [
+      "anchor uses",
+      "binding.ts",
+      `export const binding = codeAnchor({ id: codeAnchorId("impl:orders.binding"), satisfies: ref("spec:orders.target"), uses: [codeAnchorId("impl:orders.repository#design.step1")] });`,
+      "uses[0]",
+      `anchor field "uses[0]" did not reify: ${namespaceRefusal("impl:orders.repository#design.step1")}`,
+      "impl:orders.binding",
+    ],
+    [
+      "the Pack identity",
+      "specs/probe.pack.sdp.ts",
+      `export const probePack = pack({ id: packId("pack:probe#design.step1"), title: "Probe", specs: [ref("spec:orders.target")] });`,
+      "id",
+      `envelope field "id" did not reify: ${namespaceRefusal("pack:probe#design.step1")}`,
+      undefined,
+    ],
+    [
+      "the test anchor identity",
+      "binding.ts",
+      `export const binding = specTest({ id: testAnchorId("test:orders.binding#design.step1"), verifies: ref("spec:orders.target") });`,
+      "id",
+      `anchor field "id" did not reify: ${namespaceRefusal("test:orders.binding#design.step1")}`,
+      undefined,
+    ],
+    [
+      "the oracle anchor identity",
+      "binding.ts",
+      `export const binding = specOracle({ id: oracleAnchorId("oracle:orders.binding#design.step1"), models: ref("spec:orders.target") });`,
+      "id",
+      `anchor field "id" did not reify: ${namespaceRefusal("oracle:orders.binding#design.step1")}`,
+      undefined,
+    ],
+    [
+      "the API anchor identity",
+      "binding.ts",
+      `export const binding = codeAnchor({ id: codeAnchorId("api:orders.binding#design.step1"), satisfies: ref("spec:orders.target") });`,
+      "id",
+      `anchor field "id" did not reify: ${namespaceRefusal("api:orders.binding#design.step1")}`,
+      undefined,
+    ],
+  ])(
+    "entry-address-slots: %s refuses an entry address, and no # reaches the graph",
+    (_slot, file, declaration, path, message, subjectId) => {
+      const root = temporaryCorpusRoot("entry-address-slot");
+      const builders = `import { codeAnchor, codeAnchorId, componentAnchorId, oracleAnchorId, pack, packId, ref, spec, specId, specOracle, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";`;
+      writeFileSync(
+        join(root, "specs", "target.sdp.ts"),
+        `${builders}\nexport const target = spec({ id: specId("spec:orders.target"), title: "Probe", kind: "behavior", altitude: "story", readiness: "idea", intent: { outcome: "Probe an id slot." } });\n`,
+      );
+      writeFileSync(join(root, file), `${builders}\n${declaration}\n`);
+
+      const result = extract({ root });
+
+      expect(result.report.findings).toEqual([
+        {
+          validatorId: extractFindingIds.invalidId,
+          family: "conformance",
+          severity: "error",
+          message,
+          subjectId,
+          path,
+          file,
+          line: 2,
+        },
+      ]);
+      expect(result.graph.nodes.map((node) => node.id)).toEqual(["spec:orders.target"]);
+      expect(result.graph.edges).toEqual([]);
+      expect(
+        [
+          ...result.graph.nodes.map((node) => node.id),
+          ...result.graph.edges.flatMap((edge) => [edge.from, edge.to]),
+        ].filter((id) => id.includes("#")),
+      ).toEqual([]);
+    },
+  );
 });
 
 describe("Markdown carrier discovery", () => {

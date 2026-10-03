@@ -2187,4 +2187,14 @@ export const expectedAnchors = [
     constant: "proseMentionsAnchor",
     site: "function checkProseMentions",
   },
+  {
+    id: "test:protocol.prose-mentions",
+    nodeType: "Anchor",
+    label: "verifies prose-mention resolution and the unbacked-pair warning",
+    type: "verifies",
+    target: "spec:validation.prose-mentions",
+    file: "test/validators.test.ts",
+    constant: "proseMentionsTestAnchor",
+    site: 'describe("conformance/prose-mentions',
+  },
 ] as const;
