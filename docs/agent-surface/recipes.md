@@ -1456,8 +1456,8 @@ the rows shown. `matches` holds the first fifty.
 ## 24. Pinned declarations
 
 *When you need this: you want every signature, type, validator or table a corpus pins as a
-one-line code span opening a keyed Design entry, which is the input to any derived declarations
-module and the list a Design Review reads before it compares code with the Spec.*
+one-line code span opening a keyed Design entry. The list is the input to any derived declarations
+module and what a Design Review reads before it compares code with the Spec.*
 
 A declaration is the code span that opens the value of one keyed Design entry, as
 `spec:extraction.contract-declarations` rules. The body opens a span at a backtick run of any
@@ -1474,7 +1474,7 @@ for (const spec of g.specs()) {
   if (design === undefined) continue;
   for (const [key, value] of Object.entries(design)) {
     if (key === "description" || typeof value !== "string") continue;
-    const span = /^(`+)(?!`)(.+?)(?<!`)\1(?!`)/u.exec(value);
+    const span = /^(`+)(?!`)([^\r\n]+?)(?<!`)\1(?!`)/u.exec(value);
     if (span) rows.push({ spec: spec.id, key, declaration: span[2] });
   }
 }

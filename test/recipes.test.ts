@@ -2455,6 +2455,8 @@ describe("register recipe semantics", () => {
                 fnOpenTwoLonger: "``a`b```",
                 fnOpenThree: "```x`",
                 fnMultiline: "`a\nb`",
+                typeLineSep: '`type S = "\u2028"`',
+                typeParaSep: '`type S = "\u2029"`',
               },
             },
           },
@@ -2465,7 +2467,7 @@ describe("register recipe semantics", () => {
     };
     const recipe = recipeByOrdinal(24);
     expect(await runRecipe(recipe, undefined, extraction)).toEqual({
-      totals: { entries: 6, specs: 2 },
+      totals: { entries: 8, specs: 2 },
       rows: [
         { spec: "spec:probe.a", key: "validatorId", declaration: "isId(value: unknown): boolean" },
         { spec: "spec:probe.search", key: "fnResume", declaration: "resume(id: string): void" },
@@ -2473,6 +2475,8 @@ describe("register recipe semantics", () => {
         { spec: "spec:probe.search", key: "typeFence", declaration: "a``b" },
         { spec: "spec:probe.search", key: "typeTriple", declaration: "a``b" },
         { spec: "spec:probe.search", key: "fnFirst", declaration: "first" },
+        { spec: "spec:probe.search", key: "typeLineSep", declaration: 'type S = "\u2028"' },
+        { spec: "spec:probe.search", key: "typeParaSep", declaration: 'type S = "\u2029"' },
       ],
     });
   });
