@@ -3263,6 +3263,81 @@ describe("address resolution and dependency cycles", () => {
     expectCyclesToMatchOracle(result, extraction);
   });
 
+  it("walks targets in code-unit order, so of two tied shortest cycles the first target's is reported", async () => {
+    // `A` rests on `Z` and on `b`, and each rests back on `A`: two closed paths of two steps.
+    // In code units `Z` comes before `b`; reversed or alphabetical order would pick `b`.
+    const extraction = markdownProbe("sdp-cycle-tie-probe-", {
+      "start.sdp.md": cycleProbeSpec("A", ["b", "Z"]),
+      "upper.sdp.md": cycleProbeSpec("Z", ["A"]),
+      "lower.sdp.md": cycleProbeSpec("b", ["A"]),
+    });
+    const result = asRecord(await runRecipe(recipeByOrdinal(26), undefined, extraction));
+    expect(result).toEqual({
+      totals: { sets: 1, selfDependent: 0, specsInCycles: 3 },
+      cycles: [
+        {
+          members: ["spec:probe.A", "spec:probe.Z", "spec:probe.b"],
+          cycle: ["spec:probe.A", "spec:probe.Z", "spec:probe.A"],
+        },
+      ],
+    });
+    expectCyclesToMatchOracle(result, extraction);
+  });
+
+  it("resolves an inherited property name only where the Spec authors it as a key", async () => {
+    const designProbeSpec = (leaf: string, entry: string): string => `---
+id: spec:probe.${leaf}
+kind: rule
+altitude: story
+readiness: idea
+relations: {}
+---
+# Probe ${leaf}
+
+## Intent
+- outcome: Carry one Design entry.
+
+## Rule
+- The probe states one rule.
+
+## Design
+- ${entry}
+`;
+    const extraction = markdownProbe("sdp-inherited-key-probe-", {
+      "plain.sdp.md": designProbeSpec("plain", "shape: A shape."),
+      "authored.sdp.md": designProbeSpec("authored", "constructor: An authored constructor."),
+    });
+    const result = await runRecipe(
+      addressResolution([
+        "spec:probe.plain#design.constructor",
+        "spec:probe.authored#design.constructor",
+      ]),
+      undefined,
+      extraction,
+    );
+    expect(result).toEqual({
+      totals: { addresses: 2, resolved: 1, malformed: 0, spec: 0, entry: 1 },
+      rows: [
+        {
+          address: "spec:probe.plain#design.constructor",
+          resolves: false,
+          id: null,
+          section: null,
+          key: null,
+          reason: "entry",
+        },
+        {
+          address: "spec:probe.authored#design.constructor",
+          resolves: true,
+          id: "spec:probe.authored",
+          section: "design",
+          key: "constructor",
+          reason: null,
+        },
+      ],
+    });
+  });
+
   it("resolves the design's probe addresses with one row and one reason each", async () => {
     const result = await runRecipe(
       addressResolution([

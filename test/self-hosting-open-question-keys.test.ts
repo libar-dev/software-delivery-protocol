@@ -36,6 +36,7 @@ const SUBJECT_FILE = "subject.sdp.md";
 const MENTIONING_FILE = "mentioning.sdp.md";
 const QUESTION_KEY = /^[a-z][A-Za-z0-9]*$/u;
 const QUESTION_LINE = /^- \[(?:blocking|non-blocking)(?: #([^\]]*))?\] \S.*$/u;
+const QUESTION_PARTS = /^- \[(blocking|non-blocking)(?: #([^\]]*))?\] (\S.*)$/u;
 
 /** Every Then value of one point, written the way the example Specs write them. */
 interface KeyAnswer {
@@ -96,6 +97,24 @@ function answerFor(point: Partial<OpenQuestionKeysConditions>): KeyAnswer | unde
     keys: heldKeys.join(", "),
     mentionErrors: resolves ? 0 : 1,
   };
+}
+
+/**
+ * The question objects a reified first carrier holds, in authored order: each line's text, whether
+ * its flag blocks, and its key when the marker carries one. An unkeyed line is a question too.
+ */
+function expectedQuestions(point: Partial<OpenQuestionKeysConditions>): readonly unknown[] {
+  return questionLines(point.questions ?? "").flatMap((line) => {
+    const parts = QUESTION_PARTS.exec(line);
+    if (parts?.[1] === undefined || parts[3] === undefined) return [];
+    return [
+      {
+        question: parts[3],
+        blocking: parts[1] === "blocking",
+        ...(parts[2] === undefined ? {} : { key: parts[2] }),
+      },
+    ];
+  });
 }
 
 function expectedOutcome(point: Partial<OpenQuestionKeysConditions>): OpenQuestionKeysOutcome {
@@ -216,6 +235,15 @@ function graphKeys(result: ExtractionResult): readonly string[] {
     });
 }
 
+/** The open questions of the first Spec as the graph holds them, whole. */
+function subjectQuestions(world: KeyWorld): unknown {
+  const subject = resultOf(world)
+    .graph.nodes.filter((node): node is PrimitiveNode => node.nodeType === "Primitive")
+    .find((node) => node.id === world.point.specId);
+  const intent = (subject?.sections as Record<string, unknown> | undefined)?.intent;
+  return (intent as Record<string, unknown> | undefined)?.openQuestions;
+}
+
 function observedAnswer(world: KeyWorld): KeyAnswer {
   const result = resultOf(world);
   return {
@@ -269,6 +297,10 @@ function assertionsFor(contract: KeyContract): (world: KeyWorld) => void {
     expect(statedAnswer(contract)).toEqual(answer);
     expect(observedAnswer(world)).toEqual(answer);
     const result = resultOf(world);
+    if (answer?.reified === true) {
+      // The whole question objects, so a question the key leaves alone cannot drop unseen.
+      expect(subjectQuestions(world)).toEqual(expectedQuestions(world.point));
+    }
     if (answer?.reified === false) {
       // The refusal is the structure finding at the line of the repeated entry, and the address
       // then names a missing Spec rather than a missing entry.

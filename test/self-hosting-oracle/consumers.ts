@@ -1596,6 +1596,12 @@ export const consumersSpecs = [
         openQuestions: [
           {
             question:
+              "The original's left rail shows the current Pack's tree, its specs and then its harnesses; the graph has no harness node. Does the rail list harnesses, and from which graph value?",
+            blocking: false,
+            key: "railHarnesses",
+          },
+          {
+            question:
               "The original's left rail lists recent edits; the graph carries only current state, git is the event log, and the shipped views are a function of the graph alone. Does the rail read recent edits from git when the Studio is built, or leave them out?",
             blocking: false,
             key: "recentEdits",
@@ -1649,7 +1655,7 @@ export const consumersSpecs = [
           },
           {
             question:
-              "The original pins one color for each of seven rungs, sketch through verified; readiness has four rungs, idea through ready, and the floor reached renders beside the stated rung. Does the palette color the stated rung, the floor reached, or both?",
+              "The original pins one color for each of seven rungs: light grey for `sketch`, blue for `framed`, cyan for `specified`, green for `designed`, emerald for `bound`, indigo for `executable` and violet for `verified`; readiness has four rungs, idea through ready, and the floor reached renders beside the stated rung. Does the palette color the stated rung, the floor reached, or both?",
             blocking: false,
             key: "rungColors",
           },
@@ -1661,7 +1667,7 @@ export const consumersSpecs = [
           },
           {
             question:
-              "The original's runtime panel shows the HTTP route, the Effect layer with what it provides and requires, its lifetime and its test layer, the external systems, and the Awilix registration with its lifetime; an anchor carries identity only, and `component` and `uses` are its only structural fields. Does the panel show more than the structural neighborhood of the Spec's implementation anchors?",
+              "The original's runtime panel binds a Fastify route to the Effect program it invokes, as `api:POST:/orders` invokes an Effect program with `R = CreateOrderUseCase`; shows the Effect layer `layer:CreateOrderUseCaseLive`, which provides `port:CreateOrderUseCase`, requires `port:OrderRepository` and `port:EventBus`, has the lifetime `scoped` and the test layer `layer:CreateOrderUseCaseTest`; names the external system `external:postgres`; and, for Awilix, binds the registration `createOrderUseCase` to `impl:CreateOrderUseCase` as `asClass CreateOrderUseCase` with the lifetime `SCOPED`, depending on `impl:OrderRepository` and `impl:EventBus`. An anchor carries identity only, and `component` and `uses` are its only structural fields. Does the panel show more than the structural neighborhood of the Spec's implementation anchors?",
             blocking: false,
             key: "runtimeComposition",
           },
@@ -1670,6 +1676,12 @@ export const consumersSpecs = [
               "The original's bindings panel lists schema bindings beside code and test bindings; anchors bind implementation code, tests and oracles, and no anchor binds a schema. Does a schema binding need a home?",
             blocking: false,
             key: "schemaBindings",
+          },
+          {
+            question:
+              "The original's page outline names a section `UI / Stories`, whose UI half the UI panel carries; the original never says what a story is. What is a story, and does the page show one?",
+            blocking: false,
+            key: "uiStories",
           },
         ],
       },

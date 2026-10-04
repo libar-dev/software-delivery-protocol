@@ -1,4 +1,5 @@
-import { lstatSync, readFileSync, readlinkSync } from "node:fs";
+import { lstatSync, mkdtempSync, readFileSync, readlinkSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -6,10 +7,14 @@ import {
   buildGraphIndex,
   deriveReadiness,
   evaluateReadinessFloor,
+  extract,
+  graphValidatorIds,
   refines,
   spec,
   specId,
+  validateGraph,
 } from "../src/index.js";
+import type { PrimitiveNode } from "../src/index.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
 import { parseMarkdownBody } from "../src/extract/markdown-body.js";
@@ -722,5 +727,117 @@ describe("taught grammar agrees with parser behavior", () => {
         grammarProbe(`## ${owner}\n- ${key}: A value.\n- ${key}: Another value.`).findings,
       ).toEqual([]);
     }
+  });
+});
+
+/**
+ * The keyed open-question marker the authoring skill teaches, as one code span, and the address it
+ * says that marker has, read from the sentence that pairs them.
+ */
+function taughtQuestionMarker(): { readonly marker: string; readonly address: string } {
+  const text = readSkill(".agents/skills/sdp-authoring/SKILL.md").source;
+  const taught = /`([^`]+)` is\s+addressed as\s+`(spec:<id>#question\.[^`]+)`/u.exec(text);
+  const marker = taught?.[1];
+  const address = taught?.[2];
+  if (marker === undefined || address === undefined) {
+    throw new Error("the authoring skill must pair one keyed marker with its question address");
+  }
+  return { marker, address };
+}
+
+/**
+ * Writes the marker on one open question of a Spec in a temporary corpus, beside a second Spec
+ * that names the address and declares `dependsOn` on the first, then extracts and validates.
+ */
+function probeQuestionMarker(marker: string, addressTemplate: string) {
+  const subjectId = "spec:probe.taught";
+  const address = addressTemplate.replace("spec:<id>", subjectId);
+  const root = mkdtempSync(join(tmpdir(), "sdp-taught-marker-"));
+  try {
+    writeFileSync(
+      join(root, "taught.sdp.md"),
+      `---
+id: ${subjectId}
+kind: rule
+altitude: story
+readiness: idea
+relations: {}
+---
+# Taught marker probe
+
+## Intent
+- outcome: Carry the keyed question the authoring skill teaches.
+
+### Open questions
+- ${marker} Does the owner widen the aggregate?
+
+## Rule
+- The probe states one rule.
+`,
+    );
+    writeFileSync(
+      join(root, "citing.sdp.md"),
+      `---
+id: spec:probe.citing
+kind: rule
+altitude: story
+readiness: idea
+relations:
+  dependsOn: ${subjectId}
+---
+# Citing probe
+
+The probe cites ${address} by its address.
+
+## Intent
+- outcome: Name the taught question by its address.
+
+## Rule
+- The probe states one rule.
+`,
+    );
+    const extraction = extract({ root });
+    const subject = extraction.graph.nodes.find(
+      (node): node is PrimitiveNode => node.nodeType === "Primitive" && node.id === subjectId,
+    );
+    const intent = (subject?.sections as Record<string, unknown> | undefined)?.intent;
+    const questions = (intent as Record<string, unknown> | undefined)?.openQuestions;
+    const first: unknown = Array.isArray(questions) ? questions[0] : undefined;
+    return {
+      address,
+      extractionErrors: extraction.report.findings.filter(
+        (finding) => finding.severity === "error",
+      ),
+      key: (first as Record<string, unknown> | undefined)?.key,
+      mentionFindings: validateGraph(extraction.graph).findings.filter(
+        (finding) => finding.validatorId === graphValidatorIds.proseMentions,
+      ),
+    };
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+describe("the taught question marker", () => {
+  it("extracts the key the skill's marker carries and resolves the address the skill gives it", () => {
+    const { marker, address } = taughtQuestionMarker();
+    const probe = probeQuestionMarker(marker, address);
+    expect(probe.address).toBe(address.replace("spec:<id>", "spec:probe.taught"));
+    expect(probe.extractionErrors).toEqual([]);
+    expect(probe.key).toBe(address.slice(address.indexOf("#question.") + "#question.".length));
+    expect(probe.mentionFindings).toEqual([]);
+  });
+
+  it("leaves the address unresolved when the key stands outside the brackets", () => {
+    const { marker, address } = taughtQuestionMarker();
+    const inverted = /^\[(\S+) (#\S+)\]$/u.exec(marker);
+    if (inverted?.[1] === undefined || inverted[2] === undefined) {
+      throw new Error("the taught marker must carry its flag and its key inside the brackets");
+    }
+    const probe = probeQuestionMarker(`[${inverted[1]}] ${inverted[2]}`, address);
+    expect(probe.key).toBeUndefined();
+    expect(probe.mentionFindings).toMatchObject([
+      { severity: "error", message: expect.stringContaining("points to missing entry") },
+    ]);
   });
 });

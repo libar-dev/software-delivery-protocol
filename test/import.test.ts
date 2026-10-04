@@ -242,6 +242,33 @@ export const authoredSpec = spec({
     );
   });
 
+  it("imports a keyed question whose blocking flag is omitted as a non-blocking marker", () => {
+    // Given: the lawful `{ question, key }` shape, whose omitted flag means non-blocking.
+    const source = `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const authoredSpec = spec({
+  id: specId("spec:import.keyed-unflagged"),
+  title: "Import a keyed question with no flag",
+  kind: "rule",
+  altitude: "story",
+  readiness: "idea",
+  intent: {
+    outcome: "Keep the key without a flag.",
+    openQuestions: [{ question: "Where does the page live?", key: "pageHome" }],
+  },
+});
+`;
+
+    // When
+    const result = importTypeScriptSpec(source, "specs/keyed-unflagged.sdp.ts");
+
+    // Then: the fidelity check passes and the marker carries the non-blocking flag and the key.
+    expect(result.findings).toEqual([]);
+    expect(result.emitted?.content).toContain(
+      "### Open questions\n\n- [non-blocking #pageHome] Where does the page live?",
+    );
+  });
+
   it("refuses an import whose question key the reifier drops", () => {
     // Given: a key off the grammar, which the TypeScript carrier drops with an error.
     const source = `import { spec, specId } from "@libar-dev/software-delivery-protocol";

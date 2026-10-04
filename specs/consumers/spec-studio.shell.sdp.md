@@ -12,6 +12,7 @@ relations:
 ## Intent
 - outcome: Let a reader move between lenses, Packs and Specs from any page, and find a Spec by what they remember of it.
 ### Open questions
+- [non-blocking #railHarnesses] The original's left rail shows the current Pack's tree, its specs and then its harnesses; the graph has no harness node. Does the rail list harnesses, and from which graph value?
 - [non-blocking #recentEdits] The original's left rail lists recent edits; the graph carries only current state, git is the event log, and the shipped views are a function of the graph alone. Does the rail read recent edits from git when the Studio is built, or leave them out?
 - [non-blocking #searchTags] The original's search indexes tags; the Spec envelope is closed to `id`, `kind`, `altitude`, `readiness` and `relations` with the H1 as title, and no free-form tag vocabulary is admitted. What, if anything, does search index in place of tags?
 

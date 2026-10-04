@@ -5,10 +5,14 @@
 > for the owner to state `ready`. The entry-address engine is built: of the four Specs the owner
 > ruled, the prose-mentions validator and the open-section order carry `implemented` and wait for
 > the same statement, and the checked-mentions decision and contract declarations need no engine
-> binding. The one Spec an owner question held, the list rendering, was ratified in round 2
-> (see "Round 2" at the end), which adds four Specs at `defined`. The backlog and readiness are
-> read from the graph (recipes 1, 2, 9, 11). If this file and the graph disagree, the graph wins
-> and this file is stale.
+> binding. The one Spec an owner question held, the list rendering
+> (`spec:decisions.authored-entry-order`), was ratified and built in round 2 (see "Round 2" at
+> the end). Round 2 adds four Specs at `defined`, each built; promotion preflight (recipe 9) now
+> reports the next rung's unmet clauses. Its slice of the original design is the Studio review
+> workbench, captured as `pack:spec-studio-v1` ahead of its code. The round's one review returned
+> nine findings, each ruled and folded in. The backlog and readiness are read from the graph
+> (recipes 1, 2, 9, 11). If this file and the graph disagree, the graph wins and this file is
+> stale.
 
 ## Why this arc
 
@@ -375,19 +379,21 @@ Applied before any engine work, read from the graph with recipes 9 and 11:
 
 - `spec:decisions.authored-entry-order` states `ready` and supersedes the freeze, under O3 and R1.
   `spec:consumers.design-review` and `spec:extraction.open-section-order` now say the open-section
-  entries render as a list.
+  entries render as a list, and `2d5d851` builds that rendering.
 - `spec:decisions.checked-mentions` admits the `question` section of the entry address, under O6,
   and the glossary's entry address says the same.
 - `spec:extraction.pack-member-order`, with one bound example: the Pack node's `members` and
   schema `0.7.0` (O5).
 - `spec:consumers.agent-surface.address-and-cycle-recipes`: recipes 25 and 26 (R3, R4).
 - `spec:validation.next-rung-floor`, with two bound examples: the target rung, the next rung's
-  failures in the reader and in recipe 9, and the typed-dependency targets (R2).
+  failures in the reader and in recipe 9, and the typed-dependency targets (R2). Recipe 9 now
+  reports the next rung's unmet clauses beside the current floor's.
 - `spec:model.open-question-keys`, with three bound examples: the key, its marker, its address
   (O6).
 
-Each new Spec states `defined` and derives `ready`. The design that removes the builders'
-decisions is `design-sdp.md`, kept in the owner's context repository beside the round's rulings.
+Each new Spec states `defined`, derives `ready`, and carries `implemented`. The design that
+removes the builders' decisions is `design-sdp.md`, kept in the owner's context repository beside
+the round's rulings.
 
 ### Order of the build
 
@@ -400,4 +406,10 @@ decisions is `design-sdp.md`, kept in the owner's context repository beside the 
 5. Recipes 25 and 26, after step 4, since address resolution reads the `question` section.
 6. The integrator re-derives the self-hosting pins and counts, and `npm run check` passes.
 7. A representative slice of the original design under `docs/lineage/v0-design/`, captured as
-   Specs ahead of their code with the five changes in use. Slice to be chosen.
+   Specs ahead of their code with the five changes in use. The slice is the Studio review
+   workbench, chapter 07's sections 1 to 3, 11 and 12, captured as `pack:spec-studio-v1`.
+
+### The review
+
+The round's one read-only review returned nine findings, the first on the defect planted in its
+copy of the authoring skill, and the main thread ruled each and folded it in.
