@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ENTRY_ADDRESS_SECTIONS,
   anchorId,
   codeAnchorId,
   componentAnchorId,
@@ -15,6 +16,8 @@ import {
 const validIds = [
   "spec:orders.create-order",
   "spec:orders.create-order#design.validCart",
+  "spec:orders.create-order#question.aggregateReach",
+  "spec:orders.create-order#question.description",
   "pack:checkout-v1",
   "impl:orders.create-order-use-case",
   "test:orders.create-order.valid-cart",
@@ -39,12 +42,24 @@ const entryAddressRefusals = [
   ["pack:x#", "the # sub-part is an entry address and is admitted only in the spec namespace"],
   ["spec:x#", "malformed # suffix"],
   ["spec:x#a#b", "malformed # suffix"],
-  ["spec:x#foo", "entry address must be <section>.<key> with section design or ui"],
-  ["spec:x#model.foo", "entry address must be <section>.<key> with section design or ui"],
-  ["spec:x#design", "entry address must be <section>.<key> with section design or ui"],
+  ["spec:x#foo", "entry address must be <section>.<key> with section design, ui, or question"],
+  [
+    "spec:x#model.foo",
+    "entry address must be <section>.<key> with section design, ui, or question",
+  ],
+  ["spec:x#design", "entry address must be <section>.<key> with section design, ui, or question"],
+  ["spec:x#question", "entry address must be <section>.<key> with section design, ui, or question"],
+  [
+    "spec:x#questions.k",
+    "entry address must be <section>.<key> with section design, ui, or question",
+  ],
+  [
+    "spec:x#openQuestions.k",
+    "entry address must be <section>.<key> with section design, ui, or question",
+  ],
   [
     "spec:orders.create-order#valid-cart",
-    "entry address must be <section>.<key> with section design or ui",
+    "entry address must be <section>.<key> with section design, ui, or question",
   ],
   ["spec:x#design.1", "entry address key must be lower-camel ASCII"],
   ["spec:x#design.Foo", "entry address key must be lower-camel ASCII"],
@@ -53,6 +68,9 @@ const entryAddressRefusals = [
   ["spec:x#design.", "entry address key must be lower-camel ASCII"],
   ["spec:x#design.éclair", "entry address key must be lower-camel ASCII"],
   ["spec:x#design.café", "entry address key must be lower-camel ASCII"],
+  ["spec:x#question.AggregateReach", "entry address key must be lower-camel ASCII"],
+  ["spec:x#question.aggregate-reach", "entry address key must be lower-camel ASCII"],
+  ["spec:x#question.", "entry address key must be lower-camel ASCII"],
 ] as const;
 
 /** The complete message a call throws; a substring match would let extra text through. */
@@ -111,6 +129,27 @@ describe("ids", () => {
       path: "orders.create-order",
       subpath: "ui.fnResume",
     });
+  });
+
+  it("names the three sections an entry address may carry", () => {
+    expect(ENTRY_ADDRESS_SECTIONS).toEqual(["design", "ui", "question"]);
+  });
+
+  it("parses a question address with its key verbatim", () => {
+    expect(parseId("spec:orders.create-order#question.aggregateReach")).toEqual({
+      namespace: "spec",
+      path: "orders.create-order",
+      subpath: "question.aggregateReach",
+    });
+  });
+
+  it("refuses a question address where a Spec id is required", () => {
+    expect(thrownMessage(() => ref("spec:x#question.k"))).toBe(
+      'Invalid ID "spec:x#question.k": an entry address is not a Spec id',
+    );
+    expect(thrownMessage(() => codeAnchorId("impl:x#question.k"))).toBe(
+      'Invalid ID "impl:x#question.k": the # sub-part is an entry address and is admitted only in the spec namespace',
+    );
   });
 
   it("refuses an entry address where a Spec id is required", () => {

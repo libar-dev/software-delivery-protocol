@@ -1143,12 +1143,28 @@ function parseMention(token: string): IdParts | string {
   }
 }
 
-/** An entry address resolves to an own key of its section, never the section's `description`. */
+/**
+ * A `design` or `ui` address resolves to an own key of its section, never the section's
+ * `description`. A `question` address resolves to an open question that carries the key, and
+ * there `description` is an ordinary key.
+ */
 function hasAddressedEntry(target: PrimitiveNode, address: string): boolean {
   const dotIndex = address.indexOf(".");
   const key = address.slice(dotIndex + 1);
+  const sectionName = address.slice(0, dotIndex);
   const sections = target.sections as Readonly<Record<string, unknown>> | undefined;
-  const section = sections?.[address.slice(0, dotIndex)];
+
+  if (sectionName === "question") {
+    const intent = sections?.intent;
+    const questions = isRecord(intent) ? intent.openQuestions : undefined;
+
+    return (
+      Array.isArray(questions) &&
+      questions.some((question) => isRecord(question) && question.key === key)
+    );
+  }
+
+  const section = sections?.[sectionName];
 
   return key !== "description" && isRecord(section) && Object.hasOwn(section, key);
 }
