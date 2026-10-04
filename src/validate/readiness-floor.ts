@@ -280,14 +280,6 @@ function allRelationsResolve(node: PrimitiveNode, index: GraphIndex): boolean {
 
 const definedIndex = SPEC_READINESS.indexOf("defined");
 
-const typedDependencyFloorAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.typed-dependency-floor"),
-  label: "checks stated readiness across all four typed dependencies",
-  satisfies: ref("spec:validation.typed-dependency-floor"),
-  component: componentAnchorId("component:protocol.validate"),
-});
-void typedDependencyFloorAnchor;
-
 const typedDependencyTypes: readonly TypedDependencyType[] = [
   "refines",
   "dependsOn",
@@ -351,6 +343,14 @@ function typedDependencyTargets(
       compareCodeUnits(left.id, right.id),
   );
 }
+
+const typedDependencyFloorAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.typed-dependency-floor"),
+  label: "checks stated readiness across all four typed dependencies",
+  satisfies: ref("spec:validation.typed-dependency-floor"),
+  component: componentAnchorId("component:protocol.validate"),
+});
+void typedDependencyFloorAnchor;
 
 function typedDependencyTargetsAreDefined(node: PrimitiveNode, index: GraphIndex): boolean {
   return typedDependencyTargets(node, index).length === 0;
@@ -584,13 +584,11 @@ const ratifiedReadiness: ReadonlySet<string> = new Set(SPEC_READINESS);
  * rung must hold. Evaluates a `Primitive` node against the indexed graph (one validation path,
  * MD-14).
  */
-export const readinessFloorAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.readiness-floor"),
-  label: "evaluates the stated readiness floor against the graph",
-  satisfies: ref("spec:validation.readiness-floor"),
-  component: componentAnchorId("component:protocol.validate"),
-});
-
+/**
+ * Without `rung`, evaluates up to the stated rung. Given `rung`, evaluates the cumulative clauses
+ * of every rung up to and including it, whatever the Spec states; the reader passes the rung above
+ * derived readiness to name the next rung's unmet clauses (`spec:validation.next-rung-floor`).
+ */
 const verifierSemanticsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.verifier-semantics"),
   label: "readiness clauses over direct verification bindings",
@@ -608,11 +606,13 @@ const nextRungFloorAnchor = codeAnchor({
 });
 void nextRungFloorAnchor;
 
-/**
- * Without `rung`, evaluates up to the stated rung. Given `rung`, evaluates the cumulative clauses
- * of every rung up to and including it, whatever the Spec states; the reader passes the rung above
- * derived readiness to name the next rung's unmet clauses (`spec:validation.next-rung-floor`).
- */
+export const readinessFloorAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.readiness-floor"),
+  label: "evaluates the stated readiness floor against the graph",
+  satisfies: ref("spec:validation.readiness-floor"),
+  component: componentAnchorId("component:protocol.validate"),
+});
+
 export function evaluateReadinessFloor(
   node: PrimitiveNode,
   index: GraphIndex,

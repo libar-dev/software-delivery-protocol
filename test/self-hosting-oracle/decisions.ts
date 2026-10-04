@@ -1035,7 +1035,7 @@ export const decisionsSpecs = [
     sections: {
       intent: {
         outcome:
-          "Make a Spec id written in prose resolve, and make one keyed entry of an open section addressable, so a reference below the Spec level can be checked.",
+          "Make a Spec id written in prose resolve, and make one keyed entry of an open section or one keyed open question addressable, so a reference below the Spec level can be checked.",
         openQuestions: [
           {
             question:
@@ -1048,10 +1048,11 @@ export const decisionsSpecs = [
         context:
           "Specs name other Specs, and single entries of them, in prose. Referential integrity reads edges and Pack references only. A prose id that does not resolve passes validation, a mention that no relation backs hides a dependent from blast radius, and finding every Spec that repeats an entry is a text search. The first adopter corpus carried its design as keyed entries, and most of its prose mentions had no declared relation.",
         decision:
-          "A Spec id in narrative or section text, outside `gwt` and `gwt-vocabulary` fences, is a mention. A mention that does not resolve is a conformance error. A mention of another Spec that shares no declared relation with the mentioning Spec, in either direction, is one warning per mentioning Spec and target Spec pair, whatever the number of locations; an address on the mentioning Spec's own id is checked for its entry and never warned. An entry address is a Spec id followed by `#`, the section name `design` or `ui`, a dot, and the entry's lower-camel ASCII key, as in `spec:<id>#design.<key>`; it addresses one keyed entry of that Spec and resolves when the Spec exists and that section holds the key as its own key, other than `description`. The `#` sub-part is reserved for the entry address in every namespace: a Spec's own id, a relation target, a Pack member or model reference, an anchor id or target, and the `specId` and `ref` builders all refuse it. A mention mints no edge, and the reader gains no join.",
+          "A Spec id in narrative or section text, outside `gwt` and `gwt-vocabulary` fences, is a mention. A mention that does not resolve is a conformance error. A mention of another Spec that shares no declared relation with the mentioning Spec, in either direction, is one warning per mentioning Spec and target Spec pair, whatever the number of locations; an address on the mentioning Spec's own id is checked for its entry and never warned. An entry address is a Spec id followed by `#`, the section name `design`, `ui`, or `question`, a dot, and the entry's lower-camel ASCII key, as in `spec:<id>#design.<key>` or `spec:<id>#question.<key>`. A `design` or `ui` address resolves when the Spec exists and that section holds the key as its own key, other than `description`; a `question` address resolves when the Spec exists and one of its open questions carries that key. The `#` sub-part is reserved for the entry address in every namespace: a Spec's own id, a relation target, a Pack member or model reference, an anchor id or target, and the `specId` and `ref` builders all refuse it. A mention mints no edge, and the reader gains no join.",
         rationale: [
           "The warning asks for a relation that already exists, so linkage keeps one home. A relation in either direction backs a mention because blast radius walks its one hop both ways, so a reverse edge already surfaces the dependent. One warning per pair keeps the report readable where a Spec names one neighbor in many bullets, and the mention audit keeps every location.",
           "This applies the content-only sections ruling rather than contradicting it. A mention mints no edge, so no consumer branches on a reference union, and the warning names exactly the double-linkage drift that ruling calls legal and silent today. The id grammar already parses and formats a `#` sub-part; this record gives it its only meaning, and the dot inside the sub-part is the one grammar change.",
+          "The owner ruled that an open question may carry an optional key in its marker, as in `- [blocking #aggregateReach] text`, addressed as `spec:<id>#question.aggregateReach`. The key grammar is the Design key grammar, a key is unique among one Spec's open questions, and an unkeyed question stays lawful. A register that cites a question by its position breaks silently when a question above it moves or closes, and the first adopter's register had drifted in 47 of 151 such citations; a key breaks loudly where it is renamed.",
           "The owner ruled that the address carries the section, because open-section keys are unique within a section and not within a Spec, so `spec:<id>#design.shared` and `spec:<id>#ui.shared` stay distinct when one carrier holds both; that `#` is refused in every identity, because neither this corpus nor the first adopter's carries one, re-measured as zero in both at `242d8e6`, and one meaning per sub-part keeps resolution a lookup instead of a precedence rule; and that one lower-camel key grammar serves every carrier, so an address is typeable from memory and a lawful TypeScript key outside it is simply unaddressable.",
         ],
         alternatives: [
@@ -1063,9 +1064,9 @@ export const decisionsSpecs = [
           "Warning only on a missing forward relation would turn a parent's mention of its own child into a finding the child's `refines` edge already answers. Refused by the owner.",
         ],
         consequences: [
-          "Only a keyed entry of `design` or `ui` is addressable. A Workflow flow, a Rule or Contract bullet, a Model term, and an open question have no address; a reference to one of them stays a Spec-level mention, and a sequence that must be addressed is authored as keyed entries.",
-          "The key `description` names a section's leading prose and is never an entry, so an address ending in `.description` never resolves. A TypeScript key outside the lower-camel ASCII grammar is lawful and has no address.",
-          "A renamed open-section key fails validation in every Spec that addresses it.",
+          "Only a keyed entry of `design` or `ui` and a keyed open question are addressable. A Workflow flow, a Rule or Contract bullet, a Model term, and an unkeyed open question have no address; a reference to one of them stays a Spec-level mention, and a sequence that must be addressed is authored as keyed entries.",
+          "The key `description` names the leading prose of a `design` or `ui` section and is never an entry there, so a `design` or `ui` address ending in `.description` never resolves. A question key is a value on the question, not a property beside section prose, so `description` is an ordinary question key. A TypeScript key outside the lower-camel ASCII grammar is lawful and has no address.",
+          "A renamed or removed open-section key or question key fails validation in every Spec that addresses it.",
           "Blast radius and delta review scope include a mentioning Spec once a declared relation backs its mention.",
           "A family pattern written in id form reads as an unresolved mention, so such a pattern is written as plain words.",
           "The id contract and its test move together: the stable-ids round-trip example re-binds from a sectionless `#` sub-part to an entry address, and the id tests move the sectionless form to the refused list.",
@@ -1079,7 +1080,7 @@ export const decisionsSpecs = [
     id: "spec:decisions.authored-entry-order",
     specKind: "decision",
     altitude: "feature",
-    readiness: "scoped",
+    readiness: "ready",
     file: "specs/decisions/authored-entry-order.sdp.md",
     title: "The Design Review renders open-section entries as a list",
     narrative: null,
@@ -1087,13 +1088,6 @@ export const decisionsSpecs = [
       intent: {
         outcome:
           "Render the entries of an open section as a readable list in authored order, so a signature or a step reads as text and not as an escaped JSON string.",
-        openQuestions: [
-          {
-            question:
-              "This record changes a stated rule of the Design Review, so on ratification it declares `supersedes` on the shipped-projections freeze for open-section rendering and must pass the ADR three-part test. The envelope declares `dependsOn` until then, so a draft never reads as a landed supersession in the graph. Does the owner reopen the freeze now, or after `spec:extraction.open-section-order` has landed and the ordered JSON has been read?",
-            blocking: true,
-          },
-        ],
       },
       decision: {
         context:
@@ -1114,5 +1108,125 @@ export const decisionsSpecs = [
       },
     },
     deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.question-key-rendering",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "ready",
+    title: "The Design Review shows an open question's key",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Show an open question's key on its Spec page, so a reader can cite the question's entry address from the page.",
+      },
+      decision: {
+        context:
+          "`spec:model.open-question-keys` gives an open question an optional key in its marker and an entry address `spec:<id>#question.<key>`. The Design Review renders an open question as its escaped text, with the word blocking after a blocking one, and the shipped projections are frozen, so a reader of the page cannot see the key the address needs. The first adopter cites its open questions from a decision register and from generated pages.",
+        decision:
+          "The Design Review renders an open question that carries a key with the key as inline code, `#<key>`, at the start of its item, before the question's text; a question without a key renders as before. The freeze on the four shipped projections stands for everything else.",
+        rationale: [
+          "The key is the one part of the address the page did not show, and the `#` that opens it in the marker opens it on the page.",
+        ],
+        alternatives: [
+          "Rendering the whole address beside each question repeats the Spec id on every question of its own page.",
+          "Leaving the key off the page keeps the freeze whole and leaves the address to the carrier file and recipe 20.",
+        ],
+        consequences: [
+          "A self-hosted page whose Spec keys a question changes; the checkout-v1 goldens hold no keyed question and do not change.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/decisions/question-key-rendering.sdp.md",
+  },
+  {
+    id: "spec:decisions.studio-html-surface",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "scoped",
+    title: "The Studio renders HTML, and the HTML stays derived",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Record why the Studio's surface is generated HTML rather than Markdown, and what keeps the HTML out of the diffs a reviewer reads.",
+        openQuestions: [
+          {
+            question:
+              "Is the Studio's HTML the primary surface for a person reviewing a design, with Markdown as the fallback, as the original states, or one human projection beside the generated Markdown Design Review, which the consumers concept keeps as the MVP view after agents, the first sink?",
+            blocking: true,
+            key: "primarySurface",
+          },
+          {
+            question:
+              "The original accepts HTML at about two to four times Markdown's generation time, with a negligible token cost under prompt caching and million-token windows, which prices a page a model writes; a projection is rendered by code from the graph, so does the argument become a bound on page weight or build time, or fall away?",
+            blocking: false,
+            key: "generationCost",
+          },
+          {
+            question:
+              "The original keeps git diffs over canonical TypeScript Specs; the carrier ruling makes Markdown the default carrier and the TypeScript DSL a lawful per-ID option. Does any part of the case for derived HTML depend on the carrier being TypeScript?",
+            blocking: false,
+            key: "canonicalCarrier",
+          },
+        ],
+      },
+      decision: {
+        context:
+          "When a model writes the Specs, a person's main act is review, and review reads tables, diagrams, code, comparisons and examples across many Specs. Markdown caps out at about a hundred lines, past which nobody reads it, its authors included; large Specs are common, and Markdown rots into a wall of text quickly.",
+        decision:
+          "The Studio renders generated HTML as its surface. The HTML is derived and never committed in raw form: git diffs stay over the canonical Spec source, and the Studio's files are regenerated from the graph.",
+        rationale: [
+          "HTML conveys more per screen: tables, SVG diagrams, code blocks with syntax highlighting, embedded harnesses, interactive sliders, side-by-side comparisons and tabbed views are all native to it.",
+          "HTML is shareable: a build uploaded to S3 or any static host is a link, with no rendering-engine mismatch between viewers.",
+          "HTML is interactive: a reader can move an NFR target on a slider, toggle a scenario harness, or reorder a Pack's members by drag and drop, none of which Markdown can do.",
+          "When a model writes the Specs, review is the person's main act, and HTML beats Markdown for review by a wide margin.",
+          "The download is acceptable: HTML takes about two to four times Markdown's generation time, and with prompt caching and million-token windows the token cost is negligible for the value gained.",
+        ],
+        alternatives: [
+          "Markdown as the primary surface diffs cleanly in git, but caps out at about a hundred lines and cannot be interactive.",
+        ],
+        consequences: [
+          "The principal trade-off of HTML, diffs that are noisier in git, is sidestepped because the HTML is derived and never committed.",
+          "Markdown remains a fallback surface.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/decisions/studio-html-surface.sdp.md",
+  },
+  {
+    id: "spec:decisions.studio-web-components",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "scoped",
+    title: "The Studio is built from custom elements, not a framework",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Record why the Studio's building blocks are Web Components rather than components of a framework.",
+      },
+      decision: {
+        context:
+          "The Studio's views must work inside the Studio, standalone in any HTML container, and embedded in status reports, pull request descriptions and slide exports, and its assets should stay small and cache well.",
+        decision:
+          "The Studio is built from Web Components, custom elements written without React, Vue, Svelte or another framework.",
+        rationale: [
+          "Custom elements carry no framework lock-in and work standalone in any HTML container.",
+          "The Studio's assets stay small and cache-friendly.",
+        ],
+        alternatives: [
+          "Components of React, Vue or Svelte would impose that framework on every page that embeds one of them.",
+        ],
+        consequences: [
+          "The few elements that need richer state, the harness and the scenario editor, may use a small reactive primitive inside themselves, such as `@lit/reactive-element` or a signals-style atom, without imposing a framework on the page that embeds them.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/decisions/studio-web-components.sdp.md",
   },
 ] as const;

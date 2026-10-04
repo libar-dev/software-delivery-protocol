@@ -297,34 +297,30 @@ function structuralGroundTruth() {
   };
 }
 
-const registerRecipesImplementationAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.register-recipes"),
-  label: "asserts realization of the shipped register recipes",
-  satisfies: ref("spec:consumers.agent-surface.register-recipes"),
-});
-void registerRecipesImplementationAnchor;
-
-const registerRecipesTestAnchor = specTest({
-  id: testAnchorId("test:protocol.register-recipes"),
-  label: "recipe checks verify the register recipes",
-  verifies: ref("spec:consumers.agent-surface.register-recipes"),
-});
-void registerRecipesTestAnchor;
-
 const addressAndCycleRecipesImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.address-and-cycle-recipes"),
   label: "asserts realization of the shipped address resolution and dependency cycle recipes",
   satisfies: ref("spec:consumers.agent-surface.address-and-cycle-recipes"),
 });
 void addressAndCycleRecipesImplementationAnchor;
-
 const addressAndCycleRecipesTestAnchor = specTest({
   id: testAnchorId("test:protocol.address-and-cycle-recipes"),
   label: "recipe checks verify the address resolution and dependency cycle recipes",
   verifies: ref("spec:consumers.agent-surface.address-and-cycle-recipes"),
 });
 void addressAndCycleRecipesTestAnchor;
-
+const registerRecipesImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.register-recipes"),
+  label: "asserts realization of the shipped register recipes",
+  satisfies: ref("spec:consumers.agent-surface.register-recipes"),
+});
+void registerRecipesImplementationAnchor;
+const registerRecipesTestAnchor = specTest({
+  id: testAnchorId("test:protocol.register-recipes"),
+  label: "recipe checks verify the register recipes",
+  verifies: ref("spec:consumers.agent-surface.register-recipes"),
+});
+void registerRecipesTestAnchor;
 describe("the agent-surface recipe corpus", () => {
   // Given: the catalog as authored. When: its structure is read. Then: every documented recipe
   // carries exactly one runnable body, so a new recipe cannot dodge the check by omitting one.

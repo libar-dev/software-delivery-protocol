@@ -34,7 +34,7 @@ export const validationSpecs = [
           "The anchor clause reads the bindings that are present, so a Spec carrying no anchor clears it — the floor never demands a binding an author has not made.",
           "Only relations the Spec itself declares count toward the relation clauses; membership of a Pack is derived from the manifest and never stands in for an authored relation.",
           "Every clause stated here is kind-blind. The two evidence clauses are the one kind-conditional place in the floor, and what counts as a kind's natural evidence is stated in full by the refining Spec that carries the per-kind evidence table.",
-          "One clause table serves both readings: it checks the readiness an author states, and it yields derived readiness — the highest rung whose cumulative clauses all pass — which is read beside the stated rung and never overwrites it.",
+          "One clause table serves both readings: it checks the readiness an author states, and it yields derived readiness — the highest rung whose cumulative clauses all pass — which is read beside the stated rung and never overwrites it, and it answers for a target rung an evaluation names, which yields the next rung's unmet clauses.",
           "The floor is the mechanism while the specific clause thresholds are one chosen representation, so a team-overridable floor configuration is a designed-for deferral rather than a landed capability: no validator reads a per-team floor setting, and the shipped clause table is the only floor any Spec is checked against.",
           "The floor table in `src/validate/readiness-floor.ts` is the clause set's code-level source of truth and the realizing entrypoint. The clauses stated here and the rows of that table are one law read twice, so any disagreement between them is drift to resolve on one side, never a second floor.",
         ],
@@ -1181,7 +1181,7 @@ export const validationSpecs = [
           "The clause stays kind-blind and reads resolving targets only. An unresolved target remains the relation-resolution clause's failure, never a second one.",
           "`verifies` and `supersedes` stay outside the clause. A verifier's rung is independent of the Spec it verifies, and a replacement decision does not rest on the record it supersedes.",
           "An unsettled fact is stated the way any unsettled truth is. A constraint Spec that records a blocking open question clears at most `scoped`. When it states a rung below `defined`, a Spec bounded by it may state `defined` if its own floor clears, but cannot lawfully state `ready`.",
-          "The floor keeps one target clause, `typed-dependency-targets-are-defined`, in `src/validate/readiness-floor.ts`. Its parent `spec:validation.readiness-floor` states the same target bound.",
+          "The floor keeps one target clause, `typed-dependency-targets-are-defined`, in `src/validate/readiness-floor.ts`. Its parent `spec:validation.readiness-floor` states the same target bound. A failure of the clause names every target that breaks it.",
         ],
         exampleSpace: {
           given: [
@@ -1251,7 +1251,7 @@ export const validationSpecs = [
           "A mention starts at `spec:` where the character before it, if any, is not an ASCII letter, an ASCII digit, or `-`. A backslash before ASCII punctuation is read as that punctuation, as Markdown reads an escape. The token ends at ASCII whitespace, at one of the ASCII delimiters `` ` `` `\"` `'` `(` `)` `[` `]` `{` `}` `<` `>` `|`, or at a character outside ASCII that is whitespace, U+0085 included, punctuation other than connector punctuation, a symbol, or a space, line, or paragraph separator, so every dash, ellipsis, typographic quote, and arrow ends it. Every other character stays in the token, letters, combining marks, digits, connector punctuation, control characters other than whitespace, and format, private-use, and unassigned characters among them. Trailing `.` `,` `;` `:` `!` `?` `*` `_` `~` are then removed after the prefix, so a sentence, a list, or emphasis may end in an id. When nothing remains after `spec:`, there is no mention, so a bare prefix or a placeholder such as `spec:<id>` stays prose. The whole token goes to `parseId`, so an underscore, a slash, a comma, a control character, or any character outside ASCII that stays in it refuses the whole token as malformed; the token is never cut short to the valid id before that character, and a refused token counts toward no pair. A token equal to the scanning Spec's own id is skipped.",
           'A token that fails `parseId` is an error with the message `Mention "<token>" in "<spec>" at <path> is not a Spec id or entry address: <reason>`, where `<reason>` is the grammar\'s refusal text with its `Invalid ID "<token>": ` prefix stripped.',
           'A token whose Spec part names no Primitive node is an error with the message `Mention in "<spec>" at <path> points to missing target "<token>".`, followed by the referential-integrity nearest-id suggestion when one is unique.',
-          'A token whose Spec exists and whose entry address names no key of that section, or names `description`, is an error with the message `Mention in "<spec>" at <path> points to missing entry "<section>.<key>" of "<target>".`',
+          'A token whose Spec exists and whose entry address names no key of that `design` or `ui` section, names `description` there, or names a question key no open question of that Spec carries, is an error with the message `Mention in "<spec>" at <path> points to missing entry "<section>.<key>" of "<target>".`',
           "Errors are reported once per scanning Spec, text path, and distinct token; `subjectId` is the scanning Spec, `relatedId` the token as written, `path` the text path, and `file` the Spec's carrier. The path is `narrative` or the section path in the mention audit's form, such as `intent.openQuestions[0].question`, `behavior.rules[2]`, `design.step2`, or `model.terms.<term>`.",
           'A target Spec that exists and shares no declared `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, or `supersedes` edge with the scanning Spec, in either direction, is one warning per scanning Spec and target Spec pair, counting every location where any token names that Spec or one of its entries. The message is `Mention of "<target>" in "<spec>" at <n> locations, first at <path>, with no declared relation between them; informative only. Declare the relation that fits, or leave the mention as prose and let the warning stand when none does.` with `<n>` the count of distinct paths, written `1 location` when it is one, and `<path>` the first in scan order; `subjectId` is the scanning Spec, `relatedId` the target Spec id, `path` that first path, and `file` the Spec\'s carrier. An address on the scanning Spec\'s own id is checked for its entry and never warned.',
           "The warning is honest when it stands: the six relations are typed, a mention that none of them describes is lawful prose, and no author declares a relation to silence the report. Warnings never fail `sdp validate`; the mention audit recipe reports every location of every pair as data and stays the way to list them at once.",
@@ -1481,5 +1481,118 @@ export const validationSpecs = [
       },
     },
     deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.next-rung-floor.blocking-question",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    title: "A scoped Spec held by a blocking question is told the clause",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a rule spec {specId: "spec:probe.held"} stating readiness {statedReadiness: "scoped"}',
+              'the spec {structure: "records a blocking open question"}',
+            ],
+            when: ["the reader builds the spec's context"],
+            then: [
+              'the floor reached is {floorReached: "scoped"} and the next rung is {nextRung: "defined"}',
+              'the next rung\'s first unmet clause is {clauseId: "no-blocking-open-questions"}',
+              'that failure names the targets {targets: ""}',
+              "the stated rung's floor failures number {currentFailures: 0}",
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Execute the next rung's evidence on a Spec whose `defined` floor fails on a blocking open question, where the failure names no target.",
+        assumptions: [
+          "The world holds two story-altitude rule Specs with an Intent outcome and one rule each. The subject declares one `refines` on the other, its parent, which states `ready`, and records one blocking open question. No anchor is present. A failure with no targets is written as an empty string.",
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+    file: "specs/validation/next-rung-floor.blocking-question.sdp.md",
+  },
+  {
+    id: "spec:validation.next-rung-floor",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "defined",
+    title: "The floor names what blocks the next rung",
+    narrative: null,
+    sections: {
+      intent: {
+        problem:
+          "The floor is evaluated only at the stated rung, so promotion preflight answers no unmet clause for a Spec that states `defined` and cannot state `ready`, and an author or an adopter's page walks the floor table one rung up with its own code. A failed typed-dependency clause names the clause and not the dependencies that break it, so the same page recomputes which targets stand below `defined`.",
+        outcome:
+          "Let the one evaluator answer for any rung, name the next rung's unmet clauses in the reader, and name the targets that fail the typed-dependency clause, so no consumer evaluates the floor a second way.",
+      },
+      behavior: {
+        rules: [
+          "The evaluator takes an optional target rung. Given one, it evaluates the cumulative clauses of every rung up to and including that rung; without one, it evaluates up to the stated rung, as before. A Spec of an unratified kind, or an evaluation with no ratified rung to reach, yields no failure, and the descriptor conformance error owns that case.",
+          "The next rung is the rung above derived readiness: `idea` when no rung derives, and none when derived readiness is `ready`. Because derived readiness is the highest rung whose cumulative clauses all pass, the failures at the next rung are that rung's own clauses, and there is at least one whenever a next rung exists for a Spec of a ratified kind.",
+          "The reader's Spec context carries the next rung's failures beside the stated rung's failures, computed by the same evaluator, and an empty list when there is no next rung. This is a field on the existing per-Spec context, not a new reader method, and it meets the second-caller bar: promotion preflight and the first adopter's Pack page both need it, and the page's own walk read the rung above the stated one where preflight reads the rung above the floor reached.",
+          "A failure of the typed-dependency clause carries its targets: every distinct resolving `refines`, `dependsOn`, `constrainedBy`, or `decidedBy` target that states a rung below `defined`, or that is not a Spec, each with its relation type, its id, and its stated rung when it is a Spec. Targets sort by relation type in that order and then by id in code-unit order. No other clause carries targets.",
+          "Promotion preflight keeps every field it reports and adds the next rung's failures and the first of them, each failure with its targets when it has them. The next rung's first unmet clause is a report and never a promotion: stating any rung stays a human's edit.",
+          "The realizing sites are `evaluateReadinessFloor` and the typed-dependency clause in `src/validate/readiness-floor.ts`, and `specContext` in `src/reader/reader.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            'the graph holds a rule spec {specId:string} stating readiness {statedReadiness:"scoped"|"defined"}',
+            'the spec {structure:"depends on a spec stating scoped"|"records a blocking open question"}',
+          ],
+          when: ["the reader builds the spec's context"],
+          then: [
+            'the floor reached is {floorReached:"scoped"|"defined"} and the next rung is {nextRung:"defined"|"ready"}',
+            "the next rung's first unmet clause is {clauseId:string}",
+            "that failure names the targets {targets:string}",
+            "the stated rung's floor failures number {currentFailures:number}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+    file: "specs/validation/next-rung-floor.sdp.md",
+  },
+  {
+    id: "spec:validation.next-rung-floor.typed-dependency-targets",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    title: "A defined Spec resting on a scoped dependency is told which one",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a rule spec {specId: "spec:probe.subject"} stating readiness {statedReadiness: "defined"}',
+              'the spec {structure: "depends on a spec stating scoped"}',
+            ],
+            when: ["the reader builds the spec's context"],
+            then: [
+              'the floor reached is {floorReached: "defined"} and the next rung is {nextRung: "ready"}',
+              'the next rung\'s first unmet clause is {clauseId: "typed-dependency-targets-are-defined"}',
+              'that failure names the targets {targets: "dependsOn spec:probe.basis (scoped)"}',
+              "the stated rung's floor failures number {currentFailures: 0}",
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Execute the next rung's evidence on a Spec whose own floor clears `defined` and whose `ready` floor fails on one dependency.",
+        assumptions: [
+          "The world holds three story-altitude rule Specs with an Intent outcome and one rule each. The subject declares `dependsOn` on the basis Spec named in the targets, which states `scoped` and declares `refines` on a third Spec stating `idea`. No Spec records an open question and no anchor is present. A target is written as its relation type, its id, and its stated rung in parentheses.",
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+    file: "specs/validation/next-rung-floor.typed-dependency-targets.sdp.md",
   },
 ] as const;

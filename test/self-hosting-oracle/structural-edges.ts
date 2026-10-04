@@ -30,6 +30,7 @@ export const structuralMembershipExceptions = [
   "impl:protocol.shipped-protocol-corpus",
   "impl:protocol.authoring-recipes",
   "impl:protocol.delivery-session-on-ramp",
+  "impl:protocol.address-and-cycle-recipes",
 ] as const;
 
 export const acceptedArchitecturalUnits = [
@@ -441,6 +442,21 @@ export const acceptedArchitecturalUnits = [
   {
     unit: "src/validate/contracts.ts#validatorFamilies",
     anchorId: "impl:protocol.validation-contracts",
+    componentId: "component:protocol.validate",
+  },
+  {
+    unit: "src/extract/derive.ts#derivePackNode",
+    anchorId: "impl:protocol.pack-member-order",
+    componentId: "component:protocol.extract",
+  },
+  {
+    unit: "src/extract/markdown-body-owner-behavior.ts#OPEN_QUESTION_MARKER",
+    anchorId: "impl:protocol.open-question-keys",
+    componentId: "component:protocol.extract",
+  },
+  {
+    unit: "src/validate/readiness-floor.ts#evaluateReadinessFloor",
+    anchorId: "impl:protocol.next-rung-floor",
     componentId: "component:protocol.validate",
   },
 ] as const;

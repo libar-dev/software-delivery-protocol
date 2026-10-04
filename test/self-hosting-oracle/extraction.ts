@@ -24,6 +24,7 @@ export const extractionSpecs = [
           "Delivery facts are computed node facts: a resolving `satisfies` edge contributes `implemented`, and an enabled direct verifier contributes `has-verifier` only to its target.",
           "Inferred structural edges are advisory inputs to impact analysis and never become authoritative graph truth.",
           "The key order of `design`, `ui`, and `model.terms` is the authored order and part of the graph contract.",
+          "A Pack node carries its manifest's members in authored order, and the `belongsTo` edges that re-express them keep the global edge sort.",
         ],
       },
       design: {
@@ -292,7 +293,7 @@ export const extractionSpecs = [
               'a graph derived from the authored spec {specId: "spec:probe.schema-versioning"}',
             ],
             when: ["the graph payload is serialized"],
-            then: ['the payload declares the schema version {schemaVersion: "0.6.0"}'],
+            then: ['the payload declares the schema version {schemaVersion: "0.7.0"}'],
           },
         ],
       },
@@ -708,13 +709,13 @@ export const extractionSpecs = [
       },
       behavior: {
         rules: [
-          "The entry order of `design`, `ui`, and `model` terms is authored content. Extraction keeps it, the serialized graph emits it, the Design Review's fenced JSON follows it for open sections, and the Model table follows it for terms.",
+          "The entry order of `design`, `ui`, and `model` terms is authored content. Extraction keeps it, the serialized graph emits it, the Design Review's entry list follows it for open sections, and the Model table follows it for terms.",
           "Authored order is a function of the committed source, so two derivations of one commit stay byte-identical. What is given up is invariance under permutation: two carriers that author the same entries in different orders derive different graph bytes, and parity for these sections means the same entries in the same order.",
           'A key is integer-like when it matches `^(0|[1-9][0-9]*)$`. The Markdown carrier refuses an integer-like Model term with the structure finding `model terms must not be integer-like` and drops the carrier, as it does for every structure refusal; its open-section keys are lower-camel and cannot be integer-like. The TypeScript carrier reads each name under `design`, `ui`, or `model.terms` as the key JavaScript gives it. A name written as an identifier or a string is its text, and a numeric name is the string form of its number, so `1e3` is `"1000"`, `0x10` is `"16"`, and `0.0000001` is `"1e-7"`. A property, method, getter, or setter whose key is integer-like is refused with the finding `extract/unrecognized-property` at severity error, where that finding is otherwise a warning, and the message `property "<key>" is refused: integer-like keys are not accepted in design, ui, or model terms`. Each refused member gets one finding whatever its value, and only that member drops; the Spec and its other keys stay. A numeric name whose key is not integer-like, such as `1.5`, drops as a non-static name, as it did before this rule. The Gherkin carrier has no open section. The owner ruled the refusal over an ordered-list representation; re-measured at `242d8e6`, neither this corpus nor the first adopter\'s carries such a key.',
           "With integer-like keys refused, a plain object keeps insertion order, so the representation stays an object and no field shape changes. Authored key order is part of the graph contract. The derived graph establishes it, so the reader, the serialized graph, and the Design Review agree. In `design` and `ui` the section's own `description`, its leading prose, comes first, then every other key in authored order. `model.terms` keeps pure authored order, and a term named `description` is an ordinary term, because the Model section's prose lives at `model.description`.",
           "The schema version moves from `0.5.0` to `0.6.0`, documented as a change of accepted ids, since the `#` sub-part becomes an entry address, and of ordering semantics, with unchanged field shapes. The serialized graph changes for every Spec whose entries are not already in code-unit order.",
           "The reader exposes authored order as the key order of a Spec context's `sections.design`, `sections.ui`, and `sections.model.terms`; entry search rows follow it, and no reader method is added.",
-          "This rule is an ordinary revision, and no Spec stated the sort it replaced. `canonicalDynamicSection` in `src/extract/serialize.ts`, `renderDynamicRecord` in `src/projections/design-review-markdown.ts`, and `renderModel` in `src/projections/design-review-section-content.ts` are the sites that keep authored order. The Design Review's encoding rule is untouched; rendering entries as a list is `spec:decisions.authored-entry-order`.",
+          "This rule is an ordinary revision, and no Spec stated the sort it replaced. `canonicalDynamicSection` in `src/extract/serialize.ts`, `renderDynamicRecord` in `src/projections/design-review-markdown.ts`, and `renderModel` in `src/projections/design-review-section-content.ts` are the sites that keep authored order. Rendering entries as a list is a change to the Design Review's encoding rule, ruled by `spec:decisions.authored-entry-order`; this rule supplies only the order the list follows.",
         ],
       },
     },
@@ -765,5 +766,79 @@ export const extractionSpecs = [
       },
     },
     deliveryFacts: [],
+  },
+  {
+    id: "spec:extraction.pack-member-order.manifest-order-kept",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    title: "A manifest's member order survives into the graph and the reader",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Pack manifest whose specs list reads {manifestOrder: "spec:probe.zeta, spec:probe.alpha, spec:probe.mid"}',
+            ],
+            when: ["the graph is derived and serialized"],
+            then: [
+              'the serialized Pack node lists the members {serializedMembers: "spec:probe.zeta, spec:probe.alpha, spec:probe.mid"}',
+              'the serialized belongsTo edges run from {edgeSources: "spec:probe.alpha, spec:probe.mid, spec:probe.zeta"}',
+              'the reader\'s Pack context lists the members {readerMembers: "spec:probe.zeta, spec:probe.alpha, spec:probe.mid"}',
+              'the payload declares the schema version {schemaVersion: "0.7.0"}',
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Execute the member order rule on a manifest whose authored order is not id order.",
+        assumptions: [
+          "The world writes one Markdown Pack manifest and three member Specs in one extraction root. Each member is a story-altitude behavior Spec stating `idea` with an Intent outcome and no relations. Lists are written as ids joined by a comma and a space.",
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+    file: "specs/extraction/pack-member-order.manifest-order-kept.sdp.md",
+  },
+  {
+    id: "spec:extraction.pack-member-order",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "defined",
+    title: "A Pack node keeps its members in authored order",
+    narrative: null,
+    sections: {
+      intent: {
+        problem:
+          "A Pack manifest lists its members in the order its author chose to read them, and the graph loses that order: the serialized edges sort by from, type, and to, and the reader's Pack context sorts members by id, so an adopter reads the manifest file to recover a reading order the graph was given.",
+        outcome:
+          "Carry a Pack's members in the manifest's authored order through the serialized graph, the reader's Pack context, and the Design Review's Pack page, while the edges keep their global sort.",
+      },
+      behavior: {
+        rules: [
+          "A Pack node carries `members`, the manifest's `specs` list in authored order, duplicates included. The `belongsTo` edges re-express the same list, one edge per entry, so the members of a Pack node and the sources of its `belongsTo` edges are one list read twice and never disagree in a derived graph.",
+          "`members` is always present on a Pack node, and an empty manifest list derives `members: []`. The serialized Pack node writes its fields in the order `id`, `nodeType`, `claim`, `title`, `framing`, `file`, `members`, `modelRefs`, omitting an absent optional field.",
+          "Nodes keep their sort by id and edges keep their sort by from, type, and to. Authored member order is content of the Pack node, as authored entry order is content of a Spec's open sections, so two derivations of one commit stay byte-identical and two manifests that list the same members in different orders derive different Pack nodes.",
+          "The reader's Pack context lists one member row per entry of `members`, in that order, and its verifier gaps follow the same order. The Design Review's Pack page renders its member table and its verifier gap list in that order.",
+          "The schema version moves from `0.6.0` to `0.7.0`, documented as a field added to the Pack node and an optional field added to an open question, with node and edge order unchanged. One bump covers both additions.",
+          "A repeated member stays the pack-coherence error it is today, counted on the `belongsTo` edges; `members` keeps the repetition, so the reader shows the repeated row as the manifest wrote it.",
+          "The realizing sites are `derivePackNode` and the membership loop in `src/extract/derive.ts`, the Pack case of `canonicalNode` in `src/extract/serialize.ts`, and `packContext` in `src/reader/reader.ts`.",
+        ],
+        exampleSpace: {
+          given: ["a Markdown Pack manifest whose specs list reads {manifestOrder:string}"],
+          when: ["the graph is derived and serialized"],
+          then: [
+            "the serialized Pack node lists the members {serializedMembers:string}",
+            "the serialized belongsTo edges run from {edgeSources:string}",
+            "the reader's Pack context lists the members {readerMembers:string}",
+            "the payload declares the schema version {schemaVersion:string}",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+    file: "specs/extraction/pack-member-order.sdp.md",
   },
 ] as const;

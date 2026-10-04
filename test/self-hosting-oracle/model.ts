@@ -264,7 +264,7 @@ export const modelSpecs = [
             when: ["the identifier is parsed"],
             then: [
               'parsing {outcome: "is refused"}',
-              'the refusal names the reason {reason: "entry address must be <section>.<key> with section design or ui"}',
+              'the refusal names the reason {reason: "entry address must be <section>.<key> with section design, ui, or question"}',
             ],
           },
         ],
@@ -437,5 +437,155 @@ export const modelSpecs = [
       },
     },
     deliveryFacts: [],
+  },
+  {
+    id: "spec:model.open-question-keys.keyed-question-resolves",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    title: "A keyed question is reified and its address resolves",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier {specId: "spec:probe.subject"} whose open questions read {questions: "- [blocking #aggregateReach] Does the owner widen the aggregate?; - [non-blocking] Is the name final?"}',
+              'a second Spec that names {address: "spec:probe.subject#question.aggregateReach"} in its narrative and declares dependsOn on the first',
+            ],
+            when: ["the extractor reifies both carriers and the graph is validated"],
+            then: [
+              "the first carrier is reified: {reified: true}",
+              'the extraction findings name {extractMessage: ""}',
+              'the graph holds the question keys {keys: "aggregateReach"}',
+              "the report holds {mentionErrors: 0} prose-mention errors",
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Execute the key grammar and the question address on one keyed question beside an unkeyed one.",
+        assumptions: [
+          "The world writes two Markdown carriers in one extraction root. The first is a story-altitude rule Spec stating `scoped` with an Intent outcome, one rule, and one declared `refines` on the second; its Open questions hold the entries written in `questions`, one line each, where the slot joins them with a semicolon and a space. The second is a story-altitude rule Spec stating `idea` with an Intent outcome and one rule; it names the address in its narrative and declares `dependsOn` on the first. The messages of the extraction findings are joined by a semicolon and a space, and an empty string names no finding; the keys of every Spec in the graph are joined by a comma and a space.",
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+    file: "specs/model/open-question-keys.keyed-question-resolves.sdp.md",
+  },
+  {
+    id: "spec:model.open-question-keys.renamed-key-breaks",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    title: "A renamed question key fails the mention that addresses it",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier {specId: "spec:probe.subject"} whose open questions read {questions: "- [blocking #aggregateScope] Does the owner widen the aggregate?"}',
+              'a second Spec that names {address: "spec:probe.subject#question.aggregateReach"} in its narrative and declares dependsOn on the first',
+            ],
+            when: ["the extractor reifies both carriers and the graph is validated"],
+            then: [
+              "the first carrier is reified: {reified: true}",
+              'the extraction findings name {extractMessage: ""}',
+              'the graph holds the question keys {keys: "aggregateScope"}',
+              "the report holds {mentionErrors: 1} prose-mention errors",
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Execute the missing-entry error on an address whose question key the target no longer carries.",
+        assumptions: [
+          "The world is the one of the keyed-question example, with the key renamed in the first carrier and the address in the second left as it was.",
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+    file: "specs/model/open-question-keys.renamed-key-breaks.sdp.md",
+  },
+  {
+    id: "spec:model.open-question-keys.repeated-key-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    title: "A repeated question key refuses its carrier",
+    narrative: null,
+    sections: {
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier {specId: "spec:probe.subject"} whose open questions read {questions: "- [blocking #aggregateReach] Does the owner widen the aggregate?; - [non-blocking #aggregateReach] Does the aggregate keep its name?"}',
+              'a second Spec that names {address: "spec:probe.subject#question.aggregateReach"} in its narrative and declares dependsOn on the first',
+            ],
+            when: ["the extractor reifies both carriers and the graph is validated"],
+            then: [
+              "the first carrier is reified: {reified: false}",
+              'the extraction findings name {extractMessage: "open question keys must be unique"}',
+              'the graph holds the question keys {keys: ""}',
+              "the report holds {mentionErrors: 1} prose-mention errors",
+            ],
+          },
+        ],
+      },
+      intent: {
+        outcome:
+          "Execute the uniqueness refusal, and show that the address then names a missing Spec.",
+        assumptions: [
+          "The world is the one of the keyed-question example, with two questions in the first carrier that carry the same key. The first carrier is refused whole, so the graph holds no question key and the address's Spec is absent.",
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+    file: "specs/model/open-question-keys.repeated-key-refused.sdp.md",
+  },
+  {
+    id: "spec:model.open-question-keys",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "defined",
+    title: "An open question may carry a key that addresses it",
+    narrative: null,
+    sections: {
+      intent: {
+        problem:
+          "An open question has no identity but its position and its text, so a register or a decision that cites one breaks silently when a question above it moves, closes, or is reworded.",
+        outcome:
+          "Let an author give an open question an optional key, so `spec:<id>#question.<key>` names it, resolves while it stands, and fails validation where it is renamed or removed.",
+      },
+      behavior: {
+        rules: [
+          "An open question is prose, or an object with `question`, an optional `blocking` flag, and an optional `key`. A key matches `^[a-z][A-Za-z0-9]*$`, the grammar of a Design key, and is unique among the open questions of one Spec. An unkeyed question stays lawful and has no address.",
+          "In the Markdown carrier the key follows the flag inside the marker, after one space and `#`, as in `- [blocking #aggregateReach] Does the owner widen the aggregate?` or `- [non-blocking #pageHome] Where does the page live?`. A marker whose key text is empty or off the grammar is refused with `open question keys must be lower-camel ASCII`, and a key that repeats an earlier key of the same Spec is refused with `open question keys must be unique`, each as the structure finding `extract/invalid-markdown-structure` at the line of the entry, and the carrier is refused whole as for every structure refusal.",
+          'In the TypeScript carrier the key is the `key` property of the question object. A key that is not a string on the grammar, or that repeats an earlier key of the same Spec, is refused with the finding `extract/unrecognized-property` at severity error and the message `property "intent.openQuestions[<n>].key" is refused: open question keys must be lower-camel ASCII` or `property "intent.openQuestions[<n>].key" is refused: open question keys must be unique`, with `<n>` the zero-based position; only the key drops, and the question and the Spec stay.',
+          "The serialized graph writes a question object's fields in the order `question`, `blocking`, `key`, omitting an absent one. The import emitter writes a keyed question's marker as `[<flag> #<key>]`, so a keyed TypeScript question round-trips into Markdown.",
+          "The entry address gains the section `question`: `spec:<id>#question.<key>` parses, is refused in every id slot as every entry address is, and resolves when the Spec exists and one of its open questions carries that key. A mention whose question key no open question carries is the prose-mentions error for a missing entry, so renaming or removing a key fails validation in every Spec that addresses it.",
+          "The open-question register reports each question's key, or null for an unkeyed question. The mention audit and entry search read the `question` address as they read a `design` or `ui` address, and entry search gives a keyed question's text the address `spec:<id>#question.<key>`.",
+          "The realizing sites are `IntentOpenQuestion` in `src/model/sections.ts`, the open-question marker in `src/extract/markdown-body-owner-behavior.ts`, the question shape in `src/extract/reify.ts`, `canonicalOpenQuestion` in `src/extract/serialize.ts`, the Intent emission in `src/import/emit-markdown.ts`, the entry-address grammar in `src/ids.ts`, and `hasAddressedEntry` in `src/validate/validators.ts`.",
+        ],
+        exampleSpace: {
+          given: [
+            "a Markdown Spec carrier {specId:string} whose open questions read {questions:string}",
+            "a second Spec that names {address:string} in its narrative and declares dependsOn on the first",
+          ],
+          when: ["the extractor reifies both carriers and the graph is validated"],
+          then: [
+            "the first carrier is reified: {reified:boolean}",
+            "the extraction findings name {extractMessage:string}",
+            "the graph holds the question keys {keys:string}",
+            "the report holds {mentionErrors:number} prose-mention errors",
+          ],
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+    file: "specs/model/open-question-keys.sdp.md",
   },
 ] as const;

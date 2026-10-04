@@ -145,7 +145,7 @@ export const expectedWarnings = [
 
 export { expectedAnchors } from "./anchors.js";
 export { expectedDeclaredRelations } from "./declared-relations.js";
-export { expectedPackMembers } from "./pack-members.js";
+export { expectedPackMembers, expectedStudioPackMembers, expectedPacks } from "./pack-members.js";
 export {
   acceptedArchitecturalUnits,
   coarseGrainCoverage,
