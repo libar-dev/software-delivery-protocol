@@ -213,6 +213,7 @@ specs:
   - spec:model.open-question-keys.keyed-question-resolves
   - spec:model.open-question-keys.renamed-key-breaks
   - spec:model.open-question-keys.repeated-key-refused
+  - spec:decisions.question-key-rendering
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model

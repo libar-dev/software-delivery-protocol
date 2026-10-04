@@ -212,6 +212,68 @@ export const authoredSpec = spec({
     );
   });
 
+  it("imports a keyed TypeScript question into a keyed Markdown marker", () => {
+    // Given: a TypeScript Spec whose open questions carry a key and none.
+    const source = `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const authoredSpec = spec({
+  id: specId("spec:import.keyed"),
+  title: "Import a keyed question",
+  kind: "rule",
+  altitude: "story",
+  readiness: "idea",
+  intent: {
+    outcome: "Keep the key.",
+    openQuestions: [
+      { question: "Does the owner widen the aggregate?", blocking: true, key: "aggregateReach" },
+      { question: "Is the name final?", blocking: false },
+    ],
+  },
+});
+`;
+
+    // When
+    const result = importTypeScriptSpec(source, "specs/keyed.sdp.ts");
+
+    // Then: the key rides in the marker, and the unkeyed question keeps today's marker.
+    expect(result.findings).toEqual([]);
+    expect(result.emitted?.content).toContain(
+      "- [blocking #aggregateReach] Does the owner widen the aggregate?\n- [non-blocking] Is the name final?",
+    );
+  });
+
+  it("refuses an import whose question key the reifier drops", () => {
+    // Given: a key off the grammar, which the TypeScript carrier drops with an error.
+    const source = `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const authoredSpec = spec({
+  id: specId("spec:import.bad-key"),
+  title: "Import a bad key",
+  kind: "rule",
+  altitude: "story",
+  readiness: "idea",
+  intent: { openQuestions: [{ question: "Is it keyed?", blocking: true, key: "Bad" }] },
+});
+`;
+
+    // When
+    const result = importTypeScriptSpec(source, "specs/bad-key.sdp.ts");
+
+    // Then: nothing is emitted that would lose the authored key without a trace.
+    expect(result).not.toHaveProperty("emitted");
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({
+        validatorId: "extract/unrecognized-property",
+        severity: "error",
+        message:
+          'property "intent.openQuestions[0].key" is refused: open question keys must be lower-camel ASCII',
+      }),
+    );
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({ validatorId: importFindingIds.refusal }),
+    );
+  });
+
   it("refuses a path that cannot produce a Markdown sibling", () => {
     // Given: valid TypeScript carrier text with a non-carrier path.
     const source = specSource("spec:import.invalid-path", "Reject an invalid source path");

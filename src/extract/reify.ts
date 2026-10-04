@@ -717,7 +717,7 @@ const RECOGNIZED_SECTION_PROPERTIES: ReadonlyMap<string, ReadonlySet<string>> = 
       "openQuestions",
     ]),
   ],
-  ["intent.openQuestions[]", new Set(["question", "blocking"])],
+  ["intent.openQuestions[]", new Set(["question", "blocking", "key"])],
   ["behavior", new Set(["description", "rules", "examples", "flows", "exampleSpace"])],
   ["behavior.examples[]", GWT_PROPERTY_NAMES],
   ["behavior.exampleSpace", GWT_PROPERTY_NAMES],
@@ -954,6 +954,96 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
   }
 
   return { value: sanitized, issues };
+}
+
+/** The Design key grammar, which an open question's key shares. */
+const OPEN_QUESTION_KEY = /^[a-z][A-Za-z0-9]*$/u;
+
+/**
+ * The first plain property assignment of an object literal with the given name, the one lossy
+ * reification and sanitization keep when a name repeats.
+ */
+function firstPropertyNamed(node: Node, name: string): PropertyAssignment | undefined {
+  const unwrapped = unwrapTransparent(node);
+
+  if (!Node.isObjectLiteralExpression(unwrapped)) {
+    return undefined;
+  }
+
+  return unwrapped
+    .getProperties()
+    .find(
+      (property): property is PropertyAssignment =>
+        Node.isPropertyAssignment(property) && readPropertyName(property) === name,
+    );
+}
+
+/** The line of `openQuestions[<index>].key` in an authored Intent, or the Intent's own line. */
+function openQuestionKeyLine(intentNode: Node, index: number): number {
+  const fallback = intentNode.getStartLineNumber();
+  const questions = firstPropertyNamed(intentNode, "openQuestions")?.getInitializer();
+  const array = questions === undefined ? undefined : unwrapTransparent(questions);
+
+  if (array === undefined || !Node.isArrayLiteralExpression(array)) {
+    return fallback;
+  }
+
+  const element = array.getElements()[index];
+  const key = element === undefined ? undefined : firstPropertyNamed(element, "key");
+
+  return key?.getStartLineNumber() ?? fallback;
+}
+
+/**
+ * An open question's key is the Design key grammar and unique among one Spec's open questions.
+ * A key that is not a string on the grammar, or repeats an earlier key, drops alone with an error;
+ * the question and the Spec stay (`spec:model.open-question-keys`).
+ */
+function checkOpenQuestionKeys(
+  intentNode: Node,
+  intent: unknown,
+  file: string,
+  subjectId: string | undefined,
+  findings: Finding[],
+): void {
+  const questions = isUnknownRecord(intent) ? intent.openQuestions : undefined;
+
+  if (!Array.isArray(questions)) {
+    return;
+  }
+
+  const seen = new Set<string>();
+
+  for (const [index, question] of questions.entries()) {
+    if (!isUnknownRecord(question) || !Object.hasOwn(question, "key")) {
+      continue;
+    }
+
+    const key: unknown = question.key;
+    const lawful = typeof key === "string" && OPEN_QUESTION_KEY.test(key);
+
+    if (lawful && !seen.has(key)) {
+      seen.add(key);
+      continue;
+    }
+
+    const reason = lawful
+      ? "open question keys must be unique"
+      : "open question keys must be lower-camel ASCII";
+    const path = `intent.openQuestions[${String(index)}].key`;
+    delete question.key;
+    findings.push(
+      createExtractFinding(
+        extractFindingIds.unrecognizedProperty,
+        "error",
+        `property "${path}" is refused: ${reason}`,
+        file,
+        openQuestionKeyLine(intentNode, index),
+        subjectId,
+        path,
+      ),
+    );
+  }
 }
 
 function appendSectionPropertyFindings(
@@ -1436,6 +1526,9 @@ function reifySpecCall(
       data[name] = sanitized.value;
       appendDropFindings(lossy.drops, file, subjectId, findings);
       appendSectionPropertyFindings(sanitized.issues, file, subjectId, findings);
+      if (name === "intent") {
+        checkOpenQuestionKeys(inner, sanitized.value, file, subjectId, findings);
+      }
       continue;
     }
 
@@ -1461,6 +1554,9 @@ function reifySpecCall(
       const sanitized = sanitizeSectionValue(inner, result.value, name);
       data[name] = sanitized.value;
       appendSectionPropertyFindings(sanitized.issues, file, subjectId, findings);
+      if (name === "intent") {
+        checkOpenQuestionKeys(inner, sanitized.value, file, subjectId, findings);
+      }
       continue;
     }
 

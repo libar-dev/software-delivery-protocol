@@ -16,5 +16,5 @@ relations:
 Given the authored identifier {identifier: "spec:orders.create-order#valid-cart"}
 When the identifier is parsed
 Then parsing {outcome: "is refused"}
-Then the refusal names the reason {reason: "entry address must be <section>.<key> with section design or ui"}
+Then the refusal names the reason {reason: "entry address must be <section>.<key> with section design, ui, or question"}
 ```
