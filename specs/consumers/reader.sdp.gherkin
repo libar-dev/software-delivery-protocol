@@ -70,4 +70,5 @@ Feature: The reader bridges agent entry points to composable graph context
   Rule: The reader's `blastRadius` surface maps changed files to directly impacted Specs and Packs, their explicit one-hop at-risk neighbors, and every coverage-unknown file.
   Rule: Every impact and at-risk answer carries its reason as data — the changed file, the binding it travelled through, the connecting edge, and that edge's claim — so nothing about the reach is left to the caller's inference.
   Rule: File-level blast radius reports curated graph reach without claiming exhaustive symbol-level usage reach.
+  Rule: `packContext` lists one member row per manifest entry in the manifest's authored order, and its verifier gaps follow that order.
   Rule: The realizing entrypoint is `createReader` in `src/reader/reader.ts`.

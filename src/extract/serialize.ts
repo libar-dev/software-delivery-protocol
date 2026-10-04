@@ -52,6 +52,7 @@ function canonicalOpenQuestion(question: IntentOpenQuestion): Record<string, unk
     : {
         question: question.question,
         ...(question.blocking === undefined ? {} : { blocking: question.blocking }),
+        ...(question.key === undefined ? {} : { key: question.key }),
       };
 }
 
@@ -204,6 +205,7 @@ function canonicalNode(node: GraphNode): Record<string, unknown> {
         ...(node.title === undefined ? {} : { title: node.title }),
         ...(node.framing === undefined ? {} : { framing: node.framing }),
         file: node.file,
+        members: [...node.members],
         ...(node.modelRefs === undefined ? {} : { modelRefs: node.modelRefs }),
       };
     case "Anchor":

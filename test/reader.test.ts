@@ -695,15 +695,15 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
       // specs (create-order and its valid-cart example — the one ready member, covered, so not
       // a gap) and no ready member among the gaps, so no priority.
       expect(context?.verifierGaps.map((gap) => gap.id)).toEqual([
-        "spec:decisions.order-lifecycle",
-        "spec:orders.create-order.api-contract",
+        "spec:orders.order-management",
+        "spec:orders.order-placement-flow",
         "spec:orders.create-order.invalid-cart",
+        "spec:orders.create-order.api-contract",
+        "spec:orders.order-total-rule",
         "spec:orders.order-inventory-rule",
         "spec:orders.order-latency-constraint",
-        "spec:orders.order-management",
         "spec:orders.order-model",
-        "spec:orders.order-placement-flow",
-        "spec:orders.order-total-rule",
+        "spec:decisions.order-lifecycle",
       ]);
       expect(context?.verifierGaps.every((gap) => !gap.priority)).toBe(true);
     });

@@ -578,31 +578,28 @@ export function createReader(graph: GraphSchema): Reader {
       return undefined;
     }
 
-    const members = (index.edgesByTo.get(id) ?? [])
-      .filter((edge) => edge.type === "belongsTo")
-      .map((edge): PackMemberSummary => {
-        const member = index.primitivesById.get(edge.from);
+    const members = node.members.map((memberId): PackMemberSummary => {
+      const member = index.primitivesById.get(memberId);
 
-        if (member === undefined) {
-          return { id: edge.from, resolved: false, deliveryFacts: [] };
-        }
+      if (member === undefined) {
+        return { id: memberId, resolved: false, deliveryFacts: [] };
+      }
 
-        const summary = summarize(member);
+      const summary = summarize(member);
 
-        return {
-          id: summary.id,
-          resolved: true,
-          ...(summary.title === undefined ? {} : { title: summary.title }),
-          specKind: summary.specKind,
-          altitude: summary.altitude,
-          statedReadiness: summary.statedReadiness,
-          ...(summary.derivedReadiness === undefined
-            ? {}
-            : { derivedReadiness: summary.derivedReadiness }),
-          deliveryFacts: summary.deliveryFacts,
-        };
-      })
-      .sort((left, right) => compareCodeUnits(left.id, right.id));
+      return {
+        id: summary.id,
+        resolved: true,
+        ...(summary.title === undefined ? {} : { title: summary.title }),
+        specKind: summary.specKind,
+        altitude: summary.altitude,
+        statedReadiness: summary.statedReadiness,
+        ...(summary.derivedReadiness === undefined
+          ? {}
+          : { derivedReadiness: summary.derivedReadiness }),
+        deliveryFacts: summary.deliveryFacts,
+      };
+    });
 
     const verifierGaps = members
       .filter((member) => member.resolved && !member.deliveryFacts.includes("has-verifier"))

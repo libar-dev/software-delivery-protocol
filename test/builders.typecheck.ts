@@ -17,6 +17,9 @@ const authoredSpec = spec({
   kind: "behavior",
   altitude: "feature",
   readiness: "idea",
+  intent: {
+    openQuestions: [{ question: "Is checkout settled?", blocking: false, key: "checkoutSettled" }],
+  },
 });
 
 const authoredPack = pack({

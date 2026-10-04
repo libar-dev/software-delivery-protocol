@@ -3,7 +3,7 @@ import { codeAnchor } from "../model/code-anchor.js";
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSections } from "../model/sections.js";
 
-export const schemaVersion = "0.6.0" as const;
+export const schemaVersion = "0.7.0" as const;
 
 const schemaVersionAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.schema-version"),
@@ -95,6 +95,8 @@ export interface PackNode extends GraphNodeBase {
    * Node data, not edges: the `spec:extraction.derive-graph` edge contract has no `modelRefs` edge type — the
    * pack-coherence check reads this (every entry resolves to a `model`-kind spec).
    */
+  /** The manifest's `specs` list as authored, duplicates included; the `belongsTo` edges re-express it. */
+  readonly members: readonly string[];
   readonly modelRefs?: readonly string[];
   readonly file: string;
 }

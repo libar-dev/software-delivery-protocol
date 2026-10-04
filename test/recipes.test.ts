@@ -1809,6 +1809,7 @@ function registerProbe(): ExtractionResult {
           nodeType: "Pack",
           claim: "declared",
           title: "Probe pack",
+          members: [],
           file: "probe.pack.sdp.md",
           modelRefs: [],
         },
