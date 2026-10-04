@@ -203,6 +203,16 @@ specs:
   - spec:validation.typed-dependency-floor.missing-targets
   - spec:validation.typed-dependency-floor.unsettled-fact
   - spec:validation.typed-dependency-floor.stated-readiness
+  - spec:extraction.pack-member-order
+  - spec:extraction.pack-member-order.manifest-order-kept
+  - spec:consumers.agent-surface.address-and-cycle-recipes
+  - spec:validation.next-rung-floor
+  - spec:validation.next-rung-floor.typed-dependency-targets
+  - spec:validation.next-rung-floor.blocking-question
+  - spec:model.open-question-keys
+  - spec:model.open-question-keys.keyed-question-resolves
+  - spec:model.open-question-keys.renamed-key-breaks
+  - spec:model.open-question-keys.repeated-key-refused
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model

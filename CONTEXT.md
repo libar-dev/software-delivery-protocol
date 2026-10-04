@@ -225,10 +225,11 @@ delivery fact, workflow state, or graph state.
   locked ledger when the record states `ready`). **mention**: a `spec:` id written in a Spec's
   narrative or section text, outside the `gwt` and `gwt-vocabulary` fences; checked for resolution
   and for a backing declared relation in either direction, and it mints no edge (aliases to avoid:
-  "reference" · "citation" · "link"). **entry address**: a Spec id followed by `#`, the open section's
-  name (`design` or `ui`), a dot, and the entry's lower-camel ASCII key, naming one keyed entry of
-  that Spec; admitted in prose and by `parseId` and refused in every id slot, so a Spec's own id
-  never carries `#`, and checked in prose by `spec:validation.prose-mentions`, which is implemented
+  "reference" · "citation" · "link"). **entry address**: a Spec id followed by `#`, a section name
+  (`design`, `ui`, or `question`), a dot, and the entry's lower-camel ASCII key, naming one keyed
+  entry of that Spec's open section, or one of its open questions that carries that key; admitted
+  in prose and by `parseId` and refused in every id slot, so a Spec's own id never carries `#`,
+  and checked in prose by `spec:validation.prose-mentions`, which is implemented
   and still states `defined` (aliases to avoid: "anchor", reserved for the in-code binding ·
   "fragment" · "sub-id").
 - ~~Candidate vocabulary from the executable-spec exploration: *notation* · *carrier*~~ — **ratified
