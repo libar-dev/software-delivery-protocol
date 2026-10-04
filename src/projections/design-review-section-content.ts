@@ -1,6 +1,13 @@
 import { renderStepText } from "../notation/slots.js";
 import { escapeRenderedField, sectionDescription } from "./owned-prose.js";
-import { asArray, asRecord, asText, tableCell, textEntries } from "./design-review-markdown.js";
+import {
+  asArray,
+  asRecord,
+  asText,
+  renderInlineCode,
+  tableCell,
+  textEntries,
+} from "./design-review-markdown.js";
 
 export function renderIntent(intent: Record<string, unknown>): readonly string[] {
   const description = sectionDescription(intent);
@@ -43,7 +50,11 @@ export function renderIntent(intent: Record<string, unknown>): readonly string[]
       const structured = asRecord(entry);
       const question = asText(structured?.question) ?? "(malformed open-question entry)";
       const blocking = structured?.blocking === true ? " — **blocking**" : "";
-      lines.push(`- ${escapeRenderedField(question)}${blocking}`);
+      // A keyed question opens with its key, so the page shows the part of its entry address the
+      // rest of the page does not (`spec:decisions.question-key-rendering`).
+      const key = asText(structured?.key);
+      const opening = key === undefined ? "" : `${renderInlineCode(`#${key}`)} `;
+      lines.push(`- ${opening}${escapeRenderedField(question)}${blocking}`);
     }
   }
 
