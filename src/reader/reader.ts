@@ -17,7 +17,7 @@ import type {
   PackNode,
   PrimitiveNode,
 } from "../graph/schema.js";
-import { SPEC_KIND_DISPLAY_LABELS } from "../model/descriptors.js";
+import { SPEC_KIND_DISPLAY_LABELS, SPEC_READINESS } from "../model/descriptors.js";
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSections } from "../model/sections.js";
 import type { Finding } from "../validate/contracts.js";
@@ -109,6 +109,12 @@ export interface OracleBinding {
 export interface SpecContext extends SpecSummary {
   readonly sections?: SpecSections;
   readonly floorFailures: readonly ReadinessFloorFailure[];
+  /**
+   * The unmet clauses of the rung above derived readiness (`idea` when no rung derives), by the
+   * same evaluator; empty when derived readiness is `ready`. A report, never a promotion
+   * (`spec:validation.next-rung-floor`).
+   */
+  readonly nextRungFailures: readonly ReadinessFloorFailure[];
   /** The spec's authored relations (declared edges of authored types; `belongsTo` rides `packs`). */
   readonly relationsOut: readonly RelationEnd[];
   /** Authored-type edges pointing at the spec — who refines / depends on / verifies it. */
@@ -545,10 +551,17 @@ export function createReader(graph: GraphSchema): Reader {
             return { anchorId: oracleEdge.from, claim: oracleEdge.claim, ...location };
           })();
 
+    const summary = summarize(node);
+    const nextRung =
+      summary.derivedReadiness === undefined
+        ? SPEC_READINESS[0]
+        : SPEC_READINESS[SPEC_READINESS.indexOf(summary.derivedReadiness) + 1];
+
     return {
-      ...summarize(node),
+      ...summary,
       ...(node.sections === undefined ? {} : { sections: node.sections }),
       floorFailures: evaluateReadinessFloor(node, index),
+      nextRungFailures: nextRung === undefined ? [] : evaluateReadinessFloor(node, index, nextRung),
       relationsOut,
       relationsIn,
       implementations,

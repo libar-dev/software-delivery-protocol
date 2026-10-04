@@ -811,6 +811,119 @@ describe("the agent-surface recipe corpus", () => {
     expect([...rungs, "none"]).toContain(stringAt(result, "floorReached"));
     expect(result.promotionRequiresHumanStatement).toBe(true);
     expect(Array.isArray(result.currentFloorFailures)).toBe(true);
+    // Every field the recipe reported stays, and the next rung's failures join them.
+    expect(Object.keys(result)).toEqual([
+      "id",
+      "found",
+      "statedReadiness",
+      "floorReached",
+      "nextRung",
+      "currentFloorFailures",
+      "firstUnmetClause",
+      "nextRungFailures",
+      "nextRungFirstUnmetClause",
+      "promotionRequiresHumanStatement",
+    ]);
+    const context = reader.specContext(stringAt(result, "id"));
+    expect(result.nextRungFailures).toEqual(
+      JSON.parse(JSON.stringify(context?.nextRungFailures)) as unknown,
+    );
+    expect(result.nextRungFirstUnmetClause).toBe(context?.nextRungFailures[0]?.clauseId ?? null);
+  });
+
+  it("names the next rung's unmet clause and the dependency that breaks it on a probe", async () => {
+    const recipe = recipeByOrdinal(9);
+    const catalogLine = 'const id = "spec:model.enrichment-lifecycle";';
+    expect(recipe.body).toContain(catalogLine);
+    const retarget = (id: string) => ({
+      ...recipe,
+      body: recipe.body.replace(catalogLine, `const id = "${id}";`),
+    });
+    const ruleNode = (
+      id: string,
+      readiness: "idea" | "scoped" | "defined" | "ready",
+      blocking = false,
+    ) => ({
+      id,
+      nodeType: "Primitive" as const,
+      claim: "declared" as const,
+      specKind: "rule" as const,
+      altitude: "story" as const,
+      readiness,
+      title: id,
+      file: "specs/probe.sdp.md",
+      sections: {
+        intent: {
+          outcome: "Probe promotion preflight.",
+          ...(blocking ? { openQuestions: [{ question: "Settled?", blocking: true }] } : {}),
+        },
+        behavior: { rules: ["The probe states one rule."] },
+      },
+    });
+    const declared = (from: string, type: "refines" | "dependsOn" | "decidedBy", to: string) => ({
+      from,
+      to,
+      type,
+      claim: "declared" as const,
+    });
+    const probe: ExtractionResult = {
+      ...derived,
+      graph: {
+        schemaVersion: derived.graph.schemaVersion,
+        nodes: [
+          ruleNode("spec:probe.subject", "defined"),
+          ruleNode("spec:probe.basis", "scoped"),
+          ruleNode("spec:probe.held", "scoped", true),
+          {
+            id: "impl:probe.code",
+            nodeType: "CodeNode",
+            claim: "anchored",
+            file: "src/probe.ts",
+          },
+        ],
+        edges: [
+          declared("spec:probe.subject", "dependsOn", "spec:probe.basis"),
+          declared("spec:probe.subject", "decidedBy", "impl:probe.code"),
+          declared("spec:probe.basis", "refines", "spec:probe.subject"),
+          declared("spec:probe.held", "refines", "spec:probe.subject"),
+        ],
+      },
+    };
+    const targetClause = "typed-dependency-targets-are-defined";
+
+    expect(await runRecipe(retarget("spec:probe.subject"), undefined, probe)).toEqual({
+      id: "spec:probe.subject",
+      found: true,
+      statedReadiness: "defined",
+      floorReached: "defined",
+      nextRung: "ready",
+      currentFloorFailures: [],
+      firstUnmetClause: null,
+      nextRungFailures: [
+        {
+          clauseId: targetClause,
+          description:
+            "Every refines, dependsOn, constrainedBy, and decidedBy target states at least defined.",
+          targets: [
+            { type: "dependsOn", id: "spec:probe.basis", statedReadiness: "scoped" },
+            { type: "decidedBy", id: "impl:probe.code" },
+          ],
+        },
+      ],
+      nextRungFirstUnmetClause: targetClause,
+      promotionRequiresHumanStatement: true,
+    });
+
+    // A failure of any other clause carries no targets field.
+    const held = asRecord(await runRecipe(retarget("spec:probe.held"), undefined, probe));
+    expect(held.nextRung).toBe("defined");
+    expect(held.nextRungFailures).toEqual([
+      {
+        clauseId: "no-blocking-open-questions",
+        description: "Spec has no blocking open question in intent.openQuestions.",
+      },
+    ]);
+    expect(held.nextRungFirstUnmetClause).toBe("no-blocking-open-questions");
   });
 
   it("keeps declared examples distinct from enabled verifier bindings", async () => {

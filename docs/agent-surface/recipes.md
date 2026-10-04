@@ -382,6 +382,11 @@ if (context === undefined) {
 const rungs = ["idea", "scoped", "defined", "ready"];
 const reached = context.derivedReadiness ?? "none";
 const reachedIndex = reached === "none" ? -1 : rungs.indexOf(reached);
+const shape = (failure) => ({
+  clauseId: failure.clauseId,
+  description: failure.description,
+  ...(failure.targets === undefined ? {} : { targets: failure.targets }),
+});
 
 return {
   id,
@@ -389,11 +394,10 @@ return {
   statedReadiness: context.statedReadiness,
   floorReached: reached,
   nextRung: rungs[reachedIndex + 1] ?? null,
-  currentFloorFailures: context.floorFailures.map((failure) => ({
-    clauseId: failure.clauseId,
-    description: failure.description,
-  })),
+  currentFloorFailures: context.floorFailures.map(shape),
   firstUnmetClause: context.floorFailures[0]?.clauseId ?? null,
+  nextRungFailures: context.nextRungFailures.map(shape),
+  nextRungFirstUnmetClause: context.nextRungFailures[0]?.clauseId ?? null,
   promotionRequiresHumanStatement: true,
 };
 ```
@@ -401,6 +405,8 @@ return {
 The `id` line is the recipe's parameter — substitute the Spec whose promotion you are weighing.
 An empty `currentFloorFailures` list says the stated rung is honest. It does not confer the next
 rung, and `floorReached` above the stated rung is information rather than an automatic edit.
+`nextRungFailures` are the unmet clauses of `nextRung`, and a typed-dependency failure lists its
+`targets`; neither confers the rung.
 
 ## 10. Declared versus enabled verifiers
 

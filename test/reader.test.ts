@@ -7,12 +7,14 @@ import {
   codeAnchor,
   codeAnchorId,
   createReader,
+  dependsOn,
   extract,
   graphValidatorIds,
   oracleAnchorId,
   pack,
   packId,
   refines,
+  schemaVersion,
   spec,
   specId,
   specOracle,
@@ -454,6 +456,9 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
       ]);
 
       expect(context?.floorFailures).toEqual([]);
+      // The example derives `ready`: there is no next rung, so no next-rung failure.
+      expect(context?.derivedReadiness).toBe("ready");
+      expect(context?.nextRungFailures).toEqual([]);
       expect(context?.findings).toEqual([]);
     });
 
@@ -584,6 +589,98 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
 
     it("returns undefined for an id the graph does not hold", () => {
       expect(exampleReader().specContext("spec:orders.refund-order")).toBeUndefined();
+    });
+  });
+
+  describe("nextRungFailures — the unmet clauses of the rung above the floor reached", () => {
+    const targetClause = "typed-dependency-targets-are-defined";
+    const ruleSpec = (
+      id: string,
+      readiness: "idea" | "scoped" | "defined" | "ready",
+      relations: Parameters<typeof spec>[0]["relations"] = [],
+    ) =>
+      spec({
+        id: specId(id),
+        title: id,
+        kind: "rule",
+        altitude: "story",
+        readiness,
+        intent: { outcome: "Probe the next rung." },
+        behavior: { rules: ["The probe states one rule."] },
+        relations,
+      });
+    const contextOf = (...specs: Parameters<typeof spec>[0][]) =>
+      createReader(deriveFixtureGraph({ specs })).specContext("spec:probe.subject");
+
+    it("names the scoped dependency of a Spec stating defined at the next rung, ready", () => {
+      const context = contextOf(
+        ruleSpec("spec:probe.subject", "defined", [dependsOn(specId("spec:probe.basis"))]),
+        ruleSpec("spec:probe.basis", "scoped", [refines(specId("spec:probe.subject"))]),
+      );
+
+      expect(context?.floorFailures).toEqual([]);
+      expect(context?.derivedReadiness).toBe("defined");
+      expect(context?.nextRungFailures).toEqual([
+        {
+          clauseId: targetClause,
+          description:
+            "Every refines, dependsOn, constrainedBy, and decidedBy target states at least defined.",
+          targets: [{ type: "dependsOn", id: "spec:probe.basis", statedReadiness: "scoped" }],
+        },
+      ]);
+    });
+
+    it("has no next-rung failure when the same dependency states defined and ready derives", () => {
+      const context = contextOf(
+        ruleSpec("spec:probe.subject", "defined", [dependsOn(specId("spec:probe.basis"))]),
+        ruleSpec("spec:probe.basis", "defined", [refines(specId("spec:probe.subject"))]),
+      );
+
+      expect(context?.derivedReadiness).toBe("ready");
+      expect(context?.nextRungFailures).toEqual([]);
+    });
+
+    it("reads the rung above the floor reached, not the rung above the stated one", () => {
+      // Stated `idea` with headroom: the rung above the stated one (`scoped`) clears, while the
+      // rung above the floor reached (`ready`) fails on the dependency.
+      const context = contextOf(
+        ruleSpec("spec:probe.subject", "idea", [dependsOn(specId("spec:probe.basis"))]),
+        ruleSpec("spec:probe.basis", "scoped", [refines(specId("spec:probe.subject"))]),
+      );
+
+      expect(context?.statedReadiness).toBe("idea");
+      expect(context?.derivedReadiness).toBe("defined");
+      expect(context?.nextRungFailures.map((failure) => failure.clauseId)).toEqual([targetClause]);
+    });
+
+    it("reads idea as the next rung when no rung derives, and nothing for an unratified kind", () => {
+      const node = {
+        id: "spec:probe.subject",
+        nodeType: "Primitive" as const,
+        claim: "declared" as const,
+        specKind: "rule" as const,
+        altitude: "story" as const,
+        readiness: "idea" as const,
+        file: "specs/probe.sdp.md",
+      };
+      const untitled = createReader({ schemaVersion, nodes: [node], edges: [] }).specContext(
+        node.id,
+      );
+
+      expect(untitled?.derivedReadiness).toBeUndefined();
+      expect(untitled?.nextRungFailures.map((failure) => failure.clauseId)).toEqual([
+        "title",
+        "intent.outcome-or-parent-relation",
+      ]);
+
+      const foreign = createReader({
+        schemaVersion,
+        nodes: [{ ...node, specKind: "epic" } as unknown as typeof node],
+        edges: [],
+      }).specContext(node.id);
+
+      expect(foreign?.derivedReadiness).toBeUndefined();
+      expect(foreign?.nextRungFailures).toEqual([]);
     });
   });
 

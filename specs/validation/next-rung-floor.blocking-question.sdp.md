@@ -11,7 +11,7 @@ relations:
 
 ## Intent
 - outcome: Execute the next rung's evidence on a Spec whose `defined` floor fails on a blocking open question, where the failure names no target.
-- assumption: The world holds one story-altitude rule Spec with an Intent outcome, one rule, one declared `refines` on a parent stating `ready`, and one blocking open question. No anchor is present. A failure with no targets is written as an empty string.
+- assumption: The world holds two story-altitude rule Specs with an Intent outcome and one rule each. The subject declares one `refines` on the other, its parent, which states `ready`, and records one blocking open question. No anchor is present. A failure with no targets is written as an empty string.
 
 ```gwt
 Given the graph holds a rule spec {specId: "spec:probe.held"} stating readiness {statedReadiness: "scoped"}

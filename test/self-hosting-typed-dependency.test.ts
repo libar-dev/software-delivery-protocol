@@ -12,7 +12,14 @@ import type {
   TypedDependencyFloorOutcome,
 } from "../generated/contracts/validation.typed-dependency-floor.space.js";
 import { createReader, schemaVersion } from "../src/index.js";
-import type { GraphEdge, GraphNode, PrimitiveNode, SpecKind, SpecReadiness } from "../src/index.js";
+import type {
+  GraphEdge,
+  GraphNode,
+  PrimitiveNode,
+  ReadinessFloorTarget,
+  SpecKind,
+  SpecReadiness,
+} from "../src/index.js";
 import { registerRelationRungs } from "./validation.typed-dependency-floor.relation-rungs.test.generated.js";
 import { registerMissingTargets } from "./validation.typed-dependency-floor.missing-targets.test.generated.js";
 import { registerUnsettledFact } from "./validation.typed-dependency-floor.unsettled-fact.test.generated.js";
@@ -69,6 +76,8 @@ interface Trace {
   targetFails: boolean;
   missing: boolean;
   derivedTargetFails: boolean;
+  /** The targets a failure of the target clause names, in the order it names them. */
+  failingTargets: ReadinessFloorTarget[];
 }
 interface World {
   nodes: GraphNode[];
@@ -148,10 +157,15 @@ function addTrace(
     world.edges.push({ from: target, to: subject, type: "dependsOn", claim: "declared" });
   }
   world.edges.push({ from: subject, to: target, type: relation, claim: "declared" });
+  const breaks = !options.missing && dependencies.includes(relation) && rungs.indexOf(rung) < 2;
   world.traces.push({
     subject,
     target,
     missing: options.missing ?? false,
+    failingTargets:
+      breaks && relation !== "verifies" && relation !== "supersedes"
+        ? [{ type: relation, id: target, statedReadiness: rung }]
+        : [],
     derivedTargetFails:
       !options.missing && dependencies.includes(relation) && rungs.indexOf(rung) < 2,
     targetFails:
@@ -188,6 +202,7 @@ function addMixedTrace(
     { from: target, to: trace.subject, type: "dependsOn", claim: "declared" },
     { from: trace.subject, to: target, type: second, claim: "declared" },
   );
+  if (!firstFails) trace.failingTargets = [{ type: second, id: target, statedReadiness: "scoped" }];
   trace.targetFails = true;
   trace.derivedTargetFails = true;
 }
@@ -250,6 +265,17 @@ function observe(world: World): TypedDependencyFloorOutcome {
       expect(failure).toMatchObject({ severity: "error", path: "readiness" });
     expect(reader.specContext(trace.subject)?.derivedReadiness).toBe(
       trace.missing || trace.derivedTargetFails ? "defined" : "ready",
+    );
+    // A failure of the target clause names the targets that break it, at the stated rung and at
+    // the next rung; a missing target stays the resolution clause's and is never named.
+    const context = reader.specContext(trace.subject);
+    const targetsAt = (failures: readonly { clauseId: string; targets?: unknown }[] = []) =>
+      failures.find((failure) => failure.clauseId === TARGET_CLAUSE)?.targets;
+    expect(targetsAt(context?.floorFailures)).toEqual(
+      trace.targetFails ? trace.failingTargets : undefined,
+    );
+    expect(targetsAt(context?.nextRungFailures)).toEqual(
+      trace.derivedTargetFails ? trace.failingTargets : undefined,
     );
     const target = reader.specContext(trace.target);
     if (world.questions.includes(trace.target)) {

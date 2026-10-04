@@ -28,10 +28,23 @@ import type { GraphIndex } from "./graph-index.js";
 
 export type ReadinessPredicate = (node: PrimitiveNode, index: GraphIndex) => boolean;
 
+/** The four typed dependencies the `ready` floor's target clause reads, in their sort order. */
+export type TypedDependencyType = "refines" | "dependsOn" | "constrainedBy" | "decidedBy";
+
+/** One typed-dependency target that breaks the `ready` floor's target clause. */
+export interface ReadinessFloorTarget {
+  readonly type: TypedDependencyType;
+  readonly id: string;
+  /** The target's stated rung; absent when the target resolves to a node that is not a Spec. */
+  readonly statedReadiness?: SpecReadiness;
+}
+
 export interface ReadinessClause {
   readonly id: string;
   readonly description: string;
   readonly predicate: ReadinessPredicate;
+  /** Set only on `typed-dependency-targets-are-defined`; the predicate is `targets(...).length === 0`. */
+  readonly targets?: (node: PrimitiveNode, index: GraphIndex) => readonly ReadinessFloorTarget[];
 }
 
 export interface ReadinessFloor {
@@ -275,29 +288,72 @@ const typedDependencyFloorAnchor = codeAnchor({
 });
 void typedDependencyFloorAnchor;
 
-/**
- * Reads stated readiness on resolving targets only. The relation-resolution clause owns missing
- * targets. A resolving non-Primitive target fails this bound and the edge's conformance contract.
- */
-function typedDependencyTargetsAreDefined(node: PrimitiveNode, index: GraphIndex): boolean {
-  return declaredRelationEdges(node, index).every((edge) => {
-    if (
-      edge.type !== "dependsOn" &&
-      edge.type !== "refines" &&
-      edge.type !== "constrainedBy" &&
-      edge.type !== "decidedBy"
-    ) {
-      return true;
-    }
+const typedDependencyTypes: readonly TypedDependencyType[] = [
+  "refines",
+  "dependsOn",
+  "constrainedBy",
+  "decidedBy",
+];
 
-    if (!index.nodesById.has(edge.to)) {
-      return true;
+function typedDependencyTypeOf(type: string): TypedDependencyType | undefined {
+  return typedDependencyTypes.find((candidate) => candidate === type);
+}
+
+function compareCodeUnits(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
+/**
+ * The targets that break the `ready` floor's target clause: one per distinct `(type, id)` among the
+ * declared typed-dependency edges whose target resolves and is not a Spec stating at least
+ * `defined`. Reads stated readiness on resolving targets only; the relation-resolution clause owns
+ * missing targets. A resolving non-Primitive target breaks this bound and the edge's conformance
+ * contract, and carries no stated rung. Sorted by relation type in the declared order, then by id
+ * in code-unit order (`spec:validation.next-rung-floor`).
+ */
+function typedDependencyTargets(
+  node: PrimitiveNode,
+  index: GraphIndex,
+): readonly ReadinessFloorTarget[] {
+  const seen = new Set<string>();
+  const targets: ReadinessFloorTarget[] = [];
+
+  for (const edge of declaredRelationEdges(node, index)) {
+    const type = typedDependencyTypeOf(edge.type);
+
+    if (type === undefined || !index.nodesById.has(edge.to)) {
+      continue;
     }
 
     const target = index.primitivesById.get(edge.to);
 
-    return target !== undefined && SPEC_READINESS.indexOf(target.readiness) >= definedIndex;
-  });
+    if (target !== undefined && SPEC_READINESS.indexOf(target.readiness) >= definedIndex) {
+      continue;
+    }
+
+    const key = `${type} ${edge.to}`;
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    targets.push({
+      type,
+      id: edge.to,
+      ...(target === undefined ? {} : { statedReadiness: target.readiness }),
+    });
+  }
+
+  return targets.sort(
+    (left, right) =>
+      typedDependencyTypes.indexOf(left.type) - typedDependencyTypes.indexOf(right.type) ||
+      compareCodeUnits(left.id, right.id),
+  );
+}
+
+function typedDependencyTargetsAreDefined(node: PrimitiveNode, index: GraphIndex): boolean {
+  return typedDependencyTargets(node, index).length === 0;
 }
 
 /**
@@ -496,6 +552,7 @@ export const readinessFloors = {
         description:
           "Every refines, dependsOn, constrainedBy, and decidedBy target states at least defined.",
         predicate: typedDependencyTargetsAreDefined,
+        targets: typedDependencyTargets,
       },
       {
         id: "anchors-resolve",
@@ -512,7 +569,12 @@ export type ReadinessClauseId = (typeof readinessFloors)[SpecReadiness]["clauses
 export interface ReadinessFloorFailure {
   readonly clauseId: ReadinessClauseId;
   readonly description: string;
+  /** Only on a `typed-dependency-targets-are-defined` failure, sorted by type (the order above), then id. */
+  readonly targets?: readonly ReadinessFloorTarget[];
 }
+
+/** A clause row of the table, read with its literal id. */
+type ReadinessTableClause = ReadinessClause & { readonly id: ReadinessClauseId };
 
 const ratifiedKinds: ReadonlySet<string> = new Set(SPEC_KINDS);
 const ratifiedReadiness: ReadonlySet<string> = new Set(SPEC_READINESS);
@@ -538,28 +600,52 @@ const verifierSemanticsAnchor = codeAnchor({
 
 void verifierSemanticsAnchor;
 
+const nextRungFloorAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.next-rung-floor"),
+  label: "evaluates the floor for a target rung and names the targets that break a dependency",
+  satisfies: ref("spec:validation.next-rung-floor"),
+  component: componentAnchorId("component:protocol.validate"),
+});
+void nextRungFloorAnchor;
+
+/**
+ * Without `rung`, evaluates up to the stated rung. Given `rung`, evaluates the cumulative clauses
+ * of every rung up to and including it, whatever the Spec states; the reader passes the rung above
+ * derived readiness to name the next rung's unmet clauses (`spec:validation.next-rung-floor`).
+ */
 export function evaluateReadinessFloor(
   node: PrimitiveNode,
   index: GraphIndex,
+  rung?: SpecReadiness,
 ): readonly ReadinessFloorFailure[] {
+  const target: string = rung ?? node.readiness;
+
   // Foreign graph data can carry unratified strings in the typed descriptor slots; those are the
   // descriptor conformance errors (`spec:validation.claim-separation` — validateGraph fails closed), and the
-  // evaluator stays total: over an unratified kind or readiness it evaluates no clauses rather
+  // evaluator stays total: over an unratified kind or rung it evaluates no clauses rather
   // than dereferencing the evidence table into a throw or guessing a rung.
-  if (!ratifiedKinds.has(node.specKind) || !ratifiedReadiness.has(node.readiness)) {
+  if (!ratifiedKinds.has(node.specKind) || !ratifiedReadiness.has(target)) {
     return [];
   }
 
-  const statedIndex = SPEC_READINESS.indexOf(node.readiness);
+  const targetIndex = SPEC_READINESS.findIndex((readiness) => readiness === target);
   const failures: ReadinessFloorFailure[] = [];
 
-  for (const readiness of SPEC_READINESS.slice(0, statedIndex + 1)) {
-    for (const clause of readinessFloors[readiness].clauses) {
+  for (const readiness of SPEC_READINESS.slice(0, targetIndex + 1)) {
+    const clauses: readonly ReadinessTableClause[] = readinessFloors[readiness].clauses;
+
+    for (const clause of clauses) {
       if (clause.predicate(node, index)) {
         continue;
       }
 
-      failures.push({ clauseId: clause.id, description: clause.description });
+      const targets = clause.targets?.(node, index);
+
+      failures.push({
+        clauseId: clause.id,
+        description: clause.description,
+        ...(targets === undefined ? {} : { targets }),
+      });
     }
   }
 
