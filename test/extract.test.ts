@@ -1914,3 +1914,143 @@ describe("Gherkin carrier suffix discovery", () => {
     expect(result.graph.nodes).toEqual([]);
   });
 });
+
+describe("open question keys in the TypeScript carrier", () => {
+  function questionsCarrier(questions: string): string {
+    return `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:orders.question-keys"),
+  kind: "rule",
+  altitude: "story",
+  readiness: "idea",
+  intent: {
+    outcome: "Key the questions.",
+    openQuestions: [
+${questions}
+    ],
+  },
+});`;
+  }
+
+  function refusal(index: number, reason: string, line: number) {
+    const path = `intent.openQuestions[${String(index)}].key`;
+    return {
+      validatorId: extractFindingIds.unrecognizedProperty,
+      family: "conformance",
+      severity: "error",
+      message: `property "${path}" is refused: ${reason}`,
+      subjectId: "spec:orders.question-keys",
+      path,
+      file: "question-keys.sdp.ts",
+      line,
+    };
+  }
+
+  // The first question object sits at line 10, one per line after it.
+  it("admits a lawful key beside prose and unkeyed questions", () => {
+    const reified = reifyTypeScriptCarrier(
+      questionsCarrier(
+        [
+          `      { question: "Does the owner widen the aggregate?", blocking: true, key: "aggregateReach" },`,
+          `      "A prose question.",`,
+          `      { question: "Is the name final?" },`,
+          `      { question: "Is description ordinary?", key: "description" },`,
+        ].join("\n"),
+      ),
+      "question-keys.sdp.ts",
+    );
+
+    expect(reified.findings).toEqual([]);
+    expect(reified.specs[0]?.data.intent).toEqual({
+      outcome: "Key the questions.",
+      openQuestions: [
+        { question: "Does the owner widen the aggregate?", blocking: true, key: "aggregateReach" },
+        "A prose question.",
+        { question: "Is the name final?" },
+        { question: "Is description ordinary?", key: "description" },
+      ],
+    });
+  });
+
+  it("drops a key off the grammar with an error and keeps the question and the Spec", () => {
+    const reified = reifyTypeScriptCarrier(
+      questionsCarrier(
+        [
+          `      { question: "Upper?", blocking: true, key: "AggregateReach" },`,
+          `      { question: "Hyphen?", key: "aggregate-reach" },`,
+          `      { question: "Number?", key: 7 },`,
+          `      { question: "Empty?", key: "" },`,
+          `      { question: "Lawful?", key: "pageHome" },`,
+        ].join("\n"),
+      ),
+      "question-keys.sdp.ts",
+    );
+
+    const reason = "open question keys must be lower-camel ASCII";
+    expect(reified.findings).toEqual([
+      refusal(0, reason, 10),
+      refusal(1, reason, 11),
+      refusal(2, reason, 12),
+      refusal(3, reason, 13),
+    ]);
+    expect(reified.specs).toHaveLength(1);
+    expect(reified.specs[0]?.data.intent).toEqual({
+      outcome: "Key the questions.",
+      openQuestions: [
+        { question: "Upper?", blocking: true },
+        { question: "Hyphen?" },
+        { question: "Number?" },
+        { question: "Empty?" },
+        { question: "Lawful?", key: "pageHome" },
+      ],
+    });
+  });
+
+  it("drops a key an earlier question carries, keeping the first", () => {
+    const reified = reifyTypeScriptCarrier(
+      questionsCarrier(
+        [
+          `      { question: "First?", blocking: true, key: "aggregateReach" },`,
+          `      { question: "Bad first?", key: "Bad" },`,
+          `      { question: "Second?", key: "aggregateReach" },`,
+          `      { question: "Third?", key: "Bad" },`,
+        ].join("\n"),
+      ),
+      "question-keys.sdp.ts",
+    );
+
+    expect(reified.findings).toEqual([
+      refusal(1, "open question keys must be lower-camel ASCII", 11),
+      refusal(2, "open question keys must be unique", 12),
+      refusal(3, "open question keys must be lower-camel ASCII", 13),
+    ]);
+    expect(reified.specs).toHaveLength(1);
+    expect(reified.specs[0]?.data.intent).toMatchObject({
+      openQuestions: [
+        { question: "First?", blocking: true, key: "aggregateReach" },
+        { question: "Bad first?" },
+        { question: "Second?" },
+        { question: "Third?" },
+      ],
+    });
+  });
+
+  it("derives a graph where only the first of a repeated key remains", () => {
+    const reified = reifyTypeScriptCarrier(
+      questionsCarrier(
+        [
+          `      { question: "First?", key: "aggregateReach" },`,
+          `      { question: "Second?", key: "aggregateReach" },`,
+        ].join("\n"),
+      ),
+      "question-keys.sdp.ts",
+    );
+    const graph = deriveGraph(reified.specs, [], []);
+    const node = graph.nodes.find((candidate) => candidate.id === "spec:orders.question-keys");
+
+    expect((node as PrimitiveNode | undefined)?.sections?.intent?.openQuestions).toEqual([
+      { question: "First?", key: "aggregateReach" },
+      { question: "Second?" },
+    ]);
+  });
+});

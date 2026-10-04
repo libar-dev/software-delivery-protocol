@@ -1,3 +1,5 @@
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchor } from "../model/code-anchor.js";
 import type { Finding } from "../validate/contracts.js";
 import { parseSectionContent } from "./markdown-body-content.js";
 import type { MarkdownLine } from "./markdown-body-content.js";
@@ -16,7 +18,25 @@ import { addMarkdownFinding } from "./markdown-support.js";
 interface OpenQuestion {
   readonly question: string;
   readonly blocking: boolean;
+  readonly key?: string;
 }
+
+/**
+ * The open-question marker: the flag, then optionally one space, `#`, and the key, inside the
+ * brackets. The captured key is checked against the Design key grammar after the match, so an
+ * empty or off-grammar key is refused by name instead of falling through to another refusal.
+ */
+const OPEN_QUESTION_MARKER = /^\[(blocking|non-blocking)(?: #([^\]]*))?\] (.+)$/u;
+const OPEN_QUESTION_KEY = /^[a-z][A-Za-z0-9]*$/u;
+
+const openQuestionKeysAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.open-question-keys"),
+  label:
+    "reads an open question's optional key from its Markdown marker and refuses a bad or repeated key",
+  satisfies: ref("spec:model.open-question-keys"),
+  component: componentAnchorId("component:protocol.extract"),
+});
+void openQuestionKeysAnchor;
 
 function isOpenQuestionArray(value: unknown): value is readonly OpenQuestion[] {
   return (
@@ -24,9 +44,20 @@ function isOpenQuestionArray(value: unknown): value is readonly OpenQuestion[] {
     value.every((item): item is OpenQuestion => {
       if (item === null || typeof item !== "object") return false;
       const candidate = item as Record<string, unknown>;
-      return typeof candidate.question === "string" && typeof candidate.blocking === "boolean";
+      return (
+        typeof candidate.question === "string" &&
+        typeof candidate.blocking === "boolean" &&
+        (candidate.key === undefined || typeof candidate.key === "string")
+      );
     })
   );
+}
+
+/** The refusal a captured key earns, or undefined when the key is lawful and new in this Spec. */
+function openQuestionKeyRefusal(key: string, earlier: readonly OpenQuestion[]): string | undefined {
+  if (!OPEN_QUESTION_KEY.test(key)) return "open question keys must be lower-camel ASCII";
+  if (earlier.some((question) => question.key === key)) return "open question keys must be unique";
+  return undefined;
 }
 
 export function mapIntent(
@@ -85,18 +116,27 @@ export function mapIntent(
       structureFinding(file, parsed.h3.line, "only ### Open questions is accepted under Intent"),
     );
   for (const item of parsed.items) {
-    const question = /^\[(blocking|non-blocking)\] (.+)$/u.exec(item.text);
-    if (question?.[1] !== undefined && question[2] !== undefined) {
+    const question = OPEN_QUESTION_MARKER.exec(item.text);
+    if (question?.[1] !== undefined && question[3] !== undefined) {
       if (!item.afterH3 || parsed.h3?.text !== "### Open questions")
         addMarkdownFinding(
           findings,
           structureFinding(file, item.line, "open questions require ### Open questions"),
         );
       else {
-        const entry = { question: question[2], blocking: question[1] === "blocking" };
-        section.openQuestions = isOpenQuestionArray(section.openQuestions)
-          ? [...section.openQuestions, entry]
-          : [entry];
+        const earlier = isOpenQuestionArray(section.openQuestions) ? section.openQuestions : [];
+        const key = question[2];
+        const refusal = key === undefined ? undefined : openQuestionKeyRefusal(key, earlier);
+        if (refusal !== undefined) {
+          addMarkdownFinding(findings, structureFinding(file, item.line, refusal));
+          continue;
+        }
+        const entry: OpenQuestion = {
+          question: question[3],
+          blocking: question[1] === "blocking",
+          ...(key === undefined ? {} : { key }),
+        };
+        section.openQuestions = [...earlier, entry];
       }
       continue;
     }

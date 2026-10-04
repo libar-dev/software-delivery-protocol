@@ -61,9 +61,12 @@ function intentSection(
     ? intent.openQuestions.flatMap((question) => {
         const entry = importData(question);
         const value = importText(entry?.question);
+        const key = importText(entry?.key);
         return value === undefined || typeof entry?.blocking !== "boolean"
           ? []
-          : [`- [${entry.blocking ? "blocking" : "non-blocking"}] ${value}`];
+          : [
+              `- [${entry.blocking ? "blocking" : "non-blocking"}${key === undefined ? "" : ` #${key}`}] ${value}`,
+            ];
       })
     : [];
   const fieldBlock = [...fields, ...repeated].join("\n");
