@@ -214,6 +214,18 @@ specs:
   - spec:model.open-question-keys.renamed-key-breaks
   - spec:model.open-question-keys.repeated-key-refused
   - spec:decisions.question-key-rendering
+  - spec:consumers.spec-studio
+  - spec:decisions.studio-html-surface
+  - spec:consumers.spec-studio.data
+  - spec:consumers.spec-studio.shell
+  - spec:consumers.spec-studio.lenses
+  - spec:consumers.spec-studio.spec-page
+  - spec:consumers.spec-studio.verification-panels
+  - spec:consumers.spec-studio.intent-panel
+  - spec:consumers.spec-studio.components
+  - spec:decisions.studio-web-components
+  - spec:consumers.spec-studio.responsive
+  - spec:consumers.spec-studio.sharing
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model
