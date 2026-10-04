@@ -154,10 +154,10 @@ describe("the Design Review — the one generated read-only view", () => {
     expect(page).toContain("## Intent\n\nEscaped \\`code\\` \\| \\# &lt;tag&gt; &gt; quote");
     expect(page).toContain("## Behavior\n\nBehavior description.\n\n### Rules");
     expect(page).toContain("## Domain vocabulary\n\nModel description.\n\n| Term | Definition |");
-    expect(page).toContain("## Design\n\nDesign description.\n\n```json");
+    expect(page).toContain("## Design\n\nDesign description.\n\n- `layout`: linear");
     expect(page).toContain("## Decision\n\nDecision description.\n\n**Context.");
     expect(page).toContain("## Verification intent\n\nVerification description.\n\n- **mode:");
-    expect(page).toContain("## Ui\n\nUI description.\n\n```json");
+    expect(page).toContain("## Ui\n\nUI description.\n\n- `surface`: review");
     expect(page).not.toContain('"description"');
     expect(withoutProse).not.toContain("## Narrative");
     expect(withoutProse).not.toContain("\n\n\n\n");
@@ -267,7 +267,7 @@ describe("the Design Review — the one generated read-only view", () => {
     }
   });
 
-  it("renders authored entry order in fenced JSON and the Model table", () => {
+  it("renders authored entry order in lists and the Model table", () => {
     const graph = deriveFixtureGraph({
       specs: [
         spec({
@@ -289,12 +289,15 @@ describe("the Design Review — the one generated read-only view", () => {
       ],
     });
     const page = pageByPath(renderDesignReview(createReader(graph)), "spec/probe.order.md");
-    const fences = [...page.matchAll(/```json\n([\s\S]*?)\n```/gu)];
-    expect(fences).toHaveLength(2);
-    for (const fence of fences) {
-      const record = JSON.parse(fence[1] ?? "{}") as Record<string, unknown>;
-      expect(Object.keys(record)).toEqual(["zeta", "alpha", "mid10", "mid2"]);
+    for (const [heading, description] of [
+      ["Design", "Design prose."],
+      ["Ui", "UI prose."],
+    ] as const) {
+      expect(page).toContain(
+        `## ${heading}\n\n${description}\n\n- \`zeta\`: z\n- \`alpha\`: a\n- \`mid10\`: ten\n- \`mid2\`: two\n`,
+      );
     }
+    expect(page).not.toContain("```json");
     const terms = page.split("\n").filter((line) => /^\| (?:zebra|apple) \|/u.test(line));
     expect(terms).toEqual(["| zebra | z |", "| apple | a |"]);
   });
@@ -357,7 +360,7 @@ describe("the Design Review — the one generated read-only view", () => {
     expect(permutedPages).toEqual(firstPages);
   });
 
-  it("escapes Markdown text fields while preserving fenced JSON data", () => {
+  it("escapes Markdown text fields and open-section strings", () => {
     const graph = deriveFixtureGraph({
       specs: [
         spec({
@@ -384,7 +387,7 @@ describe("the Design Review — the one generated read-only view", () => {
     expect(page).toContain("- **outcome:** Keep &lt;outcome&gt; &amp; visible.");
     expect(page).toContain("- Keep &lt;rule&gt; &amp; stable.");
     expect(page).toContain("| &lt;Term&gt; &amp; | Define &lt;term&gt; &amp; safely. |");
-    expect(page).toContain('"surface": "Review <design> & safely."');
+    expect(page).toContain("- `surface`: Review &lt;design&gt; &amp; safely.");
     expect(page).toContain("- Inspect &lt;criterion&gt; &amp; output.");
   });
 

@@ -5,7 +5,7 @@ import {
   asRecord,
   asText,
   renderInlineCode,
-  renderDynamicRecord,
+  renderDynamicValue,
   textEntries,
 } from "./design-review-markdown.js";
 import {
@@ -79,14 +79,12 @@ function renderVerification(verification: Record<string, unknown>): readonly str
   return lines.length === 1 ? [] : lines;
 }
 
-/** The open bags (`design` / `ui`, L9): dynamic keys canonicalized, rendered as data. */
+/** Open sections render entries in authored order, with structured values nested under their items. */
 function renderOpenBag(name: string, content: Record<string, unknown>): readonly string[] {
   const description = sectionDescription(content);
-  const data = renderDynamicRecord(
-    Object.fromEntries(Object.entries(content).filter(([key]) => key !== "description")),
-  );
+  const entries = Object.entries(content).filter(([key]) => key !== "description");
 
-  if (Object.keys(data).length === 0 && description.length === 0) {
+  if (entries.length === 0 && description.length === 0) {
     return [];
   }
 
@@ -96,8 +94,32 @@ function renderOpenBag(name: string, content: Record<string, unknown>): readonly
     lines.push("", ...description);
   }
 
-  if (Object.keys(data).length > 0) {
-    lines.push("", "```json", ...JSON.stringify(data, null, 2).split("\n"), "```");
+  if (entries.length > 0) {
+    lines.push("");
+  }
+
+  for (const [key, value] of entries) {
+    const item = `- ${renderInlineCode(key)}:`;
+
+    if (typeof value === "string") {
+      const [first = "", ...rest] = value.split("\n");
+      lines.push(
+        first.length === 0 ? item : `${item} ${escapeRenderedField(first)}`,
+        ...rest.map((line) => `  ${escapeRenderedField(line)}`),
+      );
+    } else if (asArray(value) !== undefined || asRecord(value) !== undefined) {
+      lines.push(
+        item,
+        "",
+        "  ```json",
+        ...JSON.stringify(renderDynamicValue(value), null, 2)
+          .split("\n")
+          .map((line) => `  ${line}`),
+        "  ```",
+      );
+    } else {
+      lines.push(`${item} ${renderInlineCode(JSON.stringify(value))}`);
+    }
   }
 
   return lines;

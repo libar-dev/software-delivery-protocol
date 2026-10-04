@@ -84,7 +84,7 @@ export function renderTableInlineCode(value: string): string {
   return renderInlineCode(value.replaceAll("|", "\\|").replaceAll(/\s+/gu, " ").trim());
 }
 
-function renderDynamicValue(value: unknown): unknown {
+export function renderDynamicValue(value: unknown): unknown {
   const record = asRecord(value);
 
   if (record !== undefined) {
