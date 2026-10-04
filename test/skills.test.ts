@@ -836,8 +836,8 @@ describe("the taught question marker", () => {
     }
     const probe = probeQuestionMarker(`[${inverted[1]}] ${inverted[2]}`, address);
     expect(probe.key).toBeUndefined();
-    expect(probe.mentionFindings).toMatchObject([
-      { severity: "error", message: expect.stringContaining("points to missing entry") },
-    ]);
+    expect(probe.mentionFindings).toHaveLength(1);
+    expect(probe.mentionFindings[0]?.severity).toBe("error");
+    expect(probe.mentionFindings[0]?.message).toContain("points to missing entry");
   });
 });
