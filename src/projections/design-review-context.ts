@@ -1,7 +1,12 @@
 import { SPEC_READINESS } from "../model/descriptors.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
-import type { RelationEnd, SpecContext, VerifierBinding } from "../reader/reader.js";
+import type {
+  CodeUnitBinding,
+  RelationEnd,
+  SpecContext,
+  VerifierBinding,
+} from "../reader/reader.js";
 import type { Finding } from "../validate/contracts.js";
 import { escapeRenderedField } from "./owned-prose.js";
 import {
@@ -72,6 +77,31 @@ const bindingLanguageSpecPageAnchor = codeAnchor({
 });
 void bindingLanguageSpecPageAnchor;
 
+/**
+ * One code unit row: identity, label, source location, the structural attributes the unit
+ * carries (`role` on any unit; `layer` and `context` on a component), and the edge's claim.
+ */
+function renderCodeUnitRow(binding: CodeUnitBinding, page: string): string {
+  const label = binding.label === undefined ? "" : ` — ${escapeRenderedField(binding.label)}`;
+  const location =
+    binding.file === undefined
+      ? ""
+      : ` ([${escapeRenderedField(binding.file)}${binding.line === undefined ? "" : `:${String(binding.line)}`}](${sourceHref(page, binding.file)}))`;
+  const attributes = (
+    [
+      ["role", binding.role],
+      ["layer", binding.layer],
+      ["context", binding.context],
+    ] as const
+  )
+    .flatMap(([name, value]) =>
+      value === undefined ? [] : [`${name} \`${escapeRenderedField(value)}\``],
+    )
+    .join(" · ");
+
+  return `- \`${binding.codeId}\`${label}${location}${attributes === "" ? "" : ` · ${attributes}`} \`[${binding.claim}]\``;
+}
+
 export function renderBindings(context: SpecContext, page: string): readonly string[] {
   const present = (fact: "implemented" | "has-verifier"): string =>
     context.deliveryFacts.includes(fact) ? "present" : "none";
@@ -89,12 +119,21 @@ export function renderBindings(context: SpecContext, page: string): readonly str
     lines.push("", "### Implementations", "");
 
     for (const binding of context.implementations) {
-      const label = binding.label === undefined ? "" : ` — ${escapeRenderedField(binding.label)}`;
-      const location =
-        binding.file === undefined
-          ? ""
-          : ` ([${escapeRenderedField(binding.file)}${binding.line === undefined ? "" : `:${String(binding.line)}`}](${sourceHref(page, binding.file)}))`;
-      lines.push(`- \`${binding.codeId}\`${label}${location} \`[${binding.claim}]\``);
+      lines.push(renderCodeUnitRow(binding, page));
+    }
+  }
+
+  if (context.references.length > 0) {
+    lines.push(
+      "",
+      "### Referenced by",
+      "",
+      "Code written against this design. A reference confers no implementation binding.",
+      "",
+    );
+
+    for (const binding of context.references) {
+      lines.push(renderCodeUnitRow(binding, page));
     }
   }
 

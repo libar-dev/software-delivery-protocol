@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  codeAnchor,
+  codeAnchorId,
   createReader,
   extract,
   pack,
@@ -19,6 +21,7 @@ import {
   testAnchorId,
 } from "../src/index.js";
 import type { DesignReviewPage, GraphSchema } from "../src/index.js";
+import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
 const exampleRoot = fileURLToPath(new URL("../examples/checkout-v1", import.meta.url));
@@ -648,5 +651,72 @@ describe("the Design Review — the one generated read-only view", () => {
 
     expect(page).toContain("`spec:orders.order-management` — **unresolved** (see findings)");
     expect(page).toContain("conformance/referential-integrity");
+  });
+
+  it("lists the referencing units with file and line, and the reference confers no binding", () => {
+    const root = materializeExtractCorpus("annotation-forms");
+
+    try {
+      const pages = renderDesignReview(createReader(extract({ root }).graph));
+      const posture = pageByPath(pages, "spec/decisions.history-posture.md");
+      const rebuild = pageByPath(pages, "spec/platform.rebuild.md");
+
+      expect(posture).toContain("- Implementation binding: **none**");
+      expect(posture).not.toContain("### Implementations");
+      expect(posture).toContain(
+        [
+          "### Referenced by",
+          "",
+          "Code written against this design. A reference confers no implementation binding.",
+          "",
+          "- `impl:platform.gate` — the gate ([src/constant-form.ts:17](../../../src/constant-form.ts)) · role `decider` `[anchored]`",
+          "- `impl:platform.rebuild` — the online rebuild path ([src/comment-form.ts:13](../../../src/comment-form.ts)) · role `service` `[anchored]`",
+        ].join("\n"),
+      );
+
+      // An implementation row shows the unit's role; the reference rides beside it.
+      expect(rebuild).toContain(
+        "- `impl:platform.rebuild` — the online rebuild path ([src/comment-form.ts:13](../../../src/comment-form.ts)) · role `service` `[anchored]`",
+      );
+      expect(rebuild.indexOf("### Implementations")).toBeLessThan(
+        rebuild.indexOf("### Referenced by"),
+      );
+    } finally {
+      removeMaterializedCorpus(root);
+    }
+  });
+
+  it("shows a component row's layer and context", () => {
+    const graph = deriveFixtureGraph({
+      specs: [
+        spec({
+          id: specId("spec:orders.order-management"),
+          title: "Order management",
+          kind: "behavior",
+          altitude: "feature",
+          readiness: "idea",
+          intent: { outcome: "Manage orders." },
+        }),
+      ],
+      anchors: [
+        codeAnchor({
+          id: codeAnchorId("component:orders.core"),
+          label: "the orders core",
+          satisfies: specId("spec:orders.order-management"),
+          layer: "domain",
+          context: "orders",
+          role: "service",
+        }),
+      ],
+    });
+    const page = pageByPath(
+      renderDesignReview(createReader(graph)),
+      "spec/orders.order-management.md",
+    );
+
+    expect(page).toContain(
+      "- `component:orders.core` — the orders core ([src/fixture.ts:1](../../../src/fixture.ts)) · role `service` · layer `domain` · context `orders` `[anchored]`",
+    );
+    expect(page).not.toContain("### Referenced by");
   });
 });

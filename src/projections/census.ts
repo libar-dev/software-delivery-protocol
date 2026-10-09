@@ -1,6 +1,7 @@
 import { deliveryFactNames, graphClaims, graphEdgeTypes, graphNodeTypes } from "../graph/schema.js";
 import type { GraphEdge, GraphSchema } from "../graph/schema.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { CODE_ANCHOR_LAYERS } from "../model/anchors.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import {
   SPEC_ALTITUDES,
@@ -138,20 +139,158 @@ function namespaceOf(id: string): string {
   return separator <= 0 ? "unrecognized: no namespace" : id.slice(0, separator);
 }
 
+const structuralEdgeTypes = ["memberOf", "uses", "references"] as const;
+
 function structuralEdges(graph: GraphSchema): readonly GraphEdge[] {
-  return graph.edges.filter((edge) => edge.type === "memberOf" || edge.type === "uses");
+  const types = new Set<string>(structuralEdgeTypes);
+  return graph.edges.filter((edge) => types.has(edge.type));
+}
+
+/** The structural attributes a code unit carries, read as recorded (`role`, `layer`, `context`). */
+interface CodeUnitAttributes {
+  readonly id: string;
+  readonly role?: string;
+  readonly layer?: string;
+  readonly context?: string;
+}
+
+function codeUnits(graph: GraphSchema): readonly CodeUnitAttributes[] {
+  const text = (value: unknown): string | undefined =>
+    typeof value === "string" ? value : undefined;
+
+  return graph.nodes
+    .filter((node) => node.nodeType === "CodeNode")
+    .map((node) => {
+      const record = node as unknown as Readonly<Record<string, unknown>>;
+      const role = text(record.role);
+      const layer = text(record.layer);
+      const context = text(record.context);
+      return {
+        id: node.id,
+        ...(role === undefined ? {} : { role }),
+        ...(layer === undefined ? {} : { layer }),
+        ...(context === undefined ? {} : { context }),
+      };
+    })
+    .sort(
+      (left, right) =>
+        compareCodeUnits(left.id, right.id) ||
+        compareCodeUnits(left.role ?? "", right.role ?? "") ||
+        compareCodeUnits(left.layer ?? "", right.layer ?? "") ||
+        compareCodeUnits(left.context ?? "", right.context ?? ""),
+    );
+}
+
+function renderIdList(ids: readonly string[]): string {
+  return ids.length === 0 ? "—" : ids.map((id) => `\`${escapeRenderedField(id)}\``).join(", ");
+}
+
+/**
+ * One structural attribute as a value → units table, so an owner can reconcile synonyms. A closed
+ * runtime set (`layer`) renders every value even at zero and names a foreign value `unrecognized`;
+ * a corpus-owned vocabulary (`role`, `context`) renders the values the graph holds.
+ */
+function renderAttributeTaxonomy(
+  heading: string,
+  column: string,
+  unitsByValue: ReadonlyMap<string, readonly string[]>,
+  runtimeValues?: readonly string[],
+): readonly string[] {
+  const row = (label: string, units: readonly string[]): string =>
+    `| ${label} | ${renderIdList(units)} | ${String(units.length)} |`;
+  const runtimeSet = new Set<string>(runtimeValues ?? []);
+  const known = (runtimeValues ?? []).map((value) =>
+    row(`\`${escapeRenderedField(value)}\``, unitsByValue.get(value) ?? []),
+  );
+  const observed = [...unitsByValue.keys()]
+    .filter((value) => !runtimeSet.has(value))
+    .sort(compareCodeUnits)
+    .map((value) =>
+      row(
+        runtimeValues === undefined
+          ? `\`${escapeRenderedField(value)}\``
+          : `unrecognized: \`${escapeRenderedField(value)}\``,
+        unitsByValue.get(value) ?? [],
+      ),
+    );
+  const rows = [...known, ...observed];
+
+  return [
+    `### ${heading}`,
+    "",
+    `| ${column} | Units | Unit count |`,
+    "| --- | --- | ---: |",
+    ...(rows.length === 0 ? ["| — | None | 0 |"] : rows),
+    "",
+  ];
+}
+
+function unitsBy(
+  units: readonly CodeUnitAttributes[],
+  attribute: "role" | "layer" | "context",
+): ReadonlyMap<string, readonly string[]> {
+  const grouped = new Map<string, string[]>();
+
+  for (const unit of units) {
+    const value = unit[attribute];
+
+    if (value !== undefined) {
+      grouped.set(value, [...(grouped.get(value) ?? []), unit.id]);
+    }
+  }
+
+  return grouped;
+}
+
+function renderReferences(referenceEdges: readonly GraphEdge[]): readonly string[] {
+  const specsByUnit = new Map<string, Set<string>>();
+
+  for (const edge of referenceEdges) {
+    const specs = specsByUnit.get(edge.from) ?? new Set<string>();
+    specs.add(edge.to);
+    specsByUnit.set(edge.from, specs);
+  }
+
+  const rows = [...specsByUnit.entries()]
+    .sort(([left], [right]) => compareCodeUnits(left, right))
+    .map(([unit, specs]) => {
+      const sorted = [...specs].sort(compareCodeUnits);
+      return `| \`${escapeRenderedField(unit)}\` | ${renderIdList(sorted)} | ${String(sorted.length)} |`;
+    });
+
+  return [
+    "### References",
+    "",
+    "A `references` edge says the unit is written against that design; it confers no delivery fact.",
+    "",
+    "| Unit | Specs | Spec count |",
+    "| --- | --- | ---: |",
+    ...(rows.length === 0 ? ["| — | None | 0 |"] : rows),
+    "",
+  ];
 }
 
 function renderStructuralBindings(reader: Reader): readonly string[] {
   const edges = structuralEdges(reader.graph);
+  const units = codeUnits(reader.graph);
+  const edgeCount = (type: string): number => edges.filter((edge) => edge.type === type).length;
   const lines = [
     "## Structural bindings",
     "",
-    "Authored `memberOf` and `uses` CodeNode edges are rendered as structure; they confer no delivery fact or readiness.",
+    "Anchored `memberOf`, `uses`, and `references` edges and the `role`, `layer`, and `context` attributes of code units are rendered as structure; they confer no delivery fact or readiness. Units are counted apart from edges.",
+    "",
+    "| Structure | Count |",
+    "| --- | ---: |",
+    `| Code units | ${String(units.length)} |`,
+    `| Component units | ${String(units.filter((unit) => namespaceOf(unit.id) === "component").length)} |`,
+    ...structuralEdgeTypes.map((type) => `| \`${type}\` edges | ${String(edgeCount(type))} |`),
     "",
   ];
+  const attributed = units.some(
+    (unit) => unit.role !== undefined || unit.layer !== undefined || unit.context !== undefined,
+  );
 
-  if (edges.length === 0) {
+  if (edges.length === 0 && !attributed) {
     return [...lines, "No structural bindings exist.", ""];
   }
 
@@ -207,6 +346,9 @@ function renderStructuralBindings(reader: Reader): readonly string[] {
       `| \`${escapeRenderedField(component)}\` | ${members.length === 0 ? "—" : members.map((member) => `\`${escapeRenderedField(member)}\``).join(", ")} | ${String(members.length)} |`,
     );
   }
+  if (components.size === 0) {
+    lines.push("| — | None | 0 |");
+  }
   lines.push(
     "",
     "### Uses fan-in / fan-out per component",
@@ -221,7 +363,17 @@ function renderStructuralBindings(reader: Reader): readonly string[] {
       `| \`${escapeRenderedField(component)}\` | ${String(fanIn.get(component) ?? 0)} | ${String(fanOut.get(component) ?? 0)} |`,
     );
   }
-  lines.push("", ...renderUsesCycles(usesEdges));
+  if (components.size === 0) {
+    lines.push("| — | 0 | 0 |");
+  }
+  lines.push(
+    "",
+    ...renderUsesCycles(usesEdges),
+    ...renderAttributeTaxonomy("Layers", "Layer", unitsBy(units, "layer"), CODE_ANCHOR_LAYERS),
+    ...renderAttributeTaxonomy("Contexts", "Context", unitsBy(units, "context")),
+    ...renderAttributeTaxonomy("Roles", "Role", unitsBy(units, "role")),
+    ...renderReferences(edges.filter((edge) => edge.type === "references")),
+  );
 
   const structuralIds = new Set(edges.flatMap((edge) => [edge.from, edge.to]));
   const dangling = reader

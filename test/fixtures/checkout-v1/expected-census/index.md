@@ -105,7 +105,15 @@ Anchor flavor is the binding node type plus its ID namespace plus each outgoing 
 
 ## Structural bindings
 
-Authored `memberOf` and `uses` CodeNode edges are rendered as structure; they confer no delivery fact or readiness.
+Anchored `memberOf`, `uses`, and `references` edges and the `role`, `layer`, and `context` attributes of code units are rendered as structure; they confer no delivery fact or readiness. Units are counted apart from edges.
+
+| Structure | Count |
+| --- | ---: |
+| Code units | 3 |
+| Component units | 0 |
+| `memberOf` edges | 0 |
+| `uses` edges | 0 |
+| `references` edges | 0 |
 
 No structural bindings exist.
 
