@@ -17,6 +17,7 @@ import type {
   PackNode,
   PrimitiveNode,
 } from "../graph/schema.js";
+import type { CodeAnchorLayer } from "../model/anchors.js";
 import { SPEC_KIND_DISPLAY_LABELS, SPEC_READINESS } from "../model/descriptors.js";
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSections } from "../model/sections.js";
@@ -69,14 +70,32 @@ export interface RelationEnd {
   readonly otherTitle?: string;
 }
 
-/** A code binding (`satisfies` from a `CodeNode`) decoded to its source location. */
-export interface ImplementationBinding {
+/**
+ * A code unit at the source end of a binding edge, decoded to its source location and its
+ * structural attributes (`spec:decisions.architectural-annotation`): `role` on any code unit,
+ * `layer` and `context` on a `component:` unit. The attributes are carried as recorded; none of
+ * them confers anything.
+ */
+export interface CodeUnitBinding {
   readonly codeId: string;
   readonly claim: GraphClaim;
   readonly label?: string;
   readonly file?: string;
   readonly line?: number;
+  readonly role?: string;
+  readonly layer?: CodeAnchorLayer;
+  readonly context?: string;
 }
+
+/** A code binding (`satisfies` from a `CodeNode`) decoded to its source location. */
+export type ImplementationBinding = CodeUnitBinding;
+
+/**
+ * A design reference (`references` from a `CodeNode`): this code is written against the Spec
+ * (`spec:decisions.anchor-binding-grain`). It confers no delivery fact and moves no floor, so it
+ * rides beside the implementations, never inside them.
+ */
+export type ReferenceBinding = CodeUnitBinding;
 
 /**
  * A verifier decoded with its enabled-status — the cross-source join an agent hand-rolling gets
@@ -120,6 +139,8 @@ export interface SpecContext extends SpecSummary {
   /** Authored-type edges pointing at the spec — who refines / depends on / verifies it. */
   readonly relationsIn: readonly RelationEnd[];
   readonly implementations: readonly ImplementationBinding[];
+  /** The code units that reference the Spec: written against it, conferring nothing. */
+  readonly references: readonly ReferenceBinding[];
   readonly verifiers: readonly VerifierBinding[];
   readonly oracle?: OracleBinding;
   /** The graph findings naming this spec (as subject or related) — the holes beside the assertions. */
@@ -174,7 +195,11 @@ export interface FileNodeRef {
   readonly line?: number;
 }
 
-/** The file→graph bridge: what the graph records at a path, and the specs reachable from it. */
+/**
+ * The file→graph bridge: what the graph records at a path, and the specs reachable from it. A
+ * code unit with no `satisfies` or `references` edge is still listed in `nodes`; the Spec list
+ * may then be empty (an identity-only anchor is lawful).
+ */
 export interface FileEntry {
   readonly path: string;
   readonly nodes: readonly FileNodeRef[];
@@ -213,12 +238,20 @@ export interface AtRiskItem {
   readonly reasons: readonly AtRiskReason[];
 }
 
+/** A changed code unit the graph records with no Spec linkage: no `satisfies`, no `references`. */
+export interface UnlinkedCodeUnit {
+  readonly file: string;
+  readonly id: string;
+}
+
 /**
  * File-level blast-radius (`06` §2): directly impacted specs/packs, their one-hop neighborhood
  * with the connecting edges named, and — honesty about the blind spot — every changed file the
- * graph records nothing at, surfaced as `coverageUnknown`, never silently dropped. The answer
- * never claims exhaustive reach: deeper walks are scripts over the same shapes, and symbol-level
- * reach is the aspirational impact graph.
+ * graph records nothing at, surfaced as `coverageUnknown`, never silently dropped. A changed code
+ * unit with no Spec linkage is recorded, so its file is not `coverageUnknown`; it is listed in
+ * `unlinked` instead, never dropped and never read as coverage. The answer never claims
+ * exhaustive reach: deeper walks are scripts over the same shapes, and symbol-level reach is the
+ * aspirational impact graph.
  */
 export interface BlastRadius {
   readonly changedFiles: readonly string[];
@@ -226,6 +259,7 @@ export interface BlastRadius {
   readonly impactedPacks: readonly ImpactedItem[];
   readonly atRisk: readonly AtRiskItem[];
   readonly coverageUnknown: readonly string[];
+  readonly unlinked: readonly UnlinkedCodeUnit[];
 }
 
 const readerImpactAnchor = codeAnchor({
@@ -402,8 +436,11 @@ export function createReader(graph: GraphSchema): Reader {
   );
   // Structural memberOf/uses edges are intentionally excluded: this traversal follows binding
   // nodes to Specs, while structural edges connect CodeNode endpoints and confer no Spec linkage.
+  // `references` is traversed: it confers nothing, but it is the code unit's recorded linkage to
+  // the design it is written against, so a change to that unit reaches the Spec.
   const isTraversableBinding = (edge: GraphEdge): boolean =>
     edge.type === "satisfies" ||
+    edge.type === "references" ||
     edge.type === "verifies" ||
     (edge.type === "models" && usableOracleEdges.has(edge));
 
@@ -470,22 +507,29 @@ export function createReader(graph: GraphSchema): Reader {
       .map((edge) => relationEnd(index, edge, edge.from))
       .sort(compareRelationEnds);
 
-    const implementations = (index.edgesByTo.get(id) ?? [])
-      .filter((edge) => edge.type === "satisfies")
-      .map((edge): ImplementationBinding => {
-        const source = index.nodesById.get(edge.from);
-        const location =
-          source?.nodeType === "CodeNode"
-            ? {
-                ...(source.label === undefined ? {} : { label: source.label }),
-                file: source.file,
-                ...(source.line === undefined ? {} : { line: source.line }),
-              }
-            : {};
+    const codeUnitBindings = (edgeType: "satisfies" | "references"): CodeUnitBinding[] =>
+      (index.edgesByTo.get(id) ?? [])
+        .filter((edge) => edge.type === edgeType)
+        .map((edge): CodeUnitBinding => {
+          const source = index.nodesById.get(edge.from);
+          const location =
+            source?.nodeType === "CodeNode"
+              ? {
+                  ...(source.label === undefined ? {} : { label: source.label }),
+                  file: source.file,
+                  ...(source.line === undefined ? {} : { line: source.line }),
+                  ...(source.role === undefined ? {} : { role: source.role }),
+                  ...(source.layer === undefined ? {} : { layer: source.layer }),
+                  ...(source.context === undefined ? {} : { context: source.context }),
+                }
+              : {};
 
-        return { codeId: edge.from, claim: edge.claim, ...location };
-      })
-      .sort((left, right) => compareCodeUnits(left.codeId, right.codeId));
+          return { codeId: edge.from, claim: edge.claim, ...location };
+        })
+        .sort((left, right) => compareCodeUnits(left.codeId, right.codeId));
+
+    const implementations: readonly ImplementationBinding[] = codeUnitBindings("satisfies");
+    const references: readonly ReferenceBinding[] = codeUnitBindings("references");
 
     const anchorVerified = (verifierId: string): boolean =>
       (index.edgesByTo.get(verifierId) ?? []).some((edge) =>
@@ -565,6 +609,7 @@ export function createReader(graph: GraphSchema): Reader {
       relationsOut,
       relationsIn,
       implementations,
+      references,
       verifiers,
       ...(oracle === undefined ? {} : { oracle }),
       findings: findingsNaming(id),
@@ -737,6 +782,7 @@ export function createReader(graph: GraphSchema): Reader {
     const impactedSpecReasons = new Map<string, ImpactReason[]>();
     const impactedPackReasons = new Map<string, ImpactReason[]>();
     const coverageUnknown: string[] = [];
+    const unlinked: UnlinkedCodeUnit[] = [];
 
     const appendReason = (
       map: Map<string, ImpactReason[]>,
@@ -769,13 +815,22 @@ export function createReader(graph: GraphSchema): Reader {
           continue;
         }
 
+        let linked = false;
+
         for (const edge of index.edgesByFrom.get(ref.id) ?? []) {
           if (isTraversableBinding(edge)) {
+            linked = true;
             appendReason(impactedSpecReasons, edge.to, {
               file,
               throughBinding: { id: ref.id, edgeType: edge.type, claim: edge.claim },
             });
           }
+        }
+
+        // A recorded code unit with no Spec linkage (an identity-only anchor) is named, never
+        // dropped: its file is not coverage-unknown, and it implies no coverage either.
+        if (!linked && ref.nodeType === "CodeNode") {
+          unlinked.push({ file, id: ref.id });
         }
       }
     }
@@ -843,6 +898,7 @@ export function createReader(graph: GraphSchema): Reader {
       impactedPacks: toImpacted(impactedPackReasons),
       atRisk,
       coverageUnknown,
+      unlinked,
     };
   };
 
