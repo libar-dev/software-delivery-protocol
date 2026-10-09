@@ -114,6 +114,16 @@ function derivePackNode(entry: ReifiedPack, memberIds: readonly string[]): PackN
   };
 }
 
+function idList(value: unknown): readonly string[] {
+  if (typeof value === "string") {
+    return [value];
+  }
+
+  return Array.isArray(value)
+    ? value.filter((entry): entry is string => typeof entry === "string")
+    : [];
+}
+
 /** Test and oracle anchors both ride the `Anchor` node type — the id namespace (`test:` /
  *  `oracle:`) and the binding edge type (`verifies` / `models`) carry the flavor. */
 function deriveAnchorNode(entry: ReifiedAnchor): AnchorNode | CodeNode {
@@ -208,9 +218,10 @@ export function deriveGraph(
 
     const targetField =
       entry.flavor === "code" ? "satisfies" : entry.flavor === "test" ? "verifies" : "models";
-    const target = entry.data[targetField];
 
-    if (typeof target === "string") {
+    // One binding edge per target (the binding grain, `spec:decisions.anchor-binding-grain`):
+    // reified anchors carry lists, a typed `CodeAnchor` may still carry one id.
+    for (const target of idList(entry.data[targetField])) {
       edges.push({
         from: entry.id,
         type: targetField,

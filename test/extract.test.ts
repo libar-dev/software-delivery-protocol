@@ -878,8 +878,8 @@ relations: {}
 
     expect(pathsByFile.get("bare-spec.sdp.ts")).toEqual(["id", "kind", "altitude", "readiness"]);
     expect(pathsByFile.get("bare-pack.sdp.ts")).toEqual(["id", "specs"]);
-    expect(pathsByFile.get("bare-binding.ts")).toEqual(["id", "satisfies"]);
-    expect(errors).toHaveLength(8);
+    expect(pathsByFile.get("bare-binding.ts")).toEqual(["id", "id", "verifies"]);
+    expect(errors).toHaveLength(9);
     expect(result.graph.nodes).toEqual([]);
     expect(result.counts).toEqual({ specs: 0, packs: 0, anchors: 0 });
   });
