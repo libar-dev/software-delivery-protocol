@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 const packageAliasTarget = fileURLToPath(new URL("./src/index.ts", import.meta.url));
+const anchorsAliasTarget = fileURLToPath(new URL("./src/anchors.ts", import.meta.url));
 const runnerAliasTarget = fileURLToPath(new URL("./src/runner/index.ts", import.meta.url));
 const vitestAdapterAliasTarget = fileURLToPath(
   new URL("./src/adapters/vitest.ts", import.meta.url),
@@ -13,6 +14,7 @@ export default defineConfig({
     // Array form: subpath entries must match before the bare specifier (a prefix alias would
     // otherwise rewrite ".../runner" into a path inside index.ts).
     alias: [
+      { find: "@libar-dev/software-delivery-protocol/anchors", replacement: anchorsAliasTarget },
       { find: "@libar-dev/software-delivery-protocol/runner", replacement: runnerAliasTarget },
       {
         find: "@libar-dev/software-delivery-protocol/vitest",

@@ -28,6 +28,10 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./anchors": {
+      "types": "./dist/anchors.d.ts",
+      "import": "./dist/anchors.js"
+    },
     "./runner": {
       "types": "./dist/runner/index.d.ts",
       "import": "./dist/runner/index.js"

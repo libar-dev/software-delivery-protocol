@@ -14,7 +14,8 @@
     "types": ["node"],
     "noEmit": true,
     "paths": {
-      "@libar-dev/software-delivery-protocol": ["./src/index.ts"]
+      "@libar-dev/software-delivery-protocol": ["./src/index.ts"],
+      "@libar-dev/software-delivery-protocol/anchors": ["./src/anchors.ts"]
     }
   },
   "include": ["src/**/*.ts", "test/**/*.ts", "tsup.config.ts", "vitest.config.ts"],

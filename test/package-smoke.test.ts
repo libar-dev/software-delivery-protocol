@@ -19,10 +19,12 @@ const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 const importFixture = join(repositoryRoot, "test/fixtures/import/round-trip/behavior.sdp.ts.txt");
 
 const expectedRootExports = [
+  "CODE_ANCHOR_LAYERS",
   "CODE_ANCHOR_NAMESPACES",
   "ENTRY_ADDRESS_SECTIONS",
   "MAX_MERMAID_EDGES_PER_DIAGRAM",
   "MAX_MERMAID_NODES_PER_DIAGRAM",
+  "PROTOCOL_ANCHORS_MODULE_SPECIFIER",
   "PROTOCOL_MODULE_SPECIFIER",
   "SPEC_ALTITUDES",
   "SPEC_KINDS",

@@ -19,7 +19,10 @@ import type { ReifiedPack, ReifiedSpec } from "./reify.js";
 import { hasProtocolBuilderImport, protocolBindingScopeFor } from "./protocol-bindings.js";
 import type { ProtocolBindingScope } from "./protocol-bindings.js";
 
-export { PROTOCOL_MODULE_SPECIFIER } from "./protocol-bindings.js";
+export {
+  PROTOCOL_ANCHORS_MODULE_SPECIFIER,
+  PROTOCOL_MODULE_SPECIFIER,
+} from "./protocol-bindings.js";
 export { extractFindingIds } from "./reify.js";
 export { serializeGraph } from "./serialize.js";
 
