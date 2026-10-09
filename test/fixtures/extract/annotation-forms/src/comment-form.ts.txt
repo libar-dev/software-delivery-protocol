@@ -1,0 +1,41 @@
+/**
+ * The read model: the declared component, realized where it is written. The prose above the
+ * reserved tags is local commentary and confers nothing.
+ *
+ * @sdpAnchor component:platform.read-model
+ * @sdpLabel the read model
+ * @sdpLayer application
+ * @sdpContext platform
+ * @sdpUses component:platform.gateway
+ */
+export const READ_MODEL = "read-model";
+
+/**
+ * The online rebuild path.
+ *
+ * @sdpAnchor impl:platform.rebuild
+ * @sdpLabel the online rebuild path
+ * @sdpSatisfies spec:platform.rebuild, spec:platform.history-rebuild
+ * @sdpReferences spec:decisions.history-posture
+ * @sdpComponent component:platform.read-model
+ * @sdpUses impl:platform.gate
+ * @sdpRole service
+ */
+export async function rebuild(): Promise<void> {
+  await Promise.resolve();
+}
+
+/**
+ * @sdpAnchor test:platform.rebuild
+ * @sdpLabel the rebuild path is verified end to end
+ * @sdpVerifies spec:platform.rebuild, spec:platform.history-rebuild
+ */
+export function rebuildTest(): void {}
+
+/**
+ * @sdpAnchor oracle:platform.rebuild
+ * @sdpModels spec:platform.rebuild
+ */
+export function expected(): string {
+  return "rebuilt";
+}

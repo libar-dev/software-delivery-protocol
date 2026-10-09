@@ -1,0 +1,96 @@
+/**
+ * @sdpAnchor impl:refused.unknown-tag
+ * @sdpStatus implemented
+ */
+export const unknownTag = 1;
+
+/**
+ * @sdpReferences spec:platform.gate
+ */
+export const noOpener = 2;
+
+/**
+ * @sdpAnchor impl:refused.repeated
+ * @sdpRole service
+ * @sdpRole decider
+ */
+export const repeated = 3;
+
+/**
+ * @sdpAnchor test:refused.wrong-target
+ * @sdpSatisfies spec:platform.gate
+ */
+export const wrongTargetOnTest = 4;
+
+/**
+ * @sdpAnchor impl:refused.wrong-target
+ * @sdpVerifies spec:platform.gate
+ */
+export const wrongTargetOnCode = 5;
+
+/**
+ * @sdpAnchor impl:refused.Bad Id
+ */
+export const badId = 6;
+
+/**
+ * @sdpAnchor spec:refused.not-an-anchor
+ */
+export const specNamespace = 7;
+
+/**
+ * @sdpAnchor component:refused.layer
+ * @sdpLayer presentation
+ */
+export const openLayer = 8;
+
+/**
+ * @sdpAnchor impl:refused.layer-on-impl
+ * @sdpLayer domain
+ * @sdpContext platform
+ */
+export const layerOnImpl = 9;
+
+/**
+ * @sdpAnchor impl:refused.continuation
+ * @sdpSatisfies spec:platform.gate,
+ *   spec:platform.rebuild
+ */
+export const continuation = 10;
+
+/**
+ * @sdpAnchor impl:refused.empty-item
+ * @sdpUses impl:platform.gate,, impl:platform.barrel
+ */
+export const emptyItem = 11;
+
+/**
+ * @sdpAnchor oracle:refused.plural
+ * @sdpModels spec:platform.gate, spec:platform.rebuild
+ */
+export const pluralModels = 12;
+
+/**
+ * @sdpAnchor impl:refused.role
+ * @sdpRole Service Layer
+ */
+export const roleProse = 13;
+
+/**
+ * @sdpAnchor test:refused.unbound
+ * @sdpLabel a verifier with nothing to verify
+ */
+export const unbound = 14;
+
+/**
+ * @sdpAnchor impl:refused.overlap
+ * @sdpSatisfies spec:platform.gate
+ * @sdpReferences spec:platform.gate
+ */
+export const overlap = 15;
+
+export function nested(): void {
+  /** @sdpAnchor impl:refused.nested */
+  const inner = 16;
+  void inner;
+}
