@@ -40,6 +40,7 @@ const specDescriptorsAnchor = codeAnchor({
   label: "Spec kind, altitude, and readiness coordinates",
   satisfies: ref("spec:model.core-model"),
   component: componentAnchorId("component:protocol.model"),
+  role: "contract",
 });
 
 void specDescriptorsAnchor;

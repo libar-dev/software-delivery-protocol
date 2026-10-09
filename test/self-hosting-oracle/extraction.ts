@@ -20,7 +20,9 @@ export const extractionSpecs = [
         rules: [
           "Carrier reification feeds deriveGraph once; no consumer creates a second graph.",
           "The graph is flat arrays of typed nodes and edges; hierarchy and containment are expressed by edges rather than nested nodes.",
-          "Declared relations resolve Primitive to Primitive, while `satisfies` and test `verifies` edges derive from anchors and run from their binding node to the direct Spec target.",
+          "Declared relations resolve Primitive to Primitive, while `satisfies`, `references`, and test `verifies` edges derive from anchors and run from their binding node to the direct Spec target, one edge per target.",
+          "The edge list is closed at twelve types: the six declared relations `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, and `supersedes`, and the six derived edges `belongsTo`, `satisfies`, `models`, `memberOf`, `uses`, and `references`.",
+          "A `references` edge is anchored, runs from a CodeNode to the Spec its code is written against, and contributes no delivery fact.",
           "Delivery facts are computed node facts: a resolving `satisfies` edge contributes `implemented`, and an enabled direct verifier contributes `has-verifier` only to its target.",
           "Inferred structural edges are advisory inputs to impact analysis and never become authoritative graph truth.",
           "The key order of `design`, `ui`, and `model.terms` is the authored order and part of the graph contract.",
@@ -293,7 +295,8 @@ export const extractionSpecs = [
               'a graph derived from the authored spec {specId: "spec:probe.schema-versioning"}',
             ],
             when: ["the graph payload is serialized"],
-            then: ['the payload declares the schema version {schemaVersion: "0.7.0"}'],
+            // re-measured under plan 40
+            then: ['the payload declares the schema version {schemaVersion: "0.8.0"}'],
           },
         ],
       },
@@ -786,7 +789,8 @@ export const extractionSpecs = [
               'the serialized Pack node lists the members {serializedMembers: "spec:probe.zeta, spec:probe.alpha, spec:probe.mid"}',
               'the serialized belongsTo edges run from {edgeSources: "spec:probe.alpha, spec:probe.mid, spec:probe.zeta"}',
               'the reader\'s Pack context lists the members {readerMembers: "spec:probe.zeta, spec:probe.alpha, spec:probe.mid"}',
-              'the payload declares the schema version {schemaVersion: "0.7.0"}',
+              // re-measured under plan 40
+              'the payload declares the schema version {schemaVersion: "0.8.0"}',
             ],
           },
         ],

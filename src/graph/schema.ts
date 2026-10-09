@@ -11,6 +11,7 @@ const schemaVersionAnchor = codeAnchor({
   label: "declares the graph schema version",
   satisfies: ref("spec:extraction.schema-versioning"),
   component: componentAnchorId("component:protocol.graph"),
+  role: "contract",
 });
 void schemaVersionAnchor;
 
@@ -28,12 +29,15 @@ const graphComponentAnchor = codeAnchor({
     componentAnchorId("component:protocol.model"),
     componentAnchorId("component:protocol.notation"),
   ],
+  layer: "domain",
+  context: "protocol",
 });
 const graphClaimsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.graph-claims"),
   label: "declares the graph claim taxonomy",
   satisfies: ref("spec:extraction.claim-taxonomy"),
   component: componentAnchorId("component:protocol.graph"),
+  role: "contract",
 });
 void graphComponentAnchor;
 void graphClaimsAnchor;

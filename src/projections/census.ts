@@ -1,8 +1,6 @@
 import { deliveryFactNames, graphClaims, graphEdgeTypes, graphNodeTypes } from "../graph/schema.js";
 import type { GraphEdge, GraphSchema } from "../graph/schema.js";
-import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { CODE_ANCHOR_LAYERS } from "../model/anchors.js";
-import { codeAnchor } from "../model/code-anchor.js";
 import {
   SPEC_ALTITUDES,
   SPEC_KIND_DISPLAY_LABELS,
@@ -19,13 +17,14 @@ export interface CensusPage {
   readonly content: string;
 }
 
-const censusAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.census-page"),
-  label: "renders the derived census and runtime taxonomy projection",
-  satisfies: ref("spec:consumers.census-page"),
-  component: componentAnchorId("component:protocol.projections"),
-});
-void censusAnchor;
+/**
+ * @sdpAnchor impl:protocol.census-page
+ * @sdpLabel renders the derived census and runtime taxonomy projection
+ * @sdpSatisfies spec:consumers.census-page
+ * @sdpComponent component:protocol.projections
+ * @sdpReferences spec:consumers.spec-studio.lenses
+ * @sdpRole projection
+ */
 
 function compareCodeUnits(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;

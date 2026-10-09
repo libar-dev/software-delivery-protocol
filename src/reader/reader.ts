@@ -5,8 +5,6 @@ import {
 } from "../graph/delivery-facts.js";
 import { isResolvingOracleModel } from "../graph/oracle-bindings.js";
 import { authoredEdgeTypes } from "../graph/schema.js";
-import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
-import { codeAnchor } from "../model/code-anchor.js";
 import type {
   DeliveryFactName,
   GraphClaim,
@@ -253,6 +251,13 @@ export interface UnlinkedCodeUnit {
  * exhaustive reach: deeper walks are scripts over the same shapes, and symbol-level reach is the
  * aspirational impact graph.
  */
+/**
+ * @sdpAnchor impl:protocol.reader-impact
+ * @sdpLabel file-level reader blast-radius contract
+ * @sdpSatisfies spec:consumers.reader
+ * @sdpComponent component:protocol.reader
+ * @sdpRole contract
+ */
 export interface BlastRadius {
   readonly changedFiles: readonly string[];
   readonly impactedSpecs: readonly ImpactedItem[];
@@ -261,15 +266,6 @@ export interface BlastRadius {
   readonly coverageUnknown: readonly string[];
   readonly unlinked: readonly UnlinkedCodeUnit[];
 }
-
-const readerImpactAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.reader-impact"),
-  label: "file-level reader blast-radius contract",
-  satisfies: ref("spec:consumers.reader"),
-  component: componentAnchorId("component:protocol.reader"),
-});
-
-void readerImpactAnchor;
 
 /* ----- the reader ----- */
 
@@ -389,35 +385,32 @@ function matchSections(sections: SpecSections | undefined, needle: string): read
   return matched.sort(compareCodeUnits);
 }
 
-const readerComponentAnchor = codeAnchor({
-  id: codeAnchorId("component:protocol.reader"),
-  label: "Protocol reader seam",
-  satisfies: ref("spec:consumers.reader"),
-  uses: [
-    componentAnchorId("component:protocol.graph"),
-    componentAnchorId("component:protocol.validate"),
-    componentAnchorId("component:protocol.model"),
-  ],
-});
-const agentSurfaceAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.agent-surface"),
-  label: "typed graph reader and agent entry adapters",
-  satisfies: ref("spec:consumers.agent-surface"),
-  component: componentAnchorId("component:protocol.reader"),
-});
+/**
+ * @sdpAnchor component:protocol.reader
+ * @sdpLabel Protocol reader seam
+ * @sdpSatisfies spec:consumers.reader
+ * @sdpUses component:protocol.graph, component:protocol.validate, component:protocol.model
+ * @sdpLayer application
+ * @sdpContext protocol
+ */
+/**
+ * @sdpAnchor impl:protocol.agent-surface
+ * @sdpLabel typed graph reader and agent entry adapters
+ * @sdpSatisfies spec:consumers.agent-surface
+ * @sdpComponent component:protocol.reader
+ * @sdpReferences spec:consumers.spec-studio.shell
+ * @sdpRole reader
+ */
 
-void agentSurfaceAnchor;
-
-const readerAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.reader"),
-  label: "thin typed graph reader construction",
-  satisfies: ref("spec:consumers.reader"),
-  component: componentAnchorId("component:protocol.reader"),
-  uses: [codeAnchorId("impl:protocol.delivery-facts")],
-});
-
-void readerComponentAnchor;
-void readerAnchor;
+/**
+ * @sdpAnchor impl:protocol.reader
+ * @sdpLabel thin typed graph reader construction
+ * @sdpSatisfies spec:consumers.reader
+ * @sdpComponent component:protocol.reader
+ * @sdpUses impl:protocol.delivery-facts
+ * @sdpReferences spec:consumers.spec-studio.data, spec:consumers.spec-studio
+ * @sdpRole reader
+ */
 
 export function createReader(graph: GraphSchema): Reader {
   const index = buildGraphIndex(graph);

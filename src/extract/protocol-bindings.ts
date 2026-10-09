@@ -95,6 +95,7 @@ const protocolBindingsAnchor = codeAnchor({
   label: "Protocol builder-import trust (protocolBindingScopeFor / collectProtocolBindings)",
   satisfies: ref("spec:model.anchors"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "extractor",
 });
 void protocolBindingsAnchor;
 

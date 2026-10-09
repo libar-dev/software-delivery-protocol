@@ -205,6 +205,7 @@ const sdpImportMarkdownEmitAnchor = codeAnchor({
   label: "emits the Markdown document twin for an imported Spec",
   satisfies: ref("spec:carrier.sdp-import"),
   component: componentAnchorId("component:protocol.import"),
+  role: "codec",
 });
 void sdpImportMarkdownEmitAnchor;
 

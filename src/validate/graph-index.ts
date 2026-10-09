@@ -30,6 +30,7 @@ const graphIndexAnchor = codeAnchor({
   label: "builds the one-graph index validators and the reader share",
   satisfies: ref("spec:validation.two-check-families"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "utility",
 });
 void graphIndexAnchor;
 

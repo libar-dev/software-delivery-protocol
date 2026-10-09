@@ -20,6 +20,7 @@ export const envelopeContractAnchor = codeAnchor({
   label: "parses the bounded Markdown frontmatter envelope",
   satisfies: ref("spec:carrier.envelope-contract"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "codec",
 });
 
 export function parseMarkdownFrontmatter(
@@ -34,6 +35,7 @@ export const proseOwnershipAnchor = codeAnchor({
   label: "reads Markdown body content through its prose owners",
   satisfies: ref("spec:carrier.prose-ownership-rule"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "codec",
 });
 
 export function readMarkdownBody(
@@ -52,6 +54,7 @@ export const markdownAuthoringAnchor = codeAnchor({
   label: "reifies Markdown authoring into the one carrier path",
   satisfies: ref("spec:carrier.markdown-authoring"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "extractor",
 });
 
 export const markdownParserAnchor = codeAnchor({
@@ -59,6 +62,7 @@ export const markdownParserAnchor = codeAnchor({
   label: "reifies the ruled Markdown parser input",
   satisfies: ref("spec:carrier.markdown-parser"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "extractor",
 });
 
 export function reifyMarkdownCarrier(sourceText: string, relativePath: string): CarrierReification {

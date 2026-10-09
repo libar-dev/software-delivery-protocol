@@ -1,5 +1,3 @@
-import { codeAnchor } from "../model/code-anchor.js";
-import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import type { Reader } from "../reader/reader.js";
 import { escapeRenderedField } from "./owned-prose.js";
 import { pageHref, pagePathOf } from "./design-review-markdown.js";
@@ -18,43 +16,37 @@ import { renderIndexPage, renderPackPage, renderSpecPage } from "./design-review
  * never liveness. Stated readiness renders beside the structurally-reached floor, and the
  * divergence banner fires only in the dishonest direction (`spec:consumers.derived-readiness-banner`).
  */
+/**
+ * @sdpAnchor impl:protocol.projections-model
+ * @sdpLabel pure generated projection page contract
+ * @sdpSatisfies spec:consumers.projections-model
+ * @sdpComponent component:protocol.projections
+ * @sdpReferences spec:consumers.spec-studio
+ * @sdpRole contract
+ */
 export interface DesignReviewPage {
   /** POSIX path under the view root (`generated/design-review/`), e.g. `spec/orders.create-order.md`. */
   readonly path: string;
   readonly content: string;
 }
 
-const projectionsComponentAnchor = codeAnchor({
-  id: codeAnchorId("component:protocol.projections"),
-  label: "Protocol projections seam",
-  satisfies: ref("spec:consumers.projections-model"),
-  uses: [
-    componentAnchorId("component:protocol.reader"),
-    componentAnchorId("component:protocol.graph"),
-    componentAnchorId("component:protocol.extract"),
-    componentAnchorId("component:protocol.model"),
-    componentAnchorId("component:protocol.notation"),
-    componentAnchorId("component:protocol.validate"),
-  ],
-});
-const projectionModelAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.projections-model"),
-  label: "pure generated projection page contract",
-  satisfies: ref("spec:consumers.projections-model"),
-  component: componentAnchorId("component:protocol.projections"),
-});
+/**
+ * @sdpAnchor component:protocol.projections
+ * @sdpLabel Protocol projections seam
+ * @sdpSatisfies spec:consumers.projections-model
+ * @sdpUses component:protocol.reader, component:protocol.graph, component:protocol.extract, component:protocol.model, component:protocol.notation, component:protocol.validate
+ * @sdpLayer edge
+ * @sdpContext protocol
+ */
 
-void projectionsComponentAnchor;
-void projectionModelAnchor;
-
-const designReviewAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.design-review"),
-  label: "renders the contextual Design Review projection",
-  satisfies: ref("spec:consumers.design-review"),
-  component: componentAnchorId("component:protocol.projections"),
-});
-
-void designReviewAnchor;
+/**
+ * @sdpAnchor impl:protocol.design-review
+ * @sdpLabel renders the contextual Design Review projection
+ * @sdpSatisfies spec:consumers.design-review
+ * @sdpComponent component:protocol.projections
+ * @sdpReferences spec:decisions.studio-html-surface
+ * @sdpRole projection
+ */
 
 /**
  * Renders the full Design Review off the reader. Pure and fs-free: the caller owns writing the

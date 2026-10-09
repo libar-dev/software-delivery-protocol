@@ -19,5 +19,5 @@ When the graph is derived and serialized
 Then the serialized Pack node lists the members {serializedMembers: "spec:probe.zeta, spec:probe.alpha, spec:probe.mid"}
 Then the serialized belongsTo edges run from {edgeSources: "spec:probe.alpha, spec:probe.mid, spec:probe.zeta"}
 Then the reader's Pack context lists the members {readerMembers: "spec:probe.zeta, spec:probe.alpha, spec:probe.mid"}
-Then the payload declares the schema version {schemaVersion: "0.7.0"}
+Then the payload declares the schema version {schemaVersion: "0.8.0"}
 ```

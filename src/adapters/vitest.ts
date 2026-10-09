@@ -20,6 +20,8 @@ const adaptersComponentAnchor = codeAnchor({
   label: "Protocol Vitest adapter seam",
   satisfies: ref("spec:extraction.example-runner"),
   uses: [componentAnchorId("component:protocol.runner")],
+  layer: "adapter",
+  context: "protocol",
 });
 const exampleRunnerAdapterAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.example-runner-adapter"),
@@ -27,6 +29,7 @@ const exampleRunnerAdapterAnchor = codeAnchor({
   satisfies: ref("spec:extraction.example-runner"),
   component: componentAnchorId("component:protocol.adapters"),
   uses: [codeAnchorId("impl:protocol.example-runner")],
+  role: "adapter",
 });
 void adaptersComponentAnchor;
 void exampleRunnerAdapterAnchor;

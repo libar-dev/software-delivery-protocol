@@ -197,6 +197,7 @@ const buildPipelineQueryAnchor = codeAnchor({
     "one query invocation derives the graph once and serves reader, raw graph, and report from that one derivation",
   satisfies: ref("spec:extraction.build-pipeline"),
   component: componentAnchorId("component:protocol.cli"),
+  role: "service",
 });
 void buildPipelineQueryAnchor;
 

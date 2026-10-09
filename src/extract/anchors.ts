@@ -122,6 +122,7 @@ const anchorExtractionAnchor = codeAnchor({
   label: "anchor reification seam: the constant form and the comment form",
   satisfies: ref("spec:model.anchors"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "extractor",
 });
 
 void anchorExtractionAnchor;

@@ -7,6 +7,7 @@ const validationContractsAnchor = codeAnchor({
   label: "conformance/honesty family currency and finding shapes",
   satisfies: ref("spec:validation.two-check-families"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "contract",
 });
 void validationContractsAnchor;
 

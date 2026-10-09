@@ -44,6 +44,7 @@ const exclusionSurfaceAnchor = codeAnchor({
   label: "strict root-relative exclusion input for both extraction surfaces",
   satisfies: ref("spec:extraction.excludes"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "contract",
 });
 void exclusionSurfaceAnchor;
 
@@ -93,6 +94,7 @@ export const duplicateIdExclusionAnchor = codeAnchor({
   label: "excludes duplicated carrier ids from the graph",
   satisfies: ref("spec:validation.duplicate-ids"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "validator",
 });
 
 function findDuplicatedIds(
@@ -190,6 +192,8 @@ const extractComponentAnchor = codeAnchor({
     componentAnchorId("component:protocol.model"),
     componentAnchorId("component:protocol.notation"),
   ],
+  layer: "application",
+  context: "protocol",
 });
 void extractComponentAnchor;
 
@@ -198,6 +202,7 @@ export const extractAnchor = codeAnchor({
   label: "extracts authored carriers and bindings into one graph",
   satisfies: ref("spec:extraction.derive-graph"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "extractor",
 });
 
 export function extract(options: ExtractOptions): ExtractionResult {

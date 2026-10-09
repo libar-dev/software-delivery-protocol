@@ -461,6 +461,7 @@ export const acceptedArchitecturalUnits = [
   },
 ] as const;
 
+// re-measured under plan 40
 export const expectedMemberOfEdges = acceptedArchitecturalUnits.map((row) => [
   row.anchorId,
   row.componentId,
@@ -511,6 +512,7 @@ export const coarseGrainCoverage = [
 // A uses edge tracks real imports (value or type) from another component's source files; imports
 // that exist only to author the anchors themselves (the stable-id and anchor-builder modules)
 // confer no edge. The convention is stated in spec:protocol.structural-self-binding.
+// re-measured under plan 40
 export const expectedUsesEdges = [
   ["impl:protocol.example-runner-adapter", "impl:protocol.example-runner"],
   ["impl:protocol.authored-honesty-delivery-facts", "impl:protocol.delivery-facts"],

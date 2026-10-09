@@ -120,6 +120,7 @@ const markdownBodyGrammarAnchor = codeAnchor({
   label: "enforces the closed Markdown body grammar",
   satisfies: ref("spec:carrier.markdown-body-grammar"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "codec",
 });
 void markdownBodyGrammarAnchor;
 

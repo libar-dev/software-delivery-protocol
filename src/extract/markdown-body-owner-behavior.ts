@@ -35,6 +35,7 @@ const openQuestionKeysAnchor = codeAnchor({
     "reads an open question's optional key from its Markdown marker and refuses a bad or repeated key",
   satisfies: ref("spec:model.open-question-keys"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "codec",
 });
 void openQuestionKeysAnchor;
 

@@ -38,12 +38,15 @@ const testingComponentAnchor = codeAnchor({
     componentAnchorId("component:protocol.adapters"),
     componentAnchorId("component:protocol.runner"),
   ],
+  layer: "adapter",
+  context: "protocol",
 });
 const exampleTestingHelpersAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.example-testing-helpers"),
   label: "adapter-lifecycle and oracle-comparison helpers for bound examples",
   satisfies: ref("spec:extraction.example-runner"),
   component: componentAnchorId("component:protocol.testing"),
+  role: "utility",
 });
 void testingComponentAnchor;
 void exampleTestingHelpersAnchor;

@@ -100,6 +100,7 @@ const openSectionOrderAnchor = codeAnchor({
   label: "preserves authored open-section and model-term order",
   satisfies: ref("spec:extraction.open-section-order"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "codec",
 });
 void openSectionOrderAnchor;
 

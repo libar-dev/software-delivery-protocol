@@ -73,6 +73,7 @@ const sdpImportAnchor = codeAnchor({
   label: "plans, refuses, and publishes TypeScript-to-Markdown Spec imports",
   satisfies: ref("spec:carrier.sdp-import"),
   component: componentAnchorId("component:protocol.cli"),
+  role: "service",
 });
 void sdpImportAnchor;
 

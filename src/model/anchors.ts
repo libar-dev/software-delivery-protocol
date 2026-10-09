@@ -93,6 +93,8 @@ export function specOracle(anchor: SpecOracleAnchor): SpecOracleAnchor {
 const modelComponentAnchor = createCodeAnchor({
   id: codeAnchorId("component:protocol.model"),
   label: "Protocol model seam",
+  layer: "domain",
+  context: "protocol",
   satisfies: ref("spec:model.core-model"),
 });
 const anchorModelAnchor = createCodeAnchor({
@@ -100,6 +102,7 @@ const anchorModelAnchor = createCodeAnchor({
   label: "binding-only anchor model builders",
   satisfies: ref("spec:model.anchors"),
   component: componentAnchorId("component:protocol.model"),
+  role: "contract",
 });
 
 void modelComponentAnchor;

@@ -86,7 +86,10 @@
           "outcome": "Exercise the two anchor forms over the gate path."
         }
       },
-      "deliveryFacts": ["implemented", "has-verifier"]
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ]
     },
     {
       "id": "spec:platform.history-rebuild",
@@ -102,7 +105,10 @@
           "outcome": "Exercise the two anchor forms over the history-rebuild path."
         }
       },
-      "deliveryFacts": ["implemented", "has-verifier"]
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ]
     },
     {
       "id": "spec:platform.rebuild",
@@ -119,13 +125,22 @@
         },
         "behavior": {
           "exampleSpace": {
-            "given": ["a read model {events:number} events behind"],
-            "when": ["the rebuild runs"],
-            "then": ["the read model is {state:string}"]
+            "given": [
+              "a read model {events:number} events behind"
+            ],
+            "when": [
+              "the rebuild runs"
+            ],
+            "then": [
+              "the read model is {state:string}"
+            ]
           }
         }
       },
-      "deliveryFacts": ["implemented", "has-verifier"]
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ]
     },
     {
       "id": "test:platform.gate",

@@ -60,6 +60,7 @@ const validationFamiliesAnchor = codeAnchor({
   label: "conformance and honesty validator registry",
   satisfies: ref("spec:validation.two-check-families"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "contract",
 });
 const validateComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.validate"),
@@ -70,6 +71,8 @@ const validateComponentAnchor = codeAnchor({
     componentAnchorId("component:protocol.model"),
     componentAnchorId("component:protocol.notation"),
   ],
+  layer: "domain",
+  context: "protocol",
 });
 
 void validationFamiliesAnchor;
@@ -174,6 +177,7 @@ const referentialIntegrityAnchor = codeAnchor({
   label: "checks every graph edge endpoint and Pack model reference resolves",
   satisfies: ref("spec:validation.referential-integrity"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "validator",
 });
 void referentialIntegrityAnchor;
 
@@ -506,6 +510,7 @@ const claimSeparationAnchor = codeAnchor({
   label: "checks graph claims, descriptors, node shapes, and relation endpoint contracts",
   satisfies: ref("spec:validation.claim-separation"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "validator",
 });
 void claimSeparationAnchor;
 
@@ -796,6 +801,7 @@ const verifiesLinkageAnchor = codeAnchor({
   label: "resolves declared example verification through enabled test bindings",
   satisfies: ref("spec:validation.verification-linkage"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "validator",
 });
 void verifiesLinkageAnchor;
 
@@ -804,6 +810,7 @@ const unboundExamplePostureAnchor = codeAnchor({
   label: "limits unbound example warnings to stated ready",
   satisfies: ref("spec:validation.unbound-example-posture"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "validator",
 });
 void unboundExamplePostureAnchor;
 
@@ -869,6 +876,7 @@ const oracleLinkageAnchor = codeAnchor({
   label: "resolves and de-duplicates expected-outcome oracle bindings",
   satisfies: ref("spec:validation.verification-linkage"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "validator",
 });
 void oracleLinkageAnchor;
 
@@ -1001,6 +1009,7 @@ const packCoherenceAnchor = codeAnchor({
   label: "checks Pack membership uniqueness and model-reference kinds",
   satisfies: ref("spec:validation.pack-coherence"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "validator",
 });
 void packCoherenceAnchor;
 
@@ -1026,6 +1035,7 @@ const orphanSignalAnchor = codeAnchor({
   label: "surfaces relationless Specs as informative orphan warnings",
   satisfies: ref("spec:validation.warn-level-signals"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "validator",
 });
 void orphanSignalAnchor;
 
@@ -1262,6 +1272,7 @@ const proseMentionsAnchor = codeAnchor({
   label: "checks that prose mentions resolve and warns once per unbacked Spec pair",
   satisfies: ref("spec:validation.prose-mentions"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "validator",
 });
 void proseMentionsAnchor;
 
@@ -1377,6 +1388,7 @@ const authoringShapeAnchor = codeAnchor({
   label: "refuses delivery facts smuggled through authored section carriers",
   satisfies: ref("spec:validation.authored-honesty"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "validator",
 });
 void authoringShapeAnchor;
 
@@ -1445,6 +1457,7 @@ const deliveryFactsHonestyAnchor = codeAnchor({
   satisfies: ref("spec:validation.authored-honesty"),
   component: componentAnchorId("component:protocol.validate"),
   uses: [codeAnchorId("impl:protocol.delivery-facts")],
+  role: "validator",
 });
 void deliveryFactsHonestyAnchor;
 
@@ -1553,6 +1566,7 @@ const gapSignalAnchor = codeAnchor({
   label: "surfaces ready Specs without recomputed verifier bindings as informative gaps",
   satisfies: ref("spec:validation.warn-level-signals"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "validator",
 });
 void gapSignalAnchor;
 

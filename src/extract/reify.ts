@@ -1874,6 +1874,7 @@ const staticReificationAnchor = codeAnchor({
   label: "reifies authored carriers from the AST and never evaluates them",
   satisfies: ref("spec:extraction.determinism"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "extractor",
 });
 void staticReificationAnchor;
 

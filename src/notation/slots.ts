@@ -257,12 +257,15 @@ const notationComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.notation"),
   label: "Protocol slot notation seam",
   satisfies: ref("spec:carrier.slot-notation"),
+  layer: "domain",
+  context: "protocol",
 });
 const slotNotationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.slot-notation"),
   label: "parses slot groups and normalizes a step to its skeleton",
   satisfies: ref("spec:carrier.slot-notation"),
   component: componentAnchorId("component:protocol.notation"),
+  role: "codec",
 });
 
 void notationComponentAnchor;

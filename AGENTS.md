@@ -16,6 +16,9 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
+> **plan 40 is EXECUTING**. The annotations arc adds the comment form, optional plural bindings,
+> design references, and architecture attributes; the engine, self-binding, projections, and
+> agent recipes change together. The full gate and acceptance probes are re-measured at close.
 > **plan 39 is DRAFTED**. The first-adopter arc, a thin lineage pointer in the plan-38 shape. Six
 > of its Specs (inline code spans, the unbound-example posture, the typed-dependency floor, the
 > register recipes, the adopter on-ramp, the shipped corpus) are implemented with bound evidence

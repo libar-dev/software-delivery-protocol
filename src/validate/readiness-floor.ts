@@ -349,6 +349,7 @@ const typedDependencyFloorAnchor = codeAnchor({
   label: "checks stated readiness across all four typed dependencies",
   satisfies: ref("spec:validation.typed-dependency-floor"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "validator",
 });
 void typedDependencyFloorAnchor;
 
@@ -399,6 +400,7 @@ const kindEvidenceAnchor = codeAnchor({
   label: "defines the code-level per-kind evidence rows for readiness floors",
   satisfies: ref("spec:validation.kind-evidence"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "contract",
 });
 void kindEvidenceAnchor;
 
@@ -594,6 +596,7 @@ const verifierSemanticsAnchor = codeAnchor({
   label: "readiness clauses over direct verification bindings",
   satisfies: ref("spec:model.spec-sections"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "validator",
 });
 
 void verifierSemanticsAnchor;
@@ -603,6 +606,7 @@ const nextRungFloorAnchor = codeAnchor({
   label: "evaluates the floor for a target rung and names the targets that break a dependency",
   satisfies: ref("spec:validation.next-rung-floor"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "validator",
 });
 void nextRungFloorAnchor;
 
@@ -611,6 +615,7 @@ export const readinessFloorAnchor = codeAnchor({
   label: "evaluates the stated readiness floor against the graph",
   satisfies: ref("spec:validation.readiness-floor"),
   component: componentAnchorId("component:protocol.validate"),
+  role: "validator",
 });
 
 export function evaluateReadinessFloor(

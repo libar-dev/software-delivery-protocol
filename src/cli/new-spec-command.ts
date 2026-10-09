@@ -361,6 +361,7 @@ const specScaffolderAnchor = codeAnchor({
   label: "scaffolds an honest idea-rung Markdown Spec through `sdp new spec`",
   satisfies: ref("spec:consumers.authoring-on-ramp"),
   component: componentAnchorId("component:protocol.cli"),
+  role: "service",
 });
 void specScaffolderAnchor;
 

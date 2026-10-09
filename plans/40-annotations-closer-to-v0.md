@@ -234,3 +234,19 @@ close commit. Never push without the owner's word.
   is gone.
 - `npm run check` passes; the adopter's lint, typecheck, tests and `python3 design/tools/check.py`
   pass, so the comment form costs its runtime nothing.
+
+## Wave 2 gate close
+
+Pins are re-measured under plan 40. The self-binding lane's independent node and binding-edge
+rosters retain the reviewed significant-unit set. The graph yields five `honesty/gaps` and nine
+`conformance/prose-mentions` warnings, including the superseded architectural-significance
+decision's mention of structural patterns. The oracle pins both lists.
+
+The close repairs the current-plan handbook and test pin, the manifest-order example's schema
+version, and the README recipe count. The annotation-form graph golden is regenerated through
+`projection-suite.mjs` from its materialized corpus and excluded from Prettier, because the
+serializer owns its bytes. Repository projections and contracts use the generation scripts.
+
+The full gate runs with `npm_config_cache=/private/tmp/plan40-npm-cache`, a writable cache for
+the package smoke test. Acceptance probes run after the gate to avoid concurrent writes to its
+generated roots. Wave 2 closes here; the adopter work above remains in this executing arc.

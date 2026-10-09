@@ -46,6 +46,7 @@ const deliveryFactsAnchor = codeAnchor({
   label: "computes delivery facts from resolving binding edges",
   satisfies: ref("spec:extraction.delivery-facts"),
   component: componentAnchorId("component:protocol.graph"),
+  role: "decider",
 });
 void deliveryFactsAnchor;
 

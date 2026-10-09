@@ -96,6 +96,7 @@ const packMemberOrderAnchor = codeAnchor({
   label: "keeps manifest member order on the Pack node",
   satisfies: ref("spec:extraction.pack-member-order"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "extractor",
 });
 void packMemberOrderAnchor;
 
@@ -182,6 +183,7 @@ export const deriveGraphAnchor = codeAnchor({
   satisfies: ref("spec:extraction.derive-graph"),
   component: componentAnchorId("component:protocol.extract"),
   uses: [codeAnchorId("impl:protocol.delivery-facts")],
+  role: "extractor",
 });
 
 export function deriveGraph(

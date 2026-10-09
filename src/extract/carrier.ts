@@ -56,6 +56,7 @@ const carrierReificationAnchor = codeAnchor({
   label: "reifies each canonical carrier surface into specs, packs, and findings",
   satisfies: ref("spec:extraction.derive-graph"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "extractor",
 });
 void carrierReificationAnchor;
 

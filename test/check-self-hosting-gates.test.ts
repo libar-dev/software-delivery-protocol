@@ -76,10 +76,11 @@ afterEach(() => {
 });
 
 describe("the self-hosting records gate", () => {
-  it("discovers plan 39 as the current primary plan", () => {
+  it("discovers plan 40 as the current primary plan", () => {
+    // re-measured under plan 40
     expect(currentPlan).toMatchObject({
-      number: 39,
-      name: "39-adopter-driven-hardening.md",
+      number: 40,
+      name: "40-annotations-closer-to-v0.md",
     });
   });
 
