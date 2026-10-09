@@ -64,8 +64,14 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
 | **`Pack`** | the authored grouping / review **aggregate** over `Spec`s; states **no truth of its own**; its `framing` is a plain descriptive note; a spec may belong to many packs; membership lives on the manifest, the `belongsTo` edge is derived from it | "SpecPack" |
-| **anchor** | a human-written pointer **in source code**: *"this code location is the implementation/test **binding** for this Spec ID"* — a binding assertion only, never system-truth content (no behavior, rationale, readiness, acceptance criteria, or delivery facts); yields `anchored`-claim edges | "marker" |
-| **architecturally significant unit** | a code unit with exported public surface or cross-component reach that warrants graph-visible structural binding — component membership, and uses declarations for its architectural dependencies; the accepted set is an owner-reviewed declaration, never derived from imports (carried by `spec:model.structural-patterns`) | "pattern" (refused, MD-34) |
+| **anchor** | a human-written pointer **in source code**: *"this code location is a **binding** into the graph"* — identity, an optional label, zero or more Spec targets, and optional structure; a binding assertion only, never system-truth content (no behavior, rationale, readiness, status, acceptance criteria, or delivery facts); yields `anchored`-claim edges; written in one of **two representations**, the constant form or the comment form, feeding one closed envelope (`spec:model.anchors`); in prose, the verb **"annotate"** means "write an anchor" | "marker" · "annotation" |
+| **constant form** | the anchor as a top-level `const` initialized with a trusted builder call (`codeAnchor` · `specTest` · `specOracle`), reified statically; trust is by Protocol builder import, from the package or its zero-dependency `/anchors` subpath | "anchor constant" (the old name) · "marker constant" |
+| **comment form** | the anchor as a `/** … */` doc comment on a top-level statement of a `.ts`/`.tsx` file, carrying reserved `@sdp-*` lines; `@sdp-anchor <id>` opens it, only the reserved lines are read, prose authors nothing, and no import is required (the comment-form ruling, MD-36) | "JSDoc anchor" · "doc tag" |
+| **references** | the derived, `anchored` CodeNode → `Spec` edge from a code anchor's `references` list: *this code is written against that design*; confers no delivery fact, moves no floor, and the drift alarm ignores it (the binding-grain ruling, MD-37) | "see-also" · "satisfies" (a realization claim) · "dependsOn" (a Spec relation) |
+| **role** | the optional free string on a code anchor naming the architectural pattern its unit plays (`service` · `decider` · `projection` · …); a corpus-owned vocabulary whose taxonomy the census renders with counts, checked against no list (the architectural-annotation ruling, MD-38) | "pattern" · "kind" (reserved for the Spec descriptor) · "tag" |
+| **layer** | the optional closed-set attribute of a `component:` anchor — `edge` · `application` · `domain` · `adapter` · `infrastructure`; outside the set, or on a non-component anchor, an envelope error | "tier" |
+| **context** | the optional free string on a `component:` anchor naming its bounded context; on a non-component anchor, an envelope error | "bounded_context" (the v0 field) · "domain" |
+| **architecturally significant unit** | a code unit with exported public surface or cross-component reach that warrants graph-visible structural binding — component membership, uses declarations for its architectural dependencies, a role, and references to the designs it rests on; annotated on the anchor of the code that realizes it; the accepted set is an owner-reviewed declaration, never derived from imports (carried by `spec:model.structural-patterns`) | "pattern" (refused by the architectural-annotation ruling, MD-38, which supersedes MD-34) |
 
 **Two grouping mechanisms, kept distinct:** *refinement* (parent `Spec` → children — authored truth with
 descendants) vs *the aggregate* (the `Pack` — a cross-cutting review collection, no truth of its own).
@@ -183,8 +189,11 @@ a sibling set back as a table — the graph never holds a multi-point example.
 | **verifies** | verifier → target | an example/scenario verifies a target — also emitted derived from a test anchor (same type, different `claim`, never collapsed) | UML «verify» |
 | **supersedes** | new → old | current forward-pointer between two Decision Records that both still exist | — |
 
-**Derived, never authored:** `satisfies` (code → `Spec`, from an anchor) · `belongsTo` (→ grouping, from the
-manifest). **Dropped:** `exemplifies` (= `example` kind + `refines` + `verifies`).
+**Derived, never authored:** `satisfies` (code → `Spec`, from an anchor; one edge per target) · `references`
+(code → `Spec`, from an anchor; confers nothing) · `models` (oracle → `Spec`) · `belongsTo` (→ grouping, from the
+manifest) · `memberOf` and `uses` (CodeNode → CodeNode, anchored structure). The edge list is **closed at
+twelve**: these six plus the six authored relations above (`spec:extraction.derive-graph`). **Dropped:**
+`exemplifies` (= `example` kind + `refines` + `verifies`).
 
 ## Delivery-process vocabulary  (adopted nouns, realized only as projections — → `06` §6)
 
@@ -249,7 +258,9 @@ delivery fact, workflow state, or graph state.
   `carrier` · `notation` (both ratified at the carrier ruling, MD-18) ·
   `agent front door` · `evaluation sink` / `sdp q` · `demand map` · `recipe` (the growth-valve
   sense) — the last four ratified at the phase-5 PR review (the front-door ruling, MD-22); the
-  **Surfaces & projections** rows above give the referents.
+  **Surfaces & projections** rows above give the referents · `constant form` · `comment form` ·
+  `references` · `role` · `layer` · `context` — the six held by the annotations arc (MD-36 to
+  MD-38; their decision Specs state `defined` and await the owner's `ready`).
 - **Descriptor values locked:** `kind` ∈ {`behavior`,`workflow`,`example`,`rule`,`constraint`,`model`,
   `decision`,`contract`} · `altitude` ∈ {`epic`,`feature`,`story`} · `readiness` ∈
   {`idea`,`scoped`,`defined`,`ready`}.
@@ -259,7 +270,8 @@ delivery fact, workflow state, or graph state.
   as descriptors (labels / projections, not descriptors) · `exemplifies` (relation) · `status` (on the
   `decision` section — FSM imprint; adoption arc = `readiness`, replacement = `supersedes`, rejected paths =
   `alternatives`/`consequences` — MD-11) · `pattern` (as an architectural primitive, kind, or
-  `pattern:` namespace — ordinary English remains; MD-34).
+  `pattern:` namespace — ordinary English remains; the architectural-annotation ruling, MD-38,
+  superseding MD-34) · `annotation` (→ `anchor`; the verb "annotate" survives as "write an anchor").
 - **Locked usage:** readiness is **"stated/asserted," never "claimed"** ("claim" is reserved for the `claim`
   taxonomy) · the meta-model defines the **contract**, **instances conform**; "govern"/"police" retired ·
   checks are **conformance checks + honesty checks** · **pre-graph** = upstream of graph derivation in the

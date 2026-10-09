@@ -97,7 +97,7 @@ Progressive disclosure — start at the top, follow the pointers down.
 | `npm run check` | **the green gate** — `check:temporal` → `lint` → `format:check` → `build` → `generate:self-hosting` → `generate:example` → `typecheck` → `typecheck:examples` → `test` → `check:self-hosting-gates` → `check:self-hosting` → `check:example` → `preflight` | before claiming green / after engine edits |
 | `reviews/` | **archived session reviews** (implementation, founding-ideation, adversarial + prompts) — durable findings already folded into plans/DECISIONS; read for provenance | rarely |
 
-Key decisions (names first): the executable meta-model (MD-1); one primitive named coordinates (MD-4); the carrier ruling (MD-18); the agent front door (MD-22); structural anchors confer nothing (MD-30); the shipped projections stay frozen (MD-32); planning truths live in ruled graph homes (MD-33); architectural significance rides existing primitives (MD-34).
+Key decisions (names first): the executable meta-model (MD-1); one primitive named coordinates (MD-4); the carrier ruling (MD-18); the agent front door (MD-22); the shipped projections stay frozen (MD-32); planning truths live in ruled graph homes (MD-33); the comment form (MD-36); bindings are optional, plural, and may reference a design (MD-37); architectural significance is annotated where it is realized (MD-38).
 
 > Concept docs still carry implementation detail (TS shapes, DSL, graph JSON) for **unsettled and
 > post-MVP** design — on a disagreement with `src/`, the drift rule above applies: fix the stale
