@@ -17,8 +17,8 @@ export const PROTOCOL_MODULE_SPECIFIER = "@libar-dev/software-delivery-protocol"
  */
 export const PROTOCOL_ANCHORS_MODULE_SPECIFIER = `${PROTOCOL_MODULE_SPECIFIER}/anchors`;
 
-/** The reserved comment-form opener; a file carrying it is parsed whether or not it imports. */
-export const ANCHOR_COMMENT_OPENER = "@sdp-anchor";
+/** The reserved comment-form tag prefix; a file carrying it is parsed whether or not it imports. */
+export const ANCHOR_COMMENT_TAG_PREFIX = "@sdp";
 
 export interface ProtocolBindings {
   /** Local name → exported builder name, from named imports. */
@@ -82,6 +82,7 @@ function trustedBuilderModules(): ReadonlySet<string> {
   const candidates = [
     join(packageRoot, "src", "ids.ts"),
     join(packageRoot, "src", "model", "code-anchor.ts"),
+    join(packageRoot, "src", "anchors.ts"),
   ];
 
   return new Set(candidates.flatMap((candidate) => canonicalPath(candidate) ?? []));
@@ -135,8 +136,9 @@ export function isProtocolBuilderModuleSpecifier(
 
 /**
  * The raw-text prefilter that gates AST work. The bare specifier is a prefix of the anchors
- * subpath, so one `includes` admits both; the comment form needs no import, so the reserved
- * opener admits a file on its own (trust by reserved grammar, not by builder import).
+ * subpath, so one `includes` admits both; the comment form needs no import, so the reserved tag
+ * prefix admits a file on its own (trust by reserved grammar, not by builder import) — a block
+ * with `@sdpReferences` and no `@sdpAnchor` still gets its diagnostic.
  */
 export function hasProtocolBuilderImport(
   sourceText: string,
@@ -144,7 +146,7 @@ export function hasProtocolBuilderImport(
 ): boolean {
   if (
     sourceText.includes(PROTOCOL_MODULE_SPECIFIER) ||
-    sourceText.includes(ANCHOR_COMMENT_OPENER)
+    sourceText.includes(ANCHOR_COMMENT_TAG_PREFIX)
   ) {
     return true;
   }

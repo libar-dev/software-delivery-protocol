@@ -1,5 +1,5 @@
-import { Node, VariableDeclarationKind } from "ts-morph";
-import type { CallExpression, ObjectLiteralExpression, SourceFile, Statement } from "ts-morph";
+import { Node, VariableDeclarationKind, ts } from "ts-morph";
+import type { CallExpression, ObjectLiteralExpression, SourceFile } from "ts-morph";
 
 import { CODE_ANCHOR_NAMESPACES } from "../ids.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
@@ -28,9 +28,9 @@ import type { IdReification } from "./reify.js";
  * code, so there is no recognized-statement sweep here (the opposite of spec files): the extractor
  * reads the two representations of an anchor and nothing else. The **constant form** is a
  * top-level `const` initialized with a `codeAnchor(…)`/`specTest(…)`/`specOracle(…)` call bound
- * to a Protocol import. The **comment form** (`spec:decisions.anchor-comment-form`) is a `/** … *\/`
- * block leading a top-level statement and carrying reserved `@sdp-*` lines; it needs no import.
- * Both feed one closed envelope, so identical content yields identical graph data.
+ * to a Protocol import. The **comment form** (`spec:decisions.anchor-comment-form`) is any
+ * top-level `/** … *\/` block carrying reserved `@sdp…` tags; it needs no import. Both feed one
+ * closed envelope, so identical content yields identical graph data.
  *
  * An anchor is almost all envelope: the id, the binding targets, and the structural attributes
  * are binding identity (hard errors when non-static or grammar-failing); only `label` is
@@ -87,16 +87,35 @@ const AUTHORING_BUILDER_NAMES = new Set<string>([
 ]);
 
 /**
- * The comment-form line grammar: one reserved tag per line, read off the raw comment text after
- * the delimiters are stripped, never through the TypeScript JSDoc tag parser. A tag with no value
- * still matches, so it can be refused loudly rather than ignored.
+ * The comment-form line grammar (`spec:decisions.anchor-comment-form`): one TSDoc-compatible tag
+ * per line, read off the raw comment text after the delimiters are stripped, never through the
+ * TypeScript JSDoc tag parser. Every `@sdp…` tag is reserved; the known ones map onto the envelope
+ * fields, an unknown one is refused. A tag with no value still matches, so it can be refused
+ * loudly rather than ignored.
  */
-const ANCHOR_COMMENT_TAG_LINE = /^\s*\*?\s*@sdp-([a-z]+)(?:\s+(.*?))?\s*$/u;
-const ANCHOR_COMMENT_OPEN = "/**";
-const ANCHOR_COMMENT_CLOSE = "*/";
+const COMMENT_TAG_LINE = /^\s*\*?\s*@([A-Za-z][A-Za-z0-9]*)(?:\s+(.*?))?\s*$/u;
+const COMMENT_LINE_BODY = /^\s*\*?\s*(.*?)\s*$/u;
+const RESERVED_TAG_PREFIX = "sdp";
+const COMMENT_OPEN = "/**";
+const COMMENT_CLOSE = "*/";
 
-/** The tag names map onto the envelope fields one to one, except the opener. */
-const ANCHOR_COMMENT_TAG_FIELDS: ReadonlyMap<string, string> = new Map([["anchor", "id"]]);
+/** The reserved tags, each the envelope field it carries. */
+const COMMENT_TAG_FIELDS: ReadonlyMap<string, string> = new Map([
+  ["sdpAnchor", "id"],
+  ["sdpLabel", "label"],
+  ["sdpSatisfies", "satisfies"],
+  ["sdpVerifies", "verifies"],
+  ["sdpModels", "models"],
+  ["sdpReferences", "references"],
+  ["sdpComponent", "component"],
+  ["sdpUses", "uses"],
+  ["sdpRole", "role"],
+  ["sdpLayer", "layer"],
+  ["sdpContext", "context"],
+]);
+
+/** `role` and `context` are one token each: a free vocabulary, but never free-form prose. */
+const STRUCTURAL_TOKEN = /^[a-z][a-z0-9-]*$/u;
 
 const anchorExtractionAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.anchor-extraction"),
@@ -363,9 +382,20 @@ class AnchorEnvelope {
         case "context": {
           const value = reader.text(name, false);
 
-          if (value !== undefined) {
-            this.data[name] = value;
+          if (value === undefined) {
+            return;
           }
+
+          if (!STRUCTURAL_TOKEN.test(value)) {
+            this.failEnvelope(
+              line,
+              `anchor field "${name}" reified to "${value}", which is not one token of the form ${STRUCTURAL_TOKEN.source} — role and context are vocabulary, never prose`,
+              name,
+            );
+            return;
+          }
+
+          this.data[name] = value;
           return;
         }
         case "layer": {
@@ -761,17 +791,21 @@ function reifyAnchorCall(
 
 /* ----- the comment form ----- */
 
-interface AnchorCommentTag {
-  readonly name: string;
+interface CommentTag {
+  readonly tag: string;
   readonly value: string | undefined;
   readonly line: number;
 }
 
-function commentFieldReader(
-  tag: AnchorCommentTag,
-  value: string,
-  envelope: AnchorEnvelope,
-): FieldReader {
+interface CommentBlock {
+  /** The block's first line: the binding site. */
+  readonly line: number;
+  readonly tags: readonly CommentTag[];
+  /** Non-empty lines after the first reserved tag that do not open a tag: refused continuations. */
+  readonly continuations: readonly number[];
+}
+
+function commentFieldReader(tag: CommentTag, value: string, envelope: AnchorEnvelope): FieldReader {
   const readId = (
     text: string,
     expectedNamespaces: readonly string[],
@@ -787,6 +821,19 @@ function commentFieldReader(
     return checked.id;
   };
 
+  const readOne = (expectedNamespaces: readonly string[], path: string): string | undefined => {
+    if (value.includes(",")) {
+      envelope.failEnvelope(
+        tag.line,
+        `tag "@${tag.tag}" names more than one target; exactly one is required`,
+        path,
+      );
+      return undefined;
+    }
+
+    return readId(value, expectedNamespaces, path);
+  };
+
   const readList = (
     expectedNamespaces: readonly string[],
     path: string,
@@ -795,7 +842,20 @@ function commentFieldReader(
     let ok = true;
 
     for (const [position, entry] of value.split(",").entries()) {
-      const id = readId(entry.trim(), expectedNamespaces, `${path}[${String(position)}]`);
+      const text = entry.trim();
+      const entryPath = `${path}[${String(position)}]`;
+
+      if (text.length === 0) {
+        envelope.failEnvelope(
+          tag.line,
+          `tag "@${tag.tag}" carries an empty list item at "${entryPath}"`,
+          entryPath,
+        );
+        ok = false;
+        continue;
+      }
+
+      const id = readId(text, expectedNamespaces, entryPath);
 
       if (id === undefined) {
         ok = false;
@@ -809,64 +869,66 @@ function commentFieldReader(
   };
 
   return {
-    id: (expectedNamespaces, path) => readId(value, expectedNamespaces, path),
+    id: readOne,
     idList: readList,
     idOrList: readList,
     text: () => value,
   };
 }
 
-/** The leading `/** … *\/` blocks of one statement, each reduced to its reserved tag lines. */
-function readAnchorCommentBlocks(
-  statement: Statement,
-  sourceFile: SourceFile,
-): readonly { readonly line: number; readonly tags: readonly AnchorCommentTag[] }[] {
-  const blocks: { readonly line: number; readonly tags: readonly AnchorCommentTag[] }[] = [];
+/**
+ * One `/** … *\/` block reduced to its reserved tag lines. Prose may precede the first reserved
+ * tag; after it, every non-empty line must open a tag (`@…`), so an accidentally wrapped target
+ * is refused rather than read as prose. Other TSDoc tags (`@param`, `@returns`) are not read.
+ */
+function readCommentBlock(text: string, line: number): CommentBlock | undefined {
+  const body = text.slice(COMMENT_OPEN.length, -COMMENT_CLOSE.length);
+  const tags: CommentTag[] = [];
+  const continuations: number[] = [];
 
-  for (const range of statement.getLeadingCommentRanges()) {
-    const text = range.getText();
+  for (const [offset, rawLine] of body.split(/\r?\n/u).entries()) {
+    const tagMatch = COMMENT_TAG_LINE.exec(rawLine);
 
-    if (
-      !text.startsWith(ANCHOR_COMMENT_OPEN) ||
-      !text.endsWith(ANCHOR_COMMENT_CLOSE) ||
-      text.length < ANCHOR_COMMENT_OPEN.length + ANCHOR_COMMENT_CLOSE.length
-    ) {
+    if (tagMatch?.[1] !== undefined) {
+      if (tagMatch[1].startsWith(RESERVED_TAG_PREFIX)) {
+        const value = tagMatch[2];
+        tags.push({
+          tag: tagMatch[1],
+          value: value === undefined || value.length === 0 ? undefined : value,
+          line: line + offset,
+        });
+      }
       continue;
     }
 
-    const line = sourceFile.getLineAndColumnAtPos(range.getPos()).line;
-    const body = text.slice(ANCHOR_COMMENT_OPEN.length, -ANCHOR_COMMENT_CLOSE.length);
-    const tags: AnchorCommentTag[] = [];
-
-    for (const [offset, rawLine] of body.split(/\r?\n/u).entries()) {
-      const match = ANCHOR_COMMENT_TAG_LINE.exec(rawLine);
-
-      if (match?.[1] === undefined) {
-        continue;
-      }
-
-      const value = match[2];
-      tags.push({
-        name: match[1],
-        value: value === undefined || value.length === 0 ? undefined : value,
-        line: line + offset,
-      });
+    if (tags.length === 0) {
+      continue;
     }
 
-    if (tags.length > 0) {
-      blocks.push({ line, tags });
+    const content = COMMENT_LINE_BODY.exec(rawLine)?.[1] ?? "";
+
+    if (content.length > 0) {
+      continuations.push(line + offset);
     }
   }
 
-  return blocks;
+  return tags.length === 0 ? undefined : { line, tags, continuations };
 }
 
-function reifyAnchorComment(
-  block: { readonly line: number; readonly tags: readonly AnchorCommentTag[] },
+function isCommentBlock(text: string): boolean {
+  return (
+    text.startsWith(COMMENT_OPEN) &&
+    text.endsWith(COMMENT_CLOSE) &&
+    text.length >= COMMENT_OPEN.length + COMMENT_CLOSE.length
+  );
+}
+
+function reifyCommentBlock(
+  block: CommentBlock,
   file: string,
   findings: Finding[],
 ): ReifiedAnchor | undefined {
-  const opener = block.tags.find((tag) => tag.name === "anchor");
+  const opener = block.tags.find((tag) => tag.tag === "sdpAnchor");
 
   // The flavor is the opener's namespace; without it no other line can be judged, and the block
   // is refused with the one finding the constant form gives a missing id.
@@ -875,7 +937,7 @@ function reifyAnchorComment(
       createAnchorFinding(
         extractFindingIds.nonStaticEnvelope,
         "error",
-        'anchor field "id" is missing — a comment block carrying @sdp-* lines must open with @sdp-anchor <id>',
+        'anchor field "id" is missing — a comment block carrying @sdp… tags must open its anchor with @sdpAnchor <id>',
         file,
         block.line,
         undefined,
@@ -887,8 +949,10 @@ function reifyAnchorComment(
 
   const opened =
     opener.value === undefined
-      ? { ok: false as const, reason: 'tag "@sdp-anchor" carries no id' }
-      : checkIdText(opener.value, ANCHOR_ID_NAMESPACES);
+      ? { ok: false as const, reason: 'tag "@sdpAnchor" carries no id' }
+      : opener.value.includes(",")
+        ? { ok: false as const, reason: 'tag "@sdpAnchor" names more than one id' }
+        : checkIdText(opener.value, ANCHOR_ID_NAMESPACES);
 
   if (!opened.ok) {
     findings.push(
@@ -914,11 +978,20 @@ function reifyAnchorComment(
   const envelope = new AnchorEnvelope(flavor, file, block.line, opened.id, findings);
 
   for (const tag of block.tags) {
-    const name = ANCHOR_COMMENT_TAG_FIELDS.get(tag.name) ?? tag.name;
+    const name = COMMENT_TAG_FIELDS.get(tag.tag);
+
+    if (name === undefined) {
+      envelope.failEnvelope(
+        tag.line,
+        `tag "@${tag.tag}" is not a reserved anchor tag (${[...COMMENT_TAG_FIELDS.keys()].map((known) => `@${known}`).join(" · ")}) — the envelope is closed`,
+        tag.tag,
+      );
+      continue;
+    }
 
     if (tag.value === undefined) {
       if (envelope.markAuthored(name, tag.line)) {
-        envelope.failEnvelope(tag.line, `tag "@sdp-${tag.name}" carries no value`, name);
+        envelope.failEnvelope(tag.line, `tag "@${tag.tag}" carries no value`, name);
       }
       continue;
     }
@@ -926,7 +999,106 @@ function reifyAnchorComment(
     envelope.field(name, tag.line, commentFieldReader(tag, tag.value, envelope));
   }
 
+  for (const line of block.continuations) {
+    envelope.failEnvelope(
+      line,
+      "a line after the first reserved tag must open a tag — a wrapped target is refused, never read as prose",
+    );
+  }
+
   return envelope.finish();
+}
+
+interface TopLevelComment {
+  readonly pos: number;
+  readonly text: string;
+  readonly line: number;
+}
+
+/**
+ * Every top-level comment of a file, in source order: the leading and trailing comments of each
+ * top-level statement, then the comments after the last statement (the end-of-file token's
+ * leading trivia, which is all of a comment-only file). Attachment to a declaration is not
+ * recorded: a block above the first import is simply an anchor in that file.
+ */
+function topLevelComments(sourceFile: SourceFile): readonly TopLevelComment[] {
+  const seen = new Set<number>();
+  const comments: TopLevelComment[] = [];
+  const collect = (ranges: readonly { getPos(): number; getText(): string }[]): void => {
+    for (const range of ranges) {
+      if (seen.has(range.getPos())) {
+        continue;
+      }
+
+      seen.add(range.getPos());
+      comments.push({
+        pos: range.getPos(),
+        text: range.getText(),
+        line: sourceFile.getLineAndColumnAtPos(range.getPos()).line,
+      });
+    }
+  };
+
+  for (const statement of sourceFile.getStatements()) {
+    collect(statement.getLeadingCommentRanges());
+    collect(statement.getTrailingCommentRanges());
+  }
+
+  // The end-of-file token is not a ts-morph node; its leading trivia holds every comment after
+  // the last statement, which is the whole of a comment-only file.
+  const fullText = sourceFile.getFullText();
+  collect(
+    (ts.getLeadingCommentRanges(fullText, sourceFile.compilerNode.endOfFileToken.pos) ?? []).map(
+      (range) => ({
+        getPos: () => range.pos,
+        getText: () => fullText.slice(range.pos, range.end),
+      }),
+    ),
+  );
+
+  return comments.sort((left, right) => left.pos - right.pos);
+}
+
+/**
+ * A reserved tag in a nested position (a class body, a function body, an object literal, a JSX
+ * expression) is refused, never ignored: the author believes a binding exists (L2).
+ */
+function reportMisplacedReservedTags(
+  sourceFile: SourceFile,
+  topLevelPositions: ReadonlySet<number>,
+  file: string,
+  findings: Finding[],
+): void {
+  const reported = new Set<number>();
+  const inspect = (ranges: readonly { getPos(): number; getText(): string }[]): void => {
+    for (const range of ranges) {
+      const pos = range.getPos();
+
+      if (topLevelPositions.has(pos) || reported.has(pos)) {
+        continue;
+      }
+
+      if (!range.getText().includes(`@${RESERVED_TAG_PREFIX}`)) {
+        continue;
+      }
+
+      reported.add(pos);
+      findings.push(
+        createAnchorFinding(
+          extractFindingIds.nonStaticEnvelope,
+          "error",
+          "misplaced reserved tag: an @sdp… tag binds only from a top-level /** … */ comment, never from a nested position",
+          file,
+          sourceFile.getLineAndColumnAtPos(pos).line,
+        ),
+      );
+    }
+  };
+
+  sourceFile.forEachDescendant((node) => {
+    inspect(node.getLeadingCommentRanges());
+    inspect(node.getTrailingCommentRanges());
+  });
 }
 
 /* ----- the file sweep ----- */
@@ -934,8 +1106,8 @@ function reifyAnchorComment(
 /**
  * Reifies the anchors of one source file standalone — no type checker, no import following
  * (static reification without execution, MD-14). The comment form is read off every top-level
- * statement's leading `/** … *\/` blocks whether or not the file imports anything; the constant
- * form, and the misplaced-authoring scan, need a Protocol import binding. The scan warns loudly
+ * `/** … *\/` block whether or not the file imports anything, and a reserved tag anywhere else is
+ * refused; the constant form, and the misplaced-authoring scan, need a Protocol import binding. The scan warns loudly
  * on a protocol authoring call outside its recognized surface (L2 — a binding the author believes
  * exists must never silently fall out of the graph) and reaches exactly as far as the
  * import-binding contract (`PROTOCOL_MODULE_SPECIFIER`): a call through an out-of-contract
@@ -951,18 +1123,40 @@ export function reifyAnchorSourceFile(
   const hasBindings = bindings.named.size > 0 || bindings.namespaceLocals.size > 0;
   const anchors: ReifiedAnchor[] = [];
   const findings: Finding[] = [];
-  const recognizedCalls = new Set<CallExpression>();
 
-  for (const statement of sourceFile.getStatements()) {
-    for (const block of readAnchorCommentBlocks(statement, sourceFile)) {
-      const reified = reifyAnchorComment(block, relativePath, findings);
+  if (sourceFile.getFullText().includes(`@${RESERVED_TAG_PREFIX}`)) {
+    const comments = topLevelComments(sourceFile);
+
+    for (const comment of comments) {
+      if (!isCommentBlock(comment.text)) {
+        continue;
+      }
+
+      const block = readCommentBlock(comment.text, comment.line);
+      const reified =
+        block === undefined ? undefined : reifyCommentBlock(block, relativePath, findings);
 
       if (reified !== undefined) {
         anchors.push(reified);
       }
     }
 
-    if (!hasBindings || !Node.isVariableStatement(statement)) {
+    reportMisplacedReservedTags(
+      sourceFile,
+      new Set(comments.map((comment) => comment.pos)),
+      relativePath,
+      findings,
+    );
+  }
+
+  if (!hasBindings) {
+    return { anchors, findings };
+  }
+
+  const recognizedCalls = new Set<CallExpression>();
+
+  for (const statement of sourceFile.getStatements()) {
+    if (!Node.isVariableStatement(statement)) {
       continue;
     }
 
@@ -992,10 +1186,6 @@ export function reifyAnchorSourceFile(
         anchors.push(reified);
       }
     }
-  }
-
-  if (!hasBindings) {
-    return { anchors, findings };
   }
 
   sourceFile.forEachDescendant((node) => {

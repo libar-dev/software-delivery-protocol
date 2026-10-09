@@ -55,6 +55,10 @@ function siteless(graph: GraphSchema): unknown {
   };
 }
 
+function codeNodeIds(graph: GraphSchema): readonly string[] {
+  return graph.nodes.filter((node) => node.nodeType === "CodeNode").map((node) => node.id);
+}
+
 afterAll(() => {
   for (const root of temporaryRoots) {
     rmSync(root, { recursive: true, force: true });
@@ -66,14 +70,18 @@ const CONSTANT_FORM = `import { codeAnchor, codeAnchorId, componentAnchorId, ref
 export const readModel = codeAnchor({
   id: codeAnchorId("component:fixture.read-model"),
   label: "the read model",
+  layer: "application",
+  context: "platform",
 });
 
 export const rebuild = codeAnchor({
   id: codeAnchorId("impl:fixture.rebuild"),
   label: "the online rebuild path",
-  satisfies: [ref("spec:fixture.rebuild"), ref("spec:fixture.history-rebuild")],
+  satisfies: [ref("spec:fixture.rebuild")],
+  references: [ref("spec:fixture.history-rebuild")],
   component: componentAnchorId("component:fixture.read-model"),
   uses: [codeAnchorId("impl:fixture.gate"), componentAnchorId("component:fixture.read-model")],
+  role: "service",
 });
 
 export const gate = codeAnchor({
@@ -91,28 +99,32 @@ export const rebuildTest = specTest({
 const COMMENT_FORM = `/**
  * The read model. Prose stays local commentary and confers nothing.
  *
- * @sdp-anchor component:fixture.read-model
- * @sdp-label the read model
+ * @sdpAnchor component:fixture.read-model
+ * @sdpLabel the read model
+ * @sdpLayer application
+ * @sdpContext platform
  */
 export const readModel = {};
 
 /**
- * @sdp-anchor impl:fixture.rebuild
- * @sdp-label the online rebuild path
- * @sdp-satisfies spec:fixture.rebuild, spec:fixture.history-rebuild
- * @sdp-component component:fixture.read-model
- * @sdp-uses impl:fixture.gate, component:fixture.read-model
+ * @sdpAnchor impl:fixture.rebuild
+ * @sdpLabel the online rebuild path
+ * @sdpSatisfies spec:fixture.rebuild
+ * @sdpReferences spec:fixture.history-rebuild
+ * @sdpComponent component:fixture.read-model
+ * @sdpUses impl:fixture.gate, component:fixture.read-model
+ * @sdpRole service
  */
 export async function rebuild(): Promise<void> {}
 
-/** @sdp-anchor impl:fixture.gate
- *  @sdp-satisfies spec:fixture.gate */
+/** @sdpAnchor impl:fixture.gate
+ *  @sdpSatisfies spec:fixture.gate */
 export function gate(): void {}
 
 /**
- * @sdp-anchor test:fixture.rebuild
- * @sdp-label rebuild is verified
- * @sdp-verifies spec:fixture.rebuild, spec:fixture.gate
+ * @sdpAnchor test:fixture.rebuild
+ * @sdpLabel rebuild is verified
+ * @sdpVerifies spec:fixture.rebuild, spec:fixture.gate
  */
 export function rebuildTest(): void {}
 `;
@@ -132,12 +144,6 @@ describe("the two anchor forms", () => {
       },
       {
         from: "impl:fixture.rebuild",
-        type: "satisfies",
-        to: "spec:fixture.history-rebuild",
-        claim: "anchored",
-      },
-      {
-        from: "impl:fixture.rebuild",
         type: "memberOf",
         to: "component:fixture.read-model",
         claim: "anchored",
@@ -147,6 +153,12 @@ describe("the two anchor forms", () => {
         from: "impl:fixture.rebuild",
         type: "uses",
         to: "component:fixture.read-model",
+        claim: "anchored",
+      },
+      {
+        from: "impl:fixture.rebuild",
+        type: "references",
+        to: "spec:fixture.history-rebuild",
         claim: "anchored",
       },
     ]);
@@ -164,13 +176,30 @@ describe("the two anchor forms", () => {
         claim: "anchored",
       },
     ]);
-    // An identity-only component anchor mints a CodeNode and nothing else.
-    expect(result.graph.nodes).toContainEqual(
-      expect.objectContaining({ id: "component:fixture.read-model", nodeType: "CodeNode" }),
-    );
+    // An identity-only component anchor mints a CodeNode, with its layer and context, and no edge.
+    expect(result.graph.nodes).toContainEqual({
+      id: "component:fixture.read-model",
+      nodeType: "CodeNode",
+      claim: "anchored",
+      label: "the read model",
+      file: "src/constant.ts",
+      line: 3,
+      layer: "application",
+      context: "platform",
+    });
     expect(result.graph.edges.some((edge) => edge.from === "component:fixture.read-model")).toBe(
       false,
     );
+    expect(result.graph.nodes).toContainEqual(
+      expect.objectContaining({ id: "impl:fixture.rebuild", role: "service" }),
+    );
+    // `references` confers nothing: only the satisfied Spec reads implemented.
+    const primitive = (id: string) =>
+      result.graph.nodes.find((node) => node.id === id && node.nodeType === "Primitive");
+    expect(primitive("spec:fixture.rebuild")).toEqual(
+      expect.objectContaining({ deliveryFacts: ["implemented", "has-verifier"] }),
+    );
+    expect(primitive("spec:fixture.history-rebuild")).not.toHaveProperty("deliveryFacts");
     expect(validateGraph(result.graph).findings).toEqual([]);
   });
 
@@ -187,6 +216,8 @@ describe("the two anchor forms", () => {
         label: "the read model",
         file: "src/comment.ts",
         line: 1,
+        layer: "application",
+        context: "platform",
       },
       {
         id: "impl:fixture.rebuild",
@@ -194,14 +225,15 @@ describe("the two anchor forms", () => {
         claim: "anchored",
         label: "the online rebuild path",
         file: "src/comment.ts",
-        line: 9,
+        line: 11,
+        role: "service",
       },
       {
         id: "impl:fixture.gate",
         nodeType: "CodeNode",
         claim: "anchored",
         file: "src/comment.ts",
-        line: 18,
+        line: 22,
       },
       {
         id: "test:fixture.rebuild",
@@ -209,7 +241,7 @@ describe("the two anchor forms", () => {
         claim: "anchored",
         label: "rebuild is verified",
         file: "src/comment.ts",
-        line: 22,
+        line: 26,
       },
     ]);
     expect(validateGraph(result.graph).findings).toEqual([]);
@@ -224,36 +256,83 @@ describe("the two anchor forms", () => {
     expect(siteless(comment.graph)).toEqual(siteless(constant.graph));
   });
 
-  it("reads only the leading /** block of a top-level statement", () => {
+  it("reads every top-level /** block: above an import, several before one statement, after the last, alone in a file", () => {
     const result = extract({
       root: fixtureRoot(
-        "scope.ts",
-        `// @sdp-anchor impl:fixture.line-comment
-/* @sdp-anchor impl:fixture.plain-block */
+        "attachment.ts",
+        `/** @sdpAnchor impl:fixture.above-import */
+import { readFileSync } from "node:fs";
+
+/** @sdpAnchor impl:fixture.first */
+/** @sdpAnchor impl:fixture.second */
+export const pair = readFileSync;
+/** @sdpAnchor impl:fixture.trailing */
+
+/**
+ * Ordinary documentation with a TSDoc tag and no reserved tag.
+ * @param nothing - is read here
+ */
+export function plain(): void {}
+
+/** @sdpAnchor impl:fixture.tail */
+`,
+      ),
+    });
+    const alone = extract({
+      root: fixtureRoot("alone.ts", `/** @sdpAnchor impl:fixture.alone\n *  @sdpRole barrel */\n`),
+    });
+
+    expect(result.report.findings).toEqual([]);
+    expect(codeNodeIds(result.graph)).toEqual([
+      "impl:fixture.above-import",
+      "impl:fixture.first",
+      "impl:fixture.second",
+      "impl:fixture.trailing",
+      "impl:fixture.tail",
+    ]);
+    expect(alone.report.findings).toEqual([]);
+    expect(alone.graph.nodes).toContainEqual(
+      expect.objectContaining({ id: "impl:fixture.alone", role: "barrel", line: 1 }),
+    );
+  });
+
+  it("refuses a reserved tag in a nested position and never reads a non-doc comment", () => {
+    const result = extract({
+      root: fixtureRoot(
+        "nested.ts",
+        `// @sdpAnchor impl:fixture.line-comment
+/* @sdpAnchor impl:fixture.plain-block */
 export function outer(): void {
   /**
-   * @sdp-anchor impl:fixture.nested
+   * @sdpAnchor impl:fixture.nested
    */
   const inner = 1;
   void inner;
 }
 
 export class Holder {
-  /** @sdp-anchor impl:fixture.member */
+  /** @sdpAnchor impl:fixture.member */
   method(): void {}
 }
 
-/** @sdp-anchor impl:fixture.gate */
-export const gate = 1; /** @sdp-anchor impl:fixture.trailing */
-/** @sdp-anchor impl:fixture.tail */
+export const literal = {
+  // @sdpReferences spec:fixture.gate
+  key: 1,
+};
 `,
       ),
     });
 
-    expect(result.report.findings).toEqual([]);
-    expect(
-      result.graph.nodes.filter((node) => node.nodeType === "CodeNode").map((n) => n.id),
-    ).toEqual(["impl:fixture.gate"]);
+    expect(result.report.findings).toEqual([
+      expect.objectContaining({
+        validatorId: extractFindingIds.nonStaticEnvelope,
+        line: 4,
+        message: expect.stringContaining("misplaced reserved tag") as string,
+      }),
+      expect.objectContaining({ validatorId: extractFindingIds.nonStaticEnvelope, line: 12 }),
+      expect.objectContaining({ validatorId: extractFindingIds.nonStaticEnvelope, line: 17 }),
+    ]);
+    expect(codeNodeIds(result.graph)).toEqual([]);
   });
 
   it("reports the same duplicate id across the two forms", () => {
@@ -263,8 +342,8 @@ export const gate = 1; /** @sdp-anchor impl:fixture.trailing */
         `import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
 
 /**
- * @sdp-anchor impl:fixture.gate
- * @sdp-satisfies spec:fixture.gate
+ * @sdpAnchor impl:fixture.gate
+ * @sdpSatisfies spec:fixture.gate
  */
 export const gate = codeAnchor({
   id: codeAnchorId("impl:fixture.gate"),
