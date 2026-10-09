@@ -1,6 +1,8 @@
 # Plan 40. Annotations, closer to the original design
 
-> **Status:** 🔨 EXECUTING. The owner's direction of 2026-10-09: move closer to the v0 design and
+> **Status:** ✅ EXECUTED, held for the owner's `ready` on MD-36 to MD-38. The full gate passed
+> at close on both repositories; every count below is derived, re-run the recipes rather than
+> quoting it. The owner's direction of 2026-10-09: move closer to the v0 design and
 > bring back the value of annotating architecturally significant units and their relationships
 > in code. This plan is the contract every session and agent on the arc reads. The engine,
 > corpus, and skills change together on `feature/annotations-v0`, stacked on
