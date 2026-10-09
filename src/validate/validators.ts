@@ -418,6 +418,7 @@ function checkEdgeContractRow(edge: GraphEdge, index: GraphIndex, findings: Find
 
   switch (edge.type) {
     case "satisfies":
+    case "references":
       requireClaim("anchored");
       requireEndpoints(["CodeNode"], "Primitive");
       return;

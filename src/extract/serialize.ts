@@ -225,6 +225,9 @@ function canonicalNode(node: GraphNode): Record<string, unknown> {
         ...(node.label === undefined ? {} : { label: node.label }),
         file: node.file,
         ...(node.line === undefined ? {} : { line: node.line }),
+        ...(node.role === undefined ? {} : { role: node.role }),
+        ...(node.layer === undefined ? {} : { layer: node.layer }),
+        ...(node.context === undefined ? {} : { context: node.context }),
       };
   }
 }

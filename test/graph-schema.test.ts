@@ -30,7 +30,7 @@ const openSectionOrderTestAnchor = specTest({
 void openSectionOrderTestAnchor;
 
 describe("graph schema", () => {
-  it("serializes authored entry order with description first and schema 0.7.0", () => {
+  it("serializes authored entry order with description first and schema 0.8.0", () => {
     const graph = deriveFixtureGraph({
       specs: [
         spec({
@@ -53,7 +53,7 @@ describe("graph schema", () => {
     });
     const serialized = JSON.parse(serializeGraph(graph)) as GraphSchema;
     const node = serialized.nodes.find((entry) => entry.nodeType === "Primitive");
-    expect(serialized.schemaVersion).toBe("0.7.0");
+    expect(serialized.schemaVersion).toBe("0.8.0");
     expect(Object.keys(node?.sections?.design ?? {})).toEqual([
       "description",
       "zeta",
@@ -197,10 +197,17 @@ The Model prose.
   });
 
   it("exports the graph schema contracts", () => {
-    expect(schemaVersion).toBe("0.7.0");
+    expect(schemaVersion).toBe("0.8.0");
     expect(graphNodeTypes).toEqual(["Primitive", "Pack", "Anchor", "CodeNode"]);
     expect(deliveryFactNames).toEqual(["implemented", "has-verifier", "observed"]);
-    expect(derivedEdgeTypes).toEqual(["belongsTo", "satisfies", "models", "memberOf", "uses"]);
+    expect(derivedEdgeTypes).toEqual([
+      "belongsTo",
+      "satisfies",
+      "models",
+      "memberOf",
+      "uses",
+      "references",
+    ]);
     expect(graphEdgeTypes).toEqual([
       "refines",
       "dependsOn",
@@ -213,6 +220,7 @@ The Model prose.
       "models",
       "memberOf",
       "uses",
+      "references",
     ]);
   });
 });

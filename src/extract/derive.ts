@@ -10,6 +10,8 @@ import type {
   PackNode,
   PrimitiveNode,
 } from "../graph/schema.js";
+import { CODE_ANCHOR_LAYERS } from "../model/anchors.js";
+import type { CodeAnchorLayer } from "../model/anchors.js";
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import { SPEC_SECTION_NAMES } from "../model/sections.js";
 import type { SpecSections } from "../model/sections.js";
@@ -114,6 +116,10 @@ function derivePackNode(entry: ReifiedPack, memberIds: readonly string[]): PackN
   };
 }
 
+function isCodeAnchorLayer(value: unknown): value is CodeAnchorLayer {
+  return typeof value === "string" && CODE_ANCHOR_LAYERS.some((layer) => layer === value);
+}
+
 function idList(value: unknown): readonly string[] {
   if (typeof value === "string") {
     return [value];
@@ -130,6 +136,10 @@ function deriveAnchorNode(entry: ReifiedAnchor): AnchorNode | CodeNode {
   const label = entry.data.label;
 
   if (entry.flavor === "code") {
+    const role = entry.data.role;
+    const layer = entry.data.layer;
+    const context = entry.data.context;
+
     return {
       id: entry.id,
       nodeType: "CodeNode",
@@ -137,6 +147,9 @@ function deriveAnchorNode(entry: ReifiedAnchor): AnchorNode | CodeNode {
       ...(typeof label === "string" ? { label } : {}),
       file: entry.file,
       line: entry.line,
+      ...(typeof role === "string" ? { role } : {}),
+      ...(isCodeAnchorLayer(layer) ? { layer } : {}),
+      ...(typeof context === "string" ? { context } : {}),
     };
   }
 
@@ -156,7 +169,7 @@ function deriveAnchorNode(entry: ReifiedAnchor): AnchorNode | CodeNode {
  * — the `spec:extraction.derive-graph` edge contract), one edge per authored relation, one derived `belongsTo` per
  * manifest entry, and anchored binding/structural edges per anchor. `memberOf` and `uses` connect
  * CodeNode endpoints only: they confer no delivery fact and deliberately do not join the reader's
- * binding-to-Spec traversal. `belongsTo` is a deterministic re-expression of the declared manifest,
+ * binding-to-Spec traversal. `references` reaches a Spec but confers nothing either. `belongsTo` is a deterministic re-expression of the declared manifest,
  * so it inherits its source's claim — there is no 4th claim (`spec:extraction.claim-taxonomy`). A dangling target is emitted, not dropped: the unresolved id itself
  * is the sentinel the referential-integrity check (`validateGraph`) flags — but resolution does
  * gate the delivery facts (see `computeDeliveryFacts`). Zero `inferred` claims by decision: the
@@ -245,17 +258,24 @@ export function deriveGraph(
       });
     }
 
-    const uses = Array.isArray(entry.data.uses) ? (entry.data.uses as readonly unknown[]) : [];
+    for (const dependency of idList(entry.data.uses)) {
+      edges.push({
+        from: entry.id,
+        type: "uses",
+        to: dependency,
+        claim: "anchored",
+      });
+    }
 
-    for (const dependency of uses) {
-      if (typeof dependency === "string") {
-        edges.push({
-          from: entry.id,
-          type: "uses",
-          to: dependency,
-          claim: "anchored",
-        });
-      }
+    // The non-conferring design reference: emitted as data like every other anchored edge, so a
+    // dangling target is referential integrity's sentinel and never a dropped binding.
+    for (const target of idList(entry.data.references)) {
+      edges.push({
+        from: entry.id,
+        type: "references",
+        to: target,
+        claim: "anchored",
+      });
     }
   }
 
