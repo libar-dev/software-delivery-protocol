@@ -665,6 +665,7 @@ describe("the agent-surface recipe corpus", () => {
         "atRiskSpecs",
         "atRiskOther",
         "coverageUnknownFiles",
+        "unlinkedUnits",
       ]),
     );
     expect(changedFiles).toEqual(radius.changedFiles);
@@ -745,6 +746,34 @@ describe("the agent-surface recipe corpus", () => {
     }
 
     expect(asArray(result.coverageUnknownFiles)).toEqual(radius.coverageUnknown);
+    expect(asArray(result.unlinkedUnits)).toEqual(
+      radius.unlinked.map((unit) => ({ id: unit.id, file: unit.file })),
+    );
+  });
+
+  it("names a changed identity-only unit as unlinked, never coverage-unknown or dropped", async () => {
+    const file = "src/probe/identity-only.ts";
+    const unit: GraphNode = {
+      id: "impl:probe.identity-only",
+      nodeType: "CodeNode",
+      claim: "anchored",
+      file,
+      line: 1,
+    };
+    const extraction: ExtractionResult = {
+      counts: derived.counts,
+      report: derived.report,
+      graph: {
+        schemaVersion: derived.graph.schemaVersion,
+        nodes: [...derived.graph.nodes, unit],
+        edges: derived.graph.edges,
+      },
+    };
+    const result = asRecord(await runRecipe(recipeByOrdinal(4), [file], extraction));
+
+    expect(result.unlinkedUnits).toEqual([{ id: unit.id, file }]);
+    expect(result.coverageUnknownFiles).toEqual([]);
+    expect(result.impactedSpecs).toEqual([]);
   });
 
   it("returns a pack's review backbone with its verifier gaps", async () => {

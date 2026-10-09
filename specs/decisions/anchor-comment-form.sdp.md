@@ -26,12 +26,12 @@ relations:
 - consequence: Target tags by flavor are `@sdpSatisfies` on a code anchor, `@sdpVerifies` on a test anchor, and `@sdpModels` on an oracle anchor; lists are comma-separated.
 - consequence: Structural tags are admitted on code anchors only: `@sdpComponent`, `@sdpUses`, `@sdpReferences`, `@sdpRole`; a component anchor additionally takes `@sdpLayer` and `@sdpContext`.
 - consequence: `@sdpLabel` is admitted on any flavor.
-- consequence: Any other `@sdp*` tag is an envelope error, because the envelope is closed exactly as it is in the constant form.
-- consequence: Attachment: every top-level `/** … */` block that contains a reserved tag is one anchor with exactly one `@sdpAnchor`; a block with reserved tags and no `@sdpAnchor` is an envelope error, and a block with two is a duplicate id.
-- consequence: Blocks above the first import, trailing blocks with no statement beneath them, and comment-only files are read; a reserved tag in a nested position, inside a function body, a class member, or an object literal, is a misplaced-tag error.
+- consequence: Any other `@sdp*` tag is an envelope error, because the envelope is closed exactly as it is in the constant form; a line that opens with `@sdp` is a reserved tag line, so a misspelling such as `@sdp-anchor` or `@sdpAnchor:` is refused rather than read as prose.
+- consequence: Attachment: every top-level `/** … */` block that contains a reserved tag is one anchor with exactly one `@sdpAnchor`; a block with reserved tags and no `@sdpAnchor` is an envelope error, and a block with two is an envelope error, as any repeated tag is.
+- consequence: Blocks above the first import, trailing blocks with no statement beneath them, and comment-only files are read; a `/** … */` block with a reserved tag in a nested position, inside a function body, a class member, an object literal, or a JSX expression, is a misplaced-tag error, and a nested comment the top level would not read stays unread.
 - consequence: The block's first line is the binding's file and line.
 - consequence: Cardinalities: each reserved tag appears at most once per block; `@sdpModels` takes one target; a list tag is non-empty, carries no empty item, and repeats no target.
-- consequence: Prose precedes the tags; a non-empty line that is not a reserved tag after the first reserved tag is a refused continuation.
+- consequence: Prose precedes the tags; after the first reserved tag, a non-empty line that does not open a tag is a refused continuation, and an ordinary TSDoc tag such as `@param` stays lawful and unread.
 - consequence: Parsing reads the raw comment text with a tag grammar; it does not depend on the TypeScript JSDoc tag parser.
 - consequence: The `hasProtocolBuilderImport` prefilter admits a file that contains the `@sdp` prefix.
 - consequence: The same id written in both forms reports through the existing duplicate-id validator.

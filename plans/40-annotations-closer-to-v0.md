@@ -250,3 +250,29 @@ serializer owns its bytes. Repository projections and contracts use the generati
 The full gate runs with `npm_config_cache=/private/tmp/plan40-npm-cache`, a writable cache for
 the package smoke test. Acceptance probes run after the gate to avoid concurrent writes to its
 generated roots. Wave 2 closes here; the adopter work above remains in this executing arc.
+
+## Review
+
+An independent read of the branch after wave 2 (gpt-6-astra, read-only) raised seven findings.
+
+1. Applied. A misspelled reserved tag (`@sdp-anchor`, `@sdpAnchor:`) read as prose and vanished
+   without a finding. A line that opens with `@sdp` is now a reserved tag line, and a misspelling
+   refuses the block.
+2. Applied. The nested-tag scan missed blocks before a closing brace and inside a JSX expression,
+   and refused nested `//` and `/*` comments the top level never reads. It now walks every comment
+   in the file and judges a nested comment by the top-level grammar.
+3. Deferred. The engine's Studio `references` point from existing code at Specs that rest on it,
+   which the review reads as inverting "written against". The showcase clause and the lineage
+   scout read `references` as design context, so the owner rules it: the open question
+   `#referenceDirection` on `spec:decisions.anchor-binding-grain`. The edges stay as declared.
+4. Applied. Recipe 4 dropped `blastRadius().unlinked`. Both bodies return `unlinkedUnits`, and a
+   test runs the recipe on a file that holds only an identity-only unit.
+5. Applied. The comment-form decision now says what the contract and the parser do: two openers
+   are an envelope error, and an ordinary TSDoc tag after the reserved tags stays lawful and
+   unread. The oracle declares the amended text.
+6. Applied. `CONTEXT.md` and `sdp-authoring` now teach unattached top-level blocks, one-token role
+   and context values, identity-only anchors under `anchored`, direct test-to-Spec
+   `has-verifier`, which mistakes are loud and which silent, that a block binds by file and line
+   so a stale one still binds, and that `validate --watch` ignores source edits.
+7. Applied. `check-prose-schema.mjs` failed on the concept document's schema sentence, which now
+   names `0.8.0` as current and states what `0.8.0` adds.

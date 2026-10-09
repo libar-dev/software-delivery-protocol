@@ -188,9 +188,12 @@ membership order and point to `spec:carrier.markdown-pack-authoring` for the com
 
 ## Bind code, tests, and oracles
 
-Anchors are the only write path from code into the graph, and the ways to get them wrong are
-silent: nothing fails, the binding just never exists. An anchor carries identity, an optional
-label, its targets, and optional structure. It never carries behavior, rationale, readiness,
+Anchors are the only write path from code into the graph. Malformed authoring the extractor
+recognizes is an error: a field beyond the contract, a misspelled or misplaced reserved tag, a
+target that does not resolve. Two mistakes stay silent, because the extractor never recognizes
+them as authoring: a constant-form builder that is not a Protocol builder binding, and a comment
+that does not open with `/**`. Then nothing fails and the binding just never exists. An anchor
+carries identity, an optional label, its targets, and optional structure. It never carries behavior, rationale, readiness,
 status, acceptance criteria, or delivery facts, and a field beyond that contract is an extraction
 error. The law is `spec:model.anchors` and `spec:decisions.binding-not-liveness`. The id's
 namespace selects one of three flavors:
@@ -277,14 +280,21 @@ export async function rebuild(stream: string): Promise<void> {
   non-empty, and repeats no target.
 - Structure tags, code anchors only: `@sdpComponent`, `@sdpUses`, `@sdpRole`; a `component:`
   anchor also takes `@sdpLayer` and `@sdpContext`. `@sdpLabel` fits any flavor.
-- Prose comes first and authors nothing. After the first tag every non-empty line is a tag, so a
-  target wrapped onto a second line is refused rather than read as prose. Each tag appears at most
-  once.
-- Any other `@sdp` tag, a block with tags and no `@sdpAnchor`, and a tag inside a function body, a
-  class member, or an object literal are errors. A comment that opens with `/*` alone is never
-  read.
+- Prose comes first and authors nothing. After the first tag every non-empty line opens a tag,
+  so a target wrapped onto a second line is refused rather than read as prose; an ordinary TSDoc
+  tag such as `@param` stays lawful and is not read. Each tag appears at most once.
+- A line that opens with `@sdp` is a reserved tag, spelled exactly: `@sdp-anchor` or
+  `@sdpAnchor:` is an error, never prose. Any other `@sdp` tag, a block with tags and no
+  `@sdpAnchor`, and a tagged `/** … */` block inside a function body, a class member, an object
+  literal, or a JSX expression are errors. A comment that opens with `/*` alone is never read.
 - The block's first line is the binding's file and line, so `byFile` on the source file names the
   anchor. The same id written in both forms is a duplicate id.
+- The block binds by file and line, never by the statement beneath it. Delete or move that
+  statement and the block still binds, conferring what it did; a stale or wrong target that still
+  resolves is an authoritative binding until someone edits the block. Review a block with the code
+  beneath it.
+- `sdp validate --watch` re-runs on carrier edits only, never on source edits. After editing an
+  anchor, run `sdp validate` or query the graph again.
 
 The law is `spec:decisions.anchor-comment-form`. The decorator form stays an unextracted
 representation and mints nothing.

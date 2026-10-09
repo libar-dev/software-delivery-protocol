@@ -316,9 +316,55 @@ export class Holder {
 }
 
 export const literal = {
-  // @sdpReferences spec:fixture.gate
+  /** @sdpReferences spec:fixture.gate */
   key: 1,
 };
+
+export function quiet(): void {
+  // @sdpAnchor impl:fixture.nested-line-comment
+  /* @sdpAnchor impl:fixture.nested-plain-block */
+  /** Explain @sdpAnchor here: prose that mentions a tag reads nothing. */
+}
+
+export function empty(): void { /** @sdpAnchor impl:fixture.empty-body */ }
+
+export class Closing {
+  method(): void {}
+  /** @sdpAnchor impl:fixture.before-class-close */
+}
+
+export function afterLast(): void {
+  void 0;
+  /** @sdpAnchor impl:fixture.after-last-statement */
+}
+`,
+      ),
+    });
+
+    expect(result.report.findings).toEqual(
+      [4, 12, 17, 27, 31, 36].map((line): unknown =>
+        expect.objectContaining({
+          validatorId: extractFindingIds.nonStaticEnvelope,
+          line,
+          message: expect.stringContaining("misplaced reserved tag") as string,
+        }),
+      ),
+    );
+    expect(codeNodeIds(result.graph)).toEqual([]);
+  });
+
+  it("refuses a reserved tag in a JSX expression and reads nothing from JSX text", () => {
+    const result = extract({
+      root: fixtureRoot(
+        "view.tsx",
+        `export function View(): unknown {
+  return (
+    <section>
+      {/** @sdpAnchor impl:fixture.jsx-expression */}
+      /** @sdpAnchor impl:fixture.jsx-text */
+    </section>
+  );
+}
 `,
       ),
     });
@@ -329,8 +375,48 @@ export const literal = {
         line: 4,
         message: expect.stringContaining("misplaced reserved tag") as string,
       }),
-      expect.objectContaining({ validatorId: extractFindingIds.nonStaticEnvelope, line: 12 }),
-      expect.objectContaining({ validatorId: extractFindingIds.nonStaticEnvelope, line: 17 }),
+    ]);
+    expect(codeNodeIds(result.graph)).toEqual([]);
+  });
+
+  it("refuses a misspelled reserved tag rather than reading it as prose", () => {
+    const result = extract({
+      root: fixtureRoot(
+        "misspelled.ts",
+        `/** @sdp-anchor impl:fixture.hyphenated */
+export const hyphenated = 1;
+
+/** @sdpAnchor: impl:fixture.colon */
+export const colon = 1;
+
+/**
+ * @sdpBad: value
+ * @sdpAnchor impl:fixture.gate
+ * @sdpSatisfies spec:fixture.gate
+ */
+export const prefixed = 1;
+`,
+      ),
+    });
+    const malformed = (line: number, tag: string): unknown =>
+      expect.objectContaining({
+        validatorId: extractFindingIds.nonStaticEnvelope,
+        line,
+        message: expect.stringContaining(`malformed reserved tag "@${tag}"`) as string,
+      });
+    const missingOpener = (line: number): unknown =>
+      expect.objectContaining({
+        validatorId: extractFindingIds.nonStaticEnvelope,
+        line,
+        message: expect.stringContaining("must open its anchor with @sdpAnchor") as string,
+      });
+
+    expect(result.report.findings).toEqual([
+      malformed(1, "sdp-anchor"),
+      missingOpener(1),
+      malformed(4, "sdpAnchor:"),
+      missingOpener(4),
+      malformed(8, "sdpBad:"),
     ]);
     expect(codeNodeIds(result.graph)).toEqual([]);
   });

@@ -66,11 +66,11 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 | **`Pack`** | the authored grouping / review **aggregate** over `Spec`s; states **no truth of its own**; its `framing` is a plain descriptive note; a spec may belong to many packs; membership lives on the manifest, the `belongsTo` edge is derived from it | "SpecPack" |
 | **anchor** | a human-written pointer **in source code**: *"this code location is a **binding** into the graph"* — identity, an optional label, zero or more Spec targets, and optional structure; a binding assertion only, never system-truth content (no behavior, rationale, readiness, status, acceptance criteria, or delivery facts); yields `anchored`-claim edges; written in one of **two representations**, the constant form or the comment form, feeding one closed envelope (`spec:model.anchors`); in prose, the verb **"annotate"** means "write an anchor" | "marker" · "annotation" |
 | **constant form** | the anchor as a top-level `const` initialized with a trusted builder call (`codeAnchor` · `specTest` · `specOracle`), reified statically; trust is by Protocol builder import, from the package or its zero-dependency `/anchors` subpath | "anchor constant" (the old name) · "marker constant" |
-| **comment form** | the anchor as a `/** … */` doc comment on a top-level statement of a `.ts`/`.tsx` file, carrying reserved camelCase, TSDoc-compatible tags (`@sdpAnchor` · `@sdpSatisfies` · `@sdpReferences` · `@sdpRole` · …); `@sdpAnchor <id>` opens it, only the reserved tags are read, prose authors nothing, and no import is required (the comment-form ruling, MD-36) | "JSDoc anchor" · "doc tag" |
+| **comment form** | the anchor as a top-level `/** … */` block in a `.ts`/`.tsx` file, above a statement, after the last one, or alone in the file, carrying reserved camelCase, TSDoc-compatible tags (`@sdpAnchor` · `@sdpSatisfies` · `@sdpReferences` · `@sdpRole` · …); `@sdpAnchor <id>` opens it, only the reserved tags are read, prose authors nothing, and no import is required (the comment-form ruling, MD-36) | "JSDoc anchor" · "doc tag" |
 | **references** | the derived, `anchored` CodeNode → `Spec` edge from a code anchor's `references` list: *this code is written against that design*; confers no delivery fact, moves no floor, and the drift alarm ignores it (the binding-grain ruling, MD-37) | "see-also" · "satisfies" (a realization claim) · "dependsOn" (a Spec relation) |
-| **role** | the optional free string on a code anchor naming the architectural pattern its unit plays (`service` · `decider` · `projection` · …); a corpus-owned vocabulary whose taxonomy the census renders with counts, checked against no list (the architectural-annotation ruling, MD-38) | "pattern" · "kind" (reserved for the Spec descriptor) · "tag" |
+| **role** | the optional one-token value on a code anchor, lowercase kebab and never normalized, naming the architectural pattern its unit plays (`service` · `decider` · `projection` · …); a corpus-owned vocabulary whose taxonomy the census renders with counts, checked against no list (the architectural-annotation ruling, MD-38) | "pattern" · "kind" (reserved for the Spec descriptor) · "tag" |
 | **layer** | the optional closed-set attribute of a `component:` anchor — `edge` · `application` · `domain` · `adapter` · `infrastructure`; outside the set, or on a non-component anchor, an envelope error | "tier" |
-| **context** | the optional free string on a `component:` anchor naming its bounded context; on a non-component anchor, an envelope error | "bounded_context" (the v0 field) · "domain" |
+| **context** | the optional one-token value on a `component:` anchor, in the token grammar of `role`, naming its bounded context; on a non-component anchor, an envelope error | "bounded_context" (the v0 field) · "domain" |
 | **architecturally significant unit** | a code unit with exported public surface or cross-component reach that warrants graph-visible structural binding — component membership, uses declarations for its architectural dependencies, a role, and references to the designs it rests on; annotated on the anchor of the code that realizes it; the accepted set is an owner-reviewed declaration, never derived from imports (carried by `spec:model.structural-patterns`) | "pattern" (refused by the architectural-annotation ruling, MD-38, which supersedes MD-34) |
 
 **Two grouping mechanisms, kept distinct:** *refinement* (parent `Spec` → children — authored truth with
@@ -82,7 +82,7 @@ descendants) vs *the aggregate* (the `Pack` — a cross-cutting review collectio
 |---|---|---|
 | **`claim`** | a fact's **epistemic status** — never its ancestry; values `declared` / `anchored` / `inferred`, **never collapsed** | "provenance" |
 | **declared** | human-authored *intent* (relations, readiness, decisions) — authoritative intent | — |
-| **anchored** | a human *binding* — an anchor points code → a `Spec` ID — authoritative binding, no intent | — |
+| **anchored** | a human *binding* — an anchor binds a code unit, test, or oracle into the graph, pointing at zero or more `Spec` IDs (an identity-only code anchor binds structure alone) — authoritative binding, no intent | — |
 | **inferred** | machine-derived *structure* (calls, imports) — advisory, never authoritative | — |
 | **authored / derived** | the umbrella pair: authored = human claims (`declared` + `anchored`); derived = machine output | — |
 
@@ -95,7 +95,7 @@ claim category** — it **inherits** its source's `claim` (so `belongsTo` carrie
 |---|---|---|
 | **delivery fact** | a derived truth about a `Spec`'s *realization*, computed from edges, shown as a badge — **never authored** (authoring one is an honesty violation) | a readiness rung |
 | **`implemented`** | ≥1 `satisfies` edge resolves directly to the Spec — code **claims** to realise it, *not* that it works or is live; the fact never propagates through refinement | — |
-| **`has-verifier`** | ≥1 `verifies` edge from an **enabled verifier** resolves to the Spec — a verifier *exists*, *not* that it passed | — |
+| **`has-verifier`** | a resolving test anchor `verifies` the Spec directly, or an **enabled verifier** verifies it — a verifier *exists*, *not* that it passed | — |
 | **`observed`** *(aspirational)* | runtime evidence links to the Spec's target — the liveness rung | — |
 | **enabled verifier** | a verifying `example`/scenario backed by a **linked, resolvable test anchor** — *structurally bound*, not runner-executed (skip/quarantine is CI's, exactly as pass/fail is) | — |
 

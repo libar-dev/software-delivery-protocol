@@ -89,12 +89,13 @@ const AUTHORING_BUILDER_NAMES = new Set<string>([
 /**
  * The comment-form line grammar (`spec:decisions.anchor-comment-form`): one TSDoc-compatible tag
  * per line, read off the raw comment text after the delimiters are stripped, never through the
- * TypeScript JSDoc tag parser. Every `@sdp…` tag is reserved; the known ones map onto the envelope
- * fields, an unknown one is refused. A tag with no value still matches, so it can be refused
- * loudly rather than ignored.
+ * TypeScript JSDoc tag parser. Every line that opens with `@sdp` is a reserved tag line; the known
+ * tags map onto the envelope fields, and an unknown or misspelled one (`@sdp-anchor`,
+ * `@sdpAnchor:`) is refused, never read as prose. A tag with no value still matches, so it can be
+ * refused loudly rather than ignored.
  */
-const COMMENT_TAG_LINE = /^\s*\*?\s*@([A-Za-z][A-Za-z0-9]*)(?:\s+(.*?))?\s*$/u;
 const COMMENT_LINE_BODY = /^\s*\*?\s*(.*?)\s*$/u;
+const COMMENT_TAG = /^@([A-Za-z][A-Za-z0-9]*)(?:\s+(.*))?$/u;
 const RESERVED_TAG_PREFIX = "sdp";
 const COMMENT_OPEN = "/**";
 const COMMENT_CLOSE = "*/";
@@ -796,6 +797,8 @@ interface CommentTag {
   readonly tag: string;
   readonly value: string | undefined;
   readonly line: number;
+  /** A line that opens with `@sdp` but is not spelled as a tag: refused, never prose. */
+  readonly malformed: boolean;
 }
 
 interface CommentBlock {
@@ -878,9 +881,11 @@ function commentFieldReader(tag: CommentTag, value: string, envelope: AnchorEnve
 }
 
 /**
- * One `/** … *\/` block reduced to its reserved tag lines. Prose may precede the first reserved
- * tag; after it, every non-empty line must open a tag (`@…`), so an accidentally wrapped target
- * is refused rather than read as prose. Other TSDoc tags (`@param`, `@returns`) are not read.
+ * One `/** … *\/` block reduced to its reserved tag lines. A line that opens with `@sdp` is a
+ * reserved tag line wherever it stands, so a misspelled tag is refused rather than read as prose.
+ * Prose may precede the first reserved tag; after it, every non-empty line must open a tag
+ * (`@…`), so an accidentally wrapped target is refused rather than read as prose. Other TSDoc
+ * tags (`@param`, `@returns`) are not read.
  */
 function readCommentBlock(text: string, line: number): CommentBlock | undefined {
   const body = text.slice(COMMENT_OPEN.length, -COMMENT_CLOSE.length);
@@ -888,25 +893,32 @@ function readCommentBlock(text: string, line: number): CommentBlock | undefined 
   const continuations: number[] = [];
 
   for (const [offset, rawLine] of body.split(/\r?\n/u).entries()) {
-    const tagMatch = COMMENT_TAG_LINE.exec(rawLine);
-
-    if (tagMatch?.[1] !== undefined) {
-      if (tagMatch[1].startsWith(RESERVED_TAG_PREFIX)) {
-        const value = tagMatch[2];
-        tags.push({
-          tag: tagMatch[1],
-          value: value === undefined || value.length === 0 ? undefined : value,
-          line: line + offset,
-        });
-      }
-      continue;
-    }
-
-    if (tags.length === 0) {
-      continue;
-    }
-
     const content = COMMENT_LINE_BODY.exec(rawLine)?.[1] ?? "";
+    const tagMatch = COMMENT_TAG.exec(content);
+
+    if (content.startsWith(`@${RESERVED_TAG_PREFIX}`)) {
+      const value = tagMatch?.[2];
+      tags.push(
+        tagMatch?.[1] === undefined
+          ? {
+              tag: (content.split(/\s/u, 1)[0] ?? content).slice(1),
+              value: undefined,
+              line: line + offset,
+              malformed: true,
+            }
+          : {
+              tag: tagMatch[1],
+              value: value === undefined || value.length === 0 ? undefined : value,
+              line: line + offset,
+              malformed: false,
+            },
+      );
+      continue;
+    }
+
+    if (tagMatch !== null || tags.length === 0) {
+      continue;
+    }
 
     if (content.length > 0) {
       continuations.push(line + offset);
@@ -914,6 +926,10 @@ function readCommentBlock(text: string, line: number): CommentBlock | undefined 
   }
 
   return tags.length === 0 ? undefined : { line, tags, continuations };
+}
+
+function malformedTagMessage(tag: CommentTag): string {
+  return `malformed reserved tag "@${tag.tag}": a line that opens with @sdp is a reserved tag, written as @sdp and a camelCase name, then whitespace and its value`;
 }
 
 function isCommentBlock(text: string): boolean {
@@ -934,6 +950,19 @@ function reifyCommentBlock(
   // The flavor is the opener's namespace; without it no other line can be judged, and the block
   // is refused with the one finding the constant form gives a missing id.
   if (opener === undefined) {
+    for (const tag of block.tags.filter((candidate) => candidate.malformed)) {
+      findings.push(
+        createAnchorFinding(
+          extractFindingIds.nonStaticEnvelope,
+          "error",
+          malformedTagMessage(tag),
+          file,
+          tag.line,
+          undefined,
+          tag.tag,
+        ),
+      );
+    }
     findings.push(
       createAnchorFinding(
         extractFindingIds.nonStaticEnvelope,
@@ -979,6 +1008,11 @@ function reifyCommentBlock(
   const envelope = new AnchorEnvelope(flavor, file, block.line, opened.id, findings);
 
   for (const tag of block.tags) {
+    if (tag.malformed) {
+      envelope.failEnvelope(tag.line, malformedTagMessage(tag), tag.tag);
+      continue;
+    }
+
     const name = COMMENT_TAG_FIELDS.get(tag.tag);
 
     if (name === undefined) {
@@ -1060,9 +1094,60 @@ function topLevelComments(sourceFile: SourceFile): readonly TopLevelComment[] {
   return comments.sort((left, right) => left.pos - right.pos);
 }
 
+function isJsDocNode(node: ts.Node): boolean {
+  return node.kind >= ts.SyntaxKind.FirstJSDocNode && node.kind <= ts.SyntaxKind.LastJSDocNode;
+}
+
+/**
+ * Every comment of a file, in source order. A comment sits in the trivia between two tokens, as
+ * the leading trivia of the next token or the trailing trivia of the one before, so a walk over
+ * every token, closing delimiters and the end-of-file token included, misses none: not one before
+ * the closing brace of an empty body, not one in an empty JSX expression. JSX text and a doc
+ * comment's own content are not trivia, so neither is scanned for comments.
+ */
+function everyComment(sourceFile: SourceFile): readonly TopLevelComment[] {
+  const root = sourceFile.compilerNode;
+  const fullText = root.getFullText();
+  const ranges = new Map<number, ts.CommentRange>();
+  const jsxText: { readonly pos: number; readonly end: number }[] = [];
+  const visit = (node: ts.Node): void => {
+    if (isJsDocNode(node)) {
+      return;
+    }
+
+    if (node.kind === ts.SyntaxKind.JsxText) {
+      jsxText.push({ pos: node.pos, end: node.end });
+      return;
+    }
+
+    for (const range of [
+      ...(ts.getLeadingCommentRanges(fullText, node.pos) ?? []),
+      ...(ts.getTrailingCommentRanges(fullText, node.end) ?? []),
+    ]) {
+      ranges.set(range.pos, range);
+    }
+
+    for (const child of node.getChildren(root)) {
+      visit(child);
+    }
+  };
+
+  visit(root);
+  return [...ranges.values()]
+    .filter((range) => !jsxText.some((text) => range.pos >= text.pos && range.pos < text.end))
+    .sort((left, right) => left.pos - right.pos)
+    .map((range) => ({
+      pos: range.pos,
+      text: fullText.slice(range.pos, range.end),
+      line: sourceFile.getLineAndColumnAtPos(range.pos).line,
+    }));
+}
+
 /**
  * A reserved tag in a nested position (a class body, a function body, an object literal, a JSX
- * expression) is refused, never ignored: the author believes a binding exists (L2).
+ * expression) is refused, never ignored: the author believes a binding exists (L2). A nested
+ * comment is judged by the grammar the top level reads: a `/** … *\/` block with a reserved tag
+ * line is refused, and a `//` or `/*` comment, or prose that mentions a tag, stays unread.
  */
 function reportMisplacedReservedTags(
   sourceFile: SourceFile,
@@ -1070,36 +1155,25 @@ function reportMisplacedReservedTags(
   file: string,
   findings: Finding[],
 ): void {
-  const reported = new Set<number>();
-  const inspect = (ranges: readonly { getPos(): number; getText(): string }[]): void => {
-    for (const range of ranges) {
-      const pos = range.getPos();
-
-      if (topLevelPositions.has(pos) || reported.has(pos)) {
-        continue;
-      }
-
-      if (!range.getText().includes(`@${RESERVED_TAG_PREFIX}`)) {
-        continue;
-      }
-
-      reported.add(pos);
-      findings.push(
-        createAnchorFinding(
-          extractFindingIds.nonStaticEnvelope,
-          "error",
-          "misplaced reserved tag: an @sdp… tag binds only from a top-level /** … */ comment, never from a nested position",
-          file,
-          sourceFile.getLineAndColumnAtPos(pos).line,
-        ),
-      );
+  for (const comment of everyComment(sourceFile)) {
+    if (
+      topLevelPositions.has(comment.pos) ||
+      !isCommentBlock(comment.text) ||
+      readCommentBlock(comment.text, comment.line) === undefined
+    ) {
+      continue;
     }
-  };
 
-  sourceFile.forEachDescendant((node) => {
-    inspect(node.getLeadingCommentRanges());
-    inspect(node.getTrailingCommentRanges());
-  });
+    findings.push(
+      createAnchorFinding(
+        extractFindingIds.nonStaticEnvelope,
+        "error",
+        "misplaced reserved tag: an @sdp… tag binds only from a top-level /** … */ comment, never from a nested position",
+        file,
+        comment.line,
+      ),
+    );
+  }
 }
 
 /* ----- the file sweep ----- */
