@@ -5,7 +5,8 @@
 > in code. This plan is the contract every session and agent on the arc reads. The engine,
 > corpus, and skills change together on `feature/annotations-v0`, stacked on
 > `feature/adopter-round-2` (PR 28). The first adopter showcases the result on its PR 12 branch.
-> Readiness and backlog are read from the graph; this file is the brief, not the law.
+> Readiness and backlog are read from the graph; this file is the brief, not the law. Revised
+> once after an independent design review (gpt-6-astra, read-only) before wave 2.
 
 ## Why this arc
 
@@ -33,8 +34,8 @@ Each is a decision Spec at `defined`, held for the owner's `ready`. Names lead; 
 ### R1. The comment form (`spec:decisions.anchor-comment-form`, MD-36)
 
 Supersedes `spec:decisions.jsdoc-graph-extraction-refused` (MD-35). A second extracted
-representation of the anchor: a `/** … */` comment carrying reserved `@sdp-*` lines, attached as
-the leading doc comment of any top-level statement of a `.ts`/`.tsx` file. It feeds the same
+representation of the anchor: a `/** … */` comment carrying reserved camelCase `@sdp*` tags (TSDoc-compatible), read from every top-level `/** */` block
+of a `.ts`/`.tsx` file. It feeds the same
 closed anchor envelope as the constant form. Prose in the comment still authors nothing; only
 the reserved lines are read. The same id in two forms is a duplicate id. One grammar, by example:
 
@@ -42,37 +43,51 @@ the reserved lines are read. The same id in two forms is a duplicate id. One gra
 /**
  * The online rebuild path. Explanation stays local commentary and confers nothing.
  *
- * @sdp-anchor impl:platform.read-model.rebuild
- * @sdp-label the online rebuild path
- * @sdp-satisfies spec:application.rebuild
- * @sdp-references spec:application.history-rebuild
- * @sdp-component component:platform.read-model
- * @sdp-uses impl:platform.gate, impl:platform.context.adapter
- * @sdp-role service
+ * @sdpAnchor impl:platform.read-model.rebuild
+ * @sdpLabel the online rebuild path
+ * @sdpSatisfies spec:application.rebuild
+ * @sdpReferences spec:application.history-rebuild
+ * @sdpComponent component:platform.read-model
+ * @sdpUses impl:platform.gate, impl:platform.context.adapter
+ * @sdpRole service
  */
 export async function rebuild(...) {}
 ```
 
-- `@sdp-anchor <id>` opens the anchor; the id's namespace selects the flavor exactly as the
+- `@sdpAnchor <id>` opens the anchor; the id's namespace selects the flavor exactly as the
   constant builders do: `impl:` `api:` `component:` are code anchors, `test:` is a test anchor,
   `oracle:` is an oracle anchor.
-- Target lines by flavor: `@sdp-satisfies` (code), `@sdp-verifies` (test), `@sdp-models`
+- Target lines by flavor: `@sdpSatisfies` (code), `@sdpVerifies` (test), `@sdpModels`
   (oracle). Lists are comma-separated.
-- Structural lines, code anchors only: `@sdp-component`, `@sdp-uses`, `@sdp-references`,
-  `@sdp-role`; component anchors additionally `@sdp-layer`, `@sdp-context`.
-- `@sdp-label` on any flavor.
-- Any other `@sdp-*` line is an envelope error (closed envelope, as the constant form).
-  A block with `@sdp-*` lines and no `@sdp-anchor` is an envelope error. The block's first
-  line is the binding's `file`/`line`.
+- Structural lines, code anchors only: `@sdpComponent`, `@sdpUses`, `@sdpReferences`,
+  `@sdpRole`; component anchors additionally `@sdpLayer`, `@sdpContext`.
+- `@sdpLabel` on any flavor.
+- Any other `@sdp*` tag is an envelope error (closed envelope, as the constant form).
+  A block with reserved tags and no `@sdpAnchor`, or with two, is an envelope error. The block's
+  first line is the binding's `file`/`line`.
+- Attachment: every top-level `/** */` block containing a reserved tag is one anchor, whether it
+  leads an import, a declaration, trails the last statement, or is the only content of the file.
+  Attachment to a declaration is not recorded (open question: attachment kind and exported
+  name, as v0 03 §2.7). A reserved tag in a nested position is a misplaced-tag error.
+- Cardinality: each tag at most once per block; `@sdpModels` one target; the list tags take
+  comma lists with no empty or repeated item; a non-empty line after the first reserved tag
+  that does not start with `@` is a refused continuation, so a wrapped target never becomes
+  ignored prose; prose precedes the tags.
+- `@sdpRole` and `@sdpContext` values are one lowercase kebab token (`^[a-z][a-z0-9-]*$`), never
+  normalized; `@sdpLayer` is the closed five-value set.
 - Parsing reads the raw comment text with a line grammar; it does not depend on the TypeScript
   JSDoc tag parser. A comment that does not open with `/**` is never read.
-- No import is required. Trust is by reserved grammar, not by builder import. The
-  `hasProtocolBuilderImport` prefilter must admit a file containing `@sdp-anchor`.
+- No import is required. Trust is by reserved grammar, not by builder import: a file is read
+  for the comment form when it contains the `@sdp` prefix. The constant form keeps the
+  import-based prefilter and the "untrusted builder mints nothing" rule; the two routes are
+  separate. Neither is a security boundary against someone who can edit source; the
+  extraction root and exclusions bound the scan, as they do today.
 
 Also under R1: the package ships a zero-dependency subpath `@libar-dev/software-delivery-protocol/anchors`
 exporting the id builders and the three anchor builders and nothing else, for runtimes that may
-import but must not load `node:*` or ts-morph (v0 02 §3 verbatim). The extractor trusts that
-specifier as a Protocol builder module.
+import but must not load `node:*` or ts-morph (v0 02 §3 verbatim). ESM with declarations, built
+from the leaf modules; a test asserts the built file's import closure. The extractor trusts that
+specifier exactly, and the source barrel as a relative trusted module.
 
 ### R2. Binding grain (`spec:decisions.anchor-binding-grain`, MD-37)
 
@@ -85,17 +100,26 @@ Refines `spec:model.anchors`.
   code anchor. It confers no delivery fact, moves no floor, and the drift alarm ignores it. It
   says this code is written against that design. A target also named in `satisfies` is an error.
 - An identity-only code anchor (no `satisfies`, no `references`) is lawful: it mints a CodeNode
-  for structure and for `byFile`, and nothing else.
+  for structure and for `byFile`, and nothing else. `byFile` may return nodes with an empty Spec
+  list; `blastRadius` reports changed CodeNodes with no Spec linkage as their own list, never
+  dropped and never implying coverage.
+- `references` may target any Spec, decisions included. `satisfies` to a decision stays the
+  authoring prohibition of MD-26, not a new conferral filter. The drift alarm ignores
+  `references` and still reports a separate `satisfies` target below `ready`; recipe 1's
+  predicate is unchanged.
 - Entry-address targets (`spec:x#design.key`) stay an open question on the decision, with
   v0 03 §6.2 as the lineage.
 
 ### R3. Architectural annotation (`spec:decisions.architectural-annotation`, MD-38)
 
 Supersedes `spec:decisions.structural-anchor-semantics` (MD-30) and
-`spec:decisions.architectural-significance-rides-primitives` (MD-34). What survives from both is
-restated inside: `component` and `uses` semantics, structural non-conferral, no inference from
-imports, no status or readiness on code, significance never selects a Spec kind, no `pattern:`
-namespace. What changes:
+`spec:decisions.architectural-significance-rides-primitives` (MD-34). Every operational rule of
+both that still holds is restated inside: `component` and `uses` semantics (one-level
+membership, unique non-empty targets, self-reference refused, cycles as data, whole-envelope
+refusal, warn-level optional anchor lint), structural non-conferral, no inference from imports,
+no status or readiness on code, significance never selects a Spec kind, no `pattern:` namespace,
+`dependsOn` for genuine need only and scheduling edges refused, negative constraints as declared
+intent, no anchor pointed at an unfinished Spec to manufacture coverage. What changes:
 
 - `role?: string` on any code anchor: the architectural pattern the unit plays (gen 1's role;
   `service`, `decider`, `projection`, `read-model`, `codec`, `contract`, `barrel`, `utility` are
@@ -105,8 +129,13 @@ namespace. What changes:
 - `layer?: "edge" | "application" | "domain" | "adapter" | "infrastructure"` and
   `context?: string` (bounded context) on `component:` anchors only (v0 03 §2.5). `layer` is a
   closed set; a value outside it is an envelope error.
-- The declared component is the `component:` anchor. No separate architecture file; the anchor
-  is where the component is realized.
+- The `component:` anchor is anchored architecture, not v0's declared Component that could exist
+  before code. An unrealized component lives in Specs, never as an invented CodeNode. "No
+  independently declared Component" is a retained limitation, named in the decision. A package
+  may hold several layers or contexts; the mapping is reviewed, never one component per package.
+- The five layers, one line each, live in the decision; omission is lawful and nothing forces a
+  label to populate the census. The census links each role, layer and context value to its
+  units so an owner can reconcile synonyms.
 - The census and the Design Review render the new structure under their existing contracts
   (MD-30 already gave the census that duty); Mermaid and Gherkin are untouched, which keeps
   MD-32 as it stands. The decision names this.
@@ -134,16 +163,18 @@ component anchor is an envelope error. Duplicate ids across forms report through
 duplicate-id validator.
 
 Reader: `SpecContext` gains `references` (the CodeNodes that reference the Spec, with file and
-line). `byFile` returns the comment-form anchors at their site. `blastRadius` traverses
-`references` as a binding, naming the edge type in the reason. The frozen entry adapters stay
+line). `byFile` returns the comment-form anchors at their site and may return nodes with no Spec.
+`blastRadius` traverses `references` as a binding, naming the edge type and claim in the reason,
+and lists changed unlinked CodeNodes separately. The frozen entry adapters stay
 three.
 
 Projections: the census structural section renders role, layer, context and `references`; the
 Design Review Spec page lists "Referenced by" and the component rows show layer and context.
 Mermaid and Gherkin untouched.
 
-Recipes: 27 "References into a design" (per Spec: unbound, referenced, realized, verified, with
-the referencing and realizing units; the claim-map projection), 28 "Roles and layers" (the
+Recipes: 27 "References into a design" (per Spec, independent facts side by side: the
+referencing units, the realizing units, whether an enabled verifier exists; absence reads as
+unbound, never as "not built"; the claim-map projection, without a ladder), 28 "Roles and layers" (the
 taxonomy from the graph). Both executed by `test/recipes.test.ts`.
 
 Skills and docs: `sdp-agent-surface` (twelve edges, the new node fields, recipes 27 and 28),
@@ -162,15 +193,21 @@ verb "annotate" in prose means "write an anchor".
 The engine's own reader and projections code carries comment-form anchors with `references` into
 `pack:spec-studio-v1` members where the code is the design context a Studio Spec rests on; every
 engine component declares `layer` and `context`; architecturally significant units carry a
-`role`. Recipe 27 over the Studio Pack is the claim map as a projection. The self-hosting oracle
-re-derives its pins at close.
+`role`. Recipe 27 over the Studio Pack is the claim map as a projection. The self-hosting oracle's
+model changes with it: expected nodes separate from expected edges, zero-to-many bindings per
+anchor, the owner-reviewed significant-unit set preserved rather than generated, comment
+attachment asserted on its own; the census counts units apart from edges. Pins are re-derived
+at close and labelled so.
 
 ## The adopter showcase (PR 12 branch)
 
 Re-pin the package to this branch. Move the test-resident implementation anchors into `src/` as
-comment-form anchors at their real sites and delete `design/tools/anchor-sites.json`, its test,
-and the Pack page's reading of it. Declare one `component:` anchor per package with layer and
-context and `uses` between packages. Give significant units a role. Add `references` from the
+comment-form anchors at their real sites: one identity per realizing unit, so an identity that
+stood for several files becomes several identities, each choosing `satisfies` or `references`
+honestly, and every source-file-to-Spec association the sidecar recorded stays discoverable
+through `byFile` before the sidecar is deleted. Then delete `design/tools/anchor-sites.json`,
+its test, and the Pack page's reading of it. Declare `component:` anchors with layer and
+context from a reviewed mapping, and `uses` between them. Give significant units a role. Add `references` from the
 read-model code to the history-view Specs it is written against. Let the Pack page and
 `check.py` read the new structure. Record what changed in `docs/feedback/sdp-feedback-01.md`
 and in the PR description.
@@ -193,4 +230,7 @@ close commit. Never push without the owner's word.
 - A `references` edge reaches a Spec page and recipe 27 without conferring `implemented`.
 - Recipe 27 over `pack:spec-studio-v1` prints one row per member with its state.
 - The census prints the role, layer and context taxonomy from the graph alone.
-- `npm run check` passes; the adopter's `python3 design/tools/check.py` prints OK.
+- Every file-to-Spec pair the adopter's sidecar listed is returned by `byFile` after the sidecar
+  is gone.
+- `npm run check` passes; the adopter's lint, typecheck, tests and `python3 design/tools/check.py`
+  pass, so the comment form costs its runtime nothing.
