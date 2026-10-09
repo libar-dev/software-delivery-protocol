@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 
 import { runSdpCli } from "../src/cli/sdp.js";
 import { createReader, extract, validateGraph } from "../src/index.js";
-import type { ExtractionResult } from "../src/index.js";
+import type { ExtractionResult, GraphEdge, GraphNode } from "../src/index.js";
 import { expectedComponentIds, expectedUsesEdges } from "./self-hosting-oracle/structural-edges.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 
@@ -405,6 +405,8 @@ describe("the agent-surface recipe corpus", () => {
       "twenty-four",
       "twenty-five",
       "twenty-six",
+      "twenty-seven",
+      "twenty-eight",
     ] as const;
     const countWord = countWords[recipes.length];
     const lastOrdinal = recipes[recipes.length - 1]?.ordinal;
@@ -475,11 +477,13 @@ describe("the agent-surface recipe corpus", () => {
       "pinned declarations",
       "address resolution",
       "dependency cycles",
+      "references into a design",
+      "roles, layers and contexts",
     ]) {
       expect(agentSurfaceProse).toContain(phrase);
     }
 
-    for (const ordinal of [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]) {
+    for (const ordinal of [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]) {
       expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
     }
   });
@@ -1903,7 +1907,7 @@ export const probe = spec({
 }
 
 describe("register recipe semantics", () => {
-  it.each([20, 21, 22, 23, 24, 25, 26])(
+  it.each([20, 21, 22, 23, 24, 25, 26, 27, 28])(
     "runs recipe %s as written in default output",
     async (ordinal) => {
       const capture = createCaptureOutput();
@@ -2129,7 +2133,7 @@ describe("register recipe semantics", () => {
           check(entry, insideTotals || key === "totals");
       }
     };
-    for (const ordinal of [20, 21, 22, 23, 24, 25, 26]) {
+    for (const ordinal of [20, 21, 22, 23, 24, 25, 26, 27, 28]) {
       const output = asRecord(await runRecipe(recipeByOrdinal(ordinal)));
       check(output);
       for (const key of [
@@ -2143,6 +2147,9 @@ describe("register recipe semantics", () => {
         "matches",
         "rows",
         "cycles",
+        "roles",
+        "layers",
+        "contexts",
       ]) {
         if (key in output) expect(Array.isArray(output[key])).toBe(true);
       }
@@ -3488,5 +3495,208 @@ relations: {}
     expect(description.map((row) => [row.entry, row.address, row.matchedIn])).toEqual([
       ["openQuestions[1].question", "spec:probe.keyed#question.description", ["key", "text"]],
     ]);
+  });
+});
+
+const studioPackId = "pack:spec-studio-v1";
+
+/** One recipe 27 row, computed from the raw graph rather than through the reader. */
+function referenceRowFromGraph(extraction: ExtractionResult, memberId: string) {
+  const nodes = new Map(extraction.graph.nodes.map((node) => [node.id, node] as const));
+  const member = nodes.get(memberId);
+  const unitsBy = (type: "references" | "satisfies") =>
+    extraction.graph.edges
+      .filter((edge) => edge.type === type && edge.to === memberId)
+      .filter((edge) => nodes.get(edge.from)?.nodeType === "CodeNode")
+      .map((edge) => edge.from)
+      .sort();
+
+  return {
+    id: memberId,
+    resolved: member?.nodeType === "Primitive",
+    referencedBy: unitsBy("references").map((id) => ({ id, file: nodes.get(id)?.file ?? null })),
+    implementedBy: unitsBy("satisfies"),
+    hasVerifier:
+      member?.nodeType === "Primitive" && (member.deliveryFacts ?? []).includes("has-verifier"),
+  };
+}
+
+/** Every value one CodeNode field carries, with its units, computed from the raw graph. */
+function taxonomyFromGraph(extraction: ExtractionResult, field: "role" | "layer" | "context") {
+  const byValue = new Map<string, string[]>();
+  for (const node of extraction.graph.nodes) {
+    const value = node.nodeType === "CodeNode" ? node[field] : undefined;
+    if (value !== undefined) byValue.set(value, [...(byValue.get(value) ?? []), node.id]);
+  }
+  return [...byValue.keys()]
+    .sort()
+    .map((value) => ({ value, units: [...(byValue.get(value) ?? [])].sort() }));
+}
+
+/**
+ * The base graph plus one identity-only code unit that references two Studio members and carries
+ * a role, one component with a layer and a context, and a dangling member on the Studio Pack.
+ */
+function referenceProbe(): {
+  readonly extraction: ExtractionResult;
+  readonly targets: readonly [string, string];
+} {
+  const pack = derived.graph.nodes.find((node) => node.id === studioPackId);
+  if (pack?.nodeType !== "Pack") throw new Error(`the corpus must hold ${studioPackId}`);
+  const [first, second] = pack.members;
+  if (first === undefined || second === undefined) {
+    throw new Error(`${studioPackId} must hold at least two members`);
+  }
+  const unit: GraphNode = {
+    id: "impl:probe.studio-reader",
+    nodeType: "CodeNode",
+    claim: "anchored",
+    label: "written against the Studio design",
+    file: "src/probe/studio-reader.ts",
+    line: 1,
+    role: "probe-role",
+  };
+  const seam: GraphNode = {
+    id: "component:probe.studio-seam",
+    nodeType: "CodeNode",
+    claim: "anchored",
+    file: "src/probe/studio-seam.ts",
+    line: 1,
+    layer: "domain",
+    context: "probe-context",
+  };
+  const references: readonly GraphEdge[] = [first, second].map((to) => ({
+    from: unit.id,
+    type: "references",
+    to,
+    claim: "anchored",
+  }));
+
+  return {
+    targets: [first, second],
+    extraction: {
+      counts: derived.counts,
+      report: derived.report,
+      graph: {
+        schemaVersion: derived.graph.schemaVersion,
+        nodes: [
+          ...derived.graph.nodes.map((node) =>
+            node === pack
+              ? { ...pack, members: [...pack.members, "spec:probe.absent-member"] }
+              : node,
+          ),
+          unit,
+          seam,
+        ],
+        edges: [...derived.graph.edges, ...references],
+      },
+    },
+  };
+}
+
+describe("design references and the architecture taxonomy", () => {
+  it("returns one row per Studio member with three independent facts", async () => {
+    const recipe = recipeByOrdinal(27);
+    const result = asRecord(await runRecipe(recipe));
+    const pack = derived.graph.nodes.find((node) => node.id === studioPackId);
+    if (pack?.nodeType !== "Pack") throw new Error(`the corpus must hold ${studioPackId}`);
+    const rows = asArray(result.rows).map(asRecord);
+
+    expect(result.found).toBe(true);
+    expect(result.id).toBe(studioPackId);
+    expect(rows.map((row) => stringAt(row, "id"))).toEqual(pack.members);
+    expect(rows).toEqual(pack.members.map((id) => referenceRowFromGraph(derived, id)));
+
+    const count = (test: (row: Record<string, unknown>) => boolean) => rows.filter(test).length;
+    const listed = (row: Record<string, unknown>, key: string) => asArray(row[key]).length > 0;
+    expect(result.totals).toEqual({
+      members: rows.length,
+      withReferences: count((row) => listed(row, "referencedBy")),
+      withImplementations: count((row) => listed(row, "implementedBy")),
+      withVerifier: count((row) => row.hasVerifier === true),
+      unbound: count(
+        (row) =>
+          !listed(row, "referencedBy") && !listed(row, "implementedBy") && row.hasVerifier !== true,
+      ),
+    });
+
+    const absent = await runRecipe({
+      ...recipe,
+      body: recipe.body.replace(studioPackId, "pack:absent-v1"),
+    });
+    expect(absent).toEqual({ id: "pack:absent-v1", found: false });
+  });
+
+  it("lists a referencing unit beside the realizing units without conferring implemented", async () => {
+    const { extraction, targets } = referenceProbe();
+    const [target] = targets;
+    const before = asArray(asRecord(await runRecipe(recipeByOrdinal(27))).rows).map(asRecord);
+    const after = asArray(
+      asRecord(await runRecipe(recipeByOrdinal(27), undefined, extraction)).rows,
+    ).map(asRecord);
+    const rowFor = (rows: readonly Record<string, unknown>[], id: string) =>
+      rows.find((row) => row.id === id);
+
+    expect(asArray(rowFor(after, target)?.referencedBy)).toContainEqual({
+      id: "impl:probe.studio-reader",
+      file: "src/probe/studio-reader.ts",
+    });
+    expect(rowFor(after, target)?.implementedBy).toEqual(rowFor(before, target)?.implementedBy);
+    expect(rowFor(after, target)?.hasVerifier).toBe(rowFor(before, target)?.hasVerifier);
+    expect(createReader(extraction.graph).specContext(target)?.deliveryFacts).toEqual(
+      reader.specContext(target)?.deliveryFacts,
+    );
+    expect(rowFor(after, "spec:probe.absent-member")).toEqual({
+      id: "spec:probe.absent-member",
+      resolved: false,
+      referencedBy: [],
+      implementedBy: [],
+      hasVerifier: false,
+    });
+  });
+
+  it("returns the role, layer, and context taxonomy from the code units alone", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(28)));
+    const units = derived.graph.nodes.filter((node) => node.nodeType === "CodeNode");
+    const references = derived.graph.edges.filter((edge) => edge.type === "references");
+
+    expect(result).toEqual({
+      totals: {
+        codeUnits: units.length,
+        withRole: units.filter((unit) => unit.role !== undefined).length,
+        withLayer: units.filter((unit) => unit.layer !== undefined).length,
+        withContext: units.filter((unit) => unit.context !== undefined).length,
+        references: references.length,
+        referencingUnits: new Set(references.map((edge) => edge.from)).size,
+        referencedSpecs: new Set(references.map((edge) => edge.to)).size,
+      },
+      roles: taxonomyFromGraph(derived, "role"),
+      layers: taxonomyFromGraph(derived, "layer"),
+      contexts: taxonomyFromGraph(derived, "context"),
+    });
+  });
+
+  it("counts references as edges apart from the units that carry them", async () => {
+    const { extraction } = referenceProbe();
+    const before = asRecord(asRecord(await runRecipe(recipeByOrdinal(28))).totals);
+    const result = asRecord(await runRecipe(recipeByOrdinal(28), undefined, extraction));
+    const after = asRecord(result.totals);
+    const valueRow = (key: string, value: string) =>
+      asArray(result[key])
+        .map(asRecord)
+        .find((row) => row.value === value);
+
+    expect(numberAt(after, "codeUnits")).toBe(numberAt(before, "codeUnits") + 2);
+    expect(numberAt(after, "references")).toBe(numberAt(before, "references") + 2);
+    expect(numberAt(after, "referencingUnits")).toBe(numberAt(before, "referencingUnits") + 1);
+    expect(valueRow("roles", "probe-role")).toEqual({
+      value: "probe-role",
+      units: ["impl:probe.studio-reader"],
+    });
+    expect(valueRow("contexts", "probe-context")).toEqual({
+      value: "probe-context",
+      units: ["component:probe.studio-seam"],
+    });
+    expect(asArray(valueRow("layers", "domain")?.units)).toContain("component:probe.studio-seam");
   });
 });

@@ -1,6 +1,6 @@
 ---
 name: sdp-agent-surface
-description: Query this repository's Spec graph through `sdp q` instead of reading spec files by hand. Use whenever a question is about the authored corpus — what a Spec says or guarantees, who verifies it, what is ready but unimplemented, what a change touches, what is still open or blocking, what a Spec depends on, where a concept lives, which Specs are in a Pack, what a component contains or uses, what the census or projections will see, or what the validation report says. Also use before editing `.sdp.md` files, before writing a Spec citation, and before answering "is this implemented / verified / ready".
+description: Query this repository's Spec graph through `sdp q` instead of reading spec files by hand. Use whenever a question is about the authored corpus — what a Spec says or guarantees, who verifies it, what is ready but unimplemented, what a change touches, what is still open or blocking, what a Spec depends on, where a concept lives, which Specs are in a Pack, what a component contains or uses, what code references a design, what the census or projections will see, or what the validation report says. Also use before editing `.sdp.md` files, before writing a Spec citation, and before answering "is this implemented / verified / ready".
 ---
 
 # The agent surface
@@ -22,14 +22,22 @@ every question is a filter or a join, never a tree walk. Four node types exist:
 - `Pack` — the review grouping: title, framing prose, `modelRefs`. Membership is `belongsTo`
   edges. A Pack states no system truth.
 - `Anchor` — a test or oracle binding, with the `file` and `line` of the binding itself.
-- `CodeNode` — the code identity a `codeAnchor` mints; structural `memberOf` and `uses` edges run
-  between these.
+- `CodeNode` — the code unit a code anchor mints, from either form: a `codeAnchor` constant or a
+  comment-form block whose id sits in the `impl:`, `api:`, or `component:` namespace. It carries
+  `file`, `line`, an optional `label`, and three optional structural attributes: `role`, the
+  architectural pattern the unit plays, on any unit; and on a `component:` unit only, `layer` (one
+  of `edge`, `application`, `domain`, `adapter`, `infrastructure`) and `context`, its bounded
+  context. None of the three confers anything. Structural `memberOf` and `uses` edges run between
+  these units.
 
-Eleven edge types exist, and the list is closed. Six are authored Spec relations: `refines`,
-`dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, `supersedes`. Five are derived by
-extraction: `belongsTo` (Pack membership), `satisfies` (code realization), `models` (oracle
-binding), `memberOf` and `uses` (anchored structure). A relation name outside this list is a bug
-in whatever prose named it, not a query to attempt. IDs are namespaced (`spec:` · `pack:` ·
+Twelve edge types exist, and the list is closed. Six are authored Spec relations: `refines`,
+`dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, `supersedes`. Six are derived by
+extraction: `belongsTo` (Pack membership), `satisfies` (code realization, one edge per target),
+`references` (code written against a design), `models` (oracle binding), `memberOf` and `uses`
+(anchored structure). A `references` edge runs from a code unit to a Spec and says only that the
+code rests on that design: it confers no delivery fact, moves no readiness floor, and the drift
+alarm ignores it. A relation name outside this list is a bug in whatever prose named it, not a
+query to attempt. IDs are namespaced (`spec:` · `pack:` ·
 `impl:` · `api:` · `component:` · `test:` · `oracle:`), and an edge whose target does not resolve
 confers no delivery fact. Every node and edge carries exactly one claim; the edge contract is
 `spec:extraction.derive-graph`, the claim law is `spec:extraction.claim-taxonomy`.
@@ -38,8 +46,9 @@ confers no delivery fact. Every node and edge carries exactly one claim; the edg
 
 Every fact enters the graph through one of three claims, and the claims are never collapsed.
 Carrier prose, relations, and stated readiness are `declared` intent. Source anchors are `anchored`
-bindings: a `codeAnchor` records that this code realizes that Spec, a `specTest` records that this
-test verifies its target Spec, a `specOracle` records that this function models that example space.
+bindings: a code anchor's `satisfies` records that this code realizes that Spec and its `references`
+records only that the code is written against it, a test anchor records that this test verifies
+its target Specs, an oracle anchor records that this function models that example space.
 Structure the extractor computes on its own enters as `inferred`.
 
 Delivery facts fall out of those edges. A Spec is `implemented` when a `satisfies` edge resolves to
@@ -85,10 +94,10 @@ The public projection publishers are `sdp view`, `sdp census`, `sdp mermaid`, an
 In this source checkout, use `npm run generate:self-hosting` or `npm run check:self-hosting` when
 all four roots must be published or certified together.
 
-The catalog contains twenty-six ready-made bodies in `docs/agent-surface/recipes.md` in the
+The catalog contains twenty-eight ready-made bodies in `docs/agent-surface/recipes.md` in the
 Protocol repository and
 `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an adopter.
-Recipes 1-26 each open under a numbered heading that names the recipe. Every body there runs
+Recipes 1-28 each open under a numbered heading that names the recipe. Every body there runs
 verbatim and a test proves it. Start from a recipe; adapt it in place.
 
 For structural questions, use component membership, uses fan-in and fan-out, structural
@@ -96,7 +105,12 @@ neighborhood, census structural coverage, and the projection-coverage upper boun
 For architecture questions, use the architecture map to see components and their shaping decisions
 together, the decision map to rank decisions by shaping fan-in (decided subjects plus inter-decision
 dependsOn and refines), or the planning slice to see refinement and dependency neighbors, shaping
-decisions, bound components, and entry points before editing.
+decisions, bound components, and entry points before editing. To read a Pack from the code side,
+run references into a design (recipe 27): one row per member with the units that reference it,
+the units that realize it, and whether a verifier is bound, three independent facts with no
+ladder. An empty list reads as unbound, never as "not built". For the architecture vocabulary
+itself, run roles, layers and contexts (recipe 28): every value the code anchors state, with the
+units that carry it, and the `references` edges counted apart from units.
 
 For a table you would otherwise keep by hand, run a register recipe each time you need it: the
 open-question register (recipe 20) for every open question with its blocking flag and its key,
@@ -119,6 +133,19 @@ through `dependsOn`, run dependency cycles (recipe 26): it lists each such set w
 path through it, and reports without refusing.
 
 Reach for the files only when you need the authored prose itself — the exact words to edit.
+
+## The entry adapters
+
+`g.specContext(id)` lists the units that realize the Spec under `implementations` and the units
+written against it under `references`, each with its file and line. `g.byFile(path)` returns every
+node recorded at a path and the Specs reachable from it. A comment-form anchor is recorded at its
+own site, so a source file with no Protocol import still answers. A node may come back with an
+empty Spec list: an identity-only anchor, with no `satisfies` and no `references`, is lawful and
+binds no Spec, and the empty list is its honest answer, not a failed lookup.
+`g.blastRadius(files)` follows `satisfies`, `references`, `verifies`, and oracle `models` from the
+changed files and names the edge type and claim in each reason. A changed unit bound to no Spec
+goes in `unlinked`; a changed file the graph records nothing at goes in `coverageUnknown`. Neither
+list implies coverage.
 
 ## The contract
 
@@ -167,6 +194,9 @@ are empty and its gap warnings say nothing about what the Protocol has built.
   Pass, fail, skip, and quarantine are CI's.
 - **Do not read `implemented` as "it is live."** It says a code anchor binds to the Spec. Runtime
   evidence would be `observed`, the designed-and-deferred liveness fact the graph does not derive.
+- **Do not read `references` as `implemented`.** A `references` edge says the code is written
+  against the design, and nothing more. Only a resolving `satisfies` confers `implemented`; recipe
+  27 keeps the two in separate columns.
 - **Do not use raw `ready ∧ ¬implemented` as the operational backlog.** Under the example realization
   posture and the decision readiness posture it also includes ready example evidence and ready
   decision records; recipe 1 excludes both kinds, reports the excluded counts, and audits example
@@ -184,5 +214,6 @@ are empty and its gap warnings say nothing about what the Protocol has built.
 The Protocol's ratified glossary is `CONTEXT.md` at the Protocol repository's root, and
 `node_modules/@libar-dev/software-delivery-protocol/CONTEXT.md` in an adopter. It is separate from
 any glossary your project keeps. Read it before inventing a term. The terms these queries speak:
-`Spec` · `Pack` · `anchor` · `claim` · delivery facts · readiness floor · derived readiness ·
-blast radius · at-risk · coverage-unknown · gap · orphan.
+`Spec` · `Pack` · `anchor` · constant form · comment form · `claim` · `references` · role · layer ·
+context · delivery facts · readiness floor · derived readiness · blast radius · at-risk ·
+coverage-unknown · gap · orphan.

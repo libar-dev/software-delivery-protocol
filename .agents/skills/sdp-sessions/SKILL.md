@@ -64,10 +64,13 @@ Use the build backlog (recipe 1) to orient the available ready work and the targ
 (recipe 3) to read guarantees, relations, implementation bindings, and verifiers. Inspect the
 planning slice (recipe 19) to see refinement neighbors, bound components, and entry points before
 writing code. When the work lives in a declared seam, use component membership (recipe 12) and uses
-fan-in/fan-out (recipe 13) to see the units and neighbors before binding. Bind code, test, and oracle
-anchors, the structural `component` and `uses` fields included, and executable examples through
-`sdp-authoring`, which owns the registrar-first executable transition; an `implemented` fact names
-a binding, not a passing or live system.
+fan-in/fan-out (recipe 13) to see the units and neighbors before binding. When the code rests on
+a Pack's design, use references into a design (recipe 27) to see which units already reference or
+realize each member, and roles, layers and contexts (recipe 28) to reuse a role, layer, or context
+value before coining one. Bind code, test, and oracle anchors in either form, with `satisfies`,
+`references`, `role`, and the structural `component` and `uses` fields, and executable examples
+through `sdp-authoring`, which owns the registrar-first executable transition; an `implemented`
+fact names a binding, not a passing or live system, and a `references` edge confers nothing.
 
 ### Review
 
@@ -78,8 +81,11 @@ mention audit (recipe 22) with that scope as its parameter. Use address resoluti
 the entry addresses a register, a test, or a page cites outside the Specs. When reviewing
 component, architecture, or projection questions, use structural neighborhood (recipe 14), census
 structural coverage (recipe 15), the projection-coverage upper bound (recipe 16), the architecture
-map (recipe 17), and the decision map (recipe 18). Review findings and gaps as data; the review
-never becomes a workflow gate.
+map (recipe 17), and the decision map (recipe 18). For a Pack reviewed from the code side, use
+references into a design (recipe 27): per member, the referencing units, the realizing units, and
+whether a verifier is bound, with an empty column read as unbound. Use roles, layers and contexts
+(recipe 28) to review the architecture vocabulary the anchors state and to spot two spellings of
+one value. Review findings and gaps as data; the review never becomes a workflow gate.
 
 ### Close / slim
 

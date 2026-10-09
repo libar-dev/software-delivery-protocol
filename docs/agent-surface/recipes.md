@@ -32,11 +32,12 @@ pnpm exec sdp q '<body>' --root PATH --exclude PATH --exclude PATH
 `--root PATH` picks the extraction root (default: the working directory) and `--exclude` is
 repeatable for root-relative path prefixes. `PATH` is a placeholder, not a literal directory.
 
-**Some recipes open with a parameter.** Recipes 3, 6, 9, 14, 19, 21, 22, 23, and 25 take their
-subject on the opening `const` line(s): a Spec id, a search term, a component id, a list of
-Spec ids, or a list of entry addresses. Those lines name *this* repository's corpus so every body
-runs as written here (the recipe check executes each one verbatim); in your own corpus,
-substitute your subject on that line before running. A Spec id or component id absent from the graph returns `{ found: false }` rather than failing.
+**Some recipes open with a parameter.** Recipes 3, 6, 9, 14, 19, 21, 22, 23, 25, and 27 take
+their subject on the opening `const` line(s): a Spec id, a search term, a component id, a list of
+Spec ids, a list of entry addresses, or a Pack id. Those lines name *this* repository's corpus so
+every body runs as written here (the recipe check executes each one verbatim); in your own corpus,
+substitute your subject on that line before running. A Spec id, component id, or Pack id absent
+from the graph returns `found: false` rather than failing.
 
 **Recipe 4 is different.** Recipe 4 filenames travel via `SDP_CHANGED_FILES_JSON`; callers never
 substitute filenames into the JavaScript fence. Keep its query body static and pass changed paths
@@ -1776,3 +1777,105 @@ rest only on themselves, and `totals.specsInCycles` every member of either. The 
 never refuses: a cycle is data about the authored dependencies, and the readiness floor reads each
 `dependsOn` target's stated rung without walking a chain. The law is
 `spec:consumers.agent-surface.address-and-cycle-recipes`.
+
+## 27. References into a design
+
+*When you need this: you are reviewing a Pack and want to see, for each member, which code is
+written against it, which code realizes it, and whether a verifier is bound, with no fact read as
+another.*
+
+The opening `const id` is the parameter. Replace it with the Pack you are reviewing; an unknown
+Pack returns `{ id, found: false }`.
+
+```js
+const id = "pack:spec-studio-v1";
+const pack = g.packContext(id);
+
+if (pack === undefined) {
+  return { id, found: false };
+}
+
+const rows = pack.members.map((member) => {
+  const context = g.specContext(member.id);
+  return {
+    id: member.id,
+    resolved: context !== undefined,
+    referencedBy: (context?.references ?? []).map((unit) => ({ id: unit.codeId, file: unit.file ?? null })),
+    implementedBy: (context?.implementations ?? []).map((unit) => unit.codeId),
+    hasVerifier: (context?.deliveryFacts ?? []).includes("has-verifier"),
+  };
+});
+const count = (test) => rows.filter(test).length;
+
+return {
+  found: true,
+  id,
+  totals: {
+    members: rows.length,
+    withReferences: count((row) => row.referencedBy.length > 0),
+    withImplementations: count((row) => row.implementedBy.length > 0),
+    withVerifier: count((row) => row.hasVerifier),
+    unbound: count(
+      (row) => row.referencedBy.length === 0 && row.implementedBy.length === 0 && !row.hasVerifier,
+    ),
+  },
+  rows,
+};
+```
+
+Each row puts three independent facts side by side. `referencedBy` lists the code units whose
+anchors name the member in `references`, with the file each sits in: that code is written against
+the design, and the edge confers nothing. `implementedBy` lists the units whose `satisfies`
+resolves to the member, the edge behind `implemented`. `hasVerifier` is the derived `has-verifier`
+fact: a resolving verifier binding exists, not that it passed. An empty list or `false` reads as
+unbound. The graph records no binding there, which says nothing about whether the code is built.
+The three facts form no ladder: a member can be referenced and verified while nothing satisfies
+it, so never read `referencedBy` as progress toward `implemented`. Rows keep the manifest's member
+order, `resolved: false` marks a member the graph does not hold, and `totals.unbound` counts the
+members with none of the three. The law is `spec:decisions.anchor-binding-grain`.
+
+## 28. Roles, layers and contexts
+
+*When you need this: you want the architecture vocabulary the code anchors actually state, every
+role, layer, and context value with the units that carry it, before you name a new one or
+reconcile two spellings of one.*
+
+```js
+const units = graph.nodes.filter((node) => node.nodeType === "CodeNode");
+const taxonomy = (field) => {
+  const byValue = new Map();
+  for (const unit of units) {
+    const value = unit[field];
+    if (typeof value !== "string") continue;
+    byValue.set(value, [...(byValue.get(value) ?? []), unit.id]);
+  }
+  return [...byValue.keys()].sort().map((value) => ({ value, units: byValue.get(value).sort() }));
+};
+const references = graph.edges.filter((edge) => edge.type === "references");
+
+return {
+  totals: {
+    codeUnits: units.length,
+    withRole: units.filter((unit) => typeof unit.role === "string").length,
+    withLayer: units.filter((unit) => typeof unit.layer === "string").length,
+    withContext: units.filter((unit) => typeof unit.context === "string").length,
+    references: references.length,
+    referencingUnits: new Set(references.map((edge) => edge.from)).size,
+    referencedSpecs: new Set(references.map((edge) => edge.to)).size,
+  },
+  roles: taxonomy("role"),
+  layers: taxonomy("layer"),
+  contexts: taxonomy("context"),
+};
+```
+
+The body takes no parameter. The taxonomy reads the CodeNodes alone, so a value appears only when
+an anchor states it, and an unlabelled unit counts in `totals.codeUnits` and in no taxonomy row;
+omission is lawful. Each value lists its units in id order, so an owner can find the anchors to
+edit when two spellings name one category. A role or a context is a free value in one lowercase
+kebab token, checked against no list; a layer is one of `edge`, `application`, `domain`, `adapter`,
+or `infrastructure`, and only a `component:` anchor carries a layer or a context. The `references`
+counts are edges, kept apart from units: one unit that references three Specs is three edges and
+one referencing unit. None of these attributes or edges confers a delivery fact or moves a
+readiness floor. The census renders the same taxonomy for a human reader. The law is
+`spec:decisions.architectural-annotation`.
