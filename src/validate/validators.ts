@@ -559,7 +559,12 @@ function checkClaimSeparation(graph: GraphSchema, index: GraphIndex): readonly F
   return findings;
 }
 
-/* ----- conformance/structural-anchors (`spec:decisions.structural-anchor-semantics`) ----- */
+/* ----- conformance/structural-anchors (`spec:decisions.architectural-annotation`, `spec:decisions.anchor-binding-grain`) ----- */
+
+/** The anchored edges the structural check owns: CodeNode structure plus the design reference. */
+function isStructuralEdge(edge: GraphEdge): boolean {
+  return edge.type === "memberOf" || edge.type === "uses" || edge.type === "references";
+}
 
 function structuralFinding(
   edge: GraphEdge,
@@ -588,16 +593,67 @@ function namespaceOf(id: string): string | undefined {
 }
 
 function checkStructuralAnchors(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
-  const structuralEdges = graph.edges.filter(
-    (edge) => edge.type === "memberOf" || edge.type === "uses",
-  );
+  const structuralEdges = graph.edges.filter(isStructuralEdge);
   const findings: Finding[] = [];
   const exactCounts = new Map<string, number>();
   const membershipsBySource = new Map<string, GraphEdge[]>();
+  const satisfiedBySource = new Map<string, Set<string>>();
+
+  for (const edge of graph.edges) {
+    if (edge.type === "satisfies") {
+      const targets = satisfiedBySource.get(edge.from) ?? new Set<string>();
+      targets.add(edge.to);
+      satisfiedBySource.set(edge.from, targets);
+    }
+  }
 
   for (const edge of structuralEdges) {
     const key = `${edge.from}\u0000${edge.type}\u0000${edge.to}`;
     exactCounts.set(key, (exactCounts.get(key) ?? 0) + 1);
+
+    if (edge.type === "references") {
+      const fromNamespace = namespaceOf(edge.from);
+
+      if (
+        fromNamespace === undefined ||
+        !CODE_ANCHOR_NAMESPACES.includes(fromNamespace as (typeof CODE_ANCHOR_NAMESPACES)[number])
+      ) {
+        findings.push(
+          structuralFinding(
+            edge,
+            index,
+            `A references edge source must use an impl:, api:, or component: CodeNode id; received "${edge.from}".`,
+            "references",
+          ),
+        );
+      }
+
+      if (namespaceOf(edge.to) !== "spec") {
+        findings.push(
+          structuralFinding(
+            edge,
+            index,
+            `A references edge must target a Spec id; received "${edge.to}".`,
+            "references",
+          ),
+        );
+      }
+
+      // A realized target is not also a design reference: the same Spec in `satisfies` and
+      // `references` on one anchor is an authoring contradiction, not two facts.
+      if (satisfiedBySource.get(edge.from)?.has(edge.to) === true) {
+        findings.push(
+          structuralFinding(
+            edge,
+            index,
+            `Spec "${edge.to}" is named in both "satisfies" and "references" of "${edge.from}"; a realized target is not also a design reference.`,
+            "references",
+          ),
+        );
+      }
+
+      continue;
+    }
 
     if (edge.from === edge.to) {
       findings.push(
@@ -718,9 +774,7 @@ function checkStructuralAnchors(graph: GraphSchema, index: GraphIndex): readonly
  */
 export function validateStructuralAnchorEdges(graph: GraphSchema): readonly Finding[] {
   const index = buildGraphIndex(graph);
-  const structuralEdges = graph.edges.filter(
-    (edge) => edge.type === "memberOf" || edge.type === "uses",
-  );
+  const structuralEdges = graph.edges.filter(isStructuralEdge);
 
   return sortFindings([
     ...checkEdgeReferentialIntegrity(structuralEdges, index),

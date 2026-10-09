@@ -332,3 +332,156 @@ export const subject = codeAnchor({
     expect(result.graph.edges.some((edge) => edge.from === "impl:fixture.subject")).toBe(false);
   });
 });
+
+describe("the references edge (the binding grain)", () => {
+  function primitive(id: string): GraphNode {
+    return {
+      id,
+      nodeType: "Primitive",
+      claim: "declared",
+      specKind: "behavior",
+      altitude: "feature",
+      readiness: "idea",
+      file: "specs/target.sdp.md",
+    };
+  }
+
+  function structural(graph: GraphSchema) {
+    return validateGraph(graph).findings.filter(
+      (finding) => finding.validatorId === graphValidatorIds.structuralAnchors,
+    );
+  }
+
+  it("rejects a Spec named in both satisfies and references of one anchor", () => {
+    const source = codeNode("impl:fixture.subject");
+    const target = primitive("spec:fixture.structural-target");
+    const findings = structural(
+      syntheticGraph(
+        [source, target],
+        [
+          { from: source.id, type: "satisfies", to: target.id, claim: "anchored" },
+          { from: source.id, type: "references", to: target.id, claim: "anchored" },
+        ],
+      ),
+    );
+
+    expect(findings).toEqual([
+      expect.objectContaining({
+        subjectId: "impl:fixture.subject",
+        relatedId: "spec:fixture.structural-target",
+        path: "references",
+      }),
+    ]);
+    expect(findings[0]?.message).toContain('both "satisfies" and "references"');
+  });
+
+  it("requires a CodeNode source and a Spec target", () => {
+    const source: GraphNode = {
+      id: "test:fixture.verifier",
+      nodeType: "Anchor",
+      claim: "anchored",
+      file: "test/structural.test.ts",
+      line: 1,
+    };
+    const component = codeNode("component:fixture.core");
+    const graph = syntheticGraph(
+      [source, component],
+      [{ from: source.id, type: "references", to: component.id, claim: "anchored" }],
+    );
+
+    expect(structural(graph).map((finding) => finding.message)).toEqual([
+      expect.stringContaining("references edge source must use an impl:, api:, or component:"),
+      expect.stringContaining("references edge must target a Spec id"),
+    ]);
+    expect(
+      validateGraph(graph).findings.filter(
+        (finding) => finding.validatorId === graphValidatorIds.claimSeparation,
+      ),
+    ).toHaveLength(2);
+  });
+
+  it("rejects the same references edge authored twice", () => {
+    const source = codeNode("impl:fixture.subject");
+    const target = primitive("spec:fixture.structural-target");
+    const findings = structural(
+      syntheticGraph(
+        [source, target],
+        [
+          { from: source.id, type: "references", to: target.id, claim: "anchored" },
+          { from: source.id, type: "references", to: target.id, claim: "anchored" },
+        ],
+      ),
+    );
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.message).toContain("structural edges must be unique");
+  });
+
+  it("reports a dangling references target through referential integrity and confers nothing", () => {
+    const result = extract({
+      root: fixtureRoot(oneAnchor('  references: [ref("spec:fixture.missing")],')),
+    });
+
+    expect(result.report.findings).toEqual([]);
+    expect(validateGraph(result.graph).findings).toEqual([
+      expect.objectContaining({
+        validatorId: graphValidatorIds.referentialIntegrity,
+        severity: "error",
+        subjectId: "impl:fixture.subject",
+        relatedId: "spec:fixture.missing",
+      }),
+    ]);
+    expect(result.graph.edges).toContainEqual({
+      from: "impl:fixture.subject",
+      type: "references",
+      to: "spec:fixture.missing",
+      claim: "anchored",
+    });
+    expect(result.graph.nodes.find((node) => node.id === "spec:fixture.structural-target")).toEqual(
+      expect.objectContaining({ deliveryFacts: ["implemented"] }),
+    );
+  });
+
+  it("refuses an empty references array at reification", () => {
+    const result = extract({ root: fixtureRoot(oneAnchor("  references: [],")) });
+
+    expect(result.report.findings).toEqual([
+      expect.objectContaining({
+        validatorId: graphValidatorIds.structuralAnchors,
+        severity: "error",
+        subjectId: "impl:fixture.subject",
+        path: "references",
+      }),
+    ]);
+    expect(result.graph.nodes.some((node) => node.id === "impl:fixture.subject")).toBe(false);
+  });
+
+  it("refuses a repeated references target and the satisfies overlap at reification", () => {
+    const repeated = extract({
+      root: fixtureRoot(
+        oneAnchor('  references: [ref("spec:fixture.other"), ref("spec:fixture.other")],'),
+      ),
+    });
+    const overlap = extract({
+      root: fixtureRoot(oneAnchor('  references: [ref("spec:fixture.structural-target")],')),
+    });
+
+    expect(repeated.report.findings).toEqual([
+      expect.objectContaining({
+        validatorId: graphValidatorIds.structuralAnchors,
+        subjectId: "impl:fixture.subject",
+        relatedId: "spec:fixture.other",
+        path: "references",
+      }),
+    ]);
+    expect(overlap.report.findings).toEqual([
+      expect.objectContaining({
+        validatorId: graphValidatorIds.structuralAnchors,
+        subjectId: "impl:fixture.subject",
+        relatedId: "spec:fixture.structural-target",
+        path: "references",
+      }),
+    ]);
+    expect(overlap.graph.nodes.some((node) => node.id === "impl:fixture.subject")).toBe(false);
+  });
+});
