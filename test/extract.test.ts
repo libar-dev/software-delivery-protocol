@@ -25,6 +25,8 @@ import {
   removeMaterializedCorpus,
 } from "./helpers/extract-corpus.js";
 
+import { serializeGraphStructure } from "./helpers/graph-structure.js";
+
 const exampleRoot = fileURLToPath(new URL("../examples/checkout-v1", import.meta.url));
 
 const materializedRoots: string[] = [];
@@ -387,11 +389,11 @@ The Model prose.
       ]);
     }
     expect(
-      serializeGraph(typeScript.graph).replace(
+      serializeGraphStructure(typeScript.graph).replace(
         '"file": "specs/terms.sdp.ts"',
         '"file": "specs/terms.sdp.md"',
       ),
-    ).toBe(serializeGraph(markdown.graph));
+    ).toBe(serializeGraphStructure(markdown.graph));
   });
 
   it("integer-like keys: refuses numeric and string integer-like names in design and keeps the Spec with its other keys", () => {
@@ -1319,8 +1321,8 @@ describe("Markdown carrier discovery", () => {
 
     const markdown = extract({ root: markdownRoot });
     const typeScript = extract({ root: typeScriptRoot });
-    const markdownSerialized = serializeGraph(markdown.graph);
-    const typeScriptSerialized = serializeGraph(typeScript.graph);
+    const markdownSerialized = serializeGraphStructure(markdown.graph);
+    const typeScriptSerialized = serializeGraphStructure(typeScript.graph);
 
     // This is accepted-subset equivalence only; full Markdown/TS parity waits for multi-entry
     // constraint syntax and the deferred hardening work.

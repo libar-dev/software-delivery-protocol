@@ -259,6 +259,18 @@ export function serializeGraph(graph: GraphSchema): string {
     schemaVersion: graph.schemaVersion,
     nodes: [...graph.nodes].sort(compareNodes).map(canonicalNode),
     edges: [...graph.edges].sort(compareEdges).map(canonicalEdge),
+    locations: [...(graph.locations ?? [])]
+      .sort(
+        (left, right) =>
+          compareCodeUnits(left.spec, right.spec) || compareCodeUnits(left.entry, right.entry),
+      )
+      .map((location) => ({
+        spec: location.spec,
+        file: location.file,
+        entry: location.entry,
+        ...(location.key === undefined ? {} : { key: location.key }),
+        line: location.line,
+      })),
   };
 
   return `${JSON.stringify(canonical, null, 2)}\n`;

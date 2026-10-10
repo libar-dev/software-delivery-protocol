@@ -1,3 +1,4 @@
+import type { ReifiedEntryLine } from "./reify.js";
 import type { Finding } from "../validate/contracts.js";
 import type { MarkdownLine } from "./markdown-body-content.js";
 import { mapBehavior, mapExampleSpace, mapIntent } from "./markdown-body-owner-behavior.js";
@@ -17,10 +18,11 @@ export function mapOwner(
   file: string,
   kind: string,
   findings: Finding[],
+  entryLines: ReifiedEntryLine[],
 ): void {
   if (owner === "Intent") {
     const intent: Record<string, unknown> = {};
-    mapIntent(intent, target, lines, file, kind, findings);
+    mapIntent(intent, target, lines, file, kind, findings, entryLines);
     target.intent = intent;
     return;
   }
@@ -48,7 +50,7 @@ export function mapOwner(
   }
   if (owner === "Design" || owner === "UI") {
     const section: Record<string, unknown> = {};
-    mapOpen(section, lines, file, findings);
+    mapOpen(section, lines, file, findings, owner.toLowerCase(), entryLines);
     target[owner.toLowerCase()] = section;
     return;
   }

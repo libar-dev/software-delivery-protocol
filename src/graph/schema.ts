@@ -4,7 +4,7 @@ import type { CodeAnchorLayer } from "../model/anchors.js";
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSections } from "../model/sections.js";
 
-export const schemaVersion = "0.8.0" as const;
+export const schemaVersion = "0.9.0" as const;
 
 const schemaVersionAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.schema-version"),
