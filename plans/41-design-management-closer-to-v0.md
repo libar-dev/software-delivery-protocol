@@ -92,8 +92,8 @@ carries the Spec's locations. Recipe 25 returns each resolved entry's value, fil
 
 `sdp q --params JSON` (or `--params @path`) injects a fourth binding, `params`, defaulting to an
 empty object. Every parameterized recipe reads its parameter from `params` and falls back to the
-catalog's sample: recipes 3, 9, 19, 21 (a Spec id), 4 (files, replacing `SDP_CHANGED_FILES_JSON`),
-5 and 27 (a Pack id), 25 (addresses), 22 (a scope). The build writes each catalog body to
+catalog's sample: `spec` (3, 9, 19, 21), `files` (4, replacing `SDP_CHANGED_FILES_JSON`), `pack`
+(5, 27, 29), `term` (6, 23), `component` (14), `scope` (22), `addresses` (25) and `specs` (30). The build writes each catalog body to
 `dist/recipes/NN-slug.js`, shipped in the package, so an adopter runs a body as shipped. The catalog
 stays the one owner of the bodies; the files are derived and checked.
 
@@ -156,8 +156,10 @@ realized Spec it builds on:
 - **The decision registry.** MD-32's row names its two narrow supersessions; D4 points at its
   carrying Spec; MD-39 enters for B1.
 - **Mentions and gaps.** Each of the nine unbacked mentions gets the relation that fits or stays
-  prose with its reason in this plan; a ready Spec without a verifier gets a test anchor only where
-  a test checks the Spec's own promise.
+  prose; a ready Spec without a verifier gets a test anchor only where a test checks the Spec's own
+  promise. Four mentions gained a relation and five stay prose; three of the five gaps gained a
+  verifier and two stay open. Each disposition and its reason is in
+  `.omo/evidence/plan-41/mentions.md`.
 - **Vocabulary.** Candidate terms (question key, stated next rung, Pack design, boundary, pinned
   declaration, location table, recipe parameter) enter `CONTEXT.md`'s flagged ambiguities for the
   owner to ratify.
@@ -204,4 +206,55 @@ Never push without the owner's word.
 
 ## The drift queue, for the owner
 
-Filled in by lane D.
+Prepared by a read-only pass (gpt-6.1-sol) on the branch base `28dcbdd`, over the sixteen Specs
+recipe 2 listed before this arc: each states `defined`, its floor holds `ready`, and a code anchor
+satisfies it. Each was checked through its context, its carrier and the code its anchors bind. The
+Specs this arc implements join the alarm too and are not in this packet; they wait for the owner's
+reading of the arc as a whole. Re-run recipe 2 rather than trusting this list.
+
+**14 to state `ready` as they are · 1 to revise first · 1 to split or reference.**
+
+| Spec | Recommendation | Why |
+| --- | --- | --- |
+| `spec:carrier.inline-code-spans` | state ready | Code spans keep literal text past the HTML checks; four enabled examples bind it. |
+| `spec:carrier.markdown-body-grammar` | state ready | Every section's closed grammar is realized; fourteen enabled refusal examples bind it. |
+| `spec:consumers.adopter-on-ramp` | state ready | The shipped skills teach the graph homes; a document-realization unit and an enabled verifier bind it. |
+| `spec:consumers.agent-surface.address-and-cycle-recipes` | state ready | Recipes 25 and 26 match their rules; probe tests cover repeats, missing entries and cycles. |
+| `spec:consumers.agent-surface.register-recipes` | state ready | Recipes 20 to 24 match their rules; an enabled verifier binds them. |
+| `spec:consumers.projections-model` | split or reference | Its units realize the shipped projections, but the Spec also promises views no unit builds and cites a measurement no artifact supports. |
+| `spec:consumers.shipped-protocol-corpus` | state ready | The package ships the carriers and glossary; a `specs/`-only extraction yields intent alone. |
+| `spec:extraction.open-section-order` | state ready | Authored order survives extraction, serialization, the reader and the Design Review. |
+| `spec:extraction.pack-member-order` | state ready | The manifest's order survives to the reader and the page; an enabled example binds it. |
+| `spec:extraction.regenerability` | revise first | Deterministic regeneration is realized; the two "measured evidence" thresholds have no measurement behind them. |
+| `spec:model.core-model` | state ready | One Spec, independent coordinates and directly derived facts are realized by three units; plan 37's hold moved to `spec:model.enrichment-lifecycle`. |
+| `spec:model.open-question-keys` | state ready | Keys, addresses and refusals match in both carriers; three enabled examples bind it. |
+| `spec:validation.next-rung-floor` | state ready | The evaluator takes a target rung and failures name their targets; two enabled examples bind it. |
+| `spec:validation.prose-mentions` | state ready | Mentions and addresses must resolve and unbacked pairs warn once; an enabled verifier binds it. |
+| `spec:validation.typed-dependency-floor` | state ready | The four typed relations' targets must state `defined`; four enabled examples bind it. |
+| `spec:validation.unbound-example-posture` | state ready | Unbound examples below `ready` stay quiet data; three enabled examples bind it. |
+
+### `spec:consumers.projections-model`: split or reference
+
+It promises disposable views derived from one graph, a reader that persists nothing, and
+publication that keeps validation's exit code. Its two satisfying units, in
+`src/projections/design-review.ts`, realize that. The same Spec also describes an exhaustive impact
+graph, git-tag release and baseline views and roadmap views no unit builds, and a "single-digit to
+about one quarter" curation figure with no comparison artifact. It has no verifier of its own.
+
+The change: keep the realized projection, publication and reader contract here; leave impact
+behavior to `spec:consumers.impact-graph`; capture release, baseline and roadmap views as deferred
+children; drop the curation figure until a reproducible comparison supports it. If the broader text
+stays, the units should reference this Spec rather than satisfy it.
+
+### `spec:extraction.regenerability`: revise first
+
+It promises that the graph and every projection rebuild to identical bytes and that consumers
+read the graph rather than keep another model. The satisfying unit in `src/cli/build-command.ts`
+re-derives and compares; the read-only pass reproduced identical graph, contract, registrar and
+projection outputs. Two rules claim measured evidence (comfortable rebuilds below about 50 Specs, a
+graph database deferred until about 10k nodes) with no workload, timing or method behind them, and
+the corpus is now past 250 Specs.
+
+The change: delete the two measured-evidence rules and keep the qualitative deferral, or replace
+them with a cited, reproducible measurement kept apart from an owner-chosen re-entry threshold.
+Then it can state `ready`; the regeneration contract needs no split.
