@@ -4,7 +4,7 @@ import type { CodeAnchorLayer } from "../model/anchors.js";
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSections } from "../model/sections.js";
 
-export const schemaVersion = "0.8.0" as const;
+export const schemaVersion = "0.9.0" as const;
 
 const schemaVersionAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.schema-version"),
@@ -166,8 +166,26 @@ export interface GraphEdge {
   readonly claim: GraphClaim;
 }
 
+/**
+ * One row of the location table (`spec:extraction.entry-locations`): where an addressable entry
+ * of a Spec is written. `entry` is `design.<key>`, `ui.<key>`, or `question[<index>]` by the
+ * question's position in the Spec's open questions, with `key` beside it when the question carries
+ * one. The table rides beside the nodes, so Primitive and Pack nodes stay line-free.
+ */
+export interface EntryLocation {
+  readonly spec: string;
+  /** Extraction-root-relative, POSIX separators, no leading `./` — never absolute (JS-C3). */
+  readonly file: string;
+  readonly entry: string;
+  readonly key?: string;
+  /** 1-based. */
+  readonly line: number;
+}
+
 export interface GraphSchema {
   readonly schemaVersion: typeof schemaVersion;
   readonly nodes: readonly GraphNode[];
   readonly edges: readonly GraphEdge[];
+  /** Absent reads as empty: no entry is located. */
+  readonly locations?: readonly EntryLocation[];
 }

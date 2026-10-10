@@ -24,7 +24,7 @@ import type {
   GherkinAuthoringConditions,
   GherkinAuthoringOutcome,
 } from "../generated/contracts/carrier.gherkin-authoring.space.js";
-import { extract, generateContracts, serializeGraph, validateGraph } from "../src/index.js";
+import { extract, generateContracts, validateGraph } from "../src/index.js";
 import type { Finding, GraphSchema, ValidationReport } from "../src/index.js";
 import { registerAuthoredFactRefused } from "./carrier.gherkin-authoring.authored-fact-refused.test.generated.js";
 import { registerDescriptionLocationRefused } from "./carrier.gherkin-authoring.description-location-refused.test.generated.js";
@@ -39,6 +39,8 @@ import { registerUnknownTagRefused } from "./carrier.gherkin-authoring.unknown-t
 import { registerUnsupportedConstructRefused } from "./carrier.gherkin-authoring.unsupported-construct-refused.test.generated.js";
 import { materializeGherkinCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 import { paramsForStep } from "./helpers/generated-contract.js";
+
+import { serializeGraphStructure } from "./helpers/graph-structure.js";
 
 const temporaryRoots: string[] = [];
 
@@ -306,8 +308,14 @@ const bindings = {
     const right = extract({ root: rightRoot });
     expect(left.report.findings).toEqual([]);
     expect(right.report.findings).toEqual([]);
-    const leftBytes = serializeGraph(left.graph).replaceAll(params.parityLeft, "twin.carrier");
-    const rightBytes = serializeGraph(right.graph).replaceAll(params.parityRight, "twin.carrier");
+    const leftBytes = serializeGraphStructure(left.graph).replaceAll(
+      params.parityLeft,
+      "twin.carrier",
+    );
+    const rightBytes = serializeGraphStructure(right.graph).replaceAll(
+      params.parityRight,
+      "twin.carrier",
+    );
     expect(leftBytes).toBe(rightBytes);
   },
   "the contracts for {parityLeft} equal the contracts for {parityRight}": (

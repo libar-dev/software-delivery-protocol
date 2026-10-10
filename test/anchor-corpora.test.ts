@@ -3,15 +3,11 @@ import { fileURLToPath } from "node:url";
 
 import { afterAll, describe, expect, it } from "vitest";
 
-import {
-  extract,
-  extractFindingIds,
-  graphValidatorIds,
-  serializeGraph,
-  validateGraph,
-} from "../src/index.js";
+import { extract, extractFindingIds, graphValidatorIds, validateGraph } from "../src/index.js";
 import type { Finding } from "../src/index.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
+
+import { serializeGraphStructure } from "./helpers/graph-structure.js";
 
 const materializedRoots: string[] = [];
 
@@ -48,7 +44,7 @@ describe("the annotation corpora", () => {
     const goldenPath = fileURLToPath(
       new URL("./fixtures/extract/annotation-forms/expected-graph.json", import.meta.url),
     );
-    expect(serializeGraph(result.graph)).toBe(readFileSync(goldenPath, "utf8"));
+    expect(serializeGraphStructure(result.graph)).toBe(readFileSync(goldenPath, "utf8"));
 
     // Plural targets: one satisfies edge per target; the decision reached by references alone.
     expect(

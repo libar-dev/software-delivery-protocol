@@ -9,7 +9,7 @@
 export interface ExpectedAnchor {
   readonly id: string;
   readonly nodeType: "Anchor" | "CodeNode";
-  readonly label: string;
+  readonly label?: string;
   readonly file: string;
   readonly constant?: string;
   readonly site: string;
@@ -18,7 +18,7 @@ export interface ExpectedAnchor {
   readonly context?: string;
 }
 
-// re-measured under plan 40
+// re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
     id: "test:protocol.open-section-order",
@@ -1998,9 +1998,187 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     constant: "packMemberOrderTestAnchor",
     site: "registerManifestOrderKept(",
   },
+  // The design-management arc (plan 41), transcribed from each anchor's own text.
+  {
+    id: "impl:protocol.entry-locations",
+    nodeType: "CodeNode",
+    label: "builds the carrier entry location table",
+    file: "src/extract/derive.ts",
+    constant: "entryLocationsAnchor",
+    site: "function deriveEntryLocations",
+    role: "extractor",
+  },
+  {
+    id: "test:protocol.entry-locations",
+    nodeType: "Anchor",
+    file: "test/entry-locations.test.ts",
+    constant: "entryLocationsTestAnchor",
+    site: "function corpus(",
+  },
+  {
+    id: "impl:protocol.pack-design",
+    nodeType: "CodeNode",
+    label: "the Pack design helpers and the Pack context assembly they serve",
+    file: "src/reader/reader.ts",
+    site: "function packMemberDesign(",
+    role: "reader",
+  },
+  {
+    id: "test:protocol.pack-design",
+    nodeType: "Anchor",
+    label: "the Pack context carries each member's design and the Pack's boundary",
+    file: "test/pack-design.test.ts",
+    site: "function packDesign(",
+  },
+  {
+    id: "impl:protocol.pack-design-page",
+    nodeType: "CodeNode",
+    label: "renders the Pack page from the Pack design",
+    file: "src/projections/design-review-pages.ts",
+    site: "export function renderPackPage",
+    role: "renderer",
+  },
+  {
+    id: "impl:protocol.pack-design-sections",
+    nodeType: "CodeNode",
+    label: "renders the Pack page's next-rung, boundary, question and code sections",
+    file: "src/projections/design-review-pack-sections.ts",
+    site: "export function lineHref",
+    role: "renderer",
+  },
+  {
+    id: "test:protocol.pack-design-page",
+    nodeType: "Anchor",
+    label: "the Pack page renders the Pack design in its fixed order",
+    file: "test/design-review-pack-page.test.ts",
+    site: "function renderPackPage(",
+  },
+  {
+    id: "impl:protocol.query-params",
+    nodeType: "CodeNode",
+    label: "reads --params as JSON data and injects it as the sink's fourth binding, params",
+    file: "src/cli/q-command.ts",
+    constant: "queryParamsAnchor",
+    site: "function readParams",
+    role: "service",
+  },
+  {
+    id: "test:protocol.query-params",
+    nodeType: "Anchor",
+    label: "front-door checks verify --params as the fourth binding and its refusals",
+    file: "test/cli-q.test.ts",
+    constant: "queryParamsTestAnchor",
+    site: 'describe("sdp q --params',
+  },
+  {
+    id: "impl:protocol.build-artifacts",
+    nodeType: "CodeNode",
+    label:
+      "the build step that writes each catalog recipe to dist/recipes and records the build commit beside the CLI",
+    file: "src/cli/build-artifacts.ts",
+    site: "export function writeBuildArtifacts",
+    role: "publisher",
+  },
+  {
+    id: "impl:protocol.recipe-parameters-catalog",
+    nodeType: "CodeNode",
+    label: "asserts realization of the catalog recipes that read their parameter from params",
+    file: "test/recipes.test.ts",
+    constant: "recipeParametersCatalogAnchor",
+    site: "function shippedRecipeName",
+  },
+  {
+    id: "test:protocol.recipe-parameters",
+    nodeType: "Anchor",
+    label: "recipe checks verify parameters passed as data and the shipped recipe files",
+    file: "test/recipes.test.ts",
+    constant: "recipeParametersTestAnchor",
+    site: "function shippedRecipeName",
+  },
+  {
+    id: "impl:protocol.design-recipes",
+    nodeType: "CodeNode",
+    label: "asserts realization of the shipped design recipes",
+    file: "test/recipes.test.ts",
+    constant: "designRecipesImplementationAnchor",
+    site: "function probeSpec(",
+  },
+  {
+    id: "test:protocol.design-recipes",
+    nodeType: "Anchor",
+    label: "recipe checks verify the design recipes",
+    file: "test/recipes.test.ts",
+    constant: "designRecipesTestAnchor",
+    site: "function probeSpec(",
+  },
+  {
+    id: "impl:protocol.entry-location-recipes",
+    nodeType: "CodeNode",
+    label:
+      "asserts realization of the entry lines the entry search and address resolution recipes return",
+    file: "test/recipes.test.ts",
+    constant: "entryLocationRecipesAnchor",
+    site: 'describe("entry lines in entry search and address resolution",',
+  },
+  {
+    id: "impl:protocol.engine-provenance-cli",
+    nodeType: "CodeNode",
+    label: "sdp --version names the package version and the commit the build recorded",
+    file: "src/cli/sdp.ts",
+    site: "export function runSdpCli",
+    role: "service",
+  },
+  {
+    id: "test:protocol.engine-provenance",
+    nodeType: "Anchor",
+    label: "version checks verify the engine provenance line and the build's commit record",
+    file: "test/cli.test.ts",
+    constant: "engineProvenanceTestAnchor",
+    site: 'describe("sdp --version",',
+  },
+  {
+    id: "impl:protocol.validate-watch",
+    nodeType: "CodeNode",
+    label: "re-runs the one validate path on every carrier change and stays alive after findings",
+    file: "src/cli/validate-watch.ts",
+    site: "export async function runValidateWatch",
+    role: "service",
+  },
+  {
+    id: "test:protocol.validate-watch",
+    nodeType: "Anchor",
+    label: "watch-loop checks verify the validate --watch authoring loop",
+    file: "test/cli.test.ts",
+    constant: "validateWatchTestAnchor",
+    site: 'describe("sdp validate --watch",',
+  },
+  {
+    id: "test:protocol.markdown-authoring",
+    nodeType: "Anchor",
+    label: "TypeScript and Markdown twins derive one graph, verifying Markdown authoring",
+    file: "test/import-round-trip.test.ts",
+    constant: "markdownAuthoringTestAnchor",
+    site: "function materializeMarkdownCorpus",
+  },
+  {
+    id: "test:protocol.relation-builders",
+    nodeType: "Anchor",
+    label: "relation builder tests verify the six declared, directed Spec relations",
+    file: "test/builders.test.ts",
+    constant: "relationBuildersTestAnchor",
+    site: 'describe("builders",',
+  },
+  {
+    id: "test:protocol.pack-builder",
+    nodeType: "Anchor",
+    label: "Pack builder tests verify the truth-free review aggregate",
+    file: "test/builders.test.ts",
+    constant: "packBuilderTestAnchor",
+    site: 'describe("builders",',
+  },
 ] as const;
 
-// re-measured under plan 40
+// re-measured under plan 41
 export const expectedBindingEdges = [
   ["test:protocol.open-section-order", "verifies", "spec:extraction.open-section-order"],
   ["impl:protocol.open-section-order", "satisfies", "spec:extraction.open-section-order"],
@@ -2249,6 +2427,7 @@ export const expectedBindingEdges = [
   ["impl:protocol.agent-surface", "satisfies", "spec:consumers.agent-surface"],
   ["impl:protocol.reader-impact", "satisfies", "spec:consumers.reader"],
   ["impl:protocol.reader", "satisfies", "spec:consumers.reader"],
+  ["impl:protocol.reader", "satisfies", "spec:extraction.entry-locations"],
   ["impl:protocol.design-review", "satisfies", "spec:consumers.design-review"],
   ["impl:protocol.census-page", "satisfies", "spec:consumers.census-page"],
   ["impl:protocol.mermaid-view", "satisfies", "spec:consumers.mermaid-view"],
@@ -2661,9 +2840,44 @@ export const expectedBindingEdges = [
   ["impl:protocol.graph-edge-types", "references", "spec:decisions.anchor-binding-grain"],
   ["impl:protocol.anchor-model", "references", "spec:decisions.architectural-annotation"],
   ["impl:protocol.census-page", "references", "spec:decisions.architectural-annotation"],
+  // The design-management arc (plan 41), transcribed from each anchor's own target list.
+  ["impl:protocol.entry-locations", "satisfies", "spec:extraction.entry-locations"],
+  ["test:protocol.entry-locations", "verifies", "spec:extraction.entry-locations"],
+  ["impl:protocol.pack-design", "satisfies", "spec:consumers.pack-design"],
+  ["impl:protocol.pack-design", "references", "spec:extraction.entry-locations"],
+  ["impl:protocol.pack-design", "references", "spec:extraction.contract-declarations"],
+  ["test:protocol.pack-design", "verifies", "spec:consumers.pack-design"],
+  ["impl:protocol.pack-design-page", "satisfies", "spec:consumers.design-review.pack-design-page"],
+  ["impl:protocol.pack-design-page", "references", "spec:decisions.pack-design-page"],
+  [
+    "impl:protocol.pack-design-sections",
+    "references",
+    "spec:consumers.design-review.pack-design-page",
+  ],
+  ["test:protocol.pack-design-page", "verifies", "spec:consumers.design-review.pack-design-page"],
+  ["impl:protocol.query-params", "satisfies", "spec:consumers.agent-surface.recipe-parameters"],
+  ["test:protocol.query-params", "verifies", "spec:consumers.agent-surface.recipe-parameters"],
+  ["impl:protocol.build-artifacts", "satisfies", "spec:consumers.agent-surface.recipe-parameters"],
+  ["impl:protocol.build-artifacts", "satisfies", "spec:consumers.engine-provenance"],
+  [
+    "impl:protocol.recipe-parameters-catalog",
+    "satisfies",
+    "spec:consumers.agent-surface.recipe-parameters",
+  ],
+  ["test:protocol.recipe-parameters", "verifies", "spec:consumers.agent-surface.recipe-parameters"],
+  ["impl:protocol.design-recipes", "satisfies", "spec:consumers.agent-surface.design-recipes"],
+  ["test:protocol.design-recipes", "verifies", "spec:consumers.agent-surface.design-recipes"],
+  ["impl:protocol.entry-location-recipes", "satisfies", "spec:extraction.entry-locations"],
+  ["impl:protocol.engine-provenance-cli", "satisfies", "spec:consumers.engine-provenance"],
+  ["test:protocol.engine-provenance", "verifies", "spec:consumers.engine-provenance"],
+  ["impl:protocol.validate-watch", "satisfies", "spec:consumers.validate-watch"],
+  ["test:protocol.validate-watch", "verifies", "spec:consumers.validate-watch"],
+  ["test:protocol.markdown-authoring", "verifies", "spec:carrier.markdown-authoring"],
+  ["test:protocol.relation-builders", "verifies", "spec:model.relations"],
+  ["test:protocol.pack-builder", "verifies", "spec:model.pack-aggregate"],
 ] as const;
 
-// re-measured under plan 40
+// re-measured under plan 41
 export const expectedCommentAnchorIds = [
   "impl:protocol.reader-impact",
   "component:protocol.reader",
@@ -2682,4 +2896,12 @@ export const expectedCommentAnchorIds = [
   "impl:protocol.mermaid-view",
   "impl:protocol.agent-surface-cli",
   "impl:protocol.anchors-subpath",
+  "impl:protocol.pack-design",
+  "test:protocol.pack-design",
+  "impl:protocol.pack-design-page",
+  "impl:protocol.pack-design-sections",
+  "test:protocol.pack-design-page",
+  "impl:protocol.build-artifacts",
+  "impl:protocol.engine-provenance-cli",
+  "impl:protocol.validate-watch",
 ] as const;

@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import {
   cpSync,
   existsSync,
@@ -17,7 +18,19 @@ import { afterAll, describe, expect, it, vi } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
-import { SDP_HELP_TEXT, isCliEntrypoint, onStdoutError, runSdpCli } from "../src/cli/sdp.js";
+import {
+  readBuildCommit,
+  writeBuildArtifacts,
+  writeBuildInfo,
+} from "../src/cli/build-artifacts.js";
+import { BUILD_INFO_FILE, parseBuildCommit } from "../src/cli/build-info.js";
+import {
+  SDP_HELP_TEXT,
+  isCliEntrypoint,
+  onStdoutError,
+  readEngineProvenance,
+  runSdpCli,
+} from "../src/cli/sdp.js";
 import {
   isWatchedCarrierPath,
   type NativeWatchHandle,
@@ -28,6 +41,7 @@ import {
 import { generateContracts } from "../src/codegen/contracts.js";
 import { extract } from "../src/extract/index.js";
 import { renderDesignReview } from "../src/projections/design-review.js";
+import { createReader } from "../src/reader/reader.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import {
   materializeExtractCorpus,
@@ -256,39 +270,21 @@ describe("sdp cli", () => {
       expect(exitCode).toBe(0);
       const stderr = capture.readStderr();
       for (const [file, specId] of [
-        ["specs/carrier/markdown-authoring.sdp.md", "spec:carrier.markdown-authoring"],
         ["specs/extraction/claim-taxonomy.sdp.md", "spec:extraction.claim-taxonomy"],
-        ["specs/model/pack-aggregate.sdp.md", "spec:model.pack-aggregate"],
-        ["specs/model/relations.sdp.md", "spec:model.relations"],
         ["specs/model/spec-sections.sdp.md", "spec:model.spec-sections"],
       ] as const) {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
       }
       for (const [file, target, specId] of [
         [
-          "specs/carrier/markdown-body-grammar.sdp.md",
-          "spec:validation.authored-honesty",
-          "spec:carrier.markdown-body-grammar",
-        ],
-        [
-          "specs/carrier/markdown-parser.sdp.md",
-          "spec:carrier.inline-code-spans",
-          "spec:carrier.markdown-parser",
-        ],
-        [
-          "specs/consumers/adopter-on-ramp.sdp.md",
-          "spec:carrier.markdown-body-grammar",
-          "spec:consumers.adopter-on-ramp",
-        ],
-        [
-          "specs/consumers/delivery-session-on-ramp.sdp.md",
-          "spec:decisions.planning-truths-placement",
-          "spec:consumers.delivery-session-on-ramp",
-        ],
-        [
           "specs/consumers/delivery-session-on-ramp.sdp.md",
           "spec:decisions.shipped-projections-frozen",
           "spec:consumers.delivery-session-on-ramp",
+        ],
+        [
+          "specs/decisions/architectural-significance-rides-primitives.sdp.md",
+          "spec:model.structural-patterns",
+          "spec:decisions.architectural-significance-rides-primitives",
         ],
         [
           "specs/decisions/carrier-ruling.sdp.md",
@@ -310,8 +306,8 @@ describe("sdp cli", () => {
           `${file} — [warning] conformance/prose-mentions — Mention of "${target}" in "${specId}"`,
         );
       }
-      // re-measured under plan 40
-      expect(capture.readStdout()).toContain("validate: 0 errors · 14 warnings");
+      // re-measured under plan 41
+      expect(capture.readStdout()).toContain("validate: 0 errors · 7 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
@@ -1592,6 +1588,13 @@ function createWatchHarness(): {
   };
 }
 
+const validateWatchTestAnchor = specTest({
+  id: testAnchorId("test:protocol.validate-watch"),
+  label: "watch-loop checks verify the validate --watch authoring loop",
+  verifies: ref("spec:consumers.validate-watch"),
+});
+void validateWatchTestAnchor;
+
 describe("sdp validate --watch", () => {
   it("documents --watch as a validate-only authoring loop", () => {
     expect(SDP_HELP_TEXT).toContain(
@@ -2198,4 +2201,195 @@ it("clean-repo determinism: the full pipeline at a different absolute path is by
     rmSync(firstRoot, { recursive: true, force: true });
     rmSync(secondRoot, { recursive: true, force: true });
   }
+});
+
+const engineProvenanceTestAnchor = specTest({
+  id: testAnchorId("test:protocol.engine-provenance"),
+  label: "version checks verify the engine provenance line and the build's commit record",
+  verifies: ref("spec:consumers.engine-provenance"),
+});
+void engineProvenanceTestAnchor;
+
+describe("sdp --version", () => {
+  const packageVersion = (
+    JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as { version: string }
+  ).version;
+  const fullCommit = "0123456789abcdef0123456789abcdef01234567";
+
+  /** A reader over two in-memory files, keyed by the last path segment of the URL. */
+  function shippedFiles(files: Readonly<Record<string, string>>) {
+    return (url: URL): string => {
+      const name = url.pathname.slice(url.pathname.lastIndexOf("/") + 1);
+      const text = files[name];
+
+      if (text === undefined) {
+        throw Object.assign(new Error(`ENOENT: ${name}`), { code: "ENOENT" });
+      }
+
+      return text;
+    };
+  }
+
+  it("prints one line naming the package version and the recorded commit, and exits 0", () => {
+    const capture = createCaptureOutput();
+
+    const exitCode = runSdpCli(["--version"], capture.output, {
+      readEngineFile: shippedFiles({
+        "package.json": JSON.stringify({ name: "x", version: "1.2.3" }),
+        [BUILD_INFO_FILE]: JSON.stringify({ commit: fullCommit }),
+      }),
+    });
+
+    expect(exitCode).toBe(0);
+    expect(capture.readStdout()).toBe(`sdp 1.2.3 (${fullCommit})\n`);
+    expect(capture.readStderr()).toBe("");
+  });
+
+  it("names the commit unknown when the build recorded none or recorded something else", () => {
+    for (const record of [
+      undefined,
+      "",
+      "not json",
+      "null",
+      JSON.stringify({ commit: "28dcbdd" }),
+      JSON.stringify({ commit: `${fullCommit}\nsdp 9.9.9` }),
+      JSON.stringify({ commit: fullCommit.toUpperCase() }),
+    ]) {
+      const capture = createCaptureOutput();
+      const files: Record<string, string> = { "package.json": '{"version":"1.2.3"}' };
+      if (record !== undefined) files[BUILD_INFO_FILE] = record;
+
+      expect(
+        runSdpCli(["--version"], capture.output, { readEngineFile: shippedFiles(files) }),
+      ).toBe(0);
+      expect(capture.readStdout()).toBe("sdp 1.2.3 (unknown)\n");
+    }
+  });
+
+  it("reads the version from the package manifest two directories above the CLI module", () => {
+    const urls: string[] = [];
+    readEngineProvenance((url) => {
+      urls.push(url.href);
+      throw new Error("absent");
+    });
+
+    expect(urls).toEqual([
+      new URL("../package.json", import.meta.url).href,
+      new URL(`../src/cli/${BUILD_INFO_FILE}`, import.meta.url).href,
+    ]);
+    expect(readEngineProvenance()).toEqual({ version: packageVersion, commit: "unknown" });
+  });
+
+  it("documents --version and --params in the usage text", () => {
+    expect(SDP_HELP_TEXT).toContain("  sdp --version\n");
+    expect(SDP_HELP_TEXT).toContain("sdp <package version> (<commit>)");
+    expect(SDP_HELP_TEXT).toContain("[--params JSON | --params @PATH]");
+    expect(SDP_HELP_TEXT).toContain("Four bindings are injected");
+    expect(SDP_HELP_TEXT).toContain("dist/recipes/NN-slug.js");
+  });
+
+  it("records the checked-out commit at build time, or unknown when git cannot name one", () => {
+    const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: repoRoot, encoding: "utf8" });
+
+    expect(readBuildCommit(repoRoot)).toBe(head.trim());
+    expect(
+      readBuildCommit(repoRoot, () => {
+        throw new Error("not a git checkout");
+      }),
+    ).toBe("unknown");
+    expect(readBuildCommit(repoRoot, () => "fatal: ambiguous argument\n")).toBe("unknown");
+
+    const outDir = mkdtempSync(join(tmpdir(), "sdp-build-info-"));
+    try {
+      writeBuildInfo(outDir, fullCommit);
+      expect(parseBuildCommit(readFileSync(join(outDir, "cli", BUILD_INFO_FILE), "utf8"))).toBe(
+        fullCommit,
+      );
+    } finally {
+      rmSync(outDir, { recursive: true, force: true });
+    }
+  });
+
+  it("publishes the commit the build step reads from git beside the CLI", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-build-step-"));
+    const outDir = join(root, "dist");
+    const asked: { readonly cwd: string; readonly args: readonly string[] }[] = [];
+
+    try {
+      mkdirSync(join(root, "docs", "agent-surface"), { recursive: true });
+      writeFileSync(
+        join(root, "docs", "agent-surface", "recipes.md"),
+        "## 1. One\n\n```js\nreturn 1;\n```\n",
+      );
+      writeBuildArtifacts({
+        root,
+        outDir,
+        git: (cwd, args) => {
+          asked.push({ cwd, args });
+          return `${fullCommit}\n`;
+        },
+      });
+
+      expect(asked).toEqual([{ cwd: root, args: ["rev-parse", "HEAD"] }]);
+      expect(readFileSync(join(outDir, "cli", BUILD_INFO_FILE), "utf8")).toBe(
+        `${JSON.stringify({ commit: fullCommit })}\n`,
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("answers from the compiled CLI with the commit its build recorded beside it", () => {
+    const compiledCli = join(repoRoot, "dist", "cli", "sdp.js");
+    const record = join(repoRoot, "dist", "cli", BUILD_INFO_FILE);
+    expect(existsSync(compiledCli), "run npm run build before the CLI check").toBe(true);
+    expect(existsSync(record), "the build records its commit beside the CLI").toBe(true);
+
+    const commit = parseBuildCommit(readFileSync(record, "utf8"));
+    expect(commit).toMatch(/^(?:[0-9a-f]{40}|[0-9a-f]{64}|unknown)$/u);
+    expect(execFileSync(process.execPath, [compiledCli, "--version"], { encoding: "utf8" })).toBe(
+      `sdp ${packageVersion} (${commit})\n`,
+    );
+
+    // Neither value reaches a derived artifact: the graph stays a function of the corpus alone.
+    const graphText = JSON.stringify(extract({ root: exampleRoot }).graph);
+    expect(graphText).not.toContain(BUILD_INFO_FILE);
+    expect(commit === "unknown" || !graphText.includes(commit)).toBe(true);
+  });
+});
+
+describe("a shipped recipe file through the compiled CLI", () => {
+  it("runs recipe 4 as shipped, its changed files passed with --params @PATH", () => {
+    const compiledCli = join(repoRoot, "dist", "cli", "sdp.js");
+    const shipped = join(repoRoot, "dist", "recipes", "04-what-breaks-if-i-change-these-files.js");
+    const scratch = mkdtempSync(join(tmpdir(), "sdp-shipped-recipe-"));
+    const graph = extract({ root: exampleRoot }).graph;
+    const boundFile = graph.nodes.find((node) => node.nodeType === "CodeNode");
+    if (boundFile?.nodeType !== "CodeNode") {
+      throw new Error("the example corpus binds no code unit");
+    }
+    const files = [boundFile.file, "absent/file.ts"];
+
+    try {
+      const params = join(scratch, "changed.json");
+      writeFileSync(params, JSON.stringify({ files }));
+      const body = readFileSync(shipped, "utf8").replace(/\n+$/u, "");
+      const stdout = execFileSync(
+        process.execPath,
+        [compiledCli, "q", body, "--root", exampleRoot, "--params", `@${params}`, "--json"],
+        { encoding: "utf8" },
+      );
+      const result = JSON.parse(stdout) as Record<string, unknown>;
+      const radius = createReader(graph).blastRadius(files);
+
+      expect(result.changedFiles).toEqual(radius.changedFiles);
+      expect(result.coverageUnknownFiles).toEqual(["absent/file.ts"]);
+      expect(
+        (result.impactedSpecs as readonly { readonly id: string }[]).map((row) => row.id),
+      ).toEqual(radius.impactedSpecs.map((item) => item.id));
+      expect(radius.impactedSpecs.length).toBeGreaterThan(0);
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
 });

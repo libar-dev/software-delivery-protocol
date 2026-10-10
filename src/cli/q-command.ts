@@ -50,6 +50,8 @@ export interface QueryArgs {
   /** `undefined` means "not supplied on argv" — stdin decides whether that is a body or a refusal. */
   readonly body: string | undefined;
   readonly json: boolean;
+  /** The JSON object `--params` supplied, already parsed, or `{}` without the flag. */
+  readonly params: Readonly<Record<string, unknown>>;
 }
 
 export interface QueryHooks {
@@ -58,7 +60,12 @@ export interface QueryHooks {
   readonly readStdin?: () => string;
 }
 
-type CompiledBody = (g: Reader, graph: GraphSchema, report: ValidationReport) => Promise<unknown>;
+type CompiledBody = (
+  g: Reader,
+  graph: GraphSchema,
+  report: ValidationReport,
+  params: unknown,
+) => Promise<unknown>;
 
 type AsyncBodyConstructor = new (...parameterNamesThenBody: readonly string[]) => CompiledBody;
 
@@ -70,14 +77,15 @@ async function asyncBodyShape(): Promise<void> {
 /**
  * The body is a plain JavaScript async function body — no `import`/`export`, no TypeScript-only
  * syntax — so the runner never has to resolve a module on the operator's behalf and no staleness
- * switch exists to forget. `return` is the output contract.
+ * switch exists to forget. `return` is the output contract. The binding names, in order, are the
+ * scripted contract every recipe and skill depends on.
  */
 export function compileBody(source: string): CompiledBody {
   const { constructor: AsyncBody } = Object.getPrototypeOf(asyncBodyShape) as {
     readonly constructor: AsyncBodyConstructor;
   };
 
-  return new AsyncBody("g", "graph", "report", source);
+  return new AsyncBody("g", "graph", "report", "params", source);
 }
 
 function defaultIsStdinTty(): boolean {
@@ -88,10 +96,82 @@ function defaultReadStdin(): string {
   return readFileSync(0, "utf8");
 }
 
+/** Collapses an error message onto one line, so a refusal stays the one-line diagnostic. */
+function oneLine(message: string): string {
+  return message.replace(/\s+/gu, " ").trim();
+}
+
+const queryParamsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.query-params"),
+  label: "reads --params as JSON data and injects it as the sink's fourth binding, params",
+  satisfies: ref("spec:consumers.agent-surface.recipe-parameters"),
+  component: componentAnchorId("component:protocol.cli"),
+  role: "service",
+});
+void queryParamsAnchor;
+
+/** How a refusal names a parsed JSON value that is not an object. */
+function jsonKind(value: unknown): string {
+  return value === null ? "null" : Array.isArray(value) ? "an array" : `a ${typeof value}`;
+}
+
+/**
+ * `--params` carries a recipe's parameter as data, never as body source: a JSON object inline, or
+ * `@PATH` naming a file, resolved from the working directory, that holds one. It is read and parsed
+ * here, before the graph derives, so a value that is not JSON, JSON that is not an object, or a
+ * file that cannot be read refuses the invocation before the body could run.
+ */
+function readParams(
+  value: string,
+  output: CliOutput,
+): { readonly params: Readonly<Record<string, unknown>> } | undefined {
+  let text = value;
+  let source = "--params";
+
+  if (value.startsWith("@")) {
+    const path = value.slice(1);
+
+    if (path === "") {
+      writeStderr(output, "sdp q: --params @PATH requires a path after @.\n");
+      return undefined;
+    }
+
+    source = `--params file ${JSON.stringify(path)}`;
+
+    try {
+      // A byte-order mark is not JSON text, though an editor may save one; it is dropped.
+      text = readFileSync(path, "utf8").replace(/^\uFEFF/u, "");
+    } catch (error) {
+      writeStderr(
+        output,
+        `sdp q: ${source} could not be read (${oneLine(errorMessage(error))}).\n`,
+      );
+      return undefined;
+    }
+  }
+
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(text) as unknown;
+  } catch (error) {
+    writeStderr(output, `sdp q: ${source} is not valid JSON (${oneLine(errorMessage(error))}).\n`);
+    return undefined;
+  }
+
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    writeStderr(output, `sdp q: ${source} must be a JSON object, got ${jsonKind(parsed)}.\n`);
+    return undefined;
+  }
+
+  return { params: parsed as Readonly<Record<string, unknown>> };
+}
+
 export function parseQueryArgs(args: readonly string[], output: CliOutput): QueryArgs | undefined {
   let root: string | undefined;
   let body: string | undefined;
   let json = false;
+  let rawParams: string | undefined;
   const rawExcludes: string[] = [];
 
   for (let index = 0; index < args.length; index += 1) {
@@ -134,6 +214,29 @@ export function parseQueryArgs(args: readonly string[], output: CliOutput): Quer
       continue;
     }
 
+    if (argument === "--params") {
+      const value = args[index + 1];
+
+      if (value === undefined) {
+        writeStderr(output, "sdp q: --params requires a JSON object or @PATH.\n");
+        return undefined;
+      }
+
+      if (value.startsWith("--")) {
+        writeStderr(output, `sdp q: --params expects a JSON object or @PATH, got ${value}\n`);
+        return undefined;
+      }
+
+      if (rawParams !== undefined) {
+        writeStderr(output, "sdp q takes at most one --params.\n");
+        return undefined;
+      }
+
+      rawParams = value;
+      index += 1;
+      continue;
+    }
+
     if (argument.startsWith("--")) {
       writeStderr(output, `sdp q: unknown option ${argument}\n`);
       return undefined;
@@ -162,7 +265,15 @@ export function parseQueryArgs(args: readonly string[], output: CliOutput): Quer
 
   const resolvedRoot = resolveExtractionRoot(root, output, "q");
 
-  return resolvedRoot === undefined ? undefined : { root: resolvedRoot, exclude, body, json };
+  if (resolvedRoot === undefined) {
+    return undefined;
+  }
+
+  const supplied = rawParams === undefined ? { params: {} } : readParams(rawParams, output);
+
+  return supplied === undefined
+    ? undefined
+    : { root: resolvedRoot, exclude, body, json, params: supplied.params };
 }
 
 /**
@@ -243,7 +354,7 @@ export async function runQuery(
 
   try {
     const report = validateGraph(graph);
-    value = await compileBody(body)(createReader(graph), graph, report);
+    value = await compileBody(body)(createReader(graph), graph, report, parsed.params);
   } catch (error) {
     writeStderr(output, `sdp q: ${errorMessage(error)}\n`);
     return 1;

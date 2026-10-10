@@ -5,6 +5,7 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:consumers.authoring-on-ramp
+  decidedBy: spec:decisions.planning-truths-placement
 ---
 # Delivery sessions route work from current graph state
 

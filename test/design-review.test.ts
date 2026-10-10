@@ -98,10 +98,16 @@ describe("the Design Review — the one generated read-only view", () => {
       "## Narrative\n\nThe Protocol's own delivery model exercises the same carrier, graph, checks, and projections offered to consumers.\n\n**Readiness:",
     );
     expect(page).toContain("## Intent\n\n- **outcome:");
-    expect(index).toContain("schema `0.8.0`");
-    expect(pack).toContain(
-      "| [`spec:protocol.self-hosting`](../spec/protocol.self-hosting.md) The Protocol authors and validates itself | behavior | epic | defined | ready | none | none |",
+    expect(index).toContain("schema `0.9.0`");
+    const row = pack
+      .split("\n")
+      .find((line) =>
+        line.startsWith("| [`spec:protocol.self-hosting`](../spec/protocol.self-hosting.md) ("),
+      );
+    expect(row).toContain(
+      ") The Protocol authors and validates itself | behavior | epic | defined | ready | ready · holds | 0 | 0 | 0 |",
     );
+    expect(row?.endsWith("| none | none | none |")).toBe(true);
   });
 
   it("renders every owned description as escaped prose and omits absent prose artifacts", () => {

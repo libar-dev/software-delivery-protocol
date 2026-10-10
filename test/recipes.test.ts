@@ -1,10 +1,19 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import { recipeFiles, writeBuildArtifacts, writeRecipeFiles } from "../src/cli/build-artifacts.js";
 import { compileBody } from "../src/cli/q-command.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import {
@@ -35,10 +44,10 @@ const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const recipesPath = "docs/agent-surface/recipes.md";
 
 // The seam is the production one: `runSdpCli` parses the same argv, compiles the same body, injects
-// the same `g` / `graph` / `report` bindings, and shapes the same output. Only the extraction is
-// memoized — derived once from the repository root with the standard exclude list (the corpus-oracle
-// derivation pattern), because deriving the whole corpus once per recipe buys nothing the single
-// derivation does not already prove. Nothing here names a write path, so the suite stays pooled.
+// the same `g` / `graph` / `report` / `params` bindings, and shapes the same output. Only the
+// extraction is memoized — derived once from the repository root with the standard exclude list (the
+// corpus-oracle derivation pattern), because deriving the whole corpus once per recipe buys nothing
+// the single derivation does not already prove. Nothing here names a write path, so the suite stays pooled.
 // The project's own exclusions, stated once. Every documented `sdp q` invocation that names any
 // exclusion at this root must name all of them: without the full set the corpus reports extraction
 // errors and the sink refuses the body outright, so a shorter list in a doc is an invocation that
@@ -110,7 +119,8 @@ function parseRecipes(markdown: string): readonly Recipe[] {
   return recipes;
 }
 
-const source = readFileSync(join(repoRoot, recipesPath), "utf8");
+// LF-normalized, as the build step reads the catalog, so a CRLF checkout parses the same bodies.
+const source = readFileSync(join(repoRoot, recipesPath), "utf8").replaceAll("\r\n", "\n");
 const recipes = parseRecipes(source);
 const documentedHeadingCount = source
   .split("\n")
@@ -128,47 +138,44 @@ const queryHooks = {
   },
 };
 
+/**
+ * Runs one body through the real argv seam. A recipe parameter travels the way a caller passes
+ * it, as JSON data on `--params`, never spliced into the body; without one the body runs exactly
+ * as the catalog prints it and falls back to its sample.
+ */
 async function runRecipe(
   recipe: Recipe,
-  changedFiles?: readonly string[],
+  params?: Readonly<Record<string, unknown>>,
   extraction: ExtractionResult = derived,
 ): Promise<unknown> {
-  const previousChangedFiles = process.env.SDP_CHANGED_FILES_JSON;
-  if (changedFiles === undefined) {
-    delete process.env.SDP_CHANGED_FILES_JSON;
-  } else {
-    process.env.SDP_CHANGED_FILES_JSON = JSON.stringify(changedFiles);
-  }
-
-  try {
-    const capture = createCaptureOutput();
-    const exitCode = await runSdpCli(
-      ["q", recipe.body, "--root", repoRoot, "--json"],
-      capture.output,
-      {
-        query: {
-          ...queryHooks.query,
-          extract: () => extraction,
-        },
+  const capture = createCaptureOutput();
+  const exitCode = await runSdpCli(
+    [
+      "q",
+      recipe.body,
+      "--root",
+      repoRoot,
+      "--json",
+      ...(params === undefined ? [] : ["--params", JSON.stringify(params)]),
+    ],
+    capture.output,
+    {
+      query: {
+        ...queryHooks.query,
+        extract: () => extraction,
       },
-    );
+    },
+  );
 
-    // The expected stderr is the empty string, not a self-comparison: a recipe run over the green
-    // corpus has nothing to say on stderr, and the object shape keeps the actual output in the
-    // failure diff when it does.
-    expect(
-      { recipe: recipe.title, exitCode, stderr: capture.readStderr() },
-      `recipe ${String(recipe.ordinal)} must run as written`,
-    ).toEqual({ recipe: recipe.title, exitCode: 0, stderr: "" });
+  // The expected stderr is the empty string, not a self-comparison: a recipe run over the green
+  // corpus has nothing to say on stderr, and the object shape keeps the actual output in the
+  // failure diff when it does.
+  expect(
+    { recipe: recipe.title, exitCode, stderr: capture.readStderr() },
+    `recipe ${String(recipe.ordinal)} must run as written`,
+  ).toEqual({ recipe: recipe.title, exitCode: 0, stderr: "" });
 
-    return JSON.parse(capture.readStdout()) as unknown;
-  } finally {
-    if (previousChangedFiles === undefined) {
-      delete process.env.SDP_CHANGED_FILES_JSON;
-    } else {
-      process.env.SDP_CHANGED_FILES_JSON = previousChangedFiles;
-    }
-  }
+  return JSON.parse(capture.readStdout()) as unknown;
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -330,6 +337,41 @@ const registerRecipesTestAnchor = specTest({
 });
 void registerRecipesTestAnchor;
 describe("the agent-surface recipe corpus", () => {
+  // A Spec that cites a recipe by number and heading, as "Recipe 32, architecture crossings," or
+  // "architecture crossings (recipe 32)", names the heading the catalog gives that number.
+  it("cites each recipe that a Spec names by number and heading under the catalog's number", () => {
+    const headings = recipes.map((recipe) => ({
+      ordinal: recipe.ordinal,
+      heading: recipe.title.toLowerCase(),
+    }));
+    const citations: { spec: string; cited: number; named: number }[] = [];
+
+    for (const node of derived.graph.nodes) {
+      if (node.nodeType !== "Primitive") continue;
+
+      const text = `${node.narrative ?? ""}\n${JSON.stringify(node.sections ?? {})}`;
+      for (const match of text.matchAll(/\brecipe (\d+), ([^,.;:()"\n]+)/giu)) {
+        const named = headings.find((entry) =>
+          (match[2] ?? "").toLowerCase().startsWith(entry.heading),
+        );
+        if (named !== undefined) {
+          citations.push({ spec: node.id, cited: Number(match[1]), named: named.ordinal });
+        }
+      }
+      for (const match of text.matchAll(/([\p{L}\p{N} -]+) \(recipe (\d+)\)/giu)) {
+        const named = headings.find((entry) =>
+          (match[1] ?? "").toLowerCase().endsWith(entry.heading),
+        );
+        if (named !== undefined) {
+          citations.push({ spec: node.id, cited: Number(match[2]), named: named.ordinal });
+        }
+      }
+    }
+
+    expect(citations.length).toBeGreaterThan(0);
+    expect(citations.filter((citation) => citation.cited !== citation.named)).toEqual([]);
+  });
+
   // Given: the catalog as authored. When: its structure is read. Then: every documented recipe
   // carries exactly one runnable body, so a new recipe cannot dodge the check by omitting one.
   it("pairs every documented recipe with exactly one fenced body", () => {
@@ -368,9 +410,13 @@ describe("the agent-surface recipe corpus", () => {
         source,
         selfHosting: true,
       });
+      // A body in double quotes is shell-expanded before the sink sees it. The one lawful
+      // double-quoted body is a shipped recipe file read whole by command substitution.
       expect({
         source,
-        otherQuoting: lines.filter((line) => line.includes(' q "') && line.includes("sdp")),
+        otherQuoting: lines.filter(
+          (line) => line.includes(' q "') && line.includes("sdp") && !line.includes(' q "$(cat '),
+        ),
       }).toEqual({ source, otherQuoting: [] });
 
       expect({ source, adopterForms: adopterLines.length }).toEqual({
@@ -415,6 +461,10 @@ describe("the agent-surface recipe corpus", () => {
       "twenty-six",
       "twenty-seven",
       "twenty-eight",
+      "twenty-nine",
+      "thirty",
+      "thirty-one",
+      "thirty-two",
     ] as const;
     const countWord = countWords[recipes.length];
     const lastOrdinal = recipes[recipes.length - 1]?.ordinal;
@@ -433,23 +483,18 @@ describe("the agent-surface recipe corpus", () => {
       authoring: readFileSync(join(repoRoot, ".agents/skills/sdp-authoring/SKILL.md"), "utf8"),
       sessions: readFileSync(join(repoRoot, ".agents/skills/sdp-sessions/SKILL.md"), "utf8"),
     };
-    const parameterizedRecipes = recipes.filter(
-      (recipe) =>
-        recipe.ordinal !== 4 &&
-        /^(?:const (?:id|term|subject|scope|addresses) = )/u.test(recipe.body),
-    );
+    const parameterizedRecipes = recipes.filter((recipe) => /\bparams\./u.test(recipe.body));
 
-    // Recipe 4 receives filenames as data. Intro guidance must never teach callers to construct
-    // executable query source from repository-controlled paths.
-    const parameterGuidance =
-      /\*\*Some recipes open with a parameter\.[\s\S]*?(?=\n\n\*\*Recipe 4 is different)/u.exec(
-        intro,
-      )?.[0] ?? "";
-    expect(parameterGuidance).not.toMatch(
-      /\b4\b[\s\S]*?(?:changed-file list|substitut(?:e|ion))/iu,
-    );
-    expect(introProse).toContain("Recipe 4 filenames travel via `SDP_CHANGED_FILES_JSON`");
-    expect(introProse).toContain("callers never substitute filenames into the JavaScript fence");
+    // A parameter is data on `--params`, never source spliced into a body, and no recipe reads
+    // the environment. The intro teaches exactly that and names no retired channel.
+    expect(introProse).toContain("Pass it as JSON data with `--params`, never by editing the body");
+    expect(source).not.toContain("SDP_CHANGED_FILES_JSON");
+    for (const recipe of recipes) {
+      expect({ recipe: recipe.ordinal, env: recipe.body.includes("process.env") }).toEqual({
+        recipe: recipe.ordinal,
+        env: false,
+      });
+    }
 
     expect(countWord).toBeDefined();
     if (countWord === undefined) {
@@ -487,11 +532,15 @@ describe("the agent-surface recipe corpus", () => {
       "dependency cycles",
       "references into a design",
       "roles, layers and contexts",
+      "pack design",
+      "design-change impact",
+      "decision register",
+      "architecture crossings",
     ]) {
       expect(agentSurfaceProse).toContain(phrase);
     }
 
-    for (const ordinal of [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]) {
+    for (let ordinal = 12; ordinal <= recipes.length; ordinal += 1) {
       expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
     }
   });
@@ -642,13 +691,14 @@ describe("the agent-surface recipe corpus", () => {
     const recipe = recipeByOrdinal(4);
     rmSync(sentinel, { force: true });
 
-    expect(recipe.body).toContain("process.env.SDP_CHANGED_FILES_JSON");
+    expect(recipe.body).toContain("params.files");
+    expect(recipe.body).not.toContain("process.env");
     for (const filename of hostileChangedFiles) {
       expect(recipe.body).not.toContain(filename);
     }
 
     try {
-      const result = asRecord(await runRecipe(recipe, hostileChangedFiles));
+      const result = asRecord(await runRecipe(recipe, { files: hostileChangedFiles }));
 
       expect([...asArray(result.changedFiles)].sort()).toEqual([...hostileChangedFiles].sort());
       expect([...asArray(result.coverageUnknownFiles)].sort()).toEqual(
@@ -662,7 +712,7 @@ describe("the agent-surface recipe corpus", () => {
 
   it("returns the complete diff-to-at-risk bridge", async () => {
     const normalChangedFiles = ["src/reader/reader.ts", "docs/agent-surface/recipes.md"];
-    const result = asRecord(await runRecipe(recipeByOrdinal(4), normalChangedFiles));
+    const result = asRecord(await runRecipe(recipeByOrdinal(4), { files: normalChangedFiles }));
     const changedFiles = asArray(result.changedFiles).map((file) => stringAt({ file }, "file"));
     const radius = reader.blastRadius(changedFiles);
 
@@ -777,7 +827,7 @@ describe("the agent-surface recipe corpus", () => {
         edges: derived.graph.edges,
       },
     };
-    const result = asRecord(await runRecipe(recipeByOrdinal(4), [file], extraction));
+    const result = asRecord(await runRecipe(recipeByOrdinal(4), { files: [file] }, extraction));
 
     expect(result.unlinkedUnits).toEqual([{ id: unit.id, file }]);
     expect(result.coverageUnknownFiles).toEqual([]);
@@ -889,12 +939,6 @@ describe("the agent-surface recipe corpus", () => {
 
   it("names the next rung's unmet clause and the dependency that breaks it on a probe", async () => {
     const recipe = recipeByOrdinal(9);
-    const catalogLine = 'const id = "spec:model.enrichment-lifecycle";';
-    expect(recipe.body).toContain(catalogLine);
-    const retarget = (id: string) => ({
-      ...recipe,
-      body: recipe.body.replace(catalogLine, `const id = "${id}";`),
-    });
     const ruleNode = (
       id: string,
       readiness: "idea" | "scoped" | "defined" | "ready",
@@ -947,7 +991,7 @@ describe("the agent-surface recipe corpus", () => {
     };
     const targetClause = "typed-dependency-targets-are-defined";
 
-    expect(await runRecipe(retarget("spec:probe.subject"), undefined, probe)).toEqual({
+    expect(await runRecipe(recipe, { spec: "spec:probe.subject" }, probe)).toEqual({
       id: "spec:probe.subject",
       found: true,
       statedReadiness: "defined",
@@ -971,7 +1015,7 @@ describe("the agent-surface recipe corpus", () => {
     });
 
     // A failure of any other clause carries no targets field.
-    const held = asRecord(await runRecipe(retarget("spec:probe.held"), undefined, probe));
+    const held = asRecord(await runRecipe(recipe, { spec: "spec:probe.held" }, probe));
     expect(held.nextRung).toBe("defined");
     expect(held.nextRungFailures).toEqual([
       {
@@ -1121,10 +1165,7 @@ describe("the agent-surface recipe corpus", () => {
       satisfiedSpecs,
     });
 
-    const absent = await runRecipe({
-      ...recipe,
-      body: recipe.body.replace("component:protocol.reader", "component:protocol.nonexistent"),
-    });
+    const absent = await runRecipe(recipe, { component: "component:protocol.nonexistent" });
     expect(absent).toEqual({ found: false });
   });
 
@@ -1582,14 +1623,11 @@ describe("the agent-surface recipe corpus", () => {
     expect(Object.keys(result)).not.toContain("blastRadiusEntryPoints");
 
     const unknownId = "spec:consumers.nonexistent";
-    const absent = await runRecipe({
-      ...recipe,
-      body: recipe.body.replace(id, unknownId),
-    });
+    const absent = await runRecipe(recipe, { spec: unknownId });
     expect(absent).toEqual({ id: unknownId, found: false });
   });
 
-  // Given: catalog recipe 19 with only the opening id retargeted to the structural-anchor
+  // Given: catalog recipe 19 with its parameter naming the structural-anchor
   // decision (live graph: one outgoing dependsOn, two inbound dependsOn from MD-34/MD-35).
   // When: the otherwise unchanged body runs through real runSdpCli.
   // Then: dependencies.dependsOn and dependencies.dependedOnBy are both non-empty and name the
@@ -1599,14 +1637,9 @@ describe("the agent-surface recipe corpus", () => {
     const recipe = recipeByOrdinal(19);
     const catalogId = "spec:consumers.agent-surface";
     const id = "spec:decisions.structural-anchor-semantics";
-    expect(recipe.body).toContain(`const id = "${catalogId}";`);
+    expect(recipe.body).toContain(`const id = params.spec ?? "${catalogId}";`);
 
-    const result = asRecord(
-      await runRecipe({
-        ...recipe,
-        body: recipe.body.replace(catalogId, id),
-      }),
-    );
+    const result = asRecord(await runRecipe(recipe, { spec: id }));
     const dependencies = asRecord(result.dependencies);
     const dependsOn = asArray(dependencies.dependsOn).map(asRecord);
     const dependedOnBy = asArray(dependencies.dependedOnBy).map(asRecord);
@@ -1944,7 +1977,7 @@ export const probe = spec({
 }
 
 describe("register recipe semantics", () => {
-  it.each([20, 21, 22, 23, 24, 25, 26, 27, 28])(
+  it.each([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32])(
     "runs recipe %s as written in default output",
     async (ordinal) => {
       const capture = createCaptureOutput();
@@ -1975,8 +2008,7 @@ describe("register recipe semantics", () => {
       },
     };
     const recipe = recipeByOrdinal(23);
-    const body = recipe.body.replace('const term = "suffix";', 'const term = "retry";');
-    const result = asRecord(await runRecipe({ ...recipe, body }, undefined, probe));
+    const result = asRecord(await runRecipe(recipe, { term: "retry" }, probe));
     expect(
       asArray(result.matches)
         .map(asRecord)
@@ -1984,9 +2016,11 @@ describe("register recipe semantics", () => {
     ).toEqual([text, JSON.stringify({ detail: text })]);
     const capture = createCaptureOutput();
     expect(
-      await runSdpCli(["q", body, "--root", repoRoot], capture.output, {
-        query: { ...queryHooks.query, extract: () => probe },
-      }),
+      await runSdpCli(
+        ["q", recipe.body, "--root", repoRoot, "--params", JSON.stringify({ term: "retry" })],
+        capture.output,
+        { query: { ...queryHooks.query, extract: () => probe } },
+      ),
     ).toBe(0);
     expect(capture.readStderr()).toBe("");
     expect(capture.readStdout()).not.toContain(text);
@@ -2014,27 +2048,26 @@ describe("register recipe semantics", () => {
 
   it("searches coined keys of every value shape through a TypeScript carrier", async () => {
     const recipe = recipeByOrdinal(23);
-    const result = asRecord(
-      await runRecipe(
-        { ...recipe, body: recipe.body.replace('const term = "suffix";', 'const term = "retry";') },
-        undefined,
-        carrierRegisterProbe(),
-      ),
-    );
-    const expected = [
-      ["design", "retryLimit", "3"],
-      ["design", "retryEnabled", "true"],
-      ["design", "retryPolicy", '{"mode":"fixed"}'],
-      ["design", "retryWorkers", '["alpha","beta"]'],
-      ["design", "retryEmptyList", "[]"],
-      ["design", "retryEmptyObject", "{}"],
-      ["design", "retryLong", JSON.stringify({ detail: "x".repeat(300) })],
-      ["ui", "retryVisible", "false"],
-    ].map(([section, entry, text]) => ({
+    const result = asRecord(await runRecipe(recipe, { term: "retry" }, carrierRegisterProbe()));
+    // The line is the one the TypeScript carrier records for the entry's property; a nested path
+    // is no entry of the location table, so it has none.
+    const expected = (
+      [
+        ["design", "retryLimit", "3", 8],
+        ["design", "retryEnabled", "true", 8],
+        ["design", "retryPolicy", '{"mode":"fixed"}', 8],
+        ["design", "retryWorkers", '["alpha","beta"]', 9],
+        ["design", "retryEmptyList", "[]", 9],
+        ["design", "retryEmptyObject", "{}", 9],
+        ["design", "retryLong", JSON.stringify({ detail: "x".repeat(300) }), 10],
+        ["ui", "retryVisible", "false", 12],
+      ] as const
+    ).map(([section, entry, text, line]) => ({
       id: "spec:probe.carrier",
       section,
       entry,
-      address: `spec:probe.carrier#${section ?? ""}.${entry ?? ""}`,
+      address: `spec:probe.carrier#${section}.${entry}`,
+      line,
       text,
       matchedIn: ["key"],
     }));
@@ -2045,6 +2078,7 @@ describe("register recipe semantics", () => {
         section: "design",
         entry: "nested.steps[0]",
         address: null,
+        line: null,
         text: "retry later",
         matchedIn: ["text"],
       },
@@ -2060,8 +2094,8 @@ describe("register recipe semantics", () => {
     const recipe = recipeByOrdinal(23);
     const result = asRecord(
       await runRecipe(
-        { ...recipe, body: recipe.body.replace('const term = "suffix";', 'const term = "retry";') },
-        undefined,
+        recipe,
+        { term: "retry" },
         {
           ...extraction,
           graph: {
@@ -2081,12 +2115,14 @@ describe("register recipe semantics", () => {
         },
       ),
     );
+    // The swapped sections keep the probe's location table, which locates both top-level keys.
     expect(result.matches).toEqual([
       {
         id: node.id,
         section: "design",
         entry: "retryWorkers",
         address: `${node.id}#design.retryWorkers`,
+        line: 9,
         matchedIn: ["key"],
         text: '["retry later"]',
       },
@@ -2095,6 +2131,7 @@ describe("register recipe semantics", () => {
         section: "design",
         entry: "retryWorkers[0]",
         address: null,
+        line: null,
         matchedIn: ["text"],
         text: "retry later",
       },
@@ -2103,6 +2140,7 @@ describe("register recipe semantics", () => {
         section: "design",
         entry: "retryPolicy",
         address: `${node.id}#design.retryPolicy`,
+        line: 8,
         matchedIn: ["key"],
         text: '{"mode":"retry fixed","options":["retry soon"]}',
       },
@@ -2111,6 +2149,7 @@ describe("register recipe semantics", () => {
         section: "design",
         entry: "retryPolicy.mode",
         address: null,
+        line: null,
         matchedIn: ["text"],
         text: "retry fixed",
       },
@@ -2119,6 +2158,7 @@ describe("register recipe semantics", () => {
         section: "design",
         entry: "retryPolicy.options[0]",
         address: null,
+        line: null,
         matchedIn: ["text"],
         text: "retry soon",
       },
@@ -2133,8 +2173,8 @@ describe("register recipe semantics", () => {
     if (node?.nodeType !== "Primitive") throw new Error("missing carrier probe");
     const result = asRecord(
       await runRecipe(
-        { ...recipe, body: recipe.body.replace('const term = "suffix";', 'const term = "retry";') },
-        undefined,
+        recipe,
+        { term: "retry" },
         {
           ...extraction,
           graph: {
@@ -2150,6 +2190,8 @@ describe("register recipe semantics", () => {
         section: "design",
         entry: "retryNothing",
         address: `${node.id}#design.retryNothing`,
+        // The probe's location table never saw this key: not located, never absent.
+        line: null,
         matchedIn: ["key"],
         text: "null",
       },
@@ -2157,20 +2199,25 @@ describe("register recipe semantics", () => {
     expect(result.totals).toEqual({ matches: 1, specs: 1, shown: 1 });
   });
 
+  // A source line is a location, not a count, so a number under `line` may sit in a row. Recipes
+  // 29 and 30 are left out: their rows carry per-member design counts and a distance by law.
   it("keeps register counts under totals and top-level plural nouns as arrays", async () => {
-    const check = (value: unknown, insideTotals = false): void => {
+    const check = (value: unknown, insideTotals = false, key = ""): void => {
       if (typeof value === "number") {
-        expect(insideTotals).toBe(true);
+        expect({ key, insideTotals: insideTotals || key === "line" }).toEqual({
+          key,
+          insideTotals: true,
+        });
       } else if (Array.isArray(value)) {
         value.forEach((entry) => {
-          check(entry, insideTotals);
+          check(entry, insideTotals, key);
         });
       } else if (typeof value === "object" && value !== null) {
-        for (const [key, entry] of Object.entries(value))
-          check(entry, insideTotals || key === "totals");
+        for (const [name, entry] of Object.entries(value))
+          check(entry, insideTotals || name === "totals", name);
       }
     };
-    for (const ordinal of [20, 21, 22, 23, 24, 25, 26, 27, 28]) {
+    for (const ordinal of [20, 21, 22, 23, 24, 25, 26, 27, 28, 31, 32]) {
       const output = asRecord(await runRecipe(recipeByOrdinal(ordinal)));
       check(output);
       for (const key of [
@@ -2219,16 +2266,7 @@ describe("register recipe semantics", () => {
         },
       };
       const recipe = recipeByOrdinal(23);
-      const result = asRecord(
-        await runRecipe(
-          {
-            ...recipe,
-            body: recipe.body.replace('const term = "suffix";', `const term = "${term}";`),
-          },
-          undefined,
-          extraction,
-        ),
-      );
+      const result = asRecord(await runRecipe(recipe, { term }, extraction));
       expect(asRecord(result.totals).matches).toBe(matchedIn.length === 0 ? 0 : 1);
       expect(result.matches).toEqual(
         matchedIn.length === 0
@@ -2239,6 +2277,8 @@ describe("register recipe semantics", () => {
                 section: "design",
                 entry: key,
                 address: `${node.id}#design.${key}`,
+                // The in-memory probe carries no location table: not located, never absent.
+                line: null,
                 matchedIn,
                 text,
               },
@@ -2371,20 +2411,11 @@ describe("register recipe semantics", () => {
       expect(asRecord(output.totals).byFloorReached).toEqual(expectedFloor);
     };
     assertReadiness(result, derived);
-    const retarget = (id: string) => ({
-      ...recipe,
-      body: recipe.body.replace(
-        'const id = "spec:extraction.derive-graph";',
-        `const id = "${id}";`,
-      ),
-    });
-    expect(await runRecipe(retarget("spec:probe.absent"), undefined, registerProbe())).toEqual({
+    expect(await runRecipe(recipe, { spec: "spec:probe.absent" }, registerProbe())).toEqual({
       id: "spec:probe.absent",
       found: false,
     });
-    const synthetic = asRecord(
-      await runRecipe(retarget("spec:probe.b"), undefined, registerProbe()),
-    );
+    const synthetic = asRecord(await runRecipe(recipe, { spec: "spec:probe.b" }, registerProbe()));
     assertReadiness(synthetic, registerProbe());
     expect(asRecord(synthetic.totals).relations).toBe(6);
     expect(asRecord(synthetic.totals).byType).toEqual({
@@ -2751,16 +2782,7 @@ export const source = spec({
       ),
     };
     const recipe = recipeByOrdinal(23);
-    const result = asRecord(
-      await runRecipe(
-        {
-          ...recipe,
-          body: recipe.body.replace('const term = "suffix";', 'const term = "needle";'),
-        },
-        undefined,
-        { ...probe, graph },
-      ),
-    );
+    const result = asRecord(await runRecipe(recipe, { term: "needle" }, { ...probe, graph }));
     const rows = asArray(result.matches).map(asRecord);
     for (const section of ["design", "ui"])
       expect(
@@ -2773,20 +2795,7 @@ export const source = spec({
   it("scopes mentions by the mentioning Spec only", async () => {
     const probe = registerProbe();
     const recipe = recipeByOrdinal(22);
-    const scoped = async (scope: string[]) =>
-      asRecord(
-        await runRecipe(
-          {
-            ...recipe,
-            body: recipe.body.replace(
-              "const scope = [];",
-              `const scope = ${JSON.stringify(scope)};`,
-            ),
-          },
-          undefined,
-          probe,
-        ),
-      );
+    const scoped = async (scope: string[]) => asRecord(await runRecipe(recipe, { scope }, probe));
     const all = asRecord(await runRecipe(recipe, undefined, probe));
     expect(await scoped(["spec:probe.b"])).toEqual(all);
     for (const scope of [
@@ -2882,16 +2891,7 @@ export const source = spec({
   it("searches whole tokens, coined keys, narrative and fence steps", async () => {
     const recipe = recipeByOrdinal(23);
     const search = async (term: string, extraction = registerProbe()) =>
-      asRecord(
-        await runRecipe(
-          {
-            ...recipe,
-            body: recipe.body.replace('const term = "suffix";', `const term = "${term}";`),
-          },
-          undefined,
-          extraction,
-        ),
-      );
+      asRecord(await runRecipe(recipe, { term }, extraction));
     const retry = await search("retry");
     const rows = asArray(retry.matches).map(asRecord);
     const entries = rows.map((row) => row.entry);
@@ -2903,6 +2903,7 @@ export const source = spec({
       section: "design",
       entry: "retryWorker",
       address: "spec:probe.search#design.retryWorker",
+      line: null,
       matchedIn: ["key", "text"],
       text: "retry-worker",
     });
@@ -3179,17 +3180,6 @@ relations: {}
   });
 }
 
-/** Recipe 25 with its opening parameter replaced, as the catalog tells a reader to do. */
-function addressResolution(addresses: readonly unknown[]): Recipe {
-  const recipe = recipeByOrdinal(25);
-  const opening = /^const addresses = \[\n[\s\S]*?\n\];\n/u;
-  expect(recipe.body).toMatch(opening);
-  return {
-    ...recipe,
-    body: recipe.body.replace(opening, `const addresses = ${JSON.stringify(addresses)};\n`),
-  };
-}
-
 /**
  * The dependency cycles of a graph by mutual reachability, a second derivation independent of the
  * recipe's own walk: the sets it must report, each with the length of the shortest closed path
@@ -3275,6 +3265,13 @@ function expectCyclesToMatchOracle(result: Record<string, unknown>, extraction: 
 
 describe("address resolution and dependency cycles", () => {
   it("resolves the catalog's addresses on this corpus as written", async () => {
+    // The value and the line are read from the raw graph, the node's section and the location
+    // table, so an edit to the Spec moves the expectation with it.
+    const holder = primitivesById.get("spec:consumers.design-review");
+    const location = derived.graph.locations?.find(
+      (row) => row.spec === "spec:consumers.design-review" && row.entry === "ui.packPage",
+    );
+    expect(location).toBeDefined();
     expect(await runRecipe(recipeByOrdinal(25))).toEqual({
       totals: { addresses: 4, resolved: 1, malformed: 1, spec: 1, entry: 1 },
       rows: [
@@ -3284,6 +3281,9 @@ describe("address resolution and dependency cycles", () => {
           id: "spec:consumers.design-review",
           section: "ui",
           key: "packPage",
+          value: holder?.sections?.ui?.packPage,
+          file: "specs/consumers/design-review.sdp.md",
+          line: location?.line,
           reason: null,
         },
         ...[
@@ -3296,6 +3296,9 @@ describe("address resolution and dependency cycles", () => {
           id: null,
           section: null,
           key: null,
+          value: null,
+          file: null,
+          line: null,
           reason,
         })),
       ],
@@ -3412,11 +3415,13 @@ relations: {}
       "authored.sdp.md": designProbeSpec("authored", "constructor: An authored constructor."),
     });
     const result = await runRecipe(
-      addressResolution([
-        "spec:probe.plain#design.constructor",
-        "spec:probe.authored#design.constructor",
-      ]),
-      undefined,
+      recipeByOrdinal(25),
+      {
+        addresses: [
+          "spec:probe.plain#design.constructor",
+          "spec:probe.authored#design.constructor",
+        ],
+      },
       extraction,
     );
     expect(result).toEqual({
@@ -3428,6 +3433,9 @@ relations: {}
           id: null,
           section: null,
           key: null,
+          value: null,
+          file: null,
+          line: null,
           reason: "entry",
         },
         {
@@ -3436,6 +3444,9 @@ relations: {}
           id: "spec:probe.authored",
           section: "design",
           key: "constructor",
+          value: "An authored constructor.",
+          file: "authored.sdp.md",
+          line: 17,
           reason: null,
         },
       ],
@@ -3444,13 +3455,15 @@ relations: {}
 
   it("resolves the design's probe addresses with one row and one reason each", async () => {
     const result = await runRecipe(
-      addressResolution([
-        "spec:probe.a#design.shape",
-        "spec:probe.a#question.shapeOpen",
-        "spec:probe.z#design.shape",
-        "spec:probe.a#Design.shape",
-      ]),
-      undefined,
+      recipeByOrdinal(25),
+      {
+        addresses: [
+          "spec:probe.a#design.shape",
+          "spec:probe.a#question.shapeOpen",
+          "spec:probe.z#design.shape",
+          "spec:probe.a#Design.shape",
+        ],
+      },
       cycleProbe(),
     );
     expect(result).toEqual({
@@ -3462,6 +3475,9 @@ relations: {}
           id: "spec:probe.a",
           section: "design",
           key: "shape",
+          value: "A shape.",
+          file: "a.sdp.md",
+          line: 19,
           reason: null,
         },
         ...[
@@ -3474,6 +3490,9 @@ relations: {}
           id: null,
           section: null,
           key: null,
+          value: null,
+          file: null,
+          line: null,
           reason,
         })),
       ],
@@ -3485,12 +3504,21 @@ relations: {}
     const sections = createReader(extraction.graph).specContext("spec:probe.keyed")?.sections;
     expect(sections?.design).toHaveProperty("description");
     expect(sections?.ui).toHaveProperty("description");
-    const resolved = (address: string, section: string, key: string) => ({
+    const resolved = (
+      address: string,
+      section: string,
+      key: string,
+      value: string,
+      line: number,
+    ) => ({
       address,
       resolves: true,
       id: "spec:probe.keyed",
       section,
       key,
+      value,
+      file: "keyed.sdp.md",
+      line,
       reason: null,
     });
     const refused = (address: unknown, reason: string) => ({
@@ -3499,37 +3527,60 @@ relations: {}
       id: null,
       section: null,
       key: null,
+      value: null,
+      file: null,
+      line: null,
       reason,
     });
     const result = await runRecipe(
-      addressResolution([
-        "spec:probe.keyed#question.shapeOpen",
-        "spec:probe.keyed#question.description",
-        "spec:probe.keyed#design.description",
-        "spec:probe.keyed#ui.description",
-        "spec:probe.keyed#question.ownerOpen",
-        "spec:probe.keyed#design.shape",
-        "spec:probe.keyed",
-        42,
-        "pack:probe.keyed#design.shape",
-        "spec:probe.keyed#question.shapeOpen",
-      ]),
-      undefined,
+      recipeByOrdinal(25),
+      {
+        addresses: [
+          "spec:probe.keyed#question.shapeOpen",
+          "spec:probe.keyed#question.description",
+          "spec:probe.keyed#design.description",
+          "spec:probe.keyed#ui.description",
+          "spec:probe.keyed#question.ownerOpen",
+          "spec:probe.keyed#design.shape",
+          "spec:probe.keyed",
+          42,
+          "pack:probe.keyed#design.shape",
+          "spec:probe.keyed#question.shapeOpen",
+        ],
+      },
       extraction,
     );
     expect(result).toEqual({
       totals: { addresses: 10, resolved: 4, malformed: 3, spec: 0, entry: 3 },
       rows: [
-        resolved("spec:probe.keyed#question.shapeOpen", "question", "shapeOpen"),
-        resolved("spec:probe.keyed#question.description", "question", "description"),
+        resolved(
+          "spec:probe.keyed#question.shapeOpen",
+          "question",
+          "shapeOpen",
+          "Is the shape final?",
+          14,
+        ),
+        resolved(
+          "spec:probe.keyed#question.description",
+          "question",
+          "description",
+          "Is description a key?",
+          15,
+        ),
         refused("spec:probe.keyed#design.description", "entry"),
         refused("spec:probe.keyed#ui.description", "entry"),
         refused("spec:probe.keyed#question.ownerOpen", "entry"),
-        resolved("spec:probe.keyed#design.shape", "design", "shape"),
+        resolved("spec:probe.keyed#design.shape", "design", "shape", "A shape.", 24),
         refused("spec:probe.keyed", "malformed"),
         refused(42, "malformed"),
         refused("pack:probe.keyed#design.shape", "malformed"),
-        resolved("spec:probe.keyed#question.shapeOpen", "question", "shapeOpen"),
+        resolved(
+          "spec:probe.keyed#question.shapeOpen",
+          "question",
+          "shapeOpen",
+          "Is the shape final?",
+          14,
+        ),
       ],
     });
   });
@@ -3560,18 +3611,7 @@ relations: {}
   it("addresses a keyed question's text and matches its key, never the key as a row", async () => {
     const recipe = recipeByOrdinal(23);
     const search = async (term: string) =>
-      asArray(
-        asRecord(
-          await runRecipe(
-            {
-              ...recipe,
-              body: recipe.body.replace('const term = "suffix";', `const term = "${term}";`),
-            },
-            undefined,
-            keyedQuestionProbe(),
-          ),
-        ).matches,
-      )
+      asArray(asRecord(await runRecipe(recipe, { term }, keyedQuestionProbe())).matches)
         .map(asRecord)
         .filter((row) => row.id === "spec:probe.keyed");
     expect(await search("shape open")).toEqual([
@@ -3580,13 +3620,15 @@ relations: {}
         section: "intent",
         entry: "openQuestions[0].question",
         address: "spec:probe.keyed#question.shapeOpen",
+        line: 14,
         matchedIn: ["key"],
         text: "Is the shape final?",
       },
     ]);
+    // An unkeyed question has no address but still a line: the table locates every question.
     const owner = await search("owns");
-    expect(owner.map((row) => [row.entry, row.address])).toEqual([
-      ["openQuestions[2].question", null],
+    expect(owner.map((row) => [row.entry, row.address, row.line])).toEqual([
+      ["openQuestions[2].question", null, 16],
     ]);
     const description = await search("description");
     expect(description.map((row) => [row.entry, row.address, row.matchedIn])).toEqual([
@@ -3741,10 +3783,7 @@ describe("design references and the architecture taxonomy", () => {
       ),
     });
 
-    const absent = await runRecipe({
-      ...recipe,
-      body: recipe.body.replace(studioPackId, "pack:absent-v1"),
-    });
+    const absent = await runRecipe(recipe, { pack: "pack:absent-v1" });
     expect(absent).toEqual({ id: "pack:absent-v1", found: false });
   });
 
@@ -3926,7 +3965,7 @@ describe("design references and the architecture taxonomy", () => {
     expect(asArray(valueRow("layers", "domain")?.units)).toContain("component:probe.studio-seam");
   });
 
-  // The sink compiles a body this way and calls it with the same three bindings; calling the
+  // The sink compiles a body this way and calls it with the same four bindings; calling the
   // compiled body directly keeps the count to the body alone.
   it("creates each taxonomy bucket once, however many units share the value", async () => {
     const ids = Array.from(
@@ -3951,7 +3990,7 @@ describe("design references and the architecture taxonomy", () => {
     const body = compileBody(recipeByOrdinal(28).body);
     const reader = createReader(graph);
     const report = validateGraph(graph);
-    const { value, sets } = countMapSets(() => body(reader, graph, report));
+    const { value, sets } = countMapSets(() => body(reader, graph, report, {}));
     const result = asRecord(await value);
 
     // Two buckets, `service` and `probe`, two Map sets. Replacing the bucket on every insertion
@@ -3960,5 +3999,1541 @@ describe("design references and the architecture taxonomy", () => {
     expect(result.roles).toEqual([{ value: "service", units: ids }]);
     expect(result.contexts).toEqual([{ value: "probe", units: ids }]);
     expect(result.layers).toEqual([]);
+  });
+});
+
+const recipeParametersCatalogAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.recipe-parameters-catalog"),
+  label: "asserts realization of the catalog recipes that read their parameter from params",
+  satisfies: ref("spec:consumers.agent-surface.recipe-parameters"),
+});
+void recipeParametersCatalogAnchor;
+const recipeParametersTestAnchor = specTest({
+  id: testAnchorId("test:protocol.recipe-parameters"),
+  label: "recipe checks verify parameters passed as data and the shipped recipe files",
+  verifies: ref("spec:consumers.agent-surface.recipe-parameters"),
+});
+void recipeParametersTestAnchor;
+
+const shippedRecipesDirectory = join(repoRoot, "dist", "recipes");
+
+/** The file the build owes a recipe: its two-digit number, then its heading in lower kebab case. */
+function shippedRecipeName(recipe: Recipe): string {
+  const slug = recipe.title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gu, "-")
+    .replace(/^-+|-+$/gu, "");
+
+  return `${String(recipe.ordinal).padStart(2, "0")}-${slug}.js`;
+}
+
+function readShippedRecipe(recipe: Recipe): string {
+  const path = join(shippedRecipesDirectory, shippedRecipeName(recipe));
+
+  if (!existsSync(path)) {
+    throw new Error(`${path} is missing: run npm run build before the recipe check`);
+  }
+
+  return readFileSync(path, "utf8");
+}
+
+/** The body `sdp q "$(cat FILE)"` hands the sink: command substitution drops trailing newlines. */
+function shippedBody(recipe: Recipe): string {
+  return readShippedRecipe(recipe).replace(/\n+$/u, "");
+}
+
+/** The catalog text a recipe owns, heading through the line before the next numbered heading. */
+function recipeProse(recipe: Recipe): string {
+  const start = source.indexOf(`\n## ${String(recipe.ordinal)}. `);
+  const next = source.indexOf(`\n## ${String(recipe.ordinal + 1)}. `, start + 1);
+
+  return source.slice(start, next === -1 ? undefined : next).replace(recipe.body, "");
+}
+
+async function runShipped(
+  body: string,
+  params: readonly string[],
+): Promise<{ readonly exitCode: number; readonly stdout: string; readonly stderr: string }> {
+  const capture = createCaptureOutput();
+  const exitCode = await runSdpCli(
+    ["q", body, "--root", repoRoot, "--json", ...params],
+    capture.output,
+    queryHooks,
+  );
+
+  return { exitCode, stdout: capture.readStdout(), stderr: capture.readStderr() };
+}
+
+describe("recipe parameters and the shipped recipe files", () => {
+  it("reads each parameter from params, falls back to the catalog sample, and names it", () => {
+    const parameterized = recipes.filter((recipe) => /\bparams\./u.test(recipe.body));
+
+    expect(parameterized.map((recipe) => recipe.ordinal)).toEqual(
+      expect.arrayContaining([3, 4, 5, 9, 19, 21, 22, 25, 27]),
+    );
+
+    for (const recipe of parameterized) {
+      const names = new Set(
+        [...recipe.body.matchAll(/\bparams\.([A-Za-z]+)/gu)].map((match) => match[1] ?? ""),
+      );
+
+      for (const name of names) {
+        expect({
+          recipe: recipe.ordinal,
+          fallback: recipe.body.includes(`params.${name} ?? `),
+        }).toEqual({ recipe: recipe.ordinal, fallback: true });
+        expect({
+          recipe: recipe.ordinal,
+          named: recipeProse(recipe).includes(`\`params.${name}\``),
+        }).toEqual({ recipe: recipe.ordinal, named: true });
+      }
+    }
+  });
+
+  it("ships every catalog body as dist/recipes/NN-slug.js, byte for byte", () => {
+    const shipped = readdirSync(shippedRecipesDirectory)
+      .filter((entry) => entry.endsWith(".js"))
+      .sort();
+
+    expect(shipped).toEqual(recipes.map(shippedRecipeName).sort());
+    for (const recipe of recipes) {
+      expect({ recipe: recipe.ordinal, bytes: readShippedRecipe(recipe) }).toEqual({
+        recipe: recipe.ordinal,
+        bytes: `${recipe.body}\n`,
+      });
+    }
+
+    // The build step derives the same pairing the check parses: one file per numbered heading.
+    expect(recipeFiles(source).map((file) => file.fileName)).toEqual(
+      recipes.map(shippedRecipeName),
+    );
+
+    const packageJson = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
+      readonly files: readonly string[];
+    };
+    expect(packageJson.files).toContain("dist/**");
+  });
+
+  it("runs every shipped file, read whole, to the answer its catalog body gives", async () => {
+    for (const recipe of recipes) {
+      const shipped = await runRecipe({ ...recipe, body: shippedBody(recipe) });
+
+      expect({ recipe: recipe.ordinal, shipped }).toEqual({
+        recipe: recipe.ordinal,
+        shipped: await runRecipe(recipe),
+      });
+    }
+  });
+
+  it("refuses a catalog whose bodies and headings do not pair, rather than guess a file name", () => {
+    expect(() => recipeFiles("## 1. One\n\n```js\nreturn 1;\n```\n## 1. Again\n")).toThrow(
+      "recipe 1 is numbered twice",
+    );
+    expect(() => recipeFiles("```js\nreturn 1;\n```\n")).toThrow("has no numbered heading");
+    expect(() => recipeFiles("## 2. Two\n\n## 3. Three\n```js\nreturn 3;\n```\n")).toThrow(
+      "recipe 2 has no js body",
+    );
+    expect(() => recipeFiles("## 4. Four\n```js\nreturn 4;\n")).toThrow("is never closed");
+    expect(() => recipeFiles("## 5. !!!\n```js\nreturn 5;\n```\n")).toThrow("has no heading text");
+    expect(recipeFiles("## 7. Roles, layers and contexts\n```js\nreturn 7;\n```\n")).toEqual([
+      { ordinal: 7, fileName: "07-roles-layers-and-contexts.js", content: "return 7;\n" },
+    ]);
+  });
+
+  it("reads a CRLF catalog as its LF bodies, and refuses a catalog with no recipe before publishing", () => {
+    const crlf = source.replaceAll("\n", "\r\n");
+
+    expect(recipeFiles(crlf)).toEqual(recipeFiles(source));
+    expect(() => recipeFiles("# Agent-surface recipes\r\n\r\nNo bodies yet.\r\n")).toThrow(
+      "has no numbered recipe",
+    );
+
+    // Through the build step: a CRLF catalog publishes every body, and an empty one publishes
+    // nothing and removes nothing.
+    const root = mkdtempSync(join(tmpdir(), "sdp-recipe-files-"));
+    const catalogPath = join(root, recipesPath);
+    const recipesOut = join(root, "dist", "recipes");
+
+    try {
+      mkdirSync(join(root, "docs", "agent-surface"), { recursive: true });
+      writeFileSync(catalogPath, crlf);
+      writeBuildArtifacts({ root, outDir: join(root, "dist"), git: () => "unknown" });
+      expect(readdirSync(recipesOut).sort()).toEqual(recipes.map(shippedRecipeName).sort());
+      for (const recipe of recipes) {
+        expect({
+          recipe: recipe.ordinal,
+          bytes: readFileSync(join(recipesOut, shippedRecipeName(recipe)), "utf8"),
+        }).toEqual({ recipe: recipe.ordinal, bytes: `${recipe.body}\n` });
+      }
+
+      writeFileSync(catalogPath, "# Agent-surface recipes\r\n");
+      expect(() => {
+        writeBuildArtifacts({ root, outDir: join(root, "dist"), git: () => "unknown" });
+      }).toThrow("has no numbered recipe");
+      expect(readdirSync(recipesOut).sort()).toEqual(recipes.map(shippedRecipeName).sort());
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("removes only completed recipe files the catalog no longer owes, never another run's temporary file", () => {
+    const outDir = mkdtempSync(join(tmpdir(), "sdp-recipe-stale-"));
+    const directory = join(outDir, "recipes");
+    const foreignTemporary = "01-one.js.4242.tmp";
+
+    try {
+      mkdirSync(directory, { recursive: true });
+      writeFileSync(join(directory, "02-retired.js"), "return 2;\n");
+      writeFileSync(join(directory, foreignTemporary), "return 'half written';\n");
+
+      writeRecipeFiles(outDir, recipeFiles("## 1. One\n```js\nreturn 1;\n```\n"));
+
+      expect(readdirSync(directory).sort()).toEqual(["01-one.js", foreignTemporary]);
+    } finally {
+      rmSync(outDir, { recursive: true, force: true });
+    }
+  });
+
+  it("passes recipe 4 its changed files from a file named with @PATH", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "sdp-recipe-params-"));
+    const files = ["src/reader/reader.ts", "docs/agent-surface/recipes.md", "absent/file.ts"];
+
+    try {
+      const path = join(directory, "changed.json");
+      writeFileSync(path, JSON.stringify({ files }));
+
+      const run = await runShipped(shippedBody(recipeByOrdinal(4)), ["--params", `@${path}`]);
+      expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({ exitCode: 0, stderr: "" });
+
+      const result = asRecord(JSON.parse(run.stdout));
+      const radius = reader.blastRadius(files);
+      expect(result.changedFiles).toEqual(radius.changedFiles);
+      expect(asArray(result.impactedSpecs).map((row) => stringAt(asRecord(row), "id"))).toEqual(
+        radius.impactedSpecs.map((item) => item.id),
+      );
+      expect(result.coverageUnknownFiles).toEqual(radius.coverageUnknown);
+      expect(result.coverageUnknownFiles).toContain("absent/file.ts");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("resolves the addresses recipe 25 receives as data", async () => {
+    const holder = reader.specs().find((spec) => {
+      const design = reader.specContext(spec.id)?.sections?.design;
+      return (
+        design !== undefined && Object.keys(design).some((key) => /^[a-z][A-Za-z0-9]*$/u.test(key))
+      );
+    });
+    if (holder === undefined) throw new Error("the corpus holds no keyed Design entry");
+    const key = Object.keys(reader.specContext(holder.id)?.sections?.design ?? {}).find(
+      (candidate) => candidate !== "description" && /^[a-z][A-Za-z0-9]*$/u.test(candidate),
+    );
+    if (key === undefined) throw new Error(`${holder.id} holds no addressable Design key`);
+    const addresses = [
+      `${holder.id}#design.${key}`,
+      `${holder.id}#design.noSuchKey`,
+      "spec:probe.absent#design.anyKey",
+      holder.id,
+    ];
+
+    const run = await runShipped(shippedBody(recipeByOrdinal(25)), [
+      "--params",
+      JSON.stringify({ addresses }),
+    ]);
+    expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({ exitCode: 0, stderr: "" });
+
+    const result = asRecord(JSON.parse(run.stdout));
+    expect(result.totals).toEqual({
+      addresses: 4,
+      resolved: 1,
+      malformed: 1,
+      spec: 1,
+      entry: 1,
+    });
+    expect(asArray(result.rows).map((row) => asRecord(row).reason)).toEqual([
+      null,
+      "entry",
+      "spec",
+      "malformed",
+    ]);
+  });
+
+  it("reads the Pack the Pack recipes review from params.pack", async () => {
+    const packIds = reader.packs().map((pack) => pack.id);
+    const chosen = packIds[packIds.length - 1];
+    if (chosen === undefined) throw new Error("the corpus holds no Pack");
+    const members = reader.packContext(chosen)?.members.length;
+
+    for (const ordinal of [5, 27]) {
+      const body = shippedBody(recipeByOrdinal(ordinal));
+      const run = await runShipped(body, ["--params", JSON.stringify({ pack: chosen })]);
+      expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({ exitCode: 0, stderr: "" });
+
+      const result = asRecord(JSON.parse(run.stdout));
+      expect(result.id).toBe(chosen);
+      expect(ordinal === 5 ? result.memberCount : asRecord(result.totals).members).toBe(members);
+
+      const absent = await runShipped(body, ["--params", '{"pack":"pack:absent-v1"}']);
+      expect(JSON.parse(absent.stdout)).toEqual({ id: "pack:absent-v1", found: false });
+    }
+
+    // Without the parameter, recipe 5 falls back to its sample: the first Pack in the graph.
+    expect(asRecord(await runRecipe(recipeByOrdinal(5))).id).toBe(packIds[0]);
+  });
+});
+
+const designRecipesImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.design-recipes"),
+  label: "asserts realization of the shipped design recipes",
+  satisfies: ref("spec:consumers.agent-surface.design-recipes"),
+});
+void designRecipesImplementationAnchor;
+const designRecipesTestAnchor = specTest({
+  id: testAnchorId("test:protocol.design-recipes"),
+  label: "recipe checks verify the design recipes",
+  verifies: ref("spec:consumers.agent-surface.design-recipes"),
+});
+void designRecipesTestAnchor;
+
+type ProbeSpecKind = Extract<GraphNode, { nodeType: "Primitive" }>["specKind"];
+type ProbeReadiness = Extract<GraphNode, { nodeType: "Primitive" }>["readiness"];
+type ProbeSections = Extract<GraphNode, { nodeType: "Primitive" }>["sections"];
+
+/** One Spec of an in-memory probe graph. */
+function probeSpec(
+  id: string,
+  specKind: ProbeSpecKind = "rule",
+  readiness: ProbeReadiness = "idea",
+  sections: ProbeSections = { intent: { outcome: "Probe." } },
+): GraphNode {
+  return {
+    id,
+    nodeType: "Primitive",
+    claim: "declared",
+    specKind,
+    altitude: "story",
+    readiness,
+    title: `Title of ${id}`,
+    file: `specs/${id}.sdp.md`,
+    sections,
+  };
+}
+
+/** One code unit of an in-memory probe graph, with its structural attributes. */
+function probeUnit(
+  id: string,
+  line: number,
+  structure: { readonly layer?: "edge" | "domain"; readonly context?: string } = {},
+): GraphNode {
+  return { id, nodeType: "CodeNode", claim: "anchored", file: "src/probe.ts", line, ...structure };
+}
+
+function probeEdge(
+  from: string,
+  type: GraphEdge["type"],
+  to: string,
+  claim: GraphEdge["claim"] = "declared",
+): GraphEdge {
+  return { from, type, to, claim };
+}
+
+/**
+ * A synthetic extraction built in memory. The probe is the recipe's reading of a graph, not the
+ * extractor, so the stub carries only what the query sink reads: the graph, an error-free report,
+ * and the counts.
+ */
+function syntheticExtraction(
+  nodes: readonly GraphNode[],
+  edges: readonly GraphEdge[],
+): ExtractionResult {
+  return {
+    graph: { schemaVersion, nodes: [...nodes], edges: [...edges] },
+    report: { validatorId: extractValidatorId, findings: [] },
+    counts: {
+      specs: nodes.filter((node) => node.nodeType === "Primitive").length,
+      packs: nodes.filter((node) => node.nodeType === "Pack").length,
+      anchors: nodes.filter((node) => node.nodeType === "Anchor" || node.nodeType === "CodeNode")
+        .length,
+    },
+  };
+}
+
+const designFollowedTypes = new Set(["refines", "dependsOn", "constrainedBy", "decidedBy"]);
+
+/** The units bound to a Spec by one edge type, read from the raw graph in code-unit order. */
+function rawUnits(extraction: ExtractionResult, type: "satisfies" | "references", specId: string) {
+  const nodes = new Map(extraction.graph.nodes.map((node) => [node.id, node] as const));
+  return extraction.graph.edges
+    .filter((edge) => edge.type === type && edge.to === specId)
+    .map((edge) => nodes.get(edge.from))
+    .filter(
+      (node): node is Extract<GraphNode, { nodeType: "CodeNode" }> => node?.nodeType === "CodeNode",
+    )
+    .sort((left, right) => codeUnitOrder(left.id, right.id));
+}
+
+/** The resolving verifiers of a Spec from the raw graph: test anchors and enabled examples. */
+function rawEnabledVerifiers(extraction: ExtractionResult, specId: string): string[] {
+  const nodes = new Map(extraction.graph.nodes.map((node) => [node.id, node] as const));
+  const anchoredBy = (id: string) =>
+    extraction.graph.edges.some(
+      (edge) =>
+        edge.type === "verifies" &&
+        edge.to === id &&
+        edge.claim === "anchored" &&
+        nodes.get(edge.from)?.nodeType === "Anchor",
+    );
+  return extraction.graph.edges
+    .filter((edge) => edge.type === "verifies" && edge.to === specId)
+    .filter((edge) => {
+      const source = nodes.get(edge.from);
+      if (source?.nodeType === "Anchor") return edge.claim === "anchored";
+      return (
+        source?.nodeType === "Primitive" &&
+        source.specKind === "example" &&
+        edge.claim === "declared" &&
+        anchoredBy(source.id)
+      );
+    })
+    .map((edge) => edge.from)
+    .sort(codeUnitOrder);
+}
+
+/**
+ * Design-change impact by relaxation, a second derivation independent of the recipe's walk: the
+ * shortest number of inbound `refines`, `dependsOn`, `constrainedBy` or `decidedBy` hops from any
+ * changed Spec to every Spec that rests on it.
+ */
+function impactOracle(extraction: ExtractionResult, changed: readonly string[]) {
+  const specIds = new Set(
+    extraction.graph.nodes.filter((node) => node.nodeType === "Primitive").map((node) => node.id),
+  );
+  const relations = extraction.graph.edges.filter(
+    (edge) =>
+      designFollowedTypes.has(edge.type) &&
+      edge.claim === "declared" &&
+      specIds.has(edge.from) &&
+      specIds.has(edge.to),
+  );
+  const distance = new Map(changed.filter((id) => specIds.has(id)).map((id) => [id, 0]));
+  for (let moved = true; moved; ) {
+    moved = false;
+    for (const edge of relations) {
+      const via = distance.get(edge.to);
+      const current = distance.get(edge.from);
+      if (via !== undefined && (current === undefined || via + 1 < current)) {
+        distance.set(edge.from, via + 1);
+        moved = true;
+      }
+    }
+  }
+  return { distance, relations };
+}
+
+/** The `uses` crossings of a graph computed straight from its edges, beside the recipe's own. */
+function crossingOracle(extraction: ExtractionResult) {
+  const units = new Map(
+    extraction.graph.nodes
+      .filter((node) => node.nodeType === "CodeNode")
+      .map((node) => [node.id, node] as const),
+  );
+  const owner = (id: string) => {
+    if (id.startsWith("component:")) return units.get(id);
+    const memberOf = extraction.graph.edges.find(
+      (edge) => edge.type === "memberOf" && edge.from === id,
+    );
+    return memberOf === undefined || !units.has(id) ? undefined : units.get(memberOf.to);
+  };
+  const uses = extraction.graph.edges.filter((edge) => edge.type === "uses");
+  const resolved = uses.filter(
+    (edge) => owner(edge.from) !== undefined && owner(edge.to) !== undefined,
+  );
+  const rows = resolved
+    .map((edge) => {
+      const from = owner(edge.from);
+      const to = owner(edge.to);
+      const differs = (["context", "layer"] as const).filter(
+        (field) =>
+          from?.[field] !== undefined && to?.[field] !== undefined && from[field] !== to[field],
+      );
+      const describe = (node: typeof from) => ({
+        id: node?.id,
+        layer: node?.layer ?? null,
+        context: node?.context ?? null,
+      });
+      return {
+        from: edge.from,
+        to: edge.to,
+        fromComponent: describe(from),
+        toComponent: describe(to),
+        differs: [...differs],
+      };
+    })
+    .filter((row) => row.differs.length > 0)
+    .sort(
+      (left, right) => codeUnitOrder(left.from, right.from) || codeUnitOrder(left.to, right.to),
+    );
+  return { uses, resolved, rows };
+}
+
+/**
+ * The Pack design probe: three members in a Pack, two Specs it rests on, one Spec resting on it,
+ * comment-form anchors with a component, and, injected after extraction, a member the graph does
+ * not hold and a `decidedBy` whose target is no Spec.
+ */
+function packDesignProbe(): ExtractionResult {
+  const extraction = markdownProbe("sdp-pack-design-probe-", {
+    "probe.pack.sdp.md": `---
+id: pack:probe-design-v1
+specs:
+  - spec:probe.page
+  - spec:probe.store
+  - spec:probe.note
+---
+# Probe design
+
+The probe's framing.
+`,
+    "page.sdp.md": `---
+id: spec:probe.page
+kind: behavior
+altitude: story
+readiness: scoped
+relations:
+  dependsOn: spec:probe.base
+  decidedBy: spec:probe.choice
+---
+# Probe page
+
+## Intent
+- outcome: Render the probe page.
+
+### Open questions
+- [blocking #layout] Which layout holds?
+- [non-blocking] Who reads the page?
+
+## Behavior
+- rule: The page renders.
+
+## Design
+- render: \`render(): string\` returns the page.
+- shape: A plain shape.
+
+## UI
+- panel: One panel.
+`,
+    "store.sdp.md": `---
+id: spec:probe.store
+kind: behavior
+altitude: story
+readiness: defined
+relations:
+  refines: spec:probe.page
+---
+# Probe store
+
+## Intent
+- outcome: Store the page.
+
+## Behavior
+- rule: The store keeps the page.
+`,
+    "note.sdp.md": `---
+id: spec:probe.note
+kind: rule
+altitude: story
+readiness: idea
+relations:
+  refines: spec:probe.page
+---
+# Probe note
+
+## Intent
+- outcome: Note the page.
+
+## Rule
+- The note states one rule.
+`,
+    "base.sdp.md": `---
+id: spec:probe.base
+kind: rule
+altitude: story
+readiness: idea
+relations: {}
+---
+# Probe base
+
+## Intent
+- outcome: Rest the page on a base.
+
+## Rule
+- The base states one rule.
+`,
+    "choice.sdp.md": `---
+id: spec:probe.choice
+kind: decision
+altitude: story
+readiness: idea
+relations: {}
+---
+# Probe choice
+
+## Intent
+- outcome: Decide the page.
+
+## Decision
+- context: The page needs a choice.
+- decision: The page takes the plain shape.
+`,
+    "reader.sdp.md": `---
+id: spec:probe.reader
+kind: behavior
+altitude: story
+readiness: idea
+relations:
+  refines: spec:probe.store
+---
+# Probe reader
+
+## Intent
+- outcome: Read the stored page.
+
+## Behavior
+- rule: The reader reads the page.
+`,
+    "code.ts": `/**
+ * @sdpAnchor component:probe.web
+ * @sdpLayer edge
+ * @sdpContext studio
+ */
+
+/**
+ * @sdpAnchor impl:probe.page
+ * @sdpSatisfies spec:probe.page
+ * @sdpComponent component:probe.web
+ * @sdpRole projection
+ */
+
+/**
+ * @sdpAnchor impl:probe.store
+ * @sdpReferences spec:probe.store
+ */
+
+/**
+ * @sdpAnchor test:probe.page
+ * @sdpVerifies spec:probe.page
+ */
+export const probe = 1;
+`,
+  });
+  return {
+    ...extraction,
+    graph: {
+      ...extraction.graph,
+      nodes: extraction.graph.nodes.map((node) =>
+        node.nodeType === "Pack"
+          ? { ...node, members: [...node.members, "spec:probe.absent"] }
+          : node,
+      ),
+      edges: [
+        ...extraction.graph.edges,
+        probeEdge("spec:probe.page", "decidedBy", "spec:probe.gone"),
+      ],
+    },
+  };
+}
+
+describe("design recipes", () => {
+  it("returns the Pack design of every corpus Pack as the raw graph states it", async () => {
+    const locations = derived.graph.locations ?? [];
+    const pinned = /^(`+)(?!`)([^\r\n]+?)(?<!`)\1(?!`)/u;
+    const keyed = (content: unknown) =>
+      typeof content === "object" && content !== null
+        ? Object.entries(content).filter(([key]) => key !== "description")
+        : [];
+    const memberOfEdges = new Map(
+      derived.graph.edges
+        .filter((edge) => edge.type === "memberOf")
+        .map((edge) => [edge.from, edge.to] as const),
+    );
+    const nodes = new Map(derived.graph.nodes.map((node) => [node.id, node] as const));
+    const unitOf = (unit: Extract<GraphNode, { nodeType: "CodeNode" }>) => {
+      const componentId = memberOfEdges.get(unit.id);
+      const component = componentId === undefined ? undefined : nodes.get(componentId);
+      return {
+        id: unit.id,
+        file: unit.file,
+        line: unit.line ?? null,
+        role: unit.role ?? null,
+        component:
+          componentId === undefined
+            ? null
+            : {
+                id: componentId,
+                layer: component?.nodeType === "CodeNode" ? (component.layer ?? null) : null,
+                context: component?.nodeType === "CodeNode" ? (component.context ?? null) : null,
+              },
+      };
+    };
+    const packs = derived.graph.nodes.filter((node) => node.nodeType === "Pack");
+    expect(packs.length).toBeGreaterThan(0);
+
+    for (const pack of packs) {
+      const result = asRecord(await runRecipe(recipeByOrdinal(29), { pack: pack.id }));
+      const members = asArray(result.members).map(asRecord);
+      expect(result.found).toBe(true);
+      expect(members.map((member) => member.id)).toEqual(pack.members);
+
+      for (const member of members) {
+        const node = primitivesById.get(stringAt(member, "id"));
+        if (node === undefined) {
+          expect(member).toEqual({ id: member.id, resolved: false });
+          continue;
+        }
+        const questions = node.sections?.intent?.openQuestions ?? [];
+        const design = keyed(node.sections?.design);
+        expect({
+          id: member.id,
+          statedReadiness: member.statedReadiness,
+          statedNextRung: member.statedNextRung,
+          design: member.design,
+          questions: member.questions,
+          decisions: asArray(member.decisions).map((entry) => asRecord(entry).id),
+          implementedBy: member.implementedBy,
+          referencedBy: member.referencedBy,
+        }).toEqual({
+          id: node.id,
+          statedReadiness: node.readiness,
+          statedNextRung: rungs[rungs.indexOf(node.readiness) + 1] ?? null,
+          design: {
+            entries: design.length + keyed(node.sections?.ui).length,
+            declarations: design.filter(
+              ([, value]) => typeof value === "string" && pinned.test(value),
+            ).length,
+            openQuestions: questions.length,
+            blockingQuestions: questions.filter(
+              (entry) => typeof entry !== "string" && entry.blocking === true,
+            ).length,
+          },
+          questions: questions.map((entry, index) => {
+            const key = typeof entry === "string" ? undefined : entry.key;
+            return {
+              key: key ?? null,
+              blocking: typeof entry !== "string" && entry.blocking === true,
+              address: key === undefined ? null : `${node.id}#question.${key}`,
+              line:
+                locations.find(
+                  (row) => row.spec === node.id && row.entry === `question[${String(index)}]`,
+                )?.line ?? null,
+              question: typeof entry === "string" ? entry : entry.question,
+            };
+          }),
+          decisions: [
+            ...new Set(
+              derived.graph.edges
+                .filter((edge) => edge.from === node.id && edge.type === "decidedBy")
+                .map((edge) => edge.to),
+            ),
+          ].sort(codeUnitOrder),
+          implementedBy: rawUnits(derived, "satisfies", node.id).map(unitOf),
+          referencedBy: rawUnits(derived, "references", node.id).map(unitOf),
+        });
+        // The stated next rung's clauses pass through from the one floor evaluator unchanged.
+        const context = reader.packContext(pack.id);
+        const fromReader = context?.members.find((entry) => entry.id === node.id);
+        expect(member.statedNextRungFailures).toEqual(
+          (fromReader?.statedNextRungFailures ?? []).map((failure) => ({ ...failure })),
+        );
+      }
+
+      const inside = new Set(pack.members);
+      const outside = (ids: readonly string[]) =>
+        [...new Set(ids)]
+          .filter((id) => !inside.has(id) && primitivesById.has(id))
+          .sort(codeUnitOrder);
+      const memberEdges = derived.graph.edges.filter(
+        (edge) => edge.claim === "declared" && edge.type !== "belongsTo",
+      );
+      const boundary = asRecord(result.boundary);
+      expect({
+        restsOn: asArray(boundary.restsOn).map((row) => asRecord(row).id),
+        restedOnBy: asArray(boundary.restedOnBy).map((row) => asRecord(row).id),
+      }).toEqual({
+        restsOn: outside(
+          memberEdges
+            .filter((edge) => inside.has(edge.from) && designFollowedTypes.has(edge.type))
+            .map((edge) => edge.to),
+        ),
+        restedOnBy: outside(
+          memberEdges.filter((edge) => inside.has(edge.to)).map((edge) => edge.from),
+        ),
+      });
+    }
+
+    // Without the parameter the body reads its sample, the Studio Pack.
+    expect(asRecord(await runRecipe(recipeByOrdinal(29))).id).toBe(studioPackId);
+    expect(await runRecipe(recipeByOrdinal(29), { pack: "pack:absent-v1" })).toEqual({
+      id: "pack:absent-v1",
+      found: false,
+    });
+  });
+
+  it("returns the probe Pack's design exactly, member by member", async () => {
+    const result = await runRecipe(
+      recipeByOrdinal(29),
+      { pack: "pack:probe-design-v1" },
+      packDesignProbe(),
+    );
+    const bound = (type: string, members: readonly string[]) => ({ type, members });
+    const counts = (total: number, enabled: number) => ({ total, enabled });
+    const empty = { entries: 0, declarations: 0, openQuestions: 0, blockingQuestions: 0 };
+
+    expect(result).toEqual({
+      found: true,
+      id: "pack:probe-design-v1",
+      title: "Probe design",
+      totals: {
+        members: 4,
+        unresolved: 1,
+        heldBelowNextRung: 2,
+        waitingForAuthor: 1,
+        entries: 3,
+        declarations: 1,
+        openQuestions: 2,
+        blockingQuestions: 1,
+        withImplementations: 1,
+        withReferences: 1,
+        restsOn: 2,
+        restedOnBy: 1,
+      },
+      members: [
+        {
+          id: "spec:probe.page",
+          resolved: true,
+          title: "Probe page",
+          specKind: "behavior",
+          statedReadiness: "scoped",
+          floorReached: "scoped",
+          statedNextRung: "defined",
+          statedNextRungFailures: [
+            {
+              clauseId: "no-blocking-open-questions",
+              description: "Spec has no blocking open question in intent.openQuestions.",
+            },
+          ],
+          design: { entries: 3, declarations: 1, openQuestions: 2, blockingQuestions: 1 },
+          questions: [
+            {
+              key: "layout",
+              blocking: true,
+              address: "spec:probe.page#question.layout",
+              line: 16,
+              question: "Which layout holds?",
+            },
+            {
+              key: null,
+              blocking: false,
+              address: null,
+              line: 17,
+              question: "Who reads the page?",
+            },
+          ],
+          decisions: [
+            { id: "spec:probe.choice", statedReadiness: "idea", resolved: true },
+            { id: "spec:probe.gone", statedReadiness: null, resolved: false },
+          ],
+          implementedBy: [
+            {
+              id: "impl:probe.page",
+              file: "code.ts",
+              line: 7,
+              role: "projection",
+              component: { id: "component:probe.web", layer: "edge", context: "studio" },
+            },
+          ],
+          referencedBy: [],
+          verifiers: counts(1, 1),
+          examples: counts(0, 0),
+        },
+        {
+          id: "spec:probe.store",
+          resolved: true,
+          title: "Probe store",
+          specKind: "behavior",
+          statedReadiness: "defined",
+          floorReached: "defined",
+          statedNextRung: "ready",
+          statedNextRungFailures: [
+            {
+              clauseId: "typed-dependency-targets-are-defined",
+              description:
+                "Every refines, dependsOn, constrainedBy, and decidedBy target states at least defined.",
+              targets: [{ type: "refines", id: "spec:probe.page", statedReadiness: "scoped" }],
+            },
+          ],
+          design: empty,
+          questions: [],
+          decisions: [],
+          implementedBy: [],
+          referencedBy: [
+            { id: "impl:probe.store", file: "code.ts", line: 14, role: null, component: null },
+          ],
+          verifiers: counts(0, 0),
+          examples: counts(0, 0),
+        },
+        {
+          // The floor already holds the stated next rung: the rung waits for its author.
+          id: "spec:probe.note",
+          resolved: true,
+          title: "Probe note",
+          specKind: "rule",
+          statedReadiness: "idea",
+          floorReached: "defined",
+          statedNextRung: "scoped",
+          statedNextRungFailures: [],
+          design: empty,
+          questions: [],
+          decisions: [],
+          implementedBy: [],
+          referencedBy: [],
+          verifiers: counts(0, 0),
+          examples: counts(0, 0),
+        },
+        { id: "spec:probe.absent", resolved: false },
+      ],
+      boundary: {
+        // The dangling `decidedBy` is referential integrity's finding and joins no boundary row.
+        restsOn: [
+          {
+            id: "spec:probe.base",
+            title: "Probe base",
+            statedReadiness: "idea",
+            implemented: false,
+            via: [bound("dependsOn", ["spec:probe.page"])],
+          },
+          {
+            id: "spec:probe.choice",
+            title: "Probe choice",
+            statedReadiness: "idea",
+            implemented: false,
+            via: [bound("decidedBy", ["spec:probe.page"])],
+          },
+        ],
+        restedOnBy: [
+          {
+            id: "spec:probe.reader",
+            title: "Probe reader",
+            statedReadiness: "idea",
+            implemented: false,
+            via: [bound("refines", ["spec:probe.store"])],
+          },
+        ],
+      },
+    });
+  });
+
+  it("reaches every Spec resting on the corpus sample, by a shortest path of real edges", async () => {
+    const recipe = recipeByOrdinal(30);
+    const sample = "spec:validation.readiness-floor";
+    const result = asRecord(await runRecipe(recipe));
+    const { distance, relations } = impactOracle(derived, [sample]);
+    const rows = asArray(result.rows).map(asRecord);
+
+    expect(result.changed).toEqual([{ id: sample, resolved: true }]);
+    expect(rows.map((row) => [row.id, row.distance])).toEqual(
+      [...distance.entries()].sort(
+        ([leftId, left], [rightId, right]) => left - right || codeUnitOrder(leftId, rightId),
+      ),
+    );
+    expect(rows.length).toBeGreaterThan(1);
+    for (const row of rows) {
+      const path = asArray(row.path).map(asRecord);
+      expect(path).toHaveLength(numberAt(row, "distance"));
+      path.forEach((hop, index) => {
+        expect(hop.to).toBe(index === 0 ? sample : path[index - 1]?.from);
+        expect(
+          relations.some(
+            (edge) => edge.from === hop.from && edge.type === hop.type && edge.to === hop.to,
+          ),
+        ).toBe(true);
+      });
+      if (path.length > 0) expect(path[path.length - 1]?.from).toBe(row.id);
+
+      const id = stringAt(row, "id");
+      const located = (type: "satisfies" | "references") =>
+        rawUnits(derived, type, id).map((unit) => ({
+          id: unit.id,
+          file: unit.file,
+          line: unit.line ?? null,
+        }));
+      expect({
+        id,
+        statedReadiness: row.statedReadiness,
+        implementedBy: row.implementedBy,
+        referencedBy: row.referencedBy,
+        enabledVerifiers: row.enabledVerifiers,
+        packs: row.packs,
+      }).toEqual({
+        id,
+        statedReadiness: primitivesById.get(id)?.readiness,
+        implementedBy: located("satisfies"),
+        referencedBy: located("references"),
+        enabledVerifiers: rawEnabledVerifiers(derived, id),
+        packs: derived.graph.edges
+          .filter((edge) => edge.type === "belongsTo" && edge.from === id)
+          .map((edge) => edge.to)
+          .sort(codeUnitOrder),
+      });
+    }
+    expect(result.totals).toEqual({
+      specs: rows.length,
+      dependents: rows.length - 1,
+      units: new Set(
+        rows.flatMap((row) =>
+          [...asArray(row.implementedBy), ...asArray(row.referencedBy)].map((unit) =>
+            stringAt(asRecord(unit), "id"),
+          ),
+        ),
+      ).size,
+    });
+  });
+
+  it("walks a dependency chain inbound only, once per Spec, and keeps a reference apart", async () => {
+    const extraction = syntheticExtraction(
+      [
+        probeSpec("spec:probe.choice", "decision"),
+        probeSpec("spec:probe.root"),
+        probeSpec("spec:probe.twin"),
+        probeSpec("spec:probe.join"),
+        probeSpec("spec:probe.mid"),
+        probeSpec("spec:probe.leaf"),
+        probeSpec("spec:probe.far"),
+        probeSpec("spec:probe.outside"),
+        probeSpec("spec:probe.side"),
+        probeSpec("spec:probe.mid.sample", "example"),
+        probeUnit("impl:probe.root-unit", 3),
+        probeUnit("impl:probe.mid-ref", 7),
+        {
+          id: "test:probe.root",
+          nodeType: "Anchor",
+          claim: "anchored",
+          file: "test/probe.test.ts",
+          line: 1,
+        },
+        {
+          id: "pack:probe-v1",
+          nodeType: "Pack",
+          claim: "declared",
+          members: ["spec:probe.mid"],
+          file: "probe.pack.sdp.md",
+        },
+      ],
+      [
+        probeEdge("spec:probe.root", "decidedBy", "spec:probe.choice"),
+        probeEdge("spec:probe.twin", "refines", "spec:probe.choice"),
+        probeEdge("spec:probe.twin", "dependsOn", "spec:probe.root"),
+        probeEdge("spec:probe.mid", "dependsOn", "spec:probe.root"),
+        probeEdge("spec:probe.join", "dependsOn", "spec:probe.twin"),
+        probeEdge("spec:probe.join", "refines", "spec:probe.root"),
+        probeEdge("spec:probe.leaf", "refines", "spec:probe.mid"),
+        probeEdge("spec:probe.leaf", "constrainedBy", "spec:probe.mid"),
+        probeEdge("spec:probe.far", "constrainedBy", "spec:probe.leaf"),
+        probeEdge("spec:probe.root", "dependsOn", "spec:probe.outside"),
+        probeEdge("spec:probe.mid.sample", "verifies", "spec:probe.mid"),
+        probeEdge("test:probe.root", "verifies", "spec:probe.root", "anchored"),
+        probeEdge("impl:probe.root-unit", "satisfies", "spec:probe.root", "anchored"),
+        probeEdge("impl:probe.mid-ref", "references", "spec:probe.mid", "anchored"),
+        probeEdge("spec:probe.mid", "belongsTo", "pack:probe-v1"),
+      ],
+    );
+    const result = await runRecipe(
+      recipeByOrdinal(30),
+      { specs: ["spec:probe.choice", "spec:probe.absent"] },
+      extraction,
+    );
+    const hop = (from: string, type: string, to: string) => ({ from, type, to });
+    const viaRoot = hop("spec:probe.root", "decidedBy", "spec:probe.choice");
+    const viaMid = hop("spec:probe.mid", "dependsOn", "spec:probe.root");
+    // Of two relations between one pair, the walk takes the first by type.
+    const viaLeaf = hop("spec:probe.leaf", "constrainedBy", "spec:probe.mid");
+    const row = (id: string, distance: number, path: readonly unknown[], extra = {}) => ({
+      id,
+      distance,
+      path,
+      statedReadiness: "idea",
+      implementedBy: [],
+      referencedBy: [],
+      enabledVerifiers: [],
+      packs: [],
+      ...extra,
+    });
+
+    expect(result).toEqual({
+      changed: [
+        { id: "spec:probe.choice", resolved: true },
+        { id: "spec:probe.absent", resolved: false },
+      ],
+      totals: { specs: 7, dependents: 6, units: 2 },
+      rows: [
+        row("spec:probe.choice", 0, []),
+        row("spec:probe.root", 1, [viaRoot], {
+          implementedBy: [{ id: "impl:probe.root-unit", file: "src/probe.ts", line: 3 }],
+          enabledVerifiers: ["test:probe.root"],
+        }),
+        // Reached once, by its shorter path through `refines`, never again through `root`.
+        row("spec:probe.twin", 1, [hop("spec:probe.twin", "refines", "spec:probe.choice")]),
+        // Two shortest paths: `root` is dequeued before `twin`, so its path is the one kept.
+        row("spec:probe.join", 2, [viaRoot, hop("spec:probe.join", "refines", "spec:probe.root")]),
+        // The example declares `verifies` but no test anchor binds it, so it is not enabled.
+        row("spec:probe.mid", 2, [viaRoot, viaMid], {
+          referencedBy: [{ id: "impl:probe.mid-ref", file: "src/probe.ts", line: 7 }],
+          packs: ["pack:probe-v1"],
+        }),
+        row("spec:probe.leaf", 3, [viaRoot, viaMid, viaLeaf]),
+        row("spec:probe.far", 4, [
+          viaRoot,
+          viaMid,
+          viaLeaf,
+          hop("spec:probe.far", "constrainedBy", "spec:probe.leaf"),
+        ]),
+      ],
+    });
+  });
+
+  it("registers every corpus decision with its supersession, subjects and keyed questions", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(31)));
+    const decisions = [...primitivesById.values()]
+      .filter((node) => node.specKind === "decision")
+      .sort((left, right) => codeUnitOrder(left.id, right.id));
+    const ends = (type: string, side: "from" | "to", id: string) =>
+      derived.graph.edges
+        .filter((edge) => edge.type === type && edge.claim === "declared" && edge[side] === id)
+        .map((edge) => (side === "from" ? edge.to : edge.from))
+        .sort(codeUnitOrder);
+    const rows = asArray(result.rows).map(asRecord);
+
+    expect(rows).toEqual(
+      decisions.map((node) => ({
+        id: node.id,
+        title: node.title ?? null,
+        statedReadiness: node.readiness,
+        supersedes: ends("supersedes", "from", node.id),
+        supersededBy: ends("supersedes", "to", node.id),
+        shapes: ends("decidedBy", "to", node.id),
+        questions: (node.sections?.intent?.openQuestions ?? []).flatMap((entry) =>
+          typeof entry === "string" || entry.key === undefined
+            ? []
+            : [
+                {
+                  key: entry.key,
+                  blocking: entry.blocking === true,
+                  address: `${node.id}#question.${entry.key}`,
+                },
+              ],
+        ),
+        packs: ends("belongsTo", "from", node.id),
+      })),
+    );
+    expect(rows.some((row) => asArray(row.supersededBy).length > 0)).toBe(true);
+    const totals = asRecord(result.totals);
+    expect(totals.decisions).toBe(decisions.length);
+    expect(
+      Object.values(asRecord(totals.byRung)).reduce<number>((sum, n) => sum + Number(n), 0),
+    ).toBe(decisions.length);
+  });
+
+  it("registers a supersedes pair both ways and a decision that shapes nothing", async () => {
+    const extraction = syntheticExtraction(
+      [
+        probeSpec("spec:probe.old", "decision", "ready"),
+        probeSpec("spec:probe.new", "decision", "defined", {
+          intent: {
+            outcome: "Replace the old decision.",
+            openQuestions: [
+              { question: "Which scope?", blocking: true, key: "scope" },
+              "A bare question.",
+              { question: "Later?", blocking: false },
+            ],
+          },
+        }),
+        probeSpec("spec:probe.lone", "decision"),
+        probeSpec("spec:probe.subject"),
+        probeSpec("spec:probe.legacy"),
+        {
+          id: "pack:probe-v1",
+          nodeType: "Pack",
+          claim: "declared",
+          members: ["spec:probe.new"],
+          file: "probe.pack.sdp.md",
+        },
+      ],
+      [
+        probeEdge("spec:probe.new", "supersedes", "spec:probe.old"),
+        probeEdge("spec:probe.subject", "decidedBy", "spec:probe.new"),
+        probeEdge("spec:probe.legacy", "decidedBy", "spec:probe.old"),
+        probeEdge("spec:probe.new", "belongsTo", "pack:probe-v1"),
+      ],
+    );
+    const row = (id: string, statedReadiness: string, extra = {}) => ({
+      id,
+      title: `Title of ${id}`,
+      statedReadiness,
+      supersedes: [],
+      supersededBy: [],
+      shapes: [],
+      questions: [],
+      packs: [],
+      ...extra,
+    });
+
+    expect(await runRecipe(recipeByOrdinal(31), undefined, extraction)).toEqual({
+      totals: {
+        decisions: 3,
+        byRung: { idea: 1, defined: 1, ready: 1 },
+        superseded: 1,
+        shapingNothing: 1,
+      },
+      rows: [
+        row("spec:probe.lone", "idea"),
+        row("spec:probe.new", "defined", {
+          supersedes: ["spec:probe.old"],
+          shapes: ["spec:probe.subject"],
+          questions: [{ key: "scope", blocking: true, address: "spec:probe.new#question.scope" }],
+          packs: ["pack:probe-v1"],
+        }),
+        // A superseded decision stays a row, with the decision that supersedes it.
+        row("spec:probe.old", "ready", {
+          supersededBy: ["spec:probe.new"],
+          shapes: ["spec:probe.legacy"],
+        }),
+      ],
+    });
+  });
+
+  it("reports the corpus's architecture crossings as the raw edges state them", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(32)));
+    const oracle = crossingOracle(derived);
+    const tally = (field: "context" | "layer") => {
+      const counts: Record<string, number> = {};
+      for (const row of oracle.rows.filter((entry) => entry.differs.includes(field))) {
+        const pair = `${String(row.fromComponent[field])} -> ${String(row.toComponent[field])}`;
+        counts[pair] = (counts[pair] ?? 0) + 1;
+      }
+      return counts;
+    };
+
+    expect(result.rows).toEqual(oracle.rows);
+    expect(result.totals).toEqual({
+      usesEdges: oracle.uses.length,
+      resolvedToComponents: oracle.resolved.length,
+      crossings: oracle.rows.length,
+      contextCrossings: oracle.rows.filter((row) => row.differs.includes("context")).length,
+      layerCrossings: oracle.rows.filter((row) => row.differs.includes("layer")).length,
+      byContextPair: tally("context"),
+      byLayerPair: tally("layer"),
+    });
+    expect(Object.keys(asRecord(asRecord(result.totals).byLayerPair))).toEqual(
+      Object.keys(tally("layer")).sort(codeUnitOrder),
+    );
+  });
+
+  it("names a crossing of two contexts and of two layers, and skips what cannot cross", async () => {
+    const extraction = syntheticExtraction(
+      [
+        probeUnit("component:probe.web", 1, { layer: "edge", context: "studio" }),
+        probeUnit("component:probe.core", 2, { layer: "domain", context: "engine" }),
+        probeUnit("component:probe.store", 3, { layer: "domain", context: "studio" }),
+        probeUnit("component:probe.loose", 4, { context: "studio" }),
+        probeUnit("impl:probe.page", 5),
+        probeUnit("impl:probe.model", 6),
+        probeUnit("impl:probe.rule", 7),
+        probeUnit("impl:probe.free", 8),
+      ],
+      [
+        probeEdge("impl:probe.page", "memberOf", "component:probe.web", "anchored"),
+        probeEdge("impl:probe.model", "memberOf", "component:probe.core", "anchored"),
+        probeEdge("impl:probe.rule", "memberOf", "component:probe.core", "anchored"),
+        probeEdge("impl:probe.page", "uses", "impl:probe.model", "anchored"),
+        probeEdge("impl:probe.page", "uses", "component:probe.store", "anchored"),
+        probeEdge("impl:probe.model", "uses", "impl:probe.rule", "anchored"),
+        probeEdge("component:probe.web", "uses", "component:probe.loose", "anchored"),
+        probeEdge("impl:probe.free", "uses", "impl:probe.model", "anchored"),
+        probeEdge("component:probe.store", "uses", "component:probe.core", "anchored"),
+      ],
+    );
+    const component = (id: string, layer: string | null, context: string) => ({
+      id,
+      layer,
+      context,
+    });
+    const web = component("component:probe.web", "edge", "studio");
+    const core = component("component:probe.core", "domain", "engine");
+    const store = component("component:probe.store", "domain", "studio");
+
+    expect(await runRecipe(recipeByOrdinal(32), undefined, extraction)).toEqual({
+      totals: {
+        usesEdges: 6,
+        // `impl:probe.free` belongs to no component, so its edge is counted and never a row.
+        resolvedToComponents: 5,
+        crossings: 3,
+        contextCrossings: 2,
+        layerCrossings: 2,
+        byContextPair: { "studio -> engine": 2 },
+        byLayerPair: { "edge -> domain": 2 },
+      },
+      rows: [
+        {
+          from: "component:probe.store",
+          to: "component:probe.core",
+          fromComponent: store,
+          toComponent: core,
+          differs: ["context"],
+        },
+        {
+          from: "impl:probe.page",
+          to: "component:probe.store",
+          fromComponent: web,
+          toComponent: store,
+          differs: ["layer"],
+        },
+        {
+          from: "impl:probe.page",
+          to: "impl:probe.model",
+          fromComponent: web,
+          toComponent: core,
+          differs: ["context", "layer"],
+        },
+      ],
+    });
+  });
+});
+
+const entryLocationRecipesAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.entry-location-recipes"),
+  label:
+    "asserts realization of the entry lines the entry search and address resolution recipes return",
+  satisfies: ref("spec:extraction.entry-locations"),
+});
+void entryLocationRecipesAnchor;
+
+describe("entry lines in entry search and address resolution", () => {
+  it("resolves every keyed corpus entry to its value and the line the location table records", async () => {
+    const lawfulKey = /^[a-z][A-Za-z0-9]*$/u;
+    const located = (derived.graph.locations ?? []).filter(
+      (row) =>
+        (row.key !== undefined && row.entry.startsWith("question[")) ||
+        /^(design|ui)\./u.test(row.entry),
+    );
+    const addresses = located.flatMap((row) => {
+      const [section, key] = row.entry.startsWith("question[")
+        ? ["question", row.key ?? ""]
+        : row.entry.split(/\.(.*)/su);
+      return lawfulKey.test(key ?? "") ? [`${row.spec}#${section ?? ""}.${key ?? ""}`] : [];
+    });
+    expect(addresses.length).toBeGreaterThan(0);
+
+    const result = asRecord(await runRecipe(recipeByOrdinal(25), { addresses }));
+    const rows = asArray(result.rows).map(asRecord);
+    expect(asRecord(result.totals).resolved).toBe(addresses.length);
+    for (const row of rows) {
+      const id = stringAt(row, "id");
+      const section = stringAt(row, "section");
+      const key = stringAt(row, "key");
+      const node = primitivesById.get(id);
+      const questions = node?.sections?.intent?.openQuestions ?? [];
+      const index = questions.findIndex((entry) => typeof entry !== "string" && entry.key === key);
+      const entry = section === "question" ? `question[${String(index)}]` : `${section}.${key}`;
+      const location = located.find(
+        (candidate) => candidate.spec === id && candidate.entry === entry,
+      );
+      const question = questions[index];
+      const authored: Record<string, unknown> | undefined =
+        section === "design" ? node?.sections?.design : node?.sections?.ui;
+      expect({ address: row.address, value: row.value, file: row.file, line: row.line }).toEqual({
+        address: row.address,
+        value:
+          section === "question"
+            ? typeof question === "string"
+              ? question
+              : question?.question
+            : authored?.[key],
+        file: location?.file,
+        line: location?.line,
+      });
+    }
+  });
+
+  it("gives each corpus entry-search row the line of a located entry and null otherwise", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(23), { term: "page" }));
+    const rows = asArray(result.matches).map(asRecord);
+    const locations = derived.graph.locations ?? [];
+    const expectedLine = (row: Record<string, unknown>) => {
+      const entry = typeof row.entry === "string" ? row.entry : "";
+      const question = /^openQuestions\[(\d+)\](?:\.question)?$/u.exec(entry)?.[1];
+      const name =
+        row.section === "intent" && question !== undefined
+          ? `question[${question}]`
+          : row.section === "design" || row.section === "ui"
+            ? `${row.section}.${entry}`
+            : undefined;
+      return (
+        locations.find((location) => location.spec === row.id && location.entry === name)?.line ??
+        null
+      );
+    };
+
+    expect(rows.map((row) => [row.id, row.entry, row.line])).toEqual(
+      rows.map((row) => [row.id, row.entry, expectedLine(row)]),
+    );
+    expect(rows.some((row) => typeof row.line === "number")).toBe(true);
+    expect(rows.some((row) => row.line === null)).toBe(true);
+  });
+
+  it("never gives a nested entry the line of a literal top-level key its path spells", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-entry-search-path-collision-"));
+
+    try {
+      writeFileSync(
+        join(root, "subject.sdp.ts"),
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const subject = spec({
+  id: specId("spec:probe.collision"),
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  title: "Collision",
+  intent: { outcome: "Collide." },
+  design: {
+    "shape.detail": "the literal gadget",
+    shape: {
+      detail: "the nested gadget",
+    },
+  },
+});
+`,
+      );
+      const extraction = extract({ root });
+      expect(extraction.report.findings.filter((finding) => finding.severity === "error")).toEqual(
+        [],
+      );
+      const located = extraction.graph.locations?.find(
+        (row) => row.spec === "spec:probe.collision" && row.entry === "design.shape.detail",
+      )?.line;
+      expect(located).toBe(11);
+
+      const result = asRecord(await runRecipe(recipeByOrdinal(23), { term: "gadget" }, extraction));
+      expect(
+        asArray(result.matches)
+          .map(asRecord)
+          .map((row) => [row.entry, row.text, row.line]),
+      ).toEqual([
+        ["shape.detail", "the literal gadget", 11],
+        ["shape.detail", "the nested gadget", null],
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("counts a verifying Spec of another kind as a verifier, never as an example, in the Pack design", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-pack-design-verifier-kind-"));
+    const carrier = (id: string, relations: string) => `---
+id: ${id}
+kind: behavior
+altitude: story
+readiness: idea
+relations: ${relations}
+---
+# Probe ${id}
+
+## Intent
+- outcome: Probe ${id}.
+
+## Behavior
+- rule: The probe states one rule.
+`;
+
+    try {
+      writeFileSync(join(root, "target.sdp.md"), carrier("spec:probe.target", "{}"));
+      writeFileSync(
+        join(root, "checker.sdp.md"),
+        carrier("spec:probe.checker", "\n  verifies: spec:probe.target"),
+      );
+      writeFileSync(
+        join(root, "kinds.pack.sdp.md"),
+        `---
+id: pack:probe.kinds
+specs:
+  - spec:probe.target
+---
+# Probe kinds
+`,
+      );
+      const extraction = extract({ root });
+      expect(extraction.report.findings.filter((finding) => finding.severity === "error")).toEqual(
+        [],
+      );
+
+      const result = asRecord(
+        await runRecipe(recipeByOrdinal(29), { pack: "pack:probe.kinds" }, extraction),
+      );
+      const target = asArray(result.members)
+        .map(asRecord)
+        .find((row) => row.id === "spec:probe.target");
+      expect(target).toMatchObject({
+        verifiers: { total: 1, enabled: 0 },
+        examples: { total: 0, enabled: 0 },
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("gives a string-form open question the line its question[n] row records, as the object form", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-entry-search-string-question-"));
+
+    try {
+      writeFileSync(
+        join(root, "subject.sdp.ts"),
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const subject = spec({
+  id: specId("spec:probe.questions"),
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  title: "Questions",
+  intent: {
+    outcome: "Ask.",
+    openQuestions: [
+      "Which gadget ships first?",
+      { question: "Who owns the gadget?", blocking: false },
+    ],
+  },
+});
+`,
+      );
+      const extraction = extract({ root });
+      expect(extraction.report.findings).toEqual([]);
+      const lineOf = (entry: string) =>
+        extraction.graph.locations?.find(
+          (row) => row.spec === "spec:probe.questions" && row.entry === entry,
+        )?.line;
+      expect([lineOf("question[0]"), lineOf("question[1]")]).toEqual([12, 13]);
+
+      const result = asRecord(await runRecipe(recipeByOrdinal(23), { term: "gadget" }, extraction));
+      expect(
+        asArray(result.matches)
+          .map(asRecord)
+          .map((row) => [row.entry, row.line]),
+      ).toEqual([
+        ["openQuestions[0]", 12],
+        ["openQuestions[1].question", 13],
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });

@@ -76,11 +76,11 @@ afterEach(() => {
 });
 
 describe("the self-hosting records gate", () => {
-  it("discovers plan 40 as the current primary plan", () => {
-    // re-measured under plan 40
+  it("discovers plan 41 as the current primary plan", () => {
+    // re-measured under plan 41
     expect(currentPlan).toMatchObject({
-      number: 40,
-      name: "40-annotations-closer-to-v0.md",
+      number: 41,
+      name: "41-design-management-closer-to-v0.md",
     });
   });
 

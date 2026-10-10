@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
-import { realpathSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { parseBuildArgs } from "./build-args.js";
+import { BUILD_INFO_FILE, UNKNOWN_COMMIT, parseBuildCommit } from "./build-info.js";
 import { runBuild } from "./build-command.js";
 import { runCensus } from "./census-command.js";
 import type { CensusHooks } from "./census-command.js";
@@ -25,6 +26,7 @@ import { runValidate, runView } from "./validate-view-command.js";
 export const SDP_HELP_TEXT = `sdp — Libar Software Delivery Protocol
 Usage:
   sdp --help
+  sdp --version
   sdp build [root] [--exclude PATH]... [--check-clean]
   sdp validate [root] [--exclude PATH]... [--check-clean | --watch]
   sdp view [root] [--exclude PATH]... [--check-clean]
@@ -33,7 +35,12 @@ Usage:
   sdp gherkin [root] [--exclude PATH]... [--check-clean]
   sdp import <path...> [--dry-run]
   sdp new spec PATH --id ID --kind KIND --altitude ALT --title TITLE --outcome OUTCOME
-  sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--json]
+  sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--params JSON | --params @PATH] [--json]
+
+Options:
+  --version  Print one line, sdp <package version> (<commit>), and exit 0. The commit is the full
+             hash the build recorded beside the compiled CLI, or unknown; the CLI never runs git,
+             and neither value enters the graph or any projection.
 
 Commands:
   build      Extract every *.sdp.ts, *.sdp.md, and *.sdp.gherkin under root (default: cwd), plus
@@ -81,10 +88,14 @@ Commands:
              positional argument, or stdin when stdin is not a terminal; with neither, q refuses
              with a usage note and exits 1 rather than waiting. It is a plain JavaScript async function
              body — no import/export, no TypeScript-only syntax — and \`return\` is the output
-             contract. Three bindings are injected: \`g\`, the reader over the derived graph (the
-             same createReader the package exports); \`graph\`, the raw graph schema object; and
+             contract. Four bindings are injected: \`g\`, the reader over the derived graph (the
+             same createReader the package exports); \`graph\`, the raw graph schema object;
              \`report\`, the validation report, so honesty findings are queryable data rather than a
-             gate — checks never gate the read path. The graph is derived on every invocation, so a
+             gate — checks never gate the read path; and \`params\`, the JSON object --params
+             supplies, or {} without it. --params takes the JSON inline or, as @PATH, a file
+             holding it; a value that is not a JSON object or a file that cannot be read refuses
+             before the body runs. A recipe reads its parameter from \`params\` and falls back to the
+             catalog's sample. The graph is derived on every invocation, so a
              just-authored Spec is queryable immediately and no committed artifact answers in the
              graph's name; nothing is written anywhere. Output is bounded util.inspect (depth 4);
              --json prints JSON.stringify instead, unbounded. A body that throws exits 1, as does a
@@ -98,6 +109,8 @@ Agent skills and reference:
   .agents/skills/sdp-authoring/SKILL.md       the skill for authoring Specs, Packs, and anchors
   .agents/skills/sdp-sessions/SKILL.md        the skill for routing a delivery session
   docs/agent-surface/recipes.md               the recipe catalog: runnable q bodies
+  dist/recipes/NN-slug.js                     each catalog body as a file, run as shipped with
+                                              sdp q "$(cat PKG/dist/recipes/NN-slug.js)"
   CONTEXT.md                                  the Protocol's glossary, which the skills and
                                               recipes use
   specs/                                      the Protocol's own Specs and Pack, which the skills
@@ -106,15 +119,68 @@ Agent skills and reference:
   That graph holds intent only. The package ships no source anchors, so its delivery facts are
   empty and its gap warnings are not evidence about what the Protocol has realized.`;
 
+/** Reads one file the package ships, by URL; `sdp --version` reads through it. */
+export type EngineFileReader = (url: URL) => string;
+
 interface CliHooks extends CensusHooks, MermaidHooks, GherkinViewHooks, ValidateWatchHooks {
   readonly import?: ImportHooks;
   readonly query?: QueryHooks;
+  readonly readEngineFile?: EngineFileReader;
+}
+
+export interface EngineProvenance {
+  readonly version: string;
+  readonly commit: string;
+}
+
+const readShippedFile: EngineFileReader = (url) => readFileSync(url, "utf8");
+
+/**
+ * The engine's identity, read from two files and never from git: the version from the
+ * `package.json` two directories above this module, which is the package root from `dist/cli/` and
+ * from `src/cli/` alike, and the commit from the record the build wrote beside the compiled CLI.
+ * A file that is absent or does not answer reads as `unknown`.
+ */
+export function readEngineProvenance(read: EngineFileReader = readShippedFile): EngineProvenance {
+  let version = "unknown";
+
+  try {
+    const manifest = JSON.parse(read(new URL("../../package.json", import.meta.url))) as unknown;
+    const value =
+      typeof manifest === "object" && manifest !== null
+        ? (manifest as Record<string, unknown>).version
+        : undefined;
+
+    if (typeof value === "string" && /^\S+$/u.test(value)) {
+      version = value;
+    }
+  } catch {
+    // An unreadable manifest names no version.
+  }
+
+  let commit = UNKNOWN_COMMIT;
+
+  try {
+    commit = parseBuildCommit(read(new URL(`./${BUILD_INFO_FILE}`, import.meta.url)));
+  } catch {
+    // A build that recorded nothing names no commit.
+  }
+
+  return { version, commit };
 }
 
 /**
  * @sdpAnchor impl:protocol.agent-surface-cli
  * @sdpLabel CLI verb dispatcher and agent-surface front of the package CLI
  * @sdpSatisfies spec:consumers.agent-surface
+ * @sdpComponent component:protocol.cli
+ * @sdpRole service
+ */
+
+/**
+ * @sdpAnchor impl:protocol.engine-provenance-cli
+ * @sdpLabel sdp --version names the package version and the commit the build recorded
+ * @sdpSatisfies spec:consumers.engine-provenance
  * @sdpComponent component:protocol.cli
  * @sdpRole service
  */
@@ -134,6 +200,13 @@ export function runSdpCli(
 
   if (command === undefined || command === "--help") {
     writeStdout(output, `${SDP_HELP_TEXT}\n`);
+    return 0;
+  }
+
+  if (command === "--version") {
+    const { version, commit } = readEngineProvenance(hooks.readEngineFile);
+
+    writeStdout(output, `sdp ${version} (${commit})\n`);
     return 0;
   }
 

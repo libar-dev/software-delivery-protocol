@@ -13,8 +13,17 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+
 import { emitMarkdownSpec, reifyTypeScriptCarrier } from "../src/index.js";
 import { assertAuthoredRoundTrip, assertGraphRoundTrip } from "./import-round-trip.helpers.js";
+
+const markdownAuthoringTestAnchor = specTest({
+  id: testAnchorId("test:protocol.markdown-authoring"),
+  label: "TypeScript and Markdown twins derive one graph, verifying Markdown authoring",
+  verifies: ref("spec:carrier.markdown-authoring"),
+});
+void markdownAuthoringTestAnchor;
 
 const fixtureRoot = fileURLToPath(new URL("./fixtures/import/round-trip", import.meta.url));
 

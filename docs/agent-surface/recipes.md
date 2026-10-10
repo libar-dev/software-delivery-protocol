@@ -32,25 +32,47 @@ pnpm exec sdp q '<body>' --root PATH --exclude PATH --exclude PATH
 `--root PATH` picks the extraction root (default: the working directory) and `--exclude` is
 repeatable for root-relative path prefixes. `PATH` is a placeholder, not a literal directory.
 
-**Some recipes open with a parameter.** Recipes 3, 6, 9, 14, 19, 21, 22, 23, 25, and 27 take
-their subject on the opening `const` line(s): a Spec id, a search term, a component id, a list of
-Spec ids, a list of entry addresses, or a Pack id. Those lines name *this* repository's corpus so
-every body runs as written here (the recipe check executes each one verbatim); in your own corpus,
-substitute your subject on that line before running. A Spec id, component id, or Pack id absent
-from the graph returns `found: false` rather than failing.
+**Some recipes take a parameter.** Recipes 3, 4, 5, 6, 9, 14, 19, 21, 22, 23, 25, 27, 29, and 30
+read their subject from the `params` binding on their opening line: a Spec id, a list of changed
+files, a Pack id, a search term, a component id, a list of Spec ids, or a list of entry addresses.
+Each recipe names its parameter. Pass it as JSON data with `--params`, never by editing the body:
 
-**Recipe 4 is different.** Recipe 4 filenames travel via `SDP_CHANGED_FILES_JSON`; callers never
-substitute filenames into the JavaScript fence. Keep its query body static and pass changed paths
-as JSON data through that environment variable, as shown in the recipe-4 instructions below.
+```sh
+pnpm --silent sdp:q '<body>' --params '{"spec":"spec:model.anchors"}' --json
+pnpm --silent sdp:q '<body>' --params @params.json --json
+```
+
+`--params @PATH` reads the JSON from a file, which suits a long list. Without `--params`, `params`
+is `{}` and the body falls back to the sample on its opening line. The samples name *this*
+repository's corpus, so every body runs as written here (the recipe check executes each one
+unchanged). A Spec id, component id, or Pack id absent from the graph returns `found: false`
+rather than failing. A value that is not JSON, JSON that is not an object (null, an array, a
+string, a number or a boolean), or a file that cannot be read is refused before the body runs,
+with exit 1 and one line on stderr.
+
+**Every body ships as a file.** The build writes each body below to
+`dist/recipes/<NN>-<slug>.js`, where `NN` is the two-digit recipe number and the slug is the
+heading in lower kebab case, so recipe 25 is `dist/recipes/25-address-resolution.js`. The package
+ships that directory, at
+`node_modules/@libar-dev/software-delivery-protocol/dist/recipes/` in an adopter. Run a file as
+shipped instead of copying its body out of this page:
+
+```sh
+pnpm --silent sdp:q "$(cat dist/recipes/25-address-resolution.js)" --params @addresses.json --json
+```
+
+This catalog stays the one owner of the bodies. The files are derived from it, and the recipe
+check holds each one byte for byte to its body here.
 
 **The contract, in one place.** The front door derives the graph in process and evaluates the body
-you supply; `return` is the output contract. Three bindings are injected:
+you supply; `return` is the output contract. Four bindings are injected:
 
 | Binding | What it is |
 |---|---|
 | `g` | the reader over the derived graph — the same `createReader` the package exports |
 | `graph` | the raw graph schema object (nodes, edges, claims) |
 | `report` | the validation report, so honesty findings are queryable data and never a gate |
+| `params` | the JSON object `--params` supplies, or `{}` without it; input to the body, never a verb |
 
 **Body rules.** A body is a plain JavaScript async function body — no `import`/`export`, no
 TypeScript-only syntax. It may `await`. Default output is bounded `util.inspect`; `--json` prints
@@ -165,8 +187,11 @@ rung. A hit *with* an unmet clause is the expensive one.
 *When you need this: you are about to implement or review one Spec and want its sections,
 relations, and bindings in one shot.*
 
+The parameter is `params.spec`, the Spec id to read; an unknown id returns `{ id, found: false }`
+rather than failing.
+
 ```js
-const id = "spec:consumers.reader";
+const id = params.spec ?? "spec:consumers.reader";
 const context = g.specContext(id);
 
 if (context === undefined) {
@@ -222,17 +247,24 @@ that it passed. Pass/fail is CI's, exactly as skip and quarantine are.
 
 *When you need this: you have a diff (or are about to make one) and want the Specs it reaches.*
 
-The caller acquires the changed paths and passes them as data, never as query source. From the repository root, this exact pipeline preserves every valid Git filename byte except NUL (which Git filenames cannot contain), including newlines, while JSON-encoding the NUL-delimited list before it reaches the environment:
+The parameter is `params.files`, the list of changed paths, relative to the root. The caller
+acquires the paths and passes them as data, never as query source. From the repository root, this
+pipeline keeps every valid Git filename byte except NUL (which Git filenames cannot contain),
+newlines included, by JSON-encoding the NUL-delimited list before it reaches the sink:
 
 ```sh
-SDP_CHANGED_FILES_JSON="$(git diff --name-only -z | node -e 'const fs = require("node:fs"); const names = fs.readFileSync(0).toString("utf8").split("\0"); process.stdout.write(JSON.stringify(names.slice(0, -1)));')" \
-pnpm --silent sdp:q 'const changed = JSON.parse(process.env.SDP_CHANGED_FILES_JSON ?? "[]"); const radius = g.blastRadius(changed); const impactReasons = (item) => ({ id: item.id, reasons: item.reasons.map((reason) => reason.throughBinding === undefined ? { file: reason.file, via: null } : { file: reason.file, via: reason.throughBinding.id, edgeType: reason.throughBinding.edgeType, claim: reason.throughBinding.claim }) }); const atRiskReasons = (item) => ({ id: item.id, nodeType: item.nodeType, reasons: item.reasons.map((reason) => ({ from: reason.from, edgeType: reason.edgeType, to: reason.to, claim: reason.claim })) }); return { changedFiles: radius.changedFiles, impactedSpecs: radius.impactedSpecs.map(impactReasons), atRiskSpecs: radius.atRisk.filter((item) => item.nodeType === "Primitive").map(atRiskReasons), atRiskOther: radius.atRisk.filter((item) => item.nodeType !== "Primitive").map(atRiskReasons), coverageUnknownFiles: radius.coverageUnknown, unlinkedUnits: radius.unlinked.map((unit) => ({ id: unit.id, file: unit.file })) };' --json
+changed="$(mktemp)"
+git diff --name-only -z | node -e 'const fs = require("node:fs"); const names = fs.readFileSync(0).toString("utf8").split("\0"); process.stdout.write(JSON.stringify({ files: names.slice(0, -1) }));' > "$changed"
+pnpm --silent sdp:q "$(cat dist/recipes/04-what-breaks-if-i-change-these-files.js)" --params "@$changed" --json
+rm -f "$changed"
 ```
 
-The query body is static and reads only the JSON environment value; neither the shell nor the reader reevaluates filenames. `JSON.parse` receives data, so quotes, shell metacharacters, spaces, Unicode, and embedded newlines remain filenames rather than JavaScript or shell syntax. The reader never shells to git.
+The body is static and reads only the JSON value; neither the shell nor the reader reevaluates
+filenames. `--params` parses data, so quotes, shell metacharacters, spaces, Unicode, and embedded
+newlines remain filenames rather than JavaScript or shell syntax. The reader never shells to git.
 
 ```js
-const changed = JSON.parse(process.env.SDP_CHANGED_FILES_JSON ?? "[]");
+const changed = params.files ?? [];
 const radius = g.blastRadius(changed);
 const impactReasons = (item) => ({ id: item.id, reasons: item.reasons.map((reason) => reason.throughBinding === undefined ? { file: reason.file, via: null } : { file: reason.file, via: reason.throughBinding.id, edgeType: reason.throughBinding.edgeType, claim: reason.throughBinding.claim }) });
 const atRiskReasons = (item) => ({ id: item.id, nodeType: item.nodeType, reasons: item.reasons.map((reason) => ({ from: reason.from, edgeType: reason.edgeType, to: reason.to, claim: reason.claim })) });
@@ -246,14 +278,22 @@ Every result class is returned. **Impacted Specs** are authored-at or bound-to a
 *When you need this: you are reviewing a Pack as a unit and want its members' readiness, delivery
 facts, and verifier gaps.*
 
-```js
-const packs = g.packs();
+The parameter is `params.pack`, the Pack to review; without it the body reads the first Pack in
+the graph. An unknown Pack returns `{ id, found: false }`.
 
-if (packs.length === 0) {
+```js
+const id = params.pack ?? g.packs()[0]?.id;
+
+if (id === undefined) {
   return { packs: 0 };
 }
 
-const context = g.packContext(packs[0].id);
+const context = g.packContext(id);
+
+if (context === undefined) {
+  return { id, found: false };
+}
+
 const byStatedReadiness = {};
 
 for (const member of context.members) {
@@ -286,8 +326,10 @@ aggregate over Specs that do.
 
 *When you need this: you have a phrase and no id — the grep-to-graph bridge.*
 
+The parameter is `params.term`, the phrase to look for.
+
 ```js
-const term = "blast radius";
+const term = params.term ?? "blast radius";
 const matches = g.findByConcept(term);
 
 return {
@@ -373,7 +415,7 @@ refusals; a green corpus has no errors, but may carry intentional warnings.
 evidence before touching the carrier.*
 
 ```js
-const id = "spec:model.enrichment-lifecycle";
+const id = params.spec ?? "spec:model.enrichment-lifecycle";
 const context = g.specContext(id);
 
 if (context === undefined) {
@@ -403,7 +445,7 @@ return {
 };
 ```
 
-The `id` line is the recipe's parameter — substitute the Spec whose promotion you are weighing.
+The parameter is `params.spec`, the Spec whose promotion you are weighing.
 An empty `currentFloorFailures` list says the stated rung is honest. It does not confer the next
 rung, and `floorReached` above the stated rung is information rather than an automatic edit.
 `nextRungFailures` are the unmet clauses of `nextRung`, and a typed-dependency failure lists its
@@ -551,11 +593,11 @@ component dependencies, not a validation finding.
 
 *When you need this: you want the members, neighboring components, and Specs satisfied by one component.*
 
-The opening `const subject` is the parameter. Replace it with the component you are reviewing; an
-unknown subject returns the exact not-found shape and does not throw.
+The parameter is `params.component`, the component you are reviewing; an unknown component
+returns the exact not-found shape and does not throw.
 
 ```js
-const subject = "component:protocol.reader";
+const subject = params.component ?? "component:protocol.reader";
 const component = graph.nodes.find((node) => node.nodeType === "CodeNode" && node.id === subject);
 
 if (component === undefined) {
@@ -905,11 +947,11 @@ is the absence of an edge; `decidedBy` subjects stay grouped by family.
 *When you need this: you want one Spec's refinement and dependency neighborhood, shaping
 decisions, bound components, verifiers, and file-level entry points.*
 
-The opening `const id` is the parameter. Replace it with the Spec you are planning around; an
-unknown id returns `{ found: false }` rather than failing.
+The parameter is `params.spec`, the Spec you are planning around; an unknown id returns
+`{ id, found: false }` rather than failing.
 
 ```js
-const id = "spec:consumers.agent-surface";
+const id = params.spec ?? "spec:consumers.agent-surface";
 const context = g.specContext(id);
 
 if (context === undefined) {
@@ -1165,11 +1207,11 @@ but is not a lower-camel string. Those entries do not count as questions.
 the rung each one states and the floor each one reaches. For the floor's verdict on the Spec
 itself, run promotion preflight (recipe 9).*
 
-The opening `const id` is the parameter. Replace it with the Spec you are weighing; an unknown id
-returns `{ id, found: false }` rather than failing.
+The parameter is `params.spec`, the Spec you are weighing; an unknown id returns
+`{ id, found: false }` rather than failing.
 
 ```js
-const id = "spec:extraction.derive-graph";
+const id = params.spec ?? "spec:extraction.derive-graph";
 const context = g.specContext(id);
 
 if (context === undefined) {
@@ -1236,11 +1278,11 @@ Spec can state `ready` is the floor clause carried by `spec:validation.typed-dep
 resolve, or that no declared relation backs in either direction. The `reverseOnly` list stays a
 separate audit list, for mentions backed only by a relation from the target.*
 
-The opening `const scope` is the parameter. Replace it with a list of Spec ids to audit
-mentions from those Specs only. An empty list audits the whole corpus.
+The parameter is `params.scope`, a list of Spec ids to audit mentions from those Specs only. An
+empty or absent list audits the whole corpus.
 
 ```js
-const scope = [];
+const scope = params.scope ?? [];
 const backingTypes = [
   "refines",
   "dependsOn",
@@ -1425,11 +1467,10 @@ every location of every pair.
 *When you need this: you hold a word or a key and want the entries that carry it, where concept
 search (recipe 6) stops at the section.*
 
-The opening `const term` is the parameter. Replace it with your word or phrase; an empty term
-returns no matches.
+The parameter is `params.term`, your word or phrase; an empty term returns no matches.
 
 ```js
-const term = "suffix";
+const term = params.term ?? "suffix";
 const tokensOf = (text) =>
   text
     .replace(/(\p{Lu}+)(\p{Lu}\p{Ll})/gu, "$1 $2")
@@ -1472,38 +1513,46 @@ for (const spec of g.specs()) {
       ? `${spec.id}#${section}.${entry}`
       : null;
   };
-  const visit = (section, entry, key, text) => {
+  const lines = new Map(context.entryLocations.map((location) => [location.entry, location.line]));
+  // A Design or UI line is looked up by the top-level key the walk carries, never by the joined
+  // path: a literal key `a.b` and a nested `a: { b }` join to one path, and only the top-level
+  // entry has a row in the location table.
+  const lineOf = (section, entry, topKey) => {
+    const index = /^openQuestions\[(\d+)\](?:\.question)?$/u.exec(entry ?? "")?.[1];
+    const located =
+      section === "intent" && index !== undefined
+        ? `question[${index}]`
+        : (section === "design" || section === "ui") && topKey !== null
+          ? `${section}.${topKey}`
+          : null;
+    return lines.get(located) ?? null;
+  };
+  const row = (section, entry, matchedIn, text, topKey) => ({
+    id: spec.id,
+    section,
+    entry,
+    address: addressOf(section, entry),
+    line: lineOf(section, entry, topKey),
+    matchedIn,
+    text,
+  });
+  const visit = (section, entry, key, text, topKey) => {
     const matchedIn = [
       ...(key !== null && hits(key) ? ["key"] : []),
       ...(hits(text) ? ["text"] : []),
     ];
-    if (matchedIn.length > 0)
-      matches.push({
-        id: spec.id,
-        section,
-        entry,
-        address: addressOf(section, entry),
-        matchedIn,
-        text,
-      });
+    if (matchedIn.length > 0) matches.push(row(section, entry, matchedIn, text, topKey));
   };
-  const walk = (section, value, entry, key) => {
+  const walk = (section, value, entry, key, topKey) => {
     if (typeof value === "string") {
-      visit(section, entry, key, value);
+      visit(section, entry, key, value, topKey);
       return;
     }
     if (key !== null && hits(key)) {
-      matches.push({
-        id: spec.id,
-        section,
-        entry,
-        address: addressOf(section, entry),
-        matchedIn: ["key"],
-        text: JSON.stringify(value),
-      });
+      matches.push(row(section, entry, ["key"], JSON.stringify(value), topKey));
     }
     if (Array.isArray(value)) {
-      value.forEach((item, index) => walk(section, item, `${entry ?? ""}[${index}]`, null));
+      value.forEach((item, index) => walk(section, item, `${entry ?? ""}[${index}]`, null, null));
     } else if (typeof value === "object" && value !== null) {
       // A key the author coins is content: any key of the open sections (`design`, `ui`) except
       // `description`, a `model.terms` term, and the key of an open question, which travels with
@@ -1523,14 +1572,17 @@ for (const spec of g.specs()) {
             : section === "intent"
               ? questionKeyOf(path)
               : null,
+          entry === null ? name : null,
         );
       }
     }
   };
 
-  if (typeof context.narrative === "string") visit("narrative", null, null, context.narrative);
+  if (typeof context.narrative === "string") {
+    visit("narrative", null, null, context.narrative, null);
+  }
   for (const [section, content] of Object.entries(context.sections ?? {})) {
-    walk(section, content, null, null);
+    walk(section, content, null, null, null);
   }
 }
 
@@ -1566,6 +1618,14 @@ Each row carries `address: string | null`. A Design or UI entry with a key match
 marker carries a key, at `openQuestions[<n>].question`, has address `spec:<id>#question.<key>`,
 and that key matches as the row's key; the key is not a row of its own. `description` in Design or
 UI, off-grammar keys, other nested paths, and all other sections have `null`.
+Each row also carries `line`, the line in the Spec's carrier where the entry starts, from the
+location table the Spec context carries. The table locates a top-level Design or UI key other than
+`description` and the text of an open question, at `openQuestions[<n>].question` or, for a question
+written as a plain string, at `openQuestions[<n>]`, so a row for any other entry has `line: null`, as
+does an entry the carrier did not locate; null reads as not located, never as absent
+(`spec:extraction.entry-locations`). The line comes from the top-level key the walk reaches, never
+from the joined path, so a nested `shape: { detail }` reports `line: null` even beside a literal
+top-level key `shape.detail`, whose path it spells.
 Each row names the Spec, the `section`, the `entry` inside it, and the entry's `text`. `entry` is
 the key for a keyed entry (`envelopeSketch`, `terms.claim inheritance`), the field and zero-based
 index for a list entry (`rules[2]`), and `null` for the Spec's narrative, which is reported under
@@ -1614,11 +1674,11 @@ return { totals: { entries: rows.length, specs: new Set(rows.map((row) => row.sp
 *When you need this: you hold entry addresses written outside the Specs, in a register, a test,
 or a page, and want to know which still resolve.*
 
-The opening `const addresses` is the parameter. Replace it with the addresses you hold; an empty
-list returns no rows.
+The parameter is `params.addresses`, the list of addresses you hold; an empty list returns no
+rows. A long list belongs in a file passed as `--params @PATH`.
 
 ```js
-const addresses = [
+const addresses = params.addresses ?? [
   "spec:consumers.design-review#ui.packPage",
   "spec:consumers.design-review#ui.memberTable",
   "spec:consumers.absent#design.anyKey",
@@ -1627,31 +1687,55 @@ const addresses = [
 const pattern =
   /^(spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*)#(design|ui|question)\.([a-z][A-Za-z0-9]*)$/u;
 const specIds = new Set(g.specs().map((spec) => spec.id));
-const holds = (id, section, key) => {
-  const sections = g.specContext(id)?.sections ?? {};
+const entryOf = (sections, section, key) => {
   if (section === "question") {
     const questions = sections.intent?.openQuestions;
-    return (
-      Array.isArray(questions) &&
-      questions.some((entry) => typeof entry === "object" && entry !== null && entry.key === key)
-    );
+    const index = Array.isArray(questions)
+      ? questions.findIndex(
+          (entry) => typeof entry === "object" && entry !== null && entry.key === key,
+        )
+      : -1;
+    return index < 0
+      ? undefined
+      : { value: questions[index].question, entry: `question[${index}]` };
   }
   const entries = sections[section];
-  return (
-    key !== "description" &&
-    typeof entries === "object" &&
-    entries !== null &&
-    Object.hasOwn(entries, key)
-  );
+  if (key === "description" || typeof entries !== "object" || entries === null) return undefined;
+  return Object.hasOwn(entries, key)
+    ? { value: entries[key], entry: `${section}.${key}` }
+    : undefined;
 };
 const rows = addresses.map((address) => {
-  const row = (resolves, id, section, key, reason) => ({ address, resolves, id, section, key, reason });
+  const miss = (reason) => ({
+    address,
+    resolves: false,
+    id: null,
+    section: null,
+    key: null,
+    value: null,
+    file: null,
+    line: null,
+    reason,
+  });
   const parsed = typeof address === "string" ? pattern.exec(address) : null;
-  if (parsed === null) return row(false, null, null, null, "malformed");
+  if (parsed === null) return miss("malformed");
   const [, id, section, key] = parsed;
-  if (!specIds.has(id)) return row(false, null, null, null, "spec");
-  if (!holds(id, section, key)) return row(false, null, null, null, "entry");
-  return row(true, id, section, key, null);
+  if (!specIds.has(id)) return miss("spec");
+  const context = g.specContext(id);
+  const found = entryOf(context.sections ?? {}, section, key);
+  if (found === undefined) return miss("entry");
+  const location = context.entryLocations.find((row) => row.entry === found.entry);
+  return {
+    address,
+    resolves: true,
+    id,
+    section,
+    key,
+    value: found.value,
+    file: location?.file ?? null,
+    line: location?.line ?? null,
+    reason: null,
+  };
 });
 const count = (reason) => rows.filter((row) => row.reason === reason).length;
 
@@ -1668,8 +1752,12 @@ return {
 ```
 
 Each row answers one input, in input order, repeats included. A row that resolves carries the
-Spec `id`, the `section` (`design`, `ui`, or `question`), the `key`, and `reason: null`. A row that
-does not resolve carries `id`, `section`, and `key` as null and one `reason`: `"malformed"` for an
+Spec `id`, the `section` (`design`, `ui`, or `question`), the `key`, the entry's `value`, and
+`reason: null`. The value is the Design or UI entry's value as the graph holds it, or the
+question's text. `file` and `line` say where the entry is written, from the location table the
+Spec context carries; both are null when the carrier did not locate the entry, which reads as not
+located, never as absent. A row that does not resolve carries `id`, `section`, `key`, `value`,
+`file`, and `line` as null and one `reason`: `"malformed"` for an
 input that is not an entry address, a bare Spec id, a `pack:` id, and a value that is not a string
 among them; `"spec"` for an address whose Spec is absent; and `"entry"` for an address whose Spec
 holds no such entry. A Design or UI key resolves as an own key of that section other than
@@ -1677,8 +1765,9 @@ holds no such entry. A Design or UI key resolves as an own key of that section o
 marker, `[blocking #aggregateReach]`. These are the grammar and the rule `sdp validate` applies to
 an address written in a Spec's prose, under `spec:decisions.checked-mentions`; the mention audit
 (recipe 22) reads addresses inside the Specs, and this recipe reads the ones written anywhere
-else. `totals` counts the inputs, the resolving rows, and each reason. The law is
-`spec:consumers.agent-surface.address-and-cycle-recipes`.
+else. `totals` counts the inputs, the resolving rows, and each reason. The laws are
+`spec:consumers.agent-surface.address-and-cycle-recipes` and, for the value, file and line,
+`spec:extraction.entry-locations`.
 
 ## 26. Dependency cycles
 
@@ -1799,11 +1888,11 @@ never refuses: a cycle is data about the authored dependencies, and the readines
 answers to it, which code realizes it, whether a verifier is bound, and which built Specs it
 builds on, with no fact read as another.*
 
-The opening `const id` is the parameter. Replace it with the Pack you are reviewing; an unknown
-Pack returns `{ id, found: false }`.
+The parameter is `params.pack`, the Pack you are reviewing; an unknown Pack returns
+`{ id, found: false }`.
 
 ```js
-const id = "pack:spec-studio-v1";
+const id = params.pack ?? "pack:spec-studio-v1";
 const pack = g.packContext(id);
 
 if (pack === undefined) {
@@ -1917,3 +2006,390 @@ counts are edges, kept apart from units: one unit that references three Specs is
 one referencing unit. None of these attributes or edges confers a delivery fact or moves a
 readiness floor. The census renders the same taxonomy for a human reader. The law is
 `spec:decisions.architectural-annotation`.
+
+## 29. Pack design
+
+*When you need this: you are designing or reviewing a Pack and want where its design stands,
+member by member: what holds each one below its next rung, what design it carries, which code
+answers to it, and what the Pack rests on, as data a page or a script renders.*
+
+The parameter is `params.pack`, the Pack you are designing; an unknown Pack returns
+`{ id, found: false }`.
+
+```js
+const id = params.pack ?? "pack:spec-studio-v1";
+const pack = g.packContext(id);
+
+if (pack === undefined) {
+  return { id, found: false };
+}
+
+const unitOf = (binding) => ({
+  id: binding.codeId,
+  file: binding.file ?? null,
+  line: binding.line ?? null,
+  role: binding.role ?? null,
+  component:
+    binding.component === undefined
+      ? null
+      : {
+          id: binding.component.id,
+          layer: binding.component.layer ?? null,
+          context: binding.component.context ?? null,
+        },
+});
+const members = pack.members.map((member) => {
+  if (!member.resolved) return { id: member.id, resolved: false };
+  const { design } = member;
+
+  return {
+    id: member.id,
+    resolved: true,
+    title: member.title ?? null,
+    specKind: member.specKind,
+    statedReadiness: member.statedReadiness,
+    floorReached: member.derivedReadiness ?? "none",
+    statedNextRung: member.statedNextRung ?? null,
+    statedNextRungFailures: member.statedNextRungFailures.map((failure) => ({
+      clauseId: failure.clauseId,
+      description: failure.description,
+      ...(failure.targets === undefined ? {} : { targets: failure.targets }),
+    })),
+    design: {
+      entries: design.entries,
+      declarations: design.declarations,
+      openQuestions: design.openQuestions.length,
+      blockingQuestions: design.blockingQuestions,
+    },
+    questions: design.openQuestions.map((entry) => ({
+      key: entry.key ?? null,
+      blocking: entry.blocking,
+      address: entry.key === undefined ? null : `${member.id}#question.${entry.key}`,
+      line: entry.line ?? null,
+      question: entry.question,
+    })),
+    decisions: design.decisions.map((decision) => ({
+      id: decision.id,
+      statedReadiness: decision.statedReadiness ?? null,
+      resolved: decision.resolved,
+    })),
+    implementedBy: member.implementations.map(unitOf),
+    referencedBy: member.references.map(unitOf),
+    verifiers: member.verifiers,
+    examples: member.examples,
+  };
+});
+const boundaryRow = (row) => ({
+  id: row.id,
+  title: row.title ?? null,
+  statedReadiness: row.statedReadiness,
+  implemented: row.implemented,
+  via: row.via,
+});
+const resolved = members.filter((member) => member.resolved);
+const count = (test) => resolved.filter(test).length;
+const sum = (field) => resolved.reduce((total, member) => total + member.design[field], 0);
+
+return {
+  found: true,
+  id,
+  title: pack.title ?? null,
+  totals: {
+    members: members.length,
+    unresolved: members.length - resolved.length,
+    heldBelowNextRung: count((member) => member.statedNextRungFailures.length > 0),
+    waitingForAuthor: count(
+      (member) => member.statedNextRung !== null && member.statedNextRungFailures.length === 0,
+    ),
+    entries: sum("entries"),
+    declarations: sum("declarations"),
+    openQuestions: sum("openQuestions"),
+    blockingQuestions: sum("blockingQuestions"),
+    withImplementations: count((member) => member.implementedBy.length > 0),
+    withReferences: count((member) => member.referencedBy.length > 0),
+    restsOn: pack.boundary.restsOn.length,
+    restedOnBy: pack.boundary.restedOnBy.length,
+  },
+  members,
+  boundary: {
+    restsOn: pack.boundary.restsOn.map(boundaryRow),
+    restedOnBy: pack.boundary.restedOnBy.map(boundaryRow),
+  },
+};
+```
+
+The body pre-shapes the Pack design the reader assembles on the Pack context and computes nothing
+of its own. Members keep the manifest's order. Each resolved member carries its stated rung, the
+floor reached (`"none"` when no rung derives), and its stated next rung, the rung above the stated
+one, `null` at `ready`. `statedNextRungFailures` lists the floor clauses that hold the member below
+that rung, each with its `targets` when it names dependencies. An empty list beside a next rung
+means the floor already holds that rung: the rung waits for its author, and
+`totals.waitingForAuthor` counts those members. It is never a promotion. Promotion preflight
+(recipe 9) reads the rung above the floor reached instead, under its own names.
+
+`design` counts the member's keyed Design and UI entries other than `description`, its pinned
+declarations by recipe 24's rule, its open questions, and the blocking ones. `questions` lists each
+open question with its key, its blocking flag, its entry address when it carries a key, the line
+the location table records (`null` when not located), and its text. `decisions` lists the
+decisions the member names through `decidedBy`, each with its stated rung, and `resolved: false`
+when the target is no Spec. `implementedBy` and `referencedBy` list the code units that satisfy and
+that reference the member, each with its file, line, role, and component, with the layer and
+context its component anchor states; a reference confers nothing. `verifiers` and `examples` count
+the member's verifiers and verifying examples beside how many are enabled. An unresolved member
+keeps only its `id` and `resolved: false`.
+
+`boundary.restsOn` lists the Specs outside the Pack that a member relates to by `refines`,
+`dependsOn`, `constrainedBy` or `decidedBy`, and `boundary.restedOnBy` the Specs outside it that
+relate to a member by any authored relation. Each row carries the outside Spec's stated rung,
+whether it carries `implemented`, and under `via` the members it joins per relation type. The
+columns are counts and lists, never a score or a rung. The Design Review's Pack page renders the
+same assembly. The laws are `spec:consumers.pack-design` and
+`spec:consumers.agent-surface.design-recipes`.
+
+## 30. Design-change impact
+
+*When you need this: you are about to change a Spec's design and want every Spec that rests on it,
+with the code, verifiers and Packs the change asks to follow.*
+
+The parameter is `params.specs`, the Spec ids you are changing; an id the graph does not hold comes
+back in `changed` with `resolved: false` and reaches nothing.
+
+```js
+const changed = params.specs ?? ["spec:validation.readiness-floor"];
+const followed = new Set(["refines", "dependsOn", "constrainedBy", "decidedBy"]);
+const specIds = new Set(g.specs().map((spec) => spec.id));
+const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
+const inbound = new Map();
+for (const edge of graph.edges) {
+  if (!followed.has(edge.type) || edge.claim !== "declared") continue;
+  if (!specIds.has(edge.from) || !specIds.has(edge.to)) continue;
+  if (!inbound.has(edge.to)) inbound.set(edge.to, []);
+  inbound.get(edge.to).push(edge);
+}
+
+const reached = new Map();
+const queue = [];
+for (const id of changed) {
+  if (!specIds.has(id) || reached.has(id)) continue;
+  reached.set(id, { distance: 0, path: [] });
+  queue.push(id);
+}
+for (let at = 0; at < queue.length; at += 1) {
+  const id = queue[at];
+  const here = reached.get(id);
+  const edges = [...(inbound.get(id) ?? [])].sort(
+    (left, right) => byCodeUnit(left.from, right.from) || byCodeUnit(left.type, right.type),
+  );
+  for (const edge of edges) {
+    if (reached.has(edge.from)) continue;
+    reached.set(edge.from, {
+      distance: here.distance + 1,
+      path: [...here.path, { from: edge.from, type: edge.type, to: id }],
+    });
+    queue.push(edge.from);
+  }
+}
+
+const unitsOf = (bindings) =>
+  bindings.map((unit) => ({ id: unit.codeId, file: unit.file ?? null, line: unit.line ?? null }));
+const rows = [...reached.entries()]
+  .map(([id, reach]) => {
+    const context = g.specContext(id);
+    return {
+      id,
+      distance: reach.distance,
+      path: reach.path,
+      statedReadiness: context.statedReadiness,
+      implementedBy: unitsOf(context.implementations),
+      referencedBy: unitsOf(context.references),
+      enabledVerifiers: context.verifiers
+        .filter((verifier) => verifier.enabled)
+        .map((verifier) => verifier.verifierId),
+      packs: context.packs,
+    };
+  })
+  .sort((left, right) => left.distance - right.distance || byCodeUnit(left.id, right.id));
+
+return {
+  changed: changed.map((id) => ({ id, resolved: specIds.has(id) })),
+  totals: {
+    specs: rows.length,
+    dependents: rows.filter((row) => row.distance > 0).length,
+    units: new Set(
+      rows.flatMap((row) => [...row.implementedBy, ...row.referencedBy].map((unit) => unit.id)),
+    ).size,
+  },
+  rows,
+};
+```
+
+The walk follows `refines`, `dependsOn`, `constrainedBy` and `decidedBy` edges backwards, from the
+Spec they point at to the Spec that declares them, so it reaches every Spec that refines, depends
+on, is constrained by, or is decided by a changed Spec, and then every Spec that rests on those, to
+any depth. It never follows a relation outward: what a changed Spec rests on does not move with it,
+and dependency footing (recipe 21) reads that side. Each Spec is reached once, by a shortest path.
+`distance` counts its hops, 0 for a changed Spec. `path` lists the hops from the changed Spec out,
+each naming the dependent Spec (`from`), the relation, and the Spec it rests on (`to`). The walk is
+breadth-first and takes each Spec's dependents in id order, then relation type, so of two shortest
+paths it keeps the one it finds first. Rows sort by distance, then id.
+
+For each row, `implementedBy` lists the units that satisfy the Spec and `referencedBy` the units
+that reference it, each with its file and line. Both are code a design change asks to follow, and a
+reference confers nothing. `enabledVerifiers` lists the ids of the verifiers whose binding resolves,
+a test anchor or an enabled example; a binding says nothing about whether a test passes. `packs`
+lists the Packs the Spec belongs to. `totals.dependents` counts the Specs reached beyond the changed
+ones, and `totals.units` the distinct units across all rows. The law is
+`spec:consumers.agent-surface.design-recipes`.
+
+## 31. Decision register
+
+*When you need this: you want every decision with its rung, what it supersedes and what supersedes
+it, what it shapes, and what it leaves open, read from the graph instead of kept by hand.*
+
+```js
+const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
+const ends = (relations, type) =>
+  relations
+    .filter((relation) => relation.type === type)
+    .map((relation) => relation.otherId)
+    .sort(byCodeUnit);
+const rows = g
+  .specs()
+  .filter((spec) => spec.specKind === "decision")
+  .map((spec) => spec.id)
+  .sort(byCodeUnit)
+  .map((id) => {
+    const context = g.specContext(id);
+    const authored = context.sections?.intent?.openQuestions;
+    const questions = Array.isArray(authored) ? authored : [];
+    return {
+      id,
+      title: context.title ?? null,
+      statedReadiness: context.statedReadiness,
+      supersedes: ends(context.relationsOut, "supersedes"),
+      supersededBy: ends(context.relationsIn, "supersedes"),
+      shapes: ends(context.relationsIn, "decidedBy"),
+      questions: questions
+        .filter((entry) => typeof entry === "object" && entry !== null)
+        .filter((entry) => typeof entry.key === "string")
+        .map((entry) => ({
+          key: entry.key,
+          blocking: entry.blocking === true,
+          address: `${id}#question.${entry.key}`,
+        })),
+      packs: context.packs,
+    };
+  });
+const byRung = {};
+for (const row of rows) byRung[row.statedReadiness] = (byRung[row.statedReadiness] ?? 0) + 1;
+
+return {
+  totals: {
+    decisions: rows.length,
+    byRung,
+    superseded: rows.filter((row) => row.supersededBy.length > 0).length,
+    shapingNothing: rows.filter((row) => row.shapes.length === 0).length,
+  },
+  rows,
+};
+```
+
+The body takes no parameter. It returns one row per decision Spec, sorted by id in code-unit order.
+`supersedes` lists the decisions this one supersedes and `supersededBy` the ones that supersede it;
+follow either to walk a chain. `shapes` lists the Specs that name the decision through
+`decidedBy`. `questions` lists the decision's open questions that carry a key, each with its
+blocking flag and entry address; the open-question register (recipe 20) lists the unkeyed ones
+too. `totals.byRung` counts the decisions by stated rung, `totals.superseded` the ones another
+decision supersedes, and `totals.shapingNothing` the ones no Spec names through `decidedBy`. A
+superseded decision stays a row: supersession is a relation, never a removal. The ratified names
+stay in the decision registry, `docs/concept/DECISIONS.md`, and the decision map (recipe 18) ranks
+decisions by shaping fan-in. The law is `spec:consumers.agent-surface.design-recipes`.
+
+## 32. Architecture crossings
+
+*When you need this: you want every component dependency that crosses a bounded context or a
+layer, and which way it runs, before you write or review an architecture rule.*
+
+```js
+const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
+const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
+const componentOf = new Map();
+for (const edge of graph.edges) if (edge.type === "memberOf") componentOf.set(edge.from, edge.to);
+const componentFor = (id) => {
+  const node = nodes.get(id);
+  if (node?.nodeType !== "CodeNode") return undefined;
+  if (id.startsWith("component:")) return node;
+  const component = nodes.get(componentOf.get(id));
+  return component?.nodeType === "CodeNode" ? component : undefined;
+};
+const describe = (component) => ({
+  id: component.id,
+  layer: component.layer ?? null,
+  context: component.context ?? null,
+});
+
+const uses = graph.edges.filter((edge) => edge.type === "uses");
+let resolved = 0;
+const rows = [];
+for (const edge of uses) {
+  const from = componentFor(edge.from);
+  const to = componentFor(edge.to);
+  if (from === undefined || to === undefined) continue;
+  resolved += 1;
+  const differs = ["context", "layer"].filter(
+    (field) =>
+      typeof from[field] === "string" &&
+      typeof to[field] === "string" &&
+      from[field] !== to[field],
+  );
+  if (differs.length > 0) {
+    rows.push({
+      from: edge.from,
+      to: edge.to,
+      fromComponent: describe(from),
+      toComponent: describe(to),
+      differs,
+    });
+  }
+}
+rows.sort((left, right) => byCodeUnit(left.from, right.from) || byCodeUnit(left.to, right.to));
+
+const tally = (field) => {
+  const counts = new Map();
+  for (const row of rows) {
+    if (!row.differs.includes(field)) continue;
+    const pair = `${row.fromComponent[field]} -> ${row.toComponent[field]}`;
+    counts.set(pair, (counts.get(pair) ?? 0) + 1);
+  }
+  return Object.fromEntries(
+    [...counts.entries()].sort(([left], [right]) => byCodeUnit(left, right)),
+  );
+};
+
+return {
+  totals: {
+    usesEdges: uses.length,
+    resolvedToComponents: resolved,
+    crossings: rows.length,
+    contextCrossings: rows.filter((row) => row.differs.includes("context")).length,
+    layerCrossings: rows.filter((row) => row.differs.includes("layer")).length,
+    byContextPair: tally("context"),
+    byLayerPair: tally("layer"),
+  },
+  rows,
+};
+```
+
+The body takes no parameter. It resolves both ends of each `uses` edge to a component: a
+`component:` unit is its own, and any other unit belongs to the target of its `memberOf` edge.
+`totals.usesEdges` counts every `uses` edge and `totals.resolvedToComponents` the ones whose two
+ends both resolve; an edge with an end that belongs to no component is left out of the rows. An
+edge crosses when both components state a context and the contexts differ, or both state a layer
+and the layers differ. Two units in one component never cross, and an attribute either component
+leaves unstated never counts as a difference. Each row names both units (`from`, `to`), both components with their
+layer and context, and `differs`, the attributes that differ. Rows sort by `from`, then `to`.
+`totals.byContextPair` and `totals.byLayerPair` tally the crossings as `from -> to`, so the
+direction of a corpus's dependencies reads at a glance. The recipe reports and never refuses: which
+crossings are lawful is the corpus's own rule, as the architectural annotation decision leaves it.
+Roles, layers and contexts (recipe 28) lists the values the anchors state. The law is
+`spec:consumers.agent-surface.design-recipes`.

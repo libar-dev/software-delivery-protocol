@@ -6,6 +6,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import { extract, generateContracts, serializeGraph } from "../src/index.js";
 import { materializeGherkinCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 
+import { serializeGraphStructure } from "./helpers/graph-structure.js";
+
 const temporaryRoots: string[] = [];
 
 function materialize(name: string): string {
@@ -27,8 +29,11 @@ describe("Gherkin carrier graph parity", () => {
 
     const markdown = extract({ root: markdownRoot });
     const gherkin = extract({ root: gherkinRoot });
-    const markdownGraph = serializeGraph(markdown.graph).replaceAll("twin.sdp.md", "twin.carrier");
-    const gherkinGraph = serializeGraph(gherkin.graph).replaceAll(
+    const markdownGraph = serializeGraphStructure(markdown.graph).replaceAll(
+      "twin.sdp.md",
+      "twin.carrier",
+    );
+    const gherkinGraph = serializeGraphStructure(gherkin.graph).replaceAll(
       "twin.sdp.gherkin",
       "twin.carrier",
     );

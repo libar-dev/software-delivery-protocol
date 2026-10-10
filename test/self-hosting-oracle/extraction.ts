@@ -214,7 +214,7 @@ export const extractionSpecs = [
           declared:
             "Human intent explicitly authored in a Spec or Pack; it is authoritative intent.",
           anchored:
-            "A human binding from a code, test, or oracle location to one Spec ID; it is authoritative binding and carries no intent.",
+            "A human binding from a code, test, or oracle location to zero or more Spec IDs, or between code units for structure; it is authoritative binding and carries no intent.",
           inferred:
             "Machine-derived structural information; it is advisory and never authoritative.",
           "claim inheritance":
@@ -295,8 +295,8 @@ export const extractionSpecs = [
               'a graph derived from the authored spec {specId: "spec:probe.schema-versioning"}',
             ],
             when: ["the graph payload is serialized"],
-            // re-measured under plan 40
-            then: ['the payload declares the schema version {schemaVersion: "0.8.0"}'],
+            // re-measured under plan 41
+            then: ['the payload declares the schema version {schemaVersion: "0.9.0"}'],
           },
         ],
       },
@@ -323,6 +323,7 @@ export const extractionSpecs = [
             question:
               "Do the concreteness-refusal and no-guessing outcome-identity laws stated in src/codegen/contracts.ts commentary promote here or to a story-altitude child under comment promotion?",
             blocking: false,
+            key: "contractLawPromotion",
           },
         ],
       },
@@ -533,6 +534,7 @@ export const extractionSpecs = [
             question:
               "Do the every-step-and-only-the-steps and fresh-world-per-example laws stated in the runner and vitest-adapter commentary promote here or to story-altitude children under comment promotion?",
             blocking: false,
+            key: "runnerLawPromotion",
           },
         ],
       },
@@ -639,6 +641,7 @@ export const extractionSpecs = [
             question:
               "Does the derive-in-process freshness law stated in src/cli/q-command.ts commentary promote here or to a story-altitude child under comment promotion?",
             blocking: false,
+            key: "freshnessPromotion",
           },
         ],
       },
@@ -744,16 +747,19 @@ export const extractionSpecs = [
             question:
               "The contract kind's evidence row in the kind-evidence table is unchanged by this Spec. A closed contract section is not planned; if an adopter asks for one, it enters as a Spec of its own.",
             blocking: false,
+            key: "contractSection",
           },
           {
             question:
               "A compiled module finds a name used and never declared and a name declared twice. It does not find a bullet whose prose uses a declared name with another type, which is the drift the first adopter met at its merge. Checking a span used inside a step bullet as an expression is deferred until an adopter asks for it.",
             blocking: false,
+            key: "bulletTypeDrift",
           },
           {
             question:
               "The source report's full shape is kept here so the capture does not narrow it in silence: an opaque language-tagged fence as the value of one keyed entry, then the closed section whose declarations derive one module per corpus, then implementation code importing the derived types so that a Spec which disagrees with its code fails the build. Compiling the derived module alone finds only names used and never declared, and names declared twice.",
             blocking: false,
+            key: "reportShape",
           },
         ],
       },
@@ -789,8 +795,8 @@ export const extractionSpecs = [
               'the serialized Pack node lists the members {serializedMembers: "spec:probe.zeta, spec:probe.alpha, spec:probe.mid"}',
               'the serialized belongsTo edges run from {edgeSources: "spec:probe.alpha, spec:probe.mid, spec:probe.zeta"}',
               'the reader\'s Pack context lists the members {readerMembers: "spec:probe.zeta, spec:probe.alpha, spec:probe.mid"}',
-              // re-measured under plan 40
-              'the payload declares the schema version {schemaVersion: "0.8.0"}',
+              // re-measured under plan 41
+              'the payload declares the schema version {schemaVersion: "0.9.0"}',
             ],
           },
         ],
@@ -844,5 +850,36 @@ export const extractionSpecs = [
     },
     deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/extraction/pack-member-order.sdp.md",
+  },
+  // The design-management arc (plan 41).
+  {
+    id: "spec:extraction.entry-locations",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/extraction/entry-locations.sdp.md",
+    title: "The graph records where each addressable entry is written",
+    narrative:
+      "An entry address names one keyed Design or UI entry, or one keyed open question. A reader that follows an address to the text needs the line it sits on, and today only the carrier file knows it, so the first adopter's page parses every member's carrier a second time to find them.",
+    sections: {
+      intent: {
+        problem:
+          "The graph records the file of a Spec and the line of every anchor, but not the line of an entry inside a Spec, so a page that links an address to its text, or a review that cites one, re-reads carrier syntax the extractor already parsed.",
+        outcome:
+          "Record the source line of every keyed Design and UI entry and every open question in the graph, apart from the nodes, so any consumer links an entry to its text without parsing a carrier.",
+      },
+      behavior: {
+        rules: [
+          "The graph carries a location table beside its nodes and edges. Each row names a Spec id, the carrier file, the entry, and the 1-based line the entry starts on in that file. An entry is a `design` or `ui` key other than `description`, written as `design.<key>` or `ui.<key>`, or an open question, written as `question[<index>]` by its position in the Spec's open questions counted from 0, with its key beside it when the question carries one.",
+          "Primitive and Pack nodes stay free of lines, so a comparison of nodes and edges is unchanged by an edit that only moves an entry, and carrier parity compares nodes and edges and never the location table, whose lines differ by carrier by nature.",
+          "Every carrier the extractor reads records the lines it can locate: the Markdown carrier records each entry it reifies; the TypeScript carrier records the line of each entry's property; the Gherkin carrier records the open questions it carries. An entry with no row has no recorded line, which a consumer reads as not located and never as absent.",
+          "Rows sort by Spec id, then by entry, in code-unit order. The table is a deterministic function of the carriers at the extracted commit, as every other part of the graph is.",
+          "A location names where an entry is written and nothing else: it is not an identity, never an anchor target or a binding, and an edit above an entry moves its line.",
+          "The reader's Spec context carries the Spec's rows as its entry locations. Address resolution (recipe 25) adds the entry's value, file and line to each resolving row, and entry search (recipe 23) adds the line to each entry it matches.",
+          "The graph schema version moves to `0.9.0`. The realizing sites are the Markdown, TypeScript and Gherkin extractors in `src/extract/`, the graph schema in `src/graph/schema.ts`, and `specContext` in `src/reader/reader.ts`.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
   },
 ] as const;

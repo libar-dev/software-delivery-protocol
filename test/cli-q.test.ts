@@ -1,10 +1,13 @@
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { isatty } from "node:tty";
 import { fileURLToPath } from "node:url";
 
 import { afterAll, describe, expect, it } from "vitest";
+
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
 import { runSdpCli } from "../src/cli/sdp.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
@@ -493,5 +496,217 @@ describe("sdp q — the agent front door", () => {
     // cwd is the repository root under the pooled runner, so an unchanged fingerprint pins "no
     // write at the invoking root" in the direction the test name claims.
     expect(fingerprintTree(rootGenerated)).toBe(before);
+  });
+});
+
+const queryParamsTestAnchor = specTest({
+  id: testAnchorId("test:protocol.query-params"),
+  label: "front-door checks verify --params as the fourth binding and its refusals",
+  verifies: ref("spec:consumers.agent-surface.recipe-parameters"),
+});
+void queryParamsTestAnchor;
+
+describe("sdp q --params — a recipe parameter as data", () => {
+  const paramsRoot = materializeExtractCorpus("anchored-binding");
+  const scratch = mkdtempSync(join(tmpdir(), "sdp-q-params-"));
+
+  afterAll(() => {
+    removeMaterializedCorpus(paramsRoot);
+    rmSync(scratch, { recursive: true, force: true });
+  });
+
+  /** An extraction that records whether it ran: a refusal must land before the graph derives. */
+  function watchedExtraction() {
+    const seen = { extracted: false };
+    return {
+      seen,
+      hooks: {
+        query: {
+          ...terminalStdin.query,
+          extract: () => {
+            seen.extracted = true;
+            throw new Error("the graph must not derive after a --params refusal");
+          },
+        },
+      },
+    };
+  }
+
+  it("injects params as a fourth binding beside g, graph and report", async () => {
+    const capture = createCaptureOutput();
+
+    const exitCode = await runQ(
+      [
+        "return { params, g: typeof g.specs, graph: Array.isArray(graph.nodes), report: report.validatorId }",
+        "--root",
+        paramsRoot,
+        "--params",
+        '{"spec":"spec:orders.anchored-parent","files":["a b.ts"],"depth":2}',
+        "--json",
+      ],
+      capture,
+      terminalStdin,
+    );
+
+    expect(exitCode).toBe(0);
+    expect(capture.readStderr()).toBe("");
+    expect(JSON.parse(capture.readStdout())).toEqual({
+      params: { spec: parentId, files: ["a b.ts"], depth: 2 },
+      g: "function",
+      graph: true,
+      report: "graph",
+    });
+  });
+
+  it("binds params to an empty object without the flag", async () => {
+    const capture = createCaptureOutput();
+
+    const exitCode = await runQ(
+      [
+        "return { params, isObject: Object.getPrototypeOf(params) === Object.prototype }",
+        "--root",
+        paramsRoot,
+        "--json",
+      ],
+      capture,
+      terminalStdin,
+    );
+
+    expect(exitCode).toBe(0);
+    expect(JSON.parse(capture.readStdout())).toEqual({ params: {}, isObject: true });
+  });
+
+  it("passes any JSON object through unchanged", async () => {
+    for (const value of ["{}", '{"nested":{"list":[1,null,"x"]},"flag":false}']) {
+      const capture = createCaptureOutput();
+
+      const exitCode = await runQ(
+        ["return { params }", "--root", paramsRoot, "--params", value, "--json"],
+        capture,
+        terminalStdin,
+      );
+
+      expect(exitCode).toBe(0);
+      expect(JSON.parse(capture.readStdout())).toEqual({ params: JSON.parse(value) as unknown });
+    }
+  });
+
+  it("reads params from a file named with @PATH, a byte-order mark dropped", async () => {
+    const path = join(scratch, "params.json");
+    writeFileSync(path, `\uFEFF${JSON.stringify({ spec: parentId })}\n`);
+    const capture = createCaptureOutput();
+
+    const exitCode = await runQ(
+      [
+        "return g.specContext(params.spec)?.id ?? null",
+        "--root",
+        paramsRoot,
+        "--params",
+        `@${path}`,
+        "--json",
+      ],
+      capture,
+      terminalStdin,
+    );
+
+    expect(exitCode).toBe(0);
+    expect(capture.readStderr()).toBe("");
+    expect(JSON.parse(capture.readStdout())).toBe(parentId);
+  });
+
+  it.each([
+    [
+      "inline text that is not JSON",
+      ["--params", "{spec: 1}"],
+      "sdp q: --params is not valid JSON (",
+    ],
+    ["an empty value", ["--params", ""], "sdp q: --params is not valid JSON ("],
+    ["null", ["--params", "null"], "sdp q: --params must be a JSON object, got null."],
+    ["an array", ["--params", "[1,2]"], "sdp q: --params must be a JSON object, got an array."],
+    [
+      "a string",
+      ["--params", '"spec:orders.anchored-parent"'],
+      "sdp q: --params must be a JSON object, got a string.",
+    ],
+    ["a number", ["--params", "42"], "sdp q: --params must be a JSON object, got a number."],
+    ["a boolean", ["--params", "true"], "sdp q: --params must be a JSON object, got a boolean."],
+    [
+      "a file that cannot be read",
+      ["--params", "@/no/such/params.json"],
+      'sdp q: --params file "/no/such/params.json" could not be read (',
+    ],
+    ["an @ with no path", ["--params", "@"], "sdp q: --params @PATH requires a path after @."],
+    ["a missing value", ["--params"], "sdp q: --params requires a JSON object or @PATH."],
+    [
+      "a flag in place of the value",
+      ["--params", "--json"],
+      "sdp q: --params expects a JSON object or @PATH, got --json",
+    ],
+    [
+      "a second --params",
+      ["--params", "{}", "--params", "{}"],
+      "sdp q takes at most one --params.",
+    ],
+  ])(
+    "refuses %s before the body runs: exit 1, one line, nothing on stdout",
+    async (_case, args, message) => {
+      const { seen, hooks } = watchedExtraction();
+      const capture = createCaptureOutput();
+
+      const exitCode = await runQ(
+        ["return 'the body must not run'", "--root", paramsRoot, ...args],
+        capture,
+        hooks,
+      );
+
+      expect(exitCode).toBe(1);
+      expect(capture.readStdout()).toBe("");
+      expect(capture.readStderr().startsWith(message)).toBe(true);
+      expect(capture.readStderr().split("\n")).toHaveLength(2);
+      expect(seen.extracted).toBe(false);
+    },
+  );
+
+  it("refuses a file whose JSON is not an object, in one line naming the file", async () => {
+    const path = join(scratch, "null.json");
+    writeFileSync(path, "null\n");
+    const { seen, hooks } = watchedExtraction();
+    const capture = createCaptureOutput();
+
+    const exitCode = await runQ(
+      ["return 'the body must not run'", "--root", paramsRoot, "--params", `@${path}`],
+      capture,
+      hooks,
+    );
+
+    expect(exitCode).toBe(1);
+    expect(capture.readStdout()).toBe("");
+    expect(capture.readStderr()).toBe(
+      `sdp q: --params file ${JSON.stringify(path)} must be a JSON object, got null.\n`,
+    );
+    expect(seen.extracted).toBe(false);
+  });
+
+  it("refuses a file whose text is not JSON, in one line naming the file", async () => {
+    const path = join(scratch, "broken.json");
+    writeFileSync(path, '{\n  "spec": \n}\n');
+    const { seen, hooks } = watchedExtraction();
+    const capture = createCaptureOutput();
+
+    const exitCode = await runQ(
+      ["return 'the body must not run'", "--root", paramsRoot, "--params", `@${path}`],
+      capture,
+      hooks,
+    );
+
+    expect(exitCode).toBe(1);
+    expect(capture.readStdout()).toBe("");
+    const stderr = capture.readStderr();
+    expect(
+      stderr.startsWith(`sdp q: --params file ${JSON.stringify(path)} is not valid JSON (`),
+    ).toBe(true);
+    expect(stderr.endsWith(").\n")).toBe(true);
+    expect(stderr.split("\n")).toHaveLength(2);
+    expect(seen.extracted).toBe(false);
   });
 });
