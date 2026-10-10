@@ -99,7 +99,7 @@ stays the one owner of the bodies; the files are derived and checked.
 
 ### B5. Design recipes (`spec:consumers.agent-surface.design-recipes`)
 
-Five recipes, each run by the recipe test:
+Four recipes, each run by the recipe test:
 
 - 29 **Pack design**: the B2 assembly as data, the page's input for any renderer.
 - 30 **Design-change impact**: from Specs being changed, the transitive inbound dependents
@@ -108,10 +108,7 @@ Five recipes, each run by the recipe test:
 - 31 **Decision register**: every decision with its stated rung, its `supersedes` chain both ways,
   the Specs it shapes, its keyed open questions and its Packs. `DECISIONS.md` keeps the ratified
   names; the register's substance is read from the graph.
-- 32 **Example-space coverage**: per parent with an example space, each literal-union slot value
-  and the children whose bound point witnesses it; the values no child witnesses are coverage
-  gaps. Realizes the ratified terms witness and coverage gap (v0 04 §4).
-- 33 **Architecture crossings**: `uses` edges whose two ends, resolved to their components, sit in
+- 32 **Architecture crossings**: `uses` edges whose two ends, resolved to their components, sit in
   different contexts or layers. Reports, refuses nothing; a corpus gates its own rule (MD-38).
 
 ### B6. Engine provenance (`spec:consumers.engine-provenance`)
@@ -142,6 +139,7 @@ realized Spec it builds on:
 | `spec:validation.architecture-constraints` | 06 §6.4 | Declared architecture rules checked against anchored structure; MD-38's refusal as a question. |
 | `spec:validation.corpus-rules` | 06 §6.5 | Corpus-authored rules on the one validation path. |
 | `spec:observation.run-evidence` | 06 §11.2, 08 | CI run records joined to verifiers in a view, never in the graph. |
+| `spec:consumers.agent-surface.example-space-coverage` | 04 §4 | Witnesses and coverage gaps per literal slot; a recipe would need a second notation parser, so the reader may decode spaces and points instead. |
 
 ## Self-hosting repairs
 
@@ -172,7 +170,7 @@ realized Spec it builds on:
    (`src/extract`, `src/graph`), E2 Pack design and page (`src/reader`, `src/projections`), E3
    CLI (`src/cli`, build), C1 captures (`specs/`), C2 self-hosting repairs (`specs/`, `docs/`,
    `CONTEXT.md`, `AGENTS.md`), D the drift packet (read-only).
-3. **Integration.** Merge lanes; recipes 29 to 33 on B2 to B4; recipe catalog, skills and docs;
+3. **Integration.** Merge lanes; recipes 29 to 32 on B2 to B4; recipe catalog, skills and docs;
    self-hosting oracle pins re-derived and labelled re-measured; the engine's own anchors.
 4. **Gate.** `npm run check` green.
 5. **Review.** A read-only adversarial review of the branch (gpt-6-astra) and a line read
@@ -191,7 +189,7 @@ Never push without the owner's word.
   context, from the graph alone.
 - Recipe 25 over the adopter's external addresses returns each value and line, passed with
   `--params @file` and run from `dist/recipes/` as shipped.
-- Recipes 29 to 33 run as written in the recipe test.
+- Recipes 29 to 32 run as written in the recipe test.
 - `sdp --version` names the package version and build commit.
 - No v0 claim this arc captures lacks a carrying Spec; `npm run check` passes.
 
