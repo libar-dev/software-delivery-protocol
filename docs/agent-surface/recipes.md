@@ -1700,28 +1700,42 @@ const low = new Map();
 const stack = [];
 const onStack = new Set();
 const sets = [];
-const connect = (id) => {
+const visit = (id) => {
   order.set(id, order.size);
   low.set(id, order.get(id));
   stack.push(id);
   onStack.add(id);
-  for (const next of targets.get(id)) {
-    if (!order.has(next)) {
-      connect(next);
-      low.set(id, Math.min(low.get(id), low.get(next)));
-    } else if (onStack.has(next)) {
-      low.set(id, Math.min(low.get(id), order.get(next)));
+};
+const connect = (root) => {
+  visit(root);
+  const frames = [{ id: root, at: 0 }];
+  while (frames.length > 0) {
+    const frame = frames[frames.length - 1];
+    const list = targets.get(frame.id);
+    if (frame.at < list.length) {
+      const next = list[frame.at];
+      frame.at += 1;
+      if (!order.has(next)) {
+        visit(next);
+        frames.push({ id: next, at: 0 });
+      } else if (onStack.has(next)) {
+        low.set(frame.id, Math.min(low.get(frame.id), order.get(next)));
+      }
+      continue;
     }
-  }
-  if (low.get(id) === order.get(id)) {
-    const members = [];
-    let member;
-    do {
-      member = stack.pop();
-      onStack.delete(member);
-      members.push(member);
-    } while (member !== id);
-    sets.push(members.sort());
+    frames.pop();
+    if (low.get(frame.id) === order.get(frame.id)) {
+      const members = [];
+      let member;
+      do {
+        member = stack.pop();
+        onStack.delete(member);
+        members.push(member);
+      } while (member !== frame.id);
+      sets.push(members.sort());
+    }
+    const parent = frames[frames.length - 1];
+    if (parent !== undefined) low.set(parent.id, Math.min(low.get(parent.id), low.get(frame.id)));
   }
 };
 for (const id of ids) if (!order.has(id)) connect(id);
@@ -1764,7 +1778,8 @@ return {
 };
 ```
 
-The body takes no parameter and reads the whole graph. Each entry of `cycles` is a set of two or
+The body takes no parameter and reads the whole graph. The walk keeps its own frame stack, so a
+dependency chain of any length runs without recursing. Each entry of `cycles` is a set of two or
 more Specs in which each Spec reaches every other through declared `dependsOn` edges, or one Spec
 that declares `dependsOn` on itself and belongs to no such set. A Spec that reaches a set without
 being reached back belongs to none, and an edge whose target is not a Spec in the graph is
