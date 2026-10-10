@@ -238,6 +238,21 @@ specs:
   - spec:consumers.engine-provenance
   - spec:model.design-maturity
   - spec:consumers.validate-watch
+  - spec:consumers.agent-surface.example-space-coverage
+  - spec:model.planned-architecture
+  - spec:model.open-question-fields
+  - spec:model.rule-keys
+  - spec:model.relation-reasons
+  - spec:consumers.review-perspectives
+  - spec:consumers.context-bundle
+  - spec:consumers.design-diff
+  - spec:consumers.intent-composition.proposal
+  - spec:consumers.reference-projection
+  - spec:consumers.structural-mermaid
+  - spec:validation.superseded-decision-signal
+  - spec:validation.architecture-constraints
+  - spec:validation.corpus-rules
+  - spec:observation.run-evidence
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model

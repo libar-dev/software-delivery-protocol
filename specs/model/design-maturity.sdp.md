@@ -9,7 +9,7 @@ relations:
 ---
 # A Spec's design maturity, beside its readiness
 
-The original design had seven readiness stages, and its `designed` stage meant the Spec's key abstractions were settled before code (`docs/lineage/v0-design/01-core-primitives.md` §1.4 and §8). The Protocol rules four rungs, and they describe the intent, so a `defined` Spec with no design and a `defined` Spec whose interfaces are settled look the same in the graph. The owner ruled on 2026-10-10 that this arc derives design columns beside readiness and adds no rung; this Spec holds the rest of the question.
+The original design had seven readiness stages, and its `designed` stage meant the Spec's key abstractions were settled before code (`docs/lineage/v0-design/01-core-primitives.md` §1.4 and §8). The Protocol rules four rungs, and they describe the intent, so a `defined` Spec with no design and a `defined` Spec whose interfaces are settled look the same in the graph. When the design-management arc was planned, the owner ruled that it derives design columns beside readiness and adds no rung; this Spec holds the rest of the question.
 
 ## Intent
 - problem: A reviewer or an implementer cannot tell from readiness alone which Specs carry a settled design and which carry only intent, and the first adopter's owner asked for Specs whose key abstractions are designed as stubs before code.
