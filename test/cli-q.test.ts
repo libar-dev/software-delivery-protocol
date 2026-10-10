@@ -576,8 +576,8 @@ describe("sdp q --params — a recipe parameter as data", () => {
     expect(JSON.parse(capture.readStdout())).toEqual({ params: {}, isObject: true });
   });
 
-  it("passes any JSON value through unchanged", async () => {
-    for (const value of ["42", '"spec:orders.anchored-parent"', "[1,2]", "null", "true"]) {
+  it("passes any JSON object through unchanged", async () => {
+    for (const value of ["{}", '{"nested":{"list":[1,null,"x"]},"flag":false}']) {
       const capture = createCaptureOutput();
 
       const exitCode = await runQ(
@@ -621,17 +621,26 @@ describe("sdp q --params — a recipe parameter as data", () => {
       "sdp q: --params is not valid JSON (",
     ],
     ["an empty value", ["--params", ""], "sdp q: --params is not valid JSON ("],
+    ["null", ["--params", "null"], "sdp q: --params must be a JSON object, got null."],
+    ["an array", ["--params", "[1,2]"], "sdp q: --params must be a JSON object, got an array."],
+    [
+      "a string",
+      ["--params", '"spec:orders.anchored-parent"'],
+      "sdp q: --params must be a JSON object, got a string.",
+    ],
+    ["a number", ["--params", "42"], "sdp q: --params must be a JSON object, got a number."],
+    ["a boolean", ["--params", "true"], "sdp q: --params must be a JSON object, got a boolean."],
     [
       "a file that cannot be read",
       ["--params", "@/no/such/params.json"],
       'sdp q: --params file "/no/such/params.json" could not be read (',
     ],
     ["an @ with no path", ["--params", "@"], "sdp q: --params @PATH requires a path after @."],
-    ["a missing value", ["--params"], "sdp q: --params requires a JSON value or @PATH."],
+    ["a missing value", ["--params"], "sdp q: --params requires a JSON object or @PATH."],
     [
       "a flag in place of the value",
       ["--params", "--json"],
-      "sdp q: --params expects a JSON value or @PATH, got --json",
+      "sdp q: --params expects a JSON object or @PATH, got --json",
     ],
     [
       "a second --params",
@@ -657,6 +666,26 @@ describe("sdp q --params — a recipe parameter as data", () => {
       expect(seen.extracted).toBe(false);
     },
   );
+
+  it("refuses a file whose JSON is not an object, in one line naming the file", async () => {
+    const path = join(scratch, "null.json");
+    writeFileSync(path, "null\n");
+    const { seen, hooks } = watchedExtraction();
+    const capture = createCaptureOutput();
+
+    const exitCode = await runQ(
+      ["return 'the body must not run'", "--root", paramsRoot, "--params", `@${path}`],
+      capture,
+      hooks,
+    );
+
+    expect(exitCode).toBe(1);
+    expect(capture.readStdout()).toBe("");
+    expect(capture.readStderr()).toBe(
+      `sdp q: --params file ${JSON.stringify(path)} must be a JSON object, got null.\n`,
+    );
+    expect(seen.extracted).toBe(false);
+  });
 
   it("refuses a file whose text is not JSON, in one line naming the file", async () => {
     const path = join(scratch, "broken.json");

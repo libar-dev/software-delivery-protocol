@@ -186,8 +186,8 @@ Four bindings are injected:
 - `g` — the reader over the derived graph (the same `createReader` the package exports)
 - `graph` — the raw graph schema (nodes, edges, claims)
 - `report` — the validation report, so findings are queryable data, never a gate
-- `params` — the JSON value `--params` supplies, or `{}` without it; a value that is not JSON or
-  a file that cannot be read is refused before the body runs
+- `params` — the JSON object `--params` supplies, or `{}` without it; a value that is not a JSON
+  object, or a file that cannot be read, is refused before the body runs
 
 Body rules: a plain JavaScript **async function body**. No `import`/`export`, no TypeScript-only
 syntax; `await` is fine. `return` is the machine output contract, but `sdp q` does not suppress

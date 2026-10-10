@@ -46,8 +46,9 @@ pnpm --silent sdp:q '<body>' --params @params.json --json
 is `{}` and the body falls back to the sample on its opening line. The samples name *this*
 repository's corpus, so every body runs as written here (the recipe check executes each one
 unchanged). A Spec id, component id, or Pack id absent from the graph returns `found: false`
-rather than failing. A value that is not JSON, or a file that cannot be read, is refused before
-the body runs.
+rather than failing. A value that is not JSON, JSON that is not an object (null, an array, a
+string, a number or a boolean), or a file that cannot be read is refused before the body runs,
+with exit 1 and one line on stderr.
 
 **Every body ships as a file.** The build writes each body below to
 `dist/recipes/<NN>-<slug>.js`, where `NN` is the two-digit recipe number and the slug is the
@@ -71,7 +72,7 @@ you supply; `return` is the output contract. Four bindings are injected:
 | `g` | the reader over the derived graph — the same `createReader` the package exports |
 | `graph` | the raw graph schema object (nodes, edges, claims) |
 | `report` | the validation report, so honesty findings are queryable data and never a gate |
-| `params` | the JSON value `--params` supplies, or `{}` without it; input to the body, never a verb |
+| `params` | the JSON object `--params` supplies, or `{}` without it; input to the body, never a verb |
 
 **Body rules.** A body is a plain JavaScript async function body — no `import`/`export`, no
 TypeScript-only syntax. It may `await`. Default output is bounded `util.inspect`; `--json` prints

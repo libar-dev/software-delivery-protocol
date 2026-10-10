@@ -691,7 +691,7 @@ export const modelSpecs = [
           },
           {
             question:
-              "Once code exists, what does the comparison report: a planned component with no anchor, an anchored component no design names, a layer or context that differs, a `uses` edge the design does not name? Recipe 33, architecture crossings, already joins the same anchored data.",
+              "Once code exists, what does the comparison report: a planned component with no anchor, an anchored component no design names, a layer or context that differs, a `uses` edge the design does not name? Recipe 32, architecture crossings, already joins the same anchored data.",
             blocking: false,
             key: "realizationComparison",
           },

@@ -336,6 +336,41 @@ const registerRecipesTestAnchor = specTest({
 });
 void registerRecipesTestAnchor;
 describe("the agent-surface recipe corpus", () => {
+  // A Spec that cites a recipe by number and heading, as "Recipe 32, architecture crossings," or
+  // "architecture crossings (recipe 32)", names the heading the catalog gives that number.
+  it("cites each recipe that a Spec names by number and heading under the catalog's number", () => {
+    const headings = recipes.map((recipe) => ({
+      ordinal: recipe.ordinal,
+      heading: recipe.title.toLowerCase(),
+    }));
+    const citations: { spec: string; cited: number; named: number }[] = [];
+
+    for (const node of derived.graph.nodes) {
+      if (node.nodeType !== "Primitive") continue;
+
+      const text = `${node.narrative ?? ""}\n${JSON.stringify(node.sections ?? {})}`;
+      for (const match of text.matchAll(/\brecipe (\d+), ([^,.;:()"\n]+)/giu)) {
+        const named = headings.find((entry) =>
+          (match[2] ?? "").toLowerCase().startsWith(entry.heading),
+        );
+        if (named !== undefined) {
+          citations.push({ spec: node.id, cited: Number(match[1]), named: named.ordinal });
+        }
+      }
+      for (const match of text.matchAll(/([\p{L}\p{N} -]+) \(recipe (\d+)\)/giu)) {
+        const named = headings.find((entry) =>
+          (match[1] ?? "").toLowerCase().endsWith(entry.heading),
+        );
+        if (named !== undefined) {
+          citations.push({ spec: node.id, cited: Number(match[2]), named: named.ordinal });
+        }
+      }
+    }
+
+    expect(citations.length).toBeGreaterThan(0);
+    expect(citations.filter((citation) => citation.cited !== citation.named)).toEqual([]);
+  });
+
   // Given: the catalog as authored. When: its structure is read. Then: every documented recipe
   // carries exactly one runnable body, so a new recipe cannot dodge the check by omitting one.
   it("pairs every documented recipe with exactly one fenced body", () => {

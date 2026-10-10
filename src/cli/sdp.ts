@@ -91,10 +91,10 @@ Commands:
              contract. Four bindings are injected: \`g\`, the reader over the derived graph (the
              same createReader the package exports); \`graph\`, the raw graph schema object;
              \`report\`, the validation report, so honesty findings are queryable data rather than a
-             gate — checks never gate the read path; and \`params\`, the JSON value --params
+             gate — checks never gate the read path; and \`params\`, the JSON object --params
              supplies, or {} without it. --params takes the JSON inline or, as @PATH, a file
-             holding it; a value that is not JSON or a file that cannot be read refuses before the
-             body runs. A recipe reads its parameter from \`params\` and falls back to the
+             holding it; a value that is not a JSON object or a file that cannot be read refuses
+             before the body runs. A recipe reads its parameter from \`params\` and falls back to the
              catalog's sample. The graph is derived on every invocation, so a
              just-authored Spec is queryable immediately and no committed artifact answers in the
              graph's name; nothing is written anywhere. Output is bounded util.inspect (depth 4);

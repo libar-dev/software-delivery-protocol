@@ -50,8 +50,8 @@ export interface QueryArgs {
   /** `undefined` means "not supplied on argv" — stdin decides whether that is a body or a refusal. */
   readonly body: string | undefined;
   readonly json: boolean;
-  /** The JSON value `--params` supplied, already parsed, or `{}` without the flag. */
-  readonly params: unknown;
+  /** The JSON object `--params` supplied, already parsed, or `{}` without the flag. */
+  readonly params: Readonly<Record<string, unknown>>;
 }
 
 export interface QueryHooks {
@@ -110,13 +110,21 @@ const queryParamsAnchor = codeAnchor({
 });
 void queryParamsAnchor;
 
+/** How a refusal names a parsed JSON value that is not an object. */
+function jsonKind(value: unknown): string {
+  return value === null ? "null" : Array.isArray(value) ? "an array" : `a ${typeof value}`;
+}
+
 /**
- * `--params` carries a recipe's parameter as data, never as body source: a JSON value inline, or
+ * `--params` carries a recipe's parameter as data, never as body source: a JSON object inline, or
  * `@PATH` naming a file, resolved from the working directory, that holds one. It is read and parsed
- * here, before the graph derives, so a value that is not JSON or a file that cannot be read refuses
- * the invocation before the body could run.
+ * here, before the graph derives, so a value that is not JSON, JSON that is not an object, or a
+ * file that cannot be read refuses the invocation before the body could run.
  */
-function readParams(value: string, output: CliOutput): { readonly params: unknown } | undefined {
+function readParams(
+  value: string,
+  output: CliOutput,
+): { readonly params: Readonly<Record<string, unknown>> } | undefined {
   let text = value;
   let source = "--params";
 
@@ -142,12 +150,21 @@ function readParams(value: string, output: CliOutput): { readonly params: unknow
     }
   }
 
+  let parsed: unknown;
+
   try {
-    return { params: JSON.parse(text) as unknown };
+    parsed = JSON.parse(text) as unknown;
   } catch (error) {
     writeStderr(output, `sdp q: ${source} is not valid JSON (${oneLine(errorMessage(error))}).\n`);
     return undefined;
   }
+
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    writeStderr(output, `sdp q: ${source} must be a JSON object, got ${jsonKind(parsed)}.\n`);
+    return undefined;
+  }
+
+  return { params: parsed as Readonly<Record<string, unknown>> };
 }
 
 export function parseQueryArgs(args: readonly string[], output: CliOutput): QueryArgs | undefined {
@@ -201,12 +218,12 @@ export function parseQueryArgs(args: readonly string[], output: CliOutput): Quer
       const value = args[index + 1];
 
       if (value === undefined) {
-        writeStderr(output, "sdp q: --params requires a JSON value or @PATH.\n");
+        writeStderr(output, "sdp q: --params requires a JSON object or @PATH.\n");
         return undefined;
       }
 
       if (value.startsWith("--")) {
-        writeStderr(output, `sdp q: --params expects a JSON value or @PATH, got ${value}\n`);
+        writeStderr(output, `sdp q: --params expects a JSON object or @PATH, got ${value}\n`);
         return undefined;
       }
 

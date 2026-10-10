@@ -26,7 +26,7 @@ The first adopter's agents already write proposals in that shape. A design pass 
 - [non-blocking #batchProposals] Is a proposal one change, or may it hold several changes to several Specs that land together or not at all?
 
 ## Contract
-- A proposal names its scope as one or more Spec ids or entry addresses, each resolved by address resolution before anything is applied.
+- A proposal names its scope as one or more Spec ids or entry addresses, each resolved before anything is applied: a Spec id through the reader's Spec context, an entry address through address resolution.
 - A proposal names the commit whose graph it was read against.
 - A proposal states the requested change in words an agent can apply, such as the exact text for an entry with the address it replaces or follows, a new open question with its flag, or a relation to declare or remove.
 - A proposal states its reason in one line.
