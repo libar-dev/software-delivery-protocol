@@ -65,7 +65,7 @@
       "file": "specs/history-posture.sdp.md",
       "sections": {
         "intent": {
-          "outcome": "Code written against the posture says so through references, never satisfies."
+          "outcome": "Code that answers to the posture says so through references, never satisfies."
         },
         "decision": {
           "decision": "The read model is rebuilt from history, never patched in place."

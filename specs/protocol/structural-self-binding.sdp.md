@@ -21,4 +21,4 @@ relations:
 - rule: The accepted set of architecturally significant units is an owner-reviewed declaration recorded in the self-hosting oracle, never derived from imports or exports; the suite census-checks that every accepted unit carries its declared membership and that no unrostered membership edge exists.
 - rule: Every engine `component:` anchor declares its `layer` and its `context`.
 - rule: Every architecturally significant engine unit carries a `role`.
-- rule: An engine unit references the decisions and designs it answers to through `references`, never through `satisfies`; a Spec Studio design that builds on engine code states that by its own `dependsOn` or `refines` to the Spec the code satisfies, never by a reference from the unit.
+- rule: An engine unit references the decisions it follows, and the designs it answers to without wholly realizing them, through `references`; it satisfies only a Spec it wholly realizes, never a decision; a Spec Studio design that builds on engine code states that by its own `dependsOn` or `refines` to the Spec the code satisfies, never by a reference from the unit.

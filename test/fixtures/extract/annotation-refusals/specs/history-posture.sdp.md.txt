@@ -8,7 +8,7 @@ relations: {}
 # The history posture
 
 ## Intent
-- outcome: Code written against the posture says so through references, never satisfies.
+- outcome: Code that answers to the posture says so through references, never satisfies.
 
 ## Decision
 - decision: The read model is rebuilt from history, never patched in place.

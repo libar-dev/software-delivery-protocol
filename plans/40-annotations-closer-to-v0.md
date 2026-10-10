@@ -215,9 +215,9 @@ the census counts units apart from edges. Pins are re-derived at close and label
 Re-pin the package to this branch. Move the test-resident implementation anchors into `src/` as
 comment-form anchors at their real sites: one identity per realizing unit, so an identity that
 stood for several files becomes several identities, each choosing `satisfies` or `references`
-honestly, and every source-file-to-Spec association the sidecar recorded stays discoverable
-through `byFile` before the sidecar is deleted. Then delete `design/tools/anchor-sites.json`,
-its test, and the Pack page's reading of it. Declare `component:` anchors with layer and
+honestly. Keep only honest bindings and re-measure the file-to-Spec pairs they yield; the
+sidecar is historical evidence, never an acceptance list (R10). Then delete
+`design/tools/anchor-sites.json`, its test, and the Pack page's reading of it. Declare `component:` anchors with layer and
 context from a reviewed mapping, and `uses` between them. Give significant units a role. Add `references` only where a
 unit answers to a design it does not wholly realize; the rulings of 2026-10-10 (R1, R2, R10) set
 the per-Spec pass. Let the Pack page and
@@ -242,8 +242,8 @@ close commit. Never push without the owner's word.
 - A `references` edge reaches a Spec page and recipe 27 without conferring `implemented`.
 - Recipe 27 over `pack:spec-studio-v1` prints one row per member with its state.
 - The census prints the role, layer and context taxonomy from the graph alone.
-- Every file-to-Spec pair the adopter's sidecar listed is returned by `byFile` after the sidecar
-  is gone.
+- The adopter's `byFile` coverage test pins the file-to-Spec pairs its honest anchors yield,
+  re-measured after the sidecar is gone; no pair is kept because the sidecar listed it (R10).
 - `npm run check` passes; the adopter's lint, typecheck, tests and `python3 design/tools/check.py`
   pass, so the comment form costs its runtime nothing.
 
@@ -313,10 +313,11 @@ their own, apart from R1 to R3 above.
 - **R2. Anchor targets name whole Specs.** `#entryAddressTargets` closes with an entry-address
   target refused: a per-entry `implemented` is the partial-realization fact under another name,
   and a design key is renamed freely. The adopter runs a per-Spec pass over its twelve Specs with
-  designed-but-unbuilt parts, and over each component with its members. With no unrealized Design
-  entry, `satisfies` stays. A coherent part with its own trigger or step splits into a child Spec
-  that refines the parent, and the parent keeps `satisfies`. Anything else becomes `references`
-  until the code realizes what the Spec promises. Unanimous.
+  designed-but-unbuilt parts, and over each component with its members. With no unrealized
+  promise, whether a Design entry or a rule, flow, or contract entry the Spec states, `satisfies`
+  stays. A coherent part with its own trigger or step splits into a child Spec that refines the
+  parent, and the parent is read again before it keeps `satisfies`. Anything else becomes
+  `references` until the code realizes what the Spec promises. Unanimous.
 - **R3. Roles stay a free, corpus-owned vocabulary.** `#roleVocabulary` closes as a refused
   alternative: a corpus-declared vocabulary checked by a validator is an authored registry and a
   content-quality check. Two spellings of one role are reconciled by editing the anchors.
@@ -331,8 +332,10 @@ their own, apart from R1 to R3 above.
 - **R6. The adopter's contexts stay, and the isolation is checked.** `platform` stays on the seven
   platform components. `orders` and `inventory` stay on the example's domain and context
   components, `orders-inventory` on the parent composition. The adopter's
-  `design/tools/check.py` fails when a `platform` component `uses` a component in another
-  context. Two advisors would have dropped `platform` under the adopter's narrower glossary; the
+  `design/tools/check.py` fails when a `uses` edge runs from a `platform` component, or a member
+  of one, to a unit in another context: each endpoint resolves to its component, directly or
+  through `memberOf`, before the contexts are compared. The check reads the declared `uses` edges,
+  not imports. Two advisors would have dropped `platform` under the adopter's narrower glossary; the
   owner's statement that the platform is the key context settles it.
 - **R7. `example/` is architecture.** Its five components stay; `fixture/` stays without
   components. Unanimous.
@@ -352,3 +355,28 @@ Sequence: the Protocol side (R1 to R4, R8, R9, R10) lands as one change on
 `feature/annotations-v0`, with the self-binding, recipes, oracle, and goldens, and passes the full
 gate. The adopter then re-pins and applies R1, R2, R5 to R8, and R10 on its branch. After PR 29
 merges, the adopter re-pins to the merge commit.
+
+Review. An independent read of the rulings as landed (gpt-6-astra, read-only, `69113ff..52e8bea`)
+raised seven findings, two of them holds.
+
+- Applied (hold). The authoring skill's `satisfies` checklist read only Design entries. It now
+  reads every promise a Spec carries, Design section or not, and reads a parent again after a
+  split before it keeps `satisfies`. R2's record above says the same.
+- Applied (hold). The adopter showcase and its acceptance line still kept every sidecar pair
+  reachable through `byFile`, which R10 replaced. Both now pin the pairs the honest anchors
+  yield.
+- Applied. The self-binding rule on `references` now separates the decisions a unit follows and
+  the designs it answers to without wholly realizing them from a Spec it wholly realizes, which it
+  satisfies.
+- Declined. The entry-address alternative on the binding grain gives one rationale for both
+  target kinds, though a `references` target confers no `implemented`, and says a keyed binding
+  breaks "on every design edit" where only a removed or renamed key breaks it. R2 quotes that
+  sentence, so it stands as ruled; a sharper wording is an owner item.
+- Applied. The architectural-annotation decision refused negative constraints as "a
+  machine-enforced graph finding", while R6 asks the adopter's gate to enforce one. The
+  consequence now scopes the refusal to the Protocol's validators and leaves a corpus its own
+  gate, as R3's alternative already does for roles. It adds no ruling.
+- Applied. R6's check compared only component-to-component `uses`. The record above resolves
+  each endpoint to its component, directly or through `memberOf`, before comparing contexts.
+- Applied. Two fixture carriers, their golden, and a recipe test label still read "written
+  against". They now read "answers to", and the golden was regenerated from its corpus.

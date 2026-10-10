@@ -317,15 +317,17 @@ code that already exists, the design says so with `dependsOn` or `refines` to th
 satisfies. The existing code gets no reference to the new design.
 
 Targets name whole Specs; an entry address is never a target. To choose between `satisfies` and
-`references` for one Spec, list the Design entries no satisfying unit realizes:
+`references` for one Spec, list what the Spec promises that no satisfying unit realizes. Read every
+promise it carries, not only its Design entries: a rule, a flow, a contract entry, a UI entry, or a
+constraint promises as much, and a Spec without a Design section still promises.
 
 - None: keep `satisfies`.
 - A coherent part with its own trigger or step: split it into a child Spec that refines the
-  parent, and keep `satisfies` on the parent.
+  parent, then run the pass again on what the parent still promises before it keeps `satisfies`.
 - Anything else: write `references` until the code realizes what the Spec promises.
 
-Never write a whole-Spec `satisfies` over a promised entry no unit builds. Apply the same pass to
-a component and its members together.
+Never write a whole-Spec `satisfies` over a promise no unit builds. Apply the same pass to a
+component and its members together.
 
 Write a reference for the design relationship it names. A reference added to make a test pass,
 move a count, or give `byFile` an answer does not belong; remove it. Never point `satisfies` at

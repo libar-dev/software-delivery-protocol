@@ -3603,7 +3603,7 @@ function referenceProbe(): {
     id: "impl:probe.studio-reader",
     nodeType: "CodeNode",
     claim: "anchored",
-    label: "written against the Studio design",
+    label: "answers to the Studio design",
     file: "src/probe/studio-reader.ts",
     line: 1,
     role: "probe-role",
