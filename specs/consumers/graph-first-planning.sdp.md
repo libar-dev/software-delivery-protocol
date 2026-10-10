@@ -15,7 +15,7 @@ relations:
 
 ### Open questions
 
-- [blocking] How does an arc boundary stay legible in the graph (a Pack, a relation cluster, a naming convention) without minting a workflow gate or an authored delivery fact? Evidence note: the briefs-index register's rows landed in four homes: tradeoff refusals on `decision`-kind Specs, existing behavior guarantees on their carrying Specs, holds as blocking open questions, and a lawful non-decision in the plan record; that split is observed evidence for this question, not a ruling on arc-boundary representation.
+- [blocking #arcBoundary] How does an arc boundary stay legible in the graph (a Pack, a relation cluster, a naming convention) without minting a workflow gate or an authored delivery fact? Evidence note: the briefs-index register's rows landed in four homes: tradeoff refusals on `decision`-kind Specs, existing behavior guarantees on their carrying Specs, holds as blocking open questions, and a lawful non-decision in the plan record; that split is observed evidence for this question, not a ruling on arc-boundary representation. Further evidence: two arcs are authored as Packs, `pack:spec-studio-v1` and `pack:design-management-v1`, each listing its Specs in reading order, and the first adopter reads each capability it designs as a Pack; that too is evidence for this question, not a ruling.
 
 ## Behavior
 

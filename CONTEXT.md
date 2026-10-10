@@ -59,7 +59,7 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 | **section** | the typed, optional detail-slice of a `Spec` — the **extension surface**; one concern each: `intent` · `behavior` · `constraints` · `model` · `design` · `decision` · `verification` · `ui` | "Facet" · "aspect" |
 | **section ⟷ kind duality** | `constraints`/`model`/`decision` — and `behavior.rules`/`behavior.examples` vs the `rule`/`example` kinds — have a `kind` twin: keep **inline** when local detail; **promote** to a standalone `Spec` when shared or needing its own identity/lifecycle/review. **Sections carry content, relations carry linkage** (never a ref inside a section); **promotion is exclusive** (inline XOR promoted — content moves out, MD-10) | — |
 
-## The other authored things  (no system truth — → `spec:model.pack-aggregate`, `04` §2)
+## The other authored things  (no system truth — → `spec:model.pack-aggregate`, `spec:model.anchors`)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
@@ -241,6 +241,38 @@ delivery fact, workflow state, or graph state.
   and checked in prose by `spec:validation.prose-mentions`, which is implemented
   and still states `defined` (aliases to avoid: "anchor", reserved for the in-code binding ·
   "fragment" · "sub-id").
+- **Candidate vocabulary from the design-management arc (plan 41)**, terms the owner ratifies; until
+  then they stay out of the tables and the term ledger. **question key**: the optional lower-camel
+  key an open question carries in its marker, as in `[blocking #arcBoundary]`, unique in its Spec,
+  which gives the question the entry address `spec:<id>#question.<key>`
+  (`spec:model.open-question-keys`) (aliases to avoid: "question id" · "anchor"). **stated next
+  rung**: the rung above a Spec's stated rung, with the floor clauses that keep the floor from
+  reaching it; empty clauses mean the rung waits for its author, never a promotion. It differs from
+  the floor's next rung, the rung above the floor reached, which promotion preflight (recipe 9)
+  reports (`spec:consumers.pack-design`) (aliases to avoid: "next rung" alone · "target rung").
+  **design columns**: the counts and lists derived for a Pack member beside its readiness, its
+  keyed Design and UI entries, pinned declarations, open and blocking questions, and the decisions
+  it names; never a score or a rung (`spec:model.design-maturity`) (aliases to avoid: "design
+  score" · "designed", the original design's stage). **Pack design**: the reader's per-Pack
+  assembly of each member's stated next rung, design columns and code bindings, with the Pack's
+  boundary; the Design Review's Pack page renders it (`spec:consumers.pack-design`) (aliases to
+  avoid: "Pack page", which names the rendering · "capability page"). **boundary**: the Specs
+  outside a Pack joined to a member by an authored relation; the Pack **rests on** a Spec a member
+  names by `refines`, `dependsOn`, `constrainedBy` or `decidedBy`, and is **rested on by** a Spec
+  that relates to a member by any authored relation (aliases to avoid: "outside dependencies" ·
+  "perimeter"). **location table**: the graph's table, beside its nodes and edges, of the source
+  line of every keyed Design and UI entry and every open question; a location is never an identity
+  or a binding target (`spec:extraction.entry-locations`) (aliases to avoid: "source map" · "entry
+  anchor"). **recipe parameter**: the input a caller passes a recipe as data through
+  `sdp q --params`, read by the body from `params` with the catalog's sample as its fallback
+  (`spec:consumers.agent-surface.recipe-parameters`) (aliases to avoid: "argument" · "recipe
+  flag"). **pinned declaration**: a keyed Design entry whose value opens with a code span, stating
+  one signature, type, validator or table a derived module can hold code to; recipe 24 lists them
+  (`spec:extraction.contract-declarations`) (aliases to avoid: "pin" alone · "stub"). **dependency
+  cycle**: a set of two or more Specs in which each reaches every other through declared
+  `dependsOn` edges, or a Spec that declares `dependsOn` on itself; recipe 26 reports each and
+  nothing refuses it (`spec:consumers.agent-surface.address-and-cycle-recipes`) (aliases to
+  avoid: "circular dependency" · "loop").
 - ~~Candidate vocabulary from the executable-spec exploration: *notation* · *carrier*~~ — **ratified
   by the carrier ruling (MD-18)**; see **The authoring carrier** above. The rest
   of the exploration's candidates ratified with their referents at the plan-12 session — see **The

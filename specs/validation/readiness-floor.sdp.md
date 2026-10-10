@@ -16,7 +16,7 @@ relations:
 - outcome: Refuse maturity claims that their authored evidence does not support.
 
 ### Open questions
-- [non-blocking] Does any remaining law in the src/validate/readiness-floor.ts file header promote here under comment promotion?
+- [non-blocking #headerLawPromotion] Does any remaining law in the src/validate/readiness-floor.ts file header promote here under comment promotion?
 
 ## Rule
 - A Spec may state a readiness only when every clause in that readiness floor passes.

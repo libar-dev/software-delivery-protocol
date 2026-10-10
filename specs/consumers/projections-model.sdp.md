@@ -13,7 +13,7 @@ relations:
 - outcome: Give agents and humans consumer-specific views while preserving the repository as the only canonical source.
 
 ### Open questions
-- [non-blocking] Does the pure-projection binding-language law stated in src/projections/design-review.ts commentary promote here or to a story-altitude child under comment promotion?
+- [non-blocking #bindingLanguagePromotion] Does the pure-projection binding-language law stated in src/projections/design-review.ts commentary promote here or to a story-altitude child under comment promotion?
 
 ## Model
 - **projection** — A pure, disposable, regenerable function of the graph that produces a consumer artifact without becoming a second source of truth.

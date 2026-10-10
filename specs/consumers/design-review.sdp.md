@@ -25,7 +25,7 @@ relations:
 The generated Design Review exposes three page anatomies from the same graph.
 
 - specPage: A Spec page presents descriptors, readiness, relations, bindings, authored sections, and findings in one context.
-- packPage: A Pack page presents framing, model references, and a member table in the manifest's authored order with each member's kind, altitude, readiness, and implementation and verifier bindings.
+- packPage: A Pack page presents the Pack's design as its child `spec:consumers.design-review.pack-design-page` states.
 - indexPage: The index presents one sortable-style Markdown table for Specs and a linked bullet list for Packs, with stable links into their detail pages.
 
 ## Example space

@@ -226,6 +226,18 @@ specs:
   - spec:decisions.studio-web-components
   - spec:consumers.spec-studio.responsive
   - spec:consumers.spec-studio.sharing
+  - spec:decisions.anchor-comment-form
+  - spec:decisions.anchor-binding-grain
+  - spec:decisions.architectural-annotation
+  - spec:decisions.pack-design-page
+  - spec:consumers.pack-design
+  - spec:consumers.design-review.pack-design-page
+  - spec:extraction.entry-locations
+  - spec:consumers.agent-surface.recipe-parameters
+  - spec:consumers.agent-surface.design-recipes
+  - spec:consumers.engine-provenance
+  - spec:model.design-maturity
+  - spec:consumers.validate-watch
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model

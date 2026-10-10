@@ -70,7 +70,7 @@ Deferred deliberately; recorded so they are not lost. None blocks the MVP.
 
 - **Derived-readiness banner timing (resolved, recorded here for traceability).** Floor enforcement and the banner both ship in the MVP: the Design Review renders stated readiness beside the structurally-reached floor and names the first unmet clause — cheaply, because the floor evaluator reports which clause fails. *(`spec:consumers.derived-readiness-banner`, `spec:validation.readiness-floor`.)*
 - **Impact-graph depth (resolved, recorded here for traceability).** The boundary is decided, not open: **file-level** impact ships in the MVP (`git diff` → `byFile` → a curated-graph walk gives changeset blast-radius with no symbol index, surfacing an explicit `coverage-unknown` item for any changed file that has no anchor so a too-small set is never mistaken for complete), while the **exhaustive** impact graph — `bySymbol`, symbol-level identity, cross-package find-all-usages, drift/fan-in tooling — is deferred (Iterate). What remains genuinely open is only *when* the exhaustive graph earns its way in, driven by measured pain (§5), never the MVP boundary itself. *(`06` §2.)*
-- **Inline-vs-centralized anchor semantics.** Anchors carry no intent in the MVP. How much *structural* semantics an anchor may carry beyond the landed binding contract (`id` · optional `label` · one `satisfies`/`verifies` target) — e.g. a future `component`/`implements` — is left configurable later. *(`04` §2.)*
+- **Inline-vs-centralized anchor semantics (resolved, recorded here for traceability).** Anchors still carry no intent, and the structure they may carry is ruled. `satisfies` is optional and plural, `verifies` is plural, and `references` names a design the code answers to (the binding-grain ruling, MD-37). `component` and `uses` stay, and a code anchor may add a `role`, a component anchor a `layer` and a `context` (the architectural-annotation ruling, MD-38, which supersedes MD-30 and MD-34). No `implements` field is admitted. *(`spec:model.anchors`.)*
 - **Graph-DB timing.** File-based until measured traversal pain; the schema is designed to map to a property graph later. *(`spec:extraction.regenerability`.)*
 - **Trace-link recovery.** Permitted later only as an assistive *suggestion* engine (the impact graph's "propose candidates" assist role), never a declared edge — bounded permanently by P10. *(`01`, `06` §2.)*
 - **When (if ever) harnesses / evidence become CORE** (the Gherkin half is answered — MD-27 admits graph-aware Gherkin for behavior and example Specs, MD-28 settles `.sdp.gherkin`; harnesses remain open). Driven by measured pain after the MVP loop holds, not by the roadmap.
@@ -98,10 +98,11 @@ the standing invariant plus where its protection lives.
 - **① Authoring ergonomics — the headline forward risk.** If authoring feels heavy, authors (human **and**
   agent) avoid the system or overfit specs to satisfy tooling. Two levers ship in the MVP: **typed sections**
   (autocomplete + shape guardrails — the typing law, MD-11) and the one diagnostic rendering rule (location
-  rendered from the finding's structured fields; first contact fails clean — §1, Slice 5). The remaining
-  levers are genuinely forward-looking: `sdp validate --watch`; later `sdp new spec` / `sdp explain` (below
-  the second-caller bar, `06` §3). Threads back to the anti-padding rule: make *dishonesty* fail without
-  rewarding low-signal filler (a floor to clear, never a quota to fill).
+  rendered from the finding's structured fields; first contact fails clean — §1, Slice 5). Two more levers
+  shipped with plan 35: `sdp new spec` writes the idea-rung carrier (`spec:consumers.authoring-on-ramp`),
+  and `sdp validate --watch` re-runs validation on every carrier edit (`spec:consumers.validate-watch`).
+  `sdp explain` stays below the second-caller bar (`06` §3). Threads back to the anti-padding rule: make
+  *dishonesty* fail without rewarding low-signal filler (a floor to clear, never a quota to fill).
 - **② A golden correctness oracle, kept distinct from the determinism self-checks.** Both exist, labeled
   distinctly, never conflated. The **correctness oracle** — "did the extractor produce the *right* graph" —
   is the committed golden fixture: `test/fixtures/checkout-v1/expected-graph.json` plus the

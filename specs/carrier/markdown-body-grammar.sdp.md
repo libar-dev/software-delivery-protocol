@@ -6,6 +6,7 @@ readiness: defined
 relations:
   refines: spec:carrier.markdown-authoring
   dependsOn: spec:carrier.slot-notation
+  constrainedBy: spec:validation.authored-honesty
   decidedBy:
     - spec:decisions.carrier-ruling
     - spec:decisions.prose-ownership
@@ -17,7 +18,7 @@ relations:
 - outcome: State what each section of a Markdown Spec body accepts and refuses, so an author can write a lawful carrier from this Spec alone.
 
 ### Open questions
-- [non-blocking] The Markdown carrier admits one constraint entry per Spec; the TypeScript model and carrier admit several, and the kind-evidence law reads every entry. The owner's ruling makes one entry the law across carriers. Two reviewers contest it: a `constrainedBy` edge points at one Spec and says nothing about how many entries that Spec holds, and the narrowing would force a Spec with two bounds to promote or bundle them. The revision stays unlanded until that cost is weighed.
+- [non-blocking #constraintEntryCount] The Markdown carrier admits one constraint entry per Spec; the TypeScript model and carrier admit several, and the kind-evidence law reads every entry. The owner's ruling makes one entry the law across carriers. Two reviewers contest it: a `constrainedBy` edge points at one Spec and says nothing about how many entries that Spec holds, and the narrowing would force a Spec with two bounds to promote or bundle them. The revision stays unlanded until that cost is weighed.
 
 ## Behavior
 - rule: The body opens with one H1 title. Text between the title and the first H2 is the Spec's narrative, and narrative accepts plain paragraphs only.

@@ -12,7 +12,7 @@ relations:
 - outcome: Keep a Spec useful after implementation without recreating value-transfer duplication.
 
 ### Open questions
-- [blocking] After implementation, which design-time detail stays in the Spec and which detail may be removed while preserving one durable home for each explanation?
+- [blocking #detailAfterImplementation] After implementation, which design-time detail stays in the Spec and which detail may be removed while preserving one durable home for each explanation?
 
 ## Model
 - **enrichment lifecycle** — The same Spec gains and may later slim typed detail without changing identity or moving truth into another artifact type.

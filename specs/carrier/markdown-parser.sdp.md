@@ -6,6 +6,7 @@ readiness: ready
 relations:
   refines: spec:carrier.markdown-authoring
   dependsOn: spec:carrier.envelope-contract
+  constrainedBy: spec:carrier.inline-code-spans
 ---
 # The product parser reifies the ruled Markdown subset
 
