@@ -1185,3 +1185,123 @@ export const invalid = spec({ id: specId("spec:carrier.invalid-prose"), title: "
     expect(result.findings[0]).toMatchObject({ validatorId, line });
   });
 });
+
+describe("open question keys in the Markdown marker", () => {
+  function questionsCarrier(...questions: readonly string[]): string {
+    return carrierBody(
+      `# Title\n## Intent\n- outcome: Key the questions.\n\n### Open questions\n${questions.join("\n")}`,
+    );
+  }
+
+  // The carrier body opens at line 8; the first question sits at line 13.
+  const firstQuestionLine = 13;
+
+  it("reads a key after the flag and leaves an unkeyed question without one", () => {
+    const result = reify(
+      questionsCarrier(
+        "- [blocking #aggregateReach] Does the owner widen the aggregate?",
+        "- [non-blocking] Is the name final?",
+        "- [non-blocking #description] Is description an ordinary key?",
+      ),
+    );
+
+    expect(result.findings).toEqual([]);
+    expect(result.specs[0]?.data.intent).toEqual({
+      outcome: "Key the questions.",
+      openQuestions: [
+        { question: "Does the owner widen the aggregate?", blocking: true, key: "aggregateReach" },
+        { question: "Is the name final?", blocking: false },
+        { question: "Is description an ordinary key?", blocking: false, key: "description" },
+      ],
+    });
+    expect(Object.hasOwn(asQuestions(result)[1] ?? {}, "key")).toBe(false);
+  });
+
+  it.each([
+    ["an upper-case first letter", "AggregateReach"],
+    ["an empty key", ""],
+    ["a hyphen", "aggregate-reach"],
+    ["a digit first", "1st"],
+    ["a space inside", "aggregate reach"],
+    ["a non-ASCII letter", "café"],
+  ])("refuses the carrier whole on a key with %s", (_name, key) => {
+    const result = reify(
+      questionsCarrier("- [non-blocking] Is the name final?", `- [blocking #${key}] Text?`),
+    );
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings).toEqual([
+      expect.objectContaining({
+        validatorId: "extract/invalid-markdown-structure",
+        severity: "error",
+        line: firstQuestionLine + 1,
+        message: "open question keys must be lower-camel ASCII",
+      }),
+    ]);
+  });
+
+  it("refuses the carrier whole on a key an earlier question of the Spec carries", () => {
+    const result = reify(
+      questionsCarrier(
+        "- [blocking #aggregateReach] Does the owner widen the aggregate?",
+        "- [non-blocking] Is the name final?",
+        "- [non-blocking #aggregateReach] Does the aggregate keep its name?",
+      ),
+    );
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings).toEqual([
+      expect.objectContaining({
+        validatorId: "extract/invalid-markdown-structure",
+        severity: "error",
+        line: firstQuestionLine + 2,
+        message: "open question keys must be unique",
+      }),
+    ]);
+  });
+
+  it("keeps distinct keys that differ only in case", () => {
+    const result = reify(
+      questionsCarrier("- [blocking #pageHome] Where?", "- [non-blocking #pagehome] Which?"),
+    );
+
+    expect(result.findings).toEqual([]);
+    expect(asQuestions(result).map((question) => question.key)).toEqual(["pageHome", "pagehome"]);
+  });
+
+  it.each([
+    ["no space before the hash", "- [blocking#aggregateReach] Text?"],
+    ["two spaces before the hash", "- [blocking  #aggregateReach] Text?"],
+    ["a key without its hash", "- [blocking aggregateReach] Text?"],
+  ])("keeps today's refusal for a marker with %s", (_name, question) => {
+    const result = reify(questionsCarrier(question));
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings).toEqual([
+      expect.objectContaining({
+        validatorId: "extract/invalid-markdown-structure",
+        line: firstQuestionLine,
+        message: "Intent fields must precede ### Open questions",
+      }),
+    ]);
+  });
+
+  it("refuses a keyed question outside its H3 owner as an unkeyed one is refused", () => {
+    const result = reify(
+      carrierBody("# Title\n## Intent\n- [blocking #aggregateReach] Must be owned."),
+    );
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings[0]).toMatchObject({
+      validatorId: "extract/invalid-markdown-structure",
+      message: "open questions require ### Open questions",
+    });
+  });
+
+  function asQuestions(result: ReturnType<typeof reify>): readonly { readonly key?: unknown }[] {
+    const intent = result.specs[0]?.data.intent as
+      | { readonly openQuestions?: readonly { readonly key?: unknown }[] }
+      | undefined;
+    return intent?.openQuestions ?? [];
+  }
+});

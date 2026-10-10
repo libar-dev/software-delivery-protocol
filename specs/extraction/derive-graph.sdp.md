@@ -25,6 +25,7 @@ forward pointer between records that still exist.
 - rule: Delivery facts are computed node facts: a resolving `satisfies` edge contributes `implemented`, and an enabled direct verifier contributes `has-verifier` only to its target.
 - rule: Inferred structural edges are advisory inputs to impact analysis and never become authoritative graph truth.
 - rule: The key order of `design`, `ui`, and `model.terms` is the authored order and part of the graph contract.
+- rule: A Pack node carries its manifest's members in authored order, and the `belongsTo` edges that re-express them keep the global edge sort.
 
 ## Design
 

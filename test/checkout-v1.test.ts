@@ -61,6 +61,29 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
     ).toBe(expected);
   });
 
+  it("carries the checkout manifest order through serialized members and reader context", () => {
+    const members = [
+      "spec:orders.order-management",
+      "spec:orders.order-placement-flow",
+      "spec:orders.create-order",
+      "spec:orders.create-order.valid-cart",
+      "spec:orders.create-order.invalid-cart",
+      "spec:orders.create-order.api-contract",
+      "spec:orders.order-total-rule",
+      "spec:orders.order-inventory-rule",
+      "spec:orders.order-latency-constraint",
+      "spec:orders.order-model",
+      "spec:decisions.order-lifecycle",
+    ];
+    const pack = extraction.graph.nodes.find((node) => node.nodeType === "Pack");
+    expect(pack?.members).toEqual(members);
+    expect(
+      createReader(extraction.graph)
+        .packContext("pack:checkout-v1")
+        ?.members.map((member) => member.id),
+    ).toEqual(members);
+  });
+
   it("keeps every authored reference target inside the checkout-v1 example graph", () => {
     const nodeIds = new Set(extraction.graph.nodes.map((node) => node.id));
     const relationTypes = new Set<string>(authoredEdgeTypes);

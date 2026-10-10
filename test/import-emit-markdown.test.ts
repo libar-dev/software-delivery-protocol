@@ -132,6 +132,35 @@ relations: {}
     expect(emitted).toContain("### Open questions\n\n- [blocking] Is the section complete?");
   });
 
+  it("writes a keyed question's key after its flag and leaves an unkeyed marker as it was", () => {
+    const source = reifiedSpec({
+      intent: {
+        outcome: "Each question keeps its key.",
+        openQuestions: [
+          {
+            question: "Does the owner widen the aggregate?",
+            blocking: true,
+            key: "aggregateReach",
+          },
+          { question: "Is the name final?", blocking: false },
+          { question: "Where does the page live?", blocking: false, key: "pageHome" },
+        ],
+      },
+    });
+
+    const emitted = expectMarkdownRoundTrip(source);
+
+    expect(emitted).toContain(
+      [
+        "### Open questions",
+        "",
+        "- [blocking #aggregateReach] Does the owner widen the aggregate?",
+        "- [non-blocking] Is the name final?",
+        "- [non-blocking #pageHome] Where does the page live?",
+      ].join("\n"),
+    );
+  });
+
   it.each([
     [
       "Behavior",

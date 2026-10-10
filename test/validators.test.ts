@@ -771,6 +771,205 @@ describe("graph validators", () => {
   });
 });
 
+describe("conformance/pack-coherence — the members list and the belongsTo edges agree", () => {
+  const packId = "pack:probe.checkout";
+  const specA = "spec:probe.a";
+  const specB = "spec:probe.b";
+  const codeId = "impl:probe.code";
+
+  function probePack(members: readonly string[]): GraphNode {
+    return {
+      id: packId,
+      nodeType: "Pack",
+      claim: "declared",
+      title: "Probe aggregate",
+      members,
+      file: "specs/probe.pack.sdp.ts",
+    };
+  }
+
+  function belongsTo(from: string): GraphEdge {
+    return { from, type: "belongsTo", to: packId, claim: "declared" };
+  }
+
+  function coherenceFindings(graph: GraphSchema): readonly Finding[] {
+    return validateGraph(graph).findings.filter(
+      (finding) => finding.validatorId === graphValidatorIds.packCoherence,
+    );
+  }
+
+  const probeSpecs = [ideaPrimitive(specA, "Probe A."), ideaPrimitive(specB, "Probe B.")];
+
+  it("reports nothing when every listed member has its one edge and every edge is listed", () => {
+    const graph = syntheticGraph(
+      [...probeSpecs, probePack([specA, specB])],
+      [belongsTo(specA), belongsTo(specB)],
+    );
+
+    expect(coherenceFindings(graph)).toEqual([]);
+  });
+
+  it("names a listed member with no belongsTo edge into the pack", () => {
+    const graph = syntheticGraph([...probeSpecs, probePack([specA, specB])], [belongsTo(specA)]);
+
+    expect(coherenceFindings(graph)).toEqual([
+      {
+        validatorId: graphValidatorIds.packCoherence,
+        family: "conformance",
+        severity: "error",
+        message: `Pack "${packId}" lists member "${specB}" with no belongsTo edge into the pack — the manifest and the derived edges must agree, or the reader answers membership differently per query.`,
+        subjectId: packId,
+        relatedId: specB,
+        file: "specs/probe.pack.sdp.ts",
+      },
+    ]);
+  });
+
+  it("names a belongsTo edge whose source the members do not list", () => {
+    const graph = syntheticGraph(
+      [...probeSpecs, probePack([specA])],
+      [belongsTo(specA), belongsTo(specB)],
+    );
+
+    expect(coherenceFindings(graph)).toEqual([
+      {
+        validatorId: graphValidatorIds.packCoherence,
+        family: "conformance",
+        severity: "error",
+        message: `Pack "${packId}" has a belongsTo edge from "${specB}", which its members do not list — the manifest and the derived edges must agree, or the reader answers membership differently per query.`,
+        subjectId: packId,
+        relatedId: specB,
+        file: "specs/probe.pack.sdp.ts",
+      },
+    ]);
+  });
+
+  it("names a listed member that is no Spec when no edge carries it, and defers to the edge contract when one does", () => {
+    const codeNode: GraphNode = {
+      id: codeId,
+      nodeType: "CodeNode",
+      claim: "anchored",
+      file: "src/probe.ts",
+      line: 1,
+    };
+    const unbound = syntheticGraph(
+      [...probeSpecs, codeNode, probePack([specA, codeId])],
+      [belongsTo(specA)],
+    );
+
+    expect(coherenceFindings(unbound)).toEqual([
+      {
+        validatorId: graphValidatorIds.packCoherence,
+        family: "conformance",
+        severity: "error",
+        message: `Pack "${packId}" lists member "${codeId}", which is a CodeNode node, not a Spec — Pack members are Specs.`,
+        subjectId: packId,
+        relatedId: codeId,
+        file: "specs/probe.pack.sdp.ts",
+      },
+    ]);
+
+    // With an edge, the edge contract row already names the wrong-kind source: no second finding.
+    const bound = syntheticGraph(
+      [...probeSpecs, codeNode, probePack([specA, codeId])],
+      [belongsTo(specA), belongsTo(codeId)],
+    );
+    const findings = validateGraph(bound).findings;
+
+    expect(coherenceFindings(bound)).toEqual([]);
+    expect(
+      findings.some(
+        (finding) =>
+          finding.validatorId === graphValidatorIds.claimSeparation &&
+          finding.message.includes(`originates from a CodeNode node`),
+      ),
+    ).toBe(true);
+  });
+
+  it("leaves an absent listed member whose edge dangles to referential integrity", () => {
+    const graph = syntheticGraph(
+      [...probeSpecs, probePack([specA, "spec:probe.absent"])],
+      [belongsTo(specA), belongsTo("spec:probe.absent")],
+    );
+    const findings = validateGraph(graph).findings;
+
+    expect(coherenceFindings(graph)).toEqual([]);
+    expect(
+      findings.filter(
+        (finding) =>
+          finding.validatorId === graphValidatorIds.referentialIntegrity &&
+          finding.subjectId === "spec:probe.absent",
+      ),
+    ).toHaveLength(1);
+  });
+
+  it("leaves an unlisted belongsTo edge from an absent source to referential integrity", () => {
+    const graph = syntheticGraph(
+      [...probeSpecs, probePack([specA])],
+      [belongsTo(specA), belongsTo("spec:probe.absent")],
+    );
+    const findings = validateGraph(graph).findings;
+
+    expect(coherenceFindings(graph)).toEqual([]);
+    expect(
+      findings.filter(
+        (finding) =>
+          finding.validatorId === graphValidatorIds.referentialIntegrity &&
+          finding.subjectId === "spec:probe.absent",
+      ),
+    ).toHaveLength(1);
+  });
+
+  it("leaves an unlisted belongsTo edge from a CodeNode to the edge contract", () => {
+    const codeNode: GraphNode = {
+      id: codeId,
+      nodeType: "CodeNode",
+      claim: "anchored",
+      file: "src/probe.ts",
+      line: 1,
+    };
+    const graph = syntheticGraph(
+      [...probeSpecs, codeNode, probePack([specA])],
+      [belongsTo(specA), belongsTo(codeId)],
+    );
+    const findings = validateGraph(graph).findings;
+
+    expect(coherenceFindings(graph)).toEqual([]);
+    expect(
+      findings.filter(
+        (finding) =>
+          finding.validatorId === graphValidatorIds.claimSeparation &&
+          finding.subjectId === codeId &&
+          finding.message.includes("originates from a CodeNode node"),
+      ),
+    ).toHaveLength(1);
+  });
+
+  it("keeps the duplicate rule: a repeated member is named once, in authored order, with its count", () => {
+    const repeatedEdges = syntheticGraph(
+      [...probeSpecs, probePack([specB, specA, specB])],
+      [belongsTo(specB), belongsTo(specA), belongsTo(specB)],
+    );
+
+    expect(
+      coherenceFindings(repeatedEdges).map((finding) => [finding.relatedId, finding.message]),
+    ).toEqual([
+      [
+        specB,
+        `Pack "${packId}" lists member "${specB}" 2 times — membership is single-sourced on the manifest and duplicates are ambiguous (L2).`,
+      ],
+    ]);
+
+    // A list that repeats a member its edges carry once is still one repeated member.
+    const repeatedList = syntheticGraph(
+      [...probeSpecs, probePack([specB, specA, specB])],
+      [belongsTo(specB), belongsTo(specA)],
+    );
+
+    expect(coherenceFindings(repeatedList).map((finding) => finding.relatedId)).toEqual([specB]);
+  });
+});
+
 describe("the models edge — the oracle anchor's contract row", () => {
   const modeled = spec({
     id: specId("spec:orders.create-order"),
@@ -1042,7 +1241,7 @@ describe("conformance/prose-mentions — prose mentions and their entry addresse
         "spec:probe.mentioning",
         "spec:x#foo",
         "design.step1",
-        'Mention "spec:x#foo" in "spec:probe.mentioning" at design.step1 is not a Spec id or entry address: entry address must be <section>.<key> with section design or ui',
+        'Mention "spec:x#foo" in "spec:probe.mentioning" at design.step1 is not a Spec id or entry address: entry address must be <section>.<key> with section design, ui, or question',
       ),
     ]);
   });
@@ -1153,6 +1352,147 @@ describe("conformance/prose-mentions — prose mentions and their entry addresse
         'Mention in "spec:probe.mentioning" at behavior.rules[0] points to missing entry "design.description" of "spec:probe.target".',
       ),
     ]);
+  });
+
+  describe("a question address", () => {
+    function questionTarget(intent: Readonly<Record<string, unknown>>, design?: unknown) {
+      return mentionSpec("spec:probe.target", {
+        intent: { outcome: "Hold the questions.", ...intent },
+        ...(design === undefined ? {} : { design }),
+      });
+    }
+
+    function questionFindings(target: PrimitiveNode, rule: string): readonly Finding[] {
+      return proseMentionFindings(
+        [
+          target,
+          mentionSpec("spec:probe.mentioning", {
+            intent: { outcome: "Address the target's questions." },
+            behavior: { rules: [rule] },
+          }),
+        ],
+        [dependsOnEdge("spec:probe.mentioning", "spec:probe.target")],
+      );
+    }
+
+    function missingQuestion(token: string, key: string) {
+      return mentionError(
+        "spec:probe.mentioning",
+        token,
+        "behavior.rules[0]",
+        `Mention in "spec:probe.mentioning" at behavior.rules[0] points to missing entry "question.${key}" of "spec:probe.target".`,
+      );
+    }
+
+    it("resolves to an open question that carries the key, beside unkeyed and prose questions", () => {
+      const target = questionTarget({
+        openQuestions: [
+          "A prose question.",
+          { question: "Is the name final?", blocking: false },
+          {
+            question: "Does the owner widen the aggregate?",
+            blocking: true,
+            key: "aggregateReach",
+          },
+        ],
+      });
+
+      expect(
+        questionFindings(target, "Settle spec:probe.target#question.aggregateReach first."),
+      ).toEqual([]);
+    });
+
+    it("fails every mention of an old address once its key is renamed", () => {
+      const target = questionTarget({
+        openQuestions: [{ question: "Does the owner widen the aggregate?", key: "aggregateScope" }],
+      });
+
+      expect(
+        questionFindings(
+          target,
+          "Settle spec:probe.target#question.aggregateReach, then spec:probe.target#question.aggregateScope.",
+        ),
+      ).toEqual([missingQuestion("spec:probe.target#question.aggregateReach", "aggregateReach")]);
+    });
+
+    it("finds no entry on a Spec whose questions carry no key, or that has none", () => {
+      const unkeyed = questionTarget({
+        openQuestions: ["aggregateReach", { question: "aggregateReach", blocking: true }],
+      });
+      const bare = questionTarget({});
+      const rule = "Settle spec:probe.target#question.aggregateReach first.";
+      const expected = [
+        missingQuestion("spec:probe.target#question.aggregateReach", "aggregateReach"),
+      ];
+
+      expect(questionFindings(unkeyed, rule)).toEqual(expected);
+      expect(questionFindings(bare, rule)).toEqual(expected);
+    });
+
+    it("reads question keys only, never the Design or UI keys of the Spec", () => {
+      const target = mentionSpec("spec:probe.target", {
+        intent: {
+          outcome: "Hold one question.",
+          openQuestions: [{ question: "Where does the page live?", key: "pageHome" }],
+        },
+        design: { aggregateReach: "A Design entry." },
+        ui: { aggregateReach: "A UI entry." },
+      });
+
+      expect(
+        questionFindings(
+          target,
+          "Read spec:probe.target#question.aggregateReach and spec:probe.target#design.pageHome.",
+        ),
+      ).toEqual([
+        // Findings sort by their related token, so the Design address reports first.
+        mentionError(
+          "spec:probe.mentioning",
+          "spec:probe.target#design.pageHome",
+          "behavior.rules[0]",
+          'Mention in "spec:probe.mentioning" at behavior.rules[0] points to missing entry "design.pageHome" of "spec:probe.target".',
+        ),
+        missingQuestion("spec:probe.target#question.aggregateReach", "aggregateReach"),
+      ]);
+    });
+
+    it("treats description as an ordinary question key", () => {
+      const target = questionTarget(
+        { openQuestions: [{ question: "Is description a key?", key: "description" }] },
+        { description: "The leading prose." },
+      );
+
+      expect(
+        questionFindings(target, "Settle spec:probe.target#question.description first."),
+      ).toEqual([]);
+      expect(
+        questionFindings(target, "Quote spec:probe.target#design.description in full."),
+      ).toEqual([
+        mentionError(
+          "spec:probe.mentioning",
+          "spec:probe.target#design.description",
+          "behavior.rules[0]",
+          'Mention in "spec:probe.mentioning" at behavior.rules[0] points to missing entry "design.description" of "spec:probe.target".',
+        ),
+      ]);
+    });
+
+    it("refuses a question address with a key off the grammar by the id grammar's reason", () => {
+      const target = questionTarget({
+        openQuestions: [{ question: "Upper?", key: "AggregateReach" }],
+      });
+
+      expect(
+        questionFindings(target, "Settle spec:probe.target#question.AggregateReach first."),
+      ).toEqual([
+        mentionError(
+          "spec:probe.mentioning",
+          "spec:probe.target#question.AggregateReach",
+          "behavior.rules[0]",
+          'Mention "spec:probe.target#question.AggregateReach" in "spec:probe.mentioning" at behavior.rules[0] is not a Spec id or entry address: entry address key must be lower-camel ASCII',
+        ),
+      ]);
+    });
   });
 
   it("checks a self-address for its entry and never warns on it", () => {
@@ -1542,13 +1882,13 @@ describe("conformance/prose-mentions — prose mentions and their entry addresse
       "an entry suffix with no key",
       "spec:probe.target#design.",
       "spec:probe.target#design",
-      "entry address must be <section>.<key> with section design or ui",
+      "entry address must be <section>.<key> with section design, ui, or question",
     ],
     [
-      "an entry suffix outside design and ui",
+      "an entry suffix outside design, ui, and question",
       "spec:probe.target#model.x",
       "spec:probe.target#model.x",
-      "entry address must be <section>.<key> with section design or ui",
+      "entry address must be <section>.<key> with section design, ui, or question",
     ],
   ])(
     "reads the whole token through %s and refuses it, never the existing prefix",

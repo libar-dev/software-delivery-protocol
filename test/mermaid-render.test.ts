@@ -47,7 +47,7 @@ function primitive(id: string, title = id): PrimitiveNode {
 }
 
 function pack(id: string, title = id): GraphNode {
-  return { id, nodeType: "Pack", claim: "declared", title, file: `${id}.pack.sdp.md` };
+  return { id, nodeType: "Pack", claim: "declared", title, members: [], file: `${id}.pack.sdp.md` };
 }
 
 function rendered(input: GraphSchema): ReadonlyMap<string, string> {

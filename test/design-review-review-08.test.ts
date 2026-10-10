@@ -20,31 +20,75 @@ describe("review-08 Design Review rendering", () => {
     expect(renderInlineCode(" padded ")).toBe("`  padded  `");
   });
 
-  it("preserves fenced JSON data in authored key order", () => {
+  it.each(["design", "ui"] as const)("renders %s values as authored list bytes", (section) => {
     const graph = deriveFixtureGraph({
       specs: [
         spec({
           id: specId("spec:orders.literal-json"),
-          title: "Literal JSON",
+          title: "Literal values",
           kind: "behavior",
           altitude: "story",
           readiness: "idea",
-          design: {
-            "a|x": "Review <design> & safely.",
-            ab: "Keep `code` literal.",
+          [section]: {
+            description: "Section prose.\nSecond paragraph.",
+            zeta: "plain text",
+            alpha: "first line\nsecond `line` | <tag> & #\n\nlast line",
+            empty: "",
+            number: 3,
+            boolean: true,
+            null: null,
+            array: ["Review <design> & safely.", { z: true, a: null }],
+            object: { z: "Keep `code` literal.", a: [1, false] },
+            "`a|x`": "Keep `code` | # <tag> > & \\ *stars* [link](url) _text_",
           },
         }),
       ],
     });
     const page = pageByPath(renderDesignReview(createReader(graph)), "spec/orders.literal-json.md");
-    const fenced = /```json\n([\s\S]*?)\n```/u.exec(page)?.[1];
+    const rendered = page
+      .split(`## ${section === "design" ? "Design" : "Ui"}\n\n`)[1]
+      ?.split("\n\n## ")[0];
 
-    expect(fenced).toBeDefined();
-    expect(JSON.parse(fenced ?? "{}")).toEqual({
-      ab: "Keep `code` literal.",
-      "a|x": "Review <design> & safely.",
-    });
-    expect(fenced?.indexOf('"a|x"')).toBeLessThan(fenced?.indexOf('"ab"') ?? -1);
+    expect(rendered).toBe(
+      [
+        "Section prose.",
+        "Second paragraph.",
+        "",
+        "- `zeta`: plain text",
+        "- `alpha`: first line",
+        "  second \\`line\\` \\| &lt;tag&gt; &amp; \\#",
+        "  ",
+        "  last line",
+        "- `empty`:",
+        "- `number`: `3`",
+        "- `boolean`: `true`",
+        "- `null`: `null`",
+        "- `array`:",
+        "",
+        "  ```json",
+        "  [",
+        '    "Review <design> & safely.",',
+        "    {",
+        '      "z": true,',
+        '      "a": null',
+        "    }",
+        "  ]",
+        "  ```",
+        "- `object`:",
+        "",
+        "  ```json",
+        "  {",
+        '    "z": "Keep `code` literal.",',
+        '    "a": [',
+        "      1,",
+        "      false",
+        "    ]",
+        "  }",
+        "  ```",
+        "- `` `a|x` ``: Keep \\`code\\` \\| \\# &lt;tag&gt; &gt; &amp; \\\\ *stars* [link](url) _text_",
+      ].join("\n"),
+    );
+    expect(rendered).not.toContain("description");
   });
 
   it("preserves literal finding locations inside delimiter-safe table code spans", () => {

@@ -89,7 +89,15 @@ function derivePrimitiveNode(entry: ReifiedSpec): PrimitiveNode {
   };
 }
 
-function derivePackNode(entry: ReifiedPack): PackNode {
+const packMemberOrderAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.pack-member-order"),
+  label: "keeps manifest member order on the Pack node",
+  satisfies: ref("spec:extraction.pack-member-order"),
+  component: componentAnchorId("component:protocol.extract"),
+});
+void packMemberOrderAnchor;
+
+function derivePackNode(entry: ReifiedPack, memberIds: readonly string[]): PackNode {
   const title = entry.data.title;
   const framing = entry.data.framing;
   const modelRefs = entry.data.modelRefs;
@@ -100,8 +108,9 @@ function derivePackNode(entry: ReifiedPack): PackNode {
     claim: "declared",
     ...(typeof title === "string" ? { title } : {}),
     ...(typeof framing === "string" ? { framing } : {}),
-    ...(Array.isArray(modelRefs) ? { modelRefs: modelRefs as readonly string[] } : {}),
     file: entry.file,
+    members: [...memberIds],
+    ...(Array.isArray(modelRefs) ? { modelRefs: modelRefs as readonly string[] } : {}),
   };
 }
 
@@ -178,11 +187,11 @@ export function deriveGraph(
   }
 
   for (const entry of packs) {
-    nodes.push(derivePackNode(entry));
-
     const memberIds = Array.isArray(entry.data.specs)
       ? (entry.data.specs as readonly string[])
       : [];
+
+    nodes.push(derivePackNode(entry, memberIds));
 
     for (const memberId of memberIds) {
       edges.push({

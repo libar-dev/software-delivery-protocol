@@ -203,6 +203,29 @@ specs:
   - spec:validation.typed-dependency-floor.missing-targets
   - spec:validation.typed-dependency-floor.unsettled-fact
   - spec:validation.typed-dependency-floor.stated-readiness
+  - spec:extraction.pack-member-order
+  - spec:extraction.pack-member-order.manifest-order-kept
+  - spec:consumers.agent-surface.address-and-cycle-recipes
+  - spec:validation.next-rung-floor
+  - spec:validation.next-rung-floor.typed-dependency-targets
+  - spec:validation.next-rung-floor.blocking-question
+  - spec:model.open-question-keys
+  - spec:model.open-question-keys.keyed-question-resolves
+  - spec:model.open-question-keys.renamed-key-breaks
+  - spec:model.open-question-keys.repeated-key-refused
+  - spec:decisions.question-key-rendering
+  - spec:consumers.spec-studio
+  - spec:decisions.studio-html-surface
+  - spec:consumers.spec-studio.data
+  - spec:consumers.spec-studio.shell
+  - spec:consumers.spec-studio.lenses
+  - spec:consumers.spec-studio.spec-page
+  - spec:consumers.spec-studio.verification-panels
+  - spec:consumers.spec-studio.intent-panel
+  - spec:consumers.spec-studio.components
+  - spec:decisions.studio-web-components
+  - spec:consumers.spec-studio.responsive
+  - spec:consumers.spec-studio.sharing
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model

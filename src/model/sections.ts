@@ -28,7 +28,7 @@ export type SpecSectionContent = Record<string, unknown>;
 /** An open question is prose, or an object flaggable `blocking` (MD-9: blocks `defined`+). */
 export type IntentOpenQuestion =
   | string
-  | { readonly question: string; readonly blocking?: boolean };
+  | { readonly question: string; readonly blocking?: boolean; readonly key?: string };
 
 export interface IntentSection {
   readonly description?: string;

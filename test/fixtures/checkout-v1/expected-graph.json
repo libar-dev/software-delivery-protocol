@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.6.0",
+  "schemaVersion": "0.7.0",
   "nodes": [
     {
       "id": "api:orders.post",
@@ -40,6 +40,19 @@
       "title": "Checkout v1",
       "framing": "Let customers create orders from valid carts with honest authored traceability.",
       "file": "specs/checkout.pack.sdp.md",
+      "members": [
+        "spec:orders.order-management",
+        "spec:orders.order-placement-flow",
+        "spec:orders.create-order",
+        "spec:orders.create-order.valid-cart",
+        "spec:orders.create-order.invalid-cart",
+        "spec:orders.create-order.api-contract",
+        "spec:orders.order-total-rule",
+        "spec:orders.order-inventory-rule",
+        "spec:orders.order-latency-constraint",
+        "spec:orders.order-model",
+        "spec:decisions.order-lifecycle"
+      ],
       "modelRefs": [
         "spec:orders.order-model"
       ]

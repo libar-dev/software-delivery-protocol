@@ -5,9 +5,14 @@
 > for the owner to state `ready`. The entry-address engine is built: of the four Specs the owner
 > ruled, the prose-mentions validator and the open-section order carry `implemented` and wait for
 > the same statement, and the checked-mentions decision and contract declarations need no engine
-> binding. One Spec stays held by an owner question. The backlog and readiness are read from the
-> graph (recipes 1, 2, 9, 11). If this file and the graph disagree, the graph wins and this file
-> is stale.
+> binding. The one Spec an owner question held, the list rendering
+> (`spec:decisions.authored-entry-order`), was ratified and built in round 2 (see "Round 2" at
+> the end). Round 2 adds four Specs at `defined`, each built; promotion preflight (recipe 9) now
+> reports the next rung's unmet clauses. Its slice of the original design is the Studio review
+> workbench, captured as `pack:spec-studio-v1` ahead of its code. The round's one review returned
+> nine findings, each ruled and folded in. The backlog and readiness are read from the graph
+> (recipes 1, 2, 9, 11). If this file and the graph disagree, the graph wins and this file is
+> stale.
 
 ## Why this arc
 
@@ -324,3 +329,87 @@ Plan and execution stay separate. `npm run check` runs before any green claim. R
 promotion is a human statement after recipe 9. Checks police conformance and honesty, never
 content quality and never workflow. Close records re-derive their numbers and label them as
 re-derived.
+
+## Round 2
+
+The adopter built a page per capability Pack on the engine at `5e29c03` and named five things the
+page had to work around (its feedback of 2026-10-04, under `docs/feedback/` in the adopter's
+repository). This round turns them into Specs on the branch `feature/adopter-round-2`, one pull
+request to `main`, like pull request 27.
+
+### The owner's words
+
+The owner chose from the main thread's options on 2026-10-04:
+
+- O3, on the list rendering: "Ratify now". The record states `ready`, declares `supersedes` on the
+  shipped-projections freeze for open-section rendering, and keeps its decision text.
+- O5, on a Pack's member order: "Members list on Pack node". The Pack node in the serialized graph
+  gains an ordered `members` list in authored order. Edges keep the global sort, so the
+  determinism rule stands. The reader's Pack context and the Design Review read the list. The
+  graph schema moves from `0.6.0` to `0.7.0`, one bump shared with O6.
+- O6, on an open question's key: "Key in the marker". `- [blocking #aggregateReach] Does the owner
+  ...`, addressed as `spec:<id>#question.aggregateReach`. The key is optional and unkeyed
+  questions stay lawful. The key grammar is the Design key grammar. A key is unique among one
+  Spec's open questions. A removed or renamed key makes every mention of its address an error, as
+  a missing Design entry does. The TypeScript carrier's object form is `{ question, blocking?,
+  key? }`. The checked-mentions record is revised, since it said an open question has no address.
+
+### The main thread's rulings
+
+These change no model. The owner reads them in the pull request.
+
+- R1. Ratification is an act: the record states `ready`, replaces its `dependsOn` on the freeze
+  with `supersedes`, drops its blocking question, and keeps its decision text. The rendering is
+  built in a separate commit.
+- R2. Promotion preflight (recipe 9) keeps every field and gains the first unmet clause of its
+  next rung, the rung above the floor reached. A failure of the typed-dependency clause names the
+  targets that break it. The evaluator gains a target rung, exported for an adopter.
+- R3. Address resolution is a new shipped recipe: one row per input address, in input order, and
+  a reason from a closed set when an address does not resolve. It adds no CLI verb.
+- R4. Dependency cycles is a new shipped recipe: every strongly connected set of `dependsOn`, and
+  every Spec that depends on itself, each with one cycle through it as a closed path.
+- R5. New behavior on a `ready` Spec is a new Spec at `defined` that the engine change binds, and
+  the build commit moves the parent's sentence, as this arc did before. A built `defined` Spec
+  stays in the drift alarm until the owner states `ready`.
+- R6. This plan stays the live plan and gains this section.
+
+### The Specs
+
+Applied before any engine work, read from the graph with recipes 9 and 11:
+
+- `spec:decisions.authored-entry-order` states `ready` and supersedes the freeze, under O3 and R1.
+  `spec:consumers.design-review` and `spec:extraction.open-section-order` now say the open-section
+  entries render as a list, and `2d5d851` builds that rendering.
+- `spec:decisions.checked-mentions` admits the `question` section of the entry address, under O6,
+  and the glossary's entry address says the same.
+- `spec:extraction.pack-member-order`, with one bound example: the Pack node's `members` and
+  schema `0.7.0` (O5).
+- `spec:consumers.agent-surface.address-and-cycle-recipes`: recipes 25 and 26 (R3, R4).
+- `spec:validation.next-rung-floor`, with two bound examples: the target rung, the next rung's
+  failures in the reader and in recipe 9, and the typed-dependency targets (R2). Recipe 9 now
+  reports the next rung's unmet clauses beside the current floor's.
+- `spec:model.open-question-keys`, with three bound examples: the key, its marker, its address
+  (O6).
+
+Each new Spec states `defined`, derives `ready`, and carries `implemented`. The design that
+removes the builders' decisions is `design-sdp.md`, kept in the owner's context repository beside
+the round's rulings.
+
+### Order of the build
+
+1. The list rendering of open sections, under the ratified record.
+2. The Pack node's `members`, the reader's and the Design Review's member order, and schema
+   `0.7.0`.
+3. The target rung, the typed-dependency targets, the reader's next-rung failures, and recipe 9.
+4. The question key in both carriers, the serializer, the importer, the address grammar, the
+   mention validator, and recipes 20, 22, and 23.
+5. Recipes 25 and 26, after step 4, since address resolution reads the `question` section.
+6. The integrator re-derives the self-hosting pins and counts, and `npm run check` passes.
+7. A representative slice of the original design under `docs/lineage/v0-design/`, captured as
+   Specs ahead of their code with the five changes in use. The slice is the Studio review
+   workbench, chapter 07's sections 1 to 3, 11 and 12, captured as `pack:spec-studio-v1`.
+
+### The review
+
+The round's one read-only review returned nine findings, the first on the defect planted in its
+copy of the authoring skill, and the main thread ruled each and folded it in.

@@ -8,8 +8,18 @@ type Brand<TBrand extends string> = string & {
 const LOWERCASE_NAMESPACE_PATTERN = /^[a-z][a-z0-9-]*$/u;
 const PATH_SEGMENT_PATTERN = /^[A-Za-z0-9][A-Za-z0-9-]*$/u;
 const ENTRY_ADDRESS_NAMESPACE = "spec";
-const ENTRY_ADDRESS_SECTIONS: readonly string[] = ["design", "ui"];
 const ENTRY_ADDRESS_KEY_PATTERN = /^[a-z][A-Za-z0-9]*$/u;
+
+/**
+ * The sections an entry address may name: a keyed entry of `design` or `ui`, or a keyed open
+ * question (`spec:model.open-question-keys`).
+ */
+export const ENTRY_ADDRESS_SECTIONS = ["design", "ui", "question"] as const;
+export type EntryAddressSection = (typeof ENTRY_ADDRESS_SECTIONS)[number];
+
+function isEntryAddressSection(value: string | undefined): value is EntryAddressSection {
+  return ENTRY_ADDRESS_SECTIONS.some((section) => section === value);
+}
 
 export type SpecId = Brand<"SpecId">;
 export type PackId = Brand<"PackId">;
@@ -60,9 +70,9 @@ function validatePath(value: string, path: string): void {
 
 /**
  * The `#` sub-part is an entry address, `spec:<path>#<section>.<key>`, naming one keyed entry of a
- * Spec's `design` or `ui` section. It is reserved in every namespace and never part of an
- * identity: the parser admits it so prose can carry it, and every id slot refuses it. The refusal
- * rows run in order and the first match wins.
+ * Spec's `design` or `ui` section or one keyed open question. It is reserved in every namespace
+ * and never part of an identity: the parser admits it so prose can carry it, and every id slot
+ * refuses it. The refusal rows run in order and the first match wins.
  */
 function validateEntryAddress(value: string, namespace: string, subpath: string): void {
   if (namespace !== ENTRY_ADDRESS_NAMESPACE) {
@@ -76,8 +86,8 @@ function validateEntryAddress(value: string, namespace: string, subpath: string)
   const dotIndex = subpath.indexOf(".");
   const section = dotIndex === -1 ? undefined : subpath.slice(0, dotIndex);
 
-  if (section === undefined || !ENTRY_ADDRESS_SECTIONS.includes(section)) {
-    failId(value, "entry address must be <section>.<key> with section design or ui");
+  if (!isEntryAddressSection(section)) {
+    failId(value, "entry address must be <section>.<key> with section design, ui, or question");
   }
 
   if (!ENTRY_ADDRESS_KEY_PATTERN.test(subpath.slice(dotIndex + 1))) {

@@ -5,6 +5,8 @@ import type {
   FileEntry,
   PackContext,
   OracleBinding,
+  ReadinessFloorFailure,
+  ReadinessFloorTarget,
   Reader,
   SpecContext,
   SpecSummary,
@@ -36,6 +38,17 @@ const singularOracleKey: "oracle" extends keyof SpecContext ? true : false = tru
 const pluralOracleKeyRemoved: "oracles" extends keyof SpecContext ? false : true = true;
 
 void [singularOracleKey, pluralOracleKeyRemoved];
+
+// The next rung's failures sit beside the stated rung's on the same context, always present, and
+// a typed-dependency failure carries its targets as data.
+const nextRungFailures: readonly ReadinessFloorFailure[] | undefined =
+  specContext?.nextRungFailures;
+const nextRungTargets: readonly ReadinessFloorTarget[] | undefined =
+  specContext?.nextRungFailures[0]?.targets;
+const nextRungKeyRequired: undefined extends SpecContext["nextRungFailures"] ? false : true = true;
+const nextRungIsContextOnly: "nextRungFailures" extends keyof SpecSummary ? false : true = true;
+
+void [nextRungFailures, nextRungTargets, nextRungKeyRequired, nextRungIsContextOnly];
 
 // @ts-expect-error bySymbol is aspirational — it rides the exhaustive impact graph and is not
 // stubbed: a method that throws would fake the capability its absence honestly hides (`06` §3).

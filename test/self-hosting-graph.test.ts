@@ -31,6 +31,8 @@ import {
   expectedDeclaredRelations,
   expectedMemberOfEdges,
   expectedPackMembers,
+  expectedStudioPackMembers,
+  expectedPacks,
   expectedSpecs,
   expectedUsesEdges,
   expectedWarnings,
@@ -115,7 +117,7 @@ const result = extract({
 // When: the root corpus is reified through the public extractor.
 const nodeIds = result.graph.nodes.map((node) => node.id).sort();
 const primitiveNodes = result.graph.nodes.filter((node) => node.nodeType === "Primitive");
-const packNode = result.graph.nodes.find((node) => node.id === "pack:self-hosting-v1");
+const packNodes = result.graph.nodes.filter((node) => node.nodeType === "Pack");
 
 const byId = (left: { id: string }, right: { id: string }): number =>
   left.id.localeCompare(right.id);
@@ -191,12 +193,12 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    expect(result.counts).toEqual({ specs: 202, packs: 1, anchors: 220 });
-    expect(expectedSpecs).toHaveLength(202);
-    expect(expectedPackMembers).toHaveLength(202);
-    expect(expectedAnchors).toHaveLength(220);
-    expect(result.graph.nodes).toHaveLength(423);
-    expect(result.graph.edges).toHaveLength(934);
+    expect(result.counts).toEqual({ specs: 225, packs: 2, anchors: 233 });
+    expect(expectedSpecs).toHaveLength(225);
+    expect(expectedPackMembers).toHaveLength(225);
+    expect(expectedAnchors).toHaveLength(233);
+    expect(result.graph.nodes).toHaveLength(460);
+    expect(result.graph.edges).toHaveLength(1055);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -204,7 +206,7 @@ describe("the self-hosting corpus", () => {
     // read: one oracle statement of the corpus's identities, compared against the graph once.
     expect(nodeIds).toEqual(
       [
-        "pack:self-hosting-v1",
+        ...expectedPacks.map((pack) => pack.id),
         ...expectedSpecs.map((spec) => spec.id),
         ...expectedAnchors.map((anchor) => anchor.id),
       ].sort(),
@@ -246,7 +248,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 48, idea: 4, ready: 148, scoped: 2 });
+    ).toEqual({ defined: 58, idea: 4, ready: 150, scoped: 13 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {
@@ -254,19 +256,14 @@ describe("the self-hosting corpus", () => {
       result.graph.edges
         .filter((edge) => edge.type === "belongsTo")
         .map((edge) => [edge.from, edge.to, edge.claim]),
-    ).toEqual(expectedPackMembers.map((id) => [id, "pack:self-hosting-v1", "declared"]));
+    ).toEqual([
+      ...expectedStudioPackMembers.map((id) => [id, "pack:spec-studio-v1", "declared"]),
+      ...expectedPackMembers.map((id) => [id, "pack:self-hosting-v1", "declared"]),
+    ]);
   });
 
-  it("carries the Pack aggregate node exactly as authored", () => {
-    expect(packNode).toEqual({
-      id: "pack:self-hosting-v1",
-      nodeType: "Pack",
-      claim: "declared",
-      title: "Self-hosting",
-      framing: "The Protocol authors and validates its own delivery model.",
-      modelRefs: ["spec:model.protocol-domain", "spec:model.core-model"],
-      file: "specs/self-hosting.pack.sdp.md",
-    });
+  it("carries the Pack aggregate nodes exactly as authored", () => {
+    expect(packNodes).toEqual(expectedPacks);
   });
 
   it("derives one binding edge per authored anchor", () => {

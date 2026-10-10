@@ -30,7 +30,7 @@ const openSectionOrderTestAnchor = specTest({
 void openSectionOrderTestAnchor;
 
 describe("graph schema", () => {
-  it("serializes authored entry order with description first and schema 0.6.0", () => {
+  it("serializes authored entry order with description first and schema 0.7.0", () => {
     const graph = deriveFixtureGraph({
       specs: [
         spec({
@@ -53,7 +53,7 @@ describe("graph schema", () => {
     });
     const serialized = JSON.parse(serializeGraph(graph)) as GraphSchema;
     const node = serialized.nodes.find((entry) => entry.nodeType === "Primitive");
-    expect(serialized.schemaVersion).toBe("0.6.0");
+    expect(serialized.schemaVersion).toBe("0.7.0");
     expect(Object.keys(node?.sections?.design ?? {})).toEqual([
       "description",
       "zeta",
@@ -139,10 +139,10 @@ The Model prose.
       const pages = renderDesignReview(reader);
       const page = (path: string) => pages.find((entry) => entry.path === path)?.content ?? "";
       expect(page("spec/probe.order.md")).toContain(
-        '## Design\n\nDesign prose.\n\n```json\n{\n  "zeta": "z",\n  "alpha": "a"\n}\n```',
+        "## Design\n\nDesign prose.\n\n- `zeta`: z\n- `alpha`: a",
       );
       expect(page("spec/probe.order.md")).toContain(
-        '## Ui\n\nUI prose.\n\n```json\n{\n  "zeta": "z",\n  "alpha": "a"\n}\n```',
+        "## Ui\n\nUI prose.\n\n- `zeta`: z\n- `alpha`: a",
       );
       expect(page("spec/probe.terms.md")).toContain(
         "The Model prose.\n\n| Term | Definition |\n|---|---|\n| zeta | The last letter. |\n| description | An ordinary term. |\n| alpha | The first letter. |",
@@ -152,8 +152,52 @@ The Model prose.
     }
   });
 
+  it("serializes question text, optional blocking and optional key in canonical order", () => {
+    const graph = deriveFixtureGraph({
+      specs: [
+        spec({
+          id: specId("spec:probe.questions"),
+          title: "Question serialization",
+          kind: "behavior",
+          altitude: "story",
+          readiness: "idea",
+          intent: {
+            openQuestions: [
+              { key: "settled", blocking: false, question: "Is it settled?" },
+              { key: "named", question: "Is it named?" },
+              { blocking: true, question: "Is it blocked?" },
+              { question: "Is it open?" },
+              "A string question",
+            ],
+          },
+        }),
+      ],
+    });
+    const payload = JSON.parse(serializeGraph(graph)) as GraphSchema;
+    const node = payload.nodes.find(
+      (entry): entry is PrimitiveNode => entry.nodeType === "Primitive",
+    );
+    const questions = node?.sections?.intent?.openQuestions ?? [];
+    expect(questions).toEqual([
+      { question: "Is it settled?", blocking: false, key: "settled" },
+      { question: "Is it named?", key: "named" },
+      { question: "Is it blocked?", blocking: true },
+      { question: "Is it open?" },
+      "A string question",
+    ]);
+    expect(
+      questions.map((question) => (typeof question === "string" ? [] : Object.keys(question))),
+    ).toEqual([
+      ["question", "blocking", "key"],
+      ["question", "key"],
+      ["question", "blocking"],
+      ["question"],
+      [],
+    ]);
+  });
+
   it("exports the graph schema contracts", () => {
-    expect(schemaVersion).toBe("0.6.0");
+    expect(schemaVersion).toBe("0.7.0");
     expect(graphNodeTypes).toEqual(["Primitive", "Pack", "Anchor", "CodeNode"]);
     expect(deliveryFactNames).toEqual(["implemented", "has-verifier", "observed"]);
     expect(derivedEdgeTypes).toEqual(["belongsTo", "satisfies", "models", "memberOf", "uses"]);

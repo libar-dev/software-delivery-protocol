@@ -36,6 +36,27 @@ function normalizeRelations(data: Record<string, unknown>): Record<string, unkno
   };
 }
 
+/**
+ * An open question object whose `blocking` flag is absent is non-blocking, the reading the
+ * readiness floor gives it and the `[non-blocking]` marker the emitter writes for it, so the
+ * comparison reads the absent flag as `false`.
+ */
+function normalizeOpenQuestions(data: Record<string, unknown>): Record<string, unknown> {
+  const intent = data.intent;
+  if (!isRecord(intent) || !isUnknownArray(intent.openQuestions)) return data;
+  return {
+    ...data,
+    intent: {
+      ...intent,
+      openQuestions: intent.openQuestions.map((question) =>
+        isRecord(question) && question.blocking === undefined
+          ? { ...question, blocking: false }
+          : question,
+      ),
+    },
+  };
+}
+
 function firstDivergentPath(left: unknown, right: unknown, path = ""): string | undefined {
   if (isDeepStrictEqual(left, right)) {
     return undefined;
@@ -80,8 +101,8 @@ export function assertMarkdownEmissionFidelity(reified: ReifiedSpec, document: s
   }
 
   const divergent = firstDivergentPath(
-    normalizeRelations(reified.data),
-    normalizeRelations(emitted.data),
+    normalizeOpenQuestions(normalizeRelations(reified.data)),
+    normalizeOpenQuestions(normalizeRelations(emitted.data)),
   );
 
   if (divergent !== undefined) {

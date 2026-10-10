@@ -7,12 +7,14 @@ import {
   codeAnchor,
   codeAnchorId,
   createReader,
+  dependsOn,
   extract,
   graphValidatorIds,
   oracleAnchorId,
   pack,
   packId,
   refines,
+  schemaVersion,
   spec,
   specId,
   specOracle,
@@ -454,6 +456,9 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
       ]);
 
       expect(context?.floorFailures).toEqual([]);
+      // The example derives `ready`: there is no next rung, so no next-rung failure.
+      expect(context?.derivedReadiness).toBe("ready");
+      expect(context?.nextRungFailures).toEqual([]);
       expect(context?.findings).toEqual([]);
     });
 
@@ -587,6 +592,98 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
     });
   });
 
+  describe("nextRungFailures — the unmet clauses of the rung above the floor reached", () => {
+    const targetClause = "typed-dependency-targets-are-defined";
+    const ruleSpec = (
+      id: string,
+      readiness: "idea" | "scoped" | "defined" | "ready",
+      relations: Parameters<typeof spec>[0]["relations"] = [],
+    ) =>
+      spec({
+        id: specId(id),
+        title: id,
+        kind: "rule",
+        altitude: "story",
+        readiness,
+        intent: { outcome: "Probe the next rung." },
+        behavior: { rules: ["The probe states one rule."] },
+        relations,
+      });
+    const contextOf = (...specs: Parameters<typeof spec>[0][]) =>
+      createReader(deriveFixtureGraph({ specs })).specContext("spec:probe.subject");
+
+    it("names the scoped dependency of a Spec stating defined at the next rung, ready", () => {
+      const context = contextOf(
+        ruleSpec("spec:probe.subject", "defined", [dependsOn(specId("spec:probe.basis"))]),
+        ruleSpec("spec:probe.basis", "scoped", [refines(specId("spec:probe.subject"))]),
+      );
+
+      expect(context?.floorFailures).toEqual([]);
+      expect(context?.derivedReadiness).toBe("defined");
+      expect(context?.nextRungFailures).toEqual([
+        {
+          clauseId: targetClause,
+          description:
+            "Every refines, dependsOn, constrainedBy, and decidedBy target states at least defined.",
+          targets: [{ type: "dependsOn", id: "spec:probe.basis", statedReadiness: "scoped" }],
+        },
+      ]);
+    });
+
+    it("has no next-rung failure when the same dependency states defined and ready derives", () => {
+      const context = contextOf(
+        ruleSpec("spec:probe.subject", "defined", [dependsOn(specId("spec:probe.basis"))]),
+        ruleSpec("spec:probe.basis", "defined", [refines(specId("spec:probe.subject"))]),
+      );
+
+      expect(context?.derivedReadiness).toBe("ready");
+      expect(context?.nextRungFailures).toEqual([]);
+    });
+
+    it("reads the rung above the floor reached, not the rung above the stated one", () => {
+      // Stated `idea` with headroom: the rung above the stated one (`scoped`) clears, while the
+      // rung above the floor reached (`ready`) fails on the dependency.
+      const context = contextOf(
+        ruleSpec("spec:probe.subject", "idea", [dependsOn(specId("spec:probe.basis"))]),
+        ruleSpec("spec:probe.basis", "scoped", [refines(specId("spec:probe.subject"))]),
+      );
+
+      expect(context?.statedReadiness).toBe("idea");
+      expect(context?.derivedReadiness).toBe("defined");
+      expect(context?.nextRungFailures.map((failure) => failure.clauseId)).toEqual([targetClause]);
+    });
+
+    it("reads idea as the next rung when no rung derives, and nothing for an unratified kind", () => {
+      const node = {
+        id: "spec:probe.subject",
+        nodeType: "Primitive" as const,
+        claim: "declared" as const,
+        specKind: "rule" as const,
+        altitude: "story" as const,
+        readiness: "idea" as const,
+        file: "specs/probe.sdp.md",
+      };
+      const untitled = createReader({ schemaVersion, nodes: [node], edges: [] }).specContext(
+        node.id,
+      );
+
+      expect(untitled?.derivedReadiness).toBeUndefined();
+      expect(untitled?.nextRungFailures.map((failure) => failure.clauseId)).toEqual([
+        "title",
+        "intent.outcome-or-parent-relation",
+      ]);
+
+      const foreign = createReader({
+        schemaVersion,
+        nodes: [{ ...node, specKind: "epic" } as unknown as typeof node],
+        edges: [],
+      }).specContext(node.id);
+
+      expect(foreign?.derivedReadiness).toBeUndefined();
+      expect(foreign?.nextRungFailures).toEqual([]);
+    });
+  });
+
   describe("packContext — the pack reviewed as a unit (JS-E4, JS-G4)", () => {
     it("lists members with their decode and the verifier gaps, ready ones as the priority slice", () => {
       const context = exampleReader().packContext("pack:checkout-v1");
@@ -598,15 +695,15 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
       // specs (create-order and its valid-cart example — the one ready member, covered, so not
       // a gap) and no ready member among the gaps, so no priority.
       expect(context?.verifierGaps.map((gap) => gap.id)).toEqual([
-        "spec:decisions.order-lifecycle",
-        "spec:orders.create-order.api-contract",
+        "spec:orders.order-management",
+        "spec:orders.order-placement-flow",
         "spec:orders.create-order.invalid-cart",
+        "spec:orders.create-order.api-contract",
+        "spec:orders.order-total-rule",
         "spec:orders.order-inventory-rule",
         "spec:orders.order-latency-constraint",
-        "spec:orders.order-management",
         "spec:orders.order-model",
-        "spec:orders.order-placement-flow",
-        "spec:orders.order-total-rule",
+        "spec:decisions.order-lifecycle",
       ]);
       expect(context?.verifierGaps.every((gap) => !gap.priority)).toBe(true);
     });
@@ -648,6 +745,67 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
         { id: "spec:orders.order-management", statedReadiness: "defined", priority: false },
         { id: "spec:orders.order-total-rule", statedReadiness: "ready", priority: true },
       ]);
+    });
+
+    it("answers membership the same from the list and from the belongsTo edges, and the validator names a graph where they disagree", () => {
+      const probe = (leaf: string) =>
+        spec({
+          id: specId(`spec:probe.${leaf}`),
+          title: `Probe ${leaf}`,
+          kind: "rule",
+          altitude: "story",
+          readiness: "idea",
+          intent: { outcome: `Probe ${leaf}.` },
+        });
+      const packNodeId = "pack:probe.checkout";
+      const graph = deriveFixtureGraph({
+        specs: [probe("a"), probe("b"), probe("c")],
+        packs: [
+          pack({
+            id: packId(packNodeId),
+            title: "Probe aggregate",
+            specs: [specId("spec:probe.a"), specId("spec:probe.b")],
+          }),
+        ],
+      });
+      const membership = (reader: Reader) => ({
+        listed: reader.packContext(packNodeId)?.members.map((member) => member.id),
+        byEdges: reader
+          .specs()
+          .filter((summary) => summary.packs.includes(packNodeId))
+          .map((summary) => summary.id),
+        atRisk: reader
+          .blastRadius(["specs/fixture.pack.sdp.ts"])
+          .atRisk.map((item) => item.id)
+          .sort(),
+        coherence: reader
+          .findings()
+          .filter((finding) => finding.validatorId === graphValidatorIds.packCoherence)
+          .map((finding) => finding.relatedId),
+      });
+
+      expect(membership(createReader(graph))).toEqual({
+        listed: ["spec:probe.a", "spec:probe.b"],
+        byEdges: ["spec:probe.a", "spec:probe.b"],
+        atRisk: ["spec:probe.a", "spec:probe.b"],
+        coherence: [],
+      });
+
+      // A supplied graph whose list names `b` while no edge carries it: the list-reading query
+      // and the edge-reading queries disagree, and the validator names the member.
+      const skewed: GraphSchema = {
+        ...graph,
+        edges: graph.edges.filter(
+          (edge) => !(edge.type === "belongsTo" && edge.from === "spec:probe.b"),
+        ),
+      };
+
+      expect(membership(createReader(skewed))).toEqual({
+        listed: ["spec:probe.a", "spec:probe.b"],
+        byEdges: ["spec:probe.a"],
+        atRisk: ["spec:probe.a"],
+        coherence: ["spec:probe.b"],
+      });
     });
 
     it("returns undefined for a non-pack id", () => {

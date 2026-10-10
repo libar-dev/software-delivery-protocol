@@ -1,5 +1,21 @@
-import { authoredEdgeTypes, schemaVersion } from "../src/index.js";
-import type { Finding, GraphEdge, GraphSchema, ValidationReport, Validator } from "../src/index.js";
+import {
+  authoredEdgeTypes,
+  buildGraphIndex,
+  evaluateReadinessFloor,
+  readinessFloors,
+  schemaVersion,
+} from "../src/index.js";
+import type {
+  Finding,
+  GraphEdge,
+  GraphSchema,
+  ReadinessClause,
+  ReadinessFloorFailure,
+  ReadinessFloorTarget,
+  TypedDependencyType,
+  ValidationReport,
+  Validator,
+} from "../src/index.js";
 
 const graph = {
   schemaVersion,
@@ -73,3 +89,41 @@ const invalidFinding: Finding = {
 };
 
 void invalidFinding;
+
+// The evaluator answers for a target rung an evaluation names; the rung is a ratified readiness.
+const floorIndex = buildGraphIndex(graph);
+const floorNode = floorIndex.primitivesById.get("spec:orders.create-order");
+const nextRungFailures: readonly ReadinessFloorFailure[] =
+  floorNode === undefined ? [] : evaluateReadinessFloor(floorNode, floorIndex, "ready");
+const statedRungFailures: readonly ReadinessFloorFailure[] =
+  floorNode === undefined ? [] : evaluateReadinessFloor(floorNode, floorIndex);
+
+// A failure's targets are optional, and each target names its relation type and id; the stated
+// rung is optional because a target may resolve to a node that is not a Spec.
+const failureTargets: readonly ReadinessFloorTarget[] | undefined = nextRungFailures[0]?.targets;
+const nonSpecTarget: ReadinessFloorTarget = { type: "decidedBy", id: "impl:orders.code" };
+const specTarget: ReadinessFloorTarget = {
+  type: "dependsOn",
+  id: "spec:orders.basis",
+  statedReadiness: "scoped",
+};
+const typedDependencyTypes: readonly TypedDependencyType[] = [
+  "refines",
+  "dependsOn",
+  "constrainedBy",
+  "decidedBy",
+];
+const clauseTargets: ReadinessClause["targets"] = readinessFloors.ready.clauses[1].targets;
+
+void [statedRungFailures, failureTargets, nonSpecTarget, specTarget, typedDependencyTypes];
+void clauseTargets;
+
+if (floorNode !== undefined) {
+  // @ts-expect-error a target rung is a ratified readiness, never an arbitrary string.
+  evaluateReadinessFloor(floorNode, floorIndex, "shipped");
+}
+
+// @ts-expect-error `verifies` and `supersedes` are not typed dependencies.
+const verifiesTarget: ReadinessFloorTarget = { type: "verifies", id: "spec:orders.example" };
+
+void verifiesTarget;

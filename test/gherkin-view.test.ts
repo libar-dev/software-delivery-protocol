@@ -55,6 +55,7 @@ function specContext(overrides: Partial<SpecContext> = {}): SpecContext {
   return {
     ...summary,
     floorFailures: [],
+    nextRungFailures: [],
     relationsOut: [],
     relationsIn: [],
     implementations: [],

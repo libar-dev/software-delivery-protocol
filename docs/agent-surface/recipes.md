@@ -32,11 +32,11 @@ pnpm exec sdp q '<body>' --root PATH --exclude PATH --exclude PATH
 `--root PATH` picks the extraction root (default: the working directory) and `--exclude` is
 repeatable for root-relative path prefixes. `PATH` is a placeholder, not a literal directory.
 
-**Some recipes open with a parameter.** Recipes 3, 6, 9, 14, 19, 21, 22, and 23 take their
-subject on the opening `const` line(s): a Spec id, a search term, a component id, or a list of
-Spec ids. Those lines name *this* repository's corpus so every body runs as written here (the
-recipe check executes each one verbatim); in your own corpus, substitute your subject on that
-line before running. A Spec id or component id absent from the graph returns `{ found: false }` rather than failing.
+**Some recipes open with a parameter.** Recipes 3, 6, 9, 14, 19, 21, 22, 23, and 25 take their
+subject on the opening `const` line(s): a Spec id, a search term, a component id, a list of
+Spec ids, or a list of entry addresses. Those lines name *this* repository's corpus so every body
+runs as written here (the recipe check executes each one verbatim); in your own corpus,
+substitute your subject on that line before running. A Spec id or component id absent from the graph returns `{ found: false }` rather than failing.
 
 **Recipe 4 is different.** Recipe 4 filenames travel via `SDP_CHANGED_FILES_JSON`; callers never
 substitute filenames into the JavaScript fence. Keep its query body static and pass changed paths
@@ -382,6 +382,11 @@ if (context === undefined) {
 const rungs = ["idea", "scoped", "defined", "ready"];
 const reached = context.derivedReadiness ?? "none";
 const reachedIndex = reached === "none" ? -1 : rungs.indexOf(reached);
+const shape = (failure) => ({
+  clauseId: failure.clauseId,
+  description: failure.description,
+  ...(failure.targets === undefined ? {} : { targets: failure.targets }),
+});
 
 return {
   id,
@@ -389,11 +394,10 @@ return {
   statedReadiness: context.statedReadiness,
   floorReached: reached,
   nextRung: rungs[reachedIndex + 1] ?? null,
-  currentFloorFailures: context.floorFailures.map((failure) => ({
-    clauseId: failure.clauseId,
-    description: failure.description,
-  })),
+  currentFloorFailures: context.floorFailures.map(shape),
   firstUnmetClause: context.floorFailures[0]?.clauseId ?? null,
+  nextRungFailures: context.nextRungFailures.map(shape),
+  nextRungFirstUnmetClause: context.nextRungFailures[0]?.clauseId ?? null,
   promotionRequiresHumanStatement: true,
 };
 ```
@@ -401,6 +405,8 @@ return {
 The `id` line is the recipe's parameter — substitute the Spec whose promotion you are weighing.
 An empty `currentFloorFailures` list says the stated rung is honest. It does not confer the next
 rung, and `floorReached` above the stated rung is information rather than an automatic edit.
+`nextRungFailures` are the unmet clauses of `nextRung`, and a typed-dependency failure lists its
+`targets`; neither confers the rung.
 
 ## 10. Declared versus enabled verifiers
 
@@ -1098,7 +1104,19 @@ for (const spec of g.specs()) {
       bad(`openQuestions[${index}]`, "Expected a question and boolean blocking flag");
       return;
     }
-    questions.push({ blocking: typeof entry === "string" ? false : entry.blocking ?? false, question });
+    if (
+      typeof entry !== "string" &&
+      "key" in entry &&
+      (typeof entry.key !== "string" || !/^[a-z][A-Za-z0-9]*$/u.test(entry.key))
+    ) {
+      bad(`openQuestions[${index}]`, "Expected a lower-camel question key");
+      return;
+    }
+    questions.push({
+      blocking: typeof entry === "string" ? false : entry.blocking ?? false,
+      question,
+      key: typeof entry === "string" ? null : entry.key ?? null,
+    });
   });
   if (questions.length === 0) continue;
   rows.push({
@@ -1128,15 +1146,17 @@ return {
 ```
 
 Each row is one Spec that records open questions under Intent: its stated readiness,
-`totals.blocking`, and the questions in authored order with their flags. Specs that hold a
+`totals.blocking`, and the questions in authored order with their flags and keys. A question's
+`key` is the one its marker carries, `[blocking #aggregateReach]`, which prose cites as
+`spec:<id>#question.aggregateReach`; a question without a key has `key: null`. Specs that hold a
 blocking question come first, and each group keeps Spec id order. `totals` reports the question
 and Spec counts, so the size of the register never needs a second query or a number copied into
 prose. The recipe lists and does not judge: a blocking question holding its Spec below `defined`
 is the readiness floor's clause, which recipe 9 names for one Spec. A question authored as bare
 prose or as an object with no `blocking` flag in a TypeScript carrier reads as non-blocking.
 `malformed` reports collections that are not lists, entries without non-empty question text,
-and entries whose `blocking` flag is present but is not a boolean. Those entries do not count
-as questions.
+entries whose `blocking` flag is present but is not a boolean, and entries whose `key` is present
+but is not a lower-camel string. Those entries do not count as questions.
 
 ## 21. Dependency footing
 
@@ -1232,7 +1252,7 @@ const escapePattern = /\\([!-/:-@[-`{-~])/gu;
 const idPattern =
   /(?<![A-Za-z0-9-])spec:(?:[^\p{White_Space}\P{ASCII}`"\u0027()[\]{}<>|]|[^\p{ASCII}\p{White_Space}\p{Pd}\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}\p{S}\p{Z}])*/gu;
 const mentionPattern =
-  /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#(design|ui)\.([a-z][A-Za-z0-9]*))?$/u;
+  /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#(design|ui|question)\.([a-z][A-Za-z0-9]*))?$/u;
 const specIds = new Set(g.specs().map((spec) => spec.id));
 const declared = new Map();
 
@@ -1318,11 +1338,16 @@ for (const spec of g.specs()) {
         continue;
       }
       const [, section, key] = parsed;
-      if (
-        section !== undefined &&
-        (key === "description" || !Object.hasOwn(g.specContext(to)?.sections?.[section] ?? {}, key))
-      )
-        record(unresolvedPairs, spec.id, token, at, "entry");
+      if (section !== undefined) {
+        const sections = g.specContext(to)?.sections ?? {};
+        const questions = sections.intent?.openQuestions;
+        const holds =
+          section === "question"
+            ? Array.isArray(questions) &&
+              questions.some((entry) => typeof entry === "object" && entry !== null && entry.key === key)
+            : key !== "description" && Object.hasOwn(sections[section] ?? {}, key);
+        if (!holds) record(unresolvedPairs, spec.id, token, at, "entry");
+      }
       if (to !== spec.id) record(pairs, spec.id, to, at);
     }
   }
@@ -1375,9 +1400,12 @@ A token equal to the scanning Spec's own id is skipped; its own entry addresses 
 Each row keeps every distinct location in `at` as `{ section, entry }`, with zero-based indexes
 inside `entry`, and counts token occurrences in `totals.occurrences`.
 `unresolved` groups by mentioning Spec and token, with `reason: "malformed"` for a refused id or
-address, `"spec"` for an absent Spec, and `"entry"` for an absent own section key or `description`.
+address, `"spec"` for an absent Spec, and `"entry"` for an absent own section key, `description`
+in Design or UI, or a question key no open question of the Spec carries.
 An entry address is `spec:<id>#design.<key>` or `spec:<id>#ui.<key>`, with a key matching
-`^[a-z][A-Za-z0-9]*$`. It resolves against the named Spec's own section keys.
+`^[a-z][A-Za-z0-9]*$`. It resolves against the named Spec's own section keys. An entry address may
+also be `spec:<id>#question.<key>`, which resolves when one of the named Spec's open questions
+carries that key in its marker; there `description` is an ordinary key.
 
 `unbacked` and `reverseOnly` group valid mentions by mentioning Spec and target Spec, combining
 Spec-level mentions and addresses, including missing entries. Self-addresses never enter these
@@ -1425,12 +1453,24 @@ for (const spec of g.specs()) {
   const context = g.specContext(spec.id);
   if (context === undefined) continue;
 
-  const addressOf = (section, entry) =>
-    (section === "design" || section === "ui") &&
-    entry !== "description" &&
-    /^[a-z][A-Za-z0-9]*$/u.test(entry ?? "")
+  const questions = context.sections?.intent?.openQuestions;
+  const questionKeyOf = (entry) => {
+    const index = /^openQuestions\[(\d+)\]\.question$/u.exec(entry ?? "")?.[1];
+    const key =
+      index === undefined || !Array.isArray(questions) ? undefined : questions[Number(index)]?.key;
+    return typeof key === "string" && /^[a-z][A-Za-z0-9]*$/u.test(key) ? key : null;
+  };
+  const addressOf = (section, entry) => {
+    if (section === "intent") {
+      const key = questionKeyOf(entry);
+      return key === null ? null : `${spec.id}#question.${key}`;
+    }
+    return (section === "design" || section === "ui") &&
+      entry !== "description" &&
+      /^[a-z][A-Za-z0-9]*$/u.test(entry ?? "")
       ? `${spec.id}#${section}.${entry}`
       : null;
+  };
   const visit = (section, entry, key, text) => {
     const matchedIn = [
       ...(key !== null && hits(key) ? ["key"] : []),
@@ -1465,16 +1505,23 @@ for (const spec of g.specs()) {
       value.forEach((item, index) => walk(section, item, `${entry ?? ""}[${index}]`, null));
     } else if (typeof value === "object" && value !== null) {
       // A key the author coins is content: any key of the open sections (`design`, `ui`) except
-      // `description`, and a `model.terms` term. A key the carrier fixes (`outcome`, `rules`,
-      // `given`) is structure and never matches.
+      // `description`, a `model.terms` term, and the key of an open question, which travels with
+      // the text of that question and is never a row of its own. A key the carrier fixes
+      // (`outcome`, `rules`, `given`) is structure and never matches.
       const coined =
         section === "design" || section === "ui" || (section === "model" && entry === "terms");
       for (const [name, item] of Object.entries(value)) {
+        const path = entry === null ? name : `${entry}.${name}`;
+        if (section === "intent" && /^openQuestions\[\d+\]\.key$/u.test(path)) continue;
         walk(
           section,
           item,
-          entry === null ? name : `${entry}.${name}`,
-          coined && !(entry === null && name === "description") ? name : null,
+          path,
+          coined && !(entry === null && name === "description")
+            ? name
+            : section === "intent"
+              ? questionKeyOf(path)
+              : null,
         );
       }
     }
@@ -1514,8 +1561,10 @@ The term matches when its tokens appear in the entry as one consecutive run, in 
 | `retry worker` | `retry the worker` | no match, the tokens are not adjacent |
 
 Each row carries `address: string | null`. A Design or UI entry with a key matching
-`^[a-z][A-Za-z0-9]*$` has address `spec:<id>#<section>.<key>`; `description`, off-grammar keys,
-nested paths, and all other sections have `null`.
+`^[a-z][A-Za-z0-9]*$` has address `spec:<id>#<section>.<key>`. The text of an open question whose
+marker carries a key, at `openQuestions[<n>].question`, has address `spec:<id>#question.<key>`,
+and that key matches as the row's key; the key is not a row of its own. `description` in Design or
+UI, off-grammar keys, other nested paths, and all other sections have `null`.
 Each row names the Spec, the `section`, the `entry` inside it, and the entry's `text`. `entry` is
 the key for a keyed entry (`envelopeSketch`, `terms.claim inheritance`), the field and zero-based
 index for a list entry (`rules[2]`), and `null` for the Spec's narrative, which is reported under
@@ -1523,7 +1572,8 @@ the section name `narrative`. `matchedIn` says whether the key, the text, or bot
 A key matches whatever its value is. A non-string value renders as JSON and reports
 `matchedIn: ["key"]`; the front door shortens long text in default output just as it does for
 strings. Nested strings remain searchable at paths such as `retryPolicy.mode` or
-`retryWorkers[0]`. Keys match only where the author coins them: the keys of `design` and `ui` and the terms of `model`.
+`retryWorkers[0]`. Keys match only where the author coins them: the keys of `design` and `ui`,
+the terms of `model`, and the keys of open questions.
 Field names the carrier fixes, such as `outcome` or `rules`, never match. Step text inside `gwt`
 and `gwt-vocabulary` fences is searched like any other entry. Titles and ids stay with concept
 search. Rows keep Spec id order and then the order the graph holds the entries;
@@ -1557,3 +1607,187 @@ for (const spec of g.specs()) {
 }
 return { totals: { entries: rows.length, specs: new Set(rows.map((row) => row.spec)).size }, rows };
 ```
+
+## 25. Address resolution
+
+*When you need this: you hold entry addresses written outside the Specs, in a register, a test,
+or a page, and want to know which still resolve.*
+
+The opening `const addresses` is the parameter. Replace it with the addresses you hold; an empty
+list returns no rows.
+
+```js
+const addresses = [
+  "spec:consumers.design-review#ui.packPage",
+  "spec:consumers.design-review#ui.memberTable",
+  "spec:consumers.absent#design.anyKey",
+  "spec:consumers.design-review",
+];
+const pattern =
+  /^(spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*)#(design|ui|question)\.([a-z][A-Za-z0-9]*)$/u;
+const specIds = new Set(g.specs().map((spec) => spec.id));
+const holds = (id, section, key) => {
+  const sections = g.specContext(id)?.sections ?? {};
+  if (section === "question") {
+    const questions = sections.intent?.openQuestions;
+    return (
+      Array.isArray(questions) &&
+      questions.some((entry) => typeof entry === "object" && entry !== null && entry.key === key)
+    );
+  }
+  const entries = sections[section];
+  return (
+    key !== "description" &&
+    typeof entries === "object" &&
+    entries !== null &&
+    Object.hasOwn(entries, key)
+  );
+};
+const rows = addresses.map((address) => {
+  const row = (resolves, id, section, key, reason) => ({ address, resolves, id, section, key, reason });
+  const parsed = typeof address === "string" ? pattern.exec(address) : null;
+  if (parsed === null) return row(false, null, null, null, "malformed");
+  const [, id, section, key] = parsed;
+  if (!specIds.has(id)) return row(false, null, null, null, "spec");
+  if (!holds(id, section, key)) return row(false, null, null, null, "entry");
+  return row(true, id, section, key, null);
+});
+const count = (reason) => rows.filter((row) => row.reason === reason).length;
+
+return {
+  totals: {
+    addresses: rows.length,
+    resolved: rows.filter((row) => row.resolves).length,
+    malformed: count("malformed"),
+    spec: count("spec"),
+    entry: count("entry"),
+  },
+  rows,
+};
+```
+
+Each row answers one input, in input order, repeats included. A row that resolves carries the
+Spec `id`, the `section` (`design`, `ui`, or `question`), the `key`, and `reason: null`. A row that
+does not resolve carries `id`, `section`, and `key` as null and one `reason`: `"malformed"` for an
+input that is not an entry address, a bare Spec id, a `pack:` id, and a value that is not a string
+among them; `"spec"` for an address whose Spec is absent; and `"entry"` for an address whose Spec
+holds no such entry. A Design or UI key resolves as an own key of that section other than
+`description`. A question key resolves when one of the Spec's open questions carries it in its
+marker, `[blocking #aggregateReach]`. These are the grammar and the rule `sdp validate` applies to
+an address written in a Spec's prose, under `spec:decisions.checked-mentions`; the mention audit
+(recipe 22) reads addresses inside the Specs, and this recipe reads the ones written anywhere
+else. `totals` counts the inputs, the resolving rows, and each reason. The law is
+`spec:consumers.agent-surface.address-and-cycle-recipes`.
+
+## 26. Dependency cycles
+
+*When you need this: you want every place where Specs rest on each other, or on themselves,
+through `dependsOn`.*
+
+```js
+const ids = g.specs().map((spec) => spec.id);
+const known = new Set(ids);
+const targets = new Map(ids.map((id) => [id, []]));
+for (const edge of graph.edges) {
+  if (edge.type === "dependsOn" && edge.claim === "declared" && known.has(edge.from) && known.has(edge.to)) {
+    targets.get(edge.from).push(edge.to);
+  }
+}
+for (const list of targets.values()) list.sort();
+
+const order = new Map();
+const low = new Map();
+const stack = [];
+const onStack = new Set();
+const sets = [];
+const visit = (id) => {
+  order.set(id, order.size);
+  low.set(id, order.get(id));
+  stack.push(id);
+  onStack.add(id);
+};
+const connect = (root) => {
+  visit(root);
+  const frames = [{ id: root, at: 0 }];
+  while (frames.length > 0) {
+    const frame = frames[frames.length - 1];
+    const list = targets.get(frame.id);
+    if (frame.at < list.length) {
+      const next = list[frame.at];
+      frame.at += 1;
+      if (!order.has(next)) {
+        visit(next);
+        frames.push({ id: next, at: 0 });
+      } else if (onStack.has(next)) {
+        low.set(frame.id, Math.min(low.get(frame.id), order.get(next)));
+      }
+      continue;
+    }
+    frames.pop();
+    if (low.get(frame.id) === order.get(frame.id)) {
+      const members = [];
+      let member;
+      do {
+        member = stack.pop();
+        onStack.delete(member);
+        members.push(member);
+      } while (member !== frame.id);
+      sets.push(members.sort());
+    }
+    const parent = frames[frames.length - 1];
+    if (parent !== undefined) low.set(parent.id, Math.min(low.get(parent.id), low.get(frame.id)));
+  }
+};
+for (const id of ids) if (!order.has(id)) connect(id);
+
+const cycleThrough = (members) => {
+  const inside = new Set(members);
+  const start = members[0];
+  const parent = new Map();
+  const queue = [start];
+  for (let at = 0; at < queue.length; at += 1) {
+    const current = queue[at];
+    for (const next of targets.get(current)) {
+      if (!inside.has(next)) continue;
+      if (next === start) {
+        const path = [start];
+        for (let step = current; step !== start; step = parent.get(step)) path.splice(1, 0, step);
+        return [...path, start];
+      }
+      if (!parent.has(next)) {
+        parent.set(next, current);
+        queue.push(next);
+      }
+    }
+  }
+  return [];
+};
+
+const cycles = sets
+  .filter((members) => members.length > 1 || targets.get(members[0]).includes(members[0]))
+  .sort((left, right) => (left[0] < right[0] ? -1 : left[0] > right[0] ? 1 : 0))
+  .map((members) => ({ members, cycle: cycleThrough(members) }));
+
+return {
+  totals: {
+    sets: cycles.filter((entry) => entry.members.length > 1).length,
+    selfDependent: cycles.filter((entry) => entry.members.length === 1).length,
+    specsInCycles: cycles.reduce((sum, entry) => sum + entry.members.length, 0),
+  },
+  cycles,
+};
+```
+
+The body takes no parameter and reads the whole graph. The walk keeps its own frame stack, so a
+dependency chain of any length runs without recursing. Each entry of `cycles` is a set of two or
+more Specs in which each Spec reaches every other through declared `dependsOn` edges, or one Spec
+that declares `dependsOn` on itself and belongs to no such set. A Spec that reaches a set without
+being reached back belongs to none, and an edge whose target is not a Spec in the graph is
+ignored. `members` lists the set sorted by id. `cycle` is one closed path through the set: the
+shortest that starts and ends at the first member, found by a breadth-first walk over targets in
+id order, so a Spec that rests only on itself reads `[id, id]`. Entries keep the order of their
+first members. `totals.sets` counts the sets of two or more, `totals.selfDependent` the Specs that
+rest only on themselves, and `totals.specsInCycles` every member of either. The recipe reports and
+never refuses: a cycle is data about the authored dependencies, and the readiness floor reads each
+`dependsOn` target's stated rung without walking a chain. The law is
+`spec:consumers.agent-surface.address-and-cycle-recipes`.

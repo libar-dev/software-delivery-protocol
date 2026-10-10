@@ -18,14 +18,14 @@ relations:
 - rule: A human may use the review context when stating readiness, while validators check only the structural readiness floor and never record or require review approval.
 - rule: The MVP view is deterministic generated Markdown with an index and pages for Specs and Packs; richer visual representations remain outside this behavior.
 - rule: The page set is a function of the graph alone — it carries no timestamp, no commit, and no run identity — so two renders of the same corpus are byte-identical.
-- rule: Rendering encodes by Markdown syntax context: prose and table fields escape structural characters, fenced JSON preserves authored keys and values through JSON encoding, and inline code uses a delimiter that preserves literal backticks.
+- rule: Rendering encodes by Markdown syntax context: prose and table fields escape structural characters, each entry of a `design` or `ui` section renders as a list item in authored order with its key as inline code, as ruled by `spec:decisions.authored-entry-order`, fenced JSON preserves a structured value inside one entry through JSON encoding, and inline code uses a delimiter that preserves literal backticks.
 - rule: The realizing entrypoint is `renderDesignReview` in `src/projections/design-review.ts`, which reads the reader and returns pages; writing them is the caller's job.
 
 ## UI
 The generated Design Review exposes three page anatomies from the same graph.
 
 - specPage: A Spec page presents descriptors, readiness, relations, bindings, authored sections, and findings in one context.
-- packPage: A Pack page presents framing, model references, and an ordered member table with each member's kind, altitude, readiness, and implementation and verifier bindings.
+- packPage: A Pack page presents framing, model references, and a member table in the manifest's authored order with each member's kind, altitude, readiness, and implementation and verifier bindings.
 - indexPage: The index presents one sortable-style Markdown table for Specs and a linked bullet list for Packs, with stable links into their detail pages.
 
 ## Example space

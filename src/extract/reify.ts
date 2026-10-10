@@ -606,10 +606,15 @@ function reifyStaticArray(
   return { ok: true, value: values };
 }
 
+/**
+ * `placeholders` names the properties whose non-static value reifies to the mapped marker instead
+ * of failing the object — today only an open question's `key` (`reifyOpenQuestions`).
+ */
 function reifyStaticObject(
   objectLiteral: ObjectLiteralExpression,
   path: string,
   bindings: ProtocolBindings,
+  placeholders?: ReadonlyMap<string, unknown>,
 ): StaticResult {
   const value: Record<string, unknown> = {};
   const seenNames = new Set<string>();
@@ -649,14 +654,61 @@ function reifyStaticObject(
 
     const result = reifyStaticValue(initializer, `${path}.${name}`, bindings);
 
+    if (result.ok) {
+      setOwn(value, name, result.value);
+      continue;
+    }
+
+    if (placeholders?.has(name)) {
+      setOwn(value, name, placeholders.get(name));
+      continue;
+    }
+
+    return result;
+  }
+
+  return { ok: true, value };
+}
+
+/**
+ * What a non-static open-question `key` reifies to. `checkOpenQuestionKeys` refuses it at the
+ * key's line exactly as it refuses a static key off the grammar, and deletes it, so the marker
+ * never reaches the graph.
+ */
+const NON_STATIC_OPEN_QUESTION_KEY = Symbol("non-static open question key");
+const OPEN_QUESTION_PLACEHOLDERS: ReadonlyMap<string, unknown> = new Map([
+  ["key", NON_STATIC_OPEN_QUESTION_KEY],
+]);
+
+/**
+ * The one array that is not strict about one property: an open question's `key` is the key
+ * check's to refuse, so a non-static key drops alone with that check's error while the question
+ * and its siblings stay (`spec:model.open-question-keys`). Everything else keeps the strict array
+ * rule — a non-static `question`, a spread, or a non-static prose element still fails the whole
+ * `openQuestions` value, as `reifyStaticArray` would.
+ */
+function reifyOpenQuestions(
+  arrayLiteral: ArrayLiteralExpression,
+  path: string,
+  bindings: ProtocolBindings,
+): StaticResult {
+  const values: unknown[] = [];
+
+  for (const [index, element] of arrayLiteral.getElements().entries()) {
+    const elementPath = `${path}[${String(index)}]`;
+    const unwrapped = unwrapTransparent(element);
+    const result = Node.isObjectLiteralExpression(unwrapped)
+      ? reifyStaticObject(unwrapped, elementPath, bindings, OPEN_QUESTION_PLACEHOLDERS)
+      : reifyStaticValue(element, elementPath, bindings);
+
     if (!result.ok) {
       return result;
     }
 
-    setOwn(value, name, result.value);
+    values.push(result.value);
   }
 
-  return { ok: true, value };
+  return { ok: true, value: values };
 }
 
 function containsDescription(value: unknown): boolean {
@@ -717,7 +769,7 @@ const RECOGNIZED_SECTION_PROPERTIES: ReadonlyMap<string, ReadonlySet<string>> = 
       "openQuestions",
     ]),
   ],
-  ["intent.openQuestions[]", new Set(["question", "blocking"])],
+  ["intent.openQuestions[]", new Set(["question", "blocking", "key"])],
   ["behavior", new Set(["description", "rules", "examples", "flows", "exampleSpace"])],
   ["behavior.examples[]", GWT_PROPERTY_NAMES],
   ["behavior.exampleSpace", GWT_PROPERTY_NAMES],
@@ -742,7 +794,7 @@ const AUTHORING_SHAPE_PATHS = new Set([
  * Section content degrades property-by-property: a non-static property inside a section drops with
  * a warning while its static siblings survive. Lossiness recurses through object nesting only —
  * arrays stay strict (see `reifyStaticArray`), so a failure inside an array drops the owning
- * property wholesale.
+ * property wholesale. The one exception is an open question's `key` (`reifyOpenQuestions`).
  */
 function reifyObjectLossy(
   objectLiteral: ObjectLiteralExpression,
@@ -829,7 +881,10 @@ function reifyObjectLossy(
       continue;
     }
 
-    const result = reifyStaticValue(initializer, propertyPath, bindings);
+    const result =
+      propertyPath === "intent.openQuestions" && Node.isArrayLiteralExpression(inner)
+        ? reifyOpenQuestions(inner, propertyPath, bindings)
+        : reifyStaticValue(initializer, propertyPath, bindings);
 
     if (result.ok) {
       setOwn(value, name, result.value);
@@ -954,6 +1009,97 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
   }
 
   return { value: sanitized, issues };
+}
+
+/** The Design key grammar, which an open question's key shares. */
+const OPEN_QUESTION_KEY = /^[a-z][A-Za-z0-9]*$/u;
+
+/**
+ * The first plain property assignment of an object literal with the given name, the one lossy
+ * reification and sanitization keep when a name repeats.
+ */
+function firstPropertyNamed(node: Node, name: string): PropertyAssignment | undefined {
+  const unwrapped = unwrapTransparent(node);
+
+  if (!Node.isObjectLiteralExpression(unwrapped)) {
+    return undefined;
+  }
+
+  return unwrapped
+    .getProperties()
+    .find(
+      (property): property is PropertyAssignment =>
+        Node.isPropertyAssignment(property) && readPropertyName(property) === name,
+    );
+}
+
+/** The line of `openQuestions[<index>].key` in an authored Intent, or the Intent's own line. */
+function openQuestionKeyLine(intentNode: Node, index: number): number {
+  const fallback = intentNode.getStartLineNumber();
+  const questions = firstPropertyNamed(intentNode, "openQuestions")?.getInitializer();
+  const array = questions === undefined ? undefined : unwrapTransparent(questions);
+
+  if (array === undefined || !Node.isArrayLiteralExpression(array)) {
+    return fallback;
+  }
+
+  const element = array.getElements()[index];
+  const key = element === undefined ? undefined : firstPropertyNamed(element, "key");
+
+  return key?.getStartLineNumber() ?? fallback;
+}
+
+/**
+ * An open question's key is the Design key grammar and unique among one Spec's open questions.
+ * A key that is not a string on the grammar, or repeats an earlier key, drops alone with an error;
+ * the question and the Spec stay (`spec:model.open-question-keys`). A non-static key arrives here
+ * as `NON_STATIC_OPEN_QUESTION_KEY` and is refused as a key off the grammar.
+ */
+function checkOpenQuestionKeys(
+  intentNode: Node,
+  intent: unknown,
+  file: string,
+  subjectId: string | undefined,
+  findings: Finding[],
+): void {
+  const questions = isUnknownRecord(intent) ? intent.openQuestions : undefined;
+
+  if (!Array.isArray(questions)) {
+    return;
+  }
+
+  const seen = new Set<string>();
+
+  for (const [index, question] of questions.entries()) {
+    if (!isUnknownRecord(question) || !Object.hasOwn(question, "key")) {
+      continue;
+    }
+
+    const key: unknown = question.key;
+    const lawful = typeof key === "string" && OPEN_QUESTION_KEY.test(key);
+
+    if (lawful && !seen.has(key)) {
+      seen.add(key);
+      continue;
+    }
+
+    const reason = lawful
+      ? "open question keys must be unique"
+      : "open question keys must be lower-camel ASCII";
+    const path = `intent.openQuestions[${String(index)}].key`;
+    delete question.key;
+    findings.push(
+      createExtractFinding(
+        extractFindingIds.unrecognizedProperty,
+        "error",
+        `property "${path}" is refused: ${reason}`,
+        file,
+        openQuestionKeyLine(intentNode, index),
+        subjectId,
+        path,
+      ),
+    );
+  }
 }
 
 function appendSectionPropertyFindings(
@@ -1436,6 +1582,9 @@ function reifySpecCall(
       data[name] = sanitized.value;
       appendDropFindings(lossy.drops, file, subjectId, findings);
       appendSectionPropertyFindings(sanitized.issues, file, subjectId, findings);
+      if (name === "intent") {
+        checkOpenQuestionKeys(inner, sanitized.value, file, subjectId, findings);
+      }
       continue;
     }
 
@@ -1461,6 +1610,9 @@ function reifySpecCall(
       const sanitized = sanitizeSectionValue(inner, result.value, name);
       data[name] = sanitized.value;
       appendSectionPropertyFindings(sanitized.issues, file, subjectId, findings);
+      if (name === "intent") {
+        checkOpenQuestionKeys(inner, sanitized.value, file, subjectId, findings);
+      }
       continue;
     }
 

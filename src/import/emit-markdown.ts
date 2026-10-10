@@ -57,13 +57,19 @@ function intentSection(
     ...importTexts(intent?.risks).map((value) => `- risk: ${value}`),
     ...importTexts(intent?.assumptions).map((value) => `- assumption: ${value}`),
   ];
+  // An omitted `blocking` flag is non-blocking, as the readiness floor reads it, so it emits the
+  // `[non-blocking]` marker; a flag that is present and not a boolean has no marker.
   const questions = Array.isArray(intent?.openQuestions)
     ? intent.openQuestions.flatMap((question) => {
         const entry = importData(question);
         const value = importText(entry?.question);
-        return value === undefined || typeof entry?.blocking !== "boolean"
+        const key = importText(entry?.key);
+        const blocking = entry?.blocking;
+        return value === undefined || (blocking !== undefined && typeof blocking !== "boolean")
           ? []
-          : [`- [${entry.blocking ? "blocking" : "non-blocking"}] ${value}`];
+          : [
+              `- [${blocking === true ? "blocking" : "non-blocking"}${key === undefined ? "" : ` #${key}`}] ${value}`,
+            ];
       })
     : [];
   const fieldBlock = [...fields, ...repeated].join("\n");

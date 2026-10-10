@@ -121,7 +121,9 @@ takes its entries only. Prose after a section's first entry, fence, or H3 is ref
 | `## Verification — <mode>` | plain entries, one criterion each; the mode is `manual`, `reviewed`, `contract`, or `executable`, after an em dash |
 
 Intent may end with an optional `### Open questions`, the only H3 the body accepts. Each of its
-entries opens with `[blocking]` or `[non-blocking]`. On an example, one `gwt` fence closes Intent.
+entries opens with `[blocking]` or `[non-blocking]`. To cite a question from prose, give it a
+lower-camel key, unique in the Spec, after `#` inside the marker: `[blocking #aggregateReach]` is
+addressed as `spec:<id>#question.aggregateReach`. On an example, one `gwt` fence closes Intent.
 
 A Spec carries at most one of Behavior, Rule, Workflow, and Contract. Leading prose may stand under
 that owner or under Example space, not both. In Rule, Contract, Workflow, and Verification, open

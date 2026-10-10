@@ -6,17 +6,29 @@ import {
   SPEC_KINDS,
   buildGraphIndex,
   constrainedBy,
+  dependsOn,
   deriveReadiness,
   evaluateReadinessFloor,
   kindEvidence,
   readinessFloors,
   refines,
+  schemaVersion,
   spec,
   specId,
+  validateGraph,
   validationSeverities,
   validatorFamilies,
 } from "../src/index.js";
-import type { GraphIndex, PrimitiveNode, ReadinessFloorFailure, Spec } from "../src/index.js";
+import type {
+  GraphEdge,
+  GraphIndex,
+  GraphNode,
+  PrimitiveNode,
+  ReadinessClause,
+  ReadinessFloorFailure,
+  Spec,
+  SpecReadiness,
+} from "../src/index.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
 /** Indexes the graph derived from the given model and resolves the subject's Primitive node. */
@@ -581,5 +593,206 @@ describe("the concreteness law — an example is a bound point (the plan-12 rati
     });
 
     expect(derivedReadinessFor(unbound.id, unbound)).toBe("scoped");
+  });
+});
+
+describe("the floor for a target rung and the targets a dependency failure names", () => {
+  const subjectId = specId("spec:probe.subject");
+  const basisId = specId("spec:probe.basis");
+  const subjectStating = (readiness: Spec["readiness"]): Spec =>
+    spec({
+      id: subjectId,
+      title: "Subject",
+      kind: "rule",
+      altitude: "story",
+      readiness,
+      intent: { outcome: "Rest on the basis." },
+      behavior: { rules: ["The subject states one rule."] },
+      relations: [dependsOn(basisId)],
+    });
+  const basisStating = (readiness: Spec["readiness"]): Spec =>
+    spec({
+      id: basisId,
+      title: "Basis",
+      kind: "rule",
+      altitude: "story",
+      readiness,
+      intent: { outcome: "Carry the subject." },
+      behavior: { rules: ["The basis states one rule."] },
+    });
+  const targetClause = "typed-dependency-targets-are-defined";
+
+  it("names the scoped dependency at a target rung of ready on a Spec stating defined", () => {
+    const { node, index } = indexedSubject(subjectId, [
+      subjectStating("defined"),
+      basisStating("scoped"),
+    ]);
+
+    // Stated rung: honest. Target rung `ready`: the dependency below `defined` is named.
+    expect(evaluateReadinessFloor(node, index)).toEqual([]);
+    expect(evaluateReadinessFloor(node, index, "ready")).toEqual([
+      {
+        clauseId: targetClause,
+        description: readinessFloors.ready.clauses[1].description,
+        targets: [{ type: "dependsOn", id: basisId, statedReadiness: "scoped" }],
+      },
+    ]);
+  });
+
+  it("finds nothing at ready when the same dependency states defined", () => {
+    const { node, index } = indexedSubject(subjectId, [
+      subjectStating("defined"),
+      basisStating("defined"),
+    ]);
+
+    expect(evaluateReadinessFloor(node, index, "ready")).toEqual([]);
+  });
+
+  it("evaluates the target rung, not the stated one, in both directions", () => {
+    const { node, index } = indexedSubject(subjectId, [
+      subjectStating("ready"),
+      basisStating("scoped"),
+    ]);
+
+    // Stated `ready` fails on the target; a lower target rung evaluates only the clauses up to it.
+    expect(evaluateReadinessFloor(node, index).map((failure) => failure.clauseId)).toEqual([
+      targetClause,
+    ]);
+    for (const rung of ["idea", "scoped", "defined"] as const) {
+      expect(evaluateReadinessFloor(node, index, rung)).toEqual([]);
+    }
+  });
+
+  it("evaluates the cumulative clauses of every rung up to the target", () => {
+    const bare = spec({
+      id: subjectId,
+      title: "Bare",
+      kind: "rule",
+      altitude: "story",
+      readiness: "idea",
+      intent: {
+        outcome: "Say only the outcome.",
+        openQuestions: [{ question: "Q?", blocking: true }],
+      },
+    });
+    const { node, index } = indexedSubject(subjectId, [bare]);
+
+    expect(
+      evaluateReadinessFloor(node, index, "defined").map((failure) => failure.clauseId),
+    ).toEqual([
+      "at-least-one-relation",
+      "kind-evidence-present",
+      "kind-evidence-complete",
+      "no-blocking-open-questions",
+    ]);
+    expect(
+      evaluateReadinessFloor(node, index, "scoped").map((failure) => failure.clauseId),
+    ).toEqual(["at-least-one-relation", "kind-evidence-present"]);
+  });
+
+  it("yields no failure for an unratified kind or an unratified target rung", () => {
+    const { node, index } = indexedSubject(subjectId, [
+      subjectStating("ready"),
+      basisStating("scoped"),
+    ]);
+    const foreignKind = { ...node, specKind: "epic" } as unknown as PrimitiveNode;
+    const foreignStated = { ...node, readiness: "shipped" } as unknown as PrimitiveNode;
+
+    expect(evaluateReadinessFloor(foreignKind, index, "ready")).toEqual([]);
+    expect(evaluateReadinessFloor(node, index, "shipped" as SpecReadiness)).toEqual([]);
+    // An unratified stated rung yields nothing on its own, but a named target rung is evaluated.
+    expect(evaluateReadinessFloor(foreignStated, index)).toEqual([]);
+    expect(
+      evaluateReadinessFloor(foreignStated, index, "ready").map((failure) => failure.clauseId),
+    ).toEqual([targetClause]);
+  });
+
+  it("names every distinct breaking target, sorted by relation type and then by id", () => {
+    const subject = "spec:probe.subject";
+    const primitive = (id: string, readiness: SpecReadiness): PrimitiveNode => ({
+      id,
+      nodeType: "Primitive",
+      claim: "declared",
+      specKind: "rule",
+      altitude: "story",
+      readiness,
+      title: id,
+      file: "specs/probe.sdp.md",
+      sections: { intent: { outcome: "Probe." }, behavior: { rules: ["Probe rule."] } },
+    });
+    const nodes: GraphNode[] = [
+      primitive(subject, "defined"),
+      primitive("spec:probe.B", "idea"),
+      primitive("spec:probe.a", "scoped"),
+      primitive("spec:probe.c", "defined"),
+      primitive("spec:probe.d", "ready"),
+      primitive("spec:probe.e", "idea"),
+      { id: "impl:probe.code", nodeType: "CodeNode", claim: "anchored", file: "src/probe.ts" },
+    ];
+    const edge = (type: GraphEdge["type"], to: string): GraphEdge => ({
+      from: subject,
+      to,
+      type,
+      claim: "declared",
+    });
+    const edges: GraphEdge[] = [
+      edge("decidedBy", "spec:probe.a"),
+      edge("decidedBy", "impl:probe.code"),
+      edge("constrainedBy", "spec:probe.a"),
+      edge("dependsOn", "spec:probe.a"),
+      edge("dependsOn", "spec:probe.B"),
+      edge("dependsOn", "spec:probe.a"),
+      edge("dependsOn", "spec:probe.c"),
+      edge("dependsOn", "spec:probe.missing"),
+      edge("refines", "spec:probe.d"),
+      edge("refines", "spec:probe.a"),
+      edge("verifies", "spec:probe.e"),
+      edge("supersedes", "spec:probe.e"),
+      { from: subject, to: "spec:probe.e", type: "dependsOn", claim: "inferred" },
+    ];
+    const index = buildGraphIndex({ schemaVersion, nodes, edges });
+    const node = index.primitivesById.get(subject);
+    if (node === undefined) throw new Error("missing probe subject");
+
+    const failures = evaluateReadinessFloor(node, index, "ready");
+
+    expect(failures.map((failure) => failure.clauseId)).toEqual([
+      "all-relations-resolve",
+      targetClause,
+    ]);
+    // Only the typed-dependency clause carries targets.
+    expect(Object.hasOwn(failures[0] ?? {}, "targets")).toBe(false);
+    // Missing targets stay the resolution clause's; `verifies`, `supersedes`, inferred edges and
+    // targets stating at least `defined` never appear; a repeated edge appears once; a non-Spec
+    // target carries no stated rung; `B` sorts before `a` in code-unit order.
+    expect(failures[1]?.targets).toEqual([
+      { type: "refines", id: "spec:probe.a", statedReadiness: "scoped" },
+      { type: "dependsOn", id: "spec:probe.B", statedReadiness: "idea" },
+      { type: "dependsOn", id: "spec:probe.a", statedReadiness: "scoped" },
+      { type: "constrainedBy", id: "spec:probe.a", statedReadiness: "scoped" },
+      { type: "decidedBy", id: "impl:probe.code" },
+      { type: "decidedBy", id: "spec:probe.a", statedReadiness: "scoped" },
+    ]);
+  });
+
+  it("keeps the readiness-floor finding message free of targets", () => {
+    const graph = deriveFixtureGraph({ specs: [subjectStating("ready"), basisStating("scoped")] });
+    const findings = validateGraph(graph).findings.filter(
+      (finding) =>
+        finding.validatorId === "honesty/readiness-floor" && finding.subjectId === subjectId,
+    );
+
+    expect(findings.map((finding) => finding.message)).toEqual([
+      `Spec "${subjectId}" states readiness "ready" but does not satisfy floor clause "${targetClause}": Every refines, dependsOn, constrainedBy, and decidedBy target states at least defined.`,
+    ]);
+  });
+
+  it("sets a targets reader on the typed-dependency clause alone", () => {
+    const withTargets = Object.values(readinessFloors)
+      .flatMap((floor): readonly ReadinessClause[] => floor.clauses)
+      .filter((clause) => "targets" in clause)
+      .map((clause) => clause.id);
+
+    expect(withTargets).toEqual([targetClause]);
   });
 });

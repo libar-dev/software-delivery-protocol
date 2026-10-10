@@ -20,6 +20,7 @@ const importFixture = join(repositoryRoot, "test/fixtures/import/round-trip/beha
 
 const expectedRootExports = [
   "CODE_ANCHOR_NAMESPACES",
+  "ENTRY_ADDRESS_SECTIONS",
   "MAX_MERMAID_EDGES_PER_DIAGRAM",
   "MAX_MERMAID_NODES_PER_DIAGRAM",
   "PROTOCOL_MODULE_SPECIFIER",

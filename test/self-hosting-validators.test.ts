@@ -1241,6 +1241,7 @@ function createPackCoherenceWorld(point: Partial<PackCoherenceConditions>): Vali
     nodeType: "Pack",
     claim: "declared",
     title: "Probe aggregate",
+    members: Array.from({ length: memberCount }, () => specId),
     file: "specs/probe.pack.sdp.ts",
   });
 
