@@ -1,6 +1,6 @@
 # Census
 
-A disposable projection of the one graph (schema `0.8.0`): 17 nodes · 32 edges · 11 Specs.
+A disposable projection of the one graph (schema `0.9.0`): 17 nodes · 32 edges · 11 Specs.
 
 ## Spec kinds
 
