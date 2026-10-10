@@ -1,6 +1,7 @@
 # Plan 40. Annotations, closer to the original design
 
-> **Status:** ✅ EXECUTED, held for the owner's `ready` on MD-36 to MD-38. The full gate passed
+> **Status:** ✅ EXECUTED. The owner stated `ready` on MD-36 and MD-38 on 2026-10-10; MD-37 is
+> held for the owner's `ready` on `#referenceDirection` and `#entryAddressTargets`. The full gate passed
 > at close on both repositories; every count below is derived, re-run the recipes rather than
 > quoting it. The owner's direction of 2026-10-09: move closer to the v0 design and
 > bring back the value of annotating architecturally significant units and their relationships
@@ -30,7 +31,8 @@ Three inputs, read on 2026-10-09:
 
 ## The rulings this arc makes
 
-Each is a decision Spec at `defined`, held for the owner's `ready`. Names lead; numbers follow in
+Each is a decision Spec; R1 and R3 state `ready` (the owner, 2026-10-10), R2 states `defined`
+and is held for the owner's `ready`. Names lead; numbers follow in
 `docs/concept/DECISIONS.md`.
 
 ### R1. The comment form (`spec:decisions.anchor-comment-form`, MD-36)

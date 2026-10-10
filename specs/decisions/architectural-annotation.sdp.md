@@ -2,7 +2,7 @@
 id: spec:decisions.architectural-annotation
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.anchors
   supersedes:

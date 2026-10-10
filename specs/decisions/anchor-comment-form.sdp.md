@@ -2,7 +2,7 @@
 id: spec:decisions.anchor-comment-form
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.anchors
   supersedes: spec:decisions.jsdoc-graph-extraction-refused

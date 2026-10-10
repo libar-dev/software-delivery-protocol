@@ -259,8 +259,9 @@ delivery fact, workflow state, or graph state.
   `agent front door` · `evaluation sink` / `sdp q` · `demand map` · `recipe` (the growth-valve
   sense) — the last four ratified at the phase-5 PR review (the front-door ruling, MD-22); the
   **Surfaces & projections** rows above give the referents · `constant form` · `comment form` ·
-  `references` · `role` · `layer` · `context` — the six held by the annotations arc (MD-36 to
-  MD-38; their decision Specs state `defined` and await the owner's `ready`).
+  `references` · `role` · `layer` · `context` — the six of the annotations arc (MD-36 to
+  MD-38; the comment form and architectural annotation state `ready`, the binding grain
+  states `defined` and awaits the owner's `ready`).
 - **Descriptor values locked:** `kind` ∈ {`behavior`,`workflow`,`example`,`rule`,`constraint`,`model`,
   `decision`,`contract`} · `altitude` ∈ {`epic`,`feature`,`story`} · `readiness` ∈
   {`idea`,`scoped`,`defined`,`ready`}.
