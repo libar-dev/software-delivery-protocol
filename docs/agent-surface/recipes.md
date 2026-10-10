@@ -32,25 +32,46 @@ pnpm exec sdp q '<body>' --root PATH --exclude PATH --exclude PATH
 `--root PATH` picks the extraction root (default: the working directory) and `--exclude` is
 repeatable for root-relative path prefixes. `PATH` is a placeholder, not a literal directory.
 
-**Some recipes open with a parameter.** Recipes 3, 6, 9, 14, 19, 21, 22, 23, 25, and 27 take
-their subject on the opening `const` line(s): a Spec id, a search term, a component id, a list of
-Spec ids, a list of entry addresses, or a Pack id. Those lines name *this* repository's corpus so
-every body runs as written here (the recipe check executes each one verbatim); in your own corpus,
-substitute your subject on that line before running. A Spec id, component id, or Pack id absent
-from the graph returns `found: false` rather than failing.
+**Some recipes take a parameter.** Recipes 3, 4, 5, 6, 9, 14, 19, 21, 22, 23, 25, and 27 read
+their subject from the `params` binding on their opening line: a Spec id, a list of changed files,
+a Pack id, a search term, a component id, a list of Spec ids, or a list of entry addresses. Each
+recipe names its parameter. Pass it as JSON data with `--params`, never by editing the body:
 
-**Recipe 4 is different.** Recipe 4 filenames travel via `SDP_CHANGED_FILES_JSON`; callers never
-substitute filenames into the JavaScript fence. Keep its query body static and pass changed paths
-as JSON data through that environment variable, as shown in the recipe-4 instructions below.
+```sh
+pnpm --silent sdp:q '<body>' --params '{"spec":"spec:model.anchors"}' --json
+pnpm --silent sdp:q '<body>' --params @params.json --json
+```
+
+`--params @PATH` reads the JSON from a file, which suits a long list. Without `--params`, `params`
+is `{}` and the body falls back to the sample on its opening line. The samples name *this*
+repository's corpus, so every body runs as written here (the recipe check executes each one
+unchanged). A Spec id, component id, or Pack id absent from the graph returns `found: false`
+rather than failing. A value that is not JSON, or a file that cannot be read, is refused before
+the body runs.
+
+**Every body ships as a file.** The build writes each body below to
+`dist/recipes/<NN>-<slug>.js`, where `NN` is the two-digit recipe number and the slug is the
+heading in lower kebab case, so recipe 25 is `dist/recipes/25-address-resolution.js`. The package
+ships that directory, at
+`node_modules/@libar-dev/software-delivery-protocol/dist/recipes/` in an adopter. Run a file as
+shipped instead of copying its body out of this page:
+
+```sh
+pnpm --silent sdp:q "$(cat dist/recipes/25-address-resolution.js)" --params @addresses.json --json
+```
+
+This catalog stays the one owner of the bodies. The files are derived from it, and the recipe
+check holds each one byte for byte to its body here.
 
 **The contract, in one place.** The front door derives the graph in process and evaluates the body
-you supply; `return` is the output contract. Three bindings are injected:
+you supply; `return` is the output contract. Four bindings are injected:
 
 | Binding | What it is |
 |---|---|
 | `g` | the reader over the derived graph — the same `createReader` the package exports |
 | `graph` | the raw graph schema object (nodes, edges, claims) |
 | `report` | the validation report, so honesty findings are queryable data and never a gate |
+| `params` | the JSON value `--params` supplies, or `{}` without it; input to the body, never a verb |
 
 **Body rules.** A body is a plain JavaScript async function body — no `import`/`export`, no
 TypeScript-only syntax. It may `await`. Default output is bounded `util.inspect`; `--json` prints
@@ -165,8 +186,11 @@ rung. A hit *with* an unmet clause is the expensive one.
 *When you need this: you are about to implement or review one Spec and want its sections,
 relations, and bindings in one shot.*
 
+The parameter is `params.spec`, the Spec id to read; an unknown id returns `{ id, found: false }`
+rather than failing.
+
 ```js
-const id = "spec:consumers.reader";
+const id = params.spec ?? "spec:consumers.reader";
 const context = g.specContext(id);
 
 if (context === undefined) {
@@ -222,17 +246,24 @@ that it passed. Pass/fail is CI's, exactly as skip and quarantine are.
 
 *When you need this: you have a diff (or are about to make one) and want the Specs it reaches.*
 
-The caller acquires the changed paths and passes them as data, never as query source. From the repository root, this exact pipeline preserves every valid Git filename byte except NUL (which Git filenames cannot contain), including newlines, while JSON-encoding the NUL-delimited list before it reaches the environment:
+The parameter is `params.files`, the list of changed paths, relative to the root. The caller
+acquires the paths and passes them as data, never as query source. From the repository root, this
+pipeline keeps every valid Git filename byte except NUL (which Git filenames cannot contain),
+newlines included, by JSON-encoding the NUL-delimited list before it reaches the sink:
 
 ```sh
-SDP_CHANGED_FILES_JSON="$(git diff --name-only -z | node -e 'const fs = require("node:fs"); const names = fs.readFileSync(0).toString("utf8").split("\0"); process.stdout.write(JSON.stringify(names.slice(0, -1)));')" \
-pnpm --silent sdp:q 'const changed = JSON.parse(process.env.SDP_CHANGED_FILES_JSON ?? "[]"); const radius = g.blastRadius(changed); const impactReasons = (item) => ({ id: item.id, reasons: item.reasons.map((reason) => reason.throughBinding === undefined ? { file: reason.file, via: null } : { file: reason.file, via: reason.throughBinding.id, edgeType: reason.throughBinding.edgeType, claim: reason.throughBinding.claim }) }); const atRiskReasons = (item) => ({ id: item.id, nodeType: item.nodeType, reasons: item.reasons.map((reason) => ({ from: reason.from, edgeType: reason.edgeType, to: reason.to, claim: reason.claim })) }); return { changedFiles: radius.changedFiles, impactedSpecs: radius.impactedSpecs.map(impactReasons), atRiskSpecs: radius.atRisk.filter((item) => item.nodeType === "Primitive").map(atRiskReasons), atRiskOther: radius.atRisk.filter((item) => item.nodeType !== "Primitive").map(atRiskReasons), coverageUnknownFiles: radius.coverageUnknown, unlinkedUnits: radius.unlinked.map((unit) => ({ id: unit.id, file: unit.file })) };' --json
+changed="$(mktemp)"
+git diff --name-only -z | node -e 'const fs = require("node:fs"); const names = fs.readFileSync(0).toString("utf8").split("\0"); process.stdout.write(JSON.stringify({ files: names.slice(0, -1) }));' > "$changed"
+pnpm --silent sdp:q "$(cat dist/recipes/04-what-breaks-if-i-change-these-files.js)" --params "@$changed" --json
+rm -f "$changed"
 ```
 
-The query body is static and reads only the JSON environment value; neither the shell nor the reader reevaluates filenames. `JSON.parse` receives data, so quotes, shell metacharacters, spaces, Unicode, and embedded newlines remain filenames rather than JavaScript or shell syntax. The reader never shells to git.
+The body is static and reads only the JSON value; neither the shell nor the reader reevaluates
+filenames. `--params` parses data, so quotes, shell metacharacters, spaces, Unicode, and embedded
+newlines remain filenames rather than JavaScript or shell syntax. The reader never shells to git.
 
 ```js
-const changed = JSON.parse(process.env.SDP_CHANGED_FILES_JSON ?? "[]");
+const changed = params.files ?? [];
 const radius = g.blastRadius(changed);
 const impactReasons = (item) => ({ id: item.id, reasons: item.reasons.map((reason) => reason.throughBinding === undefined ? { file: reason.file, via: null } : { file: reason.file, via: reason.throughBinding.id, edgeType: reason.throughBinding.edgeType, claim: reason.throughBinding.claim }) });
 const atRiskReasons = (item) => ({ id: item.id, nodeType: item.nodeType, reasons: item.reasons.map((reason) => ({ from: reason.from, edgeType: reason.edgeType, to: reason.to, claim: reason.claim })) });
@@ -246,14 +277,22 @@ Every result class is returned. **Impacted Specs** are authored-at or bound-to a
 *When you need this: you are reviewing a Pack as a unit and want its members' readiness, delivery
 facts, and verifier gaps.*
 
-```js
-const packs = g.packs();
+The parameter is `params.pack`, the Pack to review; without it the body reads the first Pack in
+the graph. An unknown Pack returns `{ id, found: false }`.
 
-if (packs.length === 0) {
+```js
+const id = params.pack ?? g.packs()[0]?.id;
+
+if (id === undefined) {
   return { packs: 0 };
 }
 
-const context = g.packContext(packs[0].id);
+const context = g.packContext(id);
+
+if (context === undefined) {
+  return { id, found: false };
+}
+
 const byStatedReadiness = {};
 
 for (const member of context.members) {
@@ -286,8 +325,10 @@ aggregate over Specs that do.
 
 *When you need this: you have a phrase and no id — the grep-to-graph bridge.*
 
+The parameter is `params.term`, the phrase to look for.
+
 ```js
-const term = "blast radius";
+const term = params.term ?? "blast radius";
 const matches = g.findByConcept(term);
 
 return {
@@ -373,7 +414,7 @@ refusals; a green corpus has no errors, but may carry intentional warnings.
 evidence before touching the carrier.*
 
 ```js
-const id = "spec:model.enrichment-lifecycle";
+const id = params.spec ?? "spec:model.enrichment-lifecycle";
 const context = g.specContext(id);
 
 if (context === undefined) {
@@ -403,7 +444,7 @@ return {
 };
 ```
 
-The `id` line is the recipe's parameter — substitute the Spec whose promotion you are weighing.
+The parameter is `params.spec`, the Spec whose promotion you are weighing.
 An empty `currentFloorFailures` list says the stated rung is honest. It does not confer the next
 rung, and `floorReached` above the stated rung is information rather than an automatic edit.
 `nextRungFailures` are the unmet clauses of `nextRung`, and a typed-dependency failure lists its
@@ -551,11 +592,11 @@ component dependencies, not a validation finding.
 
 *When you need this: you want the members, neighboring components, and Specs satisfied by one component.*
 
-The opening `const subject` is the parameter. Replace it with the component you are reviewing; an
-unknown subject returns the exact not-found shape and does not throw.
+The parameter is `params.component`, the component you are reviewing; an unknown component
+returns the exact not-found shape and does not throw.
 
 ```js
-const subject = "component:protocol.reader";
+const subject = params.component ?? "component:protocol.reader";
 const component = graph.nodes.find((node) => node.nodeType === "CodeNode" && node.id === subject);
 
 if (component === undefined) {
@@ -905,11 +946,11 @@ is the absence of an edge; `decidedBy` subjects stay grouped by family.
 *When you need this: you want one Spec's refinement and dependency neighborhood, shaping
 decisions, bound components, verifiers, and file-level entry points.*
 
-The opening `const id` is the parameter. Replace it with the Spec you are planning around; an
-unknown id returns `{ found: false }` rather than failing.
+The parameter is `params.spec`, the Spec you are planning around; an unknown id returns
+`{ id, found: false }` rather than failing.
 
 ```js
-const id = "spec:consumers.agent-surface";
+const id = params.spec ?? "spec:consumers.agent-surface";
 const context = g.specContext(id);
 
 if (context === undefined) {
@@ -1165,11 +1206,11 @@ but is not a lower-camel string. Those entries do not count as questions.
 the rung each one states and the floor each one reaches. For the floor's verdict on the Spec
 itself, run promotion preflight (recipe 9).*
 
-The opening `const id` is the parameter. Replace it with the Spec you are weighing; an unknown id
-returns `{ id, found: false }` rather than failing.
+The parameter is `params.spec`, the Spec you are weighing; an unknown id returns
+`{ id, found: false }` rather than failing.
 
 ```js
-const id = "spec:extraction.derive-graph";
+const id = params.spec ?? "spec:extraction.derive-graph";
 const context = g.specContext(id);
 
 if (context === undefined) {
@@ -1236,11 +1277,11 @@ Spec can state `ready` is the floor clause carried by `spec:validation.typed-dep
 resolve, or that no declared relation backs in either direction. The `reverseOnly` list stays a
 separate audit list, for mentions backed only by a relation from the target.*
 
-The opening `const scope` is the parameter. Replace it with a list of Spec ids to audit
-mentions from those Specs only. An empty list audits the whole corpus.
+The parameter is `params.scope`, a list of Spec ids to audit mentions from those Specs only. An
+empty or absent list audits the whole corpus.
 
 ```js
-const scope = [];
+const scope = params.scope ?? [];
 const backingTypes = [
   "refines",
   "dependsOn",
@@ -1425,11 +1466,10 @@ every location of every pair.
 *When you need this: you hold a word or a key and want the entries that carry it, where concept
 search (recipe 6) stops at the section.*
 
-The opening `const term` is the parameter. Replace it with your word or phrase; an empty term
-returns no matches.
+The parameter is `params.term`, your word or phrase; an empty term returns no matches.
 
 ```js
-const term = "suffix";
+const term = params.term ?? "suffix";
 const tokensOf = (text) =>
   text
     .replace(/(\p{Lu}+)(\p{Lu}\p{Ll})/gu, "$1 $2")
@@ -1614,11 +1654,11 @@ return { totals: { entries: rows.length, specs: new Set(rows.map((row) => row.sp
 *When you need this: you hold entry addresses written outside the Specs, in a register, a test,
 or a page, and want to know which still resolve.*
 
-The opening `const addresses` is the parameter. Replace it with the addresses you hold; an empty
-list returns no rows.
+The parameter is `params.addresses`, the list of addresses you hold; an empty list returns no
+rows. A long list belongs in a file passed as `--params @PATH`.
 
 ```js
-const addresses = [
+const addresses = params.addresses ?? [
   "spec:consumers.design-review#ui.packPage",
   "spec:consumers.design-review#ui.memberTable",
   "spec:consumers.absent#design.anyKey",
@@ -1799,11 +1839,11 @@ never refuses: a cycle is data about the authored dependencies, and the readines
 answers to it, which code realizes it, whether a verifier is bound, and which built Specs it
 builds on, with no fact read as another.*
 
-The opening `const id` is the parameter. Replace it with the Pack you are reviewing; an unknown
-Pack returns `{ id, found: false }`.
+The parameter is `params.pack`, the Pack you are reviewing; an unknown Pack returns
+`{ id, found: false }`.
 
 ```js
-const id = "pack:spec-studio-v1";
+const id = params.pack ?? "pack:spec-studio-v1";
 const pack = g.packContext(id);
 
 if (pack === undefined) {

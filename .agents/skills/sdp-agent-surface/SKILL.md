@@ -102,6 +102,16 @@ Protocol repository and
 Recipes 1-28 each open under a numbered heading that names the recipe. Every body there runs
 verbatim and a test proves it. Start from a recipe; adapt it in place.
 
+A recipe that takes a subject (a Spec id, a Pack id, changed files, addresses, a term) reads it
+from `params.<name>`, and the catalog names the parameter. Pass it as JSON data with `--params`,
+never by editing the body; `--params @PATH` reads the JSON from a file. The build also ships each
+body as `dist/recipes/<NN>-<slug>.js`, so run it as shipped:
+
+```sh
+pnpm --silent sdp:q "$(cat dist/recipes/03-what-does-this-spec-guarantee-and-who-verifies-it.js)" --params '{"spec":"spec:consumers.reader"}' --json
+pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/recipes/04-what-breaks-if-i-change-these-files.js)" --params @changed-files.json --json
+```
+
 For structural questions, use component membership, uses fan-in and fan-out, structural
 neighborhood, census structural coverage, and the projection-coverage upper bound (recipes 12-16).
 For architecture questions, use the architecture map to see components and their shaping decisions
@@ -153,13 +163,15 @@ list implies coverage.
 
 ## The contract
 
-`sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--json]`
+`sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--params JSON | --params @PATH] [--json]`
 
-Three bindings are injected:
+Four bindings are injected:
 
 - `g` — the reader over the derived graph (the same `createReader` the package exports)
 - `graph` — the raw graph schema (nodes, edges, claims)
 - `report` — the validation report, so findings are queryable data, never a gate
+- `params` — the JSON value `--params` supplies, or `{}` without it; a value that is not JSON or
+  a file that cannot be read is refused before the body runs
 
 Body rules: a plain JavaScript **async function body**. No `import`/`export`, no TypeScript-only
 syntax; `await` is fine. `return` is the machine output contract, but `sdp q` does not suppress

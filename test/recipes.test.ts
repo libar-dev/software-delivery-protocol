@@ -1,10 +1,11 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import { recipeFiles } from "../src/cli/build-artifacts.js";
 import { compileBody } from "../src/cli/q-command.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import {
@@ -128,47 +129,44 @@ const queryHooks = {
   },
 };
 
+/**
+ * Runs one body through the real argv seam. A recipe parameter travels the way a caller passes
+ * it, as JSON data on `--params`, never spliced into the body; without one the body runs exactly
+ * as the catalog prints it and falls back to its sample.
+ */
 async function runRecipe(
   recipe: Recipe,
-  changedFiles?: readonly string[],
+  params?: Readonly<Record<string, unknown>>,
   extraction: ExtractionResult = derived,
 ): Promise<unknown> {
-  const previousChangedFiles = process.env.SDP_CHANGED_FILES_JSON;
-  if (changedFiles === undefined) {
-    delete process.env.SDP_CHANGED_FILES_JSON;
-  } else {
-    process.env.SDP_CHANGED_FILES_JSON = JSON.stringify(changedFiles);
-  }
-
-  try {
-    const capture = createCaptureOutput();
-    const exitCode = await runSdpCli(
-      ["q", recipe.body, "--root", repoRoot, "--json"],
-      capture.output,
-      {
-        query: {
-          ...queryHooks.query,
-          extract: () => extraction,
-        },
+  const capture = createCaptureOutput();
+  const exitCode = await runSdpCli(
+    [
+      "q",
+      recipe.body,
+      "--root",
+      repoRoot,
+      "--json",
+      ...(params === undefined ? [] : ["--params", JSON.stringify(params)]),
+    ],
+    capture.output,
+    {
+      query: {
+        ...queryHooks.query,
+        extract: () => extraction,
       },
-    );
+    },
+  );
 
-    // The expected stderr is the empty string, not a self-comparison: a recipe run over the green
-    // corpus has nothing to say on stderr, and the object shape keeps the actual output in the
-    // failure diff when it does.
-    expect(
-      { recipe: recipe.title, exitCode, stderr: capture.readStderr() },
-      `recipe ${String(recipe.ordinal)} must run as written`,
-    ).toEqual({ recipe: recipe.title, exitCode: 0, stderr: "" });
+  // The expected stderr is the empty string, not a self-comparison: a recipe run over the green
+  // corpus has nothing to say on stderr, and the object shape keeps the actual output in the
+  // failure diff when it does.
+  expect(
+    { recipe: recipe.title, exitCode, stderr: capture.readStderr() },
+    `recipe ${String(recipe.ordinal)} must run as written`,
+  ).toEqual({ recipe: recipe.title, exitCode: 0, stderr: "" });
 
-    return JSON.parse(capture.readStdout()) as unknown;
-  } finally {
-    if (previousChangedFiles === undefined) {
-      delete process.env.SDP_CHANGED_FILES_JSON;
-    } else {
-      process.env.SDP_CHANGED_FILES_JSON = previousChangedFiles;
-    }
-  }
+  return JSON.parse(capture.readStdout()) as unknown;
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -368,9 +366,13 @@ describe("the agent-surface recipe corpus", () => {
         source,
         selfHosting: true,
       });
+      // A body in double quotes is shell-expanded before the sink sees it. The one lawful
+      // double-quoted body is a shipped recipe file read whole by command substitution.
       expect({
         source,
-        otherQuoting: lines.filter((line) => line.includes(' q "') && line.includes("sdp")),
+        otherQuoting: lines.filter(
+          (line) => line.includes(' q "') && line.includes("sdp") && !line.includes(' q "$(cat '),
+        ),
       }).toEqual({ source, otherQuoting: [] });
 
       expect({ source, adopterForms: adopterLines.length }).toEqual({
@@ -433,23 +435,18 @@ describe("the agent-surface recipe corpus", () => {
       authoring: readFileSync(join(repoRoot, ".agents/skills/sdp-authoring/SKILL.md"), "utf8"),
       sessions: readFileSync(join(repoRoot, ".agents/skills/sdp-sessions/SKILL.md"), "utf8"),
     };
-    const parameterizedRecipes = recipes.filter(
-      (recipe) =>
-        recipe.ordinal !== 4 &&
-        /^(?:const (?:id|term|subject|scope|addresses) = )/u.test(recipe.body),
-    );
+    const parameterizedRecipes = recipes.filter((recipe) => /\bparams\./u.test(recipe.body));
 
-    // Recipe 4 receives filenames as data. Intro guidance must never teach callers to construct
-    // executable query source from repository-controlled paths.
-    const parameterGuidance =
-      /\*\*Some recipes open with a parameter\.[\s\S]*?(?=\n\n\*\*Recipe 4 is different)/u.exec(
-        intro,
-      )?.[0] ?? "";
-    expect(parameterGuidance).not.toMatch(
-      /\b4\b[\s\S]*?(?:changed-file list|substitut(?:e|ion))/iu,
-    );
-    expect(introProse).toContain("Recipe 4 filenames travel via `SDP_CHANGED_FILES_JSON`");
-    expect(introProse).toContain("callers never substitute filenames into the JavaScript fence");
+    // A parameter is data on `--params`, never source spliced into a body, and no recipe reads
+    // the environment. The intro teaches exactly that and names no retired channel.
+    expect(introProse).toContain("Pass it as JSON data with `--params`, never by editing the body");
+    expect(source).not.toContain("SDP_CHANGED_FILES_JSON");
+    for (const recipe of recipes) {
+      expect({ recipe: recipe.ordinal, env: recipe.body.includes("process.env") }).toEqual({
+        recipe: recipe.ordinal,
+        env: false,
+      });
+    }
 
     expect(countWord).toBeDefined();
     if (countWord === undefined) {
@@ -642,13 +639,14 @@ describe("the agent-surface recipe corpus", () => {
     const recipe = recipeByOrdinal(4);
     rmSync(sentinel, { force: true });
 
-    expect(recipe.body).toContain("process.env.SDP_CHANGED_FILES_JSON");
+    expect(recipe.body).toContain("params.files");
+    expect(recipe.body).not.toContain("process.env");
     for (const filename of hostileChangedFiles) {
       expect(recipe.body).not.toContain(filename);
     }
 
     try {
-      const result = asRecord(await runRecipe(recipe, hostileChangedFiles));
+      const result = asRecord(await runRecipe(recipe, { files: hostileChangedFiles }));
 
       expect([...asArray(result.changedFiles)].sort()).toEqual([...hostileChangedFiles].sort());
       expect([...asArray(result.coverageUnknownFiles)].sort()).toEqual(
@@ -662,7 +660,7 @@ describe("the agent-surface recipe corpus", () => {
 
   it("returns the complete diff-to-at-risk bridge", async () => {
     const normalChangedFiles = ["src/reader/reader.ts", "docs/agent-surface/recipes.md"];
-    const result = asRecord(await runRecipe(recipeByOrdinal(4), normalChangedFiles));
+    const result = asRecord(await runRecipe(recipeByOrdinal(4), { files: normalChangedFiles }));
     const changedFiles = asArray(result.changedFiles).map((file) => stringAt({ file }, "file"));
     const radius = reader.blastRadius(changedFiles);
 
@@ -777,7 +775,7 @@ describe("the agent-surface recipe corpus", () => {
         edges: derived.graph.edges,
       },
     };
-    const result = asRecord(await runRecipe(recipeByOrdinal(4), [file], extraction));
+    const result = asRecord(await runRecipe(recipeByOrdinal(4), { files: [file] }, extraction));
 
     expect(result.unlinkedUnits).toEqual([{ id: unit.id, file }]);
     expect(result.coverageUnknownFiles).toEqual([]);
@@ -889,12 +887,6 @@ describe("the agent-surface recipe corpus", () => {
 
   it("names the next rung's unmet clause and the dependency that breaks it on a probe", async () => {
     const recipe = recipeByOrdinal(9);
-    const catalogLine = 'const id = "spec:model.enrichment-lifecycle";';
-    expect(recipe.body).toContain(catalogLine);
-    const retarget = (id: string) => ({
-      ...recipe,
-      body: recipe.body.replace(catalogLine, `const id = "${id}";`),
-    });
     const ruleNode = (
       id: string,
       readiness: "idea" | "scoped" | "defined" | "ready",
@@ -947,7 +939,7 @@ describe("the agent-surface recipe corpus", () => {
     };
     const targetClause = "typed-dependency-targets-are-defined";
 
-    expect(await runRecipe(retarget("spec:probe.subject"), undefined, probe)).toEqual({
+    expect(await runRecipe(recipe, { spec: "spec:probe.subject" }, probe)).toEqual({
       id: "spec:probe.subject",
       found: true,
       statedReadiness: "defined",
@@ -971,7 +963,7 @@ describe("the agent-surface recipe corpus", () => {
     });
 
     // A failure of any other clause carries no targets field.
-    const held = asRecord(await runRecipe(retarget("spec:probe.held"), undefined, probe));
+    const held = asRecord(await runRecipe(recipe, { spec: "spec:probe.held" }, probe));
     expect(held.nextRung).toBe("defined");
     expect(held.nextRungFailures).toEqual([
       {
@@ -1121,10 +1113,7 @@ describe("the agent-surface recipe corpus", () => {
       satisfiedSpecs,
     });
 
-    const absent = await runRecipe({
-      ...recipe,
-      body: recipe.body.replace("component:protocol.reader", "component:protocol.nonexistent"),
-    });
+    const absent = await runRecipe(recipe, { component: "component:protocol.nonexistent" });
     expect(absent).toEqual({ found: false });
   });
 
@@ -1582,14 +1571,11 @@ describe("the agent-surface recipe corpus", () => {
     expect(Object.keys(result)).not.toContain("blastRadiusEntryPoints");
 
     const unknownId = "spec:consumers.nonexistent";
-    const absent = await runRecipe({
-      ...recipe,
-      body: recipe.body.replace(id, unknownId),
-    });
+    const absent = await runRecipe(recipe, { spec: unknownId });
     expect(absent).toEqual({ id: unknownId, found: false });
   });
 
-  // Given: catalog recipe 19 with only the opening id retargeted to the structural-anchor
+  // Given: catalog recipe 19 with its parameter naming the structural-anchor
   // decision (live graph: one outgoing dependsOn, two inbound dependsOn from MD-34/MD-35).
   // When: the otherwise unchanged body runs through real runSdpCli.
   // Then: dependencies.dependsOn and dependencies.dependedOnBy are both non-empty and name the
@@ -1599,14 +1585,9 @@ describe("the agent-surface recipe corpus", () => {
     const recipe = recipeByOrdinal(19);
     const catalogId = "spec:consumers.agent-surface";
     const id = "spec:decisions.structural-anchor-semantics";
-    expect(recipe.body).toContain(`const id = "${catalogId}";`);
+    expect(recipe.body).toContain(`const id = params.spec ?? "${catalogId}";`);
 
-    const result = asRecord(
-      await runRecipe({
-        ...recipe,
-        body: recipe.body.replace(catalogId, id),
-      }),
-    );
+    const result = asRecord(await runRecipe(recipe, { spec: id }));
     const dependencies = asRecord(result.dependencies);
     const dependsOn = asArray(dependencies.dependsOn).map(asRecord);
     const dependedOnBy = asArray(dependencies.dependedOnBy).map(asRecord);
@@ -1975,8 +1956,7 @@ describe("register recipe semantics", () => {
       },
     };
     const recipe = recipeByOrdinal(23);
-    const body = recipe.body.replace('const term = "suffix";', 'const term = "retry";');
-    const result = asRecord(await runRecipe({ ...recipe, body }, undefined, probe));
+    const result = asRecord(await runRecipe(recipe, { term: "retry" }, probe));
     expect(
       asArray(result.matches)
         .map(asRecord)
@@ -1984,9 +1964,11 @@ describe("register recipe semantics", () => {
     ).toEqual([text, JSON.stringify({ detail: text })]);
     const capture = createCaptureOutput();
     expect(
-      await runSdpCli(["q", body, "--root", repoRoot], capture.output, {
-        query: { ...queryHooks.query, extract: () => probe },
-      }),
+      await runSdpCli(
+        ["q", recipe.body, "--root", repoRoot, "--params", JSON.stringify({ term: "retry" })],
+        capture.output,
+        { query: { ...queryHooks.query, extract: () => probe } },
+      ),
     ).toBe(0);
     expect(capture.readStderr()).toBe("");
     expect(capture.readStdout()).not.toContain(text);
@@ -2014,13 +1996,7 @@ describe("register recipe semantics", () => {
 
   it("searches coined keys of every value shape through a TypeScript carrier", async () => {
     const recipe = recipeByOrdinal(23);
-    const result = asRecord(
-      await runRecipe(
-        { ...recipe, body: recipe.body.replace('const term = "suffix";', 'const term = "retry";') },
-        undefined,
-        carrierRegisterProbe(),
-      ),
-    );
+    const result = asRecord(await runRecipe(recipe, { term: "retry" }, carrierRegisterProbe()));
     const expected = [
       ["design", "retryLimit", "3"],
       ["design", "retryEnabled", "true"],
@@ -2060,8 +2036,8 @@ describe("register recipe semantics", () => {
     const recipe = recipeByOrdinal(23);
     const result = asRecord(
       await runRecipe(
-        { ...recipe, body: recipe.body.replace('const term = "suffix";', 'const term = "retry";') },
-        undefined,
+        recipe,
+        { term: "retry" },
         {
           ...extraction,
           graph: {
@@ -2133,8 +2109,8 @@ describe("register recipe semantics", () => {
     if (node?.nodeType !== "Primitive") throw new Error("missing carrier probe");
     const result = asRecord(
       await runRecipe(
-        { ...recipe, body: recipe.body.replace('const term = "suffix";', 'const term = "retry";') },
-        undefined,
+        recipe,
+        { term: "retry" },
         {
           ...extraction,
           graph: {
@@ -2219,16 +2195,7 @@ describe("register recipe semantics", () => {
         },
       };
       const recipe = recipeByOrdinal(23);
-      const result = asRecord(
-        await runRecipe(
-          {
-            ...recipe,
-            body: recipe.body.replace('const term = "suffix";', `const term = "${term}";`),
-          },
-          undefined,
-          extraction,
-        ),
-      );
+      const result = asRecord(await runRecipe(recipe, { term }, extraction));
       expect(asRecord(result.totals).matches).toBe(matchedIn.length === 0 ? 0 : 1);
       expect(result.matches).toEqual(
         matchedIn.length === 0
@@ -2371,20 +2338,11 @@ describe("register recipe semantics", () => {
       expect(asRecord(output.totals).byFloorReached).toEqual(expectedFloor);
     };
     assertReadiness(result, derived);
-    const retarget = (id: string) => ({
-      ...recipe,
-      body: recipe.body.replace(
-        'const id = "spec:extraction.derive-graph";',
-        `const id = "${id}";`,
-      ),
-    });
-    expect(await runRecipe(retarget("spec:probe.absent"), undefined, registerProbe())).toEqual({
+    expect(await runRecipe(recipe, { spec: "spec:probe.absent" }, registerProbe())).toEqual({
       id: "spec:probe.absent",
       found: false,
     });
-    const synthetic = asRecord(
-      await runRecipe(retarget("spec:probe.b"), undefined, registerProbe()),
-    );
+    const synthetic = asRecord(await runRecipe(recipe, { spec: "spec:probe.b" }, registerProbe()));
     assertReadiness(synthetic, registerProbe());
     expect(asRecord(synthetic.totals).relations).toBe(6);
     expect(asRecord(synthetic.totals).byType).toEqual({
@@ -2751,16 +2709,7 @@ export const source = spec({
       ),
     };
     const recipe = recipeByOrdinal(23);
-    const result = asRecord(
-      await runRecipe(
-        {
-          ...recipe,
-          body: recipe.body.replace('const term = "suffix";', 'const term = "needle";'),
-        },
-        undefined,
-        { ...probe, graph },
-      ),
-    );
+    const result = asRecord(await runRecipe(recipe, { term: "needle" }, { ...probe, graph }));
     const rows = asArray(result.matches).map(asRecord);
     for (const section of ["design", "ui"])
       expect(
@@ -2773,20 +2722,7 @@ export const source = spec({
   it("scopes mentions by the mentioning Spec only", async () => {
     const probe = registerProbe();
     const recipe = recipeByOrdinal(22);
-    const scoped = async (scope: string[]) =>
-      asRecord(
-        await runRecipe(
-          {
-            ...recipe,
-            body: recipe.body.replace(
-              "const scope = [];",
-              `const scope = ${JSON.stringify(scope)};`,
-            ),
-          },
-          undefined,
-          probe,
-        ),
-      );
+    const scoped = async (scope: string[]) => asRecord(await runRecipe(recipe, { scope }, probe));
     const all = asRecord(await runRecipe(recipe, undefined, probe));
     expect(await scoped(["spec:probe.b"])).toEqual(all);
     for (const scope of [
@@ -2882,16 +2818,7 @@ export const source = spec({
   it("searches whole tokens, coined keys, narrative and fence steps", async () => {
     const recipe = recipeByOrdinal(23);
     const search = async (term: string, extraction = registerProbe()) =>
-      asRecord(
-        await runRecipe(
-          {
-            ...recipe,
-            body: recipe.body.replace('const term = "suffix";', `const term = "${term}";`),
-          },
-          undefined,
-          extraction,
-        ),
-      );
+      asRecord(await runRecipe(recipe, { term }, extraction));
     const retry = await search("retry");
     const rows = asArray(retry.matches).map(asRecord);
     const entries = rows.map((row) => row.entry);
@@ -3179,17 +3106,6 @@ relations: {}
   });
 }
 
-/** Recipe 25 with its opening parameter replaced, as the catalog tells a reader to do. */
-function addressResolution(addresses: readonly unknown[]): Recipe {
-  const recipe = recipeByOrdinal(25);
-  const opening = /^const addresses = \[\n[\s\S]*?\n\];\n/u;
-  expect(recipe.body).toMatch(opening);
-  return {
-    ...recipe,
-    body: recipe.body.replace(opening, `const addresses = ${JSON.stringify(addresses)};\n`),
-  };
-}
-
 /**
  * The dependency cycles of a graph by mutual reachability, a second derivation independent of the
  * recipe's own walk: the sets it must report, each with the length of the shortest closed path
@@ -3412,11 +3328,13 @@ relations: {}
       "authored.sdp.md": designProbeSpec("authored", "constructor: An authored constructor."),
     });
     const result = await runRecipe(
-      addressResolution([
-        "spec:probe.plain#design.constructor",
-        "spec:probe.authored#design.constructor",
-      ]),
-      undefined,
+      recipeByOrdinal(25),
+      {
+        addresses: [
+          "spec:probe.plain#design.constructor",
+          "spec:probe.authored#design.constructor",
+        ],
+      },
       extraction,
     );
     expect(result).toEqual({
@@ -3444,13 +3362,15 @@ relations: {}
 
   it("resolves the design's probe addresses with one row and one reason each", async () => {
     const result = await runRecipe(
-      addressResolution([
-        "spec:probe.a#design.shape",
-        "spec:probe.a#question.shapeOpen",
-        "spec:probe.z#design.shape",
-        "spec:probe.a#Design.shape",
-      ]),
-      undefined,
+      recipeByOrdinal(25),
+      {
+        addresses: [
+          "spec:probe.a#design.shape",
+          "spec:probe.a#question.shapeOpen",
+          "spec:probe.z#design.shape",
+          "spec:probe.a#Design.shape",
+        ],
+      },
       cycleProbe(),
     );
     expect(result).toEqual({
@@ -3502,19 +3422,21 @@ relations: {}
       reason,
     });
     const result = await runRecipe(
-      addressResolution([
-        "spec:probe.keyed#question.shapeOpen",
-        "spec:probe.keyed#question.description",
-        "spec:probe.keyed#design.description",
-        "spec:probe.keyed#ui.description",
-        "spec:probe.keyed#question.ownerOpen",
-        "spec:probe.keyed#design.shape",
-        "spec:probe.keyed",
-        42,
-        "pack:probe.keyed#design.shape",
-        "spec:probe.keyed#question.shapeOpen",
-      ]),
-      undefined,
+      recipeByOrdinal(25),
+      {
+        addresses: [
+          "spec:probe.keyed#question.shapeOpen",
+          "spec:probe.keyed#question.description",
+          "spec:probe.keyed#design.description",
+          "spec:probe.keyed#ui.description",
+          "spec:probe.keyed#question.ownerOpen",
+          "spec:probe.keyed#design.shape",
+          "spec:probe.keyed",
+          42,
+          "pack:probe.keyed#design.shape",
+          "spec:probe.keyed#question.shapeOpen",
+        ],
+      },
       extraction,
     );
     expect(result).toEqual({
@@ -3560,18 +3482,7 @@ relations: {}
   it("addresses a keyed question's text and matches its key, never the key as a row", async () => {
     const recipe = recipeByOrdinal(23);
     const search = async (term: string) =>
-      asArray(
-        asRecord(
-          await runRecipe(
-            {
-              ...recipe,
-              body: recipe.body.replace('const term = "suffix";', `const term = "${term}";`),
-            },
-            undefined,
-            keyedQuestionProbe(),
-          ),
-        ).matches,
-      )
+      asArray(asRecord(await runRecipe(recipe, { term }, keyedQuestionProbe())).matches)
         .map(asRecord)
         .filter((row) => row.id === "spec:probe.keyed");
     expect(await search("shape open")).toEqual([
@@ -3741,10 +3652,7 @@ describe("design references and the architecture taxonomy", () => {
       ),
     });
 
-    const absent = await runRecipe({
-      ...recipe,
-      body: recipe.body.replace(studioPackId, "pack:absent-v1"),
-    });
+    const absent = await runRecipe(recipe, { pack: "pack:absent-v1" });
     expect(absent).toEqual({ id: "pack:absent-v1", found: false });
   });
 
@@ -3951,7 +3859,7 @@ describe("design references and the architecture taxonomy", () => {
     const body = compileBody(recipeByOrdinal(28).body);
     const reader = createReader(graph);
     const report = validateGraph(graph);
-    const { value, sets } = countMapSets(() => body(reader, graph, report));
+    const { value, sets } = countMapSets(() => body(reader, graph, report, {}));
     const result = asRecord(await value);
 
     // Two buckets, `service` and `probe`, two Map sets. Replacing the bucket on every insertion
@@ -3960,5 +3868,232 @@ describe("design references and the architecture taxonomy", () => {
     expect(result.roles).toEqual([{ value: "service", units: ids }]);
     expect(result.contexts).toEqual([{ value: "probe", units: ids }]);
     expect(result.layers).toEqual([]);
+  });
+});
+
+const recipeParametersCatalogAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.recipe-parameters-catalog"),
+  label: "asserts realization of the catalog recipes that read their parameter from params",
+  satisfies: ref("spec:consumers.agent-surface.recipe-parameters"),
+});
+void recipeParametersCatalogAnchor;
+const recipeParametersTestAnchor = specTest({
+  id: testAnchorId("test:protocol.recipe-parameters"),
+  label: "recipe checks verify parameters passed as data and the shipped recipe files",
+  verifies: ref("spec:consumers.agent-surface.recipe-parameters"),
+});
+void recipeParametersTestAnchor;
+
+const shippedRecipesDirectory = join(repoRoot, "dist", "recipes");
+
+/** The file the build owes a recipe: its two-digit number, then its heading in lower kebab case. */
+function shippedRecipeName(recipe: Recipe): string {
+  const slug = recipe.title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gu, "-")
+    .replace(/^-+|-+$/gu, "");
+
+  return `${String(recipe.ordinal).padStart(2, "0")}-${slug}.js`;
+}
+
+function readShippedRecipe(recipe: Recipe): string {
+  const path = join(shippedRecipesDirectory, shippedRecipeName(recipe));
+
+  if (!existsSync(path)) {
+    throw new Error(`${path} is missing: run npm run build before the recipe check`);
+  }
+
+  return readFileSync(path, "utf8");
+}
+
+/** The body `sdp q "$(cat FILE)"` hands the sink: command substitution drops trailing newlines. */
+function shippedBody(recipe: Recipe): string {
+  return readShippedRecipe(recipe).replace(/\n+$/u, "");
+}
+
+/** The catalog text a recipe owns, heading through the line before the next numbered heading. */
+function recipeProse(recipe: Recipe): string {
+  const start = source.indexOf(`\n## ${String(recipe.ordinal)}. `);
+  const next = source.indexOf(`\n## ${String(recipe.ordinal + 1)}. `, start + 1);
+
+  return source.slice(start, next === -1 ? undefined : next).replace(recipe.body, "");
+}
+
+async function runShipped(
+  body: string,
+  params: readonly string[],
+): Promise<{ readonly exitCode: number; readonly stdout: string; readonly stderr: string }> {
+  const capture = createCaptureOutput();
+  const exitCode = await runSdpCli(
+    ["q", body, "--root", repoRoot, "--json", ...params],
+    capture.output,
+    queryHooks,
+  );
+
+  return { exitCode, stdout: capture.readStdout(), stderr: capture.readStderr() };
+}
+
+describe("recipe parameters and the shipped recipe files", () => {
+  it("reads each parameter from params, falls back to the catalog sample, and names it", () => {
+    const parameterized = recipes.filter((recipe) => /\bparams\./u.test(recipe.body));
+
+    expect(parameterized.map((recipe) => recipe.ordinal)).toEqual(
+      expect.arrayContaining([3, 4, 5, 9, 19, 21, 22, 25, 27]),
+    );
+
+    for (const recipe of parameterized) {
+      const names = new Set(
+        [...recipe.body.matchAll(/\bparams\.([A-Za-z]+)/gu)].map((match) => match[1] ?? ""),
+      );
+
+      for (const name of names) {
+        expect({
+          recipe: recipe.ordinal,
+          fallback: recipe.body.includes(`params.${name} ?? `),
+        }).toEqual({ recipe: recipe.ordinal, fallback: true });
+        expect({
+          recipe: recipe.ordinal,
+          named: recipeProse(recipe).includes(`\`params.${name}\``),
+        }).toEqual({ recipe: recipe.ordinal, named: true });
+      }
+    }
+  });
+
+  it("ships every catalog body as dist/recipes/NN-slug.js, byte for byte", () => {
+    const shipped = readdirSync(shippedRecipesDirectory)
+      .filter((entry) => entry.endsWith(".js"))
+      .sort();
+
+    expect(shipped).toEqual(recipes.map(shippedRecipeName).sort());
+    for (const recipe of recipes) {
+      expect({ recipe: recipe.ordinal, bytes: readShippedRecipe(recipe) }).toEqual({
+        recipe: recipe.ordinal,
+        bytes: `${recipe.body}\n`,
+      });
+    }
+
+    // The build step derives the same pairing the check parses: one file per numbered heading.
+    expect(recipeFiles(source).map((file) => file.fileName)).toEqual(
+      recipes.map(shippedRecipeName),
+    );
+
+    const packageJson = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
+      readonly files: readonly string[];
+    };
+    expect(packageJson.files).toContain("dist/**");
+  });
+
+  it("runs every shipped file, read whole, to the answer its catalog body gives", async () => {
+    for (const recipe of recipes) {
+      const shipped = await runRecipe({ ...recipe, body: shippedBody(recipe) });
+
+      expect({ recipe: recipe.ordinal, shipped }).toEqual({
+        recipe: recipe.ordinal,
+        shipped: await runRecipe(recipe),
+      });
+    }
+  });
+
+  it("refuses a catalog whose bodies and headings do not pair, rather than guess a file name", () => {
+    expect(() => recipeFiles("## 1. One\n\n```js\nreturn 1;\n```\n## 1. Again\n")).toThrow(
+      "recipe 1 is numbered twice",
+    );
+    expect(() => recipeFiles("```js\nreturn 1;\n```\n")).toThrow("has no numbered heading");
+    expect(() => recipeFiles("## 2. Two\n\n## 3. Three\n```js\nreturn 3;\n```\n")).toThrow(
+      "recipe 2 has no js body",
+    );
+    expect(() => recipeFiles("## 4. Four\n```js\nreturn 4;\n")).toThrow("is never closed");
+    expect(() => recipeFiles("## 5. !!!\n```js\nreturn 5;\n```\n")).toThrow("has no heading text");
+    expect(recipeFiles("## 7. Roles, layers and contexts\n```js\nreturn 7;\n```\n")).toEqual([
+      { ordinal: 7, fileName: "07-roles-layers-and-contexts.js", content: "return 7;\n" },
+    ]);
+  });
+
+  it("passes recipe 4 its changed files from a file named with @PATH", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "sdp-recipe-params-"));
+    const files = ["src/reader/reader.ts", "docs/agent-surface/recipes.md", "absent/file.ts"];
+
+    try {
+      const path = join(directory, "changed.json");
+      writeFileSync(path, JSON.stringify({ files }));
+
+      const run = await runShipped(shippedBody(recipeByOrdinal(4)), ["--params", `@${path}`]);
+      expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({ exitCode: 0, stderr: "" });
+
+      const result = asRecord(JSON.parse(run.stdout));
+      const radius = reader.blastRadius(files);
+      expect(result.changedFiles).toEqual(radius.changedFiles);
+      expect(asArray(result.impactedSpecs).map((row) => stringAt(asRecord(row), "id"))).toEqual(
+        radius.impactedSpecs.map((item) => item.id),
+      );
+      expect(result.coverageUnknownFiles).toEqual(radius.coverageUnknown);
+      expect(result.coverageUnknownFiles).toContain("absent/file.ts");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("resolves the addresses recipe 25 receives as data", async () => {
+    const holder = reader.specs().find((spec) => {
+      const design = reader.specContext(spec.id)?.sections?.design;
+      return (
+        design !== undefined && Object.keys(design).some((key) => /^[a-z][A-Za-z0-9]*$/u.test(key))
+      );
+    });
+    if (holder === undefined) throw new Error("the corpus holds no keyed Design entry");
+    const key = Object.keys(reader.specContext(holder.id)?.sections?.design ?? {}).find(
+      (candidate) => candidate !== "description" && /^[a-z][A-Za-z0-9]*$/u.test(candidate),
+    );
+    if (key === undefined) throw new Error(`${holder.id} holds no addressable Design key`);
+    const addresses = [
+      `${holder.id}#design.${key}`,
+      `${holder.id}#design.noSuchKey`,
+      "spec:probe.absent#design.anyKey",
+      holder.id,
+    ];
+
+    const run = await runShipped(shippedBody(recipeByOrdinal(25)), [
+      "--params",
+      JSON.stringify({ addresses }),
+    ]);
+    expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({ exitCode: 0, stderr: "" });
+
+    const result = asRecord(JSON.parse(run.stdout));
+    expect(result.totals).toEqual({
+      addresses: 4,
+      resolved: 1,
+      malformed: 1,
+      spec: 1,
+      entry: 1,
+    });
+    expect(asArray(result.rows).map((row) => asRecord(row).reason)).toEqual([
+      null,
+      "entry",
+      "spec",
+      "malformed",
+    ]);
+  });
+
+  it("reads the Pack the Pack recipes review from params.pack", async () => {
+    const packIds = reader.packs().map((pack) => pack.id);
+    const chosen = packIds[packIds.length - 1];
+    if (chosen === undefined) throw new Error("the corpus holds no Pack");
+    const members = reader.packContext(chosen)?.members.length;
+
+    for (const ordinal of [5, 27]) {
+      const body = shippedBody(recipeByOrdinal(ordinal));
+      const run = await runShipped(body, ["--params", JSON.stringify({ pack: chosen })]);
+      expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({ exitCode: 0, stderr: "" });
+
+      const result = asRecord(JSON.parse(run.stdout));
+      expect(result.id).toBe(chosen);
+      expect(ordinal === 5 ? result.memberCount : asRecord(result.totals).members).toBe(members);
+
+      const absent = await runShipped(body, ["--params", '{"pack":"pack:absent-v1"}']);
+      expect(JSON.parse(absent.stdout)).toEqual({ id: "pack:absent-v1", found: false });
+    }
+
+    // Without the parameter, recipe 5 falls back to its sample: the first Pack in the graph.
+    expect(asRecord(await runRecipe(recipeByOrdinal(5))).id).toBe(packIds[0]);
   });
 });
