@@ -568,7 +568,7 @@ export const expectedUsesEdges = [
   ["impl:protocol.authored-honesty-delivery-facts", "impl:protocol.delivery-facts"],
   ["impl:protocol.reader", "impl:protocol.delivery-facts"],
   ["impl:protocol.derive-graph", "impl:protocol.delivery-facts"],
-  ["impl:protocol.pack-design", "impl:protocol.next-rung-floor"],
+  ["impl:protocol.reader", "impl:protocol.next-rung-floor"],
   ["component:protocol.adapters", "component:protocol.runner"],
   ["component:protocol.cli", "component:protocol.codegen"],
   ["component:protocol.cli", "component:protocol.extract"],

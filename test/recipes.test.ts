@@ -1,11 +1,19 @@
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { recipeFiles } from "../src/cli/build-artifacts.js";
+import { recipeFiles, writeBuildArtifacts, writeRecipeFiles } from "../src/cli/build-artifacts.js";
 import { compileBody } from "../src/cli/q-command.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import {
@@ -4094,6 +4102,60 @@ describe("recipe parameters and the shipped recipe files", () => {
     expect(recipeFiles("## 7. Roles, layers and contexts\n```js\nreturn 7;\n```\n")).toEqual([
       { ordinal: 7, fileName: "07-roles-layers-and-contexts.js", content: "return 7;\n" },
     ]);
+  });
+
+  it("reads a CRLF catalog as its LF bodies, and refuses a catalog with no recipe before publishing", () => {
+    const crlf = source.replaceAll("\n", "\r\n");
+
+    expect(recipeFiles(crlf)).toEqual(recipeFiles(source));
+    expect(() => recipeFiles("# Agent-surface recipes\r\n\r\nNo bodies yet.\r\n")).toThrow(
+      "has no numbered recipe",
+    );
+
+    // Through the build step: a CRLF catalog publishes every body, and an empty one publishes
+    // nothing and removes nothing.
+    const root = mkdtempSync(join(tmpdir(), "sdp-recipe-files-"));
+    const catalogPath = join(root, recipesPath);
+    const recipesOut = join(root, "dist", "recipes");
+
+    try {
+      mkdirSync(join(root, "docs", "agent-surface"), { recursive: true });
+      writeFileSync(catalogPath, crlf);
+      writeBuildArtifacts({ root, outDir: join(root, "dist"), git: () => "unknown" });
+      expect(readdirSync(recipesOut).sort()).toEqual(recipes.map(shippedRecipeName).sort());
+      for (const recipe of recipes) {
+        expect({
+          recipe: recipe.ordinal,
+          bytes: readFileSync(join(recipesOut, shippedRecipeName(recipe)), "utf8"),
+        }).toEqual({ recipe: recipe.ordinal, bytes: `${recipe.body}\n` });
+      }
+
+      writeFileSync(catalogPath, "# Agent-surface recipes\r\n");
+      expect(() => {
+        writeBuildArtifacts({ root, outDir: join(root, "dist"), git: () => "unknown" });
+      }).toThrow("has no numbered recipe");
+      expect(readdirSync(recipesOut).sort()).toEqual(recipes.map(shippedRecipeName).sort());
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("removes only completed recipe files the catalog no longer owes, never another run's temporary file", () => {
+    const outDir = mkdtempSync(join(tmpdir(), "sdp-recipe-stale-"));
+    const directory = join(outDir, "recipes");
+    const foreignTemporary = "01-one.js.4242.tmp";
+
+    try {
+      mkdirSync(directory, { recursive: true });
+      writeFileSync(join(directory, "02-retired.js"), "return 2;\n");
+      writeFileSync(join(directory, foreignTemporary), "return 'half written';\n");
+
+      writeRecipeFiles(outDir, recipeFiles("## 1. One\n```js\nreturn 1;\n```\n"));
+
+      expect(readdirSync(directory).sort()).toEqual(["01-one.js", foreignTemporary]);
+    } finally {
+      rmSync(outDir, { recursive: true, force: true });
+    }
   });
 
   it("passes recipe 4 its changed files from a file named with @PATH", async () => {

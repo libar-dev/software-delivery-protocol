@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { createReader } from "../src/index.js";
-import type { GraphSchema, PackContext, PackMemberSummary } from "../src/index.js";
+import { createReader, schemaVersion } from "../src/index.js";
+import type {
+  GraphEdge,
+  GraphNode,
+  GraphSchema,
+  PackContext,
+  PackMemberSummary,
+} from "../src/index.js";
 import {
   CARRIER,
   PACK_ID,
@@ -318,4 +324,56 @@ describe("the Pack design on the Pack context", () => {
   it("is a pure function of the graph: two reads of one graph are equal", () => {
     expect(JSON.stringify(packDesign())).toBe(JSON.stringify(packDesign()));
   });
+
+  it("joins many members to one outside Spec in one step each, members in authored order", () => {
+    // Every member rests on one outside Spec, which rests on every member in turn. A join that
+    // scans the members already joined costs the square of the count: seconds here, where one
+    // step per member costs a fraction of one.
+    const count = 40_000;
+    const primitive = (id: string): GraphNode => ({
+      id,
+      nodeType: "Primitive",
+      claim: "declared",
+      specKind: "rule",
+      altitude: "story",
+      readiness: "idea",
+      title: id,
+      file: "specs/wide.sdp.md",
+      sections: { intent: { outcome: "Probe." } },
+    });
+    const outside = "spec:wide.outside";
+    const members = Array.from(
+      { length: count },
+      (_, position) => `spec:wide.m${String(position)}`,
+    );
+    const graph: GraphSchema = {
+      schemaVersion,
+      nodes: [
+        primitive(outside),
+        ...members.map(primitive),
+        {
+          id: "pack:wide",
+          nodeType: "Pack",
+          claim: "declared",
+          title: "Wide",
+          members,
+          file: "specs/wide.pack.sdp.md",
+          modelRefs: [],
+        },
+      ],
+      edges: members.flatMap((id): GraphEdge[] => [
+        { from: id, type: "dependsOn", to: outside, claim: "declared" },
+        { from: outside, type: "dependsOn", to: id, claim: "declared" },
+      ]),
+    };
+    const reader = createReader(graph);
+
+    const started = performance.now();
+    const boundary = reader.packContext("pack:wide")?.boundary;
+    const elapsed = performance.now() - started;
+
+    expect(boundary?.restsOn.map((row) => row.via)).toEqual([[{ type: "dependsOn", members }]]);
+    expect(boundary?.restedOnBy.map((row) => row.via)).toEqual([[{ type: "dependsOn", members }]]);
+    expect(elapsed).toBeLessThan(2_000);
+  }, 30_000);
 });

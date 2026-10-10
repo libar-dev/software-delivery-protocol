@@ -2018,7 +2018,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
     id: "impl:protocol.pack-design",
     nodeType: "CodeNode",
-    label: "assembles the Pack design on the Pack context",
+    label: "the Pack design helpers and the Pack context assembly they serve",
     file: "src/reader/reader.ts",
     site: "function packMemberDesign(",
     role: "reader",

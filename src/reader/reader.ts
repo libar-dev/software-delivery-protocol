@@ -525,15 +525,16 @@ function statedNextRungOf(stated: SpecReadiness): SpecReadiness | undefined {
 }
 
 /**
- * The Pack design: each member's stated next rung, design columns, bindings and verifier counts,
- * and the Pack's boundary, assembled once on the Pack context from the graph alone.
+ * The file's Pack design code: `packMemberDesign` reads a member's design columns and
+ * `packBoundary` the Pack's boundary, and `packContext` in `createReader` joins them with each
+ * member's stated next rung, bindings and verifier counts. The evaluator call sits in
+ * `createReader`, whose anchor declares it.
  *
  * @sdpAnchor impl:protocol.pack-design
- * @sdpLabel assembles the Pack design on the Pack context
+ * @sdpLabel the Pack design helpers and the Pack context assembly they serve
  * @sdpSatisfies spec:consumers.pack-design
  * @sdpReferences spec:extraction.entry-locations, spec:extraction.contract-declarations
  * @sdpComponent component:protocol.reader
- * @sdpUses impl:protocol.next-rung-floor
  * @sdpRole reader
  */
 function packMemberDesign(
@@ -606,22 +607,21 @@ function packBoundary(
   implementedOf: (id: string) => boolean,
 ): PackBoundary {
   const inside = new Set(node.members);
-  const restsOn = new Map<string, Map<AuthoredEdgeType, string[]>>();
-  const restedOnBy = new Map<string, Map<AuthoredEdgeType, string[]>>();
+  // A Set keeps insertion order and admits each member once in constant time, so a Spec many
+  // members share costs one step per member, not one scan of the members joined so far.
+  const restsOn = new Map<string, Map<AuthoredEdgeType, Set<string>>>();
+  const restedOnBy = new Map<string, Map<AuthoredEdgeType, Set<string>>>();
 
   const join = (
-    rows: Map<string, Map<AuthoredEdgeType, string[]>>,
+    rows: Map<string, Map<AuthoredEdgeType, Set<string>>>,
     outsideId: string,
     type: AuthoredEdgeType,
     memberId: string,
   ): void => {
-    const byType = rows.get(outsideId) ?? new Map<AuthoredEdgeType, string[]>();
-    const members = byType.get(type) ?? [];
+    const byType = rows.get(outsideId) ?? new Map<AuthoredEdgeType, Set<string>>();
+    const members = byType.get(type) ?? new Set<string>();
 
-    if (!members.includes(memberId)) {
-      members.push(memberId);
-    }
-
+    members.add(memberId);
     byType.set(type, members);
     rows.set(outsideId, byType);
   };
@@ -652,7 +652,7 @@ function packBoundary(
     }
   }
 
-  const rowsOf = (rows: Map<string, Map<AuthoredEdgeType, string[]>>): PackBoundaryRow[] =>
+  const rowsOf = (rows: Map<string, Map<AuthoredEdgeType, Set<string>>>): PackBoundaryRow[] =>
     [...rows.entries()]
       .sort(([left], [right]) => compareCodeUnits(left, right))
       .flatMap(([id, byType]): PackBoundaryRow[] => {
@@ -671,7 +671,7 @@ function packBoundary(
             via: authoredEdgeTypes.flatMap((type) => {
               const members = byType.get(type);
 
-              return members === undefined ? [] : [{ type, members }];
+              return members === undefined ? [] : [{ type, members: [...members] }];
             }),
           },
         ];
@@ -701,7 +701,7 @@ function packBoundary(
  * @sdpLabel thin typed graph reader construction
  * @sdpSatisfies spec:consumers.reader, spec:extraction.entry-locations
  * @sdpComponent component:protocol.reader
- * @sdpUses impl:protocol.delivery-facts
+ * @sdpUses impl:protocol.delivery-facts, impl:protocol.next-rung-floor
  * @sdpRole reader
  */
 

@@ -41,10 +41,12 @@ function refuse(message: string): never {
 /**
  * Pairs each numbered `## N. Title` heading with the one fenced `js` body under it. A body with
  * no heading, a heading with no body, a second body under one heading, a repeated number, or an
- * empty slug refuses the build: a file name would otherwise be guessed.
+ * empty slug refuses the build: a file name would otherwise be guessed. A catalog with no recipe
+ * refuses too, before anything is published, because publishing none would remove every shipped
+ * file. Lines may end in CRLF; each body is written with LF endings, as the catalog check reads it.
  */
 export function recipeFiles(catalog: string): readonly RecipeFile[] {
-  const lines = catalog.split("\n");
+  const lines = catalog.split(/\r?\n/u);
   const files: RecipeFile[] = [];
   const seen = new Set<number>();
   let pending: { readonly ordinal: number; readonly title: string } | undefined;
@@ -110,6 +112,10 @@ export function recipeFiles(catalog: string): readonly RecipeFile[] {
     refuse(`recipe ${String(pending.ordinal)} has no js body`);
   }
 
+  if (files.length === 0) {
+    refuse("the catalog has no numbered recipe with a js body");
+  }
+
   return files;
 }
 
@@ -121,7 +127,13 @@ function replaceFile(path: string, content: string): void {
   renameSync(temporary, path);
 }
 
-/** Writes every recipe file, then removes any file the catalog no longer owes. */
+/** The name `recipeFileName` gives a published recipe; a temporary file never matches it. */
+const completedRecipeFile = /^\d{2,}-[a-z0-9]+(?:-[a-z0-9]+)*\.js$/u;
+
+/**
+ * Writes every recipe file, then removes each completed recipe file the catalog no longer owes.
+ * Any other entry stays, a concurrent build's temporary file among them.
+ */
 export function writeRecipeFiles(outDir: string, files: readonly RecipeFile[]): void {
   const directory = join(outDir, RECIPES_DIRECTORY);
   const owed = new Set(files.map((file) => file.fileName));
@@ -133,7 +145,7 @@ export function writeRecipeFiles(outDir: string, files: readonly RecipeFile[]): 
   }
 
   for (const entry of readdirSync(directory)) {
-    if (!owed.has(entry)) {
+    if (completedRecipeFile.test(entry) && !owed.has(entry)) {
       rmSync(join(directory, entry), { recursive: true, force: true });
     }
   }

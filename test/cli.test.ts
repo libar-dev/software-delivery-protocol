@@ -18,7 +18,11 @@ import { afterAll, describe, expect, it, vi } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
-import { readBuildCommit, writeBuildInfo } from "../src/cli/build-artifacts.js";
+import {
+  readBuildCommit,
+  writeBuildArtifacts,
+  writeBuildInfo,
+} from "../src/cli/build-artifacts.js";
 import { BUILD_INFO_FILE, parseBuildCommit } from "../src/cli/build-info.js";
 import {
   SDP_HELP_TEXT,
@@ -2303,6 +2307,35 @@ describe("sdp --version", () => {
       );
     } finally {
       rmSync(outDir, { recursive: true, force: true });
+    }
+  });
+
+  it("publishes the commit the build step reads from git beside the CLI", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-build-step-"));
+    const outDir = join(root, "dist");
+    const asked: { readonly cwd: string; readonly args: readonly string[] }[] = [];
+
+    try {
+      mkdirSync(join(root, "docs", "agent-surface"), { recursive: true });
+      writeFileSync(
+        join(root, "docs", "agent-surface", "recipes.md"),
+        "## 1. One\n\n```js\nreturn 1;\n```\n",
+      );
+      writeBuildArtifacts({
+        root,
+        outDir,
+        git: (cwd, args) => {
+          asked.push({ cwd, args });
+          return `${fullCommit}\n`;
+        },
+      });
+
+      expect(asked).toEqual([{ cwd: root, args: ["rev-parse", "HEAD"] }]);
+      expect(readFileSync(join(outDir, "cli", BUILD_INFO_FILE), "utf8")).toBe(
+        `${JSON.stringify({ commit: fullCommit })}\n`,
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
     }
   });
 
