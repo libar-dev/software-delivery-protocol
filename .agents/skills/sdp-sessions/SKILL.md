@@ -58,7 +58,11 @@ Resolve the target's blocking open questions and review the carrying Specs. The 
 register (recipe 20) lists every open question in the corpus when the neighbors matter too. A
 clear floor is evidence, not an automatic `ready` statement. Use pinned declarations (recipe 24)
 to list every signature, type, validator or table the target and its neighbors pin as a code span
-opening a keyed Design entry, so a test author and a builder working apart read one list.
+opening a keyed Design entry, so a test author and a builder working apart read one list. When the
+design is a Pack, read it with Pack design (recipe 29): per member, the stated next rung and what
+holds the member below it, the design columns, open questions with their lines, and the code that
+answers to it. Before changing a Spec, run design-change impact (recipe 30) for every Spec that
+rests on it and the units, verifiers, and Packs the change asks to follow.
 
 ### Implement
 
@@ -89,7 +93,11 @@ map (recipe 17), and the decision map (recipe 18). For a Pack reviewed from the 
 references into a design (recipe 27): per member, the referencing units, the realizing units, and
 whether a verifier is bound, with an empty column read as unbound. Use roles, layers and contexts
 (recipe 28) to review the architecture vocabulary the anchors state and to spot two spellings of
-one value. Review findings and gaps as data; the review never becomes a workflow gate.
+one value. To review a Pack's design as it stands, use Pack design (recipe 29); to review decisions,
+the decision register (recipe 31), with each decision's rung, supersession, and the Specs it
+shapes; to review dependency direction, architecture crossings (recipe 32), which reports the
+`uses` edges that cross a context or layer and refuses nothing. Review findings and gaps as data;
+the review never becomes a workflow gate.
 
 ### Close / slim
 
