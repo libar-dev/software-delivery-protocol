@@ -1,3 +1,4 @@
+import type { ReifiedEntryLine } from "./reify.js";
 import type { Finding } from "../validate/contracts.js";
 import { parseSectionContent } from "./markdown-body-content.js";
 import type { MarkdownLine } from "./markdown-body-content.js";
@@ -113,6 +114,8 @@ export function mapOpen(
   lines: readonly MarkdownLine[],
   file: string,
   findings: Finding[],
+  sectionName: string,
+  entryLines: ReifiedEntryLine[],
 ): void {
   const parsed = parseSectionContent(lines, file, findings);
   addDescription(section, parsed.description, file, lines[0]?.line ?? 1, findings);
@@ -139,7 +142,11 @@ export function mapOpen(
       );
     else if (reservedMarkdownProperties.has(entry.key))
       addMarkdownFinding(findings, propertyFinding(file, item.line, entry.key));
-    else section[entry.key] = entry.value;
+    else {
+      section[entry.key] = entry.value;
+      if (entry.key !== "description")
+        entryLines.push({ entry: `${sectionName}.${entry.key}`, line: item.line });
+    }
   }
 }
 

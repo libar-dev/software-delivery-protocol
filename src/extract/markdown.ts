@@ -87,6 +87,7 @@ export function reifyMarkdownCarrier(sourceText: string, relativePath: string): 
           id: frontmatter.frontmatter.id,
           file: relativePath,
           line: frontmatter.frontmatter.line,
+          entryLines: body.body.entryLines,
         },
       ],
       packs: [],
