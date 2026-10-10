@@ -529,6 +529,47 @@ export const anchor = codeAnchor({
     expect(page).toContain("### References");
   });
 
+  it("groups twenty thousand units sharing one role and one context into one bucket each, in id order", () => {
+    const ids = Array.from(
+      { length: 20_000 },
+      (_unit, index) => `component:probe.unit-${String(index).padStart(5, "0")}`,
+    );
+    const graph: GraphSchema = {
+      schemaVersion,
+      // Reverse insertion: the bucket order is the sorted unit order, never the graph's.
+      nodes: [...ids].reverse().map((id) => ({
+        id,
+        nodeType: "CodeNode" as const,
+        claim: "anchored" as const,
+        file: "src/probe.ts",
+        role: "service",
+        context: "probe",
+      })),
+      edges: [],
+    };
+    const page = pageByPath(renderCensus(readerStub({ graph })), "index.md");
+    const units = ids.map((id) => `\`${id}\``).join(", ");
+
+    expect(page).toContain("| Code units | 20000 |");
+    expect(page).toContain(
+      [
+        "### Contexts",
+        "",
+        "| Context | Units | Unit count |",
+        "| --- | --- | ---: |",
+        `| \`probe\` | ${units} | 20000 |`,
+        "",
+        "### Roles",
+        "",
+        "| Role | Units | Unit count |",
+        "| --- | --- | ---: |",
+        `| \`service\` | ${units} | 20000 |`,
+        "",
+        "### References",
+      ].join("\n"),
+    );
+  });
+
   it("keeps the explicit empty state while still counting units apart from edges", () => {
     const page = pageByPath(
       renderCensus(

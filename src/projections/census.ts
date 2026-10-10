@@ -224,6 +224,7 @@ function renderAttributeTaxonomy(
   ];
 }
 
+/** Unit ids by one attribute's value, in unit order; each bucket is created once and pushed to. */
 function unitsBy(
   units: readonly CodeUnitAttributes[],
   attribute: "role" | "layer" | "context",
@@ -233,8 +234,16 @@ function unitsBy(
   for (const unit of units) {
     const value = unit[attribute];
 
-    if (value !== undefined) {
-      grouped.set(value, [...(grouped.get(value) ?? []), unit.id]);
+    if (value === undefined) {
+      continue;
+    }
+
+    const bucket = grouped.get(value);
+
+    if (bucket === undefined) {
+      grouped.set(value, [unit.id]);
+    } else {
+      bucket.push(unit.id);
     }
   }
 

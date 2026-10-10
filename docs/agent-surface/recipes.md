@@ -1868,7 +1868,9 @@ const taxonomy = (field) => {
   for (const unit of units) {
     const value = unit[field];
     if (typeof value !== "string") continue;
-    byValue.set(value, [...(byValue.get(value) ?? []), unit.id]);
+    const bucket = byValue.get(value);
+    if (bucket === undefined) byValue.set(value, [unit.id]);
+    else bucket.push(unit.id);
   }
   return [...byValue.keys()].sort().map((value) => ({ value, units: byValue.get(value).sort() }));
 };
