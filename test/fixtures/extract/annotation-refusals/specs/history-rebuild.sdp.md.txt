@@ -1,0 +1,11 @@
+---
+id: spec:platform.history-rebuild
+kind: behavior
+altitude: feature
+readiness: idea
+relations: {}
+---
+# platform history-rebuild
+
+## Intent
+- outcome: Exercise the two anchor forms over the history-rebuild path.

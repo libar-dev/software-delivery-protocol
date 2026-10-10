@@ -59,6 +59,7 @@ function specContext(overrides: Partial<SpecContext> = {}): SpecContext {
     relationsOut: [],
     relationsIn: [],
     implementations: [],
+    references: [],
     verifiers: [],
     findings: [],
     ...overrides,

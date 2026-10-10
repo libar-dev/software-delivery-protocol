@@ -1,0 +1,18 @@
+---
+id: spec:platform.rebuild
+kind: behavior
+altitude: feature
+readiness: idea
+relations: {}
+---
+# platform rebuild
+
+## Intent
+- outcome: Exercise the two anchor forms over the rebuild path.
+
+## Example space
+```gwt-vocabulary
+Given a read model {events:number} events behind
+When the rebuild runs
+Then the read model is {state:string}
+```

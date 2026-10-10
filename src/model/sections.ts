@@ -128,6 +128,7 @@ const specSectionsAnchor = codeAnchor({
   label: "typed Spec section shapes",
   satisfies: ref("spec:model.spec-sections"),
   component: componentAnchorId("component:protocol.model"),
+  role: "contract",
 });
 
 void specSectionsAnchor;

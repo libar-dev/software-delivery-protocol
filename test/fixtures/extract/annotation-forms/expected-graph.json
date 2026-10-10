@@ -1,0 +1,247 @@
+{
+  "schemaVersion": "0.8.0",
+  "nodes": [
+    {
+      "id": "component:platform.gateway",
+      "nodeType": "CodeNode",
+      "claim": "anchored",
+      "label": "the gateway",
+      "file": "src/constant-form.ts",
+      "line": 10,
+      "layer": "edge",
+      "context": "platform"
+    },
+    {
+      "id": "component:platform.read-model",
+      "nodeType": "CodeNode",
+      "claim": "anchored",
+      "label": "the read model",
+      "file": "src/comment-form.ts",
+      "line": 1,
+      "layer": "application",
+      "context": "platform"
+    },
+    {
+      "id": "impl:platform.barrel",
+      "nodeType": "CodeNode",
+      "claim": "anchored",
+      "file": "src/constant-form.ts",
+      "line": 26,
+      "role": "barrel"
+    },
+    {
+      "id": "impl:platform.gate",
+      "nodeType": "CodeNode",
+      "claim": "anchored",
+      "label": "the gate",
+      "file": "src/constant-form.ts",
+      "line": 17,
+      "role": "decider"
+    },
+    {
+      "id": "impl:platform.rebuild",
+      "nodeType": "CodeNode",
+      "claim": "anchored",
+      "label": "the online rebuild path",
+      "file": "src/comment-form.ts",
+      "line": 13,
+      "role": "service"
+    },
+    {
+      "id": "oracle:platform.rebuild",
+      "nodeType": "Anchor",
+      "claim": "anchored",
+      "file": "src/comment-form.ts",
+      "line": 35
+    },
+    {
+      "id": "spec:decisions.history-posture",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "decision",
+      "altitude": "story",
+      "readiness": "idea",
+      "title": "The history posture",
+      "file": "specs/history-posture.sdp.md",
+      "sections": {
+        "intent": {
+          "outcome": "Code that answers to the posture says so through references, never satisfies."
+        },
+        "decision": {
+          "decision": "The read model is rebuilt from history, never patched in place."
+        }
+      }
+    },
+    {
+      "id": "spec:platform.gate",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "behavior",
+      "altitude": "feature",
+      "readiness": "idea",
+      "title": "platform gate",
+      "file": "specs/gate.sdp.md",
+      "sections": {
+        "intent": {
+          "outcome": "Exercise the two anchor forms over the gate path."
+        }
+      },
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ]
+    },
+    {
+      "id": "spec:platform.history-rebuild",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "behavior",
+      "altitude": "feature",
+      "readiness": "idea",
+      "title": "platform history-rebuild",
+      "file": "specs/history-rebuild.sdp.md",
+      "sections": {
+        "intent": {
+          "outcome": "Exercise the two anchor forms over the history-rebuild path."
+        }
+      },
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ]
+    },
+    {
+      "id": "spec:platform.rebuild",
+      "nodeType": "Primitive",
+      "claim": "declared",
+      "specKind": "behavior",
+      "altitude": "feature",
+      "readiness": "idea",
+      "title": "platform rebuild",
+      "file": "specs/rebuild.sdp.md",
+      "sections": {
+        "intent": {
+          "outcome": "Exercise the two anchor forms over the rebuild path."
+        },
+        "behavior": {
+          "exampleSpace": {
+            "given": [
+              "a read model {events:number} events behind"
+            ],
+            "when": [
+              "the rebuild runs"
+            ],
+            "then": [
+              "the read model is {state:string}"
+            ]
+          }
+        }
+      },
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ]
+    },
+    {
+      "id": "test:platform.gate",
+      "nodeType": "Anchor",
+      "claim": "anchored",
+      "file": "src/constant-form.ts",
+      "line": 31
+    },
+    {
+      "id": "test:platform.rebuild",
+      "nodeType": "Anchor",
+      "claim": "anchored",
+      "label": "the rebuild path is verified end to end",
+      "file": "src/comment-form.ts",
+      "line": 28
+    }
+  ],
+  "edges": [
+    {
+      "from": "component:platform.read-model",
+      "type": "uses",
+      "to": "component:platform.gateway",
+      "claim": "anchored"
+    },
+    {
+      "from": "impl:platform.gate",
+      "type": "memberOf",
+      "to": "component:platform.gateway",
+      "claim": "anchored"
+    },
+    {
+      "from": "impl:platform.gate",
+      "type": "references",
+      "to": "spec:decisions.history-posture",
+      "claim": "anchored"
+    },
+    {
+      "from": "impl:platform.gate",
+      "type": "references",
+      "to": "spec:platform.rebuild",
+      "claim": "anchored"
+    },
+    {
+      "from": "impl:platform.gate",
+      "type": "satisfies",
+      "to": "spec:platform.gate",
+      "claim": "anchored"
+    },
+    {
+      "from": "impl:platform.rebuild",
+      "type": "memberOf",
+      "to": "component:platform.read-model",
+      "claim": "anchored"
+    },
+    {
+      "from": "impl:platform.rebuild",
+      "type": "references",
+      "to": "spec:decisions.history-posture",
+      "claim": "anchored"
+    },
+    {
+      "from": "impl:platform.rebuild",
+      "type": "satisfies",
+      "to": "spec:platform.history-rebuild",
+      "claim": "anchored"
+    },
+    {
+      "from": "impl:platform.rebuild",
+      "type": "satisfies",
+      "to": "spec:platform.rebuild",
+      "claim": "anchored"
+    },
+    {
+      "from": "impl:platform.rebuild",
+      "type": "uses",
+      "to": "impl:platform.gate",
+      "claim": "anchored"
+    },
+    {
+      "from": "oracle:platform.rebuild",
+      "type": "models",
+      "to": "spec:platform.rebuild",
+      "claim": "anchored"
+    },
+    {
+      "from": "test:platform.gate",
+      "type": "verifies",
+      "to": "spec:platform.gate",
+      "claim": "anchored"
+    },
+    {
+      "from": "test:platform.rebuild",
+      "type": "verifies",
+      "to": "spec:platform.history-rebuild",
+      "claim": "anchored"
+    },
+    {
+      "from": "test:platform.rebuild",
+      "type": "verifies",
+      "to": "spec:platform.rebuild",
+      "claim": "anchored"
+    }
+  ]
+}

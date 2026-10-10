@@ -225,6 +225,11 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.graph",
   },
   {
+    unit: "src/graph/schema.ts#graphEdgeTypes",
+    anchorId: "impl:protocol.graph-edge-types",
+    componentId: "component:protocol.graph",
+  },
+  {
     unit: "src/graph/delivery-facts.ts#computeDeliveryFacts",
     anchorId: "impl:protocol.delivery-facts",
     componentId: "component:protocol.graph",
@@ -252,6 +257,11 @@ export const acceptedArchitecturalUnits = [
   {
     unit: "src/model/anchors.ts#specTest",
     anchorId: "impl:protocol.anchor-model",
+    componentId: "component:protocol.model",
+  },
+  {
+    unit: "src/anchors.ts#codeAnchor",
+    anchorId: "impl:protocol.anchors-subpath",
     componentId: "component:protocol.model",
   },
   {
@@ -461,6 +471,7 @@ export const acceptedArchitecturalUnits = [
   },
 ] as const;
 
+// re-measured under plan 40
 export const expectedMemberOfEdges = acceptedArchitecturalUnits.map((row) => [
   row.anchorId,
   row.componentId,
@@ -511,6 +522,7 @@ export const coarseGrainCoverage = [
 // A uses edge tracks real imports (value or type) from another component's source files; imports
 // that exist only to author the anchors themselves (the stable-id and anchor-builder modules)
 // confer no edge. The convention is stated in spec:protocol.structural-self-binding.
+// re-measured under plan 40
 export const expectedUsesEdges = [
   ["impl:protocol.example-runner-adapter", "impl:protocol.example-runner"],
   ["impl:protocol.authored-honesty-delivery-facts", "impl:protocol.delivery-facts"],

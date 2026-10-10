@@ -65,6 +65,21 @@ function materializeSelfHostingCopy(): string {
     });
   }
 
+  // Copied relative builder modules are outside the Protocol's trusted source checkout. Use
+  // the public anchors import in this isolated corpus so both forms retain their bindings.
+  for (const entry of readdirSync(join(root, "src"), { recursive: true, withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith(".ts")) continue;
+    const path = join(entry.parentPath, entry.name);
+    const source = readFileSync(path, "utf8");
+    writeFileSync(
+      path,
+      source.replace(
+        /from "(?:\.\.?\/)+(?:model\/)?(?:ids|code-anchor)\.js"/gu,
+        'from "@libar-dev/software-delivery-protocol/anchors"',
+      ),
+    );
+  }
+
   return root;
 }
 
@@ -295,7 +310,8 @@ describe("sdp cli", () => {
           `${file} — [warning] conformance/prose-mentions — Mention of "${target}" in "${specId}"`,
         );
       }
-      expect(capture.readStdout()).toContain("validate: 0 errors · 13 warnings");
+      // re-measured under plan 40
+      expect(capture.readStdout()).toContain("validate: 0 errors · 14 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

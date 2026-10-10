@@ -118,6 +118,7 @@ export const markdownPackAuthoringAnchor = codeAnchor({
   label: "reifies the Markdown Pack manifest into the one carrier path",
   satisfies: ref("spec:carrier.markdown-pack-authoring"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "extractor",
 });
 export function reifyMarkdownPack(sourceText: string, relativePath: string): CarrierReification {
   try {

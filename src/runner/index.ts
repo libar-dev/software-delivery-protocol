@@ -94,12 +94,15 @@ const runnerComponentAnchor = codeAnchor({
   label: "Protocol example runner seam",
   satisfies: ref("spec:extraction.example-runner"),
   uses: [componentAnchorId("component:protocol.notation")],
+  layer: "application",
+  context: "protocol",
 });
 const exampleRunnerAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.example-runner"),
   label: "plans and executes a bound example against the caller's world",
   satisfies: ref("spec:extraction.example-runner"),
   component: componentAnchorId("component:protocol.runner"),
+  role: "service",
 });
 
 void runnerComponentAnchor;

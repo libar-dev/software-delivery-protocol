@@ -22,11 +22,13 @@ import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protoc
 
 import { extract, validateGraph } from "../src/index.js";
 import { auditStructuralCoverage } from "./helpers/structural-coverage.js";
-import type { ExpectedSpec } from "./self-hosting-oracle/index.js";
+import type { ExpectedAnchor, ExpectedSpec } from "./self-hosting-oracle/index.js";
 import {
   acceptedArchitecturalUnits,
   coarseGrainCoverage,
   expectedAnchors,
+  expectedBindingEdges,
+  expectedCommentAnchorIds,
   expectedComponentIds,
   expectedDeclaredRelations,
   expectedMemberOfEdges,
@@ -158,6 +160,21 @@ function lineContaining(source: string, token: string): number {
   return line + 1;
 }
 
+function commentAnchorLine(source: string, id: string): number {
+  const blocks = [...source.matchAll(/\/\*\*[\s\S]*?\*\//gu)].filter((match) =>
+    match[0].split("\n").some((line) => line.trim() === `* @sdpAnchor ${id}`),
+  );
+  expect(blocks, id).toHaveLength(1);
+  const block = blocks[0];
+  return block === undefined ? 0 : source.slice(0, block.index).split("\n").length;
+}
+
+function anchorDeclarationLine(source: string, anchor: ExpectedAnchor): number {
+  return anchor.constant === undefined
+    ? commentAnchorLine(source, anchor.id)
+    : lineContaining(source, `const ${anchor.constant}`);
+}
+
 function compareCoverageMismatch(
   left: { unit: string; anchorId: string; target: string },
   right: { unit: string; anchorId: string; target: string },
@@ -175,7 +192,7 @@ describe("the self-hosting corpus", () => {
     expect(result.report.findings).toEqual([]);
   });
 
-  it("reports exactly the five informative honesty gaps and the eight unbacked prose mentions", () => {
+  it("reports exactly the five informative honesty gaps and the nine unbacked prose mentions", () => {
     expect(
       validateGraph(result.graph).findings.map(
         ({ validatorId, family, severity, subjectId, relatedId }) => ({
@@ -193,12 +210,20 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    expect(result.counts).toEqual({ specs: 225, packs: 2, anchors: 233 });
-    expect(expectedSpecs).toHaveLength(225);
+    // re-measured under plan 40
+    expect(result.counts).toEqual({ specs: 228, packs: 2, anchors: 235 });
+    // re-measured under plan 40
+    expect(expectedSpecs).toHaveLength(228);
+    // re-measured under plan 40
     expect(expectedPackMembers).toHaveLength(225);
-    expect(expectedAnchors).toHaveLength(233);
-    expect(result.graph.nodes).toHaveLength(460);
-    expect(result.graph.edges).toHaveLength(1055);
+    // re-measured under plan 40
+    expect(expectedAnchors).toHaveLength(235);
+    // re-measured under plan 40
+    expect(expectedBindingEdges).toHaveLength(241);
+    // re-measured under plan 40
+    expect(result.graph.nodes).toHaveLength(465);
+    // re-measured under plan 40
+    expect(result.graph.edges).toHaveLength(1076);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -240,6 +265,7 @@ describe("the self-hosting corpus", () => {
   });
 
   it("holds the frozen stated-readiness distribution", () => {
+    // re-measured under plan 40
     expect(
       primitiveNodes.reduce<Record<string, number>>(
         (histogram, node) => ({
@@ -248,7 +274,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 58, idea: 4, ready: 150, scoped: 13 });
+    ).toEqual({ defined: 58, idea: 4, ready: 153, scoped: 13 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {
@@ -266,7 +292,7 @@ describe("the self-hosting corpus", () => {
     expect(packNodes).toEqual(expectedPacks);
   });
 
-  it("derives one binding edge per authored anchor", () => {
+  it("derives the independent zero-to-many binding edge roster", () => {
     expect(
       result.graph.edges
         .filter(
@@ -274,7 +300,7 @@ describe("the self-hosting corpus", () => {
         )
         .map((edge) => [edge.from, edge.type, edge.to])
         .sort(),
-    ).toEqual(expectedAnchors.map((anchor) => [anchor.id, anchor.type, anchor.target]).sort());
+    ).toEqual([...expectedBindingEdges].sort());
   });
 
   it("rosters exactly the accepted component set", () => {
@@ -287,6 +313,8 @@ describe("the self-hosting corpus", () => {
   });
 
   it("gives every owned impl/api CodeNode exactly one component", () => {
+    // re-measured under plan 40
+    expect(expectedMemberOfEdges).toHaveLength(87);
     const exceptions = new Set<string>(structuralMembershipExceptions);
     const codeUnits = result.graph.nodes.filter(
       (node) =>
@@ -310,6 +338,8 @@ describe("the self-hosting corpus", () => {
   });
 
   it("derives exactly the sparse authored component uses edges", () => {
+    // re-measured under plan 40
+    expect(expectedUsesEdges).toHaveLength(39);
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "uses")
@@ -442,6 +472,31 @@ describe("the self-hosting corpus", () => {
     expect(mismatches, message).toEqual([]);
   });
 
+  it("finds every converted comment anchor at its block's first line", () => {
+    // re-measured under plan 40
+    expect(expectedCommentAnchorIds).toHaveLength(17);
+    expect(
+      expectedAnchors
+        .filter((anchor) => anchor.constant === undefined)
+        .map((anchor) => anchor.id)
+        .sort(),
+    ).toEqual([...expectedCommentAnchorIds].sort());
+    for (const id of expectedCommentAnchorIds) {
+      const anchor = expectedAnchors.find((entry) => entry.id === id);
+      expect(anchor, id).toBeDefined();
+      if (anchor === undefined) continue;
+      const source = readFileSync(join(repoRoot, anchor.file), "utf8");
+      expect(
+        result.graph.nodes.find((node) => node.id === id),
+        id,
+      ).toMatchObject({
+        file: anchor.file,
+        line: commentAnchorLine(source, id),
+        claim: "anchored",
+      });
+    }
+  });
+
   it("projects every anchor and code node at the line its declaration occupies", () => {
     const expectedAnchorNodes = expectedAnchors
       .map((anchor) => {
@@ -453,7 +508,10 @@ describe("the self-hosting corpus", () => {
           claim: "anchored",
           label: anchor.label,
           file: anchor.file,
-          line: lineContaining(source, `const ${anchor.constant}`),
+          line: anchorDeclarationLine(source, anchor),
+          role: anchor.role,
+          layer: anchor.layer,
+          context: anchor.context,
         };
       })
       .sort(byId);
@@ -468,6 +526,9 @@ describe("the self-hosting corpus", () => {
           label: node.label,
           file: node.file,
           line: node.line,
+          role: node.nodeType === "CodeNode" ? node.role : undefined,
+          layer: node.nodeType === "CodeNode" ? node.layer : undefined,
+          context: node.nodeType === "CodeNode" ? node.context : undefined,
         }))
         .sort(byId),
     ).toEqual(expectedAnchorNodes);
@@ -488,7 +549,7 @@ describe("the self-hosting corpus", () => {
   it("keeps every anchor beside the site it binds", () => {
     for (const anchor of expectedAnchors) {
       const source = readFileSync(join(repoRoot, anchor.file), "utf8");
-      const anchorLine = lineContaining(source, `const ${anchor.constant}`);
+      const anchorLine = anchorDeclarationLine(source, anchor);
       const activation = adoptedActivationIdentifier(anchor.site);
       const siteLine =
         activation === undefined
@@ -498,9 +559,9 @@ describe("the self-hosting corpus", () => {
 
       expect(anchorLine).toBeGreaterThan(0);
       expect(siteLine, anchor.id).toBeGreaterThan(0);
-      // The densest site has four adjacent member anchors; their required component rows add
-      // exactly four lines to the original 20-line locality bound.
-      expect(Math.abs(anchorLine - siteLine), anchor.id).toBeLessThanOrEqual(24);
+      // re-measured under plan 40
+      // The densest adjacent binding group now spans 28 lines with component and role fields.
+      expect(Math.abs(anchorLine - siteLine), anchor.id).toBeLessThanOrEqual(28);
       expect(node).toMatchObject({ file: anchor.file, line: anchorLine, claim: "anchored" });
     }
   });

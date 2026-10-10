@@ -25,6 +25,7 @@ const diagnosticCliAnchor = codeAnchor({
   label: "composes structured finding fields into the one command-line diagnostic form",
   satisfies: ref("spec:validation.diagnostic-rendering"),
   component: componentAnchorId("component:protocol.cli"),
+  role: "renderer",
 });
 void diagnosticCliAnchor;
 

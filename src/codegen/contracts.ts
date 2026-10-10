@@ -968,18 +968,22 @@ const codegenComponentAnchor = codeAnchor({
     componentAnchorId("component:protocol.notation"),
     componentAnchorId("component:protocol.validate"),
   ],
+  layer: "application",
+  context: "protocol",
 });
 const executableContractsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.executable-contracts"),
   label: "derives step and example-space contracts from the graph",
   satisfies: ref("spec:extraction.executable-contracts"),
   component: componentAnchorId("component:protocol.codegen"),
+  role: "projection",
 });
 const runnableModulesAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.runnable-modules"),
   label: "derives and publishes runnable registrar modules from the graph",
   satisfies: ref("spec:extraction.runnable-modules"),
   component: componentAnchorId("component:protocol.codegen"),
+  role: "projection",
 });
 void codegenComponentAnchor;
 void executableContractsAnchor;

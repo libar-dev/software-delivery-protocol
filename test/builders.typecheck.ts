@@ -155,3 +155,42 @@ pack({
   // @ts-expect-error packs carry no constraints section — constraints are authored on a Spec
   constraints: [{ statement: "p95 < 200ms" }],
 });
+
+// The binding grain (`spec:decisions.anchor-binding-grain`): `satisfies` is optional and plural,
+// `verifies` is plural, `references` is a non-conferring list, and `role` / `layer` / `context`
+// are the closed structural attributes of the architectural annotation decision.
+const identityOnlyAnchor = codeAnchor({
+  id: codeAnchorId("impl:orders.identity-only"),
+  role: "barrel",
+});
+
+const pluralAnchor = codeAnchor({
+  id: codeAnchorId("impl:orders.plural"),
+  satisfies: [ref("spec:orders.create-order"), ref("spec:orders.order-total-rule")],
+  references: [ref("spec:orders.history-view")],
+});
+
+const componentAnchor = codeAnchor({
+  id: codeAnchorId("component:orders.core"),
+  layer: "domain",
+  context: "orders",
+});
+
+const pluralVerifier = specTest({
+  id: testAnchorId("test:orders.create-order.plural"),
+  verifies: [ref("spec:orders.create-order"), ref("spec:orders.create-order.valid-cart")],
+});
+
+void [identityOnlyAnchor, pluralAnchor, componentAnchor, pluralVerifier];
+
+codeAnchor({
+  id: codeAnchorId("component:orders.core"),
+  // @ts-expect-error layer is a closed set: edge · application · domain · adapter · infrastructure
+  layer: "presentation",
+});
+
+codeAnchor({
+  id: codeAnchorId("impl:orders.create-order-use-case"),
+  // @ts-expect-error references targets are Spec ids, never code anchor ids
+  references: [codeAnchorId("impl:orders.plural")],
+});

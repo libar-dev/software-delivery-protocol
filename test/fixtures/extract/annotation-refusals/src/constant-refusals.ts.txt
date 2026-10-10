@@ -1,0 +1,36 @@
+import { codeAnchor, codeAnchorId, ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol/anchors";
+
+export const emptySatisfies = codeAnchor({
+  id: codeAnchorId("impl:refused.empty-satisfies"),
+  satisfies: [],
+});
+
+export const repeatedSatisfies = codeAnchor({
+  id: codeAnchorId("impl:refused.repeated-satisfies"),
+  satisfies: [ref("spec:platform.gate"), ref("spec:platform.gate")],
+});
+
+export const openLayer = codeAnchor({
+  id: codeAnchorId("component:refused.layer"),
+  layer: "presentation",
+});
+
+export const layerOnImpl = codeAnchor({
+  id: codeAnchorId("impl:refused.layer-on-impl"),
+  context: "platform",
+});
+
+export const roleProse = codeAnchor({
+  id: codeAnchorId("impl:refused.role"),
+  role: "Service Layer",
+});
+
+export const nonStaticRole = codeAnchor({
+  id: codeAnchorId("impl:refused.non-static-role"),
+  role: ["service"].join(""),
+});
+
+export const emptyVerifies = specTest({
+  id: testAnchorId("test:refused.empty-verifies"),
+  verifies: [],
+});

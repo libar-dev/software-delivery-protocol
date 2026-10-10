@@ -1,6 +1,4 @@
 import type { PackContext, Reader, SpecContext, SpecSummary } from "../reader/reader.js";
-import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
-import { codeAnchor } from "../model/code-anchor.js";
 import { escapeRenderedField, renderNarrative } from "./owned-prose.js";
 import type { DesignReviewPage } from "./design-review.js";
 import {
@@ -48,13 +46,13 @@ export function renderSpecPage(context: SpecContext): DesignReviewPage {
   return { path: page, content: `${lines.join("\n")}\n` };
 }
 
-const bindingLanguagePackTableAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.binding-language-pack-table"),
-  label: "renders Pack member implementation and verifier bindings as present or none",
-  satisfies: ref("spec:consumers.binding-language-views"),
-  component: componentAnchorId("component:protocol.projections"),
-});
-void bindingLanguagePackTableAnchor;
+/**
+ * @sdpAnchor impl:protocol.binding-language-pack-table
+ * @sdpLabel renders Pack member implementation and verifier bindings as present or none
+ * @sdpSatisfies spec:consumers.binding-language-views
+ * @sdpComponent component:protocol.projections
+ * @sdpRole renderer
+ */
 
 export function renderPackPage(
   context: PackContext,
@@ -121,13 +119,13 @@ export function renderPackPage(
   return { path: page, content: `${lines.join("\n")}\n` };
 }
 
-const bindingLanguageIndexTableAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.binding-language-index-table"),
-  label: "renders index implementation and verifier bindings as present or none",
-  satisfies: ref("spec:consumers.binding-language-views"),
-  component: componentAnchorId("component:protocol.projections"),
-});
-void bindingLanguageIndexTableAnchor;
+/**
+ * @sdpAnchor impl:protocol.binding-language-index-table
+ * @sdpLabel renders index implementation and verifier bindings as present or none
+ * @sdpSatisfies spec:consumers.binding-language-views
+ * @sdpComponent component:protocol.projections
+ * @sdpRole renderer
+ */
 
 export function renderIndexPage(reader: Reader, specs: readonly SpecSummary[]): DesignReviewPage {
   const page = "index.md";

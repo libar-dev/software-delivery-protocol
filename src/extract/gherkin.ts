@@ -1231,6 +1231,7 @@ export const gherkinAuthoringAnchor = codeAnchor({
   label: "reifies Gherkin behavior and example authoring into the one carrier path",
   satisfies: ref("spec:carrier.gherkin-authoring"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "extractor",
 });
 
 export function reifyGherkinCarrier(sourceText: string, relativePath: string): CarrierReification {

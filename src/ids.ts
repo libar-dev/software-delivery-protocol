@@ -173,6 +173,7 @@ const stableIdsAnchor = codeAnchor({
   label: "stable ID grammar parser",
   satisfies: "spec:model.stable-ids" as SpecId,
   component: createComponentAnchorId("component:protocol.model"),
+  role: "codec",
 });
 
 void stableIdsAnchor;

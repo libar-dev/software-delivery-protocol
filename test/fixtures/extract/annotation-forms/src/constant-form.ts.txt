@@ -1,0 +1,34 @@
+import {
+  codeAnchor,
+  codeAnchorId,
+  componentAnchorId,
+  ref,
+  specTest,
+  testAnchorId,
+} from "@libar-dev/software-delivery-protocol/anchors";
+
+export const gatewayComponent = codeAnchor({
+  id: codeAnchorId("component:platform.gateway"),
+  label: "the gateway",
+  layer: "edge",
+  context: "platform",
+});
+
+export const gate = codeAnchor({
+  id: codeAnchorId("impl:platform.gate"),
+  label: "the gate",
+  satisfies: [ref("spec:platform.gate")],
+  references: [ref("spec:decisions.history-posture"), ref("spec:platform.rebuild")],
+  component: componentAnchorId("component:platform.gateway"),
+  role: "decider",
+});
+
+export const barrel = codeAnchor({
+  id: codeAnchorId("impl:platform.barrel"),
+  role: "barrel",
+});
+
+export const gateTest = specTest({
+  id: testAnchorId("test:platform.gate"),
+  verifies: ref("spec:platform.gate"),
+});

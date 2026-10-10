@@ -24,6 +24,7 @@ const packAggregateAnchor = codeAnchor({
   label: "Pack aggregate and model references",
   satisfies: ref("spec:model.pack-aggregate"),
   component: componentAnchorId("component:protocol.model"),
+  role: "contract",
 });
 
 void packAggregateAnchor;

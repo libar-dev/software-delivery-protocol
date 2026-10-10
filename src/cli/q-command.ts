@@ -72,7 +72,7 @@ async function asyncBodyShape(): Promise<void> {
  * syntax — so the runner never has to resolve a module on the operator's behalf and no staleness
  * switch exists to forget. `return` is the output contract.
  */
-function compileBody(source: string): CompiledBody {
+export function compileBody(source: string): CompiledBody {
   const { constructor: AsyncBody } = Object.getPrototypeOf(asyncBodyShape) as {
     readonly constructor: AsyncBodyConstructor;
   };
@@ -197,6 +197,7 @@ const buildPipelineQueryAnchor = codeAnchor({
     "one query invocation derives the graph once and serves reader, raw graph, and report from that one derivation",
   satisfies: ref("spec:extraction.build-pipeline"),
   component: componentAnchorId("component:protocol.cli"),
+  role: "service",
 });
 void buildPipelineQueryAnchor;
 

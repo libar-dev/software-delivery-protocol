@@ -1229,4 +1229,158 @@ export const decisionsSpecs = [
     deliveryFacts: [],
     file: "specs/decisions/studio-web-components.sdp.md",
   },
+  {
+    id: "spec:decisions.anchor-comment-form",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/decisions/anchor-comment-form.sdp.md",
+    title: "The comment form is a second anchor representation",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Admit a doc comment carrying reserved `@sdp*` tags as a second extracted representation of the anchor, feeding the same closed envelope as the constant form, so code that cannot import the Protocol binds at its real site and comment prose still authors nothing.",
+      },
+      decision: {
+        context:
+          "The source-commentary ruling it supersedes (`spec:decisions.jsdoc-graph-extraction-refused`, MD-35) refused two things in one record: comment prose authoring graph content, and identity tags in doc comments. Its rationale said the refusal \"is about prose, not identity\", while its operative alternative also refused structured identity tags; the annotation scout under `docs/lineage/` names that mismatch and finds that gen 1's drift was duplicate identities, scan scope, and syntax handling, never an extracted identity tag as such. The first adopter showed the cost of the single form: every one of its code anchors sits in a test or a harness because its runtime code cannot import this package, `byFile` on a source file returns nothing, and a hand-kept join stands in for the binding. The original design (`docs/lineage/v0-design/04-authoring-surfaces.md` §2) supported three marker styles feeding one extractor, and its package shape (`docs/lineage/v0-design/02-system-architecture.md` §3) kept the marker library free of runtime dependencies so product code could import it. The owner's direction opening plan 40 is to move closer to that design.",
+        decision:
+          "An anchor has two extracted representations that feed one closed envelope, the constant form as ruled and a comment form. The comment form is a top-level `/** … */` block in a `.ts` or `.tsx` file carrying reserved camelCase, TSDoc-compatible tags; `@sdpAnchor <id>` opens it, and the id's namespace selects the flavor exactly as the constant builders do. Comment prose still authors nothing: only the reserved tags are read, and a comment that does not open with `/**` is never read. Trust is by reserved grammar, not by builder import, so no import is required. The same id in two forms is a duplicate id. The package also ships a zero-dependency subpath `@libar-dev/software-delivery-protocol/anchors` exporting the id builders and the three anchor builders and nothing else, for runtimes that may import but must not load `node:*` modules or ts-morph; the extractor trusts that specifier as a Protocol builder module.",
+        rationale: [
+          "Hard to reverse: a second write path from source becomes a contract for the extractor, the validators, and every adopter's code. Surprising without context: the superseded ruling refused the obvious parity move, and this one admits exactly the half its own rationale left open while keeping the half it was about. Real trade-off: a tag grammar in a comment gets no compiler check and the extractor gains a second parser; in exchange, code that cannot import the package binds at its real site and `byFile` answers for it.",
+          "What survives from the superseded ruling: comment prose authors nothing; a comment's wording beyond the reserved tags produces no graph finding; a comment that states law other surfaces depend on still promotes into a Spec under the promotion law, and restating promoted law in a comment violates exclusive promotion (MD-10), so the comment demotes to local commentary plus a Spec pointer; one graph language stays, because both forms feed one envelope and one extraction path (one validation path, MD-14).",
+        ],
+        consequences: [
+          "The reserved tags are `@sdpAnchor`, `@sdpLabel`, `@sdpSatisfies`, `@sdpVerifies`, `@sdpModels`, `@sdpReferences`, `@sdpComponent`, `@sdpUses`, `@sdpRole`, `@sdpLayer`, and `@sdpContext`; the spelling is camelCase so TSDoc tooling reads each as one tag.",
+          "`@sdpAnchor <id>` opens the anchor; `impl:`, `api:`, and `component:` ids are code anchors, `test:` is a test anchor, `oracle:` is an oracle anchor.",
+          "Target tags by flavor are `@sdpSatisfies` on a code anchor, `@sdpVerifies` on a test anchor, and `@sdpModels` on an oracle anchor; lists are comma-separated.",
+          "Structural tags are admitted on code anchors only: `@sdpComponent`, `@sdpUses`, `@sdpReferences`, `@sdpRole`; a component anchor additionally takes `@sdpLayer` and `@sdpContext`.",
+          "`@sdpLabel` is admitted on any flavor.",
+          "Any other `@sdp*` tag is an envelope error, because the envelope is closed exactly as it is in the constant form; a line that opens with `@sdp` is a reserved tag line, so a misspelling such as `@sdp-anchor` or `@sdpAnchor:` is refused rather than read as prose.",
+          "Attachment: every top-level `/** … */` block that contains a reserved tag is one anchor with exactly one `@sdpAnchor`; a block with reserved tags and no `@sdpAnchor` is an envelope error, and a block with two is an envelope error, as any repeated tag is.",
+          "Blocks above the first import, trailing blocks with no statement beneath them, and comment-only files are read; a `/** … */` block with a reserved tag in a nested position, inside a function body, a class member, an object literal, or a JSX expression, is a misplaced-tag error, and a nested comment the top level would not read stays unread.",
+          "The block's first line is the binding's file and line.",
+          "The binding grain of both forms is the file: a block's line locates the anchor and names no declaration, and no attachment kind or symbol name is recorded. Symbol-level reach, if it arrives, is derived under the inferred claim and joins anchors by position; a mismatch is never a finding.",
+          "Cardinalities: each reserved tag appears at most once per block; `@sdpModels` takes one target; a list tag is non-empty, carries no empty item, and repeats no target.",
+          "Prose precedes the tags; after the first reserved tag, a non-empty line that does not open a tag is a refused continuation, and an ordinary TSDoc tag such as `@param` stays lawful and unread.",
+          "Parsing reads the raw comment text with a tag grammar; it does not depend on the TypeScript JSDoc tag parser.",
+          "The `hasProtocolBuilderImport` prefilter admits a file that contains the `@sdp` prefix.",
+          "The same id written in both forms reports through the existing duplicate-id validator.",
+          "The `/anchors` subpath is ESM with type declarations, built from the leaf id and anchor modules, carries no dependency, loads no `node:*` module, and its dependency closure is tested; a runtime that imports it ships nothing beyond the id and anchor builders.",
+          "The decorator form stays an unextracted representation.",
+        ],
+        alternatives: [
+          "Keeping the constant form as the single binding syntax was refused: the adopter's runtime code cannot import this package, so its anchors would stay in tests and the graph would keep answering nothing for source files.",
+          "Extracting the comment form through the TypeScript JSDoc tag parser was refused: it would couple the reserved grammar to the compiler's tag model and its versioning, where a tag grammar over the raw comment text is owned here.",
+          "A hyphenated spelling such as `@sdp-anchor` was refused: TSDoc tooling splits a hyphenated tag at the hyphen, so the tag would render as `@sdp` with a stray suffix in every documentation projection.",
+          "Parsing comment prose into Spec sections stays refused: it inverts the separation of intent from binding and recreates a shadow intent carrier beside the Specs.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.anchor-binding-grain",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/decisions/anchor-binding-grain.sdp.md",
+    title: "Bindings are optional, plural, and may reference a design",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let a code anchor name zero, one, or several Specs it realizes, and name the Specs it answers to without claiming to realize them, so an anchor can state exactly what its code does and the graph can reach a design from the code that answers to it.",
+      },
+      decision: {
+        context:
+          "A code anchor carries one required `satisfies`, a test anchor one `verifies`. The first adopter split Specs so that an anchor could claim only what its code does, a stub reads as `implemented` because the only way to name a design from code is to claim to realize it, and a relationship the design states in prose cannot reach a page. The original design made `satisfies` optional and plural on a marker (`docs/lineage/v0-design/04-authoring-surfaces.md` §2.4) and drew the line that markers carry identity and structure, never readiness, intent, behavior, or verification. The annotation scout under `docs/lineage/` found no informational code-to-Spec edge in either lineage and proposed one as the smallest extension.",
+        decision:
+          "On a code anchor, `satisfies` is optional and plural; on a test anchor, `verifies` is plural and non-empty. The constant form accepts one `ref(…)` or a fresh array literal of them. Each resolving target confers its fact as today, and `implemented` stays a whole-Spec fact. A new anchored edge `references` runs from a CodeNode to a Spec, from `references?: readonly SpecId[]` on a code anchor; it may target any Spec, decisions included, confers no delivery fact, moves no readiness floor, and the drift alarm ignores it. It says this code answers to that design without claiming to realize it: the unit follows the design or realizes part of it, so a change to the design asks the code to follow. A design that builds on existing code states that by a typed relation to the Spec the code satisfies, never by a reference from the code. A target named in both `satisfies` and `references` is an error. An identity-only code anchor, with no `satisfies` and no `references`, is lawful: it mints a CodeNode for structure and for `byFile`, and nothing else.",
+        rationale: [
+          "Hard to reverse: the anchor contract and the closed edge list are contracts for the extractor, the validators, the reader, and every adopter's anchors. Surprising without context: the obvious move is to let `satisfies` name a design the code only partly realizes, and this ruling refuses that in favor of a second edge that confers nothing. Real trade-off: a non-conferring edge can be written where a realization claim is due, and nothing in the graph says which; in exchange, `implemented` keeps its one meaning and an honest anchor is always writable.",
+          "Bindings state existence, not liveness, and `references` states less than existence of realization: only that the code answers to the design. Keeping that below the delivery facts preserves the drift alarm's meaning.",
+        ],
+        consequences: [
+          "The closed edge list gains `references`, derived and anchored; `satisfies` and `verifies` edges are one per target.",
+          "A present `references` is non-empty and unique; a non-resolving target confers nothing and reports as a non-resolving `satisfies` target does.",
+          "`satisfies` keeps its posture: code never satisfies a decision Spec directly (MD-26), and an anchor is never pointed at an unfinished Spec to manufacture coverage; a unit that answers to such a Spec references it.",
+          "An identity-only anchor derives no `satisfies` edge, so it never confers `implemented`; a stub that answers to a design references the design rather than satisfying it.",
+          "`byFile` may lawfully return a CodeNode with an empty Spec list; an empty list is the identity-only anchor's honest answer, not a lookup failure.",
+          "`blastRadius` reports changed identity-only CodeNodes as their own list, neither dropped nor folded into coverage-unknown, because the graph records the node and nothing it binds.",
+          "The drift alarm ignores `references` and still reports a `satisfies` target that states below `ready`, target by target.",
+          "The build backlog predicate (recipe 1) is unchanged: `references` neither adds nor removes a row.",
+          "The reader's Spec context names the CodeNodes that reference the Spec with their file and line; blast radius traverses `references` as a binding and names the edge type in its reason.",
+          "The Design Review Spec page lists the units that reference the Spec, and the census renders `references` beside the structural edges.",
+          "Anchor targets name whole Specs. An entry address never narrows a binding and never carries a delivery fact; a part of a Spec that needs its own realization tracking is its own Spec.",
+          "A `references` edge is authored for the design relationship it names; an edge whose reason is a test, a count, or a `byFile` answer is removed.",
+        ],
+        alternatives: [
+          'A partial-realization delivery fact was refused: a fact that says "partly implemented" is a status on code, and the floor cannot read it honestly.',
+          "Folding the design relationship into `satisfies` was refused: it manufactures `implemented` on a Spec the code does not realize, which is the adopter's stub problem restated.",
+          "Declaring the relationship on the Spec, as a list of its own code bindings, was refused: a Spec-side list of bindings is authored delivery state and a second place for the binding to drift.",
+          "References from code that a design builds on were refused: that dependency is a relation from the building design to the Spec the code satisfies; a code-side copy is a second home for it and would make each unit's source list its consumers' designs.",
+          "A `satisfies` or `references` target at an entry address was refused: a per-entry `implemented` is the partial-realization fact by another name, it would put delivery facts below the Spec, and a design key is renamed freely while an anchor bound to one would break on every design edit.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.architectural-annotation",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/decisions/architectural-annotation.sdp.md",
+    title: "Architectural significance is annotated where it is realized",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let a code anchor state the architectural role its unit plays, and let a component anchor state its layer and bounded context, so the graph answers architecture questions from the code that realizes the architecture, without a status, a second vocabulary registry, or a second architecture file.",
+      },
+      decision: {
+        context:
+          "Two rulings carried the structural half of the anchor: structural anchors confer nothing (`spec:decisions.structural-anchor-semantics`, MD-30) admitted `component` and `uses` as the only structural fields, and architectural significance rides existing primitives (`spec:decisions.architectural-significance-rides-primitives`, MD-34) refused a vocabulary beyond them and gave up CodeNode-grain roles. Both cited gen 1's tag-registry drift, about 50 tags to about 26, as the failure of an open structural vocabulary. The annotation scout under `docs/lineage/` corrects that account: the 50-to-26 collapse was a cleanup of gen 1's formal vocabulary that never shipped as a runtime registry, and what drifted there was duplicate identities, scan scope, and syntax handling. The original design declared a Component with `layer` and `bounded_context` (`docs/lineage/v0-design/03-graph-metamodel.md` §2.5), and gen 1 carried a role on each annotated unit. The owner's direction opening plan 40 is to bring back the value of annotating architecturally significant units and their relationships in code.",
+        decision:
+          "Architectural significance is annotated on the anchor of the unit that realizes it. A code anchor may carry `role`, the architectural pattern the unit plays; a `component:` anchor may additionally carry `layer`, one of `edge`, `application`, `domain`, `adapter`, or `infrastructure`, and `context`, its bounded context. The `component:` anchor is anchored architecture: it is the declared component, and there is no separate architecture file, because the anchor sits where the component is realized. It is not the original design's declared Component that could exist before code; an unrealized component lives in Specs and never as an invented CodeNode. A role is a free, corpus-owned vocabulary whose taxonomy the census renders with counts from the graph; `service`, `decider`, `projection`, `read-model`, `codec`, `contract`, `barrel`, and `utility` are the lineage set, not a closed list. `layer` is a closed set, and a value outside it is an envelope error; `layer` or `context` on a non-component anchor is an envelope error. All three attributes are optional, and omission is lawful.",
+        rationale: [
+          "Hard to reverse: the anchor envelope and the CodeNode fields are contracts for the extractor, the census, the Design Review, and every adopter's annotations. Surprising without context: the superseded rulings refused exactly these attributes on the strength of a drift account the scout found inaccurate, so the reversal reads as a repeat of gen 1 until the correction is on the table. Real trade-off: a free role vocabulary can drift across a corpus and no validator will say so; in exchange, the role, layer, and context live on the one anchor at the one site, and the census taxonomy makes drift visible without a registry.",
+          "What survives from both superseded rulings is restated here as consequences: the `component` and `uses` semantics and their validation rules, structural non-conferral, no inference from imports, no status or readiness on code, significance never selects a Spec kind, no `pattern:` namespace, and the engine significance criterion.",
+        ],
+        consequences: [
+          "`component?: ComponentAnchorId` and `uses?: readonly CodeAnchorId[]` stay closed graph-ID references deriving only anchored `memberOf` and `uses` edges; neither accepts a free string or an enum detached from graph identity, and there are no per-namespace sibling builders.",
+          "Every `component` and `uses` target exists as a CodeNode, and a dangling graph id is an error.",
+          "Membership is one level: a `memberOf` edge runs only from an `impl:` or `api:` CodeNode to a `component:` CodeNode, each source has at most one component, and a `component:` node is never itself a member.",
+          "A `uses` edge runs between CodeNode endpoints in the `impl:`, `api:`, or `component:` namespace; a present `uses` is non-empty and unique, structural edges are unique, and structural self-reference is an error.",
+          "Multi-node `uses` cycles remain authored data for the census, never findings; validators infer no transitive edge and reject no cycle.",
+          "A malformed or non-static structural field, an unknown `layer`, or `layer` or `context` on a non-component anchor refuses the whole anchor at reification rather than yielding a partial declaration; the envelope stays closed.",
+          "Structural edges and the new attributes confer no intent, delivery fact, or readiness effect; `satisfies` stays the only code-to-Spec realization slot and no `implements` field is admitted.",
+          "Architecture is never inferred from imports as anchored or declared structure; an inferred structural layer, if one arrives, stays advisory under its own claim, and derivation adds no fourth claim.",
+          "No status, readiness, intent, behavior, or verification is carried on code; role, layer, and context describe what the unit is, never where it stands.",
+          "Anchor-required lint stays warn-level and optional; the absence of an anchor is evidence, never a workflow gate.",
+          "Architectural significance never selects a Spec kind; the Spec states the kind of truth it carries, and relationships among such Specs are the existing relations, with `dependsOn` reserved for genuine semantic need, `supersedes` for actual replacement, and scheduling-flavored edges refused (planning truths live in ruled graph homes, MD-33).",
+          "Negative architecture constraints, a layer that must not use another, stay declared intent in a Spec, never a finding of the Protocol's validators; a corpus that wants one enforced checks its declared `uses`, `layer`, and `context` in its own gate.",
+          "No `pattern` term, kind, or `pattern:` namespace is admitted; a role is an attribute of a CodeNode, not a node; grouping is derived from id families and the component graph, not new Packs.",
+          "The engine significance criterion stays exported public surface or cross-component reach; code never satisfies a decision Spec directly (MD-26), and an anchor is never pointed at an unfinished Spec to manufacture coverage.",
+          "`role` and `context` values are one lowercase kebab token matching `^[a-z][a-z0-9-]*$`, with no normalization, so `read-model`, `readModel`, and `Read Model` cannot coexist as three categories; a value outside the token grammar is an envelope error.",
+          "The census links each role, layer, and context value to the units that carry it, so an owner can reconcile two spellings of one category by editing the anchors; nothing forces a label, and an unlabelled unit does not populate the taxonomy.",
+          "The five layers, one line each: `edge` is the transport and presentation boundary; `application` is use cases and orchestration; `domain` is the model and its rules; `adapter` is the implementations of ports toward external systems; `infrastructure` is runtime, persistence, and platform plumbing.",
+          "A package may hold several layers or several contexts; the package-to-component mapping is reviewed, and one component per package is a choice, never a rule.",
+          "Retained limitation: there is no independently declared Component; a component that no code realizes yet is a Spec, and the graph holds no CodeNode for it until an anchor exists.",
+          "The census renders role, layer, context, and `references` beside the structural edges it already renders, reporting an explicit empty state when none exist, and the Design Review's component rows show layer and context; both render under their existing contracts, Mermaid and Gherkin are untouched, and the shipped projections stay frozen (MD-32) as it stands, because a frozen projection renders the graph it is given and no projection is re-specified.",
+          "Annotations are curated, never a coverage quota; an identity has one owner; a realizing unit documents its local how, never a paraphrase of the Spec's what or why.",
+        ],
+        alternatives: [
+          "A separate architecture file declaring components, layers, and contexts was refused: it is a second place for the component to drift from the code that realizes it.",
+          "A closed role enum was refused: the corpus owns its architecture vocabulary, and a closed set would be the Protocol's architecture, not the adopter's.",
+          "A corpus-declared role vocabulary checked by a validator was refused: it is an authored registry, and the check is a content-quality check. The token grammar and the census taxonomy with its units are the whole check; a corpus that wants a list lints recipe 28 in its own gate.",
+          "Deriving role, layer, or context from file paths or imports was refused: it turns incidental layout into authoritative architecture and misclassifies an inferred observation as an anchored claim.",
+          "Adding `implements` was refused again: it would duplicate `satisfies` for contract-kind targets and make code-to-Spec realization ambiguous.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
 ] as const;

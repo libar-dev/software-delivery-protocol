@@ -32,11 +32,12 @@ pnpm exec sdp q '<body>' --root PATH --exclude PATH --exclude PATH
 `--root PATH` picks the extraction root (default: the working directory) and `--exclude` is
 repeatable for root-relative path prefixes. `PATH` is a placeholder, not a literal directory.
 
-**Some recipes open with a parameter.** Recipes 3, 6, 9, 14, 19, 21, 22, 23, and 25 take their
-subject on the opening `const` line(s): a Spec id, a search term, a component id, a list of
-Spec ids, or a list of entry addresses. Those lines name *this* repository's corpus so every body
-runs as written here (the recipe check executes each one verbatim); in your own corpus,
-substitute your subject on that line before running. A Spec id or component id absent from the graph returns `{ found: false }` rather than failing.
+**Some recipes open with a parameter.** Recipes 3, 6, 9, 14, 19, 21, 22, 23, 25, and 27 take
+their subject on the opening `const` line(s): a Spec id, a search term, a component id, a list of
+Spec ids, a list of entry addresses, or a Pack id. Those lines name *this* repository's corpus so
+every body runs as written here (the recipe check executes each one verbatim); in your own corpus,
+substitute your subject on that line before running. A Spec id, component id, or Pack id absent
+from the graph returns `found: false` rather than failing.
 
 **Recipe 4 is different.** Recipe 4 filenames travel via `SDP_CHANGED_FILES_JSON`; callers never
 substitute filenames into the JavaScript fence. Keep its query body static and pass changed paths
@@ -225,7 +226,7 @@ The caller acquires the changed paths and passes them as data, never as query so
 
 ```sh
 SDP_CHANGED_FILES_JSON="$(git diff --name-only -z | node -e 'const fs = require("node:fs"); const names = fs.readFileSync(0).toString("utf8").split("\0"); process.stdout.write(JSON.stringify(names.slice(0, -1)));')" \
-pnpm --silent sdp:q 'const changed = JSON.parse(process.env.SDP_CHANGED_FILES_JSON ?? "[]"); const radius = g.blastRadius(changed); const impactReasons = (item) => ({ id: item.id, reasons: item.reasons.map((reason) => reason.throughBinding === undefined ? { file: reason.file, via: null } : { file: reason.file, via: reason.throughBinding.id, edgeType: reason.throughBinding.edgeType, claim: reason.throughBinding.claim }) }); const atRiskReasons = (item) => ({ id: item.id, nodeType: item.nodeType, reasons: item.reasons.map((reason) => ({ from: reason.from, edgeType: reason.edgeType, to: reason.to, claim: reason.claim })) }); return { changedFiles: radius.changedFiles, impactedSpecs: radius.impactedSpecs.map(impactReasons), atRiskSpecs: radius.atRisk.filter((item) => item.nodeType === "Primitive").map(atRiskReasons), atRiskOther: radius.atRisk.filter((item) => item.nodeType !== "Primitive").map(atRiskReasons), coverageUnknownFiles: radius.coverageUnknown };' --json
+pnpm --silent sdp:q 'const changed = JSON.parse(process.env.SDP_CHANGED_FILES_JSON ?? "[]"); const radius = g.blastRadius(changed); const impactReasons = (item) => ({ id: item.id, reasons: item.reasons.map((reason) => reason.throughBinding === undefined ? { file: reason.file, via: null } : { file: reason.file, via: reason.throughBinding.id, edgeType: reason.throughBinding.edgeType, claim: reason.throughBinding.claim }) }); const atRiskReasons = (item) => ({ id: item.id, nodeType: item.nodeType, reasons: item.reasons.map((reason) => ({ from: reason.from, edgeType: reason.edgeType, to: reason.to, claim: reason.claim })) }); return { changedFiles: radius.changedFiles, impactedSpecs: radius.impactedSpecs.map(impactReasons), atRiskSpecs: radius.atRisk.filter((item) => item.nodeType === "Primitive").map(atRiskReasons), atRiskOther: radius.atRisk.filter((item) => item.nodeType !== "Primitive").map(atRiskReasons), coverageUnknownFiles: radius.coverageUnknown, unlinkedUnits: radius.unlinked.map((unit) => ({ id: unit.id, file: unit.file })) };' --json
 ```
 
 The query body is static and reads only the JSON environment value; neither the shell nor the reader reevaluates filenames. `JSON.parse` receives data, so quotes, shell metacharacters, spaces, Unicode, and embedded newlines remain filenames rather than JavaScript or shell syntax. The reader never shells to git.
@@ -235,10 +236,10 @@ const changed = JSON.parse(process.env.SDP_CHANGED_FILES_JSON ?? "[]");
 const radius = g.blastRadius(changed);
 const impactReasons = (item) => ({ id: item.id, reasons: item.reasons.map((reason) => reason.throughBinding === undefined ? { file: reason.file, via: null } : { file: reason.file, via: reason.throughBinding.id, edgeType: reason.throughBinding.edgeType, claim: reason.throughBinding.claim }) });
 const atRiskReasons = (item) => ({ id: item.id, nodeType: item.nodeType, reasons: item.reasons.map((reason) => ({ from: reason.from, edgeType: reason.edgeType, to: reason.to, claim: reason.claim })) });
-return { changedFiles: radius.changedFiles, impactedSpecs: radius.impactedSpecs.map(impactReasons), atRiskSpecs: radius.atRisk.filter((item) => item.nodeType === "Primitive").map(atRiskReasons), atRiskOther: radius.atRisk.filter((item) => item.nodeType !== "Primitive").map(atRiskReasons), coverageUnknownFiles: radius.coverageUnknown };
+return { changedFiles: radius.changedFiles, impactedSpecs: radius.impactedSpecs.map(impactReasons), atRiskSpecs: radius.atRisk.filter((item) => item.nodeType === "Primitive").map(atRiskReasons), atRiskOther: radius.atRisk.filter((item) => item.nodeType !== "Primitive").map(atRiskReasons), coverageUnknownFiles: radius.coverageUnknown, unlinkedUnits: radius.unlinked.map((unit) => ({ id: unit.id, file: unit.file })) };
 ```
 
-Every result class is returned. **Impacted Specs** are authored-at or bound-to a changed file. **At-risk Specs** are the one-hop Primitive neighbors; **atRiskOther** retains every other at-risk node and its `nodeType`. Each at-risk reason carries its connecting edge and claim, while **coverageUnknownFiles** names changed files the graph records nothing at. File-level reach never claims exhaustive symbol-level reach — that would ride the impact graph, which does not exist.
+Every result class is returned. **Impacted Specs** are authored-at or bound-to a changed file. **At-risk Specs** are the one-hop Primitive neighbors; **atRiskOther** retains every other at-risk node and its `nodeType`. Each at-risk reason carries its connecting edge and claim, while **coverageUnknownFiles** names changed files the graph records nothing at. **unlinkedUnits** names each changed code unit that binds no Spec, such as an identity-only anchor, with its file; it is recorded, so its file is not coverage-unknown, and it implies no coverage. File-level reach never claims exhaustive symbol-level reach — that would ride the impact graph, which does not exist.
 
 ## 5. The Pack review backbone
 
@@ -1791,3 +1792,128 @@ rest only on themselves, and `totals.specsInCycles` every member of either. The 
 never refuses: a cycle is data about the authored dependencies, and the readiness floor reads each
 `dependsOn` target's stated rung without walking a chain. The law is
 `spec:consumers.agent-surface.address-and-cycle-recipes`.
+
+## 27. References into a design
+
+*When you need this: you are reviewing a Pack and want to see, for each member, which code
+answers to it, which code realizes it, whether a verifier is bound, and which built Specs it
+builds on, with no fact read as another.*
+
+The opening `const id` is the parameter. Replace it with the Pack you are reviewing; an unknown
+Pack returns `{ id, found: false }`.
+
+```js
+const id = "pack:spec-studio-v1";
+const pack = g.packContext(id);
+
+if (pack === undefined) {
+  return { id, found: false };
+}
+
+const unitsOf = (bindings) => bindings.map((unit) => ({ id: unit.codeId, file: unit.file ?? null }));
+const rows = pack.members.map((member) => {
+  const context = g.specContext(member.id);
+  const buildsOn = (context?.relationsOut ?? [])
+    .filter((relation) => relation.type === "dependsOn" || relation.type === "refines")
+    .map((relation) => ({ relation, target: g.specContext(relation.otherId) }))
+    .filter(({ target }) => (target?.deliveryFacts ?? []).includes("implemented"))
+    .map(({ relation, target }) => ({
+      id: relation.otherId,
+      via: relation.type,
+      implementedBy: unitsOf(target.implementations),
+    }));
+  return {
+    id: member.id,
+    resolved: context !== undefined,
+    referencedBy: unitsOf(context?.references ?? []),
+    implementedBy: (context?.implementations ?? []).map((unit) => unit.codeId),
+    hasVerifier: (context?.deliveryFacts ?? []).includes("has-verifier"),
+    buildsOn,
+  };
+});
+const count = (test) => rows.filter(test).length;
+
+return {
+  found: true,
+  id,
+  totals: {
+    members: rows.length,
+    withReferences: count((row) => row.referencedBy.length > 0),
+    withImplementations: count((row) => row.implementedBy.length > 0),
+    withVerifier: count((row) => row.hasVerifier),
+    withBuildsOn: count((row) => row.buildsOn.length > 0),
+    unbound: count(
+      (row) => row.referencedBy.length === 0 && row.implementedBy.length === 0 && !row.hasVerifier,
+    ),
+  },
+  rows,
+};
+```
+
+Each row puts four independent facts side by side. `referencedBy` lists the code units whose
+anchors name the member in `references`, with the file each sits in: that code answers to the
+design without claiming to realize it, and the edge confers nothing. `implementedBy` lists the
+units whose `satisfies` resolves to the member, the edge behind `implemented`. `hasVerifier` is
+the derived `has-verifier` fact: a resolving verifier binding exists, not that it passed.
+`buildsOn` lists the Specs the member `dependsOn` or `refines` that carry `implemented`, each with
+the relation it comes through and the units that realize it, with their files. It is derived from
+the member's own relations and the targets' bindings: a design that builds on existing code says
+so on its own side, so the dependency has one home, and the column confers nothing on the member.
+
+An empty `referencedBy` or `implementedBy`, or a `false`, reads as unbound. The graph records no
+binding there, which says nothing about whether the code is built. An empty `buildsOn` says only
+that the member names no implemented Spec through `dependsOn` or `refines`. The four facts form no
+ladder: a member can be referenced and verified while nothing satisfies it, and a member that
+builds on implemented code is not itself implemented, so never read `referencedBy` or `buildsOn`
+as progress toward `implemented`. Rows keep the manifest's member order and each `buildsOn` list
+keeps relation then id order. `resolved: false` marks a member the graph does not hold, and
+`totals.unbound` counts the members with none of the first three facts. The law is
+`spec:decisions.anchor-binding-grain`.
+
+## 28. Roles, layers and contexts
+
+*When you need this: you want the architecture vocabulary the code anchors actually state, every
+role, layer, and context value with the units that carry it, before you name a new one or
+reconcile two spellings of one.*
+
+```js
+const units = graph.nodes.filter((node) => node.nodeType === "CodeNode");
+const taxonomy = (field) => {
+  const byValue = new Map();
+  for (const unit of units) {
+    const value = unit[field];
+    if (typeof value !== "string") continue;
+    const bucket = byValue.get(value);
+    if (bucket === undefined) byValue.set(value, [unit.id]);
+    else bucket.push(unit.id);
+  }
+  return [...byValue.keys()].sort().map((value) => ({ value, units: byValue.get(value).sort() }));
+};
+const references = graph.edges.filter((edge) => edge.type === "references");
+
+return {
+  totals: {
+    codeUnits: units.length,
+    withRole: units.filter((unit) => typeof unit.role === "string").length,
+    withLayer: units.filter((unit) => typeof unit.layer === "string").length,
+    withContext: units.filter((unit) => typeof unit.context === "string").length,
+    references: references.length,
+    referencingUnits: new Set(references.map((edge) => edge.from)).size,
+    referencedSpecs: new Set(references.map((edge) => edge.to)).size,
+  },
+  roles: taxonomy("role"),
+  layers: taxonomy("layer"),
+  contexts: taxonomy("context"),
+};
+```
+
+The body takes no parameter. The taxonomy reads the CodeNodes alone, so a value appears only when
+an anchor states it, and an unlabelled unit counts in `totals.codeUnits` and in no taxonomy row;
+omission is lawful. Each value lists its units in id order, so an owner can find the anchors to
+edit when two spellings name one category. A role or a context is a free value in one lowercase
+kebab token, checked against no list; a layer is one of `edge`, `application`, `domain`, `adapter`,
+or `infrastructure`, and only a `component:` anchor carries a layer or a context. The `references`
+counts are edges, kept apart from units: one unit that references three Specs is three edges and
+one referencing unit. None of these attributes or edges confers a delivery fact or moves a
+readiness floor. The census renders the same taxonomy for a human reader. The law is
+`spec:decisions.architectural-annotation`.

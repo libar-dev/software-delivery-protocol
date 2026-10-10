@@ -100,6 +100,32 @@ void binding;
     );
   });
 
+  it("trusts the zero-dependency anchors subpath exactly as the bare specifier", () => {
+    const root = temporaryRoot("anchors-subpath");
+    writeFileSync(
+      join(root, "binding.ts"),
+      `import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol/anchors";
+
+const binding = codeAnchor({
+  id: codeAnchorId("impl:consumer.subpath-binding"),
+  satisfies: ref("spec:consumer.subpath-binding"),
+});
+void binding;
+`,
+    );
+
+    const result = extract({ root });
+
+    expect(result.report.findings).toEqual([]);
+    expect(result.counts.anchors).toBe(1);
+    expect(result.graph.edges).toContainEqual({
+      from: "impl:consumer.subpath-binding",
+      type: "satisfies",
+      to: "spec:consumer.subpath-binding",
+      claim: "anchored",
+    });
+  });
+
   it("continues to recognize package imports in consumer repositories", () => {
     const root = temporaryRoot("package-import");
     writeFileSync(

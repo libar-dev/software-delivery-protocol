@@ -35,6 +35,8 @@ const cliComponentAnchor = codeAnchor({
     componentAnchorId("component:protocol.graph"),
     componentAnchorId("component:protocol.model"),
   ],
+  layer: "edge",
+  context: "protocol",
 });
 
 export interface BuildHooks {
@@ -207,24 +209,28 @@ const wholesaleViewBuildInvalidationAnchor = codeAnchor({
   label: "invalidates the prior Design Review before every build attempt",
   satisfies: ref("spec:consumers.wholesale-view-rewrite"),
   component: componentAnchorId("component:protocol.cli"),
+  role: "service",
 });
 const buildPipelineEmitAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.build-pipeline-emit"),
   label: "the build command owns the ordered flow through artifact emission",
   satisfies: ref("spec:extraction.build-pipeline"),
   component: componentAnchorId("component:protocol.cli"),
+  role: "service",
 });
 const determinismAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.extraction-determinism"),
   label: "repeats and byte-compares graph and contract generation under --check-clean",
   satisfies: ref("spec:extraction.determinism"),
   component: componentAnchorId("component:protocol.cli"),
+  role: "service",
 });
 const regenerabilityAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.regenerability"),
   label: "repeats graph and contract producers for deterministic regeneration",
   satisfies: ref("spec:extraction.regenerability"),
   component: componentAnchorId("component:protocol.cli"),
+  role: "service",
 });
 export function runBuild(
   parsed: BuildArgs,

@@ -10,6 +10,16 @@ import { codeAnchor } from "../model/code-anchor.js";
 /** The one public package specifier whose imports bind Protocol authoring builders. */
 export const PROTOCOL_MODULE_SPECIFIER = "@libar-dev/software-delivery-protocol";
 
+/**
+ * The zero-dependency anchor subpath (`spec:decisions.anchor-comment-form`): it ships the id and
+ * anchor builders alone, so a runtime that must not load `node:*` or ts-morph can still bind
+ * constant-form anchors, and the extractor trusts it exactly as it trusts the bare specifier.
+ */
+export const PROTOCOL_ANCHORS_MODULE_SPECIFIER = `${PROTOCOL_MODULE_SPECIFIER}/anchors`;
+
+/** The reserved comment-form tag prefix; a file carrying it is parsed whether or not it imports. */
+export const ANCHOR_COMMENT_TAG_PREFIX = "@sdp";
+
 export interface ProtocolBindings {
   /** Local name → exported builder name, from named imports. */
   readonly named: ReadonlyMap<string, string>;
@@ -72,6 +82,7 @@ function trustedBuilderModules(): ReadonlySet<string> {
   const candidates = [
     join(packageRoot, "src", "ids.ts"),
     join(packageRoot, "src", "model", "code-anchor.ts"),
+    join(packageRoot, "src", "anchors.ts"),
   ];
 
   return new Set(candidates.flatMap((candidate) => canonicalPath(candidate) ?? []));
@@ -84,6 +95,7 @@ const protocolBindingsAnchor = codeAnchor({
   label: "Protocol builder-import trust (protocolBindingScopeFor / collectProtocolBindings)",
   satisfies: ref("spec:model.anchors"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "extractor",
 });
 void protocolBindingsAnchor;
 
@@ -106,7 +118,7 @@ export function isProtocolBuilderModuleSpecifier(
   specifier: string,
   scope: ProtocolBindingScope = packageOnlyScope,
 ): boolean {
-  if (specifier === PROTOCOL_MODULE_SPECIFIER) {
+  if (specifier === PROTOCOL_MODULE_SPECIFIER || specifier === PROTOCOL_ANCHORS_MODULE_SPECIFIER) {
     return true;
   }
 
@@ -123,11 +135,20 @@ export function isProtocolBuilderModuleSpecifier(
   });
 }
 
+/**
+ * The raw-text prefilter that gates AST work. The bare specifier is a prefix of the anchors
+ * subpath, so one `includes` admits both; the comment form needs no import, so the reserved tag
+ * prefix admits a file on its own (trust by reserved grammar, not by builder import) — a block
+ * with `@sdpReferences` and no `@sdpAnchor` still gets its diagnostic.
+ */
 export function hasProtocolBuilderImport(
   sourceText: string,
   scope: ProtocolBindingScope = packageOnlyScope,
 ): boolean {
-  if (sourceText.includes(PROTOCOL_MODULE_SPECIFIER)) {
+  if (
+    sourceText.includes(PROTOCOL_MODULE_SPECIFIER) ||
+    sourceText.includes(ANCHOR_COMMENT_TAG_PREFIX)
+  ) {
     return true;
   }
 

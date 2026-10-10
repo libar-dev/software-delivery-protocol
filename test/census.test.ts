@@ -34,6 +34,7 @@ import { runSdpCli } from "../src/cli/sdp.js";
 import type { CensusPage, Finding, GraphSchema, Reader, SpecSummary } from "../src/index.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
+import { countMapSets } from "./helpers/map-sets.js";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const exampleRoot = join(repoRoot, "examples", "checkout-v1");
@@ -444,6 +445,186 @@ export const anchor = codeAnchor({
 
     expect(page).toContain("| CodeNode | `impl` | `satisfies` | 1 |");
     expect(page).toContain("| CodeNode | `impl` | unrecognized: `connects` | 1 |");
+  });
+
+  it("renders the role, layer, and context taxonomies and the references table from the graph", () => {
+    const root = materializeExtractCorpus("annotation-forms");
+
+    try {
+      const reader = createReader(extract({ root }).graph);
+      const page = pageByPath(renderCensus(reader), "index.md");
+
+      // Units are counted apart from edges.
+      expect(page).toContain("| Code units | 5 |");
+      expect(page).toContain("| Component units | 2 |");
+      expect(page).toContain("| `memberOf` edges | 2 |");
+      expect(page).toContain("| `uses` edges | 2 |");
+      expect(page).toContain("| `references` edges | 3 |");
+      expect(page).not.toContain("No structural bindings exist.");
+
+      // Each value links to its units, so an owner can reconcile synonyms; the closed layer set
+      // renders every value even at zero.
+      expect(page).toContain("### Layers");
+      expect(page).toContain("| `edge` | `component:platform.gateway` | 1 |");
+      expect(page).toContain("| `application` | `component:platform.read-model` | 1 |");
+      expect(page).toContain("| `infrastructure` | — | 0 |");
+      expect(page).toContain("### Contexts");
+      expect(page).toContain(
+        "| `platform` | `component:platform.gateway`, `component:platform.read-model` | 2 |",
+      );
+      expect(page).toContain("### Roles");
+      expect(page).toContain("| `barrel` | `impl:platform.barrel` | 1 |");
+      expect(page).toContain("| `decider` | `impl:platform.gate` | 1 |");
+      expect(page).toContain("| `service` | `impl:platform.rebuild` | 1 |");
+      expect(page).toContain("### References");
+      expect(page).toContain(
+        "A `references` edge says the unit answers to that design without claiming to realize it; it confers no delivery fact.",
+      );
+      expect(page).toContain(
+        "| `impl:platform.gate` | `spec:decisions.history-posture`, `spec:platform.rebuild` | 2 |",
+      );
+      expect(page).toContain("| `impl:platform.rebuild` | `spec:decisions.history-posture` | 1 |");
+      expect(page).toContain("| CodeNode | `impl` | `references` | 3 |");
+    } finally {
+      removeMaterializedCorpus(root);
+    }
+  });
+
+  it("renders attribute-only structure, a foreign layer value, and empty tables deterministically", () => {
+    const graph = {
+      schemaVersion,
+      nodes: [
+        {
+          id: "impl:probe.codec",
+          nodeType: "CodeNode",
+          claim: "anchored",
+          file: "src/codec.ts",
+          role: "codec",
+        },
+        {
+          id: "component:probe.store",
+          nodeType: "CodeNode",
+          claim: "anchored",
+          file: "src/store.ts",
+          layer: "tier",
+        },
+      ],
+      edges: [],
+    } as unknown as GraphSchema;
+    const page = pageByPath(renderCensus(readerStub({ graph })), "index.md");
+    const reordered = pageByPath(
+      renderCensus(readerStub({ graph: { ...graph, nodes: [...graph.nodes].reverse() } })),
+      "index.md",
+    );
+
+    expect(reordered).toBe(page);
+    expect(page).not.toContain("No structural bindings exist.");
+    expect(page).toContain("| Code units | 2 |");
+    expect(page).toContain("| `references` edges | 0 |");
+    expect(page).toContain("| `codec` | `impl:probe.codec` | 1 |");
+    expect(page).toContain("| unrecognized: `tier` | `component:probe.store` | 1 |");
+    expect(page).toContain("| `domain` | — | 0 |");
+    expect(page).toContain(
+      "### Contexts\n\n| Context | Units | Unit count |\n| --- | --- | ---: |\n| — | None | 0 |",
+    );
+    expect(page).toContain("### References");
+  });
+
+  it("groups twenty thousand units sharing one role and one context into one bucket each, in id order", () => {
+    const ids = Array.from(
+      { length: 20_000 },
+      (_unit, index) => `component:probe.unit-${String(index).padStart(5, "0")}`,
+    );
+    const graph: GraphSchema = {
+      schemaVersion,
+      // Reverse insertion: the bucket order is the sorted unit order, never the graph's.
+      nodes: [...ids].reverse().map((id) => ({
+        id,
+        nodeType: "CodeNode" as const,
+        claim: "anchored" as const,
+        file: "src/probe.ts",
+        role: "service",
+        context: "probe",
+      })),
+      edges: [],
+    };
+    const page = pageByPath(renderCensus(readerStub({ graph })), "index.md");
+    const units = ids.map((id) => `\`${id}\``).join(", ");
+
+    expect(page).toContain("| Code units | 20000 |");
+    expect(page).toContain(
+      [
+        "### Contexts",
+        "",
+        "| Context | Units | Unit count |",
+        "| --- | --- | ---: |",
+        `| \`probe\` | ${units} | 20000 |`,
+        "",
+        "### Roles",
+        "",
+        "| Role | Units | Unit count |",
+        "| --- | --- | ---: |",
+        `| \`service\` | ${units} | 20000 |`,
+        "",
+        "### References",
+      ].join("\n"),
+    );
+  });
+
+  it("creates each attribute bucket once, however many units share the value", () => {
+    const ids = Array.from(
+      { length: 20_000 },
+      (_unit, index) => `component:probe.unit-${String(index).padStart(5, "0")}`,
+    );
+    const graphWithRoles = (roleOf: (index: number) => string): GraphSchema => ({
+      schemaVersion,
+      nodes: ids.map((id, index) => ({
+        id,
+        nodeType: "CodeNode" as const,
+        claim: "anchored" as const,
+        file: "src/probe.ts",
+        role: roleOf(index),
+        context: "probe",
+      })),
+      edges: [],
+    });
+    const setsToRender = (graph: GraphSchema): number =>
+      countMapSets(() => renderCensus(readerStub({ graph }))).sets;
+
+    // Grouping that creates each bucket once pays one Map set for one shared role and one per
+    // role for 20,000 distinct roles; every other set the census pays is the same for both
+    // graphs. Grouping that replaced the bucket on every insertion would pay one set per unit
+    // either way, and the difference would be 0.
+    const shared = setsToRender(graphWithRoles(() => "service"));
+    const distinct = setsToRender(graphWithRoles((index) => `role-${String(index)}`));
+
+    expect(distinct - shared).toBe(ids.length - 1);
+  });
+
+  it("keeps the explicit empty state while still counting units apart from edges", () => {
+    const page = pageByPath(
+      renderCensus(
+        readerStub({
+          graph: {
+            schemaVersion,
+            nodes: [
+              {
+                id: "impl:probe.bare",
+                nodeType: "CodeNode",
+                claim: "anchored",
+                file: "src/bare.ts",
+              },
+            ],
+            edges: [],
+          },
+        }),
+      ),
+      "index.md",
+    );
+
+    expect(page).toContain("| Code units | 1 |");
+    expect(page).toContain("No structural bindings exist.");
+    expect(page).not.toContain("### Roles");
   });
 });
 

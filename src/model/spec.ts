@@ -22,6 +22,7 @@ const specPrimitiveAnchor = codeAnchor({
   label: "Spec envelope and enrich-in-place shape",
   satisfies: ref("spec:model.core-model"),
   component: componentAnchorId("component:protocol.model"),
+  role: "contract",
 });
 
 void specPrimitiveAnchor;

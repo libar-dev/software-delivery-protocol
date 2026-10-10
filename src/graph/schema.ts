@@ -1,15 +1,17 @@
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
+import type { CodeAnchorLayer } from "../model/anchors.js";
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSections } from "../model/sections.js";
 
-export const schemaVersion = "0.7.0" as const;
+export const schemaVersion = "0.8.0" as const;
 
 const schemaVersionAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.schema-version"),
   label: "declares the graph schema version",
   satisfies: ref("spec:extraction.schema-versioning"),
   component: componentAnchorId("component:protocol.graph"),
+  role: "contract",
 });
 void schemaVersionAnchor;
 
@@ -27,12 +29,15 @@ const graphComponentAnchor = codeAnchor({
     componentAnchorId("component:protocol.model"),
     componentAnchorId("component:protocol.notation"),
   ],
+  layer: "domain",
+  context: "protocol",
 });
 const graphClaimsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.graph-claims"),
   label: "declares the graph claim taxonomy",
   satisfies: ref("spec:extraction.claim-taxonomy"),
   component: componentAnchorId("component:protocol.graph"),
+  role: "contract",
 });
 void graphComponentAnchor;
 void graphClaimsAnchor;
@@ -53,12 +58,32 @@ export type AuthoredEdgeType = (typeof authoredEdgeTypes)[number];
 /** `models` is the oracle anchor's binding edge (Anchor → Primitive, anchored) — anchor-emitted
  *  like `satisfies`, never authored; it confers no delivery fact (no `has-oracle` at MVP).
  *  `memberOf` and `uses` are anchored CodeNode → CodeNode structure. They deliberately stay out
- *  of delivery facts and the reader's binding traversal, whose destination is always a Spec. */
-export const derivedEdgeTypes = ["belongsTo", "satisfies", "models", "memberOf", "uses"] as const;
+ *  of delivery facts and the reader's binding traversal, whose destination is always a Spec.
+ *  `references` is the anchored CodeNode → Primitive edge of the binding grain
+ *  (`spec:decisions.anchor-binding-grain`): this code answers to that design without claiming to
+ *  realize it. It confers no delivery fact, moves no floor, and the drift alarm ignores it. */
+export const derivedEdgeTypes = [
+  "belongsTo",
+  "satisfies",
+  "models",
+  "memberOf",
+  "uses",
+  "references",
+] as const;
 export type DerivedEdgeType = (typeof derivedEdgeTypes)[number];
 
 export const graphEdgeTypes = [...authoredEdgeTypes, ...derivedEdgeTypes] as const;
 export type GraphEdgeType = (typeof graphEdgeTypes)[number];
+
+const graphEdgeTypesAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.graph-edge-types"),
+  label: "declares the closed list of graph edge types",
+  satisfies: ref("spec:extraction.derive-graph"),
+  component: componentAnchorId("component:protocol.graph"),
+  references: [ref("spec:decisions.anchor-binding-grain")],
+  role: "contract",
+});
+void graphEdgeTypesAnchor;
 
 interface GraphNodeBase {
   readonly id: string;
@@ -115,12 +140,21 @@ export interface AnchorNode extends GraphNodeBase {
   readonly line: number;
 }
 
-/** A code anchor's node (the `satisfies` edge contract row: CodeNode → Primitive, anchored). */
+/**
+ * A code anchor's node (the `satisfies` edge contract row: CodeNode → Primitive, anchored). The
+ * architectural annotation decision (`spec:decisions.architectural-annotation`) adds three
+ * structural attributes: `role`, the pattern the unit plays, a free corpus-owned vocabulary;
+ * `layer` and `context`, the declared component's layer and bounded context, on `component:`
+ * nodes only. None of them confers anything; the census renders their taxonomy from the graph.
+ */
 export interface CodeNode extends GraphNodeBase {
   readonly nodeType: "CodeNode";
   readonly label?: string;
   readonly file: string;
   readonly line?: number;
+  readonly role?: string;
+  readonly layer?: CodeAnchorLayer;
+  readonly context?: string;
 }
 
 export type GraphNode = PrimitiveNode | PackNode | AnchorNode | CodeNode;

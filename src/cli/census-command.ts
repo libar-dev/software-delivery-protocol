@@ -67,6 +67,7 @@ const censusPageCliAnchor = codeAnchor({
   label: "publishes the census through the explicit `sdp census` surface",
   satisfies: ref("spec:consumers.census-page"),
   component: componentAnchorId("component:protocol.cli"),
+  role: "publisher",
 });
 void censusPageCliAnchor;
 

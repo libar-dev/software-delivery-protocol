@@ -65,6 +65,7 @@ const specRelationsAnchor = codeAnchor({
   label: "declared Spec relation builders",
   satisfies: ref("spec:model.relations"),
   component: componentAnchorId("component:protocol.model"),
+  role: "contract",
 });
 
 void specRelationsAnchor;

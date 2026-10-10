@@ -1,3 +1,7 @@
-import { codeAnchor } from "@libar-dev/software-delivery-protocol";
+import { codeAnchor, specTest } from "@libar-dev/software-delivery-protocol";
 
+// A code anchor needs only its id (the binding grain: satisfies is optional); a test anchor
+// still needs its verifies target.
 export const bareBinding = codeAnchor({});
+
+export const bareVerifier = specTest({});

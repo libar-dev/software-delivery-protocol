@@ -1,7 +1,10 @@
 import { SPEC_READINESS } from "../model/descriptors.js";
-import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
-import { codeAnchor } from "../model/code-anchor.js";
-import type { RelationEnd, SpecContext, VerifierBinding } from "../reader/reader.js";
+import type {
+  CodeUnitBinding,
+  RelationEnd,
+  SpecContext,
+  VerifierBinding,
+} from "../reader/reader.js";
 import type { Finding } from "../validate/contracts.js";
 import { escapeRenderedField } from "./owned-prose.js";
 import {
@@ -12,13 +15,13 @@ import {
   tableCell,
 } from "./design-review-markdown.js";
 
-const derivedReadinessBannerAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.derived-readiness-banner"),
-  label: "renders stated readiness beside the structural floor and dishonest divergence",
-  satisfies: ref("spec:consumers.derived-readiness-banner"),
-  component: componentAnchorId("component:protocol.projections"),
-});
-void derivedReadinessBannerAnchor;
+/**
+ * @sdpAnchor impl:protocol.derived-readiness-banner
+ * @sdpLabel renders stated readiness beside the structural floor and dishonest divergence
+ * @sdpSatisfies spec:consumers.derived-readiness-banner
+ * @sdpComponent component:protocol.projections
+ * @sdpRole renderer
+ */
 
 export function renderReadiness(context: SpecContext): readonly string[] {
   const derived = context.derivedReadiness;
@@ -64,14 +67,38 @@ function describeVerifier(verifier: VerifierBinding): string {
     : "**not enabled** (an off-contract `verifies` edge — it confers no verifier binding)";
 }
 
-const bindingLanguageSpecPageAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.binding-language-spec-page"),
-  label: "renders implementation, verifier, oracle, and observation binding language",
-  satisfies: ref("spec:consumers.binding-language-views"),
-  component: componentAnchorId("component:protocol.projections"),
-});
-void bindingLanguageSpecPageAnchor;
+/**
+ * One code unit row: identity, label, source location, the structural attributes the unit
+ * carries (`role` on any unit; `layer` and `context` on a component), and the edge's claim.
+ */
+function renderCodeUnitRow(binding: CodeUnitBinding, page: string): string {
+  const label = binding.label === undefined ? "" : ` — ${escapeRenderedField(binding.label)}`;
+  const location =
+    binding.file === undefined
+      ? ""
+      : ` ([${escapeRenderedField(binding.file)}${binding.line === undefined ? "" : `:${String(binding.line)}`}](${sourceHref(page, binding.file)}))`;
+  const attributes = (
+    [
+      ["role", binding.role],
+      ["layer", binding.layer],
+      ["context", binding.context],
+    ] as const
+  )
+    .flatMap(([name, value]) =>
+      value === undefined ? [] : [`${name} \`${escapeRenderedField(value)}\``],
+    )
+    .join(" · ");
 
+  return `- \`${binding.codeId}\`${label}${location}${attributes === "" ? "" : ` · ${attributes}`} \`[${binding.claim}]\``;
+}
+
+/**
+ * @sdpAnchor impl:protocol.binding-language-spec-page
+ * @sdpLabel renders implementation, verifier, oracle, and observation binding language
+ * @sdpSatisfies spec:consumers.binding-language-views
+ * @sdpComponent component:protocol.projections
+ * @sdpRole renderer
+ */
 export function renderBindings(context: SpecContext, page: string): readonly string[] {
   const present = (fact: "implemented" | "has-verifier"): string =>
     context.deliveryFacts.includes(fact) ? "present" : "none";
@@ -89,12 +116,21 @@ export function renderBindings(context: SpecContext, page: string): readonly str
     lines.push("", "### Implementations", "");
 
     for (const binding of context.implementations) {
-      const label = binding.label === undefined ? "" : ` — ${escapeRenderedField(binding.label)}`;
-      const location =
-        binding.file === undefined
-          ? ""
-          : ` ([${escapeRenderedField(binding.file)}${binding.line === undefined ? "" : `:${String(binding.line)}`}](${sourceHref(page, binding.file)}))`;
-      lines.push(`- \`${binding.codeId}\`${label}${location} \`[${binding.claim}]\``);
+      lines.push(renderCodeUnitRow(binding, page));
+    }
+  }
+
+  if (context.references.length > 0) {
+    lines.push(
+      "",
+      "### Referenced by",
+      "",
+      "Code that answers to this design without claiming to realize it. A reference confers no implementation binding.",
+      "",
+    );
+
+    for (const binding of context.references) {
+      lines.push(renderCodeUnitRow(binding, page));
     }
   }
 
@@ -169,13 +205,13 @@ export function renderRelationsAndImpact(context: SpecContext, page: string): re
   return lines.length === 4 ? [] : lines;
 }
 
-const diagnosticDesignReviewAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.diagnostic-rendering-design-review"),
-  label: "renders structured finding locations in the Design Review table",
-  satisfies: ref("spec:validation.diagnostic-rendering"),
-  component: componentAnchorId("component:protocol.projections"),
-});
-void diagnosticDesignReviewAnchor;
+/**
+ * @sdpAnchor impl:protocol.diagnostic-rendering-design-review
+ * @sdpLabel renders structured finding locations in the Design Review table
+ * @sdpSatisfies spec:validation.diagnostic-rendering
+ * @sdpComponent component:protocol.projections
+ * @sdpRole renderer
+ */
 
 export function renderFindings(findings: readonly Finding[]): readonly string[] {
   if (findings.length === 0) {

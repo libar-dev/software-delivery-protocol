@@ -83,6 +83,7 @@ const mermaidViewCliAnchor = codeAnchor({
   label: "publishes Mermaid through the explicit `sdp mermaid` surface",
   satisfies: ref("spec:consumers.mermaid-view"),
   component: componentAnchorId("component:protocol.cli"),
+  role: "publisher",
 });
 void mermaidViewCliAnchor;
 

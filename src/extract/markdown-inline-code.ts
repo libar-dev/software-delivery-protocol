@@ -6,6 +6,7 @@ const inlineCodeSpansAnchor = codeAnchor({
   label: "scans raw HTML outside matched code spans",
   satisfies: ref("spec:carrier.inline-code-spans"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "codec",
 });
 void inlineCodeSpansAnchor;
 

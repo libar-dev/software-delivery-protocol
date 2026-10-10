@@ -67,6 +67,7 @@ const gherkinViewCliAnchor = codeAnchor({
   label: "publishes the Gherkin view through the explicit `sdp gherkin` surface",
   satisfies: ref("spec:consumers.gherkin-view"),
   component: componentAnchorId("component:protocol.cli"),
+  role: "publisher",
 });
 void gherkinViewCliAnchor;
 

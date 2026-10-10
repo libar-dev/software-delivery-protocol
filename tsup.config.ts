@@ -7,6 +7,7 @@ export default defineConfig([
   {
     entry: [
       "src/index.ts",
+      "src/anchors.ts",
       "src/cli/sdp.ts",
       "src/runner/index.ts",
       "src/adapters/vitest.ts",

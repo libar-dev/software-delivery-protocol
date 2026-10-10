@@ -1,6 +1,6 @@
 # Census
 
-A disposable projection of the one graph (schema `0.7.0`): 17 nodes · 32 edges · 11 Specs.
+A disposable projection of the one graph (schema `0.8.0`): 17 nodes · 32 edges · 11 Specs.
 
 ## Spec kinds
 
@@ -82,6 +82,7 @@ A disposable projection of the one graph (schema `0.7.0`): 17 nodes · 32 edges 
 | `models` | 1 |
 | `memberOf` | 0 |
 | `uses` | 0 |
+| `references` | 0 |
 
 ## Graph edge claims
 
@@ -104,7 +105,15 @@ Anchor flavor is the binding node type plus its ID namespace plus each outgoing 
 
 ## Structural bindings
 
-Authored `memberOf` and `uses` CodeNode edges are rendered as structure; they confer no delivery fact or readiness.
+Anchored `memberOf`, `uses`, and `references` edges and the `role`, `layer`, and `context` attributes of code units are rendered as structure; they confer no delivery fact or readiness. Units are counted apart from edges.
+
+| Structure | Count |
+| --- | ---: |
+| Code units | 3 |
+| Component units | 0 |
+| `memberOf` edges | 0 |
+| `uses` edges | 0 |
+| `references` edges | 0 |
 
 No structural bindings exist.
 

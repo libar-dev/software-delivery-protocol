@@ -45,12 +45,15 @@ const importComponentAnchor = codeAnchor({
     componentAnchorId("component:protocol.extract"),
     componentAnchorId("component:protocol.validate"),
   ],
+  layer: "application",
+  context: "protocol",
 });
 const sdpImportCoreAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.sdp-import-core"),
   label: "converts a TypeScript-carrier Spec into an idiomatic Markdown twin",
   satisfies: ref("spec:carrier.sdp-import"),
   component: componentAnchorId("component:protocol.import"),
+  role: "service",
 });
 void importComponentAnchor;
 void sdpImportCoreAnchor;

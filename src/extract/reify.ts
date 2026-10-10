@@ -430,6 +430,40 @@ function namespacesLabel(namespaces: readonly string[]): string {
     : `one of ${namespacesList(namespaces)} is required`;
 }
 
+export type IdTextCheck =
+  | { readonly ok: true; readonly id: string }
+  | { readonly ok: false; readonly reason: string };
+
+/**
+ * The id grammar check every id slot shares, over the bare text: `parseId` must accept it, its
+ * namespace must be one of the slot's, and it must not be an entry address. The constant form
+ * reaches it through `reifyStaticIdExpression`; the comment form reads tag text and calls it
+ * directly, so one grammar serves both representations of an anchor.
+ */
+export function checkIdText(idText: string, expectedNamespaces: readonly string[]): IdTextCheck {
+  try {
+    const parsed = parseId(idText);
+
+    if (!expectedNamespaces.includes(parsed.namespace)) {
+      return {
+        ok: false,
+        reason: `id "${idText}" carries namespace "${parsed.namespace}" where ${namespacesLabel(expectedNamespaces)}`,
+      };
+    }
+
+    const addressReason = entryAddressSlotReason(idText, parsed);
+
+    return addressReason === undefined
+      ? { ok: true, id: idText }
+      : { ok: false, reason: addressReason };
+  } catch (error) {
+    return {
+      ok: false,
+      reason: error instanceof Error ? error.message : `id "${idText}" fails the id grammar`,
+    };
+  }
+}
+
 /**
  * An id slot accepts a string literal or an id-builder unwrap (`specId` / `packId` / `ref` /
  * `codeAnchorId` / `testAnchorId` around a string literal); the reified string must clear the
@@ -471,48 +505,32 @@ export function reifyStaticIdExpression(
   const idText = stringResult.value as string;
   const line = unwrapped.getStartLineNumber();
 
-  try {
-    const parsed = parseId(idText);
+  // The wrapping builder's contract checks first: it is the narrower statement, and the one
+  // evaluation would enforce (the builder throws on a foreign namespace).
+  if (builderCall !== undefined && builderNamespaces !== undefined) {
+    let namespace: string | undefined;
 
-    // The wrapping builder's contract checks first: it is the narrower statement, and the one
-    // evaluation would enforce (the builder throws on a foreign namespace).
-    if (
-      builderCall !== undefined &&
-      builderNamespaces !== undefined &&
-      !builderNamespaces.includes(parsed.namespace)
-    ) {
+    try {
+      namespace = parseId(idText).namespace;
+    } catch {
+      namespace = undefined;
+    }
+
+    if (namespace !== undefined && !builderNamespaces.includes(namespace)) {
       return {
         ok: false,
         kind: "invalid",
         line,
-        reason: `id "${idText}" carries namespace "${parsed.namespace}" where ${builderCall.builder}(…) accepts only ${namespacesList(builderNamespaces)} — the builder's own contract, restated statically`,
+        reason: `id "${idText}" carries namespace "${namespace}" where ${builderCall.builder}(…) accepts only ${namespacesList(builderNamespaces)} — the builder's own contract, restated statically`,
       };
     }
-
-    if (!expectedNamespaces.includes(parsed.namespace)) {
-      return {
-        ok: false,
-        kind: "invalid",
-        line,
-        reason: `id "${idText}" carries namespace "${parsed.namespace}" where ${namespacesLabel(expectedNamespaces)}`,
-      };
-    }
-
-    const addressReason = entryAddressSlotReason(idText, parsed);
-
-    if (addressReason !== undefined) {
-      return { ok: false, kind: "invalid", line, reason: addressReason };
-    }
-  } catch (error) {
-    return {
-      ok: false,
-      kind: "invalid",
-      line,
-      reason: error instanceof Error ? error.message : `id "${idText}" fails the id grammar`,
-    };
   }
 
-  return { ok: true, id: idText };
+  const checked = checkIdText(idText, expectedNamespaces);
+
+  return checked.ok
+    ? { ok: true, id: idText }
+    : { ok: false, kind: "invalid", line, reason: checked.reason };
 }
 
 function reifyStaticValue(node: Node, path: string, bindings: ProtocolBindings): StaticResult {
@@ -1912,6 +1930,7 @@ const staticReificationAnchor = codeAnchor({
   label: "reifies authored carriers from the AST and never evaluates them",
   satisfies: ref("spec:extraction.determinism"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "extractor",
 });
 void staticReificationAnchor;
 

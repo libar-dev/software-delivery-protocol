@@ -37,6 +37,7 @@ const discoverFilesAnchor = codeAnchor({
   label: "realizes exclusion-aware discovery (normalizeExcludes / discoverFiles)",
   satisfies: ref("spec:extraction.excludes"),
   component: componentAnchorId("component:protocol.extract"),
+  role: "extractor",
 });
 void discoverFilesAnchor;
 

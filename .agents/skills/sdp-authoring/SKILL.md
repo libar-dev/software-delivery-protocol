@@ -188,19 +188,32 @@ membership order and point to `spec:carrier.markdown-pack-authoring` for the com
 
 ## Bind code, tests, and oracles
 
-Anchors are the only write path from code into the graph, and the two ways to get them wrong are
-both silent: nothing fails, the binding just never exists. Three builders exist, each carrying
-identity, an optional label, and one realization target:
+Anchors are the only write path from code into the graph. Malformed authoring the extractor
+recognizes is an error: a field beyond the contract, a misspelled or misplaced reserved tag, a
+target that does not resolve. Two mistakes stay silent, because the extractor never recognizes
+them as authoring: a constant-form builder that is not a Protocol builder binding, and a comment
+that does not open with `/**`. Then nothing fails and the binding just never exists. An anchor
+carries identity, an optional label, its targets, and optional structure. It never carries behavior, rationale, readiness,
+status, acceptance criteria, or delivery facts, and a field beyond that contract is an extraction
+error. The law is `spec:model.anchors` and `spec:decisions.binding-not-liveness`. The id's
+namespace selects one of three flavors:
 
-- `codeAnchor` binds implementation code through `satisfies`, with IDs in the `impl:`, `api:`, or
-  `component:` namespaces.
-- `specTest` binds a test through a non-empty `verifies`, in the `test:` namespace. A resolving
-  `specTest` anchor is the sole `has-verifier` source, conferring the fact directly on the Spec it
-  verifies or, through an enabled example, on the Spec that example verifies.
-- `specOracle` binds an oracle through `models`, in the `oracle:` namespace. It records that
+- A code anchor (`impl:`, `api:`, `component:`) binds implementation code. Its `satisfies` is
+  optional and plural; each resolving target derives a `satisfies` edge and confers `implemented`
+  on that Spec. Its `references` names the Specs the code answers to without claiming to realize
+  them, and confers nothing.
+- A test anchor (`test:`) binds a test through a non-empty, plural `verifies`. A resolving test
+  anchor is the sole `has-verifier` source, conferring the fact directly on each Spec it verifies
+  or, through an enabled example, on the Spec that example verifies.
+- An oracle anchor (`oracle:`) binds an oracle through one `models` target. It records that
   expected-outcome semantics exist and confers no delivery fact.
 
-The anchor-constant form, written out once:
+Each anchor takes one of two forms, and both feed one closed envelope. Pick the form by what the
+file may import.
+
+### The constant form
+
+Code that may import the package writes a top-level `const` initialized with a builder call:
 
 ```ts
 import {
@@ -213,40 +226,154 @@ import {
 const createOrderAnchor = codeAnchor({
   id: codeAnchorId("impl:orders.create-order"),
   label: "realizes order creation",
-  satisfies: ref("spec:orders.create-order"),
+  satisfies: [ref("spec:orders.create-order"), ref("spec:orders.order-numbering")],
+  references: [ref("spec:orders.checkout-flow")],
   component: componentAnchorId("component:orders.api"),
   uses: [codeAnchorId("impl:orders.repository")],
+  role: "service",
 });
 void createOrderAnchor;
 ```
 
-A top-level `const`, a trusted package import, one realization target, and optional structure. The
-`void` reference keeps the unused constant past lint without exporting it.
+`specTest` takes `id: testAnchorId("test:…")` and `verifies`; `specOracle` takes
+`id: oracleAnchorId("oracle:…")` and `models`. `satisfies` and `verifies` take one `ref(…)` or a
+fresh array literal of them; `references` and `uses` take a fresh array literal. The `void`
+reference keeps the unused constant past lint without exporting it.
 
-The first hazard is form. The extractor reifies only the anchor-constant form above: a top-level
-`const` initialized with the builder call. The decorator and JSDoc forms remain unextracted
-representations and mint nothing.
+A runtime that may import but must not load `node:*` modules or ts-morph, such as a browser bundle
+or a sandboxed function runtime, imports the same builders from the zero-dependency subpath
+`@libar-dev/software-delivery-protocol/anchors`. It exports the id builders and the three anchor
+builders and nothing else.
 
-The second hazard is trust. The builder import must be a Protocol builder binding: from the public
-package, or from a relative import that resolves to the package's `ids` or `model/code-anchor`
-module. A consumer-local lookalike mints nothing and reports nothing, because a source file that
-never bound to the Protocol is not authoring drift to report. On the CommonJS package surface the
-trusted relative-module set is empty, so relative bindings mint no anchors there while package
-imports stay trusted. When an authored anchor fails to appear in the graph, suspect the import
-before the syntax.
+Trust comes from the import. The builder import must be a Protocol builder binding: the public
+package, its `/anchors` subpath, or a relative import that resolves to the package's `ids` or
+`model/code-anchor` module. A consumer-local lookalike mints nothing and reports nothing, because
+a source file that never bound to the Protocol is not authoring drift to report. On the CommonJS
+package surface the trusted relative-module set is empty, so relative bindings mint no anchors
+there while package imports stay trusted. When a constant-form anchor fails to appear in the
+graph, suspect the import before the syntax.
 
-An anchor never carries behavior, rationale, readiness, acceptance criteria, or delivery facts; a
-field beyond that contract is an extraction error. The law is `spec:model.anchors` and
-`spec:decisions.binding-not-liveness`.
+### The comment form
 
-A `codeAnchor` may also declare structure through two fields: one `component?: ComponentAnchorId`
-and a non-empty, unique `uses?: readonly CodeAnchorId[]`. Both are closed graph-ID references that
-must resolve to an existing `CodeNode`, and they derive only anchored `memberOf` and `uses` edges.
-`memberOf` runs from an `impl:` or `api:` node to a `component:` node with at most one component
-per source, structural self-reference is refused, and a malformed structural field refuses the whole
-anchor. There is no `implements` field; contract realization stays `satisfies`. Multi-node `uses`
-cycles remain data, never findings, and structural edges confer no intent, delivery fact, or
-readiness effect. The law is `spec:decisions.structural-anchor-semantics`.
+Code that may import nothing from the Protocol writes a top-level `/** … */` block in a `.ts` or
+`.tsx` file, carrying reserved `@sdp` tags. No import is required:
+
+```ts
+/**
+ * Rebuilds the read model from the event history, one stream at a time.
+ *
+ * @sdpAnchor impl:orders.read-model-rebuild
+ * @sdpLabel the online rebuild path
+ * @sdpSatisfies spec:orders.rebuild
+ * @sdpReferences spec:orders.read-model, spec:decisions.replay-per-stream
+ * @sdpComponent component:orders.read-model
+ * @sdpUses impl:orders.event-store, impl:orders.projection-gate
+ * @sdpRole service
+ */
+export async function rebuild(stream: string): Promise<void> {
+  await replay(stream);
+}
+```
+
+- `@sdpAnchor <id>` opens the anchor, once per block, and its namespace selects the flavor.
+- Target tags by flavor: `@sdpSatisfies` and `@sdpReferences` on a code anchor, `@sdpVerifies` on
+  a test anchor, `@sdpModels` with one target on an oracle anchor. A list is comma-separated,
+  non-empty, and repeats no target.
+- Structure tags, code anchors only: `@sdpComponent`, `@sdpUses`, `@sdpRole`; a `component:`
+  anchor also takes `@sdpLayer` and `@sdpContext`. `@sdpLabel` fits any flavor.
+- Prose comes first and authors nothing. After the first tag every non-empty line opens a tag,
+  so a target wrapped onto a second line is refused rather than read as prose; an ordinary TSDoc
+  tag such as `@param` stays lawful and is not read. Each tag appears at most once.
+- A line that opens with `@sdp` is a reserved tag, spelled exactly: `@sdp-anchor` or
+  `@sdpAnchor:` is an error, never prose. Any other `@sdp` tag, a block with tags and no
+  `@sdpAnchor`, and a tagged `/** … */` block inside a function body, a class member, an object
+  literal, or a JSX expression are errors. A comment that opens with `/*` alone is never read.
+- The block's first line is the binding's file and line, so `byFile` on the source file names the
+  anchor. The same id written in both forms is a duplicate id.
+- The block binds by file and line, never by the statement beneath it. Delete or move that
+  statement and the block still binds, conferring what it did; a stale or wrong target that still
+  resolves is an authoritative binding until someone edits the block. Review a block with the code
+  beneath it.
+- The file is the binding grain of both forms. A block names no declaration, and the graph records
+  no symbol, so keep a file's blocks together and write one identity per realizing site rather than
+  one block above each declaration.
+- `sdp validate --watch` re-runs on carrier edits only, never on source edits. After editing an
+  anchor, run `sdp validate` or query the graph again.
+
+The law is `spec:decisions.anchor-comment-form`. The decorator form stays an unextracted
+representation and mints nothing.
+
+### Choose targets honestly
+
+`satisfies` claims the code realizes the whole Spec and confers `implemented`. `references` says
+the code answers to the design without claiming to realize it: the unit follows the design or
+realizes part of it, so a change to the design asks the code to follow. It confers nothing: no
+delivery fact, no readiness floor, no drift alarm. A target named in both is an error. A code
+anchor with neither is identity-only and lawful; it mints a code unit for structure and for
+`byFile`, and confers nothing.
+
+A reference runs one way, from the code to the design it answers to. When a new design builds on
+code that already exists, the design says so with `dependsOn` or `refines` to the Spec that code
+satisfies. The existing code gets no reference to the new design.
+
+Targets name whole Specs; an entry address is never a target. To choose between `satisfies` and
+`references` for one Spec, list what the Spec promises that no satisfying unit realizes. Read every
+promise it carries, not only its Design entries: a rule, a flow, a contract entry, a UI entry, or a
+constraint promises as much, and a Spec without a Design section still promises.
+
+- None: keep `satisfies`.
+- A coherent part with its own trigger or step: split it into a child Spec that refines the
+  parent, then run the pass again on what the parent still promises before it keeps `satisfies`.
+- Anything else: write `references` until the code realizes what the Spec promises.
+
+Never write a whole-Spec `satisfies` over a promise no unit builds. Apply the same pass to a
+component and its members together.
+
+Write a reference for the design relationship it names. A reference added to make a test pass,
+move a count, or give `byFile` an answer does not belong; remove it. Never point `satisfies` at
+an unfinished Spec to manufacture coverage: a unit that answers to such a Spec, a stub included,
+references it. Code never satisfies a decision Spec directly; a unit may reference the decisions it
+follows. The law is `spec:decisions.anchor-binding-grain`.
+
+### Declare architecture where it is realized
+
+- `component` names the one `component:` anchor a unit belongs to, and `uses` lists the units or
+  components it depends on. Both are closed graph-ID references that must resolve to an existing
+  code unit, and they derive only anchored `memberOf` and `uses` edges. `memberOf` runs from an
+  `impl:` or `api:` unit to a `component:` unit, at most one per source. A present `uses` is
+  non-empty and unique, and structural self-reference is refused. Multi-node `uses` cycles remain
+  data, never findings. There is no `implements` field; contract realization stays `satisfies`.
+- `role` names the architectural pattern the unit plays, on any code anchor. The corpus owns the
+  vocabulary: `service`, `decider`, `projection`, `read-model`, `codec`, `contract`, `barrel`, and
+  `utility` are the lineage set, not a closed list. A value is one lowercase kebab token matching
+  `^[a-z][a-z0-9-]*$` and is never normalized, so `readModel` is refused rather than folded into
+  `read-model`.
+- `layer` goes on a `component:` anchor only and takes one of five values:
+  - `edge`: the transport and presentation boundary.
+  - `application`: use cases and orchestration.
+  - `domain`: the model and its rules.
+  - `adapter`: the implementations of ports toward external systems.
+  - `infrastructure`: runtime, persistence, and platform plumbing.
+- `context` goes on a `component:` anchor only and names its bounded context, in the token grammar
+  a role uses.
+
+A malformed or non-static structural field, an unknown `layer`, or `layer` or `context` on a
+non-component anchor refuses the whole anchor. Every structural field is optional, and none
+confers intent, a delivery fact, or a readiness effect. A component that no code realizes yet is a
+Spec, never an invented anchor. A component either satisfies its seam's design Spec or binds no
+Spec its members satisfy; it never references one. A package may hold several layers or contexts,
+so map packages to components by review rather than one component per package. Run roles, layers and contexts
+(recipe 28) to see the values in use before you add one. The law is
+`spec:decisions.architectural-annotation`.
+
+### Curate the anchors
+
+Annotations are curated, never a coverage quota. Anchor the units that carry the architecture, its
+exported public surface and its cross-component reach, and leave the rest bare. An identity has
+one owner: one anchor per realizing unit, so an identity that would stand for several files
+becomes several identities, each choosing `satisfies` or `references` for what its own code does.
+A realizing unit's comment documents its local how, never a paraphrase of the Spec's what or why;
+the Spec already owns those, and a restatement in code is a second owner that drifts.
 
 A Markdown deliverable cannot carry an in-code anchor. Bind it through the document-realization
 convention: the test suite that asserts the shipped document carries the code anchor, its label

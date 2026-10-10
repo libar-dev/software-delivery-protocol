@@ -119,6 +119,7 @@ const exampleSpaceAnchor = codeAnchor({
   label: "resolves example-space vocabulary for contracts and floors",
   satisfies: ref("spec:extraction.executable-contracts"),
   component: componentAnchorId("component:protocol.graph"),
+  role: "decider",
 });
 void exampleSpaceAnchor;
 

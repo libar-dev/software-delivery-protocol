@@ -50,10 +50,11 @@ export const expectedSpecs: readonly ExpectedSpec[] = specFamilies.flatMap(
 );
 
 // These projections identify the five informative honesty gaps from owner-ratified ready Specs
-// without resolving verifier bindings, and the eight informative prose-mention warnings, one per
+// without resolving verifier bindings, and the nine informative prose-mention warnings, one per
 // mentioning and target Spec pair with no declared relation either way. A prose-mention row also
 // pins its target Spec as relatedId, so two pairs from one Spec differ in the pin. The CLI suite
 // separately pins each diagnostic's file, validator, and message prefix.
+// re-measured under plan 40
 export const expectedWarnings = [
   {
     validatorId: "honesty/gaps",
@@ -95,6 +96,13 @@ export const expectedWarnings = [
     severity: "warning",
     subjectId: "spec:consumers.delivery-session-on-ramp",
     relatedId: "spec:decisions.shipped-projections-frozen",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:decisions.architectural-significance-rides-primitives",
+    relatedId: "spec:model.structural-patterns",
   },
   {
     validatorId: "conformance/prose-mentions",
@@ -143,7 +151,8 @@ export const expectedWarnings = [
   },
 ] as const;
 
-export { expectedAnchors } from "./anchors.js";
+export type { ExpectedAnchor } from "./anchors.js";
+export { expectedAnchors, expectedBindingEdges, expectedCommentAnchorIds } from "./anchors.js";
 export { expectedDeclaredRelations } from "./declared-relations.js";
 export { expectedPackMembers, expectedStudioPackMembers, expectedPacks } from "./pack-members.js";
 export {

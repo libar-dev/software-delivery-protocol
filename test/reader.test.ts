@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 
 import {
   codeAnchor,
@@ -23,6 +23,7 @@ import {
   verifies,
 } from "../src/index.js";
 import type { GraphSchema, Reader } from "../src/index.js";
+import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
 const exampleRoot = join(fileURLToPath(new URL("..", import.meta.url)), "examples", "checkout-v1");
@@ -32,6 +33,55 @@ const exampleGraph = extract({ root: exampleRoot }).graph;
 
 function exampleReader(): Reader {
   return createReader(exampleGraph);
+}
+
+/** Both anchor forms with plural targets, `references`, roles, and two components carrying a
+ *  layer and a context: the binding grain over a real extraction. */
+const annotationRoot = materializeExtractCorpus("annotation-forms");
+const annotationGraph = extract({ root: annotationRoot }).graph;
+
+afterAll(() => {
+  removeMaterializedCorpus(annotationRoot);
+});
+
+function annotationReader(): Reader {
+  return createReader(annotationGraph);
+}
+
+/** One file holding only an identity-only unit, beside one bound unit. */
+function identityOnlyGraph(): GraphSchema {
+  return {
+    schemaVersion,
+    nodes: [
+      {
+        id: "spec:probe.bound",
+        nodeType: "Primitive",
+        claim: "declared",
+        specKind: "behavior",
+        altitude: "feature",
+        readiness: "idea",
+        file: "specs/bound.sdp.md",
+      },
+      {
+        id: "impl:probe.barrel",
+        nodeType: "CodeNode",
+        claim: "anchored",
+        file: "src/barrel.ts",
+        line: 3,
+        role: "barrel",
+      },
+      {
+        id: "impl:probe.bound",
+        nodeType: "CodeNode",
+        claim: "anchored",
+        file: "src/bound.ts",
+        line: 5,
+      },
+    ],
+    edges: [
+      { from: "impl:probe.bound", type: "satisfies", to: "spec:probe.bound", claim: "anchored" },
+    ],
+  };
 }
 
 describe("the reader — the thin typed loader behind the agent surface", () => {
@@ -1111,6 +1161,151 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
           .findings()
           .some((finding) => finding.validatorId === graphValidatorIds.claimSeparation),
       ).toBe(true);
+    });
+  });
+
+  describe("the binding grain: references and unlinked code units", () => {
+    it("lists the units that reference a Spec beside its implementations, with role and location", () => {
+      const context = annotationReader().specContext("spec:platform.rebuild");
+
+      expect(context?.implementations).toEqual([
+        {
+          codeId: "impl:platform.rebuild",
+          claim: "anchored",
+          label: "the online rebuild path",
+          file: "src/comment-form.ts",
+          line: 13,
+          role: "service",
+        },
+      ]);
+      expect(context?.references).toEqual([
+        {
+          codeId: "impl:platform.gate",
+          claim: "anchored",
+          label: "the gate",
+          file: "src/constant-form.ts",
+          line: 17,
+          role: "decider",
+        },
+      ]);
+    });
+
+    it("never confers a delivery fact through references", () => {
+      const context = annotationReader().specContext("spec:decisions.history-posture");
+
+      expect(context?.references.map((binding) => binding.codeId)).toEqual([
+        "impl:platform.gate",
+        "impl:platform.rebuild",
+      ]);
+      expect(context?.implementations).toEqual([]);
+      expect(context?.deliveryFacts).toEqual([]);
+    });
+
+    it("carries layer and context on a component's binding row", () => {
+      const graph = deriveFixtureGraph({
+        specs: [
+          spec({
+            id: specId("spec:orders.order-management"),
+            title: "Order management",
+            kind: "behavior",
+            altitude: "feature",
+            readiness: "idea",
+            intent: { outcome: "Manage orders." },
+          }),
+        ],
+        anchors: [
+          codeAnchor({
+            id: codeAnchorId("component:orders.core"),
+            label: "the orders core",
+            satisfies: specId("spec:orders.order-management"),
+            layer: "domain",
+            context: "orders",
+          }),
+        ],
+      });
+
+      expect(
+        createReader(graph).specContext("spec:orders.order-management")?.implementations,
+      ).toEqual([
+        {
+          codeId: "component:orders.core",
+          claim: "anchored",
+          label: "the orders core",
+          file: "src/fixture.ts",
+          line: 1,
+          layer: "domain",
+          context: "orders",
+        },
+      ]);
+    });
+
+    it("reaches a referenced Spec from a source file", () => {
+      expect(annotationReader().byFile("src/constant-form.ts")).toEqual({
+        path: "src/constant-form.ts",
+        nodes: [
+          { id: "component:platform.gateway", nodeType: "CodeNode", line: 10 },
+          { id: "impl:platform.barrel", nodeType: "CodeNode", line: 26 },
+          { id: "impl:platform.gate", nodeType: "CodeNode", line: 17 },
+          { id: "test:platform.gate", nodeType: "Anchor", line: 31 },
+        ],
+        specs: ["spec:decisions.history-posture", "spec:platform.gate", "spec:platform.rebuild"],
+      });
+    });
+
+    it("returns an identity-only unit with an empty Spec list", () => {
+      expect(createReader(identityOnlyGraph()).byFile("src/barrel.ts")).toEqual({
+        path: "src/barrel.ts",
+        nodes: [{ id: "impl:probe.barrel", nodeType: "CodeNode", line: 3 }],
+        specs: [],
+      });
+    });
+
+    it("traverses references as a binding, naming the edge type and its claim", () => {
+      const radius = annotationReader().blastRadius(["src/comment-form.ts"]);
+      const posture = radius.impactedSpecs.find(
+        (item) => item.id === "spec:decisions.history-posture",
+      );
+
+      expect(posture?.reasons).toEqual([
+        {
+          file: "src/comment-form.ts",
+          throughBinding: {
+            id: "impl:platform.rebuild",
+            edgeType: "references",
+            claim: "anchored",
+          },
+        },
+      ]);
+    });
+
+    it("lists changed units with no Spec linkage as unlinked, never coverage-unknown or dropped", () => {
+      const radius = annotationReader().blastRadius([
+        "src/constant-form.ts",
+        "src/comment-form.ts",
+        "src/unrecorded.ts",
+      ]);
+
+      expect(radius.unlinked).toEqual([
+        { file: "src/comment-form.ts", id: "component:platform.read-model" },
+        { file: "src/constant-form.ts", id: "component:platform.gateway" },
+        { file: "src/constant-form.ts", id: "impl:platform.barrel" },
+      ]);
+      expect(radius.coverageUnknown).toEqual(["src/unrecorded.ts"]);
+    });
+
+    it("keeps a file holding only an identity-only unit out of coverage-unknown and out of impact", () => {
+      const radius = createReader(identityOnlyGraph()).blastRadius(["src/barrel.ts"]);
+
+      expect(radius.unlinked).toEqual([{ file: "src/barrel.ts", id: "impl:probe.barrel" }]);
+      expect(radius.coverageUnknown).toEqual([]);
+      expect(radius.impactedSpecs).toEqual([]);
+      expect(radius.atRisk).toEqual([]);
+    });
+
+    it("reports nothing unlinked when every changed unit has a Spec linkage", () => {
+      expect(exampleReader().blastRadius(["src/orders/create-order.use-case.ts"]).unlinked).toEqual(
+        [],
+      );
     });
   });
 

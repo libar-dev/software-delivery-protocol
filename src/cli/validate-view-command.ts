@@ -59,6 +59,7 @@ const wholesaleViewRewriteAnchor = codeAnchor({
   label: "publishes each Design Review as one wholesale temporary-directory replacement",
   satisfies: ref("spec:consumers.wholesale-view-rewrite"),
   component: componentAnchorId("component:protocol.cli"),
+  role: "publisher",
 });
 void wholesaleViewRewriteAnchor;
 

@@ -27,6 +27,7 @@ const oracleTargetEligibilityAnchor = codeAnchor({
   label: "resolves oracle targets by example-space ownership across Spec kinds",
   satisfies: ref("spec:validation.oracle-target-eligibility"),
   component: componentAnchorId("component:protocol.graph"),
+  role: "decider",
 });
 void oracleTargetEligibilityAnchor;
 
