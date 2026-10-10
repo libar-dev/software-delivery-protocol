@@ -13,7 +13,7 @@ relations:
 - outcome: Turn authored carriers into validated derived artifacts.
 
 ### Open questions
-- [non-blocking] Does the derive-in-process freshness law stated in src/cli/q-command.ts commentary promote here or to a story-altitude child under comment promotion?
+- [non-blocking #freshnessPromotion] Does the derive-in-process freshness law stated in src/cli/q-command.ts commentary promote here or to a story-altitude child under comment promotion?
 
 ## Workflow
 - Discover carriers.

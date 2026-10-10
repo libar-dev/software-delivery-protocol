@@ -13,7 +13,7 @@ relations:
 - outcome: Make a Spec id written in prose resolve, and make one keyed entry of an open section or one keyed open question addressable, so a reference below the Spec level can be checked.
 
 ### Open questions
-- [non-blocking] `mention` and `entry address` are candidate terms, defined in the glossary's flagged list. They move into the ratified tables when this record states `ready`.
+- [non-blocking #candidateTerms] `mention` and `entry address` are candidate terms, defined in the glossary's flagged list. They move into the ratified tables when this record states `ready`.
 
 ## Decision
 - context: Specs name other Specs, and single entries of them, in prose. Referential integrity reads edges and Pack references only. A prose id that does not resolve passes validation, a mention that no relation backs hides a dependent from blast radius, and finding every Spec that repeats an entry is a text search. The first adopter corpus carried its design as keyed entries, and most of its prose mentions had no declared relation.

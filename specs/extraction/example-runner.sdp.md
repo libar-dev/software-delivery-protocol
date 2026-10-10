@@ -14,7 +14,7 @@ relations:
 - value: A failing example reads as the Spec that failed rather than as an anonymous assertion.
 
 ### Open questions
-- [non-blocking] Do the every-step-and-only-the-steps and fresh-world-per-example laws stated in the runner and vitest-adapter commentary promote here or to story-altitude children under comment promotion?
+- [non-blocking #runnerLawPromotion] Do the every-step-and-only-the-steps and fresh-world-per-example laws stated in the runner and vitest-adapter commentary promote here or to story-altitude children under comment promotion?
 
 ## Behavior
 - rule: The core plans every contract step in authored order and runs it against the world the caller hands in; creating a fresh world per example is the adapter's lifecycle, never the core's.
