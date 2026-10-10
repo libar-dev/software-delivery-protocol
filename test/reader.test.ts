@@ -1176,6 +1176,11 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
           file: "src/comment-form.ts",
           line: 13,
           role: "service",
+          component: {
+            id: "component:platform.read-model",
+            layer: "application",
+            context: "platform",
+          },
         },
       ]);
       expect(context?.references).toEqual([
@@ -1186,6 +1191,7 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
           file: "src/constant-form.ts",
           line: 17,
           role: "decider",
+          component: { id: "component:platform.gateway", layer: "edge", context: "platform" },
         },
       ]);
     });

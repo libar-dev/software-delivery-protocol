@@ -6,7 +6,9 @@ import {
 import { isResolvingOracleModel } from "../graph/oracle-bindings.js";
 import { authoredEdgeTypes } from "../graph/schema.js";
 import type {
+  AuthoredEdgeType,
   DeliveryFactName,
+  EntryLocation,
   GraphClaim,
   GraphEdge,
   GraphEdgeType,
@@ -69,10 +71,21 @@ export interface RelationEnd {
 }
 
 /**
+ * The component a code unit belongs to: the target of its `memberOf` edge, with the layer and
+ * context that component's anchor states. An unresolved target keeps its id and carries neither.
+ */
+export interface CodeUnitComponent {
+  readonly id: string;
+  readonly layer?: CodeAnchorLayer;
+  readonly context?: string;
+}
+
+/**
  * A code unit at the source end of a binding edge, decoded to its source location and its
  * structural attributes (`spec:decisions.architectural-annotation`): `role` on any code unit,
- * `layer` and `context` on a `component:` unit. The attributes are carried as recorded; none of
- * them confers anything.
+ * `layer` and `context` on a `component:` unit, and the component the unit belongs to
+ * (`spec:consumers.pack-design`). The attributes are carried as recorded; none of them confers
+ * anything.
  */
 export interface CodeUnitBinding {
   readonly codeId: string;
@@ -83,6 +96,7 @@ export interface CodeUnitBinding {
   readonly role?: string;
   readonly layer?: CodeAnchorLayer;
   readonly context?: string;
+  readonly component?: CodeUnitComponent;
 }
 
 /** A code binding (`satisfies` from a `CodeNode`) decoded to its source location. */
@@ -141,10 +155,59 @@ export interface SpecContext extends SpecSummary {
   readonly references: readonly ReferenceBinding[];
   readonly verifiers: readonly VerifierBinding[];
   readonly oracle?: OracleBinding;
+  /**
+   * The location-table rows of this Spec (`spec:extraction.entry-locations`), sorted by entry in
+   * code-unit order: where each keyed entry and open question is written. Empty when the graph
+   * locates none; a missing row reads as not located, never as absent.
+   */
+  readonly entryLocations: readonly EntryLocation[];
   /** The graph findings naming this spec (as subject or related) — the holes beside the assertions. */
   readonly findings: readonly Finding[];
 }
 
+/** One open question of a Pack member, with its position, flag, key and recorded line. */
+export interface PackMemberQuestion {
+  /** The question's position among the Spec's authored open questions, from 0. */
+  readonly index: number;
+  readonly question: string;
+  readonly blocking: boolean;
+  readonly key?: string;
+  /** The line the location table records for `question[<index>]`; absent when not located. */
+  readonly line?: number;
+}
+
+/** A decision a Pack member names through `decidedBy`; unresolved when the target is no Spec. */
+export interface PackMemberDecision {
+  readonly id: string;
+  readonly title?: string;
+  readonly statedReadiness?: SpecReadiness;
+  readonly resolved: boolean;
+}
+
+/**
+ * A Pack member's design columns (`spec:consumers.pack-design`): counts and lists read from the
+ * graph, never a score or a rung. `entries` counts the keyed `design` and `ui` entries other than
+ * `description`; `declarations` counts the `design` entries whose value opens with a code span
+ * (the pinned-declaration rule of `spec:extraction.contract-declarations`).
+ */
+export interface PackMemberDesign {
+  readonly entries: number;
+  readonly declarations: number;
+  readonly blockingQuestions: number;
+  readonly openQuestions: readonly PackMemberQuestion[];
+  readonly decisions: readonly PackMemberDecision[];
+}
+
+/** A count beside how many of the counted bindings are enabled. */
+export interface EnabledCount {
+  readonly total: number;
+  readonly enabled: number;
+}
+
+/**
+ * A Pack member row. A resolved member carries its design (`spec:consumers.pack-design`); an
+ * unresolved member keeps `id`, `resolved: false` and empty `deliveryFacts`, and nothing else.
+ */
 export interface PackMemberSummary {
   readonly id: string;
   /** False when the manifest names a member absent from the graph. */
@@ -155,6 +218,50 @@ export interface PackMemberSummary {
   readonly statedReadiness?: SpecReadiness;
   readonly derivedReadiness?: SpecReadiness;
   readonly deliveryFacts: readonly DeliveryFactName[];
+  readonly file?: string;
+  /** The rung above the stated rung; absent when the member states `ready`. */
+  readonly statedNextRung?: SpecReadiness;
+  /**
+   * The floor's unmet clauses with the stated next rung as target, by the one evaluator. Empty
+   * when the floor already holds that rung, a rung that waits for its author and never a
+   * promotion, or when there is no next rung. `SpecContext.nextRungFailures` reads the rung above
+   * the floor reached instead; the two readings never share a name.
+   */
+  readonly statedNextRungFailures?: readonly ReadinessFloorFailure[];
+  readonly design?: PackMemberDesign;
+  readonly implementations?: readonly ImplementationBinding[];
+  readonly references?: readonly ReferenceBinding[];
+  /** Every decoded verifier, and how many are enabled. */
+  readonly verifiers?: EnabledCount;
+  /** The examples that declare `verifies` on the member, and how many are enabled. */
+  readonly examples?: EnabledCount;
+}
+
+/** The members an outside Spec joins under one authored relation type, in authored member order. */
+export interface PackBoundaryVia {
+  readonly type: AuthoredEdgeType;
+  readonly members: readonly string[];
+}
+
+/** A Spec outside the Pack joined to members by authored relations. */
+export interface PackBoundaryRow {
+  readonly id: string;
+  readonly title?: string;
+  readonly statedReadiness: SpecReadiness;
+  /** Whether the outside Spec carries the `implemented` delivery fact. */
+  readonly implemented: boolean;
+  /** One entry per relation type, in the closed list's authored order. */
+  readonly via: readonly PackBoundaryVia[];
+}
+
+/**
+ * The Specs outside the Pack joined to a member (`spec:consumers.pack-design`): `restsOn` lists
+ * those a member `refines`, `dependsOn`, is `constrainedBy` or `decidedBy`; `restedOnBy` lists
+ * those relating to a member by any authored relation. Rows sort by id in code-unit order.
+ */
+export interface PackBoundary {
+  readonly restsOn: readonly PackBoundaryRow[];
+  readonly restedOnBy: readonly PackBoundaryRow[];
 }
 
 /** A member with no verifier binding — `ready` ones are the priority slice (JS-G4). */
@@ -164,10 +271,11 @@ export interface PackVerifierGap {
   readonly priority: boolean;
 }
 
-/** The pack reviewed as a unit: members, vocabulary refs, and the verifier gaps. */
+/** The pack reviewed as a unit: members, vocabulary refs, the verifier gaps, and its boundary. */
 export interface PackContext extends PackSummary {
   readonly members: readonly PackMemberSummary[];
   readonly verifierGaps: readonly PackVerifierGap[];
+  readonly boundary: PackBoundary;
   readonly findings: readonly Finding[];
 }
 
@@ -385,6 +493,193 @@ function matchSections(sections: SpecSections | undefined, needle: string): read
   return matched.sort(compareCodeUnits);
 }
 
+/* ----- the Pack design (`spec:consumers.pack-design`) ----- */
+
+/** A value that opens with a code span, by recipe 24's rule: a declaration as authored. */
+const pinnedDeclaration = /^(`+)(?!`)([^\r\n]+?)(?<!`)\1(?!`)/u;
+
+/** The relation types by which a member rests on a Spec outside its Pack. */
+const restsOnTypes: ReadonlySet<string> = new Set([
+  "refines",
+  "dependsOn",
+  "constrainedBy",
+  "decidedBy",
+]);
+
+function asPlainRecord(value: unknown): Readonly<Record<string, unknown>> | undefined {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Readonly<Record<string, unknown>>)
+    : undefined;
+}
+
+/** The keyed entries of an open section (`design`, `ui`), `description` excluded. */
+function keyedEntries(content: unknown): readonly (readonly [string, unknown])[] {
+  return Object.entries(asPlainRecord(content) ?? {}).filter(([key]) => key !== "description");
+}
+
+/** The rung above a stated rung; none above `ready`, and none for an unratified statement. */
+function statedNextRungOf(stated: SpecReadiness): SpecReadiness | undefined {
+  const position = SPEC_READINESS.indexOf(stated);
+
+  return position < 0 ? undefined : SPEC_READINESS[position + 1];
+}
+
+/**
+ * The Pack design: each member's stated next rung, design columns, bindings and verifier counts,
+ * and the Pack's boundary, assembled once on the Pack context from the graph alone.
+ *
+ * @sdpAnchor impl:protocol.pack-design
+ * @sdpLabel assembles the Pack design on the Pack context
+ * @sdpSatisfies spec:consumers.pack-design
+ * @sdpReferences spec:extraction.entry-locations, spec:extraction.contract-declarations
+ * @sdpComponent component:protocol.reader
+ * @sdpUses impl:protocol.next-rung-floor
+ * @sdpRole reader
+ */
+function packMemberDesign(
+  node: PrimitiveNode,
+  index: GraphIndex,
+  locations: readonly EntryLocation[],
+): PackMemberDesign {
+  const designEntries = keyedEntries(node.sections?.design);
+  const lineOf = new Map(locations.map((row) => [row.entry, row.line]));
+  const authored: unknown = node.sections?.intent?.openQuestions;
+  const openQuestions: PackMemberQuestion[] = [];
+
+  // Malformed entries are the validators' finding; they keep their position and are skipped.
+  (Array.isArray(authored) ? (authored as readonly unknown[]) : []).forEach((entry, position) => {
+    const record = typeof entry === "string" ? undefined : asPlainRecord(entry);
+    const question = typeof entry === "string" ? entry : record?.question;
+
+    if (typeof question !== "string" || question.trim().length === 0) {
+      return;
+    }
+
+    const key = record?.key;
+    const line = lineOf.get(`question[${String(position)}]`);
+    openQuestions.push({
+      index: position,
+      question,
+      blocking: record?.blocking === true,
+      ...(typeof key === "string" ? { key } : {}),
+      ...(line === undefined ? {} : { line }),
+    });
+  });
+
+  const decisionIds = new Set(
+    (index.edgesByFrom.get(node.id) ?? [])
+      .filter((edge) => edge.type === "decidedBy" && edge.claim === "declared")
+      .map((edge) => edge.to),
+  );
+  const decisions = [...decisionIds].sort(compareCodeUnits).map((id): PackMemberDecision => {
+    const target = index.primitivesById.get(id);
+
+    return target === undefined
+      ? { id, resolved: false }
+      : {
+          id,
+          ...(target.title === undefined ? {} : { title: target.title }),
+          statedReadiness: target.readiness,
+          resolved: true,
+        };
+  });
+
+  return {
+    entries: designEntries.length + keyedEntries(node.sections?.ui).length,
+    declarations: designEntries.filter(
+      ([, value]) => typeof value === "string" && pinnedDeclaration.test(value),
+    ).length,
+    blockingQuestions: openQuestions.filter((entry) => entry.blocking).length,
+    openQuestions,
+    decisions,
+  };
+}
+
+/**
+ * The Specs outside the Pack joined to a resolved member by a declared authored relation whose
+ * other end is a Spec in the graph. Members in each `via` keep authored order; `via` follows the
+ * closed relation list's order; rows sort by id.
+ */
+function packBoundary(
+  node: PackNode,
+  index: GraphIndex,
+  implementedOf: (id: string) => boolean,
+): PackBoundary {
+  const inside = new Set(node.members);
+  const restsOn = new Map<string, Map<AuthoredEdgeType, string[]>>();
+  const restedOnBy = new Map<string, Map<AuthoredEdgeType, string[]>>();
+
+  const join = (
+    rows: Map<string, Map<AuthoredEdgeType, string[]>>,
+    outsideId: string,
+    type: AuthoredEdgeType,
+    memberId: string,
+  ): void => {
+    const byType = rows.get(outsideId) ?? new Map<AuthoredEdgeType, string[]>();
+    const members = byType.get(type) ?? [];
+
+    if (!members.includes(memberId)) {
+      members.push(memberId);
+    }
+
+    byType.set(type, members);
+    rows.set(outsideId, byType);
+  };
+
+  const isAuthored = (edge: GraphEdge): edge is GraphEdge & { type: AuthoredEdgeType } =>
+    edge.claim === "declared" && authoredEdgeTypeSet.has(edge.type);
+
+  for (const memberId of new Set(node.members)) {
+    if (!index.primitivesById.has(memberId)) {
+      continue;
+    }
+
+    for (const edge of index.edgesByFrom.get(memberId) ?? []) {
+      if (
+        isAuthored(edge) &&
+        restsOnTypes.has(edge.type) &&
+        !inside.has(edge.to) &&
+        index.primitivesById.has(edge.to)
+      ) {
+        join(restsOn, edge.to, edge.type, memberId);
+      }
+    }
+
+    for (const edge of index.edgesByTo.get(memberId) ?? []) {
+      if (isAuthored(edge) && !inside.has(edge.from) && index.primitivesById.has(edge.from)) {
+        join(restedOnBy, edge.from, edge.type, memberId);
+      }
+    }
+  }
+
+  const rowsOf = (rows: Map<string, Map<AuthoredEdgeType, string[]>>): PackBoundaryRow[] =>
+    [...rows.entries()]
+      .sort(([left], [right]) => compareCodeUnits(left, right))
+      .flatMap(([id, byType]): PackBoundaryRow[] => {
+        const outside = index.primitivesById.get(id);
+
+        if (outside === undefined) {
+          return [];
+        }
+
+        return [
+          {
+            id,
+            ...(outside.title === undefined ? {} : { title: outside.title }),
+            statedReadiness: outside.readiness,
+            implemented: implementedOf(id),
+            via: authoredEdgeTypes.flatMap((type) => {
+              const members = byType.get(type);
+
+              return members === undefined ? [] : [{ type, members }];
+            }),
+          },
+        ];
+      });
+
+  return { restsOn: rowsOf(restsOn), restedOnBy: rowsOf(restedOnBy) };
+}
+
 /**
  * @sdpAnchor component:protocol.reader
  * @sdpLabel Protocol reader seam
@@ -405,6 +700,7 @@ function matchSections(sections: SpecSections | undefined, needle: string): read
  * @sdpAnchor impl:protocol.reader
  * @sdpLabel thin typed graph reader construction
  * @sdpSatisfies spec:consumers.reader
+ * @sdpReferences spec:extraction.entry-locations
  * @sdpComponent component:protocol.reader
  * @sdpUses impl:protocol.delivery-facts
  * @sdpRole reader
@@ -436,6 +732,120 @@ export function createReader(graph: GraphSchema): Reader {
     (edge.type === "models" && usableOracleEdges.has(edge));
 
   const factsOf = (id: string): readonly DeliveryFactName[] => recomputedFacts.get(id) ?? [];
+
+  // The location table, grouped by Spec once; each Spec's rows sort by entry in code-unit order.
+  const locationsBySpec = new Map<string, EntryLocation[]>();
+
+  for (const row of graph.locations ?? []) {
+    const rows = locationsBySpec.get(row.spec) ?? [];
+    rows.push(row);
+    locationsBySpec.set(row.spec, rows);
+  }
+
+  for (const rows of locationsBySpec.values()) {
+    rows.sort((left, right) => compareCodeUnits(left.entry, right.entry) || left.line - right.line);
+  }
+
+  const locationsOf = (id: string): readonly EntryLocation[] => locationsBySpec.get(id) ?? [];
+
+  /** The unit's component: its `memberOf` target (the first by id, should a foreign graph hold more). */
+  const componentOf = (codeId: string): CodeUnitComponent | undefined => {
+    const [componentId] = (index.edgesByFrom.get(codeId) ?? [])
+      .filter((edge) => edge.type === "memberOf")
+      .map((edge) => edge.to)
+      .sort(compareCodeUnits);
+
+    if (componentId === undefined) {
+      return undefined;
+    }
+
+    const component = index.nodesById.get(componentId);
+
+    return component?.nodeType === "CodeNode"
+      ? {
+          id: componentId,
+          ...(component.layer === undefined ? {} : { layer: component.layer }),
+          ...(component.context === undefined ? {} : { context: component.context }),
+        }
+      : { id: componentId };
+  };
+
+  const codeUnitBindingsTo = (
+    id: string,
+    edgeType: "satisfies" | "references",
+  ): readonly CodeUnitBinding[] =>
+    (index.edgesByTo.get(id) ?? [])
+      .filter((edge) => edge.type === edgeType)
+      .map((edge): CodeUnitBinding => {
+        const source = index.nodesById.get(edge.from);
+        const location =
+          source?.nodeType === "CodeNode"
+            ? {
+                ...(source.label === undefined ? {} : { label: source.label }),
+                file: source.file,
+                ...(source.line === undefined ? {} : { line: source.line }),
+                ...(source.role === undefined ? {} : { role: source.role }),
+                ...(source.layer === undefined ? {} : { layer: source.layer }),
+                ...(source.context === undefined ? {} : { context: source.context }),
+              }
+            : {};
+        const component = componentOf(edge.from);
+
+        return {
+          codeId: edge.from,
+          claim: edge.claim,
+          ...location,
+          ...(component === undefined ? {} : { component }),
+        };
+      })
+      .sort((left, right) => compareCodeUnits(left.codeId, right.codeId));
+
+  const anchorVerified = (verifierId: string): boolean =>
+    (index.edgesByTo.get(verifierId) ?? []).some((edge) =>
+      isResolvingTestAnchorVerify(edge, index.nodesById),
+    );
+
+  const verifierBindingsTo = (id: string): readonly VerifierBinding[] =>
+    (index.edgesByTo.get(id) ?? [])
+      .filter((edge) => edge.type === "verifies")
+      .map((edge): VerifierBinding => {
+        const source = index.nodesById.get(edge.from);
+
+        if (source?.nodeType === "Anchor") {
+          return {
+            verifierId: edge.from,
+            via: "test-anchor",
+            claim: edge.claim,
+            // A resolving test anchor *is* the enabled binding (MD-7) — but only along its
+            // contract row: an off-contract claim confers nothing, exactly as in the derived
+            // facts (the shared resolving-test-anchor rule; fail closed).
+            enabled: isResolvingTestAnchorVerify(edge, index.nodesById),
+            ...(source.label === undefined ? {} : { label: source.label }),
+            file: source.file,
+            line: source.line,
+          };
+        }
+
+        const example = index.primitivesById.get(edge.from);
+        // The shared enabled-example rule (delivery-facts): one predicate decides conferral for
+        // the decode and the derived facts, so the two surfaces can never disagree (fail closed).
+        const enabled = isEnabledExampleVerify(edge, index.nodesById, anchorVerified);
+
+        return {
+          verifierId: edge.from,
+          via: "example",
+          claim: edge.claim,
+          enabled,
+          ...(example?.title === undefined ? {} : { label: example.title }),
+          ...(example === undefined ? {} : { file: example.file }),
+        };
+      })
+      .sort((left, right) => compareCodeUnits(left.verifierId, right.verifierId));
+
+  const enabledCount = (verifiers: readonly VerifierBinding[]): EnabledCount => ({
+    total: verifiers.length,
+    enabled: verifiers.filter((verifier) => verifier.enabled).length,
+  });
 
   const packsOf = (specId: string): readonly string[] =>
     (index.edgesByFrom.get(specId) ?? [])
@@ -498,70 +908,9 @@ export function createReader(graph: GraphSchema): Reader {
       .map((edge) => relationEnd(index, edge, edge.from))
       .sort(compareRelationEnds);
 
-    const codeUnitBindings = (edgeType: "satisfies" | "references"): CodeUnitBinding[] =>
-      (index.edgesByTo.get(id) ?? [])
-        .filter((edge) => edge.type === edgeType)
-        .map((edge): CodeUnitBinding => {
-          const source = index.nodesById.get(edge.from);
-          const location =
-            source?.nodeType === "CodeNode"
-              ? {
-                  ...(source.label === undefined ? {} : { label: source.label }),
-                  file: source.file,
-                  ...(source.line === undefined ? {} : { line: source.line }),
-                  ...(source.role === undefined ? {} : { role: source.role }),
-                  ...(source.layer === undefined ? {} : { layer: source.layer }),
-                  ...(source.context === undefined ? {} : { context: source.context }),
-                }
-              : {};
-
-          return { codeId: edge.from, claim: edge.claim, ...location };
-        })
-        .sort((left, right) => compareCodeUnits(left.codeId, right.codeId));
-
-    const implementations: readonly ImplementationBinding[] = codeUnitBindings("satisfies");
-    const references: readonly ReferenceBinding[] = codeUnitBindings("references");
-
-    const anchorVerified = (verifierId: string): boolean =>
-      (index.edgesByTo.get(verifierId) ?? []).some((edge) =>
-        isResolvingTestAnchorVerify(edge, index.nodesById),
-      );
-
-    const verifiers = (index.edgesByTo.get(id) ?? [])
-      .filter((edge) => edge.type === "verifies")
-      .map((edge): VerifierBinding => {
-        const source = index.nodesById.get(edge.from);
-
-        if (source?.nodeType === "Anchor") {
-          return {
-            verifierId: edge.from,
-            via: "test-anchor",
-            claim: edge.claim,
-            // A resolving test anchor *is* the enabled binding (MD-7) — but only along its
-            // contract row: an off-contract claim confers nothing, exactly as in the derived
-            // facts (the shared resolving-test-anchor rule; fail closed).
-            enabled: isResolvingTestAnchorVerify(edge, index.nodesById),
-            ...(source.label === undefined ? {} : { label: source.label }),
-            file: source.file,
-            line: source.line,
-          };
-        }
-
-        const example = index.primitivesById.get(edge.from);
-        // The shared enabled-example rule (delivery-facts): one predicate decides conferral for
-        // the decode and the derived facts, so the two surfaces can never disagree (fail closed).
-        const enabled = isEnabledExampleVerify(edge, index.nodesById, anchorVerified);
-
-        return {
-          verifierId: edge.from,
-          via: "example",
-          claim: edge.claim,
-          enabled,
-          ...(example?.title === undefined ? {} : { label: example.title }),
-          ...(example === undefined ? {} : { file: example.file }),
-        };
-      })
-      .sort((left, right) => compareCodeUnits(left.verifierId, right.verifierId));
+    const implementations: readonly ImplementationBinding[] = codeUnitBindingsTo(id, "satisfies");
+    const references: readonly ReferenceBinding[] = codeUnitBindingsTo(id, "references");
+    const verifiers = verifierBindingsTo(id);
 
     // Exactly one complete oracle contract decodes as presence. Off-contract or competing edges
     // stay visible through findings, but never become an expected-outcome authority by accident.
@@ -603,6 +952,7 @@ export function createReader(graph: GraphSchema): Reader {
       references,
       verifiers,
       ...(oracle === undefined ? {} : { oracle }),
+      entryLocations: locationsOf(id),
       findings: findingsNaming(id),
     };
   };
@@ -622,6 +972,8 @@ export function createReader(graph: GraphSchema): Reader {
       }
 
       const summary = summarize(member);
+      const statedNextRung = statedNextRungOf(member.readiness);
+      const verifiers = verifierBindingsTo(member.id);
 
       return {
         id: summary.id,
@@ -634,6 +986,15 @@ export function createReader(graph: GraphSchema): Reader {
           ? {}
           : { derivedReadiness: summary.derivedReadiness }),
         deliveryFacts: summary.deliveryFacts,
+        file: summary.file,
+        ...(statedNextRung === undefined ? {} : { statedNextRung }),
+        statedNextRungFailures:
+          statedNextRung === undefined ? [] : evaluateReadinessFloor(member, index, statedNextRung),
+        design: packMemberDesign(member, index, locationsOf(member.id)),
+        implementations: codeUnitBindingsTo(member.id, "satisfies"),
+        references: codeUnitBindingsTo(member.id, "references"),
+        verifiers: enabledCount(verifiers),
+        examples: enabledCount(verifiers.filter((verifier) => verifier.via === "example")),
       };
     });
 
@@ -653,6 +1014,7 @@ export function createReader(graph: GraphSchema): Reader {
       ...summarizePack(node),
       members,
       verifierGaps,
+      boundary: packBoundary(node, index, (specId) => factsOf(specId).includes("implemented")),
       findings: findingsNaming(id),
     };
   };
