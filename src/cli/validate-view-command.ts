@@ -60,7 +60,6 @@ const wholesaleViewRewriteAnchor = codeAnchor({
   satisfies: ref("spec:consumers.wholesale-view-rewrite"),
   component: componentAnchorId("component:protocol.cli"),
   role: "publisher",
-  references: [ref("spec:consumers.spec-studio")],
 });
 void wholesaleViewRewriteAnchor;
 

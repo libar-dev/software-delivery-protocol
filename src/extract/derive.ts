@@ -183,6 +183,7 @@ export const deriveGraphAnchor = codeAnchor({
   satisfies: ref("spec:extraction.derive-graph"),
   component: componentAnchorId("component:protocol.extract"),
   uses: [codeAnchorId("impl:protocol.delivery-facts")],
+  references: [ref("spec:decisions.anchor-binding-grain")],
   role: "extractor",
 });
 

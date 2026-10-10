@@ -667,7 +667,7 @@ describe("the Design Review — the one generated read-only view", () => {
         [
           "### Referenced by",
           "",
-          "Code written against this design. A reference confers no implementation binding.",
+          "Code that answers to this design without claiming to realize it. A reference confers no implementation binding.",
           "",
           "- `impl:platform.gate` — the gate ([src/constant-form.ts:17](../../../src/constant-form.ts)) · role `decider` `[anchored]`",
           "- `impl:platform.rebuild` — the online rebuild path ([src/comment-form.ts:13](../../../src/comment-form.ts)) · role `service` `[anchored]`",

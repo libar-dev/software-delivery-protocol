@@ -22,7 +22,7 @@ export interface CensusPage {
  * @sdpLabel renders the derived census and runtime taxonomy projection
  * @sdpSatisfies spec:consumers.census-page
  * @sdpComponent component:protocol.projections
- * @sdpReferences spec:consumers.spec-studio.lenses
+ * @sdpReferences spec:decisions.architectural-annotation
  * @sdpRole projection
  */
 
@@ -260,7 +260,7 @@ function renderReferences(referenceEdges: readonly GraphEdge[]): readonly string
   return [
     "### References",
     "",
-    "A `references` edge says the unit is written against that design; it confers no delivery fact.",
+    "A `references` edge says the unit answers to that design without claiming to realize it; it confers no delivery fact.",
     "",
     "| Unit | Specs | Spec count |",
     "| --- | --- | ---: |",

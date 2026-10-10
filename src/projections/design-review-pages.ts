@@ -51,7 +51,6 @@ export function renderSpecPage(context: SpecContext): DesignReviewPage {
  * @sdpLabel renders Pack member implementation and verifier bindings as present or none
  * @sdpSatisfies spec:consumers.binding-language-views
  * @sdpComponent component:protocol.projections
- * @sdpReferences spec:consumers.spec-studio.lenses
  * @sdpRole renderer
  */
 
@@ -125,7 +124,6 @@ export function renderPackPage(
  * @sdpLabel renders index implementation and verifier bindings as present or none
  * @sdpSatisfies spec:consumers.binding-language-views
  * @sdpComponent component:protocol.projections
- * @sdpReferences spec:consumers.spec-studio.lenses
  * @sdpRole renderer
  */
 

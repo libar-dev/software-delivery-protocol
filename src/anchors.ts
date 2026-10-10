@@ -5,6 +5,14 @@
  * `node:*` or ts-morph binds its constant-form anchors through this entry; the extractor trusts
  * the specifier exactly as it trusts the bare package specifier.
  */
+/**
+ * @sdpAnchor impl:protocol.anchors-subpath
+ * @sdpLabel zero-dependency subpath exporting the id and anchor builders only
+ * @sdpSatisfies spec:model.anchors
+ * @sdpComponent component:protocol.model
+ * @sdpReferences spec:decisions.anchor-comment-form
+ * @sdpRole contract
+ */
 export {
   anchorId,
   codeAnchorId,

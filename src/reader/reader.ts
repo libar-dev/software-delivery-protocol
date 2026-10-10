@@ -89,9 +89,9 @@ export interface CodeUnitBinding {
 export type ImplementationBinding = CodeUnitBinding;
 
 /**
- * A design reference (`references` from a `CodeNode`): this code is written against the Spec
- * (`spec:decisions.anchor-binding-grain`). It confers no delivery fact and moves no floor, so it
- * rides beside the implementations, never inside them.
+ * A design reference (`references` from a `CodeNode`): this code answers to the Spec's design
+ * without claiming to realize it (`spec:decisions.anchor-binding-grain`). It confers no delivery
+ * fact and moves no floor, so it rides beside the implementations, never inside them.
  */
 export type ReferenceBinding = CodeUnitBinding;
 
@@ -137,7 +137,7 @@ export interface SpecContext extends SpecSummary {
   /** Authored-type edges pointing at the spec — who refines / depends on / verifies it. */
   readonly relationsIn: readonly RelationEnd[];
   readonly implementations: readonly ImplementationBinding[];
-  /** The code units that reference the Spec: written against it, conferring nothing. */
+  /** The code units that reference the Spec: they answer to its design, conferring nothing. */
   readonly references: readonly ReferenceBinding[];
   readonly verifiers: readonly VerifierBinding[];
   readonly oracle?: OracleBinding;
@@ -398,7 +398,6 @@ function matchSections(sections: SpecSections | undefined, needle: string): read
  * @sdpLabel typed graph reader and agent entry adapters
  * @sdpSatisfies spec:consumers.agent-surface
  * @sdpComponent component:protocol.reader
- * @sdpReferences spec:consumers.spec-studio.shell
  * @sdpRole reader
  */
 
@@ -408,7 +407,6 @@ function matchSections(sections: SpecSections | undefined, needle: string): read
  * @sdpSatisfies spec:consumers.reader
  * @sdpComponent component:protocol.reader
  * @sdpUses impl:protocol.delivery-facts
- * @sdpReferences spec:consumers.spec-studio.data, spec:consumers.spec-studio
  * @sdpRole reader
  */
 
@@ -430,7 +428,7 @@ export function createReader(graph: GraphSchema): Reader {
   // Structural memberOf/uses edges are intentionally excluded: this traversal follows binding
   // nodes to Specs, while structural edges connect CodeNode endpoints and confer no Spec linkage.
   // `references` is traversed: it confers nothing, but it is the code unit's recorded linkage to
-  // the design it is written against, so a change to that unit reaches the Spec.
+  // the design it answers to, so a change to that unit reaches the Spec.
   const isTraversableBinding = (edge: GraphEdge): boolean =>
     edge.type === "satisfies" ||
     edge.type === "references" ||

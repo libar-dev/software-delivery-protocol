@@ -16,11 +16,11 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
-> **plan 40 is EXECUTED**. The annotations arc: the comment form (MD-36, `ready`), optional plural
-> bindings and design references (MD-37, held for the owner's `ready` on `#referenceDirection`
-> and `#entryAddressTargets`), and architecture attributes (MD-38, `ready`); the engine,
-> self-binding, projections, and agent recipes changed together. Counts are derived at close;
-> re-run the recipes rather than quoting them.
+> **plan 40 is EXECUTED**. The annotations arc: the comment form (MD-36), optional plural
+> bindings and design references (MD-37), and architecture attributes (MD-38), all three
+> `ready`, with their open questions closed by the plan's rulings; the engine, self-binding,
+> projections, and agent recipes changed together. Counts are derived at close; re-run the
+> recipes rather than quoting them.
 > **plan 39 is DRAFTED**. The first-adopter arc, a thin lineage pointer in the plan-38 shape. Six
 > of its Specs (inline code spans, the unbound-example posture, the typed-dependency floor, the
 > register recipes, the adopter on-ramp, the shipped corpus) are implemented with bound evidence

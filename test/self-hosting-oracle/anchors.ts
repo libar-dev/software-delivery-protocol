@@ -689,6 +689,14 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     role: "contract",
   },
   {
+    id: "impl:protocol.anchors-subpath",
+    nodeType: "CodeNode",
+    label: "zero-dependency subpath exporting the id and anchor builders only",
+    file: "src/anchors.ts",
+    site: "export {",
+    role: "contract",
+  },
+  {
     id: "impl:protocol.pack-aggregate",
     nodeType: "CodeNode",
     label: "Pack aggregate and model references",
@@ -848,6 +856,15 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     file: "src/graph/schema.ts",
     constant: "graphClaimsAnchor",
     site: "export const graphClaims",
+    role: "contract",
+  },
+  {
+    id: "impl:protocol.graph-edge-types",
+    nodeType: "CodeNode",
+    label: "declares the closed list of graph edge types",
+    file: "src/graph/schema.ts",
+    constant: "graphEdgeTypesAnchor",
+    site: "export const graphEdgeTypes",
     role: "contract",
   },
   {
@@ -2634,32 +2651,16 @@ export const expectedBindingEdges = [
     "verifies",
     "spec:extraction.pack-member-order.manifest-order-kept",
   ],
-  ["impl:protocol.reader", "references", "spec:consumers.spec-studio.data"],
-  ["impl:protocol.reader", "references", "spec:consumers.spec-studio"],
-  ["impl:protocol.agent-surface", "references", "spec:consumers.spec-studio.shell"],
-  ["impl:protocol.projections-model", "references", "spec:consumers.spec-studio"],
-  ["impl:protocol.design-review", "references", "spec:decisions.studio-html-surface"],
-  ["impl:protocol.derived-readiness-banner", "references", "spec:consumers.spec-studio.spec-page"],
-  [
-    "impl:protocol.binding-language-spec-page",
-    "references",
-    "spec:consumers.spec-studio.spec-page",
-  ],
-  [
-    "impl:protocol.binding-language-spec-page",
-    "references",
-    "spec:consumers.spec-studio.verification-panels",
-  ],
-  [
-    "impl:protocol.diagnostic-rendering-design-review",
-    "references",
-    "spec:consumers.spec-studio.components",
-  ],
-  ["impl:protocol.binding-language-pack-table", "references", "spec:consumers.spec-studio.lenses"],
-  ["impl:protocol.binding-language-index-table", "references", "spec:consumers.spec-studio.lenses"],
-  ["impl:protocol.census-page", "references", "spec:consumers.spec-studio.lenses"],
-  ["impl:protocol.mermaid-view", "references", "spec:consumers.spec-studio.components"],
-  ["impl:protocol.wholesale-view-rewrite", "references", "spec:consumers.spec-studio"],
+  // Each unit references the decision it answers to (plan 40's rulings, R1); a design
+  // that builds on existing code states that by its own relation, never by a reference here.
+  ["impl:protocol.anchors-subpath", "satisfies", "spec:model.anchors"],
+  ["impl:protocol.anchors-subpath", "references", "spec:decisions.anchor-comment-form"],
+  ["impl:protocol.anchor-extraction", "references", "spec:decisions.anchor-comment-form"],
+  ["impl:protocol.derive-graph", "references", "spec:decisions.anchor-binding-grain"],
+  ["impl:protocol.graph-edge-types", "satisfies", "spec:extraction.derive-graph"],
+  ["impl:protocol.graph-edge-types", "references", "spec:decisions.anchor-binding-grain"],
+  ["impl:protocol.anchor-model", "references", "spec:decisions.architectural-annotation"],
+  ["impl:protocol.census-page", "references", "spec:decisions.architectural-annotation"],
 ] as const;
 
 // re-measured under plan 40
@@ -2680,4 +2681,5 @@ export const expectedCommentAnchorIds = [
   "impl:protocol.gherkin-view",
   "impl:protocol.mermaid-view",
   "impl:protocol.agent-surface-cli",
+  "impl:protocol.anchors-subpath",
 ] as const;

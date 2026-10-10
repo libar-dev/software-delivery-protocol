@@ -225,6 +225,11 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.graph",
   },
   {
+    unit: "src/graph/schema.ts#graphEdgeTypes",
+    anchorId: "impl:protocol.graph-edge-types",
+    componentId: "component:protocol.graph",
+  },
+  {
     unit: "src/graph/delivery-facts.ts#computeDeliveryFacts",
     anchorId: "impl:protocol.delivery-facts",
     componentId: "component:protocol.graph",
@@ -252,6 +257,11 @@ export const acceptedArchitecturalUnits = [
   {
     unit: "src/model/anchors.ts#specTest",
     anchorId: "impl:protocol.anchor-model",
+    componentId: "component:protocol.model",
+  },
+  {
+    unit: "src/anchors.ts#codeAnchor",
+    anchorId: "impl:protocol.anchors-subpath",
     componentId: "component:protocol.model",
   },
   {

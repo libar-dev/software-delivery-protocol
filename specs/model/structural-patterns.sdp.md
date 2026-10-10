@@ -15,6 +15,6 @@ relations:
 
 ## Model
 
-- **architecturally significant unit** — A code unit with exported public surface or cross-component reach that warrants graph-visible structural binding: component membership, uses declarations for its architectural dependencies, a role, and `references` to the designs it is written against.
+- **architecturally significant unit** — A code unit with exported public surface or cross-component reach that warrants graph-visible structural binding: component membership, uses declarations for its architectural dependencies, a role, and `references` to the designs it answers to.
 - **structural attributes** — `role` on any code anchor; `layer` and `context` on a `component:` anchor; all three describe what the unit is, never where it stands, and the census renders their taxonomy from the graph.
 - **accepted set** — The set of architecturally significant units in a corpus is an owner-reviewed declaration, never derived from imports or exports; annotations are curated, never a coverage quota.

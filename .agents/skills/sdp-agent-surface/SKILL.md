@@ -33,13 +33,15 @@ every question is a filter or a join, never a tree walk. Four node types exist:
 Twelve edge types exist, and the list is closed. Six are authored Spec relations: `refines`,
 `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, `supersedes`. Six are derived by
 extraction: `belongsTo` (Pack membership), `satisfies` (code realization, one edge per target),
-`references` (code written against a design), `models` (oracle binding), `memberOf` and `uses`
+`references` (code that answers to a design), `models` (oracle binding), `memberOf` and `uses`
 (anchored structure). A `references` edge runs from a code unit to a Spec and says only that the
-code rests on that design: it confers no delivery fact, moves no readiness floor, and the drift
-alarm ignores it. A relation name outside this list is a bug in whatever prose named it, not a
-query to attempt. IDs are namespaced (`spec:` · `pack:` ·
-`impl:` · `api:` · `component:` · `test:` · `oracle:`), and an edge whose target does not resolve
-confers no delivery fact. Every node and edge carries exactly one claim; the edge contract is
+code answers to that design without claiming to realize it: it confers no delivery fact, moves no
+readiness floor, and the drift alarm ignores it. It runs one way. A design that builds on existing
+code states that through its own `dependsOn` or `refines` to the Spec the code satisfies, so read
+that dependency from the Spec's relations, never from the code. A relation name outside this list
+is a bug in whatever prose named it, not a query to attempt. IDs are namespaced (`spec:` · `pack:`
+· `impl:` · `api:` · `component:` · `test:` · `oracle:`), and an edge whose target does not
+resolve confers no delivery fact. Every node and edge carries exactly one claim; the edge contract is
 `spec:extraction.derive-graph`, the claim law is `spec:extraction.claim-taxonomy`.
 
 ## How delivery state derives
@@ -47,7 +49,7 @@ confers no delivery fact. Every node and edge carries exactly one claim; the edg
 Every fact enters the graph through one of three claims, and the claims are never collapsed.
 Carrier prose, relations, and stated readiness are `declared` intent. Source anchors are `anchored`
 bindings: a code anchor's `satisfies` records that this code realizes that Spec and its `references`
-records only that the code is written against it, a test anchor records that this test verifies
+records only that the code answers to it, a test anchor records that this test verifies
 its target Specs, an oracle anchor records that this function models that example space.
 Structure the extractor computes on its own enters as `inferred`.
 
@@ -107,10 +109,12 @@ together, the decision map to rank decisions by shaping fan-in (decided subjects
 dependsOn and refines), or the planning slice to see refinement and dependency neighbors, shaping
 decisions, bound components, and entry points before editing. To read a Pack from the code side,
 run references into a design (recipe 27): one row per member with the units that reference it,
-the units that realize it, and whether a verifier is bound, three independent facts with no
-ladder. An empty list reads as unbound, never as "not built". For the architecture vocabulary
-itself, run roles, layers and contexts (recipe 28): every value the code anchors state, with the
-units that carry it, and the `references` edges counted apart from units.
+the units that realize it, whether a verifier is bound, and a derived "builds on" column, the
+Specs the member `dependsOn` or `refines` that carry `implemented`, each with its implementing
+units. The four columns are independent and form no ladder, and "builds on" confers nothing. An
+empty list reads as unbound, never as "not built". For the architecture vocabulary itself, run
+roles, layers and contexts (recipe 28): every value the code anchors state, with the units that
+carry it, and the `references` edges counted apart from units.
 
 For a table you would otherwise keep by hand, run a register recipe each time you need it: the
 open-question register (recipe 20) for every open question with its blocking flag and its key,
@@ -137,7 +141,7 @@ Reach for the files only when you need the authored prose itself — the exact w
 ## The entry adapters
 
 `g.specContext(id)` lists the units that realize the Spec under `implementations` and the units
-written against it under `references`, each with its file and line. `g.byFile(path)` returns every
+that answer to it under `references`, each with its file and line. `g.byFile(path)` returns every
 node recorded at a path and the Specs reachable from it. A comment-form anchor is recorded at its
 own site, so a source file with no Protocol import still answers. A node may come back with an
 empty Spec list: an identity-only anchor, with no `satisfies` and no `references`, is lawful and
@@ -194,8 +198,8 @@ are empty and its gap warnings say nothing about what the Protocol has built.
   Pass, fail, skip, and quarantine are CI's.
 - **Do not read `implemented` as "it is live."** It says a code anchor binds to the Spec. Runtime
   evidence would be `observed`, the designed-and-deferred liveness fact the graph does not derive.
-- **Do not read `references` as `implemented`.** A `references` edge says the code is written
-  against the design, and nothing more. Only a resolving `satisfies` confers `implemented`; recipe
+- **Do not read `references` as `implemented`.** A `references` edge says the code answers to
+  the design, and nothing more. Only a resolving `satisfies` confers `implemented`; recipe
   27 keeps the two in separate columns.
 - **Do not use raw `ready ∧ ¬implemented` as the operational backlog.** Under the example realization
   posture and the decision readiness posture it also includes ready example evidence and ready

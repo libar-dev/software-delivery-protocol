@@ -22,7 +22,7 @@ export const extractionSpecs = [
           "The graph is flat arrays of typed nodes and edges; hierarchy and containment are expressed by edges rather than nested nodes.",
           "Declared relations resolve Primitive to Primitive, while `satisfies`, `references`, and test `verifies` edges derive from anchors and run from their binding node to the direct Spec target, one edge per target.",
           "The edge list is closed at twelve types: the six declared relations `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, and `supersedes`, and the six derived edges `belongsTo`, `satisfies`, `models`, `memberOf`, `uses`, and `references`.",
-          "A `references` edge is anchored, runs from a CodeNode to the Spec its code is written against, and contributes no delivery fact.",
+          "A `references` edge is anchored, runs from a CodeNode to the Spec its code answers to, and contributes no delivery fact.",
           "Delivery facts are computed node facts: a resolving `satisfies` edge contributes `implemented`, and an enabled direct verifier contributes `has-verifier` only to its target.",
           "Inferred structural edges are advisory inputs to impact analysis and never become authoritative graph truth.",
           "The key order of `design`, `ui`, and `model.terms` is the authored order and part of the graph contract.",

@@ -33,8 +33,9 @@ export type CodeAnchorLayer = (typeof CODE_ANCHOR_LAYERS)[number];
  * the non-conferring `references` targets, and closed structural attributes — nothing spec-level
  * ever rides here. The binding grain (`spec:decisions.anchor-binding-grain`): `satisfies` is
  * optional and plural, so an identity-only anchor is lawful and mints a CodeNode for structure.
- * `references` says this code is written against that design and confers nothing. `role` is a
- * free, corpus-owned vocabulary; `layer` and `context` belong to `component:` anchors only.
+ * `references` says this code answers to that design without claiming to realize it, and confers
+ * nothing. `role` is a free, corpus-owned vocabulary; `layer` and `context` belong to `component:`
+ * anchors only.
  */
 export interface CodeAnchor {
   readonly id: CodeAnchorId;
@@ -102,6 +103,7 @@ const anchorModelAnchor = createCodeAnchor({
   label: "binding-only anchor model builders",
   satisfies: ref("spec:model.anchors"),
   component: componentAnchorId("component:protocol.model"),
+  references: [ref("spec:decisions.architectural-annotation")],
   role: "contract",
 });
 

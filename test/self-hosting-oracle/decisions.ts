@@ -1241,14 +1241,6 @@ export const decisionsSpecs = [
       intent: {
         outcome:
           "Admit a doc comment carrying reserved `@sdp*` tags as a second extracted representation of the anchor, feeding the same closed envelope as the constant form, so code that cannot import the Protocol binds at its real site and comment prose still authors nothing.",
-        openQuestions: [
-          {
-            key: "attachmentIdentity",
-            question:
-              "The comment form records the block's file and line and nothing about the statement beneath it. The original design's Implementation node carried the attachment kind and the exported symbol name (`docs/lineage/v0-design/03-graph-metamodel.md` §2.7). Does a later ruling record the attachment kind and symbol name on the CodeNode, so a rename or a move reports, or does the binding stay a file-and-line pin? Re-entry trigger: a consumer needs to name the symbol a CodeNode binds, twice.",
-            blocking: false,
-          },
-        ],
       },
       decision: {
         context:
@@ -1269,6 +1261,7 @@ export const decisionsSpecs = [
           "Attachment: every top-level `/** … */` block that contains a reserved tag is one anchor with exactly one `@sdpAnchor`; a block with reserved tags and no `@sdpAnchor` is an envelope error, and a block with two is an envelope error, as any repeated tag is.",
           "Blocks above the first import, trailing blocks with no statement beneath them, and comment-only files are read; a `/** … */` block with a reserved tag in a nested position, inside a function body, a class member, an object literal, or a JSX expression, is a misplaced-tag error, and a nested comment the top level would not read stays unread.",
           "The block's first line is the binding's file and line.",
+          "The binding grain of both forms is the file: a block's line locates the anchor and names no declaration, and no attachment kind or symbol name is recorded. Symbol-level reach, if it arrives, is derived under the inferred claim and joins anchors by position; a mismatch is never a finding.",
           "Cardinalities: each reserved tag appears at most once per block; `@sdpModels` takes one target; a list tag is non-empty, carries no empty item, and repeats no target.",
           "Prose precedes the tags; after the first reserved tag, a non-empty line that does not open a tag is a refused continuation, and an ordinary TSDoc tag such as `@param` stays lawful and unread.",
           "Parsing reads the raw comment text with a tag grammar; it does not depend on the TypeScript JSDoc tag parser.",
@@ -1291,54 +1284,44 @@ export const decisionsSpecs = [
     id: "spec:decisions.anchor-binding-grain",
     specKind: "decision",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/decisions/anchor-binding-grain.sdp.md",
     title: "Bindings are optional, plural, and may reference a design",
     narrative: null,
     sections: {
       intent: {
         outcome:
-          "Let a code anchor name zero, one, or several Specs it realizes, and name the Specs it is written against without claiming to realize them, so an anchor can state exactly what its code does and the graph can reach a design from the code that rests on it.",
-        openQuestions: [
-          {
-            key: "entryAddressTargets",
-            question:
-              "The original design admits a `#` sub-segment in the id grammar for a child of a Spec that is not itself a Spec (`docs/lineage/v0-design/03-graph-metamodel.md` §6.2), and the checked-mentions ruling gives `#` its one meaning as an entry address while refusing it in every id slot, anchor targets included. Should a `satisfies` or `references` target be allowed to name an entry address, so code can bind to one keyed Design entry, or does binding stay at Spec grain with the entry named in the label? Re-entry trigger: an adopter whose Specs carry their design as keyed entries asks for it twice.",
-            blocking: false,
-          },
-          {
-            key: "referenceDirection",
-            question:
-              "This ruling says a `references` edge records that the code is written against the design. The engine's own self-binding points existing reader and projection units at the Studio Specs whose design rests on that code, the reading the annotation scout under `docs/lineage/` gives the first generation's see-also, and an independent review reads those edges as inverted. Does `references` also admit existing code as the design context of a Spec no code realizes yet, or only code written against the design, so the Studio references come out and each unit references the decisions it follows instead? Re-entry trigger: the owner's `ready` statement on this decision.",
-            blocking: false,
-          },
-        ],
+          "Let a code anchor name zero, one, or several Specs it realizes, and name the Specs it answers to without claiming to realize them, so an anchor can state exactly what its code does and the graph can reach a design from the code that answers to it.",
       },
       decision: {
         context:
           "A code anchor carries one required `satisfies`, a test anchor one `verifies`. The first adopter split Specs so that an anchor could claim only what its code does, a stub reads as `implemented` because the only way to name a design from code is to claim to realize it, and a relationship the design states in prose cannot reach a page. The original design made `satisfies` optional and plural on a marker (`docs/lineage/v0-design/04-authoring-surfaces.md` §2.4) and drew the line that markers carry identity and structure, never readiness, intent, behavior, or verification. The annotation scout under `docs/lineage/` found no informational code-to-Spec edge in either lineage and proposed one as the smallest extension.",
         decision:
-          "On a code anchor, `satisfies` is optional and plural; on a test anchor, `verifies` is plural and non-empty. The constant form accepts one `ref(…)` or a fresh array literal of them. Each resolving target confers its fact as today, and `implemented` stays a whole-Spec fact. A new anchored edge `references` runs from a CodeNode to a Spec, from `references?: readonly SpecId[]` on a code anchor; it may target any Spec, decisions included, confers no delivery fact, moves no readiness floor, and the drift alarm ignores it. It says this code is written against that design. A target named in both `satisfies` and `references` is an error. An identity-only code anchor, with no `satisfies` and no `references`, is lawful: it mints a CodeNode for structure and for `byFile`, and nothing else.",
+          "On a code anchor, `satisfies` is optional and plural; on a test anchor, `verifies` is plural and non-empty. The constant form accepts one `ref(…)` or a fresh array literal of them. Each resolving target confers its fact as today, and `implemented` stays a whole-Spec fact. A new anchored edge `references` runs from a CodeNode to a Spec, from `references?: readonly SpecId[]` on a code anchor; it may target any Spec, decisions included, confers no delivery fact, moves no readiness floor, and the drift alarm ignores it. It says this code answers to that design without claiming to realize it: the unit follows the design or realizes part of it, so a change to the design asks the code to follow. A design that builds on existing code states that by a typed relation to the Spec the code satisfies, never by a reference from the code. A target named in both `satisfies` and `references` is an error. An identity-only code anchor, with no `satisfies` and no `references`, is lawful: it mints a CodeNode for structure and for `byFile`, and nothing else.",
         rationale: [
           "Hard to reverse: the anchor contract and the closed edge list are contracts for the extractor, the validators, the reader, and every adopter's anchors. Surprising without context: the obvious move is to let `satisfies` name a design the code only partly realizes, and this ruling refuses that in favor of a second edge that confers nothing. Real trade-off: a non-conferring edge can be written where a realization claim is due, and nothing in the graph says which; in exchange, `implemented` keeps its one meaning and an honest anchor is always writable.",
-          "Bindings state existence, not liveness, and `references` states less than existence of realization: only that the code rests on the design. Keeping that below the delivery facts preserves the drift alarm's meaning.",
+          "Bindings state existence, not liveness, and `references` states less than existence of realization: only that the code answers to the design. Keeping that below the delivery facts preserves the drift alarm's meaning.",
         ],
         consequences: [
           "The closed edge list gains `references`, derived and anchored; `satisfies` and `verifies` edges are one per target.",
           "A present `references` is non-empty and unique; a non-resolving target confers nothing and reports as a non-resolving `satisfies` target does.",
-          "`satisfies` keeps its posture: code never satisfies a decision Spec directly (MD-26), and an anchor is never pointed at an unfinished Spec to manufacture coverage; a unit written against such a Spec references it.",
-          "An identity-only anchor derives no `satisfies` edge, so it never confers `implemented`; a stub written against a design references the design rather than satisfying it.",
+          "`satisfies` keeps its posture: code never satisfies a decision Spec directly (MD-26), and an anchor is never pointed at an unfinished Spec to manufacture coverage; a unit that answers to such a Spec references it.",
+          "An identity-only anchor derives no `satisfies` edge, so it never confers `implemented`; a stub that answers to a design references the design rather than satisfying it.",
           "`byFile` may lawfully return a CodeNode with an empty Spec list; an empty list is the identity-only anchor's honest answer, not a lookup failure.",
           "`blastRadius` reports changed identity-only CodeNodes as their own list, neither dropped nor folded into coverage-unknown, because the graph records the node and nothing it binds.",
           "The drift alarm ignores `references` and still reports a `satisfies` target that states below `ready`, target by target.",
           "The build backlog predicate (recipe 1) is unchanged: `references` neither adds nor removes a row.",
           "The reader's Spec context names the CodeNodes that reference the Spec with their file and line; blast radius traverses `references` as a binding and names the edge type in its reason.",
           "The Design Review Spec page lists the units that reference the Spec, and the census renders `references` beside the structural edges.",
+          "Anchor targets name whole Specs. An entry address never narrows a binding and never carries a delivery fact; a part of a Spec that needs its own realization tracking is its own Spec.",
+          "A `references` edge is authored for the design relationship it names; an edge whose reason is a test, a count, or a `byFile` answer is removed.",
         ],
         alternatives: [
           'A partial-realization delivery fact was refused: a fact that says "partly implemented" is a status on code, and the floor cannot read it honestly.',
           "Folding the design relationship into `satisfies` was refused: it manufactures `implemented` on a Spec the code does not realize, which is the adopter's stub problem restated.",
           "Declaring the relationship on the Spec, as a list of its own code bindings, was refused: a Spec-side list of bindings is authored delivery state and a second place for the binding to drift.",
+          "References from code that a design builds on were refused: that dependency is a relation from the building design to the Spec the code satisfies; a code-side copy is a second home for it and would make each unit's source list its consumers' designs.",
+          "A `satisfies` or `references` target at an entry address was refused: a per-entry `implemented` is the partial-realization fact by another name, it would put delivery facts below the Spec, and a design key is renamed freely while an anchor bound to one would break on every design edit.",
         ],
       },
     },
@@ -1356,14 +1339,6 @@ export const decisionsSpecs = [
       intent: {
         outcome:
           "Let a code anchor state the architectural role its unit plays, and let a component anchor state its layer and bounded context, so the graph answers architecture questions from the code that realizes the architecture, without a status, a second vocabulary registry, or a second architecture file.",
-        openQuestions: [
-          {
-            key: "roleVocabulary",
-            question:
-              "A role is a free, corpus-owned vocabulary and no validator checks it against a list. Should a corpus be able to declare its role vocabulary in a Spec, with a validator reporting a role outside it, or does the census taxonomy with counts stay the only check? Re-entry trigger: the census taxonomy of one corpus shows the same role under two spellings.",
-            blocking: false,
-          },
-        ],
       },
       decision: {
         context:
@@ -1400,6 +1375,7 @@ export const decisionsSpecs = [
         alternatives: [
           "A separate architecture file declaring components, layers, and contexts was refused: it is a second place for the component to drift from the code that realizes it.",
           "A closed role enum was refused: the corpus owns its architecture vocabulary, and a closed set would be the Protocol's architecture, not the adopter's.",
+          "A corpus-declared role vocabulary checked by a validator was refused: it is an authored registry, and the check is a content-quality check. The token grammar and the census taxonomy with its units are the whole check; a corpus that wants a list lints recipe 28 in its own gate.",
           "Deriving role, layer, or context from file paths or imports was refused: it turns incidental layout into authoritative architecture and misclassifies an inferred observation as an anchored claim.",
           "Adding `implements` was refused again: it would duplicate `satisfies` for contract-kind targets and make code-to-Spec realization ambiguous.",
         ],

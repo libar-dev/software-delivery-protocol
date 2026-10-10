@@ -34,7 +34,7 @@ export const protocolSpecs = [
     sections: {
       intent: {
         outcome:
-          "Every architecturally significant engine unit carries component membership, uses declarations, and a role, every engine component declares its layer and context, and the units that are the design context of a Studio Spec reference it, so structural recipes and the census answer architecture questions about the engine itself.",
+          "Every architecturally significant engine unit carries component membership, uses declarations, and a role, every engine component declares its layer and context, and a unit references the decisions it answers to, so structural recipes and the census answer architecture questions about the engine itself.",
       },
       behavior: {
         rules: [
@@ -44,7 +44,7 @@ export const protocolSpecs = [
           "The accepted set of architecturally significant units is an owner-reviewed declaration recorded in the self-hosting oracle, never derived from imports or exports; the suite census-checks that every accepted unit carries its declared membership and that no unrostered membership edge exists.",
           "Every engine `component:` anchor declares its `layer` and its `context`.",
           "Every architecturally significant engine unit carries a `role`.",
-          "A reader or projection unit that is the design context a Spec Studio Spec rests on references that Spec through `references`, never through `satisfies`, until the unit realizes it.",
+          "An engine unit references the decisions and designs it answers to through `references`, never through `satisfies`; a Spec Studio design that builds on engine code states that by its own `dependsOn` or `refines` to the Spec the code satisfies, never by a reference from the unit.",
         ],
       },
     },

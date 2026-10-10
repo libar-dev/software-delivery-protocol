@@ -200,7 +200,8 @@ namespace selects one of three flavors:
 
 - A code anchor (`impl:`, `api:`, `component:`) binds implementation code. Its `satisfies` is
   optional and plural; each resolving target derives a `satisfies` edge and confers `implemented`
-  on that Spec. Its `references` names the Specs the code is written against and confers nothing.
+  on that Spec. Its `references` names the Specs the code answers to without claiming to realize
+  them, and confers nothing.
 - A test anchor (`test:`) binds a test through a non-empty, plural `verifies`. A resolving test
   anchor is the sole `has-verifier` source, conferring the fact directly on each Spec it verifies
   or, through an enabled example, on the Spec that example verifies.
@@ -264,7 +265,7 @@ Code that may import nothing from the Protocol writes a top-level `/** … */` b
  * @sdpAnchor impl:orders.read-model-rebuild
  * @sdpLabel the online rebuild path
  * @sdpSatisfies spec:orders.rebuild
- * @sdpReferences spec:orders.history-view, spec:orders.read-model
+ * @sdpReferences spec:orders.read-model, spec:decisions.replay-per-stream
  * @sdpComponent component:orders.read-model
  * @sdpUses impl:orders.event-store, impl:orders.projection-gate
  * @sdpRole service
@@ -293,6 +294,9 @@ export async function rebuild(stream: string): Promise<void> {
   statement and the block still binds, conferring what it did; a stale or wrong target that still
   resolves is an authoritative binding until someone edits the block. Review a block with the code
   beneath it.
+- The file is the binding grain of both forms. A block names no declaration, and the graph records
+  no symbol, so keep a file's blocks together and write one identity per realizing site rather than
+  one block above each declaration.
 - `sdp validate --watch` re-runs on carrier edits only, never on source edits. After editing an
   anchor, run `sdp validate` or query the graph again.
 
@@ -301,13 +305,33 @@ representation and mints nothing.
 
 ### Choose targets honestly
 
-`satisfies` claims the code realizes the Spec and confers `implemented`. `references` says the
-code is written against the design and confers nothing: no delivery fact, no readiness floor, no
-drift alarm. A target named in both is an error. A code anchor with neither is identity-only and
-lawful; it mints a code unit for structure and for `byFile`, and confers nothing. Never point
-`satisfies` at an unfinished Spec to manufacture coverage: a unit written against such a Spec, a
-stub included, references it. Code never satisfies a decision Spec directly, and it may reference
-one. The law is `spec:decisions.anchor-binding-grain`.
+`satisfies` claims the code realizes the whole Spec and confers `implemented`. `references` says
+the code answers to the design without claiming to realize it: the unit follows the design or
+realizes part of it, so a change to the design asks the code to follow. It confers nothing: no
+delivery fact, no readiness floor, no drift alarm. A target named in both is an error. A code
+anchor with neither is identity-only and lawful; it mints a code unit for structure and for
+`byFile`, and confers nothing.
+
+A reference runs one way, from the code to the design it answers to. When a new design builds on
+code that already exists, the design says so with `dependsOn` or `refines` to the Spec that code
+satisfies. The existing code gets no reference to the new design.
+
+Targets name whole Specs; an entry address is never a target. To choose between `satisfies` and
+`references` for one Spec, list the Design entries no satisfying unit realizes:
+
+- None: keep `satisfies`.
+- A coherent part with its own trigger or step: split it into a child Spec that refines the
+  parent, and keep `satisfies` on the parent.
+- Anything else: write `references` until the code realizes what the Spec promises.
+
+Never write a whole-Spec `satisfies` over a promised entry no unit builds. Apply the same pass to
+a component and its members together.
+
+Write a reference for the design relationship it names. A reference added to make a test pass,
+move a count, or give `byFile` an answer does not belong; remove it. Never point `satisfies` at
+an unfinished Spec to manufacture coverage: a unit that answers to such a Spec, a stub included,
+references it. Code never satisfies a decision Spec directly; a unit may reference the decisions it
+follows. The law is `spec:decisions.anchor-binding-grain`.
 
 ### Declare architecture where it is realized
 
@@ -334,8 +358,9 @@ one. The law is `spec:decisions.anchor-binding-grain`.
 A malformed or non-static structural field, an unknown `layer`, or `layer` or `context` on a
 non-component anchor refuses the whole anchor. Every structural field is optional, and none
 confers intent, a delivery fact, or a readiness effect. A component that no code realizes yet is a
-Spec, never an invented anchor. A package may hold several layers or contexts, so map packages to
-components by review rather than one component per package. Run roles, layers and contexts
+Spec, never an invented anchor. A component either satisfies its seam's design Spec or binds no
+Spec its members satisfy; it never references one. A package may hold several layers or contexts,
+so map packages to components by review rather than one component per package. Run roles, layers and contexts
 (recipe 28) to see the values in use before you add one. The law is
 `spec:decisions.architectural-annotation`.
 

@@ -21,7 +21,6 @@ import { renderIndexPage, renderPackPage, renderSpecPage } from "./design-review
  * @sdpLabel pure generated projection page contract
  * @sdpSatisfies spec:consumers.projections-model
  * @sdpComponent component:protocol.projections
- * @sdpReferences spec:consumers.spec-studio
  * @sdpRole contract
  */
 export interface DesignReviewPage {
@@ -44,7 +43,6 @@ export interface DesignReviewPage {
  * @sdpLabel renders the contextual Design Review projection
  * @sdpSatisfies spec:consumers.design-review
  * @sdpComponent component:protocol.projections
- * @sdpReferences spec:decisions.studio-html-surface
  * @sdpRole projection
  */
 

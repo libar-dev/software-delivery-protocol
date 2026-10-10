@@ -330,7 +330,7 @@ export const modelSpecs = [
           "identity-only anchor":
             "A code anchor with no `satisfies` and no `references`; it mints a CodeNode for structure and for `byFile`, derives no realization edge, and confers nothing.",
           references:
-            "The anchored CodeNode-to-Spec edge derived from `references?: readonly SpecId[]` on a code anchor: this code is written against that design. It confers no delivery fact, moves no readiness floor, and the drift alarm ignores it; a target also named in `satisfies` is an error. The reader reports the referencing units on the Spec's context, and blast radius traverses the edge as a binding.",
+            "The anchored CodeNode-to-Spec edge derived from `references?: readonly SpecId[]` on a code anchor: this code answers to that design without claiming to realize it. The unit follows the design or realizes part of it, so a change to the design asks the code to follow. The direction is one way: a design that builds on existing code states that on its own side, by a `dependsOn` or `refines` relation to the Spec the code satisfies, never by a reference from the code. It confers no delivery fact, moves no readiness floor, and the drift alarm ignores it; a target also named in `satisfies` is an error. The reader reports the referencing units on the Spec's context, and blast radius traverses the edge as a binding.",
           role: "An optional free string on a code anchor naming the architectural pattern the unit plays; a corpus-owned vocabulary whose taxonomy the census renders with counts, checked against no list.",
           layer:
             "An optional attribute of a `component:` anchor, one of `edge`, `application`, `domain`, `adapter`, or `infrastructure`; a value outside the set, or the attribute on a non-component anchor, is an envelope error.",
@@ -339,7 +339,7 @@ export const modelSpecs = [
           "declared component":
             "The `component:` anchor is the component's declaration; there is no separate architecture file, because the anchor sits where the component is realized.",
           "component realization convention":
-            "A `component:` anchor that satisfies a Spec satisfies its seam's most-specific design Spec; that `satisfies` edge is the component's own realization claim. Structural edges confer nothing under the architectural-annotation ruling (MD-38), which supersedes structural anchors confer nothing (MD-30) without changing this.",
+            "A `component:` anchor that satisfies a Spec satisfies its seam's most-specific design Spec; that `satisfies` edge is the component's own realization claim. As guidance, checked by no validator: a component either satisfies its seam's design Spec or binds no Spec its members satisfy, and it never references one. Structural edges confer nothing under the architectural-annotation ruling (MD-38), which supersedes structural anchors confer nothing (MD-30) without changing this.",
           "structural anchor validity":
             "A `memberOf` source is an `impl:` or `api:` CodeNode and its target is a `component:` CodeNode; every structural target exists, every edge is unique, each source has at most one component, and structural self-reference is refused. A malformed or non-static structural field, an unknown `layer`, or `layer` or `context` on a non-component anchor refuses the whole anchor at reification; a graph-validly reified edge that later fails referential or structural validation remains visible with its anchor and independent `satisfies` binding. Multi-node `uses` cycles remain data and produce no finding.",
           "structural non-conferral":
@@ -449,7 +449,7 @@ export const modelSpecs = [
       model: {
         terms: {
           "architecturally significant unit":
-            "A code unit with exported public surface or cross-component reach that warrants graph-visible structural binding: component membership, uses declarations for its architectural dependencies, a role, and `references` to the designs it is written against.",
+            "A code unit with exported public surface or cross-component reach that warrants graph-visible structural binding: component membership, uses declarations for its architectural dependencies, a role, and `references` to the designs it answers to.",
           "structural attributes":
             "`role` on any code anchor; `layer` and `context` on a `component:` anchor; all three describe what the unit is, never where it stands, and the census renders their taxonomy from the graph.",
           "accepted set":

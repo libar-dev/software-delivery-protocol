@@ -67,11 +67,11 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 | **anchor** | a human-written pointer **in source code**: *"this code location is a **binding** into the graph"* — identity, an optional label, zero or more Spec targets, and optional structure; a binding assertion only, never system-truth content (no behavior, rationale, readiness, status, acceptance criteria, or delivery facts); yields `anchored`-claim edges; written in one of **two representations**, the constant form or the comment form, feeding one closed envelope (`spec:model.anchors`); in prose, the verb **"annotate"** means "write an anchor" | "marker" · "annotation" |
 | **constant form** | the anchor as a top-level `const` initialized with a trusted builder call (`codeAnchor` · `specTest` · `specOracle`), reified statically; trust is by Protocol builder import, from the package or its zero-dependency `/anchors` subpath | "anchor constant" (the old name) · "marker constant" |
 | **comment form** | the anchor as a top-level `/** … */` block in a `.ts`/`.tsx` file, above a statement, after the last one, or alone in the file, carrying reserved camelCase, TSDoc-compatible tags (`@sdpAnchor` · `@sdpSatisfies` · `@sdpReferences` · `@sdpRole` · …); `@sdpAnchor <id>` opens it, only the reserved tags are read, prose authors nothing, and no import is required (the comment-form ruling, MD-36) | "JSDoc anchor" · "doc tag" |
-| **references** | the derived, `anchored` CodeNode → `Spec` edge from a code anchor's `references` list: *this code is written against that design*; confers no delivery fact, moves no floor, and the drift alarm ignores it (the binding-grain ruling, MD-37) | "see-also" · "satisfies" (a realization claim) · "dependsOn" (a Spec relation) |
+| **references** | the derived, `anchored` CodeNode → `Spec` edge from a code anchor's `references` list: *this code answers to that design* without claiming to realize it; the unit follows the design or realizes part of it, so a change to the design asks the code to follow; one direction only, so a design that builds on existing code says so by its own `dependsOn` or `refines` to the Spec the code satisfies, never by a reference from the code; a target names a whole Spec; it confers no delivery fact, moves no floor, and the drift alarm ignores it (the binding-grain ruling, MD-37) | "see-also" · "satisfies" (a realization claim) · "dependsOn" (a Spec relation) |
 | **role** | the optional one-token value on a code anchor, lowercase kebab and never normalized, naming the architectural pattern its unit plays (`service` · `decider` · `projection` · …); a corpus-owned vocabulary whose taxonomy the census renders with counts, checked against no list (the architectural-annotation ruling, MD-38) | "pattern" · "kind" (reserved for the Spec descriptor) · "tag" |
 | **layer** | the optional closed-set attribute of a `component:` anchor — `edge` · `application` · `domain` · `adapter` · `infrastructure`; outside the set, or on a non-component anchor, an envelope error | "tier" |
 | **context** | the optional one-token value on a `component:` anchor, in the token grammar of `role`, naming its bounded context; on a non-component anchor, an envelope error | "bounded_context" (the v0 field) · "domain" |
-| **architecturally significant unit** | a code unit with exported public surface or cross-component reach that warrants graph-visible structural binding — component membership, uses declarations for its architectural dependencies, a role, and references to the designs it rests on; annotated on the anchor of the code that realizes it; the accepted set is an owner-reviewed declaration, never derived from imports (carried by `spec:model.structural-patterns`) | "pattern" (refused by the architectural-annotation ruling, MD-38, which supersedes MD-34) |
+| **architecturally significant unit** | a code unit with exported public surface or cross-component reach that warrants graph-visible structural binding — component membership, uses declarations for its architectural dependencies, a role, and references to the designs it answers to; annotated on the anchor of the code that realizes it; the accepted set is an owner-reviewed declaration, never derived from imports (carried by `spec:model.structural-patterns`) | "pattern" (refused by the architectural-annotation ruling, MD-38, which supersedes MD-34) |
 
 **Two grouping mechanisms, kept distinct:** *refinement* (parent `Spec` → children — authored truth with
 descendants) vs *the aggregate* (the `Pack` — a cross-cutting review collection, no truth of its own).
@@ -175,7 +175,7 @@ a sibling set back as a table — the graph never holds a multi-point example.
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
-| **carrier** | the text format that carries the authored `Spec` document — the envelope, the prose, and the owned notation; **ruled: Markdown (`.sdp.md`) for all eight kinds**, Gherkin (`.sdp.gherkin`) as a lawful per-ID carrier for behavior and example Specs, and the TS DSL as the import source and a lawful per-ID option (one canonical surface per ID, `04` §1); bare `.feature` is non-canonical import-source territory | "format"/"file type" (say which layer) · a carrier is never a second store |
+| **carrier** | the text format that carries the authored `Spec` document — the envelope, the prose, and the owned notation; **ruled: Markdown (`.sdp.md`) for all eight kinds**, Gherkin (`.sdp.gherkin`) as a lawful per-ID carrier for behavior and example Specs, and the TS DSL as the import source and a lawful per-ID option (one canonical surface per ID, `04` §1); bare `.feature` is non-canonical import-source territory | "format"/"file type" (say which level) · a carrier is never a second store |
 | **notation** | the Protocol-**owned** typed step language inside the carrier's fenced blocks — Given/When/Then step text and the slot vocabulary; owned by the Protocol whatever the carrier | "grammar" (the dismissed own-language direction) · "DSL" (reserved for the TS DSL) |
 
 ## Relations  (authored, typed, directed `Spec`→`Spec` edges — → `spec:model.relations`)
@@ -260,8 +260,7 @@ delivery fact, workflow state, or graph state.
   sense) — the last four ratified at the phase-5 PR review (the front-door ruling, MD-22); the
   **Surfaces & projections** rows above give the referents · `constant form` · `comment form` ·
   `references` · `role` · `layer` · `context` — the six of the annotations arc (MD-36 to
-  MD-38; the comment form and architectural annotation state `ready`, the binding grain
-  states `defined` and awaits the owner's `ready`).
+  MD-38; all three rulings state `ready`).
 - **Descriptor values locked:** `kind` ∈ {`behavior`,`workflow`,`example`,`rule`,`constraint`,`model`,
   `decision`,`contract`} · `altitude` ∈ {`epic`,`feature`,`story`} · `readiness` ∈
   {`idea`,`scoped`,`defined`,`ready`}.
@@ -276,7 +275,7 @@ delivery fact, workflow state, or graph state.
 - **Locked usage:** readiness is **"stated/asserted," never "claimed"** ("claim" is reserved for the `claim`
   taxonomy) · the meta-model defines the **contract**, **instances conform**; "govern"/"police" retired ·
   checks are **conformance checks + honesty checks** · **pre-graph** = upstream of graph derivation in the
-  one validation path (the authored layer before the extractor runs) — a layer checks never live in:
+  one validation path (the authored level before the extractor runs) — a level checks never live in:
   validators consume the one graph only, never a second validation path (one validation path, MD-14).
 - **Resolved (MD-15):** Markdown Spec files use the **`.sdp.md`** extension by default; **`.sdp.ts`**
   identifies the lawful TypeScript carrier without colliding with every JS test-runner's default glob.
@@ -296,5 +295,5 @@ delivery fact, workflow state, or graph state.
 - **Naming (resolved — the protocol naming, MD-5):** product **Libar Software Delivery Protocol** (short form "the Protocol");
   CLI **`sdp`**; npm **`@libar-dev/software-delivery-protocol`** (single package); repo
   `libar-dev/software-delivery-protocol`; namespaces `@libar-dev/` (OSS) vs `@libar-ai/` (commercial).
-  "Protocol" names the meta-layer (a conformance contract, not a workflow); "process" is retained only for
+  "Protocol" names the meta-level (a conformance contract, not a workflow); "process" is retained only for
   the modeled activity.

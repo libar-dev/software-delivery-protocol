@@ -60,8 +60,8 @@ export type AuthoredEdgeType = (typeof authoredEdgeTypes)[number];
  *  `memberOf` and `uses` are anchored CodeNode → CodeNode structure. They deliberately stay out
  *  of delivery facts and the reader's binding traversal, whose destination is always a Spec.
  *  `references` is the anchored CodeNode → Primitive edge of the binding grain
- *  (`spec:decisions.anchor-binding-grain`): this code is written against that design. It confers
- *  no delivery fact, moves no floor, and the drift alarm ignores it. */
+ *  (`spec:decisions.anchor-binding-grain`): this code answers to that design without claiming to
+ *  realize it. It confers no delivery fact, moves no floor, and the drift alarm ignores it. */
 export const derivedEdgeTypes = [
   "belongsTo",
   "satisfies",
@@ -74,6 +74,16 @@ export type DerivedEdgeType = (typeof derivedEdgeTypes)[number];
 
 export const graphEdgeTypes = [...authoredEdgeTypes, ...derivedEdgeTypes] as const;
 export type GraphEdgeType = (typeof graphEdgeTypes)[number];
+
+const graphEdgeTypesAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.graph-edge-types"),
+  label: "declares the closed list of graph edge types",
+  satisfies: ref("spec:extraction.derive-graph"),
+  component: componentAnchorId("component:protocol.graph"),
+  references: [ref("spec:decisions.anchor-binding-grain")],
+  role: "contract",
+});
+void graphEdgeTypesAnchor;
 
 interface GraphNodeBase {
   readonly id: string;

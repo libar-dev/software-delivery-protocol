@@ -16,7 +16,6 @@ export interface MermaidPage {
  * @sdpLabel renders bounded Spec one-hop and Pack membership diagrams
  * @sdpSatisfies spec:consumers.mermaid-view
  * @sdpComponent component:protocol.projections
- * @sdpReferences spec:consumers.spec-studio.components
  * @sdpRole projection
  */
 

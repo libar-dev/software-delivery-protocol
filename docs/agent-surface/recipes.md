@@ -1780,9 +1780,9 @@ never refuses: a cycle is data about the authored dependencies, and the readines
 
 ## 27. References into a design
 
-*When you need this: you are reviewing a Pack and want to see, for each member, which code is
-written against it, which code realizes it, and whether a verifier is bound, with no fact read as
-another.*
+*When you need this: you are reviewing a Pack and want to see, for each member, which code
+answers to it, which code realizes it, whether a verifier is bound, and which built Specs it
+builds on, with no fact read as another.*
 
 The opening `const id` is the parameter. Replace it with the Pack you are reviewing; an unknown
 Pack returns `{ id, found: false }`.
@@ -1795,14 +1795,25 @@ if (pack === undefined) {
   return { id, found: false };
 }
 
+const unitsOf = (bindings) => bindings.map((unit) => ({ id: unit.codeId, file: unit.file ?? null }));
 const rows = pack.members.map((member) => {
   const context = g.specContext(member.id);
+  const buildsOn = (context?.relationsOut ?? [])
+    .filter((relation) => relation.type === "dependsOn" || relation.type === "refines")
+    .map((relation) => ({ relation, target: g.specContext(relation.otherId) }))
+    .filter(({ target }) => (target?.deliveryFacts ?? []).includes("implemented"))
+    .map(({ relation, target }) => ({
+      id: relation.otherId,
+      via: relation.type,
+      implementedBy: unitsOf(target.implementations),
+    }));
   return {
     id: member.id,
     resolved: context !== undefined,
-    referencedBy: (context?.references ?? []).map((unit) => ({ id: unit.codeId, file: unit.file ?? null })),
+    referencedBy: unitsOf(context?.references ?? []),
     implementedBy: (context?.implementations ?? []).map((unit) => unit.codeId),
     hasVerifier: (context?.deliveryFacts ?? []).includes("has-verifier"),
+    buildsOn,
   };
 });
 const count = (test) => rows.filter(test).length;
@@ -1815,6 +1826,7 @@ return {
     withReferences: count((row) => row.referencedBy.length > 0),
     withImplementations: count((row) => row.implementedBy.length > 0),
     withVerifier: count((row) => row.hasVerifier),
+    withBuildsOn: count((row) => row.buildsOn.length > 0),
     unbound: count(
       (row) => row.referencedBy.length === 0 && row.implementedBy.length === 0 && !row.hasVerifier,
     ),
@@ -1823,16 +1835,25 @@ return {
 };
 ```
 
-Each row puts three independent facts side by side. `referencedBy` lists the code units whose
-anchors name the member in `references`, with the file each sits in: that code is written against
-the design, and the edge confers nothing. `implementedBy` lists the units whose `satisfies`
-resolves to the member, the edge behind `implemented`. `hasVerifier` is the derived `has-verifier`
-fact: a resolving verifier binding exists, not that it passed. An empty list or `false` reads as
-unbound. The graph records no binding there, which says nothing about whether the code is built.
-The three facts form no ladder: a member can be referenced and verified while nothing satisfies
-it, so never read `referencedBy` as progress toward `implemented`. Rows keep the manifest's member
-order, `resolved: false` marks a member the graph does not hold, and `totals.unbound` counts the
-members with none of the three. The law is `spec:decisions.anchor-binding-grain`.
+Each row puts four independent facts side by side. `referencedBy` lists the code units whose
+anchors name the member in `references`, with the file each sits in: that code answers to the
+design without claiming to realize it, and the edge confers nothing. `implementedBy` lists the
+units whose `satisfies` resolves to the member, the edge behind `implemented`. `hasVerifier` is
+the derived `has-verifier` fact: a resolving verifier binding exists, not that it passed.
+`buildsOn` lists the Specs the member `dependsOn` or `refines` that carry `implemented`, each with
+the relation it comes through and the units that realize it, with their files. It is derived from
+the member's own relations and the targets' bindings: a design that builds on existing code says
+so on its own side, so the dependency has one home, and the column confers nothing on the member.
+
+An empty `referencedBy` or `implementedBy`, or a `false`, reads as unbound. The graph records no
+binding there, which says nothing about whether the code is built. An empty `buildsOn` says only
+that the member names no implemented Spec through `dependsOn` or `refines`. The four facts form no
+ladder: a member can be referenced and verified while nothing satisfies it, and a member that
+builds on implemented code is not itself implemented, so never read `referencedBy` or `buildsOn`
+as progress toward `implemented`. Rows keep the manifest's member order and each `buildsOn` list
+keeps relation then id order. `resolved: false` marks a member the graph does not hold, and
+`totals.unbound` counts the members with none of the first three facts. The law is
+`spec:decisions.anchor-binding-grain`.
 
 ## 28. Roles, layers and contexts
 

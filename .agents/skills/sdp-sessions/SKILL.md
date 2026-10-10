@@ -64,13 +64,15 @@ Use the build backlog (recipe 1) to orient the available ready work and the targ
 (recipe 3) to read guarantees, relations, implementation bindings, and verifiers. Inspect the
 planning slice (recipe 19) to see refinement neighbors, bound components, and entry points before
 writing code. When the work lives in a declared seam, use component membership (recipe 12) and uses
-fan-in/fan-out (recipe 13) to see the units and neighbors before binding. When the code rests on
-a Pack's design, use references into a design (recipe 27) to see which units already reference or
-realize each member, and roles, layers and contexts (recipe 28) to reuse a role, layer, or context
-value before coining one. Bind code, test, and oracle anchors in either form, with `satisfies`,
+fan-in/fan-out (recipe 13) to see the units and neighbors before binding. When the code answers
+to a Pack's design, use references into a design (recipe 27) to see which units already reference
+or realize each member and which implemented Specs each member builds on, and roles, layers and
+contexts (recipe 28) to reuse a role, layer, or context value before coining one. Bind code, test, and oracle anchors in either form, with `satisfies`,
 `references`, `role`, and the structural `component` and `uses` fields, and executable examples
 through `sdp-authoring`, which owns the registrar-first executable transition; an `implemented`
-fact names a binding, not a passing or live system, and a `references` edge confers nothing.
+fact names a binding, not a passing or live system, and a `references` edge confers nothing. A
+reference runs one way, from code to the design it answers to; when a new design builds on
+existing code, the design's own `dependsOn` or `refines` says so, never a reference from the code.
 
 ### Review
 

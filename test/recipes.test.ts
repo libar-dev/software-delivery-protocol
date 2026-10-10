@@ -3529,24 +3529,47 @@ relations: {}
 
 const studioPackId = "pack:spec-studio-v1";
 
+/** Plain code-unit order, the order the reader sorts relations and units in. */
+function codeUnitOrder(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
 /** One recipe 27 row, computed from the raw graph rather than through the reader. */
 function referenceRowFromGraph(extraction: ExtractionResult, memberId: string) {
   const nodes = new Map(extraction.graph.nodes.map((node) => [node.id, node] as const));
   const member = nodes.get(memberId);
-  const unitsBy = (type: "references" | "satisfies") =>
+  const unitsBy = (type: "references" | "satisfies", specId: string) =>
     extraction.graph.edges
-      .filter((edge) => edge.type === type && edge.to === memberId)
+      .filter((edge) => edge.type === type && edge.to === specId)
       .filter((edge) => nodes.get(edge.from)?.nodeType === "CodeNode")
       .map((edge) => edge.from)
       .sort();
+  const located = (ids: readonly string[]) =>
+    ids.map((id) => ({ id, file: nodes.get(id)?.file ?? null }));
+  const factsOf = (id: string) => {
+    const node = nodes.get(id);
+    return node?.nodeType === "Primitive" ? (node.deliveryFacts ?? []) : [];
+  };
+  // Builds on: the member's own declared `dependsOn` and `refines` edges whose target carries
+  // `implemented`, in relation then id order, each with the units that realize the target.
+  const buildsOn = extraction.graph.edges
+    .filter((edge) => edge.from === memberId && edge.claim === "declared")
+    .filter((edge) => edge.type === "dependsOn" || edge.type === "refines")
+    .filter((edge) => factsOf(edge.to).includes("implemented"))
+    .sort((left, right) => codeUnitOrder(left.type, right.type) || codeUnitOrder(left.to, right.to))
+    .map((edge) => ({
+      id: edge.to,
+      via: edge.type,
+      implementedBy: located(unitsBy("satisfies", edge.to)),
+    }));
 
   return {
     id: memberId,
     resolved: member?.nodeType === "Primitive",
-    referencedBy: unitsBy("references").map((id) => ({ id, file: nodes.get(id)?.file ?? null })),
-    implementedBy: unitsBy("satisfies"),
-    hasVerifier:
-      member?.nodeType === "Primitive" && (member.deliveryFacts ?? []).includes("has-verifier"),
+    referencedBy: located(unitsBy("references", memberId)),
+    implementedBy: unitsBy("satisfies", memberId),
+    hasVerifier: factsOf(memberId).includes("has-verifier"),
+    buildsOn,
   };
 }
 
@@ -3624,7 +3647,7 @@ function referenceProbe(): {
 }
 
 describe("design references and the architecture taxonomy", () => {
-  it("returns one row per Studio member with three independent facts", async () => {
+  it("returns one row per Studio member with four independent facts", async () => {
     const recipe = recipeByOrdinal(27);
     const result = asRecord(await runRecipe(recipe));
     const pack = derived.graph.nodes.find((node) => node.id === studioPackId);
@@ -3643,6 +3666,7 @@ describe("design references and the architecture taxonomy", () => {
       withReferences: count((row) => listed(row, "referencedBy")),
       withImplementations: count((row) => listed(row, "implementedBy")),
       withVerifier: count((row) => row.hasVerifier === true),
+      withBuildsOn: count((row) => listed(row, "buildsOn")),
       unbound: count(
         (row) =>
           !listed(row, "referencedBy") && !listed(row, "implementedBy") && row.hasVerifier !== true,
@@ -3681,7 +3705,112 @@ describe("design references and the architecture taxonomy", () => {
       referencedBy: [],
       implementedBy: [],
       hasVerifier: false,
+      buildsOn: [],
     });
+  });
+
+  it("lists the reader beside each Studio member that depends on it, with its realizing units", async () => {
+    const rows = asArray(asRecord(await runRecipe(recipeByOrdinal(27))).rows).map(asRecord);
+    const readerId = "spec:consumers.reader";
+    const readerUnits = derived.graph.edges
+      .filter((edge) => edge.type === "satisfies" && edge.to === readerId)
+      .map((edge) => edge.from)
+      .sort()
+      .map((id) => ({
+        id,
+        file: derived.graph.nodes.find((node) => node.id === id)?.file ?? null,
+      }));
+    const dependents = derived.graph.edges
+      .filter((edge) => edge.type === "dependsOn" && edge.to === readerId)
+      .map((edge) => edge.from)
+      .filter((id) => rows.some((row) => row.id === id))
+      .sort();
+
+    // The design that builds on the reader says so on its own side; the reader's code names
+    // none of its consumers' designs.
+    expect(reader.specContext(readerId)?.deliveryFacts).toContain("implemented");
+    expect(readerUnits.map((unit) => unit.file)).toContain("src/reader/reader.ts");
+    expect(dependents).toEqual(["spec:consumers.spec-studio", "spec:consumers.spec-studio.data"]);
+    for (const id of dependents) {
+      expect(asArray(rows.find((row) => row.id === id)?.buildsOn), id).toContainEqual({
+        id: readerId,
+        via: "dependsOn",
+        implementedBy: readerUnits,
+      });
+    }
+    expect(
+      derived.graph.edges.filter(
+        (edge) => edge.type === "references" && dependents.includes(edge.to),
+      ),
+    ).toEqual([]);
+    // A target with no `implemented` fact stays out of the column: the Studio depends on the
+    // edit model, which no unit realizes.
+    expect(reader.specContext("spec:consumers.edit-model")?.deliveryFacts).not.toContain(
+      "implemented",
+    );
+    const studio = asArray(rows.find((row) => row.id === "spec:consumers.spec-studio")?.buildsOn);
+    expect(studio.map((entry) => asRecord(entry).id)).not.toContain("spec:consumers.edit-model");
+  });
+
+  it("derives builds-on from the member's relations without conferring a fact on it", async () => {
+    const pack = derived.graph.nodes.find((node) => node.id === studioPackId);
+    if (pack?.nodeType !== "Pack") throw new Error(`the corpus must hold ${studioPackId}`);
+    const [member] = pack.members;
+    if (member === undefined) throw new Error(`${studioPackId} must hold a member`);
+    const primitives = derived.graph.nodes.filter((node) => node.nodeType === "Primitive");
+    const related = new Set(
+      derived.graph.edges.filter((edge) => edge.from === member).map((edge) => edge.to),
+    );
+    const built = primitives.find(
+      (node) =>
+        node.id !== member &&
+        !related.has(node.id) &&
+        (node.deliveryFacts ?? []).includes("implemented"),
+    );
+    const unbuilt = primitives.find(
+      (node) =>
+        node.id !== member &&
+        !related.has(node.id) &&
+        !(node.deliveryFacts ?? []).includes("implemented"),
+    );
+    if (built === undefined || unbuilt === undefined) {
+      throw new Error("the corpus must hold an implemented and an unimplemented Spec");
+    }
+    const extraction: ExtractionResult = {
+      counts: derived.counts,
+      report: derived.report,
+      graph: {
+        schemaVersion: derived.graph.schemaVersion,
+        nodes: derived.graph.nodes,
+        edges: [
+          ...derived.graph.edges,
+          { from: member, type: "dependsOn", to: built.id, claim: "declared" },
+          { from: member, type: "refines", to: unbuilt.id, claim: "declared" },
+        ],
+      },
+    };
+    const rowFor = async (probe: ExtractionResult) =>
+      asArray(asRecord(await runRecipe(recipeByOrdinal(27), undefined, probe)).rows)
+        .map(asRecord)
+        .find((row) => row.id === member);
+    const before = await rowFor(derived);
+    const after = await rowFor(extraction);
+
+    expect(after).toEqual(referenceRowFromGraph(extraction, member));
+    expect(asArray(after?.buildsOn)).toContainEqual({
+      id: built.id,
+      via: "dependsOn",
+      implementedBy: referenceRowFromGraph(extraction, built.id).implementedBy.map((id) => ({
+        id,
+        file: derived.graph.nodes.find((node) => node.id === id)?.file ?? null,
+      })),
+    });
+    expect(asArray(after?.buildsOn).map((entry) => asRecord(entry).id)).not.toContain(unbuilt.id);
+    expect(after?.implementedBy).toEqual(before?.implementedBy);
+    expect(after?.hasVerifier).toBe(before?.hasVerifier);
+    expect(createReader(extraction.graph).specContext(member)?.deliveryFacts).toEqual(
+      reader.specContext(member)?.deliveryFacts,
+    );
   });
 
   it("returns the role, layer, and context taxonomy from the code units alone", async () => {

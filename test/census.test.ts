@@ -477,6 +477,9 @@ export const anchor = codeAnchor({
       expect(page).toContain("| `service` | `impl:platform.rebuild` | 1 |");
       expect(page).toContain("### References");
       expect(page).toContain(
+        "A `references` edge says the unit answers to that design without claiming to realize it; it confers no delivery fact.",
+      );
+      expect(page).toContain(
         "| `impl:platform.gate` | `spec:decisions.history-posture`, `spec:platform.rebuild` | 2 |",
       );
       expect(page).toContain("| `impl:platform.rebuild` | `spec:decisions.history-posture` | 1 |");

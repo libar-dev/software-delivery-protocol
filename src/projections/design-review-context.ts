@@ -20,7 +20,6 @@ import {
  * @sdpLabel renders stated readiness beside the structural floor and dishonest divergence
  * @sdpSatisfies spec:consumers.derived-readiness-banner
  * @sdpComponent component:protocol.projections
- * @sdpReferences spec:consumers.spec-studio.spec-page
  * @sdpRole renderer
  */
 
@@ -98,7 +97,6 @@ function renderCodeUnitRow(binding: CodeUnitBinding, page: string): string {
  * @sdpLabel renders implementation, verifier, oracle, and observation binding language
  * @sdpSatisfies spec:consumers.binding-language-views
  * @sdpComponent component:protocol.projections
- * @sdpReferences spec:consumers.spec-studio.spec-page, spec:consumers.spec-studio.verification-panels
  * @sdpRole renderer
  */
 export function renderBindings(context: SpecContext, page: string): readonly string[] {
@@ -127,7 +125,7 @@ export function renderBindings(context: SpecContext, page: string): readonly str
       "",
       "### Referenced by",
       "",
-      "Code written against this design. A reference confers no implementation binding.",
+      "Code that answers to this design without claiming to realize it. A reference confers no implementation binding.",
       "",
     );
 
@@ -212,7 +210,6 @@ export function renderRelationsAndImpact(context: SpecContext, page: string): re
  * @sdpLabel renders structured finding locations in the Design Review table
  * @sdpSatisfies spec:validation.diagnostic-rendering
  * @sdpComponent component:protocol.projections
- * @sdpReferences spec:consumers.spec-studio.components
  * @sdpRole renderer
  */
 
