@@ -72,7 +72,7 @@ async function asyncBodyShape(): Promise<void> {
  * syntax — so the runner never has to resolve a module on the operator's behalf and no staleness
  * switch exists to forget. `return` is the output contract.
  */
-function compileBody(source: string): CompiledBody {
+export function compileBody(source: string): CompiledBody {
   const { constructor: AsyncBody } = Object.getPrototypeOf(asyncBodyShape) as {
     readonly constructor: AsyncBodyConstructor;
   };

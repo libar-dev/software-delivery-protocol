@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import { compileBody } from "../src/cli/q-command.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import {
   createReader,
@@ -13,9 +14,10 @@ import {
   schemaVersion,
   validateGraph,
 } from "../src/index.js";
-import type { ExtractionResult, GraphEdge, GraphNode } from "../src/index.js";
+import type { ExtractionResult, GraphEdge, GraphNode, GraphSchema } from "../src/index.js";
 import { expectedComponentIds, expectedUsesEdges } from "./self-hosting-oracle/structural-edges.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
+import { countMapSets } from "./helpers/map-sets.js";
 
 // The recipe corpus is executable documentation: every fenced `js` body in the catalog must run
 // verbatim through the real front door, or the catalog is lying about what an agent can paste.
@@ -3922,5 +3924,41 @@ describe("design references and the architecture taxonomy", () => {
       units: ["component:probe.studio-seam"],
     });
     expect(asArray(valueRow("layers", "domain")?.units)).toContain("component:probe.studio-seam");
+  });
+
+  // The sink compiles a body this way and calls it with the same three bindings; calling the
+  // compiled body directly keeps the count to the body alone.
+  it("creates each taxonomy bucket once, however many units share the value", async () => {
+    const ids = Array.from(
+      { length: 20_000 },
+      (_unit, index) => `component:probe.unit-${String(index).padStart(5, "0")}`,
+    );
+    const graph: GraphSchema = {
+      schemaVersion,
+      // Reverse insertion: each row lists its units in id order, never the graph's.
+      nodes: [...ids].reverse().map(
+        (id): GraphNode => ({
+          id,
+          nodeType: "CodeNode",
+          claim: "anchored",
+          file: "src/probe.ts",
+          role: "service",
+          context: "probe",
+        }),
+      ),
+      edges: [],
+    };
+    const body = compileBody(recipeByOrdinal(28).body);
+    const reader = createReader(graph);
+    const report = validateGraph(graph);
+    const { value, sets } = countMapSets(() => body(reader, graph, report));
+    const result = asRecord(await value);
+
+    // Two buckets, `service` and `probe`, two Map sets. Replacing the bucket on every insertion
+    // would set once per unit and attribute, 40,000 here.
+    expect(sets).toBe(2);
+    expect(result.roles).toEqual([{ value: "service", units: ids }]);
+    expect(result.contexts).toEqual([{ value: "probe", units: ids }]);
+    expect(result.layers).toEqual([]);
   });
 });

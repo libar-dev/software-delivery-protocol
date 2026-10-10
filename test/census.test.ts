@@ -34,6 +34,7 @@ import { runSdpCli } from "../src/cli/sdp.js";
 import type { CensusPage, Finding, GraphSchema, Reader, SpecSummary } from "../src/index.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
+import { countMapSets } from "./helpers/map-sets.js";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const exampleRoot = join(repoRoot, "examples", "checkout-v1");
@@ -568,6 +569,36 @@ export const anchor = codeAnchor({
         "### References",
       ].join("\n"),
     );
+  });
+
+  it("creates each attribute bucket once, however many units share the value", () => {
+    const ids = Array.from(
+      { length: 20_000 },
+      (_unit, index) => `component:probe.unit-${String(index).padStart(5, "0")}`,
+    );
+    const graphWithRoles = (roleOf: (index: number) => string): GraphSchema => ({
+      schemaVersion,
+      nodes: ids.map((id, index) => ({
+        id,
+        nodeType: "CodeNode" as const,
+        claim: "anchored" as const,
+        file: "src/probe.ts",
+        role: roleOf(index),
+        context: "probe",
+      })),
+      edges: [],
+    });
+    const setsToRender = (graph: GraphSchema): number =>
+      countMapSets(() => renderCensus(readerStub({ graph }))).sets;
+
+    // Grouping that creates each bucket once pays one Map set for one shared role and one per
+    // role for 20,000 distinct roles; every other set the census pays is the same for both
+    // graphs. Grouping that replaced the bucket on every insertion would pay one set per unit
+    // either way, and the difference would be 0.
+    const shared = setsToRender(graphWithRoles(() => "service"));
+    const distinct = setsToRender(graphWithRoles((index) => `role-${String(index)}`));
+
+    expect(distinct - shared).toBe(ids.length - 1);
   });
 
   it("keeps the explicit empty state while still counting units apart from edges", () => {

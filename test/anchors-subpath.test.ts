@@ -4,20 +4,58 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 const builtSubpath = resolve(repositoryRoot, "dist/anchors.js");
 
 /**
- * Every runtime import form: a side-effect `import "x"`, `import ... from "x"`,
- * `export ... from "x"`, `export * from "x"`, `import("x")`, and `require("x")`. A declaration is
- * read from a statement start (file start, line start, or after `;`), so a quoted word is never
- * taken for one; its specifier is the first string after `from`, or the string straight after
- * `import` when the form has no `from`.
+ * Every runtime import form, read from the syntax tree rather than the text: a side-effect
+ * `import "x"`, `import ... from "x"`, `export ... from "x"`, `export * from "x"`, `import("x")`
+ * with or without import attributes, and `require("x")`, in source order. A type-only import or
+ * export is erased by the build and is no runtime dependency. A call spelled inside a string, a
+ * template, or a comment is text, not a call, so it is never read as one.
  */
-const SPECIFIER_PATTERN =
-  /(?:^|[\n;])\s*(?:import|export)\b\s*(?:[^;"']*?\bfrom\s*)?["']([^"']+)["']|\bimport\(\s*["']([^"']+)["']\s*\)|\brequire\(\s*["']([^"']+)["']\s*\)/gu;
+function moduleSpecifiers(file: string, text: string): readonly string[] {
+  const specifiers: string[] = [];
+  const visit = (node: ts.Node): void => {
+    if (ts.isImportDeclaration(node)) {
+      if (
+        node.importClause?.phaseModifier !== ts.SyntaxKind.TypeKeyword &&
+        ts.isStringLiteralLike(node.moduleSpecifier)
+      ) {
+        specifiers.push(node.moduleSpecifier.text);
+      }
+    } else if (ts.isExportDeclaration(node)) {
+      if (
+        !node.isTypeOnly &&
+        node.moduleSpecifier !== undefined &&
+        ts.isStringLiteralLike(node.moduleSpecifier)
+      ) {
+        specifiers.push(node.moduleSpecifier.text);
+      }
+    } else if (ts.isCallExpression(node)) {
+      const callee = node.expression;
+      const [argument] = node.arguments;
+
+      if (
+        argument !== undefined &&
+        ts.isStringLiteralLike(argument) &&
+        (callee.kind === ts.SyntaxKind.ImportKeyword ||
+          (ts.isIdentifier(callee) && callee.text === "require"))
+      ) {
+        specifiers.push(argument.text);
+      }
+    }
+
+    ts.forEachChild(node, visit);
+  };
+
+  visit(ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true));
+
+  return specifiers;
+}
 
 /** A relative specifier stays inside the package; every other specifier is a dependency. */
 function isRelative(specifier: string): boolean {
@@ -36,15 +74,8 @@ function importClosure(entry: string): readonly string[] {
     }
 
     visited.add(file);
-    const text = readFileSync(file, "utf8");
 
-    for (const match of text.matchAll(SPECIFIER_PATTERN)) {
-      const specifier = match[1] ?? match[2] ?? match[3];
-
-      if (specifier === undefined) {
-        continue;
-      }
-
+    for (const specifier of moduleSpecifiers(file, readFileSync(file, "utf8"))) {
       specifiers.push(specifier);
 
       if (isRelative(specifier)) {
@@ -149,6 +180,45 @@ describe("the import scanner behind the subpath check", () => {
         "core-js/stable",
         "node:crypto",
       ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  // Given: the forms a token scan misses (a space before the parenthesis, a comment between the
+  // keyword and the specifier, import attributes) beside text that spells a call without making
+  // one (a string, a template, a comment, `import.meta`). When: the closure is scanned. Then: the
+  // four calls are listed in source order, nothing else is, and the predicate rejects each.
+  it("reads a spaced, commented, or attributed form, and never a call spelled in a string", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-anchors-forms-"));
+
+    try {
+      writeFileSync(
+        join(root, "entry.js"),
+        [
+          'export const spaced = () => import ("spaced-dynamic");',
+          'const required = require ("spaced-require");',
+          'import/* between the keyword and the specifier */"commented-side-effect";',
+          'export const attributed = () => import("attributed-json", { with: { type: "json" } });',
+          "export const quoted = 'require(\"quoted-text\")';",
+          'export const templated = `import("templated-text")`;',
+          '// import "commented-out";',
+          "export const here = import.meta.url;",
+          "export const entry = required;",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+
+      const closure = importClosure(join(root, "entry.js"));
+
+      expect(closure).toEqual([
+        "spaced-dynamic",
+        "spaced-require",
+        "commented-side-effect",
+        "attributed-json",
+      ]);
+      expect(closure.filter((specifier) => !isRelative(specifier))).toEqual(closure);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
