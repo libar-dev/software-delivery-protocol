@@ -8,6 +8,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
 import {
+  createReader,
   deriveGraph,
   extract,
   extractFindingIds,
@@ -2052,5 +2053,148 @@ ${questions}
       { question: "First?", key: "aggregateReach" },
       { question: "Second?" },
     ]);
+  });
+
+  // A key that is not static drops alone, like a static key off the grammar: the blocking sibling
+  // survives, so readiness never derives past the question. The Markdown carrier parses a key from
+  // the marker regex, so a non-static key exists only in the TypeScript carrier.
+  describe("a non-static key drops alone and the blocking sibling holds readiness", () => {
+    const subjectId = "spec:orders.question-keys";
+
+    // The subject clears every `ready` clause but the blocking question: a resolving `refines`
+    // target at `defined`, its rule statement, and no anchors.
+    function readinessCarrier(questions: string, blockingSibling = true): string {
+      const sibling = blockingSibling
+        ? `      { question: "Does the owner widen the aggregate?", blocking: true, key: "aggregateReach" },\n`
+        : "";
+
+      return `import { ref, refines, spec, specId } from "@libar-dev/software-delivery-protocol";
+const someIdentifier = "aggregateReach";
+export const parent = spec({
+  id: specId("spec:orders.question-parent"),
+  title: "The parent",
+  kind: "rule",
+  altitude: "feature",
+  readiness: "defined",
+  intent: { outcome: "Hold the parent." },
+  behavior: { rules: ["The parent states one rule."] },
+});
+export const carrier = spec({
+  id: specId("${subjectId}"),
+  title: "Keyed questions",
+  kind: "rule",
+  altitude: "story",
+  readiness: "ready",
+  relations: [refines(ref("spec:orders.question-parent"))],
+  intent: {
+    outcome: "Key the questions.",
+    openQuestions: [
+${sibling}${questions}
+    ],
+  },
+  behavior: { rules: ["The subject states one rule."] },
+});`;
+    }
+
+    // The question after the blocking sibling sits at line 23.
+    const questionLine = 23;
+
+    function reifyReadiness(questions: string) {
+      const reified = reifyTypeScriptCarrier(questions, "question-keys.sdp.ts");
+      const derived = createReader(deriveGraph(reified.specs, [], [])).specContext(subjectId);
+
+      return {
+        errors: reified.findings.filter((finding) => finding.severity === "error"),
+        validatorIds: new Set(reified.findings.map((finding) => finding.validatorId)),
+        openQuestions: reified.specs.find((entry) => entry.id === subjectId)?.data.intent,
+        derivedReadiness: derived?.derivedReadiness,
+      };
+    }
+
+    it("derives ready when no question blocks — the control for every case below", () => {
+      const result = reifyReadiness(
+        readinessCarrier(`      { question: "Is the name final?", key: "nameFinal" },`, false),
+      );
+
+      expect(result.errors).toEqual([]);
+      expect(result.derivedReadiness).toBe("ready");
+    });
+
+    it.each([
+      ["null", "key: null"],
+      ["undefined", "key: undefined"],
+      ["a function", 'key: () => "x"'],
+      ["an identifier", "key: someIdentifier"],
+      ["a template with a substitution", "key: `${someIdentifier}`"],
+    ])("strips a key that is %s and keeps the question and its blocking sibling", (_, key) => {
+      const result = reifyReadiness(
+        readinessCarrier(`      { question: "Is the name final?", ${key} },`),
+      );
+
+      expect(result.errors).toEqual([
+        refusal(1, "open question keys must be lower-camel ASCII", questionLine),
+      ]);
+      expect(result.validatorIds.has(extractFindingIds.nonStaticSection)).toBe(false);
+      expect(result.openQuestions).toEqual({
+        outcome: "Key the questions.",
+        openQuestions: [
+          {
+            question: "Does the owner widen the aggregate?",
+            blocking: true,
+            key: "aggregateReach",
+          },
+          { question: "Is the name final?" },
+        ],
+      });
+      expect(result.derivedReadiness).toBe("scoped");
+    });
+
+    it("drops a repeated key alone and keeps the blocking sibling", () => {
+      const result = reifyReadiness(
+        readinessCarrier(`      { question: "Is the name final?", key: "aggregateReach" },`),
+      );
+
+      expect(result.errors).toEqual([
+        refusal(1, "open question keys must be unique", questionLine),
+      ]);
+      expect(result.openQuestions).toMatchObject({
+        openQuestions: [
+          {
+            question: "Does the owner widen the aggregate?",
+            blocking: true,
+            key: "aggregateReach",
+          },
+          { question: "Is the name final?" },
+        ],
+      });
+      expect(result.derivedReadiness).toBe("scoped");
+    });
+
+    it("admits an omitted key beside the blocking sibling", () => {
+      const result = reifyReadiness(readinessCarrier(`      { question: "Is the name final?" },`));
+
+      expect(result.errors).toEqual([]);
+      expect(result.openQuestions).toMatchObject({
+        openQuestions: [
+          {
+            question: "Does the owner widen the aggregate?",
+            blocking: true,
+            key: "aggregateReach",
+          },
+          { question: "Is the name final?" },
+        ],
+      });
+      expect(result.derivedReadiness).toBe("scoped");
+    });
+
+    it("keeps every other property strict: a non-static question still drops the array", () => {
+      const result = reifyReadiness(
+        readinessCarrier(`      { question: someIdentifier, key: "nameFinal" },`),
+      );
+
+      expect(result.errors).toEqual([]);
+      expect(result.validatorIds.has(extractFindingIds.nonStaticSection)).toBe(true);
+      expect(result.openQuestions).toEqual({ outcome: "Key the questions." });
+    });
   });
 });

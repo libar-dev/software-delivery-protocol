@@ -606,10 +606,15 @@ function reifyStaticArray(
   return { ok: true, value: values };
 }
 
+/**
+ * `placeholders` names the properties whose non-static value reifies to the mapped marker instead
+ * of failing the object — today only an open question's `key` (`reifyOpenQuestions`).
+ */
 function reifyStaticObject(
   objectLiteral: ObjectLiteralExpression,
   path: string,
   bindings: ProtocolBindings,
+  placeholders?: ReadonlyMap<string, unknown>,
 ): StaticResult {
   const value: Record<string, unknown> = {};
   const seenNames = new Set<string>();
@@ -649,14 +654,61 @@ function reifyStaticObject(
 
     const result = reifyStaticValue(initializer, `${path}.${name}`, bindings);
 
+    if (result.ok) {
+      setOwn(value, name, result.value);
+      continue;
+    }
+
+    if (placeholders?.has(name)) {
+      setOwn(value, name, placeholders.get(name));
+      continue;
+    }
+
+    return result;
+  }
+
+  return { ok: true, value };
+}
+
+/**
+ * What a non-static open-question `key` reifies to. `checkOpenQuestionKeys` refuses it at the
+ * key's line exactly as it refuses a static key off the grammar, and deletes it, so the marker
+ * never reaches the graph.
+ */
+const NON_STATIC_OPEN_QUESTION_KEY = Symbol("non-static open question key");
+const OPEN_QUESTION_PLACEHOLDERS: ReadonlyMap<string, unknown> = new Map([
+  ["key", NON_STATIC_OPEN_QUESTION_KEY],
+]);
+
+/**
+ * The one array that is not strict about one property: an open question's `key` is the key
+ * check's to refuse, so a non-static key drops alone with that check's error while the question
+ * and its siblings stay (`spec:model.open-question-keys`). Everything else keeps the strict array
+ * rule — a non-static `question`, a spread, or a non-static prose element still fails the whole
+ * `openQuestions` value, as `reifyStaticArray` would.
+ */
+function reifyOpenQuestions(
+  arrayLiteral: ArrayLiteralExpression,
+  path: string,
+  bindings: ProtocolBindings,
+): StaticResult {
+  const values: unknown[] = [];
+
+  for (const [index, element] of arrayLiteral.getElements().entries()) {
+    const elementPath = `${path}[${String(index)}]`;
+    const unwrapped = unwrapTransparent(element);
+    const result = Node.isObjectLiteralExpression(unwrapped)
+      ? reifyStaticObject(unwrapped, elementPath, bindings, OPEN_QUESTION_PLACEHOLDERS)
+      : reifyStaticValue(element, elementPath, bindings);
+
     if (!result.ok) {
       return result;
     }
 
-    setOwn(value, name, result.value);
+    values.push(result.value);
   }
 
-  return { ok: true, value };
+  return { ok: true, value: values };
 }
 
 function containsDescription(value: unknown): boolean {
@@ -742,7 +794,7 @@ const AUTHORING_SHAPE_PATHS = new Set([
  * Section content degrades property-by-property: a non-static property inside a section drops with
  * a warning while its static siblings survive. Lossiness recurses through object nesting only —
  * arrays stay strict (see `reifyStaticArray`), so a failure inside an array drops the owning
- * property wholesale.
+ * property wholesale. The one exception is an open question's `key` (`reifyOpenQuestions`).
  */
 function reifyObjectLossy(
   objectLiteral: ObjectLiteralExpression,
@@ -829,7 +881,10 @@ function reifyObjectLossy(
       continue;
     }
 
-    const result = reifyStaticValue(initializer, propertyPath, bindings);
+    const result =
+      propertyPath === "intent.openQuestions" && Node.isArrayLiteralExpression(inner)
+        ? reifyOpenQuestions(inner, propertyPath, bindings)
+        : reifyStaticValue(initializer, propertyPath, bindings);
 
     if (result.ok) {
       setOwn(value, name, result.value);
@@ -997,7 +1052,8 @@ function openQuestionKeyLine(intentNode: Node, index: number): number {
 /**
  * An open question's key is the Design key grammar and unique among one Spec's open questions.
  * A key that is not a string on the grammar, or repeats an earlier key, drops alone with an error;
- * the question and the Spec stay (`spec:model.open-question-keys`).
+ * the question and the Spec stay (`spec:model.open-question-keys`). A non-static key arrives here
+ * as `NON_STATIC_OPEN_QUESTION_KEY` and is refused as a key off the grammar.
  */
 function checkOpenQuestionKeys(
   intentNode: Node,
