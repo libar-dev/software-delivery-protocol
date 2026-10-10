@@ -16,6 +16,7 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
+> **plan 41 is EXECUTING**. The design-management arc; its intent is authored in `pack:design-management-v1`.
 > **plan 40 is EXECUTED**. The annotations arc: the comment form (MD-36), optional plural
 > bindings and design references (MD-37), and architecture attributes (MD-38), all three
 > `ready`, with their open questions closed by the plan's rulings; the engine, self-binding,
@@ -27,7 +28,8 @@ code behavior into intent.
 > and, like the verified Markdown body grammar, wait for the owner to state `ready`. The
 > entry-address engine is built: the prose-mentions validator and the open-section order carry
 > `implemented` and wait for the same statement, the checked-mentions decision and contract
-> declarations need no engine binding, and one Spec stays held by an owner question. The backlog
+> declarations need no engine binding, and the list rendering an owner question held
+> (`spec:decisions.authored-entry-order`) was ratified and built in round 2. The backlog
 > and readiness are read from the graph (recipes 1, 2, 9, 11).
 > **plan 38 is DRAFTED** — the graph-first planning arc, a thin lineage pointer, not a briefs
 > index: the arc's forward intent is authored as capture-rung Specs
