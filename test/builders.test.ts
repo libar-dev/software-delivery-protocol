@@ -17,6 +17,25 @@ import {
   testAnchorId,
   verifies,
 } from "../src/index.js";
+// The package builders bind this suite's anchors; the builders above are the subject under test,
+// imported from source, which the extractor does not read as authoring.
+import {
+  ref as anchorRef,
+  specTest as anchorSpecTest,
+  testAnchorId as anchorTestAnchorId,
+} from "@libar-dev/software-delivery-protocol";
+
+const relationBuildersTestAnchor = anchorSpecTest({
+  id: anchorTestAnchorId("test:protocol.relation-builders"),
+  label: "relation builder tests verify the six declared, directed Spec relations",
+  verifies: anchorRef("spec:model.relations"),
+});
+const packBuilderTestAnchor = anchorSpecTest({
+  id: anchorTestAnchorId("test:protocol.pack-builder"),
+  label: "Pack builder tests verify the truth-free review aggregate",
+  verifies: anchorRef("spec:model.pack-aggregate"),
+});
+void [relationBuildersTestAnchor, packBuilderTestAnchor];
 
 describe("builders", () => {
   it("builds plain serializable specs with declared relations", () => {
