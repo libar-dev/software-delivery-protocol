@@ -880,31 +880,74 @@ function checkOracleLinkage(graph: GraphSchema, index: GraphIndex): readonly Fin
 
 /* ----- conformance/pack-coherence (`spec:validation.pack-coherence`; F4) ----- */
 
+/**
+ * A Pack's members list and its derived `belongsTo` edges are two readings of one manifest, and
+ * the reader answers from both (`packContext` reads the list; a Spec's `packs` and blast radius
+ * follow the edges), so they must agree: every listed member has one edge into the Pack and every
+ * edge comes from a listed member. Findings keep authored order, one per member. An edge whose
+ * source is absent or no Spec is referential integrity's or the edge contract's finding, never a
+ * second one here; a listed member no edge carries has no other owner, so its kind is named here.
+ */
 function checkPackMembers(pack: PackNode, index: GraphIndex, findings: Finding[]): void {
-  const memberCounts = new Map<string, number>();
+  const edgeCounts = new Map<string, number>();
+  const listCounts = new Map<string, number>();
 
   for (const edge of index.edgesByTo.get(pack.id) ?? []) {
     if (edge.type === "belongsTo") {
-      memberCounts.set(edge.from, (memberCounts.get(edge.from) ?? 0) + 1);
+      edgeCounts.set(edge.from, (edgeCounts.get(edge.from) ?? 0) + 1);
     }
   }
 
-  for (const [memberId, count] of memberCounts) {
-    if (count < 2) {
-      continue;
-    }
+  for (const memberId of pack.members) {
+    listCounts.set(memberId, (listCounts.get(memberId) ?? 0) + 1);
+  }
 
+  const report = (memberId: string, message: string): void => {
     findings.push(
       createFinding({
         validatorId: graphValidatorIds.packCoherence,
         family: "conformance",
         severity: "error",
-        message: `Pack "${pack.id}" lists member "${memberId}" ${String(count)} times — membership is single-sourced on the manifest and duplicates are ambiguous (L2).`,
+        message,
         subjectId: pack.id,
         relatedId: memberId,
         file: pack.file,
       }),
     );
+  };
+
+  for (const [memberId, listed] of listCounts) {
+    const edges = edgeCounts.get(memberId) ?? 0;
+
+    if (edges === 0) {
+      const node = index.nodesById.get(memberId);
+
+      report(
+        memberId,
+        node !== undefined && node.nodeType !== "Primitive"
+          ? `Pack "${pack.id}" lists member "${memberId}", which is a ${node.nodeType} node, not a Spec — Pack members are Specs.`
+          : `Pack "${pack.id}" lists member "${memberId}" with no belongsTo edge into the pack — the manifest and the derived edges must agree, or the reader answers membership differently per query.`,
+      );
+      continue;
+    }
+
+    const count = Math.max(listed, edges);
+
+    if (count >= 2) {
+      report(
+        memberId,
+        `Pack "${pack.id}" lists member "${memberId}" ${String(count)} times — membership is single-sourced on the manifest and duplicates are ambiguous (L2).`,
+      );
+    }
+  }
+
+  for (const sourceId of edgeCounts.keys()) {
+    if (!listCounts.has(sourceId)) {
+      report(
+        sourceId,
+        `Pack "${pack.id}" has a belongsTo edge from "${sourceId}", which its members do not list — the manifest and the derived edges must agree, or the reader answers membership differently per query.`,
+      );
+    }
   }
 }
 
@@ -943,7 +986,7 @@ function checkPackModelRefs(pack: PackNode, index: GraphIndex, findings: Finding
 
 const packCoherenceAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.pack-coherence"),
-  label: "checks Pack membership uniqueness and model-reference kinds",
+  label: "checks Pack membership agreement and uniqueness and model-reference kinds",
   satisfies: ref("spec:validation.pack-coherence"),
   component: componentAnchorId("component:protocol.validate"),
 });

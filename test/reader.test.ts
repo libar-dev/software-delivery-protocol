@@ -747,6 +747,67 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
       ]);
     });
 
+    it("answers membership the same from the list and from the belongsTo edges, and the validator names a graph where they disagree", () => {
+      const probe = (leaf: string) =>
+        spec({
+          id: specId(`spec:probe.${leaf}`),
+          title: `Probe ${leaf}`,
+          kind: "rule",
+          altitude: "story",
+          readiness: "idea",
+          intent: { outcome: `Probe ${leaf}.` },
+        });
+      const packNodeId = "pack:probe.checkout";
+      const graph = deriveFixtureGraph({
+        specs: [probe("a"), probe("b"), probe("c")],
+        packs: [
+          pack({
+            id: packId(packNodeId),
+            title: "Probe aggregate",
+            specs: [specId("spec:probe.a"), specId("spec:probe.b")],
+          }),
+        ],
+      });
+      const membership = (reader: Reader) => ({
+        listed: reader.packContext(packNodeId)?.members.map((member) => member.id),
+        byEdges: reader
+          .specs()
+          .filter((summary) => summary.packs.includes(packNodeId))
+          .map((summary) => summary.id),
+        atRisk: reader
+          .blastRadius(["specs/fixture.pack.sdp.ts"])
+          .atRisk.map((item) => item.id)
+          .sort(),
+        coherence: reader
+          .findings()
+          .filter((finding) => finding.validatorId === graphValidatorIds.packCoherence)
+          .map((finding) => finding.relatedId),
+      });
+
+      expect(membership(createReader(graph))).toEqual({
+        listed: ["spec:probe.a", "spec:probe.b"],
+        byEdges: ["spec:probe.a", "spec:probe.b"],
+        atRisk: ["spec:probe.a", "spec:probe.b"],
+        coherence: [],
+      });
+
+      // A supplied graph whose list names `b` while no edge carries it: the list-reading query
+      // and the edge-reading queries disagree, and the validator names the member.
+      const skewed: GraphSchema = {
+        ...graph,
+        edges: graph.edges.filter(
+          (edge) => !(edge.type === "belongsTo" && edge.from === "spec:probe.b"),
+        ),
+      };
+
+      expect(membership(createReader(skewed))).toEqual({
+        listed: ["spec:probe.a", "spec:probe.b"],
+        byEdges: ["spec:probe.a"],
+        atRisk: ["spec:probe.a"],
+        coherence: ["spec:probe.b"],
+      });
+    });
+
     it("returns undefined for a non-pack id", () => {
       expect(exampleReader().packContext("spec:orders.create-order")).toBeUndefined();
     });

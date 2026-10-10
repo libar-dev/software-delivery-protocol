@@ -771,6 +771,163 @@ describe("graph validators", () => {
   });
 });
 
+describe("conformance/pack-coherence — the members list and the belongsTo edges agree", () => {
+  const packId = "pack:probe.checkout";
+  const specA = "spec:probe.a";
+  const specB = "spec:probe.b";
+  const codeId = "impl:probe.code";
+
+  function probePack(members: readonly string[]): GraphNode {
+    return {
+      id: packId,
+      nodeType: "Pack",
+      claim: "declared",
+      title: "Probe aggregate",
+      members,
+      file: "specs/probe.pack.sdp.ts",
+    };
+  }
+
+  function belongsTo(from: string): GraphEdge {
+    return { from, type: "belongsTo", to: packId, claim: "declared" };
+  }
+
+  function coherenceFindings(graph: GraphSchema): readonly Finding[] {
+    return validateGraph(graph).findings.filter(
+      (finding) => finding.validatorId === graphValidatorIds.packCoherence,
+    );
+  }
+
+  const probeSpecs = [ideaPrimitive(specA, "Probe A."), ideaPrimitive(specB, "Probe B.")];
+
+  it("reports nothing when every listed member has its one edge and every edge is listed", () => {
+    const graph = syntheticGraph(
+      [...probeSpecs, probePack([specA, specB])],
+      [belongsTo(specA), belongsTo(specB)],
+    );
+
+    expect(coherenceFindings(graph)).toEqual([]);
+  });
+
+  it("names a listed member with no belongsTo edge into the pack", () => {
+    const graph = syntheticGraph([...probeSpecs, probePack([specA, specB])], [belongsTo(specA)]);
+
+    expect(coherenceFindings(graph)).toEqual([
+      {
+        validatorId: graphValidatorIds.packCoherence,
+        family: "conformance",
+        severity: "error",
+        message: `Pack "${packId}" lists member "${specB}" with no belongsTo edge into the pack — the manifest and the derived edges must agree, or the reader answers membership differently per query.`,
+        subjectId: packId,
+        relatedId: specB,
+        file: "specs/probe.pack.sdp.ts",
+      },
+    ]);
+  });
+
+  it("names a belongsTo edge whose source the members do not list", () => {
+    const graph = syntheticGraph(
+      [...probeSpecs, probePack([specA])],
+      [belongsTo(specA), belongsTo(specB)],
+    );
+
+    expect(coherenceFindings(graph)).toEqual([
+      {
+        validatorId: graphValidatorIds.packCoherence,
+        family: "conformance",
+        severity: "error",
+        message: `Pack "${packId}" has a belongsTo edge from "${specB}", which its members do not list — the manifest and the derived edges must agree, or the reader answers membership differently per query.`,
+        subjectId: packId,
+        relatedId: specB,
+        file: "specs/probe.pack.sdp.ts",
+      },
+    ]);
+  });
+
+  it("names a listed member that is no Spec when no edge carries it, and defers to the edge contract when one does", () => {
+    const codeNode: GraphNode = {
+      id: codeId,
+      nodeType: "CodeNode",
+      claim: "anchored",
+      file: "src/probe.ts",
+      line: 1,
+    };
+    const unbound = syntheticGraph(
+      [...probeSpecs, codeNode, probePack([specA, codeId])],
+      [belongsTo(specA)],
+    );
+
+    expect(coherenceFindings(unbound)).toEqual([
+      {
+        validatorId: graphValidatorIds.packCoherence,
+        family: "conformance",
+        severity: "error",
+        message: `Pack "${packId}" lists member "${codeId}", which is a CodeNode node, not a Spec — Pack members are Specs.`,
+        subjectId: packId,
+        relatedId: codeId,
+        file: "specs/probe.pack.sdp.ts",
+      },
+    ]);
+
+    // With an edge, the edge contract row already names the wrong-kind source: no second finding.
+    const bound = syntheticGraph(
+      [...probeSpecs, codeNode, probePack([specA, codeId])],
+      [belongsTo(specA), belongsTo(codeId)],
+    );
+    const findings = validateGraph(bound).findings;
+
+    expect(coherenceFindings(bound)).toEqual([]);
+    expect(
+      findings.some(
+        (finding) =>
+          finding.validatorId === graphValidatorIds.claimSeparation &&
+          finding.message.includes(`originates from a CodeNode node`),
+      ),
+    ).toBe(true);
+  });
+
+  it("leaves an absent listed member whose edge dangles to referential integrity", () => {
+    const graph = syntheticGraph(
+      [...probeSpecs, probePack([specA, "spec:probe.absent"])],
+      [belongsTo(specA), belongsTo("spec:probe.absent")],
+    );
+    const findings = validateGraph(graph).findings;
+
+    expect(coherenceFindings(graph)).toEqual([]);
+    expect(
+      findings.filter(
+        (finding) =>
+          finding.validatorId === graphValidatorIds.referentialIntegrity &&
+          finding.subjectId === "spec:probe.absent",
+      ),
+    ).toHaveLength(1);
+  });
+
+  it("keeps the duplicate rule: a repeated member is named once, in authored order, with its count", () => {
+    const repeatedEdges = syntheticGraph(
+      [...probeSpecs, probePack([specB, specA, specB])],
+      [belongsTo(specB), belongsTo(specA), belongsTo(specB)],
+    );
+
+    expect(
+      coherenceFindings(repeatedEdges).map((finding) => [finding.relatedId, finding.message]),
+    ).toEqual([
+      [
+        specB,
+        `Pack "${packId}" lists member "${specB}" 2 times — membership is single-sourced on the manifest and duplicates are ambiguous (L2).`,
+      ],
+    ]);
+
+    // A list that repeats a member its edges carry once is still one repeated member.
+    const repeatedList = syntheticGraph(
+      [...probeSpecs, probePack([specB, specA, specB])],
+      [belongsTo(specB), belongsTo(specA)],
+    );
+
+    expect(coherenceFindings(repeatedList).map((finding) => finding.relatedId)).toEqual([specB]);
+  });
+});
+
 describe("the models edge — the oracle anchor's contract row", () => {
   const modeled = spec({
     id: specId("spec:orders.create-order"),
