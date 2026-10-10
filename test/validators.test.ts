@@ -903,6 +903,48 @@ describe("conformance/pack-coherence — the members list and the belongsTo edge
     ).toHaveLength(1);
   });
 
+  it("leaves an unlisted belongsTo edge from an absent source to referential integrity", () => {
+    const graph = syntheticGraph(
+      [...probeSpecs, probePack([specA])],
+      [belongsTo(specA), belongsTo("spec:probe.absent")],
+    );
+    const findings = validateGraph(graph).findings;
+
+    expect(coherenceFindings(graph)).toEqual([]);
+    expect(
+      findings.filter(
+        (finding) =>
+          finding.validatorId === graphValidatorIds.referentialIntegrity &&
+          finding.subjectId === "spec:probe.absent",
+      ),
+    ).toHaveLength(1);
+  });
+
+  it("leaves an unlisted belongsTo edge from a CodeNode to the edge contract", () => {
+    const codeNode: GraphNode = {
+      id: codeId,
+      nodeType: "CodeNode",
+      claim: "anchored",
+      file: "src/probe.ts",
+      line: 1,
+    };
+    const graph = syntheticGraph(
+      [...probeSpecs, codeNode, probePack([specA])],
+      [belongsTo(specA), belongsTo(codeId)],
+    );
+    const findings = validateGraph(graph).findings;
+
+    expect(coherenceFindings(graph)).toEqual([]);
+    expect(
+      findings.filter(
+        (finding) =>
+          finding.validatorId === graphValidatorIds.claimSeparation &&
+          finding.subjectId === codeId &&
+          finding.message.includes("originates from a CodeNode node"),
+      ),
+    ).toHaveLength(1);
+  });
+
   it("keeps the duplicate rule: a repeated member is named once, in authored order, with its count", () => {
     const repeatedEdges = syntheticGraph(
       [...probeSpecs, probePack([specB, specA, specB])],
