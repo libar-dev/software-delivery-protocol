@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createReader, schemaVersion } from "../src/index.js";
+import { createReader, pack, packId, schemaVersion, spec, specId, verifies } from "../src/index.js";
 import type {
   GraphEdge,
   GraphNode,
@@ -8,6 +8,7 @@ import type {
   PackContext,
   PackMemberSummary,
 } from "../src/index.js";
+import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 import {
   CARRIER,
   PACK_ID,
@@ -202,6 +203,43 @@ describe("the Pack design on the Pack context", () => {
     });
     expect(member("spec:probe.held")).toMatchObject({
       verifiers: { total: 0, enabled: 0 },
+      examples: { total: 0, enabled: 0 },
+    });
+  });
+
+  // A declared `verifies` decodes as `via: "example"` whatever its source's kind; the count
+  // reads the kind, so a behavior Spec that verifies a member is a verifier and no example.
+  it("counts a verifying Spec of another kind as a verifier, never as an example", () => {
+    const behavior = (id: string, extra: Partial<Parameters<typeof spec>[0]> = {}) =>
+      spec({
+        id: specId(id),
+        title: `Probe ${id}`,
+        kind: "behavior",
+        altitude: "story",
+        readiness: "idea",
+        intent: { outcome: `Probe ${id}.` },
+        behavior: { rules: ["The probe states one rule."] },
+        ...extra,
+      });
+    const graph = deriveFixtureGraph({
+      specs: [
+        behavior("spec:probe.target"),
+        behavior("spec:probe.checker", { relations: [verifies(specId("spec:probe.target"))] }),
+      ],
+      packs: [
+        pack({
+          id: packId("pack:probe.kinds"),
+          title: "Probe kinds",
+          specs: [specId("spec:probe.target")],
+        }),
+      ],
+    });
+    const target = createReader(graph)
+      .packContext("pack:probe.kinds")
+      ?.members.find((entry) => entry.id === "spec:probe.target");
+
+    expect(target).toMatchObject({
+      verifiers: { total: 1, enabled: 0 },
       examples: { total: 0, enabled: 0 },
     });
   });

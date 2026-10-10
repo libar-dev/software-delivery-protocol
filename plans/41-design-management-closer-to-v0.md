@@ -242,6 +242,14 @@ A second astra read of the fold confirmed eleven folds and found one gap: the CR
 test itself failed on a CRLF checkout. The suite now reads the catalog LF-normalized, as the build
 step does, and the test passes against a CRLF catalog.
 
+A third adversarial review of the pull request (gpt-6-astra, xhigh, with three subagents) found two
+more, both medium, each folded with a regression test that fails without its fix:
+
+| # | Finding | Fold |
+| --- | --- | --- |
+| 13 | Recipe 23 gave a nested entry the line of a literal top-level key its joined path spells: `shape: { detail }` beside a key `shape.detail` reported the literal key's line. | The walk carries the top-level key, and a Design or UI line is looked up by it alone; a nested entry reads `line: null`. |
+| 14 | The Pack design counted every Spec that declares `verifies` as an example, because the verifier decoding labels each one `via: "example"`; a behavior Spec verifying a member read as one example. | The count reads the source's kind: only an example-kind Spec is an example. The verifier count is unchanged. |
+
 ## Acceptance, as measured at close
 
 Measured on `bd1f1f8` after the fold; re-run the recipes rather than inheriting these.

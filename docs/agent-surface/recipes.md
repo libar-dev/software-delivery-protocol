@@ -1514,42 +1514,45 @@ for (const spec of g.specs()) {
       : null;
   };
   const lines = new Map(context.entryLocations.map((location) => [location.entry, location.line]));
-  const lineOf = (section, entry) => {
+  // A Design or UI line is looked up by the top-level key the walk carries, never by the joined
+  // path: a literal key `a.b` and a nested `a: { b }` join to one path, and only the top-level
+  // entry has a row in the location table.
+  const lineOf = (section, entry, topKey) => {
     const index = /^openQuestions\[(\d+)\](?:\.question)?$/u.exec(entry ?? "")?.[1];
     const located =
       section === "intent" && index !== undefined
         ? `question[${index}]`
-        : section === "design" || section === "ui"
-          ? `${section}.${entry}`
+        : (section === "design" || section === "ui") && topKey !== null
+          ? `${section}.${topKey}`
           : null;
     return lines.get(located) ?? null;
   };
-  const row = (section, entry, matchedIn, text) => ({
+  const row = (section, entry, matchedIn, text, topKey) => ({
     id: spec.id,
     section,
     entry,
     address: addressOf(section, entry),
-    line: lineOf(section, entry),
+    line: lineOf(section, entry, topKey),
     matchedIn,
     text,
   });
-  const visit = (section, entry, key, text) => {
+  const visit = (section, entry, key, text, topKey) => {
     const matchedIn = [
       ...(key !== null && hits(key) ? ["key"] : []),
       ...(hits(text) ? ["text"] : []),
     ];
-    if (matchedIn.length > 0) matches.push(row(section, entry, matchedIn, text));
+    if (matchedIn.length > 0) matches.push(row(section, entry, matchedIn, text, topKey));
   };
-  const walk = (section, value, entry, key) => {
+  const walk = (section, value, entry, key, topKey) => {
     if (typeof value === "string") {
-      visit(section, entry, key, value);
+      visit(section, entry, key, value, topKey);
       return;
     }
     if (key !== null && hits(key)) {
-      matches.push(row(section, entry, ["key"], JSON.stringify(value)));
+      matches.push(row(section, entry, ["key"], JSON.stringify(value), topKey));
     }
     if (Array.isArray(value)) {
-      value.forEach((item, index) => walk(section, item, `${entry ?? ""}[${index}]`, null));
+      value.forEach((item, index) => walk(section, item, `${entry ?? ""}[${index}]`, null, null));
     } else if (typeof value === "object" && value !== null) {
       // A key the author coins is content: any key of the open sections (`design`, `ui`) except
       // `description`, a `model.terms` term, and the key of an open question, which travels with
@@ -1569,14 +1572,17 @@ for (const spec of g.specs()) {
             : section === "intent"
               ? questionKeyOf(path)
               : null,
+          entry === null ? name : null,
         );
       }
     }
   };
 
-  if (typeof context.narrative === "string") visit("narrative", null, null, context.narrative);
+  if (typeof context.narrative === "string") {
+    visit("narrative", null, null, context.narrative, null);
+  }
   for (const [section, content] of Object.entries(context.sections ?? {})) {
-    walk(section, content, null, null);
+    walk(section, content, null, null, null);
   }
 }
 
@@ -1617,7 +1623,9 @@ location table the Spec context carries. The table locates a top-level Design or
 `description` and the text of an open question, at `openQuestions[<n>].question` or, for a question
 written as a plain string, at `openQuestions[<n>]`, so a row for any other entry has `line: null`, as
 does an entry the carrier did not locate; null reads as not located, never as absent
-(`spec:extraction.entry-locations`).
+(`spec:extraction.entry-locations`). The line comes from the top-level key the walk reaches, never
+from the joined path, so a nested `shape: { detail }` reports `line: null` even beside a literal
+top-level key `shape.detail`, whose path it spells.
 Each row names the Spec, the `section`, the `entry` inside it, and the entry's `text`. `entry` is
 the key for a keyed entry (`envelopeSketch`, `terms.claim inheritance`), the field and zero-based
 index for a list entry (`rules[2]`), and `null` for the Spec's narrative, which is reported under

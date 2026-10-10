@@ -5390,6 +5390,107 @@ describe("entry lines in entry search and address resolution", () => {
     expect(rows.some((row) => row.line === null)).toBe(true);
   });
 
+  it("never gives a nested entry the line of a literal top-level key its path spells", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-entry-search-path-collision-"));
+
+    try {
+      writeFileSync(
+        join(root, "subject.sdp.ts"),
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const subject = spec({
+  id: specId("spec:probe.collision"),
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  title: "Collision",
+  intent: { outcome: "Collide." },
+  design: {
+    "shape.detail": "the literal gadget",
+    shape: {
+      detail: "the nested gadget",
+    },
+  },
+});
+`,
+      );
+      const extraction = extract({ root });
+      expect(extraction.report.findings.filter((finding) => finding.severity === "error")).toEqual(
+        [],
+      );
+      const located = extraction.graph.locations?.find(
+        (row) => row.spec === "spec:probe.collision" && row.entry === "design.shape.detail",
+      )?.line;
+      expect(located).toBe(11);
+
+      const result = asRecord(await runRecipe(recipeByOrdinal(23), { term: "gadget" }, extraction));
+      expect(
+        asArray(result.matches)
+          .map(asRecord)
+          .map((row) => [row.entry, row.text, row.line]),
+      ).toEqual([
+        ["shape.detail", "the literal gadget", 11],
+        ["shape.detail", "the nested gadget", null],
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("counts a verifying Spec of another kind as a verifier, never as an example, in the Pack design", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-pack-design-verifier-kind-"));
+    const carrier = (id: string, relations: string) => `---
+id: ${id}
+kind: behavior
+altitude: story
+readiness: idea
+relations: ${relations}
+---
+# Probe ${id}
+
+## Intent
+- outcome: Probe ${id}.
+
+## Behavior
+- rule: The probe states one rule.
+`;
+
+    try {
+      writeFileSync(join(root, "target.sdp.md"), carrier("spec:probe.target", "{}"));
+      writeFileSync(
+        join(root, "checker.sdp.md"),
+        carrier("spec:probe.checker", "\n  verifies: spec:probe.target"),
+      );
+      writeFileSync(
+        join(root, "kinds.pack.sdp.md"),
+        `---
+id: pack:probe.kinds
+specs:
+  - spec:probe.target
+---
+# Probe kinds
+`,
+      );
+      const extraction = extract({ root });
+      expect(extraction.report.findings.filter((finding) => finding.severity === "error")).toEqual(
+        [],
+      );
+
+      const result = asRecord(
+        await runRecipe(recipeByOrdinal(29), { pack: "pack:probe.kinds" }, extraction),
+      );
+      const target = asArray(result.members)
+        .map(asRecord)
+        .find((row) => row.id === "spec:probe.target");
+      expect(target).toMatchObject({
+        verifiers: { total: 1, enabled: 0 },
+        examples: { total: 0, enabled: 0 },
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("gives a string-form open question the line its question[n] row records, as the object form", async () => {
     const root = mkdtempSync(join(tmpdir(), "sdp-entry-search-string-question-"));
 

@@ -233,7 +233,7 @@ export interface PackMemberSummary {
   readonly references?: readonly ReferenceBinding[];
   /** Every decoded verifier, and how many are enabled. */
   readonly verifiers?: EnabledCount;
-  /** The examples that declare `verifies` on the member, and how many are enabled. */
+  /** The example-kind Specs that declare `verifies` on the member, and how many are enabled. */
   readonly examples?: EnabledCount;
 }
 
@@ -993,7 +993,15 @@ export function createReader(graph: GraphSchema): Reader {
         implementations: codeUnitBindingsTo(member.id, "satisfies"),
         references: codeUnitBindingsTo(member.id, "references"),
         verifiers: enabledCount(verifiers),
-        examples: enabledCount(verifiers.filter((verifier) => verifier.via === "example")),
+        // A declared `verifies` decodes as `via: "example"` whatever its source's kind, so the
+        // count reads the source's kind: only an example-kind Spec is an example.
+        examples: enabledCount(
+          verifiers.filter(
+            (verifier) =>
+              verifier.via === "example" &&
+              index.primitivesById.get(verifier.verifierId)?.specKind === "example",
+          ),
+        ),
       };
     });
 
