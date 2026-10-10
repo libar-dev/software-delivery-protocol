@@ -173,8 +173,83 @@ describe("the Design Review's Pack page presents the Pack design", () => {
       ].join("\n"),
     );
     expect(code).toContain(
-      "### [`spec:probe.held`](../spec/probe.held.md) Probe held\n\nNo code unit realizes or references this member.\n",
+      "### [`spec:probe.held`](../spec/probe.held.md) Probe held\n\nNo implementation or design-reference binding is recorded for this member.\n",
     );
+  });
+
+  it("percent-encodes each path segment of a line link and escapes brackets in its label", () => {
+    const carrier = "specs/odd (dir)/a#b].sdp.ts";
+    const source = "src/odd dir/x#y].ts";
+    const probe = packDesignProbeGraph();
+    const page = renderPackPage({
+      ...probe,
+      nodes: probe.nodes.map((node) =>
+        node.id === "spec:probe.held"
+          ? { ...node, file: carrier }
+          : node.id === "impl:probe.waiting"
+            ? { ...node, file: source }
+            : node,
+      ),
+    });
+
+    expect(section(page, "## Open questions")).toContain(
+      "- non-blocking · `spec:probe.held#question.basisOwner` — Who owns the basis? ([specs/odd (dir)/a\\#b\\].sdp.ts:21](../../../specs/odd%20%28dir%29/a%23b%5D.sdp.ts#L21))",
+    );
+    expect(section(page, "## Code")).toContain(
+      "- `impl:probe.waiting` — realizes the waiting rule ([src/odd dir/x\\#y\\].ts:2](../../../src/odd%20dir/x%23y%5D.ts#L2)) · role `service`",
+    );
+  });
+
+  it("keeps a multiline title, question or label inside its heading or list item", () => {
+    const probe = packDesignProbeGraph();
+    const page = renderPackPage({
+      ...probe,
+      nodes: probe.nodes.map((node) => {
+        if (node.id === PACK_ID) {
+          return { ...node, title: "Probe\ndesign" };
+        }
+
+        if (node.id === "impl:probe.waiting") {
+          return { ...node, label: "realizes the\r\nwaiting rule" };
+        }
+
+        if (node.nodeType !== "Primitive" || node.id !== "spec:probe.held") {
+          return node;
+        }
+
+        return {
+          ...node,
+          title: "Probe held\nacross lines",
+          sections: {
+            ...node.sections,
+            intent: {
+              ...node.sections?.intent,
+              openQuestions: [
+                { question: "Who owns\n  the basis?", blocking: false, key: "basisOwner" },
+              ],
+            },
+          },
+        };
+      }),
+    });
+    const lines = page.split("\n");
+
+    expect(lines[0]).toBe("# Probe design");
+    expect(lines).toContain(
+      "### [`spec:probe.held`](../spec/probe.held.md) Probe held across lines",
+    );
+    expect(lines).toContain(
+      "- non-blocking · `spec:probe.held#question.basisOwner` — Who owns the basis? ([specs/fixture.sdp.ts:21](../../../specs/fixture.sdp.ts#L21))",
+    );
+    expect(lines).toContain(
+      "- `impl:probe.waiting` — realizes the waiting rule ([src/fixture.ts:2](../../../src/fixture.ts#L2)) · role `service` · component `component:probe.core` (layer `domain`, context `probe`) `[anchored]`",
+    );
+    expect(lines).toContain(
+      "- [`spec:probe.held`](../spec/probe.held.md) — Probe held across lines (stated `defined`)",
+    );
+    for (const continuation of ["design", "across lines", "the basis?", "waiting rule"]) {
+      expect(lines.filter((line) => line.trimStart().startsWith(continuation))).toEqual([]);
+    }
   });
 
   it("speaks binding language: no delivery-fact name renders as text", () => {
@@ -238,6 +313,9 @@ describe("the Design Review's Pack page presents the Pack design", () => {
     expect(section(page, "## Open questions")).toBe(
       "## Open questions\n\nNo member records an open question.\n",
     );
-    expect(section(page, "## Code")).toContain("No code unit realizes or references this member.");
+    expect(section(page, "## Code")).toContain(
+      "No implementation or design-reference binding is recorded for this member.",
+    );
+    expect(page).not.toContain("No code unit realizes");
   });
 });

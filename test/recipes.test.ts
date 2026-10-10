@@ -5334,7 +5334,7 @@ describe("entry lines in entry search and address resolution", () => {
     const locations = derived.graph.locations ?? [];
     const expectedLine = (row: Record<string, unknown>) => {
       const entry = typeof row.entry === "string" ? row.entry : "";
-      const question = /^openQuestions\[(\d+)\]\.question$/u.exec(entry)?.[1];
+      const question = /^openQuestions\[(\d+)\](?:\.question)?$/u.exec(entry)?.[1];
       const name =
         row.section === "intent" && question !== undefined
           ? `question[${question}]`
@@ -5352,5 +5352,51 @@ describe("entry lines in entry search and address resolution", () => {
     );
     expect(rows.some((row) => typeof row.line === "number")).toBe(true);
     expect(rows.some((row) => row.line === null)).toBe(true);
+  });
+
+  it("gives a string-form open question the line its question[n] row records, as the object form", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-entry-search-string-question-"));
+
+    try {
+      writeFileSync(
+        join(root, "subject.sdp.ts"),
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+
+export const subject = spec({
+  id: specId("spec:probe.questions"),
+  kind: "behavior",
+  altitude: "story",
+  readiness: "idea",
+  title: "Questions",
+  intent: {
+    outcome: "Ask.",
+    openQuestions: [
+      "Which gadget ships first?",
+      { question: "Who owns the gadget?", blocking: false },
+    ],
+  },
+});
+`,
+      );
+      const extraction = extract({ root });
+      expect(extraction.report.findings).toEqual([]);
+      const lineOf = (entry: string) =>
+        extraction.graph.locations?.find(
+          (row) => row.spec === "spec:probe.questions" && row.entry === entry,
+        )?.line;
+      expect([lineOf("question[0]"), lineOf("question[1]")]).toEqual([12, 13]);
+
+      const result = asRecord(await runRecipe(recipeByOrdinal(23), { term: "gadget" }, extraction));
+      expect(
+        asArray(result.matches)
+          .map(asRecord)
+          .map((row) => [row.entry, row.line]),
+      ).toEqual([
+        ["openQuestions[0]", 12],
+        ["openQuestions[1].question", 13],
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });

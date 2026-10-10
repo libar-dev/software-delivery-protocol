@@ -11,6 +11,7 @@ import {
   pagePathOf,
   renderInlineCode,
   renderTableInlineCode,
+  singleLine,
   sourceHref,
   tableCell,
 } from "./design-review-markdown.js";
@@ -28,12 +29,35 @@ import {
 
 /** A relative link from a view page to one line of a repository file. */
 export function lineHref(page: string, file: string, line: number): string {
-  return `${sourceHref(page, file)}#L${String(line)}`;
+  return `${fileHref(page, file)}#L${String(line)}`;
+}
+
+/**
+ * A relative link to a repository file, each path segment percent-encoded, so a space, a `#` or
+ * a bracket in a file name stays inside the destination.
+ */
+function fileHref(page: string, file: string): string {
+  const encoded = file
+    .split("/")
+    .map((segment) => encodeURIComponent(segment).replaceAll("(", "%28").replaceAll(")", "%29"))
+    .join("/");
+
+  return sourceHref(page, encoded);
+}
+
+/** An authored value inside a heading or one list item: escaped, its line breaks collapsed. */
+function inlineText(text: string): string {
+  return escapeRenderedField(singleLine(text));
+}
+
+/** A link label: inline text whose brackets are escaped, so a `]` cannot close the label. */
+function linkLabel(text: string): string {
+  return inlineText(text).replaceAll("[", "\\[").replaceAll("]", "\\]");
 }
 
 /** The linked Spec id, then its title. */
 function specLink(page: string, id: string, title: string | undefined): string {
-  const display = title === undefined ? "" : ` ${escapeRenderedField(title)}`;
+  const display = title === undefined ? "" : ` ${inlineText(title)}`;
 
   return `[\`${id}\`](${pageHref(page, pagePathOf(id))})${display}`;
 }
@@ -85,9 +109,7 @@ export function renderNextRungSection(context: PackContext, page: string): reado
     );
 
     for (const failure of member.statedNextRungFailures ?? []) {
-      lines.push(
-        `- ${renderInlineCode(failure.clauseId)} — ${escapeRenderedField(failure.description)}`,
-      );
+      lines.push(`- ${renderInlineCode(failure.clauseId)} — ${inlineText(failure.description)}`);
 
       for (const target of failure.targets ?? []) {
         lines.push(`  - ${renderTarget(page, target)}`);
@@ -184,8 +206,8 @@ export function renderOpenQuestionsSection(context: PackContext, page: string): 
       const location =
         question.line === undefined || member.file === undefined
           ? ""
-          : ` ([${escapeRenderedField(member.file)}:${String(question.line)}](${lineHref(page, member.file, question.line)}))`;
-      lines.push(`- ${flag}${address} — ${escapeRenderedField(question.question)}${location}`);
+          : ` ([${linkLabel(member.file)}:${String(question.line)}](${lineHref(page, member.file, question.line)}))`;
+      lines.push(`- ${flag}${address} — ${inlineText(question.question)}${location}`);
     }
   }
 
@@ -194,13 +216,13 @@ export function renderOpenQuestionsSection(context: PackContext, page: string): 
 
 /** One unit: id, label, a line link, its role and own structure, and its component's. */
 function renderUnit(binding: CodeUnitBinding, page: string): string {
-  const label = binding.label === undefined ? "" : ` — ${escapeRenderedField(binding.label)}`;
+  const label = binding.label === undefined ? "" : ` — ${inlineText(binding.label)}`;
   const location =
     binding.file === undefined
       ? ""
       : binding.line === undefined
-        ? ` ([${escapeRenderedField(binding.file)}](${sourceHref(page, binding.file)}))`
-        : ` ([${escapeRenderedField(binding.file)}:${String(binding.line)}](${lineHref(page, binding.file, binding.line)}))`;
+        ? ` ([${linkLabel(binding.file)}](${fileHref(page, binding.file)}))`
+        : ` ([${linkLabel(binding.file)}:${String(binding.line)}](${lineHref(page, binding.file, binding.line)}))`;
   const own = (
     [
       ["role", binding.role],
@@ -245,7 +267,7 @@ export function renderCodeSection(context: PackContext, page: string): readonly 
     lines.push("", `### ${specLink(page, member.id, member.title)}`, "");
 
     if (implementations.length === 0 && references.length === 0) {
-      lines.push("No code unit realizes or references this member.");
+      lines.push("No implementation or design-reference binding is recorded for this member.");
       continue;
     }
 

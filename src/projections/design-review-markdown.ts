@@ -30,6 +30,11 @@ export function sourceHref(fromPage: string, file: string): string {
   return `${"../".repeat(directoryOf(fromPage).length + 2)}${file}`;
 }
 
+/** A value on one line: each whitespace run that holds a line break becomes one space. */
+export function singleLine(text: string): string {
+  return text.replaceAll(/\s+/gu, (run) => (/[\r\n]/u.test(run) ? " " : run));
+}
+
 /** One-line table cell: field escaping plus collapsed newlines keeps content inside the table. */
 export function tableCell(text: string): string {
   return escapeRenderedField(text).replaceAll(/\s+/gu, " ").trim();

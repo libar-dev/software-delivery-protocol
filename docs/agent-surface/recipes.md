@@ -1514,7 +1514,7 @@ for (const spec of g.specs()) {
   };
   const lines = new Map(context.entryLocations.map((location) => [location.entry, location.line]));
   const lineOf = (section, entry) => {
-    const index = /^openQuestions\[(\d+)\]\.question$/u.exec(entry ?? "")?.[1];
+    const index = /^openQuestions\[(\d+)\](?:\.question)?$/u.exec(entry ?? "")?.[1];
     const located =
       section === "intent" && index !== undefined
         ? `question[${index}]`
@@ -1613,7 +1613,8 @@ and that key matches as the row's key; the key is not a row of its own. `descrip
 UI, off-grammar keys, other nested paths, and all other sections have `null`.
 Each row also carries `line`, the line in the Spec's carrier where the entry starts, from the
 location table the Spec context carries. The table locates a top-level Design or UI key other than
-`description` and the text of an open question, so a row for any other entry has `line: null`, as
+`description` and the text of an open question, at `openQuestions[<n>].question` or, for a question
+written as a plain string, at `openQuestions[<n>]`, so a row for any other entry has `line: null`, as
 does an entry the carrier did not locate; null reads as not located, never as absent
 (`spec:extraction.entry-locations`).
 Each row names the Spec, the `section`, the `entry` inside it, and the entry's `text`. `entry` is

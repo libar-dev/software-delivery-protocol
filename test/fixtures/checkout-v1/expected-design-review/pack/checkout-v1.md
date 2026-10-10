@@ -79,11 +79,11 @@ The code units that realize each member, and those that answer to its design wit
 
 ### [`spec:orders.order-management`](../spec/orders.order-management.md) Order management
 
-No code unit realizes or references this member.
+No implementation or design-reference binding is recorded for this member.
 
 ### [`spec:orders.order-placement-flow`](../spec/orders.order-placement-flow.md) Order placement flow
 
-No code unit realizes or references this member.
+No implementation or design-reference binding is recorded for this member.
 
 ### [`spec:orders.create-order`](../spec/orders.create-order.md) Customer creates an order
 
@@ -94,15 +94,15 @@ No code unit realizes or references this member.
 
 ### [`spec:orders.create-order.valid-cart`](../spec/orders.create-order.valid-cart.md) Valid cart creates an order
 
-No code unit realizes or references this member.
+No implementation or design-reference binding is recorded for this member.
 
 ### [`spec:orders.create-order.invalid-cart`](../spec/orders.create-order.invalid-cart.md) Invalid cart is rejected
 
-No code unit realizes or references this member.
+No implementation or design-reference binding is recorded for this member.
 
 ### [`spec:orders.create-order.api-contract`](../spec/orders.create-order.api-contract.md) Create-order API contract
 
-No code unit realizes or references this member.
+No implementation or design-reference binding is recorded for this member.
 
 ### [`spec:orders.order-total-rule`](../spec/orders.order-total-rule.md) Order total matches cart math
 
@@ -112,19 +112,19 @@ No code unit realizes or references this member.
 
 ### [`spec:orders.order-inventory-rule`](../spec/orders.order-inventory-rule.md) Order creation requires available inventory
 
-No code unit realizes or references this member.
+No implementation or design-reference binding is recorded for this member.
 
 ### [`spec:orders.order-latency-constraint`](../spec/orders.order-latency-constraint.md) Create-order latency stays within checkout budget
 
-No code unit realizes or references this member.
+No implementation or design-reference binding is recorded for this member.
 
 ### [`spec:orders.order-model`](../spec/orders.order-model.md) Order-management domain vocabulary
 
-No code unit realizes or references this member.
+No implementation or design-reference binding is recorded for this member.
 
 ### [`spec:decisions.order-lifecycle`](../spec/decisions.order-lifecycle.md) Order lifecycle keeps validation before creation
 
-No code unit realizes or references this member.
+No implementation or design-reference binding is recorded for this member.
 
 ## Verifier coverage gaps
 

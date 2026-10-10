@@ -26,6 +26,7 @@ import {
   PAGE_FOOTER,
   pageHref,
   pagePathOf,
+  singleLine,
   sourceHref,
   tableCell,
 } from "./design-review-markdown.js";
@@ -143,7 +144,7 @@ export function renderPackPage(
 ): DesignReviewPage {
   const page = pagePathOf(context.id);
   const lines = [
-    heading(context.title, context.id),
+    heading(context.title === undefined ? undefined : singleLine(context.title), context.id),
     "",
     `\`${context.id}\` · Pack (the grouping / review aggregate — states no truth of its own) · authored in [${escapeRenderedField(context.file)}](${sourceHref(page, context.file)}) \`[declared]\``,
   ];
