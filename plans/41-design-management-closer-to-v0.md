@@ -238,6 +238,10 @@ node or edge. Every finding was folded with a regression test.
 | 11 | The proposal contract sent bare Spec ids to recipe 25, which calls them malformed (astra). | A Spec id resolves through the Spec context, an entry address through recipe 25. |
 | 12 | Two Specs cited recipe 33 for architecture crossings (astra, oracle lane). | Both say recipe 32; a corpus check now holds every Spec's recipe citation to the catalog. |
 
+A second astra read of the fold confirmed eleven folds and found one gap: the CRLF regression
+test itself failed on a CRLF checkout. The suite now reads the catalog LF-normalized, as the build
+step does, and the test passes against a CRLF catalog.
+
 ## Acceptance, as measured at close
 
 Measured on `bd1f1f8` after the fold; re-run the recipes rather than inheriting these.

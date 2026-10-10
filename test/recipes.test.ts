@@ -119,7 +119,8 @@ function parseRecipes(markdown: string): readonly Recipe[] {
   return recipes;
 }
 
-const source = readFileSync(join(repoRoot, recipesPath), "utf8");
+// LF-normalized, as the build step reads the catalog, so a CRLF checkout parses the same bodies.
+const source = readFileSync(join(repoRoot, recipesPath), "utf8").replaceAll("\r\n", "\n");
 const recipes = parseRecipes(source);
 const documentedHeadingCount = source
   .split("\n")
