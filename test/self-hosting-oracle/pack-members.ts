@@ -227,6 +227,33 @@ export const expectedPackMembers = [
   "spec:decisions.studio-web-components",
   "spec:consumers.spec-studio.responsive",
   "spec:consumers.spec-studio.sharing",
+  "spec:decisions.anchor-comment-form",
+  "spec:decisions.anchor-binding-grain",
+  "spec:decisions.architectural-annotation",
+  "spec:decisions.pack-design-page",
+  "spec:consumers.pack-design",
+  "spec:consumers.design-review.pack-design-page",
+  "spec:extraction.entry-locations",
+  "spec:consumers.agent-surface.recipe-parameters",
+  "spec:consumers.agent-surface.design-recipes",
+  "spec:consumers.engine-provenance",
+  "spec:model.design-maturity",
+  "spec:consumers.validate-watch",
+  "spec:consumers.agent-surface.example-space-coverage",
+  "spec:model.planned-architecture",
+  "spec:model.open-question-fields",
+  "spec:model.rule-keys",
+  "spec:model.relation-reasons",
+  "spec:consumers.review-perspectives",
+  "spec:consumers.context-bundle",
+  "spec:consumers.design-diff",
+  "spec:consumers.intent-composition.proposal",
+  "spec:consumers.reference-projection",
+  "spec:consumers.structural-mermaid",
+  "spec:validation.superseded-decision-signal",
+  "spec:validation.architecture-constraints",
+  "spec:validation.corpus-rules",
+  "spec:observation.run-evidence",
 ] as const;
 
 export const expectedStudioPackMembers = [
@@ -243,6 +270,35 @@ export const expectedStudioPackMembers = [
   "spec:consumers.spec-studio.responsive",
   "spec:consumers.spec-studio.sharing",
 ] as const;
+
+// The authored membership of `pack:design-management-v1`, in manifest order.
+export const expectedDesignManagementPackMembers = [
+  "spec:decisions.pack-design-page",
+  "spec:consumers.pack-design",
+  "spec:consumers.design-review.pack-design-page",
+  "spec:extraction.entry-locations",
+  "spec:consumers.agent-surface.recipe-parameters",
+  "spec:consumers.agent-surface.design-recipes",
+  "spec:consumers.agent-surface.example-space-coverage",
+  "spec:consumers.engine-provenance",
+  "spec:consumers.validate-watch",
+  "spec:model.design-maturity",
+  "spec:model.planned-architecture",
+  "spec:model.open-question-fields",
+  "spec:model.rule-keys",
+  "spec:model.relation-reasons",
+  "spec:consumers.review-perspectives",
+  "spec:consumers.context-bundle",
+  "spec:consumers.design-diff",
+  "spec:consumers.intent-composition.proposal",
+  "spec:consumers.reference-projection",
+  "spec:consumers.structural-mermaid",
+  "spec:validation.superseded-decision-signal",
+  "spec:validation.architecture-constraints",
+  "spec:validation.corpus-rules",
+  "spec:observation.run-evidence",
+] as const;
+
 export const expectedPacks = [
   {
     id: "pack:spec-studio-v1",
@@ -254,6 +310,17 @@ export const expectedPacks = [
     file: "specs/consumers/spec-studio.pack.sdp.md",
     members: expectedStudioPackMembers,
     modelRefs: ["spec:consumers.projections-model"],
+  },
+  {
+    id: "pack:design-management-v1",
+    nodeType: "Pack",
+    claim: "declared",
+    title: "Design management",
+    framing:
+      "The arc of plan 41, in the order a reviewer reads it: what lets a person working in the repository design a capability ahead of its code and iterate on it. First the Pack page that shows where a Pack's design stands, and the reader assembly it renders; then the graph's record of where each entry is written, the recipe parameters and files, and the recipes design work reads; then the engine's provenance and the authoring watch loop that had no Spec. The captured Specs that follow hold what the original design (`docs/lineage/v0-design/`) promised and the Protocol has not built, each at the rung its structure clears, with the question that holds it there. They run from the model, through the consumers a design pass reads with, to validation and observation.",
+    file: "specs/design-management.pack.sdp.md",
+    members: expectedDesignManagementPackMembers,
+    modelRefs: ["spec:model.design-maturity"],
   },
   {
     id: "pack:self-hosting-v1",

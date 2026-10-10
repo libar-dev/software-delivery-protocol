@@ -4197,13 +4197,6 @@ const designRecipesTestAnchor = specTest({
   verifies: ref("spec:consumers.agent-surface.design-recipes"),
 });
 void designRecipesTestAnchor;
-const entryLocationRecipesAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.entry-location-recipes"),
-  label:
-    "asserts realization of the entry lines the entry search and address resolution recipes return",
-  satisfies: ref("spec:extraction.entry-locations"),
-});
-void entryLocationRecipesAnchor;
 
 type ProbeSpecKind = Extract<GraphNode, { nodeType: "Primitive" }>["specKind"];
 type ProbeReadiness = Extract<GraphNode, { nodeType: "Primitive" }>["readiness"];
@@ -5217,6 +5210,14 @@ describe("design recipes", () => {
     });
   });
 });
+
+const entryLocationRecipesAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.entry-location-recipes"),
+  label:
+    "asserts realization of the entry lines the entry search and address resolution recipes return",
+  satisfies: ref("spec:extraction.entry-locations"),
+});
+void entryLocationRecipesAnchor;
 
 describe("entry lines in entry search and address resolution", () => {
   it("resolves every keyed corpus entry to its value and the line the location table records", async () => {

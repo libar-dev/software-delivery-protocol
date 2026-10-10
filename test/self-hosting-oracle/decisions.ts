@@ -1041,6 +1041,7 @@ export const decisionsSpecs = [
             question:
               "`mention` and `entry address` are candidate terms, defined in the glossary's flagged list. They move into the ratified tables when this record states `ready`.",
             blocking: false,
+            key: "candidateTerms",
           },
         ],
       },
@@ -1378,6 +1379,40 @@ export const decisionsSpecs = [
           "A corpus-declared role vocabulary checked by a validator was refused: it is an authored registry, and the check is a content-quality check. The token grammar and the census taxonomy with its units are the whole check; a corpus that wants a list lints recipe 28 in its own gate.",
           "Deriving role, layer, or context from file paths or imports was refused: it turns incidental layout into authoritative architecture and misclassifies an inferred observation as an anchored claim.",
           "Adding `implements` was refused again: it would duplicate `satisfies` for contract-kind targets and make code-to-Spec realization ambiguous.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  // The design-management arc (plan 41).
+  {
+    id: "spec:decisions.pack-design-page",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/decisions/pack-design-page.sdp.md",
+    title: "The Design Review's Pack page presents the Pack's design",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let a person working in the repository read where a Pack's design stands, what holds each member below its next rung, what the Pack rests on, and which code answers to it, on the page the Protocol already generates.",
+      },
+      decision: {
+        context:
+          "The Design Review's Pack page lists the members with their readiness and bindings, and the verifier gaps. The first adopter designs whole capabilities ahead of their code as Packs and generates its own page beside the Design Review, 1,201 lines of script that walks the readiness floor one rung above the stated rung, reads what the members rest on outside the Pack, joins the open questions, and re-parses carrier files for the line of each entry. Its design passes read that page first. The shipped projections are frozen, so the Pack page cannot change without a superseding record.",
+        decision:
+          "The Design Review's Pack page renders the Pack design that `spec:consumers.pack-design` assembles: a member table in authored order with each member's stated rung, floor reached, the rung above the stated rung with the clause that holds it there, its design columns and its bindings; a section naming what holds each member below its next rung; the Specs outside the Pack that members rest on and that rest on members; each member's open questions with their entry addresses and source lines; and each member's realizing and referencing code units with their roles and their components' layers and contexts. The verifier gaps and findings stay. The freeze on the four shipped projections stands for everything else, the Spec page and the index included.",
+        rationale: [
+          "The assembly already exists as graph data and reader values, and an adopter that rebuilds it by hand reads the floor a second way, which the next-rung record showed it gets wrong. One assembly in the reader, rendered on the page the Protocol ships, gives a reviewer the design as it stands and leaves the adopter's script nothing to recompute.",
+        ],
+        alternatives: [
+          "Starting the Spec Studio with an HTML Pack page is closer to the original design, but the Studio's package home and its reader are blocking questions, and the Pack design data serves the Studio later unchanged.",
+          "Shipping the assembly as data only keeps every projection frozen and leaves rendering to each adopter, which is the burden this record removes.",
+        ],
+        consequences: [
+          "The Pack page grows from a member table to a design page, and the golden Design Review Pack pages regenerate.",
+          "Line links on the page point into carrier files through the graph's location table, so the page stays a function of the graph alone.",
         ],
       },
     },

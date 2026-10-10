@@ -19,6 +19,7 @@ export const validationSpecs = [
             question:
               "Does any remaining law in the src/validate/readiness-floor.ts file header promote here under comment promotion?",
             blocking: false,
+            key: "headerLawPromotion",
           },
         ],
       },
@@ -329,6 +330,7 @@ export const validationSpecs = [
             question:
               "Does the one-validation-path registry law stated in the src/validate/validators.ts file header promote here or to a story-altitude child under comment promotion?",
             blocking: false,
+            key: "registryLawPromotion",
           },
         ],
       },
@@ -1595,5 +1597,147 @@ export const validationSpecs = [
     },
     deliveryFacts: ["has-verifier"],
     file: "specs/validation/next-rung-floor.typed-dependency-targets.sdp.md",
+  },
+  // The design-management arc (plan 41): captures ahead of code.
+  {
+    id: "spec:validation.superseded-decision-signal",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "scoped",
+    file: "specs/validation/superseded-decision-signal.sdp.md",
+    title: "A Spec shaped by a superseded decision warns",
+    narrative:
+      "The original design checked lifecycle integrity. It flagged a superseded Spec that live Specs still depend on, and a deprecated decision still named by `decidedBy` (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.3.4). The Protocol keeps decision lineage in the graph, as `supersedes` edges between decision Specs and `decidedBy` edges from the Specs they shape, but no check reads the two together. When this arc began, the corpus showed the cost. The Spec Studio's lenses Spec still named a decision the architectural annotation decision had superseded, and its architecture question still read the old ruling after the new one admitted layer and context.\n\nThe corpus also shows why the rule needs a ruling first. Three decisions declare `supersedes` on the projections freeze, and each replaces one part of it. The authored-entry-order decision reopened the rendering of open-section entries, the question-key-rendering decision the rendering of question keys, and the Pack design page decision the Pack page. The freeze stands for everything else, and several consumer Specs are still, correctly, shaped by it. A signal that read every `supersedes` as a whole replacement would warn on each of them.",
+    sections: {
+      intent: {
+        problem:
+          "A Spec can stay shaped by a decision that a later decision replaced, and nothing tells its author that the ruling it rests on has moved.",
+        outcome:
+          "Surface a live Spec that is still shaped by a decision another decision has superseded, as an informative warning.",
+        openQuestions: [
+          {
+            question:
+              "May `supersedes` amend part of a decision, as the authored-entry-order, question-key-rendering and Pack design page decisions do to the projections freeze? If so, how does the graph tell a partial replacement from a whole one: a different relation, a reason on the edge, or `refines` for an amendment and `supersedes` only for a replacement?",
+            blocking: true,
+            key: "partialSupersession",
+          },
+          {
+            question:
+              "Does the signal read only `decidedBy`, or also a `refines` or `dependsOn` that names a superseded decision?",
+            blocking: false,
+            key: "signalReach",
+          },
+          {
+            question:
+              "When a superseding decision is itself superseded, does the warning name the decision at the end of the chain?",
+            blocking: false,
+            key: "supersededChain",
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "A Spec that names a decision through `decidedBy`, where another decision `supersedes` that decision, carries one warning for each such pair, naming the superseded decision and every decision that supersedes it.",
+          "The warning is informative and never fails validation, as the orphan and gap signals never do, and its severity is fixed by the Protocol.",
+          "The `supersedes` edge itself is never warned, and a superseded decision is never warned for being superseded.",
+          "The signal reads the authored edges of the one graph and nothing else; it judges no content and never asks whether the newer ruling fits the Spec.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.architecture-constraints",
+    specKind: "rule",
+    altitude: "feature",
+    readiness: "scoped",
+    file: "specs/validation/architecture-constraints.sdp.md",
+    title: "Declared architecture rules are checked against anchored structure",
+    narrative:
+      "The original design gave architecture a validation tier of its own. Its rules said that only adapter components depend on external systems, that domain code imports no infrastructure and that layers depend in one direction; dependency-cruiser, architecture tests and lint rules ran them, and their findings joined the one report (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.4). Since the architectural annotation decision, the data those rules read is in the graph with no inference: a component anchor states its layer and its context, and `uses` and `memberOf` edges are anchored. The same decision keeps the check out of the Protocol. A negative architecture constraint stays declared intent in a Spec, and a corpus that wants it enforced checks its declared `uses`, `layer` and `context` in its own gate.\n\nThe first adopter needed one such rule as soon as the attributes landed. No component in its `platform` context may have a `uses` edge to a component in another context, with each end resolved to its component through `memberOf` first. It checks the rule in its own script (`libar-platform/design/tools/check.py`, the context rule of `libar-platform/design/PLAN.md` §2.1). Recipe 33, architecture crossings, reports every `uses` edge whose ends sit in different contexts or layers and refuses nothing.",
+    sections: {
+      intent: {
+        problem:
+          "A corpus that states an architecture rule in a Spec cannot have it checked by the Protocol, so each adopter writes the same walk over `uses`, `memberOf`, `layer` and `context` in its own gate.",
+        outcome:
+          "Check a corpus's declared architecture rules, such as a forbidden uses direction or context isolation, against the layers, contexts and uses its anchors state.",
+        openQuestions: [
+          {
+            question:
+              "The architectural annotation decision keeps negative architecture constraints out of the Protocol's validators and sends them to the corpus's own gate. Does a check that reads only declared rules and anchored structure, and infers nothing, earn a decision that supersedes that consequence?",
+            blocking: true,
+            key: "negativeConstraints",
+          },
+          {
+            question:
+              "Where is a rule declared so a check can read it: in a constraint Spec with a machine-readable target, in the Design entries of a component design, or in a corpus rule body?",
+            blocking: true,
+            key: "ruleDeclaration",
+          },
+          {
+            question:
+              "Which rule forms cover the need: a forbidden `uses` from one layer to another, an isolated context, a component that must state a layer? The original's list also held rules on ports and routes, which have no anchors here.",
+            blocking: false,
+            key: "ruleForms",
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "An architecture rule is declared by the corpus as intent and names the `uses` edges it forbids by the layers or contexts of the components at either end.",
+          "A check resolves each end of every anchored `uses` edge to its component, directly or through `memberOf`, and reports each edge a declared rule forbids, naming both units, both components and the rule.",
+          "A check reads declared rules and anchored structure only; it infers no edge from imports, reads no file path and judges no role.",
+          "A component that states no layer or context falls outside a rule that names one, and the check reports it as unclassified rather than as a breach.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.corpus-rules",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "scoped",
+    file: "specs/validation/corpus-rules.sdp.md",
+    title: "Corpus-authored rules run on the one validation path",
+    narrative:
+      "The original design let a team add its own rules beside the built-in validators, each with an id, a severity and the whole graph query API, run in the same pass and reported in the same output (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.5). The Protocol has two check families, conformance and honesty, and every validator belongs to one of them. The architectural annotation decision sends a corpus's own rules to the corpus's own gate.\n\nThe first adopter's gate shows what that costs. Its 363-line check script runs `sdp validate` and parses the summary line, then holds about ten rules of its own: context isolation over declared `uses`, entry addresses written outside the Specs resolved through recipe 25, no `dependsOn` cycle through recipe 26, every open question keyed, a prose mention allowed only with a listed reason, cited laws backed by `constrainedBy`, and the Pack pages current. To read kind, readiness and relations it parses the carriers' frontmatter with regular expressions, the second read model the agent surface warns against (`libar-platform/design/tools/check.py`).",
+    sections: {
+      intent: {
+        problem:
+          "A corpus with rules of its own checks them off the one validation path, reading the carriers a second way and reporting in a form no Protocol surface reads.",
+        outcome:
+          "Let a corpus author its own graph rules and have their findings join the one validation report, so no corpus re-parses its carriers to check itself.",
+        openQuestions: [
+          {
+            question:
+              "The two-check-families law puts every validator in one of two families the Protocol owns. Do corpus rules join the report as a third family the corpus owns, or as findings outside the families, and does either keep the guardrail that checks police conformance and honesty, never content quality or workflow?",
+            blocking: true,
+            key: "checkFamilies",
+          },
+          {
+            question:
+              "A corpus rule is corpus code that `sdp validate` would run, while the agent surface tells an operator never to run a body taken from corpus content. On what terms does validation run corpus code: an explicit flag, a file the operator names, or never by default?",
+            blocking: true,
+            key: "ruleTrust",
+          },
+          {
+            question:
+              "May a corpus rule fail validation, or are its findings always informative and the corpus's own gate decides?",
+            blocking: false,
+            key: "ruleSeverity",
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "A corpus rule is a graph body the corpus authors, given the bindings a recipe body gets, the reader, the raw graph and the report, and returning findings that each carry a rule id, a subject, a message and a severity.",
+          "A corpus rule reads the one derived graph and nothing else, so no rule reads a carrier, a source file or the network.",
+          "Each corpus finding names its rule and its corpus as its source and stands apart from the Protocol's own findings; the Protocol states none of these rules and ships none.",
+          "A corpus rule changes no node, edge or delivery fact; it reports on the graph it is given.",
+        ],
+      },
+    },
+    deliveryFacts: [],
   },
 ] as const;
