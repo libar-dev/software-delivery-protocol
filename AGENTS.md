@@ -91,7 +91,7 @@ Progressive disclosure — start at the top, follow the pointers down.
 | Look here | What you get | Read |
 |---|---|---|
 | `CONTEXT.md` (repo root) | **the vocabulary** — the ratified lean glossary (terms · relations · a worked dialogue · flagged ambiguities); sole source of truth for terminology; the model exposition lives in the Specs under `specs/` and in the surviving concept docs | **first, always** |
-| `.agents/skills/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — three repository-owned skills: `sdp-agent-surface` (reading the graph), `sdp-authoring` (authoring intent), `sdp-sessions` (advisory delivery-session routing), also exposed to Claude through the `.claude/skills` symlink; plus the twenty-eight runnable `sdp q` bodies | **mandatory** — after `CONTEXT.md`, load the matching skill before any corpus question, Spec authoring, or delivery-session routing; see "Query the graph first" |
+| `.agents/skills/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — three repository-owned skills: `sdp-agent-surface` (reading the graph), `sdp-authoring` (authoring intent), `sdp-sessions` (advisory delivery-session routing), also exposed to Claude through the `.claude/skills` symlink; plus the thirty-two runnable `sdp q` bodies | **mandatory** — after `CONTEXT.md`, load the matching skill before any corpus question, Spec authoring, or delivery-session routing; see "Query the graph first" |
 | `specs/` | **the self-hosted corpus** — the Protocol's own Specs in its own carrier (families: `model` · `extraction` · `validation` · `carrier` · `consumers` · `protocol` · `observation` · `decisions`, plus the self-hosting Pack); the primary carrier of intended truth | when design truth is in question — but query it through `sdp q` first, then read the carrying Spec |
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
 | `docs/concept/` (+ README) | **the technical design** — the surviving principle-led docs: vision & MVP boundary, founding principles (P1–P10), authoring & binding, consumers, roadmap; the core model, the one graph, and validation & honesty dissolved into the `model.*`, `extraction.*`, and `validation.*` Spec families — locate any of them with concept search (recipe 6) | to know *how* it is designed |
@@ -120,9 +120,10 @@ load `.agents/skills/sdp-authoring/SKILL.md`. Before routing delivery work, load
 questions.
 
 `sdp q` is the agent front door (MD-22): it derives the graph in process and evaluates a plain
-JavaScript async-function body you supply, with three bindings injected — `g` (the reader),
-`graph` (the raw schema), `report` (the validation report). `return` is the output contract; add
-`--json` for machine-readable output. For any corpus question — what a Spec guarantees, what is
+JavaScript async-function body you supply, with four bindings injected — `g` (the reader),
+`graph` (the raw schema), `report` (the validation report), and `params` (the JSON a caller passes
+with `--params`, `{}` without it). `return` is the output contract; add `--json` for
+machine-readable output. For any corpus question — what a Spec guarantees, what is
 ready but unimplemented, what a change touches, where a concept lives — script the graph instead
 of reading `.sdp.md` files by hand:
 
@@ -139,7 +140,7 @@ The full CLI surface is `sdp build · validate · view · census · mermaid · g
 and stays alive after findings; operator stop exits 0. `--watch` is validate-only and cannot combine
 with `--check-clean`. The four projection publishers remain independent public verbs; repository
 generation/check scripts certify all four roots through the private projection-suite driver. The
-twenty-eight runnable recipe bodies live in `docs/agent-surface/recipes.md` (each executed as written by
+thirty-two runnable recipe bodies live in `docs/agent-surface/recipes.md` (each executed as written by
 `test/recipes.test.ts`), and the repository-owned skills (`sdp-agent-surface` for reading,
 `sdp-authoring` for writing intent, `sdp-sessions` for advisory work-shape routing) are the
 on-ramps. In this checkout, always go through

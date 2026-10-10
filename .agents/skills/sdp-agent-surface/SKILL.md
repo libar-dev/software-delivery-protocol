@@ -14,7 +14,9 @@ evaluation sink. There is no verb wall — you script the graph.
 ## The shape of the graph
 
 The graph is flat: one array of nodes, one array of edges, nothing nested. Hierarchy is edges, so
-every question is a filter or a join, never a tree walk. Four node types exist:
+every question is a filter or a join, never a tree walk. Beside them, `graph.locations` is the
+location table: the source line of every keyed Design and UI entry and every open question. Nodes
+carry no lines, and a location is never an identity or a binding target. Four node types exist:
 
 - `Primitive` — one authored Spec, positioned by `specKind` × `altitude` × `readiness`, carrying
   its title, narrative, reified section content, and the derived `deliveryFacts`. Use case, NFR,
@@ -96,10 +98,10 @@ The public projection publishers are `sdp view`, `sdp census`, `sdp mermaid`, an
 In this source checkout, use `npm run generate:self-hosting` or `npm run check:self-hosting` when
 all four roots must be published or certified together.
 
-The catalog contains twenty-eight ready-made bodies in `docs/agent-surface/recipes.md` in the
+The catalog contains thirty-two ready-made bodies in `docs/agent-surface/recipes.md` in the
 Protocol repository and
 `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an adopter.
-Recipes 1-28 each open under a numbered heading that names the recipe. Every body there runs
+Recipes 1-32 each open under a numbered heading that names the recipe. Every body there runs
 verbatim and a test proves it. Start from a recipe; adapt it in place.
 
 A recipe that takes a subject (a Spec id, a Pack id, changed files, addresses, a term) reads it
@@ -134,9 +136,11 @@ keyed entry of a Spec's Design or UI section, and `spec:<id>#question.<key>` nam
 question whose marker carries that key; it belongs in prose, and `sdp validate` reports an address
 whose Spec or key does not exist as an error. When you hold addresses written outside the
 Specs, in a register, a test, or a page, address resolution (recipe 25) gives one row per
-address: whether it resolves and, when it does not, why. When you hold a key or a term and need
-the entry that carries it, use entry search (recipe 23): it matches whole tokens and names the
-entry, where concept search stops at the section. It also gives the entry's address when the entry is a
+address: whether it resolves and, when it does not, why; a resolving row carries the entry's
+value, file, and line. When you hold a key or a term and need the entry that carries it, use entry
+search (recipe 23): it matches whole tokens and names the entry and its line, where concept search
+stops at the section. Both read lines from the location table, and a null line means not located,
+never absent. Entry search also gives the entry's address when the entry is a
 top-level Design or UI key that starts with a lowercase ASCII letter and goes on in ASCII letters
 and digits, other than `description`, and when the entry is the text of an open question that
 carries a key. Every other entry, a lawful `"01"` key included, gets `address: null`. When a
@@ -146,14 +150,26 @@ the key and the span content as authored. To see where Specs rest on each other 
 through `dependsOn`, run dependency cycles (recipe 26): it lists each such set with one closed
 path through it, and reports without refusing.
 
+For design work, run Pack design (recipe 29): per member, the stated next rung with the clauses
+that hold the member below it, the design columns, open questions with addresses and lines,
+decisions, and the realizing and referencing units with their components, plus the Pack's
+boundary. The Design Review's Pack page renders the same assembly. Before changing a Spec,
+design-change impact (recipe 30) lists every Spec that rests on it, transitively, with the units,
+verifiers, and Packs to follow. The decision register (recipe 31) lists every decision with its
+rung, its supersession both ways, the Specs it shapes, and its keyed questions. Architecture
+crossings (recipe 32) lists the `uses` edges whose components differ in context or layer, tallied
+by direction, and refuses nothing.
+
 Reach for the files only when you need the authored prose itself — the exact words to edit.
 
 ## The entry adapters
 
 `g.specContext(id)` lists the units that realize the Spec under `implementations` and the units
-that answer to it under `references`, each with its file and line. `g.byFile(path)` returns every
-node recorded at a path and the Specs reachable from it. A comment-form anchor is recorded at its
-own site, so a source file with no Protocol import still answers. A node may come back with an
+that answer to it under `references`, each with its file, line, and component, and its rows of the
+location table under `entryLocations`. `g.packContext(id)` carries the Pack design: each member's
+stated next rung, design columns, and bindings, and the Pack's boundary. `g.byFile(path)` returns
+every node recorded at a path and the Specs reachable from it. A comment-form anchor is recorded
+at its own site, so a source file with no Protocol import still answers. A node may come back with an
 empty Spec list: an identity-only anchor, with no `satisfies` and no `references`, is lawful and
 binds no Spec, and the empty list is its honest answer, not a failed lookup.
 `g.blastRadius(files)` follows `satisfies`, `references`, `verifies`, and oracle `models` from the

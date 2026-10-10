@@ -699,8 +699,7 @@ function packBoundary(
 /**
  * @sdpAnchor impl:protocol.reader
  * @sdpLabel thin typed graph reader construction
- * @sdpSatisfies spec:consumers.reader
- * @sdpReferences spec:extraction.entry-locations
+ * @sdpSatisfies spec:consumers.reader, spec:extraction.entry-locations
  * @sdpComponent component:protocol.reader
  * @sdpUses impl:protocol.delivery-facts
  * @sdpRole reader
