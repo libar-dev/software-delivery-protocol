@@ -16,7 +16,12 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
-> **plan 41 is EXECUTING**. The design-management arc; its intent is authored in `pack:design-management-v1`.
+> **plan 41 is EXECUTED**. The design-management arc, intent in `pack:design-management-v1`: the
+> Design Review's Pack page shows a Pack's design (the Pack design page, held for the owner's
+> ratification), the graph records entry lines, recipes take `--params` and ship under
+> `dist/recipes/`, recipes 29 to 32 serve design work, `sdp --version` names the build, and the
+> original design's unbuilt promises are captured as Specs. Its implemented Specs and the drift
+> packet in the plan wait for the owner's `ready`.
 > **plan 40 is EXECUTED**. The annotations arc: the comment form (MD-36), optional plural
 > bindings and design references (MD-37), and architecture attributes (MD-38), all three
 > `ready`, with their open questions closed by the plan's rulings; the engine, self-binding,

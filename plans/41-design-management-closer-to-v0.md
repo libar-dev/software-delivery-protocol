@@ -1,10 +1,13 @@
 # Plan 41. Design management, closer to the original design
 
-> **Status:** 🛠 EXECUTING on `feature/design-management-v0`, from `main` at `822aea4`. This plan
-> is the contract every session and agent on the arc reads. The arc's intent lives in the graph:
-> `pack:design-management-v1` holds the built and captured Specs in reading order, and readiness,
-> backlog and findings are read from the graph (recipes 1, 2, 9, 11, 20), never from this file.
-> If this file and the graph disagree, the graph wins and this file is stale.
+> **Status:** ✅ EXECUTED on `feature/design-management-v0`, from `main` at `822aea4`. The engine,
+> corpus, recipes and skills changed together; the full gate passes. The arc's intent lives in the
+> graph: `pack:design-management-v1` holds the built and captured Specs in reading order, and
+> readiness, backlog and findings are read from the graph (recipes 1, 2, 9, 11, 20), never from
+> this file. What waits for the owner: ratifying `spec:decisions.pack-design-page`, `ready`
+> statements on the arc's implemented Specs and on the drift queue (the packet is the last
+> section), the captures' blocking questions, and the candidate terms. If this file and the graph
+> disagree, the graph wins and this file is stale.
 
 ## Why this arc
 
@@ -183,7 +186,7 @@ realized Spec it builds on:
 Commit per coherent unit after its focused tests pass; the full gate before the close commit.
 Never push without the owner's word.
 
-## Acceptance, re-measured at close
+## Acceptance criteria
 
 - The Design Review page for `pack:spec-studio-v1`, and for the adopter's `pack:history-view`, shows
   each member's stated next rung with its unmet clauses, its design columns, its boundary, its
@@ -194,6 +197,75 @@ Never push without the owner's word.
 - Recipes 29 to 32 run as written in the recipe test.
 - `sdp --version` names the package version and build commit.
 - No v0 claim this arc captures lacks a carrying Spec; `npm run check` passes.
+
+## Lanes, as run
+
+Each lane worked in its own git worktree on its own branch, merged without conflict.
+
+| Lane | Model | What it built |
+| --- | --- | --- |
+| Research | Opus 5.5 (three v0 lanes), gpt-6-astra (v0 03 and 05; self-hosting audit), gpt-6.1-sol (adopter inventory) | The six maps in `.omo/evidence/plan-41/research/`. |
+| E1 entry locations | gpt-6.1-sol | The location table in the Markdown and TypeScript extractors, schema `0.9.0`, parity and goldens on nodes and edges only. The Gherkin carrier carries no open questions, so it records no rows. |
+| E2 Pack design | Opus 5.5 | The Pack context's design columns and boundary, the code unit's component, the Spec context's entry locations, and the Pack page. |
+| E3 CLI | Opus 5.5 | `sdp q --params`, the parameterized recipes, `dist/recipes/`, `sdp --version`, the watch loop's anchor. |
+| C1 captures | Opus 5.5 | Fourteen captured Specs, each with keyed questions and a relation to what it builds on. |
+| C2 repairs | Opus 5.5 | The stale guidance, 17 question keys, Pack membership, the registry rows, four backed mentions, three verifier bindings, candidate terms. |
+| D drift packet | gpt-6.1-sol | The packet in the last section. |
+| I1 recipes | Opus 5.5 | Recipes 29 to 32, lines in recipes 23 and 25, counts and skills. |
+| I2 fallout | gpt-6.1-sol | The schema-version examples and goldens, the gates test, the warning pins. |
+| I3 oracle | Opus 5.5 | The self-hosting oracle, transcribed from carriers and anchors. |
+
+## Review
+
+Two read-only reviews ran on the merged branch at `c1cce4c`: an adversarial review of the whole arc
+(gpt-6-astra, xhigh) and a line read of the engine and tests (gpt-6.1-sol, high). Neither found a
+blocker. Both confirmed the honesty laws hold: the stated next rung is never presented as approval,
+references stay apart from realization, and a line-only edit moves locations without changing a
+node or edge. Every finding was folded with a regression test.
+
+| # | Finding | Fold |
+| --- | --- | --- |
+| 1 | A CRLF catalog wrote no recipe files, then deleted the shipped ones (sol, major). | Lines split on `\r?\n`; an empty catalog is refused before anything is written. |
+| 2 | Stale cleanup deleted another build's temporary files (sol). | Cleanup removes only finished `NN-slug.js` names. |
+| 3 | The Pack boundary was quadratic in members sharing one outside Spec (sol). | An insertion-ordered set per Spec and relation; 40,000 members in about 0.1 s. |
+| 4 | Line links carried raw paths and unescaped brackets (astra, sol). | Each path segment is percent-encoded; labels escape brackets. |
+| 5 | A multiline title or question escaped its heading or list item (sol). | Line breaks collapse to a space in every heading and list item on the page. |
+| 6 | "No code unit realizes or references this member" claimed more than the graph knows (astra). | "No implementation or design-reference binding is recorded for this member." |
+| 7 | Recipe 23 lost the line of a string-form question (astra). | It maps `openQuestions[n]` to `question[n]` as the object form does. |
+| 8 | `--params null` crashed every parameterized recipe (sol). | `--params` takes a JSON object; anything else is refused before the body runs. The recipe-parameters Spec says so. |
+| 9 | The provenance tests did not prove the build publishes the commit it reads (sol). | A test drives the build step with a known hash and reads it back. |
+| 10 | The Pack design anchor misstated its unit and carried the evaluator dependency (sol). | Its label names the helpers and the assembly they serve; the `uses` moved to `impl:protocol.reader`, which calls the evaluator. |
+| 11 | The proposal contract sent bare Spec ids to recipe 25, which calls them malformed (astra). | A Spec id resolves through the Spec context, an entry address through recipe 25. |
+| 12 | Two Specs cited recipe 33 for architecture crossings (astra, oracle lane). | Both say recipe 32; a corpus check now holds every Spec's recipe citation to the catalog. |
+
+## Acceptance, as measured at close
+
+Measured on `bd1f1f8` after the fold; re-run the recipes rather than inheriting these.
+
+- **The gate.** `npm run check` exits 0: 1,527 pooled tests in 77 files and 93 CLI tests pass,
+  preflight included.
+- **The graph.** 252 Specs, 3 Packs, 257 anchors, 512 nodes, 1,224 edges; validate reports 0 errors
+  and 7 warnings, down from 14 (two honest gaps, five prose mentions with recorded reasons). Every
+  Spec belongs to a Pack. All 97 open questions carry a key, 35 of them blocking. The location table
+  holds 155 rows.
+- **The backlog and the alarm.** Recipe 1 is empty. Recipe 2 lists 23: the sixteen in the packet
+  below and the arc's seven implemented Specs, each waiting for the owner's statement.
+- **The Pack page.** `pack:design-management-v1` and `pack:spec-studio-v1` render with each member's
+  stated next rung, design columns, boundary, keyed questions with line links, and code units with
+  role, component, layer and context, from the graph alone.
+- **The first adopter.** This branch's build ran read-only over an export of libar-platform at
+  `d310eb1`; the platform repository was not touched. Its graph is unchanged (243 Specs, 429 nodes,
+  1,499 edges). The `pack:history-view` page renders 19 members, 53 open questions with addresses
+  and lines, and 56 Specs the Pack rests on, the same 56 outside dependencies its hand-built page
+  counts. Recipe 25, run from `dist/recipes/25-address-resolution.js` with `--params @file` over the
+  586 entry addresses written outside its Specs, resolves 576 and gives each its value and line; the
+  10 that do not resolve come from illustrative addresses in its feedback documents. Recipe 32's
+  context pairs show no `uses` edge leaving the `platform` context, the result its own isolation
+  check reports.
+- **The engine's own architecture.** Recipe 32 over this repository: 40 `uses` edges, no context
+  crossing, and layer pairs that run only inward (edge to application and domain, application to
+  domain, adapter to application).
+- `sdp --version` names the build commit, and no projection or graph carries it.
 
 ## Refused, and staying refused
 
