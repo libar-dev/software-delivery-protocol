@@ -266,39 +266,21 @@ describe("sdp cli", () => {
       expect(exitCode).toBe(0);
       const stderr = capture.readStderr();
       for (const [file, specId] of [
-        ["specs/carrier/markdown-authoring.sdp.md", "spec:carrier.markdown-authoring"],
         ["specs/extraction/claim-taxonomy.sdp.md", "spec:extraction.claim-taxonomy"],
-        ["specs/model/pack-aggregate.sdp.md", "spec:model.pack-aggregate"],
-        ["specs/model/relations.sdp.md", "spec:model.relations"],
         ["specs/model/spec-sections.sdp.md", "spec:model.spec-sections"],
       ] as const) {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
       }
       for (const [file, target, specId] of [
         [
-          "specs/carrier/markdown-body-grammar.sdp.md",
-          "spec:validation.authored-honesty",
-          "spec:carrier.markdown-body-grammar",
-        ],
-        [
-          "specs/carrier/markdown-parser.sdp.md",
-          "spec:carrier.inline-code-spans",
-          "spec:carrier.markdown-parser",
-        ],
-        [
-          "specs/consumers/adopter-on-ramp.sdp.md",
-          "spec:carrier.markdown-body-grammar",
-          "spec:consumers.adopter-on-ramp",
-        ],
-        [
-          "specs/consumers/delivery-session-on-ramp.sdp.md",
-          "spec:decisions.planning-truths-placement",
-          "spec:consumers.delivery-session-on-ramp",
-        ],
-        [
           "specs/consumers/delivery-session-on-ramp.sdp.md",
           "spec:decisions.shipped-projections-frozen",
           "spec:consumers.delivery-session-on-ramp",
+        ],
+        [
+          "specs/decisions/architectural-significance-rides-primitives.sdp.md",
+          "spec:model.structural-patterns",
+          "spec:decisions.architectural-significance-rides-primitives",
         ],
         [
           "specs/decisions/carrier-ruling.sdp.md",
@@ -320,8 +302,8 @@ describe("sdp cli", () => {
           `${file} — [warning] conformance/prose-mentions — Mention of "${target}" in "${specId}"`,
         );
       }
-      // re-measured under plan 40
-      expect(capture.readStdout()).toContain("validate: 0 errors · 14 warnings");
+      // re-measured under plan 41
+      expect(capture.readStdout()).toContain("validate: 0 errors · 7 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

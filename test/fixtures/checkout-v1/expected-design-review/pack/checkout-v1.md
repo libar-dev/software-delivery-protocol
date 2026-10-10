@@ -71,7 +71,7 @@ None.
 
 ### [`spec:orders.create-order.api-contract`](../spec/orders.create-order.api-contract.md) Create-order API contract
 
-- **blocking** — Does the response carry the inventory-snapshot version the order was validated against?
+- **blocking** — Does the response carry the inventory-snapshot version the order was validated against? ([specs/orders/create-order-api-contract.sdp.md:17](../../../specs/orders/create-order-api-contract.sdp.md#L17))
 
 ## Code
 

@@ -98,7 +98,7 @@ describe("the Design Review — the one generated read-only view", () => {
       "## Narrative\n\nThe Protocol's own delivery model exercises the same carrier, graph, checks, and projections offered to consumers.\n\n**Readiness:",
     );
     expect(page).toContain("## Intent\n\n- **outcome:");
-    expect(index).toContain("schema `0.8.0`");
+    expect(index).toContain("schema `0.9.0`");
     const row = pack
       .split("\n")
       .find((line) =>
