@@ -1005,12 +1005,20 @@ function checkPackMembers(pack: PackNode, index: GraphIndex, findings: Finding[]
   }
 
   for (const sourceId of edgeCounts.keys()) {
-    if (!listCounts.has(sourceId)) {
-      report(
-        sourceId,
-        `Pack "${pack.id}" has a belongsTo edge from "${sourceId}", which its members do not list — the manifest and the derived edges must agree, or the reader answers membership differently per query.`,
-      );
+    if (listCounts.has(sourceId)) {
+      continue;
     }
+
+    // An unlisted source that is absent or no Spec is already referential integrity's or the
+    // edge contract's finding; naming it here would be the second finding the rule refuses.
+    if (index.nodesById.get(sourceId)?.nodeType !== "Primitive") {
+      continue;
+    }
+
+    report(
+      sourceId,
+      `Pack "${pack.id}" has a belongsTo edge from "${sourceId}", which its members do not list — the manifest and the derived edges must agree, or the reader answers membership differently per query.`,
+    );
   }
 }
 
