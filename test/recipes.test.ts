@@ -6,7 +6,13 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { runSdpCli } from "../src/cli/sdp.js";
-import { createReader, extract, validateGraph } from "../src/index.js";
+import {
+  createReader,
+  extract,
+  extractValidatorId,
+  schemaVersion,
+  validateGraph,
+} from "../src/index.js";
 import type { ExtractionResult, GraphEdge, GraphNode } from "../src/index.js";
 import { expectedComponentIds, expectedUsesEdges } from "./self-hosting-oracle/structural-edges.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
@@ -3069,6 +3075,46 @@ ${dependsOn.map((target) => `    - spec:probe.${target}`).join("\n")}
 - The probe states one rule.
 ${design}`;
 
+/**
+ * A synthetic extraction built in memory: `count` idea-rung rule Specs, each resting on the next
+ * through `dependsOn`, and the last on the first when `closed`. The probe is the recipe's walk over
+ * a graph this size, not the extractor, so the stub carries only what the query sink reads: the
+ * graph, an error-free report, and the counts.
+ */
+function dependencyChain(count: number, closed = false): ExtractionResult {
+  const ids = Array.from(
+    { length: count },
+    (_, position) => `spec:probe.n${String(position).padStart(5, "0")}`,
+  );
+  const nodes: GraphNode[] = ids.map((id) => ({
+    id,
+    nodeType: "Primitive",
+    claim: "declared",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "idea",
+    title: id,
+    file: `specs/${id}.sdp.md`,
+    sections: { intent: { outcome: "Rest on the next probe Spec." } },
+  }));
+  const edges: GraphEdge[] = ids.slice(0, -1).map((from, position) => ({
+    from,
+    type: "dependsOn",
+    to: ids[position + 1] ?? from,
+    claim: "declared",
+  }));
+  const [first] = ids;
+  const last = ids[ids.length - 1];
+  if (closed && first !== undefined && last !== undefined) {
+    edges.push({ from: last, type: "dependsOn", to: first, claim: "declared" });
+  }
+  return {
+    graph: { schemaVersion, nodes, edges },
+    report: { validatorId: extractValidatorId, findings: [] },
+    counts: { specs: count, packs: 0, anchors: 0 },
+  };
+}
+
 /** The design's five-Spec probe: `a`, `b`, `c` rest on each other, `d` on itself, `e` on `a`. */
 function cycleProbe(): ExtractionResult {
   return markdownProbe("sdp-cycle-probe-", {
@@ -3318,6 +3364,26 @@ describe("address resolution and dependency cycles", () => {
       ],
     });
     expectCyclesToMatchOracle(result, extraction);
+  });
+
+  // A chain this long overflows a recursive walk; the recipe's explicit stack must not.
+  it("walks a chain of 10,000 Specs and one cycle of 5,000 without recursing", async () => {
+    const chain = asRecord(
+      await runRecipe(recipeByOrdinal(26), undefined, dependencyChain(10_000)),
+    );
+    expect(chain).toEqual({
+      totals: { sets: 0, selfDependent: 0, specsInCycles: 0 },
+      cycles: [],
+    });
+
+    const ring = dependencyChain(5_000, true);
+    const ids = ring.graph.nodes.map((node) => node.id);
+    const result = asRecord(await runRecipe(recipeByOrdinal(26), undefined, ring));
+    expect(result.totals).toEqual({ sets: 1, selfDependent: 0, specsInCycles: 5_000 });
+    const [only, ...rest] = asArray(result.cycles).map(asRecord);
+    expect(rest).toEqual([]);
+    expect(only?.members).toEqual(ids);
+    expect(only?.cycle).toEqual([...ids, ids[0]]);
   });
 
   it("resolves an inherited property name only where the Spec authors it as a key", async () => {

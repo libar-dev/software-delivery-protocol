@@ -1253,7 +1253,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
     id: "impl:protocol.pack-coherence",
     nodeType: "CodeNode",
-    label: "checks Pack membership uniqueness and model-reference kinds",
+    label: "checks Pack membership agreement and uniqueness and model-reference kinds",
     file: "src/validate/validators.ts",
     constant: "packCoherenceAnchor",
     site: "function checkPackCoherence",
