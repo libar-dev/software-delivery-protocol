@@ -56,7 +56,7 @@ const REFUSAL_STEP =
   "the carrier is refused whole with the finding {findingId} whose message contains {reason} at line {line}" as const;
 const SIBLING_STEP = "the healthy sibling {siblingId} stays in the graph" as const;
 
-// Every sibling binds the same three vocabulary steps, so one contract shape types them all.
+// Every sibling binds the same vocabulary, so one contract shape types them all.
 type RefusalContract = ExampleContract<Step, StepParams>;
 
 const temporaryRoots = new Set<string>();
