@@ -267,6 +267,34 @@ describe("relation attributes", () => {
       expect.objectContaining({ severity: "error", line: 6, relatedId: "spec:probe.parent" }),
     ]);
   });
+  it.each(["refines", "dependsOn", "constrainedBy", "decidedBy", "verifies", "supersedes"])(
+    "reads a target-only %s object as the plain id",
+    (relation) => {
+      const markdown = (target: string) =>
+        reifyMarkdownCarrier(
+          mdSpec("## Intent\n- outcome: Probe.", "behavior", `{${relation}: ${target}}`),
+          "probe.sdp.md",
+        );
+      const plain = markdown("spec:probe.parent");
+      const object = markdown("{target: spec:probe.parent}");
+      expect(plain.findings).toEqual([]);
+      expect(object.findings).toEqual([]);
+      expect(object.specs).toEqual(plain.specs);
+      expect(serializeGraph(graphOf(object))).toBe(serializeGraph(graphOf(plain)));
+      const withoutOptions = reifyTypeScriptCarrier(
+        tsSpec(`relations: [${relation}(ref("spec:probe.parent"))]`),
+        "probe.sdp.ts",
+      );
+      const emptyOptions = reifyTypeScriptCarrier(
+        tsSpec(`relations: [${relation}(ref("spec:probe.parent"), {})]`),
+        "probe.sdp.ts",
+      );
+      expect(withoutOptions.findings).toEqual([]);
+      expect(emptyOptions.findings).toEqual([]);
+      expect(emptyOptions.specs).toEqual(withoutOptions.specs);
+    },
+  );
+
   it("accepts mixed Markdown target forms and TypeScript second arguments", () => {
     const md = reifyMarkdownCarrier(
       mdSpec(
@@ -347,6 +375,21 @@ describe("relation attributes", () => {
       ).findings.some((finding) => finding.message.includes("duplicate target")),
     ).toBe(true);
   });
+  it("refuses a duplicate target shared by plain and target-only forms", () => {
+    const result = reifyMarkdownCarrier(
+      mdSpec(
+        "## Intent\n- outcome: Probe.",
+        "behavior",
+        "{dependsOn: [spec:probe.parent, {target: spec:probe.parent}]}",
+      ),
+      "probe.sdp.md",
+    );
+    expect(result.specs).toEqual([]);
+    expect(result.findings.some((finding) => finding.message.includes("duplicate target"))).toBe(
+      true,
+    );
+  });
+
   it("maps Gherkin exercises to the default or explicit verified target", () => {
     for (const tags of ["@exercises.first", "@verifies.spec:probe.parent @exercises.first"]) {
       const graph = graphOf(

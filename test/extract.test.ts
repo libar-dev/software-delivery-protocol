@@ -1719,6 +1719,8 @@ describe("import-surface and discovery corpora", () => {
     "C:/work/specs",
     "../x",
     "a/../b",
+    "a/./b",
+    "a/.",
     "a//b",
     "a\\b",
   ])("rejects the invalid consumer exclusion %j", (exclude) => {

@@ -1,4 +1,13 @@
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+import type { RunnableExampleAdapters } from "../src/testing/index.js";
 import type { StepBindings } from "../src/runner/index.js";
+
+const runnableModulesTypesAnchor = specTest({
+  id: testAnchorId("test:protocol.runnable-modules-types"),
+  label: "checks registrar skeletons and required authored adapters",
+  verifies: ref("spec:extraction.runnable-modules"),
+});
+void runnableModulesTypesAnchor;
 
 type GeneratedStep = "Given {n}" | "When submit" | "Then total {total}";
 interface GeneratedParams {
@@ -32,3 +41,17 @@ const stale = {
   "When stale submit": () => undefined,
 } satisfies GeneratedBindings;
 void stale;
+
+type GeneratedAdapters = RunnableExampleAdapters<
+  unknown,
+  { readonly n: number },
+  { readonly kind: "total"; readonly total: number }
+>;
+
+// @ts-expect-error a registrar requires an observe adapter supplied by the authored suite
+const missingObserve: GeneratedAdapters = {
+  createWorld: () => ({}),
+  invoke: () => undefined,
+  expected: () => ({ kind: "total", total: 1 }),
+};
+void missingObserve;
