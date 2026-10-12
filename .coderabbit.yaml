@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+# Merge with the organization settings instead of replacing them; this file only narrows scope.
+inheritance: true
+
+reviews:
+  # Records and evidence that carry no reviewable code or intent. Keeping them out holds an arc's
+  # PR under the review file limit; the Specs, engine, tests, skills, and recipes stay in scope.
+  path_filters:
+    # OmO orchestration state: drafts, plans, recovery evidence, agent trial reports
+    - "!.omo/**"
+    # Per-session build records and archived reviews
+    - "!plans/**"
+    - "!reviews/**"
+    # Verbatim historical exhibits and exploration evidence
+    - "!docs/lineage/**"
+    - "!explorations/**"
+    # Test inputs and golden outputs, several malformed on purpose; the shared fixture builders at
+    # the top of test/fixtures stay in scope
+    - "!test/fixtures/*/**"
+    # Hand transcription of the Specs; the self-hosting suite checks it against the derived graph
+    - "!test/self-hosting-oracle/**"
