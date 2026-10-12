@@ -53,7 +53,7 @@ describe("the Design Review's Pack page presents the Pack design", () => {
     expect(page.indexOf("**Vocabulary (`modelRefs`):**")).toBeLessThan(page.indexOf("## Members"));
     expect(lines.filter((line) => line.startsWith("## "))).toEqual([
       "## Members",
-      "## Next rung",
+      "## Stated next rung",
       "## Boundary",
       "## Open questions",
       "## Code",
@@ -81,8 +81,8 @@ describe("the Design Review's Pack page presents the Pack design", () => {
     ]);
   });
 
-  it("lists what holds each member below its next rung, and apart, the members that wait for their author", () => {
-    const nextRung = section(renderPackPage(), "## Next rung");
+  it("lists what holds each member below its stated next rung, and apart, the members that wait for their author", () => {
+    const nextRung = section(renderPackPage(), "## Stated next rung");
     const [held, waiting = ""] = nextRung.split("### Waiting for the author's statement");
 
     expect(held).toContain(
@@ -102,7 +102,9 @@ describe("the Design Review's Pack page presents the Pack design", () => {
       ].join("\n"),
     );
     expect(held).toContain("### [`spec:probe.check`](../spec/probe.check.md) Probe check");
-    expect(waiting).toContain("That is not approval");
+    expect(waiting).toContain(
+      "The floor already holds these members at their stated next rung. That is not approval",
+    );
     expect(waiting.split("\n").filter((line) => line.startsWith("- "))).toEqual([
       "- stated `defined`, next `ready`: [`spec:probe.waiting`](../spec/probe.waiting.md) Probe waiting",
       "- stated `idea`, next `scoped`: [`spec:probe.modest`](../spec/probe.modest.md) Probe modest",
@@ -322,8 +324,10 @@ describe("the Design Review's Pack page presents the Pack design", () => {
     });
     const page = renderPackPage(graph, "pack/probe.alone.md");
 
-    expect(section(page, "## Next rung")).toContain("No member is held below its next rung.");
-    expect(section(page, "## Next rung")).not.toContain("### Waiting");
+    expect(section(page, "## Stated next rung")).toContain(
+      "No member is held below its stated next rung.",
+    );
+    expect(section(page, "## Stated next rung")).not.toContain("### Waiting");
     expect(section(page, "## Boundary")).toBe(
       [
         "## Boundary",

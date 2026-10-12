@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it, vi } from "vitest";
+import { runSdpCli } from "../src/cli/sdp.js";
 
 import {
   codeAnchor,
@@ -15,6 +16,7 @@ import {
   packId,
   refines,
   renderDesignReview,
+  schemaVersion,
   spec,
   specId,
   specTest,
@@ -23,6 +25,7 @@ import {
 import type { DesignReviewPage, GraphSchema } from "../src/index.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
+import { createCaptureOutput } from "./helpers/cli-capture.js";
 
 import {
   ref as projectionRef,
@@ -98,7 +101,68 @@ function assertNarrativeAndIntent(
   expect(page).toContain(`## Intent\n\n${intentDescription}\n\n- **outcome:**`);
 }
 
-describe("the Design Review — the one generated read-only view", () => {
+describe("the generated Design Review", () => {
+  it("labels the index as diagnostic when the real reader reports validation errors", () => {
+    const cleanGraph = extract({ root: exampleRoot }).graph;
+    const diagnosticGraph: GraphSchema = {
+      ...cleanGraph,
+      edges: [
+        ...cleanGraph.edges,
+        {
+          from: "spec:orders.create-order",
+          type: "dependsOn",
+          to: "spec:probe.missing",
+          claim: "declared",
+        },
+      ],
+    };
+    const diagnostic = pageByPath(renderDesignReview(createReader(diagnosticGraph)), "index.md");
+
+    expect(pageByPath(renderDesignReview(createReader(cleanGraph)), "index.md")).not.toContain(
+      "Diagnostic projection",
+    );
+    expect(diagnostic).toContain("Diagnostic projection — validation errors present");
+    expect(diagnostic).toMatch(/1 error and \d+ warnings/u);
+  });
+
+  it("publishes the real diagnostic Design Review and returns nonzero", () => {
+    const root = materializeExtractCorpus("anchored-binding");
+
+    try {
+      const capture = createCaptureOutput();
+      expect(
+        runSdpCli(["view", root], capture.output, {
+          extract: (options) => {
+            const result = extract(options);
+            const source = result.graph.nodes.find((node) => node.nodeType === "Primitive");
+            if (source === undefined) throw new Error("diagnostic probe needs a Spec");
+            return {
+              ...result,
+              graph: {
+                ...result.graph,
+                edges: [
+                  ...result.graph.edges,
+                  {
+                    from: source.id,
+                    type: "dependsOn",
+                    to: "spec:probe.missing",
+                    claim: "declared",
+                  },
+                ],
+              },
+            };
+          },
+        }),
+      ).toBe(1);
+      expect(capture.readStderr()).toContain("spec:probe.missing");
+      expect(readFileSync(join(root, "generated", "design-review", "index.md"), "utf8")).toContain(
+        "Diagnostic projection — validation errors present",
+      );
+    } finally {
+      removeMaterializedCorpus(root);
+    }
+  });
+
   it("renders the self-hosting spec narrative from the graph", () => {
     const page = pageByPath(selfHostingPages, "spec/protocol.self-hosting.md");
     const index = pageByPath(selfHostingPages, "index.md");
@@ -111,7 +175,7 @@ describe("the Design Review — the one generated read-only view", () => {
       "## Narrative\n\nThe Protocol's own delivery model exercises the same carrier, graph, checks, and projections offered to consumers.\n\n**Readiness:",
     );
     expect(page).toContain("## Intent\n\n- **outcome:");
-    expect(index).toContain("schema `0.9.0`");
+    expect(index).toContain(`schema \`${schemaVersion}\``);
     const row = pack
       .split("\n")
       .find((line) =>

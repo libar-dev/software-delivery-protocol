@@ -92,24 +92,21 @@ function boundRefusal(diagramId: string, bound: string, limit: number, observed:
 }
 
 function findMachineTokenCollisions(ids: readonly string[]): {
-  readonly refusal: string | undefined;
   readonly ids: ReadonlySet<string>;
 } {
   const idsByToken = new Map<string, string>();
   const colliding = new Set<string>();
-  let refusal: string | undefined;
   for (const id of [...ids].sort(compareCodeUnits)) {
     const token = machineToken(id);
     const previous = idsByToken.get(token);
     if (previous !== undefined) {
       colliding.add(previous);
       colliding.add(id);
-      refusal ??= collisionRefusal(token, previous, id);
     } else {
       idsByToken.set(token, id);
     }
   }
-  return { refusal, ids: colliding };
+  return { ids: colliding };
 }
 
 function uniqueById(nodes: readonly GraphNode[]): readonly GraphNode[] {
@@ -135,7 +132,7 @@ function sliceFor(
   root: GraphNode,
   graphNodes: readonly GraphNode[],
   graphEdges: readonly GraphEdge[],
-  graphCollisions: { readonly refusal: string | undefined; readonly ids: ReadonlySet<string> },
+  graphCollisions: { readonly ids: ReadonlySet<string> },
 ): DiagramSlice {
   const nodesById = new Map(graphNodes.map((node) => [node.id, node]));
   const edges = graphEdges
@@ -151,8 +148,11 @@ function sliceFor(
     ids.add(edge.to);
   }
   const nodes = [...ids].sort(compareCodeUnits).map((id) => ({ id, node: nodesById.get(id) }));
-  const sliceCollision = findMachineTokenCollisions(nodes.map((entry) => entry.id)).refusal;
-  const collision = graphCollisions.ids.has(root.id) ? graphCollisions.refusal : sliceCollision;
+  const collidingId = nodes.find((entry) => graphCollisions.ids.has(entry.id))?.id;
+  const collision =
+    collidingId === undefined
+      ? undefined
+      : collisionRefusal(machineToken(collidingId), collidingId, collidingId);
   const refusal =
     collision ??
     (nodes.length > MAX_MERMAID_NODES_PER_DIAGRAM

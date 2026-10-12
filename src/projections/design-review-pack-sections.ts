@@ -71,7 +71,7 @@ function renderTarget(page: string, target: ReadinessFloorTarget): string {
 
 export function renderNextRungSection(context: PackContext, page: string): readonly string[] {
   const lines = [
-    "## Next rung",
+    "## Stated next rung",
     "",
     "The floor clauses that fail at the rung above each member's stated rung, with the targets a failing dependency clause names. This is a report, never a promotion: only an author's edit states a rung.",
     "",
@@ -81,7 +81,7 @@ export function renderNextRungSection(context: PackContext, page: string): reado
   const waiting = withNext.filter((member) => (member.statedNextRungFailures ?? []).length === 0);
 
   if (held.length === 0) {
-    lines.push("No member is held below its next rung.");
+    lines.push("No member is held below its stated next rung.");
   }
 
   // One group per held member, as the question and code sections group; a list line never opens
@@ -109,7 +109,7 @@ export function renderNextRungSection(context: PackContext, page: string): reado
       "",
       "### Waiting for the author's statement",
       "",
-      "The floor already holds these members at their next rung. That is not approval: the page records no review, and the rung stays unstated until its author states it.",
+      "The floor already holds these members at their stated next rung. That is not approval: the page records no review, and the rung stays unstated until its author states it.",
       "",
     );
 

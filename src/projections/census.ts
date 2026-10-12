@@ -9,6 +9,7 @@ import {
 } from "../model/descriptors.js";
 import type { Reader, SpecSummary } from "../reader/reader.js";
 import type { Finding } from "../validate/contracts.js";
+import { renderDiagnosticBanner } from "./diagnostic-banner.js";
 import { escapeRenderedField } from "./owned-prose.js";
 
 export interface CensusPage {
@@ -554,6 +555,7 @@ export function renderCensus(reader: Reader): readonly CensusPage[] {
   const lines = [
     "# Census",
     "",
+    ...renderDiagnosticBanner(reader.findings()),
     `A disposable projection of the one graph (schema \`${escapeRenderedField(graph.schemaVersion)}\`): ${String(graph.nodes.length)} nodes · ${String(graph.edges.length)} edges · ${String(specs.length)} Specs.`,
     "",
     ...renderTaxonomy(

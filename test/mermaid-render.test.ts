@@ -131,6 +131,42 @@ describe("the bounded Mermaid projection", () => {
     expect(machineToken("spec:λ")).not.toBe(machineToken("spec:\udbff\udfff"));
   });
 
+  it("refuses a diagram whose neighbor has a duplicated id and names that neighbor", () => {
+    const input = graph(
+      [
+        primitive("spec:root"),
+        primitive("spec:duplicate", "First"),
+        primitive("spec:duplicate", "Second"),
+        primitive("spec:ok"),
+      ],
+      [{ from: "spec:root", type: "dependsOn", to: "spec:duplicate", claim: "declared" }],
+    );
+    const pages = rendered(input);
+    const refusal = `MERMAID_MACHINE_TOKEN_COLLISION token=${machineToken("spec:duplicate")} first="spec:duplicate" second="spec:duplicate"`;
+
+    expect(pages.get("spec/root.md")).toContain(refusal);
+    expect(pages.get("spec/root.md")).not.toContain("```mermaid");
+    expect(pages.get("spec/ok.md")).toContain("```mermaid");
+    expect(rendered(graph([...input.nodes].reverse(), [...input.edges].reverse()))).toEqual(pages);
+  });
+
+  it("names each duplicated root in its own refusal", () => {
+    const pages = rendered(
+      graph(
+        [primitive("spec:a"), primitive("spec:a"), primitive("spec:z"), primitive("spec:z")],
+        [],
+      ),
+    );
+
+    for (const id of ["spec:a", "spec:z"]) {
+      const page = pages.get(`spec/${id.slice("spec:".length)}.md`);
+      expect(page).toContain(
+        `MERMAID_MACHINE_TOKEN_COLLISION token=${machineToken(id)} first="${id}" second="${id}"`,
+      );
+      expect(page).not.toContain("```mermaid");
+    }
+  });
+
   it("keeps one-hop cycles, disconnected Pack members, foreign edges, and dangling placeholders without emitting a whole graph", () => {
     const nodes = [
       primitive("spec:a", "A"),

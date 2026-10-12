@@ -371,15 +371,8 @@ export interface UnlinkedCodeUnit {
  * graph records nothing at, surfaced as `coverageUnknown`, never silently dropped. A changed code
  * unit with no Spec linkage is recorded, so its file is not `coverageUnknown`; it is listed in
  * `unlinked` instead, never dropped and never read as coverage. The answer never claims
- * exhaustive reach: deeper walks are scripts over the same shapes, and symbol-level reach is the
- * aspirational impact graph.
- */
-/**
- * @sdpAnchor impl:protocol.reader-impact
- * @sdpLabel file-level reader blast-radius contract
- * @sdpSatisfies spec:consumers.reader
- * @sdpComponent component:protocol.reader
- * @sdpRole contract
+ * exhaustive reach: deeper walks are scripts over the same shapes, and symbol-level reach is
+ * deferred by the impact graph.
  */
 export interface BlastRadius {
   readonly changedFiles: readonly string[];
@@ -399,8 +392,8 @@ export interface BlastRadius {
  * front door, not a store, rebuilt fresh each load. Frozen here is only the irreducible set
  * (entry adapters · file-level blast-radius · the per-spec/per-pack joins); everything else —
  * single-field traversals, group-bys, the maturity ladder — stays a script over `graph` and the
- * flat accessors. `bySymbol` is deliberately absent, not stubbed: it rides the aspirational
- * impact graph, and a method that throws would fake the capability its absence honestly hides.
+ * flat accessors. `bySymbol` is deliberately absent, not stubbed: it needs the symbol-level reach
+ * the impact graph defers, and a method that throws would fake the capability its absence honestly hides.
  *
  * Not a second validation path (MD-14): `findings()` exposes `validateGraph`'s output — the one
  * seam, called, never re-implemented. Exposed delivery facts are the recomputed ones (the one
@@ -549,7 +542,7 @@ function statedNextRungOf(stated: SpecReadiness): SpecReadiness | undefined {
  *
  * @sdpAnchor impl:protocol.pack-design
  * @sdpLabel the Pack design helpers and the Pack context assembly they serve
- * @sdpSatisfies spec:consumers.pack-design
+ * @sdpSatisfies spec:consumers.pack-design, spec:model.design-maturity
  * @sdpReferences spec:extraction.entry-locations, spec:extraction.contract-declarations
  * @sdpComponent component:protocol.reader
  * @sdpRole reader
@@ -733,7 +726,7 @@ function packBoundary(
  * @sdpAnchor impl:protocol.reader
  * @sdpLabel thin typed graph reader construction
  * @sdpReferences spec:consumers.agent-surface.answer-shapes
- * @sdpSatisfies spec:consumers.reader, spec:extraction.entry-locations
+ * @sdpSatisfies spec:consumers.reader, spec:extraction.entry-locations, spec:validation.next-rung-floor
  * @sdpComponent component:protocol.reader
  * @sdpUses impl:protocol.delivery-facts, impl:protocol.next-rung-floor
  * @sdpRole reader
@@ -1046,7 +1039,12 @@ export function createReader(graph: GraphSchema): Reader {
     });
 
     const verifierGaps = members
-      .filter((member) => member.resolved && !member.deliveryFacts.includes("has-verifier"))
+      .filter(
+        (member) =>
+          member.resolved &&
+          member.specKind !== "decision" &&
+          !member.deliveryFacts.includes("has-verifier"),
+      )
       .map(
         (member): PackVerifierGap => ({
           id: member.id,
