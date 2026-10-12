@@ -2289,7 +2289,7 @@ describe("sdp --version", () => {
   it("documents --version and --params in the usage text", () => {
     expect(SDP_HELP_TEXT).toContain("  sdp --version\n");
     expect(SDP_HELP_TEXT).toContain("sdp <package version> (<commit>)");
-    expect(SDP_HELP_TEXT).toContain("[--params JSON | --params @PATH]");
+    expect(SDP_HELP_TEXT).toContain("[--params JSON | --params @PATH | --params KEY=@PATH]...");
     expect(SDP_HELP_TEXT).toContain("Four bindings are injected");
     expect(SDP_HELP_TEXT).toContain("dist/recipes/NN-slug.js");
   });
@@ -2390,9 +2390,16 @@ describe("a shipped recipe file through the compiled CLI", () => {
 
       expect(result.changedFiles).toEqual(radius.changedFiles);
       expect(result.coverageUnknownFiles).toEqual(["absent/file.ts"]);
-      expect(
-        (result.impactedSpecs as readonly { readonly id: string }[]).map((row) => row.id),
-      ).toEqual(radius.impactedSpecs.map((item) => item.id));
+      expect(result.impactedSpecs).toEqual(radius.impactedSpecs.map((item) => item.id));
+      expect(result.totals).toEqual({
+        changedFiles: radius.changedFiles.length,
+        impactedSpecs: radius.impactedSpecs.length,
+        impactedPacks: radius.impactedPacks.length,
+        atRiskSpecs: radius.atRisk.filter((item) => item.nodeType === "Primitive").length,
+        atRiskOther: radius.atRisk.filter((item) => item.nodeType !== "Primitive").length,
+        coverageUnknownFiles: radius.coverageUnknown.length,
+        unlinkedUnits: radius.unlinked.length,
+      });
       expect(radius.impactedSpecs.length).toBeGreaterThan(0);
     } finally {
       rmSync(scratch, { recursive: true, force: true });

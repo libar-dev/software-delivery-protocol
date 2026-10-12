@@ -328,7 +328,12 @@ export function parseQueryArgs(args: readonly string[], output: CliOutput): Quer
         writeStderr(output, `sdp q: --params key ${JSON.stringify(key)} was given twice.\n`);
         return undefined;
       }
-      Object.defineProperty(params, key, { value: item, enumerable: true });
+      Object.defineProperty(params, key, {
+        value: item,
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
     }
   }
 

@@ -831,6 +831,65 @@ describe("query body positions and merged parameters", () => {
     },
   );
 
+  it("keeps merged parameter keys writable for the caller's body", async () => {
+    const capture = createCaptureOutput();
+    expect(
+      await runQ(
+        [
+          "params.value = 2; delete params.removable; return params",
+          "--root",
+          scratch,
+          "--json",
+          "--params",
+          '{"value":1}',
+          "--params",
+          '{"removable":true}',
+        ],
+        capture,
+      ),
+    ).toBe(0);
+    expect(JSON.parse(capture.readStdout())).toEqual({ value: 2 });
+  });
+
+  it.each([
+    ["key=@", "sdp q: --params @PATH requires a path after @."],
+    ["key=@missing-file.json", "could not be read"],
+    ["bad-key=@missing-file.json", "requires a lower-camel key"],
+    ["bad_key=@missing-file.json", "requires a lower-camel key"],
+  ])("refuses an invalid keyed input %s before extraction", async (value, message) => {
+    const capture = createCaptureOutput();
+    expect(
+      await runQ(["return params", "--root", scratch, "--params", value], capture, {
+        query: {
+          extract: () => {
+            throw new Error("must not extract");
+          },
+        },
+      }),
+    ).toBe(1);
+    expect(capture.readStdout()).toBe("");
+    expect(capture.readStderr()).toContain(message);
+    expect(capture.readStderr().trimEnd().split("\n")).toHaveLength(1);
+  });
+
+  it("refuses a keyed file holding invalid JSON before extraction", async () => {
+    const path = join(scratch, "invalid.json");
+    writeFileSync(path, "{broken");
+    const capture = createCaptureOutput();
+    expect(
+      await runQ(["return params", "--root", scratch, "--params", `base=@${path}`], capture, {
+        query: {
+          extract: () => {
+            throw new Error("must not extract");
+          },
+        },
+      }),
+    ).toBe(1);
+    expect(capture.readStdout()).toBe("");
+    expect(capture.readStderr()).toContain("is not valid JSON");
+    expect(capture.readStderr().trimEnd().split("\n")).toHaveLength(1);
+  });
+
   it("merges own keys without treating __proto__ as an assignment", async () => {
     const capture = createCaptureOutput();
     expect(
