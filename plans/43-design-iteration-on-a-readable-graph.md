@@ -92,12 +92,16 @@ the gpt-6.1-sol lanes write against.
   source.
 - `npm run check` passes.
 
-## Candidates to join (the owner's call)
+## Candidates, ruled
 
-Each states `defined` and would join by entering the Pack and taking a `ready` statement:
-`spec:validation.corpus-rules` with `spec:validation.architecture-constraints`, which together
-would retire the adopter's 363-line check script; `spec:consumers.agent-surface.example-space-coverage`;
-and `spec:observation.run-evidence` over CTRF.
+The owner delegated this ruling, and on Fable 5.1's advice none joins this arc. Corpus rules with
+architecture constraints change the validate path and its exit codes and depend on nothing this arc
+builds; they would replace the graph-side half of the adopter's check script, about 145 of its 363
+lines, not all of it. They lead a later arc, with the adopter's gate rewrite as its test.
+Example-space coverage and run evidence move to plan 42, where their consumer, the Studio's tests
+lens and verification panels, lives. The curation layer's two questions are ruled in its Spec: the
+import adapter runs in `sdp build` and writes `generated/imports.json`, which the recipe reads
+through `--params`, and load-bearing is a ranked list the caller cuts.
 
 ## Refused
 
