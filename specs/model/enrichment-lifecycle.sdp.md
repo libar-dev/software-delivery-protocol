@@ -5,11 +5,14 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:model.core-model
+  dependsOn:
+    target: spec:extraction.contract-declarations
+    reason: a slimming candidate is a pinned declaration
 ---
 # Enrichment keeps one Spec while its detail changes
 
 ## Intent
-- outcome: Keep a Spec useful after implementation without recreating value-transfer duplication.
+- outcome: Keep a Spec useful after implementation without copying its detail into a second artifact that drifts from it.
 
 ## Model
 - **enrichment lifecycle** — The same Spec gains and may later slim typed detail without changing identity or moving truth into another artifact type.
