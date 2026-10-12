@@ -162,7 +162,7 @@ export function renderPackPage(
     "",
     "## Members",
     "",
-    "One row per member in the manifest's order. The stated next rung is the rung above the stated one, with `holds` when the floor already holds it and its first unmet clause otherwise. A binding or design reference reads present when a resolving anchor exists, and none otherwise.",
+    "One row per member in the manifest's order. The stated next rung is the rung above the stated one, with `nothing blocks` when the floor already holds it and its first unmet clause otherwise. A binding or design reference reads present when a resolving anchor exists, and none otherwise.",
     "",
     `| ${MEMBER_TABLE_HEADER.join(" | ")} |`,
     `|${"---|".repeat(MEMBER_TABLE_HEADER.length)}`,

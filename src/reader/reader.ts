@@ -257,11 +257,14 @@ export interface PackBoundaryRow {
 /**
  * The Specs outside the Pack joined to a member (`spec:consumers.pack-design`): `restsOn` lists
  * those a member `refines`, `dependsOn`, is `constrainedBy` or `decidedBy`; `restedOnBy` lists
- * those relating to a member by any authored relation. Rows sort by id in code-unit order.
+ * those relating to a member by the same four types. `verifiedBy` and `supersededBy` list
+ * inbound `verifies` and `supersedes` separately. Rows sort by id in code-unit order.
  */
 export interface PackBoundary {
   readonly restsOn: readonly PackBoundaryRow[];
   readonly restedOnBy: readonly PackBoundaryRow[];
+  readonly verifiedBy: readonly PackBoundaryRow[];
+  readonly supersededBy: readonly PackBoundaryRow[];
 }
 
 /** A member with no verifier binding — `ready` ones are the priority slice (JS-G4). */
@@ -611,6 +614,8 @@ function packBoundary(
   // members share costs one step per member, not one scan of the members joined so far.
   const restsOn = new Map<string, Map<AuthoredEdgeType, Set<string>>>();
   const restedOnBy = new Map<string, Map<AuthoredEdgeType, Set<string>>>();
+  const verifiedBy = new Map<string, Map<AuthoredEdgeType, Set<string>>>();
+  const supersededBy = new Map<string, Map<AuthoredEdgeType, Set<string>>>();
 
   const join = (
     rows: Map<string, Map<AuthoredEdgeType, Set<string>>>,
@@ -647,7 +652,12 @@ function packBoundary(
 
     for (const edge of index.edgesByTo.get(memberId) ?? []) {
       if (isAuthored(edge) && !inside.has(edge.from) && index.primitivesById.has(edge.from)) {
-        join(restedOnBy, edge.from, edge.type, memberId);
+        const rows = restsOnTypes.has(edge.type)
+          ? restedOnBy
+          : edge.type === "verifies"
+            ? verifiedBy
+            : supersededBy;
+        join(rows, edge.from, edge.type, memberId);
       }
     }
   }
@@ -677,7 +687,12 @@ function packBoundary(
         ];
       });
 
-  return { restsOn: rowsOf(restsOn), restedOnBy: rowsOf(restedOnBy) };
+  return {
+    restsOn: rowsOf(restsOn),
+    restedOnBy: rowsOf(restedOnBy),
+    verifiedBy: rowsOf(verifiedBy),
+    supersededBy: rowsOf(supersededBy),
+  };
 }
 
 /**

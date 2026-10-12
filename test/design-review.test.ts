@@ -105,7 +105,7 @@ describe("the Design Review — the one generated read-only view", () => {
         line.startsWith("| [`spec:protocol.self-hosting`](../spec/protocol.self-hosting.md) ("),
       );
     expect(row).toContain(
-      ") The Protocol authors and validates itself | behavior | epic | defined | ready | ready · holds | 0 | 0 | 0 |",
+      ") The Protocol authors and validates itself | behavior | epic | defined | ready | ready · nothing blocks | 0 | 0 | 0 |",
     );
     expect(row?.endsWith("| none | none | none |")).toBe(true);
   });

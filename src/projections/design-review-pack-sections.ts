@@ -173,9 +173,21 @@ export function renderBoundarySection(context: PackContext, page: string): reado
     "",
     "### Rested on by",
     "",
-    "The Specs outside the Pack that relate to a member by an authored relation.",
+    "The Specs outside the Pack that refine, depend on, are constrained by or are decided by a member.",
     "",
     ...renderBoundaryTable(context.boundary.restedOnBy, page),
+    "",
+    "### Verified by",
+    "",
+    "The Specs outside the Pack that verify a member.",
+    "",
+    ...renderBoundaryTable(context.boundary.verifiedBy, page),
+    "",
+    "### Superseded by",
+    "",
+    "The Specs outside the Pack that supersede a member.",
+    "",
+    ...renderBoundaryTable(context.boundary.supersededBy, page),
   ];
 }
 
@@ -292,7 +304,7 @@ export function renderCodeSection(context: PackContext, page: string): readonly 
   return lines;
 }
 
-/** The member table's stated-next-rung cell: `holds`, the first unmet clause, or none. */
+/** The member table's stated-next-rung cell: `nothing blocks`, the first unmet clause, or none. */
 export function renderStatedNextRungCell(member: PackMemberSummary): string {
   if (member.statedNextRung === undefined) {
     return "—";
@@ -300,7 +312,7 @@ export function renderStatedNextRungCell(member: PackMemberSummary): string {
 
   const first = member.statedNextRungFailures?.[0];
 
-  return `${member.statedNextRung} · ${first === undefined ? "holds" : renderTableInlineCode(first.clauseId)}`;
+  return `${member.statedNextRung} · ${first === undefined ? "nothing blocks" : renderTableInlineCode(first.clauseId)}`;
 }
 
 /** The member table's decisions cell: each decision linked with its stated rung. */

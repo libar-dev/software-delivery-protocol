@@ -2109,11 +2109,15 @@ return {
     withReferences: count((member) => member.referencedBy.length > 0),
     restsOn: pack.boundary.restsOn.length,
     restedOnBy: pack.boundary.restedOnBy.length,
+    verifiedBy: pack.boundary.verifiedBy.length,
+    supersededBy: pack.boundary.supersededBy.length,
   },
   members,
   boundary: {
     restsOn: pack.boundary.restsOn.map(boundaryRow),
     restedOnBy: pack.boundary.restedOnBy.map(boundaryRow),
+    verifiedBy: pack.boundary.verifiedBy.map(boundaryRow),
+    supersededBy: pack.boundary.supersededBy.map(boundaryRow),
   },
 };
 ```
@@ -2140,7 +2144,9 @@ keeps only its `id` and `resolved: false`.
 
 `boundary.restsOn` lists the Specs outside the Pack that a member relates to by `refines`,
 `dependsOn`, `constrainedBy` or `decidedBy`, and `boundary.restedOnBy` the Specs outside it that
-relate to a member by any authored relation. Each row carries the outside Spec's stated rung,
+relate to a member by the same four relations. `boundary.verifiedBy` lists outside Specs that
+`verifies` a member and `boundary.supersededBy` those that `supersedes` one, separately. Each row
+carries the outside Spec's stated rung,
 whether it carries `implemented`, and under `via` the members it joins per relation type. The
 columns are counts and lists, never a score or a rung. The Design Review's Pack page renders the
 same assembly. The laws are `spec:consumers.pack-design` and

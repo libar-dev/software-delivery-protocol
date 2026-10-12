@@ -8,21 +8,21 @@
 
 ## Members
 
-One row per member in the manifest's order. The stated next rung is the rung above the stated one, with `holds` when the floor already holds it and its first unmet clause otherwise. A binding or design reference reads present when a resolving anchor exists, and none otherwise.
+One row per member in the manifest's order. The stated next rung is the rung above the stated one, with `nothing blocks` when the floor already holds it and its first unmet clause otherwise. A binding or design reference reads present when a resolving anchor exists, and none otherwise.
 
 | Spec | Kind | Altitude | Stated | Floor reached | Stated next rung | Design entries | Declarations | Open questions | Decisions | Design reference | Implementation binding | Verifier binding |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| [`spec:orders.order-management`](../spec/orders.order-management.md) (1) Order management | behavior | epic | defined | ready | ready · holds | 0 | 0 | 0 | [`spec:decisions.order-lifecycle`](../spec/decisions.order-lifecycle.md) (defined) | none | none | none |
+| [`spec:orders.order-management`](../spec/orders.order-management.md) (1) Order management | behavior | epic | defined | ready | ready · nothing blocks | 0 | 0 | 0 | [`spec:decisions.order-lifecycle`](../spec/decisions.order-lifecycle.md) (defined) | none | none | none |
 | [`spec:orders.order-placement-flow`](../spec/orders.order-placement-flow.md) (2) Order placement flow | workflow | feature | scoped | scoped | defined · `kind-evidence-complete` | 0 | 0 | 0 | — | none | none | none |
-| [`spec:orders.create-order`](../spec/orders.create-order.md) (3) Customer creates an order | behavior | feature | defined | ready | ready · holds | 0 | 0 | 0 | [`spec:decisions.order-lifecycle`](../spec/decisions.order-lifecycle.md) (defined) | none | present | present |
+| [`spec:orders.create-order`](../spec/orders.create-order.md) (3) Customer creates an order | behavior | feature | defined | ready | ready · nothing blocks | 0 | 0 | 0 | [`spec:decisions.order-lifecycle`](../spec/decisions.order-lifecycle.md) (defined) | none | present | present |
 | [`spec:orders.create-order.valid-cart`](../spec/orders.create-order.valid-cart.md) (4) Valid cart creates an order | example | story | ready | ready | — | 0 | 0 | 0 | — | none | none | present |
-| [`spec:orders.create-order.invalid-cart`](../spec/orders.create-order.invalid-cart.md) (5) Invalid cart is rejected | example | story | defined | ready | ready · holds | 0 | 0 | 0 | — | none | none | none |
+| [`spec:orders.create-order.invalid-cart`](../spec/orders.create-order.invalid-cart.md) (5) Invalid cart is rejected | example | story | defined | ready | ready · nothing blocks | 0 | 0 | 0 | — | none | none | none |
 | [`spec:orders.create-order.api-contract`](../spec/orders.create-order.api-contract.md) (6) Create-order API contract | contract | story | idea | idea | scoped · `kind-evidence-present` | 0 | 0 | 1 (1 blocking) | — | none | none | none |
-| [`spec:orders.order-total-rule`](../spec/orders.order-total-rule.md) (7) Order total matches cart math | rule | story | defined | ready | ready · holds | 0 | 0 | 0 | — | none | present | none |
-| [`spec:orders.order-inventory-rule`](../spec/orders.order-inventory-rule.md) (8) Order creation requires available inventory | rule | story | defined | ready | ready · holds | 0 | 0 | 0 | — | none | none | none |
-| [`spec:orders.order-latency-constraint`](../spec/orders.order-latency-constraint.md) (9) Create-order latency stays within checkout budget | constraint | story | defined | ready | ready · holds | 0 | 0 | 0 | — | none | none | none |
-| [`spec:orders.order-model`](../spec/orders.order-model.md) (10) Order-management domain vocabulary | model | story | defined | ready | ready · holds | 0 | 0 | 0 | — | none | none | none |
-| [`spec:decisions.order-lifecycle`](../spec/decisions.order-lifecycle.md) (11) Order lifecycle keeps validation before creation | decision | feature | defined | ready | ready · holds | 0 | 0 | 0 | — | none | none | none |
+| [`spec:orders.order-total-rule`](../spec/orders.order-total-rule.md) (7) Order total matches cart math | rule | story | defined | ready | ready · nothing blocks | 0 | 0 | 0 | — | none | present | none |
+| [`spec:orders.order-inventory-rule`](../spec/orders.order-inventory-rule.md) (8) Order creation requires available inventory | rule | story | defined | ready | ready · nothing blocks | 0 | 0 | 0 | — | none | none | none |
+| [`spec:orders.order-latency-constraint`](../spec/orders.order-latency-constraint.md) (9) Create-order latency stays within checkout budget | constraint | story | defined | ready | ready · nothing blocks | 0 | 0 | 0 | — | none | none | none |
+| [`spec:orders.order-model`](../spec/orders.order-model.md) (10) Order-management domain vocabulary | model | story | defined | ready | ready · nothing blocks | 0 | 0 | 0 | — | none | none | none |
+| [`spec:decisions.order-lifecycle`](../spec/decisions.order-lifecycle.md) (11) Order lifecycle keeps validation before creation | decision | feature | defined | ready | ready · nothing blocks | 0 | 0 | 0 | — | none | none | none |
 
 ## Next rung
 
@@ -63,7 +63,19 @@ None.
 
 ### Rested on by
 
-The Specs outside the Pack that relate to a member by an authored relation.
+The Specs outside the Pack that refine, depend on, are constrained by or are decided by a member.
+
+None.
+
+### Verified by
+
+The Specs outside the Pack that verify a member.
+
+None.
+
+### Superseded by
+
+The Specs outside the Pack that supersede a member.
 
 None.
 
