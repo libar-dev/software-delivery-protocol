@@ -7,7 +7,7 @@ description: Query this repository's Spec graph through `sdp q` instead of readi
 
 This repository models its own delivery lifecycle as typed `Spec` documents and derives **one
 graph** from them. The graph — not the files — is the read model. The surface you read it through
-is `spec:consumers.agent-surface`, realized by the front door
+is `spec:consumers.agent-surface`, shaped by the agent front door decision,
 `spec:decisions.agent-front-door` (MD-22): the package exports the reader, and the CLI carries one
 evaluation sink. There is no verb wall — you script the graph.
 
@@ -16,14 +16,15 @@ evaluation sink. There is no verb wall — you script the graph.
 The graph is flat: one array of nodes, one array of edges, nothing nested. Hierarchy is edges, so
 every question is a filter or a join, never a tree walk. Beside them, `graph.locations` is the
 location table: the source line of every keyed Design and UI entry, every rule and flow entry,
-every open question and each of its fields. Nodes
-carry no lines, and a location is never an identity or a binding target. Four node types exist:
+every open question and each of its fields, and every authored relation target. Nodes carry no
+lines, and a location is never an identity or a binding target. Four node types exist:
 
 - `Primitive` — one authored Spec, positioned by `specKind` × `altitude` × `readiness`, carrying
   its title, narrative, reified section content, and the derived `deliveryFacts`. Use case, NFR,
   decision record, epic, and story are coordinates on this one type, never separate node types.
-- `Pack` — the review grouping: title, framing prose, `modelRefs`. Membership is `belongsTo`
-  edges. A Pack states no system truth.
+- `Pack` — the review grouping, carrying its title, framing prose, ordered `members` as authored,
+  and `modelRefs`. `belongsTo` edges re-express membership in the global edge order; read
+  authored reading order from `members`. A Pack states no system truth.
 - `Anchor` — a test or oracle binding, with the `file` and `line` of the binding itself.
 - `CodeNode` — the code unit a code anchor mints, from either form: a `codeAnchor` constant or a
   comment-form block whose id sits in the `impl:`, `api:`, or `component:` namespace. It carries
@@ -99,14 +100,18 @@ own `node_modules/.bin`; an unresolved `sdp` can select macOS's unrelated binary
 global `sdp` either.
 
 The public projection publishers are `sdp view`, `sdp census`, `sdp mermaid`, and `sdp gherkin`.
-In this source checkout, use `npm run generate:self-hosting` or `npm run check:self-hosting` when
-all four roots must be published or certified together.
+Each of them, like `sdp build` and `sdp validate`, first removes all four projection roots, so
+after one publisher runs only its own root is current
+(`spec:consumers.wholesale-view-rewrite#rule.buildInvalidates`).
+In this source checkout, `npm run generate:self-hosting` and `npm run check:self-hosting` preserve
+and publish all four roots together. In check mode a prior tree must exist for each root; Design
+Review checks repeat-render determinism, while census, Mermaid and Gherkin also compare the prior
+tree's bytes with the current render.
 
-The catalog contains forty ready-made bodies in `docs/agent-surface/recipes.md` in the
-Protocol repository and
-`node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an adopter.
-Recipes 1-40 each open under a numbered heading that names the recipe. Every body there runs
-verbatim and a test proves it. Start from a recipe; adapt it in place.
+The catalog of ready-made bodies is `docs/agent-surface/recipes.md` in the Protocol repository
+and `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an
+adopter. Each recipe opens under a numbered heading that names it. Every body there runs verbatim
+and a test proves it. Start from a recipe; adapt it in place.
 
 A recipe that takes a subject (a Spec id, a Pack id, changed files, addresses, a term) reads it
 from `params.<name>`, and the catalog names the parameter. Pass it as JSON data with `--params`,
@@ -117,6 +122,36 @@ body as `dist/recipes/<NN>-<slug>.js`, so run it as shipped:
 pnpm --silent sdp:q "$(cat dist/recipes/03-what-does-this-spec-guarantee-and-who-verifies-it.js)" --params '{"spec":"spec:consumers.reader"}' --json
 pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/recipes/04-what-breaks-if-i-change-these-files.js)" --params @changed-files.json --json
 ```
+
+### Which recipe answers a task
+
+| The task                                        | Run                                                                                                        |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Pick work to build                              | the build backlog (recipe 1); the design backlog (recipe 33) for designed, unbuilt Specs                   |
+| Find code ahead of intent                       | the drift alarm (recipe 2)                                                                                 |
+| Read what a Spec guarantees and who verifies it | Spec guarantees (recipe 3)                                                                                 |
+| Review a changeset                              | changed-file impact (recipe 4), then the mention audit (recipe 22) over its scope                          |
+| Locate a term or a concept                      | concept search (recipe 6); entry search (recipe 23) for the entry and its line                             |
+| Decide whether a Spec may state its next rung   | promotion preflight (recipe 9); the lower ladder (recipe 11) across the corpus                             |
+| Compare stated readiness with the floor         | readiness divergence (recipe 7)                                                                            |
+| Read warnings, gaps and verifier health         | orphans and gaps (recipe 8); declared versus enabled verifiers (recipe 10)                                 |
+| Review a Pack                                   | the Pack review backbone (recipe 5), Pack design (recipe 29), references into a design (recipe 27)         |
+| List open questions                             | the open-question register (recipe 20)                                                                     |
+| See what a Spec rests on                        | dependency footing (recipe 21); dependency cycles (recipe 26)                                              |
+| Change a Spec others rest on                    | design-change impact (recipe 30); the planning slice (recipe 19)                                           |
+| Check addresses written outside the Specs       | address resolution (recipe 25)                                                                             |
+| List the signatures two parties share           | pinned declarations (recipe 24)                                                                            |
+| Read a component and its reach                  | component membership (recipe 12), uses fan-in and fan-out (recipe 13), structural neighborhood (recipe 14) |
+| Measure structural and projection coverage      | census structural coverage (recipe 15), the projection-coverage upper bound (recipe 16)                    |
+| Read the architecture                           | the architecture map (recipe 17), architecture crossings (recipe 32)                                       |
+| Weigh the decisions that shape it               | the decision map (recipe 18), the decision register (recipe 31)                                            |
+| Reuse an architecture value                     | roles, layers and contexts (recipe 28)                                                                     |
+| Find keyed rules no example exercises           | rule coverage (recipe 34)                                                                                  |
+| See what changed since a design pass            | the design diff (recipe 35)                                                                                |
+| Compose a design pass's reading                 | the context bundle (recipe 36), the perspective filter (recipe 37)                                         |
+| Apply a change proposal                         | the proposal check (recipe 38)                                                                             |
+| Slim a Spec its bound code now carries          | slimming candidates (recipe 39)                                                                            |
+| Find files and components the anchors miss      | the curation report (recipe 40)                                                                            |
 
 For structural questions, use component membership, uses fan-in and fan-out, structural
 neighborhood, census structural coverage, and the projection-coverage upper bound (recipes 12-16).
@@ -147,8 +182,9 @@ search (recipe 23): it matches whole tokens and names the entry and its line, wh
 stops at the section. Both read lines from the location table, and a null line means not located,
 never absent. Entry search also gives the entry's address when the entry is a
 top-level Design or UI key that starts with a lowercase ASCII letter and goes on in ASCII letters
-and digits, other than `description`, and when the entry is the text of an open question that
-carries a key. Every other entry, a lawful `"01"` key included, gets `address: null`. When a
+and digits, other than `description`; the text of an open question that carries a key; or a rule
+or flow entry that carries a `[#key]`. Every other entry, a lawful `"01"` key included, gets
+`address: null`. When a
 Design Review or a test author needs every signature a corpus has pinned, use pinned declarations
 (recipe 24): it lists each keyed Design entry whose value opens with a code span, with the Spec,
 the key and the span content as authored. To see where Specs rest on each other or on themselves
@@ -203,6 +239,9 @@ list implies coverage.
 
 ## The contract
 
+The sink's contract is `spec:consumers.agent-surface.evaluation-sink`: how the body arrives, how
+the answer prints, and which failures refuse.
+
 `sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--params JSON | @PATH | KEY=@PATH]... [--json]`
 
 Four bindings are injected:
@@ -223,9 +262,9 @@ the return**: counts, ids, and decoded reasons, not whole nodes. Default output 
 `--exclude` for root-relative path prefixes. A body that does not parse is reported with its line
 and column.
 
-Recipes whose full answer runs long, changed-file impact (recipe 4) and Pack design (recipe 29),
-return a summary by default: every total, ids in place of rows, and `leftOut` naming what
-`detail: true` adds. To filter any shipped answer, run it inside your own body:
+A recipe that takes `params.detail` returns a summary by default: every total, ids in place of
+rows, and `leftOut` naming what `detail: true` adds (changed-file impact, recipe 4; Pack design,
+recipe 29; the design diff, recipe 35). To filter any shipped answer, run it inside your own body:
 
 ```sh
 pnpm --silent sdp:q "const answer = await (async () => { $(cat dist/recipes/29-pack-design.js) })(); return answer.members.filter((member) => member.blockingQuestions > 0)" --params '{"pack":"pack:design-iteration-v1"}' --json
@@ -246,11 +285,13 @@ session and any paraphrase in any document. If the graph and this file disagree,
 and this file is the bug — report it rather than reconciling in your head.
 
 The same rule governs law: this skill cites Specs, it never restates them. When you need the law,
-read the carrying Spec. Every `spec:` id this skill or the catalog cites is a Protocol Spec. In an
-adopter, `g.specContext` on such an id returns `undefined` from your own root. Query it with
-`--root node_modules/@libar-dev/software-delivery-protocol/specs`, or open its carrier under that
-directory. That graph holds intent only. The package ships no source anchors, so its delivery facts
-are empty and its gap warnings say nothing about what the Protocol has built.
+read the carrying Spec. Protocol references in this skill name the carrying Specs shipped with
+the package. Placeholder ids and the order-domain examples demonstrate syntax and do not name
+Specs in that corpus. In an adopter, `g.specContext` on a Protocol id returns `undefined` from
+your own root. Query it with `--root node_modules/@libar-dev/software-delivery-protocol/specs`, or
+open its carrier under that directory. That graph holds intent only. The package ships no source
+anchors, so its delivery facts are empty and its gap and verifier-linkage warnings say nothing
+about what the Protocol has built.
 
 ## Empty answers that mislead
 
@@ -271,7 +312,7 @@ An empty list or a zero is an answer, and some read as more than they say:
 ## Log friction
 
 When a recipe misleads you, or an answer costs extra calls, record one row where the project keeps
-its feedback on the Protocol (the first adopter keeps `docs/feedback/`): what you wanted, what you
+its feedback on the Protocol (for example a `docs/feedback/` folder): what you wanted, what you
 ran, what you got, what you did instead, and what it cost (minor, slowed, blocked). Do not
 reconcile the gap in your head; the row is the evidence the next arc reads.
 
