@@ -3,6 +3,19 @@
 // the extractor may neither add to it nor drop from it.
 
 export const expectedDeclaredRelations = [
+  ["spec:consumers.agent-surface.answer-shapes", "refines", "spec:consumers.agent-surface"],
+  [
+    "spec:consumers.agent-surface.answer-shapes",
+    "dependsOn",
+    "spec:consumers.agent-surface.design-recipes",
+  ],
+  ["spec:consumers.impact-graph.curation-assist", "refines", "spec:consumers.impact-graph"],
+  ["spec:consumers.impact-graph.curation-assist", "dependsOn", "spec:model.planned-architecture"],
+  [
+    "spec:consumers.impact-graph.curation-assist",
+    "decidedBy",
+    "spec:decisions.architectural-annotation",
+  ],
   ["spec:extraction.derive-graph", "dependsOn", "spec:extraction.delivery-facts"],
   ["spec:consumers.reader", "dependsOn", "spec:extraction.delivery-facts"],
   ["spec:validation.authored-honesty", "dependsOn", "spec:extraction.delivery-facts"],

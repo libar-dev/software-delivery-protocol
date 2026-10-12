@@ -4,6 +4,85 @@
 
 export const consumersSpecs = [
   {
+    id: "spec:consumers.agent-surface.answer-shapes",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/agent-surface.answer-shapes.sdp.md",
+    title: "Recipe answers fit an agent's context and explain their misses",
+    narrative:
+      "Three agents of two model families, gpt-6.1-sol, Opus 5.5 and gpt-6-astra, tried the agent surface with only the skills, the recipe catalog and `sdp q`. Each answered the same thirteen delivery questions correctly, without opening a carrier or source file. They stumbled in the same places: answers too large for a tool's output, misses that named no reason, two meanings of the next rung, a recipe whose title promised more than it returned, and one label all three believed though it overstated the relation it read (`.omo/evidence/agent-surface-trial/`). The owner accepted the fixes as one arc's scope.",
+    sections: {
+      intent: {
+        actor: "An agent answering a delivery question through the catalog recipes.",
+        problem:
+          "An agent spends calls trimming oversized answers, decoding terse misses and writing the same missing body, and can repeat a recipe's label as fact when the label says more than the graph does.",
+        outcome:
+          "Let an agent get each answer in one call that fits its context, with every miss explained.",
+      },
+      behavior: {
+        rules: [
+          "A recipe whose full answer can run past a few hundred lines takes a `detail` parameter and by default returns a summary that keeps every total and names what it left out; changed-file impact (recipe 4) and Pack design (recipe 29) take it first.",
+          "The guarantees recipe (recipe 3) returns each section's entries as the Spec states them and the binding fields the Spec context carries, not only the names of the sections.",
+          "Promotion preflight (recipe 9) reports the rung above the stated rung beside the rung above the floor, with the clauses that fail at each, so a Spec stated below its floor shows both.",
+          "The orphans and gaps recipe (recipe 8) reports each kind the verifier-gap signal exempts and how many ready Specs it exempts, as the build backlog reports its exclusions.",
+          "Address resolution (recipe 25) keeps the Spec, section and key it parsed when an address misses, names the part that failed, and lists the keys that section of the Spec does carry.",
+          "The decision register (recipe 31) names its fields after the relation it reads, `refines` and `refinedBy` beside `supersedes` and `supersededBy`; whether a refinement narrows a decision is that decision's own text.",
+          "Architecture crossings (recipe 32) tallies the same-layer `uses` edges beside the crossings.",
+          "A design-backlog recipe lists the Specs stated `defined` that no code realizes, with their design columns, excluding examples and decisions as the build backlog does.",
+          "The catalog opens with a one-line index of its recipes and shows how to run a shipped body inside a caller's own body to filter its answer.",
+          "A body that fails to parse is reported with the line and column of the error in the body the caller wrote.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.impact-graph.curation-assist",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "scoped",
+    file: "specs/consumers/impact-graph.curation-assist.sdp.md",
+    title: "File-level imports show where curation is missing",
+    narrative:
+      "Gen 1 of this tool, `@libar-dev/architect`, derived a mechanical import graph beside its curated one and used it to show authors where curation was missing: load-bearing modules no annotation covered, coverage by package, and designed modules no code realized yet (`architect/packages/architect-core/src/graph/analysis-views.ts`). The idea held; the build did not. It hard-coded the repository's layout into the engine, read TypeScript only, and mixed both graphs in one query handle. A review of gen 1 for this arc found that this file-level layer gave most of its curation value, and that only its symbol queries needed the symbol identity `spec:consumers.impact-graph` still holds open. The owner ruled to ship the file-level layer first, as the first adopter's large redesign is the test it serves.",
+    sections: {
+      intent: {
+        actor:
+          "An author curating anchors across a codebase, or a design pass over a large redesign.",
+        problem:
+          "Nothing tells an author which load-bearing files no anchor covers, where anchored `uses` and the code's imports disagree, or which component designs no code realizes yet, so curation gaps surface only when someone reads the code.",
+        outcome:
+          "Report from file-level imports where anchors and component designs are missing or drifting, as advice that never authors intent.",
+        openQuestions: [
+          {
+            question:
+              "Does the import adapter run inside extraction, beside the anchors it reads, or as a separate projection root that extraction never waits on?",
+            blocking: false,
+            key: "adapterHome",
+          },
+          {
+            question:
+              "What counts as load-bearing: a fan-in threshold the caller passes, or a ranked list the caller cuts?",
+            blocking: false,
+            key: "loadBearing",
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "The layer reads file-level import edges from a per-language adapter and identifies each file by its repository-relative path, so it needs no symbol identity.",
+          "Every import edge it derives carries the `inferred` claim and stays apart from the curated graph: no `uses`, `memberOf`, `satisfies` or delivery fact derives from it, and a query of the curated graph never reads it unless the caller asks.",
+          "It reports the files with the highest import fan-in that no anchor covers, the anchored `uses` edges between two components whose files share no import, the imports between two anchored components that no `uses` states, and the component designs no `component:` anchor realizes yet.",
+          "Every report is advice: it refuses nothing, fails no validation and authors no anchor, and an author who agrees edits an anchor or a Spec as usual.",
+          "The engine reads no repository layout convention. Source roots and package boundaries come from the adapter's configuration, never from a path pattern in the engine.",
+          "A TypeScript adapter ships first, through the compiler library extraction already depends on; another language arrives as another adapter.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
     id: "spec:consumers.mermaid-view",
     specKind: "behavior",
     altitude: "feature",
@@ -1084,6 +1163,7 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "Mechanical import and symbol structure is inferred and remains distinct from the sparse curated graph.",
+          "File-level import structure, keyed by repository-relative path, needs no symbol identity and ships first as `spec:consumers.impact-graph.curation-assist`; only exhaustive symbol reach waits on the open question.",
           "Comparing commits derives `graph(A)` and `graph(B)` and reports added, removed, or changed nodes and edges without persisting either projection as a second store.",
           "Candidate relationship suggestions and unambiguous-drift flags are assistive outputs; neither authors intent or silently rewrites the curated graph.",
         ],

@@ -1067,7 +1067,7 @@ export const decisionsSpecs = [
     id: "spec:decisions.studio-web-components",
     specKind: "decision",
     altitude: "feature",
-    readiness: "scoped",
+    readiness: "ready",
     title: "The Studio is built from custom elements, not a framework",
     narrative: null,
     sections: {

@@ -1632,6 +1632,7 @@ export const validationSpecs = [
       behavior: {
         rules: [
           "A `supersedes` edge replaces the decision it targets whole; a decision that narrows part of another `refines` it instead, and the signal never reads a `refines` between decisions.",
+          "Before the Protocol's first release a replaced decision is deleted by default, because the corpus is unreleased and its history lives in git; the signal stays unbuilt until a corpus keeps a replaced decision as history, and a `supersedes` edge stays lawful for that case.",
           "A replaced decision whose text no reader still needs is deleted rather than kept beside a `supersedes` edge, and a Spec still naming it then fails as an unresolved target, so the signal covers only replaced decisions kept as history.",
           "A Spec that names a decision through `decidedBy`, where another decision `supersedes` that decision, carries one warning for each such pair, naming the superseded decision and every decision that supersedes it.",
           "The warning is informative and never fails validation, as the orphan and gap signals never do, and its severity is fixed by the Protocol.",

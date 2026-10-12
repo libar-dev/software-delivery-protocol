@@ -31,6 +31,7 @@ import {
   expectedCommentAnchorIds,
   expectedComponentIds,
   expectedDeclaredRelations,
+  expectedDesignIterationPackMembers,
   expectedDesignManagementPackMembers,
   expectedMemberOfEdges,
   expectedPackMembers,
@@ -211,20 +212,20 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    // re-measured under plan 41's fold and the owner's second round
-    expect(result.counts).toEqual({ specs: 250, packs: 3, anchors: 263 });
-    // re-measured under plan 41's fold and the owner's second round
-    expect(expectedSpecs).toHaveLength(250);
+    // re-measured after plan 43's corpus commit
+    expect(result.counts).toEqual({ specs: 252, packs: 4, anchors: 263 });
+    // re-measured after plan 43's corpus commit
+    expect(expectedSpecs).toHaveLength(252);
     // re-measured under plan 41's fold and the owner's second round
     expect(expectedPackMembers).toHaveLength(250);
     // re-measured under plan 41's fold and the owner's second round
     expect(expectedAnchors).toHaveLength(263);
     // re-measured under plan 41's fold and the owner's second round
     expect(expectedBindingEdges).toHaveLength(274);
-    // re-measured under plan 41's fold and the owner's second round
-    expect(result.graph.nodes).toHaveLength(516);
-    // re-measured under plan 41's fold and the owner's second round
-    expect(result.graph.edges).toHaveLength(1222);
+    // re-measured after plan 43's corpus commit
+    expect(result.graph.nodes).toHaveLength(519);
+    // re-measured after plan 43's corpus commit
+    expect(result.graph.edges).toHaveLength(1238);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -266,7 +267,7 @@ describe("the self-hosting corpus", () => {
   });
 
   it("holds the frozen stated-readiness distribution", () => {
-    // re-measured under plan 41's fold and the owner's second round
+    // re-measured after plan 43's corpus commit
     expect(
       primitiveNodes.reduce<Record<string, number>>(
         (histogram, node) => ({
@@ -275,7 +276,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 58, idea: 6, ready: 176, scoped: 10 });
+    ).toEqual({ defined: 60, idea: 6, ready: 177, scoped: 9 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {
@@ -285,6 +286,11 @@ describe("the self-hosting corpus", () => {
         .map((edge) => [edge.from, edge.to, edge.claim]),
     ).toEqual([
       ...expectedStudioPackMembers.map((id) => [id, "pack:spec-studio-v1", "declared"]),
+      ...expectedDesignIterationPackMembers.map((id) => [
+        id,
+        "pack:design-iteration-v1",
+        "declared",
+      ]),
       ...expectedDesignManagementPackMembers.map((id) => [
         id,
         "pack:design-management-v1",

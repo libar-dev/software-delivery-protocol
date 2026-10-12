@@ -89,6 +89,7 @@ export type { ExpectedAnchor } from "./anchors.js";
 export { expectedAnchors, expectedBindingEdges, expectedCommentAnchorIds } from "./anchors.js";
 export { expectedDeclaredRelations } from "./declared-relations.js";
 export {
+  expectedDesignIterationPackMembers,
   expectedDesignManagementPackMembers,
   expectedPackMembers,
   expectedStudioPackMembers,

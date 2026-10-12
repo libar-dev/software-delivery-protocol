@@ -97,7 +97,7 @@ export const modelSpecs = [
     id: "spec:model.enrichment-lifecycle",
     specKind: "model",
     altitude: "feature",
-    readiness: "scoped",
+    readiness: "defined",
     file: "specs/model/enrichment-lifecycle.sdp.md",
     title: "Enrichment keeps one Spec while its detail changes",
     narrative: null,
@@ -105,21 +105,15 @@ export const modelSpecs = [
       intent: {
         outcome:
           "Keep a Spec useful after implementation without recreating value-transfer duplication.",
-        openQuestions: [
-          {
-            question:
-              "After implementation, which design-time detail stays in the Spec and which detail may be removed while preserving one durable home for each explanation?",
-            blocking: true,
-            key: "detailAfterImplementation",
-          },
-        ],
       },
       model: {
         terms: {
           "enrichment lifecycle":
             "The same Spec gains and may later slim typed detail without changing identity or moving truth into another artifact type.",
           "distillation boundary":
-            "Implemented code does not automatically justify either retaining or deleting design-time detail; the unresolved policy must preserve one home per explanation.",
+            "A Design entry may leave its Spec once the Spec is implemented with a verifier and a bound artifact carries the entry: a pinned declaration whose realizing unit exists, or a bound example. Prose that explains why always stays, so each explanation keeps one home, and implemented code alone justifies neither keeping nor deleting detail.",
+          "slimming candidate":
+            "A Design entry past the distillation boundary. A recipe reports the candidates and never deletes one; removing an entry stays the author's edit.",
         },
       },
     },
@@ -702,7 +696,7 @@ export const modelSpecs = [
         problem:
           "A question's text and blocking flag do not say who settles it, what it rests on, or what the design assumes until it is settled, so an adopter keeps a register beside the graph that repeats each question.",
         outcome:
-          "Let an open question carry who decides it, the sources it rests on and the reading the design proceeds on, without a status.",
+          "Let an open question carry who decides it, the sources it rests on, the reading the design proceeds on and, on a deferral, what brings it back, without a status.",
         risks: [
           "A field for who decides invites fields for when and for what state the question is in, which would rebuild a workflow tracker inside the Spec.",
         ],
@@ -723,14 +717,15 @@ export const modelSpecs = [
       },
       behavior: {
         rules: [
-          "An open question may carry three optional fields beside its text, flag and key, namely who decides it, the links it rests on and its provisional reading; a question without them stays lawful.",
+          "An open question may carry four optional fields beside its text, flag and key, namely who decides it, the links it rests on, its provisional reading and its re-entry trigger; a question without them stays lawful.",
           "Who decides a question names the person, role or body whose ruling settles it. It authorizes nothing, gates no edit, and no validator compares it with the author of a change.",
           "Who decides a question is one lowercase kebab token the corpus owns, on the grammar a role uses, such as `owner` or `delegated`. The graph holds no person or role to point at, so the value references nothing, and the Protocol ships no list of values.",
-          "In the Markdown carrier the three fields ride labelled sub-items indented under the question's own line, `decider:`, `links:` and `provisional:`, each at most once and each one line, so the question line stays as authored. They are the one indented line the body grammar admits, and the TypeScript carrier carries the same three fields on the question object.",
+          "In the Markdown carrier the four fields ride labelled sub-items indented under the question's own line, `decider:`, `links:`, `provisional:` and `trigger:`, each at most once and each one line, so the question line stays as authored. They are the one indented line the body grammar admits, and the TypeScript carrier carries the same four fields on the question object.",
           "A link names a Spec id or an entry address the question rests on and resolves as a mention does. A link mints no relation.",
           "The provisional reading is one line stating what the design assumes while the question is open. It is intent, never a ruling.",
+          "A re-entry trigger is one line naming what brings a deferred Spec back, such as a named reader the shipped views do not serve. It sits on the blocking question that holds the deferral, and the open-question register reports questions that carry one apart from design holds, so no reader tells the two apart by their wording.",
           "An open question carries no status, date, blocked work unit or record of who checked it. A settled question leaves the Spec, a ruling that passes the decision test lands as a decision Spec the shaped Specs name through `decidedBy`, and the rest of the history stays in git and in the adopter's own records.",
-          "Whether a question holds the readiness floor stays its `[blocking]` flag alone; none of the three fields moves a floor.",
+          "Whether a question holds the readiness floor stays its `[blocking]` flag alone; none of the four fields moves a floor.",
         ],
       },
     },
@@ -754,9 +749,9 @@ export const modelSpecs = [
         openQuestions: [
           {
             question:
-              "Should an example name the rule it exercises, and where: in its prose, or in a field a rule-coverage view could read?",
+              "Where does an example carry the rule keys it exercises: a body line the example section admits, or an envelope field, which would reopen the closed envelope?",
             blocking: false,
-            key: "exampleNamesRule",
+            key: "exercisesCarrier",
           },
           {
             question:
@@ -772,6 +767,7 @@ export const modelSpecs = [
           "A key sits in a marker at the start of the entry's text, after the `rule:` or `flow:` label where the entry has one, as in `- rule: [#graphOnly] The Studio is a projection.` and `- [#oneFamily] Every validator belongs to one family.`, the shape an open question's marker uses, so one form serves labelled and plain entries.",
           "Every keyed entry is addressed as `spec:<id>#rule.<key>` whatever its section, because a Spec uses one primary behavior owner. The address resolves while the Spec carries an entry with that key and fails validation in every Spec that names it once the key is renamed or removed.",
           "A rule address is refused in every id slot, as every entry address is, so no anchor targets a rule and no delivery fact attaches to one.",
+          "An example may name the keys of its parent's rules it exercises, in a field validation checks against the parent's keys. The field mints no edge and confers no delivery fact, so `verifies` stays whole-Spec, and a rule-coverage recipe reads it to report which keyed rules a bound example exercises and which none does.",
           "A keyed rule promoted to a Spec of its own leaves its address behind, because promotion moves the content out, and every mention of that address fails until it names the new Spec.",
         ],
       },
