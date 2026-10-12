@@ -97,3 +97,19 @@ the gate.
 
 The adopter re-pins after the merge and adds the two associations plan 42's acceptance needs
 (OD-157 in its question's text; a test anchor on `tests/types/pinned.test-d.ts`). Then plan 42.
+
+## Status after the second main thread (2026-10-12)
+
+The owner delegated the design pass and the rest of the arc while away. Done on the branch, all
+committed locally: the design pass with Fable 5.1's advice and a gpt-6.1-sol line review; the
+delegated rulings and `ready` statements; lanes S, A, C, G and L; integration; gpt-6-astra's review
+and its fixes; the trial re-run; the adopter's read-only pass. Plan 43's last sections are the
+record, and `npm run check` exits 0.
+
+Not done, for the owner:
+
+- **Push.** The permission classifier refused `git push`, so the branch's commits after `258df34`
+  are local only. PR 31's description is drafted in `.omo/drafts/pr31-body.md`; apply it with
+  `gh pr edit 31 --body-file .omo/drafts/pr31-body.md` after pushing.
+- **Review the delegated rulings** (plan 43, "The design pass, as run") before merging.
+- The three questions in plan 43's "What comes next".
