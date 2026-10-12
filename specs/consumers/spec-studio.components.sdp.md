@@ -8,7 +8,7 @@ relations:
   dependsOn: spec:consumers.spec-studio.data
   decidedBy: spec:decisions.studio-web-components
 ---
-# The Studio's custom elements each render one view and embed anywhere
+# The Studio's custom elements each render one view in pages that load their script and supply graph data
 
 ## Intent
 - outcome: Give the Studio a small set of custom elements that each render one view of the graph for a Studio page or an HTML report that can load the element script and supply its graph data.

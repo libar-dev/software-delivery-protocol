@@ -141,9 +141,10 @@ you supply; `return` is the output contract. Four bindings are injected:
 TypeScript-only syntax. It may `await`. Default output is bounded `util.inspect`; `--json` prints
 `JSON.stringify` instead, which is what a machine consumer should read.
 
-**Pre-shape the return.** The sink prints what you return and nothing else, so returning a
-conclusion costs a fraction of returning a dump. Every recipe below returns counts, ids, and
-decoded reasons rather than whole nodes.
+**Pre-shape the return.** The sink prints the value you return, as JSON under `--json`. It does
+not suppress `console.*`, so a body a machine reads, every recipe below included, writes nothing
+to the console. Returning a conclusion costs a fraction of returning a dump, so every recipe
+below returns counts, ids, and decoded reasons rather than whole nodes.
 
 Changed-file impact, Pack design and the design diff, recipes 4, 29 and 35, accept `detail: true`
 and default to summaries that preserve every total and name omitted detail in `leftOut`. Pack
@@ -158,7 +159,9 @@ process's full authority.
 **These recipes are not law.** They compose the laws the Specs carry, and they cite rather than
 restate them: the surface itself is [`spec:consumers.agent-surface`](../../specs/consumers/agent-surface.sdp.md)
 and [`spec:consumers.reader`](../../specs/consumers/reader.sdp.gherkin); the front door is
-[`spec:decisions.agent-front-door`](../../specs/decisions/agent-front-door.sdp.md). The vocabulary
+[`spec:decisions.agent-front-door`](../../specs/decisions/agent-front-door.sdp.md); the sink's contract
+(how a body arrives, how its answer prints and which failures refuse) is
+[`spec:consumers.agent-surface.evaluation-sink`](../../specs/consumers/agent-surface.evaluation-sink.sdp.md). The vocabulary
 these bodies speak — claims, delivery facts, stated versus derived readiness, blast radius,
 coverage-unknown, at-risk — is ratified in [`CONTEXT.md`](../../CONTEXT.md).
 
@@ -2369,7 +2372,7 @@ Totals always count the whole Pack. With `detail: true`, the body pre-shapes the
 of its own. Members keep the manifest's order. Each resolved member carries its stated rung, the
 floor reached (`"none"` when no rung derives), and its stated next rung, the rung above the stated
 one, `null` at `ready`. `statedNextRungFailures` lists the floor clauses that hold the member below
-that rung, each with its `targets` when it names dependencies. An empty list beside a next rung
+that rung, each with its `targets` when it names dependencies. An empty list beside the stated next rung
 means the floor already holds that rung: the rung waits for its author, and
 `totals.waitingForAuthor` counts those members. It is never a promotion. Promotion preflight
 (recipe 9) reports both next rungs under `aboveStated` and `aboveFloor`.
@@ -3691,6 +3694,7 @@ const input = params.imports;
 const diagnostics = [];
 const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 if (!object(input) || input.schema !== "sdp-imports/1" || typeof input.adapter !== "string" || !Array.isArray(input.files) ||
+    ("exclude" in input && (!Array.isArray(input.exclude) || input.exclude.some((path) => typeof path !== "string"))) ||
     input.files.some((entry) => !object(entry) || typeof entry.file !== "string" || !Array.isArray(entry.imports) || entry.imports.some((file) => typeof file !== "string"))) {
   diagnostics.push({ parameter: "imports", problem: "Supply an sdp-imports/1 object." });
 }

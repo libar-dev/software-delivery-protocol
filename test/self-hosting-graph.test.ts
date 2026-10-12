@@ -223,14 +223,14 @@ describe("the self-hosting corpus", () => {
     // cannot certify itself by moving both sides of a comparison at once.
     // Re-measured from the refreshed tree: 256 Markdown Specs and four Gherkin Specs,
     // all 260 in the self-hosting Pack; five Pack manifests and 299 source anchors.
-    // The excluded-root validate run corroborates 564 nodes and 1446 edges.
+    // The excluded-root validate run corroborates 564 nodes and 1452 edges.
     expect(result.counts).toEqual({ specs: 260, packs: 5, anchors: 299 });
     expect(expectedSpecs).toHaveLength(260);
     expect(expectedPackMembers).toHaveLength(260);
     expect(expectedAnchors).toHaveLength(299);
-    expect(expectedBindingEdges).toHaveLength(333);
+    expect(expectedBindingEdges).toHaveLength(339);
     expect(result.graph.nodes).toHaveLength(564);
-    expect(result.graph.edges).toHaveLength(1446);
+    expect(result.graph.edges).toHaveLength(1452);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {

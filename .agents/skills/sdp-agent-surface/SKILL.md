@@ -125,33 +125,33 @@ pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/r
 
 ### Which recipe answers a task
 
-| The task                                        | Run                                                                                                        |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Pick work to build                              | the build backlog (recipe 1); the design backlog (recipe 33) for designed, unbuilt Specs                   |
-| Find code ahead of intent                       | the drift alarm (recipe 2)                                                                                 |
-| Read what a Spec guarantees and who verifies it | Spec guarantees (recipe 3)                                                                                 |
-| Review a changeset                              | changed-file impact (recipe 4), then the mention audit (recipe 22) over its scope                          |
-| Locate a term or a concept                      | concept search (recipe 6); entry search (recipe 23) for the entry and its line                             |
-| Decide whether a Spec may state its next rung   | promotion preflight (recipe 9); the lower ladder (recipe 11) across the corpus                             |
-| Compare stated readiness with the floor         | readiness divergence (recipe 7)                                                                            |
-| Read warnings, gaps and verifier health         | orphans and gaps (recipe 8); declared versus enabled verifiers (recipe 10)                                 |
-| Review a Pack                                   | the Pack review backbone (recipe 5), Pack design (recipe 29), references into a design (recipe 27)         |
-| List open questions                             | the open-question register (recipe 20)                                                                     |
-| See what a Spec rests on                        | dependency footing (recipe 21); dependency cycles (recipe 26)                                              |
-| Change a Spec others rest on                    | design-change impact (recipe 30); the planning slice (recipe 19)                                           |
-| Check addresses written outside the Specs       | address resolution (recipe 25)                                                                             |
-| List the signatures two parties share           | pinned declarations (recipe 24)                                                                            |
-| Read a component and its reach                  | component membership (recipe 12), uses fan-in and fan-out (recipe 13), structural neighborhood (recipe 14) |
-| Measure structural and projection coverage      | census structural coverage (recipe 15), the projection-coverage upper bound (recipe 16)                    |
-| Read the architecture                           | the architecture map (recipe 17), architecture crossings (recipe 32)                                       |
-| Weigh the decisions that shape it               | the decision map (recipe 18), the decision register (recipe 31)                                            |
-| Reuse an architecture value                     | roles, layers and contexts (recipe 28)                                                                     |
-| Find keyed rules no example exercises           | rule coverage (recipe 34)                                                                                  |
-| See what changed since a design pass            | the design diff (recipe 35)                                                                                |
-| Compose a design pass's reading                 | the context bundle (recipe 36), the perspective filter (recipe 37)                                         |
-| Apply a change proposal                         | the proposal check (recipe 38)                                                                             |
-| Slim a Spec its bound code now carries          | slimming candidates (recipe 39)                                                                            |
-| Find files and components the anchors miss      | the curation report (recipe 40)                                                                            |
+| The task                                                | Run                                                                                                        |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Pick work to build                                      | the build backlog (recipe 1); the design backlog (recipe 33) for designed, unbuilt Specs                   |
+| Find code ahead of intent                               | the drift alarm (recipe 2)                                                                                 |
+| Read what a Spec guarantees and who verifies it         | Spec guarantees (recipe 3)                                                                                 |
+| Review a changeset                                      | changed-file impact (recipe 4), then the mention audit (recipe 22) over its scope                          |
+| Locate a term or a concept                              | concept search (recipe 6); entry search (recipe 23) for the entry and its line                             |
+| Check a Spec's stated next rung before a readiness edit | promotion preflight (recipe 9); the lower ladder (recipe 11) across the corpus                             |
+| Compare stated readiness with the floor                 | readiness divergence (recipe 7)                                                                            |
+| Read warnings, gaps and verifier health                 | orphans and gaps (recipe 8); declared versus enabled verifiers (recipe 10)                                 |
+| Review a Pack                                           | the Pack review backbone (recipe 5), Pack design (recipe 29), references into a design (recipe 27)         |
+| List open questions                                     | the open-question register (recipe 20)                                                                     |
+| See what a Spec rests on                                | dependency footing (recipe 21); dependency cycles (recipe 26)                                              |
+| Change a Spec others rest on                            | design-change impact (recipe 30); the planning slice (recipe 19)                                           |
+| Check addresses written outside the Specs               | address resolution (recipe 25)                                                                             |
+| List the signatures two parties share                   | pinned declarations (recipe 24)                                                                            |
+| Read a component and its reach                          | component membership (recipe 12), uses fan-in and fan-out (recipe 13), structural neighborhood (recipe 14) |
+| Measure structural and projection coverage              | census structural coverage (recipe 15), the projection-coverage upper bound (recipe 16)                    |
+| Read the architecture                                   | the architecture map (recipe 17), architecture crossings (recipe 32)                                       |
+| Weigh the decisions that shape it                       | the decision map (recipe 18), the decision register (recipe 31)                                            |
+| Reuse an architecture value                             | roles, layers and contexts (recipe 28)                                                                     |
+| Find keyed rules no example exercises                   | rule coverage (recipe 34)                                                                                  |
+| See what changed since a design pass                    | the design diff (recipe 35)                                                                                |
+| Compose a design pass's reading                         | the context bundle (recipe 36), the perspective filter (recipe 37)                                         |
+| Apply a change proposal                                 | the proposal check (recipe 38)                                                                             |
+| Slim a Spec its bound code now carries                  | slimming candidates (recipe 39)                                                                            |
+| Find files and components the anchors miss              | the curation report (recipe 40)                                                                            |
 
 For structural questions, use component membership, uses fan-in and fan-out, structural
 neighborhood, census structural coverage, and the projection-coverage upper bound (recipes 12-16).

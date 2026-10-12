@@ -294,6 +294,8 @@ describe("curation report recipe", () => {
       { schema: "sdp-imports/2", adapter: "typescript", files: [] },
       { schema: "sdp-imports/1", files: [] },
       { schema: "sdp-imports/1", adapter: "typescript", files: null },
+      { schema: "sdp-imports/1", adapter: "typescript", files: [], exclude: "src/private" },
+      { schema: "sdp-imports/1", adapter: "typescript", files: [], exclude: [42] },
       { schema: "sdp-imports/1", adapter: "typescript", files: [null] },
       { schema: "sdp-imports/1", adapter: "typescript", files: [1] },
       {

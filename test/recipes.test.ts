@@ -324,7 +324,10 @@ function structuralGroundTruth() {
 const registerRecipesImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.register-recipes"),
   label: "asserts realization of the shipped register recipes",
-  satisfies: ref("spec:consumers.agent-surface.register-recipes"),
+  satisfies: [
+    ref("spec:consumers.agent-surface.register-recipes"),
+    ref("spec:model.open-question-keys"),
+  ],
 });
 void registerRecipesImplementationAnchor;
 const registerRecipesTestAnchor = specTest({

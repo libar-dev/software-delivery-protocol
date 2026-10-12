@@ -8,7 +8,7 @@ relations:
     target: spec:decisions.carrier-ruling
     reason: extends the Markdown carrier to Packs and keeps the TypeScript builder as a per-ID option
 ---
-# Packs gain a Markdown manifest carrier
+# Packs have a Markdown manifest carrier
 
 ## Intent
 - outcome: Give every Pack one readable canonical authoring surface without losing the TypeScript manifest as a lawful per-ID option.

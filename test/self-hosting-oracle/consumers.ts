@@ -1412,7 +1412,8 @@ export const consumersSpecs = [
     specKind: "contract",
     altitude: "story",
     readiness: "scoped",
-    title: "The Studio's custom elements each render one view and embed anywhere",
+    title:
+      "The Studio's custom elements each render one view in pages that load their script and supply graph data",
     narrative: null,
     sections: {
       intent: {

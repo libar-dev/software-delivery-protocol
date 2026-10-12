@@ -103,7 +103,7 @@ function canonicalConstraint(constraint: ConstraintSection): Record<string, unkn
 const openSectionOrderAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.open-section-order"),
   label: "preserves authored open-section and model-term order",
-  satisfies: ref("spec:extraction.open-section-order"),
+  satisfies: [ref("spec:extraction.open-section-order"), ref("spec:model.open-question-keys")],
   component: componentAnchorId("component:protocol.extract"),
   role: "codec",
 });

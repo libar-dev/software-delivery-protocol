@@ -35,7 +35,7 @@ Self-hosting, the Protocol's own repo conforming to its own meta-model, came aft
 | Term | Definition | Aliases to avoid |
 |---|---|---|
 | **`Spec`** | the one authored truth-primitive: a durable, **enrich-in-place** statement of intended system truth, never migrated to a different artifact type | "model element" · `Requirement`/`ImplementedRequirement` splits |
-| **envelope** | the stable minimal outer shape — `id` · `title` · `kind` · `altitude` · `readiness` · `relations`; changes almost never (L9) | — |
+| **envelope** | the stable minimal outer shape — `id` · `title` · `kind` · `altitude` · `readiness` · `relations`; changes almost never | — |
 | **`kind`** | the category of truth — a **true subtype** (changes required detail + validation); 8 values, below | "genus/species" |
 | **`altitude`** | size/scope — a **position**: `epic → feature → story`; `epic` is the ceiling (above-epic defers) | "abstraction" |
 | **`readiness`** | design maturity — a **position**: `idea → scoped → defined → ready`; **stated** by the author, checked against a floor | "status" · "candidate" (FSM imprint) · readiness is never "claimed" |
@@ -74,7 +74,7 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 | **anchor** | a human-written pointer **in source code**: *"this code location is a **binding** into the graph"* — identity, an optional label, zero or more Spec targets, and optional structure; a binding assertion only, never system-truth content (no behavior, rationale, readiness, status, acceptance criteria, or delivery facts); yields `anchored`-claim edges; written in one of **two representations**, the constant form or the comment form, feeding one closed envelope (`spec:model.anchors`); in prose, the verb **"annotate"** means "write an anchor" | "marker" · "annotation" |
 | **constant form** | the anchor as a top-level `const` initialized with a trusted builder call (`codeAnchor` · `specTest` · `specOracle`), reified statically; trust is by a Protocol builder binding: the package, its zero-dependency `/anchors` subpath, or a relative import of the package's own `ids`, `anchors` or `model/code-anchor` module (`spec:model.anchors`) | "anchor constant" (the old name) · "marker constant" |
 | **comment form** | the anchor as a top-level `/** … */` block in a `.ts`/`.tsx` file, above a statement, after the last one, or alone in the file, carrying reserved camelCase, TSDoc-compatible tags (`@sdpAnchor` · `@sdpSatisfies` · `@sdpReferences` · `@sdpRole` · …); `@sdpAnchor <id>` opens it, only the reserved tags are read, prose authors nothing, and no import is required (the comment-form ruling, MD-36) | "JSDoc anchor" · "doc tag" |
-| **references** | the derived, `anchored` CodeNode → `Spec` edge from a code anchor's `references` list: *this code answers to that design* without claiming to realize it; the unit follows the design or realizes part of it, so a change to the design asks the code to follow; one direction only, so a design that builds on existing code says so by its own `dependsOn` or `refines` to the Spec the code satisfies, never by a reference from the code; a target names a whole Spec; it confers no delivery fact, moves no floor, and the drift alarm ignores it (the binding-grain ruling, MD-37) | "see-also" · "satisfies" (a realization claim) · "dependsOn" (a Spec relation) |
+| **references** | the derived, `anchored` CodeNode → `Spec` edge from a code anchor's `references` list: *this code answers to that design* without claiming to realize it; the unit follows the design without realizing any of its promises, or realizes part of a Spec whose remaining promises no unit yet realizes, so a change to the design asks the code to follow; one direction only, so a design that builds on existing code says so by its own `dependsOn` or `refines` to the Spec the code satisfies, never by a reference from the code; a target names a whole Spec; it confers no delivery fact, moves no floor, and the drift alarm ignores it (the binding-grain ruling, MD-37) | "see-also" · "satisfies" (a realization claim) · "dependsOn" (a Spec relation) |
 | **role** | the optional one-token value on a code anchor, lowercase kebab and never normalized, naming the architectural pattern its unit plays (`service` · `decider` · `projection` · …); a corpus-owned vocabulary whose taxonomy the census renders with counts, checked against no list (the architectural-annotation ruling, MD-38) | "pattern" · "kind" (reserved for the Spec descriptor) · "tag" |
 | **layer** | the optional closed-set attribute of a `component:` anchor — `edge` · `application` · `domain` · `adapter` · `infrastructure`; outside the set, or on a non-component anchor, an envelope error | "tier" |
 | **context** | the optional one-token value on a `component:` anchor, in the token grammar of `role`, naming its bounded context; on a non-component anchor, an envelope error | "bounded_context" (the v0 field) · "domain" |
@@ -129,7 +129,7 @@ facts literal while the canonical recipe reports both audited exclusions.
 | **`validator`** | one individual deterministic check; groups into the two families below | — |
 | **conformance checks** | "is this *well-formed* against the meta-model?" — referential integrity · duplicate IDs · `claim` separation · grouping coherence · ambiguity-is-loud | — |
 | **honesty checks** | "is this *not pretending*?" — authoring-shape honesty (no hand-authored derived edges/facts) · honest readiness against the floor | — |
-| **corpus rule** | an operator-selected graph body a corpus runs through its own `validate --rules` invocation; its findings name their corpus and sit outside the conformance and honesty families; neither a rule-kind Spec nor a Protocol validator (`spec:validation.corpus-rules`) | "corpus check" · "custom validator" |
+| **corpus rule** | an operator-selected graph body a corpus runs through its own `validate --rules` invocation, designed and not yet built; its findings name their corpus and sit outside the conformance and honesty families; neither a rule-kind Spec nor a Protocol validator (`spec:validation.corpus-rules`) | "corpus check" · "custom validator" |
 | **readiness floor** | the **minimum structural requirement to *state*** a readiness rung — a floor to clear, **never a quota to fill** or a score | "readiness profile" |
 | **`gap`** | a surfaced absence (e.g. `ready` with no verifier) — informative, never a gate | — |
 | **`orphan`** | a `Spec` with no relations and nothing pointing at it — informative | — |
@@ -149,7 +149,7 @@ validated," never "provably correct."**
 |---|---|---|
 | **`projection`** | a pure function of the graph producing a consumer artifact — disposable, regenerable, never a second source | — |
 | **Design Review** | the flagship curated review: a `Spec`/`Pack` rendered *in context* — the context in which a human decides to state `ready`; human practice, never a recorded fact or gate | — |
-| **census** | the projection of taxonomy, readiness divergence, structural bindings and findings that `sdp census` publishes | "inventory" |
+| **census** | the projection of taxonomy, readiness divergence, structural bindings and findings that `sdp census` publishes (`spec:consumers.census-page`) | "inventory" |
 | **agent surface** | a **visible typed graph the agent *scripts*** via the typed CLI — no verb wall; the schema *is* the contract (under-typing hides a capability) | a 30-verb API · raw-JSON-you-rejoin |
 | **`reader`** | the thin typed loader: joins + `claim` decode done once, returns composable data; authors/persists nothing — a front door, not a store | "handle" |
 | **agent front door** | the CLI-facing realization of the agent surface (MD-22): **two entrances over one seam** — the package exports the `reader` constructor, and the CLI carries the evaluation sink; a composite naming both entrances, distinct from the `reader`'s own "front door, not a store" gloss above, which names the reader's role over the graph | a query API · a verb wall |
@@ -297,9 +297,9 @@ delivery fact, workflow state, or graph state.
   `pattern:` namespace — ordinary English remains; the architectural-annotation ruling, MD-38,
   which replaced MD-34) · `annotation` (→ `anchor`; the verb "annotate" survives as "write an anchor").
 - **Locked usage:** readiness is **"stated/asserted," never "claimed"** ("claim" is reserved for the `claim`
-  taxonomy) · the meta-model defines the **contract**, **instances conform**; "govern"/"police" are
-  retired as descriptions of the Protocol's relation to a project, which it does not; "checks police
-  conformance and honesty" remains the guardrail's wording, because checks do enforce · checks are
+  taxonomy) · the meta-model defines the **contract**, **instances conform**; the Protocol neither
+  governs nor polices a project, so "govern" and "police" never describe its relation to one;
+  "checks police conformance and honesty" stays the guardrail's wording, because checks do enforce · checks are
   **conformance checks + honesty checks** · **pre-graph** = upstream of graph derivation in the
   one validation path (the authored level before the extractor runs) — a level checks never live in:
   validators consume the one graph only, never a second validation path (one validation path, MD-14).

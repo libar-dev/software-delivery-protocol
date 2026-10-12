@@ -180,7 +180,8 @@ so it needs no extra tag, status key, or side table.
   below `defined`, the floor clause in `spec:validation.readiness-floor`.
 - A deferral is a `[blocking]` open question that names its re-entry trigger in a `trigger:`
   field, plus `dependsOn` when another Spec must hold first; `spec:decisions.planning-truths-placement` rules this home.
-  The `defined` floor does not read the parent's readiness, so the deferred Spec's example children
+  A deferral that is itself a ruling, such as MCP integration or external `doc:` decision targets,
+  stays on its decision Spec, which names its re-entry condition. The `defined` floor does not read the parent's readiness, so the deferred Spec's example children
   can still state `defined` once their bound points are complete and match the parent's example
   vocabulary, when it has one. The `ready` floor does read the parent's readiness, so their `ready`
   waits until the parent states `defined`.
@@ -328,7 +329,7 @@ or a sandboxed function runtime, imports the same builders from the zero-depende
 builders and nothing else.
 
 Trust comes from the import. The builder import must be a Protocol builder binding: the public
-package, its `/anchors` subpath, or a relative import that resolves to the package's `ids` or
+package, its `/anchors` subpath, or a relative import that resolves to the package's `ids`, `anchors` or
 `model/code-anchor` module. A consumer-local lookalike mints nothing and reports nothing, because
 a source file that never bound to the Protocol is not authoring drift to report. On the CommonJS
 package surface the trusted relative-module set is empty, so relative bindings mint no anchors

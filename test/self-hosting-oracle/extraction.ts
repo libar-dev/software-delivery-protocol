@@ -653,7 +653,7 @@ export const extractionSpecs = [
       },
       behavior: {
         rules: [
-          "Every command uses the same extracted graph and validation seam.",
+          "Every command that checks the graph checks the graph its own run derived, through the one validation seam; `sdp build` stops at extraction checks.",
           "`sdp build` publishes derived outputs only after extraction reports no error. A warning does not fail the build; a contract-generation warning may withhold the contract or registrar it names under the executable-contracts law.",
           "Before replacing current outputs, `sdp build` stages the graph, the owed contracts, the registrar manifest and the registrar siblings, and the imports when `--imports` is supplied, in temporary locations. It then publishes the staged set and removes registrar siblings no longer owed.",
           "On failure, `sdp build` removes its graph, contracts, manifest, temporary outputs and the confined registrar siblings known from the previous and new manifests. It removes imports only when that invocation requested them. A failed removal names the surviving path and says it must not be read as current; an untrusted registrar path is outside generated ownership.",

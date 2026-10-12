@@ -1379,7 +1379,7 @@ function proseMentionWarning(
 const proseMentionsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.prose-mentions"),
   label: "checks that prose mentions resolve and warns once per unbacked Spec pair",
-  satisfies: ref("spec:validation.prose-mentions"),
+  satisfies: [ref("spec:validation.prose-mentions"), ref("spec:model.open-question-keys")],
   component: componentAnchorId("component:protocol.validate"),
   role: "validator",
 });
