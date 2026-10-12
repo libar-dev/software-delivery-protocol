@@ -1103,14 +1103,15 @@ function typeScriptEntryLines(
   const relationsNode = firstPropertyNamed(objectLiteral, "relations")?.getInitializer();
   const relationsArray = relationsNode === undefined ? undefined : unwrapTransparent(relationsNode);
   if (relationsArray !== undefined && Node.isArrayLiteralExpression(relationsArray)) {
-    relationsArray
-      .getElements()
-      .forEach((element, index) =>
+    const relations = data.relations as Record<string, unknown>[];
+    relationsArray.getElements().forEach((element, index) => {
+      const relation = relations[index];
+      if (relation !== undefined)
         lines.push({
-          entry: `relation.${String((data.relations as Record<string, unknown>[])[index]?.type)}.${String((data.relations as Record<string, unknown>[])[index]?.target)}`,
+          entry: `relation.${String(relation.type)}.${String(relation.target)}`,
           line: element.getStartLineNumber(),
-        }),
-      );
+        });
+    });
   }
   const intent = data.intent;
   const intentNode = firstPropertyNamed(objectLiteral, "intent")?.getInitializer();

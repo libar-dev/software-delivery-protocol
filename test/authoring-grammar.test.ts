@@ -76,7 +76,7 @@ describe("rule keys", () => {
         ]),
       );
       const parent = createReader(graph).specContext("spec:probe.parent");
-      expect(parent?.sections.behavior).toEqual({
+      expect(parent?.sections?.behavior).toEqual({
         rules: ["First text.", "Unkeyed text.", "Third text.", "A later [#plain] marker."],
         ruleKeys: { firstRule: "rules[0]", description: "rules[2]" },
       });
@@ -98,7 +98,7 @@ describe("rule keys", () => {
       expect(JSON.parse(serializeGraph(graph))).toMatchObject({
         nodes: expect.arrayContaining([
           expect.objectContaining({
-            sections: expect.objectContaining({ behavior: parent?.sections.behavior }) as unknown,
+            sections: expect.objectContaining({ behavior: parent?.sections?.behavior }) as unknown,
           }),
         ]) as unknown,
       });
@@ -115,7 +115,7 @@ describe("rule keys", () => {
             : "- [#firstRule] First rule.";
       const graph = graphOf(reifyMarkdownCarrier(mdSpec(`## ${owner}\n${items}`), "probe.sdp.md"));
       expect(
-        createReader(graph).specContext("spec:probe.parent")?.sections.behavior?.ruleKeys,
+        createReader(graph).specContext("spec:probe.parent")?.sections?.behavior?.ruleKeys,
       ).toEqual(
         owner === "Behavior" || owner === "Workflow"
           ? { firstFlow: "flows[0]", firstRule: "rules[0]" }
@@ -132,7 +132,7 @@ describe("rule keys", () => {
     );
     expect(
       Object.keys(
-        createReader(graph).specContext("spec:probe.parent")?.sections.behavior?.ruleKeys ?? {},
+        createReader(graph).specContext("spec:probe.parent")?.sections?.behavior?.ruleKeys ?? {},
       ),
     ).toEqual(["flowFirst", "ruleNext"]);
   });
@@ -177,7 +177,7 @@ describe("rule keys", () => {
       reifyMarkdownCarrier(mdSpec("## Rule\n- [#first] First text.", "rule"), "probe.sdp.md"),
     );
     expect(
-      createReader(plain).specContext("spec:probe.parent")?.sections.behavior,
+      createReader(plain).specContext("spec:probe.parent")?.sections?.behavior,
     ).not.toHaveProperty("ruleKeys");
     expect(renderDesignReview(createReader(keyed))).toEqual(
       renderDesignReview(createReader(plain)),
@@ -383,13 +383,115 @@ describe("relation attributes", () => {
   });
 });
 
+describe("grammar boundary checks", () => {
+  it("refuses Gherkin exercises on an otherwise lawful example-space scenario", () => {
+    const source = `@spec.probe.parent @altitude.story @readiness.idea
+Feature: Probe
+  @example-space @exercises.first
+  Scenario: Vocabulary
+    Given a point
+    When invoked
+    Then returned
+  Rule: [#first] First text.
+`;
+    const result = reifyGherkinCarrier(source, "probe.sdp.gherkin");
+    expect(result.specs).toEqual([]);
+    expect(
+      result.findings.some(
+        (finding) => finding.message.includes("exercises") && finding.line === 3,
+      ),
+    ).toBe(true);
+  });
+  it.each(["@exercises", "@exercise.first"])(
+    "refuses a malformed or near-miss exercises tag %s",
+    (tag) => {
+      const result = reifyGherkinCarrier(
+        gherkin(["[#first] First text."], tag),
+        "probe.sdp.gherkin",
+      );
+      expect(result.findings.some((finding) => finding.message.includes("exercises"))).toBe(true);
+      expect(result.specs).toEqual([]);
+    },
+  );
+  it("keeps the carrier finding caps after common normalization", () => {
+    const rules = Array.from({ length: 110 }, () => "[#Bad] Malformed.");
+    for (const carrier of ["Markdown", "Gherkin"]) {
+      const result = ruleResult(carrier, rules);
+      expect(result.findings).toHaveLength(100);
+      expect(result.specs).toEqual([]);
+    }
+  });
+  it("keeps relation finding lines after serialization reorders edges", () => {
+    const parent = reifyMarkdownCarrier(
+      mdSpec("## Rule\n- [#first] First text.", "rule"),
+      "parent.sdp.md",
+    );
+    const example = reifyMarkdownCarrier(
+      mdSpec(
+        "## Intent\n- outcome: Probe.",
+        "example",
+        "\n  verifies: {target: spec:probe.parent, exercises: [missing]}\n  dependsOn: spec:probe.parent",
+        "probe.example",
+      ),
+      "example.sdp.md",
+    );
+    const graph = graphOf(parent, example);
+    const serialized = JSON.parse(serializeGraph(graph)) as GraphSchema;
+    for (const input of [graph, serialized]) {
+      const finding = validateGraph(input).findings.find(
+        (row) => row.validatorId === "conformance/rule-exercises",
+      );
+      expect(finding?.line).toBe(7);
+    }
+  });
+  it("refuses exercises on an anchored verifies edge", () => {
+    const graph = graphOf(ruleResult("Markdown", ["[#first] First text."]));
+    const input: GraphSchema = {
+      ...graph,
+      nodes: [
+        ...graph.nodes,
+        { id: "test:probe", nodeType: "Anchor", claim: "anchored", file: "probe.test.ts", line: 1 },
+      ],
+      edges: [
+        {
+          from: "test:probe",
+          type: "verifies",
+          to: "spec:probe.parent",
+          claim: "anchored",
+          exercises: ["first"],
+        },
+      ],
+    };
+    expect(
+      validateGraph(input).findings.filter(
+        (finding) => finding.validatorId === "conformance/rule-exercises",
+      ),
+    ).toHaveLength(1);
+  });
+  it("refuses an unknown relation property even when its name is inherited", () => {
+    const result = reifyMarkdownCarrier(
+      mdSpec(
+        "## Intent\n- outcome: Probe.",
+        "behavior",
+        "{dependsOn: {target: spec:probe.parent, __proto__: hidden}}",
+      ),
+      "probe.sdp.md",
+    );
+    expect(
+      result.findings.some(
+        (finding) => finding.severity === "error" && finding.message.includes("__proto__"),
+      ),
+    ).toBe(true);
+  });
+});
+
 const questionBody =
   "## Intent\n- outcome: Probe.\n### Open questions\n- [blocking #settle] Who settles it?\n  - decider: design-owner\n  - links: spec:probe.parent#rule.first, spec:probe.missing\n  - provisional: Assume one caller.\n  - trigger: A second caller arrives.\n\n## Rule\n- [#first] First text.";
 describe("question fields", () => {
   it("carries the fields through Markdown, serialization and the reader with exact lines", () => {
     const graph = graphOf(reifyMarkdownCarrier(mdSpec(questionBody), "probe.sdp.md"));
     const context = createReader(graph).specContext("spec:probe.parent");
-    expect(context?.sections.intent?.openQuestions?.[0]).toEqual({
+    expect(context?.sections?.intent?.openQuestions?.[0]).toEqual({
       question: "Who settles it?",
       blocking: true,
       key: "settle",
@@ -415,7 +517,7 @@ describe("question fields", () => {
     expect(JSON.parse(serializeGraph(graph))).toMatchObject({
       nodes: [
         expect.objectContaining({
-          sections: expect.objectContaining({ intent: context?.sections.intent }) as unknown,
+          sections: expect.objectContaining({ intent: context?.sections?.intent }) as unknown,
         }),
       ],
     });
@@ -561,7 +663,7 @@ describe("TypeScript import", () => {
     expect(md.specs[0]?.data.behavior).toEqual(ts.specs[0]?.data.behavior);
     expect(md.specs[0]?.data.intent).toEqual(ts.specs[0]?.data.intent);
     expect(deriveGraph(md.specs, [], []).edges).toEqual(
-      expect.arrayContaining(deriveGraph(ts.specs, [], []).edges),
+      expect.arrayContaining([...deriveGraph(ts.specs, [], []).edges]),
     );
   });
 });
