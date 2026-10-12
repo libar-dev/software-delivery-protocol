@@ -23,7 +23,7 @@
 | 19 | Planning slice | spec | Read a planning slice |
 | 20 | Open-question register | none | List open questions |
 | 21 | Dependency footing | spec | Read dependency footing |
-| 22 | Mention audit | scope | Audit prose mentions |
+| 22 | Mention audit | scope, intended | Audit prose mentions |
 | 23 | Entry search | term | Find entries by term |
 | 24 | Pinned declarations | none | List pinned declarations |
 | 25 | Address resolution | addresses | Resolve entry addresses |
@@ -62,8 +62,11 @@ link itself into its own `node_modules/.bin`; an unresolved `sdp` can select mac
 binary.
 
 The same CLI publishes four independent read roots with `view`, `census`, `mermaid`, and `gherkin`.
-Repository generation/check scripts run the private projection suite so all four survive and are
-certified together; graph questions still enter through `q`.
+The repository's generate/check scripts preserve and publish all four roots together. They save
+the prior trees before the individual publishers run, preserve each result across the next build's
+invalidation, and restore all four results at the end. In check mode a prior tree must exist for
+each root; Design Review checks repeat-render determinism, while census, Mermaid and Gherkin also
+compare the prior tree's bytes with the current render. Graph questions enter through `q`.
 
 For adopters, the portable form keeps root and exclusions project-selected:
 
@@ -75,10 +78,10 @@ pnpm exec sdp q '<body>' --root PATH --exclude PATH --exclude PATH
 `--root PATH` picks the extraction root (default: the working directory) and `--exclude` is
 repeatable for root-relative path prefixes. `PATH` is a placeholder, not a literal directory.
 
-**Some recipes take a parameter.** Recipes 3, 4, 5, 6, 9, 14, 19, 21, 22, 23, 25, 27, 29, 30, 34, 35, 36, 37, 38, 39, and 40
-read their subject from the `params` binding on their opening line: a Spec id, a list of changed
-files, a Pack id, a search term, a component id, a list of Spec ids, or a list of entry addresses.
-Each recipe names its parameter. Pass it as JSON data with `--params`, never by editing the body:
+Recipes read their documented input from `params`: Spec or component ids, changed files, Pack
+ids, search terms, Spec or address lists, base graphs, proposals, perspectives, imports objects,
+budgets and detail selections. Each recipe names its parameter. Pass it as JSON data with
+`--params`, never by editing the body:
 
 ```sh
 pnpm --silent sdp:q '<body>' --params '{"spec":"spec:model.anchors"}' --json
@@ -88,12 +91,14 @@ pnpm --silent sdp:q '<body>' --params @params.json --json
 Repeat `--params` to merge objects at the top level from left to right. `--params @PATH` reads an
 object from a file. `--params KEY=@PATH` binds any JSON value from the file to one lower-camel key,
 for example `--params base=@graph.json --params '{"spec":"spec:model.anchors"}'`. A key given twice
-by any form is refused before the body runs. Without `--params`, `params`
-is `{}`. Bodies with a sample use it; recipes that require external input return diagnostics or
-refuse a missing input, as their sections state. The samples name *this*
-repository's corpus, so every body runs as written here (the recipe check executes each one
-unchanged). A Spec id, component id, or Pack id absent from the graph returns `found: false`
-rather than failing. A value that is not JSON, JSON that is not an object (null, an array, a
+by any form is refused before the body runs. Without `--params`, `params` is `{}`. Bodies with a
+documented sample fall back to it. A required input without a sample returns diagnostic data in
+the shape its recipe documents: `diagnostics`, `schemaProblems`, or a `found: false` result with a
+reason and expected input. Missing input is never silently treated as a successful empty answer.
+The samples name this repository's corpus, so every body runs as written here. The recipe check
+executes each one unchanged. Recipes report absent subjects in their documented result shape.
+Most use `found: false`; the design diff, context bundle and perspective filter report an absent
+Pack in `diagnostics`. A value that is not JSON, JSON that is not an object (null, an array, a
 string, a number or a boolean), or a file that cannot be read is refused before the body runs,
 with exit 1 and one line on stderr.
 
@@ -127,7 +132,7 @@ you supply; `return` is the output contract. Four bindings are injected:
 |---|---|
 | `g` | the reader over the derived graph — the same `createReader` the package exports |
 | `graph` | the raw graph schema object (nodes, edges, claims) |
-| `report` | the validation report, so honesty findings are queryable data and never a gate |
+| `report` | the validation report, so findings are queryable data and never a gate |
 | `params` | the JSON object `--params` supplies, or `{}` without it; input to the body, never a verb |
 
 **Body rules.** A body is a plain JavaScript async function body — no `import`/`export`, no
@@ -137,6 +142,11 @@ TypeScript-only syntax. It may `await`. Default output is bounded `util.inspect`
 **Pre-shape the return.** The sink prints what you return and nothing else, so returning a
 conclusion costs a fraction of returning a dump. Every recipe below returns counts, ids, and
 decoded reasons rather than whole nodes.
+
+Changed-file impact, Pack design and the design diff, recipes 4, 29 and 35, accept `detail: true`
+and default to summaries that preserve every total and name omitted detail in `leftOut`. Pack
+design also accepts member ids in `detail` for selected full rows. Other recipes follow their
+own documented result shapes.
 
 **Trust stance.** `sdp q` evaluates local operator-supplied code with the trust of any local
 developer tool — no sandbox is claimed and none exists. A body is code you author yourself; never
@@ -209,8 +219,8 @@ return {
 
 `implemented` is a delivery fact: it says a code anchor *binds* to the Spec, never that the code
 works or is live. It never propagates through refinement. Ready examples normally carry
-verification evidence rather than implementation work (MD-24); ready decision records carry
-registry-ratification evidence rather than implementation or verifier work (MD-26). The raw
+verification evidence under the example realization posture (MD-24); ready decision records carry
+registry-ratification evidence under the decision readiness posture (MD-26). The raw
 `ready ∧ ¬implemented` expression remains literally true while this operational recipe excludes
 both kinds, audits example verifier bindings, and reports both excluded counts. The reverse pairing
 is recipe 2. Each backlog row also reports `designColumns` from its Spec context: counts of keyed
@@ -391,6 +401,7 @@ return {
   changedFiles: radius.changedFiles,
   totals,
   impactedSpecs: radius.impactedSpecs.map((item) => item.id),
+  impactedPacks: radius.impactedPacks.map((item) => item.id),
   atRisk: {
     incomingSpecs: specs.filter((item) => inDirection(item, "incoming")).map((item) => item.id),
     outgoingSpecs: specs.filter((item) => inDirection(item, "outgoing")).map((item) => item.id),
@@ -402,8 +413,9 @@ return {
 };
 ```
 
-The default summary keeps all totals and lists impacted and at-risk ids. Incoming and outgoing
-name the connecting edge's direction relative to its impacted end; neither asserts dependency.
+The default summary keeps all totals and lists impacted Spec and Pack ids beside at-risk ids.
+Incoming and outgoing name the connecting edge's direction relative to its impacted end; neither
+asserts dependency.
 `leftOut` names the omitted details. With `detail: true`, impacted Specs carry their binding
 reasons, and at-risk Specs carry their connecting edges, claims and directions. `atRiskOther`
 keeps the other at-risk nodes with their node types. `coverageUnknownFiles` names changed files
@@ -643,8 +655,8 @@ contract no suite binds, and it never reports runner pass or fail.
 
 ## 11. The lower ladder
 
-*When you need this: you want every non-ready Spec grouped by family, with current floor evidence
-visible instead of hidden in plan prose.*
+*When you need this: you want every non-ready Spec grouped by family, with its stated next rung
+and the first clause that holds it below that rung.*
 
 ```js
 const lower = g.specs().filter((spec) => spec.statedReadiness !== "ready");
@@ -653,23 +665,21 @@ const byFamily = Object.create(null);
 for (const spec of lower) {
   const family = spec.id.slice("spec:".length).split(".")[0];
   const context = g.specContext(spec.id);
-  const failures = context?.floorFailures ?? [];
-
   byFamily[family] = byFamily[family] ?? [];
   byFamily[family].push({
     id: spec.id,
     statedReadiness: spec.statedReadiness,
     floorReached: spec.derivedReadiness ?? "none",
-    nextUnmetClause: failures[0]?.clauseId ?? null,
+    statedNextRung: context?.statedNextRung ?? null,
+    nextUnmetClause: context?.statedNextRungFailures[0]?.clauseId ?? null,
   });
 }
 
 return { total: lower.length, byFamily };
 ```
 
-`nextUnmetClause: null` means the current stated floor has no failure. It is not permission to
-promote: the next rung may require evidence the current-floor evaluator was not asked to police,
-and `ready` always remains a human statement.
+`statedNextRung` is the rung above the author's statement. `nextUnmetClause: null` means nothing
+blocks that rung. The author still decides whether to state it; the recipe never promotes a Spec.
 
 ## 12. Component membership
 
@@ -742,11 +752,14 @@ return { components };
 ```
 
 Fan counts are graph-side composition, not a new reader accessor. A structural cycle is data about
-component dependencies, not a validation finding.
+component dependencies, not a validation finding. Fan counts deduplicate mapped component
+endpoints and include a component reaching itself through uses between its units; the architecture
+map counts only crossings between different components.
 
 ## 14. Structural neighborhood
 
-*When you need this: you want the members, neighboring components, and Specs satisfied by one component.*
+*When you need this: you want the component's members, directly declared uses neighbors, and the
+Specs satisfied by its member units.*
 
 The parameter is `params.component`, the component you are reviewing; an unknown component
 returns the exact not-found shape and does not throw.
@@ -1829,13 +1842,15 @@ The term matches when its tokens appear in the entry as one consecutive run, in 
 Each row carries `address: string | null`. A Design or UI entry with a key matching
 `^[a-z][A-Za-z0-9]*$` has address `spec:<id>#<section>.<key>`. The text of an open question whose
 marker carries a key, at `openQuestions[<n>].question`, has address `spec:<id>#question.<key>`,
-and that key matches as the row's key; the key is not a row of its own. `description` in Design or
-UI, off-grammar keys, other nested paths, and all other sections have `null`.
+and that key matches as the row's key; the key is not a row of its own. A keyed rule or flow at
+`rules[<n>]` or `flows[<n>]` under Behavior has address `spec:<id>#rule.<key>`. `description` in
+Design or UI, off-grammar keys, other nested paths, and every other entry have `address: null`.
 Each row also carries `line`, the line in the Spec's carrier where the entry starts, from the
 location table the Spec context carries. The table locates a top-level Design or UI key other than
 `description` and the text of an open question, at `openQuestions[<n>].question` or, for a question
-written as a plain string, at `openQuestions[<n>]`, so a row for any other entry has `line: null`, as
-does an entry the carrier did not locate; null reads as not located, never as absent
+written as a plain string, at `openQuestions[<n>]`. It also locates rule and flow entries, including
+unkeyed entries, and each open question's fields. A question field uses its field's location row.
+An entry the table does not locate has `line: null`; null reads as not located, never as absent
 (`spec:extraction.entry-locations`). The line comes from the top-level key the walk reaches, never
 from the joined path, so a nested `shape: { detail }` reports `line: null` even beside a literal
 top-level key `shape.detail`, whose path it spells.
@@ -1847,16 +1862,12 @@ A key matches whatever its value is. A non-string value renders as JSON and repo
 `matchedIn: ["key"]`; the front door shortens long text in default output just as it does for
 strings. Nested strings remain searchable at paths such as `retryPolicy.mode` or
 `retryWorkers[0]`. Keys match only where the author coins them: the keys of `design` and `ui`,
-the terms of `model`, and the keys of open questions.
+the terms of `model`, the keys of open questions, and rule keys beside their rule or flow text.
 Field names the carrier fixes, such as `outcome` or `rules`, never match. Step text inside `gwt`
 and `gwt-vocabulary` fences is searched like any other entry. Titles and ids stay with concept
 search. Rows keep Spec id order and then the order the graph holds the entries;
 `totals.matches` counts every matching entry, `totals.specs` counts the matching Specs, and `totals.shown` counts
 the rows shown. `matches` holds the first fifty.
-
-A rule key matches beside its entry's text, at `rules[<n>]` or `flows[<n>]` under Behavior.
-Its address uses `#rule.<key>` for either list. Rule and flow rows have their recorded lines,
-including unkeyed entries, and a question field uses its field's location row.
 
 ## 24. Pinned declarations
 
@@ -2201,7 +2212,7 @@ readiness floor. The census renders the same taxonomy for a human reader. The la
 ## 29. Pack design
 
 *When you need this: you are designing or reviewing a Pack and want where its design stands,
-member by member: what holds each one below its next rung, what design it carries, which code
+member by member: what holds each one below its stated next rung, what design it carries, which code
 answers to it, and what the Pack rests on, as data a page or a script renders.*
 
 The parameters are `params.pack`, the Pack you are designing, and `params.detail`, absent or false
@@ -2375,8 +2386,8 @@ relate to a member by the same four relations. `boundary.verifiedBy` lists outsi
 carries the outside Spec's stated rung,
 whether it carries `implemented`, and under `via` the members it joins per relation type. The
 columns are counts and lists, never a score or a rung. The Design Review's Pack page renders the
-same assembly. The laws are `spec:consumers.pack-design` and
-`spec:consumers.agent-surface.design-recipes`.
+same assembly. The laws are `spec:consumers.pack-design`, `spec:consumers.agent-surface.design-recipes` and
+`spec:consumers.agent-surface.answer-shapes`.
 
 ## 30. Design-change impact
 
@@ -2702,7 +2713,7 @@ code-unit order. The law is `spec:consumers.agent-surface.answer-shapes`.
 
 ## 34. Rule coverage
 
-Use this to see which keyed rules examples exercise and which have no example.
+*When you need this: you want to see which keyed rules examples exercise and which have no example.*
 Pass one scope, `params.spec` or `params.pack`. Without one the recipe asks for a scope.
 
 ```js
@@ -2816,11 +2827,16 @@ const atLeast = (value, minimum) => {
 const unsupported = new Set();
 for (const [part, minimum] of [
   ["narrative", [0, 4, 0]],
-  ...["ruleKeys", "decider", "links", "provisional", "trigger", "reason", "exercises"].map((part) => [part, [0, 9, 0]]),
+  ...["ruleKeys", "decider", "links", "provisional", "trigger", "reason", "exercises"].map((part) => [part, [0, 10, 0]]),
 ]) {
   const a = atLeast(base, minimum), b = atLeast(graph, minimum);
-  if (!a || !b) unsupported.add(part);
-  if (a !== b) diagnostics.push({ part, problem: "Part is outside the common schema.", base: a, head: b });
+  if (!a || !b) {
+    unsupported.add(part);
+    const historical = minimum[1] === 10 && [base.schemaVersion, graph.schemaVersion].includes("0.9.0");
+    diagnostics.push({ part, problem: historical
+      ? "Schema 0.9.0 does not identify this optional capability."
+      : "Part is outside the common schema.", base: a, head: b });
+  }
 }
 // Before ruleKeys, engines left the authored marker in the rule or flow string and kept no
 // order between the two lists, so keyed entries in both lists have no comparable order across them.
@@ -2961,7 +2977,10 @@ alone do not change intent.
 `bindings` keeps anchor-derived changes apart, with added and removed ids for realizing units,
 referencing units, enabled verifiers and delivery facts. Each list has a count in `totals`.
 A schema difference is diagnostic data. Parts outside the schemas' shared capabilities are
-omitted and named in `diagnostics`; an unused optional section still compares. Legacy rule markers
+omitted and named in `diagnostics`; an unused optional section still compares. Schema `0.9.0`
+does not distinguish engines with the rule keys, question fields, relation reasons and exercises
+capabilities. Those comparisons require both graphs to declare at least `0.10.0`; a `0.9.0` input
+produces diagnostics even when both versions match. Legacy rule markers
 are normalized before comparison when a Spec carries no `ruleKeys`. Such a graph keeps no order
 between rules and flows, so when it keys entries in both, keyed entries compare by order within
 each list and a `ruleOrder` diagnostic names the Spec. The comparison confers nothing and
@@ -3409,11 +3428,16 @@ const atLeast = (value, minimum) => {
 const unsupported = new Set();
 for (const [part, minimum] of [
   ["narrative", [0, 4, 0]],
-  ...["ruleKeys", "decider", "links", "provisional", "trigger", "reason", "exercises"].map((part) => [part, [0, 9, 0]]),
+  ...["ruleKeys", "decider", "links", "provisional", "trigger", "reason", "exercises"].map((part) => [part, [0, 10, 0]]),
 ]) {
   const a = atLeast(base, minimum), b = atLeast(graph, minimum);
-  if (!a || !b) unsupported.add(part);
-  if (a !== b) diagnostics.push({ part, problem: "Part is outside the common schema.", base: a, head: b });
+  if (!a || !b) {
+    unsupported.add(part);
+    const historical = minimum[1] === 10 && [base.schemaVersion, graph.schemaVersion].includes("0.9.0");
+    diagnostics.push({ part, problem: historical
+      ? "Schema 0.9.0 does not identify this optional capability."
+      : "Part is outside the common schema.", base: a, head: b });
+  }
 }
 // Before ruleKeys, engines left the authored marker in the rule or flow string and kept no
 // order between the two lists, so keyed entries in both lists have no comparable order across them.
@@ -3559,12 +3583,17 @@ remain explicit rows. A scope outside the common schema carries `comparable: fal
 `reason`, with no `moved` claim, as does an otherwise unmoved whole-Spec scope whose order across
 rules and flows one graph does not keep. Its change also carries `comparable: false`, and `moved` is null
 unless another comparable scope moved. Schema differences, unsupported parts and a compared Spec
-whose order across rules and flows one graph does not keep appear in `diagnostics`. A base missing from the parameters is a problem with no change rows.
+whose order across rules and flows one graph does not keep appear in `diagnostics`. Optional
+capabilities from schema `0.9.0` are uncertain, even beside another `0.9.0` graph. The check names
+them in diagnostics and marks affected scopes incomparable; both graphs need at least `0.10.0`
+for rule keys, question fields, relation reasons and exercises to compare. A base missing from
+the parameters is a problem with no change rows.
 
 The rows carry facts about declared intent, with anchored changes excluded from scope movement.
 They confer no status or approval. A caller routes a moved change to a person and applies other
 changes through ordinary source edits on a worktree checked by `sdp validate`. This recipe does
-neither step. The law is `spec:consumers.intent-composition.proposal`.
+neither step. The check's law is `spec:consumers.intent-composition.proposal`; routing and applying
+are `spec:consumers.intent-composition`.
 
 ## 39. Slimming candidates
 
@@ -3633,6 +3662,8 @@ with anchored uses, and component designs that no planned component realizes yet
 The required parameter is `params.imports`, the object in the adapter's imports file. The optional
 `params.limit` is a positive integer, 20 by default, and cuts only the uncovered-file list.
 Missing or malformed imports and invalid limits return `{ diagnostics }` with no report rows.
+The imports object may carry `exclude`, the adapter's normalized list of omitted paths. The report
+echoes it as `input.exclude`, or `[]` when absent; it does not remove files from supplied input.
 Build the input explicitly, then pass it to the body as data:
 
 ```sh
@@ -3642,8 +3673,11 @@ pnpm --silent sdp:q "$(cat dist/recipes/40-curation-report.js)" --params imports
 
 The configuration is a JSON object such as
 `{ "adapter": "typescript", "tsconfig": "tsconfig.json", "roots": ["src"] }`.
-Its paths are relative to the build root. No path convention assigns files to components;
-only anchored component identity and `memberOf` do that.
+Its paths are relative to the build root. Optional `exclude` paths name a file or directory subtree,
+for example `"exclude": ["src/generated", "src/example.test.ts"]`. The adapter refuses unknown
+configuration keys, removes excluded files and import endpoints, preserves barrel resolution through
+excluded intermediates, and records the normalized exclusions in its output. Only anchored
+component identity and `memberOf` assign files to components.
 
 ```js
 const input = params.imports;
@@ -3731,7 +3765,7 @@ const oneSided = {
   importsOutsideComponents: [...files.keys()].filter((file) => !fileComponents.has(file)).sort(byCodeUnit),
 };
 return {
-  input: { label: "external inferred input", schema: input.schema, adapter: input.adapter, files: files.size },
+  input: { label: "external inferred input", schema: input.schema, adapter: input.adapter, files: files.size, exclude: input.exclude ?? [] },
   totals: {
     files: files.size, importEdges: [...files.values()].reduce((sum, imports) => sum + imports.size, 0),
     uncovered: uncovered.length, componentUses, usesWithoutImport: usesWithoutImport.length,
@@ -3742,7 +3776,9 @@ return {
 };
 ```
 
-`input` labels the file as external inferred input, with its schema, adapter and file count.
+`input` labels the file as external inferred input, with its schema, adapter, file count and
+normalized exclusions. Read `input.exclude` beside `oneSided` to distinguish deliberate omissions
+from missing input.
 `totals` counts each list before the limit, the file import edges and the anchored cross-component
 uses checked. `uncovered` ranks files with no code or test anchor by distinct importing files
 (`fanIn`), then path; `fanOut` counts their distinct imports, including barrel reach.

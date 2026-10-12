@@ -439,57 +439,8 @@ describe("the agent-surface recipe corpus", () => {
     }
   });
 
-  it("keeps on-ramp recipe mentions synchronized with the catalog", () => {
-    const countWords = [
-      "zero",
-      "one",
-      "two",
-      "three",
-      "four",
-      "five",
-      "six",
-      "seven",
-      "eight",
-      "nine",
-      "ten",
-      "eleven",
-      "twelve",
-      "thirteen",
-      "fourteen",
-      "fifteen",
-      "sixteen",
-      "seventeen",
-      "eighteen",
-      "nineteen",
-      "twenty",
-      "twenty-one",
-      "twenty-two",
-      "twenty-three",
-      "twenty-four",
-      "twenty-five",
-      "twenty-six",
-      "twenty-seven",
-      "twenty-eight",
-      "twenty-nine",
-      "thirty",
-      "thirty-one",
-      "thirty-two",
-      "thirty-three",
-      "thirty-four",
-      "thirty-five",
-      "thirty-six",
-      "thirty-seven",
-      "thirty-eight",
-      "thirty-nine",
-      "forty",
-    ] as const;
-    const countWord = countWords[recipes.length];
-    const lastOrdinal = recipes[recipes.length - 1]?.ordinal;
+  it("documents recipe parameters and points on-ramps to the executable catalog", () => {
     const intro = source.slice(0, source.indexOf("## 1."));
-    const parameterizedMention = /Recipes (?<list>[0-9, and]+)/u.exec(intro)?.groups?.list ?? "";
-    const parameterizedOrdinals = [...parameterizedMention.matchAll(/\d+/gu)].map((match) =>
-      Number(match[0]),
-    );
     const introProse = intro.replace(/\s+/gu, " ");
     const onRamps = {
       agents: readFileSync(join(repoRoot, "AGENTS.md"), "utf8"),
@@ -500,7 +451,6 @@ describe("the agent-surface recipe corpus", () => {
       authoring: readFileSync(join(repoRoot, ".agents/skills/sdp-authoring/SKILL.md"), "utf8"),
       sessions: readFileSync(join(repoRoot, ".agents/skills/sdp-sessions/SKILL.md"), "utf8"),
     };
-    const parameterizedRecipes = recipes.filter((recipe) => /\bparams\./u.test(recipe.body));
 
     // A parameter is data on `--params`, never source spliced into a body, and no recipe reads
     // the environment. The intro teaches exactly that and names no retired channel.
@@ -513,15 +463,6 @@ describe("the agent-surface recipe corpus", () => {
       });
     }
 
-    expect(countWord).toBeDefined();
-    if (countWord === undefined) {
-      throw new Error(`recipe count ${String(recipes.length)} is outside the checked prose range`);
-    }
-    expect(lastOrdinal).toBe(recipes.length);
-    expect(onRamps.agentSurface).toContain(`catalog contains ${countWord} ready-made bodies`);
-    expect(onRamps.agentSurface).toContain(`Recipes 1-${String(recipes.length)}`);
-    expect(onRamps.agents).toContain(`${countWord} runnable \`sdp q\` bodies`);
-    expect(parameterizedOrdinals).toEqual(parameterizedRecipes.map((recipe) => recipe.ordinal));
     expect(onRamps.authoring).toContain("sdp new spec");
     expect(onRamps.authoring).toContain("sdp validate --watch");
     expect(onRamps.authoring).not.toContain("--dry-run");
@@ -1132,6 +1073,53 @@ describe("the agent-surface recipe corpus", () => {
 
     expect(numberAt(result, "total")).toBe(rows.length);
     expect(rows.map((row) => stringAt(asRecord(row), "id")).sort()).toEqual(expected);
+    for (const row of rows.map(asRecord)) {
+      const context = reader.specContext(stringAt(row, "id"));
+      expect(row.statedNextRung).toBe(context?.statedNextRung ?? null);
+      expect(row.nextUnmetClause).toBe(context?.statedNextRungFailures[0]?.clauseId ?? null);
+    }
+  });
+
+  it("distinguishes a passing current floor from a blocked or clear stated next rung", async () => {
+    const extraction = syntheticExtraction(
+      [
+        probeSpec("spec:probe.blocked", "behavior", "scoped", {
+          intent: {
+            outcome: "A captured behavior.",
+            openQuestions: [{ question: "Which case remains?", blocking: true }],
+          },
+          behavior: { rules: ["A captured rule."] },
+        }),
+        probeSpec("spec:probe.clear", "rule", "scoped", {
+          intent: { outcome: "A complete rule." },
+          behavior: { rules: ["A concrete rule."] },
+        }),
+        probeSpec("spec:probe.basis", "rule", "ready"),
+      ],
+      [
+        probeEdge("spec:probe.blocked", "dependsOn", "spec:probe.basis"),
+        probeEdge("spec:probe.clear", "dependsOn", "spec:probe.basis"),
+      ],
+    );
+    const context = createReader(extraction.graph).specContext("spec:probe.blocked");
+    expect(context?.floorFailures).toEqual([]);
+    expect(context?.statedNextRungFailures.length).toBeGreaterThan(0);
+    const result = asRecord(await runRecipe(recipeByOrdinal(11), {}, extraction));
+    const rows = asArray(asRecord(result.byFamily).probe).map(asRecord);
+    expect(rows).toContainEqual(
+      expect.objectContaining({
+        id: "spec:probe.blocked",
+        statedNextRung: "defined",
+        nextUnmetClause: context?.statedNextRungFailures[0]?.clauseId,
+      }),
+    );
+    expect(rows).toContainEqual(
+      expect.objectContaining({
+        id: "spec:probe.clear",
+        statedNextRung: "defined",
+        nextUnmetClause: null,
+      }),
+    );
   });
 
   it("returns every committed structural component with non-empty membership", async () => {
@@ -6019,6 +6007,12 @@ describe("answers that fit", () => {
     expect(asRecord(summary.atRisk).incomingSpecs).toEqual(["spec:probe.member"]);
     expect(asRecord(summary.atRisk).outgoingSpecs).toEqual([]);
     expect(asRecord(summary.totals).impactedPacks).toBe(1);
+    expect(summary.impactedPacks).toEqual([pack.id]);
+    expect(summary.totals).toEqual(
+      asRecord(
+        await runRecipe(recipeByOrdinal(4), { files: [pack.file], detail: true }, extraction),
+      ).totals,
+    );
     const full = asRecord(
       await runRecipe(recipeByOrdinal(4), { files: [pack.file], detail: true }, extraction),
     );
@@ -6293,12 +6287,12 @@ void grammarRecipesTestAnchor;
 const grammarRecipesAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.authoring-grammar-recipes"),
   label: "asserts the authoring grammar's realization in docs/agent-surface/recipes.md",
-  references: [
+  satisfies: [
     ref("spec:model.rule-keys"),
     ref("spec:model.open-question-fields"),
     ref("spec:model.relation-reasons"),
-    ref("spec:consumers.agent-surface.answer-shapes"),
   ],
+  references: [ref("spec:consumers.agent-surface.answer-shapes")],
 });
 void grammarRecipesAnchor;
 

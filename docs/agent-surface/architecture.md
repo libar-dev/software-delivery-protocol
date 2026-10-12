@@ -7,13 +7,15 @@ context; recipe 3 reads its complete law and verifier bindings.
 
 ## What carries forward from gen 1
 
-Gen 1 made named responsibilities discoverable beside their implementations and exposed forward
-and reverse dependencies through one read model. Its architecture projections grouped that graph
-without maintaining another architecture document by hand. Those are useful design properties.
+Gen 1 is `@libar-dev/architect`, the Protocol's predecessor. It made named responsibilities
+discoverable beside their implementations and exposed forward and reverse dependencies through
+one read model. Its architecture projections grouped that graph without maintaining another
+architecture document by hand. Those are useful design properties.
 
 The comparison is grounded in `@libar-dev/architect`'s `formal-spec/10-pattern-graph.md` and
-`packages/architect-projection/src/projections/_shared/architecture-graph.internal.ts`. These are
-lineage evidence. The Protocol's intended truth lives in its Specs.
+`packages/architect-projection/src/projections/_shared/architecture-graph.internal.ts`. These paths
+are in the predecessor repository and are lineage evidence. The Protocol's intended truth lives
+in its Specs.
 
 | Gen-1 capability | Protocol representation |
 | --- | --- |
@@ -54,12 +56,19 @@ to the core and test registration and world lifecycle to the adapter.
 
 Recipe 17 retains the unit edge from `impl:protocol.example-runner-adapter` to
 `impl:protocol.example-runner`. Both realize the same behavior Spec while belonging to different
-components. This is an example of one responsibility realized by collaborating units; it does
-not require a separate Spec or role field for each participant.
+components. Collaborating units can realize one responsibility without separate Specs. Their
+anchors may also state optional roles.
 
 The absence of a reverse `uses` edge is only absence of a declaration. It does not prove that
 the runner has no framework import. Source and tests establish the current dependency direction;
 the graph preserves the accepted architectural binding.
+
+## Roles, layers and contexts
+
+A code anchor may name its role. A component anchor may name its layer and bounded context.
+These fields are optional under `spec:decisions.architectural-annotation`; recipe 28 lists the
+values and units, and recipe 32 reports declared `uses` edges crossing a layer or context without
+refusing them.
 
 ## One read model across carrier boundaries
 
@@ -78,6 +87,4 @@ imports, certify forbidden dependencies, or compute exhaustive symbol impact. Mi
 remain unresolved entries. Structural edges confer no delivery facts, and a verifier binding says
 that a verifier exists, not that it passed.
 
-The two architecture Specs retain their stated readiness. Re-run promotion preflight before a
-human changes it. These examples improve the explanation and bindings of existing design; they
-do not make a readiness statement on the owner's behalf.
+The curation report reads an imports file as external inferred input and offers advice only.
