@@ -35,6 +35,9 @@
 | 31 | Decision register | none | Read decision relations |
 | 32 | Architecture crossings | none | Read architecture crossings |
 | 33 | The design backlog | none | Pick defined design work |
+| 34 | Rule coverage | spec or pack | Find keyed rules no example exercises |
+| 39 | Slimming candidates | pack | Compare pinned declarations with bound code |
+| 40 | Curation report | imports, limit | Find curation gaps from file imports |
 
 Runnable bodies for the agent front door. Each recipe below is a body you can pass verbatim to
 `sdp q`, unchanged. In the Protocol source checkout, pass one to the repository wrapper:

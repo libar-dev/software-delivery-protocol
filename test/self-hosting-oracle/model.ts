@@ -265,7 +265,7 @@ export const modelSpecs = [
             when: ["the identifier is parsed"],
             then: [
               'parsing {outcome: "is refused"}',
-              'the refusal names the reason {reason: "entry address must be <section>.<key> with section design, ui, or question"}',
+              'the refusal names the reason {reason: "entry address must be <section>.<key> with section design, ui, question, or rule"}',
             ],
           },
         ],
