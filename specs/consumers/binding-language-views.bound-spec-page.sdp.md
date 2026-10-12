@@ -7,10 +7,10 @@ relations:
   refines: spec:consumers.binding-language-views
   verifies: spec:consumers.binding-language-views
 ---
-# A fully bound spec renders binding language on the page and in the index
+# A fully bound Spec renders binding language on the page and in the index
 
 ## Intent
-- outcome: Execute the rendered vocabulary on a spec both anchors reach, where the internal fact name would be easiest to leak.
+- outcome: Execute the rendered vocabulary on a Spec both anchors reach, where the internal fact name would be easiest to leak.
 
 ```gwt
 Given the graph holds a spec {specId: "spec:probe.bound-surface"} bound by {bindings: "an implementing code anchor and a verifying test anchor"}

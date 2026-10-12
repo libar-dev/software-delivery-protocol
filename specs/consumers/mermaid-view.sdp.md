@@ -5,6 +5,9 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:consumers.projections-model
+  dependsOn:
+    - target: spec:consumers.wholesale-view-rewrite
+      reason: the shared build invalidates the projection roots before this publisher renders
   decidedBy: spec:decisions.shipped-projections-frozen
 ---
 # Mermaid renders bounded one-hop and Pack diagrams without becoming a graph browser
@@ -14,16 +17,16 @@ relations:
 
 ## Behavior
 - rule: `renderMermaid` is a pure `Reader -> pages` projection with no filesystem or clock access; equal reader data produces byte-identical pages.
-- rule: The page set is one diagram per Spec (that Spec plus its one-hop neighborhood), one diagram per Pack (the Pack and its members), and one deterministic index that links them. The projection never emits a whole-graph diagram.
+- rule: The page set is one page per Spec, selecting that Spec and every node one edge away, code units and test anchors included, one page per Pack selecting the Pack and its members, and one deterministic index that links them. A selected diagram is rendered or refused under the hard bounds; the projection never emits a whole-graph diagram.
 - rule: Machine node tokens are injective encodings of the full graph ID. Titles and other display text never become machine tokens.
-- rule: Visible labels use a dedicated Mermaid label escape (`escapeMermaidLabel`) that is parser-safe for Mermaid syntax. The Markdown/owned-prose escaper is not reused.
+- rule: Visible labels are escaped for Mermaid's own syntax, apart from the Design Review's Markdown escaping, so no label can close or break a diagram.
 - rule: Every emitted record — pages, node declarations, edge declarations, index rows — is ordered by deterministic code-unit order independent of graph input order.
 - rule: An unresolved relation or edge target renders as an explicit unresolved placeholder node rather than disappearing or being invented.
-- rule: Cycles are retained as ordinary edges with a visited-set walk; the projection never computes transitive closure and never performs layout.
+- rule: A cycle through the root renders as its ordinary edges; the projection computes no transitive closure and no layout.
 - rule: Disconnected neighborhoods and foreign edge types remain visible when they appear in the selected one-hop or Pack slice; absence of a neighbor is honest silence, not a synthetic hub.
 - rule: Hard bounds are exact: `maxNodesPerDiagram = 64` and `maxEdgesPerDiagram = 128`. A token collision or an overflow of either bound refuses the affected diagram with a deterministic refusal that names the bound, while every in-bound diagram still publishes and the command exits 0. The projection never silently truncates, shards partially, drops edges to fit, or aborts the whole page set because one diagram overflowed.
-- rule: Publication owns only `generated/mermaid/` and uses the explicit `sdp mermaid` surface. It is not a child of or an extra write inside Design Review's transaction, and it shares no publication bus or hidden side channel with other projections.
-- rule: A Mermaid run writes its complete page set to `generated/mermaid.tmp/`, removes the prior Mermaid root, and renames the temporary root into place. Every build attempt invalidates both Mermaid roots before extraction, so failure leaves honest absence rather than stale output that looks current. A failed publish removes any live or temporary Mermaid root it cannot certify.
+- rule: After the shared build, publication owns only `generated/mermaid/` and uses the explicit `sdp mermaid` surface. It is not a child of or an extra write inside Design Review's transaction, and it shares no publication bus or hidden side channel with other projections.
+- rule: A Mermaid run writes its complete page set to `generated/mermaid.tmp/`, removes the prior Mermaid root, and renames the temporary root into place. The shared build invalidates this root and all sibling projection roots before extraction, as `spec:consumers.wholesale-view-rewrite#rule.buildInvalidates` states, so failure leaves honest absence rather than stale output that looks current. A failed publish removes any live or temporary Mermaid root it cannot certify.
 - rule: `sdp mermaid --check-clean` renders an independent twin, refuses divergent renders, and compares the current generated root with the new render. Missing or drifted output returns nonzero and is removed; clean output is replaced wholesale with byte-identical content.
 - rule: When extraction succeeds but graph validation reports errors, Mermaid still publishes the labelled diagnostic projection and returns the nonzero validation exit code.
 - rule: The projection adds no Mermaid-specific Reader accessors, maintains no projection-owned taxonomy list, and confers nothing back into the graph.
