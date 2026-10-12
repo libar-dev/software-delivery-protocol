@@ -228,6 +228,14 @@ renders a proposal as a memo for people had no home, so the proposal Spec carrie
 non-blocking `#memoRecipe`. The Pack page at the arc's base and head is rendered in
 `.omo/evidence/plan-43-demo/`.
 
+CodeRabbit reviewed `0353f10..759b911` and posted four minor findings, all valid, fixed in
+`703f09c` with a test that failed first: a missing imports root surfaced as a raw `ENOENT`; the
+rule-key sort had no consistent order when only some entries carry a line, and the suggested
+index fallback still cycled, so the sort now runs only when every entry has a line; a
+rule-exercises finding's path counted edges and changed with their order, so it now names the
+relation as the location table does; and the proposal schema test used ESLint's hoisted `ajv`,
+now a declared devDependency.
+
 ## Acceptance, as measured at close
 
 Measured at the merge of the review fixes, and the gate again at `be35578`; re-run the recipes

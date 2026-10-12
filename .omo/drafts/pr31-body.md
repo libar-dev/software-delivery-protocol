@@ -39,7 +39,7 @@ The Protocol's own corpus uses two of the three. Its four deferrals carry their 
 - Example-space coverage and run evidence move to [plan 42](https://github.com/libar-dev/software-delivery-protocol/blob/0fe675adb87edd466d4284f43c6d53861f6013d5/plans/42-spec-studio-phase-zero.md), where their consumer, the Studio's tests lens, lives.
 - The proposal Spec carries the memo recipe as a non-blocking question (`#memoRecipe`), since no recipe renders a proposal for a person yet.
 
-**Skill doctrine.** [`sdp-authoring`](https://github.com/libar-dev/software-delivery-protocol/blob/0fe675adb87edd466d4284f43c6d53861f6013d5/.agents/skills/sdp-authoring/SKILL.md) teaches how much to write and the new grammar. [`sdp-sessions`](https://github.com/libar-dev/software-delivery-protocol/blob/0fe675adb87edd466d4284f43c6d53861f6013d5/.agents/skills/sdp-sessions/SKILL.md) adds the design loop, review as a numbered gap list, a handoff form and tripwires. [`sdp-agent-surface`](https://github.com/libar-dev/software-delivery-protocol/blob/0fe675adb87edd466d4284f43c6d53861f6013d5/.agents/skills/sdp-agent-surface/SKILL.md) adds summaries, the wrap idiom, empty answers that mislead, and where to log friction.
+**Skill doctrine.** [`sdp-authoring`](https://github.com/libar-dev/software-delivery-protocol/blob/0fe675adb87edd466d4284f43c6d53861f6013d5/.agents/skills/sdp-authoring/SKILL.md) teaches how much to write and the new grammar. [`sdp-sessions`](https://github.com/libar-dev/software-delivery-protocol/blob/0fe675adb87edd466d4284f43c6d53861f6013d5/.agents/skills/sdp-sessions/SKILL.md) adds the design loop, review as a numbered gap list, a handoff form and tripwires. [`sdp-agent-surface`](https://github.com/libar-dev/software-delivery-protocol/blob/0fe675adb87edd466d4284f43c6d53861f6013d5/.agents/skills/sdp-agent-surface/SKILL.md) adds summaries, the wrap idiom, empty answers that mislead, and where to log friction. [`AGENTS.md`](https://github.com/libar-dev/software-delivery-protocol/blob/123559ddcdc259e1569d0cf07f53a49d2e49a98d/AGENTS.md#pr-descriptions-as-durable-context)'s PR description standard now asks for what this description does: human views at base and head, the owner's and the delegated rulings apart, and a forward section that proposes the next PR.
 
 ## See it
 
@@ -165,9 +165,9 @@ The bundle returns the whole Pack in 78,130 code units, about 19,500 tokens, wit
 
 ## Measured at close
 
-Re-measured at `f708cfc`; re-run the recipes rather than inheriting these.
+Re-measured at `703f09c`; re-run the recipes rather than inheriting these.
 
-- `npm run check` exits 0: 1,757 pooled tests in 81 files and 93 CLI tests. At `51a3225` it also passed in a depth-1 clone like CI's.
+- `npm run check` exits 0: 1,760 pooled tests in 81 files and 93 CLI tests. At `51a3225` it also passed in a depth-1 clone like CI's.
 - Validate reports 253 Specs, 4 Packs, 287 anchors, 544 nodes and 1,283 edges, with 0 errors and 4 warnings: the spec-sections gap the owner keeps, and three prose mentions.
 - Recipes 1 and 2 are empty. Recipe 20 counts four deferrals and one hold; recipe 33 lists 19 designed, unbuilt Specs.
 
@@ -179,7 +179,7 @@ Re-measured at `f708cfc`; re-run the recipes rather than inheriting these.
 - Against a base engine that kept no order between rules and flows, the design diff and the proposal check invented moves. They now compare order within each list.
 - `--params` read `=@` inside inline JSON as a key binding, and the bundle's fifth cut reduced a pinned declaration whose key contains a dot.
 
-Plan 43's "Review" section has both tables.
+CodeRabbit then posted four minor findings on `759b911`, all valid and fixed in `703f09c`: a missing imports root reported as a raw `ENOENT`, a rule-key sort with no consistent order when only some entries carry a line, a rule-exercises finding whose path changed with edge order, and the schema test's reliance on ESLint's hoisted `ajv`. Plan 43's "Review" section has the tables and this round.
 
 ## Feedback wanted
 
