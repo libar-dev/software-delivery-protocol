@@ -7,10 +7,10 @@ relations:
   refines: spec:validation.warn-level-signals
   verifies: spec:validation.warn-level-signals
 ---
-# A disconnected spec warns and fails nothing
+# A disconnected Spec warns and fails nothing
 
 ## Intent
-- outcome: Execute the orphan signal on a spec no relation reaches.
+- outcome: Execute the orphan signal on a Spec no relation reaches.
 
 ```gwt
 Given the graph holds a spec {specId: "spec:probe.orphan-signal"} at readiness {readiness: "idea"}

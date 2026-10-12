@@ -18,7 +18,9 @@ relations:
 - The command-line rendering is the path and line, the severity in brackets, the validator id, and the message, in that order and separated by the same one-line punctuation for every finding.
 - The location degrades by field rather than by placeholder: a file with a line renders both, a file without a line renders the path alone, and a finding carrying no file renders no location prefix at all.
 - The Design Review renders the same currency in its findings table under the same composition rule, and shows an em dash where a finding carries no file, because a table cell cannot be absent the way a prefix can.
-- The realizing entrypoints are `formatFinding` in `src/cli/output.ts` and `renderFindings` in `src/projections/design-review-context.ts`.
+
+## Design
+- summaryLine: `validate: <errors> errors · <warnings> warnings (conformance + honesty over the one graph)`, written to standard output after every finding, which goes to standard error.
 
 ## Example space
 ```gwt-vocabulary
