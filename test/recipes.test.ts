@@ -475,6 +475,13 @@ describe("the agent-surface recipe corpus", () => {
       "thirty-one",
       "thirty-two",
       "thirty-three",
+      "thirty-four",
+      "thirty-five",
+      "thirty-six",
+      "thirty-seven",
+      "thirty-eight",
+      "thirty-nine",
+      "forty",
     ] as const;
     const countWord = countWords[recipes.length];
     const lastOrdinal = recipes[recipes.length - 1]?.ordinal;
@@ -4308,6 +4315,7 @@ describe("recipe parameters and the shipped recipe files", () => {
       for (const name of names) {
         const hasSample =
           recipe.ordinal !== 34 &&
+          !([35, 36, 37, 38].includes(recipe.ordinal) && !["budget", "detail"].includes(name)) &&
           !(recipe.ordinal === 39 && name === "pack") &&
           !(recipe.ordinal === 40 && name === "imports");
         expect({

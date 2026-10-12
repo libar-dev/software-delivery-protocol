@@ -14,6 +14,7 @@
     "specs/**/*.sdp.gherkin",
     "CONTEXT.md",
     "docs/agent-surface/recipes.md",
+    "schemas/sdp-proposal-1.schema.json",
     "docs/agent-surface/architecture.md",
     ".agents/skills/sdp-agent-surface/SKILL.md",
     ".agents/skills/sdp-authoring/SKILL.md",
