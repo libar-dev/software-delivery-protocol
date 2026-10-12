@@ -2,7 +2,7 @@
 id: spec:consumers.context-bundle
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: scoped
 relations:
   refines: spec:consumers.agent-surface
   dependsOn: spec:consumers.agent-surface.design-recipes
@@ -20,6 +20,7 @@ Plan 35 deferred the bundle until evidence showed agent sessions still hand-asse
 - outcome: Give an agent the reading material for one design pass in one composed, token-budgeted slice of the graph, so no session hand-assembles it.
 
 ### Open questions
+- [blocking #budgetFloor] What does a bundle return when the content it never cuts (member ids, stated and next rungs, blocking questions, pinned declarations, entry addresses) alone exceeds the budget: a refusal, the protected content over budget with the overrun stated, or something else?
 - [non-blocking #bundleScopes] Which scopes does a bundle take beyond a Pack: a Spec with its neighborhood, the Specs a changeset touches, the open questions of a Pack?
 - [non-blocking #perspectiveFilter] Does a bundle take a review perspective as a filter, so one call yields the brief for one lens?
 

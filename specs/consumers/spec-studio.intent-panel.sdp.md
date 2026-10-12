@@ -20,7 +20,7 @@ relations:
 - rule: A reader gathers intents across pages before handing them off.
 - rule: Gathered intents persist in the browser's local storage, so refreshing a tab on a phone loses none.
 - rule: A composed intent names its scope by id or entry address, so the agent that receives it reads the same Spec, Pack, entry or question through the graph.
-- rule: The panel hands its gathered intents off as one change proposal, on the change-proposal contract, which the reader copies as text or saves as a document. The agent that applies the proposal opens the pull request; the page opens none, because a static page holds no credentials.
+- rule: The panel hands its gathered intents off as one change proposal, on the change-proposal contract, which the reader copies as text or saves as a document. The page opens no pull request, because a static page holds no credentials; any pull request comes from the agent's ordinary source edit.
 - rule: No part of the original's patch loop returns to the page: it stages no patch, applies nothing to source or to a copy of the graph, and the proposal is the reviewable half of that loop, applied as an ordinary edit.
 
 ## UI

@@ -22,7 +22,6 @@ The first adopter's agents already write proposals in that shape. A design pass 
 
 ### Open questions
 - [non-blocking #proposer] Does a proposal name who proposed it, as the original's `proposedBy` did, or do git authorship and co-author trailers stand in once it is applied?
-- [non-blocking #batchProposals] Is a proposal one change, or may it hold several changes to several Specs that land together or not at all?
 
 ## Contract
 - A proposal is one JSON document on one schema, which a recipe takes as a parameter; a Markdown memo of the proposal is a rendering of that document and never a second carrier.

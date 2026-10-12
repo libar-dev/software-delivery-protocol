@@ -2,7 +2,7 @@
 id: spec:validation.corpus-rules
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: scoped
 relations:
   dependsOn: spec:consumers.agent-surface
   constrainedBy: spec:validation.two-check-families
@@ -18,7 +18,7 @@ The first adopter's gate shows what that costs. Its 363-line check script runs `
 - outcome: Let a corpus author its own graph rules and have their findings join the one validation report, so no corpus re-parses its carriers to check itself.
 
 ### Open questions
-- [non-blocking #ruleSeverity] May a corpus rule fail validation, or are its findings always informative and the corpus's own gate decides?
+- [blocking #ruleSeverity] May a corpus rule fail validation, or are its findings always informative and the corpus's own gate decides? The answer sets the exit code of `sdp validate --rules PATH`.
 
 ## Behavior
 - rule: A corpus rule is a graph body the corpus authors, given the bindings a recipe body gets, the reader, the raw graph and the report, and returning findings that each carry a rule id, a subject, a message and a severity.

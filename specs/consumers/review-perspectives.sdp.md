@@ -2,7 +2,7 @@
 id: spec:consumers.review-perspectives
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: scoped
 relations:
   refines: spec:consumers.projections-model
   dependsOn: spec:consumers.pack-design
@@ -19,7 +19,7 @@ On 2026-10-12 the owner ruled the word: perspective. The Spec Studio keeps lens 
 - outcome: Let a reviewer read the same Pack from one perspective at a time, filtered and ordered for that perspective, without a new kind or a stage.
 
 ### Open questions
-- [non-blocking #perspectiveSelectors] What may a perspective select on: kind, section, Design key, question key, relation type, component layer or context, or a Spec family?
+- [blocking #perspectiveSelectors] What may a perspective select on: kind, section, Design key, question key, relation type, component layer or context, or a Spec family? The filter recipe cannot be built until its selectors are settled.
 
 ## Behavior
 - rule: A perspective filters and orders a Pack's members and their content and never changes them; every row opens the same Spec, and the whole Pack stays one step away.
