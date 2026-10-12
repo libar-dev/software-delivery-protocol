@@ -68,9 +68,17 @@ const structuralCoverageProgram = createProgram({
   host: structuralCoverageCompilerHost,
 });
 
+const selfHostingTestAnchor = specTest({
+  id: testAnchorId("test:protocol.self-hosting"),
+  label: "checks that the corpus derives one graph through the one validation path",
+  verifies: ref("spec:protocol.self-hosting"),
+});
+void selfHostingTestAnchor;
+
 const structuralSelfBindingTestAnchor = specTest({
   id: testAnchorId("test:protocol.structural-self-binding"),
-  label: "verifies the accepted significant-unit set carries its declared membership",
+  label:
+    "checks the accepted membership and helper coverage, authored uses, and pinned anchor roles, layers and contexts",
   verifies: ref("spec:protocol.structural-self-binding"),
 });
 void structuralSelfBindingTestAnchor;

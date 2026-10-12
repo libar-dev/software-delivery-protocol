@@ -14,3 +14,5 @@ relations:
 
 ### Open questions
 - [blocking #observationIdentity] Which external observation identity and freshness boundary is small enough for the graph while still supporting an honest `observed` delivery fact?
+  - decider: owner
+  - trigger: An adopter needs runtime measurements linked to measurable Spec targets and can supply an observation identity and freshness policy for review.

@@ -5,20 +5,26 @@ altitude: story
 readiness: defined
 relations:
   refines: spec:protocol.self-hosting
-  decidedBy: spec:decisions.architectural-annotation
+  dependsOn:
+    - target: spec:model.structural-patterns
+      reason: this model defines the significance criterion and the owner-reviewed accepted set
+  decidedBy:
+    - spec:decisions.architectural-annotation
+    - spec:decisions.anchor-binding-grain
 ---
 # The engine's structural self-binding covers its architecturally significant units
 
 ## Intent
 
-- outcome: Every architecturally significant engine unit carries component membership, uses declarations, and a role, every engine component declares its layer and context, and a unit references the decisions it answers to, so structural recipes and the census answer architecture questions about the engine itself.
+- outcome: Structural recipes, the census and the Design Review answer architecture questions about the engine from its own anchors.
 
 ## Behavior
 
-- rule: The significance criterion for engine self-binding is exported public surface or cross-component reach.
-- rule: Every architecturally significant unit is covered at Spec-realization grain: it carries component membership through the anchor of the Spec it honestly realizes, or — for an implementation helper with no honest satisfies target of its own — through the nearest honest realization anchor that consumes it; it also carries uses declarations for each component it architecturally depends on, so structural recipes answer dependency questions about the engine itself.
-- rule: A component-level uses declaration tracks real imports, value or type, from another component's source files; imports that exist only to author the anchors themselves (the stable-id and anchor-builder modules) confer no edge.
-- rule: The accepted set of architecturally significant units is an owner-reviewed declaration recorded in the self-hosting oracle, never derived from imports or exports; the suite census-checks that every accepted unit carries its declared membership and that no unrostered membership edge exists.
-- rule: Every engine `component:` anchor declares its `layer` and its `context`.
-- rule: Every architecturally significant engine unit carries a `role`.
-- rule: An engine unit references the decisions it follows, and the designs it answers to without wholly realizing them, through `references`; it satisfies only a Spec it wholly realizes, never a decision; a Spec Studio design that builds on engine code states that by its own `dependsOn` or `refines` to the Spec the code satisfies, never by a reference from the unit.
+- rule: [#criterion] The engine applies the structural-patterns model's significance criterion: exported public surface or cross-component reach.
+- rule: [#membership] Every architecturally significant engine unit carries component membership through a realizing anchor; a helper with no realization target of its own is covered through the nearest realization anchor that consumes it.
+- rule: [#architecturalUses] An architectural dependency of the engine is declared as `uses`, normally from one engine component to another; a unit's own `uses` is optional.
+- rule: [#componentUses] A component-level `uses` declaration tracks real value or type imports from another component's source files; imports made only to author anchors through the stable-id or anchor-builder modules confer no edge.
+- rule: [#acceptedSet] The accepted set of architecturally significant engine units is an owner-reviewed declaration among the self-hosting suite's pinned expectations, never derived from imports or exports; the suite checks every accepted unit's declared membership and rejects unrostered membership edges.
+- rule: [#layerAndContext] Every engine `component:` anchor declares its `layer` and its `context`.
+- rule: [#role] Every architecturally significant engine unit carries a `role`.
+- rule: [#decisionReferences] A unit reaches the decisions that shape it through the Specs it satisfies and their `decidedBy` relations, and may reference a decision directly when it answers to that design. A unit satisfies a Spec when it realizes at least one promise of it, and the satisfying units together realize every promise; a unit that follows a design without realizing a promise references it. Code never satisfies a decision Spec. A design that builds on existing code states that through its own `dependsOn` or `refines` to the Spec the code satisfies.
