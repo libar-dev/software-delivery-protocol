@@ -2,7 +2,7 @@
 id: spec:carrier.inline-code-spans
 kind: rule
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.markdown-body-grammar
 ---

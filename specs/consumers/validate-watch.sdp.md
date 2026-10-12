@@ -2,7 +2,7 @@
 id: spec:consumers.validate-watch
 kind: behavior
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.authoring-on-ramp
   dependsOn: spec:decisions.one-validation-path

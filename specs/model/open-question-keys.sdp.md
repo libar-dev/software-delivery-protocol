@@ -2,7 +2,7 @@
 id: spec:model.open-question-keys
 kind: rule
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.spec-sections
   dependsOn: spec:carrier.markdown-body-grammar

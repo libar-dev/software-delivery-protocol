@@ -2,7 +2,7 @@
 id: spec:extraction.pack-member-order
 kind: rule
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:extraction.derive-graph
   dependsOn: spec:carrier.markdown-pack-authoring

@@ -76,6 +76,7 @@ specs:
   - spec:validation.authored-honesty
   - spec:validation.warn-level-signals
   - spec:consumers.projections-model
+  - spec:consumers.projections-model.roadmap-views
   - spec:consumers.impact-graph
   - spec:consumers.agent-surface
   - spec:consumers.design-review
@@ -188,12 +189,9 @@ specs:
   - spec:decisions.gherkin-carrier-option
   - spec:decisions.sdp-gherkin-extension
   - spec:decisions.carrier-universality
-  - spec:decisions.structural-anchor-semantics
   - spec:decisions.adopted-registrars-committed
   - spec:decisions.shipped-projections-frozen
   - spec:decisions.planning-truths-placement
-  - spec:decisions.architectural-significance-rides-primitives
-  - spec:decisions.jsdoc-graph-extraction-refused
   - spec:decisions.checked-mentions
   - spec:decisions.authored-entry-order
   - spec:validation.unbound-example-posture.lower-rungs

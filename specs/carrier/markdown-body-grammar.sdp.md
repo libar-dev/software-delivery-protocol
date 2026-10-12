@@ -2,7 +2,7 @@
 id: spec:carrier.markdown-body-grammar
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.markdown-authoring
   dependsOn: spec:carrier.slot-notation

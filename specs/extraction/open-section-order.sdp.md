@@ -2,7 +2,7 @@
 id: spec:extraction.open-section-order
 kind: rule
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:extraction.derive-graph
 ---

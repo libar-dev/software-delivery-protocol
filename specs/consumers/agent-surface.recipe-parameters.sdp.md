@@ -2,7 +2,7 @@
 id: spec:consumers.agent-surface.recipe-parameters
 kind: behavior
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.agent-surface
   decidedBy: spec:decisions.agent-front-door
