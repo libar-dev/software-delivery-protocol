@@ -36,7 +36,7 @@ Everything human- or AI-facing is **generated from the one graph** (P1, P2, L8).
 
 ## 4. The edit model — intent composition, not patching
 
-- **The loop** — `spec:consumers.edit-model`: a view composes scoped intent, an agent edits source as a human would, git records the edit, and the conformance and honesty checks evaluate it. Lifecycle changes are ordinary source and git edits.
+- **The loop** — `spec:consumers.edit-model`: a view composes scoped intent, an agent edits source as a human would, git records the edit, and the conformance and honesty checks evaluate it. Lifecycle changes are ordinary source and git edits. A speculative check of an in-memory patch adds nothing to the conformance and honesty checks that evaluate every ordinary source edit.
 - **The hand-off** — `spec:consumers.intent-composition` and `spec:consumers.intent-composition.proposal`: a change proposal is the one structured hand-off, a reviewable request an agent applies as an ordinary source edit. It is not an automated patch writer, and no tool rewrites a carrier from it.
 
 ---
