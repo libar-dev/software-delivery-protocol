@@ -20,6 +20,12 @@ The first adopter's agents already write proposals in that shape. A design pass 
 - problem: A proposed design change travels as free prose, so a reviewer cannot tell what it touches, which version of the design it read, or whether it still applies once the design has moved.
 - outcome: Give a proposed design change a reviewable shape: what it touches by Spec id or entry address, the commit it was read at, the change requested and why, checked on a worktree before merge.
 
+### Open questions
+- [non-blocking #memoRecipe] Which catalog recipe renders a proposal as the Markdown memo a person reviews, so the Studio's composing panel and an agent hand off the same text?
+  - decider: owner
+  - links: spec:consumers.spec-studio.intent-panel
+  - provisional: a person reviews the proposal's JSON beside the proposal check's rows
+
 
 ## Contract
 - A proposal is one JSON document on one schema, which a recipe takes as a parameter; a Markdown memo of the proposal is a rendering of that document and never a second carrier.

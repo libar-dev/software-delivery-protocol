@@ -1,6 +1,7 @@
 # Plan 42. The Spec Studio, phase 0: a read-only static view
 
-> **Status:** DRAFTED on `feature/design-management-v0`, after plan 41's fold. A thin lineage
+> **Status:** DRAFTED after plan 41's fold, merged to `main` with PR 30; it is executed on its own
+> branch from `main` once PR 31 merges. A thin lineage
 > pointer: the Studio's intent lives in `pack:spec-studio-v1`, and its readiness, open questions and
 > backlog are read from the graph (recipes 1, 9, 11, 20, 29), never from this file. If this file and
 > the graph disagree, the graph wins and this file is stale.
