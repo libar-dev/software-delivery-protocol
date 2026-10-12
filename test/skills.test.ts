@@ -93,13 +93,6 @@ function shellFenceLines(body: string): readonly string[] {
   return lines;
 }
 
-const authoringRecipesImplementationAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.authoring-recipes"),
-  label: "asserts realization of the shipped authoring recipe catalog",
-  satisfies: ref("spec:consumers.agent-surface.authoring-recipes"),
-});
-void authoringRecipesImplementationAnchor;
-
 function documentedCommands(body: string): readonly string[] {
   return shellFenceLines(body)
     .map((line) => line.trim())
@@ -150,12 +143,6 @@ const deliverySessionOnRampTestAnchor = specTest({
   verifies: ref("spec:consumers.delivery-session-on-ramp"),
 });
 void deliverySessionOnRampTestAnchor;
-const authoringRecipesTestAnchor = specTest({
-  id: testAnchorId("test:protocol.authoring-recipes"),
-  label: "skill-asset checks verify the authoring recipes",
-  verifies: ref("spec:consumers.agent-surface.authoring-recipes"),
-});
-void authoringRecipesTestAnchor;
 
 describe("Protocol skill assets", () => {
   it("owns skills under .agents and exposes them to Claude through one relative symlink", () => {
@@ -455,6 +442,20 @@ function catalogSizePattern(): RegExp {
   const counts = words.sort((left, right) => right.length - left.length).join("|");
   return new RegExp(`\\b(?:${counts}|\\d+)(?:\\s+[\\w-]+){0,3}?\\s+(?:recipes|bodies)\\b`, "iu");
 }
+
+const readingOnRampImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.reading-on-ramp"),
+  label: "asserts realization of the shipped graph-reading skill document",
+  satisfies: ref("spec:consumers.reading-on-ramp"),
+});
+void readingOnRampImplementationAnchor;
+
+const readingOnRampTestAnchor = specTest({
+  id: testAnchorId("test:protocol.reading-on-ramp"),
+  label: "skill-asset checks verify the graph-reading on-ramp",
+  verifies: ref("spec:consumers.reading-on-ramp"),
+});
+void readingOnRampTestAnchor;
 
 describe("the graph-reading on-ramp", () => {
   it("maps a task to every catalog recipe in one sheet", () => {
