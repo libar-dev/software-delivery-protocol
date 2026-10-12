@@ -148,6 +148,10 @@ export interface SpecContext extends SpecSummary {
    * (`spec:validation.next-rung-floor`).
    */
   readonly nextRungFailures: readonly ReadinessFloorFailure[];
+  /** The rung above stated readiness; absent when the Spec states `ready`. */
+  readonly statedNextRung?: SpecReadiness;
+  /** The unmet clauses at the stated next rung, empty when it passes or there is no next rung. */
+  readonly statedNextRungFailures: readonly ReadinessFloorFailure[];
   /** The spec's authored relations (declared edges of authored types; `belongsTo` rides `packs`). */
   readonly relationsOut: readonly RelationEnd[];
   /** Authored-type edges pointing at the spec — who refines / depends on / verifies it. */
@@ -716,6 +720,7 @@ function packBoundary(
 /**
  * @sdpAnchor impl:protocol.reader
  * @sdpLabel thin typed graph reader construction
+ * @sdpReferences spec:consumers.agent-surface.answer-shapes
  * @sdpSatisfies spec:consumers.reader, spec:extraction.entry-locations
  * @sdpComponent component:protocol.reader
  * @sdpUses impl:protocol.delivery-facts, impl:protocol.next-rung-floor
@@ -957,8 +962,13 @@ export function createReader(graph: GraphSchema): Reader {
         ? SPEC_READINESS[0]
         : SPEC_READINESS[SPEC_READINESS.indexOf(summary.derivedReadiness) + 1];
 
+    const statedNextRung = statedNextRungOf(node.readiness);
+
     return {
       ...summary,
+      ...(statedNextRung === undefined ? {} : { statedNextRung }),
+      statedNextRungFailures:
+        statedNextRung === undefined ? [] : evaluateReadinessFloor(node, index, statedNextRung),
       ...(node.sections === undefined ? {} : { sections: node.sections }),
       designColumns: specDesignColumns(node, index, locationsOf(id)),
       floorFailures: evaluateReadinessFloor(node, index),

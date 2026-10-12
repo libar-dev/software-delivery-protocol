@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { isatty } from "node:tty";
 import { inspect } from "node:util";
+import { Script } from "node:vm";
 
 import { InvalidExcludePathError, normalizeExcludes } from "../extract/discover.js";
 import { extract } from "../extract/index.js";
@@ -85,8 +86,45 @@ export function compileBody(source: string): CompiledBody {
     readonly constructor: AsyncBodyConstructor;
   };
 
-  return new AsyncBody("g", "graph", "report", "params", source);
+  try {
+    return new AsyncBody("g", "graph", "report", "params", source);
+  } catch (error) {
+    // The function constructor omits positions. Compile the same body in a named wrapper
+    // only on refusal, so evaluation keeps the constructor's existing runtime behavior.
+    try {
+      new Script(`(async function(g, graph, report, params) {\n${source}\n})`, {
+        filename: "sdp-q-body",
+      });
+    } catch (syntaxError) {
+      const stack = syntaxError instanceof Error ? (syntaxError.stack ?? "") : "";
+      const position = /^sdp-q-body:(\d+)\n[^\n]*\n([^\n]*)\^/u.exec(stack);
+      const lines = source.split("\n");
+      const wrapperLine = Number(position?.[1] ?? 2);
+      const line = Math.max(1, Math.min(lines.length, wrapperLine - 1));
+      const column =
+        wrapperLine - 1 > lines.length
+          ? (lines[line - 1]?.length ?? 0) + 1
+          : (position?.[2]?.length ?? 0) + 1;
+      throw new BodyParseError(line, column, oneLine(errorMessage(syntaxError)));
+    }
+    throw error;
+  }
 }
+
+class BodyParseError extends Error {
+  constructor(line: number, column: number, message: string) {
+    super(`the body does not parse at line ${String(line)}, column ${String(column)}: ${message}`);
+  }
+}
+
+const queryAnswerShapeAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.query-answer-shapes"),
+  label: "reports parse positions in the caller's query body",
+  references: [ref("spec:consumers.agent-surface.answer-shapes")],
+  component: componentAnchorId("component:protocol.cli"),
+  role: "service",
+});
+void queryAnswerShapeAnchor;
 
 function defaultIsStdinTty(): boolean {
   return isatty(0);
@@ -117,7 +155,8 @@ function jsonKind(value: unknown): string {
 
 /**
  * `--params` carries a recipe's parameter as data, never as body source: a JSON object inline, or
- * `@PATH` naming a file, resolved from the working directory, that holds one. It is read and parsed
+ * `@PATH` naming a file that holds one, or `KEY=@PATH` binding any JSON value to one key.
+ * Paths resolve from the working directory. Each input is read and parsed
  * here, before the graph derives, so a value that is not JSON, JSON that is not an object, or a
  * file that cannot be read refuses the invocation before the body could run.
  */
@@ -127,9 +166,18 @@ function readParams(
 ): { readonly params: Readonly<Record<string, unknown>> } | undefined {
   let text = value;
   let source = "--params";
+  let key: string | undefined;
+  const keyed = /^([^=]+)=@(.*)$/u.exec(value);
+  if (keyed !== null) {
+    key = keyed[1];
+    if (key === undefined || !/^[a-z][A-Za-z0-9]*$/u.test(key)) {
+      writeStderr(output, "sdp q: --params KEY=@PATH requires a lower-camel key.\n");
+      return undefined;
+    }
+  }
 
-  if (value.startsWith("@")) {
-    const path = value.slice(1);
+  if (value.startsWith("@") || keyed !== null) {
+    const path = keyed === null ? value.slice(1) : (keyed[2] ?? "");
 
     if (path === "") {
       writeStderr(output, "sdp q: --params @PATH requires a path after @.\n");
@@ -159,6 +207,10 @@ function readParams(
     return undefined;
   }
 
+  if (key !== undefined) {
+    return { params: { [key]: parsed } };
+  }
+
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
     writeStderr(output, `sdp q: ${source} must be a JSON object, got ${jsonKind(parsed)}.\n`);
     return undefined;
@@ -171,7 +223,7 @@ export function parseQueryArgs(args: readonly string[], output: CliOutput): Quer
   let root: string | undefined;
   let body: string | undefined;
   let json = false;
-  let rawParams: string | undefined;
+  const rawParams: string[] = [];
   const rawExcludes: string[] = [];
 
   for (let index = 0; index < args.length; index += 1) {
@@ -218,21 +270,19 @@ export function parseQueryArgs(args: readonly string[], output: CliOutput): Quer
       const value = args[index + 1];
 
       if (value === undefined) {
-        writeStderr(output, "sdp q: --params requires a JSON object or @PATH.\n");
+        writeStderr(output, "sdp q: --params requires a JSON object, @PATH or KEY=@PATH.\n");
         return undefined;
       }
 
       if (value.startsWith("--")) {
-        writeStderr(output, `sdp q: --params expects a JSON object or @PATH, got ${value}\n`);
+        writeStderr(
+          output,
+          `sdp q: --params expects a JSON object, @PATH or KEY=@PATH, got ${value}\n`,
+        );
         return undefined;
       }
 
-      if (rawParams !== undefined) {
-        writeStderr(output, "sdp q takes at most one --params.\n");
-        return undefined;
-      }
-
-      rawParams = value;
+      rawParams.push(value);
       index += 1;
       continue;
     }
@@ -269,11 +319,25 @@ export function parseQueryArgs(args: readonly string[], output: CliOutput): Quer
     return undefined;
   }
 
-  const supplied = rawParams === undefined ? { params: {} } : readParams(rawParams, output);
+  const params: Record<string, unknown> = {};
+  for (const value of rawParams) {
+    const supplied = readParams(value, output);
+    if (supplied === undefined) return undefined;
+    for (const [key, item] of Object.entries(supplied.params)) {
+      if (Object.hasOwn(params, key)) {
+        writeStderr(output, `sdp q: --params key ${JSON.stringify(key)} was given twice.\n`);
+        return undefined;
+      }
+      Object.defineProperty(params, key, {
+        value: item,
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
+    }
+  }
 
-  return supplied === undefined
-    ? undefined
-    : { root: resolvedRoot, exclude, body, json, params: supplied.params };
+  return { root: resolvedRoot, exclude, body, json, params };
 }
 
 /**

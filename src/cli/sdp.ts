@@ -35,7 +35,7 @@ Usage:
   sdp gherkin [root] [--exclude PATH]... [--check-clean]
   sdp import <path...> [--dry-run]
   sdp new spec PATH --id ID --kind KIND --altitude ALT --title TITLE --outcome OUTCOME
-  sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--params JSON | --params @PATH] [--json]
+  sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--params JSON | --params @PATH | --params KEY=@PATH]... [--json]
 
 Options:
   --version  Print one line, sdp <package version> (<commit>), and exit 0. The commit is the full
@@ -92,9 +92,10 @@ Commands:
              same createReader the package exports); \`graph\`, the raw graph schema object;
              \`report\`, the validation report, so honesty findings are queryable data rather than a
              gate — checks never gate the read path; and \`params\`, the JSON object --params
-             supplies, or {} without it. --params takes the JSON inline or, as @PATH, a file
-             holding it; a value that is not a JSON object or a file that cannot be read refuses
-             before the body runs. A recipe reads its parameter from \`params\` and falls back to the
+             supplies, or {} without it. Repeat --params with JSON objects, @PATH for a file
+             holding one, or KEY=@PATH for any JSON value under a lower-camel key. Objects merge
+             at the top level; a repeated key, invalid JSON or an unreadable file refuses before
+             the body runs. A recipe reads its parameter from \`params\` and falls back to the
              catalog's sample. The graph is derived on every invocation, so a
              just-authored Spec is queryable immediately and no committed artifact answers in the
              graph's name; nothing is written anywhere. Output is bounded util.inspect (depth 4);

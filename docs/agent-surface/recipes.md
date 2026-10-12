@@ -1,5 +1,41 @@
 # Agent-surface recipes
 
+| No. | Recipe | Parameters | Use |
+| --- | --- | --- | --- |
+| 1 | The build backlog | none | Pick ready implementation work |
+| 2 | The drift alarm | none | Find implementation ahead of intent |
+| 3 | What does this Spec guarantee, and who verifies it | spec | Read guarantees and bindings |
+| 4 | What breaks if I change these files | files, detail | Review changed-file reach |
+| 5 | The Pack review backbone | pack | Review Pack readiness and gaps |
+| 6 | Where is this concept | term | Locate a concept |
+| 7 | Readiness divergence | none | Compare stated readiness to its floor |
+| 8 | Orphans and gaps | none | Read warnings and exemptions |
+| 9 | Promotion preflight | spec | Check both next rungs |
+| 10 | Declared versus enabled verifiers | none | Compare verifier declarations and bindings |
+| 11 | The lower ladder | none | Read non-ready Specs |
+| 12 | Component membership | none | List component members |
+| 13 | Uses fan-in and fan-out | none | Count uses reach |
+| 14 | Structural neighborhood | component | Read a structural neighborhood |
+| 15 | Census structural coverage | none | Measure structural coverage |
+| 16 | Projection coverage upper bound | none | Bound projection coverage |
+| 17 | Architecture map | none | Read the architecture map |
+| 18 | Decision map | none | Rank shaping decisions |
+| 19 | Planning slice | spec | Read a planning slice |
+| 20 | Open-question register | none | List open questions |
+| 21 | Dependency footing | spec | Read dependency footing |
+| 22 | Mention audit | scope | Audit prose mentions |
+| 23 | Entry search | term | Find entries by term |
+| 24 | Pinned declarations | none | List pinned declarations |
+| 25 | Address resolution | addresses | Resolve entry addresses |
+| 26 | Dependency cycles | none | Find dependency cycles |
+| 27 | References into a design | pack | Read code references into a Pack |
+| 28 | Roles, layers and contexts | none | List architecture vocabulary |
+| 29 | Pack design | pack, detail | Review Pack design |
+| 30 | Design-change impact | specs | Follow a design change |
+| 31 | Decision register | none | Read decision relations |
+| 32 | Architecture crossings | none | Read architecture crossings |
+| 33 | The design backlog | none | Pick defined design work |
+
 Runnable bodies for the agent front door. Each recipe below is a body you can pass verbatim to
 `sdp q`, unchanged. In the Protocol source checkout, pass one to the repository wrapper:
 
@@ -42,7 +78,10 @@ pnpm --silent sdp:q '<body>' --params '{"spec":"spec:model.anchors"}' --json
 pnpm --silent sdp:q '<body>' --params @params.json --json
 ```
 
-`--params @PATH` reads the JSON from a file, which suits a long list. Without `--params`, `params`
+Repeat `--params` to merge objects at the top level from left to right. `--params @PATH` reads an
+object from a file. `--params KEY=@PATH` binds any JSON value from the file to one lower-camel key,
+for example `--params base=@graph.json --params '{"spec":"spec:model.anchors"}'`. A key given twice
+by any form is refused before the body runs. Without `--params`, `params`
 is `{}` and the body falls back to the sample on its opening line. The samples name *this*
 repository's corpus, so every body runs as written here (the recipe check executes each one
 unchanged). A Spec id, component id, or Pack id absent from the graph returns `found: false`
@@ -63,6 +102,15 @@ pnpm --silent sdp:q "$(cat dist/recipes/25-address-resolution.js)" --params @add
 
 This catalog stays the one owner of the bodies. The files are derived from it, and the recipe
 check holds each one byte for byte to its body here.
+
+To filter a shipped answer, wrap its body in an async arrow function and return the part you need:
+
+```sh
+pnpm --silent sdp:q "$(printf '%s\n' 'const answer = await (async () => {'; cat dist/recipes/33-the-design-backlog.js; printf '%s\n' '})();' 'return answer.rows.filter((row) => row.specKind === "behavior");')" --json
+```
+
+The caller's part must hold no shell expansion. Single-quote it as above so the shell inserts only
+the shipped body, while the sink evaluates the whole body once.
 
 **The contract, in one place.** The front door derives the graph in process and evaluates the body
 you supply; `return` is the output contract. Four bindings are injected:
@@ -208,6 +256,17 @@ if (context === undefined) {
   return { id, found: false };
 }
 
+const unitOf = (binding) => ({
+  id: binding.codeId,
+  file: binding.file ?? null,
+  line: binding.line ?? null,
+  role: binding.role ?? null,
+  component: binding.component === undefined ? null : {
+    id: binding.component.id,
+    layer: binding.component.layer ?? null,
+    context: binding.component.context ?? null,
+  },
+});
 const relation = (end) => ({
   type: end.type,
   other: end.otherId,
@@ -223,21 +282,20 @@ return {
   statedReadiness: context.statedReadiness,
   floorReached: context.derivedReadiness ?? "none",
   unmetFloorClauses: context.floorFailures.map((failure) => failure.clauseId),
-  sections: Object.keys(context.sections ?? {}),
+  sections: context.sections ?? {},
+  designColumns: context.designColumns,
+  packs: context.packs,
   relationsOut: context.relationsOut.map(relation),
   relationsIn: context.relationsIn.map(relation),
-  implementations: context.implementations.map((binding) => ({
-    codeId: binding.codeId,
-    claim: binding.claim,
-    file: binding.file ?? null,
-    line: binding.line ?? null,
-  })),
+  implementations: context.implementations.map(unitOf),
+  references: context.references.map(unitOf),
   verifiers: context.verifiers.map((binding) => ({
     verifierId: binding.verifierId,
     via: binding.via,
     claim: binding.claim,
     enabled: binding.enabled,
     file: binding.file ?? null,
+    line: binding.line ?? null,
   })),
   verifierBindingMeans: "a resolving verifier exists; the graph never records pass or fail",
   findings: context.findings.map((finding) => ({
@@ -257,7 +315,8 @@ that it passed. Pass/fail is CI's, exactly as skip and quarantine are.
 
 *When you need this: you have a diff (or are about to make one) and want the Specs it reaches.*
 
-The parameter is `params.files`, the list of changed paths, relative to the root. The caller
+The parameters are `params.files`, the list of changed paths relative to the root, and
+`params.detail`, true for full rows and absent or false for a summary. The caller
 acquires the paths and passes them as data, never as query source. From the repository root, this
 pipeline keeps every valid Git filename byte except NUL (which Git filenames cannot contain),
 newlines included, by JSON-encoding the NUL-delimited list before it reaches the sink:
@@ -274,14 +333,72 @@ filenames. `--params` parses data, so quotes, shell metacharacters, spaces, Unic
 newlines remain filenames rather than JavaScript or shell syntax. The reader never shells to git.
 
 ```js
+const detail = params.detail ?? false;
 const changed = params.files ?? [];
 const radius = g.blastRadius(changed);
-const impactReasons = (item) => ({ id: item.id, reasons: item.reasons.map((reason) => reason.throughBinding === undefined ? { file: reason.file, via: null } : { file: reason.file, via: reason.throughBinding.id, edgeType: reason.throughBinding.edgeType, claim: reason.throughBinding.claim }) });
-const atRiskReasons = (item) => ({ id: item.id, nodeType: item.nodeType, reasons: item.reasons.map((reason) => ({ from: reason.from, edgeType: reason.edgeType, to: reason.to, claim: reason.claim })) });
-return { changedFiles: radius.changedFiles, impactedSpecs: radius.impactedSpecs.map(impactReasons), atRiskSpecs: radius.atRisk.filter((item) => item.nodeType === "Primitive").map(atRiskReasons), atRiskOther: radius.atRisk.filter((item) => item.nodeType !== "Primitive").map(atRiskReasons), coverageUnknownFiles: radius.coverageUnknown, unlinkedUnits: radius.unlinked.map((unit) => ({ id: unit.id, file: unit.file })) };
+const impacted = new Set([...radius.impactedSpecs, ...radius.impactedPacks].map((item) => item.id));
+const impactReasons = (item) => ({
+  id: item.id,
+  reasons: item.reasons.map((reason) => reason.throughBinding === undefined
+    ? { file: reason.file, via: null }
+    : { file: reason.file, via: reason.throughBinding.id, edgeType: reason.throughBinding.edgeType, claim: reason.throughBinding.claim }),
+});
+const atRiskReasons = (item) => ({
+  id: item.id,
+  nodeType: item.nodeType,
+  reasons: item.reasons.map((reason) => ({
+    from: reason.from, edgeType: reason.edgeType, to: reason.to, claim: reason.claim,
+    direction: impacted.has(reason.to) ? "incoming" : "outgoing",
+  })),
+});
+const specs = radius.atRisk.filter((item) => item.nodeType === "Primitive");
+const other = radius.atRisk.filter((item) => item.nodeType !== "Primitive");
+const totals = {
+  changedFiles: radius.changedFiles.length,
+  impactedSpecs: radius.impactedSpecs.length,
+  impactedPacks: radius.impactedPacks.length,
+  atRiskSpecs: specs.length,
+  atRiskOther: other.length,
+  coverageUnknownFiles: radius.coverageUnknown.length,
+  unlinkedUnits: radius.unlinked.length,
+};
+if (detail === true) {
+  return {
+    changedFiles: radius.changedFiles,
+    totals,
+    impactedSpecs: radius.impactedSpecs.map(impactReasons),
+    atRiskSpecs: specs.map(atRiskReasons),
+    atRiskOther: other.map(atRiskReasons),
+    coverageUnknownFiles: radius.coverageUnknown,
+    unlinkedUnits: radius.unlinked.map((unit) => ({ id: unit.id, file: unit.file })),
+  };
+}
+const inDirection = (item, direction) => item.reasons.some((reason) =>
+  direction === "incoming" ? impacted.has(reason.to) : impacted.has(reason.from),
+);
+return {
+  changedFiles: radius.changedFiles,
+  totals,
+  impactedSpecs: radius.impactedSpecs.map((item) => item.id),
+  atRisk: {
+    incomingSpecs: specs.filter((item) => inDirection(item, "incoming")).map((item) => item.id),
+    outgoingSpecs: specs.filter((item) => inDirection(item, "outgoing")).map((item) => item.id),
+    other: other.map((item) => item.id),
+  },
+  coverageUnknownFiles: radius.coverageUnknown,
+  unlinkedUnits: radius.unlinked.map((unit) => unit.id),
+  leftOut: ["Impact binding reasons omitted.", "At-risk connecting edges and claims omitted.", "Unlinked unit files omitted."],
+};
 ```
 
-Every result class is returned. **Impacted Specs** are authored-at or bound-to a changed file. **At-risk Specs** are the one-hop Primitive neighbors; **atRiskOther** retains every other at-risk node and its `nodeType`. Each at-risk reason carries its connecting edge and claim, while **coverageUnknownFiles** names changed files the graph records nothing at. **unlinkedUnits** names each changed code unit that binds no Spec, such as an identity-only anchor, with its file; it is recorded, so its file is not coverage-unknown, and it implies no coverage. File-level reach never claims exhaustive symbol-level reach — that would ride the impact graph, which does not exist.
+The default summary keeps all totals and lists impacted and at-risk ids. Incoming and outgoing
+name the connecting edge's direction relative to its impacted end; neither asserts dependency.
+`leftOut` names the omitted details. With `detail: true`, impacted Specs carry their binding
+reasons, and at-risk Specs carry their connecting edges, claims and directions. `atRiskOther`
+keeps the other at-risk nodes with their node types. `coverageUnknownFiles` names changed files
+the graph records nothing at. `unlinkedUnits` lists changed code units that bind no Spec, with
+their files. Such a unit is recorded, so its file is not coverage-unknown, and it implies no
+coverage. File-level reach makes no claim about exhaustive symbol reach.
 
 ## 5. The Pack review backbone
 
@@ -405,6 +522,12 @@ return {
   errors: report.findings.filter((finding) => finding.severity === "error").length,
   warnings: warnings.length,
   byValidator,
+  exemptions: [{
+    validatorId: "honesty/gaps",
+    exemptKind: "decision",
+    readySpecs: g.specs().filter((spec) => spec.specKind === "decision" && spec.statedReadiness === "ready").length,
+  }],
+  leftOut: warnings.length > 25 ? [`${warnings.length - 25} warning signals omitted.`] : [],
   signals: warnings.slice(0, 25).map((finding) => ({
     validatorId: finding.validatorId,
     family: finding.family,
@@ -413,6 +536,9 @@ return {
   })),
 };
 ```
+
+`exemptions` names the ready decision Specs exempt from the verifier-gap signal. `leftOut`
+names any warning signals beyond the first 25.
 
 `report` is the same validation output `g.findings()` exposes — one validation path, never a second
 one. Gaps and orphans are warn-level by design: a `ready` Spec with no verifier and a Spec nothing
@@ -446,11 +572,18 @@ return {
   found: true,
   statedReadiness: context.statedReadiness,
   floorReached: reached,
-  nextRung: rungs[reachedIndex + 1] ?? null,
+  aboveStated: {
+    rung: context.statedNextRung ?? null,
+    failures: context.statedNextRungFailures.map(shape),
+    firstUnmetClause: context.statedNextRungFailures[0]?.clauseId ?? null,
+  },
+  aboveFloor: {
+    rung: rungs[reachedIndex + 1] ?? null,
+    failures: context.nextRungFailures.map(shape),
+    firstUnmetClause: context.nextRungFailures[0]?.clauseId ?? null,
+  },
   currentFloorFailures: context.floorFailures.map(shape),
   firstUnmetClause: context.floorFailures[0]?.clauseId ?? null,
-  nextRungFailures: context.nextRungFailures.map(shape),
-  nextRungFirstUnmetClause: context.nextRungFailures[0]?.clauseId ?? null,
   promotionRequiresHumanStatement: true,
 };
 ```
@@ -458,8 +591,9 @@ return {
 The parameter is `params.spec`, the Spec whose promotion you are weighing.
 An empty `currentFloorFailures` list says the stated rung is honest. It does not confer the next
 rung, and `floorReached` above the stated rung is information rather than an automatic edit.
-`nextRungFailures` are the unmet clauses of `nextRung`, and a typed-dependency failure lists its
-`targets`; neither confers the rung.
+`aboveStated` reports the rung above the stated rung; `aboveFloor` reports the rung above the
+floor reached. Each carries its unmet clauses and first unmet clause, with `rung: null` at ready.
+A typed-dependency failure lists its `targets`; neither answer confers a rung.
 
 ## 10. Declared versus enabled verifiers
 
@@ -2023,10 +2157,12 @@ readiness floor. The census renders the same taxonomy for a human reader. The la
 member by member: what holds each one below its next rung, what design it carries, which code
 answers to it, and what the Pack rests on, as data a page or a script renders.*
 
-The parameter is `params.pack`, the Pack you are designing; an unknown Pack returns
+The parameters are `params.pack`, the Pack you are designing, and `params.detail`, absent or false
+for summaries, true for full rows, or a list of member ids for those full rows. An unknown Pack returns
 `{ id, found: false }`.
 
 ```js
+const detail = params.detail ?? false;
 const id = params.pack ?? "pack:spec-studio-v1";
 const pack = g.packContext(id);
 
@@ -2100,7 +2236,7 @@ const resolved = members.filter((member) => member.resolved);
 const count = (test) => resolved.filter(test).length;
 const sum = (field) => resolved.reduce((total, member) => total + member.design[field], 0);
 
-return {
+const answer = {
   found: true,
   id,
   title: pack.title ?? null,
@@ -2130,16 +2266,49 @@ return {
     supersededBy: pack.boundary.supersededBy.map(boundaryRow),
   },
 };
+const selected = Array.isArray(detail) ? new Set(detail) : new Set();
+const summaryOf = (member) => {
+  if (!member.resolved) return member;
+  return {
+    id: member.id,
+    specKind: member.specKind,
+    statedReadiness: member.statedReadiness,
+    floorReached: member.floorReached,
+    statedNextRung: member.statedNextRung,
+    holds: member.statedNextRungFailures.map((failure) => ({
+      clauseId: failure.clauseId,
+      targets: (failure.targets ?? []).map((target) => target.id),
+    })),
+    openQuestions: member.design.openQuestions,
+    blockingQuestions: member.design.blockingQuestions,
+    implementedBy: member.implementedBy.length,
+    referencedBy: member.referencedBy.length,
+  };
+};
+if (detail === true) return answer;
+const known = new Set(members.map((member) => member.id));
+return {
+  ...answer,
+  members: members.map((member) => selected.has(member.id) ? member : summaryOf(member)),
+  boundary: Object.fromEntries(Object.entries(answer.boundary).map(([direction, rows]) => [direction, rows.map((row) => row.id)])),
+  leftOut: ["Titles of unselected members and floor descriptions omitted.", "Design counts, question details, decisions, bindings and verifier counts of unselected members omitted.", "Boundary details omitted; ids kept per direction."],
+  ...(Array.isArray(detail) ? {
+    diagnostics: [...selected].filter((id) => !known.has(id)).map((id) => ({ id, reason: "not-member" })),
+  } : {}),
+};
 ```
 
-The body pre-shapes the Pack design the reader assembles on the Pack context and computes nothing
+By default, member summaries keep their rungs, holds and question and binding counts. Boundary
+lists keep ids per direction, and `leftOut` names the omitted details. Selecting member ids in
+`detail` keeps those full rows beside the summaries and reports unknown ids in `diagnostics`.
+Totals always count the whole Pack. With `detail: true`, the body pre-shapes the Pack design the reader assembles on the Pack context and computes nothing
 of its own. Members keep the manifest's order. Each resolved member carries its stated rung, the
 floor reached (`"none"` when no rung derives), and its stated next rung, the rung above the stated
 one, `null` at `ready`. `statedNextRungFailures` lists the floor clauses that hold the member below
 that rung, each with its `targets` when it names dependencies. An empty list beside a next rung
 means the floor already holds that rung: the rung waits for its author, and
 `totals.waitingForAuthor` counts those members. It is never a promotion. Promotion preflight
-(recipe 9) reads the rung above the floor reached instead, under its own names.
+(recipe 9) reports both next rungs under `aboveStated` and `aboveFloor`.
 
 `design` counts the member's keyed Design and UI entries other than `description`, its pinned
 declarations by recipe 24's rule, its open questions, and the blocking ones. `questions` lists each
@@ -2260,7 +2429,7 @@ ones, and `totals.units` the distinct units across all rows. The law is
 ## 31. Decision register
 
 *When you need this: you want every decision with its rung, what it supersedes and what supersedes
-it, what it narrows and what narrows it, what it shapes, and what it leaves open, read from the graph instead of kept by hand.*
+it, which decisions it refines and which refine it, what it shapes, and what it leaves open, read from the graph instead of kept by hand.*
 
 ```js
 const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
@@ -2271,7 +2440,7 @@ const ends = (relations, type) =>
     .sort(byCodeUnit);
 const decisions = g.specs().filter((spec) => spec.specKind === "decision");
 const decisionIds = new Set(decisions.map((spec) => spec.id));
-const narrowing = (relations) => ends(relations, "refines").filter((id) => decisionIds.has(id));
+const refinements = (relations) => ends(relations, "refines").filter((id) => decisionIds.has(id));
 const rows = decisions
   .map((spec) => spec.id)
   .sort(byCodeUnit)
@@ -2285,8 +2454,8 @@ const rows = decisions
       statedReadiness: context.statedReadiness,
       supersedes: ends(context.relationsOut, "supersedes"),
       supersededBy: ends(context.relationsIn, "supersedes"),
-      narrows: narrowing(context.relationsOut),
-      narrowedBy: narrowing(context.relationsIn),
+      refines: refinements(context.relationsOut),
+      refinedBy: refinements(context.relationsIn),
       shapes: ends(context.relationsIn, "decidedBy"),
       questions: questions
         .filter((entry) => typeof entry === "object" && entry !== null)
@@ -2315,9 +2484,9 @@ return {
 
 The body takes no parameter. It returns one row per decision Spec, sorted by id in code-unit order.
 `supersedes` lists the decisions this one supersedes and `supersededBy` the ones that supersede it;
-follow either to walk a chain. `narrows` lists decision-kind Specs this decision `refines`, and
-`narrowedBy` lists decision-kind Specs that `refines` it. Refinement narrows part of a decision;
-supersession replaces the whole decision. Other kinds that refine a decision stay out of these
+follow either to walk a chain. `refines` lists decision-kind Specs this decision refines, and
+`refinedBy` lists decision-kind Specs that refine it. Whether a refinement narrows a decision is
+that decision's own text. Supersession replaces the whole decision. Other kinds that refine a decision stay out of these
 two lists. `shapes` lists the Specs that name the decision through
 `decidedBy`. `questions` lists the decision's open questions that carry a key, each with its
 blocking flag and entry address; the open-question register (recipe 20) lists the unkeyed ones
@@ -2352,12 +2521,22 @@ const describe = (component) => ({
 
 const uses = graph.edges.filter((edge) => edge.type === "uses");
 let resolved = 0;
+let sameLayer = 0;
+let sameContext = 0;
+const bySameLayer = new Map();
 const rows = [];
 for (const edge of uses) {
   const from = componentFor(edge.from);
   const to = componentFor(edge.to);
   if (from === undefined || to === undefined) continue;
   resolved += 1;
+  if (from.id !== to.id) {
+    if (typeof from.layer === "string" && from.layer === to.layer) {
+      sameLayer += 1;
+      bySameLayer.set(from.layer, (bySameLayer.get(from.layer) ?? 0) + 1);
+    }
+    if (typeof from.context === "string" && from.context === to.context) sameContext += 1;
+  }
   const differs = ["context", "layer"].filter(
     (field) =>
       typeof from[field] === "string" &&
@@ -2392,6 +2571,9 @@ return {
   totals: {
     usesEdges: uses.length,
     resolvedToComponents: resolved,
+    sameLayer,
+    sameContext,
+    bySameLayer: Object.fromEntries([...bySameLayer.entries()].sort(([left], [right]) => byCodeUnit(left, right))),
     crossings: rows.length,
     contextCrossings: rows.filter((row) => row.differs.includes("context")).length,
     layerCrossings: rows.filter((row) => row.differs.includes("layer")).length,
@@ -2410,8 +2592,59 @@ edge crosses when both components state a context and the contexts differ, or bo
 and the layers differ. Two units in one component never cross, and an attribute either component
 leaves unstated never counts as a difference. Each row names both units (`from`, `to`), both components with their
 layer and context, and `differs`, the attributes that differ. Rows sort by `from`, then `to`.
-`totals.byContextPair` and `totals.byLayerPair` tally the crossings as `from -> to`, so the
+`totals.sameLayer` and `totals.sameContext` count resolved edges between distinct components
+that state the same layer or context; `totals.bySameLayer` counts them per layer. Edges within
+one component count in neither. `totals.byContextPair` and `totals.byLayerPair` tally the crossings as `from -> to`, so the
 direction of a corpus's dependencies reads at a glance. The recipe reports and never refuses: which
 crossings are lawful is the corpus's own rule, as the architectural annotation decision leaves it.
 Roles, layers and contexts (recipe 28) lists the values the anchors state. The law is
 `spec:consumers.agent-surface.design-recipes`.
+
+
+## 33. The design backlog
+
+*When you need this: you want defined Specs that no code realizes, with their design columns and
+references, before maturing the next design.*
+
+The body takes no parameter.
+
+```js
+const defined = g.specs().filter((spec) => spec.statedReadiness === "defined" && !spec.deliveryFacts.includes("implemented"));
+const backlog = defined.filter((spec) => spec.specKind !== "example" && spec.specKind !== "decision");
+const byFamily = Object.create(null);
+const rows = backlog.map((spec) => {
+  const context = g.specContext(spec.id);
+  const family = spec.id.slice("spec:".length).split(".")[0];
+  byFamily[family] = (byFamily[family] ?? 0) + 1;
+  return {
+    id: spec.id,
+    specKind: spec.specKind,
+    altitude: spec.altitude,
+    floorReached: spec.derivedReadiness ?? "none",
+    statedNextRungFailures: context.statedNextRungFailures.map((failure) => failure.clauseId),
+    design: {
+      entries: context.designColumns.entries,
+      declarations: context.designColumns.declarations,
+      openQuestions: context.designColumns.openQuestions.length,
+      blockingQuestions: context.designColumns.blockingQuestions,
+    },
+    referencedBy: context.references.map((unit) => unit.codeId),
+    packs: context.packs,
+  };
+}).sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0);
+return {
+  totals: {
+    specs: rows.length,
+    byFamily,
+    excludedExamples: defined.filter((spec) => spec.specKind === "example").length,
+    excludedDecisions: defined.filter((spec) => spec.specKind === "decision").length,
+    withReferences: rows.filter((row) => row.referencedBy.length > 0).length,
+  },
+  rows,
+};
+```
+
+The stated rung selects the rows, even when the floor reaches another rung. Examples and decisions
+are counted as exclusions. A reference says code answers to a design and confers no implementation
+fact. The design columns come from the reader and state no score or approval. Rows sort by id in
+code-unit order. The law is `spec:consumers.agent-surface.answer-shapes`.
