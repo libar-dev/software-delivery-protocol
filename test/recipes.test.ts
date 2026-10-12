@@ -439,7 +439,7 @@ describe("the agent-surface recipe corpus", () => {
     }
   });
 
-  it("documents recipe parameters and points on-ramps to the executable catalog", () => {
+  it("teaches parameters as data and keeps the on-ramps naming the CLI verbs and recipes", () => {
     const intro = source.slice(0, source.indexOf("## 1."));
     const introProse = intro.replace(/\s+/gu, " ");
     const onRamps = {
@@ -6004,18 +6004,14 @@ describe("answers that fit", () => {
     const summary = asRecord(
       await runRecipe(recipeByOrdinal(4), { files: [pack.file] }, extraction),
     );
+    const full = asRecord(
+      await runRecipe(recipeByOrdinal(4), { files: [pack.file], detail: true }, extraction),
+    );
     expect(asRecord(summary.atRisk).incomingSpecs).toEqual(["spec:probe.member"]);
     expect(asRecord(summary.atRisk).outgoingSpecs).toEqual([]);
     expect(asRecord(summary.totals).impactedPacks).toBe(1);
     expect(summary.impactedPacks).toEqual([pack.id]);
-    expect(summary.totals).toEqual(
-      asRecord(
-        await runRecipe(recipeByOrdinal(4), { files: [pack.file], detail: true }, extraction),
-      ).totals,
-    );
-    const full = asRecord(
-      await runRecipe(recipeByOrdinal(4), { files: [pack.file], detail: true }, extraction),
-    );
+    expect(summary.totals).toEqual(full.totals);
     expect(full.atRiskSpecs).toEqual([
       {
         id: "spec:probe.member",
@@ -6040,6 +6036,17 @@ describe("answers that fit", () => {
       recipes.map((recipe) => ({ number: recipe.ordinal, name: recipe.title })),
     );
     expect(indexed.every((row) => row[3]?.trim() && row[4]?.trim())).toBe(true);
+    for (const row of indexed) {
+      const recipe = recipeByOrdinal(Number(row[1]));
+      const listed = (row[3]?.trim() ?? "")
+        .split(/, | or /u)
+        .filter((name) => name !== "none")
+        .sort();
+      const read = [
+        ...new Set([...recipe.body.matchAll(/\bparams\.([A-Za-z]+)/gu)].map((match) => match[1])),
+      ].sort();
+      expect({ recipe: recipe.ordinal, listed }).toEqual({ recipe: recipe.ordinal, listed: read });
+    }
     expect(recipeFiles(source)).toHaveLength(recipes.length);
   });
 

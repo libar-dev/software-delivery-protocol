@@ -94,7 +94,8 @@ for example `--params base=@graph.json --params '{"spec":"spec:model.anchors"}'`
 by any form is refused before the body runs. Without `--params`, `params` is `{}`. Bodies with a
 documented sample fall back to it. A required input without a sample returns diagnostic data in
 the shape its recipe documents: `diagnostics`, `schemaProblems`, or a `found: false` result with a
-reason and expected input. Missing input is never silently treated as a successful empty answer.
+reason and expected input. Missing required input is never answered as empty, except recipe 4's
+`files`, which reads as an empty change list.
 The samples name this repository's corpus, so every body runs as written here. The recipe check
 executes each one unchanged. Recipes report absent subjects in their documented result shape.
 Most use `found: false`; the design diff, context bundle and perspective filter report an absent
@@ -219,8 +220,9 @@ return {
 
 `implemented` is a delivery fact: it says a code anchor *binds* to the Spec, never that the code
 works or is live. It never propagates through refinement. Ready examples normally carry
-verification evidence under the example realization posture (MD-24); ready decision records carry
-registry-ratification evidence under the decision readiness posture (MD-26). The raw
+verification evidence rather than implementation work, under the example realization posture
+(MD-24); ready decision records carry registry-ratification evidence rather than implementation or
+verifier work, under the decision readiness posture (MD-26). The raw
 `ready ∧ ¬implemented` expression remains literally true while this operational recipe excludes
 both kinds, audits example verifier bindings, and reports both excluded counts. The reverse pairing
 is recipe 2. Each backlog row also reports `designColumns` from its Spec context: counts of keyed
@@ -336,7 +338,8 @@ that it passed. Pass/fail is CI's, exactly as skip and quarantine are.
 
 *When you need this: you have a diff (or are about to make one) and want the Specs it reaches.*
 
-The parameters are `params.files`, the list of changed paths relative to the root, and
+The parameters are `params.files`, the list of changed paths relative to the root (absent, an
+empty list that reaches nothing), and
 `params.detail`, true for full rows and absent or false for a summary. The caller
 acquires the paths and passes them as data, never as query source. From the repository root, this
 pipeline keeps every valid Git filename byte except NUL (which Git filenames cannot contain),
@@ -1649,11 +1652,13 @@ Each row keeps every distinct location in `at` as `{ section, entry }`, with zer
 inside `entry`, and counts token occurrences in `totals.occurrences`.
 `unresolved` groups by mentioning Spec and token, with `reason: "malformed"` for a refused id or
 address, `"spec"` for an absent Spec, and `"entry"` for an absent own section key, `description`
-in Design or UI, or a question key no open question of the Spec carries.
+in Design or UI, a question key no open question of the Spec carries, or a rule key no rule or
+flow carries.
 An entry address is `spec:<id>#design.<key>` or `spec:<id>#ui.<key>`, with a key matching
 `^[a-z][A-Za-z0-9]*$`. It resolves against the named Spec's own section keys. An entry address may
 also be `spec:<id>#question.<key>`, which resolves when one of the named Spec's open questions
-carries that key in its marker; there `description` is an ordinary key.
+carries that key in its marker, or `spec:<id>#rule.<key>`, which resolves when the Spec's
+`behavior.ruleKeys` carries that key; there `description` is an ordinary key.
 
 `unbacked` and `reverseOnly` group valid mentions by mentioning Spec and target Spec, combining
 Spec-level mentions and addresses, including missing entries. Self-addresses never enter these
@@ -1671,8 +1676,8 @@ every location of every pair.
 `intended` holds matching unbacked pairs with their reasons. The remaining pairs stay in
 `unbacked`, and `staleIntended` lists supplied rows that match no current unbacked pair in the
 chosen scope. `totals.unbacked` counts both lists, matching the validator's warnings. The
-validator reads no intended list and its warnings stand. Rule addresses resolve through
-`behavior.ruleKeys`; question links are checked as complete ids or addresses.
+validator reads no intended list and its warnings stand. Question links are checked as complete
+ids or addresses.
 
 ## 23. Entry search
 
@@ -2714,6 +2719,7 @@ code-unit order. The law is `spec:consumers.agent-surface.answer-shapes`.
 ## 34. Rule coverage
 
 *When you need this: you want to see which keyed rules examples exercise and which have no example.*
+
 Pass one scope, `params.spec` or `params.pack`. Without one the recipe asks for a scope.
 
 ```js
