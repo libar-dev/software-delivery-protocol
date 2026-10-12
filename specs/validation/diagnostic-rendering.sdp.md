@@ -20,7 +20,7 @@ relations:
 - The Design Review renders the same currency in its findings table under the same composition rule, and shows an em dash where a finding carries no file, because a table cell cannot be absent the way a prefix can.
 
 ## Design
-- summaryLine: `validate: <errors> errors · <warnings> warnings (conformance + honesty over the one graph)`, written to standard output after every finding, which goes to standard error.
+- summaryLine: `validate: <errors> errors · <warnings> warnings (conformance + honesty over the one graph)`, written once to standard output after all findings have been written to standard error.
 
 ## Example space
 ```gwt-vocabulary
