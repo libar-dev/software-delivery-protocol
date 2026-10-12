@@ -148,6 +148,13 @@ async function runRecipe(
   params?: Readonly<Record<string, unknown>>,
   extraction: ExtractionResult = derived,
 ): Promise<unknown> {
+  // Recipe 40 requires external input rather than a corpus-specific sample fallback.
+  // The general catalog checks supply an empty imports snapshot; curation tests build a fixture.
+  const suppliedParams =
+    params ??
+    (recipe.ordinal === 40
+      ? { imports: { schema: "sdp-imports/1", adapter: "typescript", files: [] } }
+      : undefined);
   const capture = createCaptureOutput();
   const exitCode = await runSdpCli(
     [
@@ -156,7 +163,7 @@ async function runRecipe(
       "--root",
       repoRoot,
       "--json",
-      ...(params === undefined ? [] : ["--params", JSON.stringify(params)]),
+      ...(suppliedParams === undefined ? [] : ["--params", JSON.stringify(suppliedParams)]),
     ],
     capture.output,
     {
@@ -4093,7 +4100,7 @@ async function runShipped(
 }
 
 describe("recipe parameters and the shipped recipe files", () => {
-  it("reads each parameter from params, falls back to the catalog sample, and names it", () => {
+  it("reads and names each parameter, with a fallback only when the contract supplies one", () => {
     const parameterized = recipes.filter((recipe) => /\bparams\./u.test(recipe.body));
 
     expect(parameterized.map((recipe) => recipe.ordinal)).toEqual(
@@ -4106,10 +4113,13 @@ describe("recipe parameters and the shipped recipe files", () => {
       );
 
       for (const name of names) {
+        const hasSample =
+          !(recipe.ordinal === 39 && name === "pack") &&
+          !(recipe.ordinal === 40 && name === "imports");
         expect({
           recipe: recipe.ordinal,
           fallback: recipe.body.includes(`params.${name} ?? `),
-        }).toEqual({ recipe: recipe.ordinal, fallback: true });
+        }).toEqual({ recipe: recipe.ordinal, fallback: hasSample });
         expect({
           recipe: recipe.ordinal,
           named: recipeProse(recipe).includes(`\`params.${name}\``),

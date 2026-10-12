@@ -100,6 +100,23 @@ describe("TypeScript curation imports", () => {
     });
   });
 
+  it("follows re-exports through files outside the roots but never follows ordinary transitive imports", () => {
+    withFixture((root) => {
+      writeFileSync(join(root, "code", "index.ts"), 'export * from "../other/outside.js";');
+      writeFileSync(join(root, "other", "outside.ts"), 'export * from "../code/leaf.js";');
+      writeFileSync(join(root, "code", "leaf.ts"), 'import "./idle.js"; export const value = 1;');
+      const result = deriveTypeScriptImports(root, "imports.config.json");
+      expect(result.files.find((entry) => entry.file === "code/a.ts")?.imports).toEqual([
+        "code/index.ts",
+        "code/leaf.ts",
+      ]);
+      expect(result.files.find((entry) => entry.file === "code/leaf.ts")?.imports).toEqual([
+        "code/idle.tsx",
+      ]);
+      expect(result.files.some((entry) => entry.file.startsWith("other/"))).toBe(false);
+    });
+  });
+
   it.each([
     {},
     { adapter: "other", tsconfig: "tsconfig.json", roots: ["code"] },

@@ -2415,3 +2415,194 @@ direction of a corpus's dependencies reads at a glance. The recipe reports and n
 crossings are lawful is the corpus's own rule, as the architectural annotation decision leaves it.
 Roles, layers and contexts (recipe 28) lists the values the anchors state. The law is
 `spec:consumers.agent-surface.design-recipes`.
+
+## 39. Slimming candidates
+
+*When you need this: an implemented Spec has a verifier and you want to compare its pinned
+declarations with the bound artifacts before removing duplicated Design detail.*
+
+The optional parameter is `params.pack`; without it the body reads every Spec. An unknown Pack
+selects no Specs. A row is a potential candidate, never permission to delete an entry.
+
+```js
+const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
+const specs = params.pack === undefined
+  ? g.specs()
+  : (g.packContext(params.pack)?.members ?? []);
+const rows = [];
+for (const spec of specs) {
+  const context = g.specContext(spec.id);
+  if (!context?.deliveryFacts.includes("implemented") || !context.deliveryFacts.includes("has-verifier")) continue;
+  for (const [key, value] of Object.entries(context.sections?.design ?? {})) {
+    if (key === "description" || typeof value !== "string") continue;
+    const span = /^(`+)(?!`)([^\r\n]+?)(?<!`)\1(?!`)/u.exec(value);
+    if (!span) continue;
+    rows.push({
+      spec: spec.id,
+      key,
+      line: context.entryLocations.find((entry) => entry.entry === `design.${key}`)?.line ?? null,
+      declaration: span[2],
+      implementations: context.implementations.map((unit) => ({
+        id: unit.codeId, file: unit.file ?? null, line: unit.line ?? null, claim: unit.claim,
+      })),
+      verifiers: context.verifiers.map((unit) => ({
+        id: unit.verifierId, file: unit.file ?? null, via: unit.via, enabled: unit.enabled, claim: unit.claim,
+      })),
+    });
+  }
+}
+rows.sort((left, right) => byCodeUnit(left.spec, right.spec) || byCodeUnit(left.key, right.key));
+return {
+  totals: { specs: specs.length, potentialCandidates: rows.length },
+  rows,
+  leftOut: [
+    "Whole-Spec bindings prove no entry-level realization of a declaration; compare each potential candidate with its bound artifacts.",
+    "Whole-Spec bindings prove no entry-level realization by a bound example; bound examples do not identify which Design entries they realize.",
+    "Prose entries never qualify, and explanations stay in their Spec. The recipe deletes nothing.",
+  ],
+};
+```
+
+`totals.specs` counts the selected Specs, and `potentialCandidates` counts the returned Design
+entries. `declaration` is the opening code span, by pinned declarations' rule in recipe 24;
+`line` is the location table's line or null when unlocated. `implementations` names the realizing
+units and `verifiers` the declared and anchored verifier bindings, with their claim and whether
+they are enabled. A verifier binding says one exists; it records no test result. The declaration
+is declared intent, and the candidate classification is advice derived from the graph.
+`leftOut` states what whole-Spec bindings cannot prove for declarations and examples. The law is
+`spec:model.enrichment-lifecycle`.
+
+## 40. Curation report
+
+*When you need this: you want files ranked for anchor review, component imports that disagree
+with anchored uses, and component designs that no planned component realizes yet.*
+
+The required parameter is `params.imports`, the object in the adapter's imports file. The optional
+`params.limit` is a non-negative integer, 20 by default, and cuts only the uncovered-file list.
+Build the input explicitly, then pass it to the body as data:
+
+```sh
+pnpm --silent sdp build . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --imports imports.config.json
+pnpm --silent sdp:q "$(cat dist/recipes/40-curation-report.js)" --params imports=@generated/imports.json --json
+```
+
+The configuration is a JSON object such as
+`{ "adapter": "typescript", "tsconfig": "tsconfig.json", "roots": ["src"] }`.
+Its paths are relative to the build root. No path convention assigns files to components;
+only anchored component identity and `memberOf` do that.
+
+```js
+const input = params.imports;
+if (input?.schema !== "sdp-imports/1" || typeof input.adapter !== "string" || !Array.isArray(input.files) ||
+    input.files.some((entry) => typeof entry.file !== "string" || !Array.isArray(entry.imports) || entry.imports.some((file) => typeof file !== "string"))) {
+  throw new Error("params.imports must be an sdp-imports/1 object");
+}
+const limit = params.limit ?? 20;
+if (!Number.isSafeInteger(limit) || limit < 0) throw new Error("params.limit must be a non-negative integer");
+const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
+const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
+const anchored = graph.nodes.filter((node) => node.claim === "anchored" && (node.nodeType === "CodeNode" || node.nodeType === "Anchor"));
+const anchoredFiles = new Set(anchored.map((node) => node.file));
+const componentOf = new Map();
+for (const edge of graph.edges) if (edge.type === "memberOf" && edge.claim === "anchored") componentOf.set(edge.from, edge.to);
+const componentFor = (id) => {
+  const unit = nodes.get(id);
+  if (unit?.nodeType !== "CodeNode" || unit.claim !== "anchored") return undefined;
+  const component = id.startsWith("component:") ? unit : nodes.get(componentOf.get(id));
+  return component?.nodeType === "CodeNode" && component.claim === "anchored" && component.id.startsWith("component:") ? component.id : undefined;
+};
+const fileComponents = new Map();
+for (const unit of anchored) {
+  const component = componentFor(unit.id);
+  if (component === undefined) continue;
+  if (!fileComponents.has(unit.file)) fileComponents.set(unit.file, new Set());
+  fileComponents.get(unit.file).add(component);
+}
+const files = new Map(input.files.map((entry) => [entry.file, new Set(entry.imports)]));
+const fanIn = new Map();
+for (const imports of files.values()) for (const file of imports) fanIn.set(file, (fanIn.get(file) ?? 0) + 1);
+const uncovered = [...files.entries()]
+  .filter(([file]) => !anchoredFiles.has(file))
+  .map(([file, imports]) => ({ file, fanIn: fanIn.get(file) ?? 0, fanOut: imports.size }))
+  .sort((left, right) => right.fanIn - left.fanIn || byCodeUnit(left.file, right.file));
+const pairKey = (from, to) => JSON.stringify([from, to]);
+const pairs = new Map();
+for (const [from, imports] of [...files.entries()].sort(([left], [right]) => byCodeUnit(left, right))) {
+  for (const to of [...imports].sort(byCodeUnit)) {
+    for (const fromComponent of fileComponents.get(from) ?? []) {
+      for (const toComponent of fileComponents.get(to) ?? []) {
+        if (fromComponent === toComponent) continue;
+        const key = pairKey(fromComponent, toComponent);
+        const row = pairs.get(key) ?? { fromComponent, toComponent, imports: 0, sample: { from, to } };
+        row.imports += 1;
+        pairs.set(key, row);
+      }
+    }
+  }
+}
+const statedPairs = new Set();
+const usesWithoutImport = [];
+let componentUses = 0;
+for (const edge of graph.edges) {
+  if (edge.type !== "uses" || edge.claim !== "anchored") continue;
+  const fromComponent = componentFor(edge.from);
+  const toComponent = componentFor(edge.to);
+  if (fromComponent === undefined || toComponent === undefined || fromComponent === toComponent) continue;
+  componentUses += 1;
+  const key = pairKey(fromComponent, toComponent);
+  statedPairs.add(key);
+  if (!pairs.has(key)) usesWithoutImport.push({ from: edge.from, to: edge.to, fromComponent, toComponent });
+}
+usesWithoutImport.sort((left, right) => byCodeUnit(left.from, right.from) || byCodeUnit(left.to, right.to));
+const importsWithoutUses = [...pairs.entries()].filter(([key]) => !statedPairs.has(key)).map(([, row]) => row)
+  .sort((left, right) => byCodeUnit(left.fromComponent, right.fromComponent) || byCodeUnit(left.toComponent, right.toComponent));
+const unrealizedComponents = [];
+for (const spec of g.specs()) {
+  const value = g.specContext(spec.id)?.sections?.design?.id;
+  if (typeof value !== "string") continue;
+  const span = /^(`+)(?!`)([^\r\n]+?)(?<!`)\1(?!`)/u.exec(value);
+  const componentId = span?.[2] ?? value;
+  if (!/^component:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*$/u.test(componentId)) continue;
+  const component = nodes.get(componentId);
+  const realized = component?.nodeType === "CodeNode" && component.claim === "anchored" && graph.edges.some((edge) =>
+    edge.from === componentId && edge.to === spec.id && edge.type === "satisfies" && edge.claim === "anchored");
+  if (!realized) unrealizedComponents.push({ spec: spec.id, componentId });
+}
+unrealizedComponents.sort((left, right) => byCodeUnit(left.spec, right.spec));
+const oneSided = {
+  anchoredOnly: [...anchoredFiles].filter((file) => !files.has(file)).sort(byCodeUnit),
+  importsOutsideComponents: [...files.keys()].filter((file) => !fileComponents.has(file)).sort(byCodeUnit),
+};
+return {
+  input: { label: "external inferred input", schema: input.schema, adapter: input.adapter, files: files.size },
+  totals: {
+    files: files.size, importEdges: [...files.values()].reduce((sum, imports) => sum + imports.size, 0),
+    uncovered: uncovered.length, componentUses, usesWithoutImport: usesWithoutImport.length,
+    importsWithoutUses: importsWithoutUses.length, unrealizedComponents: unrealizedComponents.length,
+    anchoredOnly: oneSided.anchoredOnly.length, importsOutsideComponents: oneSided.importsOutsideComponents.length,
+  },
+  uncovered: uncovered.slice(0, limit), usesWithoutImport, importsWithoutUses, unrealizedComponents, oneSided,
+};
+```
+
+`input` labels the file as external inferred input, with its schema, adapter and file count.
+`totals` counts each list before the limit, the file import edges and the anchored cross-component
+uses checked. `uncovered` ranks files with no code or test anchor by distinct importing files
+(`fanIn`), then path; `fanOut` counts their distinct imports, including barrel reach.
+
+`usesWithoutImport` names each anchored uses edge whose components share no directed file
+import. `fromComponent` and `toComponent` are component ids. `importsWithoutUses` groups inferred
+imports by directed component pair that no anchored uses states; `imports` counts distinct file
+pairs, and `sample` gives the first pair in path order. A file with anchors in several components
+contributes to each component pair. Same-component pairs stay out of both lists. Missing import
+input can explain a mismatch, so inspect `oneSided` before editing an anchor.
+
+`unrealizedComponents` reads the component-design convention's Design `id`, as a component id or
+an opening code span. The row stays until that exact component has an anchored satisfies binding
+to the design Spec; an existing id, a reference or another unit's realization is insufficient.
+`oneSided.anchoredOnly` lists anchored source files absent from the input, and
+`importsOutsideComponents` lists input files assigned to no anchored component, including anchored
+units with no component. Component designs are declared intent, bindings are anchored, and
+imports are inferred. Every mismatch and ranking is advice; the body changes nothing and no
+finding enters validation. Bad parameters are input errors, not curation findings. The law is
+`spec:consumers.impact-graph.curation-assist`.

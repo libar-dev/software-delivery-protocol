@@ -205,6 +205,13 @@ function readRegistrarManifest(path: string, root: string, rootReal: string): re
 
   return files;
 }
+/**
+ * @sdpAnchor impl:protocol.build-imports
+ * @sdpLabel opt-in imports publication in the build command
+ * @sdpReferences spec:consumers.impact-graph.curation-assist
+ * @sdpComponent component:protocol.cli
+ * @sdpRole publisher
+ */
 const wholesaleViewBuildInvalidationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.wholesale-view-build-invalidation"),
   label: "invalidates the prior Design Review before every build attempt",
@@ -233,13 +240,6 @@ const regenerabilityAnchor = codeAnchor({
   component: componentAnchorId("component:protocol.cli"),
   role: "service",
 });
-/**
- * @sdpAnchor impl:protocol.build-imports
- * @sdpLabel opt-in imports publication in the build command
- * @sdpReferences spec:consumers.impact-graph.curation-assist
- * @sdpComponent component:protocol.cli
- * @sdpRole publisher
- */
 export function runBuild(
   parsed: BuildArgs,
   output: CliOutput,
