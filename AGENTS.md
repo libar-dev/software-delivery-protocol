@@ -234,14 +234,13 @@ Every doc honours both — never mistake one half for the other:
 - **A "verified" row is re-measured, never inherited.** A docket or ledger row claiming *fixed* or *verified*
   is re-checked against the tree at the moment of verification, never trusted from the row that closed it —
   the phase-4 close caught a "verified — intact" row that had been false since the commit after the one it cited.
-- **OmO state is recoverable project state.** Track durable `.omo/` state that carries decisions, plans,
-  review history, proofs, or orchestration recovery (`boulder.json`, `drafts/`, `plans/`, and durable
-  `evidence/`). Commit coherent checkpoints when that state is created or materially changed; a plan may mark
-  narrowly named runtime evidence as workspace-local. Never delete, prune, overwrite, or blanket-ignore
-  unfamiliar `.omo/` state as cleanup — inspect it and preserve it until its owner and recovery value are clear.
-- **Checkpoint runtime ledgers before destructive changes.** `.omo/start-work/ledger.jsonl` is ignored runtime
-  state; before replacing or deleting it, preserve required recovery records under `.omo/evidence/<work-id>/`
-  with source provenance and hashes.
+- **`.omo/` belongs to OmO.** It is the oh-my-openagent harness's state, and only OmO sessions read or
+  write it, under OmO's own protocol. Every other agent leaves it alone: it adds no plan, draft or evidence
+  there and never deletes, prunes or overwrites what is there. A Claude session keeps its working material
+  in its own scratchpad.
+- **Tests are the evidence.** A change proves itself with a test that fails without it, and the corpus's
+  state with a recipe anyone can re-run. Keep a separate evidence artifact only for what no test or recipe
+  can carry, such as a rendered page or an adopter measurement, and commit it beside the record that cites it.
 - **Commits are recovery boundaries, not workflow gates.** An execution plan's explicit commit strategy counts
   as authorization on its work branch; otherwise ask before committing. Prefer a commit after a coherent
   logical unit and its relevant quality gate, but never force one per todo, create empty commits, absorb
@@ -271,8 +270,8 @@ that reader brings. The standard, set by PR #19 (the universal-Spec arc) buildin
 - **Show it to a person.** Prose, rendered tables and screenshots are welcome. When the PR moves a
   human view, such as a Design Review page, show it at the arc's base and at the head. Render a
   recipe's answer as a short table rather than pasting JSON, and say plainly what no human view
-  shows yet. `gh` cannot attach images, so commit them under `.omo/evidence/<work-id>/` with a
-  README naming the commit, the commands and the hashes.
+  shows yet. `gh` cannot attach images, so commit them under `reviews/assets/pr<n>/` with a
+  short README naming the commit and the commands.
 - **Self-hosted and graph-measured.** The arc's intent is a Pack in the corpus: link it, and
   describe its state and its changes with the Protocol's own recipes, Pack design (29) and the
   design diff (35) from the arc's base among them. Check every claim about the Protocol's own
@@ -293,9 +292,9 @@ that reader brings. The standard, set by PR #19 (the universal-Spec arc) buildin
   carries out, and the diff stat from the base, so each finished piece of work appears or is left
   out on purpose. Pin links and images to a commit so they outlive the branch (`blob/<sha>/…`,
   `raw.githubusercontent.com/<owner>/<repo>/<sha>/…`; a line anchor on a Markdown file needs
-  `?plain=1#L…`), and confirm each linked path exists at that commit. The draft lives in
-  `.omo/drafts/pr<n>-body.md`, committed; when replacing the body, keep the sections Greptile and
-  CodeRabbit append.
+  `?plain=1#L…`), and confirm each linked path exists at that commit. Draft the body in your own
+  working area; the published description is the record. When replacing the body, keep the sections
+  Greptile and CodeRabbit append.
 
 > `CLAUDE.md` is a symlink to `AGENTS.md` — **edit `AGENTS.md`.**
 
