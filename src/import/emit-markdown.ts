@@ -92,42 +92,58 @@ function intentSection(
 
 function behaviorSection(data: ImportData, behavior: ImportData): string | undefined {
   const ruleKeys = importData(behavior.ruleKeys);
-  const keyedText = (field: string, values: readonly string[]): string[] =>
-    values.map((value, index) => {
-      const key = Object.entries(ruleKeys ?? {}).find(
-        ([, path]) => path === `${field}[${String(index)}]`,
-      )?.[0];
-      return key === undefined ? value : `[#${key}] ${value}`;
-    });
-  const rules = keyedText("rules", importTexts(behavior.rules));
-  const flows = keyedText("flows", importTexts(behavior.flows));
+  const lists = { rules: importTexts(behavior.rules), flows: importTexts(behavior.flows) };
   const kind = importText(data.kind);
   const ownsExampleSpace = fence("gwt-vocabulary", behavior.exampleSpace) !== undefined;
-  if (kind === "behavior" && ownsExampleSpace && rules.length === 0 && flows.length === 0)
+  if (
+    kind === "behavior" &&
+    ownsExampleSpace &&
+    lists.rules.length === 0 &&
+    lists.flows.length === 0
+  )
     return undefined;
-  if (kind === "behavior")
-    return section("Behavior", behavior.description, [
-      ...rules.map((value) => `- rule: ${value}`),
-      ...flows.map((value) => `- flow: ${value}`),
-    ]);
-  if (kind === "rule")
-    return section(
-      "Rule",
-      behavior.description,
-      rules.map((value) => `- ${value}`),
-    );
-  if (kind === "workflow")
-    return section("Workflow", behavior.description, [
-      ...flows.map((value) => `- ${value}`),
-      ...rules.map((value) => `- rule: ${value}`),
-    ]);
-  if (kind === "contract")
-    return section(
-      "Contract",
-      behavior.description,
-      rules.map((value) => `- ${value}`),
-    );
-  return undefined;
+  const heading =
+    kind === "behavior"
+      ? "Behavior"
+      : kind === "workflow"
+        ? "Workflow"
+        : kind === "rule"
+          ? "Rule"
+          : kind === "contract"
+            ? "Contract"
+            : undefined;
+  if (heading === undefined) return undefined;
+  const fields: ("rules" | "flows")[] =
+    kind === "workflow" ? ["flows", "rules"] : kind === "behavior" ? ["rules", "flows"] : ["rules"];
+  const keysByPath = new Map(Object.entries(ruleKeys ?? {}).map(([key, path]) => [path, key]));
+  const next = { rules: 0, flows: 0 };
+  const items: string[] = [];
+  const appendThrough = (field: "rules" | "flows", end: number): void => {
+    for (; next[field] <= end && next[field] < lists[field].length; next[field]++) {
+      const index = next[field];
+      const key = keysByPath.get(`${field}[${String(index)}]`);
+      const value = `${key === undefined ? "" : `[#${key}] `}${lists[field][index] ?? ""}`;
+      const label =
+        kind === "behavior"
+          ? field === "rules"
+            ? "rule: "
+            : "flow: "
+          : kind === "workflow" && field === "rules"
+            ? "rule: "
+            : "";
+      items.push(`- ${label}${value}`);
+    }
+  };
+  // Key order spans both lists. Emit each list's preceding unkeyed entries before its next key.
+  for (const path of Object.values(ruleKeys ?? {})) {
+    if (typeof path !== "string") continue;
+    const match = /^(rules|flows)\[(\d+)\]$/u.exec(path);
+    const field = match?.[1];
+    if ((field === "rules" || field === "flows") && fields.includes(field))
+      appendThrough(field, Number(match?.[2]));
+  }
+  for (const field of fields) appendThrough(field, lists[field].length - 1);
+  return section(heading, behavior.description, items);
 }
 
 function exampleSpaceSection(

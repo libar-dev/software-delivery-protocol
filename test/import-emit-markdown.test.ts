@@ -4,7 +4,9 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { reifyMarkdownCarrier } from "../src/extract/markdown.js";
+import { reifyTypeScriptCarrier } from "../src/extract/carrier.js";
 import { emitMarkdownSpec } from "../src/import/emit-markdown.js";
+import { assertMarkdownEmissionFidelity } from "../src/import/markdown-fidelity.js";
 import type { ReifiedSpec } from "../src/extract/reify.js";
 
 const checkoutSpecPaths = [
@@ -49,6 +51,71 @@ function expectMarkdownRoundTrip(source: ReifiedSpec): string {
 }
 
 describe("emitMarkdownSpec", () => {
+  it.each([
+    {
+      kind: "behavior",
+      body: 'flows: ["[#flow] Flow."], rules: ["[#rule] Rule."]',
+      keys: ["flow", "rule"],
+    },
+    {
+      kind: "workflow",
+      body: 'rules: ["[#rule] Rule."], flows: ["[#flow] Flow."]',
+      keys: ["rule", "flow"],
+    },
+  ])(
+    "preserves TypeScript $kind rule-key order through Markdown import",
+    ({ kind, body, keys }) => {
+      const result = reifyTypeScriptCarrier(
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const probe = spec({id: specId("spec:import.order"), title: "Ordered keys", kind: "${kind}", altitude: "story", readiness: "idea", behavior: {${body}}});`,
+        "probe.sdp.ts",
+      );
+      expect(result.findings).toEqual([]);
+      const source = result.specs[0];
+      if (!source) throw new Error("missing TypeScript Spec");
+      const original = source.data.behavior as { ruleKeys: Record<string, string> };
+      expect(Object.keys(original.ruleKeys)).toEqual(keys);
+      const markdown = reifyMarkdownCarrier(emitMarkdownSpec(source), "probe.sdp.md");
+      expect(markdown.findings).toEqual([]);
+      const imported = markdown.specs[0]?.data.behavior as { ruleKeys: Record<string, string> };
+      expect(Object.keys(imported.ruleKeys)).toEqual(keys);
+      expect(imported).toEqual(original);
+    },
+  );
+
+  it("preserves unkeyed list order around keyed entries from both lists", () => {
+    const source = reifiedSpec({
+      behavior: {
+        rules: ["Before rule.", "Rule.", "After rule."],
+        flows: ["Before flow.", "Flow.", "After flow."],
+        ruleKeys: { flow: "flows[1]", rule: "rules[1]" },
+      },
+    });
+    const document = expectMarkdownRoundTrip(source);
+    const behavior = reifyMarkdownCarrier(document, "probe.sdp.md").specs[0]?.data.behavior as {
+      ruleKeys: Record<string, string>;
+    };
+    expect(Object.keys(behavior.ruleKeys)).toEqual(["flow", "rule"]);
+    expect(document.indexOf("[#flow]")).toBeLessThan(document.indexOf("[#rule]"));
+  });
+
+  it("refuses a Markdown twin that only reorders rule keys", () => {
+    const source = reifiedSpec({
+      behavior: {
+        rules: ["Rule."],
+        flows: ["Flow."],
+        ruleKeys: { rule: "rules[0]", flow: "flows[0]" },
+      },
+    });
+    const reordered = emitMarkdownSpec(source).replace(
+      "- rule: [#rule] Rule.\n- flow: [#flow] Flow.",
+      "- flow: [#flow] Flow.\n- rule: [#rule] Rule.",
+    );
+    expect(() => {
+      assertMarkdownEmissionFidelity(source, reordered);
+    }).toThrow(/behavior\.ruleKeys/u);
+  });
+
   it("emits a bare typed heading in scaffold mode without inventing content", () => {
     const emitted = emitMarkdownSpec(
       reifiedSpec({
