@@ -194,7 +194,7 @@ describe("the self-hosting corpus", () => {
     expect(result.report.findings).toEqual([]);
   });
 
-  it("reports exactly the two informative honesty gaps and the five unbacked prose mentions", () => {
+  it("reports exactly eleven informative honesty gaps and three unbacked prose mentions", () => {
     expect(
       validateGraph(result.graph).findings.map(
         ({ validatorId, family, severity, subjectId, relatedId }) => ({
@@ -212,20 +212,17 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    // re-measured after plan 43's corpus commit
-    expect(result.counts).toEqual({ specs: 252, packs: 4, anchors: 263 });
-    // re-measured after plan 43's corpus commit
-    expect(expectedSpecs).toHaveLength(252);
-    // re-measured under plan 41's fold and the owner's second round
-    expect(expectedPackMembers).toHaveLength(250);
-    // re-measured under plan 41's fold and the owner's second round
+    // Re-measured after the design pass at 2b5b801: 249 Markdown Specs and four Specs
+    // in reader.sdp.gherkin; four Pack manifests, with 251 self-hosting members. The
+    // excluded-root sdp validate run confirms those totals and measures anchors, nodes,
+    // and edges. Symbol reach adds one node, one refines edge, and one belongsTo edge.
+    expect(result.counts).toEqual({ specs: 253, packs: 4, anchors: 263 });
+    expect(expectedSpecs).toHaveLength(253);
+    expect(expectedPackMembers).toHaveLength(251);
     expect(expectedAnchors).toHaveLength(263);
-    // re-measured under plan 41's fold and the owner's second round
     expect(expectedBindingEdges).toHaveLength(274);
-    // re-measured after plan 43's corpus commit
-    expect(result.graph.nodes).toHaveLength(519);
-    // re-measured after plan 43's corpus commit
-    expect(result.graph.edges).toHaveLength(1238);
+    expect(result.graph.nodes).toHaveLength(520);
+    expect(result.graph.edges).toHaveLength(1240);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -267,7 +264,8 @@ describe("the self-hosting corpus", () => {
   });
 
   it("holds the frozen stated-readiness distribution", () => {
-    // re-measured after plan 43's corpus commit
+    // The carrier statements at 2b5b801 total 183 ready Markdown Specs plus four ready
+    // Gherkin Specs, 53 defined, eight scoped, and five idea; sdp q corroborates them.
     expect(
       primitiveNodes.reduce<Record<string, number>>(
         (histogram, node) => ({
@@ -276,7 +274,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 61, idea: 6, ready: 177, scoped: 8 });
+    ).toEqual({ defined: 53, idea: 5, ready: 187, scoped: 8 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {

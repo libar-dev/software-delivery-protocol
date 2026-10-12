@@ -97,7 +97,7 @@ export const modelSpecs = [
     id: "spec:model.enrichment-lifecycle",
     specKind: "model",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/model/enrichment-lifecycle.sdp.md",
     title: "Enrichment keeps one Spec while its detail changes",
     narrative: null,
@@ -115,6 +115,12 @@ export const modelSpecs = [
           "slimming candidate":
             "A Design entry past the distillation boundary. A recipe reports the candidates and never deletes one; removing an entry stays the author's edit.",
         },
+      },
+      design: {
+        slimmingRecipe:
+          "recipe 39, slimming candidates, takes an optional `params.pack` and returns `{ totals: { specs, potentialCandidates }, rows, leftOut }`, each row `{ spec, key, line, declaration, implementations, verifiers }` for a pinned declaration on a Spec that carries both `implemented` and `has-verifier`.",
+        slimmingScope:
+          "rows are potential candidates the author compares with the bound artifacts, because a binding names a whole Spec and the graph proves no entry-level realization for a declaration or an example; `leftOut` states both limits, and prose entries are never candidates.",
       },
     },
     deliveryFacts: [],
@@ -686,7 +692,7 @@ export const modelSpecs = [
     id: "spec:model.open-question-fields",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/model/open-question-fields.sdp.md",
     title: "An open question may name who decides it, its links and a provisional reading",
     narrative:
@@ -700,20 +706,6 @@ export const modelSpecs = [
         risks: [
           "A field for who decides invites fields for when and for what state the question is in, which would rebuild a workflow tracker inside the Spec.",
         ],
-        openQuestions: [
-          {
-            question:
-              "May a link name only a Spec id or an entry address, which validation checks, or also an external document, which the `doc:` deferral leaves without an identity?",
-            blocking: false,
-            key: "linkTargets",
-          },
-          {
-            question:
-              "The adopter's lean has six parts: what to do, what it rests on, the case against it, what it settles, what it changes and what follows if it is wrong. Does any part belong on the question, or is a lean always a draft of a decision Spec?",
-            blocking: false,
-            key: "leanHome",
-          },
-        ],
       },
       behavior: {
         rules: [
@@ -721,12 +713,29 @@ export const modelSpecs = [
           "Who decides a question names the person, role or body whose ruling settles it. It authorizes nothing, gates no edit, and no validator compares it with the author of a change.",
           "Who decides a question is one lowercase kebab token the corpus owns, on the grammar a role uses, such as `owner` or `delegated`. The graph holds no person or role to point at, so the value references nothing, and the Protocol ships no list of values.",
           "In the Markdown carrier the four fields ride labelled sub-items indented under the question's own line, `decider:`, `links:`, `provisional:` and `trigger:`, each at most once and each one line, so the question line stays as authored. They are the one indented line the body grammar admits, and the TypeScript carrier carries the same four fields on the question object.",
-          "A link names a Spec id or an entry address the question rests on and resolves as a mention does. A link mints no relation.",
+          "A link is a Spec id or an entry address the question rests on, and nothing else. Each is checked as a mention is: a missing target or entry is an error, and a target with no declared relation either way raises the pair warning. A link mints no relation, and a document outside the graph is named in the question's text as prose, because the graph holds no identity for it to resolve.",
           "The provisional reading is one line stating what the design assumes while the question is open. It is intent, never a ruling.",
+          "A question carries at most its one-line provisional reading of a lean. A worked lean is a decision Spec whose Decision section holds its parts as `decision`, `context`, `rationale`, `alternative` and `consequence`, stated at the rung its record earns, and the Specs it shapes name it through `decidedBy`, so a lean below `defined` holds them below `ready` under the typed-dependency floor.",
           "A re-entry trigger is one line naming what brings a deferred Spec back, such as a named reader the shipped views do not serve. It sits on the blocking question that holds the deferral, and the open-question register reports questions that carry one apart from design holds, so no reader tells the two apart by their wording.",
           "An open question carries no status, date, blocked work unit or record of who checked it. A settled question leaves the Spec, a ruling that passes the decision test lands as a decision Spec the shaped Specs name through `decidedBy`, and the rest of the history stays in git and in the adopter's own records.",
           "Whether a question holds the readiness floor stays its `[blocking]` flag alone; none of the four fields moves a floor.",
         ],
+      },
+      design: {
+        subItemLine:
+          "a field is one line of exactly two spaces, `- `, a label from `decider`, `links`, `provisional` and `trigger`, a colon, a space and the value, directly under its question's line or a sibling field; any other indented line stays refused, as is a field under an entry that is not an open question.",
+        questionObject:
+          "the open question object gains `decider`, `links`, a list of strings in authored order, `provisional` and `trigger`, each absent when the author wrote none, and the TypeScript carrier writes the same four fields on its question object.",
+        linksValue:
+          "`links:` takes a comma-separated list, as an anchor comment's target tags do, non-empty and with no repeat.",
+        fieldFindings:
+          "an unknown or repeated label, an empty value, a `decider` off the token grammar, and a `trigger` on a non-blocking question are conformance errors at the field's line.",
+        fieldLocations:
+          "each carrier that records entry lines adds a location row per field present, `question[<i>].decider`, `question[<i>].links`, `question[<i>].provisional` or `question[<i>].trigger`; a link finding reads the `links` row, and a line the carrier did not record stays absent.",
+        linkResolution:
+          "each link is checked as a mention is, at the field's line, by the same validator and with the same two findings.",
+        registerColumns:
+          "the open-question register (recipe 20) adds the four fields to each row, marks a question that carries a trigger as a deferral, and counts deferrals and holds apart in its totals.",
       },
     },
     deliveryFacts: [],
@@ -735,7 +744,7 @@ export const modelSpecs = [
     id: "spec:model.rule-keys",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/model/rule-keys.sdp.md",
     title: "A rule or flow entry may carry a key that addresses it",
     narrative:
@@ -746,20 +755,6 @@ export const modelSpecs = [
           "An inline rule has no identity but its position and its text, so anything outside the Spec that cites one rule breaks silently when the rules above it move or the rule is reworded.",
         outcome:
           "Let an author key a rule or flow entry, so a review, a register row or an example can name the entry it is about.",
-        openQuestions: [
-          {
-            question:
-              "Where does an example carry the rule keys it exercises: a body line the example section admits, or an envelope field, which would reopen the closed envelope?",
-            blocking: false,
-            key: "exercisesCarrier",
-          },
-          {
-            question:
-              "Does a rule keep the original's rationale, or is the rationale prose the Spec's narrative already owns?",
-            blocking: false,
-            key: "ruleRationale",
-          },
-        ],
       },
       behavior: {
         rules: [
@@ -767,9 +762,30 @@ export const modelSpecs = [
           "A key sits in a marker at the start of the entry's text, after the `rule:` or `flow:` label where the entry has one, as in `- rule: [#graphOnly] The Studio is a projection.` and `- [#oneFamily] Every validator belongs to one family.`, the shape an open question's marker uses, so one form serves labelled and plain entries.",
           "Every keyed entry is addressed as `spec:<id>#rule.<key>` whatever its section, because a Spec uses one primary behavior owner. The address resolves while the Spec carries an entry with that key and fails validation in every Spec that names it once the key is renamed or removed.",
           "A rule address is refused in every id slot, as every entry address is, so no anchor targets a rule and no delivery fact attaches to one.",
-          "An example may name the keys of its parent's rules it exercises, in a field validation checks against the parent's keys. The field mints no edge and confers no delivery fact, so `verifies` stays whole-Spec, and a rule-coverage recipe reads it to report which keyed rules a bound example exercises and which none does.",
+          "An example names the keyed rules it exercises on its `verifies` relation: the target is an object with `target` and `exercises`, a list of the verified Spec's rule keys, beside an optional `reason`. A key the verified Spec does not carry is a conformance error at the relation, as a missing entry address is. The list mints no edge and confers no delivery fact, so `verifies` stays whole-Spec, and a rule-coverage recipe reads it to report which keyed rules a bound example exercises and which none does.",
+          "A keyed entry carries its key and its text and nothing else; why a rule holds is the Spec's narrative, or a decision Spec named through `decidedBy` when the why passes the decision test.",
           "A keyed rule promoted to a Spec of its own leaves its address behind, because promotion moves the content out, and every mention of that address fails until it names the new Spec.",
         ],
+      },
+      design: {
+        keyMarker:
+          "`[#<key>]` and one space open the entry's text, after `rule: ` or `flow: ` where the entry has a label, with the key on the open-question key grammar, `^[a-z][A-Za-z0-9]*$`; text that opens with `[#` and does not match is refused at its line, and a marker later in the text is plain text.",
+        ruleKeysField:
+          "`behavior.rules` and `behavior.flows` stay lists of strings with the marker removed, and `behavior.ruleKeys` maps each key to the entry it names, `rules[<i>]` or `flows[<i>]`, in authored order; a Spec with no keyed entry carries no `ruleKeys`, and the frozen projections read the rule text unchanged.",
+        carrierSpelling:
+          "the TypeScript carrier writes the same marker at the start of a rule or flow string, and the Gherkin carrier at the start of a `Rule:` line's text, so one normalization after reification reads all three carriers.",
+        duplicateKey:
+          "a key repeated across one Spec's rules and flows is a conformance error at each site, as a repeated question key is.",
+        ruleLocations:
+          "the location table gains a row for every rule and flow entry, keyed or not, `rule[<i>]` or `flow[<i>]` with `key` beside it when the entry is keyed, from every carrier that records entry lines.",
+        exercisesAttribute:
+          "`verifies: { target: <spec id>, exercises: [<key>] }`, with an optional `reason`, is lawful on a declared `verifies` only; the graph's declared `verifies` edge carries `exercises` in authored order, an anchored `verifies` from a test anchor carries none, and `exercises` on any other relation type is refused.",
+        gherkinExercises:
+          "`@exercises.<key>` on an ordinary Scenario names a rule of the Spec the Scenario verifies, by default its Feature, once per key; a Scenario that verifies more than one Spec and exercises a rule is authored in Markdown.",
+        ruleCoverage:
+          "recipe 34, rule coverage, takes `params.spec` or `params.pack` and returns `{ totals: { keyedRules, exercised, unexercised, unkeyedRules }, rows }`, one row per keyed rule `{ address, line, exercisedBy: [{ example, enabled }] }`, with an empty `exercisedBy` for a rule no example exercises.",
+        ruleAddress:
+          "`spec:<id>#rule.<key>` resolves through `ruleKeys`; address resolution (recipe 25) reads `rule` as a fourth section and returns the entry's text, file and line, and entry search (recipe 23) matches rule keys as it matches Design keys.",
       },
     },
     deliveryFacts: [],
@@ -778,7 +794,7 @@ export const modelSpecs = [
     id: "spec:model.relation-reasons",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/model/relation-reasons.sdp.md",
     title: "An authored relation may carry its reason",
     narrative:
@@ -789,29 +805,29 @@ export const modelSpecs = [
           "A reviewer reading a relation cannot see why it holds, and a reviewer reading a mention left as prose cannot tell an intended pointer from a forgotten dependency without a list kept outside the graph.",
         outcome:
           "Let an author say in one line why a Spec refines, depends on, is constrained by, is decided by or supersedes another, beside the relation itself.",
-        openQuestions: [
-          {
-            question:
-              "Should the original's typed attributes return, a strength on `dependsOn` and an aspect on `constrainedBy`, or does one free reason serve every relation type?",
-            blocking: false,
-            key: "typedAttributes",
-          },
-          {
-            question:
-              "Should a mention left as prose carry its reason in the mentioning Spec, so the mention audit can tell an intended pointer from a missing relation, or does that list stay the adopter's own?",
-            blocking: false,
-            key: "mentionReasons",
-          },
-        ],
       },
       behavior: {
         rules: [
           "An authored relation may carry one optional reason, a single line of prose owned by that relation from that Spec to that target.",
+          "One optional reason serves every relation type. No strength, aspect or other attribute rides a relation, except the rule keys an example's `verifies` lists, which the rule-coverage recipe reads.",
           "A reason is intent, as its relation is; it confers no delivery fact, moves no readiness floor and changes no edge, and a relation without one stays lawful.",
           "In the envelope a relation target that carries a reason is an object with `target` and `reason` in place of the plain id, and plain ids and objects mix in one relation, so a relation without a reason is written as before and no target is written twice. The TypeScript carrier passes the same reason beside the target.",
           "A reason on `supersedes` says what the newer decision replaces, and a reason on a `refines` from one decision to another says which part of the older decision the newer one narrows.",
           "A reason reaches readers with its relation through the graph, so a projection or a recipe reads it from the edge and never from the carrier.",
+          "A mention left as prose carries no reason in the Spec. A corpus may keep the mentions it intends as rows of `from`, `to` and `reason` beside its Specs and pass them to the mention audit as a parameter; the audit reports the pairs a row matches apart from the rest, each with its reason, and lists the rows that match no current pair, while the validator reads no such list and its warning stands.",
         ],
+      },
+      design: {
+        envelopeTarget:
+          "a relation target is a Spec id or `{ target: <spec id>, reason: <one line> }`, the two mixing in one list and a single target taking either form; a declared `verifies` object may also carry `exercises`, and an object with another key, an empty reason, or a reason on two lines is refused.",
+        builderArgument:
+          "each TypeScript relation builder takes an optional second argument, `dependsOn(target, { reason })`, with `verifies(target, { reason, exercises })` also taking the rule keys, and a builder called without it writes the relation as today.",
+        edgeReason:
+          "an authored graph edge gains an optional `reason`, and the reader's relation ends carry it; the guarantees recipe (3), dependency footing (21), the planning slice (19) and the decision register (31) show it beside the relation.",
+        gherkinRelations:
+          "no Gherkin form is invented for a relation reason, because relation tags carry no prose; a Spec that needs one is authored in Markdown or TypeScript.",
+        intendedMentions:
+          "the mention audit (recipe 22) takes `params.intended`, rows `{ from, to, reason }` keyed by Spec ids, and adds `intended`, the unbacked pairs a row matches with its reason, kept apart from the remaining pairs, and `staleIntended`, the rows that match no current pair.",
       },
     },
     deliveryFacts: [],

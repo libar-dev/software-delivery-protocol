@@ -640,6 +640,7 @@ export const expectedDeclaredRelations = [
   ["spec:observation.runtime-overlay", "dependsOn", "spec:model.core-model"],
   ["spec:consumers.impact-graph", "refines", "spec:consumers.projections-model"],
   ["spec:consumers.impact-graph", "dependsOn", "spec:extraction.derive-graph"],
+  ["spec:consumers.impact-graph.symbol-reach", "refines", "spec:consumers.impact-graph"],
   ["spec:carrier.markdown-pack-authoring", "refines", "spec:model.pack-aggregate"],
   ["spec:carrier.markdown-pack-authoring", "dependsOn", "spec:carrier.markdown-parser"],
   ["spec:carrier.markdown-pack-authoring", "dependsOn", "spec:decisions.carrier-ruling"],

@@ -49,19 +49,54 @@ export const expectedSpecs: readonly ExpectedSpec[] = specFamilies.flatMap(
   (family) => family.specs,
 );
 
-// These projections identify the one informative honesty gap from owner-ratified ready Specs
-// without resolving verifier bindings, and the three informative prose-mention warnings, one per
-// mentioning and target Spec pair with no declared relation either way. A prose-mention row also
-// pins its target Spec as relatedId, so two pairs from one Spec differ in the pin. The CLI suite
-// separately pins each diagnostic's file, validator, and message prefix.
-// re-measured under plan 41's fold
+// These projections pin eleven informative honesty gaps from owner-ratified ready Specs
+// without resolving verifier bindings, and three prose-mention warnings, one per mentioning
+// and target Spec pair with no declared relation either way. The relatedId keeps distinct pairs
+// separate. The CLI suite also pins each diagnostic's file, validator, and message prefix.
+// Re-measured with sdp validate after plan 43's design pass at 2b5b801.
 export const expectedWarnings = [
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.agent-surface.answer-shapes",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.context-bundle",
+  },
   {
     validatorId: "conformance/prose-mentions",
     family: "conformance",
     severity: "warning",
     subjectId: "spec:consumers.delivery-session-on-ramp",
     relatedId: "spec:decisions.shipped-projections-frozen",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.design-diff",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.impact-graph.curation-assist",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.intent-composition.proposal",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.review-perspectives",
   },
   {
     validatorId: "conformance/prose-mentions",
@@ -75,7 +110,31 @@ export const expectedWarnings = [
     family: "conformance",
     severity: "warning",
     subjectId: "spec:decisions.planning-truths-placement",
-    relatedId: "spec:consumers.impact-graph",
+    relatedId: "spec:consumers.impact-graph.symbol-reach",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:model.enrichment-lifecycle",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:model.open-question-fields",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:model.relation-reasons",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:model.rule-keys",
   },
   {
     validatorId: "honesty/gaps",

@@ -282,6 +282,25 @@ describe("sdp cli", () => {
       expect(exitCode).toBe(0);
       const stderr = capture.readStderr();
       for (const [file, specId] of [
+        [
+          "specs/consumers/agent-surface.answer-shapes.sdp.md",
+          "spec:consumers.agent-surface.answer-shapes",
+        ],
+        ["specs/consumers/context-bundle.sdp.md", "spec:consumers.context-bundle"],
+        ["specs/consumers/design-diff.sdp.md", "spec:consumers.design-diff"],
+        [
+          "specs/consumers/impact-graph.curation-assist.sdp.md",
+          "spec:consumers.impact-graph.curation-assist",
+        ],
+        [
+          "specs/consumers/intent-composition.proposal.sdp.md",
+          "spec:consumers.intent-composition.proposal",
+        ],
+        ["specs/consumers/review-perspectives.sdp.md", "spec:consumers.review-perspectives"],
+        ["specs/model/enrichment-lifecycle.sdp.md", "spec:model.enrichment-lifecycle"],
+        ["specs/model/open-question-fields.sdp.md", "spec:model.open-question-fields"],
+        ["specs/model/relation-reasons.sdp.md", "spec:model.relation-reasons"],
+        ["specs/model/rule-keys.sdp.md", "spec:model.rule-keys"],
         ["specs/model/spec-sections.sdp.md", "spec:model.spec-sections"],
       ] as const) {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
@@ -299,7 +318,7 @@ describe("sdp cli", () => {
         ],
         [
           "specs/decisions/planning-truths-placement.sdp.md",
-          "spec:consumers.impact-graph",
+          "spec:consumers.impact-graph.symbol-reach",
           "spec:decisions.planning-truths-placement",
         ],
       ] as const) {
@@ -307,8 +326,8 @@ describe("sdp cli", () => {
           `${file} — [warning] conformance/prose-mentions — Mention of "${target}" in "${specId}"`,
         );
       }
-      // re-measured under plan 41's fold
-      expect(capture.readStdout()).toContain("validate: 0 errors · 4 warnings");
+      // Re-measured with sdp validate after the design pass at 2b5b801.
+      expect(capture.readStdout()).toContain("validate: 0 errors · 14 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
