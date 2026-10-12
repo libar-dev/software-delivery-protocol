@@ -9,9 +9,10 @@ relations:
 ---
 # Mechanical code structure stays inferred and apart from curated intent
 
+File-level import structure, keyed by repository-relative path, is designed in `spec:consumers.impact-graph.curation-assist`; exhaustive symbol reach is designed in `spec:consumers.impact-graph.symbol-reach`, which holds the symbol-identity question.
+
 ## Intent
 - outcome: Let mechanically derived import and symbol structure inform impact and curation without ever standing in for curated intent.
 
 ## Behavior
-- rule: Mechanical import and symbol structure derives under the `inferred` claim and stays apart from the sparse curated graph; no curated edge, binding or delivery fact derives from it.
-- rule: File-level import structure, keyed by repository-relative path, is `spec:consumers.impact-graph.curation-assist`, and exhaustive symbol reach is `spec:consumers.impact-graph.symbol-reach`, which holds the symbol-identity question.
+- rule: [#inferredApart] Mechanical import and symbol structure derives under the `inferred` claim and stays apart from the sparse curated graph; no curated edge, binding or delivery fact derives from it.
