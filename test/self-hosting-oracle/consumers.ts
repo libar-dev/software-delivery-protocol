@@ -67,7 +67,7 @@ export const consumersSpecs = [
           "this arc's new recipes take the next numbers in this order: 33 design backlog, 34 rule coverage, 35 design diff, 36 context bundle, 37 perspective filter, 38 proposal check, 39 slimming candidates, 40 curation report.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.impact-graph.curation-assist",
@@ -116,7 +116,7 @@ export const consumersSpecs = [
           '`input` is `{ label: "external inferred input", schema, adapter, files }`, and `oneSided` lists anchored source files the imports file does not list and imports-file entries outside every anchored component, so a stale or partial file shows.',
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.mermaid-view",
@@ -1212,9 +1212,12 @@ export const consumersSpecs = [
         openQuestions: [
           {
             question:
-              "Which language-neutral identity and extraction boundary can support exhaustive symbol reach without freezing a single compiler's representation into the Protocol? It re-enters when a reader needs symbol-level reach that file-level imports and curated anchors cannot give.",
+              "Which language-neutral identity and extraction boundary can support exhaustive symbol reach without freezing a single compiler's representation into the Protocol?",
             blocking: true,
             key: "symbolIdentity",
+            decider: "owner",
+            trigger:
+              "a reader needs symbol-level reach that file-level imports and curated anchors cannot give",
           },
         ],
       },
@@ -2130,7 +2133,7 @@ export const consumersSpecs = [
           "an unknown selector, a value of the wrong type or a `bindings` selector with no `via` is a diagnostic row `{ selector, problem }`, and the recipe still applies the selectors it understood.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.context-bundle",
@@ -2182,7 +2185,7 @@ export const consumersSpecs = [
           "`{ scope, budget, budgetExceeded: true, protectedLength, leftOut }` is the whole result when the protected content alone exceeds the budget, with `protectedLength` in the budget's unit.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.design-diff",
@@ -2235,7 +2238,7 @@ export const consumersSpecs = [
           "the catalog shows how to write the base graph: `git worktree add` at the base commit, `sdp build` on that worktree with the corpus's own exclusions, then pass its `generated/graph.json` as `base` and remove the worktree.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.intent-composition.proposal",
@@ -2282,7 +2285,7 @@ export const consumersSpecs = [
           "each change row is `{ index, scope: [{ ref, resolvesAtHead, resolvesAtBase, moved }], moved, relationTarget }`, where an item's `moved` is true when the design diff reports it changed, added or removed between the base and the head and the row's `moved` is true when any item moved, and `relationTarget` says whether a declared relation's target resolves; the rows are facts, and routing a moved change to a person is the caller's step.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.reference-projection",
@@ -2300,9 +2303,12 @@ export const consumersSpecs = [
         openQuestions: [
           {
             question:
-              "Re-entry trigger from plan 35: a named human consumer outside the repository whom the four shipped roots do not serve, with a way to measure that demand inside the arc that builds it. The taxonomy row is not that consumer.",
+              "Does a human reader outside the repository need a reference projection the four shipped roots do not serve? The taxonomy row is not that reader.",
             blocking: true,
             key: "namedOutsideReader",
+            decider: "owner",
+            trigger:
+              "a named consumer outside the repository, with a way to measure that demand inside the arc that builds the projection",
           },
           {
             question:
@@ -2332,9 +2338,12 @@ export const consumersSpecs = [
         openQuestions: [
           {
             question:
-              "Re-entry trigger from plan 35: a named reader who needs diagrams rooted at code units, which census tables and Spec-rooted one-hop Mermaid do not serve, plus a recorded decision to extend or abandon the one-generated-view posture.",
+              "Does a reader need diagrams rooted at code units, which census tables and Spec-rooted one-hop Mermaid do not serve?",
             blocking: true,
             key: "namedStructuralReader",
+            decider: "owner",
+            trigger:
+              "a named reader with that need, plus a recorded decision to extend or abandon the one-generated-view posture",
           },
           {
             question:
@@ -2364,9 +2373,12 @@ export const consumersSpecs = [
         openQuestions: [
           {
             question:
-              "Re-entry trigger: a named reader who needs release, baseline or roadmap views that the shipped projections, the recipes and git do not serve, with a way to measure that need inside the arc that builds them.",
+              "Does a reader need release, baseline or roadmap views that the shipped projections, the recipes and git do not serve?",
             blocking: true,
             key: "namedRoadmapReader",
+            decider: "owner",
+            trigger:
+              "a named reader with that need, and a way to measure it inside the arc that builds the views",
           },
         ],
       },

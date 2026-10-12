@@ -123,7 +123,7 @@ export const modelSpecs = [
           "rows are potential candidates the author compares with the bound artifacts, because a binding names a whole Spec and the graph proves no entry-level realization for a declaration or an example; `leftOut` states both limits, and prose entries are never candidates.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:model.relations",
@@ -738,7 +738,7 @@ export const modelSpecs = [
           "the open-question register (recipe 20) adds the four fields to each row, marks a question that carries a trigger as a deferral, and counts deferrals and holds apart in its totals.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:model.rule-keys",
@@ -788,7 +788,7 @@ export const modelSpecs = [
           "`spec:<id>#rule.<key>` resolves through `ruleKeys`; address resolution (recipe 25) reads `rule` as a fourth section and returns the entry's text, file and line, and entry search (recipe 23) matches rule keys as it matches Design keys.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:model.relation-reasons",
@@ -830,6 +830,6 @@ export const modelSpecs = [
           "the mention audit (recipe 22) takes `params.intended`, rows `{ from, to, reason }` keyed by Spec ids, and adds `intended`, the unbacked pairs a row matches with its reason, kept apart from the remaining pairs, and `staleIntended`, the rows that match no current pair.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
 ] as const;

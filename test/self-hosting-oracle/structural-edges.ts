@@ -34,6 +34,11 @@ export const structuralMembershipExceptions = [
   "impl:protocol.recipe-parameters-catalog",
   "impl:protocol.design-recipes",
   "impl:protocol.entry-location-recipes",
+  // Recipe realization declarations live at their executing tests, outside src/ seams.
+  "impl:protocol.slimming-recipe",
+  "impl:protocol.curation-recipe",
+  "impl:protocol.answer-shape-recipes",
+  "impl:protocol.authoring-grammar-recipes",
 ] as const;
 
 export const acceptedArchitecturalUnits = [
@@ -513,6 +518,52 @@ export const acceptedArchitecturalUnits = [
     anchorId: "impl:protocol.validate-watch",
     componentId: "component:protocol.cli",
   },
+  // Plan 43 structural bindings, as declared on their anchors.
+  {
+    unit: "src/adapters/typescript-imports.ts#deriveTypeScriptImports",
+    anchorId: "impl:protocol.typescript-imports",
+    componentId: "component:protocol.adapters",
+  },
+  {
+    unit: "src/cli/build-command.ts#runBuild",
+    anchorId: "impl:protocol.build-imports",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/cli/q-command.ts#runQuery",
+    anchorId: "impl:protocol.query-answer-shapes",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/extract/authoring-normalization.ts#normalizeAuthoring",
+    anchorId: "impl:protocol.authoring-normalization",
+    componentId: "component:protocol.extract",
+  },
+  {
+    unit: "src/validate/validators.ts#checkRuleExercises",
+    anchorId: "impl:protocol.rule-exercises",
+    componentId: "component:protocol.validate",
+  },
+  {
+    unit: "test/iteration-recipes.test.ts#runRecipe",
+    anchorId: "impl:protocol.design-diff-recipe",
+    componentId: "component:protocol.reader",
+  },
+  {
+    unit: "test/iteration-recipes.test.ts#runRecipe",
+    anchorId: "impl:protocol.perspective-filter-recipe",
+    componentId: "component:protocol.reader",
+  },
+  {
+    unit: "test/iteration-recipes.test.ts#runRecipe",
+    anchorId: "impl:protocol.context-bundle-recipe",
+    componentId: "component:protocol.reader",
+  },
+  {
+    unit: "test/iteration-recipes.test.ts#runRecipe",
+    anchorId: "impl:protocol.proposal-schema-and-recipe",
+    componentId: "component:protocol.reader",
+  },
 ] as const;
 
 // re-measured under plan 41
@@ -524,7 +575,8 @@ export const expectedMemberOfEdges = acceptedArchitecturalUnits.map((row) => [
 // Helpers with no honest satisfies target of their own. Coverage rides the nearest honest
 // realization that consumes them; these rows never mint an anchor.
 // re-measured under plan 41: runValidateWatch left this list when it gained its own anchor,
-// impl:protocol.validate-watch, and joined the accepted units above.
+// impl:protocol.validate-watch, and joined the accepted units above. Plan 43 removed the
+// unused targetsForRelationType helper after the emitter switched to full relation objects.
 export const coarseGrainCoverage = [
   {
     unit: "src/import/markdown-fidelity.ts#assertMarkdownEmissionFidelity",
@@ -550,12 +602,6 @@ export const coarseGrainCoverage = [
     coveredBy: "impl:protocol.sdp-import-markdown-emit",
     componentId: "component:protocol.import",
     rationale: "src/import/emit-markdown.ts#emitMarkdownSpec value-calls importTexts",
-  },
-  {
-    unit: "src/import/data-access.ts#targetsForRelationType",
-    coveredBy: "impl:protocol.sdp-import-markdown-emit",
-    componentId: "component:protocol.import",
-    rationale: "src/import/emit-markdown.ts#emitMarkdownSpec value-calls targetsForRelationType",
   },
 ] as const;
 

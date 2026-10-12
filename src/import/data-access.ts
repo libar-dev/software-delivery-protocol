@@ -22,22 +22,3 @@ export function importTexts(value: unknown): readonly string[] {
     return text === undefined ? [] : [text];
   });
 }
-
-function isRelation(value: unknown): value is { readonly type: string; readonly target: string } {
-  const candidate = importData(value);
-  return (
-    candidate !== undefined &&
-    importText(candidate.type) !== undefined &&
-    importText(candidate.target) !== undefined
-  );
-}
-
-export function targetsForRelationType(relations: unknown, type: string): readonly string[] {
-  if (!Array.isArray(relations)) {
-    return [];
-  }
-
-  return relations.flatMap((relation) =>
-    isRelation(relation) && relation.type === type ? [relation.target] : [],
-  );
-}

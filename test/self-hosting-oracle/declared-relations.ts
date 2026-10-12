@@ -2,7 +2,13 @@
 // edges derived from the Pack manifest. Authored transcription: the relation set is intent, and
 // the extractor may neither add to it nor drop from it.
 
-export const expectedDeclaredRelations = [
+// An optional fourth tuple field carries the relation reason, verbatim from the carrier.
+export const expectedDeclaredRelations: readonly (readonly [
+  from: string,
+  type: string,
+  to: string,
+  reason?: string,
+])[] = [
   ["spec:consumers.agent-surface.answer-shapes", "refines", "spec:consumers.agent-surface"],
   [
     "spec:consumers.agent-surface.answer-shapes",
@@ -666,7 +672,12 @@ export const expectedDeclaredRelations = [
     "verifies",
     "spec:validation.oracle-target-eligibility",
   ],
-  ["spec:decisions.pack-markdown-carrier", "refines", "spec:decisions.carrier-ruling"],
+  [
+    "spec:decisions.pack-markdown-carrier",
+    "refines",
+    "spec:decisions.carrier-ruling",
+    "extends the Markdown carrier to Packs and keeps the TypeScript builder as a per-ID option",
+  ],
   ["spec:carrier.markdown-pack-authoring", "decidedBy", "spec:decisions.pack-markdown-carrier"],
   [
     "spec:carrier.markdown-pack-authoring.markdown-ts-parity",
@@ -694,10 +705,25 @@ export const expectedDeclaredRelations = [
     "dependsOn",
     "spec:decisions.kind-conditional-floor",
   ],
-  ["spec:decisions.gherkin-carrier-option", "refines", "spec:decisions.carrier-ruling"],
-  ["spec:decisions.sdp-gherkin-extension", "refines", "spec:decisions.gherkin-carrier-option"],
+  [
+    "spec:decisions.gherkin-carrier-option",
+    "refines",
+    "spec:decisions.carrier-ruling",
+    "admits Gherkin as a canonical per-ID carrier for behavior and example Specs beside the Markdown default",
+  ],
+  [
+    "spec:decisions.sdp-gherkin-extension",
+    "refines",
+    "spec:decisions.gherkin-carrier-option",
+    "fixes the canonical Gherkin suffix as .sdp.gherkin and keeps bare .feature files out of discovery",
+  ],
   ["spec:decisions.sdp-gherkin-extension", "dependsOn", "spec:decisions.sdp-ts-extension"],
-  ["spec:decisions.carrier-universality", "refines", "spec:decisions.gherkin-carrier-option"],
+  [
+    "spec:decisions.carrier-universality",
+    "refines",
+    "spec:decisions.gherkin-carrier-option",
+    "bounds the Gherkin option to behavior and example Specs, the two kinds Gherkin structure states honestly",
+  ],
   ["spec:decisions.carrier-universality", "dependsOn", "spec:decisions.prose-ownership"],
   ["spec:decisions.carrier-universality", "dependsOn", "spec:decisions.pack-markdown-carrier"],
   ["spec:decisions.adopted-registrars-committed", "refines", "spec:extraction.runnable-modules"],
@@ -1027,10 +1053,20 @@ export const expectedDeclaredRelations = [
     "decidedBy",
     "spec:decisions.verification-posture-not-realization",
   ],
-  ["spec:decisions.authored-entry-order", "refines", "spec:decisions.shipped-projections-frozen"],
+  [
+    "spec:decisions.authored-entry-order",
+    "refines",
+    "spec:decisions.shipped-projections-frozen",
+    "carves out how the Design Review renders open-section entries, as a list in authored order",
+  ],
   ["spec:decisions.question-key-rendering", "refines", "spec:consumers.design-review"],
   ["spec:decisions.question-key-rendering", "dependsOn", "spec:model.open-question-keys"],
-  ["spec:decisions.question-key-rendering", "refines", "spec:decisions.shipped-projections-frozen"],
+  [
+    "spec:decisions.question-key-rendering",
+    "refines",
+    "spec:decisions.shipped-projections-frozen",
+    "carves out one change, an open question's key shown before its text",
+  ],
   ["spec:decisions.studio-html-surface", "refines", "spec:consumers.spec-studio"],
   ["spec:decisions.studio-html-surface", "dependsOn", "spec:extraction.regenerability"],
   ["spec:decisions.studio-web-components", "refines", "spec:consumers.spec-studio"],
@@ -1109,7 +1145,12 @@ export const expectedDeclaredRelations = [
   // The design-management arc (plan 41), transcribed from each carrier's frontmatter.
   ["spec:decisions.pack-design-page", "refines", "spec:consumers.design-review"],
   ["spec:decisions.pack-design-page", "dependsOn", "spec:consumers.pack-design"],
-  ["spec:decisions.pack-design-page", "refines", "spec:decisions.shipped-projections-frozen"],
+  [
+    "spec:decisions.pack-design-page",
+    "refines",
+    "spec:decisions.shipped-projections-frozen",
+    "carves out the Pack page, which renders the Pack design",
+  ],
   ["spec:consumers.pack-design", "refines", "spec:consumers.reader"],
   ["spec:consumers.pack-design", "dependsOn", "spec:validation.next-rung-floor"],
   ["spec:consumers.pack-design", "dependsOn", "spec:extraction.pack-member-order"],

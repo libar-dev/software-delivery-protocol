@@ -194,7 +194,7 @@ describe("the self-hosting corpus", () => {
     expect(result.report.findings).toEqual([]);
   });
 
-  it("reports exactly eleven informative honesty gaps and three unbacked prose mentions", () => {
+  it("reports exactly the retained honesty gap and three unbacked prose mentions", () => {
     expect(
       validateGraph(result.graph).findings.map(
         ({ validatorId, family, severity, subjectId, relatedId }) => ({
@@ -212,17 +212,16 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    // Re-measured after the design pass at 2b5b801: 249 Markdown Specs and four Specs
-    // in reader.sdp.gherkin; four Pack manifests, with 251 self-hosting members. The
-    // excluded-root sdp validate run confirms those totals and measures anchors, nodes,
-    // and edges. Symbol reach adds one node, one refines edge, and one belongsTo edge.
-    expect(result.counts).toEqual({ specs: 253, packs: 4, anchors: 263 });
+    // Re-measured after plan 43 integration: 249 Markdown Specs and four Specs in
+    // reader.sdp.gherkin; four Pack manifests, with 251 self-hosting members. The
+    // excluded-root sdp validate run measures 287 anchors, 544 nodes and 1283 edges.
+    expect(result.counts).toEqual({ specs: 253, packs: 4, anchors: 287 });
     expect(expectedSpecs).toHaveLength(253);
     expect(expectedPackMembers).toHaveLength(251);
-    expect(expectedAnchors).toHaveLength(263);
-    expect(expectedBindingEdges).toHaveLength(274);
-    expect(result.graph.nodes).toHaveLength(520);
-    expect(result.graph.edges).toHaveLength(1240);
+    expect(expectedAnchors).toHaveLength(287);
+    expect(expectedBindingEdges).toHaveLength(308);
+    expect(result.graph.nodes).toHaveLength(544);
+    expect(result.graph.edges).toHaveLength(1283);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -258,9 +257,11 @@ describe("the self-hosting corpus", () => {
     expect(
       result.graph.edges
         .filter((edge) => edge.claim === "declared" && edge.type !== "belongsTo")
-        .map((edge) => [edge.from, edge.type, edge.to])
+        .map((edge) => [edge.from, edge.type, edge.to, edge.reason])
         .sort(),
-    ).toEqual([...expectedDeclaredRelations].sort());
+    ).toEqual(
+      expectedDeclaredRelations.map(([from, type, to, reason]) => [from, type, to, reason]).sort(),
+    );
   });
 
   it("holds the frozen stated-readiness distribution", () => {
@@ -323,8 +324,8 @@ describe("the self-hosting corpus", () => {
   });
 
   it("gives every owned impl/api CodeNode exactly one component", () => {
-    // re-measured under plan 41's fold and the owner's second round
-    expect(expectedMemberOfEdges).toHaveLength(95);
+    // Re-measured after plan 43 integration.
+    expect(expectedMemberOfEdges).toHaveLength(104);
     const exceptions = new Set<string>(structuralMembershipExceptions);
     const codeUnits = result.graph.nodes.filter(
       (node) =>
@@ -483,8 +484,8 @@ describe("the self-hosting corpus", () => {
   });
 
   it("finds every converted comment anchor at its block's first line", () => {
-    // re-measured under plan 41's fold and the owner's second round
-    expect(expectedCommentAnchorIds).toHaveLength(25);
+    // Re-measured after plan 43 integration.
+    expect(expectedCommentAnchorIds).toHaveLength(27);
     expect(
       expectedAnchors
         .filter((anchor) => anchor.constant === undefined)
