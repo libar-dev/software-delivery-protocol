@@ -14,8 +14,10 @@ relations:
     - spec:carrier.gherkin-authoring
     - spec:carrier.markdown-pack-authoring
   decidedBy:
-    - spec:decisions.anchor-comment-form
-    - spec:decisions.anchor-binding-grain
+    - target: spec:decisions.anchor-comment-form
+      reason: the skill teaches both extracted anchor forms and their silent non-binding hazards under this ruling
+    - target: spec:decisions.anchor-binding-grain
+      reason: the skill teaches optional and plural targets, references and the collective promise test under this ruling
     - spec:decisions.architectural-annotation
 ---
 # Authors move one Spec from intent to reviewed evidence
