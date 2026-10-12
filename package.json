@@ -13,6 +13,7 @@
     "specs/**/*.sdp.md",
     "specs/**/*.sdp.gherkin",
     "CONTEXT.md",
+    "docs/concept/DECISIONS.md",
     "docs/agent-surface/recipes.md",
     "schemas/sdp-proposal-1.schema.json",
     "docs/agent-surface/architecture.md",
