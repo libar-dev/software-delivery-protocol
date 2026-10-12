@@ -27,7 +27,8 @@ A design pass is a loop: an agent edits carriers, the graph changes, a person re
   - provisional: a folder of intent notes the generator never writes, each citing entries by block link, which an agent turns into a proposal and runs through the proposal check
 - [blocking #regenerationTrigger] What regenerates the vault while a pass runs?
   - decider: owner
-  - provisional: a watch mode on the carrier events `sdp validate --watch` already handles, rewriting only the notes whose values changed
+  - links: spec:consumers.validate-watch
+  - provisional: a separate vault watcher responds to carrier changes and source-anchor changes under the extraction root, replacing generated notes whose values changed and removing notes whose nodes or entries left the graph; it never extends `sdp validate --watch` to source edits
 - [non-blocking #editGuard] How does the vault discourage editing a generated note?
   - provisional: a read-only banner naming the carrier on every note, and a regeneration that reports any generated note changed since it last wrote it
 
