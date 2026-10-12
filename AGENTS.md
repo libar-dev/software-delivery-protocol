@@ -16,6 +16,9 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
+> **plan 42 is DRAFTED**. The Spec Studio's phase 0, a read-only static view (`sdp studio`),
+> re-entered on the owner's rulings; intent in `pack:spec-studio-v1`. A design pass splits the
+> Studio's Specs for honest binding and prototypes the Pack page before any code.
 > **plan 41 is EXECUTED**. The design-management arc, intent in `pack:design-management-v1`: the
 > Design Review's Pack page shows a Pack's design (the Pack design page, MD-39), the graph
 > records entry lines, recipes take `--params` and ship under `dist/recipes/`, recipes 29 to 32
