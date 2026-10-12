@@ -9,7 +9,7 @@ relations:
 ---
 # Mermaid diagrams can be rooted at code units
 
-The shipped Mermaid projection draws bounded one-hop diagrams rooted at a Spec or a Pack and never the whole graph. Code units, their component membership and their `uses` edges appear in the census tables and in recipes 12 to 14 and 17, never in a diagram. The original design drew container and component maps from its architecture model (`docs/lineage/v0-design/07-spec-studio-and-projections.md` §8.2, §8.3). Plan 35 deferred a Mermaid rendering of structural edges, because no reader needed diagrams rooted at code units that the census and the Spec-rooted diagrams fail to serve (plan 35, "H leftover projections"). Components have since gained a layer and a context, so such a diagram would have more to draw. The shipped projections are frozen, so this view would be a new root or would need a decision that narrows the freeze. If the Spec Studio proceeds, its architecture lens is the first reader that wants code units drawn, and this Spec is expected to fold into that lens rather than become a Mermaid root.
+The shipped Mermaid projection draws bounded diagrams rooted at a Spec or a Pack. A Spec-rooted diagram within the bounds includes directly bound code units and test anchors; component membership and uses are read through the census and structural recipes. A view rooted at code units could group components by their layer and context. Adding it to the shipped Mermaid root would need a decision that narrows or replaces the projection freeze. Whether it becomes a separate root or part of the Studio's architecture lens remains open.
 
 ## Intent
 - outcome: Draw component, membership and uses diagrams rooted at code units, once a reader needs them and the existing views do not serve it.
@@ -17,7 +17,9 @@ The shipped Mermaid projection draws bounded one-hop diagrams rooted at a Spec o
 ### Open questions
 - [blocking #namedStructuralReader] Does a reader need diagrams rooted at code units, which census tables and Spec-rooted one-hop Mermaid do not serve?
   - decider: owner
-  - trigger: a named reader with that need, plus a recorded decision to extend or abandon the one-generated-view posture
+  - trigger: a named reader with that need, plus a decision that refines `spec:decisions.shipped-projections-frozen` for the affected Mermaid rendering or supersedes that ruling whole
 - [non-blocking #layerAndContext] Would a component diagram group its nodes by context and order them by layer, and would that make it the architecture view the Studio's architecture lens draws?
+  - decider: owner
+  - provisional: the diagram folds into the Studio's architecture lens when that lens is designed, rather than becoming a Mermaid root
 
 ## Behavior

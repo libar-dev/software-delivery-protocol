@@ -8,7 +8,7 @@ relations:
 ---
 # Roadmap views read releases, baselines and phases from git and the graph
 
-The projections model once defined release, baseline and roadmap vocabulary beside the projections the Protocol builds, though no unit builds a view for them. The owner ruled that the realized contract stays in the projections model and this vocabulary waits here, deferred, until a reader needs it.
+Release, baseline and roadmap vocabulary belongs to optional projections that wait until a reader needs them.
 
 ## Intent
 
