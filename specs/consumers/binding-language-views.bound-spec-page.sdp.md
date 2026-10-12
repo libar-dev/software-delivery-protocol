@@ -17,6 +17,7 @@ Given the graph holds a spec {specId: "spec:probe.bound-surface"} bound by {bind
 When the Design Review renders the graph
 Then the spec page renders the implementation binding as {implementation: "present"}
 Then the spec page renders the verifier binding as {verifier: "present"}
+Then the spec page renders the expected-outcome oracle as {oracle: "none"}
 Then the spec page renders the runtime observation as {observation: "not tracked"}
 Then the index table repeats those binding values for the spec: {tableRepeats: true}
 Then the internal delivery-fact name {factName: "implemented"} appears as rendered label text: {factNameRendered: false}

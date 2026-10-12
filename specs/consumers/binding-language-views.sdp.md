@@ -28,6 +28,7 @@ Given the graph holds a pack {packId:string} listing that spec beside an unbound
 When the Design Review renders the graph
 Then the spec page renders the implementation binding as {implementation:"present"|"none"}
 Then the spec page renders the verifier binding as {verifier:"present"|"none"}
+Then the spec page renders the expected-outcome oracle as {oracle:"present"|"none"}
 Then the spec page renders the runtime observation as {observation:string}
 Then the index table repeats those binding values for the spec: {tableRepeats:boolean}
 Then the pack member table repeats those binding values for the spec: {memberTableRepeats:boolean}
