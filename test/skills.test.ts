@@ -365,6 +365,14 @@ describe("Protocol skill assets", () => {
       "thirty",
       "thirty-one",
       "thirty-two",
+      "thirty-three",
+      "thirty-four",
+      "thirty-five",
+      "thirty-six",
+      "thirty-seven",
+      "thirty-eight",
+      "thirty-nine",
+      "forty",
     ] as const;
     const countWord = countWords[headings.length];
 

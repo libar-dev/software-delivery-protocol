@@ -1,3 +1,5 @@
+import { reifyMarkdownCarrier } from "../src/extract/markdown.js";
+import { deriveGraph } from "../src/extract/derive.js";
 import {
   existsSync,
   mkdirSync,
@@ -148,6 +150,13 @@ async function runRecipe(
   params?: Readonly<Record<string, unknown>>,
   extraction: ExtractionResult = derived,
 ): Promise<unknown> {
+  // Recipe 40 requires external input rather than a corpus-specific sample fallback.
+  // The general catalog checks supply an empty imports snapshot; curation tests build a fixture.
+  const suppliedParams =
+    params ??
+    (recipe.ordinal === 40
+      ? { imports: { schema: "sdp-imports/1", adapter: "typescript", files: [] } }
+      : undefined);
   const capture = createCaptureOutput();
   const exitCode = await runSdpCli(
     [
@@ -156,7 +165,7 @@ async function runRecipe(
       "--root",
       repoRoot,
       "--json",
-      ...(params === undefined ? [] : ["--params", JSON.stringify(params)]),
+      ...(suppliedParams === undefined ? [] : ["--params", JSON.stringify(suppliedParams)]),
     ],
     capture.output,
     {
@@ -378,7 +387,7 @@ describe("the agent-surface recipe corpus", () => {
     expect(recipes.length).toBe(documentedHeadingCount);
     expect(recipes.filter((recipe) => recipe.ordinal === -1)).toEqual([]);
     expect(recipes.map((recipe) => recipe.ordinal)).toEqual(
-      recipes.map((_recipe, index) => index + 1),
+      [...new Set(recipes.map((recipe) => recipe.ordinal))].sort((left, right) => left - right),
     );
   });
 
@@ -465,6 +474,14 @@ describe("the agent-surface recipe corpus", () => {
       "thirty",
       "thirty-one",
       "thirty-two",
+      "thirty-three",
+      "thirty-four",
+      "thirty-five",
+      "thirty-six",
+      "thirty-seven",
+      "thirty-eight",
+      "thirty-nine",
+      "forty",
     ] as const;
     const countWord = countWords[recipes.length];
     const lastOrdinal = recipes[recipes.length - 1]?.ordinal;
@@ -656,7 +673,11 @@ describe("the agent-surface recipe corpus", () => {
 
     expect(result.found).not.toBe(false);
     expect(primitivesById.has(stringAt(result, "id"))).toBe(true);
-    expect(asArray(result.sections).length).toBeGreaterThan(0);
+    expect(result.sections).toEqual(
+      JSON.parse(JSON.stringify(reader.specContext(String(result.id))?.sections)),
+    );
+    expect(result.designColumns).toEqual(reader.specContext(String(result.id))?.designColumns);
+    expect(result.packs).toEqual(reader.specContext(String(result.id))?.packs);
     // The binding-language guard: a verifier binding is existence, and the recipe says so.
     expect(stringAt(result, "verifierBindingMeans")).toContain("exists");
 
@@ -672,7 +693,7 @@ describe("the agent-surface recipe corpus", () => {
     }
 
     for (const binding of asArray(result.implementations)) {
-      expect(claims).toContain(stringAt(asRecord(binding), "claim"));
+      expect(Object.keys(asRecord(binding))).toEqual(["id", "file", "line", "role", "component"]);
     }
   });
 
@@ -712,7 +733,9 @@ describe("the agent-surface recipe corpus", () => {
 
   it("returns the complete diff-to-at-risk bridge", async () => {
     const normalChangedFiles = ["src/reader/reader.ts", "docs/agent-surface/recipes.md"];
-    const result = asRecord(await runRecipe(recipeByOrdinal(4), { files: normalChangedFiles }));
+    const result = asRecord(
+      await runRecipe(recipeByOrdinal(4), { files: normalChangedFiles, detail: true }),
+    );
     const changedFiles = asArray(result.changedFiles).map((file) => stringAt({ file }, "file"));
     const radius = reader.blastRadius(changedFiles);
 
@@ -779,6 +802,11 @@ describe("the agent-surface recipe corpus", () => {
           edgeType: reason.edgeType,
           to: reason.to,
           claim: reason.claim,
+          direction: [...radius.impactedSpecs, ...radius.impactedPacks].some(
+            (item) => item.id === reason.to,
+          )
+            ? "incoming"
+            : "outgoing",
         })),
       }))
       .sort((left, right) => left.id.localeCompare(right.id));
@@ -827,7 +855,9 @@ describe("the agent-surface recipe corpus", () => {
         edges: derived.graph.edges,
       },
     };
-    const result = asRecord(await runRecipe(recipeByOrdinal(4), { files: [file] }, extraction));
+    const result = asRecord(
+      await runRecipe(recipeByOrdinal(4), { files: [file], detail: true }, extraction),
+    );
 
     expect(result.unlinkedUnits).toEqual([{ id: unit.id, file }]);
     expect(result.coverageUnknownFiles).toEqual([]);
@@ -917,24 +947,29 @@ describe("the agent-surface recipe corpus", () => {
     expect([...rungs, "none"]).toContain(stringAt(result, "floorReached"));
     expect(result.promotionRequiresHumanStatement).toBe(true);
     expect(Array.isArray(result.currentFloorFailures)).toBe(true);
-    // Every field the recipe reported stays, and the next rung's failures join them.
     expect(Object.keys(result)).toEqual([
       "id",
       "found",
       "statedReadiness",
       "floorReached",
-      "nextRung",
+      "aboveStated",
+      "aboveFloor",
       "currentFloorFailures",
       "firstUnmetClause",
-      "nextRungFailures",
-      "nextRungFirstUnmetClause",
       "promotionRequiresHumanStatement",
     ]);
     const context = reader.specContext(stringAt(result, "id"));
-    expect(result.nextRungFailures).toEqual(
+    expect(asRecord(result.aboveFloor).failures).toEqual(
       JSON.parse(JSON.stringify(context?.nextRungFailures)) as unknown,
     );
-    expect(result.nextRungFirstUnmetClause).toBe(context?.nextRungFailures[0]?.clauseId ?? null);
+    expect(asRecord(result.aboveFloor).firstUnmetClause).toBe(
+      context?.nextRungFailures[0]?.clauseId ?? null,
+    );
+    expect(result.aboveStated).toEqual({
+      rung: context?.statedNextRung ?? null,
+      failures: context?.statedNextRungFailures,
+      firstUnmetClause: context?.statedNextRungFailures[0]?.clauseId ?? null,
+    });
   });
 
   it("names the next rung's unmet clause and the dependency that breaks it on a probe", async () => {
@@ -996,34 +1031,52 @@ describe("the agent-surface recipe corpus", () => {
       found: true,
       statedReadiness: "defined",
       floorReached: "defined",
-      nextRung: "ready",
+
       currentFloorFailures: [],
       firstUnmetClause: null,
-      nextRungFailures: [
-        {
-          clauseId: targetClause,
-          description:
-            "Every refines, dependsOn, constrainedBy, and decidedBy target states at least defined.",
-          targets: [
-            { type: "dependsOn", id: "spec:probe.basis", statedReadiness: "scoped" },
-            { type: "decidedBy", id: "impl:probe.code" },
-          ],
-        },
-      ],
-      nextRungFirstUnmetClause: targetClause,
+      aboveStated: {
+        rung: "ready",
+        failures: [
+          {
+            clauseId: targetClause,
+            description:
+              "Every refines, dependsOn, constrainedBy, and decidedBy target states at least defined.",
+            targets: [
+              { type: "dependsOn", id: "spec:probe.basis", statedReadiness: "scoped" },
+              { type: "decidedBy", id: "impl:probe.code" },
+            ],
+          },
+        ],
+        firstUnmetClause: targetClause,
+      },
+      aboveFloor: {
+        rung: "ready",
+        failures: [
+          {
+            clauseId: targetClause,
+            description:
+              "Every refines, dependsOn, constrainedBy, and decidedBy target states at least defined.",
+            targets: [
+              { type: "dependsOn", id: "spec:probe.basis", statedReadiness: "scoped" },
+              { type: "decidedBy", id: "impl:probe.code" },
+            ],
+          },
+        ],
+        firstUnmetClause: targetClause,
+      },
       promotionRequiresHumanStatement: true,
     });
 
     // A failure of any other clause carries no targets field.
     const held = asRecord(await runRecipe(recipe, { spec: "spec:probe.held" }, probe));
-    expect(held.nextRung).toBe("defined");
-    expect(held.nextRungFailures).toEqual([
+    expect(asRecord(held.aboveFloor).rung).toBe("defined");
+    expect(asRecord(held.aboveFloor).failures).toEqual([
       {
         clauseId: "no-blocking-open-questions",
         description: "Spec has no blocking open question in intent.openQuestions.",
       },
     ]);
-    expect(held.nextRungFirstUnmetClause).toBe("no-blocking-open-questions");
+    expect(asRecord(held.aboveFloor).firstUnmetClause).toBe("no-blocking-open-questions");
   });
 
   it("keeps declared examples distinct from enabled verifier bindings", async () => {
@@ -2062,6 +2115,8 @@ describe("register recipe semantics", () => {
     );
     expect(result.totals).toEqual({
       questions: 1,
+      deferrals: 0,
+      holds: 0,
       blocking: 0,
       nonBlocking: 1,
       specs: 1,
@@ -2070,7 +2125,16 @@ describe("register recipe semantics", () => {
     });
     expect(result.malformed).toEqual([]);
     expect(asArray(result.specs).map(asRecord)[0]?.questions).toEqual([
-      { question: "Who owns this?", blocking: false, key: null },
+      {
+        question: "Who owns this?",
+        blocking: false,
+        key: null,
+        decider: null,
+        links: [],
+        provisional: null,
+        trigger: null,
+        deferral: false,
+      },
     ]);
   });
 
@@ -2330,6 +2394,8 @@ describe("register recipe semantics", () => {
     expect(synthetic).toEqual({
       totals: {
         questions: 9,
+        deferrals: 0,
+        holds: 1,
         blocking: 1,
         nonBlocking: 8,
         specs: 3,
@@ -2343,8 +2409,26 @@ describe("register recipe semantics", () => {
           statedReadiness: "defined",
           totals: { blocking: 1 },
           questions: [
-            { blocking: true, question: "first", key: null },
-            { blocking: false, question: "second", key: null },
+            {
+              blocking: true,
+              question: "first",
+              key: null,
+              decider: null,
+              links: [],
+              provisional: null,
+              trigger: null,
+              deferral: false,
+            },
+            {
+              blocking: false,
+              question: "second",
+              key: null,
+              decider: null,
+              links: [],
+              provisional: null,
+              trigger: null,
+              deferral: false,
+            },
           ],
         },
         {
@@ -2352,8 +2436,26 @@ describe("register recipe semantics", () => {
           statedReadiness: "defined",
           totals: { blocking: 0 },
           questions: [
-            { blocking: false, question: "bare", key: null },
-            { blocking: false, question: "later", key: null },
+            {
+              blocking: false,
+              question: "bare",
+              key: null,
+              decider: null,
+              links: [],
+              provisional: null,
+              trigger: null,
+              deferral: false,
+            },
+            {
+              blocking: false,
+              question: "later",
+              key: null,
+              decider: null,
+              links: [],
+              provisional: null,
+              trigger: null,
+              deferral: false,
+            },
           ],
         },
         {
@@ -2366,7 +2468,16 @@ describe("register recipe semantics", () => {
             "RETRY.",
             "worker retry",
             "retry the worker",
-          ].map((question) => ({ blocking: false, question, key: null })),
+          ].map((question) => ({
+            blocking: false,
+            question,
+            key: null,
+            decider: null,
+            links: [],
+            provisional: null,
+            trigger: null,
+            deferral: false,
+          })),
         },
       ],
     });
@@ -2374,6 +2485,8 @@ describe("register recipe semantics", () => {
     expect(await runRecipe(recipeByOrdinal(20), undefined, empty)).toEqual({
       totals: {
         questions: 0,
+        deferrals: 0,
+        holds: 0,
         blocking: 0,
         nonBlocking: 0,
         specs: 0,
@@ -2681,6 +2794,8 @@ export const source = spec({
             at: [{ section: "intent", entry: "outcome" }],
           },
         ],
+        intended: [],
+        staleIntended: [],
         unbacked: [],
         reverseOnly: [],
       });
@@ -2717,6 +2832,8 @@ export const source = spec({
     expect(result).toEqual({
       totals: { occurrences: 1, pairs: 1, backed: 0, unbacked: 1, reverseOnly: 0, unresolved: 0 },
       unresolved: [],
+      intended: [],
+      staleIntended: [],
       unbacked: [
         {
           from: "spec:probe.mentioning",
@@ -2741,6 +2858,8 @@ export const source = spec({
     expect(result).toEqual({
       totals: { occurrences: 0, pairs: 0, backed: 0, unbacked: 0, reverseOnly: 0, unresolved: 0 },
       unresolved: [],
+      intended: [],
+      staleIntended: [],
       unbacked: [],
       reverseOnly: [],
     });
@@ -2834,6 +2953,8 @@ export const source = spec({
       expect(await scoped(scope)).toEqual({
         totals: { occurrences: 0, pairs: 0, backed: 0, unbacked: 0, reverseOnly: 0, unresolved: 0 },
         unresolved: [],
+        intended: [],
+        staleIntended: [],
         unbacked: [],
         reverseOnly: [],
       });
@@ -2904,7 +3025,16 @@ export const source = spec({
     );
     expect(asRecord(result.totals).questions).toBe(1);
     expect(asArray(result.specs).map(asRecord)[0]?.questions).toEqual([
-      { blocking: false, question: "kept", key: "kept" },
+      {
+        blocking: false,
+        question: "kept",
+        key: "kept",
+        decider: null,
+        links: [],
+        provisional: null,
+        trigger: null,
+        deferral: false,
+      },
     ]);
     expect(result.malformed).toEqual([
       {
@@ -3301,7 +3431,7 @@ describe("address resolution and dependency cycles", () => {
     );
     expect(location).toBeDefined();
     expect(await runRecipe(recipeByOrdinal(25))).toEqual({
-      totals: { addresses: 4, resolved: 1, malformed: 1, spec: 1, entry: 1 },
+      totals: { addresses: 4, resolved: 1, malformed: 1, spec: 1, section: 0, entry: 1 },
       rows: [
         {
           address: "spec:consumers.design-review#ui.packPage",
@@ -3315,19 +3445,45 @@ describe("address resolution and dependency cycles", () => {
           reason: null,
         },
         ...[
-          ["spec:consumers.design-review#ui.memberTable", "entry"],
-          ["spec:consumers.absent#design.anyKey", "spec"],
-          ["spec:consumers.design-review", "malformed"],
-        ].map(([address, reason]) => ({
+          [
+            "spec:consumers.design-review#ui.memberTable",
+            "entry",
+            "spec:consumers.design-review",
+            "ui",
+            "memberTable",
+          ],
+          [
+            "spec:consumers.absent#design.anyKey",
+            "spec",
+            "spec:consumers.absent",
+            "design",
+            "anyKey",
+          ],
+          ["spec:consumers.design-review", "malformed", null, null, null],
+        ].map(([address, reason, id, section, key]) => ({
           address,
           resolves: false,
-          id: null,
-          section: null,
-          key: null,
+          id,
+          section,
+          key,
           value: null,
           file: null,
           line: null,
           reason,
+          ...(reason === "entry"
+            ? {
+                available: Object.keys(holder?.sections?.ui ?? {})
+                  .filter((key) => key !== "description")
+                  .sort(),
+              }
+            : {}),
+          ...(reason === "section" ? { available: [] } : {}),
+          ...(reason === "malformed"
+            ? {
+                expected:
+                  "spec:<id>#<section>.<key>, section design, ui, question, or rule; key lower-camel ASCII",
+              }
+            : {}),
         })),
       ],
     });
@@ -3453,14 +3609,15 @@ relations: {}
       extraction,
     );
     expect(result).toEqual({
-      totals: { addresses: 2, resolved: 1, malformed: 0, spec: 0, entry: 1 },
+      totals: { addresses: 2, resolved: 1, malformed: 0, spec: 0, section: 0, entry: 1 },
       rows: [
         {
           address: "spec:probe.plain#design.constructor",
           resolves: false,
-          id: null,
-          section: null,
-          key: null,
+          id: "spec:probe.plain",
+          section: "design",
+          key: "constructor",
+          available: ["shape"],
           value: null,
           file: null,
           line: null,
@@ -3495,7 +3652,7 @@ relations: {}
       cycleProbe(),
     );
     expect(result).toEqual({
-      totals: { addresses: 4, resolved: 1, malformed: 1, spec: 1, entry: 1 },
+      totals: { addresses: 4, resolved: 1, malformed: 1, spec: 1, section: 1, entry: 0 },
       rows: [
         {
           address: "spec:probe.a#design.shape",
@@ -3509,19 +3666,26 @@ relations: {}
           reason: null,
         },
         ...[
-          ["spec:probe.a#question.shapeOpen", "entry"],
-          ["spec:probe.z#design.shape", "spec"],
-          ["spec:probe.a#Design.shape", "malformed"],
-        ].map(([address, reason]) => ({
+          ["spec:probe.a#question.shapeOpen", "section", "spec:probe.a", "question", "shapeOpen"],
+          ["spec:probe.z#design.shape", "spec", "spec:probe.z", "design", "shape"],
+          ["spec:probe.a#Design.shape", "malformed", null, null, null],
+        ].map(([address, reason, id, section, key]) => ({
           address,
           resolves: false,
-          id: null,
-          section: null,
-          key: null,
+          id,
+          section,
+          key,
           value: null,
           file: null,
           line: null,
           reason,
+          ...(reason === "section" ? { available: [] } : {}),
+          ...(reason === "malformed"
+            ? {
+                expected:
+                  "spec:<id>#<section>.<key>, section design, ui, question, or rule; key lower-camel ASCII",
+              }
+            : {}),
         })),
       ],
     });
@@ -3549,16 +3713,29 @@ relations: {}
       line,
       reason: null,
     });
-    const refused = (address: unknown, reason: string) => ({
+    const refused = (
+      address: unknown,
+      reason: string,
+      section: string | null = null,
+      key: string | null = null,
+      available?: readonly string[],
+    ) => ({
       address,
       resolves: false,
-      id: null,
-      section: null,
-      key: null,
+      id: reason === "malformed" ? null : "spec:probe.keyed",
+      section,
+      key,
       value: null,
       file: null,
       line: null,
       reason,
+      ...(available === undefined ? {} : { available }),
+      ...(reason === "malformed"
+        ? {
+            expected:
+              "spec:<id>#<section>.<key>, section design, ui, question, or rule; key lower-camel ASCII",
+          }
+        : {}),
     });
     const result = await runRecipe(
       recipeByOrdinal(25),
@@ -3579,7 +3756,7 @@ relations: {}
       extraction,
     );
     expect(result).toEqual({
-      totals: { addresses: 10, resolved: 4, malformed: 3, spec: 0, entry: 3 },
+      totals: { addresses: 10, resolved: 4, malformed: 3, spec: 0, section: 0, entry: 3 },
       rows: [
         resolved(
           "spec:probe.keyed#question.shapeOpen",
@@ -3595,9 +3772,12 @@ relations: {}
           "Is description a key?",
           15,
         ),
-        refused("spec:probe.keyed#design.description", "entry"),
-        refused("spec:probe.keyed#ui.description", "entry"),
-        refused("spec:probe.keyed#question.ownerOpen", "entry"),
+        refused("spec:probe.keyed#design.description", "entry", "design", "description", ["shape"]),
+        refused("spec:probe.keyed#ui.description", "entry", "ui", "description", ["panel"]),
+        refused("spec:probe.keyed#question.ownerOpen", "entry", "question", "ownerOpen", [
+          "description",
+          "shapeOpen",
+        ]),
         resolved("spec:probe.keyed#design.shape", "design", "shape", "A shape.", 24),
         refused("spec:probe.keyed", "malformed"),
         refused(42, "malformed"),
@@ -3616,9 +3796,36 @@ relations: {}
   it("registers a keyed question with its key and an unkeyed one with a null key", async () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(20), undefined, keyedQuestionProbe()));
     expect(asArray(result.specs).map(asRecord)[0]?.questions).toEqual([
-      { blocking: true, question: "Is the shape final?", key: "shapeOpen" },
-      { blocking: false, question: "Is description a key?", key: "description" },
-      { blocking: false, question: "Who owns the page?", key: null },
+      {
+        blocking: true,
+        question: "Is the shape final?",
+        key: "shapeOpen",
+        decider: null,
+        links: [],
+        provisional: null,
+        trigger: null,
+        deferral: false,
+      },
+      {
+        blocking: false,
+        question: "Is description a key?",
+        key: "description",
+        decider: null,
+        links: [],
+        provisional: null,
+        trigger: null,
+        deferral: false,
+      },
+      {
+        blocking: false,
+        question: "Who owns the page?",
+        key: null,
+        decider: null,
+        links: [],
+        provisional: null,
+        trigger: null,
+        deferral: false,
+      },
     ]);
   });
 
@@ -4093,7 +4300,7 @@ async function runShipped(
 }
 
 describe("recipe parameters and the shipped recipe files", () => {
-  it("reads each parameter from params, falls back to the catalog sample, and names it", () => {
+  it("reads and names each parameter, with a fallback only when the contract supplies one", () => {
     const parameterized = recipes.filter((recipe) => /\bparams\./u.test(recipe.body));
 
     expect(parameterized.map((recipe) => recipe.ordinal)).toEqual(
@@ -4106,10 +4313,15 @@ describe("recipe parameters and the shipped recipe files", () => {
       );
 
       for (const name of names) {
+        const hasSample =
+          recipe.ordinal !== 34 &&
+          !([35, 36, 37, 38].includes(recipe.ordinal) && !["budget", "detail"].includes(name)) &&
+          !(recipe.ordinal === 39 && name === "pack") &&
+          !(recipe.ordinal === 40 && name === "imports");
         expect({
           recipe: recipe.ordinal,
           fallback: recipe.body.includes(`params.${name} ?? `),
-        }).toEqual({ recipe: recipe.ordinal, fallback: true });
+        }).toEqual({ recipe: recipe.ordinal, fallback: hasSample });
         expect({
           recipe: recipe.ordinal,
           named: recipeProse(recipe).includes(`\`params.${name}\``),
@@ -4151,7 +4363,7 @@ describe("recipe parameters and the shipped recipe files", () => {
         shipped: await runRecipe(recipe),
       });
     }
-  });
+  }, 60_000);
 
   it("refuses a catalog whose bodies and headings do not pair, rather than guess a file name", () => {
     expect(() => recipeFiles("## 1. One\n\n```js\nreturn 1;\n```\n## 1. Again\n")).toThrow(
@@ -4228,7 +4440,7 @@ describe("recipe parameters and the shipped recipe files", () => {
 
     try {
       const path = join(directory, "changed.json");
-      writeFileSync(path, JSON.stringify({ files }));
+      writeFileSync(path, JSON.stringify({ files, detail: true }));
 
       const run = await runShipped(shippedBody(recipeByOrdinal(4)), ["--params", `@${path}`]);
       expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({ exitCode: 0, stderr: "" });
@@ -4277,6 +4489,7 @@ describe("recipe parameters and the shipped recipe files", () => {
       resolved: 1,
       malformed: 1,
       spec: 1,
+      section: 0,
       entry: 1,
     });
     expect(asArray(result.rows).map((row) => asRecord(row).reason)).toEqual([
@@ -4502,7 +4715,25 @@ function crossingOracle(extraction: ExtractionResult) {
     .sort(
       (left, right) => codeUnitOrder(left.from, right.from) || codeUnitOrder(left.to, right.to),
     );
-  return { uses, resolved, rows };
+  const same = (field: "layer" | "context") =>
+    resolved.filter((edge) => {
+      const from = owner(edge.from);
+      const to = owner(edge.to);
+      return from?.id !== to?.id && from?.[field] !== undefined && from[field] === to?.[field];
+    });
+  const bySameLayer: Record<string, number> = {};
+  for (const edge of same("layer")) {
+    const layer = owner(edge.from)?.layer;
+    if (layer !== undefined) bySameLayer[layer] = (bySameLayer[layer] ?? 0) + 1;
+  }
+  return {
+    uses,
+    resolved,
+    rows,
+    sameLayer: same("layer").length,
+    sameContext: same("context").length,
+    bySameLayer,
+  };
 }
 
 /**
@@ -4708,7 +4939,9 @@ describe("design recipes", () => {
     expect(packs.length).toBeGreaterThan(0);
 
     for (const pack of packs) {
-      const result = asRecord(await runRecipe(recipeByOrdinal(29), { pack: pack.id }));
+      const result = asRecord(
+        await runRecipe(recipeByOrdinal(29), { pack: pack.id, detail: true }),
+      );
       const members = asArray(result.members).map(asRecord);
       expect(result.found).toBe(true);
       expect(members.map((member) => member.id)).toEqual(pack.members);
@@ -4824,7 +5057,7 @@ describe("design recipes", () => {
   it("returns the probe Pack's design exactly, member by member", async () => {
     const result = await runRecipe(
       recipeByOrdinal(29),
-      { pack: "pack:probe-design-v1" },
+      { pack: "pack:probe-design-v1", detail: true },
       packDesignProbe(),
     );
     const bound = (type: string, members: readonly string[]) => ({ type, members });
@@ -5166,13 +5399,23 @@ describe("design recipes", () => {
         statedReadiness: node.readiness,
         supersedes: ends("supersedes", "from", node.id),
         supersededBy: ends("supersedes", "to", node.id),
-        narrows: ends("refines", "from", node.id).filter(
+        refines: ends("refines", "from", node.id).filter(
           (id) => primitivesById.get(id)?.specKind === "decision",
         ),
-        narrowedBy: ends("refines", "to", node.id).filter(
+        refinedBy: ends("refines", "to", node.id).filter(
           (id) => primitivesById.get(id)?.specKind === "decision",
         ),
         shapes: ends("decidedBy", "to", node.id),
+        reasons: derived.graph.edges
+          .filter(
+            (edge) =>
+              edge.claim === "declared" && edge.from === node.id && edge.reason !== undefined,
+          )
+          .map((edge) => ({ type: edge.type, to: edge.to, reason: edge.reason }))
+          .sort(
+            (left, right) =>
+              codeUnitOrder(left.type, right.type) || codeUnitOrder(left.to, right.to),
+          ),
         questions: (node.sections?.intent?.openQuestions ?? []).flatMap((entry) =>
           typeof entry === "string" || entry.key === undefined
             ? []
@@ -5187,7 +5430,7 @@ describe("design recipes", () => {
         packs: ends("belongsTo", "from", node.id),
       })),
     );
-    expect(rows.some((row) => asArray(row.narrowedBy).length > 0)).toBe(true);
+    expect(rows.some((row) => asArray(row.refinedBy).length > 0)).toBe(true);
     const totals = asRecord(result.totals);
     expect(totals.decisions).toBe(decisions.length);
     expect(
@@ -5233,9 +5476,10 @@ describe("design recipes", () => {
       statedReadiness,
       supersedes: [],
       supersededBy: [],
-      narrows: [],
-      narrowedBy: [],
+      refines: [],
+      refinedBy: [],
       shapes: [],
+      reasons: [],
       questions: [],
       packs: [],
       ...extra,
@@ -5265,6 +5509,45 @@ describe("design recipes", () => {
     });
   });
 
+  it("carries a relation's reason beside the relation in recipes 3, 19, 21 and 31", async () => {
+    const reason = "the carve-out narrows the freeze to one page";
+    const extraction = syntheticExtraction(
+      [probeSpec("spec:probe.freeze", "decision"), probeSpec("spec:probe.carve", "decision")],
+      [
+        { ...probeEdge("spec:probe.carve", "refines", "spec:probe.freeze"), reason },
+        { ...probeEdge("spec:probe.carve", "dependsOn", "spec:probe.freeze"), reason },
+      ],
+    );
+    const guarantee = asRecord(
+      await runRecipe(recipeByOrdinal(3), { spec: "spec:probe.carve" }, extraction),
+    );
+    expect(asArray(guarantee.relationsOut)).toContainEqual(
+      expect.objectContaining({ type: "refines", other: "spec:probe.freeze", reason }),
+    );
+    const slice = asRecord(
+      await runRecipe(recipeByOrdinal(19), { spec: "spec:probe.carve" }, extraction),
+    );
+    expect(asArray(asRecord(slice.dependencies).dependsOn)).toEqual([
+      { id: "spec:probe.freeze", statedReadiness: "idea", reason },
+    ]);
+    const footing = asRecord(
+      await runRecipe(recipeByOrdinal(21), { spec: "spec:probe.carve" }, extraction),
+    );
+    expect(asArray(footing.footing)).toContainEqual(
+      expect.objectContaining({ type: "dependsOn", id: "spec:probe.freeze", reason }),
+    );
+    const register = asRecord(await runRecipe(recipeByOrdinal(31), undefined, extraction));
+    expect(asArray(register.rows)).toContainEqual(
+      expect.objectContaining({
+        id: "spec:probe.carve",
+        reasons: [
+          { type: "dependsOn", to: "spec:probe.freeze", reason },
+          { type: "refines", to: "spec:probe.freeze", reason },
+        ],
+      }),
+    );
+  });
+
   it("registers narrowing decisions both ways and excludes refinement by other kinds", async () => {
     const extraction = syntheticExtraction(
       [
@@ -5283,15 +5566,15 @@ describe("design recipes", () => {
     expect(asArray(result.rows)).toMatchObject([
       {
         id: "spec:probe.carve",
-        narrows: ["spec:probe.freeze"],
-        narrowedBy: [],
+        refines: ["spec:probe.freeze"],
+        refinedBy: [],
         supersedes: [],
         supersededBy: [],
       },
       {
         id: "spec:probe.freeze",
-        narrows: [],
-        narrowedBy: ["spec:probe.carve"],
+        refines: [],
+        refinedBy: ["spec:probe.carve"],
         supersedes: [],
         supersededBy: [],
       },
@@ -5314,6 +5597,9 @@ describe("design recipes", () => {
     expect(result.totals).toEqual({
       usesEdges: oracle.uses.length,
       resolvedToComponents: oracle.resolved.length,
+      sameLayer: oracle.sameLayer,
+      sameContext: oracle.sameContext,
+      bySameLayer: oracle.bySameLayer,
       crossings: oracle.rows.length,
       contextCrossings: oracle.rows.filter((row) => row.differs.includes("context")).length,
       layerCrossings: oracle.rows.filter((row) => row.differs.includes("layer")).length,
@@ -5363,6 +5649,9 @@ describe("design recipes", () => {
         usesEdges: 6,
         // `impl:probe.free` belongs to no component, so its edge is counted and never a row.
         resolvedToComponents: 5,
+        sameLayer: 1,
+        sameContext: 2,
+        bySameLayer: { domain: 1 },
         crossings: 3,
         contextCrossings: 2,
         layerCrossings: 2,
@@ -5463,7 +5752,9 @@ describe("entry lines in entry search and address resolution", () => {
           ? `question[${question}]`
           : row.section === "design" || row.section === "ui"
             ? `${row.section}.${entry}`
-            : undefined;
+            : row.section === "behavior" && /^(rules|flows)\[\d+\]$/u.test(entry)
+              ? entry.replace(/^rules/u, "rule").replace(/^flows/u, "flow")
+              : undefined;
       return (
         locations.find((location) => location.spec === row.id && location.entry === name)?.line ??
         null
@@ -5564,7 +5855,11 @@ specs:
       );
 
       const result = asRecord(
-        await runRecipe(recipeByOrdinal(29), { pack: "pack:probe.kinds" }, extraction),
+        await runRecipe(
+          recipeByOrdinal(29),
+          { pack: "pack:probe.kinds", detail: true },
+          extraction,
+        ),
       );
       const target = asArray(result.members)
         .map(asRecord)
@@ -5622,5 +5917,725 @@ export const subject = spec({
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
+  });
+});
+
+const answerShapeRecipesAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.answer-shape-recipes"),
+  label: "asserts realization of the catalog's compact and detailed answers",
+  satisfies: ref("spec:consumers.agent-surface.answer-shapes"),
+});
+void answerShapeRecipesAnchor;
+const answerShapeRecipesTestAnchor = specTest({
+  id: testAnchorId("test:protocol.answer-shape-recipes"),
+  verifies: ref("spec:consumers.agent-surface.answer-shapes"),
+});
+void answerShapeRecipesTestAnchor;
+
+describe("answers that fit", () => {
+  it("counts equal layers and contexts between distinct components even without crossings", async () => {
+    const extraction = syntheticExtraction(
+      [
+        probeUnit("component:probe.one", 1, { layer: "domain", context: "engine" }),
+        probeUnit("component:probe.two", 2, { layer: "domain", context: "engine" }),
+        probeUnit("impl:probe.one", 3),
+        probeUnit("impl:probe.two", 4),
+      ],
+      [
+        probeEdge("impl:probe.one", "memberOf", "component:probe.one", "anchored"),
+        probeEdge("impl:probe.two", "memberOf", "component:probe.one", "anchored"),
+        probeEdge("impl:probe.one", "uses", "component:probe.two", "anchored"),
+        probeEdge("impl:probe.one", "uses", "impl:probe.two", "anchored"),
+      ],
+    );
+    expect(await runRecipe(recipeByOrdinal(32), undefined, extraction)).toEqual({
+      totals: {
+        usesEdges: 2,
+        resolvedToComponents: 2,
+        sameLayer: 1,
+        sameContext: 1,
+        bySameLayer: { domain: 1 },
+        crossings: 0,
+        contextCrossings: 0,
+        layerCrossings: 0,
+        byContextPair: {},
+        byLayerPair: {},
+      },
+      rows: [],
+    });
+  });
+
+  it("returns guarantee entries and complete unit and verifier locations from context", async () => {
+    const extraction = packDesignProbe();
+    const id = "spec:probe.page";
+    const context = createReader(extraction.graph).specContext(id);
+    const result = asRecord(await runRecipe(recipeByOrdinal(3), { spec: id }, extraction));
+    const shape = (binding: NonNullable<typeof context>["implementations"][number]) => ({
+      id: binding.codeId,
+      file: binding.file ?? null,
+      line: binding.line ?? null,
+      role: binding.role ?? null,
+      component:
+        binding.component === undefined
+          ? null
+          : {
+              id: binding.component.id,
+              layer: binding.component.layer ?? null,
+              context: binding.component.context ?? null,
+            },
+    });
+    expect(result.sections).toEqual(context?.sections);
+    expect(result.designColumns).toEqual(context?.designColumns);
+    expect(result.packs).toEqual(context?.packs);
+    expect(result.implementations).toEqual(context?.implementations.map(shape));
+    expect(result.references).toEqual(context?.references.map(shape));
+    expect(result.verifiers).toEqual(
+      context?.verifiers.map((binding) => ({
+        verifierId: binding.verifierId,
+        via: binding.via,
+        claim: binding.claim,
+        enabled: binding.enabled,
+        file: binding.file ?? null,
+        line: binding.line ?? null,
+      })),
+    );
+  });
+
+  it("reports directions relative to an impacted Pack", async () => {
+    const pack = {
+      id: "pack:probe.impact",
+      nodeType: "Pack" as const,
+      claim: "declared" as const,
+      file: "specs/impact.pack.sdp.md",
+      members: ["spec:probe.member"],
+    };
+    const extraction = syntheticExtraction(
+      [pack, probeSpec("spec:probe.member")],
+      [probeEdge("spec:probe.member", "belongsTo", pack.id)],
+    );
+    const summary = asRecord(
+      await runRecipe(recipeByOrdinal(4), { files: [pack.file] }, extraction),
+    );
+    expect(asRecord(summary.atRisk).incomingSpecs).toEqual(["spec:probe.member"]);
+    expect(asRecord(summary.atRisk).outgoingSpecs).toEqual([]);
+    expect(asRecord(summary.totals).impactedPacks).toBe(1);
+    const full = asRecord(
+      await runRecipe(recipeByOrdinal(4), { files: [pack.file], detail: true }, extraction),
+    );
+    expect(full.atRiskSpecs).toEqual([
+      {
+        id: "spec:probe.member",
+        nodeType: "Primitive",
+        reasons: [
+          {
+            from: "spec:probe.member",
+            edgeType: "belongsTo",
+            to: pack.id,
+            claim: "declared",
+            direction: "incoming",
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("indexes exactly the present recipes with names, parameters and uses", () => {
+    const index = source.slice(0, source.indexOf("Runnable bodies"));
+    const indexed = [...index.matchAll(/^\| (\d+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \|$/gmu)];
+    expect(indexed.map((row) => ({ number: Number(row[1]), name: row[2]?.trim() }))).toEqual(
+      recipes.map((recipe) => ({ number: recipe.ordinal, name: recipe.title })),
+    );
+    expect(indexed.every((row) => row[3]?.trim() && row[4]?.trim())).toBe(true);
+    expect(recipeFiles(source)).toHaveLength(recipes.length);
+  });
+
+  it("runs a shipped body wrapped inside a caller's filter", async () => {
+    const shipped = shippedBody(recipeByOrdinal(33));
+    const wrapped = `const answer = await (async () => {\n${shipped}\n})();\nreturn answer.rows.filter((row) => row.specKind === "behavior");`;
+    const answer = asRecord(await runRecipe(recipeByOrdinal(33)));
+    expect(await runRecipe({ ordinal: 33, title: "Wrapped backlog", body: wrapped })).toEqual(
+      asArray(answer.rows).filter((row) => asRecord(row).specKind === "behavior"),
+    );
+    expect(source).toContain("The caller's part must hold no shell expansion");
+  });
+
+  it("keeps impact totals and puts both edge directions in the summary", async () => {
+    const extraction = syntheticExtraction(
+      [
+        probeSpec("spec:probe.changed", "behavior", "ready"),
+        probeSpec("spec:probe.neighbor", "rule", "defined"),
+        probeUnit("impl:probe.changed", 1),
+        probeUnit("impl:probe.other", 2),
+      ],
+      [
+        probeEdge("impl:probe.changed", "satisfies", "spec:probe.changed", "anchored"),
+        probeEdge("spec:probe.neighbor", "refines", "spec:probe.changed"),
+        probeEdge("spec:probe.changed", "dependsOn", "spec:probe.neighbor"),
+        probeEdge("impl:probe.other", "references", "spec:probe.changed", "anchored"),
+      ],
+    );
+    const files = ["src/probe.ts", "absent.ts"];
+    const summary = asRecord(await runRecipe(recipeByOrdinal(4), { files }, extraction));
+    const full = asRecord(await runRecipe(recipeByOrdinal(4), { files, detail: true }, extraction));
+    expect(summary.totals).toEqual(full.totals);
+    expect(summary).toEqual(
+      await runRecipe(recipeByOrdinal(4), { files, detail: false }, extraction),
+    );
+    const radius = createReader(extraction.graph).blastRadius(files);
+    expect(summary.impactedSpecs).toEqual(radius.impactedSpecs.map((row) => row.id));
+    // The probe unit path is selected separately below to avoid changing Spec carriers.
+    const changed = extraction.graph.nodes.find((node) => node.id === "impl:probe.changed");
+    const unitFile = changed?.file;
+    const reached = asRecord(
+      await runRecipe(recipeByOrdinal(4), { files: [unitFile] }, extraction),
+    );
+    expect(asRecord(reached.atRisk).incomingSpecs).toContain("spec:probe.neighbor");
+    expect(asRecord(reached.atRisk).outgoingSpecs).toContain("spec:probe.neighbor");
+    expect(asArray(summary.leftOut)).toHaveLength(3);
+    const reasons = asArray(full.atRiskSpecs)
+      .flatMap((row) => asArray(asRecord(row).reasons))
+      .map(asRecord);
+    expect(
+      reasons.every((row) => row.direction === "incoming" || row.direction === "outgoing"),
+    ).toBe(true);
+  });
+
+  it("keeps the reader's Pack value in summary, full and selected-member answers", async () => {
+    const extraction = packDesignProbe();
+    const pack = "pack:probe-design-v1";
+    const full = asRecord(await runRecipe(recipeByOrdinal(29), { pack, detail: true }, extraction));
+    const summary = asRecord(await runRecipe(recipeByOrdinal(29), { pack }, extraction));
+    expect(await runRecipe(recipeByOrdinal(29), { pack, detail: false }, extraction)).toEqual(
+      summary,
+    );
+    expect(summary.totals).toEqual(full.totals);
+    const fullMembers = asArray(full.members).map(asRecord);
+    const summaries = fullMembers.map((member) =>
+      member.resolved === false
+        ? member
+        : {
+            id: member.id,
+            specKind: member.specKind,
+            statedReadiness: member.statedReadiness,
+            floorReached: member.floorReached,
+            statedNextRung: member.statedNextRung,
+            holds: asArray(member.statedNextRungFailures).map((failure) => ({
+              clauseId: asRecord(failure).clauseId,
+              targets: asArray(asRecord(failure).targets ?? []).map(
+                (target) => asRecord(target).id,
+              ),
+            })),
+            openQuestions: asRecord(member.design).openQuestions,
+            blockingQuestions: asRecord(member.design).blockingQuestions,
+            implementedBy: asArray(member.implementedBy).length,
+            referencedBy: asArray(member.referencedBy).length,
+          },
+    );
+    expect(summary.members).toEqual(summaries);
+    expect(summary.boundary).toEqual(
+      Object.fromEntries(
+        Object.entries(asRecord(full.boundary)).map(([direction, rows]) => [
+          direction,
+          asArray(rows).map((row) => asRecord(row).id),
+        ]),
+      ),
+    );
+    const selected = asRecord(
+      await runRecipe(
+        recipeByOrdinal(29),
+        { pack, detail: [fullMembers[0]?.id, "spec:absent"] },
+        extraction,
+      ),
+    );
+    expect(selected.totals).toEqual(full.totals);
+    expect(selected.members).toEqual([fullMembers[0], ...summaries.slice(1)]);
+    expect(selected.diagnostics).toEqual([{ id: "spec:absent", reason: "not-member" }]);
+    expect(asArray(summary.leftOut)).toHaveLength(3);
+  });
+
+  it("reports both next rungs when the stated rung is below the floor", async () => {
+    const extraction = syntheticExtraction(
+      [
+        probeSpec("spec:probe.subject", "rule", "idea", {
+          intent: { outcome: "A complete rule." },
+          behavior: { rules: ["A rule."] },
+        }),
+        probeSpec("spec:probe.basis", "rule", "scoped", {
+          intent: { outcome: "A basis." },
+          behavior: { rules: ["A basis rule."] },
+        }),
+      ],
+      [
+        probeEdge("spec:probe.subject", "dependsOn", "spec:probe.basis"),
+        probeEdge("spec:probe.basis", "refines", "spec:probe.subject"),
+      ],
+    );
+    const result = asRecord(
+      await runRecipe(recipeByOrdinal(9), { spec: "spec:probe.subject" }, extraction),
+    );
+    expect(result.floorReached).toBe("defined");
+    expect(result.aboveStated).toEqual({ rung: "scoped", failures: [], firstUnmetClause: null });
+    expect(asRecord(result.aboveFloor).rung).toBe("ready");
+    expect(asRecord(result.aboveFloor).firstUnmetClause).toBe(
+      "typed-dependency-targets-are-defined",
+    );
+    const context = createReader(extraction.graph).specContext("spec:probe.subject");
+    expect(context?.statedNextRung).toBe("scoped");
+    expect(context?.statedNextRungFailures).toEqual([]);
+  });
+
+  it("reports no next rung at ready", async () => {
+    const context = reader.specContext("spec:consumers.reader");
+    expect(context?.statedNextRung).toBeUndefined();
+    expect(context?.statedNextRungFailures).toEqual([]);
+    const result = asRecord(await runRecipe(recipeByOrdinal(9), { spec: "spec:consumers.reader" }));
+    expect(result.aboveStated).toEqual({ rung: null, failures: [], firstUnmetClause: null });
+    expect(result.aboveFloor).toEqual({ rung: null, failures: [], firstUnmetClause: null });
+  });
+
+  it("reports gap exemptions and every omitted warning beyond the first 25", async () => {
+    const extraction = syntheticExtraction(
+      [
+        ...Array.from({ length: 30 }, (_, index) =>
+          probeSpec(`spec:probe.gap${String(index)}`, "behavior", "ready"),
+        ),
+        probeSpec("spec:probe.decision", "decision", "ready"),
+        probeSpec("spec:probe.lower", "decision", "defined"),
+      ],
+      [],
+    );
+    const result = asRecord(await runRecipe(recipeByOrdinal(8), undefined, extraction));
+    expect(result.exemptions).toEqual([
+      { validatorId: "honesty/gaps", exemptKind: "decision", readySpecs: 1 },
+    ]);
+    expect(asArray(result.signals)).toHaveLength(25);
+    expect(result.leftOut).toEqual([
+      `${String(numberAt(result, "warnings") - 25)} warning signals omitted.`,
+    ]);
+    const empty = asRecord(
+      await runRecipe(recipeByOrdinal(8), undefined, syntheticExtraction([], [])),
+    );
+    expect(empty.leftOut).toEqual([]);
+  });
+
+  it("lists only defined unimplemented designs and keeps exclusions and references", async () => {
+    const extraction = syntheticExtraction(
+      [
+        probeSpec("spec:zeta.design", "behavior", "defined", {
+          intent: { outcome: "Design me.", openQuestions: [{ question: "Held?", blocking: true }] },
+          behavior: { rules: ["One rule."] },
+          design: { signature: "`run(): void`" },
+        }),
+        probeSpec("spec:alpha.design", "rule", "defined"),
+        probeSpec("spec:alpha.built", "rule", "defined"),
+        probeSpec("spec:alpha.ready", "rule", "ready"),
+        probeSpec("spec:alpha.scoped", "rule", "scoped"),
+        probeSpec("spec:alpha.example", "example", "defined"),
+        probeSpec("spec:alpha.decision", "decision", "defined"),
+        probeUnit("impl:probe.bound", 1),
+        {
+          id: "pack:probe.backlog",
+          nodeType: "Pack",
+          claim: "declared",
+          file: "pack.sdp.md",
+          members: ["spec:zeta.design"],
+        },
+      ],
+      [
+        probeEdge("impl:probe.bound", "satisfies", "spec:alpha.built", "anchored"),
+        probeEdge("impl:probe.bound", "references", "spec:zeta.design", "anchored"),
+        probeEdge("spec:zeta.design", "belongsTo", "pack:probe.backlog"),
+      ],
+    );
+    const result = asRecord(await runRecipe(recipeByOrdinal(33), undefined, extraction));
+    expect(result.totals).toEqual({
+      specs: 2,
+      byFamily: { alpha: 1, zeta: 1 },
+      excludedExamples: 1,
+      excludedDecisions: 1,
+      withReferences: 1,
+    });
+    const rows = asArray(result.rows).map(asRecord);
+    expect(rows.map((row) => row.id)).toEqual(["spec:alpha.design", "spec:zeta.design"]);
+    expect(rows[1]).toEqual({
+      id: "spec:zeta.design",
+      specKind: "behavior",
+      altitude: "story",
+      floorReached: "idea",
+      statedNextRungFailures: ["at-least-one-relation", "no-blocking-open-questions"],
+      design: { entries: 1, declarations: 1, openQuestions: 1, blockingQuestions: 1 },
+      referencedBy: ["impl:probe.bound"],
+      packs: ["pack:probe.backlog"],
+    });
+    expect(await runRecipe(recipeByOrdinal(33), undefined, syntheticExtraction([], []))).toEqual({
+      totals: {
+        specs: 0,
+        byFamily: {},
+        excludedExamples: 0,
+        excludedDecisions: 0,
+        withReferences: 0,
+      },
+      rows: [],
+    });
+  });
+});
+
+const grammarRecipesTestAnchor = specTest({
+  id: testAnchorId("test:protocol.authoring-grammar-recipes"),
+  label: "executes the shipped question, mention, entry, address and rule coverage recipes",
+  verifies: [
+    ref("spec:model.rule-keys"),
+    ref("spec:model.open-question-fields"),
+    ref("spec:model.relation-reasons"),
+  ],
+});
+void grammarRecipesTestAnchor;
+const grammarRecipesAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.authoring-grammar-recipes"),
+  label: "asserts the authoring grammar's realization in docs/agent-surface/recipes.md",
+  references: [
+    ref("spec:model.rule-keys"),
+    ref("spec:model.open-question-fields"),
+    ref("spec:model.relation-reasons"),
+    ref("spec:consumers.agent-surface.answer-shapes"),
+  ],
+});
+void grammarRecipesAnchor;
+
+function grammarRecipeProbe(): ExtractionResult {
+  const carrier = (id: string, kind: string, body: string, relations = "{}") =>
+    reifyMarkdownCarrier(
+      `---\nid: spec:${id}\nkind: ${kind}\naltitude: story\nreadiness: idea\nrelations: ${relations}\n---\n# Probe\n\n${body}\n`,
+      `${id}.sdp.md`,
+    );
+  const files = [
+    carrier(
+      "grammar.owner",
+      "behavior",
+      `## Intent
+- outcome: Probe grammar.
+### Open questions
+- [blocking #deferred] When do we return?
+  - decider: owner
+  - links: spec:grammar.owner#rule.firstRule
+  - provisional: One caller.
+  - trigger: A second caller.
+- [blocking #hold] Which choice?
+- [non-blocking] Which detail?
+## Behavior
+- rule: [#firstRule] First text.
+- flow: [#secondFlow] Flow text.
+- rule: [#thirdRule] Third text.
+- rule: Unkeyed text.
+## Design
+- zKey: Last key.
+- aKey: First key.`,
+    ),
+    carrier(
+      "grammar.bound",
+      "example",
+      "## Intent\n- outcome: Bound proof.",
+      '{verifies: {target: spec:grammar.owner, exercises: [firstRule], reason: "Checks one rule."}}',
+    ),
+    carrier(
+      "grammar.unbound",
+      "example",
+      "## Intent\n- outcome: Unbound proof.",
+      "{verifies: {target: spec:grammar.owner, exercises: [firstRule, secondFlow]}}",
+    ),
+    carrier(
+      "grammar.mentioner",
+      "rule",
+      `spec:grammar.owner#rule.firstRule
+## Intent
+- outcome: Mention the owner.
+### Open questions
+- [non-blocking] Which design?
+  - links: spec:grammar.owner#rule.secondFlow`,
+    ),
+    reifyMarkdownCarrier(
+      "---\nid: pack:grammar\nspecs: [spec:grammar.owner]\n---\n# Grammar\n",
+      "grammar.pack.sdp.md",
+    ),
+  ];
+  for (const file of files) expect(file.findings).toEqual([]);
+  const graph = deriveGraph(
+    files.flatMap((file) => file.specs),
+    files.flatMap((file) => file.packs),
+    [
+      {
+        id: "test:grammar.bound",
+        flavor: "test",
+        file: "bound.test.ts",
+        line: 1,
+        data: { id: "test:grammar.bound", verifies: ["spec:grammar.bound"] },
+      },
+    ],
+  );
+  return {
+    graph,
+    report: { validatorId: extractValidatorId, findings: [] },
+    counts: { specs: 4, packs: 1, anchors: 1 },
+  };
+}
+
+describe("authoring grammar recipes", () => {
+  it("registers fields and counts deferrals apart from design holds", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(20), undefined, grammarRecipeProbe()));
+    expect(result.totals).toEqual({
+      questions: 4,
+      blocking: 2,
+      nonBlocking: 2,
+      deferrals: 1,
+      holds: 1,
+      specs: 2,
+      specsWithBlocking: 1,
+      malformed: 0,
+    });
+    const owner = asArray(result.specs)
+      .map(asRecord)
+      .find((row) => row.id === "spec:grammar.owner");
+    expect(asArray(owner?.questions)[0]).toEqual({
+      question: "When do we return?",
+      blocking: true,
+      key: "deferred",
+      decider: "owner",
+      links: ["spec:grammar.owner#rule.firstRule"],
+      provisional: "One caller.",
+      trigger: "A second caller.",
+      deferral: true,
+    });
+    expect(asArray(owner?.questions)[1]).toEqual({
+      question: "Which choice?",
+      blocking: true,
+      key: "hold",
+      decider: null,
+      links: [],
+      provisional: null,
+      trigger: null,
+      deferral: false,
+    });
+  });
+  it("lists intended mentions apart and preserves the validator's warnings", async () => {
+    const extraction = grammarRecipeProbe();
+    const intended = [
+      {
+        from: "spec:grammar.mentioner",
+        to: "spec:grammar.owner",
+        reason: "Names a worked design.",
+      },
+      { from: "spec:grammar.bound", to: "spec:grammar.owner", reason: "Now has a relation." },
+    ];
+    const result = asRecord(await runRecipe(recipeByOrdinal(22), { intended }, extraction));
+    expect(result.unbacked).toEqual([]);
+    expect(asArray(result.intended)).toEqual([
+      {
+        from: "spec:grammar.mentioner",
+        to: "spec:grammar.owner",
+        reason: "Names a worked design.",
+        totals: { occurrences: 2 },
+        at: [
+          { section: "narrative", entry: null },
+          { section: "intent", entry: "openQuestions[0].links[0]" },
+        ],
+      },
+    ]);
+    expect(result.staleIntended).toEqual([intended[1]]);
+    expect(asRecord(result.totals).unbacked).toBe(1);
+    expect(
+      validateGraph(extraction.graph).findings.filter(
+        (finding) => finding.validatorId === "conformance/prose-mentions",
+      ),
+    ).toHaveLength(1);
+    const scoped = asRecord(
+      await runRecipe(recipeByOrdinal(22), { scope: ["spec:grammar.bound"], intended }, extraction),
+    );
+    expect(scoped.intended).toEqual([]);
+    expect(scoped.staleIntended).toEqual(intended);
+  });
+  it("matches rule keys beside their text without searching the derived map", async () => {
+    const result = asRecord(
+      await runRecipe(recipeByOrdinal(23), { term: "second flow" }, grammarRecipeProbe()),
+    );
+    expect(
+      asArray(result.matches)
+        .map(asRecord)
+        .filter((row) => row.section === "behavior"),
+    ).toEqual([
+      {
+        id: "spec:grammar.owner",
+        section: "behavior",
+        entry: "flows[0]",
+        address: "spec:grammar.owner#rule.secondFlow",
+        line: 22,
+        matchedIn: ["key"],
+        text: "Flow text.",
+      },
+    ]);
+    expect(
+      asArray(result.matches)
+        .map(asRecord)
+        .every((row) => !String(row.entry).startsWith("ruleKeys")),
+    ).toBe(true);
+  });
+  it("locates unkeyed rule text and question field text", async () => {
+    const extraction = grammarRecipeProbe();
+    const rules = asRecord(await runRecipe(recipeByOrdinal(23), { term: "unkeyed" }, extraction));
+    expect(asArray(rules.matches)[0]).toEqual({
+      id: "spec:grammar.owner",
+      section: "behavior",
+      entry: "rules[2]",
+      address: null,
+      line: 24,
+      matchedIn: ["text"],
+      text: "Unkeyed text.",
+    });
+    const trigger = asRecord(
+      await runRecipe(recipeByOrdinal(23), { term: "second caller" }, extraction),
+    );
+    expect(asArray(trigger.matches)[0]).toEqual({
+      id: "spec:grammar.owner",
+      section: "intent",
+      entry: "openQuestions[0].trigger",
+      address: null,
+      line: 17,
+      matchedIn: ["text"],
+      text: "A second caller.",
+    });
+  });
+  it("resolves rule addresses and preserves every parsed part of a miss", async () => {
+    const extraction = grammarRecipeProbe();
+    const addresses = [
+      "spec:grammar.owner#rule.secondFlow",
+      "spec:grammar.owner#rule.absent",
+      "spec:grammar.owner#ui.absent",
+      "spec:grammar.absent#rule.firstRule",
+      "spec:grammar.owner",
+    ];
+    const result = asRecord(await runRecipe(recipeByOrdinal(25), { addresses }, extraction));
+    expect(result.totals).toEqual({
+      addresses: 5,
+      resolved: 1,
+      malformed: 1,
+      spec: 1,
+      section: 1,
+      entry: 1,
+    });
+    const rows = asArray(result.rows);
+    expect(rows[0]).toEqual({
+      address: addresses[0],
+      resolves: true,
+      id: "spec:grammar.owner",
+      section: "rule",
+      key: "secondFlow",
+      value: "Flow text.",
+      file: "grammar.owner.sdp.md",
+      line: 22,
+      reason: null,
+    });
+    expect(rows[1]).toEqual({
+      address: addresses[1],
+      resolves: false,
+      id: "spec:grammar.owner",
+      section: "rule",
+      key: "absent",
+      value: null,
+      file: null,
+      line: null,
+      reason: "entry",
+      available: ["firstRule", "secondFlow", "thirdRule"],
+    });
+    expect(rows[2]).toEqual({
+      address: addresses[2],
+      resolves: false,
+      id: "spec:grammar.owner",
+      section: "ui",
+      key: "absent",
+      value: null,
+      file: null,
+      line: null,
+      reason: "section",
+      available: [],
+    });
+    expect(asRecord(rows[3])).toMatchObject({
+      id: "spec:grammar.absent",
+      section: "rule",
+      key: "firstRule",
+      reason: "spec",
+    });
+    expect(asRecord(rows[4])).toMatchObject({
+      id: null,
+      section: null,
+      key: null,
+      reason: "malformed",
+      expected:
+        "spec:<id>#<section>.<key>, section design, ui, question, or rule; key lower-camel ASCII",
+    });
+    const design = asRecord(
+      await runRecipe(
+        recipeByOrdinal(25),
+        { addresses: ["spec:grammar.owner#design.missing"] },
+        extraction,
+      ),
+    );
+    expect(asRecord(asArray(design.rows)[0]).available).toEqual(["aKey", "zKey"]);
+    expect(await runRecipe(recipeByOrdinal(25), { addresses: [] }, extraction)).toEqual({
+      totals: { addresses: 0, resolved: 0, malformed: 0, spec: 0, section: 0, entry: 0 },
+      rows: [],
+    });
+  });
+  it("counts rule coverage from bound examples and reports unbound intent beside it", async () => {
+    const extraction = grammarRecipeProbe();
+    const result = await runRecipe(recipeByOrdinal(34), { spec: "spec:grammar.owner" }, extraction);
+    expect(result).toEqual({
+      totals: { keyedRules: 3, exercised: 1, unexercised: 2, unkeyedRules: 1 },
+      rows: [
+        {
+          address: "spec:grammar.owner#rule.firstRule",
+          line: 21,
+          exercisedBy: [
+            { example: "spec:grammar.bound", enabled: true },
+            { example: "spec:grammar.unbound", enabled: false },
+          ],
+        },
+        {
+          address: "spec:grammar.owner#rule.secondFlow",
+          line: 22,
+          exercisedBy: [{ example: "spec:grammar.unbound", enabled: false }],
+        },
+        { address: "spec:grammar.owner#rule.thirdRule", line: 23, exercisedBy: [] },
+      ],
+    });
+    expect(await runRecipe(recipeByOrdinal(34), { pack: "pack:grammar" }, extraction)).toEqual(
+      result,
+    );
+  });
+  it("reports missing rule-coverage scopes and accepts a scope with no rules", async () => {
+    const extraction = grammarRecipeProbe();
+    expect(await runRecipe(recipeByOrdinal(34), undefined, extraction)).toEqual({
+      found: false,
+      reason: "scope",
+      expected: "params.spec or params.pack",
+    });
+    expect(
+      await runRecipe(recipeByOrdinal(34), { spec: "spec:grammar.absent" }, extraction),
+    ).toEqual({ found: false, reason: "spec" });
+    expect(await runRecipe(recipeByOrdinal(34), { pack: "pack:absent" }, extraction)).toEqual({
+      found: false,
+      reason: "pack",
+    });
+    expect(
+      await runRecipe(
+        recipeByOrdinal(34),
+        { pack: "pack:grammar", spec: "spec:grammar.owner" },
+        extraction,
+      ),
+    ).toEqual({ found: false, reason: "scope", expected: "one of params.spec or params.pack" });
+    expect(
+      await runRecipe(recipeByOrdinal(34), { spec: "spec:grammar.bound" }, extraction),
+    ).toEqual({
+      totals: { keyedRules: 0, exercised: 0, unexercised: 0, unkeyedRules: 0 },
+      rows: [],
+    });
   });
 });

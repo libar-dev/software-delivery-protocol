@@ -15,7 +15,8 @@ evaluation sink. There is no verb wall — you script the graph.
 
 The graph is flat: one array of nodes, one array of edges, nothing nested. Hierarchy is edges, so
 every question is a filter or a join, never a tree walk. Beside them, `graph.locations` is the
-location table: the source line of every keyed Design and UI entry and every open question. Nodes
+location table: the source line of every keyed Design and UI entry, every rule and flow entry,
+every open question and each of its fields. Nodes
 carry no lines, and a location is never an identity or a binding target. Four node types exist:
 
 - `Primitive` — one authored Spec, positioned by `specKind` × `altitude` × `readiness`, carrying
@@ -41,7 +42,10 @@ code answers to that design without claiming to realize it: it confers no delive
 readiness floor, and the drift alarm ignores it. It runs one way. A design that builds on existing
 code states that through its own `dependsOn` or `refines` to the Spec the code satisfies, so read
 that dependency from the Spec's relations, never from the code. A relation name outside this list
-is a bug in whatever prose named it, not a query to attempt. IDs are namespaced (`spec:` · `pack:`
+is a bug in whatever prose named it, not a query to attempt. An authored edge may carry a
+`reason`, one line on why it holds, and a declared `verifies` from an example may carry
+`exercises`, the verified Spec's rule keys it exercises; neither changes what the edge confers.
+IDs are namespaced (`spec:` · `pack:`
 · `impl:` · `api:` · `component:` · `test:` · `oracle:`), and an edge whose target does not
 resolve confers no delivery fact. Every node and edge carries exactly one claim; the edge contract is
 `spec:extraction.derive-graph`, the claim law is `spec:extraction.claim-taxonomy`.
@@ -98,10 +102,10 @@ The public projection publishers are `sdp view`, `sdp census`, `sdp mermaid`, an
 In this source checkout, use `npm run generate:self-hosting` or `npm run check:self-hosting` when
 all four roots must be published or certified together.
 
-The catalog contains thirty-two ready-made bodies in `docs/agent-surface/recipes.md` in the
+The catalog contains forty ready-made bodies in `docs/agent-surface/recipes.md` in the
 Protocol repository and
 `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an adopter.
-Recipes 1-32 each open under a numbered heading that names the recipe. Every body there runs
+Recipes 1-40 each open under a numbered heading that names the recipe. Every body there runs
 verbatim and a test proves it. Start from a recipe; adapt it in place.
 
 A recipe that takes a subject (a Spec id, a Pack id, changed files, addresses, a term) reads it
@@ -132,8 +136,9 @@ For a table you would otherwise keep by hand, run a register recipe each time yo
 open-question register (recipe 20) for every open question with its blocking flag and its key,
 dependency footing (recipe 21) for what one Spec rests on, and the mention audit (recipe 22) for
 Spec ids in prose. An entry address, `spec:<id>#design.<key>` or `spec:<id>#ui.<key>`, names one
-keyed entry of a Spec's Design or UI section, and `spec:<id>#question.<key>` names the open
-question whose marker carries that key; it belongs in prose, and `sdp validate` reports an address
+keyed entry of a Spec's Design or UI section, `spec:<id>#question.<key>` names the open
+question whose marker carries that key, and `spec:<id>#rule.<key>` names the rule or flow entry
+whose `[#key]` marker carries it; it belongs in prose, and `sdp validate` reports an address
 whose Spec or key does not exist as an error. When you hold addresses written outside the
 Specs, in a register, a test, or a page, address resolution (recipe 25) gives one row per
 address: whether it resolves and, when it does not, why; a resolving row carries the entry's
@@ -156,10 +161,28 @@ decisions, and the realizing and referencing units with their components, plus t
 boundary. The Design Review's Pack page renders the same assembly. Before changing a Spec,
 design-change impact (recipe 30) lists every Spec that rests on it, transitively, with the units,
 verifiers, and Packs to follow. The decision register (recipe 31) lists every decision with its
-rung, its supersession both ways, the decisions it narrows and those that narrow it through
-`refines`, the Specs it shapes, and its keyed questions. Architecture
+rung, its supersession both ways, the decisions it refines and the decisions that refine it, the
+reasons its relations state, the Specs it shapes, and its keyed questions. Whether a refinement
+narrows a decision is that decision's own text or its relation's reason, never the field name. Architecture
 crossings (recipe 32) lists the `uses` edges whose components differ in context or layer, tallied
 by direction, and refuses nothing.
+
+To iterate on a design pass after pass:
+
+- The design backlog (recipe 33) lists the Specs stated `defined` that no code realizes, with
+  their design columns; recipe 1 lists only what is stated `ready`.
+- Rule coverage (recipe 34) lists each keyed rule with the examples that exercise it.
+- The design diff (recipe 35) compares the graph `sdp build` wrote at a base commit with the
+  graph now, by Spec, section and entry key, with anchored changes kept apart.
+- The context bundle (recipe 36) composes one pass's reading material for a Pack or a list of
+  Specs within a budget counted in UTF-16 code units, and says what it left out.
+- The perspective filter (recipe 37) selects and orders a Pack's members from a perspective the
+  corpus keeps as JSON; pass its member ids to the bundle for one perspective's brief.
+- The proposal check (recipe 38) reads a change proposal, the JSON shape a design pass hands
+  back, and reports which of its scopes moved since the base.
+- Slimming candidates (recipe 39) and the curation report (recipe 40) read what the code now
+  carries: pinned declarations an implemented, verified Spec may drop, and the files and
+  components the anchors miss, from an imports file `sdp build --imports` writes.
 
 Reach for the files only when you need the authored prose itself — the exact words to edit.
 
@@ -180,22 +203,35 @@ list implies coverage.
 
 ## The contract
 
-`sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--params JSON | --params @PATH] [--json]`
+`sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--params JSON | @PATH | KEY=@PATH]... [--json]`
 
 Four bindings are injected:
 
 - `g` — the reader over the derived graph (the same `createReader` the package exports)
 - `graph` — the raw graph schema (nodes, edges, claims)
 - `report` — the validation report, so findings are queryable data, never a gate
-- `params` — the JSON object `--params` supplies, or `{}` without it; a value that is not a JSON
-  object, or a file that cannot be read, is refused before the body runs
+- `params` — the JSON object `--params` supplies, or `{}` without it; `--params` repeats, objects
+  merge at the top level, and `KEY=@PATH` binds a file's JSON to `params.KEY`, so a base graph or
+  an imports file rides beside the other parameters. A value that is not lawful, a key given
+  twice, or a file that cannot be read is refused before the body runs
 
 Body rules: a plain JavaScript **async function body**. No `import`/`export`, no TypeScript-only
 syntax; `await` is fine. `return` is the machine output contract, but `sdp q` does not suppress
 `console.*`, so machine-consumed bodies and shipped recipes must avoid console output. **Pre-shape
 the return**: counts, ids, and decoded reasons, not whole nodes. Default output is bounded
 `util.inspect`; `--json` is the machine form. `--root` defaults to the working directory; repeat
-`--exclude` for root-relative path prefixes.
+`--exclude` for root-relative path prefixes. A body that does not parse is reported with its line
+and column.
+
+Recipes whose full answer runs long, changed-file impact (recipe 4) and Pack design (recipe 29),
+return a summary by default: every total, ids in place of rows, and `leftOut` naming what
+`detail: true` adds. To filter any shipped answer, run it inside your own body:
+
+```sh
+pnpm --silent sdp:q "const answer = await (async () => { $(cat dist/recipes/29-pack-design.js) })(); return answer.members.filter((member) => member.blockingQuestions > 0)" --params '{"pack":"pack:design-iteration-v1"}' --json
+```
+
+Keep your own part of such a body free of `$` and backticks, because the shell expands them.
 
 The graph is derived on every invocation, so a Spec you just authored is queryable immediately and
 no committed artifact answers in the graph's name. The sink writes nothing. It evaluates local
@@ -215,6 +251,29 @@ adopter, `g.specContext` on such an id returns `undefined` from your own root. Q
 `--root node_modules/@libar-dev/software-delivery-protocol/specs`, or open its carrier under that
 directory. That graph holds intent only. The package ships no source anchors, so its delivery facts
 are empty and its gap warnings say nothing about what the Protocol has built.
+
+## Empty answers that mislead
+
+An empty list or a zero is an answer, and some read as more than they say:
+
+- `implementedBy: []` or `referencedBy: []`: no unit is bound, not that nothing is built.
+- `verifiers: { total: 0 }`: no verifier is bound, not that nothing is tested.
+- An empty build backlog (recipe 1): nothing stated `ready` is unbuilt; the design backlog
+  (recipe 33) lists what is designed and unbuilt.
+- `coverageUnknownFiles: []`: every changed file is recorded somewhere, not that every reach is
+  known.
+- `found: false`: the id is not in this graph; in an adopter, a Protocol id needs `--root`.
+- No findings: conformance and honesty hold, not that the design is right.
+- `floorReached: "ready"`: the floor would allow `ready`; the author has not stated it.
+- A perspective that selects no member: read its `diagnostics` before reading the empty list as an
+  empty concern.
+
+## Log friction
+
+When a recipe misleads you, or an answer costs extra calls, record one row where the project keeps
+its feedback on the Protocol (the first adopter keeps `docs/feedback/`): what you wanted, what you
+ran, what you got, what you did instead, and what it cost (minor, slowed, blocked). Do not
+reconcile the gap in your head; the row is the evidence the next arc reads.
 
 ## What not to do
 

@@ -28,7 +28,15 @@ export type SpecSectionContent = Record<string, unknown>;
 /** An open question is prose, or an object flaggable `blocking` (MD-9: blocks `defined`+). */
 export type IntentOpenQuestion =
   | string
-  | { readonly question: string; readonly blocking?: boolean; readonly key?: string };
+  | {
+      readonly question: string;
+      readonly blocking?: boolean;
+      readonly key?: string;
+      readonly decider?: string;
+      readonly links?: readonly string[];
+      readonly provisional?: string;
+      readonly trigger?: string;
+    };
 
 export interface IntentSection {
   readonly description?: string;
@@ -73,6 +81,8 @@ export interface ExampleSpaceVocabulary {
 export interface BehaviorSection {
   readonly description?: string;
   readonly rules?: readonly string[];
+  /** Derived from the entry markers, never authored as a separate field. */
+  readonly ruleKeys?: Readonly<Record<string, `rules[${number}]` | `flows[${number}]`>>;
   readonly examples?: readonly BehaviorExample[];
   readonly flows?: readonly string[];
   readonly exampleSpace?: ExampleSpaceVocabulary;

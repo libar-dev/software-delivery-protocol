@@ -18,6 +18,7 @@ const validIds = [
   "spec:orders.create-order#design.validCart",
   "spec:orders.create-order#question.aggregateReach",
   "spec:orders.create-order#question.description",
+  "spec:orders.create-order#rule.validCart",
   "pack:checkout-v1",
   "impl:orders.create-order-use-case",
   "test:orders.create-order.valid-cart",
@@ -42,24 +43,33 @@ const entryAddressRefusals = [
   ["pack:x#", "the # sub-part is an entry address and is admitted only in the spec namespace"],
   ["spec:x#", "malformed # suffix"],
   ["spec:x#a#b", "malformed # suffix"],
-  ["spec:x#foo", "entry address must be <section>.<key> with section design, ui, or question"],
+  [
+    "spec:x#foo",
+    "entry address must be <section>.<key> with section design, ui, question, or rule",
+  ],
   [
     "spec:x#model.foo",
-    "entry address must be <section>.<key> with section design, ui, or question",
+    "entry address must be <section>.<key> with section design, ui, question, or rule",
   ],
-  ["spec:x#design", "entry address must be <section>.<key> with section design, ui, or question"],
-  ["spec:x#question", "entry address must be <section>.<key> with section design, ui, or question"],
+  [
+    "spec:x#design",
+    "entry address must be <section>.<key> with section design, ui, question, or rule",
+  ],
+  [
+    "spec:x#question",
+    "entry address must be <section>.<key> with section design, ui, question, or rule",
+  ],
   [
     "spec:x#questions.k",
-    "entry address must be <section>.<key> with section design, ui, or question",
+    "entry address must be <section>.<key> with section design, ui, question, or rule",
   ],
   [
     "spec:x#openQuestions.k",
-    "entry address must be <section>.<key> with section design, ui, or question",
+    "entry address must be <section>.<key> with section design, ui, question, or rule",
   ],
   [
     "spec:orders.create-order#valid-cart",
-    "entry address must be <section>.<key> with section design, ui, or question",
+    "entry address must be <section>.<key> with section design, ui, question, or rule",
   ],
   ["spec:x#design.1", "entry address key must be lower-camel ASCII"],
   ["spec:x#design.Foo", "entry address key must be lower-camel ASCII"],
@@ -131,8 +141,8 @@ describe("ids", () => {
     });
   });
 
-  it("names the three sections an entry address may carry", () => {
-    expect(ENTRY_ADDRESS_SECTIONS).toEqual(["design", "ui", "question"]);
+  it("names the four sections an entry address may carry", () => {
+    expect(ENTRY_ADDRESS_SECTIONS).toEqual(["design", "ui", "question", "rule"]);
   });
 
   it("parses a question address with its key verbatim", () => {

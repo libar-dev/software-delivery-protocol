@@ -15,6 +15,7 @@ import {
   markdownScalarLine,
   markdownSpecIdList,
 } from "./markdown-yaml-policy.js";
+import type { ReifiedEntryLine } from "./reify.js";
 import { entryAddressSlotReason } from "./reify.js";
 
 const relationTypes = new Set<string>(SPEC_RELATION_TYPES);
@@ -97,6 +98,7 @@ export function parseMarkdownFrontmatter(
     const data: Record<string, unknown> = {};
     const names = new Set<string>();
     let idLine = 1;
+    const entryLines: ReifiedEntryLine[] = [];
     for (const pair of root.items) {
       const line = markdownScalarLine(pair.key, envelope.source, envelope.baseLine);
       if (!isMarkdownStringScalar(pair.key)) {
@@ -132,6 +134,8 @@ export function parseMarkdownFrontmatter(
           readonly type: string;
           readonly target: string;
           readonly claim: "declared";
+          readonly reason?: string;
+          readonly exercises?: readonly string[];
         }[] = [];
         const relationNames = new Set<string>();
         for (const relation of pair.value.items) {
@@ -152,12 +156,19 @@ export function parseMarkdownFrontmatter(
           relationNames.add(relation.key.value);
           for (const target of markdownRelationTargets(
             relation.value,
+            relation.key.value,
             envelope.source,
             envelope.baseLine,
             file,
             findings,
-          ))
-            relations.push({ type: relation.key.value, target, claim: "declared" });
+          )) {
+            const { line: targetLine, ...fields } = target;
+            entryLines.push({
+              entry: `relation.${relation.key.value}.${target.target}`,
+              line: targetLine,
+            });
+            relations.push({ type: relation.key.value, ...fields, claim: "declared" });
+          }
         }
         data.relations = relations;
         continue;
@@ -228,7 +239,7 @@ export function parseMarkdownFrontmatter(
     const result = capMarkdownFindings(findings, file);
     const id = data.id;
     return result.length === 0 && typeof id === "string"
-      ? { ok: true, frontmatter: { data, id, line: idLine }, findings: result }
+      ? { ok: true, frontmatter: { data, id, line: idLine, entryLines }, findings: result }
       : { ok: false, findings: result };
   } catch (error: unknown) {
     return refusal(

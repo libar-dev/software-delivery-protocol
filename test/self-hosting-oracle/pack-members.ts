@@ -79,6 +79,7 @@ export const expectedPackMembers = [
   "spec:consumers.projections-model",
   "spec:consumers.projections-model.roadmap-views",
   "spec:consumers.impact-graph",
+  "spec:consumers.impact-graph.symbol-reach",
   "spec:consumers.agent-surface",
   "spec:consumers.design-review",
   "spec:consumers.census-page",
@@ -252,6 +253,11 @@ export const expectedPackMembers = [
   "spec:validation.architecture-constraints",
   "spec:validation.corpus-rules",
   "spec:observation.run-evidence",
+  "spec:consumers.obsidian-vault",
+  "spec:consumers.obsidian-vault.notes",
+  "spec:consumers.obsidian-vault.bases",
+  "spec:consumers.obsidian-vault.iteration",
+  "spec:model.term-addresses",
 ] as const;
 
 export const expectedStudioPackMembers = [
@@ -297,6 +303,30 @@ export const expectedDesignManagementPackMembers = [
   "spec:observation.run-evidence",
 ] as const;
 
+// The authored membership of `pack:design-iteration-v1`, in manifest order.
+export const expectedDesignIterationPackMembers = [
+  "spec:consumers.agent-surface.answer-shapes",
+  "spec:model.rule-keys",
+  "spec:model.open-question-fields",
+  "spec:model.relation-reasons",
+  "spec:consumers.design-diff",
+  "spec:consumers.context-bundle",
+  "spec:consumers.review-perspectives",
+  "spec:consumers.intent-composition.proposal",
+  "spec:model.enrichment-lifecycle",
+  "spec:consumers.impact-graph.curation-assist",
+  "spec:consumers.impact-graph",
+] as const;
+
+// The authored membership of `pack:obsidian-vault-v1`, in manifest order.
+export const expectedObsidianVaultPackMembers = [
+  "spec:consumers.obsidian-vault",
+  "spec:consumers.obsidian-vault.notes",
+  "spec:consumers.obsidian-vault.bases",
+  "spec:consumers.obsidian-vault.iteration",
+  "spec:model.term-addresses",
+] as const;
+
 export const expectedPacks = [
   {
     id: "pack:spec-studio-v1",
@@ -310,6 +340,16 @@ export const expectedPacks = [
     modelRefs: ["spec:consumers.projections-model"],
   },
   {
+    id: "pack:design-iteration-v1",
+    nodeType: "Pack",
+    claim: "declared",
+    title: "Design iteration",
+    framing:
+      "The arc that lets a design be iterated pass after pass on a graph an agent reads in one call, in the order a reviewer reads it. First the recipe answers a usability trial of the agent surface asked for. Then the authoring grammar that gives rules, question fields and relation reasons a place in the graph, which the iteration loop reads: what changed since the last pass, the brief for the next one, a perspective to read it from, and a proposal to hand back. Then when design detail may leave an implemented Spec, and the file-level imports that show where curation is missing, the two structural lessons a review of gen 1 brought.",
+    file: "specs/design-iteration.pack.sdp.md",
+    members: expectedDesignIterationPackMembers,
+  },
+  {
     id: "pack:design-management-v1",
     nodeType: "Pack",
     claim: "declared",
@@ -319,6 +359,16 @@ export const expectedPacks = [
     file: "specs/design-management.pack.sdp.md",
     members: expectedDesignManagementPackMembers,
     modelRefs: ["spec:model.design-maturity"],
+  },
+  {
+    id: "pack:obsidian-vault-v1",
+    nodeType: "Pack",
+    claim: "declared",
+    title: "Obsidian vault",
+    framing:
+      "A human interface for iterating on designs: the one graph regenerated as an Obsidian vault of linked notes, read beside the carriers an agent edits. First the vault and its place among the projections, then its notes and links, its tables, and the loop a design pass runs through it. Last, the one model change the vault asks for, an address for a Model term, so a concept links as exactly as a Spec does.",
+    file: "specs/obsidian-vault.pack.sdp.md",
+    members: expectedObsidianVaultPackMembers,
   },
   {
     id: "pack:self-hosting-v1",

@@ -14,7 +14,9 @@ The surfaces taxonomy names a reference projection, an interface and API referen
 - outcome: Publish a current interface and API reference from the graph for a reader outside the repository, once such a reader is named.
 
 ### Open questions
-- [blocking #namedOutsideReader] Re-entry trigger from plan 35: a named human consumer outside the repository whom the four shipped roots do not serve, with a way to measure that demand inside the arc that builds it. The taxonomy row is not that consumer.
+- [blocking #namedOutsideReader] Does a human reader outside the repository need a reference projection the four shipped roots do not serve? The taxonomy row is not that reader.
+  - decider: owner
+  - trigger: a named consumer outside the repository, with a way to measure that demand inside the arc that builds the projection
 - [non-blocking #referenceSource] Would the reference read pinned declarations, contract-kind Specs or `api:` code anchors, and does any of them hold enough to document an interface?
 
 ## Behavior

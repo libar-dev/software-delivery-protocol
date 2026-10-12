@@ -1,5 +1,48 @@
 # Agent-surface recipes
 
+| No. | Recipe | Parameters | Use |
+| --- | --- | --- | --- |
+| 1 | The build backlog | none | Pick ready implementation work |
+| 2 | The drift alarm | none | Find implementation ahead of intent |
+| 3 | What does this Spec guarantee, and who verifies it | spec | Read guarantees and bindings |
+| 4 | What breaks if I change these files | files, detail | Review changed-file reach |
+| 5 | The Pack review backbone | pack | Review Pack readiness and gaps |
+| 6 | Where is this concept | term | Locate a concept |
+| 7 | Readiness divergence | none | Compare stated readiness to its floor |
+| 8 | Orphans and gaps | none | Read warnings and exemptions |
+| 9 | Promotion preflight | spec | Check both next rungs |
+| 10 | Declared versus enabled verifiers | none | Compare verifier declarations and bindings |
+| 11 | The lower ladder | none | Read non-ready Specs |
+| 12 | Component membership | none | List component members |
+| 13 | Uses fan-in and fan-out | none | Count uses reach |
+| 14 | Structural neighborhood | component | Read a structural neighborhood |
+| 15 | Census structural coverage | none | Measure structural coverage |
+| 16 | Projection coverage upper bound | none | Bound projection coverage |
+| 17 | Architecture map | none | Read the architecture map |
+| 18 | Decision map | none | Rank shaping decisions |
+| 19 | Planning slice | spec | Read a planning slice |
+| 20 | Open-question register | none | List open questions |
+| 21 | Dependency footing | spec | Read dependency footing |
+| 22 | Mention audit | scope | Audit prose mentions |
+| 23 | Entry search | term | Find entries by term |
+| 24 | Pinned declarations | none | List pinned declarations |
+| 25 | Address resolution | addresses | Resolve entry addresses |
+| 26 | Dependency cycles | none | Find dependency cycles |
+| 27 | References into a design | pack | Read code references into a Pack |
+| 28 | Roles, layers and contexts | none | List architecture vocabulary |
+| 29 | Pack design | pack, detail | Review Pack design |
+| 30 | Design-change impact | specs | Follow a design change |
+| 31 | Decision register | none | Read decision relations |
+| 32 | Architecture crossings | none | Read architecture crossings |
+| 33 | The design backlog | none | Pick defined design work |
+| 34 | Rule coverage | spec or pack | Find keyed rules no example exercises |
+| 35 | The design diff | base, pack, detail | Compare design at entry grain |
+| 36 | The context bundle | pack or specs, members, budget | Compose one pass within a budget |
+| 37 | The perspective filter | pack, perspective | Select and order Pack members |
+| 38 | The proposal check | proposal, base | Resolve proposal scopes and compare intent |
+| 39 | Slimming candidates | pack | Compare pinned declarations with bound code |
+| 40 | Curation report | imports, limit | Find curation gaps from file imports |
+
 Runnable bodies for the agent front door. Each recipe below is a body you can pass verbatim to
 `sdp q`, unchanged. In the Protocol source checkout, pass one to the repository wrapper:
 
@@ -32,7 +75,7 @@ pnpm exec sdp q '<body>' --root PATH --exclude PATH --exclude PATH
 `--root PATH` picks the extraction root (default: the working directory) and `--exclude` is
 repeatable for root-relative path prefixes. `PATH` is a placeholder, not a literal directory.
 
-**Some recipes take a parameter.** Recipes 3, 4, 5, 6, 9, 14, 19, 21, 22, 23, 25, 27, 29, and 30
+**Some recipes take a parameter.** Recipes 3, 4, 5, 6, 9, 14, 19, 21, 22, 23, 25, 27, 29, 30, 34, 35, 36, 37, 38, 39, and 40
 read their subject from the `params` binding on their opening line: a Spec id, a list of changed
 files, a Pack id, a search term, a component id, a list of Spec ids, or a list of entry addresses.
 Each recipe names its parameter. Pass it as JSON data with `--params`, never by editing the body:
@@ -42,8 +85,12 @@ pnpm --silent sdp:q '<body>' --params '{"spec":"spec:model.anchors"}' --json
 pnpm --silent sdp:q '<body>' --params @params.json --json
 ```
 
-`--params @PATH` reads the JSON from a file, which suits a long list. Without `--params`, `params`
-is `{}` and the body falls back to the sample on its opening line. The samples name *this*
+Repeat `--params` to merge objects at the top level from left to right. `--params @PATH` reads an
+object from a file. `--params KEY=@PATH` binds any JSON value from the file to one lower-camel key,
+for example `--params base=@graph.json --params '{"spec":"spec:model.anchors"}'`. A key given twice
+by any form is refused before the body runs. Without `--params`, `params`
+is `{}`. Bodies with a sample use it; recipes that require external input return diagnostics or
+refuse a missing input, as their sections state. The samples name *this*
 repository's corpus, so every body runs as written here (the recipe check executes each one
 unchanged). A Spec id, component id, or Pack id absent from the graph returns `found: false`
 rather than failing. A value that is not JSON, JSON that is not an object (null, an array, a
@@ -63,6 +110,15 @@ pnpm --silent sdp:q "$(cat dist/recipes/25-address-resolution.js)" --params @add
 
 This catalog stays the one owner of the bodies. The files are derived from it, and the recipe
 check holds each one byte for byte to its body here.
+
+To filter a shipped answer, wrap its body in an async arrow function and return the part you need:
+
+```sh
+pnpm --silent sdp:q "$(printf '%s\n' 'const answer = await (async () => {'; cat dist/recipes/33-the-design-backlog.js; printf '%s\n' '})();' 'return answer.rows.filter((row) => row.specKind === "behavior");')" --json
+```
+
+The caller's part must hold no shell expansion. Single-quote it as above so the shell inserts only
+the shipped body, while the sink evaluates the whole body once.
 
 **The contract, in one place.** The front door derives the graph in process and evaluates the body
 you supply; `return` is the output contract. Four bindings are injected:
@@ -208,11 +264,24 @@ if (context === undefined) {
   return { id, found: false };
 }
 
+const unitOf = (binding) => ({
+  id: binding.codeId,
+  file: binding.file ?? null,
+  line: binding.line ?? null,
+  role: binding.role ?? null,
+  component: binding.component === undefined ? null : {
+    id: binding.component.id,
+    layer: binding.component.layer ?? null,
+    context: binding.component.context ?? null,
+  },
+});
 const relation = (end) => ({
   type: end.type,
   other: end.otherId,
   claim: end.claim,
   resolved: end.resolved,
+  ...(end.reason === undefined ? {} : { reason: end.reason }),
+  ...(end.exercises === undefined ? {} : { exercises: end.exercises }),
 });
 
 return {
@@ -223,21 +292,20 @@ return {
   statedReadiness: context.statedReadiness,
   floorReached: context.derivedReadiness ?? "none",
   unmetFloorClauses: context.floorFailures.map((failure) => failure.clauseId),
-  sections: Object.keys(context.sections ?? {}),
+  sections: context.sections ?? {},
+  designColumns: context.designColumns,
+  packs: context.packs,
   relationsOut: context.relationsOut.map(relation),
   relationsIn: context.relationsIn.map(relation),
-  implementations: context.implementations.map((binding) => ({
-    codeId: binding.codeId,
-    claim: binding.claim,
-    file: binding.file ?? null,
-    line: binding.line ?? null,
-  })),
+  implementations: context.implementations.map(unitOf),
+  references: context.references.map(unitOf),
   verifiers: context.verifiers.map((binding) => ({
     verifierId: binding.verifierId,
     via: binding.via,
     claim: binding.claim,
     enabled: binding.enabled,
     file: binding.file ?? null,
+    line: binding.line ?? null,
   })),
   verifierBindingMeans: "a resolving verifier exists; the graph never records pass or fail",
   findings: context.findings.map((finding) => ({
@@ -248,7 +316,8 @@ return {
 };
 ```
 
-Every relation carries its `claim` and the claim is never collapsed: `declared` is authored intent,
+Every relation carries its `claim` and the claim is never collapsed, and a relation authored with
+a reason carries `reason`, as a declared `verifies` naming rule keys carries `exercises`: `declared` is authored intent,
 `anchored` is a human binding from source, `inferred` is machine-derived structure. `has-verifier`
 rides an *enabled* verifier — a resolving test anchor — and states that a verifier **exists**, not
 that it passed. Pass/fail is CI's, exactly as skip and quarantine are.
@@ -257,7 +326,8 @@ that it passed. Pass/fail is CI's, exactly as skip and quarantine are.
 
 *When you need this: you have a diff (or are about to make one) and want the Specs it reaches.*
 
-The parameter is `params.files`, the list of changed paths, relative to the root. The caller
+The parameters are `params.files`, the list of changed paths relative to the root, and
+`params.detail`, true for full rows and absent or false for a summary. The caller
 acquires the paths and passes them as data, never as query source. From the repository root, this
 pipeline keeps every valid Git filename byte except NUL (which Git filenames cannot contain),
 newlines included, by JSON-encoding the NUL-delimited list before it reaches the sink:
@@ -274,14 +344,72 @@ filenames. `--params` parses data, so quotes, shell metacharacters, spaces, Unic
 newlines remain filenames rather than JavaScript or shell syntax. The reader never shells to git.
 
 ```js
+const detail = params.detail ?? false;
 const changed = params.files ?? [];
 const radius = g.blastRadius(changed);
-const impactReasons = (item) => ({ id: item.id, reasons: item.reasons.map((reason) => reason.throughBinding === undefined ? { file: reason.file, via: null } : { file: reason.file, via: reason.throughBinding.id, edgeType: reason.throughBinding.edgeType, claim: reason.throughBinding.claim }) });
-const atRiskReasons = (item) => ({ id: item.id, nodeType: item.nodeType, reasons: item.reasons.map((reason) => ({ from: reason.from, edgeType: reason.edgeType, to: reason.to, claim: reason.claim })) });
-return { changedFiles: radius.changedFiles, impactedSpecs: radius.impactedSpecs.map(impactReasons), atRiskSpecs: radius.atRisk.filter((item) => item.nodeType === "Primitive").map(atRiskReasons), atRiskOther: radius.atRisk.filter((item) => item.nodeType !== "Primitive").map(atRiskReasons), coverageUnknownFiles: radius.coverageUnknown, unlinkedUnits: radius.unlinked.map((unit) => ({ id: unit.id, file: unit.file })) };
+const impacted = new Set([...radius.impactedSpecs, ...radius.impactedPacks].map((item) => item.id));
+const impactReasons = (item) => ({
+  id: item.id,
+  reasons: item.reasons.map((reason) => reason.throughBinding === undefined
+    ? { file: reason.file, via: null }
+    : { file: reason.file, via: reason.throughBinding.id, edgeType: reason.throughBinding.edgeType, claim: reason.throughBinding.claim }),
+});
+const atRiskReasons = (item) => ({
+  id: item.id,
+  nodeType: item.nodeType,
+  reasons: item.reasons.map((reason) => ({
+    from: reason.from, edgeType: reason.edgeType, to: reason.to, claim: reason.claim,
+    direction: impacted.has(reason.to) ? "incoming" : "outgoing",
+  })),
+});
+const specs = radius.atRisk.filter((item) => item.nodeType === "Primitive");
+const other = radius.atRisk.filter((item) => item.nodeType !== "Primitive");
+const totals = {
+  changedFiles: radius.changedFiles.length,
+  impactedSpecs: radius.impactedSpecs.length,
+  impactedPacks: radius.impactedPacks.length,
+  atRiskSpecs: specs.length,
+  atRiskOther: other.length,
+  coverageUnknownFiles: radius.coverageUnknown.length,
+  unlinkedUnits: radius.unlinked.length,
+};
+if (detail === true) {
+  return {
+    changedFiles: radius.changedFiles,
+    totals,
+    impactedSpecs: radius.impactedSpecs.map(impactReasons),
+    atRiskSpecs: specs.map(atRiskReasons),
+    atRiskOther: other.map(atRiskReasons),
+    coverageUnknownFiles: radius.coverageUnknown,
+    unlinkedUnits: radius.unlinked.map((unit) => ({ id: unit.id, file: unit.file })),
+  };
+}
+const inDirection = (item, direction) => item.reasons.some((reason) =>
+  direction === "incoming" ? impacted.has(reason.to) : impacted.has(reason.from),
+);
+return {
+  changedFiles: radius.changedFiles,
+  totals,
+  impactedSpecs: radius.impactedSpecs.map((item) => item.id),
+  atRisk: {
+    incomingSpecs: specs.filter((item) => inDirection(item, "incoming")).map((item) => item.id),
+    outgoingSpecs: specs.filter((item) => inDirection(item, "outgoing")).map((item) => item.id),
+    other: other.map((item) => item.id),
+  },
+  coverageUnknownFiles: radius.coverageUnknown,
+  unlinkedUnits: radius.unlinked.map((unit) => unit.id),
+  leftOut: ["Impact binding reasons omitted.", "At-risk connecting edges and claims omitted.", "Unlinked unit files omitted."],
+};
 ```
 
-Every result class is returned. **Impacted Specs** are authored-at or bound-to a changed file. **At-risk Specs** are the one-hop Primitive neighbors; **atRiskOther** retains every other at-risk node and its `nodeType`. Each at-risk reason carries its connecting edge and claim, while **coverageUnknownFiles** names changed files the graph records nothing at. **unlinkedUnits** names each changed code unit that binds no Spec, such as an identity-only anchor, with its file; it is recorded, so its file is not coverage-unknown, and it implies no coverage. File-level reach never claims exhaustive symbol-level reach — that would ride the impact graph, which does not exist.
+The default summary keeps all totals and lists impacted and at-risk ids. Incoming and outgoing
+name the connecting edge's direction relative to its impacted end; neither asserts dependency.
+`leftOut` names the omitted details. With `detail: true`, impacted Specs carry their binding
+reasons, and at-risk Specs carry their connecting edges, claims and directions. `atRiskOther`
+keeps the other at-risk nodes with their node types. `coverageUnknownFiles` names changed files
+the graph records nothing at. `unlinkedUnits` lists changed code units that bind no Spec, with
+their files. Such a unit is recorded, so its file is not coverage-unknown, and it implies no
+coverage. File-level reach makes no claim about exhaustive symbol reach.
 
 ## 5. The Pack review backbone
 
@@ -405,6 +533,12 @@ return {
   errors: report.findings.filter((finding) => finding.severity === "error").length,
   warnings: warnings.length,
   byValidator,
+  exemptions: [{
+    validatorId: "honesty/gaps",
+    exemptKind: "decision",
+    readySpecs: g.specs().filter((spec) => spec.specKind === "decision" && spec.statedReadiness === "ready").length,
+  }],
+  leftOut: warnings.length > 25 ? [`${warnings.length - 25} warning signals omitted.`] : [],
   signals: warnings.slice(0, 25).map((finding) => ({
     validatorId: finding.validatorId,
     family: finding.family,
@@ -413,6 +547,9 @@ return {
   })),
 };
 ```
+
+`exemptions` names the ready decision Specs exempt from the verifier-gap signal. `leftOut`
+names any warning signals beyond the first 25.
 
 `report` is the same validation output `g.findings()` exposes — one validation path, never a second
 one. Gaps and orphans are warn-level by design: a `ready` Spec with no verifier and a Spec nothing
@@ -446,11 +583,18 @@ return {
   found: true,
   statedReadiness: context.statedReadiness,
   floorReached: reached,
-  nextRung: rungs[reachedIndex + 1] ?? null,
+  aboveStated: {
+    rung: context.statedNextRung ?? null,
+    failures: context.statedNextRungFailures.map(shape),
+    firstUnmetClause: context.statedNextRungFailures[0]?.clauseId ?? null,
+  },
+  aboveFloor: {
+    rung: rungs[reachedIndex + 1] ?? null,
+    failures: context.nextRungFailures.map(shape),
+    firstUnmetClause: context.nextRungFailures[0]?.clauseId ?? null,
+  },
   currentFloorFailures: context.floorFailures.map(shape),
   firstUnmetClause: context.floorFailures[0]?.clauseId ?? null,
-  nextRungFailures: context.nextRungFailures.map(shape),
-  nextRungFirstUnmetClause: context.nextRungFailures[0]?.clauseId ?? null,
   promotionRequiresHumanStatement: true,
 };
 ```
@@ -458,8 +602,9 @@ return {
 The parameter is `params.spec`, the Spec whose promotion you are weighing.
 An empty `currentFloorFailures` list says the stated rung is honest. It does not confer the next
 rung, and `floorReached` above the stated rung is information rather than an automatic edit.
-`nextRungFailures` are the unmet clauses of `nextRung`, and a typed-dependency failure lists its
-`targets`; neither confers the rung.
+`aboveStated` reports the rung above the stated rung; `aboveFloor` reports the rung above the
+floor reached. Each carries its unmet clauses and first unmet clause, with `rung: null` at ready.
+A typed-dependency failure lists its `targets`; neither answer confers a rung.
 
 ## 10. Declared versus enabled verifiers
 
@@ -981,16 +1126,28 @@ const children = [...new Set(
     .map((edge) => edge.from),
 )].sort();
 const readinessById = new Map(g.specs().map((spec) => [spec.id, spec.statedReadiness]));
-const dependencyNeighbors = (type, end) => [...new Set(
-  graph.edges
-    .filter((edge) => edge.type === type && edge[end === "to" ? "from" : "to"] === id)
-    .map((edge) => edge[end]),
-)].sort().map((specId) => ({
-  id: specId,
-  statedReadiness: readinessById.get(specId) ?? null,
-}));
+const dependencyNeighbors = (type, end) => {
+  const reasons = new Map();
+  for (const edge of graph.edges.filter(
+    (edge) => edge.type === type && edge[end === "to" ? "from" : "to"] === id,
+  )) {
+    if (!reasons.has(edge[end]) || reasons.get(edge[end]) === undefined) {
+      reasons.set(edge[end], edge.reason);
+    }
+  }
+  return [...reasons.keys()].sort().map((specId) => ({
+    id: specId,
+    statedReadiness: readinessById.get(specId) ?? null,
+    ...(reasons.get(specId) === undefined ? {} : { reason: reasons.get(specId) }),
+  }));
+};
 const dependsOn = dependencyNeighbors("dependsOn", "to");
 const dependedOnBy = dependencyNeighbors("dependsOn", "from");
+const byCodeUnit = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const reasons = graph.edges
+  .filter((edge) => edge.claim === "declared" && (edge.from === id || edge.to === id) && edge.reason !== undefined)
+  .map(({ type, from, to, reason }) => ({ type, from, to, reason }))
+  .sort((a, b) => byCodeUnit(a.type, b.type) || byCodeUnit(a.from, b.from) || byCodeUnit(a.to, b.to));
 const neighborhoodIds = new Set([id, ...parents, ...children]);
 const decisionsById = new Map();
 
@@ -1079,6 +1236,7 @@ return {
   found: true,
   refinementNeighborhood: { parents, children },
   dependencies: { dependsOn, dependedOnBy },
+  reasons,
   shapingDecisions: [...decisionsById]
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([decisionId, subjects]) => ({
@@ -1110,8 +1268,10 @@ return {
 component files. It is not the impact contract; whole-corpus blast radius over changed files stays
 recipe 4 (`g.blastRadius`). Shaping decisions are the `decidedBy` targets across the refinement
 neighborhood; a decision record that also `refines` the subject appears both as a refinement child
-and as a shaping decision. Dependency neighbors carry `statedReadiness` because an unready
-`dependsOn` target holds back the subject's `ready`. For every Spec the subject rests on, across `refines`, `dependsOn`,
+and as a shaping decision. `reasons` lists every authored relation into or out of the subject
+that states a reason, as `{ type, from, to, reason }`, sorted by type, then source id, then target id.
+Dependency neighbors carry `statedReadiness` because an unready
+`dependsOn` target holds back the subject's `ready`, and `reason` when the relation states one. For every Spec the subject rests on, across `refines`, `dependsOn`,
 `constrainedBy`, and `decidedBy`, with the floor each one reaches, use dependency footing
 (recipe 21). The graph does not derive symbol-level impact;
 `implemented` still means a code anchor binds, never that the code is live.
@@ -1169,6 +1329,11 @@ for (const spec of g.specs()) {
       blocking: typeof entry === "string" ? false : entry.blocking ?? false,
       question,
       key: typeof entry === "string" ? null : entry.key ?? null,
+      decider: typeof entry === "string" ? null : entry.decider ?? null,
+      links: typeof entry === "string" ? [] : entry.links ?? [],
+      provisional: typeof entry === "string" ? null : entry.provisional ?? null,
+      trigger: typeof entry === "string" ? null : entry.trigger ?? null,
+      deferral: typeof entry !== "string" && entry.trigger !== undefined,
     });
   });
   if (questions.length === 0) continue;
@@ -1189,6 +1354,8 @@ return {
     questions: questionCount,
     blocking: blockingCount,
     nonBlocking: questionCount - blockingCount,
+    deferrals: rows.reduce((sum, row) => sum + row.questions.filter((question) => question.deferral).length, 0),
+    holds: rows.reduce((sum, row) => sum + row.questions.filter((question) => question.blocking && !question.deferral).length, 0),
     specs: rows.length,
     specsWithBlocking: withBlocking.length,
     malformed: malformed.length,
@@ -1210,6 +1377,10 @@ prose or as an object with no `blocking` flag in a TypeScript carrier reads as n
 `malformed` reports collections that are not lists, entries without non-empty question text,
 entries whose `blocking` flag is present but is not a boolean, and entries whose `key` is present
 but is not a lower-camel string. Those entries do not count as questions.
+
+The question columns include `decider`, `links`, `provisional` and `trigger`. Missing text fields
+are null and missing links are an empty list. A question with a trigger has `deferral: true`.
+The totals count those deferrals apart from holds, blocking questions without a trigger.
 
 ## 21. Dependency footing
 
@@ -1241,6 +1412,7 @@ const footing = context.relationsOut
       id: end.otherId,
       claim: end.claim,
       resolved: end.resolved,
+      ...(end.reason === undefined ? {} : { reason: end.reason }),
       statedReadiness: target?.statedReadiness ?? null,
       floorReached: target === undefined ? null : (target.derivedReadiness ?? "none"),
     };
@@ -1273,7 +1445,8 @@ return {
 ```
 
 `footing` holds one row per relation the Spec declares through `refines`, `dependsOn`,
-`constrainedBy`, or `decidedBy`, in that order and then by target id. The reach is one hop; run
+`constrainedBy`, or `decidedBy`, in that order and then by target id, with `reason` when the
+relation states one. The reach is one hop; run
 the recipe on a target to see what that target rests on. `floorReached` is the target's derived
 readiness, read beside the rung its author stated. A target that does not resolve keeps its row
 with `resolved: false` and null readiness, and counts under `totals.byStatedReadiness.unresolved`.
@@ -1293,6 +1466,7 @@ empty or absent list audits the whole corpus.
 
 ```js
 const scope = params.scope ?? [];
+const intendedRows = params.intended ?? [];
 const backingTypes = [
   "refines",
   "dependsOn",
@@ -1305,7 +1479,7 @@ const escapePattern = /\\([!-/:-@[-`{-~])/gu;
 const idPattern =
   /(?<![A-Za-z0-9-])spec:(?:[^\p{White_Space}\P{ASCII}`"\u0027()[\]{}<>|]|[^\p{ASCII}\p{White_Space}\p{Pd}\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}\p{S}\p{Z}])*/gu;
 const mentionPattern =
-  /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#(design|ui|question)\.([a-z][A-Za-z0-9]*))?$/u;
+  /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#(design|ui|question|rule)\.([a-z][A-Za-z0-9]*))?$/u;
 const specIds = new Set(g.specs().map((spec) => spec.id));
 const declared = new Map();
 
@@ -1341,7 +1515,7 @@ for (const spec of g.specs()) {
   const texts = [];
   const collect = (value, section, entry = null) => {
     if (typeof value === "string") {
-      texts.push({ at: { section, entry }, text: value });
+      texts.push({ at: { section, entry }, text: value, link: section === "intent" && /^openQuestions\[\d+\]\.links\[\d+\]$/u.test(entry ?? "") });
     } else if (Array.isArray(value)) {
       value.forEach((item, index) => collect(item, section, `${entry ?? ""}[${index}]`));
     } else if (typeof value === "object" && value !== null) {
@@ -1373,11 +1547,11 @@ for (const spec of g.specs()) {
     }
   }
 
-  for (const { at, text } of texts) {
-    for (const match of text.replace(escapePattern, "$1").matchAll(idPattern)) {
-      const rest = match[0].slice("spec:".length).replace(/[.,;:!?*_~]+$/u, "");
-      if (rest === "") continue;
-      const token = `spec:${rest}`;
+  for (const { at, text, link } of texts) {
+    const tokens = link ? [text] : [...text.replace(escapePattern, "$1").matchAll(idPattern)]
+      .map((match) => match[0].slice("spec:".length).replace(/[.,;:!?*_~]+$/u, ""))
+      .filter((rest) => rest !== "").map((rest) => `spec:${rest}`);
+    for (const token of tokens) {
       if (token === spec.id) continue;
       occurrences += 1;
       const parsed = mentionPattern.exec(token);
@@ -1398,7 +1572,9 @@ for (const spec of g.specs()) {
           section === "question"
             ? Array.isArray(questions) &&
               questions.some((entry) => typeof entry === "object" && entry !== null && entry.key === key)
-            : key !== "description" && Object.hasOwn(sections[section] ?? {}, key);
+            : section === "rule"
+              ? Object.hasOwn(sections.behavior?.ruleKeys ?? {}, key)
+              : key !== "description" && Object.hasOwn(sections[section] ?? {}, key);
         if (!holds) record(unresolvedPairs, spec.id, token, at, "entry");
       }
       if (to !== spec.id) record(pairs, spec.id, to, at);
@@ -1417,6 +1593,10 @@ const withoutForward = rows.filter(
 );
 const unbacked = withoutForward.filter((row) => !declared.has(`${row.to} ${row.from}`));
 const reverseOnly = withoutForward.filter((row) => declared.has(`${row.to} ${row.from}`));
+const intendedByPair = new Map(intendedRows.map((row) => [`${row.from} ${row.to}`, row]));
+const intended = unbacked.filter((row) => intendedByPair.has(`${row.from} ${row.to}`))
+  .map((row) => ({...row, reason: intendedByPair.get(`${row.from} ${row.to}`).reason}));
+const staleIntended = intendedRows.filter((row) => !unbacked.some((pair) => pair.from === row.from && pair.to === row.to));
 
 return {
   totals: {
@@ -1428,7 +1608,9 @@ return {
     unresolved: unresolved.length,
   },
   unresolved,
-  unbacked,
+  unbacked: unbacked.filter((row) => !intendedByPair.has(`${row.from} ${row.to}`)),
+  intended,
+  staleIntended,
   reverseOnly,
 };
 ```
@@ -1472,6 +1654,13 @@ unresolved token, and one warning per `unbacked` pair that gives its location co
 location. This audit adds what the validator leaves out: a `scope` of chosen Specs, the `reverseOnly` list, and
 every location of every pair.
 
+`params.intended` is an optional list of `{ from, to, reason }` rows using whole Spec ids.
+`intended` holds matching unbacked pairs with their reasons. The remaining pairs stay in
+`unbacked`, and `staleIntended` lists supplied rows that match no current unbacked pair in the
+chosen scope. `totals.unbacked` counts both lists, matching the validator's warnings. The
+validator reads no intended list and its warnings stand. Rule addresses resolve through
+`behavior.ruleKeys`; question links are checked as complete ids or addresses.
+
 ## 23. Entry search
 
 *When you need this: you hold a word or a key and want the entries that carry it, where concept
@@ -1512,7 +1701,13 @@ for (const spec of g.specs()) {
       index === undefined || !Array.isArray(questions) ? undefined : questions[Number(index)]?.key;
     return typeof key === "string" && /^[a-z][A-Za-z0-9]*$/u.test(key) ? key : null;
   };
+  const ruleKeys = context.sections?.behavior?.ruleKeys ?? {};
+  const ruleKeyOf = (entry) => Object.keys(ruleKeys).find((key) => ruleKeys[key] === entry) ?? null;
   const addressOf = (section, entry) => {
+    if (section === "behavior") {
+      const key = ruleKeyOf(entry);
+      return key === null ? null : `${spec.id}#rule.${key}`;
+    }
     if (section === "intent") {
       const key = questionKeyOf(entry);
       return key === null ? null : `${spec.id}#question.${key}`;
@@ -1528,10 +1723,14 @@ for (const spec of g.specs()) {
   // path: a literal key `a.b` and a nested `a: { b }` join to one path, and only the top-level
   // entry has a row in the location table.
   const lineOf = (section, entry, topKey) => {
-    const index = /^openQuestions\[(\d+)\](?:\.question)?$/u.exec(entry ?? "")?.[1];
+    const question = /^openQuestions\[(\d+)\](?:\.(question|decider|links|provisional|trigger)(?:\[\d+\])?)?$/u.exec(entry ?? "");
+    const index = question?.[1];
+    const rule = /^(rules|flows)\[(\d+)\]$/u.exec(entry ?? "");
     const located =
       section === "intent" && index !== undefined
-        ? `question[${index}]`
+        ? `question[${index}]${question[2] && question[2] !== "question" ? "." + question[2] : ""}`
+        : section === "behavior" && rule !== null
+          ? `${rule[1] === "rules" ? "rule" : "flow"}[${rule[2]}]`
         : (section === "design" || section === "ui") && topKey !== null
           ? `${section}.${topKey}`
           : null;
@@ -1562,7 +1761,10 @@ for (const spec of g.specs()) {
       matches.push(row(section, entry, ["key"], JSON.stringify(value), topKey));
     }
     if (Array.isArray(value)) {
-      value.forEach((item, index) => walk(section, item, `${entry ?? ""}[${index}]`, null, null));
+      value.forEach((item, index) => {
+        const path = `${entry ?? ""}[${index}]`;
+        walk(section, item, path, section === "behavior" ? ruleKeyOf(path) : null, null);
+      });
     } else if (typeof value === "object" && value !== null) {
       // A key the author coins is content: any key of the open sections (`design`, `ui`) except
       // `description`, a `model.terms` term, and the key of an open question, which travels with
@@ -1572,6 +1774,7 @@ for (const spec of g.specs()) {
         section === "design" || section === "ui" || (section === "model" && entry === "terms");
       for (const [name, item] of Object.entries(value)) {
         const path = entry === null ? name : `${entry}.${name}`;
+        if (section === "behavior" && entry === null && name === "ruleKeys") continue;
         if (section === "intent" && /^openQuestions\[\d+\]\.key$/u.test(path)) continue;
         walk(
           section,
@@ -1651,6 +1854,10 @@ search. Rows keep Spec id order and then the order the graph holds the entries;
 `totals.matches` counts every matching entry, `totals.specs` counts the matching Specs, and `totals.shown` counts
 the rows shown. `matches` holds the first fifty.
 
+A rule key matches beside its entry's text, at `rules[<n>]` or `flows[<n>]` under Behavior.
+Its address uses `#rule.<key>` for either list. Rule and flow rows have their recorded lines,
+including unkeyed entries, and a question field uses its field's location row.
+
 ## 24. Pinned declarations
 
 *When you need this: you want every signature, type, validator or table a corpus pins as a
@@ -1694,90 +1901,64 @@ const addresses = params.addresses ?? [
   "spec:consumers.absent#design.anyKey",
   "spec:consumers.design-review",
 ];
-const pattern =
-  /^(spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*)#(design|ui|question)\.([a-z][A-Za-z0-9]*)$/u;
+const expected = "spec:<id>#<section>.<key>, section design, ui, question, or rule; key lower-camel ASCII";
+const pattern = /^(spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*)#(design|ui|question|rule)\.([a-z][A-Za-z0-9]*)$/u;
 const specIds = new Set(g.specs().map((spec) => spec.id));
-const entryOf = (sections, section, key) => {
-  if (section === "question") {
-    const questions = sections.intent?.openQuestions;
-    const index = Array.isArray(questions)
-      ? questions.findIndex(
-          (entry) => typeof entry === "object" && entry !== null && entry.key === key,
-        )
-      : -1;
-    return index < 0
-      ? undefined
-      : { value: questions[index].question, entry: `question[${index}]` };
-  }
-  const entries = sections[section];
-  if (key === "description" || typeof entries !== "object" || entries === null) return undefined;
-  return Object.hasOwn(entries, key)
-    ? { value: entries[key], entry: `${section}.${key}` }
-    : undefined;
-};
 const rows = addresses.map((address) => {
-  const miss = (reason) => ({
-    address,
-    resolves: false,
-    id: null,
-    section: null,
-    key: null,
-    value: null,
-    file: null,
-    line: null,
-    reason,
-  });
   const parsed = typeof address === "string" ? pattern.exec(address) : null;
-  if (parsed === null) return miss("malformed");
-  const [, id, section, key] = parsed;
+  const [, id = null, section = null, key = null] = parsed ?? [];
+  const miss = (reason, extra = {}) => ({address, resolves: false, id, section, key,
+    value: null, file: null, line: null, reason, ...extra});
+  if (parsed === null) return miss("malformed", {expected});
   if (!specIds.has(id)) return miss("spec");
   const context = g.specContext(id);
-  const found = entryOf(context.sections ?? {}, section, key);
-  if (found === undefined) return miss("entry");
-  const location = context.entryLocations.find((row) => row.entry === found.entry);
-  return {
-    address,
-    resolves: true,
-    id,
-    section,
-    key,
-    value: found.value,
-    file: location?.file ?? null,
-    line: location?.line ?? null,
-    reason: null,
-  };
+  const sections = context.sections ?? {};
+  const entries = section === "question" ? sections.intent?.openQuestions
+    : section === "rule" ? sections.behavior?.ruleKeys : sections[section];
+  if (entries === undefined || entries === null || typeof entries !== "object") return miss("section", {available: []});
+  const available = (section === "question"
+    ? entries.flatMap((entry) => typeof entry?.key === "string" ? [entry.key] : [])
+    : Object.keys(entries).filter((name) => section === "rule" || name !== "description")).sort();
+  if (!available.includes(key)) return miss("entry", {available});
+  let entry;
+  let value;
+  if (section === "question") {
+    const index = entries.findIndex((question) => question?.key === key);
+    entry = `question[${index}]`;
+    value = entries[index].question;
+  } else if (section === "rule") {
+    const path = entries[key];
+    const match = /^(rules|flows)\[(\d+)\]$/u.exec(path);
+    value = sections.behavior[match[1]][Number(match[2])];
+    entry = `${match[1] === "rules" ? "rule" : "flow"}[${match[2]}]`;
+  } else {
+    entry = `${section}.${key}`;
+    value = entries[key];
+  }
+  const location = context.entryLocations.find((row) => row.entry === entry);
+  return {address, resolves: true, id, section, key, value,
+    file: location?.file ?? null, line: location?.line ?? null, reason: null};
 });
 const count = (reason) => rows.filter((row) => row.reason === reason).length;
-
 return {
-  totals: {
-    addresses: rows.length,
-    resolved: rows.filter((row) => row.resolves).length,
-    malformed: count("malformed"),
-    spec: count("spec"),
-    entry: count("entry"),
-  },
+  totals: {addresses: rows.length, resolved: rows.filter((row) => row.resolves).length,
+    malformed: count("malformed"), spec: count("spec"), section: count("section"), entry: count("entry")},
   rows,
 };
 ```
 
-Each row answers one input, in input order, repeats included. A row that resolves carries the
-Spec `id`, the `section` (`design`, `ui`, or `question`), the `key`, the entry's `value`, and
-`reason: null`. The value is the Design or UI entry's value as the graph holds it, or the
-question's text. `file` and `line` say where the entry is written, from the location table the
-Spec context carries; both are null when the carrier did not locate the entry, which reads as not
-located, never as absent. A row that does not resolve carries `id`, `section`, `key`, `value`,
-`file`, and `line` as null and one `reason`: `"malformed"` for an
-input that is not an entry address, a bare Spec id, a `pack:` id, and a value that is not a string
-among them; `"spec"` for an address whose Spec is absent; and `"entry"` for an address whose Spec
-holds no such entry. A Design or UI key resolves as an own key of that section other than
-`description`. A question key resolves when one of the Spec's open questions carries it in its
-marker, `[blocking #aggregateReach]`. These are the grammar and the rule `sdp validate` applies to
-an address written in a Spec's prose, under `spec:decisions.checked-mentions`; the mention audit
-(recipe 22) reads addresses inside the Specs, and this recipe reads the ones written anywhere
-else. `totals` counts the inputs, the resolving rows, and each reason. The laws are
-`spec:consumers.agent-surface.address-and-cycle-recipes` and, for the value, file and line,
-`spec:extraction.entry-locations`.
+Each row answers one input in input order, repeats included. A resolving row carries the Spec
+id, section, key, value, carrier file and recorded line. An unlocated entry has `line: null`.
+A miss keeps the id, section and key it parsed, null where parsing failed. Its reason is
+`malformed`, `spec`, `section` or `entry`. A malformed input carries the expected grammar;
+a section or entry miss lists the available keys in code-unit order.
+
+Design and UI addresses resolve to their own keys other than `description`. A question address
+resolves to a question's text. A rule address reads `behavior.ruleKeys` and resolves to its
+rule or flow text, whatever the primary behavior owner. These are the rules the mention
+validator applies, carried by `spec:decisions.checked-mentions` and
+`spec:consumers.agent-surface.address-and-cycle-recipes`. Recipe 22 audits addresses inside
+Specs, and this recipe resolves ones written anywhere else.
 
 ## 26. Dependency cycles
 
@@ -2023,10 +2204,12 @@ readiness floor. The census renders the same taxonomy for a human reader. The la
 member by member: what holds each one below its next rung, what design it carries, which code
 answers to it, and what the Pack rests on, as data a page or a script renders.*
 
-The parameter is `params.pack`, the Pack you are designing; an unknown Pack returns
+The parameters are `params.pack`, the Pack you are designing, and `params.detail`, absent or false
+for summaries, true for full rows, or a list of member ids for those full rows. An unknown Pack returns
 `{ id, found: false }`.
 
 ```js
+const detail = params.detail ?? false;
 const id = params.pack ?? "pack:spec-studio-v1";
 const pack = g.packContext(id);
 
@@ -2100,7 +2283,7 @@ const resolved = members.filter((member) => member.resolved);
 const count = (test) => resolved.filter(test).length;
 const sum = (field) => resolved.reduce((total, member) => total + member.design[field], 0);
 
-return {
+const answer = {
   found: true,
   id,
   title: pack.title ?? null,
@@ -2130,16 +2313,49 @@ return {
     supersededBy: pack.boundary.supersededBy.map(boundaryRow),
   },
 };
+const selected = Array.isArray(detail) ? new Set(detail) : new Set();
+const summaryOf = (member) => {
+  if (!member.resolved) return member;
+  return {
+    id: member.id,
+    specKind: member.specKind,
+    statedReadiness: member.statedReadiness,
+    floorReached: member.floorReached,
+    statedNextRung: member.statedNextRung,
+    holds: member.statedNextRungFailures.map((failure) => ({
+      clauseId: failure.clauseId,
+      targets: (failure.targets ?? []).map((target) => target.id),
+    })),
+    openQuestions: member.design.openQuestions,
+    blockingQuestions: member.design.blockingQuestions,
+    implementedBy: member.implementedBy.length,
+    referencedBy: member.referencedBy.length,
+  };
+};
+if (detail === true) return answer;
+const known = new Set(members.map((member) => member.id));
+return {
+  ...answer,
+  members: members.map((member) => selected.has(member.id) ? member : summaryOf(member)),
+  boundary: Object.fromEntries(Object.entries(answer.boundary).map(([direction, rows]) => [direction, rows.map((row) => row.id)])),
+  leftOut: ["Titles of unselected members and floor descriptions omitted.", "Design counts, question details, decisions, bindings and verifier counts of unselected members omitted.", "Boundary details omitted; ids kept per direction."],
+  ...(Array.isArray(detail) ? {
+    diagnostics: [...selected].filter((id) => !known.has(id)).map((id) => ({ id, reason: "not-member" })),
+  } : {}),
+};
 ```
 
-The body pre-shapes the Pack design the reader assembles on the Pack context and computes nothing
+By default, member summaries keep their rungs, holds and question and binding counts. Boundary
+lists keep ids per direction, and `leftOut` names the omitted details. Selecting member ids in
+`detail` keeps those full rows beside the summaries and reports unknown ids in `diagnostics`.
+Totals always count the whole Pack. With `detail: true`, the body pre-shapes the Pack design the reader assembles on the Pack context and computes nothing
 of its own. Members keep the manifest's order. Each resolved member carries its stated rung, the
 floor reached (`"none"` when no rung derives), and its stated next rung, the rung above the stated
 one, `null` at `ready`. `statedNextRungFailures` lists the floor clauses that hold the member below
 that rung, each with its `targets` when it names dependencies. An empty list beside a next rung
 means the floor already holds that rung: the rung waits for its author, and
 `totals.waitingForAuthor` counts those members. It is never a promotion. Promotion preflight
-(recipe 9) reads the rung above the floor reached instead, under its own names.
+(recipe 9) reports both next rungs under `aboveStated` and `aboveFloor`.
 
 `design` counts the member's keyed Design and UI entries other than `description`, its pinned
 declarations by recipe 24's rule, its open questions, and the blocking ones. `questions` lists each
@@ -2260,7 +2476,7 @@ ones, and `totals.units` the distinct units across all rows. The law is
 ## 31. Decision register
 
 *When you need this: you want every decision with its rung, what it supersedes and what supersedes
-it, what it narrows and what narrows it, what it shapes, and what it leaves open, read from the graph instead of kept by hand.*
+it, which decisions it refines and which refine it, what it shapes, and what it leaves open, read from the graph instead of kept by hand.*
 
 ```js
 const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
@@ -2271,7 +2487,7 @@ const ends = (relations, type) =>
     .sort(byCodeUnit);
 const decisions = g.specs().filter((spec) => spec.specKind === "decision");
 const decisionIds = new Set(decisions.map((spec) => spec.id));
-const narrowing = (relations) => ends(relations, "refines").filter((id) => decisionIds.has(id));
+const refinements = (relations) => ends(relations, "refines").filter((id) => decisionIds.has(id));
 const rows = decisions
   .map((spec) => spec.id)
   .sort(byCodeUnit)
@@ -2285,9 +2501,13 @@ const rows = decisions
       statedReadiness: context.statedReadiness,
       supersedes: ends(context.relationsOut, "supersedes"),
       supersededBy: ends(context.relationsIn, "supersedes"),
-      narrows: narrowing(context.relationsOut),
-      narrowedBy: narrowing(context.relationsIn),
+      refines: refinements(context.relationsOut),
+      refinedBy: refinements(context.relationsIn),
       shapes: ends(context.relationsIn, "decidedBy"),
+      reasons: context.relationsOut
+        .filter((relation) => relation.reason !== undefined)
+        .map((relation) => ({ type: relation.type, to: relation.otherId, reason: relation.reason }))
+        .sort((left, right) => byCodeUnit(left.type, right.type) || byCodeUnit(left.to, right.to)),
       questions: questions
         .filter((entry) => typeof entry === "object" && entry !== null)
         .filter((entry) => typeof entry.key === "string")
@@ -2315,9 +2535,10 @@ return {
 
 The body takes no parameter. It returns one row per decision Spec, sorted by id in code-unit order.
 `supersedes` lists the decisions this one supersedes and `supersededBy` the ones that supersede it;
-follow either to walk a chain. `narrows` lists decision-kind Specs this decision `refines`, and
-`narrowedBy` lists decision-kind Specs that `refines` it. Refinement narrows part of a decision;
-supersession replaces the whole decision. Other kinds that refine a decision stay out of these
+follow either to walk a chain. `refines` lists decision-kind Specs this decision refines, and
+`refinedBy` lists decision-kind Specs that refine it. Whether a refinement narrows a decision is
+that decision's own text, and `reasons` lists every relation this decision declares with a reason,
+which on a `refines` says the part it narrows and on a `supersedes` what it replaces. Supersession replaces the whole decision. Other kinds that refine a decision stay out of these
 two lists. `shapes` lists the Specs that name the decision through
 `decidedBy`. `questions` lists the decision's open questions that carry a key, each with its
 blocking flag and entry address; the open-question register (recipe 20) lists the unkeyed ones
@@ -2352,12 +2573,22 @@ const describe = (component) => ({
 
 const uses = graph.edges.filter((edge) => edge.type === "uses");
 let resolved = 0;
+let sameLayer = 0;
+let sameContext = 0;
+const bySameLayer = new Map();
 const rows = [];
 for (const edge of uses) {
   const from = componentFor(edge.from);
   const to = componentFor(edge.to);
   if (from === undefined || to === undefined) continue;
   resolved += 1;
+  if (from.id !== to.id) {
+    if (typeof from.layer === "string" && from.layer === to.layer) {
+      sameLayer += 1;
+      bySameLayer.set(from.layer, (bySameLayer.get(from.layer) ?? 0) + 1);
+    }
+    if (typeof from.context === "string" && from.context === to.context) sameContext += 1;
+  }
   const differs = ["context", "layer"].filter(
     (field) =>
       typeof from[field] === "string" &&
@@ -2392,6 +2623,9 @@ return {
   totals: {
     usesEdges: uses.length,
     resolvedToComponents: resolved,
+    sameLayer,
+    sameContext,
+    bySameLayer: Object.fromEntries([...bySameLayer.entries()].sort(([left], [right]) => byCodeUnit(left, right))),
     crossings: rows.length,
     contextCrossings: rows.filter((row) => row.differs.includes("context")).length,
     layerCrossings: rows.filter((row) => row.differs.includes("layer")).length,
@@ -2410,8 +2644,1122 @@ edge crosses when both components state a context and the contexts differ, or bo
 and the layers differ. Two units in one component never cross, and an attribute either component
 leaves unstated never counts as a difference. Each row names both units (`from`, `to`), both components with their
 layer and context, and `differs`, the attributes that differ. Rows sort by `from`, then `to`.
-`totals.byContextPair` and `totals.byLayerPair` tally the crossings as `from -> to`, so the
+`totals.sameLayer` and `totals.sameContext` count resolved edges between distinct components
+that state the same layer or context; `totals.bySameLayer` counts them per layer. Edges within
+one component count in neither. `totals.byContextPair` and `totals.byLayerPair` tally the crossings as `from -> to`, so the
 direction of a corpus's dependencies reads at a glance. The recipe reports and never refuses: which
 crossings are lawful is the corpus's own rule, as the architectural annotation decision leaves it.
 Roles, layers and contexts (recipe 28) lists the values the anchors state. The law is
 `spec:consumers.agent-surface.design-recipes`.
+
+## 33. The design backlog
+
+*When you need this: you want defined Specs that no code realizes, with their design columns and
+references, before maturing the next design.*
+
+The body takes no parameter.
+
+```js
+const defined = g.specs().filter((spec) => spec.statedReadiness === "defined" && !spec.deliveryFacts.includes("implemented"));
+const backlog = defined.filter((spec) => spec.specKind !== "example" && spec.specKind !== "decision");
+const byFamily = Object.create(null);
+const rows = backlog.map((spec) => {
+  const context = g.specContext(spec.id);
+  const family = spec.id.slice("spec:".length).split(".")[0];
+  byFamily[family] = (byFamily[family] ?? 0) + 1;
+  return {
+    id: spec.id,
+    specKind: spec.specKind,
+    altitude: spec.altitude,
+    floorReached: spec.derivedReadiness ?? "none",
+    statedNextRungFailures: context.statedNextRungFailures.map((failure) => failure.clauseId),
+    design: {
+      entries: context.designColumns.entries,
+      declarations: context.designColumns.declarations,
+      openQuestions: context.designColumns.openQuestions.length,
+      blockingQuestions: context.designColumns.blockingQuestions,
+    },
+    referencedBy: context.references.map((unit) => unit.codeId),
+    packs: context.packs,
+  };
+}).sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0);
+return {
+  totals: {
+    specs: rows.length,
+    byFamily,
+    excludedExamples: defined.filter((spec) => spec.specKind === "example").length,
+    excludedDecisions: defined.filter((spec) => spec.specKind === "decision").length,
+    withReferences: rows.filter((row) => row.referencedBy.length > 0).length,
+  },
+  rows,
+};
+```
+
+The stated rung selects the rows, even when the floor reaches another rung. Examples and decisions
+are counted as exclusions. A reference says code answers to a design and confers no implementation
+fact. The design columns come from the reader and state no score or approval. Rows sort by id in
+code-unit order. The law is `spec:consumers.agent-surface.answer-shapes`.
+
+## 34. Rule coverage
+
+Use this to see which keyed rules examples exercise and which have no example.
+Pass one scope, `params.spec` or `params.pack`. Without one the recipe asks for a scope.
+
+```js
+if (params.spec === undefined && params.pack === undefined) {
+  return {found: false, reason: "scope", expected: "params.spec or params.pack"};
+}
+if (params.spec !== undefined && params.pack !== undefined) {
+  return {found: false, reason: "scope", expected: "one of params.spec or params.pack"};
+}
+const scope = params.spec !== undefined ? g.specContext(params.spec) : g.packContext(params.pack);
+if (scope === undefined) return {found: false, reason: params.spec !== undefined ? "spec" : "pack"};
+const ids = params.spec !== undefined ? [params.spec] : scope.members.map((member) => member.id);
+const examples = new Map(g.specs().filter((spec) => spec.specKind === "example").map((spec) => [spec.id, spec]));
+const rows = [];
+let unkeyedRules = 0;
+for (const id of ids) {
+  const context = g.specContext(id);
+  if (context === undefined) continue;
+  const behavior = context.sections?.behavior ?? {};
+  const keys = behavior.ruleKeys ?? {};
+  unkeyedRules += (behavior.rules?.length ?? 0) + (behavior.flows?.length ?? 0) - Object.keys(keys).length;
+  for (const [key, path] of Object.entries(keys)) {
+    const match = /^(rules|flows)\[(\d+)\]$/u.exec(path);
+    const entry = `${match[1] === "rules" ? "rule" : "flow"}[${match[2]}]`;
+    const exercisedBy = graph.edges.filter((edge) => edge.type === "verifies" && edge.claim === "declared" && edge.to === id && examples.has(edge.from) && edge.exercises?.includes(key))
+      .map((edge) => ({example: edge.from, enabled: context.verifiers.some((binding) => binding.via === "example" && binding.verifierId === edge.from && binding.enabled)}))
+      .sort((left, right) => left.example < right.example ? -1 : left.example > right.example ? 1 : 0);
+    rows.push({address: `${id}#rule.${key}`, line: context.entryLocations.find((row) => row.entry === entry)?.line ?? null, exercisedBy});
+  }
+}
+const exercised = rows.filter((row) => row.exercisedBy.some((example) => example.enabled)).length;
+return {totals: {keyedRules: rows.length, exercised, unexercised: rows.length - exercised, unkeyedRules}, rows};
+```
+
+Rows keep each Spec's authored key order and include every keyed rule or flow entry. An example
+is enabled when a resolving test binding backs it. `exercisedBy` also lists declared examples
+without a test, with `enabled: false`; only a bound example counts toward `totals.exercised`.
+The recipe reports intent and verifier bindings. It records no runner pass or fail and confers
+no rule delivery fact. The contract is `spec:model.rule-keys`.
+
+## 35. The design diff
+
+*When you need this: you hold the graph from the last design pass and want what changed since
+that reading, down to each keyed entry.*
+
+`params.base` is required, the graph `sdp build` wrote at the base commit. `params.pack` optionally
+limits Specs to that Pack's members at either commit. `params.detail` defaults to false; true
+includes the values and change type for every changed part.
+
+In the Protocol source repository, write the base graph with the base worktree's own engine.
+Its constant-form anchors use relative builder imports, trusted against that engine's own source
+modules. A current-checkout engine cannot recognize those imports in another worktree. Replace
+`BASE` with the commit you read and use the corpus's own exclusions:
+
+```sh
+git worktree add --detach .sdp-base BASE
+ln -s "$PWD/node_modules" .sdp-base/node_modules
+npm --prefix .sdp-base run build
+node .sdp-base/dist/cli/sdp.js build .sdp-base --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+pnpm --silent sdp:q "$(cat dist/recipes/35-the-design-diff.js)" --params base=@.sdp-base/generated/graph.json --json
+git worktree remove --force .sdp-base
+```
+
+The linked `node_modules` reuses this checkout's dependencies; use `npm --prefix .sdp-base ci`
+instead of the link when the base needs its own lockfile's versions. `--force` removes the link
+and the build output with the disposable worktree. An adopter whose anchors
+import the package by name may build its base with the engine it has, using its package runner and
+its own exclusions. A base written by another engine is accepted and reports what cannot compare.
+The caller keeps the base commit outside the graph. The recipe reads only the two graph objects.
+
+```js
+const base = params.base;
+const packId = params.pack;
+const detail = params.detail ?? false;
+const diagnostics = [];
+if (!base || !Array.isArray(base.nodes) || !Array.isArray(base.edges)) {
+  return { diagnostics: [{ part: "base", problem: "Supply the graph written at the base commit." }] };
+}
+const differentVersion = base.schemaVersion !== graph.schemaVersion;
+if (differentVersion) diagnostics.push({ part: "schemaVersion", base: base.schemaVersion, head: graph.schemaVersion });
+const canonical = (value) => {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])]));
+  }
+  return value;
+};
+const same = (a, b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
+const specsOf = (value) => new Map(value.nodes.filter((node) => node.nodeType === "Primitive").map((node) => [node.id, node]));
+const packsOf = (value) => new Map(value.nodes.filter((node) => node.nodeType === "Pack").map((node) => [node.id, node]));
+const before = specsOf(base);
+const after = specsOf(graph);
+const basePacks = packsOf(base);
+const headPacks = packsOf(graph);
+const allowed = packId === undefined ? null : new Set([
+  ...(basePacks.get(packId)?.members ?? []), ...(headPacks.get(packId)?.members ?? []),
+]);
+if (allowed !== null && !basePacks.has(packId) && !headPacks.has(packId)) {
+  diagnostics.push({ part: "pack", problem: "Pack is absent at both commits.", id: packId });
+}
+// Capabilities follow the schema contract, never whether this corpus uses an optional field.
+const atLeast = (value, minimum) => {
+  const version = /^(\d+)\.(\d+)\.(\d+)$/u.exec(value.schemaVersion ?? "");
+  if (!version) return false;
+  const numbers = version.slice(1).map(Number);
+  for (let i = 0; i < minimum.length; i++) {
+    if (numbers[i] !== minimum[i]) return numbers[i] > minimum[i];
+  }
+  return true;
+};
+const unsupported = new Set();
+for (const [part, minimum] of [
+  ["narrative", [0, 4, 0]],
+  ...["ruleKeys", "decider", "links", "provisional", "trigger", "reason", "exercises"].map((part) => [part, [0, 9, 0]]),
+]) {
+  const a = atLeast(base, minimum), b = atLeast(graph, minimum);
+  if (!a || !b) unsupported.add(part);
+  if (a !== b) diagnostics.push({ part, problem: "Part is outside the common schema.", base: a, head: b });
+}
+// Before ruleKeys, engines left the authored marker in the rule or flow string and kept no
+// order between the two lists, so keyed entries in both lists have no comparable order across them.
+const behaviorOf = (content) => {
+  const result = { ...content, rules: [...(content.rules ?? [])], flows: [...(content.flows ?? [])] };
+  if (content.ruleKeys !== undefined) return { behavior: result, crossListOrder: true };
+  const keys = {}, keyedLists = new Set();
+  for (const list of ["rules", "flows"]) {
+    result[list] = result[list].map((text, index) => {
+      const marker = /^\[#([a-z][A-Za-z0-9]*)\] (.*)$/su.exec(text);
+      if (!marker) return text;
+      keys[marker[1]] = `${list}[${index}]`;
+      keyedLists.add(list);
+      return marker[2];
+    });
+  }
+  result.ruleKeys = keys;
+  return { behavior: result, crossListOrder: keyedLists.size < 2 };
+};
+const unordered = new Set();
+const partsOf = (node, value) => {
+  const parts = new Map();
+  const put = (part, content, position) => parts.set(part, { value: content, position });
+  for (const field of ["title", "specKind", "altitude", "narrative"]) {
+    if (!unsupported.has(field) && Object.hasOwn(node, field)) put(field, node[field]);
+  }
+  put("statedReadiness", node.readiness);
+  for (const edge of value.edges) {
+    if (edge.from !== node.id || edge.claim !== "declared" || edge.type === "belongsTo") continue;
+    put(`relation.${edge.type}:${edge.to}`, Object.fromEntries(Object.entries(edge).filter(([key]) => !unsupported.has(key))));
+  }
+  if (unsupported.has("sections")) return parts;
+  for (const [section, content] of Object.entries(node.sections ?? {})) {
+    if (unsupported.has(section)) continue;
+    if (section === "design" || section === "ui") {
+      let position = 0;
+      for (const [key, entry] of Object.entries(content)) {
+        if (key === "description") put(section, entry);
+        else put(`${section}.${key}`, entry, position++);
+      }
+    } else if (section === "intent") {
+      const { openQuestions, ...rest } = content;
+      if (Object.keys(rest).length) put(section, rest);
+      let position = 0;
+      for (const question of openQuestions ?? []) {
+        if (question?.key) put(`question.${question.key}`, Object.fromEntries(Object.entries(question).filter(([key]) => !unsupported.has(key))), position++);
+      }
+      const unkeyed = (openQuestions ?? []).filter((question) => !question?.key);
+      if (unkeyed.length) put("intent.openQuestions", openQuestions.map((question) => question && typeof question === "object"
+        ? Object.fromEntries(Object.entries(question).filter(([key]) => !unsupported.has(key))) : question));
+    } else if (section === "behavior") {
+      const { behavior, crossListOrder } = behaviorOf(content);
+      const { rules, flows, ruleKeys, ...rest } = behavior;
+      if (Object.keys(rest).length) put(section, rest);
+      const keys = unsupported.has("ruleKeys") ? {} : ruleKeys ?? {};
+      if (!crossListOrder && Object.keys(keys).length) unordered.add(node.id);
+      const entries = new Map(Object.entries(keys).map(([key, path]) => [path, key]));
+      const positions = new Map(Object.keys(keys).map((key, position) => [key, position]));
+      for (const [list, items] of [["rules", rules], ["flows", flows]]) {
+        const unkeyed = [];
+        let listPosition = 0;
+        (items ?? []).forEach((entry, index) => {
+          const key = entries.get(`${list}[${index}]`);
+          if (key === undefined) unkeyed.push(entry);
+          else parts.set(`rule.${key}`, { value: { list, text: entry }, position: positions.get(key), listPosition: listPosition++ });
+        });
+        if (unkeyed.length) put(`behavior.${list}`, items);
+      }
+    } else if (section === "model") {
+      const { terms, ...rest } = content;
+      if (Object.keys(rest).length) put(section, rest);
+      Object.entries(terms ?? {}).forEach(([term, entry], position) => put(`term.${term}`, entry, position));
+    } else put(section, content);
+  }
+  return parts;
+};
+const ids = [...new Set([...before.keys(), ...after.keys()])].filter((id) => allowed === null || allowed.has(id)).sort();
+const added = ids.filter((id) => !before.has(id));
+const removed = ids.filter((id) => !after.has(id));
+const changed = [];
+for (const id of ids) {
+  if (!before.has(id) || !after.has(id)) continue;
+  const a = partsOf(before.get(id), base), b = partsOf(after.get(id), graph);
+  // Without order across rules and flows on one side, keyed entries compare by order within each list.
+  const order = unordered.has(id) ? "listPosition" : "position";
+  if (unordered.has(id)) diagnostics.push({ part: "ruleOrder", id, problem: "One graph keeps no order across rules and flows; keyed entries compare within each list." });
+  const parts = [];
+  for (const part of [...new Set([...a.keys(), ...b.keys()])].sort()) {
+    const from = a.get(part), to = b.get(part);
+    const position = (entry) => part.startsWith("rule.") ? entry[order] : entry.position;
+    const change = !from ? "added" : !to ? "removed" : !same(from.value, to.value) ? "changed"
+      : position(from) !== position(to) ? "moved" : null;
+    if (change !== null) parts.push({ part, change, from: from?.value ?? null, to: to?.value ?? null });
+  }
+  if (parts.length) changed.push({ id, parts: detail === true ? parts : parts.map((entry) => entry.part) });
+}
+const delta = (a, b) => ({ added: [...new Set(b)].filter((id) => !a.includes(id)).sort(), removed: [...new Set(a)].filter((id) => !b.includes(id)).sort() });
+const packs = [];
+for (const id of [...new Set([...basePacks.keys(), ...headPacks.keys()])].sort()) {
+  if (packId !== undefined && id !== packId) continue;
+  const a = basePacks.get(id), b = headPacks.get(id);
+  const members = delta(a?.members ?? [], b?.members ?? []);
+  const common = new Set((a?.members ?? []).filter((member) => b?.members.includes(member)));
+  const reordered = !same((a?.members ?? []).filter((member) => common.has(member)), (b?.members ?? []).filter((member) => common.has(member)));
+  if (!a || !b || members.added.length || members.removed.length || reordered) packs.push({ id,
+    change: !a ? "added" : !b ? "removed" : "changed", membersAdded: members.added, membersRemoved: members.removed, reordered });
+}
+const bound = (value, id, type) => {
+  const nodes = new Map(value.nodes.map((node) => [node.id, node]));
+  return value.edges.filter((edge) => edge.to === id && edge.type === type && (
+    edge.claim === "anchored" && nodes.has(edge.from) || type === "verifies" && edge.claim === "declared" &&
+    nodes.get(edge.from)?.specKind === "example" && value.edges.some((test) => test.to === edge.from && test.type === "verifies" && test.claim === "anchored" && nodes.has(test.from))
+  )).map((edge) => edge.from);
+};
+const bindings = [];
+for (const id of ids) {
+  const row = { id };
+  for (const [name, type] of [["implementedBy", "satisfies"], ["referencedBy", "references"], ["verifiers", "verifies"]]) row[name] = delta(bound(base, id, type), bound(graph, id, type));
+  row.deliveryFacts = unsupported.has("deliveryFacts") ? { added: [], removed: [] } : delta(before.get(id)?.deliveryFacts ?? [], after.get(id)?.deliveryFacts ?? []);
+  if (Object.values(row).some((pair) => pair?.added?.length || pair?.removed?.length)) bindings.push(row);
+}
+return { base: { schemaVersion: base.schemaVersion, specs: ids.filter((id) => before.has(id)).length },
+  head: { schemaVersion: graph.schemaVersion, specs: ids.filter((id) => after.has(id)).length }, diagnostics,
+  totals: { added: added.length, removed: removed.length, changed: changed.length, packs: packs.length, bindings: bindings.length },
+  specs: { added, removed, changed }, packs, bindings,
+  leftOut: detail === true ? [] : ["Changed part values and change types; pass detail: true."] };
+```
+
+`specs` reports declared intent. A part is an envelope field, narrative, section, relation target,
+or keyed Design, UI, question, rule or model term. A list with an unkeyed entry also compares as a whole, including its keyed entries, so an
+anonymous entry moving around a keyed one remains visible. A keyed entry
+with unchanged value and a different position among its section's keyed entries is `moved`.
+Keyed rule values include their owning list, `rules` or `flows`, so a rule becoming a flow changes
+its value at the same address. Changed values take precedence over order. Line changes and object property serialization order
+alone do not change intent.
+
+`packs` reports membership additions, removals and relative order changes among retained members.
+`bindings` keeps anchor-derived changes apart, with added and removed ids for realizing units,
+referencing units, enabled verifiers and delivery facts. Each list has a count in `totals`.
+A schema difference is diagnostic data. Parts outside the schemas' shared capabilities are
+omitted and named in `diagnostics`; an unused optional section still compares. Legacy rule markers
+are normalized before comparison when a Spec carries no `ruleKeys`. Such a graph keeps no order
+between rules and flows, so when it keys entries in both, keyed entries compare by order within
+each list and a `ruleOrder` diagnostic names the Spec. The comparison confers nothing and
+records no design pass. The law is `spec:consumers.design-diff`.
+
+## 36. The context bundle
+
+*When you need this: you want the graph's reading material for one design pass in one answer,
+with a budget and an account of what was left out.*
+
+Supply exactly one scope: `params.pack`, a Pack id, or `params.specs`, an ordered list of Spec ids.
+`params.members` optionally narrows a Pack to an ordered subset, such as the member ids recipe 37
+returns. The Pack's framing and full boundary stay visible. `params.budget` defaults to 100,000
+UTF-16 code units and accepts a non-negative integer, including zero. There is no sample scope.
+
+```js
+const packId = params.pack;
+const specIds = params.specs;
+const subset = params.members;
+const budget = params.budget ?? 100000;
+const diagnostics = [];
+const bad = (scope, problem) => diagnostics.push({ scope, problem });
+const strings = (value) => Array.isArray(value) && value.every((item) => typeof item === "string");
+if ((packId !== undefined) === (specIds !== undefined)) bad("scope", "Supply exactly one of pack or specs.");
+if (!Number.isInteger(budget) || budget < 0) bad("budget", "Expected a non-negative integer in UTF-16 code units.");
+let pack = null, ids = [];
+if (packId !== undefined) {
+  pack = typeof packId === "string" ? g.packContext(packId) : undefined;
+  if (!pack) bad("pack", "Pack does not resolve.");
+  else ids = pack.members.map((member) => member.id);
+  if (subset !== undefined) {
+    if (!strings(subset) || new Set(subset).size !== subset.length) bad("members", "Expected a unique ordered subset of member ids.");
+    else if (subset.some((id) => !ids.includes(id))) bad("members", "Every id must be a member of the Pack.");
+    else ids = subset;
+  }
+} else if (specIds !== undefined) {
+  if (!strings(specIds)) bad("specs", "Expected an ordered list of Spec ids.");
+  else ids = specIds;
+  if (subset !== undefined) bad("members", "members narrows only a Pack scope.");
+}
+for (const id of ids) if (!g.specContext(id)) bad(id, "Spec does not resolve.");
+if (diagnostics.length) return { diagnostics };
+const scope = pack ? { pack: packId, subset: subset !== undefined, members: ids } : { specs: ids };
+const types = ["refines", "dependsOn", "constrainedBy", "decidedBy"];
+const authoredTypes = [...types, "verifies", "supersedes"];
+const summaries = new Map(g.specs().map((spec) => [spec.id, spec]));
+const byCodeUnit = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const boundary = pack ? JSON.parse(JSON.stringify(pack.boundary)) : (() => {
+  const inside = new Set(ids);
+  const groups = { restsOn: new Map(), restedOnBy: new Map(), verifiedBy: new Map(), supersededBy: new Map() };
+  const join = (group, outside, type, member) => {
+    if (inside.has(outside) || !summaries.has(outside)) return;
+    if (!group.has(outside)) group.set(outside, new Map());
+    const via = group.get(outside);
+    if (!via.has(type)) via.set(type, new Set());
+    via.get(type).add(member);
+  };
+  for (const id of ids) {
+    const context = g.specContext(id);
+    for (const end of context.relationsOut) if (types.includes(end.type)) join(groups.restsOn, end.otherId, end.type, id);
+    for (const end of context.relationsIn) {
+      const group = types.includes(end.type) ? groups.restedOnBy : end.type === "verifies" ? groups.verifiedBy : groups.supersededBy;
+      join(group, end.otherId, end.type, id);
+    }
+  }
+  return Object.fromEntries(Object.entries(groups).map(([name, group]) => [name, [...group].sort(([a], [b]) => byCodeUnit(a, b)).map(([id, via]) => {
+    const spec = summaries.get(id);
+    return { id, title: spec.title ?? null, statedReadiness: spec.statedReadiness, implemented: spec.deliveryFacts.includes("implemented"),
+      via: authoredTypes.filter((type) => via.has(type)).map((type) => ({ type, members: [...via.get(type)] })) };
+  })]));
+})();
+const declarationOf = (value) => {
+  if (typeof value !== "string") return null;
+  const span = /^(`+)(?!`)([^\r\n]+?)(?<!`)\1(?!`)/u.exec(value);
+  return span?.[2] ?? null;
+};
+const unitOf = (unit) => ({ id: unit.codeId, claim: unit.claim, file: unit.file ?? null, line: unit.line ?? null,
+  role: unit.role ?? null, component: unit.component ?? null });
+const members = ids.map((id) => {
+  const context = g.specContext(id);
+  const sections = JSON.parse(JSON.stringify(context.sections ?? {}));
+  const questions = context.designColumns.openQuestions.map((question) => ({ ...question,
+    address: question.key === undefined ? null : `${id}#question.${question.key}`, file: context.file, line: question.line ?? null }));
+  const footing = context.relationsOut.filter((end) => types.includes(end.type)).map((end) => {
+    const target = summaries.get(end.otherId);
+    return { type: end.type, id: end.otherId, claim: end.claim, resolved: end.resolved,
+      ...(end.reason === undefined ? {} : { reason: end.reason }),
+      statedReadiness: target?.statedReadiness ?? null, floorReached: target === undefined ? null : target.derivedReadiness ?? "none" };
+  }).sort((a, b) => types.indexOf(a.type) - types.indexOf(b.type) || byCodeUnit(a.id, b.id));
+  const declarations = Object.entries(sections.design ?? {}).flatMap(([key, value]) => {
+    const declaration = key === "description" ? null : declarationOf(value);
+    return declaration === null ? [] : [{ spec: id, key, declaration }];
+  });
+  const exampleIds = [...new Set(context.relationsIn.filter((end) => ["refines", "verifies"].includes(end.type) &&
+    summaries.get(end.otherId)?.specKind === "example").map((end) => end.otherId))].sort();
+  const examples = exampleIds.map((exampleId) => {
+    const example = g.specContext(exampleId);
+    return { id: exampleId, statedReadiness: example.statedReadiness, enabled: example.verifiers.some((verifier) => verifier.via === "test-anchor" && verifier.enabled),
+      file: example.file, steps: JSON.parse(JSON.stringify(example.sections?.behavior?.examples ?? [])) };
+  });
+  return { id, title: context.title ?? null, specKind: context.specKind, altitude: context.altitude,
+    statedReadiness: context.statedReadiness, floorReached: context.derivedReadiness ?? "none", statedNextRung: context.statedNextRung ?? null,
+    holds: context.statedNextRungFailures, narrative: context.narrative ?? null, sections, questions, footing, declarations, examples,
+    design: { entries: context.designColumns.entries, declarations: context.designColumns.declarations,
+      openQuestions: questions.length, blockingQuestions: context.designColumns.blockingQuestions },
+    decisions: context.designColumns.decisions, implementedBy: context.implementations.map(unitOf), referencedBy: context.references.map(unitOf),
+    verifiers: context.verifiers.map((verifier) => ({ id: verifier.verifierId, claim: verifier.claim, enabled: verifier.enabled,
+      file: verifier.file ?? null, line: verifier.line ?? null })) };
+});
+const answer = { scope, budget, used: 0, tokenEstimate: { value: 0, method: "UTF-16 code units divided by four, an estimate" }, leftOut: [],
+  pack: pack ? { id: packId, title: pack.title ?? null, framing: pack.framing ?? null } : null, members, boundary };
+const measure = () => {
+  for (;;) {
+    const length = JSON.stringify(answer).length;
+    const estimate = Math.ceil(length / 4);
+    if (answer.used === length && answer.tokenEstimate.value === estimate) return length;
+    answer.used = length;
+    answer.tokenEstimate.value = estimate;
+  }
+};
+const location = (id, path) => {
+  const context = g.specContext(id);
+  const question = /^intent\.openQuestions\[(\d+)\]/u.exec(path);
+  const rule = /^behavior\.(rules|flows)\[(\d+)\]/u.exec(path);
+  const entry = question ? `question[${question[1]}]` : rule ? `${rule[1] === "rules" ? "rule" : "flow"}[${rule[2]}]` : path;
+  const at = context.entryLocations.find((row) => row.entry === entry);
+  return { spec: id, path, file: at?.file ?? context.file, line: at?.line ?? null };
+};
+const address = (id, section, key) => key !== "description" && /^[a-z][A-Za-z0-9]*$/u.test(key) ? `${id}#${section}.${key}` : null;
+// Entry addresses remain reading pointers even when the text containing them is cut.
+const addressesIn = (value) => [...new Set((JSON.stringify(value) ?? "").match(/spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*#(?:design|ui|question|rule)\.[a-z][A-Za-z0-9]*(?![A-Za-z0-9_.#-])/gu) ?? [])];
+const reference = (id, path, value, own = null) => {
+  const addresses = [...new Set([...(own === null ? [] : [own]), ...addressesIn(value)])];
+  if (own !== null) return addresses.length === 1 ? own : addresses;
+  return addresses.length ? [...addresses, location(id, path)] : location(id, path);
+};
+const questionReference = (id, question, index) => {
+  const own = question?.key === undefined ? null : `${id}#question.${question.key}`;
+  const pointer = reference(id, `intent.openQuestions[${index}]`, question, own);
+  return question?.links?.length ? { pointer, links: question.links } : pointer;
+};
+const cuts = [
+  () => {
+    answer.boundary = Object.fromEntries(Object.entries(answer.boundary).map(([name, rows]) => [name, rows.map((row) => row.id)]));
+    answer.leftOut.push("Boundary details; ids kept per direction.");
+  },
+  () => {
+    for (const member of members) member.narrative = addressesIn(member.narrative).join(" ") || null;
+    answer.leftOut.push("Member narrative.");
+  },
+  () => {
+    for (const member of members) {
+      const behavior = member.sections.behavior;
+      if (behavior) {
+        if (behavior.examples) behavior.examples = behavior.examples.map((entry, index) => reference(member.id, `behavior.examples[${index}]`, entry));
+        if (behavior.exampleSpace) behavior.exampleSpace = reference(member.id, "behavior.exampleSpace", behavior.exampleSpace);
+      }
+      for (const example of member.examples) example.steps = reference(example.id, "behavior.examples", example.steps);
+    }
+    answer.leftOut.push("Example step text, including member sections and example-space vocabulary.");
+  },
+  () => {
+    for (const member of members) {
+      member.questions = member.questions.map((question) => question.blocking ? question : questionReference(member.id, question, question.index));
+      if (member.sections.intent?.openQuestions) member.sections.intent.openQuestions = member.sections.intent.openQuestions
+        .map((question, index) => question?.blocking ? question : questionReference(member.id, question, index));
+    }
+    answer.leftOut.push("Non-blocking question text, including member sections; addresses and links kept.");
+  },
+  () => {
+    for (const member of members) {
+      const pinned = new Set(member.declarations.map((declaration) => declaration.key));
+      // A keyed entry is read by its own key, which may contain a dot, never from the joined path.
+      const keyedEntry = (section, key, value) => section === "design" && pinned.has(key) ? value
+        : reference(member.id, `${section}.${key}`, value, address(member.id, section, key));
+      const reduce = (value, path) => {
+        // Protected entries stay whole; everything else becomes a graph location or address.
+        if (path.startsWith("intent.openQuestions[")) return value;
+        const rule = /^behavior\.(rules|flows)\[(\d+)\]$/u.exec(path);
+        if (rule) {
+          const key = Object.keys(member.sections.behavior.ruleKeys ?? {}).find((key) => member.sections.behavior.ruleKeys[key] === `${rule[1]}[${rule[2]}]`);
+          return reference(member.id, path, value, key === undefined ? null : `${member.id}#rule.${key}`);
+        }
+        if (path === "behavior.ruleKeys") return value;
+        const isLocation = (entry) => entry && typeof entry === "object" && !Array.isArray(entry) &&
+          typeof entry.spec === "string" && typeof entry.path === "string" && typeof entry.file === "string" &&
+          (entry.line === null || typeof entry.line === "number") && Object.keys(entry).every((key) => ["spec", "path", "file", "line"].includes(key));
+        if (isLocation(value)) return value;
+        if (Array.isArray(value) && value.some(isLocation) && value.every((entry) => isLocation(entry) ||
+          typeof entry === "string" && addressesIn(entry).includes(entry))) return value;
+        if (Array.isArray(value)) return value.map((entry, index) => reduce(entry, `${path}[${index}]`));
+        if (value !== null && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key,
+          path === "design" || path === "ui" ? keyedEntry(path, key, entry) : reduce(entry, path ? `${path}.${key}` : key)]));
+        return reference(member.id, path, value);
+      };
+      member.sections = reduce(member.sections, "");
+    }
+    answer.leftOut.push("Section entry values other than pinned declarations and blocking questions; addresses and locations kept.");
+  },
+];
+if (measure() <= budget) return answer;
+for (const cut of cuts) { cut(); if (measure() <= budget) return answer; }
+return { scope, budget, budgetExceeded: true, protectedLength: answer.used, leftOut: answer.leftOut };
+```
+
+`scope` states a Pack and whether it is narrowed, with its ordered member ids, or the ordered
+Spec list. Each member keeps its stated rung, floor and stated next rung, with `holds` naming
+unmet floor clauses. `design` counts entries, declarations and questions, beside shaping decisions
+and the Pack design's bindings. Questions keep addresses, recorded lines and their fields.
+`footing` has recipe 21's dependency rows, including `reason` when the relation states one;
+`declarations` has recipe 24's pinned declarations.
+`examples` lists refining or verifying examples with their rung, enabled binding and steps.
+Bindings carry their claims and recorded source locations. Boundary rows carry declared
+relations, grouped exactly as the Pack design does.
+
+The fixed cuts are boundary details, member narrative, example step text, non-blocking questions,
+then remaining section values. Each cut removes text everywhere it appears, including `sections`, while retaining entry addresses
+and question links from that text.
+The fifth cut retains pinned declarations and blocking questions whole, reduces keyed entries to
+their addresses and other entries to `{ spec, path, file, line }`. If the cut value contains other
+entry addresses, they stay beside that pointer in a list. Non-blocking questions retain their
+addresses or locations and any links. Null lines mean unlocated.
+`leftOut` lists the cuts taken in that order. `used` counts the compact returned JSON, including
+itself, `scope`, `budget`, `tokenEstimate` and `leftOut`. The estimate divides code units by four,
+rounded up. A successful bundle always fits the requested budget. A budget-exceeded result carries
+only the scope, budget, protected length and omission list, and the CLI exits 0. Invalid or unknown
+scopes return diagnostics without a bundle. The law is `spec:consumers.context-bundle`.
+
+## 37. The perspective filter
+
+*When you need this: you read a Pack for one concern and the corpus has a JSON perspective
+that selects and orders its members.*
+
+`params.pack` and `params.perspective` are required. The latter is corpus data, passed as JSON or
+with `--params perspective=@perspective.json`. The Protocol ships no perspectives.
+
+A perspective has `name`, optional `select` and optional `order`, a priority list of Spec ids.
+The selectors are `ids`, `idPrefixes`, `kinds`, `sections`, `designKeys`, `questionKeys`,
+`relations` and `bindings`. List values are alternatives; different selectors are requirements.
+An absent selector imposes no restriction. A present empty list selects nothing. For example:
+
+```json
+{
+  "name": "domain",
+  "select": {
+    "kinds": ["model", "behavior"],
+    "designKeys": [{ "key": "layer", "value": "domain" }]
+  },
+  "order": ["spec:orders.model"]
+}
+```
+
+`designKeys` entries take `key` and optional `value`. `relations` entries take an authored `type`,
+`direction` as `in` or `out`, and optional `target`, the other end's Spec id. `bindings` takes
+`via`, a list of `satisfies` or `references`, and optional `layers` and `contexts`. Layers and
+contexts must match the same bound unit's component. An absent restriction matches every value;
+an empty restriction matches nothing.
+
+```js
+const packId = params.pack;
+const perspective = params.perspective;
+const diagnostics = [];
+const bad = (selector, problem) => diagnostics.push({ selector, problem });
+const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+const strings = (value) => Array.isArray(value) && value.every((item) => typeof item === "string");
+const pack = typeof packId === "string" ? g.packContext(packId) : undefined;
+if (!pack) bad("pack", "Supply a Pack id in this graph.");
+const data = object(perspective) ? perspective : {};
+if (!object(perspective)) bad("perspective", "Supply a perspective object.");
+if (typeof data.name !== "string") bad("name", "Expected a name string.");
+for (const key of Object.keys(data)) if (!["name", "select", "order"].includes(key)) bad(key, "Unknown perspective field.");
+if (data.select !== undefined && !object(data.select)) bad("select", "Expected a selector object.");
+const select = object(data.select) ? data.select : {};
+const tests = [];
+const authoredTypes = ["refines", "dependsOn", "constrainedBy", "decidedBy", "verifies", "supersedes"];
+const known = ["ids", "idPrefixes", "kinds", "sections", "designKeys", "questionKeys", "relations", "bindings"];
+for (const key of Object.keys(select)) if (!known.includes(key)) bad(key, "Unknown selector.");
+const add = (selector, values, valid, match) => {
+  if (!Array.isArray(values)) { bad(selector, "Expected a list."); return; }
+  const understood = values.filter((value, index) => {
+    if (valid(value)) return true;
+    bad(`${selector}[${index}]`, "Unsupported value or wrong type.");
+    return false;
+  });
+  if (values.length && !understood.length) return;
+  tests.push((context) => understood.flatMap((value) => match(context, value)));
+};
+for (const selector of ["ids", "idPrefixes", "kinds", "sections", "questionKeys"]) {
+  if (!Object.hasOwn(select, selector)) continue;
+  add(selector, select[selector], (value) => typeof value === "string", (context, value) => {
+    const matches = selector === "ids" ? context.id === value
+      : selector === "idPrefixes" ? context.id.startsWith(value)
+      : selector === "kinds" ? context.specKind === value
+      : selector === "sections" ? Object.hasOwn(context.sections ?? {}, value)
+      : (context.sections?.intent?.openQuestions ?? []).some((question) => question?.key === value);
+    return matches ? [{ selector, value, claim: "declared" }] : [];
+  });
+}
+if (Object.hasOwn(select, "designKeys")) add("designKeys", select.designKeys,
+  (value) => object(value) && typeof value.key === "string" && Object.keys(value).every((key) => ["key", "value"].includes(key)),
+  (context, value) => Object.hasOwn(context.sections?.design ?? {}, value.key) &&
+    (!Object.hasOwn(value, "value") || JSON.stringify(context.sections.design[value.key]) === JSON.stringify(value.value))
+    ? [{ selector: "designKeys", value, claim: "declared" }] : []);
+if (Object.hasOwn(select, "relations")) add("relations", select.relations,
+  (value) => object(value) && authoredTypes.includes(value.type) && ["in", "out"].includes(value.direction) &&
+    (value.target === undefined || typeof value.target === "string") && Object.keys(value).every((key) => ["type", "direction", "target"].includes(key)),
+  (context, value) => (value.direction === "out" ? context.relationsOut : context.relationsIn)
+    .filter((edge) => edge.claim === "declared" && edge.type === value.type && (value.target === undefined || edge.otherId === value.target))
+    .map((edge) => ({ selector: "relations", value: { type: edge.type, direction: value.direction, target: edge.otherId }, claim: "declared" })));
+if (Object.hasOwn(select, "bindings")) {
+  const binding = select.bindings;
+  if (!object(binding)) bad("bindings", "Expected a binding selector object.");
+  else {
+    for (const key of Object.keys(binding)) if (!["via", "layers", "contexts"].includes(key)) bad(`bindings.${key}`, "Unknown selector.");
+    let via;
+    if (!Object.hasOwn(binding, "via")) bad("bindings.via", "A binding selector requires via.");
+    else if (!strings(binding.via)) bad("bindings.via", "Expected a list of satisfies or references.");
+    else {
+      via = binding.via.filter((value) => ["satisfies", "references"].includes(value));
+      if (via.length !== binding.via.length) bad("bindings.via", "Only satisfies and references are supported.");
+      if (binding.via.length && !via.length) via = undefined;
+    }
+    const restrictions = {};
+    for (const key of ["layers", "contexts"]) {
+      if (!Object.hasOwn(binding, key)) continue;
+      if (!strings(binding[key])) bad(`bindings.${key}`, "Expected a list of strings.");
+      else restrictions[key] = binding[key];
+    }
+    if (via !== undefined) tests.push((context) => via.flatMap((type) => (type === "satisfies" ? context.implementations : context.references)
+      .filter((unit) => (restrictions.layers === undefined || restrictions.layers.includes(unit.component?.layer)) &&
+        (restrictions.contexts === undefined || restrictions.contexts.includes(unit.component?.context)))
+      .map((unit) => ({ selector: "bindings", value: { via: type, unit: unit.codeId, component: unit.component ?? null }, claim: "anchored" }))));
+  }
+}
+let order = [];
+if (data.order !== undefined) {
+  if (!strings(data.order)) bad("order", "Expected a priority list of Spec ids.");
+  else order = data.order;
+}
+const selected = [], notSelected = [];
+for (const member of pack?.members ?? []) {
+  const context = g.specContext(member.id);
+  if (!context) { bad(member.id, "Pack member does not resolve."); notSelected.push(member.id); continue; }
+  const matches = tests.map((test) => test(context));
+  if (matches.some((rows) => rows.length === 0)) { notSelected.push(member.id); continue; }
+  selected.push({ id: member.id, matchedOn: matches.flat(), blockingQuestions: context.designColumns.openQuestions
+    .filter((question) => question.blocking).map((question) => ({ address: question.key === undefined ? null : `${member.id}#question.${question.key}`, question: question.question })) });
+}
+const priority = (id) => order.includes(id) ? order.indexOf(id) : order.length;
+selected.sort((a, b) => priority(a.id) - priority(b.id));
+return { pack: packId ?? null, perspective: data.name ?? null, totals: { members: pack?.members.length ?? 0, selected: selected.length }, diagnostics, selected, notSelected };
+```
+
+Rows keep the priority order, with authored order breaking ties. `matchedOn` names each understood
+selector that matched, its value and its claim. Design keys select declared intent. Component
+layers and contexts select anchored structure. `blockingQuestions` keeps every blocking question
+of each selected Spec. Selection leaves Spec content intact, and `notSelected` keeps authored order.
+Diagnostics name unsupported selectors and wrong types; understood selectors still apply. An empty
+selection with no diagnostic is a valid empty result. Pass `selected.map(row => row.id)` as the
+bundle's `members` parameter. The law is `spec:consumers.review-perspectives`.
+
+## 38. The proposal check
+
+*When you need this: a design pass handed back a proposal and you want to resolve every scope
+and see which changes still read the same design.*
+
+`params.proposal` is the required JSON document. `params.base` is required, the graph written at
+the commit the proposal's `base` names. Pass the files with `--params proposal=@proposal.json`
+and `--params base=@graph.json`. The caller is responsible for pairing the graph with that commit.
+The recipe reads the objects, reads no git history, applies no change and writes no carrier.
+
+The package ships `schemas/sdp-proposal-1.schema.json` for structured output. A document has only
+`schema: "sdp-proposal/1"`, a non-empty `base`, a one-line `reason` and non-empty `changes`.
+Each change has a non-empty `scope` and `request`, and may carry `text`, `replaces` or `follows`,
+a `relation`, and a one-line `reason`. `replaces` and `follows` are exclusive entry addresses.
+A relation has only `action`, `from`, `type` and `target`; its action is `declare` or `remove`
+and its type is one of the six authored relations. Scope entries are Spec ids or entry addresses.
+A proposer, status, date, approval, verdict or any other field is refused.
+
+```js
+const proposal = params.proposal;
+const base = params.base;
+const schemaProblems = [];
+const problem = (path, message) => schemaProblems.push({ path, problem: message });
+const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+const specId = /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?![\s\S])/u;
+const entryAddress = /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*#(design|ui|question|rule)\.([a-z][A-Za-z0-9]*)(?![\s\S])/u;
+const scopeRef = (value) => typeof value === "string" && (specId.test(value) || entryAddress.test(value));
+const closed = (value, path, allowed, required) => {
+  if (!object(value)) { problem(path, "Expected an object."); return false; }
+  for (const key of Object.keys(value)) if (!allowed.includes(key)) problem(`${path}.${key}`, "Unknown field.");
+  for (const key of required) if (!Object.hasOwn(value, key)) problem(`${path}.${key}`, "Required field.");
+  return true;
+};
+const text = (value, path, nonempty = false) => {
+  if (typeof value !== "string" || nonempty && value.length === 0) problem(path, nonempty ? "Expected a non-empty string." : "Expected a string.");
+};
+const reason = (value, path) => {
+  text(value, path, true);
+  if (typeof value === "string" && /[\r\n\u0085\u2028\u2029]/u.test(value)) problem(path, "Expected one line.");
+};
+const authoredTypes = ["refines", "dependsOn", "constrainedBy", "decidedBy", "verifies", "supersedes"];
+if (closed(proposal, "$", ["schema", "base", "reason", "changes"], ["schema", "base", "reason", "changes"])) {
+  if (proposal.schema !== "sdp-proposal/1") problem("$.schema", "Expected sdp-proposal/1.");
+  text(proposal.base, "$.base", true);
+  reason(proposal.reason, "$.reason");
+  if (!Array.isArray(proposal.changes) || !proposal.changes.length) problem("$.changes", "Expected a non-empty list.");
+  else proposal.changes.forEach((change, index) => {
+    const path = `$.changes[${index}]`;
+    if (!closed(change, path, ["scope", "request", "text", "replaces", "follows", "relation", "reason"], ["scope", "request"])) return;
+    if (!Array.isArray(change.scope) || !change.scope.length) problem(`${path}.scope`, "Expected a non-empty list.");
+    else change.scope.forEach((ref, index) => { if (!scopeRef(ref)) problem(`${path}.scope[${index}]`, "Expected a Spec id or entry address."); });
+    text(change.request, `${path}.request`, true);
+    if (Object.hasOwn(change, "text")) text(change.text, `${path}.text`);
+    if (Object.hasOwn(change, "reason")) reason(change.reason, `${path}.reason`);
+    for (const key of ["replaces", "follows"]) if (Object.hasOwn(change, key) && (typeof change[key] !== "string" || !entryAddress.test(change[key]))) problem(`${path}.${key}`, "Expected an entry address.");
+    if (Object.hasOwn(change, "replaces") && Object.hasOwn(change, "follows")) problem(path, "replaces and follows are exclusive.");
+    if (Object.hasOwn(change, "relation") && closed(change.relation, `${path}.relation`, ["action", "from", "type", "target"], ["action", "from", "type", "target"])) {
+      const relation = change.relation;
+      if (!["declare", "remove"].includes(relation.action)) problem(`${path}.relation.action`, "Expected declare or remove.");
+      if (!authoredTypes.includes(relation.type)) problem(`${path}.relation.type`, "Expected an authored relation type.");
+      for (const key of ["from", "target"]) if (typeof relation[key] !== "string" || !specId.test(relation[key])) problem(`${path}.relation.${key}`, "Expected a Spec id.");
+    }
+  });
+}
+const empty = () => ({ schemaProblems, base: typeof proposal?.base === "string" ? proposal.base : null,
+  totals: { changes: 0, moved: 0, unresolved: 0 }, changes: [] });
+if (schemaProblems.length) return empty();
+if (!base || !Array.isArray(base.nodes) || !Array.isArray(base.edges)) { problem("params.base", "Supply the graph written at the proposal base commit."); return empty(); }
+const canonical = (value) => Array.isArray(value) ? value.map(canonical) : object(value)
+  ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])])) : value;
+const same = (a, b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
+const diagnostics = [];
+if (base.schemaVersion !== graph.schemaVersion) diagnostics.push({ part: "schemaVersion", base: base.schemaVersion, head: graph.schemaVersion });
+// Capabilities follow the schema contract, never whether this corpus uses an optional field.
+const atLeast = (value, minimum) => {
+  const version = /^(\d+)\.(\d+)\.(\d+)$/u.exec(value.schemaVersion ?? "");
+  if (!version) return false;
+  const numbers = version.slice(1).map(Number);
+  for (let i = 0; i < minimum.length; i++) {
+    if (numbers[i] !== minimum[i]) return numbers[i] > minimum[i];
+  }
+  return true;
+};
+const unsupported = new Set();
+for (const [part, minimum] of [
+  ["narrative", [0, 4, 0]],
+  ...["ruleKeys", "decider", "links", "provisional", "trigger", "reason", "exercises"].map((part) => [part, [0, 9, 0]]),
+]) {
+  const a = atLeast(base, minimum), b = atLeast(graph, minimum);
+  if (!a || !b) unsupported.add(part);
+  if (a !== b) diagnostics.push({ part, problem: "Part is outside the common schema.", base: a, head: b });
+}
+// Before ruleKeys, engines left the authored marker in the rule or flow string and kept no
+// order between the two lists, so keyed entries in both lists have no comparable order across them.
+const behaviorOf = (content) => {
+  const result = { ...content, rules: [...(content.rules ?? [])], flows: [...(content.flows ?? [])] };
+  if (content.ruleKeys !== undefined) return { behavior: result, crossListOrder: true };
+  const keys = {}, keyedLists = new Set();
+  for (const list of ["rules", "flows"]) {
+    result[list] = result[list].map((text, index) => {
+      const marker = /^\[#([a-z][A-Za-z0-9]*)\] (.*)$/su.exec(text);
+      if (!marker) return text;
+      keys[marker[1]] = `${list}[${index}]`;
+      keyedLists.add(list);
+      return marker[2];
+    });
+  }
+  result.ruleKeys = keys;
+  return { behavior: result, crossListOrder: keyedLists.size < 2 };
+};
+const unordered = new Set();
+const partsOf = (node, value) => {
+  const parts = new Map();
+  const put = (part, content, position) => parts.set(part, { value: content, position });
+  for (const field of ["title", "specKind", "altitude", "narrative"]) {
+    if (!unsupported.has(field) && Object.hasOwn(node, field)) put(field, node[field]);
+  }
+  put("statedReadiness", node.readiness);
+  for (const edge of value.edges) {
+    if (edge.from !== node.id || edge.claim !== "declared" || edge.type === "belongsTo") continue;
+    put(`relation.${edge.type}:${edge.to}`, Object.fromEntries(Object.entries(edge).filter(([key]) => !unsupported.has(key))));
+  }
+  if (unsupported.has("sections")) return parts;
+  for (const [section, content] of Object.entries(node.sections ?? {})) {
+    if (unsupported.has(section)) continue;
+    if (section === "design" || section === "ui") {
+      let position = 0;
+      for (const [key, entry] of Object.entries(content)) {
+        if (key === "description") put(section, entry);
+        else put(`${section}.${key}`, entry, position++);
+      }
+    } else if (section === "intent") {
+      const { openQuestions, ...rest } = content;
+      if (Object.keys(rest).length) put(section, rest);
+      let position = 0;
+      for (const question of openQuestions ?? []) {
+        if (question?.key) put(`question.${question.key}`, Object.fromEntries(Object.entries(question).filter(([key]) => !unsupported.has(key))), position++);
+      }
+      const unkeyed = (openQuestions ?? []).filter((question) => !question?.key);
+      if (unkeyed.length) put("intent.openQuestions", openQuestions.map((question) => question && typeof question === "object"
+        ? Object.fromEntries(Object.entries(question).filter(([key]) => !unsupported.has(key))) : question));
+    } else if (section === "behavior") {
+      const { behavior, crossListOrder } = behaviorOf(content);
+      const { rules, flows, ruleKeys, ...rest } = behavior;
+      if (Object.keys(rest).length) put(section, rest);
+      const keys = unsupported.has("ruleKeys") ? {} : ruleKeys ?? {};
+      if (!crossListOrder && Object.keys(keys).length) unordered.add(node.id);
+      const entries = new Map(Object.entries(keys).map(([key, path]) => [path, key]));
+      const positions = new Map(Object.keys(keys).map((key, position) => [key, position]));
+      for (const [list, items] of [["rules", rules], ["flows", flows]]) {
+        const unkeyed = [];
+        let listPosition = 0;
+        (items ?? []).forEach((entry, index) => {
+          const key = entries.get(`${list}[${index}]`);
+          if (key === undefined) unkeyed.push(entry);
+          else parts.set(`rule.${key}`, { value: { list, text: entry }, position: positions.get(key), listPosition: listPosition++ });
+        });
+        if (unkeyed.length) put(`behavior.${list}`, items);
+      }
+    } else if (section === "model") {
+      const { terms, ...rest } = content;
+      if (Object.keys(rest).length) put(section, rest);
+      Object.entries(terms ?? {}).forEach(([term, entry], position) => put(`term.${term}`, entry, position));
+    } else put(section, content);
+  }
+  return parts;
+};
+const before = new Map(base.nodes.filter((node) => node.nodeType === "Primitive").map((node) => [node.id, node]));
+const after = new Map(graph.nodes.filter((node) => node.nodeType === "Primitive").map((node) => [node.id, node]));
+const cache = new Map();
+const changedParts = (id) => {
+  if (cache.has(id)) return cache.get(id);
+  const a = before.has(id) ? partsOf(before.get(id), base) : new Map();
+  const b = after.has(id) ? partsOf(after.get(id), graph) : new Map();
+  const changed = new Set(), ordered = new Set();
+  // Without order across rules and flows on one side, keyed entries compare by order within each list.
+  const order = unordered.has(id) ? "listPosition" : "position";
+  if (unordered.has(id) && before.has(id) && after.has(id)) diagnostics.push({ part: "ruleOrder", id, problem: "One graph keeps no order across rules and flows; keyed entries compare within each list." });
+  for (const part of new Set([...a.keys(), ...b.keys()])) {
+    const position = (entry) => part.startsWith("rule.") ? entry[order] : entry.position;
+    if (!a.has(part) || !b.has(part) || !same(a.get(part).value, b.get(part).value)) changed.add(part);
+    else if (position(a.get(part)) !== position(b.get(part))) ordered.add(part);
+  }
+  const result = { changed, ordered, crossListOrder: !unordered.has(id) };
+  cache.set(id, result);
+  return result;
+};
+const resolves = (nodes, ref) => {
+  const [id, suffix] = ref.split("#");
+  const node = nodes.get(id);
+  if (!node) return false;
+  if (suffix === undefined) return true;
+  const [section, key] = suffix.split(".");
+  if (section === "question") return (node.sections?.intent?.openQuestions ?? []).some((question) => question?.key === key);
+  if (section === "rule") return Object.hasOwn(behaviorOf(node.sections?.behavior ?? {}).behavior.ruleKeys ?? {}, key);
+  return key !== "description" && Object.hasOwn(node.sections?.[section] ?? {}, key);
+};
+const changes = proposal.changes.map((change, index) => {
+  const refs = [...new Set([...change.scope, ...(change.replaces === undefined ? [] : [change.replaces]),
+    ...(change.follows === undefined ? [] : [change.follows]), ...(change.relation === undefined ? [] : [change.relation.from])])];
+  const scope = refs.map((ref) => {
+    const [id, suffix] = ref.split("#");
+    const resolution = { ref, resolvesAtHead: resolves(after, ref), resolvesAtBase: resolves(before, ref) };
+    const missing = suffix === undefined ? [...unsupported] : suffix.startsWith("rule.")
+      ? (unsupported.has("ruleKeys") ? ["ruleKeys"] : []) : suffix.startsWith("question.")
+      ? ["decider", "links", "provisional", "trigger"].filter((part) => unsupported.has(part)) : [];
+    if (missing.length) return { ...resolution, comparable: false, reason: `Outside the common schema: ${missing.join(", ")}.` };
+    const parts = changedParts(id);
+    const moved = before.has(id) !== after.has(id) || (suffix === undefined
+      ? parts.changed.size > 0 || parts.ordered.size > 0 : parts.changed.has(suffix));
+    if (!moved && suffix === undefined && !parts.crossListOrder) {
+      return { ...resolution, comparable: false, reason: "One graph keeps no order across rules and flows." };
+    }
+    return { ...resolution, moved };
+  });
+  const relationTarget = change.relation?.action === "declare"
+    ? { ref: change.relation.target, resolvesAtHead: resolves(after, change.relation.target) } : null;
+  const incomparable = scope.some((item) => item.comparable === false);
+  return { index, scope, moved: scope.some((item) => item.moved) ? true : incomparable ? null : false,
+    ...(incomparable ? { comparable: false } : {}), relationTarget };
+});
+return { schemaProblems, base: proposal.base, diagnostics, totals: { changes: changes.length, moved: changes.filter((change) => change.moved).length,
+  unresolved: changes.filter((change) => change.scope.some((item) => !item.resolvesAtHead) || change.relationTarget?.resolvesAtHead === false).length }, changes };
+```
+
+`schemaProblems` names each malformed field by its JSON path. A malformed document produces no
+change rows. The check resolves the deduplicated union of each change's scope, replaced or followed
+entry, and relation source. Each scope row reports resolution at both commits and whether its value
+was added, removed or changed under recipe 35's comparison. An order-only entry move keeps its
+value unchanged; a whole-Spec scope includes order changes. `relationTarget` reports resolution at
+the head for a declared relation, and is null otherwise. `totals.moved` and `totals.unresolved`
+count changes, so one moved entry leaves other changes independently visible. Unknown references
+remain explicit rows. A scope outside the common schema carries `comparable: false` and a
+`reason`, with no `moved` claim, as does an otherwise unmoved whole-Spec scope whose order across
+rules and flows one graph does not keep. Its change also carries `comparable: false`, and `moved` is null
+unless another comparable scope moved. Schema differences, unsupported parts and a compared Spec
+whose order across rules and flows one graph does not keep appear in `diagnostics`. A base missing from the parameters is a problem with no change rows.
+
+The rows carry facts about declared intent, with anchored changes excluded from scope movement.
+They confer no status or approval. A caller routes a moved change to a person and applies other
+changes through ordinary source edits on a worktree checked by `sdp validate`. This recipe does
+neither step. The law is `spec:consumers.intent-composition.proposal`.
+
+## 39. Slimming candidates
+
+*When you need this: an implemented Spec has a verifier and you want to compare its pinned
+declarations with the bound artifacts before removing duplicated Design detail.*
+
+The optional parameter is `params.pack`; without it the body reads every Spec. An unknown Pack
+returns `{ pack, found: false }`. An existing Pack with no candidates keeps its totals and empty
+rows. A row is a potential candidate, never permission to delete an entry.
+
+```js
+const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
+const pack = params.pack === undefined ? undefined : g.packContext(params.pack);
+if (params.pack !== undefined && !pack) return { pack: params.pack, found: false };
+const specs = params.pack === undefined
+  ? g.specs()
+  : pack.members;
+const rows = [];
+for (const spec of specs) {
+  const context = g.specContext(spec.id);
+  if (!context?.deliveryFacts.includes("implemented") || !context.deliveryFacts.includes("has-verifier")) continue;
+  for (const [key, value] of Object.entries(context.sections?.design ?? {})) {
+    if (key === "description" || typeof value !== "string") continue;
+    const span = /^(`+)(?!`)([^\r\n]+?)(?<!`)\1(?!`)/u.exec(value);
+    if (!span) continue;
+    rows.push({
+      spec: spec.id,
+      key,
+      line: context.entryLocations.find((entry) => entry.entry === `design.${key}`)?.line ?? null,
+      declaration: span[2],
+      implementations: context.implementations.map((unit) => ({
+        id: unit.codeId, file: unit.file ?? null, line: unit.line ?? null, claim: unit.claim,
+      })),
+      verifiers: context.verifiers.map((unit) => ({
+        id: unit.verifierId, file: unit.file ?? null, via: unit.via, enabled: unit.enabled, claim: unit.claim,
+      })),
+    });
+  }
+}
+rows.sort((left, right) => byCodeUnit(left.spec, right.spec) || byCodeUnit(left.key, right.key));
+return {
+  totals: { specs: specs.length, potentialCandidates: rows.length },
+  rows,
+  leftOut: [
+    "Whole-Spec bindings prove no entry-level realization of a declaration; compare each potential candidate with its bound artifacts.",
+    "Whole-Spec bindings prove no entry-level realization by a bound example; bound examples do not identify which Design entries they realize.",
+    "Prose entries never qualify, and explanations stay in their Spec. The recipe deletes nothing.",
+  ],
+};
+```
+
+`totals.specs` counts the selected Specs, and `potentialCandidates` counts the returned Design
+entries. `declaration` is the opening code span, by pinned declarations' rule in recipe 24;
+`line` is the location table's line or null when unlocated. `implementations` names the realizing
+units and `verifiers` the declared and anchored verifier bindings, with their claim and whether
+they are enabled. A verifier binding says one exists; it records no test result. The declaration
+is declared intent, and the candidate classification is advice derived from the graph.
+`leftOut` states what whole-Spec bindings cannot prove for declarations and examples. The law is
+`spec:model.enrichment-lifecycle`.
+
+## 40. Curation report
+
+*When you need this: you want files ranked for anchor review, component imports that disagree
+with anchored uses, and component designs that no planned component realizes yet.*
+
+The required parameter is `params.imports`, the object in the adapter's imports file. The optional
+`params.limit` is a positive integer, 20 by default, and cuts only the uncovered-file list.
+Missing or malformed imports and invalid limits return `{ diagnostics }` with no report rows.
+Build the input explicitly, then pass it to the body as data:
+
+```sh
+pnpm --silent sdp build . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --imports imports.config.json
+pnpm --silent sdp:q "$(cat dist/recipes/40-curation-report.js)" --params imports=@generated/imports.json --json
+```
+
+The configuration is a JSON object such as
+`{ "adapter": "typescript", "tsconfig": "tsconfig.json", "roots": ["src"] }`.
+Its paths are relative to the build root. No path convention assigns files to components;
+only anchored component identity and `memberOf` do that.
+
+```js
+const input = params.imports;
+const diagnostics = [];
+const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+if (!object(input) || input.schema !== "sdp-imports/1" || typeof input.adapter !== "string" || !Array.isArray(input.files) ||
+    input.files.some((entry) => !object(entry) || typeof entry.file !== "string" || !Array.isArray(entry.imports) || entry.imports.some((file) => typeof file !== "string"))) {
+  diagnostics.push({ parameter: "imports", problem: "Supply an sdp-imports/1 object." });
+}
+const limit = params.limit ?? 20;
+if (params.limit === null || !Number.isInteger(limit) || limit <= 0) diagnostics.push({ parameter: "limit", problem: "Expected a positive integer." });
+if (diagnostics.length) return { diagnostics };
+const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
+const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
+const anchored = graph.nodes.filter((node) => node.claim === "anchored" && (node.nodeType === "CodeNode" || node.nodeType === "Anchor"));
+const anchoredFiles = new Set(anchored.map((node) => node.file));
+const componentOf = new Map();
+for (const edge of graph.edges) if (edge.type === "memberOf" && edge.claim === "anchored") componentOf.set(edge.from, edge.to);
+const componentFor = (id) => {
+  const unit = nodes.get(id);
+  if (unit?.nodeType !== "CodeNode" || unit.claim !== "anchored") return undefined;
+  const component = id.startsWith("component:") ? unit : nodes.get(componentOf.get(id));
+  return component?.nodeType === "CodeNode" && component.claim === "anchored" && component.id.startsWith("component:") ? component.id : undefined;
+};
+const fileComponents = new Map();
+for (const unit of anchored) {
+  const component = componentFor(unit.id);
+  if (component === undefined) continue;
+  if (!fileComponents.has(unit.file)) fileComponents.set(unit.file, new Set());
+  fileComponents.get(unit.file).add(component);
+}
+const files = new Map(input.files.map((entry) => [entry.file, new Set(entry.imports)]));
+const fanIn = new Map();
+for (const imports of files.values()) for (const file of imports) fanIn.set(file, (fanIn.get(file) ?? 0) + 1);
+const uncovered = [...files.entries()]
+  .filter(([file]) => !anchoredFiles.has(file))
+  .map(([file, imports]) => ({ file, fanIn: fanIn.get(file) ?? 0, fanOut: imports.size }))
+  .sort((left, right) => right.fanIn - left.fanIn || byCodeUnit(left.file, right.file));
+const pairKey = (from, to) => JSON.stringify([from, to]);
+const pairs = new Map();
+for (const [from, imports] of [...files.entries()].sort(([left], [right]) => byCodeUnit(left, right))) {
+  for (const to of [...imports].sort(byCodeUnit)) {
+    for (const fromComponent of fileComponents.get(from) ?? []) {
+      for (const toComponent of fileComponents.get(to) ?? []) {
+        if (fromComponent === toComponent) continue;
+        const key = pairKey(fromComponent, toComponent);
+        const row = pairs.get(key) ?? { fromComponent, toComponent, imports: 0, sample: { from, to } };
+        row.imports += 1;
+        pairs.set(key, row);
+      }
+    }
+  }
+}
+const statedPairs = new Set();
+const usesWithoutImport = [];
+let componentUses = 0;
+for (const edge of graph.edges) {
+  if (edge.type !== "uses" || edge.claim !== "anchored") continue;
+  const fromComponent = componentFor(edge.from);
+  const toComponent = componentFor(edge.to);
+  if (fromComponent === undefined || toComponent === undefined || fromComponent === toComponent) continue;
+  componentUses += 1;
+  const key = pairKey(fromComponent, toComponent);
+  statedPairs.add(key);
+  if (!pairs.has(key)) usesWithoutImport.push({ from: edge.from, to: edge.to, fromComponent, toComponent });
+}
+usesWithoutImport.sort((left, right) => byCodeUnit(left.from, right.from) || byCodeUnit(left.to, right.to));
+const importsWithoutUses = [...pairs.entries()].filter(([key]) => !statedPairs.has(key)).map(([, row]) => row)
+  .sort((left, right) => byCodeUnit(left.fromComponent, right.fromComponent) || byCodeUnit(left.toComponent, right.toComponent));
+const unrealizedComponents = [];
+for (const spec of g.specs()) {
+  const value = g.specContext(spec.id)?.sections?.design?.id;
+  if (typeof value !== "string") continue;
+  const span = /^(`+)(?!`)([^\r\n]+?)(?<!`)\1(?!`)/u.exec(value);
+  const componentId = span?.[2] ?? value;
+  if (!/^component:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*$/u.test(componentId)) continue;
+  const component = nodes.get(componentId);
+  const realized = component?.nodeType === "CodeNode" && component.claim === "anchored" && graph.edges.some((edge) =>
+    edge.from === componentId && edge.to === spec.id && edge.type === "satisfies" && edge.claim === "anchored");
+  if (!realized) unrealizedComponents.push({ spec: spec.id, componentId });
+}
+unrealizedComponents.sort((left, right) => byCodeUnit(left.spec, right.spec));
+const oneSided = {
+  anchoredOnly: [...anchoredFiles].filter((file) => !files.has(file)).sort(byCodeUnit),
+  importsOutsideComponents: [...files.keys()].filter((file) => !fileComponents.has(file)).sort(byCodeUnit),
+};
+return {
+  input: { label: "external inferred input", schema: input.schema, adapter: input.adapter, files: files.size },
+  totals: {
+    files: files.size, importEdges: [...files.values()].reduce((sum, imports) => sum + imports.size, 0),
+    uncovered: uncovered.length, componentUses, usesWithoutImport: usesWithoutImport.length,
+    importsWithoutUses: importsWithoutUses.length, unrealizedComponents: unrealizedComponents.length,
+    anchoredOnly: oneSided.anchoredOnly.length, importsOutsideComponents: oneSided.importsOutsideComponents.length,
+  },
+  uncovered: uncovered.slice(0, limit), usesWithoutImport, importsWithoutUses, unrealizedComponents, oneSided,
+};
+```
+
+`input` labels the file as external inferred input, with its schema, adapter and file count.
+`totals` counts each list before the limit, the file import edges and the anchored cross-component
+uses checked. `uncovered` ranks files with no code or test anchor by distinct importing files
+(`fanIn`), then path; `fanOut` counts their distinct imports, including barrel reach.
+
+`usesWithoutImport` names each anchored uses edge whose components share no directed file
+import. `fromComponent` and `toComponent` are component ids. `importsWithoutUses` groups inferred
+imports by directed component pair that no anchored uses states; `imports` counts distinct file
+pairs, and `sample` gives the first pair in path order. A file with anchors in several components
+contributes to each component pair. Same-component pairs stay out of both lists. Missing import
+input can explain a mismatch, so inspect `oneSided` before editing an anchor.
+
+`unrealizedComponents` reads the component-design convention's Design `id`, as a component id or
+an opening code span. The row stays until that exact component has an anchored satisfies binding
+to the design Spec; an existing id, a reference or another unit's realization is insufficient.
+`oneSided.anchoredOnly` lists anchored source files absent from the input, and
+`importsOutsideComponents` lists input files assigned to no anchored component, including anchored
+units with no component. Component designs are declared intent, bindings are anchored, and
+imports are inferred. Every mismatch and ranking is advice; the body changes nothing and no
+finding enters validation. Bad parameters are input errors, not curation findings. The law is
+`spec:consumers.impact-graph.curation-assist`.

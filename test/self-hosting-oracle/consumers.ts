@@ -4,6 +4,121 @@
 
 export const consumersSpecs = [
   {
+    id: "spec:consumers.agent-surface.answer-shapes",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/agent-surface.answer-shapes.sdp.md",
+    title: "Recipe answers fit an agent's context and explain their misses",
+    narrative:
+      "Three agents of two model families, gpt-6.1-sol, Opus 5.5 and gpt-6-astra, tried the agent surface with only the skills, the recipe catalog and `sdp q`. Each answered the same thirteen delivery questions correctly, without opening a carrier or source file. They stumbled in the same places: answers too large for a tool's output, misses that named no reason, two meanings of the next rung, a recipe whose title promised more than it returned, and one label all three believed though it overstated the relation it read (`.omo/evidence/agent-surface-trial/`). The owner accepted the fixes as one arc's scope.",
+    sections: {
+      intent: {
+        actor: "An agent answering a delivery question through the catalog recipes.",
+        problem:
+          "An agent spends calls trimming oversized answers, decoding terse misses and writing the same missing body, and can repeat a recipe's label as fact when the label says more than the graph does.",
+        outcome:
+          "Let an agent get each answer in one call that fits its context, with every miss explained.",
+      },
+      behavior: {
+        rules: [
+          "A recipe whose full answer can run past a few hundred lines takes a `detail` parameter and by default returns a summary that keeps every total and names what it left out; changed-file impact (recipe 4) and Pack design (recipe 29) take it first.",
+          "The guarantees recipe (recipe 3) returns each section's entries as the Spec states them and the binding fields the Spec context carries, not only the names of the sections.",
+          "Promotion preflight (recipe 9) reports the rung above the stated rung beside the rung above the floor, with the clauses that fail at each, so a Spec stated below its floor shows both.",
+          "The orphans and gaps recipe (recipe 8) reports each kind the verifier-gap signal exempts and how many ready Specs it exempts, as the build backlog reports its exclusions.",
+          "Address resolution (recipe 25) keeps the Spec, section and key it parsed when an address misses, names the part that failed, and lists the keys that section of the Spec does carry.",
+          "The decision register (recipe 31) names its fields after the relation it reads, `refines` and `refinedBy` beside `supersedes` and `supersededBy`; whether a refinement narrows a decision is that decision's own text.",
+          "Architecture crossings (recipe 32) tallies the same-layer `uses` edges beside the crossings.",
+          "A design-backlog recipe lists the Specs stated `defined` that no code realizes, with their design columns, excluding examples and decisions as the build backlog does.",
+          "The catalog opens with a one-line index of its recipes and shows how to run a shipped body inside a caller's own body to filter its answer.",
+          "A body that fails to parse is reported with the line and column of the error in the body the caller wrote.",
+        ],
+      },
+      design: {
+        detailParameter:
+          "`params.detail`, absent or `false` for the summary and `true` for every row in full; recipe 29's `detail` may also be a list of member ids, which returns full rows for those members and summary rows for the rest of the Pack, and an id that is not a member is a diagnostic in the result. A summary keeps `totals` as the full answer counts them and adds `leftOut`, one line for each kind of detail it omits.",
+        impactSummary:
+          "`{ changedFiles, totals, impactedSpecs: [id], atRisk: { incomingSpecs: [id], outgoingSpecs: [id], other: [id] }, coverageUnknownFiles, unlinkedUnits: [id], leftOut }` is recipe 4's summary. Incoming and outgoing name the connecting edge's direction relative to the impacted node and assert no dependency, since the edge may be any type; a Spec reached both ways is listed in both, and `other` holds the at-risk nodes that are not Specs.",
+        impactDetail:
+          "with `detail: true`, recipe 4 returns its rows with their reasons as it does today, and every at-risk reason gains `direction`, `incoming` or `outgoing`, relative to its impacted end.",
+        packDesignSummary:
+          "`{ id, specKind, statedReadiness, floorReached, statedNextRung, holds: [{ clauseId, targets: [id] }], openQuestions, blockingQuestions, implementedBy, referencedBy }` is recipe 29's summary row, with counts for the last four; the summary's boundary lists ids per direction, and `totals` is unchanged.",
+        guaranteeShape:
+          "recipe 3 returns `sections` as the graph holds them, `designColumns`, `packs`, `implementations` and `references` in recipe 29's unit shape (id, file, line, role, component with its layer and context), and each verifier with its `line`, beside the relations and findings it returns today.",
+        gapExemptions:
+          "recipe 8 adds `exemptions: [{ validatorId, exemptKind, readySpecs }]`, today one row for `honesty/gaps` exempting `decision`, and a `leftOut` line when more signals exist than the 25 it lists.",
+        preflightRungs:
+          "recipe 9 replaces `nextRung` and its failure fields with `aboveStated` and `aboveFloor`, each `{ rung, failures, firstUnmetClause }` with `rung` null at `ready`. The Spec context gains `statedNextRung` and `statedNextRungFailures`, the two fields a Pack member already carries, so the recipe computes no floor.",
+        addressMiss:
+          "a miss in recipe 25 keeps the `id`, `section` and `key` it parsed; `reason` is `malformed`, `spec`, `section` when the Spec has no such section, or `entry`; a `section` or `entry` miss carries `available`, the keys that section of the Spec does carry in code-unit order, and a `malformed` miss carries `expected`, the address grammar in one line.",
+        decisionRefinement:
+          "recipe 31's `narrows` and `narrowedBy` become `refines` and `refinedBy`, still listing decision-kind ends only.",
+        sameLayerTally:
+          "recipe 32 adds `totals.sameLayer` and `totals.sameContext`, the resolved edges whose two components state one layer or one context, and `totals.bySameLayer`, a count per layer; two units of one component count in neither.",
+        designBacklog:
+          "recipe 33, the design backlog, takes no parameter and returns `{ totals: { specs, byFamily, excludedExamples, excludedDecisions, withReferences }, rows }`, each row `{ id, specKind, altitude, floorReached, statedNextRungFailures: [clauseId], design: { entries, declarations, openQuestions, blockingQuestions }, referencedBy, packs }`, sorted by id.",
+        catalogIndex:
+          "the catalog opens with a table of every recipe, its number, name, parameters and a one-line use, before the contract; the build keeps writing one file per body and none for the index.",
+        wrapIdiom:
+          "to filter a shipped answer, the caller wraps the shipped body in an async arrow function inside its own body, `const answer = await (async () => { <shipped body> })();`, and returns a filtered value; the catalog shows the shell form and states that the caller's part must hold no shell expansion.",
+        parseErrorLine:
+          "a body that does not parse prints one stderr line, `sdp q: the body does not parse at line L, column C: <message>`, with 1-based positions in the body as the caller wrote it, exits 1 and prints nothing on stdout; a runtime error keeps the report it has today.",
+        recipeNumbers:
+          "this arc's new recipes take the next numbers in this order: 33 design backlog, 34 rule coverage, 35 design diff, 36 context bundle, 37 perspective filter, 38 proposal check, 39 slimming candidates, 40 curation report.",
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.impact-graph.curation-assist",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/consumers/impact-graph.curation-assist.sdp.md",
+    title: "File-level imports show where curation is missing",
+    narrative:
+      "Gen 1 of this tool, `@libar-dev/architect`, derived a mechanical import graph beside its curated one and used it to show authors where curation was missing: load-bearing modules no annotation covered, coverage by package, and designed modules no code realized yet (`architect/packages/architect-core/src/graph/analysis-views.ts`). The idea held; the build did not. It hard-coded the repository's layout into the engine, read TypeScript only, and mixed both graphs in one query handle. A review of gen 1 for this arc found that this file-level layer gave most of its curation value, and that only its symbol queries needed the symbol identity `spec:consumers.impact-graph` still holds open. The owner ruled to ship the file-level layer first, as the first adopter's large redesign is the test it serves.",
+    sections: {
+      intent: {
+        actor:
+          "An author curating anchors across a codebase, or a design pass over a large redesign.",
+        problem:
+          "Nothing tells an author which load-bearing files no anchor covers, where anchored `uses` and the code's imports disagree, or which component designs no code realizes yet, so curation gaps surface only when someone reads the code.",
+        outcome:
+          "Report from file-level imports where anchors and component designs are missing or drifting, as advice that never authors intent.",
+      },
+      behavior: {
+        rules: [
+          "The layer reads file-level import edges from a per-language adapter and identifies each file by its repository-relative path, so it needs no symbol identity.",
+          "Every import edge it derives carries the `inferred` claim and stays apart from the curated graph: no `uses`, `memberOf`, `satisfies` or delivery fact derives from it, and a query of the curated graph never reads it unless the caller asks.",
+          "It reports the files with the highest import fan-in that no anchor covers, the anchored `uses` edges between two components whose files share no import, the imports between two anchored components that no `uses` states, and the component designs no `component:` anchor realizes yet.",
+          "Every report is advice: it refuses nothing, fails no validation and authors no anchor, and an author who agrees edits an anchor or a Spec as usual.",
+          "The engine reads no repository layout convention. Source roots and package boundaries come from the adapter's configuration, never from a path pattern in the engine.",
+          "A TypeScript adapter ships first, through the compiler library extraction already depends on; another language arrives as another adapter.",
+          "The adapter runs outside extraction and outside `sdp q`: `sdp build`, given the adapter's configuration, writes the import edges to `generated/imports.json`, sorted and without a timestamp, and the curation recipe reads that file through `--params`, so no query derives imports and no validator sees an inferred edge.",
+          "The recipe labels the file as external inferred input and reports a file present on one side only; it states nothing in the graph's name.",
+          "The adapter follows re-exports through barrel files, so a `uses` that reaches a component through an index file counts as backed by an import.",
+          "Load-bearing is a ranked list, not a threshold: the recipe reports each uncovered file's import fan-in and fan-out, takes a `limit`, and leaves the cut to the caller.",
+        ],
+      },
+      design: {
+        importsFlag:
+          '`sdp build --imports PATH` names the adapter configuration, a JSON object `{ "adapter": "typescript", "tsconfig": "tsconfig.json", "roots": ["src"] }` with root-relative paths; without the flag the build writes no imports file and leaves an existing one untouched.',
+        importsFile:
+          '`{ "schema": "sdp-imports/1", "adapter": "typescript", "files": [{ "file": "src/a.ts", "imports": ["src/b.ts"] }] }` in `generated/imports.json`, files and imports sorted in code-unit order, paths root-relative with POSIX separators, every file under the configured roots listed even when it imports nothing, and imports outside the roots left out.',
+        barrelImports:
+          "when a file imports a barrel that re-exports another file, its `imports` lists the barrel and every file the barrel's re-exports reach, so the list is already the backing a `uses` check reads.",
+        curationRecipe:
+          "recipe 40, the curation report, takes `params.imports`, the imports file's object, and `params.limit`, 20 by default, and returns `{ input, totals, uncovered, usesWithoutImport, importsWithoutUses, unrealizedComponents, oneSided }`.",
+        curationRows:
+          "`uncovered` rows are `{ file, fanIn, fanOut }` for files no anchor sits in, ranked by fan-in then path and cut at `limit`; `usesWithoutImport` rows are `{ from, to, fromComponent, toComponent }`; `importsWithoutUses` rows are `{ fromComponent, toComponent, imports, sample: { from, to } }`; `unrealizedComponents` rows are `{ spec, componentId }` for component designs with no resolving anchored `satisfies` edge from the planned `component:` unit to the design, so an existing id without that binding stays unrealized.",
+        curationInput:
+          '`input` is `{ label: "external inferred input", schema, adapter, files }`, and `oneSided` lists anchored source files the imports file does not list and imports-file entries outside every anchored component, so a stale or partial file shows.',
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
     id: "spec:consumers.mermaid-view",
     specKind: "behavior",
     altitude: "feature",
@@ -1064,28 +1179,51 @@ export const consumersSpecs = [
     id: "spec:consumers.impact-graph",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "idea",
+    readiness: "defined",
     file: "specs/consumers/impact-graph.sdp.md",
-    title: "An impact graph can answer exhaustive code-structure questions",
+    title: "Mechanical code structure stays inferred and apart from curated intent",
     narrative: null,
     sections: {
       intent: {
         outcome:
-          "Give symbol and import impact questions an exhaustive derived substrate without promoting mechanical structure into curated intent.",
+          "Let mechanically derived import and symbol structure inform impact and curation without ever standing in for curated intent.",
+      },
+      behavior: {
+        rules: [
+          "Mechanical import and symbol structure derives under the `inferred` claim and stays apart from the sparse curated graph; no curated edge, binding or delivery fact derives from it.",
+          "File-level import structure, keyed by repository-relative path, is `spec:consumers.impact-graph.curation-assist`, and exhaustive symbol reach is `spec:consumers.impact-graph.symbol-reach`, which holds the symbol-identity question.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.impact-graph.symbol-reach",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    file: "specs/consumers/impact-graph.symbol-reach.sdp.md",
+    title: "Exhaustive symbol reach waits for a language-neutral identity",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Answer find-all-usages and symbol-level impact exhaustively once a symbol identity exists that no single compiler owns.",
         openQuestions: [
           {
             question:
               "Which language-neutral identity and extraction boundary can support exhaustive symbol reach without freezing a single compiler's representation into the Protocol?",
             blocking: true,
             key: "symbolIdentity",
+            decider: "owner",
+            trigger:
+              "a reader needs symbol-level reach that file-level imports and curated anchors cannot give",
           },
         ],
       },
       behavior: {
         rules: [
-          "Mechanical import and symbol structure is inferred and remains distinct from the sparse curated graph.",
-          "Comparing commits derives `graph(A)` and `graph(B)` and reports added, removed, or changed nodes and edges without persisting either projection as a second store.",
-          "Candidate relationship suggestions and unambiguous-drift flags are assistive outputs; neither authors intent or silently rewrites the curated graph.",
+          "Symbol reach is inferred structure, kept apart from the curated graph as its parent states, and a symbol is never an anchor id or a relation target.",
         ],
       },
     },
@@ -1095,19 +1233,23 @@ export const consumersSpecs = [
     id: "spec:consumers.intent-composition",
     specKind: "behavior",
     altitude: "story",
-    readiness: "idea",
+    readiness: "defined",
     file: "specs/consumers/intent-composition.sdp.md",
-    title: "Intent composition needs a realizing surface",
+    title: "Composed intent hands off on one proposal shape",
     narrative: null,
     sections: {
       intent: {
+        actor: "A person or an agent reading a view who wants a design change made.",
+        problem:
+          "Each composing surface could invent its own hand-off, so a reviewer, an agent and a check would read one change in as many shapes as there are surfaces.",
         outcome:
-          "Realize the absent user and agent surface that composes scoped intent before ordinary source edits.",
+          "Give every surface that composes scoped intent one hand-off shape, applied as an ordinary edit.",
       },
       behavior: {
         rules: [
-          "`spec:consumers.edit-model` owns the settled intent → agent → git law; this child owns only the future composing interaction that does not yet exist.",
-          "No entrypoint, persistence path, or structured patch contract is implied at the idea rung.",
+          "`spec:consumers.edit-model` owns the settled intent, agent and git law; this Spec owns how a composing surface hands its intent off.",
+          "Every surface that composes scoped intent, the Studio's composing panel first, hands off on the one change-proposal contract, `spec:consumers.intent-composition.proposal`.",
+          "A composing surface writes no source, and its hand-off is applied as an ordinary edit under the edit model.",
         ],
       },
     },
@@ -1218,7 +1360,7 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          'Address resolution takes a list of entry addresses on its opening line and returns one row per input, in input order, repeats included. Each row carries `address`, `resolves`, `id`, `section`, `key`, and `reason`. A resolving row carries the Spec id, the section `design`, `ui`, or `question`, the key, and `reason: null`. A row that does not resolve carries `id`, `section`, and `key` as null and one reason: `"malformed"` for an input that is not an entry address, a bare Spec id included, `"spec"` for an address whose Spec is absent, and `"entry"` for an address whose Spec holds no such entry.',
+          'Address resolution takes a list of entry addresses on its opening line and returns one row per input, in input order, repeats included. Each row carries `address`, `resolves`, `id`, `section`, `key`, and `reason`. A resolving row carries the Spec id, the section `design`, `ui`, `question`, or `rule`, the key, and `reason: null`. A row that does not resolve keeps the `id`, `section`, and `key` it parsed, null where parsing failed, and one reason: `"malformed"` for an input that is not an entry address, a bare Spec id included, `"spec"` for an address whose Spec is absent, `"section"` for a Spec with no such section, and `"entry"` for a section with no such key; a `section` or `entry` miss lists the keys that section does carry.',
           "Address resolution reads the address grammar and the resolution rule of the checked-mentions record: a `design` or `ui` key resolves as an own key of that section other than `description`, and a `question` key resolves when one of the Spec's open questions carries it. Its totals count the inputs, the resolving rows, and each reason.",
           "Dependency cycles take no parameter and read the whole graph. They report every set of two or more Specs in which each Spec reaches every other through declared `dependsOn` edges, and every Spec that declares `dependsOn` on itself and belongs to no such set. An edge whose target is not a Spec in the graph is ignored.",
           "Each reported set lists its members sorted by id in code-unit order and one cycle through it as a closed path that starts and ends at its first member. The cycle is the shortest such path, found by a breadth-first walk from the first member over targets in code-unit order and restricted to the set; a Spec that depends only on itself reports the path of that Spec twice. Sets are ordered by their first member, and the totals count the sets, the self-dependent Specs, and the Specs in any set.",
@@ -1300,7 +1442,7 @@ export const consumersSpecs = [
         openQuestions: [
           {
             question:
-              "The original hydrates the Studio from AI slices beside the graph and the validation report; the context bundle is designed-in and deferred, and no Spec states the shape of a slice. Does the Studio's data hold a slice, and which Spec would state it?",
+              "The original hydrates the Studio from AI slices beside the graph and the validation report; the context bundle is now a catalog recipe composed on each invocation and never saved, so no Spec states a saved slice. Does the Studio's data hold a slice, and which Spec would state it?",
             blocking: false,
             key: "aiSlices",
           },
@@ -1815,8 +1957,9 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "`sdp q` takes `--params` with a JSON object, or `--params @PATH` with a file holding one, the path resolved from the working directory, and injects it as a fourth binding, `params`, beside `g`, `graph` and `report`. Without the flag `params` is an empty object. A value that is not valid JSON, JSON that is not an object (null, an array, a string, a number or a boolean), or a file that cannot be read, is refused before the body runs, with exit 1, one line on stderr and no output on stdout.",
+          "`--params` is repeatable in three forms: a JSON object, `@PATH` naming a file that holds one, and `KEY=@PATH` binding the JSON value in the file, of any type, to `params.KEY`, with `KEY` on the lower-camel grammar. Objects merge at the top level from left to right, and a key given twice by any form is refused before the body runs, with exit 1 and one line on stderr, so a recipe takes a large file such as a base graph beside its other parameters.",
           "The three existing bindings keep their names and meaning. The sink still evaluates one operator-supplied body and adds no query vocabulary: a parameter is input to a body, never a verb.",
-          "Every recipe that takes a parameter reads it from `params` under the name the catalog states and falls back to the catalog's sample when the name is absent, so each body still runs as written. Recipe 4 reads its changed files from `params.files`, and the environment variable it used before is retired.",
+          "Every recipe reads its parameters under the names the catalog states. A parameter with a documented sample falls back to it when absent, so each body still runs as written; a required input with no sample, such as a base graph, a proposal or an imports file, returns diagnostics when absent. Recipe 4 reads its changed files from `params.files`, and the environment variable it used before is retired.",
           "The build writes each catalog body to `dist/recipes/<NN>-<slug>.js`, where `NN` is the two-digit recipe number and the slug is the recipe's heading in lower kebab case, and the package ships that directory. The catalog stays the one owner of the bodies; the files are derived, and the recipe test checks that each file equals its catalog body byte for byte.",
           "The realizing sites are `src/cli/q-command.ts` for the flag and binding, and the build step that writes `dist/recipes/`.",
         ],
@@ -1838,21 +1981,13 @@ export const consumersSpecs = [
           "Iterating on a design asks questions no recipe answers in one body: where a Pack's design stands, what a change to a Spec asks to follow, which decisions shape what, and which component dependencies cross a context or a layer. The first adopter answers each with its own script.",
         outcome:
           "Answer each of those questions with a catalog recipe that runs as written, so design work reads them from the graph.",
-        openQuestions: [
-          {
-            question:
-              "Example-space coverage, the witnesses and coverage gaps of each literal slot (v0 04 §4), needs the slot notation parsed, and a recipe body that parses it would be a second parser; `spec:consumers.agent-surface.example-space-coverage` holds whether the reader decodes example spaces and bound points instead.",
-            blocking: false,
-            key: "exampleSpaceCoverage",
-          },
-        ],
       },
       behavior: {
         rules: [
           "The build backlog (recipe 1) keeps its existing fields and adds `designColumns` for each listed Spec, read from its Spec context: counts of keyed Design and UI entries, pinned declarations, open and blocking questions, and the decisions it names. These columns are derived, never a score, rung or approval.",
           "Pack design (recipe 29) takes a Pack id in `params.pack` and returns the Pack context's design assembly as data: the members in authored order with their stated next rung and its unmet clauses, their design columns, bindings and verifiers, and the Pack's boundary. It returns `found: false` for an id that is no Pack.",
           "Design-change impact (recipe 30) takes Spec ids in `params.specs` and returns every Spec that rests on them, transitively, through inbound `refines`, `dependsOn`, `constrainedBy` or `decidedBy` edges, each with the relation path that reaches it and its distance. For the changed Specs and every dependent it lists the units that satisfy it, the units that reference it, its enabled verifiers and its Packs. A `references` edge counts as a unit to notify and confers nothing.",
-          "Decision register (recipe 31) takes no parameter and returns one row per decision Spec, sorted by id: its title, stated rung, the decisions it supersedes and the decisions that supersede it, the decision-kind Specs it `refines` as `narrows` and those that `refines` it as `narrowedBy`, the Specs that name it through `decidedBy`, its keyed open questions, and its Packs. It reads the graph alone; the ratified names stay in the decision registry document.",
+          "Decision register (recipe 31) takes no parameter and returns one row per decision Spec, sorted by id: its title, stated rung, the decisions it supersedes and the decisions that supersede it, the decision-kind Specs it refines as `refines` and those that refine it as `refinedBy`, the reasons its relations state, the Specs that name it through `decidedBy`, its keyed open questions, and its Packs. It reads the graph alone; the ratified names stay in the decision registry document.",
           "Architecture crossings (recipe 32) takes no parameter and returns every `uses` edge whose two ends, each resolved to its own component directly or through `memberOf`, have components that both state a context and differ in it, or both state a layer and differ in it. Each row names both units, both components and what differs, and the totals tally the crossings by context pair and by layer pair, `from -> to`, so a corpus reads the direction of its dependencies at a glance. It reports and never refuses: a corpus gates its own architecture rule, as the architectural annotation decision leaves it.",
           "Each recipe body lives in the catalog and runs as written in the recipe test, and each reads its parameter as the recipe-parameters Spec states.",
         ],
@@ -1953,7 +2088,7 @@ export const consumersSpecs = [
     id: "spec:consumers.review-perspectives",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/review-perspectives.sdp.md",
     title: "A Pack is read from a named perspective",
     narrative:
@@ -1969,7 +2104,7 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "A perspective filters and orders a Pack's members and their content and never changes them; every row opens the same Spec, and the whole Pack stays one step away.",
+          "A perspective filters and orders a Pack's members and leaves each selected member's content intact; every row opens the same Spec, and the whole Pack stays one step away.",
           "A perspective adds no kind, readiness, stage or sequence; reading a Pack from one perspective records nothing, and no perspective is required before another or before `ready` is stated.",
           "The corpus owns its perspectives and their questions; the Protocol supplies the filter and ships no list of perspectives.",
           "A perspective is corpus data: a JSON object the corpus keeps beside its briefs and passes to the perspective filter, a catalog recipe, through `--params`. The reader loads no perspective file, and no validator lists or checks perspectives, so no registry forms.",
@@ -1979,18 +2114,28 @@ export const consumersSpecs = [
           "Members keep the manifest's authored order unless the perspective gives an explicit priority order, authored order breaking ties; every selected member's blocking questions stay visible whatever else the perspective filters out.",
         ],
       },
+      design: {
+        perspectiveObject:
+          '`{ "name": "domain", "select": { "ids": [], "idPrefixes": [], "kinds": [], "sections": [], "designKeys": [{ "key": "layer", "value": "domain" }], "questionKeys": [], "relations": [{ "type": "dependsOn", "direction": "out", "target": "<spec id>" }], "bindings": { "via": ["satisfies", "references"], "layers": [], "contexts": [] } }, "order": ["<spec id>"] }`, every selector optional; an absent selector imposes no requirement and a present empty list matches no member, an absent or empty `select` object selects every member, absent binding `layers` or `contexts` impose no restriction, `target` and a Design key\'s `value` are optional, and `direction` is `out` or `in`.',
+        perspectiveRecipe:
+          "recipe 37, the perspective filter, takes `params.pack` and `params.perspective` and returns `{ pack, perspective, totals: { members, selected }, diagnostics, selected, notSelected }`.",
+        perspectiveRows:
+          "each `selected` row is `{ id, matchedOn: [{ selector, value, claim }], blockingQuestions: [{ address, question }] }` in the perspective's order and then authored order; `claim` is `declared` for a match on authored intent and `anchored` for a match through a binding; `notSelected` lists the remaining member ids in authored order.",
+        perspectiveDiagnostics:
+          "an unknown selector, a value of the wrong type or a `bindings` selector with no `via` is a diagnostic row `{ selector, problem }`, and the recipe still applies the selectors it understood.",
+      },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.context-bundle",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/context-bundle.sdp.md",
-    title: "A context bundle is composed per invocation within a token budget",
+    title: "A context bundle is composed per invocation within a character budget",
     narrative:
-      "The original design cut the graph into slices for language models ahead of time. It wrote one slice per Pack, per capability, around a changed Spec, per readiness level and for failing tests, each under 32k tokens with its nodes, edges, source files, findings, open questions and a summary, and a prompt bundle for one Spec (`docs/lineage/v0-design/07-spec-studio-and-projections.md` §5.5, §13.2). The ratified vocabulary keeps the term and defines a context bundle as a token-budgeted curated slice pushed to an agent.\n\nPlan 35 deferred the bundle until evidence showed agent sessions still hand-assembling the same token-budgeted slice after the catalog recipes (plan 35, \"H leftover projections\"). The first adopter's evidence meets that trigger. Every design pass there starts from the same hand-written brief, which tells the agent to read the Pack's page, run recipes 5, 20, 21 and 24 over the Pack and its members, read the member Specs where the page falls short, and end the memo with what the page did not give (`libar-platform/design/advisors/task-pass.md`). Four advisor lenses run that brief over each Pack, and the adopter asks for the reading material to be generated from a Pack and a lens (`libar-platform/docs/feedback/sdp-feedback-02.md`, item 29). The agent front door refuses a committed artifact that answers in the graph's name, so a bundle is composed on each invocation and never saved as slices. It builds on the Pack design recipe, recipe 29.",
+      "The original design cut the graph into slices for language models ahead of time. It wrote one slice per Pack, per capability, around a changed Spec, per readiness level and for failing tests, each under 32k tokens with its nodes, edges, source files, findings, open questions and a summary, and a prompt bundle for one Spec (`docs/lineage/v0-design/07-spec-studio-and-projections.md` §5.5, §13.2). The ratified vocabulary keeps the term for the reading material of one design pass.\n\nPlan 35 deferred the bundle until evidence showed agent sessions still hand-assembling the same token-budgeted slice after the catalog recipes (plan 35, \"H leftover projections\"). The first adopter's evidence meets that trigger. Every design pass there starts from the same hand-written brief, which tells the agent to read the Pack's page, run recipes 5, 20, 21 and 24 over the Pack and its members, read the member Specs where the page falls short, and end the memo with what the page did not give (`libar-platform/design/advisors/task-pass.md`). Four advisor lenses run that brief over each Pack, and the adopter asks for the reading material to be generated from a Pack and a lens (`libar-platform/docs/feedback/sdp-feedback-02.md`, item 29). The agent front door refuses a committed artifact that answers in the graph's name, so a bundle is composed on each invocation and never saved as slices. It builds on the Pack design recipe, recipe 29.",
     sections: {
       intent: {
         actor:
@@ -1998,26 +2143,14 @@ export const consumersSpecs = [
         problem:
           "Each pass assembles the same reading material by running the same recipes and joining their answers by hand, and nothing bounds what it hands the model.",
         outcome:
-          "Give an agent the reading material for one design pass in one composed, token-budgeted slice of the graph, so no session hand-assembles it.",
-        openQuestions: [
-          {
-            question:
-              "Which scopes does a bundle take beyond a Pack: a Spec with its neighborhood, the Specs a changeset touches, the open questions of a Pack?",
-            blocking: false,
-            key: "bundleScopes",
-          },
-          {
-            question:
-              "Does a bundle take a review perspective as a filter, so one call yields the brief for one lens?",
-            blocking: false,
-            key: "perspectiveFilter",
-          },
-        ],
+          "Give an agent the reading material for one design pass in one composed slice of the graph within a stated budget, so no session hand-assembles it.",
       },
       behavior: {
         rules: [
           "A bundle is a catalog recipe that takes its scope and its budget as recipe parameters; it adds no entrance and no query verb.",
           "A bundle is composed from the graph on each invocation by the reader every recipe uses; nothing is precomputed, saved or committed, and two invocations over the same graph with the same parameters compose the same bundle.",
+          "A bundle takes one scope: `pack`, a Pack id, or `specs`, an ordered list of Spec ids. For `specs` the members are the listed Specs in the given order and the boundary is each member's one-hop neighbours through the four typed relations both ways, with `verifies` and `supersedes` apart, as the Pack boundary is built. Both scopes or neither is a diagnostic result. A changeset fills `specs` from the impacted Spec ids changed-file impact reports, and a Pack's open questions are read from the Pack bundle, not from a third scope.",
+          "With `pack`, a bundle may take `members`, an ordered subset of the Pack's member ids, which the perspective filter returns; it keeps the Pack's framing and boundary, lists only those members in that order, and states that it is a subset, so one filter implementation serves both recipes.",
           "A bundle for a Pack carries the Pack design assembly, its members in authored order with their design columns and its boundary, then each member's open questions with their addresses and lines, its dependency footing, its pinned declarations and its examples.",
           "The budget is a hard limit on a successful bundle, counted in UTF-16 code units, the `length` a recipe body reads, of the compact `JSON.stringify` of the value the recipe returns, its scope, budget and left-out statement included; `sdp q --json` prints a longer indented form, and the budget never measures printed text. The bundle also reports a token estimate labelled as an estimate, so no model's tokenizer binds the Protocol.",
           "When the scope exceeds the budget, the bundle cuts in a fixed order: boundary rows down to their ids first, then member narrative, then example step text, then non-blocking questions. It never cuts member ids, stated and next rungs, blocking questions, pinned declarations or entry addresses.",
@@ -2027,18 +2160,34 @@ export const consumersSpecs = [
           "A bundle carries facts from the graph and no instructions of its own; the brief that tells an agent what to look for stays the corpus's own text.",
         ],
       },
+      design: {
+        bundleRecipe:
+          "recipe 36, the context bundle, takes exactly one scope, `params.pack` or `params.specs`, an optional `params.members` beside `pack`, and `params.budget`, 100,000 code units by default; a missing, doubled or unknown scope returns `{ diagnostics }` and no bundle.",
+        bundleShape:
+          "`{ scope, budget, used, tokenEstimate: { value, method }, leftOut, pack, members, boundary }`, where `pack` is `{ id, title, framing }` for a Pack scope and null otherwise, and `tokenEstimate.method` reads `UTF-16 code units divided by four, an estimate`.",
+        memberShape:
+          "`{ id, title, specKind, altitude, statedReadiness, floorReached, statedNextRung, holds, narrative, sections, questions, footing, declarations, examples }`, with questions carrying their address, blocking flag, line and fields, footing as dependency footing (recipe 21) reports it, declarations as pinned declarations (recipe 24) report them, and examples with their stated rung, whether they are enabled and their steps.",
+        boundaryRows:
+          "a Pack scope's boundary is the Pack design's; a Spec-list scope's boundary is every Spec outside the list one authored relation away from a listed Spec, in the same row shape.",
+        fifthCut:
+          "after non-blocking questions, the bundle reduces the remaining section entries other than pinned declarations to their entry address, or to `{ spec, path, file, line }` with `line` null when the entry is not located; the four cuts before it keep the ruled order.",
+        cutEverywhere:
+          "every cut removes the affected text from each place it appears in the bundle, `sections` included, and blocking questions, pinned declarations and entry addresses stay whole in each place.",
+        budgetExceeded:
+          "`{ scope, budget, budgetExceeded: true, protectedLength, leftOut }` is the whole result when the protected content alone exceeds the budget, with `protectedLength` in the budget's unit.",
+      },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.design-diff",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/design-diff.sdp.md",
     title: "Designs are compared between two commits at entry grain",
     narrative:
-      "The original design's CLI compared two graph snapshots with `graph diff <ref1> <ref2>` (`docs/lineage/v0-design/08-delivery-evidence-and-tooling.md` §6.1). Today one rule of the impact graph's Spec states that comparison. It derives the graph at each commit and reports the nodes and edges added, removed or changed. That Spec is held by a blocking question on language-neutral symbol identity, which concerns exhaustive code structure and not the curated graph a design lives in, so the comparison a design review needs waits on a question it never asks.\n\nIterating on a design asks what changed since the last reading. The first adopter asks for a comparison by Spec id, section and entry key that tells changed declaration text from changed prose, moved entries, readiness edits, relation edits and new or removed examples, and for what changed since a design pass, read against the commit that pass read (`libar-platform/docs/feedback/sdp-feedback-02.md`, items 30 and 31). Git shows the changed lines; this comparison shows the changed design.",
+      "The original design's CLI compared two graph snapshots with `graph diff <ref1> <ref2>` (`docs/lineage/v0-design/08-delivery-evidence-and-tooling.md` §6.1). The impact graph's Spec once stated that comparison under a blocking question on symbol identity, which concerns exhaustive code structure and not the curated graph a design lives in. This Spec now owns it.\n\nIterating on a design asks what changed since the last reading. The first adopter asks for a comparison by Spec id, section and entry key that tells changed declaration text from changed prose, moved entries, readiness edits, relation edits and new or removed examples, and for what changed since a design pass, read against the commit that pass read (`libar-platform/docs/feedback/sdp-feedback-02.md`, items 30 and 31). Git shows the changed lines; this comparison shows the changed design.",
     sections: {
       intent: {
         actor:
@@ -2047,25 +2196,14 @@ export const consumersSpecs = [
           "A line diff of the carriers shows edits but not which Specs, entries, questions and relations changed, so each pass re-reads the whole Pack to find what moved.",
         outcome:
           "Show what changed in a design between two commits, down to the Spec, the section and the keyed entry, so a reviewer reads what moved since the last pass.",
-        openQuestions: [
-          {
-            question:
-              "Should the comparing rule leave the impact graph's Spec once this Spec is defined, so the impact graph keeps exhaustive code structure only?",
-            blocking: false,
-            key: "comparingRuleHome",
-          },
-          {
-            question:
-              "A design pass is review context, not a graph fact. Is the base commit always one the caller names, or may a corpus keep the commit each pass read in its own records for the comparison to read?",
-            blocking: false,
-            key: "passBase",
-          },
-        ],
       },
       behavior: {
         rules: [
+          "The design diff owns comparison between two commits, and the impact graph states nothing about comparing them.",
           "A comparison is a catalog recipe that takes the base graph as a recipe parameter, the graph `sdp build` writes at the base commit, and compares it with the graph the evaluation derives at the head; it adds no verb and no binding.",
           "The base graph is input the caller holds, derived from the repository alone at the base commit; it never answers in the graph's name, and the comparison writes nothing.",
+          "The caller always names the base. The recipe reads no record of a design pass and keeps none, and a corpus that notes which commit a pass read keeps that note outside the graph.",
+          "Two graphs written by different engine versions are compared on what both carry; the result reports each side's schema version, and a difference is a diagnostic in the result, never a refusal.",
           "It reports the Specs added and removed, and for a Spec present at both commits the changes to its title, kind, altitude, stated readiness, relations, narrative and each section.",
           "Inside the Design and UI sections, the open questions and any other section whose entries carry keys, it compares keyed entries by key and reports each as added, removed, changed in value or moved in order.",
           "An unkeyed entry has no identity across two commits, neither its position nor its text, so it is compared as part of its whole section.",
@@ -2073,14 +2211,32 @@ export const consumersSpecs = [
           "A comparison states facts about two commits and confers nothing. It grants no approval, raises no staleness flag, moves no readiness and never records that a pass happened.",
         ],
       },
+      design: {
+        diffRecipe:
+          "recipe 35, the design diff, takes `params.base`, the graph object `sdp build` wrote at the base commit, an optional `params.pack` that limits the comparison to the Specs that are members of that Pack at either commit, and `params.detail`; it compares `params.base` with the `graph` binding and reads nothing else.",
+        diffShape:
+          "`{ base: { schemaVersion, specs }, head: { schemaVersion, specs }, diagnostics, totals, specs: { added: [id], removed: [id], changed }, packs, bindings, leftOut }`, where `totals` counts each list and `diagnostics` lists a schema-version difference or a part one side cannot carry.",
+        changedSpecRow:
+          "`{ id, parts: [part] }` in the summary and `{ id, parts: [{ part, change, from, to }] }` with `detail: true`; `change` is `added`, `removed`, `changed` or `moved`, and `from` and `to` carry the values on each side.",
+        diffParts:
+          "a part is `title`, `specKind`, `altitude`, `statedReadiness`, `narrative`, `relation.<type>:<target>`, a keyed entry as `design.<key>`, `ui.<key>`, `question.<key>`, `rule.<key>` or `term.<term>`, an unkeyed list as `behavior.rules`, `behavior.flows` or `intent.openQuestions`, and any other section as its name.",
+        movedEntry:
+          "a keyed entry whose value is unchanged and whose position among the keyed entries of its section changed is `moved`; an entry whose value changed is `changed` whatever its position.",
+        packRows:
+          "`packs` rows are `{ id, change, membersAdded, membersRemoved, reordered }` for each Pack added, removed or changed in membership or order.",
+        bindingRows:
+          "`bindings` rows are `{ id, implementedBy, referencedBy, verifiers, deliveryFacts }`, each an `{ added, removed }` pair of ids or fact names, kept apart from `specs` because they derive from anchors.",
+        baseRecipe:
+          "the catalog shows how to write the base graph: `git worktree add` at the base commit, `sdp build` on that worktree with the corpus's own exclusions, then pass its `generated/graph.json` as `base` and remove the worktree.",
+      },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.intent-composition.proposal",
     specKind: "contract",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/intent-composition.proposal.sdp.md",
     title: "A change proposal is addressed, based and checked before it lands",
     narrative:
@@ -2094,9 +2250,12 @@ export const consumersSpecs = [
         openQuestions: [
           {
             question:
-              "Does a proposal name who proposed it, as the original's `proposedBy` did, or do git authorship and co-author trailers stand in once it is applied?",
+              "Which catalog recipe renders a proposal as the Markdown memo a person reviews, so the Studio's composing panel and an agent hand off the same text?",
             blocking: false,
-            key: "proposer",
+            key: "memoRecipe",
+            decider: "owner",
+            links: ["spec:consumers.spec-studio.intent-panel"],
+            provisional: "a person reviews the proposal's JSON beside the proposal check's rows",
           },
         ],
       },
@@ -2111,10 +2270,25 @@ export const consumersSpecs = [
           "Applying a proposal is an ordinary source edit by an agent or a person; no tool rewrites a carrier from it, and nothing is applied to a copy of the graph first.",
           "An applied proposal lands only from a worktree on which `sdp validate` reports no error, and the conformance and honesty checks stay the only gate.",
           "A proposal carries no status, approval or verdict, and the graph records none; whether it was accepted is git history and the adopter's own record.",
+          "A proposal carries no proposer. Whoever hands it over is its author until it is applied, and then git authorship and co-author trailers are the record; the schema refuses the field.",
         ],
       },
+      design: {
+        proposalDocument:
+          '`{ "schema": "sdp-proposal/1", "base": "<commit>", "reason": "<one line>", "changes": [change] }`, with `schema`, `base`, `reason` and a non-empty `changes` required and no other field.',
+        proposalChange:
+          '`{ "scope": ["<spec id or entry address>"], "request": "<words an agent can apply>", "text": "<exact entry text>", "replaces": "<entry address>", "follows": "<entry address>", "relation": { "action": "declare", "from": "<spec id>", "type": "dependsOn", "target": "<spec id>" }, "reason": "<one line>" }`, with `scope` non-empty and `request` required, `replaces` and `follows` exclusive, `action` either `declare` or `remove`, `from` naming the relation\'s source Spec, and no other field.',
+        proposalSchemaFile:
+          "the package ships the document's JSON Schema as `schemas/sdp-proposal-1.schema.json`, so an agent can use it as a structured-output schema; the check recipe validates the same shape itself, and a test holds the two to the same accepted and refused samples.",
+        checkRecipe:
+          "recipe 38, the proposal check, takes `params.proposal` and `params.base`, the base graph, and returns `{ schemaProblems: [{ path, problem }], base, diagnostics, totals: { changes, moved, unresolved }, changes }`, with the design diff's `diagnostics` for the Specs it compares; when the document breaks the schema or the base graph is missing it returns the problems and no change rows.",
+        checkedScope:
+          "the check resolves and compares the deduplicated union of `scope`, `replaces`, `follows` and `relation.from`, and a change row's `scope` reports that union, so an entry a change replaces or follows cannot move unseen.",
+        checkRows:
+          "each change row is `{ index, scope: [{ ref, resolvesAtHead, resolvesAtBase, moved }], moved, relationTarget }`, where an item's `moved` is true when the design diff reports it changed, added or removed between the base and the head and the row's `moved` is true when any item moved, and `relationTarget` says whether a declared relation's target resolves; an item the two graphs cannot judge, because a part lies outside their common schema or one graph keeps no order across rules and flows, carries `comparable: false` and a `reason` in place of `moved`, and its row carries `comparable: false` and a null `moved` unless another item moved; the rows are facts, and routing a moved change to a person is the caller's step.",
+      },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.reference-projection",
@@ -2132,9 +2306,12 @@ export const consumersSpecs = [
         openQuestions: [
           {
             question:
-              "Re-entry trigger from plan 35: a named human consumer outside the repository whom the four shipped roots do not serve, with a way to measure that demand inside the arc that builds it. The taxonomy row is not that consumer.",
+              "Does a human reader outside the repository need a reference projection the four shipped roots do not serve? The taxonomy row is not that reader.",
             blocking: true,
             key: "namedOutsideReader",
+            decider: "owner",
+            trigger:
+              "a named consumer outside the repository, with a way to measure that demand inside the arc that builds the projection",
           },
           {
             question:
@@ -2164,9 +2341,12 @@ export const consumersSpecs = [
         openQuestions: [
           {
             question:
-              "Re-entry trigger from plan 35: a named reader who needs diagrams rooted at code units, which census tables and Spec-rooted one-hop Mermaid do not serve, plus a recorded decision to extend or abandon the one-generated-view posture.",
+              "Does a reader need diagrams rooted at code units, which census tables and Spec-rooted one-hop Mermaid do not serve?",
             blocking: true,
             key: "namedStructuralReader",
+            decider: "owner",
+            trigger:
+              "a named reader with that need, plus a recorded decision to extend or abandon the one-generated-view posture",
           },
           {
             question:
@@ -2196,9 +2376,12 @@ export const consumersSpecs = [
         openQuestions: [
           {
             question:
-              "Re-entry trigger: a named reader who needs release, baseline or roadmap views that the shipped projections, the recipes and git do not serve, with a way to measure that need inside the arc that builds them.",
+              "Does a reader need release, baseline or roadmap views that the shipped projections, the recipes and git do not serve?",
             blocking: true,
             key: "namedRoadmapReader",
+            decider: "owner",
+            trigger:
+              "a named reader with that need, and a way to measure it inside the arc that builds the views",
           },
         ],
       },
@@ -2211,6 +2394,184 @@ export const consumersSpecs = [
             "Descriptive vocabulary for optional roadmap projections, never gates or enforced sequences.",
         },
       },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    file: "specs/consumers/obsidian-vault.sdp.md",
+    title: "An Obsidian vault lets a person iterate on designs from the one graph",
+    narrative:
+      "The Design Review renders on GitHub and diffs in git, but a person cannot follow a relation backward in it, filter a Pack's members, or jump from an entry address to its entry. The Spec Studio is designed for a reviewer who holds only a link. A person designing a capability in passes, with an agent editing the carriers, needs to move through the graph while the pass runs: see what a Spec rests on and what rests on it, filter a Pack by rung and design columns, open an entry from its address, and see the next edit arrive.\n\nObsidian already does that for linked Markdown notes with properties: backlinks, a graph view, search, and filterable tables it calls Bases. A prototype in `explorations/obsidian-vault/` generated a vault from the reader's values alone, with one note per Spec, Pack, code unit and Model term, every relation and checked mention written as a wikilink, entry addresses as block links, and Bases for each Pack's members and for the corpus's standing queries. Every link resolved, the Pack's members read as one sortable table, and nothing was computed outside the reader.\n\nThe principle is a linked-notes view regenerated from the one graph; Obsidian and its Bases are the representation chosen first. Like every projection, the vault states no truth, and two builds of one graph are byte-identical, so no note names a commit or a time: a publishing step may write a stamp beside the vault, as the Studio's sharing rule does. Intent is still written only in the carriers.",
+    sections: {
+      intent: {
+        actor:
+          "A person in the repository who designs a capability in passes while an agent edits the carriers.",
+        problem:
+          "The Markdown Design Review cannot be navigated, filtered or followed backward, and the Studio serves a reviewer with only a link, so a designer has no view that moves through the graph while a pass is underway.",
+        outcome:
+          "Generate an Obsidian vault from the one graph, in which a person reads, navigates and filters the corpus and follows each pass's edits, while the carriers stay the only place intent is written.",
+        risks: [
+          "A notes app invites editing, and an edit to a generated note is lost at the next regeneration without reaching the carrier.",
+        ],
+        openQuestions: [
+          {
+            question:
+              "Is the vault a projection of its own, or the Studio's local half beside the static page set a reviewer with only a link reads?",
+            blocking: true,
+            key: "studioRelation",
+            decider: "owner",
+            provisional:
+              "a projection of its own, written by its own verb under `generated/obsidian-vault/`, which the Studio's design pass may adopt as its local half",
+          },
+          {
+            question:
+              "Does the vault keep to the wikilinks and properties other notes tools read, or use Obsidian's Bases freely?",
+            blocking: false,
+            key: "otherNotesTools",
+            provisional:
+              "notes and links stay plain Markdown with wikilinks any such tool reads, and the Bases are Obsidian's alone",
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.notes",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/consumers/obsidian-vault.notes.sdp.md",
+    title: "Every Spec, Pack, code unit and term is a note, and every relation is a link",
+    narrative:
+      "The prototype wrote a note for each Spec, Pack, code unit and test anchor, and for each term a Model section defines. A note carries the reader's values as flat properties, so Obsidian's tables filter on them, and the Spec's sections in authored order. Each declared relation became a wikilink in both directions with its reason, each mention in prose became a wikilink to its Spec or to its entry's block, and each keyed Design, UI, question and rule entry carried a block id named for its address. Backlinks and the graph view then show what rests on a Spec without a query.\n\nTwo findings shape the questions below. Obsidian refuses a colon in a note's name, so a note cannot be named by its id as written. And Obsidian renders a Spec id in a property as a link to an external address, because the namespace reads as a URL scheme.",
+    sections: {
+      intent: {
+        outcome:
+          "Write one note per Spec, Pack, code unit and Model term, with the reader's values as properties and every relation and checked mention as a wikilink, so a person follows the graph in both directions.",
+        openQuestions: [
+          {
+            question:
+              "How is a note named, when Obsidian refuses a colon and a vault may also hold notes of another corpus?",
+            blocking: true,
+            key: "noteNames",
+            decider: "owner",
+            provisional:
+              "the id without its namespace colon, as model.rule-keys, pack.design-iteration-v1 and impl.protocol.reader, with the id and the title as aliases",
+          },
+          {
+            question: "Which reader values become properties?",
+            blocking: true,
+            key: "propertySet",
+            decider: "owner",
+            provisional:
+              "kind, altitude, stated rung, floor reached, whether only the author's statement is missing, the delivery facts as booleans, the design columns as numbers, the Packs as links, the carrier's repository path, and tags for kind and stated rung; every value read from the reader, none computed by the generator",
+          },
+          {
+            question:
+              "Which property form keeps a Spec id plain text where Obsidian would render it as an external link?",
+            blocking: false,
+            key: "idProperty",
+          },
+          {
+            question:
+              "A term note comes only from a Model section, and no note links a term by matching words; does a term of the ratified glossary, which is not graph data, get a note too?",
+            blocking: false,
+            key: "termNotes",
+            provisional:
+              "no; a glossary term gains a note when a Spec defines it in a Model section",
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.bases",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/consumers/obsidian-vault.bases.sdp.md",
+    title: "A Pack's members and the standing queries are tables over the reader's values",
+    narrative:
+      "A Base is Obsidian's table, card or list view over notes, filtered and sorted by their properties. The prototype gave each Pack a Base of its members and the corpus one Base whose views are standing queries: the build backlog, the design backlog, the Specs waiting only for their author's statement, the Specs with blocking questions, and the decisions. In Obsidian a Pack's members read as one sortable table with the delivery facts as checkboxes, where the Design Review's Pack page is a table too wide for its page.\n\nA view is a filter over values the generator wrote from the reader, so it agrees with the recipe it mirrors only while its predicate stays that simple. A view that would need a join waits until the reader carries the joined value.",
+    sections: {
+      intent: {
+        outcome:
+          "Give each Pack a Base of its members and the corpus a Base of standing queries, so a person filters and sorts a design by rung, floor, delivery facts and design columns.",
+        openQuestions: [
+          {
+            question:
+              "Which standing queries become views, and how is each kept equal to the recipe it mirrors?",
+            blocking: true,
+            key: "standingViews",
+            decider: "owner",
+            provisional:
+              "the build backlog, the design backlog, waiting for the author, blocking questions and decisions, each one predicate over properties, with a test that compares each view's selection with its recipe over the same graph",
+          },
+          {
+            question:
+              "A Base sorts by property and keeps no authored order; how does a person read a Pack in its reading order?",
+            blocking: false,
+            key: "memberOrder",
+            provisional: "the Pack's note lists the members in order beside the embedded Base",
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.iteration",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/consumers/obsidian-vault.iteration.sdp.md",
+    title: "A design pass is followed and answered from the vault",
+    narrative:
+      "A design pass is a loop: an agent edits carriers, the graph changes, a person reads the change and answers it. In a vault the reading half is cheap, because Obsidian reloads a note when its file changes, so a vault regenerated as the carriers change shows each edit where the person is already reading. The answering half must not become a second write path. A person who edits a generated note loses the edit at the next regeneration, and the edit model refuses patches to canonical source from a view. A person composes intent beside the generated notes instead, citing entries by their block links, and an agent turns it into a change proposal that the proposal check reads before the agent applies it.",
+    sections: {
+      intent: {
+        outcome:
+          "Let a person follow a design pass in the vault as an agent edits the carriers, and answer it from the vault with intent an agent hands off as a change proposal.",
+        risks: [
+          "Regenerating the vault while a person reads could move them off their place or overwrite a note they are editing.",
+        ],
+        openQuestions: [
+          {
+            question: "Where does a person compose intent in the vault?",
+            blocking: true,
+            key: "composeHome",
+            decider: "owner",
+            links: ["spec:consumers.intent-composition.proposal"],
+            provisional:
+              "a folder of intent notes the generator never writes, each citing entries by block link, which an agent turns into a proposal and runs through the proposal check",
+          },
+          {
+            question: "What regenerates the vault while a pass runs?",
+            blocking: true,
+            key: "regenerationTrigger",
+            decider: "owner",
+            provisional:
+              "a watch mode on the carrier events `sdp validate --watch` already handles, rewriting only the notes whose values changed",
+          },
+          {
+            question: "How does the vault discourage editing a generated note?",
+            blocking: false,
+            key: "editGuard",
+            provisional:
+              "a read-only banner naming the carrier on every note, and a regeneration that reports any generated note changed since it last wrote it",
+          },
+        ],
+      },
+      behavior: {},
     },
     deliveryFacts: [],
   },

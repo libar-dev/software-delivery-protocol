@@ -2,7 +2,7 @@
 id: spec:consumers.intent-composition.proposal
 kind: contract
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.intent-composition
   dependsOn:
@@ -21,7 +21,11 @@ The first adopter's agents already write proposals in that shape. A design pass 
 - outcome: Give a proposed design change a reviewable shape: what it touches by Spec id or entry address, the commit it was read at, the change requested and why, checked on a worktree before merge.
 
 ### Open questions
-- [non-blocking #proposer] Does a proposal name who proposed it, as the original's `proposedBy` did, or do git authorship and co-author trailers stand in once it is applied?
+- [non-blocking #memoRecipe] Which catalog recipe renders a proposal as the Markdown memo a person reviews, so the Studio's composing panel and an agent hand off the same text?
+  - decider: owner
+  - links: spec:consumers.spec-studio.intent-panel
+  - provisional: a person reviews the proposal's JSON beside the proposal check's rows
+
 
 ## Contract
 - A proposal is one JSON document on one schema, which a recipe takes as a parameter; a Markdown memo of the proposal is a rendering of that document and never a second carrier.
@@ -33,3 +37,13 @@ The first adopter's agents already write proposals in that shape. A design pass 
 - Applying a proposal is an ordinary source edit by an agent or a person; no tool rewrites a carrier from it, and nothing is applied to a copy of the graph first.
 - An applied proposal lands only from a worktree on which `sdp validate` reports no error, and the conformance and honesty checks stay the only gate.
 - A proposal carries no status, approval or verdict, and the graph records none; whether it was accepted is git history and the adopter's own record.
+- A proposal carries no proposer. Whoever hands it over is its author until it is applied, and then git authorship and co-author trailers are the record; the schema refuses the field.
+
+## Design
+
+- proposalDocument: `{ "schema": "sdp-proposal/1", "base": "<commit>", "reason": "<one line>", "changes": [change] }`, with `schema`, `base`, `reason` and a non-empty `changes` required and no other field.
+- proposalChange: `{ "scope": ["<spec id or entry address>"], "request": "<words an agent can apply>", "text": "<exact entry text>", "replaces": "<entry address>", "follows": "<entry address>", "relation": { "action": "declare", "from": "<spec id>", "type": "dependsOn", "target": "<spec id>" }, "reason": "<one line>" }`, with `scope` non-empty and `request` required, `replaces` and `follows` exclusive, `action` either `declare` or `remove`, `from` naming the relation's source Spec, and no other field.
+- proposalSchemaFile: the package ships the document's JSON Schema as `schemas/sdp-proposal-1.schema.json`, so an agent can use it as a structured-output schema; the check recipe validates the same shape itself, and a test holds the two to the same accepted and refused samples.
+- checkRecipe: recipe 38, the proposal check, takes `params.proposal` and `params.base`, the base graph, and returns `{ schemaProblems: [{ path, problem }], base, diagnostics, totals: { changes, moved, unresolved }, changes }`, with the design diff's `diagnostics` for the Specs it compares; when the document breaks the schema or the base graph is missing it returns the problems and no change rows.
+- checkedScope: the check resolves and compares the deduplicated union of `scope`, `replaces`, `follows` and `relation.from`, and a change row's `scope` reports that union, so an entry a change replaces or follows cannot move unseen.
+- checkRows: each change row is `{ index, scope: [{ ref, resolvesAtHead, resolvesAtBase, moved }], moved, relationTarget }`, where an item's `moved` is true when the design diff reports it changed, added or removed between the base and the head and the row's `moved` is true when any item moved, and `relationTarget` says whether a declared relation's target resolves; an item the two graphs cannot judge, because a part lies outside their common schema or one graph keeps no order across rules and flows, carries `comparable: false` and a `reason` in place of `moved`, and its row carries `comparable: false` and a null `moved` unless another item moved; the rows are facts, and routing a moved change to a person is the caller's step.

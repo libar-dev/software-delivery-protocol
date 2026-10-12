@@ -63,6 +63,7 @@ function specContext(overrides: Partial<SpecContext> = {}): SpecContext {
     },
     floorFailures: [],
     nextRungFailures: [],
+    statedNextRungFailures: [],
     relationsOut: [],
     relationsIn: [],
     implementations: [],

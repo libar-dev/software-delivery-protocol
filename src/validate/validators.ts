@@ -49,6 +49,7 @@ export const graphValidatorIds = {
   packCoherence: "conformance/pack-coherence",
   orphans: "conformance/orphans",
   proseMentions: "conformance/prose-mentions",
+  ruleExercises: "conformance/rule-exercises",
   authoringShape: "honesty/authoring-shape",
   deliveryFacts: "honesty/delivery-facts",
   readinessFloor: "honesty/readiness-floor",
@@ -1152,6 +1153,7 @@ const BACKING_RELATIONS: ReadonlySet<string> = new Set([
 interface MentionText {
   readonly path: string;
   readonly text: string;
+  readonly link?: boolean;
 }
 
 /** The sections whose own `description`, their leading prose, is read before their entries. */
@@ -1171,7 +1173,11 @@ function sectionKeys(
 
 function collectMentionTexts(value: unknown, path: string, texts: MentionText[]): void {
   if (typeof value === "string") {
-    texts.push({ path, text: value });
+    texts.push({
+      path,
+      text: value,
+      ...(/^intent\.openQuestions\[\d+\]\.links\[\d+\]$/u.test(path) ? { link: true } : {}),
+    });
     return;
   }
 
@@ -1280,6 +1286,12 @@ function hasAddressedEntry(target: PrimitiveNode, address: string): boolean {
     );
   }
 
+  if (sectionName === "rule") {
+    const behavior = sections?.behavior;
+    return (
+      isRecord(behavior) && isRecord(behavior.ruleKeys) && Object.hasOwn(behavior.ruleKeys, key)
+    );
+  }
   const section = sections?.[sectionName];
 
   return key !== "description" && isRecord(section) && Object.hasOwn(section, key);
@@ -1298,10 +1310,18 @@ function backingPairs(graph: GraphSchema): ReadonlySet<string> {
   return pairs;
 }
 
+function mentionLine(graph: GraphSchema, spec: string, path: string): number | undefined {
+  const entry = path
+    .replace(/^intent\.openQuestions/u, "question")
+    .replace(/\.links\[\d+\]$/u, ".links");
+  return graph.locations?.find((row) => row.spec === spec && row.entry === entry)?.line;
+}
+
 function proseMentionWarning(
   node: PrimitiveNode,
   targetId: string,
   paths: readonly string[],
+  graph: GraphSchema,
 ): Finding {
   const [first = ""] = paths;
   const locations = paths.length === 1 ? "1 location" : `${String(paths.length)} locations`;
@@ -1315,6 +1335,9 @@ function proseMentionWarning(
     relatedId: targetId,
     path: first,
     file: node.file,
+    ...(mentionLine(graph, node.id, first) === undefined
+      ? {}
+      : { line: mentionLine(graph, node.id, first) }),
   });
 }
 
@@ -1356,23 +1379,26 @@ function checkProseMentions(graph: GraphSchema, index: GraphIndex): readonly Fin
           relatedId: token,
           path,
           file: node.file,
+          ...(mentionLine(graph, node.id, path) === undefined
+            ? {}
+            : { line: mentionLine(graph, node.id, path) }),
         }),
       );
     };
 
-    for (const { path, text } of proseMentionTexts(node)) {
-      for (const token of mentionTokens(text)) {
+    for (const { path, text, link } of proseMentionTexts(node)) {
+      for (const token of link ? [text] : mentionTokens(text)) {
         if (token === node.id) {
           continue;
         }
 
         const parsed = parseMention(token);
 
-        if (typeof parsed === "string") {
+        if (typeof parsed === "string" || parsed.namespace !== "spec") {
           reportError(
             path,
             token,
-            `Mention "${token}" in "${node.id}" at ${path} is not a Spec id or entry address: ${parsed}`,
+            `Mention "${token}" in "${node.id}" at ${path} is not a Spec id or entry address: ${typeof parsed === "string" ? parsed : "expected spec namespace"}`,
           );
           continue;
         }
@@ -1413,10 +1439,73 @@ function checkProseMentions(graph: GraphSchema, index: GraphIndex): readonly Fin
     }
 
     for (const [targetId, paths] of unbacked) {
-      findings.push(proseMentionWarning(node, targetId, paths));
+      findings.push(proseMentionWarning(node, targetId, paths, graph));
     }
   }
 
+  return findings;
+}
+
+const ruleExercisesAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.rule-exercises"),
+  label: "checks the keys named by declared verifies relations",
+  references: [ref("spec:model.rule-keys")],
+  component: componentAnchorId("component:protocol.validate"),
+  role: "validator",
+});
+void ruleExercisesAnchor;
+
+function checkRuleExercises(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
+  const findings: Finding[] = [];
+  for (const edge of graph.edges) {
+    if (edge.exercises === undefined) continue;
+    // The location table's entry names the relation, so the path survives any edge order.
+    const entry = `relation.${edge.type}.${edge.to}`;
+    const source = index.primitivesById.get(edge.from);
+    const fail = (key: string, message: string): void => {
+      const line = graph.locations?.find(
+        (row) => row.spec === edge.from && row.entry === entry,
+      )?.line;
+      findings.push(
+        createFinding({
+          validatorId: graphValidatorIds.ruleExercises,
+          family: "conformance",
+          severity: "error",
+          message,
+          subjectId: edge.from,
+          relatedId: edge.to,
+          path: `${entry}.exercises${key ? "." + key : ""}`,
+          ...(source === undefined ? {} : { file: source.file }),
+          ...(line === undefined ? {} : { line }),
+        }),
+      );
+    };
+    if (edge.type !== "verifies" || edge.claim !== "declared") {
+      fail("", "exercises is lawful only on a declared verifies relation");
+      continue;
+    }
+    const keys: unknown = edge.exercises;
+    if (
+      !Array.isArray(keys) ||
+      keys.length === 0 ||
+      keys.some((key: unknown) => typeof key !== "string" || !/^[a-z][A-Za-z0-9]*$/u.test(key)) ||
+      new Set(keys).size !== keys.length
+    ) {
+      fail("", "exercises must be a nonempty list of unique lower-camel ASCII keys");
+      continue;
+    }
+    const target = index.primitivesById.get(edge.to);
+    // Referential integrity owns an absent whole-Spec target.
+    if (target === undefined) continue;
+    const ruleKeys = target.sections?.behavior?.ruleKeys;
+    for (const key of keys as string[]) {
+      if (ruleKeys === undefined || !Object.hasOwn(ruleKeys, key))
+        fail(
+          key,
+          `Relation from "${edge.from}" exercises missing rule key "${key}" of "${edge.to}".`,
+        );
+    }
+  }
   return findings;
 }
 
@@ -1702,6 +1791,7 @@ export function validateGraph(graph: GraphSchema): ValidationReport {
     ...checkPackCoherence(graph, index),
     ...checkOrphans(graph, index),
     ...checkProseMentions(graph, index),
+    ...checkRuleExercises(graph, index),
     ...authoringShapeFindings,
     ...checkDeliveryFacts(graph, derivedFacts),
     ...checkReadinessFloors(graph, index),

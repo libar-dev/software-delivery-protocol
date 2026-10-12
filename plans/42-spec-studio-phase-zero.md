@@ -1,9 +1,12 @@
 # Plan 42. The Spec Studio, phase 0: a read-only static view
 
-> **Status:** DRAFTED on `feature/design-management-v0`, after plan 41's fold. A thin lineage
+> **Status:** DRAFTED after plan 41's fold, merged to `main` with PR 30; it is executed on its own
+> branch from `main` once PR 31 merges. A thin lineage
 > pointer: the Studio's intent lives in `pack:spec-studio-v1`, and its readiness, open questions and
 > backlog are read from the graph (recipes 1, 9, 11, 20, 29), never from this file. If this file and
 > the graph disagree, the graph wins and this file is stale.
+> **Order:** after plan 43, on the owner's rulings of 2026-10-12; phase 0 then renders the rule
+> addresses, question fields and design columns plan 43 adds.
 
 ## Why
 
@@ -53,6 +56,13 @@ Constraints: opens from `file://` with no network request; two builds of one gra
 byte-identical; the page computes no join, claim, fact or floor; keyboard navigation, text beside
 every color, readable line lengths and a phone layout (`spec:consumers.spec-studio.responsive`).
 Custom elements without a framework (`spec:decisions.studio-web-components`).
+
+Joining from plan 43's candidates: `spec:consumers.agent-surface.example-space-coverage` and
+`spec:observation.run-evidence`, whose consumers are the Studio's tests lens and verification
+panels. The design pass decides whether they fit phase 0; the adopter's run records are not CTRF
+yet, so its mapping comes first. The Obsidian vault captures (`pack:obsidian-vault-v1`) ask
+whether a vault regenerated from the graph is the Studio's local half
+(`spec:consumers.obsidian-vault#question.studioRelation`); the design pass answers that too.
 
 Later phases, each its own arc: the `--watch` live view and a one-file Pack export; PR previews
 with the stamp file; run evidence once `spec:observation.run-evidence` is built; diagrams once

@@ -2,7 +2,7 @@
 id: spec:decisions.studio-web-components
 kind: decision
 altitude: feature
-readiness: scoped
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio
 ---

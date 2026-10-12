@@ -53,6 +53,10 @@ function canonicalOpenQuestion(question: IntentOpenQuestion): Record<string, unk
         question: question.question,
         ...(question.blocking === undefined ? {} : { blocking: question.blocking }),
         ...(question.key === undefined ? {} : { key: question.key }),
+        ...(question.decider === undefined ? {} : { decider: question.decider }),
+        ...(question.links === undefined ? {} : { links: question.links }),
+        ...(question.provisional === undefined ? {} : { provisional: question.provisional }),
+        ...(question.trigger === undefined ? {} : { trigger: question.trigger }),
       };
 }
 
@@ -72,6 +76,7 @@ function canonicalBehavior(
   return {
     ...(section.description === undefined ? {} : { description: section.description }),
     ...(section.rules === undefined ? {} : { rules: section.rules }),
+    ...(section.ruleKeys === undefined ? {} : { ruleKeys: section.ruleKeys }),
     ...(section.examples === undefined
       ? {}
       : {
@@ -239,6 +244,8 @@ function canonicalEdge(edge: GraphEdge): Record<string, unknown> {
     type: edge.type,
     to: edge.to,
     claim: edge.claim,
+    ...(edge.reason === undefined ? {} : { reason: edge.reason }),
+    ...(edge.exercises === undefined ? {} : { exercises: edge.exercises }),
   };
 }
 

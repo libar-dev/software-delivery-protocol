@@ -48,13 +48,6 @@ describe("review-08 pure import regressions", () => {
       `behavior: { examples: [{ given: ["a cart"], when: ["submit"], then: ["an order"] }] },`,
     ],
     ["design", "design: {},"],
-    [
-      "relations",
-      `relations: [
-        refines("spec:import.parent"),
-        refines("spec:import.parent"),
-      ],`,
-    ],
   ])("names the first divergent %s path", (path, body) => {
     const result = importTypeScriptSpec(specSource(body), `${path}.sdp.ts`);
     const finding = result.findings.find(
@@ -63,6 +56,19 @@ describe("review-08 pure import regressions", () => {
 
     expect(result.emitted).toBeUndefined();
     expect(finding?.message).toContain(`first divergent path: ${path}`);
+  });
+
+  it("refuses duplicate relation targets before Markdown emission", () => {
+    const result = importTypeScriptSpec(
+      specSource('relations: [refines("spec:import.parent"), refines("spec:import.parent")],'),
+      "relations.sdp.ts",
+    );
+    expect(result.emitted).toBeUndefined();
+    expect(result.findings.map((finding) => finding.validatorId)).toEqual([
+      "extract/non-static-envelope",
+      "import/refusal",
+    ]);
+    expect(result.findings[0]?.message).toContain("duplicate target within one relation type");
   });
 
   it("refuses a mixed Spec and Pack carrier with an actionable error", () => {

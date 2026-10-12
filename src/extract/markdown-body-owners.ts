@@ -28,7 +28,7 @@ export function mapOwner(
   }
   if (["Behavior", "Rule", "Workflow", "Contract"].includes(owner)) {
     const behavior: Record<string, unknown> = isRecord(target.behavior) ? target.behavior : {};
-    mapBehavior(behavior, owner, lines, file, findings);
+    mapBehavior(behavior, owner, lines, file, findings, entryLines);
     target.behavior = behavior;
     return;
   }

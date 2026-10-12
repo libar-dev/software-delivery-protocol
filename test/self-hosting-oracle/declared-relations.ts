@@ -2,7 +2,26 @@
 // edges derived from the Pack manifest. Authored transcription: the relation set is intent, and
 // the extractor may neither add to it nor drop from it.
 
-export const expectedDeclaredRelations = [
+// An optional fourth tuple field carries the relation reason, verbatim from the carrier.
+export const expectedDeclaredRelations: readonly (readonly [
+  from: string,
+  type: string,
+  to: string,
+  reason?: string,
+])[] = [
+  ["spec:consumers.agent-surface.answer-shapes", "refines", "spec:consumers.agent-surface"],
+  [
+    "spec:consumers.agent-surface.answer-shapes",
+    "dependsOn",
+    "spec:consumers.agent-surface.design-recipes",
+  ],
+  ["spec:consumers.impact-graph.curation-assist", "refines", "spec:consumers.impact-graph"],
+  ["spec:consumers.impact-graph.curation-assist", "dependsOn", "spec:model.planned-architecture"],
+  [
+    "spec:consumers.impact-graph.curation-assist",
+    "decidedBy",
+    "spec:decisions.architectural-annotation",
+  ],
   ["spec:extraction.derive-graph", "dependsOn", "spec:extraction.delivery-facts"],
   ["spec:consumers.reader", "dependsOn", "spec:extraction.delivery-facts"],
   ["spec:validation.authored-honesty", "dependsOn", "spec:extraction.delivery-facts"],
@@ -627,6 +646,7 @@ export const expectedDeclaredRelations = [
   ["spec:observation.runtime-overlay", "dependsOn", "spec:model.core-model"],
   ["spec:consumers.impact-graph", "refines", "spec:consumers.projections-model"],
   ["spec:consumers.impact-graph", "dependsOn", "spec:extraction.derive-graph"],
+  ["spec:consumers.impact-graph.symbol-reach", "refines", "spec:consumers.impact-graph"],
   ["spec:carrier.markdown-pack-authoring", "refines", "spec:model.pack-aggregate"],
   ["spec:carrier.markdown-pack-authoring", "dependsOn", "spec:carrier.markdown-parser"],
   ["spec:carrier.markdown-pack-authoring", "dependsOn", "spec:decisions.carrier-ruling"],
@@ -652,7 +672,12 @@ export const expectedDeclaredRelations = [
     "verifies",
     "spec:validation.oracle-target-eligibility",
   ],
-  ["spec:decisions.pack-markdown-carrier", "refines", "spec:decisions.carrier-ruling"],
+  [
+    "spec:decisions.pack-markdown-carrier",
+    "refines",
+    "spec:decisions.carrier-ruling",
+    "extends the Markdown carrier to Packs and keeps the TypeScript builder as a per-ID option",
+  ],
   ["spec:carrier.markdown-pack-authoring", "decidedBy", "spec:decisions.pack-markdown-carrier"],
   [
     "spec:carrier.markdown-pack-authoring.markdown-ts-parity",
@@ -680,10 +705,25 @@ export const expectedDeclaredRelations = [
     "dependsOn",
     "spec:decisions.kind-conditional-floor",
   ],
-  ["spec:decisions.gherkin-carrier-option", "refines", "spec:decisions.carrier-ruling"],
-  ["spec:decisions.sdp-gherkin-extension", "refines", "spec:decisions.gherkin-carrier-option"],
+  [
+    "spec:decisions.gherkin-carrier-option",
+    "refines",
+    "spec:decisions.carrier-ruling",
+    "admits Gherkin as a canonical per-ID carrier for behavior and example Specs beside the Markdown default",
+  ],
+  [
+    "spec:decisions.sdp-gherkin-extension",
+    "refines",
+    "spec:decisions.gherkin-carrier-option",
+    "fixes the canonical Gherkin suffix as .sdp.gherkin and keeps bare .feature files out of discovery",
+  ],
   ["spec:decisions.sdp-gherkin-extension", "dependsOn", "spec:decisions.sdp-ts-extension"],
-  ["spec:decisions.carrier-universality", "refines", "spec:decisions.gherkin-carrier-option"],
+  [
+    "spec:decisions.carrier-universality",
+    "refines",
+    "spec:decisions.gherkin-carrier-option",
+    "bounds the Gherkin option to behavior and example Specs, the two kinds Gherkin structure states honestly",
+  ],
   ["spec:decisions.carrier-universality", "dependsOn", "spec:decisions.prose-ownership"],
   ["spec:decisions.carrier-universality", "dependsOn", "spec:decisions.pack-markdown-carrier"],
   ["spec:decisions.adopted-registrars-committed", "refines", "spec:extraction.runnable-modules"],
@@ -1013,10 +1053,20 @@ export const expectedDeclaredRelations = [
     "decidedBy",
     "spec:decisions.verification-posture-not-realization",
   ],
-  ["spec:decisions.authored-entry-order", "refines", "spec:decisions.shipped-projections-frozen"],
+  [
+    "spec:decisions.authored-entry-order",
+    "refines",
+    "spec:decisions.shipped-projections-frozen",
+    "carves out how the Design Review renders open-section entries, as a list in authored order",
+  ],
   ["spec:decisions.question-key-rendering", "refines", "spec:consumers.design-review"],
   ["spec:decisions.question-key-rendering", "dependsOn", "spec:model.open-question-keys"],
-  ["spec:decisions.question-key-rendering", "refines", "spec:decisions.shipped-projections-frozen"],
+  [
+    "spec:decisions.question-key-rendering",
+    "refines",
+    "spec:decisions.shipped-projections-frozen",
+    "carves out one change, an open question's key shown before its text",
+  ],
   ["spec:decisions.studio-html-surface", "refines", "spec:consumers.spec-studio"],
   ["spec:decisions.studio-html-surface", "dependsOn", "spec:extraction.regenerability"],
   ["spec:decisions.studio-web-components", "refines", "spec:consumers.spec-studio"],
@@ -1095,7 +1145,12 @@ export const expectedDeclaredRelations = [
   // The design-management arc (plan 41), transcribed from each carrier's frontmatter.
   ["spec:decisions.pack-design-page", "refines", "spec:consumers.design-review"],
   ["spec:decisions.pack-design-page", "dependsOn", "spec:consumers.pack-design"],
-  ["spec:decisions.pack-design-page", "refines", "spec:decisions.shipped-projections-frozen"],
+  [
+    "spec:decisions.pack-design-page",
+    "refines",
+    "spec:decisions.shipped-projections-frozen",
+    "carves out the Pack page, which renders the Pack design",
+  ],
   ["spec:consumers.pack-design", "refines", "spec:consumers.reader"],
   ["spec:consumers.pack-design", "dependsOn", "spec:validation.next-rung-floor"],
   ["spec:consumers.pack-design", "dependsOn", "spec:extraction.pack-member-order"],
@@ -1191,4 +1246,55 @@ export const expectedDeclaredRelations = [
   ],
   ["spec:consumers.spec-studio.sharing", "dependsOn", "spec:consumers.engine-provenance"],
   ["spec:validation.architecture-constraints", "dependsOn", "spec:validation.corpus-rules"],
+  ["spec:consumers.obsidian-vault.bases", "refines", "spec:consumers.obsidian-vault"],
+  [
+    "spec:consumers.obsidian-vault.bases",
+    "dependsOn",
+    "spec:consumers.pack-design",
+    "a Pack's Base shows the members, rungs and design columns the Pack design assembles",
+  ],
+  ["spec:consumers.obsidian-vault.iteration", "refines", "spec:consumers.obsidian-vault"],
+  [
+    "spec:consumers.obsidian-vault.iteration",
+    "dependsOn",
+    "spec:consumers.edit-model",
+    "the vault composes intent and never patches a carrier",
+  ],
+  [
+    "spec:consumers.obsidian-vault.iteration",
+    "dependsOn",
+    "spec:consumers.intent-composition.proposal",
+    "intent composed in the vault hands off on the one proposal contract",
+  ],
+  ["spec:consumers.obsidian-vault.notes", "refines", "spec:consumers.obsidian-vault"],
+  [
+    "spec:consumers.obsidian-vault.notes",
+    "dependsOn",
+    "spec:validation.prose-mentions",
+    "a mention can become a link because validation already refuses one that does not resolve",
+  ],
+  [
+    "spec:consumers.obsidian-vault",
+    "refines",
+    "spec:consumers.projections-model",
+    "a projection for a person who iterates on designs in a notes app",
+  ],
+  [
+    "spec:consumers.obsidian-vault",
+    "decidedBy",
+    "spec:decisions.shipped-projections-frozen",
+    "the vault is a new root, since the four shipped projections stay frozen",
+  ],
+  [
+    "spec:model.term-addresses",
+    "refines",
+    "spec:model.spec-sections",
+    "extends entry addresses to the terms a Model section defines",
+  ],
+  [
+    "spec:model.term-addresses",
+    "decidedBy",
+    "spec:decisions.checked-mentions",
+    "a term address would join the address law that decision rules",
+  ],
 ] as const;

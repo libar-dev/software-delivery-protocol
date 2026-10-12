@@ -636,16 +636,25 @@ describe("sdp q --params — a recipe parameter as data", () => {
       'sdp q: --params file "/no/such/params.json" could not be read (',
     ],
     ["an @ with no path", ["--params", "@"], "sdp q: --params @PATH requires a path after @."],
-    ["a missing value", ["--params"], "sdp q: --params requires a JSON object or @PATH."],
+    [
+      "a missing value",
+      ["--params"],
+      "sdp q: --params requires a JSON object, @PATH or KEY=@PATH.",
+    ],
     [
       "a flag in place of the value",
       ["--params", "--json"],
-      "sdp q: --params expects a JSON object or @PATH, got --json",
+      "sdp q: --params expects a JSON object, @PATH or KEY=@PATH, got --json",
     ],
     [
-      "a second --params",
-      ["--params", "{}", "--params", "{}"],
-      "sdp q takes at most one --params.",
+      "a repeated key",
+      ["--params", '{"spec":1}', "--params", '{"spec":2}'],
+      'sdp q: --params key "spec" was given twice.',
+    ],
+    [
+      "a key outside the lower-camel grammar",
+      ["--params", "Bad=@missing.json"],
+      "sdp q: --params KEY=@PATH requires a lower-camel key.",
     ],
   ])(
     "refuses %s before the body runs: exit 1, one line, nothing on stdout",
@@ -708,5 +717,289 @@ describe("sdp q --params — a recipe parameter as data", () => {
     expect(stderr.endsWith(").\n")).toBe(true);
     expect(stderr.split("\n")).toHaveLength(2);
     expect(seen.extracted).toBe(false);
+  });
+});
+
+const answerShapesTestAnchor = specTest({
+  id: testAnchorId("test:protocol.query-answer-shapes"),
+  verifies: ref("spec:consumers.agent-surface.answer-shapes"),
+});
+void answerShapesTestAnchor;
+
+describe("query body positions and merged parameters", () => {
+  const scratch = mkdtempSync(join(repoRoot, ".q-answers-"));
+  afterAll(() => {
+    rmSync(scratch, { recursive: true, force: true });
+  });
+
+  it.each([
+    ["return )", 1, 8],
+    ["const value = 1;\n\nreturn )", 3, 8],
+    ["return (", 1, 9],
+  ])("locates a refused body %s", async (body, line, column) => {
+    const capture = createCaptureOutput();
+    expect(await runQ([body, "--root", scratch], capture)).toBe(1);
+    expect(capture.readStdout()).toBe("");
+    expect(capture.readStderr()).toMatch(
+      new RegExp(
+        `^sdp q: the body does not parse at line ${String(line)}, column ${String(column)}: [^\\n]+\\n$`,
+      ),
+    );
+  });
+
+  it("names a body that stops short instead of the wrapper's closing brace", async () => {
+    const capture = createCaptureOutput();
+    expect(await runQ(["return [1, 2", "--root", scratch], capture)).toBe(1);
+    expect(capture.readStderr()).toBe(
+      "sdp q: the body does not parse at line 1, column 13: the body ends before it is complete\n",
+    );
+  });
+
+  it("keeps runtime failures separate, including a thrown SyntaxError", async () => {
+    const capture = createCaptureOutput();
+    expect(
+      await runQ(["throw new SyntaxError('runtime refusal')", "--root", scratch], capture),
+    ).toBe(1);
+    expect(capture.readStdout()).toBe("");
+    expect(capture.readStderr()).toBe("sdp q: runtime refusal\n");
+  });
+
+  it.each(["inline", "file"])(
+    "refuses repeated top-level keys inside one %s object before extraction",
+    async (form) => {
+      for (const { text, key } of [
+        { text: '{"subject":1,"subject":2}', key: "subject" },
+        { text: String.raw`{"\u0073ubject":1,"subject":2}`, key: "subject" },
+        { text: '{"__proto__":1,"__proto__":2}', key: "__proto__" },
+        { text: String.raw`{ "a\"b": {"x":1}, "a\"b": [2] }`, key: 'a"b' },
+        { text: '{"first":1,"second":2,"second":3,"first":4}', key: "second" },
+      ]) {
+        const path = join(scratch, "duplicate-object.json");
+        writeFileSync(path, `\uFEFF${text}`);
+        const seen = { extracted: false };
+        const hooks = {
+          query: {
+            extract: () => {
+              seen.extracted = true;
+              throw new Error("the graph must not derive after a --params refusal");
+            },
+          },
+        };
+        const capture = createCaptureOutput();
+        const code = await runQ(
+          [
+            "return 'the body must not run'",
+            "--root",
+            scratch,
+            "--params",
+            form === "inline" ? text : `@${path}`,
+            "--json",
+          ],
+          capture,
+          hooks,
+        );
+        expect(code, text).toBe(1);
+        expect(capture.readStdout(), text).toBe("");
+        expect(capture.readStderr(), text).toBe(
+          `sdp q: --params key ${JSON.stringify(key)} was given twice.\n`,
+        );
+        expect(seen.extracted, text).toBe(false);
+      }
+    },
+  );
+
+  it("accepts nested duplicates and duplicate-looking text inside values", async () => {
+    const text = String.raw`{"outer":{"same":1,"same":2},"items":[{"same":3,"same":4}],"text":"{\"subject\":1,\"subject\":2}","quote":"\\\"","subject":false}`;
+    const capture = createCaptureOutput();
+    expect(
+      await runQ(["return params", "--root", scratch, "--params", text, "--json"], capture),
+    ).toBe(0);
+    expect(capture.readStderr()).toBe("");
+    expect(JSON.parse(capture.readStdout())).toEqual(JSON.parse(text));
+  });
+
+  it.each([null, [1, 2], "text", 4, true, { nested: { a: 1 } }])(
+    "binds a keyed file's JSON value %j beside merged objects",
+    async (value) => {
+      const objectPath = join(scratch, "object.json");
+      const valuePath = join(scratch, "value.json");
+      writeFileSync(objectPath, '{"second":{"b":2}}');
+      writeFileSync(valuePath, `\uFEFF${JSON.stringify(value)}`);
+      const capture = createCaptureOutput();
+      expect(
+        await runQ(
+          [
+            "return params",
+            "--root",
+            scratch,
+            "--json",
+            "--params",
+            '{"first":{"a":1}}',
+            "--params",
+            `@${objectPath}`,
+            "--params",
+            `baseGraph=@${valuePath}`,
+            "--params",
+            "{}",
+          ],
+          capture,
+        ),
+      ).toBe(0);
+      expect(JSON.parse(capture.readStdout())).toEqual({
+        first: { a: 1 },
+        second: { b: 2 },
+        baseGraph: value,
+      });
+      expect(capture.readStderr()).toBe("");
+    },
+  );
+
+  it.each(["inline-file", "file-inline", "keyed-inline", "inline-keyed", "keyed-keyed"])(
+    "refuses duplicate keys from %s before extraction",
+    async (form) => {
+      const path = join(scratch, "duplicate.json");
+      writeFileSync(path, '{"subject":null}');
+      const inline = '{"subject":false}';
+      const file = `@${path}`;
+      const keyed = `subject=@${path}`;
+      const forms: Record<string, readonly string[]> = {
+        "inline-file": [inline, file],
+        "file-inline": [file, inline],
+        "keyed-inline": [keyed, inline],
+        "inline-keyed": [inline, keyed],
+        "keyed-keyed": [keyed, keyed],
+      };
+      const capture = createCaptureOutput();
+      expect(
+        await runQ(
+          [
+            "return params",
+            "--root",
+            scratch,
+            ...(forms[form] ?? []).flatMap((item) => ["--params", item]),
+          ],
+          capture,
+          {
+            query: {
+              extract: () => {
+                throw new Error("must not extract");
+              },
+            },
+          },
+        ),
+      ).toBe(1);
+      expect(capture.readStdout()).toBe("");
+      expect(capture.readStderr()).toBe('sdp q: --params key "subject" was given twice.\n');
+    },
+  );
+
+  it("keeps merged parameter keys writable for the caller's body", async () => {
+    const capture = createCaptureOutput();
+    expect(
+      await runQ(
+        [
+          "params.value = 2; delete params.removable; return params",
+          "--root",
+          scratch,
+          "--json",
+          "--params",
+          '{"value":1}',
+          "--params",
+          '{"removable":true}',
+        ],
+        capture,
+      ),
+    ).toBe(0);
+    expect(JSON.parse(capture.readStdout())).toEqual({ value: 2 });
+  });
+
+  it.each([
+    ["key=@", "sdp q: --params @PATH requires a path after @."],
+    ["key=@missing-file.json", "could not be read"],
+    ["bad-key=@missing-file.json", "requires a lower-camel key"],
+    ["bad_key=@missing-file.json", "requires a lower-camel key"],
+  ])("refuses an invalid keyed input %s before extraction", async (value, message) => {
+    const capture = createCaptureOutput();
+    expect(
+      await runQ(["return params", "--root", scratch, "--params", value], capture, {
+        query: {
+          extract: () => {
+            throw new Error("must not extract");
+          },
+        },
+      }),
+    ).toBe(1);
+    expect(capture.readStdout()).toBe("");
+    expect(capture.readStderr()).toContain(message);
+    expect(capture.readStderr().trimEnd().split("\n")).toHaveLength(1);
+  });
+
+  it("reads inline JSON and @PATH before KEY=@PATH when the input contains =@", async () => {
+    const path = join(scratch, "params=@base.json");
+    writeFileSync(path, '{"fromFile":"x=@y"}');
+    const capture = createCaptureOutput();
+    expect(
+      await runQ(
+        [
+          "return params",
+          "--root",
+          scratch,
+          "--json",
+          "--params",
+          '{"request":"Use --params base=@graph.json"}',
+          "--params",
+          ' {"spaced":"a=@b"}',
+          "--params",
+          `@${path}`,
+        ],
+        capture,
+      ),
+    ).toBe(0);
+    expect(JSON.parse(capture.readStdout())).toEqual({
+      request: "Use --params base=@graph.json",
+      spaced: "a=@b",
+      fromFile: "x=@y",
+    });
+    expect(capture.readStderr()).toBe("");
+  });
+
+  it("refuses a keyed file holding invalid JSON before extraction", async () => {
+    const path = join(scratch, "invalid.json");
+    writeFileSync(path, "{broken");
+    const capture = createCaptureOutput();
+    expect(
+      await runQ(["return params", "--root", scratch, "--params", `base=@${path}`], capture, {
+        query: {
+          extract: () => {
+            throw new Error("must not extract");
+          },
+        },
+      }),
+    ).toBe(1);
+    expect(capture.readStdout()).toBe("");
+    expect(capture.readStderr()).toContain("is not valid JSON");
+    expect(capture.readStderr().trimEnd().split("\n")).toHaveLength(1);
+  });
+
+  it("merges own keys without treating __proto__ as an assignment", async () => {
+    const capture = createCaptureOutput();
+    expect(
+      await runQ(
+        [
+          "return { keys: Object.keys(params), prototype: Object.getPrototypeOf(params) === Object.prototype, value: params.__proto__ }",
+          "--root",
+          scratch,
+          "--json",
+          "--params",
+          '{"__proto__":{"polluted":true}}',
+        ],
+        capture,
+      ),
+    ).toBe(0);
+    expect(JSON.parse(capture.readStdout())).toEqual({
+      keys: ["__proto__"],
+      prototype: true,
+      value: { polluted: true },
+    });
   });
 });

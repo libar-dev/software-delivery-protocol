@@ -16,7 +16,7 @@ relations:
 ## Intent
 - outcome: Give every Studio page its data as files the build writes beside it, so the page reads the graph the agent surface reads and derives nothing of its own.
 ### Open questions
-- [non-blocking #aiSlices] The original hydrates the Studio from AI slices beside the graph and the validation report; the context bundle is designed-in and deferred, and no Spec states the shape of a slice. Does the Studio's data hold a slice, and which Spec would state it?
+- [non-blocking #aiSlices] The original hydrates the Studio from AI slices beside the graph and the validation report; the context bundle is now a catalog recipe composed on each invocation and never saved, so no Spec states a saved slice. Does the Studio's data hold a slice, and which Spec would state it?
 
 ## Contract
 - The Studio hydrates from data files under `generated/spec-studio/data/`, written by the build that writes its pages.

@@ -1212,6 +1212,7 @@ describe("Markdown carrier discovery", () => {
             rules: [
               "A Markdown Spec declares id, kind, altitude, readiness, and relations in bounded YAML frontmatter; its first H1 declares title.",
               "The envelope key set is closed and every one of its five keys is required: a key outside the set is refused rather than absorbed, and a missing key refuses the document rather than being defaulted.",
+              "Each relation type takes one target or a list. A target is a Spec id or an object with a required `target` and an optional one-line `reason`, and a declared `verifies` object may also carry `exercises`, the rule keys the rule-keys Spec defines. Plain ids and objects mix in one list, and any other object key is refused.",
               "`relations: {}` is written explicitly when the logical relation set is empty — honest carrier syntax, not a new logical requirement: the physical key catches a truncated envelope at reification while the model itself stays relation-optional.",
               "A derived name is never authorable in the envelope: a delivery-fact or graph-shape key is refused under its own finding class, because delivery facts are derived and never authored.",
               "The Protocol owns the envelope grammar and the parser policy while the pinned YAML library stays a swappable representation behind that contract, so an unsupported YAML construct is refused within explicit byte bounds on the carrier and its frontmatter rather than silently becoming carrier semantics.",

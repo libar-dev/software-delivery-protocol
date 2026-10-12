@@ -12,6 +12,7 @@ export interface MarkdownListItem {
   readonly text: string;
   readonly line: number;
   readonly afterH3: boolean;
+  readonly fields?: MarkdownLine[];
 }
 
 export interface MarkdownFence {
@@ -160,6 +161,7 @@ export function parseSectionContent(
   lines: readonly MarkdownLine[],
   file: string,
   findings: Finding[],
+  allowQuestionFields = false,
 ): {
   readonly description: string;
   readonly items: readonly MarkdownListItem[];
@@ -180,6 +182,22 @@ export function parseSectionContent(
     }
     if (hasRawHtmlOutsideCodeSpans(line.text)) {
       addMarkdownFinding(findings, bodyFinding(file, line.line, "raw HTML is unsupported"));
+      continue;
+    }
+    if (allowQuestionFields && line.text.startsWith("  - ")) {
+      const previous = items.at(-1);
+      const precedingLine = previous?.fields?.at(-1)?.line ?? previous?.line;
+      if (
+        previous?.afterH3 &&
+        /^\[(?:blocking|non-blocking)(?: #[^\]]*)?\] /u.test(previous.text) &&
+        precedingLine === line.line - 1
+      ) {
+        previous.fields?.push(line);
+      } else
+        addMarkdownFinding(
+          findings,
+          bodyFinding(file, line.line, "question fields must directly follow an open question"),
+        );
       continue;
     }
     if (isUnsupportedCommonMarkBlock(line.text)) {
@@ -215,7 +233,7 @@ export function parseSectionContent(
       const text = line.text.slice(2);
       if (text.trim().length === 0 || /^[\t ]/u.test(text))
         addMarkdownFinding(findings, bodyFinding(file, line.line, "list text must not be empty"));
-      else items.push({ text, line: line.line, afterH3: h3 !== undefined });
+      else items.push({ text, line: line.line, afterH3: h3 !== undefined, fields: [] });
       continue;
     }
     if (/^[\t ]/u.test(line.text) || line.text.startsWith("|") || line.text.startsWith(">")) {

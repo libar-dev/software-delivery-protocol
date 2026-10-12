@@ -5,6 +5,7 @@ export interface MarkdownFrontmatter {
   readonly data: Record<string, unknown>;
   readonly id: string;
   readonly line: number;
+  readonly entryLines?: readonly ReifiedEntryLine[];
 }
 
 export type MarkdownFrontmatterResult =

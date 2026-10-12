@@ -1,10 +1,11 @@
+import { normalizeAuthoring } from "./authoring-normalization.js";
 import { codeAnchorId, componentAnchorId, parseId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { CarrierReification } from "./carrier.js";
 import { parseMarkdownBody } from "./markdown-body.js";
 import { readMarkdownEnvelope } from "./markdown-envelope.js";
 import { parseMarkdownFrontmatter as parseFrontmatter } from "./markdown-frontmatter.js";
-import { markdownFinding } from "./markdown-support.js";
+import { capMarkdownFindings, markdownFinding } from "./markdown-support.js";
 import { reifyMarkdownPackFromFrontmatter } from "./markdown-pack.js";
 import type { MarkdownBodyResult, MarkdownFrontmatterResult } from "./markdown-types.js";
 
@@ -80,19 +81,23 @@ export function reifyMarkdownCarrier(sourceText: string, relativePath: string): 
       };
     const body = readMarkdownBody(sourceText, relativePath, kind);
     if (!body.ok) return { specs: [], packs: [], findings: body.findings };
-    return {
-      specs: [
-        {
-          data: { ...frontmatter.frontmatter.data, ...body.body.data },
-          id: frontmatter.frontmatter.id,
-          file: relativePath,
-          line: frontmatter.frontmatter.line,
-          entryLines: body.body.entryLines,
-        },
-      ],
-      packs: [],
-      findings: [],
-    };
+    const normalized = normalizeAuthoring(
+      {
+        specs: [
+          {
+            data: { ...frontmatter.frontmatter.data, ...body.body.data },
+            id: frontmatter.frontmatter.id,
+            file: relativePath,
+            line: frontmatter.frontmatter.line,
+            entryLines: [...(frontmatter.frontmatter.entryLines ?? []), ...body.body.entryLines],
+          },
+        ],
+        packs: [],
+        findings: [],
+      },
+      true,
+    );
+    return { ...normalized, findings: capMarkdownFindings(normalized.findings, relativePath) };
   } catch (error: unknown) {
     return {
       specs: [],

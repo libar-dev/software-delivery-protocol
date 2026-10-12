@@ -149,12 +149,31 @@ describe("entry locations", () => {
     expect(graph.locations).not.toContainEqual(expect.objectContaining({ entry: "design.alpha" }));
   });
 
-  it("emits no Gherkin rows because its closed grammar carries no open questions", () => {
+  it("locates Gherkin rules and relations while keeping open questions outside its grammar", () => {
     const root = corpus("subject.sdp.gherkin", gherkin);
     const result = extract({ root });
     expect(result.report.findings).toEqual([]);
     expect(result.graph.nodes).toHaveLength(2);
-    expect(result.graph.locations).toEqual([]);
+    expect(result.graph.locations).toEqual([
+      {
+        spec: "spec:fixture.gherkin-locations",
+        file: "subject.sdp.gherkin",
+        entry: "rule[0]",
+        line: 11,
+      },
+      {
+        spec: "spec:fixture.gherkin-locations.child",
+        file: "subject.sdp.gherkin",
+        entry: "relation.refines.spec:fixture.gherkin-locations",
+        line: 6,
+      },
+      {
+        spec: "spec:fixture.gherkin-locations.child",
+        file: "subject.sdp.gherkin",
+        entry: "relation.verifies.spec:fixture.gherkin-locations",
+        line: 6,
+      },
+    ]);
     writeFileSync(
       join(root, "subject.sdp.gherkin"),
       gherkin.replace("  - outcome:", "  - openQuestions: Which choice?\n  - outcome:"),
