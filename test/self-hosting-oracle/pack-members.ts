@@ -253,6 +253,11 @@ export const expectedPackMembers = [
   "spec:validation.architecture-constraints",
   "spec:validation.corpus-rules",
   "spec:observation.run-evidence",
+  "spec:consumers.obsidian-vault",
+  "spec:consumers.obsidian-vault.notes",
+  "spec:consumers.obsidian-vault.bases",
+  "spec:consumers.obsidian-vault.iteration",
+  "spec:model.term-addresses",
 ] as const;
 
 export const expectedStudioPackMembers = [
@@ -313,6 +318,15 @@ export const expectedDesignIterationPackMembers = [
   "spec:consumers.impact-graph",
 ] as const;
 
+// The authored membership of `pack:obsidian-vault-v1`, in manifest order.
+export const expectedObsidianVaultPackMembers = [
+  "spec:consumers.obsidian-vault",
+  "spec:consumers.obsidian-vault.notes",
+  "spec:consumers.obsidian-vault.bases",
+  "spec:consumers.obsidian-vault.iteration",
+  "spec:model.term-addresses",
+] as const;
+
 export const expectedPacks = [
   {
     id: "pack:spec-studio-v1",
@@ -345,6 +359,16 @@ export const expectedPacks = [
     file: "specs/design-management.pack.sdp.md",
     members: expectedDesignManagementPackMembers,
     modelRefs: ["spec:model.design-maturity"],
+  },
+  {
+    id: "pack:obsidian-vault-v1",
+    nodeType: "Pack",
+    claim: "declared",
+    title: "Obsidian vault",
+    framing:
+      "A human interface for iterating on designs: the one graph regenerated as an Obsidian vault of linked notes, read beside the carriers an agent edits. First the vault and its place among the projections, then its notes and links, its tables, and the loop a design pass runs through it. Last, the one model change the vault asks for, an address for a Model term, so a concept links as exactly as a Spec does.",
+    file: "specs/obsidian-vault.pack.sdp.md",
+    members: expectedObsidianVaultPackMembers,
   },
   {
     id: "pack:self-hosting-v1",

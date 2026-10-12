@@ -60,7 +60,9 @@ Custom elements without a framework (`spec:decisions.studio-web-components`).
 Joining from plan 43's candidates: `spec:consumers.agent-surface.example-space-coverage` and
 `spec:observation.run-evidence`, whose consumers are the Studio's tests lens and verification
 panels. The design pass decides whether they fit phase 0; the adopter's run records are not CTRF
-yet, so its mapping comes first.
+yet, so its mapping comes first. The Obsidian vault captures (`pack:obsidian-vault-v1`) ask
+whether a vault regenerated from the graph is the Studio's local half
+(`spec:consumers.obsidian-vault#question.studioRelation`); the design pass answers that too.
 
 Later phases, each its own arc: the `--watch` live view and a one-file Pack export; PR previews
 with the stamp file; run evidence once `spec:observation.run-evidence` is built; diagrams once

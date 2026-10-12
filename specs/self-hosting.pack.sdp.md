@@ -252,6 +252,11 @@ specs:
   - spec:validation.architecture-constraints
   - spec:validation.corpus-rules
   - spec:observation.run-evidence
+  - spec:consumers.obsidian-vault
+  - spec:consumers.obsidian-vault.notes
+  - spec:consumers.obsidian-vault.bases
+  - spec:consumers.obsidian-vault.iteration
+  - spec:model.term-addresses
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model

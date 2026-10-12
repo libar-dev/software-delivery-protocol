@@ -245,6 +245,10 @@ delivery fact, workflow state, or graph state.
   by the carrier ruling (MD-18)**; see **The authoring carrier** above. The rest
   of the exploration's candidates ratified with their referents at the plan-12 session — see **The
   executable half** above.
+- **"vault"** is Obsidian's word for a folder of linked notes, used by the `idea` captures in
+  `pack:obsidian-vault-v1` for a projection regenerated from the graph. Whether that projection
+  stands alone or is the Studio's local half is open (`spec:consumers.obsidian-vault`), and the
+  term waits on that ruling; a **term address** (`spec:model.term-addresses`) is a candidate too.
 
 ## Term ledger  (locked / rejected / resolved)
 

@@ -2397,4 +2397,182 @@ export const consumersSpecs = [
     },
     deliveryFacts: [],
   },
+  {
+    id: "spec:consumers.obsidian-vault",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    file: "specs/consumers/obsidian-vault.sdp.md",
+    title: "An Obsidian vault lets a person iterate on designs from the one graph",
+    narrative:
+      "The Design Review renders on GitHub and diffs in git, but a person cannot follow a relation backward in it, filter a Pack's members, or jump from an entry address to its entry. The Spec Studio is designed for a reviewer who holds only a link. A person designing a capability in passes, with an agent editing the carriers, needs to move through the graph while the pass runs: see what a Spec rests on and what rests on it, filter a Pack by rung and design columns, open an entry from its address, and see the next edit arrive.\n\nObsidian already does that for linked Markdown notes with properties: backlinks, a graph view, search, and filterable tables it calls Bases. A prototype in `explorations/obsidian-vault/` generated a vault from the reader's values alone, with one note per Spec, Pack, code unit and Model term, every relation and checked mention written as a wikilink, entry addresses as block links, and Bases for each Pack's members and for the corpus's standing queries. Every link resolved, the Pack's members read as one sortable table, and nothing was computed outside the reader.\n\nThe principle is a linked-notes view regenerated from the one graph; Obsidian and its Bases are the representation chosen first. Like every projection, the vault states no truth, and two builds of one graph are byte-identical, so no note names a commit or a time: a publishing step may write a stamp beside the vault, as the Studio's sharing rule does. Intent is still written only in the carriers.",
+    sections: {
+      intent: {
+        actor:
+          "A person in the repository who designs a capability in passes while an agent edits the carriers.",
+        problem:
+          "The Markdown Design Review cannot be navigated, filtered or followed backward, and the Studio serves a reviewer with only a link, so a designer has no view that moves through the graph while a pass is underway.",
+        outcome:
+          "Generate an Obsidian vault from the one graph, in which a person reads, navigates and filters the corpus and follows each pass's edits, while the carriers stay the only place intent is written.",
+        risks: [
+          "A notes app invites editing, and an edit to a generated note is lost at the next regeneration without reaching the carrier.",
+        ],
+        openQuestions: [
+          {
+            question:
+              "Is the vault a projection of its own, or the Studio's local half beside the static page set a reviewer with only a link reads?",
+            blocking: true,
+            key: "studioRelation",
+            decider: "owner",
+            provisional:
+              "a projection of its own, written by its own verb under `generated/obsidian-vault/`, which the Studio's design pass may adopt as its local half",
+          },
+          {
+            question:
+              "Does the vault keep to the wikilinks and properties other notes tools read, or use Obsidian's Bases freely?",
+            blocking: false,
+            key: "otherNotesTools",
+            provisional:
+              "notes and links stay plain Markdown with wikilinks any such tool reads, and the Bases are Obsidian's alone",
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.notes",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/consumers/obsidian-vault.notes.sdp.md",
+    title: "Every Spec, Pack, code unit and term is a note, and every relation is a link",
+    narrative:
+      "The prototype wrote a note for each Spec, Pack, code unit and test anchor, and for each term a Model section defines. A note carries the reader's values as flat properties, so Obsidian's tables filter on them, and the Spec's sections in authored order. Each declared relation became a wikilink in both directions with its reason, each mention in prose became a wikilink to its Spec or to its entry's block, and each keyed Design, UI, question and rule entry carried a block id named for its address. Backlinks and the graph view then show what rests on a Spec without a query.\n\nTwo findings shape the questions below. Obsidian refuses a colon in a note's name, so a note cannot be named by its id as written. And Obsidian renders a Spec id in a property as a link to an external address, because the namespace reads as a URL scheme.",
+    sections: {
+      intent: {
+        outcome:
+          "Write one note per Spec, Pack, code unit and Model term, with the reader's values as properties and every relation and checked mention as a wikilink, so a person follows the graph in both directions.",
+        openQuestions: [
+          {
+            question:
+              "How is a note named, when Obsidian refuses a colon and a vault may also hold notes of another corpus?",
+            blocking: true,
+            key: "noteNames",
+            decider: "owner",
+            provisional:
+              "the id without its namespace colon, as model.rule-keys, pack.design-iteration-v1 and impl.protocol.reader, with the id and the title as aliases",
+          },
+          {
+            question: "Which reader values become properties?",
+            blocking: true,
+            key: "propertySet",
+            decider: "owner",
+            provisional:
+              "kind, altitude, stated rung, floor reached, whether only the author's statement is missing, the delivery facts as booleans, the design columns as numbers, the Packs as links, the carrier's repository path, and tags for kind and stated rung; every value read from the reader, none computed by the generator",
+          },
+          {
+            question:
+              "Which property form keeps a Spec id plain text where Obsidian would render it as an external link?",
+            blocking: false,
+            key: "idProperty",
+          },
+          {
+            question:
+              "A term note comes only from a Model section, and no note links a term by matching words; does a term of the ratified glossary, which is not graph data, get a note too?",
+            blocking: false,
+            key: "termNotes",
+            provisional:
+              "no; a glossary term gains a note when a Spec defines it in a Model section",
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.bases",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/consumers/obsidian-vault.bases.sdp.md",
+    title: "A Pack's members and the standing queries are tables over the reader's values",
+    narrative:
+      "A Base is Obsidian's table, card or list view over notes, filtered and sorted by their properties. The prototype gave each Pack a Base of its members and the corpus one Base whose views are standing queries: the build backlog, the design backlog, the Specs waiting only for their author's statement, the Specs with blocking questions, and the decisions. In Obsidian a Pack's members read as one sortable table with the delivery facts as checkboxes, where the Design Review's Pack page is a table too wide for its page.\n\nA view is a filter over values the generator wrote from the reader, so it agrees with the recipe it mirrors only while its predicate stays that simple. A view that would need a join waits until the reader carries the joined value.",
+    sections: {
+      intent: {
+        outcome:
+          "Give each Pack a Base of its members and the corpus a Base of standing queries, so a person filters and sorts a design by rung, floor, delivery facts and design columns.",
+        openQuestions: [
+          {
+            question:
+              "Which standing queries become views, and how is each kept equal to the recipe it mirrors?",
+            blocking: true,
+            key: "standingViews",
+            decider: "owner",
+            provisional:
+              "the build backlog, the design backlog, waiting for the author, blocking questions and decisions, each one predicate over properties, with a test that compares each view's selection with its recipe over the same graph",
+          },
+          {
+            question:
+              "A Base sorts by property and keeps no authored order; how does a person read a Pack in its reading order?",
+            blocking: false,
+            key: "memberOrder",
+            provisional: "the Pack's note lists the members in order beside the embedded Base",
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.iteration",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/consumers/obsidian-vault.iteration.sdp.md",
+    title: "A design pass is followed and answered from the vault",
+    narrative:
+      "A design pass is a loop: an agent edits carriers, the graph changes, a person reads the change and answers it. In a vault the reading half is cheap, because Obsidian reloads a note when its file changes, so a vault regenerated as the carriers change shows each edit where the person is already reading. The answering half must not become a second write path. A person who edits a generated note loses the edit at the next regeneration, and the edit model refuses patches to canonical source from a view. A person composes intent beside the generated notes instead, citing entries by their block links, and an agent turns it into a change proposal that the proposal check reads before the agent applies it.",
+    sections: {
+      intent: {
+        outcome:
+          "Let a person follow a design pass in the vault as an agent edits the carriers, and answer it from the vault with intent an agent hands off as a change proposal.",
+        risks: [
+          "Regenerating the vault while a person reads could move them off their place or overwrite a note they are editing.",
+        ],
+        openQuestions: [
+          {
+            question: "Where does a person compose intent in the vault?",
+            blocking: true,
+            key: "composeHome",
+            decider: "owner",
+            links: ["spec:consumers.intent-composition.proposal"],
+            provisional:
+              "a folder of intent notes the generator never writes, each citing entries by block link, which an agent turns into a proposal and runs through the proposal check",
+          },
+          {
+            question: "What regenerates the vault while a pass runs?",
+            blocking: true,
+            key: "regenerationTrigger",
+            decider: "owner",
+            provisional:
+              "a watch mode on the carrier events `sdp validate --watch` already handles, rewriting only the notes whose values changed",
+          },
+          {
+            question: "How does the vault discourage editing a generated note?",
+            blocking: false,
+            key: "editGuard",
+            provisional:
+              "a read-only banner naming the carrier on every note, and a regeneration that reports any generated note changed since it last wrote it",
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
 ] as const;

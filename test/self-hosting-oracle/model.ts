@@ -832,4 +832,41 @@ export const modelSpecs = [
     },
     deliveryFacts: ["implemented", "has-verifier"],
   },
+  {
+    id: "spec:model.term-addresses",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/model/term-addresses.sdp.md",
+    title: "A Model term may carry a key that addresses it",
+    narrative:
+      "A Model section defines a Spec's terms, and other prose names those terms by word. Nothing checks such a reference, and a view can link a term only by matching words, which reads meaning from text in the way the Protocol refuses. Design, UI, question and rule entries already carry keys that a mention addresses and validation checks; a Model term has none. With a key, prose could cite a concept as a checked mention, and every view, the Obsidian vault included, could link it exactly.",
+    sections: {
+      intent: {
+        outcome:
+          "Let a Model term carry a key, addressed as an entry of its Spec's model section, so prose cites a concept as a checked mention and every view links it exactly.",
+        openQuestions: [
+          {
+            question:
+              "Is a term's key authored in a marker, as rules and questions carry theirs, or derived from the term?",
+            blocking: true,
+            key: "termKeyForm",
+            decider: "owner",
+            provisional:
+              "an authored marker, since a key derived from the term breaks every address when the term is reworded",
+          },
+          {
+            question:
+              "Do the ratified glossary terms move into Model sections so that each gains an address?",
+            blocking: false,
+            key: "glossaryTerms",
+            provisional:
+              "no; the glossary stays a document, and a term gains an address where a Spec defines it",
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
 ] as const;

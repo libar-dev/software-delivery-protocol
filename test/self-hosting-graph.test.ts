@@ -32,6 +32,7 @@ import {
   expectedComponentIds,
   expectedDeclaredRelations,
   expectedDesignIterationPackMembers,
+  expectedObsidianVaultPackMembers,
   expectedDesignManagementPackMembers,
   expectedMemberOfEdges,
   expectedPackMembers,
@@ -212,16 +213,16 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    // Re-measured after plan 43 integration: 249 Markdown Specs and four Specs in
-    // reader.sdp.gherkin; four Pack manifests, with 251 self-hosting members. The
-    // excluded-root sdp validate run measures 287 anchors, 544 nodes and 1283 edges.
-    expect(result.counts).toEqual({ specs: 253, packs: 4, anchors: 287 });
-    expect(expectedSpecs).toHaveLength(253);
-    expect(expectedPackMembers).toHaveLength(251);
+    // Re-measured after the Obsidian vault captures: 254 Markdown Specs and four Specs in
+    // reader.sdp.gherkin; five Pack manifests, with 256 self-hosting members. The
+    // excluded-root sdp validate run measures 287 anchors, 550 nodes and 1304 edges.
+    expect(result.counts).toEqual({ specs: 258, packs: 5, anchors: 287 });
+    expect(expectedSpecs).toHaveLength(258);
+    expect(expectedPackMembers).toHaveLength(256);
     expect(expectedAnchors).toHaveLength(287);
     expect(expectedBindingEdges).toHaveLength(308);
-    expect(result.graph.nodes).toHaveLength(544);
-    expect(result.graph.edges).toHaveLength(1283);
+    expect(result.graph.nodes).toHaveLength(550);
+    expect(result.graph.edges).toHaveLength(1304);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -265,8 +266,9 @@ describe("the self-hosting corpus", () => {
   });
 
   it("holds the frozen stated-readiness distribution", () => {
-    // The carrier statements at 2b5b801 total 183 ready Markdown Specs plus four ready
-    // Gherkin Specs, 53 defined, eight scoped, and five idea; sdp q corroborates them.
+    // The carrier statements total 183 ready Markdown Specs plus four ready Gherkin Specs,
+    // 53 defined, eight scoped, and ten idea, five of them the Obsidian vault captures; sdp q
+    // corroborates them.
     expect(
       primitiveNodes.reduce<Record<string, number>>(
         (histogram, node) => ({
@@ -275,7 +277,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 53, idea: 5, ready: 187, scoped: 8 });
+    ).toEqual({ defined: 53, idea: 10, ready: 187, scoped: 8 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {
@@ -295,6 +297,7 @@ describe("the self-hosting corpus", () => {
         "pack:design-management-v1",
         "declared",
       ]),
+      ...expectedObsidianVaultPackMembers.map((id) => [id, "pack:obsidian-vault-v1", "declared"]),
       ...expectedPackMembers.map((id) => [id, "pack:self-hosting-v1", "declared"]),
     ]);
   });
