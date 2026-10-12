@@ -1,7 +1,7 @@
 # Plan 43. Design iteration on a readable graph
 
 > **Status:** DRAFTED on `feature/design-iteration-v0`, branched from `feature/design-management-v0`
-> at `bc2c84e`, PR 30's green head; it rebases onto `main` once PR 30 merges. A thin lineage
+> at `bc2c84e`, PR 30's head, which `main` merged as `0353f10`. A thin lineage
 > pointer: the arc's intent lives in `pack:design-iteration-v1`, and readiness, backlog and open
 > questions are read from the graph (recipes 1, 9, 11, 20, 29), never from this file. If this file
 > and the graph disagree, the graph wins and this file is stale.
