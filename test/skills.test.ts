@@ -386,7 +386,14 @@ describe("Protocol skill assets", () => {
     ]) {
       expect(statement).toMatch(sizeStatement);
     }
-    for (const ordinal of ["recipes 33 to 40", "recipes 12-16", "run recipe 4 and recipe 22"]) {
+    for (const ordinal of [
+      "recipes 33 to 40",
+      "recipes 12-16",
+      "run recipe 4 and recipe 22",
+      "Use recipe 6 to locate recipes.",
+      "Recipe 35 compares bodies.",
+      "recipes 4, 29 and 35 return summary bodies",
+    ]) {
       expect(ordinal).not.toMatch(sizeStatement);
     }
 
@@ -411,7 +418,11 @@ function catalogOrdinals(): readonly number[] {
   return [...catalog.matchAll(/^## (\d+)\. /gmu)].map((match) => Number(match[1]));
 }
 
-/** A count, in digits or words up to ninety-nine, followed within three words by recipes or bodies. */
+/**
+ * A count, in digits or words up to ninety-nine, followed within three words by recipes or bodies.
+ * A number that names recipes, after `recipe` or `recipes` or after another such number through a
+ * list or range joiner, is the recipe's own number and never a count.
+ */
 function catalogSizePattern(): RegExp {
   const ones = [
     "one",
@@ -440,7 +451,11 @@ function catalogSizePattern(): RegExp {
     ...tens.flatMap((ten) => [ten, ...ones.slice(0, 9).map((one) => `${ten}-${one}`)]),
   ];
   const counts = words.sort((left, right) => right.length - left.length).join("|");
-  return new RegExp(`\\b(?:${counts}|\\d+)(?:\\s+[\\w-]+){0,3}?\\s+(?:recipes|bodies)\\b`, "iu");
+  const recipeOwnNumber = String.raw`(?<!\brecipes?\s+(?:\d+\s*(?:,|-|–|to|and|or)\s*)*)`;
+  return new RegExp(
+    `${recipeOwnNumber}\\b(?:${counts}|\\d+)(?:\\s+[\\w-]+){0,3}?\\s+(?:recipes|bodies)\\b`,
+    "iu",
+  );
 }
 
 const readingOnRampImplementationAnchor = codeAnchor({
