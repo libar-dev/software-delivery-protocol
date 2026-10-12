@@ -764,6 +764,60 @@ describe("query body positions and merged parameters", () => {
     expect(capture.readStderr()).toBe("sdp q: runtime refusal\n");
   });
 
+  it.each(["inline", "file"])(
+    "refuses repeated top-level keys inside one %s object before extraction",
+    async (form) => {
+      for (const { text, key } of [
+        { text: '{"subject":1,"subject":2}', key: "subject" },
+        { text: String.raw`{"\u0073ubject":1,"subject":2}`, key: "subject" },
+        { text: '{"__proto__":1,"__proto__":2}', key: "__proto__" },
+        { text: String.raw`{ "a\"b": {"x":1}, "a\"b": [2] }`, key: 'a"b' },
+        { text: '{"first":1,"second":2,"second":3,"first":4}', key: "second" },
+      ]) {
+        const path = join(scratch, "duplicate-object.json");
+        writeFileSync(path, `\uFEFF${text}`);
+        const seen = { extracted: false };
+        const hooks = {
+          query: {
+            extract: () => {
+              seen.extracted = true;
+              throw new Error("the graph must not derive after a --params refusal");
+            },
+          },
+        };
+        const capture = createCaptureOutput();
+        const code = await runQ(
+          [
+            "return 'the body must not run'",
+            "--root",
+            scratch,
+            "--params",
+            form === "inline" ? text : `@${path}`,
+            "--json",
+          ],
+          capture,
+          hooks,
+        );
+        expect(code, text).toBe(1);
+        expect(capture.readStdout(), text).toBe("");
+        expect(capture.readStderr(), text).toBe(
+          `sdp q: --params key ${JSON.stringify(key)} was given twice.\n`,
+        );
+        expect(seen.extracted, text).toBe(false);
+      }
+    },
+  );
+
+  it("accepts nested duplicates and duplicate-looking text inside values", async () => {
+    const text = String.raw`{"outer":{"same":1,"same":2},"items":[{"same":3,"same":4}],"text":"{\"subject\":1,\"subject\":2}","quote":"\\\"","subject":false}`;
+    const capture = createCaptureOutput();
+    expect(
+      await runQ(["return params", "--root", scratch, "--params", text, "--json"], capture),
+    ).toBe(0);
+    expect(capture.readStderr()).toBe("");
+    expect(JSON.parse(capture.readStdout())).toEqual(JSON.parse(text));
+  });
+
   it.each([null, [1, 2], "text", 4, true, { nested: { a: 1 } }])(
     "binds a keyed file's JSON value %j beside merged objects",
     async (value) => {

@@ -158,6 +158,33 @@ function jsonKind(value: unknown): string {
   return value === null ? "null" : Array.isArray(value) ? "an array" : `a ${typeof value}`;
 }
 
+/** Inspect object-key tokens before JSON.parse discards repeated keys. Nested values stay opaque. */
+function repeatedTopLevelKey(source: string): string | undefined {
+  if (!source.trimStart().startsWith("{")) return undefined;
+  const keys = new Set<string>();
+  let depth = 0;
+  for (let index = 0; index < source.length; index++) {
+    const character = source[index];
+    if (character === '"') {
+      const start = index;
+      for (index++; index < source.length; index++) {
+        if (source[index] === "\\") index++;
+        else if (source[index] === '"') break;
+      }
+      if (depth !== 1) continue;
+      let next = index + 1;
+      while (/[ \t\r\n]/u.test(source[next] ?? "")) next++;
+      if (source[next] !== ":") continue;
+      const key: unknown = JSON.parse(source.slice(start, index + 1));
+      if (typeof key !== "string") continue;
+      if (keys.has(key)) return key;
+      keys.add(key);
+    } else if (character === "{" || character === "[") depth++;
+    else if (character === "}" || character === "]") depth--;
+  }
+  return undefined;
+}
+
 /**
  * `--params` carries a recipe's parameter as data, never as body source: a JSON object inline, or
  * `@PATH` naming a file that holds one, or `KEY=@PATH` binding any JSON value to one key.
@@ -206,6 +233,13 @@ function readParams(
   let parsed: unknown;
 
   try {
+    if (key === undefined) {
+      const repeated = repeatedTopLevelKey(text);
+      if (repeated !== undefined) {
+        writeStderr(output, `sdp q: --params key ${JSON.stringify(repeated)} was given twice.\n`);
+        return undefined;
+      }
+    }
     parsed = JSON.parse(text) as unknown;
   } catch (error) {
     writeStderr(output, `sdp q: ${source} is not valid JSON (${oneLine(errorMessage(error))}).\n`);
