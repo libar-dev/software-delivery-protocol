@@ -275,6 +275,8 @@ const relation = (end) => ({
   other: end.otherId,
   claim: end.claim,
   resolved: end.resolved,
+  ...(end.reason === undefined ? {} : { reason: end.reason }),
+  ...(end.exercises === undefined ? {} : { exercises: end.exercises }),
 });
 
 return {
@@ -309,7 +311,8 @@ return {
 };
 ```
 
-Every relation carries its `claim` and the claim is never collapsed: `declared` is authored intent,
+Every relation carries its `claim` and the claim is never collapsed, and a relation authored with
+a reason carries `reason`, as a declared `verifies` naming rule keys carries `exercises`: `declared` is authored intent,
 `anchored` is a human binding from source, `inferred` is machine-derived structure. `has-verifier`
 rides an *enabled* verifier — a resolving test anchor — and states that a verifier **exists**, not
 that it passed. Pass/fail is CI's, exactly as skip and quarantine are.
@@ -1118,14 +1121,21 @@ const children = [...new Set(
     .map((edge) => edge.from),
 )].sort();
 const readinessById = new Map(g.specs().map((spec) => [spec.id, spec.statedReadiness]));
-const dependencyNeighbors = (type, end) => [...new Set(
-  graph.edges
-    .filter((edge) => edge.type === type && edge[end === "to" ? "from" : "to"] === id)
-    .map((edge) => edge[end]),
-)].sort().map((specId) => ({
-  id: specId,
-  statedReadiness: readinessById.get(specId) ?? null,
-}));
+const dependencyNeighbors = (type, end) => {
+  const reasons = new Map();
+  for (const edge of graph.edges.filter(
+    (edge) => edge.type === type && edge[end === "to" ? "from" : "to"] === id,
+  )) {
+    if (!reasons.has(edge[end]) || reasons.get(edge[end]) === undefined) {
+      reasons.set(edge[end], edge.reason);
+    }
+  }
+  return [...reasons.keys()].sort().map((specId) => ({
+    id: specId,
+    statedReadiness: readinessById.get(specId) ?? null,
+    ...(reasons.get(specId) === undefined ? {} : { reason: reasons.get(specId) }),
+  }));
+};
 const dependsOn = dependencyNeighbors("dependsOn", "to");
 const dependedOnBy = dependencyNeighbors("dependsOn", "from");
 const neighborhoodIds = new Set([id, ...parents, ...children]);
@@ -1248,7 +1258,7 @@ component files. It is not the impact contract; whole-corpus blast radius over c
 recipe 4 (`g.blastRadius`). Shaping decisions are the `decidedBy` targets across the refinement
 neighborhood; a decision record that also `refines` the subject appears both as a refinement child
 and as a shaping decision. Dependency neighbors carry `statedReadiness` because an unready
-`dependsOn` target holds back the subject's `ready`. For every Spec the subject rests on, across `refines`, `dependsOn`,
+`dependsOn` target holds back the subject's `ready`, and `reason` when the relation states one. For every Spec the subject rests on, across `refines`, `dependsOn`,
 `constrainedBy`, and `decidedBy`, with the floor each one reaches, use dependency footing
 (recipe 21). The graph does not derive symbol-level impact;
 `implemented` still means a code anchor binds, never that the code is live.
@@ -1389,6 +1399,7 @@ const footing = context.relationsOut
       id: end.otherId,
       claim: end.claim,
       resolved: end.resolved,
+      ...(end.reason === undefined ? {} : { reason: end.reason }),
       statedReadiness: target?.statedReadiness ?? null,
       floorReached: target === undefined ? null : (target.derivedReadiness ?? "none"),
     };
@@ -1421,7 +1432,8 @@ return {
 ```
 
 `footing` holds one row per relation the Spec declares through `refines`, `dependsOn`,
-`constrainedBy`, or `decidedBy`, in that order and then by target id. The reach is one hop; run
+`constrainedBy`, or `decidedBy`, in that order and then by target id, with `reason` when the
+relation states one. The reach is one hop; run
 the recipe on a target to see what that target rests on. `floorReached` is the target's derived
 readiness, read beside the rung its author stated. A target that does not resolve keeps its row
 with `resolved: false` and null readiness, and counts under `totals.byStatedReadiness.unresolved`.
@@ -2479,6 +2491,10 @@ const rows = decisions
       refines: refinements(context.relationsOut),
       refinedBy: refinements(context.relationsIn),
       shapes: ends(context.relationsIn, "decidedBy"),
+      reasons: context.relationsOut
+        .filter((relation) => relation.reason !== undefined)
+        .map((relation) => ({ type: relation.type, to: relation.otherId, reason: relation.reason }))
+        .sort((left, right) => byCodeUnit(left.type, right.type) || byCodeUnit(left.to, right.to)),
       questions: questions
         .filter((entry) => typeof entry === "object" && entry !== null)
         .filter((entry) => typeof entry.key === "string")
@@ -2508,7 +2524,8 @@ The body takes no parameter. It returns one row per decision Spec, sorted by id 
 `supersedes` lists the decisions this one supersedes and `supersededBy` the ones that supersede it;
 follow either to walk a chain. `refines` lists decision-kind Specs this decision refines, and
 `refinedBy` lists decision-kind Specs that refine it. Whether a refinement narrows a decision is
-that decision's own text. Supersession replaces the whole decision. Other kinds that refine a decision stay out of these
+that decision's own text, and `reasons` lists every relation this decision declares with a reason,
+which on a `refines` says the part it narrows and on a `supersedes` what it replaces. Supersession replaces the whole decision. Other kinds that refine a decision stay out of these
 two lists. `shapes` lists the Specs that name the decision through
 `decidedBy`. `questions` lists the decision's open questions that carry a key, each with its
 blocking flag and entry address; the open-question register (recipe 20) lists the unkeyed ones

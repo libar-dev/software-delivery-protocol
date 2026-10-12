@@ -5398,6 +5398,16 @@ describe("design recipes", () => {
           (id) => primitivesById.get(id)?.specKind === "decision",
         ),
         shapes: ends("decidedBy", "to", node.id),
+        reasons: derived.graph.edges
+          .filter(
+            (edge) =>
+              edge.claim === "declared" && edge.from === node.id && edge.reason !== undefined,
+          )
+          .map((edge) => ({ type: edge.type, to: edge.to, reason: edge.reason }))
+          .sort(
+            (left, right) =>
+              codeUnitOrder(left.type, right.type) || codeUnitOrder(left.to, right.to),
+          ),
         questions: (node.sections?.intent?.openQuestions ?? []).flatMap((entry) =>
           typeof entry === "string" || entry.key === undefined
             ? []
@@ -5461,6 +5471,7 @@ describe("design recipes", () => {
       refines: [],
       refinedBy: [],
       shapes: [],
+      reasons: [],
       questions: [],
       packs: [],
       ...extra,
@@ -5488,6 +5499,45 @@ describe("design recipes", () => {
         }),
       ],
     });
+  });
+
+  it("carries a relation's reason beside the relation in recipes 3, 19, 21 and 31", async () => {
+    const reason = "the carve-out narrows the freeze to one page";
+    const extraction = syntheticExtraction(
+      [probeSpec("spec:probe.freeze", "decision"), probeSpec("spec:probe.carve", "decision")],
+      [
+        { ...probeEdge("spec:probe.carve", "refines", "spec:probe.freeze"), reason },
+        { ...probeEdge("spec:probe.carve", "dependsOn", "spec:probe.freeze"), reason },
+      ],
+    );
+    const guarantee = asRecord(
+      await runRecipe(recipeByOrdinal(3), { spec: "spec:probe.carve" }, extraction),
+    );
+    expect(asArray(guarantee.relationsOut)).toContainEqual(
+      expect.objectContaining({ type: "refines", other: "spec:probe.freeze", reason }),
+    );
+    const slice = asRecord(
+      await runRecipe(recipeByOrdinal(19), { spec: "spec:probe.carve" }, extraction),
+    );
+    expect(asArray(asRecord(slice.dependencies).dependsOn)).toEqual([
+      { id: "spec:probe.freeze", statedReadiness: "idea", reason },
+    ]);
+    const footing = asRecord(
+      await runRecipe(recipeByOrdinal(21), { spec: "spec:probe.carve" }, extraction),
+    );
+    expect(asArray(footing.footing)).toContainEqual(
+      expect.objectContaining({ type: "dependsOn", id: "spec:probe.freeze", reason }),
+    );
+    const register = asRecord(await runRecipe(recipeByOrdinal(31), undefined, extraction));
+    expect(asArray(register.rows)).toContainEqual(
+      expect.objectContaining({
+        id: "spec:probe.carve",
+        reasons: [
+          { type: "dependsOn", to: "spec:probe.freeze", reason },
+          { type: "refines", to: "spec:probe.freeze", reason },
+        ],
+      }),
+    );
   });
 
   it("registers narrowing decisions both ways and excludes refinement by other kinds", async () => {
@@ -5865,7 +5915,7 @@ export const subject = spec({
 const answerShapeRecipesAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.answer-shape-recipes"),
   label: "asserts realization of the catalog's compact and detailed answers",
-  references: [ref("spec:consumers.agent-surface.answer-shapes")],
+  satisfies: ref("spec:consumers.agent-surface.answer-shapes"),
 });
 void answerShapeRecipesAnchor;
 const answerShapeRecipesTestAnchor = specTest({

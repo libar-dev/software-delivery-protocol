@@ -32,7 +32,7 @@ void slimmingImplementationAnchor;
 const curationRecipeAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.curation-recipe"),
   label: "asserts the curation report over external inferred imports",
-  references: [ref("spec:consumers.impact-graph.curation-assist")],
+  satisfies: ref("spec:consumers.impact-graph.curation-assist"),
 });
 void curationRecipeAnchor;
 const slimmingTestAnchor = specTest({

@@ -7,7 +7,7 @@ import { codeAnchor } from "../model/code-anchor.js";
 const normalizationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.authoring-normalization"),
   label: "normalizes rule markers and question fields after carrier reification",
-  references: [
+  satisfies: [
     ref("spec:model.rule-keys"),
     ref("spec:model.open-question-fields"),
     ref("spec:model.relation-reasons"),

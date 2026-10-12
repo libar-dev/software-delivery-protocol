@@ -125,7 +125,7 @@ class BodyParseError extends Error {
 const queryAnswerShapeAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.query-answer-shapes"),
   label: "reports parse positions in the caller's query body",
-  references: [ref("spec:consumers.agent-surface.answer-shapes")],
+  satisfies: ref("spec:consumers.agent-surface.answer-shapes"),
   component: componentAnchorId("component:protocol.cli"),
   role: "service",
 });

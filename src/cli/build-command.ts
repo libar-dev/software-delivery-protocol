@@ -208,7 +208,7 @@ function readRegistrarManifest(path: string, root: string, rootReal: string): re
 /**
  * @sdpAnchor impl:protocol.build-imports
  * @sdpLabel opt-in imports publication in the build command
- * @sdpReferences spec:consumers.impact-graph.curation-assist
+ * @sdpSatisfies spec:consumers.impact-graph.curation-assist
  * @sdpComponent component:protocol.cli
  * @sdpRole publisher
  */
