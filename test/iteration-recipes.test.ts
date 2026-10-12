@@ -385,6 +385,110 @@ describe("iteration loop: design diff", () => {
       rmSync(directory, { recursive: true, force: true });
     }
   }, 20_000);
+
+  it("compares new Design entries across schema versions when the base corpus has none", async () => {
+    await withCorpus(async (root) => {
+      edit(root, "a.sdp.md", "## Design\n- alpha: `Alpha` declaration\n- beta: Beta text\n\n", "");
+      edit(root, "b.sdp.md", "\n\n## Design\n- layer: domain", "");
+      const base = { ...extract({ root }).graph, schemaVersion: "0.8.0" };
+      edit(
+        root,
+        "b.sdp.md",
+        "- rule: B rule.",
+        "- rule: B rule.\n\n## Design\n- added: New design.",
+      );
+      const head = extract({ root });
+      const diff = await runRecipe<Diff>(35, { base, detail: true }, head);
+      expect(diff.diagnostics.map((row) => row.part)).toContain("schemaVersion");
+      expect(diff.diagnostics.map((row) => row.part)).not.toContain("design");
+      expect(diff.specs.changed.find((row) => row.id === "spec:probe.b")?.parts).toContainEqual({
+        part: "design.added",
+        change: "added",
+        from: null,
+        to: "New design.",
+      });
+      const check = await runRecipe<ProposalCheck>(
+        38,
+        {
+          base,
+          proposal: {
+            ...sampleProposal,
+            changes: [{ scope: ["spec:probe.b#design.added"], request: "Review new design." }],
+          },
+        },
+        head,
+      );
+      expect(check.changes[0]?.scope[0]).toMatchObject({
+        resolvesAtBase: false,
+        resolvesAtHead: true,
+        moved: true,
+      });
+    });
+  }, 20_000);
+
+  it("normalizes legacy rule markers when both engines declare schema 0.9.0", async () => {
+    await withCorpus(async (_root, head) => {
+      const base = JSON.parse(JSON.stringify(head.graph)) as GraphSchema;
+      for (const node of base.nodes) {
+        if (node.nodeType !== "Primitive" || !node.sections?.behavior?.ruleKeys) continue;
+        const behavior = node.sections.behavior;
+        for (const [key, path] of Object.entries(behavior.ruleKeys ?? {})) {
+          const match = /^(rules|flows)\[(\d+)\]$/u.exec(path);
+          const list = match?.[1] === "rules" ? behavior.rules : behavior.flows;
+          const index = Number(match?.[2]);
+          if (list) (list as string[])[index] = `[#${key}] ${String(list[index])}`;
+        }
+        delete (behavior as { ruleKeys?: unknown }).ruleKeys;
+      }
+      const diff = await runRecipe<Diff>(35, { base, detail: true }, head);
+      expect(diff.diagnostics).toEqual([]);
+      expect(diff.specs.changed).toEqual([]);
+      const check = await runRecipe<ProposalCheck>(
+        38,
+        {
+          base,
+          proposal: {
+            ...sampleProposal,
+            changes: [
+              {
+                scope: ["spec:probe.a#rule.first", "spec:probe.a#rule.last", "spec:probe.a"],
+                request: "Review unchanged rules.",
+              },
+            ],
+          },
+        },
+        head,
+      );
+      expect(check.changes[0]?.moved).toBe(false);
+      expect(
+        check.changes[0]?.scope.every(
+          (row) => row.resolvesAtBase && row.resolvesAtHead && row.moved === false,
+        ),
+      ).toBe(true);
+    });
+  }, 20_000);
+
+  it("reports proposal scopes outside the common schema as incomparable", async () => {
+    await withCorpus(async (_root, head) => {
+      const base = { ...head.graph, schemaVersion: "0.8.0" };
+      const check = await runRecipe<ProposalCheck>(
+        38,
+        {
+          base,
+          proposal: {
+            ...sampleProposal,
+            changes: [{ scope: ["spec:probe.a#rule.first"], request: "Review this rule." }],
+          },
+        },
+        head,
+      );
+      expect(check.changes[0]?.scope[0]?.comparable).toBe(false);
+      expect(typeof check.changes[0]?.scope[0]?.reason).toBe("string");
+      expect(check.changes[0]?.scope[0]).not.toHaveProperty("moved");
+      expect(check.changes[0]?.moved).toBeNull();
+      expect(check.diagnostics?.map((row) => row.part)).toContain("schemaVersion");
+    });
+  }, 20_000);
 });
 
 const perspectiveDocumentAnchor = codeAnchor({
@@ -853,12 +957,20 @@ const proposalTestAnchor = specTest({
 void proposalTestAnchor;
 interface ProposalCheck {
   schemaProblems: { path: string; problem: string }[];
+  diagnostics?: { part: string }[];
   base: string;
   totals: { changes: number; moved: number; unresolved: number };
   changes: {
     index: number;
-    scope: { ref: string; resolvesAtHead: boolean; resolvesAtBase: boolean; moved: boolean }[];
-    moved: boolean;
+    scope: {
+      ref: string;
+      resolvesAtHead: boolean;
+      resolvesAtBase: boolean;
+      moved?: boolean;
+      comparable?: boolean;
+      reason?: string;
+    }[];
+    moved: boolean | null;
     relationTarget: { ref: string; resolvesAtHead: boolean } | null;
   }[];
 }

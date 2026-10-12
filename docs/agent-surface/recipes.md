@@ -2788,28 +2788,41 @@ const allowed = packId === undefined ? null : new Set([
 if (allowed !== null && !basePacks.has(packId) && !headPacks.has(packId)) {
   diagnostics.push({ part: "pack", problem: "Pack is absent at both commits.", id: packId });
 }
-// Across engine versions, an optional feature absent throughout one graph cannot be compared.
-const unsupported = new Set();
-const supported = (part, test) => {
-  if (!differentVersion) return true;
-  const a = test(base), b = test(graph);
-  if (a === b) return true;
-  unsupported.add(part);
-  diagnostics.push({ part, problem: "Part is carried by only one graph.", base: a, head: b });
-  return false;
+// Capabilities follow the schema contract, never whether this corpus uses an optional field.
+const atLeast = (value, minimum) => {
+  const version = /^(\d+)\.(\d+)\.(\d+)$/u.exec(value.schemaVersion ?? "");
+  if (!version) return false;
+  const numbers = version.slice(1).map(Number);
+  for (let i = 0; i < minimum.length; i++) {
+    if (numbers[i] !== minimum[i]) return numbers[i] > minimum[i];
+  }
+  return true;
 };
-for (const field of ["title", "narrative", "sections", "deliveryFacts"]) {
-  supported(field, (value) => value.nodes.some((node) => node.nodeType === "Primitive" && Object.hasOwn(node, field)));
+const unsupported = new Set();
+for (const [part, minimum] of [
+  ["narrative", [0, 4, 0]],
+  ...["ruleKeys", "decider", "links", "provisional", "trigger", "reason", "exercises"].map((part) => [part, [0, 9, 0]]),
+]) {
+  const a = atLeast(base, minimum), b = atLeast(graph, minimum);
+  if (!a || !b) unsupported.add(part);
+  if (a !== b) diagnostics.push({ part, problem: "Part is outside the common schema.", base: a, head: b });
 }
-for (const section of ["intent", "behavior", "constraints", "model", "design", "decision", "verification", "ui"]) {
-  supported(section, (value) => value.nodes.some((node) => Object.hasOwn(node.sections ?? {}, section)));
-}
-for (const field of ["ruleKeys", "decider", "links", "provisional", "trigger"]) {
-  supported(field, (value) => value.nodes.some((node) => field === "ruleKeys"
-    ? Object.hasOwn(node.sections?.behavior ?? {}, field)
-    : (node.sections?.intent?.openQuestions ?? []).some((q) => q && typeof q === "object" && Object.hasOwn(q, field))));
-}
-for (const field of ["reason", "exercises"]) supported(field, (value) => value.edges.some((edge) => Object.hasOwn(edge, field)));
+// Before ruleKeys, engines left the authored marker in the rule or flow string.
+const behaviorOf = (content) => {
+  const result = { ...content, rules: [...(content.rules ?? [])], flows: [...(content.flows ?? [])] };
+  if (content.ruleKeys !== undefined) return result;
+  const keys = {};
+  for (const list of Object.keys(content).filter((key) => key === "rules" || key === "flows")) {
+    result[list] = result[list].map((text, index) => {
+      const marker = /^\[#([a-z][A-Za-z0-9]*)\] (.*)$/su.exec(text);
+      if (!marker) return text;
+      keys[marker[1]] = `${list}[${index}]`;
+      return marker[2];
+    });
+  }
+  result.ruleKeys = keys;
+  return result;
+};
 const partsOf = (node, value) => {
   const parts = new Map();
   const put = (part, content, position) => parts.set(part, { value: content, position });
@@ -2841,7 +2854,7 @@ const partsOf = (node, value) => {
       if (unkeyed.length) put("intent.openQuestions", openQuestions.map((question) => question && typeof question === "object"
         ? Object.fromEntries(Object.entries(question).filter(([key]) => !unsupported.has(key))) : question));
     } else if (section === "behavior") {
-      const { rules, flows, ruleKeys, ...rest } = content;
+      const { rules, flows, ruleKeys, ...rest } = behaviorOf(content);
       if (Object.keys(rest).length) put(section, rest);
       const keys = unsupported.has("ruleKeys") ? {} : ruleKeys ?? {};
       const entries = new Map(Object.entries(keys).map(([key, path]) => [path, key]));
@@ -2921,8 +2934,9 @@ alone do not change intent.
 `packs` reports membership additions, removals and relative order changes among retained members.
 `bindings` keeps anchor-derived changes apart, with added and removed ids for realizing units,
 referencing units, enabled verifiers and delivery facts. Each list has a count in `totals`.
-A schema difference is diagnostic data. Optional parts carried throughout only one graph are
-omitted from that comparison and named in `diagnostics`. The comparison confers nothing and
+A schema difference is diagnostic data. Parts outside the schemas' shared capabilities are
+omitted and named in `diagnostics`; an unused optional section still compares. Legacy rule markers
+are normalized before comparison when a Spec carries no `ruleKeys`. The comparison confers nothing and
 records no design pass. The law is `spec:consumers.design-diff`.
 
 ## 36. The context bundle
@@ -3351,21 +3365,43 @@ if (!base || !Array.isArray(base.nodes) || !Array.isArray(base.edges)) { problem
 const canonical = (value) => Array.isArray(value) ? value.map(canonical) : object(value)
   ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])])) : value;
 const same = (a, b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
-const differentVersion = base.schemaVersion !== graph.schemaVersion;
+const diagnostics = [];
+if (base.schemaVersion !== graph.schemaVersion) diagnostics.push({ part: "schemaVersion", base: base.schemaVersion, head: graph.schemaVersion });
+// Capabilities follow the schema contract, never whether this corpus uses an optional field.
+const atLeast = (value, minimum) => {
+  const version = /^(\d+)\.(\d+)\.(\d+)$/u.exec(value.schemaVersion ?? "");
+  if (!version) return false;
+  const numbers = version.slice(1).map(Number);
+  for (let i = 0; i < minimum.length; i++) {
+    if (numbers[i] !== minimum[i]) return numbers[i] > minimum[i];
+  }
+  return true;
+};
 const unsupported = new Set();
-const supported = (part, test) => { if (differentVersion && test(base) !== test(graph)) unsupported.add(part); };
-for (const field of ["title", "narrative", "sections", "deliveryFacts"]) {
-  supported(field, (value) => value.nodes.some((node) => node.nodeType === "Primitive" && Object.hasOwn(node, field)));
+for (const [part, minimum] of [
+  ["narrative", [0, 4, 0]],
+  ...["ruleKeys", "decider", "links", "provisional", "trigger", "reason", "exercises"].map((part) => [part, [0, 9, 0]]),
+]) {
+  const a = atLeast(base, minimum), b = atLeast(graph, minimum);
+  if (!a || !b) unsupported.add(part);
+  if (a !== b) diagnostics.push({ part, problem: "Part is outside the common schema.", base: a, head: b });
 }
-for (const section of ["intent", "behavior", "constraints", "model", "design", "decision", "verification", "ui"]) {
-  supported(section, (value) => value.nodes.some((node) => Object.hasOwn(node.sections ?? {}, section)));
-}
-for (const field of ["ruleKeys", "decider", "links", "provisional", "trigger"]) {
-  supported(field, (value) => value.nodes.some((node) => field === "ruleKeys"
-    ? Object.hasOwn(node.sections?.behavior ?? {}, field)
-    : (node.sections?.intent?.openQuestions ?? []).some((q) => q && typeof q === "object" && Object.hasOwn(q, field))));
-}
-for (const field of ["reason", "exercises"]) supported(field, (value) => value.edges.some((edge) => Object.hasOwn(edge, field)));
+// Before ruleKeys, engines left the authored marker in the rule or flow string.
+const behaviorOf = (content) => {
+  const result = { ...content, rules: [...(content.rules ?? [])], flows: [...(content.flows ?? [])] };
+  if (content.ruleKeys !== undefined) return result;
+  const keys = {};
+  for (const list of Object.keys(content).filter((key) => key === "rules" || key === "flows")) {
+    result[list] = result[list].map((text, index) => {
+      const marker = /^\[#([a-z][A-Za-z0-9]*)\] (.*)$/su.exec(text);
+      if (!marker) return text;
+      keys[marker[1]] = `${list}[${index}]`;
+      return marker[2];
+    });
+  }
+  result.ruleKeys = keys;
+  return result;
+};
 const partsOf = (node, value) => {
   const parts = new Map();
   const put = (part, content, position) => parts.set(part, { value: content, position });
@@ -3397,7 +3433,7 @@ const partsOf = (node, value) => {
       if (unkeyed.length) put("intent.openQuestions", openQuestions.map((question) => question && typeof question === "object"
         ? Object.fromEntries(Object.entries(question).filter(([key]) => !unsupported.has(key))) : question));
     } else if (section === "behavior") {
-      const { rules, flows, ruleKeys, ...rest } = content;
+      const { rules, flows, ruleKeys, ...rest } = behaviorOf(content);
       if (Object.keys(rest).length) put(section, rest);
       const keys = unsupported.has("ruleKeys") ? {} : ruleKeys ?? {};
       const entries = new Map(Object.entries(keys).map(([key, path]) => [path, key]));
@@ -3442,7 +3478,7 @@ const resolves = (nodes, ref) => {
   if (suffix === undefined) return true;
   const [section, key] = suffix.split(".");
   if (section === "question") return (node.sections?.intent?.openQuestions ?? []).some((question) => question?.key === key);
-  if (section === "rule") return Object.hasOwn(node.sections?.behavior?.ruleKeys ?? {}, key);
+  if (section === "rule") return Object.hasOwn(behaviorOf(node.sections?.behavior ?? {}).ruleKeys ?? {}, key);
   return key !== "description" && Object.hasOwn(node.sections?.[section] ?? {}, key);
 };
 const changes = proposal.changes.map((change, index) => {
@@ -3450,16 +3486,23 @@ const changes = proposal.changes.map((change, index) => {
     ...(change.follows === undefined ? [] : [change.follows]), ...(change.relation === undefined ? [] : [change.relation.from])])];
   const scope = refs.map((ref) => {
     const [id, suffix] = ref.split("#");
+    const resolution = { ref, resolvesAtHead: resolves(after, ref), resolvesAtBase: resolves(before, ref) };
+    const missing = suffix === undefined ? [...unsupported] : suffix.startsWith("rule.")
+      ? (unsupported.has("ruleKeys") ? ["ruleKeys"] : []) : suffix.startsWith("question.")
+      ? ["decider", "links", "provisional", "trigger"].filter((part) => unsupported.has(part)) : [];
+    if (missing.length) return { ...resolution, comparable: false, reason: `Outside the common schema: ${missing.join(", ")}.` };
     const parts = changedParts(id);
     const moved = before.has(id) !== after.has(id) || (suffix === undefined
       ? parts.changed.size > 0 || parts.ordered.size > 0 : parts.changed.has(suffix));
-    return { ref, resolvesAtHead: resolves(after, ref), resolvesAtBase: resolves(before, ref), moved };
+    return { ...resolution, moved };
   });
   const relationTarget = change.relation?.action === "declare"
     ? { ref: change.relation.target, resolvesAtHead: resolves(after, change.relation.target) } : null;
-  return { index, scope, moved: scope.some((item) => item.moved), relationTarget };
+  const incomparable = scope.some((item) => item.comparable === false);
+  return { index, scope, moved: scope.some((item) => item.moved) ? true : incomparable ? null : false,
+    ...(incomparable ? { comparable: false } : {}), relationTarget };
 });
-return { schemaProblems, base: proposal.base, totals: { changes: changes.length, moved: changes.filter((change) => change.moved).length,
+return { schemaProblems, base: proposal.base, diagnostics, totals: { changes: changes.length, moved: changes.filter((change) => change.moved).length,
   unresolved: changes.filter((change) => change.scope.some((item) => !item.resolvesAtHead) || change.relationTarget?.resolvesAtHead === false).length }, changes };
 ```
 
@@ -3470,7 +3513,10 @@ was added, removed or changed under recipe 35's comparison. An order-only entry 
 value unchanged; a whole-Spec scope includes order changes. `relationTarget` reports resolution at
 the head for a declared relation, and is null otherwise. `totals.moved` and `totals.unresolved`
 count changes, so one moved entry leaves other changes independently visible. Unknown references
-remain explicit rows. A base missing from the parameters is a problem with no change rows.
+remain explicit rows. A scope outside the common schema carries `comparable: false` and a
+`reason`, with no `moved` claim. Its change also carries `comparable: false`, and `moved` is null
+unless another comparable scope moved. Schema differences and unsupported parts appear in
+`diagnostics`. A base missing from the parameters is a problem with no change rows.
 
 The rows carry facts about declared intent, with anchored changes excluded from scope movement.
 They confer no status or approval. A caller routes a moved change to a person and applies other
