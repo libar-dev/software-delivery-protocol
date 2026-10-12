@@ -2,7 +2,7 @@
 id: spec:model.open-question-fields
 kind: rule
 altitude: story
-readiness: scoped
+readiness: defined
 relations:
   refines: spec:model.open-question-keys
   decidedBy: spec:decisions.adopt-the-nouns
@@ -17,14 +17,14 @@ The original design gave an open question an owner and a list of links to decisi
 - risk: A field for who decides invites fields for when and for what state the question is in, which would rebuild a workflow tracker inside the Spec.
 
 ### Open questions
-- [blocking #deciderForm] What names who decides: a free token the corpus owns, as a role is, or a reference to something the graph holds? The adopter's three classes and four advisor lenses are its own vocabulary, not the Protocol's.
-- [blocking #fieldCarrier] How does the Markdown marker carry the new fields and keep the entry on one line: inside the marker after the key, as trailing labelled text, or only in the TypeScript carrier's question object?
 - [non-blocking #linkTargets] May a link name only a Spec id or an entry address, which validation checks, or also an external document, which the `doc:` deferral leaves without an identity?
 - [non-blocking #leanHome] The adopter's lean has six parts: what to do, what it rests on, the case against it, what it settles, what it changes and what follows if it is wrong. Does any part belong on the question, or is a lean always a draft of a decision Spec?
 
 ## Rule
 - An open question may carry three optional fields beside its text, flag and key, namely who decides it, the links it rests on and its provisional reading; a question without them stays lawful.
 - Who decides a question names the person, role or body whose ruling settles it. It authorizes nothing, gates no edit, and no validator compares it with the author of a change.
+- Who decides a question is one lowercase kebab token the corpus owns, on the grammar a role uses, such as `owner` or `delegated`. The graph holds no person or role to point at, so the value references nothing, and the Protocol ships no list of values.
+- In the Markdown carrier the three fields ride labelled sub-items indented under the question's own line, `decider:`, `links:` and `provisional:`, each at most once and each one line, so the question line stays as authored. They are the one indented line the body grammar admits, and the TypeScript carrier carries the same three fields on the question object.
 - A link names a Spec id or an entry address the question rests on and resolves as a mention does. A link mints no relation.
 - The provisional reading is one line stating what the design assumes while the question is open. It is intent, never a ruling.
 - An open question carries no status, date, blocked work unit or record of who checked it. A settled question leaves the Spec, a ruling that passes the decision test lands as a decision Spec the shaped Specs name through `decidedBy`, and the rest of the history stays in git and in the adopter's own records.
