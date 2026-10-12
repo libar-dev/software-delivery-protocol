@@ -16,6 +16,10 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
+> **plan 44 is EXECUTED** on its branch. A whole-corpus refresh: every Spec read against the
+> engine, the other Specs and the vocabulary, cross-family verified, and the findings fixed,
+> ruled on the owner's delegation, or homed as keyed questions with provisional answers for the
+> next arcs; the record is `reviews/26-whole-corpus-refresh.md`. Plan 42 follows it.
 > **plan 43 is EXECUTED**, merged as PR 31. Design iteration on a readable graph: answers
 > that fit (summaries, both next rungs, explained misses, the design backlog, repeatable
 > `--params`), the authoring grammar (rule keys, question fields, relation reasons), the iteration
