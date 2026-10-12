@@ -2,7 +2,7 @@
 id: spec:consumers.agent-surface.example-space-coverage
 kind: behavior
 altitude: story
-readiness: idea
+readiness: defined
 relations:
   refines: spec:consumers.agent-surface.design-recipes
   dependsOn: spec:carrier.slot-notation
@@ -16,5 +16,10 @@ The original design rendered a coverage heatmap from each example space: which c
 - outcome: Report, for every example space, each literal slot value with the children that witness it and the values no child witnesses, so a design pass sees its missing examples before code exists.
 
 ### Open questions
-- [blocking #decodedSpace] A recipe body that parses step text would be a second slot-notation parser, which the extractor-only rule forbids. Should the reader decode a Spec's example space into typed slots and each example child's bound point, on the existing Spec context, so a recipe reads coverage without parsing; or should coverage ship as a projection inside the engine, beside the generated space contracts?
 - [non-blocking #combinationCoverage] Is coverage per slot value enough, or does a design pass need the combinations of two or more slots, as the original heatmap drew them?
+
+## Behavior
+- rule: The engine decodes each Spec's example space into its typed slots, and each example child's steps into its bound point, once, through the notation module that writes the space contracts, and the reader carries both on the Spec context; no recipe or projection parses slot notation a second time.
+- rule: Coverage is a catalog recipe over the decoded values: for each slot typed as a union of literals, each value with the example children whose bound point witnesses it, and the values no child witnesses.
+- rule: A slot that is not a union of literals has no finite set of values, and coverage reports it as not enumerable rather than as covered or as a coverage gap.
+- rule: Coverage reports and confers nothing: it moves no readiness, records no verdict, and a coverage gap is what a design pass reads, never a validation finding.

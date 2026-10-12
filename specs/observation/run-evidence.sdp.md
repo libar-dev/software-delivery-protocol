@@ -2,7 +2,7 @@
 id: spec:observation.run-evidence
 kind: behavior
 altitude: feature
-readiness: scoped
+readiness: defined
 relations:
   dependsOn: spec:extraction.delivery-facts
   decidedBy: spec:decisions.binding-not-liveness
@@ -18,12 +18,12 @@ The first adopter keeps run records anyway, one JSON file per run with its tier,
 - outcome: Show a verifier's recorded runs beside its binding in a view, labelled as external input with its commit, while the graph keeps recording only that the binding exists.
 
 ### Open questions
-- [blocking #joinKey] What joins a run record to a verifier: the test anchor's id, which no reporter prints, the test file the anchor sits in, or a name the adopter maps? The adopter's records carry a file and a test name.
-- [blocking #recordShape] Which run records does the Protocol read: a schema of its own, a common reporter format, or any shape an adopter maps through a recipe parameter?
 - [non-blocking #freshness] How does a view say a run is stale: by its commit against the commit being read, or by whether the bound files changed between the two?
 
 ## Behavior
 - rule: Run records are an input a view reads beside the graph, named by the caller; the graph never holds them, and no node, edge or delivery fact derives from them.
+- rule: A run record joins every verifier whose test anchor sits in the test file the record names, because the file is the binding grain of both anchor forms and every reporter prints it; each test name in the record shows as a row under that verifier.
+- rule: The Protocol reads run records in the Common Test Report Format, CTRF, an open JSON schema with reporters for the common test runners, passed to a view as a recipe parameter. A record joins only when its reporter fills CTRF's optional `filePath` field, and an adopter with records of another shape maps them into CTRF itself.
 - rule: A view shows each run joined to the verifier it exercised, with its result, its commit and the input it came from, labelled as external run evidence and never as `has-verifier` or `implemented`.
 - rule: A run whose commit differs from the commit being read shows both commits, so a reader sees how old it is.
 - rule: The Design Review stays a function of the graph alone and shows no run; run evidence appears only in a view that admits external input, such as a recipe that takes the records as a parameter, or the Studio.

@@ -2,12 +2,13 @@
 id: spec:consumers.intent-composition.proposal
 kind: contract
 altitude: story
-readiness: scoped
+readiness: defined
 relations:
   refines: spec:consumers.intent-composition
   dependsOn:
     - spec:consumers.edit-model
     - spec:consumers.agent-surface.address-and-cycle-recipes
+    - spec:consumers.design-diff
 ---
 # A change proposal is addressed, based and checked before it lands
 
@@ -20,16 +21,16 @@ The first adopter's agents already write proposals in that shape. A design pass 
 - outcome: Give a proposed design change a reviewable shape: what it touches by Spec id or entry address, the commit it was read at, the change requested and why, checked on a worktree before merge.
 
 ### Open questions
-- [blocking #proposalCarrier] What carries a proposal: a JSON document a recipe takes as a parameter, a Markdown memo with one entry per change, or both from one schema?
-- [blocking #staleBase] When the scope changed between the base commit and the head, is the proposal refused, flagged for a person, or compared entry by entry so that only a change touching a moved entry is held?
 - [non-blocking #proposer] Does a proposal name who proposed it, as the original's `proposedBy` did, or do git authorship and co-author trailers stand in once it is applied?
 - [non-blocking #batchProposals] Is a proposal one change, or may it hold several changes to several Specs that land together or not at all?
 
 ## Contract
+- A proposal is one JSON document on one schema, which a recipe takes as a parameter; a Markdown memo of the proposal is a rendering of that document and never a second carrier.
 - A proposal names its scope as one or more Spec ids or entry addresses, each resolved before anything is applied: a Spec id through the reader's Spec context, an entry address through address resolution.
 - A proposal names the commit whose graph it was read against.
 - A proposal states the requested change in words an agent can apply, such as the exact text for an entry with the address it replaces or follows, a new open question with its flag, or a relation to declare or remove.
 - A proposal states its reason in one line.
+- Before a proposal is applied, the design diff between its base commit and the head is read entry by entry. A change whose scope moved since the base goes to a person instead of being applied, every other change applies, and one moved entry never holds back the whole proposal.
 - Applying a proposal is an ordinary source edit by an agent or a person; no tool rewrites a carrier from it, and nothing is applied to a copy of the graph first.
 - An applied proposal lands only from a worktree on which `sdp validate` reports no error, and the conformance and honesty checks stay the only gate.
 - A proposal carries no status, approval or verdict, and the graph records none; whether it was accepted is git history and the adopter's own record.
