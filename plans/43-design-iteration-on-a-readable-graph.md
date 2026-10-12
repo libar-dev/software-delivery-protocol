@@ -219,6 +219,15 @@ The proposal Spec's `checkRecipe` and `checkRows` now name the `diagnostics` and
 items the first review's fix added. Left for a ruling: a non-literal `blocking` flag or question
 text still drops a TypeScript question list with a warning, under the section tier's lossy rule.
 
+### The description pass
+
+Checking PR 31's description against both ruling sheets found three loose ends, fixed in
+`f708cfc`. `spec:consumers.agent-surface.design-recipes` still named recipe 31's old fields; its
+example-space question asked what the coverage Spec now rules; and the PR 30 ruling that a recipe
+renders a proposal as a memo for people had no home, so the proposal Spec carries it as the
+non-blocking `#memoRecipe`. The Pack page at the arc's base and head is rendered in
+`.omo/evidence/plan-43-demo/`.
+
 ## Acceptance, as measured at close
 
 Measured at the merge of the review fixes, and the gate again at `be35578`; re-run the recipes
