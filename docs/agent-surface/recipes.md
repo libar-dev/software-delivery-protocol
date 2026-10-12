@@ -1143,6 +1143,11 @@ const dependencyNeighbors = (type, end) => {
 };
 const dependsOn = dependencyNeighbors("dependsOn", "to");
 const dependedOnBy = dependencyNeighbors("dependsOn", "from");
+const byCodeUnit = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const reasons = graph.edges
+  .filter((edge) => edge.claim === "declared" && (edge.from === id || edge.to === id) && edge.reason !== undefined)
+  .map(({ type, from, to, reason }) => ({ type, from, to, reason }))
+  .sort((a, b) => byCodeUnit(a.type, b.type) || byCodeUnit(a.from, b.from) || byCodeUnit(a.to, b.to));
 const neighborhoodIds = new Set([id, ...parents, ...children]);
 const decisionsById = new Map();
 
@@ -1231,6 +1236,7 @@ return {
   found: true,
   refinementNeighborhood: { parents, children },
   dependencies: { dependsOn, dependedOnBy },
+  reasons,
   shapingDecisions: [...decisionsById]
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([decisionId, subjects]) => ({
@@ -1262,7 +1268,9 @@ return {
 component files. It is not the impact contract; whole-corpus blast radius over changed files stays
 recipe 4 (`g.blastRadius`). Shaping decisions are the `decidedBy` targets across the refinement
 neighborhood; a decision record that also `refines` the subject appears both as a refinement child
-and as a shaping decision. Dependency neighbors carry `statedReadiness` because an unready
+and as a shaping decision. `reasons` lists every authored relation into or out of the subject
+that states a reason, as `{ type, from, to, reason }`, sorted by type, then source id, then target id.
+Dependency neighbors carry `statedReadiness` because an unready
 `dependsOn` target holds back the subject's `ready`, and `reason` when the relation states one. For every Spec the subject rests on, across `refines`, `dependsOn`,
 `constrainedBy`, and `decidedBy`, with the floor each one reaches, use dependency footing
 (recipe 21). The graph does not derive symbol-level impact;
@@ -3027,6 +3035,7 @@ const members = ids.map((id) => {
   const footing = context.relationsOut.filter((end) => types.includes(end.type)).map((end) => {
     const target = summaries.get(end.otherId);
     return { type: end.type, id: end.otherId, claim: end.claim, resolved: end.resolved,
+      ...(end.reason === undefined ? {} : { reason: end.reason }),
       statedReadiness: target?.statedReadiness ?? null, floorReached: target === undefined ? null : target.derivedReadiness ?? "none" };
   }).sort((a, b) => types.indexOf(a.type) - types.indexOf(b.type) || byCodeUnit(a.id, b.id));
   const declarations = Object.entries(sections.design ?? {}).flatMap(([key, value]) => {
@@ -3150,7 +3159,8 @@ return { scope, budget, budgetExceeded: true, protectedLength: answer.used, left
 Spec list. Each member keeps its stated rung, floor and stated next rung, with `holds` naming
 unmet floor clauses. `design` counts entries, declarations and questions, beside shaping decisions
 and the Pack design's bindings. Questions keep addresses, recorded lines and their fields.
-`footing` has recipe 21's dependency rows; `declarations` has recipe 24's pinned declarations.
+`footing` has recipe 21's dependency rows, including `reason` when the relation states one;
+`declarations` has recipe 24's pinned declarations.
 `examples` lists refining or verifying examples with their rung, enabled binding and steps.
 Bindings carry their claims and recorded source locations. Boundary rows carry declared
 relations, grouped exactly as the Pack design does.

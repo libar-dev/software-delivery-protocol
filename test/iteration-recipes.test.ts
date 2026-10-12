@@ -608,7 +608,7 @@ interface Bundle {
     }[];
     declarations: { spec: string; key: string; declaration: string }[];
     examples: { id: string; steps: unknown; enabled: boolean }[];
-    footing: { type: string; id: string; claim: string }[];
+    footing: { type: string; id: string; claim: string; reason?: string }[];
   }[];
   boundary: Record<string, (string | { id: string; via: { type: string; members: string[] }[] })[]>;
 }
@@ -619,6 +619,70 @@ interface BudgetExceeded {
   protectedLength: number;
   leftOut: string[];
 }
+
+describe("relation reasons in planning recipes", () => {
+  it("lists all authored reasons into and out of the planning subject in type/from/to order", async () => {
+    await withCorpus(async (root) => {
+      edit(
+        root,
+        "a.sdp.md",
+        "relations: \n  dependsOn:",
+        "relations: \n  refines:\n    - target: spec:probe.outside\n      reason: A narrows the outside law.\n  dependsOn:",
+      );
+      edit(
+        root,
+        "b.sdp.md",
+        "relations: {}",
+        "relations:\n  refines:\n    - target: spec:probe.a\n      reason: B narrows A.",
+      );
+      edit(
+        root,
+        "outside.sdp.md",
+        "relations: {}",
+        "relations:\n  dependsOn:\n    - target: spec:probe.a\n      reason: Outside needs A.",
+      );
+      const result = await runRecipe<{
+        reasons: { type: string; from: string; to: string; reason: string }[];
+      }>(19, { spec: "spec:probe.a" }, extract({ root }));
+      expect(result.reasons).toEqual([
+        {
+          type: "dependsOn",
+          from: "spec:probe.a",
+          to: "spec:probe.outside",
+          reason: "A needs the outside law.",
+        },
+        {
+          type: "dependsOn",
+          from: "spec:probe.outside",
+          to: "spec:probe.a",
+          reason: "Outside needs A.",
+        },
+        {
+          type: "refines",
+          from: "spec:probe.a",
+          to: "spec:probe.outside",
+          reason: "A narrows the outside law.",
+        },
+        { type: "refines", from: "spec:probe.b", to: "spec:probe.a", reason: "B narrows A." },
+      ]);
+    });
+  });
+
+  it("keeps dependency reasons in context-bundle footing", async () => {
+    await withCorpus(async (_root, derived) => {
+      const bundle = await runRecipe<Bundle>(36, { specs: ["spec:probe.a"] }, derived);
+      expect(bundle.members[0]?.footing).toContainEqual({
+        type: "dependsOn",
+        id: "spec:probe.outside",
+        claim: "declared",
+        resolved: true,
+        statedReadiness: "scoped",
+        floorReached: "idea",
+        reason: "A needs the outside law.",
+      });
+    });
+  });
+});
 function addQuestions(root: string): void {
   edit(
     root,
