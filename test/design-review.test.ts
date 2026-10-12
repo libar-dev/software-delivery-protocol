@@ -263,6 +263,56 @@ describe("the Design Review — the one generated read-only view", () => {
     }).toThrow();
   });
 
+  it("percent-encodes source link targets on Spec and Pack headers and every binding", () => {
+    const graph = extract({ root: exampleRoot }).graph;
+    const oddPath = "odd (dir)/file name#x.ts";
+    const pages = renderDesignReview(
+      createReader({
+        ...graph,
+        nodes: graph.nodes.map((node) => ({ ...node, file: oddPath })),
+      }),
+    );
+    for (const path of ["spec/orders.create-order.md", "pack/checkout-v1.md"]) {
+      const page = pageByPath(pages, path);
+      const targets = [...page.matchAll(/\]\(([^\n]+?)\)/gu)].map((match) => match[1] ?? "");
+      const sourceTargets = targets.filter((target) => target.startsWith("../../../"));
+      expect(sourceTargets.length).toBeGreaterThan(0);
+      expect(
+        sourceTargets.every((target) =>
+          target.startsWith("../../../odd%20%28dir%29/file%20name%23x.ts"),
+        ),
+      ).toBe(true);
+    }
+  });
+
+  it("percent-encodes page link targets on the index and detail pages", () => {
+    // Off-contract ids stay visible in diagnostic pages and still need safe link targets.
+    const graph = extract({ root: exampleRoot }).graph;
+    const rename = (id: string) => id.replace("orders.create-order", "orders.create (order)");
+    const pages = renderDesignReview(
+      createReader({
+        ...graph,
+        nodes: graph.nodes.map((node) =>
+          node.nodeType === "Pack"
+            ? { ...node, id: rename(node.id), members: node.members.map(rename) }
+            : { ...node, id: rename(node.id) },
+        ),
+        edges: graph.edges.map((edge) => ({
+          ...edge,
+          from: rename(edge.from),
+          to: rename(edge.to),
+        })),
+      }),
+    );
+    expect(pageByPath(pages, "index.md")).toContain("](" + "spec/orders.create%20%28order%29.md)");
+    expect(pageByPath(pages, "pack/checkout-v1.md")).toContain(
+      "../spec/orders.create%20%28order%29.md)",
+    );
+    expect(pageByPath(pages, "spec/orders.create (order).md")).toContain(
+      "orders.create%20%28order%29.valid-cart.md)",
+    );
+  });
+
   it("golden correctness oracle: the renderer produces the right view, page set and bytes", () => {
     const golden = readGoldenPages(goldenRoot);
 

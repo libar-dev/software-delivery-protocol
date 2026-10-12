@@ -29,20 +29,7 @@ import {
 
 /** A relative link from a view page to one line of a repository file. */
 export function lineHref(page: string, file: string, line: number): string {
-  return `${fileHref(page, file)}#L${String(line)}`;
-}
-
-/**
- * A relative link to a repository file, each path segment percent-encoded, so a space, a `#` or
- * a bracket in a file name stays inside the destination.
- */
-function fileHref(page: string, file: string): string {
-  const encoded = file
-    .split("/")
-    .map((segment) => encodeURIComponent(segment).replaceAll("(", "%28").replaceAll(")", "%29"))
-    .join("/");
-
-  return sourceHref(page, encoded);
+  return `${sourceHref(page, file)}#L${String(line)}`;
 }
 
 /** An authored value inside a heading or one list item: escaped, its line breaks collapsed. */
@@ -233,7 +220,7 @@ function renderUnit(binding: CodeUnitBinding, page: string): string {
     binding.file === undefined
       ? ""
       : binding.line === undefined
-        ? ` ([${linkLabel(binding.file)}](${fileHref(page, binding.file)}))`
+        ? ` ([${linkLabel(binding.file)}](${sourceHref(page, binding.file)}))`
         : ` ([${linkLabel(binding.file)}:${String(binding.line)}](${lineHref(page, binding.file, binding.line)}))`;
   const own = (
     [
