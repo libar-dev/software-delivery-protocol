@@ -124,11 +124,19 @@ const byFamily = Object.create(null);
 for (const spec of backlog) {
   const family = spec.id.slice("spec:".length).split(".")[0];
   byFamily[family] = byFamily[family] ?? [];
+  const { designColumns } = g.specContext(spec.id);
   byFamily[family].push({
     id: spec.id,
     kind: spec.specKind,
     altitude: spec.altitude,
     hasVerifier: spec.deliveryFacts.includes("has-verifier"),
+    designColumns: {
+      entries: designColumns.entries,
+      declarations: designColumns.declarations,
+      openQuestions: designColumns.openQuestions.length,
+      blockingQuestions: designColumns.blockingQuestions,
+      decisions: designColumns.decisions.length,
+    },
   });
 }
 
@@ -149,7 +157,9 @@ verification evidence rather than implementation work (MD-24); ready decision re
 registry-ratification evidence rather than implementation or verifier work (MD-26). The raw
 `ready ∧ ¬implemented` expression remains literally true while this operational recipe excludes
 both kinds, audits example verifier bindings, and reports both excluded counts. The reverse pairing
-is recipe 2.
+is recipe 2. Each backlog row also reports `designColumns` from its Spec context: counts of keyed
+Design and UI entries, pinned declarations, open and blocking questions, and shaping decisions.
+These columns are derived, never a score, rung or approval.
 
 ## 2. The drift alarm
 
@@ -2109,11 +2119,15 @@ return {
     withReferences: count((member) => member.referencedBy.length > 0),
     restsOn: pack.boundary.restsOn.length,
     restedOnBy: pack.boundary.restedOnBy.length,
+    verifiedBy: pack.boundary.verifiedBy.length,
+    supersededBy: pack.boundary.supersededBy.length,
   },
   members,
   boundary: {
     restsOn: pack.boundary.restsOn.map(boundaryRow),
     restedOnBy: pack.boundary.restedOnBy.map(boundaryRow),
+    verifiedBy: pack.boundary.verifiedBy.map(boundaryRow),
+    supersededBy: pack.boundary.supersededBy.map(boundaryRow),
   },
 };
 ```
@@ -2140,7 +2154,9 @@ keeps only its `id` and `resolved: false`.
 
 `boundary.restsOn` lists the Specs outside the Pack that a member relates to by `refines`,
 `dependsOn`, `constrainedBy` or `decidedBy`, and `boundary.restedOnBy` the Specs outside it that
-relate to a member by any authored relation. Each row carries the outside Spec's stated rung,
+relate to a member by the same four relations. `boundary.verifiedBy` lists outside Specs that
+`verifies` a member and `boundary.supersededBy` those that `supersedes` one, separately. Each row
+carries the outside Spec's stated rung,
 whether it carries `implemented`, and under `via` the members it joins per relation type. The
 columns are counts and lists, never a score or a rung. The Design Review's Pack page renders the
 same assembly. The laws are `spec:consumers.pack-design` and
@@ -2244,7 +2260,7 @@ ones, and `totals.units` the distinct units across all rows. The law is
 ## 31. Decision register
 
 *When you need this: you want every decision with its rung, what it supersedes and what supersedes
-it, what it shapes, and what it leaves open, read from the graph instead of kept by hand.*
+it, what it narrows and what narrows it, what it shapes, and what it leaves open, read from the graph instead of kept by hand.*
 
 ```js
 const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
@@ -2253,9 +2269,10 @@ const ends = (relations, type) =>
     .filter((relation) => relation.type === type)
     .map((relation) => relation.otherId)
     .sort(byCodeUnit);
-const rows = g
-  .specs()
-  .filter((spec) => spec.specKind === "decision")
+const decisions = g.specs().filter((spec) => spec.specKind === "decision");
+const decisionIds = new Set(decisions.map((spec) => spec.id));
+const narrowing = (relations) => ends(relations, "refines").filter((id) => decisionIds.has(id));
+const rows = decisions
   .map((spec) => spec.id)
   .sort(byCodeUnit)
   .map((id) => {
@@ -2268,6 +2285,8 @@ const rows = g
       statedReadiness: context.statedReadiness,
       supersedes: ends(context.relationsOut, "supersedes"),
       supersededBy: ends(context.relationsIn, "supersedes"),
+      narrows: narrowing(context.relationsOut),
+      narrowedBy: narrowing(context.relationsIn),
       shapes: ends(context.relationsIn, "decidedBy"),
       questions: questions
         .filter((entry) => typeof entry === "object" && entry !== null)
@@ -2296,7 +2315,10 @@ return {
 
 The body takes no parameter. It returns one row per decision Spec, sorted by id in code-unit order.
 `supersedes` lists the decisions this one supersedes and `supersededBy` the ones that supersede it;
-follow either to walk a chain. `shapes` lists the Specs that name the decision through
+follow either to walk a chain. `narrows` lists decision-kind Specs this decision `refines`, and
+`narrowedBy` lists decision-kind Specs that `refines` it. Refinement narrows part of a decision;
+supersession replaces the whole decision. Other kinds that refine a decision stay out of these
+two lists. `shapes` lists the Specs that name the decision through
 `decidedBy`. `questions` lists the decision's open questions that carry a key, each with its
 blocking flag and entry address; the open-question register (recipe 20) lists the unkeyed ones
 too. `totals.byRung` counts the decisions by stated rung, `totals.superseded` the ones another

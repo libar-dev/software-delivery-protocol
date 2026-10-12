@@ -29,20 +29,7 @@ import {
 
 /** A relative link from a view page to one line of a repository file. */
 export function lineHref(page: string, file: string, line: number): string {
-  return `${fileHref(page, file)}#L${String(line)}`;
-}
-
-/**
- * A relative link to a repository file, each path segment percent-encoded, so a space, a `#` or
- * a bracket in a file name stays inside the destination.
- */
-function fileHref(page: string, file: string): string {
-  const encoded = file
-    .split("/")
-    .map((segment) => encodeURIComponent(segment).replaceAll("(", "%28").replaceAll(")", "%29"))
-    .join("/");
-
-  return sourceHref(page, encoded);
+  return `${sourceHref(page, file)}#L${String(line)}`;
 }
 
 /** An authored value inside a heading or one list item: escaped, its line breaks collapsed. */
@@ -173,9 +160,21 @@ export function renderBoundarySection(context: PackContext, page: string): reado
     "",
     "### Rested on by",
     "",
-    "The Specs outside the Pack that relate to a member by an authored relation.",
+    "The Specs outside the Pack that refine, depend on, are constrained by or are decided by a member.",
     "",
     ...renderBoundaryTable(context.boundary.restedOnBy, page),
+    "",
+    "### Verified by",
+    "",
+    "The Specs outside the Pack that verify a member.",
+    "",
+    ...renderBoundaryTable(context.boundary.verifiedBy, page),
+    "",
+    "### Superseded by",
+    "",
+    "The Specs outside the Pack that supersede a member.",
+    "",
+    ...renderBoundaryTable(context.boundary.supersededBy, page),
   ];
 }
 
@@ -221,7 +220,7 @@ function renderUnit(binding: CodeUnitBinding, page: string): string {
     binding.file === undefined
       ? ""
       : binding.line === undefined
-        ? ` ([${linkLabel(binding.file)}](${fileHref(page, binding.file)}))`
+        ? ` ([${linkLabel(binding.file)}](${sourceHref(page, binding.file)}))`
         : ` ([${linkLabel(binding.file)}:${String(binding.line)}](${lineHref(page, binding.file, binding.line)}))`;
   const own = (
     [
@@ -292,7 +291,7 @@ export function renderCodeSection(context: PackContext, page: string): readonly 
   return lines;
 }
 
-/** The member table's stated-next-rung cell: `holds`, the first unmet clause, or none. */
+/** The member table's stated-next-rung cell: `nothing blocks`, the first unmet clause, or none. */
 export function renderStatedNextRungCell(member: PackMemberSummary): string {
   if (member.statedNextRung === undefined) {
     return "—";
@@ -300,7 +299,7 @@ export function renderStatedNextRungCell(member: PackMemberSummary): string {
 
   const first = member.statedNextRungFailures?.[0];
 
-  return `${member.statedNextRung} · ${first === undefined ? "holds" : renderTableInlineCode(first.clauseId)}`;
+  return `${member.statedNextRung} · ${first === undefined ? "nothing blocks" : renderTableInlineCode(first.clauseId)}`;
 }
 
 /** The member table's decisions cell: each decision linked with its stated rung. */

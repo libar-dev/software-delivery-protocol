@@ -54,6 +54,13 @@ function specContext(overrides: Partial<SpecContext> = {}): SpecContext {
   const summary = specSummary(overrides);
   return {
     ...summary,
+    designColumns: {
+      entries: 0,
+      declarations: 0,
+      blockingQuestions: 0,
+      openQuestions: [],
+      decisions: [],
+    },
     floorFailures: [],
     nextRungFailures: [],
     relationsOut: [],

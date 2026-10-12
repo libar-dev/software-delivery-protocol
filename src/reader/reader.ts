@@ -139,6 +139,8 @@ export interface OracleBinding {
 /** The irreducible per-spec join — what a Design Review renders and an agent starts from. */
 export interface SpecContext extends SpecSummary {
   readonly sections?: SpecSections;
+  /** Derived design counts and lists, shared with the Pack member's design. */
+  readonly designColumns: PackMemberDesign;
   readonly floorFailures: readonly ReadinessFloorFailure[];
   /**
    * The unmet clauses of the rung above derived readiness (`idea` when no rung derives), by the
@@ -257,11 +259,14 @@ export interface PackBoundaryRow {
 /**
  * The Specs outside the Pack joined to a member (`spec:consumers.pack-design`): `restsOn` lists
  * those a member `refines`, `dependsOn`, is `constrainedBy` or `decidedBy`; `restedOnBy` lists
- * those relating to a member by any authored relation. Rows sort by id in code-unit order.
+ * those relating to a member by the same four types. `verifiedBy` and `supersededBy` list
+ * inbound `verifies` and `supersedes` separately. Rows sort by id in code-unit order.
  */
 export interface PackBoundary {
   readonly restsOn: readonly PackBoundaryRow[];
   readonly restedOnBy: readonly PackBoundaryRow[];
+  readonly verifiedBy: readonly PackBoundaryRow[];
+  readonly supersededBy: readonly PackBoundaryRow[];
 }
 
 /** A member with no verifier binding — `ready` ones are the priority slice (JS-G4). */
@@ -525,7 +530,7 @@ function statedNextRungOf(stated: SpecReadiness): SpecReadiness | undefined {
 }
 
 /**
- * The file's Pack design code: `packMemberDesign` reads a member's design columns and
+ * The file's Pack design code: `specDesignColumns` reads a member's design columns and
  * `packBoundary` the Pack's boundary, and `packContext` in `createReader` joins them with each
  * member's stated next rung, bindings and verifier counts. The evaluator call sits in
  * `createReader`, whose anchor declares it.
@@ -537,7 +542,7 @@ function statedNextRungOf(stated: SpecReadiness): SpecReadiness | undefined {
  * @sdpComponent component:protocol.reader
  * @sdpRole reader
  */
-function packMemberDesign(
+function specDesignColumns(
   node: PrimitiveNode,
   index: GraphIndex,
   locations: readonly EntryLocation[],
@@ -611,6 +616,8 @@ function packBoundary(
   // members share costs one step per member, not one scan of the members joined so far.
   const restsOn = new Map<string, Map<AuthoredEdgeType, Set<string>>>();
   const restedOnBy = new Map<string, Map<AuthoredEdgeType, Set<string>>>();
+  const verifiedBy = new Map<string, Map<AuthoredEdgeType, Set<string>>>();
+  const supersededBy = new Map<string, Map<AuthoredEdgeType, Set<string>>>();
 
   const join = (
     rows: Map<string, Map<AuthoredEdgeType, Set<string>>>,
@@ -647,7 +654,12 @@ function packBoundary(
 
     for (const edge of index.edgesByTo.get(memberId) ?? []) {
       if (isAuthored(edge) && !inside.has(edge.from) && index.primitivesById.has(edge.from)) {
-        join(restedOnBy, edge.from, edge.type, memberId);
+        const rows = restsOnTypes.has(edge.type)
+          ? restedOnBy
+          : edge.type === "verifies"
+            ? verifiedBy
+            : supersededBy;
+        join(rows, edge.from, edge.type, memberId);
       }
     }
   }
@@ -677,7 +689,12 @@ function packBoundary(
         ];
       });
 
-  return { restsOn: rowsOf(restsOn), restedOnBy: rowsOf(restedOnBy) };
+  return {
+    restsOn: rowsOf(restsOn),
+    restedOnBy: rowsOf(restedOnBy),
+    verifiedBy: rowsOf(verifiedBy),
+    supersededBy: rowsOf(supersededBy),
+  };
 }
 
 /**
@@ -943,6 +960,7 @@ export function createReader(graph: GraphSchema): Reader {
     return {
       ...summary,
       ...(node.sections === undefined ? {} : { sections: node.sections }),
+      designColumns: specDesignColumns(node, index, locationsOf(id)),
       floorFailures: evaluateReadinessFloor(node, index),
       nextRungFailures: nextRung === undefined ? [] : evaluateReadinessFloor(node, index, nextRung),
       relationsOut,
@@ -989,7 +1007,7 @@ export function createReader(graph: GraphSchema): Reader {
         ...(statedNextRung === undefined ? {} : { statedNextRung }),
         statedNextRungFailures:
           statedNextRung === undefined ? [] : evaluateReadinessFloor(member, index, statedNextRung),
-        design: packMemberDesign(member, index, locationsOf(member.id)),
+        design: specDesignColumns(member, index, locationsOf(member.id)),
         implementations: codeUnitBindingsTo(member.id, "satisfies"),
         references: codeUnitBindingsTo(member.id, "references"),
         verifiers: enabledCount(verifiers),

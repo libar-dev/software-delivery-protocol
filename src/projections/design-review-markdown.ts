@@ -11,6 +11,14 @@ function directoryOf(pagePath: string): readonly string[] {
   return pagePath.split("/").slice(0, -1);
 }
 
+/** Percent-encode path segments for a Markdown link target, keeping directory separators. */
+function encodeLinkTarget(path: string): string {
+  return path
+    .split("/")
+    .map((segment) => encodeURIComponent(segment).replaceAll("(", "%28").replaceAll(")", "%29"))
+    .join("/");
+}
+
 /** Relative link between two view pages. */
 export function pageHref(fromPage: string, toPage: string): string {
   const fromDirectory = directoryOf(fromPage);
@@ -21,13 +29,13 @@ export function pageHref(fromPage: string, toPage: string): string {
     shared += 1;
   }
 
-  return `${"../".repeat(fromDirectory.length - shared)}${toParts.slice(shared).join("/")}`;
+  return `${"../".repeat(fromDirectory.length - shared)}${encodeLinkTarget(toParts.slice(shared).join("/"))}`;
 }
 
 /** Relative link from a view page to a repo file recorded in the graph (root-relative, JS-C3). */
 export function sourceHref(fromPage: string, file: string): string {
   // Up out of the page's directories, then out of `design-review/` and `generated/`.
-  return `${"../".repeat(directoryOf(fromPage).length + 2)}${file}`;
+  return `${"../".repeat(directoryOf(fromPage).length + 2)}${encodeLinkTarget(file)}`;
 }
 
 /** A value on one line: each whitespace run that holds a line break becomes one space. */

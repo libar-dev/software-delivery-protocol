@@ -72,10 +72,10 @@ describe("the Design Review's Pack page presents the Pack design", () => {
       members.filter((line) => line.startsWith("| [`spec:") || line.startsWith("| `spec:")),
     ).toEqual([
       "| [`spec:probe.held`](../spec/probe.held.md) (1) Probe held | rule | story | defined | defined | ready · `typed-dependency-targets-are-defined` | 6 | 2 | 2 (0 blocking) | [`spec:probe.choice`](../spec/probe.choice.md) (defined) | none | none | none |",
-      "| [`spec:probe.waiting`](../spec/probe.waiting.md) (2) Probe waiting | rule | story | defined | ready | ready · holds | 0 | 0 | 0 | — | none | present | present |",
+      "| [`spec:probe.waiting`](../spec/probe.waiting.md) (2) Probe waiting | rule | story | defined | ready | ready · nothing blocks | 0 | 0 | 0 | — | none | present | present |",
       "| [`spec:probe.blocked`](../spec/probe.blocked.md) (3) Probe blocked | rule | story | scoped | scoped | defined · `no-blocking-open-questions` | 0 | 0 | 1 (1 blocking) | `spec:probe.absent` (unresolved) | present | none | none |",
       "| `spec:probe.missing` (4) — **unresolved** (see findings) | — | — | — | — | — | — | — | — | — | — | — | — |",
-      "| [`spec:probe.modest`](../spec/probe.modest.md) (5) Probe modest | rule | story | idea | defined | scoped · holds | 0 | 0 | 0 | — | none | none | none |",
+      "| [`spec:probe.modest`](../spec/probe.modest.md) (5) Probe modest | rule | story | idea | defined | scoped · nothing blocks | 0 | 0 | 0 | — | none | none | none |",
       "| [`spec:probe.top`](../spec/probe.top.md) (6) Probe top | rule | story | ready | ready | — | 0 | 0 | 0 | — | none | none | none |",
       "| [`spec:probe.check`](../spec/probe.check.md) (7) Probe check | example | story | idea | idea | scoped · `kind-evidence-present` | 0 | 0 | 0 | — | none | none | none |",
     ]);
@@ -114,9 +114,10 @@ describe("the Design Review's Pack page presents the Pack design", () => {
     expect(nextRung).not.toContain("spec:probe.missing");
   });
 
-  it("renders the boundary as two tables, each row with its rung, its binding and the members it joins", () => {
+  it("renders the boundary as four lists, each row with its rung, its binding and the members it joins", () => {
     const boundary = section(renderPackPage(), "## Boundary");
-    const [restsOn, restedOnBy = ""] = boundary.split("### Rested on by");
+    const [restsOn, inbound = ""] = boundary.split("### Rested on by");
+    const [restedOnBy = "", verifiedBy = ""] = inbound.split("### Verified by");
 
     expect(restsOn).toContain(
       [
@@ -128,9 +129,40 @@ describe("the Design Review's Pack page presents the Pack design", () => {
     );
     expect(restedOnBy.split("\n").filter((line) => line.startsWith("| [`"))).toEqual([
       "| [`spec:probe.outside-basis`](../spec/probe.outside-basis.md) Probe outside-basis | scoped | none | refines: [`spec:probe.held`](../spec/probe.held.md) |",
-      "| [`spec:probe.waiting.case`](../spec/probe.waiting.case.md) Probe waiting.case | idea | none | refines: [`spec:probe.waiting`](../spec/probe.waiting.md) · verifies: [`spec:probe.waiting`](../spec/probe.waiting.md) |",
-      "| [`spec:probe.waiting.unbound`](../spec/probe.waiting.unbound.md) Probe waiting.unbound | idea | none | refines: [`spec:probe.waiting`](../spec/probe.waiting.md) · verifies: [`spec:probe.waiting`](../spec/probe.waiting.md) |",
+      "| [`spec:probe.waiting.case`](../spec/probe.waiting.case.md) Probe waiting.case | idea | none | refines: [`spec:probe.waiting`](../spec/probe.waiting.md) |",
+      "| [`spec:probe.waiting.unbound`](../spec/probe.waiting.unbound.md) Probe waiting.unbound | idea | none | refines: [`spec:probe.waiting`](../spec/probe.waiting.md) |",
     ]);
+    expect(verifiedBy).toContain("verifies: [`spec:probe.waiting`](../spec/probe.waiting.md)");
+    expect(verifiedBy).toContain(
+      "### Superseded by\n\nThe Specs outside the Pack that supersede a member.\n\nNone.",
+    );
+  });
+
+  it("renders outside superseding decisions apart from Specs that rest on members", () => {
+    const graph = packDesignProbeGraph();
+    const choice = graph.nodes.find((node) => node.id === "spec:probe.choice");
+    if (choice === undefined) throw new Error("Missing probe decision.");
+    const boundary = section(
+      renderPackPage({
+        ...graph,
+        nodes: [...graph.nodes, { ...choice, id: "spec:probe.replacement" }],
+        edges: [
+          ...graph.edges,
+          {
+            from: "spec:probe.replacement",
+            to: "spec:probe.top",
+            type: "supersedes",
+            claim: "declared",
+          },
+        ],
+      }),
+      "## Boundary",
+    );
+    const [before = "", supersededBy = ""] = boundary.split("### Superseded by");
+    expect(before).not.toContain("spec:probe.replacement");
+    expect(supersededBy).toContain(
+      "| [`spec:probe.replacement`](../spec/probe.replacement.md) Probe choice | defined | none | supersedes: [`spec:probe.top`](../spec/probe.top.md) |",
+    );
   });
 
   it("groups questions by member with their flag, address, escaped text and a line link", () => {
@@ -304,7 +336,19 @@ describe("the Design Review's Pack page presents the Pack design", () => {
         "",
         "### Rested on by",
         "",
-        "The Specs outside the Pack that relate to a member by an authored relation.",
+        "The Specs outside the Pack that refine, depend on, are constrained by or are decided by a member.",
+        "",
+        "None.",
+        "",
+        "### Verified by",
+        "",
+        "The Specs outside the Pack that verify a member.",
+        "",
+        "None.",
+        "",
+        "### Superseded by",
+        "",
+        "The Specs outside the Pack that supersede a member.",
         "",
         "None.",
         "",

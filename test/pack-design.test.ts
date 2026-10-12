@@ -161,6 +161,28 @@ describe("the Pack design on the Pack context", () => {
     });
   });
 
+  it("exposes the same design columns on Spec context and Pack members", () => {
+    const reader = createReader(probeGraph());
+    for (const member of reader.packContext(PACK_ID)?.members ?? []) {
+      if (!member.resolved) continue;
+      expect(reader.specContext(member.id)?.designColumns).toEqual(member.design);
+    }
+    expect(reader.specContext("spec:probe.held")?.designColumns).toMatchObject({
+      entries: 6,
+      declarations: 2,
+      blockingQuestions: 0,
+      openQuestions: [{ key: "basisOwner", line: 21 }, { question: "Is the <name> | # final?" }],
+      decisions: [{ id: "spec:probe.choice", statedReadiness: "defined" }],
+    });
+    expect(reader.specContext("spec:probe.top")?.designColumns).toEqual({
+      entries: 0,
+      declarations: 0,
+      blockingQuestions: 0,
+      openQuestions: [],
+      decisions: [],
+    });
+  });
+
   it("lists the decisions a member names, unresolved when the target is no Spec", () => {
     expect(member("spec:probe.held").design?.decisions).toEqual([
       {
@@ -282,23 +304,66 @@ describe("the Pack design on the Pack context", () => {
           title: "Probe waiting.case",
           statedReadiness: "idea",
           implemented: false,
-          via: [
-            { type: "refines", members: ["spec:probe.waiting"] },
-            { type: "verifies", members: ["spec:probe.waiting"] },
-          ],
+          via: [{ type: "refines", members: ["spec:probe.waiting"] }],
         },
         {
           id: "spec:probe.waiting.unbound",
           title: "Probe waiting.unbound",
           statedReadiness: "idea",
           implemented: false,
-          via: [
-            { type: "refines", members: ["spec:probe.waiting"] },
-            { type: "verifies", members: ["spec:probe.waiting"] },
-          ],
+          via: [{ type: "refines", members: ["spec:probe.waiting"] }],
+        },
+      ],
+      verifiedBy: ["spec:probe.waiting.case", "spec:probe.waiting.unbound"].map((id) => ({
+        id,
+        title: `Probe ${id.slice("spec:probe.".length)}`,
+        statedReadiness: "idea",
+        implemented: false,
+        via: [{ type: "verifies", members: ["spec:probe.waiting"] }],
+      })),
+      supersededBy: [],
+    });
+  });
+
+  it("keeps verification and supersession outside restedOnBy, ignoring anchored verifiers", () => {
+    const graph = probeGraph();
+    const source = graph.nodes.find((node) => node.id === "spec:probe.choice");
+    if (source === undefined) throw new Error("Missing probe decision.");
+    const reader = createReader({
+      ...graph,
+      nodes: [...graph.nodes, { ...source, id: "spec:probe.replacement" }],
+      edges: [
+        ...graph.edges,
+        {
+          from: "spec:probe.replacement",
+          to: "spec:probe.top",
+          type: "supersedes",
+          claim: "declared",
+        },
+        {
+          from: "spec:probe.replacement",
+          to: "spec:probe.top",
+          type: "verifies",
+          claim: "declared",
         },
       ],
     });
+    const boundary = reader.packContext(PACK_ID)?.boundary;
+    expect(boundary?.restedOnBy.map((row) => row.id)).not.toContain("spec:probe.replacement");
+    expect(boundary?.verifiedBy.map((row) => row.id)).toEqual([
+      "spec:probe.replacement",
+      "spec:probe.waiting.case",
+      "spec:probe.waiting.unbound",
+    ]);
+    expect(boundary?.supersededBy).toEqual([
+      {
+        id: "spec:probe.replacement",
+        title: "Probe choice",
+        statedReadiness: "defined",
+        implemented: false,
+        via: [{ type: "supersedes", members: ["spec:probe.top"] }],
+      },
+    ]);
   });
 
   it("marks an outside Spec that carries the implementation fact", () => {

@@ -26,6 +26,19 @@ import type { GraphSchema, Reader } from "../src/index.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
+import {
+  ref as bindingRef,
+  specTest as bindingTest,
+  testAnchorId as bindingTestId,
+} from "@libar-dev/software-delivery-protocol";
+
+const projectionReaderTestAnchor = bindingTest({
+  id: bindingTestId("test:protocol.projections-model.reader"),
+  label: "reader tests verify composable graph joins without persistence",
+  verifies: bindingRef("spec:consumers.projections-model"),
+});
+void projectionReaderTestAnchor;
+
 const exampleRoot = join(fileURLToPath(new URL("..", import.meta.url)), "examples", "checkout-v1");
 
 /** The example graph, extracted once — the canonical consumer input (one graph, many readers). */
