@@ -187,8 +187,7 @@ export function formatId(parts: IdParts): string {
 }
 
 export function anchorId(value: string): AnchorId {
-  validateIdShape(value);
-  return brandId<"AnchorId">(value);
+  return requireNamespace<"AnchorId">(value, [...CODE_ANCHOR_NAMESPACES, "test", "oracle"]);
 }
 
 /**

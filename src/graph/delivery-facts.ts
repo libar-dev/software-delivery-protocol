@@ -1,10 +1,18 @@
-import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, parseId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { DeliveryFactName, GraphEdge, GraphNode, PrimitiveNode } from "./schema.js";
 
 /**
  * Conferral law: `spec:extraction.delivery-facts`.
  */
+function hasTestNamespace(id: string): boolean {
+  try {
+    return parseId(id).namespace === "test";
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Returns whether `edge` is a resolving test-anchor `verifies` edge.
  * Shared by `computeDeliveryFacts`, the verifies-linkage check, and the reader's enabled decode.
@@ -16,7 +24,8 @@ export function isResolvingTestAnchorVerify(
   return (
     edge.type === "verifies" &&
     edge.claim === "anchored" &&
-    nodesById.get(edge.from)?.nodeType === "Anchor"
+    nodesById.get(edge.from)?.nodeType === "Anchor" &&
+    hasTestNamespace(edge.from)
   );
 }
 
@@ -73,7 +82,7 @@ export function computeDeliveryFacts(
   const anchorVerified = new Set<string>();
 
   for (const edge of edges) {
-    if (!primitivesById.has(edge.to)) {
+    if (nodesById.get(edge.to)?.nodeType !== "Primitive") {
       continue;
     }
 
@@ -93,7 +102,7 @@ export function computeDeliveryFacts(
   const hasVerifier = new Set<string>(anchorVerified);
 
   for (const edge of edges) {
-    if (!primitivesById.has(edge.to)) {
+    if (nodesById.get(edge.to)?.nodeType !== "Primitive") {
       continue;
     }
 

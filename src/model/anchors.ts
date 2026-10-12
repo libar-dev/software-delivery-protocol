@@ -29,7 +29,7 @@ export type CodeAnchorLayer = (typeof CODE_ANCHOR_LAYERS)[number];
  * binding is the thing, framework- and location-neutral (`04` §2), and the ID grammar already
  * parses any lowercase namespace. Per-namespace sibling builders (`anchorApi`, `anchorComponent`,
  * …) were rejected as surface bloat for zero expressive gain. An anchor asserts a binding only,
- * never system-truth content (R1): identity, an optional display label, the `satisfies` targets,
+ * never system-truth content (`spec:model.anchors`): identity, an optional display label, the `satisfies` targets,
  * the non-conferring `references` targets, and closed structural attributes — nothing spec-level
  * ever rides here. The binding grain (`spec:decisions.anchor-binding-grain`): `satisfies` is
  * optional and plural, so an identity-only anchor is lawful and mints a CodeNode for structure.
@@ -50,7 +50,7 @@ export interface CodeAnchor {
 }
 
 /**
- * The binding-only test anchor (R3): identity plus the `verifies` targets (one or a non-empty
+ * The binding-only test anchor (`spec:model.anchors`): identity plus the `verifies` targets (one or a non-empty
  * list), never an executing callback — the graph records that an enabled verifier *exists*, never
  * that it ran (binding, never liveness — MD-7).
  */

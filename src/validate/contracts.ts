@@ -5,7 +5,10 @@ import { codeAnchor } from "../model/code-anchor.js";
 const validationContractsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.validation-contracts"),
   label: "conformance/honesty family currency and finding shapes",
-  satisfies: ref("spec:validation.two-check-families"),
+  satisfies: [
+    ref("spec:validation.two-check-families"),
+    ref("spec:validation.diagnostic-rendering"),
+  ],
   component: componentAnchorId("component:protocol.validate"),
   role: "contract",
 });

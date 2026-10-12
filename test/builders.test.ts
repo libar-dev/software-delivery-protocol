@@ -161,8 +161,6 @@ describe("builders", () => {
         dependsOn(dependency),
         constrainedBy(constraint),
         decidedBy(decision),
-        verifies(verificationTarget),
-        supersedes(supersededDecision),
       ],
     });
 
@@ -172,8 +170,6 @@ describe("builders", () => {
       { type: "dependsOn", target: dependency, claim: "declared" },
       { type: "constrainedBy", target: constraint, claim: "declared" },
       { type: "decidedBy", target: decision, claim: "declared" },
-      { type: "verifies", target: verificationTarget, claim: "declared" },
-      { type: "supersedes", target: supersededDecision, claim: "declared" },
     ]);
     expect(JSON.parse(JSON.stringify(createOrder))).toEqual({
       id: "spec:orders.create-order",
@@ -203,12 +199,50 @@ describe("builders", () => {
           target: "spec:decisions.order-lifecycle",
           claim: "declared",
         },
-        { type: "verifies", target: "spec:orders.create-order", claim: "declared" },
-        {
-          type: "supersedes",
-          target: "spec:decisions.order-lifecycle-v0",
-          claim: "declared",
-        },
+      ],
+    });
+
+    const validCart = spec({
+      id: specId("spec:orders.create-order.valid-cart"),
+      title: "A valid cart creates an order",
+      kind: "example",
+      altitude: "story",
+      readiness: "idea",
+      relations: [verifies(verificationTarget)],
+    });
+    expect(Object.getPrototypeOf(validCart)).toBe(Object.prototype);
+    expect(validCart.relations).toEqual([
+      { type: "verifies", target: verificationTarget, claim: "declared" },
+    ]);
+    expect(JSON.parse(JSON.stringify(validCart))).toEqual({
+      id: "spec:orders.create-order.valid-cart",
+      title: "A valid cart creates an order",
+      kind: "example",
+      altitude: "story",
+      readiness: "idea",
+      relations: [{ type: "verifies", target: "spec:orders.create-order", claim: "declared" }],
+    });
+
+    const lifecycleDecision = spec({
+      id: specId("spec:decisions.order-lifecycle"),
+      title: "Order lifecycle",
+      kind: "decision",
+      altitude: "story",
+      readiness: "idea",
+      relations: [supersedes(supersededDecision)],
+    });
+    expect(Object.getPrototypeOf(lifecycleDecision)).toBe(Object.prototype);
+    expect(lifecycleDecision.relations).toEqual([
+      { type: "supersedes", target: supersededDecision, claim: "declared" },
+    ]);
+    expect(JSON.parse(JSON.stringify(lifecycleDecision))).toEqual({
+      id: "spec:decisions.order-lifecycle",
+      title: "Order lifecycle",
+      kind: "decision",
+      altitude: "story",
+      readiness: "idea",
+      relations: [
+        { type: "supersedes", target: "spec:decisions.order-lifecycle-v0", claim: "declared" },
       ],
     });
   });
