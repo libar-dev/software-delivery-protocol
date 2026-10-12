@@ -126,9 +126,9 @@ function renderMemberRow(member: PackMemberSummary, number: number, page: string
  */
 
 /**
- * `renderPackPage` writes the header and member table, then calls the section renderers in
- * `design-review-pack-sections.ts`; `escapeRenderedField` encodes values and `sourceHref` builds
- * source links.
+ * `renderPackPage` writes the header and member table, calls the section renderers in
+ * `design-review-pack-sections.ts`, then writes the verifier-gap list and the findings
+ * (`renderFindings`); `escapeRenderedField` encodes values and `sourceHref` builds source links.
  *
  * @sdpAnchor impl:protocol.pack-design-page
  * @sdpLabel renders the Pack page from the Pack design
@@ -190,7 +190,7 @@ export function renderPackPage(
       "",
       "## Verifier coverage gaps",
       "",
-      "Members with no verifier binding — a surfaced absence, informative, never a gate. `ready` members are the priority slice (designed, stated done, unverified):",
+      "Members other than decisions with no verifier binding — a surfaced absence, informative, never a gate. `ready` members are the priority slice (designed, stated done, unverified):",
       "",
     );
 

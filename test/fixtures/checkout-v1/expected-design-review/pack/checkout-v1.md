@@ -140,7 +140,7 @@ No implementation or design-reference binding is recorded for this member.
 
 ## Verifier coverage gaps
 
-Members with no verifier binding — a surfaced absence, informative, never a gate. `ready` members are the priority slice (designed, stated done, unverified):
+Members other than decisions with no verifier binding — a surfaced absence, informative, never a gate. `ready` members are the priority slice (designed, stated done, unverified):
 
 - [`spec:orders.order-management`](../spec/orders.order-management.md) — Order management (stated `defined`)
 - [`spec:orders.order-placement-flow`](../spec/orders.order-placement-flow.md) — Order placement flow (stated `scoped`)
