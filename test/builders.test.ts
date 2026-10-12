@@ -65,6 +65,8 @@ describe("builders", () => {
             intent: { outcome: "Keep the same identity." },
             design: { shape: "One envelope." },
           });
+          expect(base).toMatchObject({ kind, altitude, readiness });
+          expect(enriched).toMatchObject({ kind, altitude, readiness });
           expect(enriched).toMatchObject(base);
           expect(Object.keys(base).sort()).toEqual([
             "altitude",
@@ -81,7 +83,7 @@ describe("builders", () => {
     }
   });
 
-  it("derives delivery facts directly without promoting a refinement child's realization", () => {
+  it("derives delivery facts directly without propagating realization through refinement", () => {
     const parent = spec({
       id: specId("spec:probe.parent"),
       title: "Parent",
@@ -113,6 +115,24 @@ describe("builders", () => {
       deliveryFacts: ["implemented", "has-verifier"],
     });
     expect(facts(child.id)).toMatchObject({ readiness: "idea", deliveryFacts: ["has-verifier"] });
+
+    const childOnlyGraph = deriveFixtureGraph({
+      specs: [parent, child],
+      anchors: [
+        codeAnchor({ id: codeAnchorId("impl:probe.child"), satisfies: child.id }),
+        specTest({ id: testAnchorId("test:probe.child"), verifies: child.id }),
+      ],
+    });
+    const childOnlyFacts = (id: string) =>
+      childOnlyGraph.nodes.find((node) => node.nodeType === "Primitive" && node.id === id);
+    expect(childOnlyFacts(parent.id)).toMatchObject({
+      readiness: "defined",
+      deliveryFacts: ["has-verifier"],
+    });
+    expect(childOnlyFacts(child.id)).toMatchObject({
+      readiness: "idea",
+      deliveryFacts: ["implemented", "has-verifier"],
+    });
     expect(parent).not.toHaveProperty("deliveryFacts");
     expect(child).not.toHaveProperty("deliveryFacts");
   });

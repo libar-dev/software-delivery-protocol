@@ -14,7 +14,8 @@ The owner ruled the Studio's re-entry on 2026-10-12, on the PR 30 ruling sheet:
   Pack page is a 13-column table, and its pages cannot be searched or filtered. The adopter's
   reviewers read carrier files instead (`libar-platform/docs/feedback/sdp-feedback-01.md` and
   `-02.md`, items 36 to 40).
-- **The measure.** The adopter's five reader tasks, completed from the Studio alone: find the
+- **The measure.** The adopter's five reader tasks, completed from the Studio page set and the
+  files it links to, as in the adopter's own trial: find the
   history contract, locate OD-157, explain the aggregate dependency, find one declaration's type
   comparison, and say whether a paused-rebuild example has native-backend evidence.
 - **The home.** The read-only Studio ships in `@libar-dev/software-delivery-protocol`; hosted
@@ -71,6 +72,15 @@ Opus 5.5 design pass, before any code:
    before the templates are fixed.
 4. **The data and element contracts.** The data file shapes (`spec:consumers.spec-studio.data`),
    the element names and attributes for phase 0, and the CLI verb's flags, stated in their Specs.
+5. **Make the five tasks answerable from the graph.** Two associations the tasks need live outside
+   the adopter's graph today (gpt-6-astra, reviewing plan 41's fold). The register id OD-157 maps
+   to `spec:application.history-rebuild#question.verifyPassUnderPause` only in
+   `design/decisions/register.json`. The type-comparison suite `tests/types/pinned.test-d.ts`
+   checks `spec:application.history-projection#design.typeHistoryEvent` with no test anchor, so
+   the Spec shows no verifier. A Studio that renders graph values cannot supply either. Recommend
+   lawful homes the graph already reads, both adopter authoring: the register id in the
+   question's text, and a `specTest` anchor on the suite verifying the Spec. The adopter applies
+   them when it re-pins.
 
 The owner states `ready` on the phase 0 Specs; building starts from those statements.
 
@@ -88,8 +98,9 @@ Opus 5.5 reviews the pages' copy and the element APIs against the design pass du
 
 ## Acceptance criteria
 
-- An Astra job given only the Studio page set built from libar-platform completes the five reader
-  tasks, and its notes name where it got stuck.
+- An Astra job given only the Studio page set built from libar-platform, and the files it links to,
+  completes the five reader tasks once the two associations above are in the adopter's graph, and
+  its notes name where it got stuck.
 - Two renders of one graph are byte-identical; the pages open from `file://` with no network
   request; validation findings show as data on the pages that carry them.
 - The Markdown Design Review, census, Mermaid and Gherkin projections are unchanged.
