@@ -10,6 +10,7 @@ import {
 } from "node:fs";
 import { dirname, isAbsolute, join, posix, relative, sep, win32 } from "node:path";
 
+import { deriveTypeScriptImports } from "../adapters/typescript-imports.js";
 import { generateContracts } from "../codegen/contracts.js";
 import { extract } from "../extract/index.js";
 import { serializeGraph } from "../extract/serialize.js";
@@ -204,6 +205,13 @@ function readRegistrarManifest(path: string, root: string, rootReal: string): re
 
   return files;
 }
+/**
+ * @sdpAnchor impl:protocol.build-imports
+ * @sdpLabel opt-in imports publication in the build command
+ * @sdpReferences spec:consumers.impact-graph.curation-assist
+ * @sdpComponent component:protocol.cli
+ * @sdpRole publisher
+ */
 const wholesaleViewBuildInvalidationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.wholesale-view-build-invalidation"),
   label: "invalidates the prior Design Review before every build attempt",
@@ -252,6 +260,7 @@ export function runBuild(
   const recoveryRm = hooks.rmSync ?? rmSync;
   const write = hooks.writeFileSync ?? writeFileSync;
   const graphPath = join(resolvedRoot, "generated", "graph.json");
+  const importsPath = join(resolvedRoot, "generated", "imports.json");
   const contractsPath = join(resolvedRoot, "generated", "contracts");
   const registrarManifestPath = join(resolvedRoot, "generated", "registrars.json");
   const registrarRootReal = realpathSync(resolvedRoot);
@@ -274,6 +283,7 @@ export function runBuild(
         `${contractsPath}.tmp`,
         registrarManifestPath,
         `${registrarManifestPath}.tmp`,
+        ...(parsed.imports === undefined ? [] : [importsPath, `${importsPath}.tmp`]),
       ],
       output,
       command,
@@ -368,8 +378,21 @@ export function runBuild(
     const errorCount = allFindings.filter((finding) => finding.severity === "error").length;
     const warningCount = allFindings.length - errorCount;
     const summary = `${String(result.counts.specs)} specs · ${String(result.counts.packs)} packs · ${String(result.counts.anchors)} anchors → ${String(result.graph.nodes.length)} nodes · ${String(result.graph.edges.length)} edges (${String(errorCount)} errors, ${String(warningCount)} warnings)\n`;
+    const imports =
+      parsed.imports === undefined
+        ? undefined
+        : `${JSON.stringify(deriveTypeScriptImports(resolvedRoot, parsed.imports), null, 2)}\n`;
 
     if (checkClean) {
+      if (
+        parsed.imports !== undefined &&
+        imports !==
+          `${JSON.stringify(deriveTypeScriptImports(resolvedRoot, parsed.imports), null, 2)}\n`
+      ) {
+        return failBuild(
+          `sdp ${command} --check-clean: two independent import derivations diverged.\n`,
+        );
+      }
       const secondResult = runExtract(extractionOptions);
       const second = serializeGraph(secondResult.graph);
 
@@ -411,6 +434,7 @@ export function runBuild(
     const temporaryPath = `${graphPath}.tmp`;
     mkdirSync(join(resolvedRoot, "generated"), { recursive: true });
     write(temporaryPath, serialized, "utf8");
+    if (imports !== undefined) write(`${importsPath}.tmp`, imports, "utf8");
 
     const contractsTemporaryPath = `${contractsPath}.tmp`;
     rmSync(contractsTemporaryPath, { recursive: true, force: true });
@@ -477,9 +501,12 @@ export function runBuild(
       renameSync(`${registrarPath}.tmp`, registrarPath);
     }
     renameSync(registrarManifestTemporaryPath, registrarManifestPath);
+    if (imports !== undefined) renameSync(`${importsPath}.tmp`, importsPath);
 
     writeStdout(output, summary);
     writeStdout(output, `Wrote ${graphPath}\n`);
+    if (imports !== undefined)
+      writeStdout(output, `Wrote ${importsPath} (external inferred input)\n`);
 
     if (contracts.files.size > 0) {
       writeStdout(output, `Wrote ${contractsPath} (${String(contracts.files.size)} modules)\n`);
