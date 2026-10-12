@@ -2,7 +2,7 @@
 id: spec:validation.unbound-example-posture.parent-traces
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.unbound-example-posture
   verifies: spec:validation.unbound-example-posture
