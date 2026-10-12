@@ -2821,7 +2821,8 @@ const partsOf = (node, value) => {
         if (question?.key) put(`question.${question.key}`, Object.fromEntries(Object.entries(question).filter(([key]) => !unsupported.has(key))), position++);
       }
       const unkeyed = (openQuestions ?? []).filter((question) => !question?.key);
-      if (unkeyed.length) put("intent.openQuestions", unkeyed);
+      if (unkeyed.length) put("intent.openQuestions", openQuestions.map((question) => question && typeof question === "object"
+        ? Object.fromEntries(Object.entries(question).filter(([key]) => !unsupported.has(key))) : question));
     } else if (section === "behavior") {
       const { rules, flows, ruleKeys, ...rest } = content;
       if (Object.keys(rest).length) put(section, rest);
@@ -2835,7 +2836,7 @@ const partsOf = (node, value) => {
           if (key === undefined) unkeyed.push(entry);
           else put(`rule.${key}`, entry, positions.get(key));
         });
-        if (unkeyed.length) put(`behavior.${list}`, unkeyed);
+        if (unkeyed.length) put(`behavior.${list}`, items);
       }
     } else if (section === "model") {
       const { terms, ...rest } = content;
@@ -2894,7 +2895,8 @@ return { base: { schemaVersion: base.schemaVersion, specs: ids.filter((id) => be
 ```
 
 `specs` reports declared intent. A part is an envelope field, narrative, section, relation target,
-or keyed Design, UI, question, rule or model term. Unkeyed lists compare as a whole. A keyed entry
+or keyed Design, UI, question, rule or model term. A list with an unkeyed entry also compares as a whole, including its keyed entries, so an
+anonymous entry moving around a keyed one remains visible. A keyed entry
 with unchanged value and a different position among its section's keyed entries is `moved`.
 Changed values take precedence over order. Line changes and object property serialization order
 alone do not change intent.
@@ -3029,34 +3031,45 @@ const location = (id, path) => {
   return { spec: id, path, file: at?.file ?? context.file, line: at?.line ?? null };
 };
 const address = (id, section, key) => key !== "description" && /^[a-z][A-Za-z0-9]*$/u.test(key) ? `${id}#${section}.${key}` : null;
+// Entry addresses remain reading pointers even when the text containing them is cut.
+const addressesIn = (value) => [...new Set((JSON.stringify(value) ?? "").match(/spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*#(?:design|ui|question|rule)\.[a-z][A-Za-z0-9]*(?![A-Za-z0-9_.#-])/gu) ?? [])];
+const reference = (id, path, value, own = null) => {
+  const addresses = [...new Set([...(own === null ? [] : [own]), ...addressesIn(value)])];
+  if (own !== null) return addresses.length === 1 ? own : addresses;
+  return addresses.length ? [...addresses, location(id, path)] : location(id, path);
+};
+const questionReference = (id, question, index) => {
+  const own = question?.key === undefined ? null : `${id}#question.${question.key}`;
+  const pointer = reference(id, `intent.openQuestions[${index}]`, question, own);
+  return question?.links?.length ? { pointer, links: question.links } : pointer;
+};
 const cuts = [
   () => {
     answer.boundary = Object.fromEntries(Object.entries(answer.boundary).map(([name, rows]) => [name, rows.map((row) => row.id)]));
     answer.leftOut.push("Boundary details; ids kept per direction.");
   },
   () => {
-    for (const member of members) member.narrative = null;
+    for (const member of members) member.narrative = addressesIn(member.narrative).join(" ") || null;
     answer.leftOut.push("Member narrative.");
   },
   () => {
     for (const member of members) {
       const behavior = member.sections.behavior;
       if (behavior) {
-        if (behavior.examples) behavior.examples = behavior.examples.map((entry, index) => location(member.id, `behavior.examples[${index}]`));
-        if (behavior.exampleSpace) behavior.exampleSpace = location(member.id, "behavior.exampleSpace");
+        if (behavior.examples) behavior.examples = behavior.examples.map((entry, index) => reference(member.id, `behavior.examples[${index}]`, entry));
+        if (behavior.exampleSpace) behavior.exampleSpace = reference(member.id, "behavior.exampleSpace", behavior.exampleSpace);
       }
-      for (const example of member.examples) example.steps = location(example.id, "behavior.examples");
+      for (const example of member.examples) example.steps = reference(example.id, "behavior.examples", example.steps);
     }
     answer.leftOut.push("Example step text, including member sections and example-space vocabulary.");
   },
   () => {
     for (const member of members) {
-      member.questions = member.questions.filter((question) => question.blocking);
+      member.questions = member.questions.map((question) => question.blocking ? question : questionReference(member.id, question, question.index));
       if (member.sections.intent?.openQuestions) member.sections.intent.openQuestions = member.sections.intent.openQuestions
-        .map((question, index) => question?.blocking ? question : member.questions.some((row) => row.index === index) ? question : null)
-        .filter((question) => question !== null);
+        .map((question, index) => question?.blocking ? question : questionReference(member.id, question, index));
     }
-    answer.leftOut.push("Non-blocking questions, including member sections.");
+    answer.leftOut.push("Non-blocking question text, including member sections; addresses and links kept.");
   },
   () => {
     for (const member of members) {
@@ -3064,21 +3077,26 @@ const cuts = [
       const reduce = (value, path) => {
         // Protected entries stay whole; everything else becomes a graph location or address.
         if (path.startsWith("intent.openQuestions[")) return value;
-        if (value && typeof value === "object" && Object.hasOwn(value, "spec") && Object.hasOwn(value, "path") && Object.hasOwn(value, "line")) return value;
         const keyed = /^(design|ui)\.(.+)$/u.exec(path);
         if (keyed && !path.slice(keyed[1].length + 1).includes(".")) {
           if (keyed[1] === "design" && pinned.has(keyed[2])) return value;
-          return address(member.id, keyed[1], keyed[2]) ?? location(member.id, path);
+          return reference(member.id, path, value, address(member.id, keyed[1], keyed[2]));
         }
         const rule = /^behavior\.(rules|flows)\[(\d+)\]$/u.exec(path);
         if (rule) {
           const key = Object.keys(member.sections.behavior.ruleKeys ?? {}).find((key) => member.sections.behavior.ruleKeys[key] === `${rule[1]}[${rule[2]}]`);
-          return key === undefined ? location(member.id, path) : `${member.id}#rule.${key}`;
+          return reference(member.id, path, value, key === undefined ? null : `${member.id}#rule.${key}`);
         }
         if (path === "behavior.ruleKeys") return value;
+        const isLocation = (entry) => entry && typeof entry === "object" && !Array.isArray(entry) &&
+          typeof entry.spec === "string" && typeof entry.path === "string" && typeof entry.file === "string" &&
+          (entry.line === null || typeof entry.line === "number") && Object.keys(entry).every((key) => ["spec", "path", "file", "line"].includes(key));
+        if (isLocation(value)) return value;
+        if (Array.isArray(value) && value.some(isLocation) && value.every((entry) => isLocation(entry) ||
+          typeof entry === "string" && addressesIn(entry).includes(entry))) return value;
         if (Array.isArray(value)) return value.map((entry, index) => reduce(entry, `${path}[${index}]`));
         if (value !== null && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, reduce(entry, path ? `${path}.${key}` : key)]));
-        return location(member.id, path);
+        return reference(member.id, path, value);
       };
       member.sections = reduce(member.sections, "");
     }
@@ -3100,9 +3118,12 @@ Bindings carry their claims and recorded source locations. Boundary rows carry d
 relations, grouped exactly as the Pack design does.
 
 The fixed cuts are boundary details, member narrative, example step text, non-blocking questions,
-then remaining section values. Each cut removes text everywhere it appears, including `sections`.
+then remaining section values. Each cut removes text everywhere it appears, including `sections`, while retaining entry addresses
+and question links from that text.
 The fifth cut retains pinned declarations and blocking questions whole, reduces keyed entries to
-their addresses and other entries to `{ spec, path, file, line }`. Null lines mean unlocated.
+their addresses and other entries to `{ spec, path, file, line }`. If the cut value contains other
+entry addresses, they stay beside that pointer in a list. Non-blocking questions retain their
+addresses or locations and any links. Null lines mean unlocated.
 `leftOut` lists the cuts taken in that order. `used` counts the compact returned JSON, including
 itself, `scope`, `budget`, `tokenEstimate` and `leftOut`. The estimate divides code units by four,
 rounded up. A successful bundle always fits the requested budget. A budget-exceeded result carries
@@ -3356,7 +3377,8 @@ const partsOf = (node, value) => {
         if (question?.key) put(`question.${question.key}`, Object.fromEntries(Object.entries(question).filter(([key]) => !unsupported.has(key))), position++);
       }
       const unkeyed = (openQuestions ?? []).filter((question) => !question?.key);
-      if (unkeyed.length) put("intent.openQuestions", unkeyed);
+      if (unkeyed.length) put("intent.openQuestions", openQuestions.map((question) => question && typeof question === "object"
+        ? Object.fromEntries(Object.entries(question).filter(([key]) => !unsupported.has(key))) : question));
     } else if (section === "behavior") {
       const { rules, flows, ruleKeys, ...rest } = content;
       if (Object.keys(rest).length) put(section, rest);
@@ -3370,7 +3392,7 @@ const partsOf = (node, value) => {
           if (key === undefined) unkeyed.push(entry);
           else put(`rule.${key}`, entry, positions.get(key));
         });
-        if (unkeyed.length) put(`behavior.${list}`, unkeyed);
+        if (unkeyed.length) put(`behavior.${list}`, items);
       }
     } else if (section === "model") {
       const { terms, ...rest } = content;

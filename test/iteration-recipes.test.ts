@@ -178,8 +178,8 @@ describe("iteration loop: design diff", () => {
           {
             part: "behavior.rules",
             change: "changed",
-            from: ["An unkeyed rule."],
-            to: ["An edited unkeyed rule."],
+            from: ["First rule.", "An unkeyed rule."],
+            to: ["Edited first rule.", "An edited unkeyed rule."],
           },
         ]),
       );
@@ -769,6 +769,7 @@ describe("iteration loop: context bundle", () => {
       expect(results[1]?.members[0]?.narrative).toBeNull();
       expect(JSON.stringify(results[2])).not.toContain("Step text secret");
       expect(JSON.stringify(results[3])).not.toContain("Later question?");
+      expect(JSON.stringify(results[3])).toContain("spec:probe.b#question.later");
       expect(JSON.stringify(results[4]?.members[0]?.sections)).not.toContain("Beta text");
       expect(JSON.stringify(results[4]?.members[0]?.sections)).toContain(
         "spec:probe.a#design.beta",
@@ -1353,6 +1354,109 @@ describe("iteration loop: example enablement", () => {
       ).toBe(true);
       const bundle = await runRecipe<Bundle>(36, { specs: ["spec:probe.a"] }, derived);
       expect(bundle.members[0]?.examples[0]?.enabled).toBe(false);
+    });
+  }, 20_000);
+});
+
+describe("iteration loop: anonymous collection order", () => {
+  it("compares whole mixed collections when an unkeyed entry moves around a keyed entry", async () => {
+    await withCorpus(async (root) => {
+      edit(
+        root,
+        "b.sdp.md",
+        "## Behavior",
+        "### Open questions\n- [non-blocking #one] Keyed question?\n- [non-blocking] Anonymous question?\n\n## Behavior",
+      );
+      const base = extract({ root });
+      edit(
+        root,
+        "a.sdp.md",
+        "- rule: [#first] First rule.\n- flow: [#last] Last flow.\n- rule: An unkeyed rule.",
+        "- rule: An unkeyed rule.\n- rule: [#first] First rule.\n- flow: [#last] Last flow.",
+      );
+      edit(
+        root,
+        "b.sdp.md",
+        "- [non-blocking #one] Keyed question?\n- [non-blocking] Anonymous question?",
+        "- [non-blocking] Anonymous question?\n- [non-blocking #one] Keyed question?",
+      );
+      const head = extract({ root });
+      const diff = await runRecipe<Diff>(35, { base: base.graph, detail: true }, head);
+      expect(
+        diff.specs.changed.map((row) => ({
+          id: row.id,
+          parts: row.parts.map((part) => part.part),
+        })),
+      ).toEqual([
+        { id: "spec:probe.a", parts: ["behavior.rules"] },
+        { id: "spec:probe.b", parts: ["intent.openQuestions"] },
+      ]);
+      const check = await runRecipe<ProposalCheck>(
+        38,
+        {
+          base: base.graph,
+          proposal: {
+            ...sampleProposal,
+            changes: [
+              {
+                scope: ["spec:probe.a", "spec:probe.b"],
+                request: "Read the anonymous order changes.",
+              },
+              {
+                scope: ["spec:probe.a#rule.first", "spec:probe.b#question.one"],
+                request: "Read the unchanged keyed values.",
+              },
+            ],
+          },
+        },
+        head,
+      );
+      expect(check.changes.map((row) => row.moved)).toEqual([true, false]);
+    });
+  }, 20_000);
+});
+
+describe("iteration loop: protected entry addresses", () => {
+  it("keeps addresses in each place when narrative, example, question and section text are cut", async () => {
+    await withCorpus(async (root) => {
+      prepareBundleCorpus(root);
+      edit(root, "a.sdp.md", "Narrative for a.", "Narrative for a. spec:probe.a#rule.first");
+      edit(root, "a.sdp.md", "Beta text", "Beta text spec:probe.a#ui.panel");
+      edit(root, "b.sdp.md", "Later question?", "Later question? spec:probe.a#design.beta");
+      edit(
+        root,
+        "b.sdp.md",
+        "\n\n## Behavior",
+        "\n  - links: spec:probe.a#rule.last\n\n## Behavior",
+      );
+      edit(root, "example.sdp.md", "Step text secret", "Step text secret spec:probe.a#rule.first");
+      const derived = extract({ root });
+      let result = await runRecipe<Bundle>(
+        36,
+        { specs: ["spec:probe.a", "spec:probe.b", "spec:probe.example"], budget: 100000 },
+        derived,
+      );
+      for (let cut = 1; cut <= 5; cut += 1) {
+        result = await runRecipe<Bundle>(
+          36,
+          {
+            specs: ["spec:probe.a", "spec:probe.b", "spec:probe.example"],
+            budget: result.used - 20,
+          },
+          derived,
+        );
+        expect(result.leftOut).toHaveLength(cut);
+      }
+      expect(result.members[0]?.narrative).toBe("spec:probe.a#rule.first");
+      expect(JSON.stringify(result.members[0]?.examples)).toContain("spec:probe.a#rule.first");
+      expect(JSON.stringify(result.members[2]?.sections)).toContain("spec:probe.a#rule.first");
+      expect(JSON.stringify(result.members[1]?.questions)).toContain("spec:probe.b#question.later");
+      expect(JSON.stringify(result.members[1]?.questions)).toContain("spec:probe.a#design.beta");
+      expect(JSON.stringify(result.members[1]?.questions)).toContain("spec:probe.a#rule.last");
+      expect(JSON.stringify(result.members[1]?.sections)).toContain("spec:probe.b#question.later");
+      expect(JSON.stringify(result.members[0]?.sections)).toContain("spec:probe.a#design.beta");
+      expect(JSON.stringify(result.members[0]?.sections)).toContain("spec:probe.a#ui.panel");
+      expect(result.used).toBe(JSON.stringify(result).length);
     });
   }, 20_000);
 });
