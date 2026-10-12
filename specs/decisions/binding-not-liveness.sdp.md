@@ -14,5 +14,5 @@ relations:
 ## Decision
 - context: Anchors can resolve code and tests without proving reachability, execution, or approval.
 - decision: Delivery facts record bindings and enabled verifier existence; coverage gaps and human readiness practice remain explicit without becoming graph facts.
-- rationale: Renaming useful delivery facts or recording approval primitives either weakens drift signals or reverses the one-primitive boundary.
+- rationale: Renaming a binding fact as reachability or approval would overstate what its evidence proves, and recording approval in the graph would add an authored truth-bearing artifact beside the Spec.
 - consequence: Impact reports name coverage-unknown files and `ready` remains a declared statement above a structural floor.

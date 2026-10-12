@@ -5,7 +5,9 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:validation.warn-level-signals
-  dependsOn: spec:decisions.kind-conditional-floor
+  dependsOn:
+    target: spec:decisions.kind-conditional-floor
+    reason: decision maturity uses decision content as natural evidence instead of implementation or verifier bindings
 ---
 # Decision records state readiness from ratification evidence
 

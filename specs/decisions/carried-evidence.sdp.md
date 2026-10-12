@@ -16,6 +16,8 @@ relations:
 
 ## Decision
 - context: Promotion and constraints preserve meaning only when the promoted target carries the matching kind evidence.
-- decision: Promoted evidence counts only when the promoted Spec holds its natural evidence; authoring-shape honesty rejects authored delivery facts and external `doc:` targets remain deferred.
-- rationale: Counting empty children or wrong-kind constraints makes a structural floor pass without content, while readiness gates and premature external target types add the wrong contract.
-- consequence: The floor checks resolved target shape, and unresolved external decision links stay outside the current relation grammar.
+- decision: Promoted evidence counts only when the promoted Spec carries its own kind's natural evidence.
+- rationale: Counting an empty promoted child or a wrong-kind constraint would clear the evidence floor without the content it is meant to require.
+- consequence: The floor checks resolved target shape, and unresolved external decision links stay outside the relation grammar.
+- consequence: Authoring-shape honesty rejects authored delivery facts.
+- consequence: External `doc:` targets remain deferred until a corpus needs a relation to a decision recorded outside the graph.

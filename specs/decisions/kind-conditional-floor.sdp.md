@@ -13,6 +13,6 @@ relations:
 
 ## Decision
 - context: Kinds have different natural evidence, while structural maturity clauses apply across every Spec.
-- decision: The readiness floor combines cumulative kind-blind clauses with one kind-conditional evidence clause at each rung.
+- decision: The readiness floor combines cumulative kind-blind clauses with one kind-conditional evidence clause at each of the `scoped` and `defined` rungs: the kind's natural evidence present, then complete.
 - rationale: Defined-only evidence and uniform evidence rules either leave padding legal or erase meaningful kind distinctions.
 - consequence: Floor rows are monotonic, promotion-neutral, and converge honestly where a kind has no stronger form.
