@@ -1143,6 +1143,11 @@ const dependencyNeighbors = (type, end) => {
 };
 const dependsOn = dependencyNeighbors("dependsOn", "to");
 const dependedOnBy = dependencyNeighbors("dependsOn", "from");
+const byCodeUnit = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const reasons = graph.edges
+  .filter((edge) => edge.claim === "declared" && (edge.from === id || edge.to === id) && edge.reason !== undefined)
+  .map(({ type, from, to, reason }) => ({ type, from, to, reason }))
+  .sort((a, b) => byCodeUnit(a.type, b.type) || byCodeUnit(a.from, b.from) || byCodeUnit(a.to, b.to));
 const neighborhoodIds = new Set([id, ...parents, ...children]);
 const decisionsById = new Map();
 
@@ -1231,6 +1236,7 @@ return {
   found: true,
   refinementNeighborhood: { parents, children },
   dependencies: { dependsOn, dependedOnBy },
+  reasons,
   shapingDecisions: [...decisionsById]
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([decisionId, subjects]) => ({
@@ -1262,7 +1268,9 @@ return {
 component files. It is not the impact contract; whole-corpus blast radius over changed files stays
 recipe 4 (`g.blastRadius`). Shaping decisions are the `decidedBy` targets across the refinement
 neighborhood; a decision record that also `refines` the subject appears both as a refinement child
-and as a shaping decision. Dependency neighbors carry `statedReadiness` because an unready
+and as a shaping decision. `reasons` lists every authored relation into or out of the subject
+that states a reason, as `{ type, from, to, reason }`, sorted by type, then source id, then target id.
+Dependency neighbors carry `statedReadiness` because an unready
 `dependsOn` target holds back the subject's `ready`, and `reason` when the relation states one. For every Spec the subject rests on, across `refines`, `dependsOn`,
 `constrainedBy`, and `decidedBy`, with the floor each one reaches, use dependency footing
 (recipe 21). The graph does not derive symbol-level impact;
@@ -2744,18 +2752,24 @@ that reading, down to each keyed entry.*
 limits Specs to that Pack's members at either commit. `params.detail` defaults to false; true
 includes the values and change type for every changed part.
 
-Write a base graph in a detached worktree inside your checkout. Use the engine built in your
-current checkout and the corpus's own exclusions. Replace `BASE` with the commit you read:
+In the Protocol source repository, write the base graph with the base worktree's own engine.
+Its constant-form anchors use relative builder imports, trusted against that engine's own source
+modules. A current-checkout engine cannot recognize those imports in another worktree. Replace
+`BASE` with the commit you read and use the corpus's own exclusions:
 
 ```sh
 git worktree add --detach .sdp-base BASE
-pnpm --silent sdp build .sdp-base --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+ln -s "$PWD/node_modules" .sdp-base/node_modules
+npm --prefix .sdp-base run build
+node .sdp-base/dist/cli/sdp.js build .sdp-base --exclude explorations --exclude examples --exclude test/fixtures/import/parity
 pnpm --silent sdp:q "$(cat dist/recipes/35-the-design-diff.js)" --params base=@.sdp-base/generated/graph.json --json
 git worktree remove .sdp-base
 ```
 
-An adopter uses its package runner and its own exclusions. The current engine derives both graphs
-in this example; a base written by another engine is also accepted and reports what cannot compare.
+The linked `node_modules` reuses this checkout's dependencies; use `npm --prefix .sdp-base ci`
+instead of the link when the base needs its own lockfile's versions. An adopter whose anchors
+import the package by name may build its base with the engine it has, using its package runner and
+its own exclusions. A base written by another engine is accepted and reports what cannot compare.
 The caller keeps the base commit outside the graph. The recipe reads only the two graph objects.
 
 ```js
@@ -2788,28 +2802,41 @@ const allowed = packId === undefined ? null : new Set([
 if (allowed !== null && !basePacks.has(packId) && !headPacks.has(packId)) {
   diagnostics.push({ part: "pack", problem: "Pack is absent at both commits.", id: packId });
 }
-// Across engine versions, an optional feature absent throughout one graph cannot be compared.
-const unsupported = new Set();
-const supported = (part, test) => {
-  if (!differentVersion) return true;
-  const a = test(base), b = test(graph);
-  if (a === b) return true;
-  unsupported.add(part);
-  diagnostics.push({ part, problem: "Part is carried by only one graph.", base: a, head: b });
-  return false;
+// Capabilities follow the schema contract, never whether this corpus uses an optional field.
+const atLeast = (value, minimum) => {
+  const version = /^(\d+)\.(\d+)\.(\d+)$/u.exec(value.schemaVersion ?? "");
+  if (!version) return false;
+  const numbers = version.slice(1).map(Number);
+  for (let i = 0; i < minimum.length; i++) {
+    if (numbers[i] !== minimum[i]) return numbers[i] > minimum[i];
+  }
+  return true;
 };
-for (const field of ["title", "narrative", "sections", "deliveryFacts"]) {
-  supported(field, (value) => value.nodes.some((node) => node.nodeType === "Primitive" && Object.hasOwn(node, field)));
+const unsupported = new Set();
+for (const [part, minimum] of [
+  ["narrative", [0, 4, 0]],
+  ...["ruleKeys", "decider", "links", "provisional", "trigger", "reason", "exercises"].map((part) => [part, [0, 9, 0]]),
+]) {
+  const a = atLeast(base, minimum), b = atLeast(graph, minimum);
+  if (!a || !b) unsupported.add(part);
+  if (a !== b) diagnostics.push({ part, problem: "Part is outside the common schema.", base: a, head: b });
 }
-for (const section of ["intent", "behavior", "constraints", "model", "design", "decision", "verification", "ui"]) {
-  supported(section, (value) => value.nodes.some((node) => Object.hasOwn(node.sections ?? {}, section)));
-}
-for (const field of ["ruleKeys", "decider", "links", "provisional", "trigger"]) {
-  supported(field, (value) => value.nodes.some((node) => field === "ruleKeys"
-    ? Object.hasOwn(node.sections?.behavior ?? {}, field)
-    : (node.sections?.intent?.openQuestions ?? []).some((q) => q && typeof q === "object" && Object.hasOwn(q, field))));
-}
-for (const field of ["reason", "exercises"]) supported(field, (value) => value.edges.some((edge) => Object.hasOwn(edge, field)));
+// Before ruleKeys, engines left the authored marker in the rule or flow string.
+const behaviorOf = (content) => {
+  const result = { ...content, rules: [...(content.rules ?? [])], flows: [...(content.flows ?? [])] };
+  if (content.ruleKeys !== undefined) return result;
+  const keys = {};
+  for (const list of Object.keys(content).filter((key) => key === "rules" || key === "flows")) {
+    result[list] = result[list].map((text, index) => {
+      const marker = /^\[#([a-z][A-Za-z0-9]*)\] (.*)$/su.exec(text);
+      if (!marker) return text;
+      keys[marker[1]] = `${list}[${index}]`;
+      return marker[2];
+    });
+  }
+  result.ruleKeys = keys;
+  return result;
+};
 const partsOf = (node, value) => {
   const parts = new Map();
   const put = (part, content, position) => parts.set(part, { value: content, position });
@@ -2841,7 +2868,7 @@ const partsOf = (node, value) => {
       if (unkeyed.length) put("intent.openQuestions", openQuestions.map((question) => question && typeof question === "object"
         ? Object.fromEntries(Object.entries(question).filter(([key]) => !unsupported.has(key))) : question));
     } else if (section === "behavior") {
-      const { rules, flows, ruleKeys, ...rest } = content;
+      const { rules, flows, ruleKeys, ...rest } = behaviorOf(content);
       if (Object.keys(rest).length) put(section, rest);
       const keys = unsupported.has("ruleKeys") ? {} : ruleKeys ?? {};
       const entries = new Map(Object.entries(keys).map(([key, path]) => [path, key]));
@@ -2851,7 +2878,7 @@ const partsOf = (node, value) => {
         (items ?? []).forEach((entry, index) => {
           const key = entries.get(`${list}[${index}]`);
           if (key === undefined) unkeyed.push(entry);
-          else put(`rule.${key}`, entry, positions.get(key));
+          else put(`rule.${key}`, { list, text: entry }, positions.get(key));
         });
         if (unkeyed.length) put(`behavior.${list}`, items);
       }
@@ -2915,14 +2942,16 @@ return { base: { schemaVersion: base.schemaVersion, specs: ids.filter((id) => be
 or keyed Design, UI, question, rule or model term. A list with an unkeyed entry also compares as a whole, including its keyed entries, so an
 anonymous entry moving around a keyed one remains visible. A keyed entry
 with unchanged value and a different position among its section's keyed entries is `moved`.
-Changed values take precedence over order. Line changes and object property serialization order
+Keyed rule values include their owning list, `rules` or `flows`, so a rule becoming a flow changes
+its value at the same address. Changed values take precedence over order. Line changes and object property serialization order
 alone do not change intent.
 
 `packs` reports membership additions, removals and relative order changes among retained members.
 `bindings` keeps anchor-derived changes apart, with added and removed ids for realizing units,
 referencing units, enabled verifiers and delivery facts. Each list has a count in `totals`.
-A schema difference is diagnostic data. Optional parts carried throughout only one graph are
-omitted from that comparison and named in `diagnostics`. The comparison confers nothing and
+A schema difference is diagnostic data. Parts outside the schemas' shared capabilities are
+omitted and named in `diagnostics`; an unused optional section still compares. Legacy rule markers
+are normalized before comparison when a Spec carries no `ruleKeys`. The comparison confers nothing and
 records no design pass. The law is `spec:consumers.design-diff`.
 
 ## 36. The context bundle
@@ -3006,6 +3035,7 @@ const members = ids.map((id) => {
   const footing = context.relationsOut.filter((end) => types.includes(end.type)).map((end) => {
     const target = summaries.get(end.otherId);
     return { type: end.type, id: end.otherId, claim: end.claim, resolved: end.resolved,
+      ...(end.reason === undefined ? {} : { reason: end.reason }),
       statedReadiness: target?.statedReadiness ?? null, floorReached: target === undefined ? null : target.derivedReadiness ?? "none" };
   }).sort((a, b) => types.indexOf(a.type) - types.indexOf(b.type) || byCodeUnit(a.id, b.id));
   const declarations = Object.entries(sections.design ?? {}).flatMap(([key, value]) => {
@@ -3129,7 +3159,8 @@ return { scope, budget, budgetExceeded: true, protectedLength: answer.used, left
 Spec list. Each member keeps its stated rung, floor and stated next rung, with `holds` naming
 unmet floor clauses. `design` counts entries, declarations and questions, beside shaping decisions
 and the Pack design's bindings. Questions keep addresses, recorded lines and their fields.
-`footing` has recipe 21's dependency rows; `declarations` has recipe 24's pinned declarations.
+`footing` has recipe 21's dependency rows, including `reason` when the relation states one;
+`declarations` has recipe 24's pinned declarations.
 `examples` lists refining or verifying examples with their rung, enabled binding and steps.
 Bindings carry their claims and recorded source locations. Boundary rows carry declared
 relations, grouped exactly as the Pack design does.
@@ -3351,21 +3382,43 @@ if (!base || !Array.isArray(base.nodes) || !Array.isArray(base.edges)) { problem
 const canonical = (value) => Array.isArray(value) ? value.map(canonical) : object(value)
   ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])])) : value;
 const same = (a, b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
-const differentVersion = base.schemaVersion !== graph.schemaVersion;
+const diagnostics = [];
+if (base.schemaVersion !== graph.schemaVersion) diagnostics.push({ part: "schemaVersion", base: base.schemaVersion, head: graph.schemaVersion });
+// Capabilities follow the schema contract, never whether this corpus uses an optional field.
+const atLeast = (value, minimum) => {
+  const version = /^(\d+)\.(\d+)\.(\d+)$/u.exec(value.schemaVersion ?? "");
+  if (!version) return false;
+  const numbers = version.slice(1).map(Number);
+  for (let i = 0; i < minimum.length; i++) {
+    if (numbers[i] !== minimum[i]) return numbers[i] > minimum[i];
+  }
+  return true;
+};
 const unsupported = new Set();
-const supported = (part, test) => { if (differentVersion && test(base) !== test(graph)) unsupported.add(part); };
-for (const field of ["title", "narrative", "sections", "deliveryFacts"]) {
-  supported(field, (value) => value.nodes.some((node) => node.nodeType === "Primitive" && Object.hasOwn(node, field)));
+for (const [part, minimum] of [
+  ["narrative", [0, 4, 0]],
+  ...["ruleKeys", "decider", "links", "provisional", "trigger", "reason", "exercises"].map((part) => [part, [0, 9, 0]]),
+]) {
+  const a = atLeast(base, minimum), b = atLeast(graph, minimum);
+  if (!a || !b) unsupported.add(part);
+  if (a !== b) diagnostics.push({ part, problem: "Part is outside the common schema.", base: a, head: b });
 }
-for (const section of ["intent", "behavior", "constraints", "model", "design", "decision", "verification", "ui"]) {
-  supported(section, (value) => value.nodes.some((node) => Object.hasOwn(node.sections ?? {}, section)));
-}
-for (const field of ["ruleKeys", "decider", "links", "provisional", "trigger"]) {
-  supported(field, (value) => value.nodes.some((node) => field === "ruleKeys"
-    ? Object.hasOwn(node.sections?.behavior ?? {}, field)
-    : (node.sections?.intent?.openQuestions ?? []).some((q) => q && typeof q === "object" && Object.hasOwn(q, field))));
-}
-for (const field of ["reason", "exercises"]) supported(field, (value) => value.edges.some((edge) => Object.hasOwn(edge, field)));
+// Before ruleKeys, engines left the authored marker in the rule or flow string.
+const behaviorOf = (content) => {
+  const result = { ...content, rules: [...(content.rules ?? [])], flows: [...(content.flows ?? [])] };
+  if (content.ruleKeys !== undefined) return result;
+  const keys = {};
+  for (const list of Object.keys(content).filter((key) => key === "rules" || key === "flows")) {
+    result[list] = result[list].map((text, index) => {
+      const marker = /^\[#([a-z][A-Za-z0-9]*)\] (.*)$/su.exec(text);
+      if (!marker) return text;
+      keys[marker[1]] = `${list}[${index}]`;
+      return marker[2];
+    });
+  }
+  result.ruleKeys = keys;
+  return result;
+};
 const partsOf = (node, value) => {
   const parts = new Map();
   const put = (part, content, position) => parts.set(part, { value: content, position });
@@ -3397,7 +3450,7 @@ const partsOf = (node, value) => {
       if (unkeyed.length) put("intent.openQuestions", openQuestions.map((question) => question && typeof question === "object"
         ? Object.fromEntries(Object.entries(question).filter(([key]) => !unsupported.has(key))) : question));
     } else if (section === "behavior") {
-      const { rules, flows, ruleKeys, ...rest } = content;
+      const { rules, flows, ruleKeys, ...rest } = behaviorOf(content);
       if (Object.keys(rest).length) put(section, rest);
       const keys = unsupported.has("ruleKeys") ? {} : ruleKeys ?? {};
       const entries = new Map(Object.entries(keys).map(([key, path]) => [path, key]));
@@ -3407,7 +3460,7 @@ const partsOf = (node, value) => {
         (items ?? []).forEach((entry, index) => {
           const key = entries.get(`${list}[${index}]`);
           if (key === undefined) unkeyed.push(entry);
-          else put(`rule.${key}`, entry, positions.get(key));
+          else put(`rule.${key}`, { list, text: entry }, positions.get(key));
         });
         if (unkeyed.length) put(`behavior.${list}`, items);
       }
@@ -3442,7 +3495,7 @@ const resolves = (nodes, ref) => {
   if (suffix === undefined) return true;
   const [section, key] = suffix.split(".");
   if (section === "question") return (node.sections?.intent?.openQuestions ?? []).some((question) => question?.key === key);
-  if (section === "rule") return Object.hasOwn(node.sections?.behavior?.ruleKeys ?? {}, key);
+  if (section === "rule") return Object.hasOwn(behaviorOf(node.sections?.behavior ?? {}).ruleKeys ?? {}, key);
   return key !== "description" && Object.hasOwn(node.sections?.[section] ?? {}, key);
 };
 const changes = proposal.changes.map((change, index) => {
@@ -3450,16 +3503,23 @@ const changes = proposal.changes.map((change, index) => {
     ...(change.follows === undefined ? [] : [change.follows]), ...(change.relation === undefined ? [] : [change.relation.from])])];
   const scope = refs.map((ref) => {
     const [id, suffix] = ref.split("#");
+    const resolution = { ref, resolvesAtHead: resolves(after, ref), resolvesAtBase: resolves(before, ref) };
+    const missing = suffix === undefined ? [...unsupported] : suffix.startsWith("rule.")
+      ? (unsupported.has("ruleKeys") ? ["ruleKeys"] : []) : suffix.startsWith("question.")
+      ? ["decider", "links", "provisional", "trigger"].filter((part) => unsupported.has(part)) : [];
+    if (missing.length) return { ...resolution, comparable: false, reason: `Outside the common schema: ${missing.join(", ")}.` };
     const parts = changedParts(id);
     const moved = before.has(id) !== after.has(id) || (suffix === undefined
       ? parts.changed.size > 0 || parts.ordered.size > 0 : parts.changed.has(suffix));
-    return { ref, resolvesAtHead: resolves(after, ref), resolvesAtBase: resolves(before, ref), moved };
+    return { ...resolution, moved };
   });
   const relationTarget = change.relation?.action === "declare"
     ? { ref: change.relation.target, resolvesAtHead: resolves(after, change.relation.target) } : null;
-  return { index, scope, moved: scope.some((item) => item.moved), relationTarget };
+  const incomparable = scope.some((item) => item.comparable === false);
+  return { index, scope, moved: scope.some((item) => item.moved) ? true : incomparable ? null : false,
+    ...(incomparable ? { comparable: false } : {}), relationTarget };
 });
-return { schemaProblems, base: proposal.base, totals: { changes: changes.length, moved: changes.filter((change) => change.moved).length,
+return { schemaProblems, base: proposal.base, diagnostics, totals: { changes: changes.length, moved: changes.filter((change) => change.moved).length,
   unresolved: changes.filter((change) => change.scope.some((item) => !item.resolvesAtHead) || change.relationTarget?.resolvesAtHead === false).length }, changes };
 ```
 
@@ -3470,7 +3530,10 @@ was added, removed or changed under recipe 35's comparison. An order-only entry 
 value unchanged; a whole-Spec scope includes order changes. `relationTarget` reports resolution at
 the head for a declared relation, and is null otherwise. `totals.moved` and `totals.unresolved`
 count changes, so one moved entry leaves other changes independently visible. Unknown references
-remain explicit rows. A base missing from the parameters is a problem with no change rows.
+remain explicit rows. A scope outside the common schema carries `comparable: false` and a
+`reason`, with no `moved` claim. Its change also carries `comparable: false`, and `moved` is null
+unless another comparable scope moved. Schema differences and unsupported parts appear in
+`diagnostics`. A base missing from the parameters is a problem with no change rows.
 
 The rows carry facts about declared intent, with anchored changes excluded from scope movement.
 They confer no status or approval. A caller routes a moved change to a person and applies other
@@ -3483,13 +3546,16 @@ neither step. The law is `spec:consumers.intent-composition.proposal`.
 declarations with the bound artifacts before removing duplicated Design detail.*
 
 The optional parameter is `params.pack`; without it the body reads every Spec. An unknown Pack
-selects no Specs. A row is a potential candidate, never permission to delete an entry.
+returns `{ pack, found: false }`. An existing Pack with no candidates keeps its totals and empty
+rows. A row is a potential candidate, never permission to delete an entry.
 
 ```js
 const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
+const pack = params.pack === undefined ? undefined : g.packContext(params.pack);
+if (params.pack !== undefined && !pack) return { pack: params.pack, found: false };
 const specs = params.pack === undefined
   ? g.specs()
-  : (g.packContext(params.pack)?.members ?? []);
+  : pack.members;
 const rows = [];
 for (const spec of specs) {
   const context = g.specContext(spec.id);
@@ -3539,7 +3605,8 @@ is declared intent, and the candidate classification is advice derived from the 
 with anchored uses, and component designs that no planned component realizes yet.*
 
 The required parameter is `params.imports`, the object in the adapter's imports file. The optional
-`params.limit` is a non-negative integer, 20 by default, and cuts only the uncovered-file list.
+`params.limit` is a positive integer, 20 by default, and cuts only the uncovered-file list.
+Missing or malformed imports and invalid limits return `{ diagnostics }` with no report rows.
 Build the input explicitly, then pass it to the body as data:
 
 ```sh
@@ -3554,12 +3621,15 @@ only anchored component identity and `memberOf` do that.
 
 ```js
 const input = params.imports;
-if (input?.schema !== "sdp-imports/1" || typeof input.adapter !== "string" || !Array.isArray(input.files) ||
-    input.files.some((entry) => typeof entry.file !== "string" || !Array.isArray(entry.imports) || entry.imports.some((file) => typeof file !== "string"))) {
-  throw new Error("params.imports must be an sdp-imports/1 object");
+const diagnostics = [];
+const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+if (!object(input) || input.schema !== "sdp-imports/1" || typeof input.adapter !== "string" || !Array.isArray(input.files) ||
+    input.files.some((entry) => !object(entry) || typeof entry.file !== "string" || !Array.isArray(entry.imports) || entry.imports.some((file) => typeof file !== "string"))) {
+  diagnostics.push({ parameter: "imports", problem: "Supply an sdp-imports/1 object." });
 }
 const limit = params.limit ?? 20;
-if (!Number.isSafeInteger(limit) || limit < 0) throw new Error("params.limit must be a non-negative integer");
+if (params.limit === null || !Number.isInteger(limit) || limit <= 0) diagnostics.push({ parameter: "limit", problem: "Expected a positive integer." });
+if (diagnostics.length) return { diagnostics };
 const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
 const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
 const anchored = graph.nodes.filter((node) => node.claim === "anchored" && (node.nodeType === "CodeNode" || node.nodeType === "Anchor"));

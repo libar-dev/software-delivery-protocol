@@ -12,7 +12,7 @@ import {
   specTest,
   testAnchorId,
 } from "@libar-dev/software-delivery-protocol";
-import { extract } from "../src/index.js";
+import { extract, serializeGraph } from "../src/index.js";
 import type { ExtractionResult, GraphSchema } from "../src/index.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
@@ -174,7 +174,12 @@ describe("iteration loop: design diff", () => {
             to: "`Alpha` declaration",
           },
           { part: "design.gamma", change: "added", from: null, to: "Added text" },
-          { part: "rule.first", change: "changed", from: "First rule.", to: "Edited first rule." },
+          {
+            part: "rule.first",
+            change: "changed",
+            from: { list: "rules", text: "First rule." },
+            to: { list: "rules", text: "Edited first rule." },
+          },
           {
             part: "behavior.rules",
             change: "changed",
@@ -336,16 +341,35 @@ describe("iteration loop: design diff", () => {
     });
   }, 20_000);
 
-  it("reads this repository's HEAD~1 through a temporary git worktree and compares it to the working tree", async () => {
+  it("runs the documented base-worktree procedure, preserves constant anchors, and compares HEAD~1", async () => {
     const directory = mkdtempSync(join(repoRoot, ".lane-l-git-"));
     const worktree = join(directory, "base");
     let added = false;
     try {
-      execFileSync("git", ["-C", repoRoot, "worktree", "add", "--detach", worktree, "HEAD~1"], {
-        stdio: "pipe",
-      });
       added = true;
-      const base = extract({ root: worktree, exclude: excludes });
+      const catalog = readFileSync(join(repoRoot, "docs/agent-surface/recipes.md"), "utf8");
+      const section = catalog.split(/^## 35\..+$/mu)[1]?.split(/^## /mu)[0];
+      const procedure = /```sh\n([\s\S]*?)\n```/u.exec(section ?? "")?.[1];
+      if (!procedure) throw new Error("missing documented base-worktree procedure");
+      const preparation = procedure.split(/^pnpm --silent sdp:q /mu)[0] ?? "";
+      const quotedWorktree = `'${worktree.replaceAll("'", "'\\''")}'`;
+      execFileSync(
+        "sh",
+        ["-c", preparation.replaceAll(".sdp-base", quotedWorktree).replace(/\bBASE\b/gu, "HEAD~1")],
+        {
+          cwd: repoRoot,
+          stdio: "pipe",
+        },
+      );
+      const base = {
+        ...extract({ root: worktree, exclude: excludes }),
+        graph: JSON.parse(
+          readFileSync(join(worktree, "generated/graph.json"), "utf8"),
+        ) as GraphSchema,
+      };
+      expect(base.graph.nodes.some((node) => node.id === "impl:protocol.schema-version")).toBe(
+        true,
+      );
       const head = extract({ root: repoRoot, exclude: excludes });
       expect(base.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
       expect(head.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
@@ -356,9 +380,10 @@ describe("iteration loop: design diff", () => {
       expect(result.head.specs).toBe(
         head.graph.nodes.filter((node) => node.nodeType === "Primitive").length,
       );
-      const authoredOf = (value: GraphSchema) =>
-        new Map(
-          value.nodes
+      const authoredOf = (value: GraphSchema) => {
+        const serialized = JSON.parse(serializeGraph(value)) as GraphSchema;
+        return new Map(
+          serialized.nodes
             .filter((node) => node.nodeType === "Primitive")
             .map((node) => [
               node.id,
@@ -366,17 +391,25 @@ describe("iteration loop: design diff", () => {
                 node: Object.fromEntries(
                   Object.entries(node).filter(([key]) => !["file", "deliveryFacts"].includes(key)),
                 ),
-                relations: value.edges.filter(
+                relations: serialized.edges.filter(
                   (edge) =>
                     edge.from === node.id && edge.claim === "declared" && edge.type !== "belongsTo",
                 ),
               }),
             ]),
         );
+      };
       const a = authoredOf(base.graph),
         b = authoredOf(head.graph);
       const changedIds = [...a.keys()].filter((id) => b.has(id) && a.get(id) !== b.get(id)).sort();
       expect(result.specs.changed.map((row) => row.id)).toEqual(changedIds);
+      const cleanup = procedure.split("\n").find((line) => line.startsWith("git worktree remove "));
+      if (!cleanup) throw new Error("missing documented base-worktree cleanup");
+      execFileSync("sh", ["-c", cleanup.replaceAll(".sdp-base", quotedWorktree)], {
+        cwd: repoRoot,
+        stdio: "pipe",
+      });
+      added = false;
     } finally {
       if (added)
         execFileSync("git", ["-C", repoRoot, "worktree", "remove", "--force", worktree], {
@@ -384,6 +417,141 @@ describe("iteration loop: design diff", () => {
         });
       rmSync(directory, { recursive: true, force: true });
     }
+  }, 60_000);
+
+  it("compares a keyed rule that becomes a flow at the same address", async () => {
+    await withCorpus(async (root, base) => {
+      edit(root, "a.sdp.md", "- rule: [#first] First rule.", "- flow: [#first] First rule.");
+      const head = extract({ root });
+      const diff = await runRecipe<Diff>(35, { base: base.graph, detail: true }, head);
+      expect(diff.specs.changed.find((row) => row.id === "spec:probe.a")?.parts).toContainEqual({
+        part: "rule.first",
+        change: "changed",
+        from: { list: "rules", text: "First rule." },
+        to: { list: "flows", text: "First rule." },
+      });
+      const check = await runRecipe<ProposalCheck>(
+        38,
+        {
+          base: base.graph,
+          proposal: {
+            ...sampleProposal,
+            changes: [{ scope: ["spec:probe.a#rule.first"], request: "Review the flow." }],
+          },
+        },
+        head,
+      );
+      expect(check.changes[0]?.scope[0]).toEqual({
+        ref: "spec:probe.a#rule.first",
+        resolvesAtBase: true,
+        resolvesAtHead: true,
+        moved: true,
+      });
+    });
+  }, 20_000);
+
+  it("compares new Design entries across schema versions when the base corpus has none", async () => {
+    await withCorpus(async (root) => {
+      edit(root, "a.sdp.md", "## Design\n- alpha: `Alpha` declaration\n- beta: Beta text\n\n", "");
+      edit(root, "b.sdp.md", "\n\n## Design\n- layer: domain", "");
+      const base = { ...extract({ root }).graph, schemaVersion: "0.8.0" };
+      edit(
+        root,
+        "b.sdp.md",
+        "- rule: B rule.",
+        "- rule: B rule.\n\n## Design\n- added: New design.",
+      );
+      const head = extract({ root });
+      const diff = await runRecipe<Diff>(35, { base, detail: true }, head);
+      expect(diff.diagnostics.map((row) => row.part)).toContain("schemaVersion");
+      expect(diff.diagnostics.map((row) => row.part)).not.toContain("design");
+      expect(diff.specs.changed.find((row) => row.id === "spec:probe.b")?.parts).toContainEqual({
+        part: "design.added",
+        change: "added",
+        from: null,
+        to: "New design.",
+      });
+      const check = await runRecipe<ProposalCheck>(
+        38,
+        {
+          base,
+          proposal: {
+            ...sampleProposal,
+            changes: [{ scope: ["spec:probe.b#design.added"], request: "Review new design." }],
+          },
+        },
+        head,
+      );
+      expect(check.changes[0]?.scope[0]).toMatchObject({
+        resolvesAtBase: false,
+        resolvesAtHead: true,
+        moved: true,
+      });
+    });
+  }, 20_000);
+
+  it("normalizes legacy rule markers when both engines declare schema 0.9.0", async () => {
+    await withCorpus(async (_root, head) => {
+      const base = JSON.parse(JSON.stringify(head.graph)) as GraphSchema;
+      for (const node of base.nodes) {
+        if (node.nodeType !== "Primitive" || !node.sections?.behavior?.ruleKeys) continue;
+        const behavior = node.sections.behavior;
+        for (const [key, path] of Object.entries(behavior.ruleKeys ?? {})) {
+          const match = /^(rules|flows)\[(\d+)\]$/u.exec(path);
+          const list = match?.[1] === "rules" ? behavior.rules : behavior.flows;
+          const index = Number(match?.[2]);
+          if (list) (list as string[])[index] = `[#${key}] ${String(list[index])}`;
+        }
+        delete (behavior as { ruleKeys?: unknown }).ruleKeys;
+      }
+      const diff = await runRecipe<Diff>(35, { base, detail: true }, head);
+      expect(diff.diagnostics).toEqual([]);
+      expect(diff.specs.changed).toEqual([]);
+      const check = await runRecipe<ProposalCheck>(
+        38,
+        {
+          base,
+          proposal: {
+            ...sampleProposal,
+            changes: [
+              {
+                scope: ["spec:probe.a#rule.first", "spec:probe.a#rule.last", "spec:probe.a"],
+                request: "Review unchanged rules.",
+              },
+            ],
+          },
+        },
+        head,
+      );
+      expect(check.changes[0]?.moved).toBe(false);
+      expect(
+        check.changes[0]?.scope.every(
+          (row) => row.resolvesAtBase && row.resolvesAtHead && row.moved === false,
+        ),
+      ).toBe(true);
+    });
+  }, 20_000);
+
+  it("reports proposal scopes outside the common schema as incomparable", async () => {
+    await withCorpus(async (_root, head) => {
+      const base = { ...head.graph, schemaVersion: "0.8.0" };
+      const check = await runRecipe<ProposalCheck>(
+        38,
+        {
+          base,
+          proposal: {
+            ...sampleProposal,
+            changes: [{ scope: ["spec:probe.a#rule.first"], request: "Review this rule." }],
+          },
+        },
+        head,
+      );
+      expect(check.changes[0]?.scope[0]?.comparable).toBe(false);
+      expect(typeof check.changes[0]?.scope[0]?.reason).toBe("string");
+      expect(check.changes[0]?.scope[0]).not.toHaveProperty("moved");
+      expect(check.changes[0]?.moved).toBeNull();
+      expect(check.diagnostics?.map((row) => row.part)).toContain("schemaVersion");
+    });
   }, 20_000);
 });
 
@@ -447,7 +615,7 @@ interface Bundle {
     }[];
     declarations: { spec: string; key: string; declaration: string }[];
     examples: { id: string; steps: unknown; enabled: boolean }[];
-    footing: { type: string; id: string; claim: string }[];
+    footing: { type: string; id: string; claim: string; reason?: string }[];
   }[];
   boundary: Record<string, (string | { id: string; via: { type: string; members: string[] }[] })[]>;
 }
@@ -458,6 +626,70 @@ interface BudgetExceeded {
   protectedLength: number;
   leftOut: string[];
 }
+
+describe("relation reasons in planning recipes", () => {
+  it("lists all authored reasons into and out of the planning subject in type/from/to order", async () => {
+    await withCorpus(async (root) => {
+      edit(
+        root,
+        "a.sdp.md",
+        "relations: \n  dependsOn:",
+        "relations: \n  refines:\n    - target: spec:probe.outside\n      reason: A narrows the outside law.\n  dependsOn:",
+      );
+      edit(
+        root,
+        "b.sdp.md",
+        "relations: {}",
+        "relations:\n  refines:\n    - target: spec:probe.a\n      reason: B narrows A.",
+      );
+      edit(
+        root,
+        "outside.sdp.md",
+        "relations: {}",
+        "relations:\n  dependsOn:\n    - target: spec:probe.a\n      reason: Outside needs A.",
+      );
+      const result = await runRecipe<{
+        reasons: { type: string; from: string; to: string; reason: string }[];
+      }>(19, { spec: "spec:probe.a" }, extract({ root }));
+      expect(result.reasons).toEqual([
+        {
+          type: "dependsOn",
+          from: "spec:probe.a",
+          to: "spec:probe.outside",
+          reason: "A needs the outside law.",
+        },
+        {
+          type: "dependsOn",
+          from: "spec:probe.outside",
+          to: "spec:probe.a",
+          reason: "Outside needs A.",
+        },
+        {
+          type: "refines",
+          from: "spec:probe.a",
+          to: "spec:probe.outside",
+          reason: "A narrows the outside law.",
+        },
+        { type: "refines", from: "spec:probe.b", to: "spec:probe.a", reason: "B narrows A." },
+      ]);
+    });
+  });
+
+  it("keeps dependency reasons in context-bundle footing", async () => {
+    await withCorpus(async (_root, derived) => {
+      const bundle = await runRecipe<Bundle>(36, { specs: ["spec:probe.a"] }, derived);
+      expect(bundle.members[0]?.footing).toContainEqual({
+        type: "dependsOn",
+        id: "spec:probe.outside",
+        claim: "declared",
+        resolved: true,
+        statedReadiness: "scoped",
+        floorReached: "idea",
+        reason: "A needs the outside law.",
+      });
+    });
+  });
+});
 function addQuestions(root: string): void {
   edit(
     root,
@@ -853,12 +1085,20 @@ const proposalTestAnchor = specTest({
 void proposalTestAnchor;
 interface ProposalCheck {
   schemaProblems: { path: string; problem: string }[];
+  diagnostics?: { part: string }[];
   base: string;
   totals: { changes: number; moved: number; unresolved: number };
   changes: {
     index: number;
-    scope: { ref: string; resolvesAtHead: boolean; resolvesAtBase: boolean; moved: boolean }[];
-    moved: boolean;
+    scope: {
+      ref: string;
+      resolvesAtHead: boolean;
+      resolvesAtBase: boolean;
+      moved?: boolean;
+      comparable?: boolean;
+      reason?: string;
+    }[];
+    moved: boolean | null;
     relationTarget: { ref: string; resolvesAtHead: boolean } | null;
   }[];
 }
@@ -1251,8 +1491,18 @@ describe("iteration loop: comparison and budget edges", () => {
         head,
       );
       expect(result.specs.changed[0]?.parts).toEqual([
-        { part: "rule.first", change: "moved", from: "First rule.", to: "First rule." },
-        { part: "rule.last", change: "moved", from: "Last flow.", to: "Last flow." },
+        {
+          part: "rule.first",
+          change: "moved",
+          from: { list: "rules", text: "First rule." },
+          to: { list: "rules", text: "First rule." },
+        },
+        {
+          part: "rule.last",
+          change: "moved",
+          from: { list: "flows", text: "Last flow." },
+          to: { list: "flows", text: "Last flow." },
+        },
       ]);
       expect(result.bindings[0]?.verifiers.added).toEqual(["test:probe.a"]);
       expect(result.bindings[0]?.deliveryFacts.added).toEqual(["has-verifier"]);

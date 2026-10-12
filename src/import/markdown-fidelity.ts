@@ -57,6 +57,15 @@ function normalizeOpenQuestions(data: Record<string, unknown>): Record<string, u
   };
 }
 
+/** Object equality ignores key order, but ruleKeys records authored order across rules and flows. */
+function normalizeRuleKeys(data: Record<string, unknown>): Record<string, unknown> {
+  if (!isRecord(data.behavior) || !isRecord(data.behavior.ruleKeys)) return data;
+  return {
+    ...data,
+    behavior: { ...data.behavior, ruleKeys: Object.entries(data.behavior.ruleKeys) },
+  };
+}
+
 function firstDivergentPath(left: unknown, right: unknown, path = ""): string | undefined {
   if (isDeepStrictEqual(left, right)) {
     return undefined;
@@ -101,8 +110,8 @@ export function assertMarkdownEmissionFidelity(reified: ReifiedSpec, document: s
   }
 
   const divergent = firstDivergentPath(
-    normalizeOpenQuestions(normalizeRelations(reified.data)),
-    normalizeOpenQuestions(normalizeRelations(emitted.data)),
+    normalizeRuleKeys(normalizeOpenQuestions(normalizeRelations(reified.data))),
+    normalizeRuleKeys(normalizeOpenQuestions(normalizeRelations(emitted.data))),
   );
 
   if (divergent !== undefined) {
