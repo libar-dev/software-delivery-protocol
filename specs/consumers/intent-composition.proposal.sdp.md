@@ -7,7 +7,8 @@ relations:
   refines: spec:consumers.intent-composition
   dependsOn:
     - spec:consumers.edit-model
-    - spec:consumers.agent-surface.address-and-cycle-recipes
+    - target: spec:consumers.agent-surface.address-and-cycle-recipes
+      reason: the check resolves entry-address scopes through address resolution
     - spec:consumers.design-diff
 ---
 # A change proposal is addressed, based and checked before it lands
@@ -26,16 +27,14 @@ The first adopter's agents already write proposals in that shape. A design pass 
   - links: spec:consumers.spec-studio.intent-panel
   - provisional: a person reviews the proposal's JSON beside the proposal check's rows
 
-
 ## Contract
-- A proposal is one JSON document on one schema, which a recipe takes as a parameter; a Markdown memo of the proposal is a rendering of that document and never a second carrier.
+- A proposal is one JSON document on one schema, which a recipe takes as a parameter; a Markdown memo is a rendering of that document and never a second source of it.
 - A proposal names its scope as one or more Spec ids or entry addresses, each resolved before anything is applied: a Spec id through the reader's Spec context, an entry address through address resolution.
 - A proposal names the commit whose graph it was read against.
 - A proposal states the requested change in words an agent can apply, such as the exact text for an entry with the address it replaces or follows, a new open question with its flag, or a relation to declare or remove.
 - A proposal states its reason in one line.
-- Before a proposal is applied, the design diff between its base commit and the head is read entry by entry. A change whose scope moved since the base goes to a person instead of being applied, every other change applies, and one moved entry never holds back the whole proposal.
+- The proposal check compares each change's scope between the proposal's base commit and the working tree through the design diff, entry by entry, and reports each change on its own row, so one changed scope never hides the state of another change; the check applies nothing and routes nothing.
 - Applying a proposal is an ordinary source edit by an agent or a person; no tool rewrites a carrier from it, and nothing is applied to a copy of the graph first.
-- An applied proposal lands only from a worktree on which `sdp validate` reports no error, and the conformance and honesty checks stay the only gate.
 - A proposal carries no status, approval or verdict, and the graph records none; whether it was accepted is git history and the adopter's own record.
 - A proposal carries no proposer. Whoever hands it over is its author until it is applied, and then git authorship and co-author trailers are the record; the schema refuses the field.
 
@@ -46,4 +45,5 @@ The first adopter's agents already write proposals in that shape. A design pass 
 - proposalSchemaFile: the package ships the document's JSON Schema as `schemas/sdp-proposal-1.schema.json`, so an agent can use it as a structured-output schema; the check recipe validates the same shape itself, and a test holds the two to the same accepted and refused samples.
 - checkRecipe: recipe 38, the proposal check, takes `params.proposal` and `params.base`, the base graph, and returns `{ schemaProblems: [{ path, problem }], base, diagnostics, totals: { changes, moved, unresolved }, changes }`, with the design diff's `diagnostics` for the Specs it compares; when the document breaks the schema or the base graph is missing it returns the problems and no change rows.
 - checkedScope: the check resolves and compares the deduplicated union of `scope`, `replaces`, `follows` and `relation.from`, and a change row's `scope` reports that union, so an entry a change replaces or follows cannot move unseen.
-- checkRows: each change row is `{ index, scope: [{ ref, resolvesAtHead, resolvesAtBase, moved }], moved, relationTarget }`, where an item's `moved` is true when the design diff reports it changed, added or removed between the base and the head and the row's `moved` is true when any item moved, and `relationTarget` says whether a declared relation's target resolves; an item the two graphs cannot judge, because a part lies outside their common schema or one graph keeps no order across rules and flows, carries `comparable: false` and a `reason` in place of `moved`, and its row carries `comparable: false` and a null `moved` unless another item moved; the rows are facts, and routing a moved change to a person is the caller's step.
+- checkRows: each change row is `{ index, scope: [{ ref, resolvesAtHead, resolvesAtBase, moved }], moved, relationTarget }`; an item's `moved` is true when its Spec is added or removed between the two graphs, and otherwise, for an entry address, when the entry's value is added, removed or changed, an order-only move leaving it false, or, for a whole Spec, when any of its parts changed or moved in order; the row's `moved` is true when any item's is; `relationTarget` is `{ ref, resolvesAtHead }` for a declared relation and null otherwise.
+- incomparableScope: an item outside the common schema, or an otherwise unmoved whole-Spec item whose order across rules and flows one graph does not keep, carries `comparable: false` and a `reason` in place of `moved`; its row carries `comparable: false` and a null `moved` unless another item moved.
