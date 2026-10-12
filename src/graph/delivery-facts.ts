@@ -2,9 +2,6 @@ import { codeAnchorId, componentAnchorId, parseId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { DeliveryFactName, GraphEdge, GraphNode, PrimitiveNode } from "./schema.js";
 
-/**
- * Conferral law: `spec:extraction.delivery-facts`.
- */
 function hasTestNamespace(id: string): boolean {
   try {
     return parseId(id).namespace === "test";
@@ -13,6 +10,9 @@ function hasTestNamespace(id: string): boolean {
   }
 }
 
+/**
+ * Conferral law: `spec:extraction.delivery-facts`.
+ */
 /**
  * Returns whether `edge` is a resolving test-anchor `verifies` edge.
  * Shared by `computeDeliveryFacts`, the verifies-linkage check, and the reader's enabled decode.

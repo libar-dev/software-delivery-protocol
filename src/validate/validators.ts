@@ -1035,7 +1035,7 @@ function checkPackMembers(pack: PackNode, index: GraphIndex, findings: Finding[]
         memberId,
         listed === edges
           ? `Pack "${pack.id}" lists member "${memberId}" ${String(count)} times — membership is single-sourced on the manifest and duplicates are ambiguous (L2).`
-          : `Pack "${pack.id}" lists member "${memberId}" ${String(listed)} time(s) and carries ${String(edges)} belongsTo edges from it — membership is single-sourced on the manifest and duplicates are ambiguous (L2).`,
+          : `Pack "${pack.id}" lists member "${memberId}" ${String(listed)} time(s) and carries ${String(edges)} belongsTo edge(s) from it — membership is single-sourced on the manifest and duplicates are ambiguous (L2).`,
       );
     }
   }

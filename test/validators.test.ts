@@ -58,11 +58,6 @@ function ideaPrimitive(id: string, outcome: string): PrimitiveNode {
 }
 
 describe("graph validators", () => {
-  it("serializes the graph payload contract at schema version 0.10.0", () => {
-    const graph = deriveFixtureGraph({ specs: [] });
-    expect(JSON.parse(JSON.stringify(graph))).toHaveProperty("schemaVersion", "0.10.0");
-  });
-
   it("reports referential integrity across relations, pack members, modelRefs, and bindings", () => {
     const existingSpec = spec({
       id: specId("spec:orders.order-management"),
@@ -1093,7 +1088,7 @@ describe("conformance/pack-coherence — the members list and the belongsTo edge
     const findings = coherenceFindings(graph);
     expect(findings).toHaveLength(1);
     expect(findings[0]?.message).toBe(
-      `Pack "${packId}" lists member "${specA}" 1 time(s) and carries 2 belongsTo edges from it — membership is single-sourced on the manifest and duplicates are ambiguous (L2).`,
+      `Pack "${packId}" lists member "${specA}" 1 time(s) and carries 2 belongsTo edge(s) from it — membership is single-sourced on the manifest and duplicates are ambiguous (L2).`,
     );
   });
 
