@@ -2744,18 +2744,24 @@ that reading, down to each keyed entry.*
 limits Specs to that Pack's members at either commit. `params.detail` defaults to false; true
 includes the values and change type for every changed part.
 
-Write a base graph in a detached worktree inside your checkout. Use the engine built in your
-current checkout and the corpus's own exclusions. Replace `BASE` with the commit you read:
+In the Protocol source repository, write the base graph with the base worktree's own engine.
+Its constant-form anchors use relative builder imports, trusted against that engine's own source
+modules. A current-checkout engine cannot recognize those imports in another worktree. Replace
+`BASE` with the commit you read and use the corpus's own exclusions:
 
 ```sh
 git worktree add --detach .sdp-base BASE
-pnpm --silent sdp build .sdp-base --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+ln -s "$PWD/node_modules" .sdp-base/node_modules
+npm --prefix .sdp-base run build
+node .sdp-base/dist/cli/sdp.js build .sdp-base --exclude explorations --exclude examples --exclude test/fixtures/import/parity
 pnpm --silent sdp:q "$(cat dist/recipes/35-the-design-diff.js)" --params base=@.sdp-base/generated/graph.json --json
 git worktree remove .sdp-base
 ```
 
-An adopter uses its package runner and its own exclusions. The current engine derives both graphs
-in this example; a base written by another engine is also accepted and reports what cannot compare.
+The linked `node_modules` reuses this checkout's dependencies; use `npm --prefix .sdp-base ci`
+instead of the link when the base needs its own lockfile's versions. An adopter whose anchors
+import the package by name may build its base with the engine it has, using its package runner and
+its own exclusions. A base written by another engine is accepted and reports what cannot compare.
 The caller keeps the base commit outside the graph. The recipe reads only the two graph objects.
 
 ```js

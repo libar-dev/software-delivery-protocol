@@ -12,7 +12,7 @@ import {
   specTest,
   testAnchorId,
 } from "@libar-dev/software-delivery-protocol";
-import { extract } from "../src/index.js";
+import { extract, serializeGraph } from "../src/index.js";
 import type { ExtractionResult, GraphSchema } from "../src/index.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
@@ -341,16 +341,35 @@ describe("iteration loop: design diff", () => {
     });
   }, 20_000);
 
-  it("reads this repository's HEAD~1 through a temporary git worktree and compares it to the working tree", async () => {
+  it("runs the documented base-worktree procedure, preserves constant anchors, and compares HEAD~1", async () => {
     const directory = mkdtempSync(join(repoRoot, ".lane-l-git-"));
     const worktree = join(directory, "base");
     let added = false;
     try {
-      execFileSync("git", ["-C", repoRoot, "worktree", "add", "--detach", worktree, "HEAD~1"], {
-        stdio: "pipe",
-      });
       added = true;
-      const base = extract({ root: worktree, exclude: excludes });
+      const catalog = readFileSync(join(repoRoot, "docs/agent-surface/recipes.md"), "utf8");
+      const section = catalog.split(/^## 35\..+$/mu)[1]?.split(/^## /mu)[0];
+      const procedure = /```sh\n([\s\S]*?)\n```/u.exec(section ?? "")?.[1];
+      if (!procedure) throw new Error("missing documented base-worktree procedure");
+      const preparation = procedure.split(/^pnpm --silent sdp:q /mu)[0] ?? "";
+      const quotedWorktree = `'${worktree.replaceAll("'", "'\\''")}'`;
+      execFileSync(
+        "sh",
+        ["-c", preparation.replaceAll(".sdp-base", quotedWorktree).replace(/\bBASE\b/gu, "HEAD~1")],
+        {
+          cwd: repoRoot,
+          stdio: "pipe",
+        },
+      );
+      const base = {
+        ...extract({ root: worktree, exclude: excludes }),
+        graph: JSON.parse(
+          readFileSync(join(worktree, "generated/graph.json"), "utf8"),
+        ) as GraphSchema,
+      };
+      expect(base.graph.nodes.some((node) => node.id === "impl:protocol.schema-version")).toBe(
+        true,
+      );
       const head = extract({ root: repoRoot, exclude: excludes });
       expect(base.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
       expect(head.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
@@ -361,9 +380,10 @@ describe("iteration loop: design diff", () => {
       expect(result.head.specs).toBe(
         head.graph.nodes.filter((node) => node.nodeType === "Primitive").length,
       );
-      const authoredOf = (value: GraphSchema) =>
-        new Map(
-          value.nodes
+      const authoredOf = (value: GraphSchema) => {
+        const serialized = JSON.parse(serializeGraph(value)) as GraphSchema;
+        return new Map(
+          serialized.nodes
             .filter((node) => node.nodeType === "Primitive")
             .map((node) => [
               node.id,
@@ -371,13 +391,14 @@ describe("iteration loop: design diff", () => {
                 node: Object.fromEntries(
                   Object.entries(node).filter(([key]) => !["file", "deliveryFacts"].includes(key)),
                 ),
-                relations: value.edges.filter(
+                relations: serialized.edges.filter(
                   (edge) =>
                     edge.from === node.id && edge.claim === "declared" && edge.type !== "belongsTo",
                 ),
               }),
             ]),
         );
+      };
       const a = authoredOf(base.graph),
         b = authoredOf(head.graph);
       const changedIds = [...a.keys()].filter((id) => b.has(id) && a.get(id) !== b.get(id)).sort();
@@ -389,7 +410,7 @@ describe("iteration loop: design diff", () => {
         });
       rmSync(directory, { recursive: true, force: true });
     }
-  }, 20_000);
+  }, 60_000);
 
   it("compares a keyed rule that becomes a flow at the same address", async () => {
     await withCorpus(async (root, base) => {
