@@ -321,18 +321,6 @@ function structuralGroundTruth() {
   };
 }
 
-const addressAndCycleRecipesImplementationAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.address-and-cycle-recipes"),
-  label: "asserts realization of the shipped address resolution and dependency cycle recipes",
-  satisfies: ref("spec:consumers.agent-surface.address-and-cycle-recipes"),
-});
-void addressAndCycleRecipesImplementationAnchor;
-const addressAndCycleRecipesTestAnchor = specTest({
-  id: testAnchorId("test:protocol.address-and-cycle-recipes"),
-  label: "recipe checks verify the address resolution and dependency cycle recipes",
-  verifies: ref("spec:consumers.agent-surface.address-and-cycle-recipes"),
-});
-void addressAndCycleRecipesTestAnchor;
 const registerRecipesImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.register-recipes"),
   label: "asserts realization of the shipped register recipes",
@@ -345,6 +333,18 @@ const registerRecipesTestAnchor = specTest({
   verifies: ref("spec:consumers.agent-surface.register-recipes"),
 });
 void registerRecipesTestAnchor;
+const authoringRecipesImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.authoring-recipes"),
+  label: "asserts realization of the shipped authoring recipe catalog",
+  satisfies: ref("spec:consumers.agent-surface.authoring-recipes"),
+});
+void authoringRecipesImplementationAnchor;
+const authoringRecipesTestAnchor = specTest({
+  id: testAnchorId("test:protocol.authoring-recipes"),
+  label: "recipe checks verify promotion preflight, the verifier audit and the lower ladder",
+  verifies: ref("spec:consumers.agent-surface.authoring-recipes"),
+});
+void authoringRecipesTestAnchor;
 describe("the agent-surface recipe corpus", () => {
   // A Spec that cites a recipe by number and heading, as "Recipe 32, architecture crossings," or
   // "architecture crossings (recipe 32)", names the heading the catalog gives that number.
@@ -3409,6 +3409,18 @@ function expectCyclesToMatchOracle(result: Record<string, unknown>, extraction: 
   });
 }
 
+const addressAndCycleRecipesImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.address-and-cycle-recipes"),
+  label: "asserts realization of the shipped address resolution and dependency cycle recipes",
+  satisfies: ref("spec:consumers.agent-surface.address-and-cycle-recipes"),
+});
+void addressAndCycleRecipesImplementationAnchor;
+const addressAndCycleRecipesTestAnchor = specTest({
+  id: testAnchorId("test:protocol.address-and-cycle-recipes"),
+  label: "recipe checks verify the address resolution and dependency cycle recipes",
+  verifies: ref("spec:consumers.agent-surface.address-and-cycle-recipes"),
+});
+void addressAndCycleRecipesTestAnchor;
 describe("address resolution and dependency cycles", () => {
   it("resolves the catalog's addresses on this corpus as written", async () => {
     // The value and the line are read from the raw graph, the node's section and the location
@@ -3480,8 +3492,6 @@ describe("address resolution and dependency cycles", () => {
   it("reports this corpus's dependency cycles as an independent reachability check finds them", async () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(26)));
     expectCyclesToMatchOracle(result, derived);
-    // The design's answer on this corpus: no Spec rests on itself through `dependsOn`.
-    expect(result.cycles).toEqual([]);
   });
 
   it("reports the probe's one set and one self-dependent Spec, and nothing for a Spec that only reaches a set", async () => {

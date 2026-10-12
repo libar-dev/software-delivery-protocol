@@ -2078,7 +2078,7 @@ function unrecognizedStatement(file: string, line: number, message: string): Fin
 const staticReificationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.static-reification"),
   label: "reifies authored carriers from the AST and never evaluates them",
-  satisfies: ref("spec:extraction.determinism"),
+  satisfies: [ref("spec:extraction.determinism"), ref("spec:carrier.markdown-parser")],
   component: componentAnchorId("component:protocol.extract"),
   role: "extractor",
 });

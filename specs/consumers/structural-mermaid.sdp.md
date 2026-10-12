@@ -20,6 +20,7 @@ The shipped Mermaid projection draws bounded diagrams rooted at a Spec or a Pack
   - trigger: a named reader with that need, plus a decision that refines `spec:decisions.shipped-projections-frozen` for the affected Mermaid rendering or supersedes that ruling whole
 - [non-blocking #layerAndContext] Would a component diagram group its nodes by context and order them by layer, and would that make it the architecture view the Studio's architecture lens draws?
   - decider: owner
+  - links: spec:consumers.spec-studio.lenses#question.architectureVocabulary
   - provisional: the diagram folds into the Studio's architecture lens when that lens is designed, rather than becoming a Mermaid root
 
 ## Behavior

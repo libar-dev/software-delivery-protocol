@@ -22,7 +22,7 @@ import {
  *
  * @sdpAnchor test:protocol.pack-design
  * @sdpLabel the Pack context carries each member's design and the Pack's boundary
- * @sdpVerifies spec:consumers.pack-design
+ * @sdpVerifies spec:consumers.pack-design, spec:model.design-maturity
  */
 
 const TYPED_TARGETS = "typed-dependency-targets-are-defined";

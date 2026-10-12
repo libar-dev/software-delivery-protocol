@@ -4,7 +4,9 @@ kind: behavior
 altitude: story
 readiness: ready
 relations:
-  refines: spec:consumers.adopter-on-ramp
+  dependsOn:
+    target: spec:consumers.adopter-on-ramp
+    reason: an adopter pinned to a build asks the CLI the adopter on-ramp points it to which build it runs
   constrainedBy: spec:extraction.determinism
 ---
 # The CLI names the engine that produced a result

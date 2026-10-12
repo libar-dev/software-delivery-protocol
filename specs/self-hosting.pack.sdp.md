@@ -7,6 +7,7 @@ specs:
   - spec:carrier.markdown-parser.bounded-parity
   - spec:carrier.sdp-import
   - spec:carrier.sdp-import.round-trip
+  - spec:carrier.sdp-import.feature-adapter
   - spec:carrier.prose-ownership-rule
   - spec:carrier.markdown-pack-authoring
   - spec:carrier.markdown-pack-authoring.markdown-ts-parity
@@ -156,6 +157,7 @@ specs:
   - spec:consumers.agent-surface.scripted-context-body
   - spec:consumers.agent-surface.demand-map-entries
   - spec:consumers.agent-surface.answer-shapes
+  - spec:consumers.agent-surface.evaluation-sink
   - spec:consumers.design-review
   - spec:consumers.design-review.pure-projection
   - spec:consumers.census-page
@@ -167,6 +169,7 @@ specs:
   - spec:consumers.reader.changeset-entry
   - spec:consumers.edit-model
   - spec:consumers.authoring-on-ramp
+  - spec:consumers.reading-on-ramp
   - spec:consumers.delivery-session-on-ramp
   - spec:consumers.agent-surface.authoring-recipes
   - spec:consumers.agent-surface.register-recipes

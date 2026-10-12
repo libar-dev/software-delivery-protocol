@@ -64,15 +64,6 @@ async function runRecipe<T>(
   expect({ exitCode, stderr: capture.readStderr() }).toEqual({ exitCode: 0, stderr: "" });
   return JSON.parse(capture.readStdout()) as T;
 }
-// Fixture graphs include the optional fields defined by schema 0.10.0. Checkout probes retain
-// the engine's declared version, including historical 0.9.0 inputs with uncertain capabilities.
-function extractFixture(options: Parameters<typeof extract>[0]): ExtractionResult {
-  const derived = extract(options);
-  return {
-    ...derived,
-    graph: { ...derived.graph, schemaVersion: "0.10.0" as GraphSchema["schemaVersion"] },
-  };
-}
 function specDocument(id: string, body: string, relations = "{}", kind = "behavior"): string {
   return `---\nid: spec:probe.${id}\nkind: ${kind}\naltitude: story\nreadiness: scoped\nrelations: ${relations}\n---\n# ${id}\n\nNarrative for ${id}.\n\n## Intent\n- outcome: Read ${id} in context.\n\n${body}\n`;
 }
@@ -103,7 +94,7 @@ function withCorpus<T>(run: (root: string, base: ExtractionResult) => T): T {
     mkdirSync(template);
     for (const [path, text] of Object.entries(documents)) writeFileSync(join(template, path), text);
     cpSync(template, copy, { recursive: true });
-    const base = extractFixture({ root: copy });
+    const base = extract({ root: copy });
     expect(base.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
     const result = run(copy, base);
     // Keep asynchronous callbacks alive until their own finally removes the fixture.
@@ -198,7 +189,7 @@ describe("iteration loop: design diff", () => {
         "  - spec:probe.b\n  - spec:probe.a",
       );
       edit(root, "anchors.ts", "@sdpSatisfies spec:probe.a", "@sdpReferences spec:probe.a");
-      const head = extractFixture({ root });
+      const head = extract({ root });
       expect(head.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
       const result = await runRecipe<Diff>(35, { base: base.graph, detail: true }, head);
       expect(result.specs.changed.find((row) => row.id === "spec:probe.a")?.parts).toEqual(
@@ -267,7 +258,7 @@ describe("iteration loop: design diff", () => {
         "## Behavior",
         "### Open questions\n- [blocking #one] First question?\n  - decider: owner\n- [non-blocking #two] Second question?\n- [non-blocking] Unkeyed question?\n\n## Behavior",
       );
-      const base = extractFixture({ root });
+      const base = extract({ root });
       edit(
         root,
         "b.sdp.md",
@@ -280,7 +271,7 @@ describe("iteration loop: design diff", () => {
       const result = await runRecipe<Diff>(
         35,
         { base: base.graph, detail: true },
-        extractFixture({ root }),
+        extract({ root }),
       );
       const parts = result.specs.changed.find((row) => row.id === "spec:probe.b")?.parts ?? [];
       expect(parts.map(({ part, change }) => ({ part, change }))).toEqual(
@@ -307,7 +298,7 @@ describe("iteration loop: design diff", () => {
         join(root, "new.pack.sdp.md"),
         "---\nid: pack:probe.new\nspecs: [spec:probe.new]\n---\n# New Pack\n",
       );
-      const head = extractFixture({ root });
+      const head = extract({ root });
       const result = await runRecipe<Diff>(
         35,
         { base: base.graph, pack: "pack:probe.review", detail: true },
@@ -464,7 +455,7 @@ describe("iteration loop: design diff", () => {
   it("compares a keyed rule that becomes a flow at the same address", async () => {
     await withCorpus(async (root, base) => {
       edit(root, "a.sdp.md", "- rule: [#first] First rule.", "- flow: [#first] First rule.");
-      const head = extractFixture({ root });
+      const head = extract({ root });
       const diff = await runRecipe<Diff>(35, { base: base.graph, detail: true }, head);
       expect(diff.specs.changed.find((row) => row.id === "spec:probe.a")?.parts).toContainEqual({
         part: "rule.first",
@@ -496,14 +487,14 @@ describe("iteration loop: design diff", () => {
     await withCorpus(async (root) => {
       edit(root, "a.sdp.md", "## Design\n- alpha: `Alpha` declaration\n- beta: Beta text\n\n", "");
       edit(root, "b.sdp.md", "\n\n## Design\n- layer: domain", "");
-      const base = { ...extractFixture({ root }).graph, schemaVersion: "0.8.0" };
+      const base = { ...extract({ root }).graph, schemaVersion: "0.8.0" };
       edit(
         root,
         "b.sdp.md",
         "- rule: B rule.",
         "- rule: B rule.\n\n## Design\n- added: New design.",
       );
-      const head = extractFixture({ root });
+      const head = extract({ root });
       const diff = await runRecipe<Diff>(35, { base, detail: true }, head);
       expect(diff.diagnostics.map((row) => row.part)).toContain("schemaVersion");
       expect(diff.diagnostics.map((row) => row.part)).not.toContain("design");
@@ -543,7 +534,7 @@ describe("iteration loop: design diff", () => {
         const base = { ...derived.graph, schemaVersion: baseVersion };
         edit(root, "a.sdp.md", "A needs the outside law.", "Changed relation reason.");
         edit(root, "a.sdp.md", "- alpha: `Alpha` declaration", "- alpha: `Changed` declaration");
-        const extracted = extractFixture({ root });
+        const extracted = extract({ root });
         const head = {
           ...extracted,
           graph: { ...extracted.graph, schemaVersion: headVersion as GraphSchema["schemaVersion"] },
@@ -649,7 +640,7 @@ describe("iteration loop: design diff", () => {
         "- rule: [#first] First rule.\n- flow: [#last] Last flow.",
         "- flow: [#last] Last flow.\n- rule: [#first] First rule.",
       );
-      const head = extractFixture({ root });
+      const head = extract({ root });
       const base = legacyOf(head.graph);
       const diff = await runRecipe<Diff>(35, { base, detail: true }, head);
       expect(diff.specs.changed).toEqual([]);
@@ -676,7 +667,7 @@ describe("iteration loop: design diff", () => {
       expect(check.changes[0]?.moved).toBeNull();
       // Values and order within one list still compare.
       edit(root, "a.sdp.md", "- rule: [#first] First rule.", "- rule: [#first] Changed rule.");
-      const changed = extractFixture({ root });
+      const changed = extract({ root });
       const later = await runRecipe<Diff>(35, { base, detail: true }, changed);
       expect(
         later.specs.changed
@@ -699,11 +690,11 @@ describe("iteration loop: design diff", () => {
         "- flow: [#last] Last flow.",
         "- flow: [#last] Last flow.\n- flow: [#second] Second flow.",
       );
-      const base = legacyOf(extractFixture({ root }).graph);
+      const base = legacyOf(extract({ root }).graph);
       const partsOf = async (from: string, to: string) => {
         const text = readFileSync(join(root, "a.sdp.md"), "utf8");
         edit(root, "a.sdp.md", from, to);
-        const diff = await runRecipe<Diff>(35, { base, detail: true }, extractFixture({ root }));
+        const diff = await runRecipe<Diff>(35, { base, detail: true }, extract({ root }));
         writeFileSync(join(root, "a.sdp.md"), text);
         return Object.fromEntries(
           (diff.specs.changed.find((row) => row.id === "spec:probe.a")?.parts ?? []).map((row) => [
@@ -850,7 +841,7 @@ describe("relation reasons in planning recipes", () => {
       );
       const result = await runRecipe<{
         reasons: { type: string; from: string; to: string; reason: string }[];
-      }>(19, { spec: "spec:probe.a" }, extractFixture({ root }));
+      }>(19, { spec: "spec:probe.a" }, extract({ root }));
       expect(result.reasons).toEqual([
         {
           type: "dependsOn",
@@ -903,7 +894,7 @@ describe("iteration loop: perspective filter", () => {
   it("matches every declared selector, combines requirements, and keeps authored order unless prioritized", async () => {
     await withCorpus(async (root) => {
       addQuestions(root);
-      const derived = extractFixture({ root });
+      const derived = extract({ root });
       const query = (select: Record<string, unknown>, order?: string[]) =>
         runRecipe<Perspective>(
           37,
@@ -950,7 +941,7 @@ describe("iteration loop: perspective filter", () => {
       ]);
       expect(result.notSelected).toEqual(["spec:probe.a", "spec:probe.model"]);
       // Reading changes no content, including the member's non-blocking question.
-      expect(derived.graph).toEqual(extractFixture({ root }).graph);
+      expect(derived.graph).toEqual(extract({ root }).graph);
       edit(root, "b.sdp.md", "relations: {}", "relations:\n  dependsOn: spec:probe.a");
       const incoming = await runRecipe<Perspective>(
         37,
@@ -961,7 +952,7 @@ describe("iteration loop: perspective filter", () => {
             select: { relations: [{ type: "dependsOn", direction: "in", target: "spec:probe.b" }] },
           },
         },
-        extractFixture({ root }),
+        extract({ root }),
       );
       expect(incoming.selected.map((row) => row.id)).toEqual(["spec:probe.a"]);
     });
@@ -973,7 +964,7 @@ describe("iteration loop: perspective filter", () => {
         join(root, "architecture.ts"),
         "/**\n * @sdpAnchor component:probe.domain\n * @sdpLayer domain\n * @sdpContext orders\n */\nexport const domain = 1;\n/**\n * @sdpAnchor impl:probe.b\n * @sdpReferences spec:probe.b\n * @sdpComponent component:probe.domain\n */\nexport const b = 1;\n",
       );
-      const derived = extractFixture({ root });
+      const derived = extract({ root });
       const query = (bindings: unknown) =>
         runRecipe<Perspective>(
           37,
@@ -1102,7 +1093,7 @@ describe("iteration loop: context bundle", () => {
   it("composes both scopes, dependency footing, declarations, example bindings and a perspective subset", async () => {
     await withCorpus(async (root) => {
       prepareBundleCorpus(root);
-      const derived = extractFixture({ root });
+      const derived = extract({ root });
       const result = await runRecipe<Bundle>(36, { pack: "pack:probe.review" }, derived);
       expect(result.leftOut).toEqual([]);
       expect(result.used).toBe(JSON.stringify(result).length);
@@ -1175,7 +1166,7 @@ describe("iteration loop: context bundle", () => {
     await withCorpus(async (root) => {
       prepareBundleCorpus(root);
       edit(root, "b.sdp.md", "# b", "# b 🐈");
-      const derived = extractFixture({ root });
+      const derived = extract({ root });
       let prior = await runRecipe<Bundle>(
         36,
         { pack: "pack:probe.review", budget: 100000 },
@@ -1253,7 +1244,7 @@ export const dotted = spec({
   design: { "a.b": "\`Thing\` required detail", ab: "\`Thing\` required detail", notes: ${JSON.stringify(long)} },
 });`,
       );
-      const derived = extractFixture({ root });
+      const derived = extract({ root });
       expect(derived.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
       const specs = ["spec:probe.dotted"];
       let result = await runRecipe<Bundle>(36, { specs, budget: 100000 }, derived);
@@ -1513,11 +1504,11 @@ describe("iteration loop: proposal schema and check", () => {
   it("checks the complete scope union, resolves both graphs, and reports each change independently", async () => {
     await withCorpus(async (root) => {
       addQuestions(root);
-      const base = extractFixture({ root });
+      const base = extract({ root });
       edit(root, "a.sdp.md", "`Alpha` declaration", "`Changed` declaration");
       edit(root, "a.sdp.md", "Panel text", "Changed panel text");
       edit(root, "b.sdp.md", "A blocking question?", "Changed blocking question?");
-      const head = extractFixture({ root });
+      const head = extract({ root });
       const proposal = {
         ...sampleProposal,
         changes: [
@@ -1613,7 +1604,7 @@ describe("iteration loop: proposal schema and check", () => {
       edit(root, "a.sdp.md", "## UI\n- panel: Panel text", "");
       rmSync(join(root, "b.sdp.md"));
       writeFileSync(join(root, "new.sdp.md"), specDocument("new", "## Design\n- entry: New entry"));
-      const head = extractFixture({ root });
+      const head = extract({ root });
       const diff = await runRecipe<Diff>(35, { base: base.graph, detail: true }, head);
       const refs = [
         "spec:probe.a",
@@ -1662,7 +1653,7 @@ describe("iteration loop: proposal schema and check", () => {
   it("excludes anchor-only changes and requires the caller's base graph", async () => {
     await withCorpus(async (root, base) => {
       edit(root, "anchors.ts", "@sdpSatisfies spec:probe.a", "@sdpReferences spec:probe.a");
-      const head = extractFixture({ root });
+      const head = extract({ root });
       const result = await runRecipe<ProposalCheck>(
         38,
         {
@@ -1710,7 +1701,7 @@ describe("iteration loop: comparison and budget edges", () => {
         join(root, "test.ts"),
         "/**\n * @sdpAnchor test:probe.a\n * @sdpVerifies spec:probe.a\n */\nexport const test = 1;\n",
       );
-      const head = extractFixture({ root });
+      const head = extract({ root });
       const result = await runRecipe<Diff & { bindings: { verifiers: { added: string[] } }[] }>(
         35,
         { base: base.graph, detail: true },
@@ -1733,7 +1724,7 @@ describe("iteration loop: comparison and budget edges", () => {
       expect(result.bindings[0]?.verifiers.added).toEqual(["test:probe.a"]);
       expect(result.bindings[0]?.deliveryFacts.added).toEqual(["has-verifier"]);
       rmSync(join(root, "review.pack.sdp.md"));
-      const removed = await runRecipe<Diff>(35, { base: base.graph }, extractFixture({ root }));
+      const removed = await runRecipe<Diff>(35, { base: base.graph }, extract({ root }));
       expect(removed.packs).toEqual([
         {
           id: "pack:probe.review",
@@ -1749,7 +1740,7 @@ describe("iteration loop: comparison and budget edges", () => {
   it("cuts example text in both member sections and related examples and preserves locations after the fifth cut", async () => {
     await withCorpus(async (root) => {
       prepareBundleCorpus(root);
-      const derived = extractFixture({ root });
+      const derived = extract({ root });
       const specs = ["spec:probe.a", "spec:probe.b", "spec:probe.example"];
       let result = await runRecipe<Bundle>(36, { specs, budget: 100000 }, derived);
       expect(JSON.stringify(result.members[0]?.examples)).toContain("Step text secret");
@@ -1823,7 +1814,7 @@ describe("iteration loop: example enablement", () => {
         join(root, "nested-test.ts"),
         "/**\n * @sdpAnchor test:probe.nested\n * @sdpVerifies spec:probe.nested\n */\nexport const test = 1;\n",
       );
-      const derived = extractFixture({ root });
+      const derived = extract({ root });
       const example = derived.graph.nodes.find((node) => node.id === "spec:probe.example");
       expect(
         example?.nodeType === "Primitive" && example.deliveryFacts?.includes("has-verifier"),
@@ -1843,7 +1834,7 @@ describe("iteration loop: anonymous collection order", () => {
         "## Behavior",
         "### Open questions\n- [non-blocking #one] Keyed question?\n- [non-blocking] Anonymous question?\n\n## Behavior",
       );
-      const base = extractFixture({ root });
+      const base = extract({ root });
       edit(
         root,
         "a.sdp.md",
@@ -1856,7 +1847,7 @@ describe("iteration loop: anonymous collection order", () => {
         "- [non-blocking #one] Keyed question?\n- [non-blocking] Anonymous question?",
         "- [non-blocking] Anonymous question?\n- [non-blocking #one] Keyed question?",
       );
-      const head = extractFixture({ root });
+      const head = extract({ root });
       const diff = await runRecipe<Diff>(35, { base: base.graph, detail: true }, head);
       expect(
         diff.specs.changed.map((row) => ({
@@ -1906,7 +1897,7 @@ describe("iteration loop: protected entry addresses", () => {
         "\n  - links: spec:probe.a#rule.last\n\n## Behavior",
       );
       edit(root, "example.sdp.md", "Step text secret", "Step text secret spec:probe.a#rule.first");
-      const derived = extractFixture({ root });
+      const derived = extract({ root });
       let result = await runRecipe<Bundle>(
         36,
         { specs: ["spec:probe.a", "spec:probe.b", "spec:probe.example"], budget: 100000 },
