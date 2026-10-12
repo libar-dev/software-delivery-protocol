@@ -747,6 +747,14 @@ describe("query body positions and merged parameters", () => {
     );
   });
 
+  it("names a body that stops short instead of the wrapper's closing brace", async () => {
+    const capture = createCaptureOutput();
+    expect(await runQ(["return [1, 2", "--root", scratch], capture)).toBe(1);
+    expect(capture.readStderr()).toBe(
+      "sdp q: the body does not parse at line 1, column 13: the body ends before it is complete\n",
+    );
+  });
+
   it("keeps runtime failures separate, including a thrown SyntaxError", async () => {
     const capture = createCaptureOutput();
     expect(

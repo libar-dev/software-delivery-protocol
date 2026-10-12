@@ -101,11 +101,16 @@ export function compileBody(source: string): CompiledBody {
       const lines = source.split("\n");
       const wrapperLine = Number(position?.[1] ?? 2);
       const line = Math.max(1, Math.min(lines.length, wrapperLine - 1));
-      const column =
-        wrapperLine - 1 > lines.length
-          ? (lines[line - 1]?.length ?? 0) + 1
-          : (position?.[2]?.length ?? 0) + 1;
-      throw new BodyParseError(line, column, oneLine(errorMessage(syntaxError)));
+      // An error on the wrapper's closing line means the body stopped short; the engine would
+      // name the wrapper's own brace, a token the caller never wrote.
+      const pastEnd = wrapperLine - 1 > lines.length;
+      const column = pastEnd
+        ? (lines[line - 1]?.length ?? 0) + 1
+        : (position?.[2]?.length ?? 0) + 1;
+      const message = pastEnd
+        ? "the body ends before it is complete"
+        : oneLine(errorMessage(syntaxError));
+      throw new BodyParseError(line, column, message);
     }
     throw error;
   }
