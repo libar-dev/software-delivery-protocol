@@ -3546,13 +3546,16 @@ neither step. The law is `spec:consumers.intent-composition.proposal`.
 declarations with the bound artifacts before removing duplicated Design detail.*
 
 The optional parameter is `params.pack`; without it the body reads every Spec. An unknown Pack
-selects no Specs. A row is a potential candidate, never permission to delete an entry.
+returns `{ pack, found: false }`. An existing Pack with no candidates keeps its totals and empty
+rows. A row is a potential candidate, never permission to delete an entry.
 
 ```js
 const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
+const pack = params.pack === undefined ? undefined : g.packContext(params.pack);
+if (params.pack !== undefined && !pack) return { pack: params.pack, found: false };
 const specs = params.pack === undefined
   ? g.specs()
-  : (g.packContext(params.pack)?.members ?? []);
+  : pack.members;
 const rows = [];
 for (const spec of specs) {
   const context = g.specContext(spec.id);

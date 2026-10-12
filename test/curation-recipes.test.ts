@@ -133,11 +133,19 @@ describe("slimming candidates recipe", () => {
         file: "probe.pack.sdp.md",
         members: ["spec:probe.eligible"],
       },
+      {
+        id: "pack:probe.clean",
+        nodeType: "Pack",
+        claim: "declared",
+        file: "clean.pack.sdp.md",
+        members: ["spec:probe.bare"],
+      },
     ],
     edges: [
       edge("impl:probe.eligible", "satisfies", "spec:probe.eligible"),
       edge("test:probe.eligible", "verifies", "spec:probe.eligible"),
       edge("spec:probe.eligible", "belongsTo", "pack:probe.one", "declared"),
+      edge("spec:probe.bare", "belongsTo", "pack:probe.clean", "declared"),
     ],
     locations: [
       { spec: "spec:probe.eligible", file: "specs/probe.sdp.md", entry: "design.aShape", line: 17 },
@@ -184,14 +192,25 @@ describe("slimming candidates recipe", () => {
     ]);
   });
 
-  it("selects only Pack members and returns no rows for an unknown Pack", async () => {
+  it("selects only Pack members and returns no rows for a clean Pack", async () => {
     expect((await runRecipe(39, graph, { pack: "pack:probe.one" })).totals).toEqual({
       specs: 1,
       potentialCandidates: 2,
     });
-    const result = await runRecipe(39, graph, { pack: "pack:probe.unknown" });
-    expect(result.totals).toEqual({ specs: 0, potentialCandidates: 0 });
+    const result = await runRecipe(39, graph, { pack: "pack:probe.clean" });
+    expect(result.totals).toEqual({ specs: 1, potentialCandidates: 0 });
     expect(result.rows).toEqual([]);
+  });
+
+  it("distinguishes an unknown Pack from a clean existing Pack", async () => {
+    expect(await runRecipe(39, graph, { pack: "pack:probe.unknown" })).toEqual({
+      pack: "pack:probe.unknown",
+      found: false,
+    });
+    const clean = await runRecipe(39, graph, { pack: "pack:probe.clean" });
+    expect(clean.totals).toEqual({ specs: 1, potentialCandidates: 0 });
+    expect(clean.rows).toEqual([]);
+    expect(clean).not.toHaveProperty("found", false);
   });
 
   it("includes enabled example verifier bindings without claiming they realize an entry", async () => {
