@@ -25,6 +25,8 @@ import { setOwn } from "./set-own.js";
 interface ReifiedRelation {
   readonly type: GraphEdgeType;
   readonly target: string;
+  readonly reason?: string;
+  readonly exercises?: readonly string[];
 }
 
 /**
@@ -94,10 +96,16 @@ function deriveEntryLocations(specs: readonly ReifiedSpec[]): readonly EntryLoca
             : undefined;
         const question: unknown =
           index !== undefined && Array.isArray(questions) ? questions[Number(index)] : undefined;
-        const key =
+        let key =
           typeof question === "object" && question !== null && "key" in question
             ? question.key
             : undefined;
+        const behavior = spec.data.behavior as { ruleKeys?: Record<string, string> } | undefined;
+        const ruleEntry = entry.replace(/^rule\[/u, "rules[").replace(/^flow\[/u, "flows[");
+        if (/^(rule|flow)\[/u.test(entry))
+          key = Object.entries(behavior?.ruleKeys ?? {}).find(
+            ([, path]) => path === ruleEntry,
+          )?.[0];
         return {
           spec: spec.id,
           file: spec.file,
@@ -249,6 +257,8 @@ export function deriveGraph(
         type: relation.type,
         to: relation.target,
         claim: "declared",
+        ...(relation.reason === undefined ? {} : { reason: relation.reason }),
+        ...(relation.exercises === undefined ? {} : { exercises: relation.exercises }),
       });
     }
   }

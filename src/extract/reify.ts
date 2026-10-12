@@ -1,3 +1,4 @@
+import { normalizeAuthoring, relationOptionsRefusal } from "./authoring-normalization.js";
 import { Node, SyntaxKind, VariableDeclarationKind } from "ts-morph";
 import type {
   ArrayLiteralExpression,
@@ -793,7 +794,10 @@ const RECOGNIZED_SECTION_PROPERTIES: ReadonlyMap<string, ReadonlySet<string>> = 
       "openQuestions",
     ]),
   ],
-  ["intent.openQuestions[]", new Set(["question", "blocking", "key"])],
+  [
+    "intent.openQuestions[]",
+    new Set(["question", "blocking", "key", "decider", "links", "provisional", "trigger"]),
+  ],
   ["behavior", new Set(["description", "rules", "examples", "flows", "exampleSpace"])],
   ["behavior.examples[]", GWT_PROPERTY_NAMES],
   ["behavior.exampleSpace", GWT_PROPERTY_NAMES],
@@ -1074,6 +1078,41 @@ function typeScriptEntryLines(
       }
     }
   }
+  const behavior = data.behavior;
+  const behaviorNode = firstPropertyNamed(objectLiteral, "behavior")?.getInitializer();
+  for (const field of ["rules", "flows"]) {
+    const node =
+      behaviorNode === undefined
+        ? undefined
+        : firstPropertyNamed(behaviorNode, field)?.getInitializer();
+    const array = node === undefined ? undefined : unwrapTransparent(node);
+    if (
+      isUnknownRecord(behavior) &&
+      Array.isArray(behavior[field]) &&
+      array !== undefined &&
+      Node.isArrayLiteralExpression(array)
+    ) {
+      array.getElements().forEach((element, index) =>
+        lines.push({
+          entry: `${field === "rules" ? "rule" : "flow"}[${String(index)}]`,
+          line: element.getStartLineNumber(),
+        }),
+      );
+    }
+  }
+  const relationsNode = firstPropertyNamed(objectLiteral, "relations")?.getInitializer();
+  const relationsArray = relationsNode === undefined ? undefined : unwrapTransparent(relationsNode);
+  if (relationsArray !== undefined && Node.isArrayLiteralExpression(relationsArray)) {
+    const relations = data.relations as Record<string, unknown>[];
+    relationsArray.getElements().forEach((element, index) => {
+      const relation = relations[index];
+      if (relation !== undefined)
+        lines.push({
+          entry: `relation.${String(relation.type)}.${String(relation.target)}`,
+          line: element.getStartLineNumber(),
+        });
+    });
+  }
   const intent = data.intent;
   const intentNode = firstPropertyNamed(objectLiteral, "intent")?.getInitializer();
   const questionsNode =
@@ -1094,6 +1133,14 @@ function typeScriptEntryLines(
         entry: `question[${String(index)}]`,
         line: (question ?? element).getStartLineNumber(),
       });
+      for (const field of ["decider", "links", "provisional", "trigger"]) {
+        const property = firstPropertyNamed(element, field);
+        if (property !== undefined)
+          lines.push({
+            entry: `question[${String(index)}].${field}`,
+            line: property.getStartLineNumber(),
+          });
+      }
     }
   }
   return lines;
@@ -1194,7 +1241,7 @@ function appendSectionPropertyFindings(
     findings.push(
       createExtractFinding(
         extractFindingIds.unrecognizedProperty,
-        "warning",
+        /^intent\.openQuestions\[\d+\]\./u.test(issue.path) ? "error" : "warning",
         `property "${issue.path}" is outside the authored section shape and is dropped — authored content must never silently fall out of the graph (L2)`,
         file,
         issue.line,
@@ -1298,7 +1345,11 @@ function appendDropFindings(
     findings.push(
       createExtractFinding(
         extractFindingIds.nonStaticSection,
-        "warning",
+        /^intent\.openQuestions\[\d+\]\.(decider|links|provisional|trigger)$/u.test(
+          drop.failurePath,
+        )
+          ? "error"
+          : "warning",
         `property "${drop.droppedPath}" dropped: at "${drop.failurePath}", ${drop.reason}`,
         file,
         drop.line,
@@ -1371,12 +1422,12 @@ function reifyRelations(
     const builderArguments = builderCall.call.getArguments();
     const [target] = builderArguments;
 
-    if (builderArguments.length !== 1 || target === undefined) {
+    if ((builderArguments.length !== 1 && builderArguments.length !== 2) || target === undefined) {
       findings.push(
         createExtractFinding(
           extractFindingIds.nonStaticEnvelope,
           "error",
-          `"${entryPath}" must wrap exactly one spec id target`,
+          `"${entryPath}" must wrap one spec id target and optional relation options`,
           file,
           builderCall.call.getStartLineNumber(),
           subjectId,
@@ -1395,7 +1446,55 @@ function reifyRelations(
       continue;
     }
 
-    relations.push({ type: builderCall.builder, target: idResult.id, claim: "declared" });
+    const optionsNode = builderArguments[1];
+    let options: Record<string, unknown> = {};
+    if (optionsNode !== undefined) {
+      const result = reifyStaticValue(optionsNode, entryPath, bindings);
+      const refusal = result.ok
+        ? relationOptionsRefusal(result.value, builderCall.builder)
+        : result.failure.reason;
+      if (refusal !== undefined) {
+        findings.push(
+          createExtractFinding(
+            extractFindingIds.nonStaticEnvelope,
+            "error",
+            refusal,
+            file,
+            optionsNode.getStartLineNumber(),
+            subjectId,
+            entryPath,
+          ),
+        );
+        ok = false;
+        continue;
+      }
+      options = result.ok ? (result.value as Record<string, unknown>) : {};
+    }
+    if (
+      relations.some(
+        (relation) => relation.type === builderCall.builder && relation.target === idResult.id,
+      )
+    ) {
+      findings.push(
+        createExtractFinding(
+          extractFindingIds.nonStaticEnvelope,
+          "error",
+          "duplicate target within one relation type",
+          file,
+          element.getStartLineNumber(),
+          subjectId,
+          entryPath,
+        ),
+      );
+      ok = false;
+      continue;
+    }
+    relations.push({
+      type: builderCall.builder,
+      target: idResult.id,
+      claim: "declared",
+      ...options,
+    });
   }
 
   return { ok, relations };
@@ -2075,5 +2174,5 @@ export function reifySourceFile(
     );
   }
 
-  return { specs, packs, findings };
+  return normalizeAuthoring({ specs, packs, findings });
 }

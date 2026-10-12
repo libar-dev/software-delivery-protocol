@@ -1,3 +1,4 @@
+import { questionFields } from "./authoring-normalization.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { ReifiedEntryLine } from "./reify.js";
@@ -20,6 +21,10 @@ interface OpenQuestion {
   readonly question: string;
   readonly blocking: boolean;
   readonly key?: string;
+  decider?: string;
+  links?: string[];
+  provisional?: string;
+  trigger?: string;
 }
 
 /**
@@ -71,7 +76,7 @@ export function mapIntent(
   findings: Finding[],
   entryLines: ReifiedEntryLine[],
 ): void {
-  const parsed = parseSectionContent(lines, file, findings);
+  const parsed = parseSectionContent(lines, file, findings, true);
   addDescription(section, parsed.description, file, lines[0]?.line ?? 1, findings);
   if (parsed.fences.length > 0) {
     if (kind !== "example" || parsed.fences.length !== 1 || parsed.fences[0]?.kind !== "gwt")
@@ -140,6 +145,38 @@ export function mapIntent(
           ...(key === undefined ? {} : { key }),
         };
         entryLines.push({ entry: `question[${String(earlier.length)}]`, line: item.line });
+        const seenFields = new Set<string>();
+        for (const field of item.fields ?? []) {
+          const match = /^ {2}- ([A-Za-z]+): (.*)$/u.exec(field.text);
+          const name = match?.[1];
+          const value = match?.[2];
+          if (
+            name === undefined ||
+            value === undefined ||
+            !questionFields.some((known) => known === name)
+          ) {
+            addMarkdownFinding(
+              findings,
+              structureFinding(file, field.line, "unknown or malformed question field"),
+            );
+            continue;
+          }
+          if (seenFields.has(name)) {
+            addMarkdownFinding(
+              findings,
+              structureFinding(file, field.line, "question fields must appear at most once"),
+            );
+            continue;
+          }
+          seenFields.add(name);
+          entryLines.push({
+            entry: `question[${String(earlier.length)}].${name}`,
+            line: field.line,
+          });
+          if (name === "links") entry.links = value.split(",").map((target) => target.trim());
+          else if (name === "decider" || name === "provisional" || name === "trigger")
+            entry[name] = value;
+        }
         section.openQuestions = [...earlier, entry];
       }
       continue;
@@ -173,6 +210,7 @@ export function mapBehavior(
   lines: readonly MarkdownLine[],
   file: string,
   findings: Finding[],
+  entryLines: ReifiedEntryLine[],
 ): void {
   const parsed = parseSectionContent(lines, file, findings);
   addDescription(section, parsed.description, file, lines[0]?.line ?? 1, findings);
@@ -185,6 +223,12 @@ export function mapBehavior(
         "this behavior owner does not accept an H3 or fence",
       ),
     );
+  const add = (field: "rules" | "flows", text: string, line: number): void => {
+    const values = section[field];
+    const index = Array.isArray(values) ? values.length : 0;
+    append(section, field, text);
+    entryLines.push({ entry: `${field === "rules" ? "rule" : "flow"}[${String(index)}]`, line });
+  };
   for (const item of parsed.items) {
     const entry = keyed(item.text);
     if (entry !== undefined && reservedMarkdownProperties.has(entry.key)) {
@@ -192,17 +236,17 @@ export function mapBehavior(
       continue;
     }
     if (owner === "Behavior") {
-      if (entry?.key === "rule") append(section, "rules", entry.value);
-      else if (entry?.key === "flow") append(section, "flows", entry.value);
+      if (entry?.key === "rule") add("rules", entry.value, item.line);
+      else if (entry?.key === "flow") add("flows", entry.value, item.line);
       else
         addMarkdownFinding(
           findings,
           structureFinding(file, item.line, "Behavior entries require rule or flow"),
         );
-    } else if (owner === "Workflow" && entry?.key === "rule") append(section, "rules", entry.value);
+    } else if (owner === "Workflow" && entry?.key === "rule") add("rules", entry.value, item.line);
     else if (entry !== undefined)
       addMarkdownFinding(findings, propertyFinding(file, item.line, entry.key));
-    else append(section, owner === "Workflow" ? "flows" : "rules", item.text);
+    else add(owner === "Workflow" ? "flows" : "rules", item.text, item.line);
   }
 }
 

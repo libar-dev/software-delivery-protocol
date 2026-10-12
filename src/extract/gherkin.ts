@@ -1,3 +1,4 @@
+import { normalizeAuthoring, entryKeyPattern } from "./authoring-normalization.js";
 import { generateMessages } from "@cucumber/gherkin";
 import {
   IdGenerator,
@@ -33,6 +34,7 @@ type GherkinRelationType = (typeof GHERKIN_RELATION_TAGS)[keyof typeof GHERKIN_R
 interface ReifiedRelation {
   readonly type: GherkinRelationType;
   readonly target: string;
+  readonly exercises?: readonly string[];
   readonly claim: "declared";
 }
 
@@ -45,6 +47,7 @@ const RESERVED_TAG_HEADS = [
   "constrained-by",
   "decided-by",
   "verifies",
+  "exercises",
   "kind",
   "pack",
   "supersedes",
@@ -59,6 +62,7 @@ const RESERVED_HEAD_SUGGESTIONS = [
   { head: "pack", lawful: false },
   { head: "supersedes", lawful: false },
   { head: "verifies", lawful: true },
+  { head: "exercises", lawful: true },
   { head: "refines", lawful: true },
   { head: "depends-on", lawful: true },
   { head: "constrained-by", lawful: true },
@@ -134,6 +138,7 @@ interface ParsedMetadata {
   readonly altitude: SpecAltitude;
   readonly readiness: SpecReadiness;
   readonly relations: readonly ReifiedRelation[];
+  readonly exercises: readonly string[];
 }
 
 interface ParsedMetadataResult {
@@ -478,6 +483,7 @@ function parseMetadataTags(
   let altitudeTags = 0;
   let readinessTags = 0;
   const relations: ReifiedRelation[] = [];
+  const exercises: string[] = [];
 
   for (const tag of tags) {
     const name = tag.name;
@@ -575,6 +581,22 @@ function parseMetadataTags(
       continue;
     }
 
+    if (name.startsWith("@exercises.")) {
+      const key = name.slice("@exercises.".length);
+      if (construct !== "Scenario" || !entryKeyPattern.test(key) || exercises.includes(key)) {
+        appendFinding(
+          collector,
+          grammarFinding(
+            file,
+            tag.location.line,
+            "@exercises requires a unique lower-camel rule key on an ordinary Scenario",
+            id,
+          ),
+          file,
+        );
+      } else exercises.push(key);
+      continue;
+    }
     let relationMatched = false;
     for (const [head, relationType] of Object.entries(GHERKIN_RELATION_TAGS)) {
       const prefix = `@${head}.`;
@@ -650,7 +672,7 @@ function parseMetadataTags(
   ) {
     return { id };
   }
-  return { id, value: { id, idLine, altitude, readiness, relations } };
+  return { id, value: { id, idLine, altitude, readiness, relations, exercises } };
 }
 
 function normalizeNarrative(lines: readonly string[]): string | undefined {
@@ -1091,16 +1113,44 @@ function reifyOrdinaryScenario(
     relations.push({ type: "verifies", target: parentId, claim: "declared" });
   }
 
+  const exercises = metadata.value.exercises;
+  const verifying = relations.filter((relation) => relation.type === "verifies");
+  if (exercises.length > 0 && verifying.length !== 1) {
+    appendFinding(
+      collector,
+      grammarFinding(
+        file,
+        scenario.tags.find((tag) => tag.name.startsWith("@exercises."))?.location.line ??
+          scenario.location.line,
+        "a Scenario that exercises rules must verify exactly one Spec",
+        metadata.value.id,
+      ),
+      file,
+    );
+    return undefined;
+  }
+  const authoredRelations = relations.map((relation) =>
+    relation.type === "verifies" && exercises.length > 0 ? { ...relation, exercises } : relation,
+  );
   return {
     id: metadata.value.id,
     file,
     line: metadata.value.idLine,
+    entryLines: authoredRelations.map((relation) => ({
+      entry: `relation.${relation.type}.${relation.target}`,
+      line:
+        scenario.tags.find(
+          (tag) =>
+            tag.name.startsWith(`@${relation.type}.`) ||
+            (relation.type === "verifies" && tag.name.startsWith("@exercises.")),
+        )?.location.line ?? scenario.location.line,
+    })),
     data: {
       id: metadata.value.id,
       kind: "example",
       altitude: metadata.value.altitude,
       readiness: metadata.value.readiness,
-      relations,
+      relations: authoredRelations,
       title: scenario.name,
       ...description,
       behavior: { examples: [steps] },
@@ -1144,6 +1194,7 @@ function reifyFeature(
   );
 
   const rules: string[] = [];
+  const ruleLines: { entry: string; line: number }[] = [];
   const children: ReifiedSpec[] = [];
   let exampleSpace:
     | { readonly given: string[]; readonly when: string[]; readonly then: string[] }
@@ -1165,7 +1216,10 @@ function reifyFeature(
     }
     if (child.rule !== undefined) {
       const parsedRule = parseRule(child.rule, file, sourceIndex, collector);
-      if (parsedRule !== undefined) rules.push(parsedRule);
+      if (parsedRule !== undefined) {
+        ruleLines.push({ entry: `rule[${String(rules.length)}]`, line: child.rule.location.line });
+        rules.push(parsedRule);
+      }
       continue;
     }
     if (child.scenario === undefined) continue;
@@ -1208,6 +1262,7 @@ function reifyFeature(
     ...(exampleSpace === undefined ? {} : { exampleSpace }),
   };
   const parent: ReifiedSpec = {
+    entryLines: ruleLines,
     id: metadata.value.id,
     file,
     line: metadata.value.idLine,
@@ -1284,7 +1339,16 @@ export function reifyGherkinCarrier(sourceText: string, relativePath: string): C
     );
     if (!sourceIndex.ok) return { specs: [], packs: [], findings: [sourceIndex.finding] };
 
-    return reifyFeature(document.feature, relativePath, sourceIndex.value);
+    const normalized = normalizeAuthoring(
+      reifyFeature(document.feature, relativePath, sourceIndex.value),
+      true,
+    );
+    const collector: GherkinFindingCollector = { findings: [], findingCount: 0 };
+    for (const next of [...normalized.findings].sort(
+      (left, right) => (left.line ?? 0) - (right.line ?? 0),
+    ))
+      appendFinding(collector, next, relativePath);
+    return { ...normalized, findings: collector.findings };
   } catch (error: unknown) {
     return {
       specs: [],

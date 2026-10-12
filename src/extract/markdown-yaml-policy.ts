@@ -1,3 +1,5 @@
+import { setOwn } from "./set-own.js";
+import { relationOptionsRefusal } from "./authoring-normalization.js";
 import { Buffer } from "node:buffer";
 
 import { isAlias, isMap, isScalar, isSeq } from "yaml";
@@ -166,67 +168,91 @@ export function markdownSpecIdList(
   return ids;
 }
 
+export interface MarkdownRelationTarget {
+  readonly target: string;
+  readonly reason?: string;
+  readonly exercises?: readonly string[];
+  readonly line: number;
+}
+
 export function markdownRelationTargets(
   value: unknown,
+  type: string,
   source: string,
   baseLine: number,
   file: string,
   findings: Finding[],
-): readonly string[] {
+): readonly MarkdownRelationTarget[] {
   const values = isSeq(value) ? value.items : [value];
-  if (values.length === 0) {
+  const fail = (node: unknown, message: string, id?: string): void => {
     addMarkdownFinding(
       findings,
-      markdownFinding(
-        file,
-        markdownScalarLine(value, source, baseLine),
-        "relation values must not be empty",
-      ),
+      markdownFinding(file, markdownScalarLine(node, source, baseLine), message, id),
     );
+  };
+  if (values.length === 0) {
+    fail(value, "relation values must not be empty");
     return [];
   }
-  const targets: string[] = [];
-  for (const target of values) {
-    if (!isMarkdownStringScalar(target)) {
-      addMarkdownFinding(
-        findings,
-        markdownFinding(
-          file,
-          markdownScalarLine(target, source, baseLine),
-          "relation targets must be string scalars",
-        ),
-      );
+  const targets: MarkdownRelationTarget[] = [];
+  for (const entry of values) {
+    let targetNode: unknown = entry;
+    const options: Record<string, unknown> = {};
+    let ok = true;
+    if (isMap(entry)) {
+      targetNode = undefined;
+      const names = new Set<string>();
+      for (const pair of entry.items) {
+        if (!isMarkdownStringScalar(pair.key) || names.has(pair.key.value)) {
+          fail(pair.key, "relation object keys must be unique strings");
+          ok = false;
+          continue;
+        }
+        const key = pair.key.value;
+        names.add(key);
+        if (key === "target") targetNode = pair.value;
+        else if (key === "exercises" && isSeq(pair.value)) {
+          setOwn(
+            options,
+            "exercises",
+            pair.value.items.map((item) => (isMarkdownStringScalar(item) ? item.value : null)),
+          );
+        } else if (isMarkdownStringScalar(pair.value)) setOwn(options, key, pair.value.value);
+        else {
+          fail(pair.value, `relation attribute "${key}" must be a string scalar or exercises list`);
+          ok = false;
+        }
+      }
+      const refusal = relationOptionsRefusal(options, type);
+      if (refusal !== undefined) {
+        fail(entry, refusal);
+        ok = false;
+      }
+    }
+    if (!isMarkdownStringScalar(targetNode)) {
+      fail(entry, "relation targets must be string scalars or objects with a target");
       continue;
     }
     try {
-      const parsed = parseId(target.value);
-      const addressReason = entryAddressSlotReason(target.value, parsed);
+      const parsed = parseId(targetNode.value);
+      const addressReason = entryAddressSlotReason(targetNode.value, parsed);
       if (addressReason !== undefined) {
-        addMarkdownFinding(
-          findings,
-          markdownFinding(
-            file,
-            markdownScalarLine(target, source, baseLine),
-            addressReason,
-            invalidIdFindingId,
-          ),
-        );
+        fail(targetNode, addressReason, invalidIdFindingId);
         continue;
       }
       if (parsed.namespace !== "spec")
         throw new Error("relation target must use the spec namespace");
-      if (targets.includes(target.value))
+      if (targets.some((target) => target.target === targetNode.value))
         throw new Error("duplicate target within one relation type");
-      targets.push(target.value);
+      if (ok)
+        targets.push({
+          target: targetNode.value,
+          ...(typeof options.reason === "string" ? { reason: options.reason } : {}),
+          ...(Array.isArray(options.exercises) ? { exercises: options.exercises as string[] } : {}),
+          line: markdownScalarLine(entry, source, baseLine),
+        });
     } catch (error: unknown) {
-      addMarkdownFinding(
-        findings,
-        markdownFinding(
-          file,
-          markdownScalarLine(target, source, baseLine),
-          error instanceof Error ? error.message : "invalid relation target",
-        ),
-      );
+      fail(targetNode, error instanceof Error ? error.message : "invalid relation target");
     }
   }
   return targets;

@@ -886,8 +886,11 @@ export const permutation = spec({
 
     expect(firstResult.findings).toEqual([]);
     expect(secondResult.findings).toEqual([]);
-    expect(serializeGraph(deriveGraph(firstResult.specs, firstResult.packs, []))).toBe(
-      serializeGraph(deriveGraph(secondResult.specs, secondResult.packs, [])),
+    // Source lines move with authored field order; the content serialization stays canonical.
+    expect(
+      serializeGraph({ ...deriveGraph(firstResult.specs, firstResult.packs, []), locations: [] }),
+    ).toBe(
+      serializeGraph({ ...deriveGraph(secondResult.specs, secondResult.packs, []), locations: [] }),
     );
   });
 

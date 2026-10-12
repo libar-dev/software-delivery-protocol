@@ -164,6 +164,8 @@ export interface GraphEdge {
   readonly type: GraphEdgeType;
   readonly to: string;
   readonly claim: GraphClaim;
+  readonly reason?: string;
+  readonly exercises?: readonly string[];
 }
 
 /**
