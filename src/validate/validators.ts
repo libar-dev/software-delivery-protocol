@@ -34,10 +34,9 @@ import { evaluateReadinessFloor } from "./readiness-floor.js";
  * `gap` or `orphan` informs as a warning, never a gate. Ids are referenced typo-safely, mirroring
  * `extractFindingIds`.
  *
- * The deferred check families are named (`00` §4, `07` §3) so a future validator never collides here:
- * architecture enforcement, custom team rules, and the runtime NFR check (`nfr-violated`, gated
- * on the `observed` fact's producer). Each lands by extending this registry under its own new
- * id — a landed id is never reused or repurposed.
+ * The runtime NFR check (`nfr-violated`) waits on the `observed` fact's producer
+ * (`spec:observation.runtime-overlay`). It extends this registry under its own new id; a shipped
+ * id is never reused or repurposed.
  */
 export const graphValidatorIds = {
   referentialIntegrity: "conformance/referential-integrity",
@@ -253,6 +252,15 @@ function checkReferentialIntegrity(graph: GraphSchema, index: GraphIndex): reado
 
 /* ----- conformance/duplicate-ids (`spec:validation.duplicate-ids`) ----- */
 
+const duplicateIdsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.duplicate-ids"),
+  label: "rejects duplicate node identities from any graph producer",
+  satisfies: ref("spec:validation.duplicate-ids"),
+  component: componentAnchorId("component:protocol.validate"),
+  role: "validator",
+});
+void duplicateIdsAnchor;
+
 /**
  * The graph backstop for L2: the extractor reports duplicate authored ids per site
  * (`extract/duplicate-id`) and excludes the carriers before derivation, so over extractor output
@@ -451,6 +459,15 @@ function checkEdgeContractRow(edge: GraphEdge, index: GraphIndex, findings: Find
 
       if (edge.claim === "anchored") {
         requireEndpoints(["Anchor"], "Primitive");
+        if (fromNode?.nodeType === "Anchor" && namespaceOf(fromNode.id) !== "test") {
+          findings.push(
+            claimSeparationFinding(
+              `${describeEdge} originates from an Anchor outside the test: namespace — an anchored verifies edge must originate from a test: anchor.`,
+              edge.from,
+              fromNode.file,
+            ),
+          );
+        }
         return;
       }
 
@@ -495,7 +512,7 @@ function checkEdgeContractRow(edge: GraphEdge, index: GraphIndex, findings: Find
         toNode,
         "targets",
         ["decision"],
-        "supersedes is a current forward-pointer between two decision-kind specs (Decision Records)",
+        "supersedes runs from a decision-kind spec to the decision-kind spec it replaces (Decision Records)",
       );
       return;
     default:
@@ -566,6 +583,19 @@ function checkClaimSeparation(graph: GraphSchema, index: GraphIndex): readonly F
 }
 
 /* ----- conformance/structural-anchors (`spec:decisions.architectural-annotation`, `spec:decisions.anchor-binding-grain`) ----- */
+
+const structuralAnchorsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.structural-anchors"),
+  label: "checks structural anchor validity and disjoint realization and reference targets",
+  satisfies: ref("spec:model.anchors"),
+  component: componentAnchorId("component:protocol.validate"),
+  references: [
+    ref("spec:decisions.architectural-annotation"),
+    ref("spec:decisions.anchor-binding-grain"),
+  ],
+  role: "validator",
+});
+void structuralAnchorsAnchor;
 
 /** The anchored edges the structural check owns: CodeNode structure plus the design reference. */
 function isStructuralEdge(edge: GraphEdge): boolean {
@@ -875,7 +905,10 @@ function checkVerifiesLinkage(graph: GraphSchema, index: GraphIndex): readonly F
 const oracleLinkageAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.oracle-linkage"),
   label: "resolves and de-duplicates expected-outcome oracle bindings",
-  satisfies: ref("spec:validation.verification-linkage"),
+  satisfies: [
+    ref("spec:validation.verification-linkage"),
+    ref("spec:validation.oracle-target-eligibility"),
+  ],
   component: componentAnchorId("component:protocol.validate"),
   role: "validator",
 });
@@ -1000,7 +1033,9 @@ function checkPackMembers(pack: PackNode, index: GraphIndex, findings: Finding[]
     if (count >= 2) {
       report(
         memberId,
-        `Pack "${pack.id}" lists member "${memberId}" ${String(count)} times — membership is single-sourced on the manifest and duplicates are ambiguous (L2).`,
+        listed === edges
+          ? `Pack "${pack.id}" lists member "${memberId}" ${String(count)} times — membership is single-sourced on the manifest and duplicates are ambiguous (L2).`
+          : `Pack "${pack.id}" lists member "${memberId}" ${String(listed)} time(s) and carries ${String(edges)} belongsTo edge(s) from it — membership is single-sourced on the manifest and duplicates are ambiguous (L2).`,
       );
     }
   }
@@ -1449,7 +1484,7 @@ function checkProseMentions(graph: GraphSchema, index: GraphIndex): readonly Fin
 const ruleExercisesAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.rule-exercises"),
   label: "checks the keys named by declared verifies relations",
-  references: [ref("spec:model.rule-keys")],
+  satisfies: ref("spec:model.rule-keys"),
   component: componentAnchorId("component:protocol.validate"),
   role: "validator",
 });

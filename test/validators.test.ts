@@ -4,6 +4,7 @@ import {
   codeAnchor,
   codeAnchorId,
   constrainedBy,
+  createReader,
   decidedBy,
   dependsOn,
   graphClaims,
@@ -31,6 +32,7 @@ import {
   testAnchorId as anchorTestAnchorId,
 } from "@libar-dev/software-delivery-protocol";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
+import { computeDeliveryFacts } from "../src/graph/delivery-facts.js";
 
 /**
  * Synthetic graphs (hand-built `GraphSchema` values) are a deliberate input class here: the graph
@@ -616,6 +618,139 @@ describe("graph validators", () => {
     });
   });
 
+  it.each(["direct", "example"] as const)(
+    "refuses an oracle Anchor as the test binding for a %s verifier",
+    (route) => {
+      const target = ideaPrimitive("spec:probe.target", "Verify the target.");
+      const example: PrimitiveNode = {
+        ...ideaPrimitive("spec:probe.example", "Verify the target through an example."),
+        specKind: "example",
+        altitude: "story",
+        readiness: "ready",
+      };
+      const oracle: GraphNode = {
+        id: "oracle:probe.binding",
+        nodeType: "Anchor",
+        claim: "anchored",
+        file: "test/probe.test.ts",
+        line: 1,
+      };
+      const edges: GraphEdge[] = [
+        {
+          from: oracle.id,
+          type: "verifies",
+          to: route === "direct" ? target.id : example.id,
+          claim: "anchored",
+        },
+        ...(route === "example"
+          ? [
+              {
+                from: example.id,
+                type: "verifies" as const,
+                to: target.id,
+                claim: "declared" as const,
+              },
+            ]
+          : []),
+      ];
+      const graph = syntheticGraph(
+        route === "direct" ? [target, oracle] : [target, example, oracle],
+        edges,
+      );
+
+      expect(computeDeliveryFacts(graph.nodes, graph.edges).size).toBe(0);
+      const reader = createReader(graph);
+      expect(reader.specContext(target.id)?.deliveryFacts).toEqual([]);
+      expect(reader.specContext(target.id)?.verifiers[0]?.enabled).toBe(false);
+      const findings = validateGraph(graph).findings;
+      const contract = findings.filter(
+        (finding) => finding.validatorId === graphValidatorIds.claimSeparation,
+      );
+      expect(contract).toHaveLength(1);
+      expect(contract[0]?.message).toContain("test: anchor");
+      expect(
+        findings.filter((finding) => finding.validatorId === graphValidatorIds.deliveryFacts),
+      ).toEqual([]);
+      if (route === "example") {
+        expect(
+          findings.filter((finding) => finding.validatorId === graphValidatorIds.verifiesLinkage),
+        ).toHaveLength(1);
+      }
+    },
+  );
+
+  it.each(["satisfies", "direct verifies", "example verifies"] as const)(
+    "confers %s only when the duplicate target's first node is a Primitive",
+    (route) => {
+      const target = ideaPrimitive("spec:probe.target", "Resolve the canonical target.");
+      const duplicate: GraphNode = {
+        id: target.id,
+        nodeType: "CodeNode",
+        claim: "anchored",
+        file: "src/probe.ts",
+      };
+      const code: GraphNode = { ...duplicate, id: "impl:probe.binding" };
+      const test: GraphNode = {
+        id: "test:probe.binding",
+        nodeType: "Anchor",
+        claim: "anchored",
+        file: "test/probe.test.ts",
+        line: 1,
+      };
+      const example: PrimitiveNode = {
+        ...ideaPrimitive("spec:probe.example", "Verify the canonical target."),
+        specKind: "example",
+        altitude: "story",
+        deliveryFacts: ["has-verifier"],
+      };
+      const edges: GraphEdge[] =
+        route === "satisfies"
+          ? [{ from: code.id, type: "satisfies", to: target.id, claim: "anchored" }]
+          : route === "direct verifies"
+            ? [{ from: test.id, type: "verifies", to: target.id, claim: "anchored" }]
+            : [
+                { from: test.id, type: "verifies", to: example.id, claim: "anchored" },
+                { from: example.id, type: "verifies", to: target.id, claim: "declared" },
+              ];
+
+      for (const primitiveFirst of [false, true]) {
+        const expected: PrimitiveNode["deliveryFacts"] = primitiveFirst
+          ? [route === "satisfies" ? "implemented" : "has-verifier"]
+          : [];
+        const consistentTarget = { ...target, deliveryFacts: expected };
+        const graph = syntheticGraph(
+          [
+            ...(primitiveFirst ? [consistentTarget, duplicate] : [duplicate, consistentTarget]),
+            ...(route === "satisfies"
+              ? [code]
+              : route === "direct verifies"
+                ? [test]
+                : [test, example]),
+          ],
+          edges,
+        );
+
+        expect(computeDeliveryFacts(graph.nodes, graph.edges).get(target.id) ?? []).toEqual(
+          expected,
+        );
+        const reader = createReader(graph);
+        expect(reader.specs().find((node) => node.id === target.id)?.deliveryFacts).toEqual(
+          expected,
+        );
+        const findings = validateGraph(graph).findings;
+        expect(
+          findings.filter((finding) => finding.validatorId === graphValidatorIds.duplicateIds),
+        ).toHaveLength(2);
+        expect(
+          findings.filter((finding) => finding.validatorId === graphValidatorIds.claimSeparation),
+        ).toHaveLength(primitiveFirst ? 0 : 1);
+        expect(
+          findings.filter((finding) => finding.validatorId === graphValidatorIds.deliveryFacts),
+        ).toEqual([]);
+      }
+    },
+  );
+
   it("rejects stated delivery facts the graph does not earn — derived, never authored", () => {
     const node = {
       ...ideaPrimitive("spec:orders.create-order", "Turn a valid cart into an order."),
@@ -943,6 +1078,18 @@ describe("conformance/pack-coherence — the members list and the belongsTo edge
           finding.message.includes("originates from a CodeNode node"),
       ),
     ).toHaveLength(1);
+  });
+
+  it("names both membership counts when one listed member has two belongsTo edges", () => {
+    const graph = syntheticGraph(
+      [...probeSpecs, probePack([specA])],
+      [belongsTo(specA), belongsTo(specA)],
+    );
+    const findings = coherenceFindings(graph);
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.message).toBe(
+      `Pack "${packId}" lists member "${specA}" 1 time(s) and carries 2 belongsTo edge(s) from it — membership is single-sourced on the manifest and duplicates are ambiguous (L2).`,
+    );
   });
 
   it("keeps the duplicate rule: a repeated member is named once, in authored order, with its count", () => {

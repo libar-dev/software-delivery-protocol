@@ -99,8 +99,6 @@ describe("the anchors subpath", () => {
 
     const subpath = (await import(pathToFileURL(builtSubpath).href)) as Record<string, unknown>;
     expect(Object.keys(subpath).sort()).toEqual([
-      "CODE_ANCHOR_LAYERS",
-      "CODE_ANCHOR_NAMESPACES",
       "anchorId",
       "codeAnchor",
       "codeAnchorId",
