@@ -2,7 +2,7 @@
 id: spec:model.relation-reasons
 kind: rule
 altitude: story
-readiness: scoped
+readiness: defined
 relations:
   refines: spec:model.relations
   decidedBy: spec:decisions.prose-ownership
@@ -18,12 +18,12 @@ The first adopter meets the reverse case. When its mention audit reported Spec p
 - outcome: Let an author say in one line why a Spec refines, depends on, is constrained by, is decided by or supersedes another, beside the relation itself.
 
 ### Open questions
-- [blocking #reasonCarrier] How does the closed envelope carry a reason: a map from target to reason beside each relation list, an object per target, or a body line the relation owns? The envelope contract and every carrier change with the answer.
 - [non-blocking #typedAttributes] Should the original's typed attributes return, a strength on `dependsOn` and an aspect on `constrainedBy`, or does one free reason serve every relation type?
 - [non-blocking #mentionReasons] Should a mention left as prose carry its reason in the mentioning Spec, so the mention audit can tell an intended pointer from a missing relation, or does that list stay the adopter's own?
 
 ## Rule
 - An authored relation may carry one optional reason, a single line of prose owned by that relation from that Spec to that target.
 - A reason is intent, as its relation is; it confers no delivery fact, moves no readiness floor and changes no edge, and a relation without one stays lawful.
-- A reason on `supersedes` says what the newer decision replaces, which is where an amendment that replaces only part of an earlier decision would say so.
+- In the envelope a relation target that carries a reason is an object with `target` and `reason` in place of the plain id, and plain ids and objects mix in one relation, so a relation without a reason is written as before and no target is written twice. The TypeScript carrier passes the same reason beside the target.
+- A reason on `supersedes` says what the newer decision replaces, and a reason on a `refines` from one decision to another says which part of the older decision the newer one narrows.
 - A reason reaches readers with its relation through the graph, so a projection or a recipe reads it from the edge and never from the carrier.

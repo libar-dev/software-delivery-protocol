@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio
 kind: behavior
 altitude: feature
-readiness: scoped
+readiness: defined
 relations:
   refines: spec:consumers.projections-model
   dependsOn:
@@ -19,11 +19,11 @@ relations:
 ## Intent
 - actor: A stakeholder who reviews a design, on a desktop or on a phone, and reads far more than they change.
 - outcome: Give a person reviewing a design one generated HTML workbench that explores the whole graph through lenses, shows each Spec and Pack in context, and turns a wanted change into scoped intent rather than an edit.
-### Open questions
-- [blocking #packageHome] Which package carries the Studio: the open-source `@libar-dev/software-delivery-protocol`, or a commercial `@libar-ai/` package? The Studio's deferral re-enters on a recorded ruling that names this home; earlier planning placed the Studio under `@libar-ai/`, and no Spec rules it.
-- [blocking #unservedReader] Which reader does the Studio serve that the generated Markdown Design Review does not? The first adopter generates its own Pack page beside the Design Review, with the members in reading order, the clause that holds each below its next rung, the Specs outside the Pack they rest on, and their open questions with register rows, while the Design Review's Pack page lists the members and the verifier gaps.
 
 ## Behavior
+- rule: The Studio serves a person working in the repository who designs a capability ahead of its code and iterates on it in passes, and a reviewer of a pull request who holds only a link. The Markdown Design Review serves neither well: its pages have no search, no filters and no navigation beyond links, and its readers in the first adopter open the carrier files instead.
+- rule: The Studio's first build is accepted when a reader completes, from the Studio alone, the five reader tasks the first adopter set over its history-view Pack (`libar-platform/docs/feedback/sdp-feedback-01.md`): find the history contract, locate one keyed decision question, explain the aggregate dependency, find one declaration's type comparison, and say whether a paused-rebuild example has native-backend evidence.
+- rule: The read-only Studio ships in the open-source package `@libar-dev/software-delivery-protocol`, beside the four shipped projections; hosted review, shared comments and hosted previews may later ship under `@libar-ai/`.
 - rule: The Studio is a projection of the one graph: its page set under `generated/spec-studio/` is regenerated from the graph, states no truth, and confers nothing back into the graph.
 - rule: The Studio is a mostly static single-page application, buildable as an `index.html` page and its assets, and it needs no server.
 - rule: The Studio works offline: the same files open from the file system through `file://` for local use and from any static host for sharing.
