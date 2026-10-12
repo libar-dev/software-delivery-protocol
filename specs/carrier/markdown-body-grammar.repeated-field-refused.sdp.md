@@ -2,7 +2,7 @@
 id: spec:carrier.markdown-body-grammar.repeated-field-refused
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.markdown-body-grammar
   verifies:

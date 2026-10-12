@@ -2,7 +2,7 @@
 id: spec:carrier.inline-code-spans.narrative
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.inline-code-spans
   verifies: spec:carrier.inline-code-spans

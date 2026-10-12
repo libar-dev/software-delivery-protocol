@@ -2,7 +2,7 @@
 id: spec:carrier.markdown-pack-authoring.spec-envelope-refused
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.markdown-pack-authoring
   verifies: spec:carrier.markdown-pack-authoring
