@@ -1,0 +1,8 @@
+{
+  "source": "generated/imports.json",
+  "size": 23943,
+  "modifiedTimeNs": 1791830029983388937,
+  "sha256": "c763757ef83a89262056d0de57886ba8d3c8944649c37a4918a694bbfa3c69b2",
+  "destination": ".omo/evidence/20261013-spec-refresh-integration/imports.before.json",
+  "reason": "Pre-existing external imports input is not owned by the standard projection generation; preserve it outside generated/ to clear preflight."
+}

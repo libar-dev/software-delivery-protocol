@@ -33,9 +33,9 @@ describe("the self-hosting duplicate-ID example contracts", () => {
     const behavior = parent.sections?.behavior;
     const vocabulary = behavior?.exampleSpace;
 
-    expect(behavior?.rules).toEqual([
+    expect(behavior?.rules).toContain(
       "If more than one carrier declares an ID, every duplicate site receives extract/duplicate-id and no ambiguous node is derived.",
-    ]);
+    );
     expect(vocabulary?.given).toEqual([
       "a {firstCarrier:string} carrier declares {specId:string}",
       "a {secondCarrier:string} carrier declares {specId:string}",

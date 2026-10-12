@@ -547,7 +547,7 @@ describe("graph validators", () => {
 
   it("exempts decision-kind Specs from the gap signal while other kinds still warn", () => {
     // A decision record's evidence is its registry row and complete record, never a verifier —
-    // the signal is definitional noise for the kind (spec:validation.warn-level-signals).
+    // the signal is definitional noise for the kind (spec:decisions.decision-readiness-posture).
     const readyDecision: PrimitiveNode = {
       ...ideaPrimitive("spec:orders.order-lifecycle", "Record the order lifecycle decision."),
       specKind: "decision",

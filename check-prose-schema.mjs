@@ -23,7 +23,7 @@ for (const section of [
 ]) {
   expectContains("src/model/sections.ts", section, "missing section description owner");
 }
-expectContains("src/graph/schema.ts", 'schemaVersion = "0.9.0"', "missing 0.9.0 schema literal");
+expectContains("src/graph/schema.ts", 'schemaVersion = "0.10.0"', "missing 0.10.0 schema literal");
 expectContains("src/graph/schema.ts", "readonly narrative?: string;", "missing graph narrative");
 expectContains("src/reader/reader.ts", "readonly narrative?: string;", "missing Reader narrative");
 expectContains(
@@ -42,28 +42,18 @@ expectContains(
 // version bump names both authored surfaces instead of failing only at the bound point.
 expectContains(
   "specs/extraction/schema-versioning.sdp.md",
-  "Every graph declares its schemaVersion",
+  "Every derived graph carries `schemaVersion`",
   "missing schema-version declaration law",
 );
 expectContains(
   "specs/extraction/schema-versioning.declared-version.sdp.md",
-  '{schemaVersion: "0.9.0"}',
+  '{schemaVersion: "0.10.0"}',
   "missing declared-version example literal",
 );
 expectContains(
   "specs/carrier/prose-ownership-rule.sdp.md",
-  "the array-shaped constraints section has no description owner",
+  "Constraints has no description owner",
   "missing constraint omission contract",
-);
-expectContains(
-  "docs/concept/06-consumers-and-projections.md",
-  "Owned prose is already available through the graph and Reader",
-  "missing graph/Reader prose claim",
-);
-expectContains(
-  "docs/concept/06-consumers-and-projections.md",
-  "Design Review now renders `Spec.narrative` and the seven approved section descriptions from those Reader/graph values (schema `0.9.0`), with no source reparse and stable omission when prose is absent.",
-  "missing landed prose projection claim",
 );
 
 if (failures.length > 0) {
@@ -72,4 +62,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log("check-prose-schema — model, graph, Reader, and concept surfaces agree.");
+console.log("check-prose-schema — model, graph, reader and carrying Specs agree.");

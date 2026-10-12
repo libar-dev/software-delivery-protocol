@@ -1,0 +1,67 @@
+{
+  "unpacked": [],
+  "conditions": [
+    {
+      "id": "spec:consumers.agent-surface.evaluation-sink",
+      "stated": "ready",
+      "floor": "ready",
+      "facts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "implementations": [
+        "impl:protocol.build-pipeline-query",
+        "impl:protocol.query-answer-shapes"
+      ],
+      "verifiers": [
+        "test:protocol.evaluation-sink",
+        "test:protocol.query-answer-shapes"
+      ]
+    },
+    {
+      "id": "spec:consumers.reading-on-ramp",
+      "stated": "ready",
+      "floor": "ready",
+      "facts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "implementations": [
+        "impl:protocol.reading-on-ramp"
+      ],
+      "verifiers": [
+        "test:protocol.reading-on-ramp"
+      ]
+    },
+    {
+      "id": "spec:model.design-maturity",
+      "stated": "ready",
+      "floor": "ready",
+      "facts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "implementations": [
+        "impl:protocol.pack-design"
+      ],
+      "verifiers": [
+        "test:protocol.pack-design"
+      ]
+    },
+    {
+      "id": "spec:consumers.agent-surface.authoring-recipes",
+      "stated": "ready",
+      "floor": "ready",
+      "facts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "implementations": [
+        "impl:protocol.authoring-recipes"
+      ],
+      "verifiers": [
+        "test:protocol.authoring-recipes"
+      ]
+    }
+  ]
+}

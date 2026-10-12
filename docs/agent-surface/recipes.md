@@ -62,6 +62,7 @@ link itself into its own `node_modules/.bin`; an unresolved `sdp` can select mac
 binary.
 
 The same CLI publishes four independent read roots with `view`, `census`, `mermaid`, and `gherkin`.
+Each publisher's build removes all four projection roots first.
 The repository's generate/check scripts preserve and publish all four roots together. They save
 the prior trees before the individual publishers run, preserve each result across the next build's
 invalidation, and restore all four results at the end. In check mode a prior tree must exist for

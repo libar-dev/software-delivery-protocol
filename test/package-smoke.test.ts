@@ -198,7 +198,11 @@ describe("published package surface", () => {
         "docs/agent-surface/architecture.md",
       ];
 
-      const packedAssets = [...adopterAssets, "schemas/sdp-proposal-1.schema.json"];
+      const packedAssets = [
+        ...adopterAssets,
+        "schemas/sdp-proposal-1.schema.json",
+        "docs/concept/DECISIONS.md",
+      ];
 
       expect(dryRunPaths).toEqual(expect.arrayContaining(packedAssets));
       expect(
