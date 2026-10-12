@@ -3602,7 +3602,8 @@ is declared intent, and the candidate classification is advice derived from the 
 with anchored uses, and component designs that no planned component realizes yet.*
 
 The required parameter is `params.imports`, the object in the adapter's imports file. The optional
-`params.limit` is a non-negative integer, 20 by default, and cuts only the uncovered-file list.
+`params.limit` is a positive integer, 20 by default, and cuts only the uncovered-file list.
+Missing or malformed imports and invalid limits return `{ diagnostics }` with no report rows.
 Build the input explicitly, then pass it to the body as data:
 
 ```sh
@@ -3617,12 +3618,15 @@ only anchored component identity and `memberOf` do that.
 
 ```js
 const input = params.imports;
-if (input?.schema !== "sdp-imports/1" || typeof input.adapter !== "string" || !Array.isArray(input.files) ||
-    input.files.some((entry) => typeof entry.file !== "string" || !Array.isArray(entry.imports) || entry.imports.some((file) => typeof file !== "string"))) {
-  throw new Error("params.imports must be an sdp-imports/1 object");
+const diagnostics = [];
+const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+if (!object(input) || input.schema !== "sdp-imports/1" || typeof input.adapter !== "string" || !Array.isArray(input.files) ||
+    input.files.some((entry) => !object(entry) || typeof entry.file !== "string" || !Array.isArray(entry.imports) || entry.imports.some((file) => typeof file !== "string"))) {
+  diagnostics.push({ parameter: "imports", problem: "Supply an sdp-imports/1 object." });
 }
-const limit = params.limit ?? 20;
-if (!Number.isSafeInteger(limit) || limit < 0) throw new Error("params.limit must be a non-negative integer");
+const limit = params.limit === undefined ? 20 : params.limit;
+if (!Number.isInteger(limit) || limit <= 0) diagnostics.push({ parameter: "limit", problem: "Expected a positive integer." });
+if (diagnostics.length) return { diagnostics };
 const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
 const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
 const anchored = graph.nodes.filter((node) => node.claim === "anchored" && (node.nodeType === "CodeNode" || node.nodeType === "Anchor"));

@@ -264,6 +264,43 @@ describe("curation report recipe", () => {
     ],
   };
 
+  it.each(
+    [
+      undefined,
+      null,
+      [],
+      "imports",
+      {},
+      { schema: "sdp-imports/2", adapter: "typescript", files: [] },
+      { schema: "sdp-imports/1", files: [] },
+      { schema: "sdp-imports/1", adapter: "typescript", files: null },
+      { schema: "sdp-imports/1", adapter: "typescript", files: [null] },
+      { schema: "sdp-imports/1", adapter: "typescript", files: [1] },
+      {
+        schema: "sdp-imports/1",
+        adapter: "typescript",
+        files: [{ file: "a.ts", imports: [null] }],
+      },
+    ].map((input) => ({ input })),
+  )("returns diagnostics and no rows for invalid imports input $input", async ({ input }) => {
+    const result = await runRecipe(40, graph, input === undefined ? {} : { imports: input });
+    expect(Object.keys(result)).toEqual(["diagnostics"]);
+    expect(result.diagnostics).toEqual([
+      { parameter: "imports", problem: "Supply an sdp-imports/1 object." },
+    ]);
+  });
+
+  it.each([0, -1, 1.5, "1", null, true])(
+    "returns diagnostics and no rows for invalid limit %j",
+    async (limit) => {
+      const result = await runRecipe(40, graph, { imports, limit });
+      expect(Object.keys(result)).toEqual(["diagnostics"]);
+      expect(result.diagnostics).toEqual([
+        { parameter: "limit", problem: "Expected a positive integer." },
+      ]);
+    },
+  );
+
   it("recognizes every lawful component-id segment and keeps invalid convention values out", async () => {
     const result = await runRecipe(
       40,
@@ -342,8 +379,8 @@ describe("curation report recipe", () => {
       ...imports,
       files: [...imports.files, { file: "code/leaf.ts", imports: ["code/a.ts", "code/a.ts"] }],
     };
-    const result = await runRecipe(40, graph, { imports: duplicated, limit: 0 });
-    expect(result.uncovered).toEqual([]);
+    const result = await runRecipe(40, graph, { imports: duplicated, limit: 1 });
+    expect(result.uncovered).toEqual([{ file: "code/index.ts", fanIn: 1, fanOut: 1 }]);
     expect(result.totals).toMatchObject({ uncovered: 2, importEdges: 4, usesWithoutImport: 1 });
     expect(result.importsWithoutUses).toEqual([
       {
@@ -491,13 +528,27 @@ describe("curation report recipe", () => {
       };
       expect(
         await runSdpCli(
-          ["q", recipe?.content ?? "", "--root", repoRoot, "--params", JSON.stringify(params)],
+          [
+            "q",
+            recipe?.content ?? "",
+            "--root",
+            repoRoot,
+            "--params",
+            JSON.stringify(params),
+            "--json",
+          ],
           capture.output,
           { query: { extract: () => extraction } },
         ),
-      ).toBe(1);
-      expect(capture.readStderr()).toMatch(/params\.(imports|limit)/u);
-      expect(capture.readStdout()).toBe("");
+      ).toBe(0);
+      expect(capture.readStderr()).toBe("");
+      expect(JSON.parse(capture.readStdout())).toEqual({
+        diagnostics: [
+          Object.hasOwn(params, "limit")
+            ? { parameter: "limit", problem: "Expected a positive integer." }
+            : { parameter: "imports", problem: "Supply an sdp-imports/1 object." },
+        ],
+      });
     },
   );
 });
