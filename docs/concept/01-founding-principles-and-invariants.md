@@ -19,7 +19,7 @@ If a successor kept only the essentials, the design stands or falls on these. Ea
 **Principle · CORE.** There is exactly one authoritative store: committed source in the repo. Every other artifact — the graph, diagrams, dashboards, views, any export — is a pure function of it, never hand-authored or hand-edited. There is no "is the graph in sync?" question because the graph is *defined* as a function of the repo. *(Founding Principle #1, #2, #4.)*
 
 ### P2 — One derived read model
-**Principle · CORE.** A single canonical graph is the sole input to every projection, validator, and query. No consumer reads source directly or maintains a parallel model. (The extractor that *builds* the graph reads source — that is the producer, not a downstream consumer.) Consumers may *link to* source locations recorded in the graph; what is forbidden is independently *re-parsing* source to derive a model of their own (DECISIONS R2).
+**Principle · CORE.** A single canonical graph is the read model for current authored intent and bindings; recipes and views whose contracts admit it may read separately identified input beside it, while validators and shipped projections stay graph-only. No consumer reads source directly or maintains a parallel model. (The extractor that *builds* the graph reads source — that is the producer, not a downstream consumer.) Consumers may *link to* source locations recorded in the graph; what is forbidden is independently *re-parsing* source to derive a model of their own (`spec:extraction.regenerability`).
 
 ### P3 — Deterministic derivation
 **Principle · CORE.** Derivation is reproducible: `graph = f(repo)` and `view = f(graph)`, with stable ordering (specs sorted by ID, edges by `(from, type, to)`) and non-determinism (timestamps, hashes) excluded from the semantic comparison. Delete `generated/` and rebuild byte-identically. Without determinism, "derived" is unfalsifiable and the no-second-store rule cannot be enforced.
@@ -30,22 +30,22 @@ If a successor kept only the essentials, the design stands or falls on these. Ea
 **Corollary — significance governs detail, not a tier.** Because refinement is enrichment of one object — not advancement through fixed readiness stages — a spec carries detail only where the work is *architecturally significant or genuinely novel*. The Nth instance of an established shape (a CRUD endpoint, a standard codec, a barrel) earns a **reference, not a re-derivation**; padding a spec to "fill a level" destroys signal and is pure cleanup debt. Readiness (P8) is **stated by the author and checked against a floor — never a quota of artifacts to produce.** Fixed tiers pressure an author to fill the tier rather than the need — AI authors especially, which replicate the prevailing detail level even where it does not fit. *Enrich what matters; reference what is standard; pad nothing.*
 
 ### P5 — Statically-extractable authoring
-**Principle · CORE.** Spec and anchor source is restricted to static, side-effect-free literals — no loops, conditionals, computed IDs, interpolated IDs, IO, async, or imports of product code — so a static analyzer reifies it deterministically. Treat a spec document as static data its carrier validates: "a JSON file that TypeScript happens to validate" in the TS carrier; bounded YAML frontmatter plus the owned prose grammar in the Markdown carrier. This is the precondition for P3 on the authoring side. *(The specific allowed grammars and the carrier parsers — `ts-morph` for the TS carrier, the ruled Markdown parser for `.sdp.md` — are Representation; the requirement to be statically extractable is the Principle.)*
+**Principle · CORE.** Spec and anchor source is restricted to static, side-effect-free literals — no loops, conditionals, computed IDs, interpolated IDs, IO, async, or imports of product code — so a static analyzer reifies it deterministically. Treat a spec document as static data its carrier validates: "a JSON file that TypeScript happens to validate" in the TS carrier; bounded YAML frontmatter plus the owned prose grammar in the Markdown carrier. This is the precondition for P3 on the authoring side. *(The specific allowed grammars and the carrier parsers — `ts-morph` for the TS carrier, the ruled Markdown parser for `.sdp.md`, the pinned Gherkin parser for `.sdp.gherkin` — are Representation; the requirement to be statically extractable is the Principle.)*
 
 ### P6 — Identity is the universal join key
-**Principle · CORE.** Every node has a globally-unique (within the repo), refactor-stable, namespaced, human-readable string ID. Specs and code are linked by **ID-in-strings**, never by TypeScript import edges — so either side can be refactored freely. Every reconciliation — merge, validate, query, trace — keys on that string ID. *(The ID grammar `<namespace>:<dotted.path>#<sub>` and the namespace list are Representation; ID-as-universal-key is the Principle.)*
+**Principle · CORE.** Every node has a globally-unique (within the repo), refactor-stable, namespaced, human-readable string ID. Specs and code are linked by **ID-in-strings**, never by TypeScript import edges — so either side can be refactored freely. Every reconciliation — merge, validate, query, trace — keys on that string ID. *(The ID grammar `<namespace>:<dotted.path>` and the namespace list are Representation; `#<section>.<key>` is reserved for an entry address, which names an entry inside a Spec and is never an identity; ID-as-universal-key is the Principle.)*
 
 ### P7 — Shape vs completeness
 **Principle · CORE.** The static type system encodes only structural *shape* (all sections optional). Whether a thing is *complete enough* for its stated readiness is a separate property, decided by validators — never encoded in conditional types. "Types describe shape; validators decide completeness." This is what lets the descriptors move freely without type gymnastics.
 
 ### P8 — Three authored descriptors; readiness is a stated, checked position
-**Principle · CORE.** A spec is positioned by **three authored descriptors**: **`kind`** (a *true subtype* — the category of truth), **`altitude`** (size / scope), and **`readiness`** (design maturity). `altitude` and `readiness` move independently — a high-`altitude` feature can be barely `scoped` while a low-`altitude` example is fully `ready`. A linear idea→requirement→implementation pipeline cannot represent this. **Delivery facts** (`implemented` / `has-verifier` / `observed`) are **derived**, never readiness rungs — what the machine observes, not what the human states. And: **readiness is stated by the author; validators verify it** — the build refuses if a spec lacks the sections or relations its stated readiness floor requires. *(The independence of the descriptors, the kind-as-subtype distinction, and the floor-is-checked rule are the Principle; the specific enum members are Representation — see `spec:model.core-model`.)*
+**Principle · CORE.** A spec is positioned by **three authored descriptors**: **`kind`** (a *true subtype* — the category of truth), **`altitude`** (size / scope), and **`readiness`** (design maturity). `altitude` and `readiness` move independently — a high-`altitude` feature can be barely `scoped` while a low-`altitude` example is fully `ready`. A linear idea→requirement→implementation pipeline cannot represent this. **Delivery facts** (`implemented` / `has-verifier` / `observed`) are **derived**, never readiness rungs — what the machine observes, not what the human states. And: **readiness is stated by the author; validators verify it** — `sdp validate` refuses if a spec lacks the sections or relations its stated readiness floor requires. *(The independence of the descriptors, the kind-as-subtype distinction, and the floor-is-checked rule are the Principle; the specific enum members are Representation — see `spec:model.core-model`.)*
 
 ### P9 — The `claim` is never collapsed
 **Principle · CORE.** Every edge and node records its **`claim`** — whether it is **declared** (human intent, explicit in specs/packs), **anchored** (a human *binding* — bound by an in-code **anchor**), or **inferred** (machine-derived structure). The three are kept strictly distinct, forever. Every edge carries its `claim`. *(Founding Principle #3. The precedence ordering among them is Representation; the never-collapse rule is the Principle. `claim` replaces the old "provenance"; an edge computed deterministically from an authored source inherits that source's `claim` — see `spec:extraction.claim-taxonomy` and `04`.)*
 
 ### P10 — Inference is never authoritative
-**Principle · CORE.** Static analysis recovers structural and dataflow facts, but *intent* — "this implements that," "this decision constrains those" — must be explicitly authored. Inferred edges carry confidence, are shown differently, never trigger validator errors on their own, and can only become "declared" through an explicit human act — never silent promotion. This is a permanent design boundary.
+**Principle · CORE.** Static analysis recovers structural and dataflow facts, but *intent* — "this implements that," "this decision constrains those" — must be explicitly authored. Inferred structure is advisory, shown apart from authored edges, never triggers validator errors on its own, and becomes `declared` only through an explicit human edit, with no silent promotion. This is a permanent design boundary.
 
 **Corollary — the two-surface rule.** The inferred layer may exist as an **impact graph**: a derived, language-server-like import/symbol graph used for **impact and curation-*assist* only** (blast-radius, find-all-usages, propose-candidates, flag-unambiguous-drift). It is **never** used to derive or "densify" the authored architecture. Divergence between the curated graph and the impact graph is **curation, not drift** — a sparse curated selection of the mechanical firehose is correct by design. The impact graph is a *derived structure, not a competing read model*, so it does not breach Founding Principle #1. See `06` §2.
 
@@ -55,10 +55,10 @@ If a successor kept only the essentials, the design stands or falls on these. Ea
 
 **Principle · CORE.** There is a clean division of epistemic labour, and the two halves are never confused:
 
-- **Humans assert intent and bindings.** Relations, stated readiness, decisions — and an in-code **anchor** that points code → a spec ID (a binding assertion only, never intent — DECISIONS R1). Authored and taken at face value until a validator can check them.
+- **Humans assert intent and bindings.** Relations, stated readiness, decisions — and an in-code **anchor** that points code → a spec ID (a binding assertion only, never intent; `spec:model.anchors`). Authored and taken at face value until a validator can check them.
 - **Machines assert structure.** Calls, imports, route wiring — derived and distrusted as *intent*.
 
-P9 and P10 are corollaries of this boundary. So is the rule that **delivery facts are derived, not authored**: a spec's realization (`implemented` / `has-verifier` / `observed`) is **derived** by the pipeline from graph edges and runtime, never authored by hand — authoring one is a violation because it would drift from reality. *(In the MVP this is structural only — `has-verifier` means a linked, enabled verifying spec/test exists; test run results are not ingested, they are CI's. The point stands: "did it actually happen" is structurally separate from "what we state should happen".)*
+P9 and P10 are corollaries of this boundary. So is the rule that **delivery facts are derived, not authored**: a spec's realization (`implemented` / `has-verifier` / `observed`) is **derived** by the pipeline from graph edges and runtime, never authored by hand — authoring one is a violation because it would drift from reality. *(In the MVP this is structural only — `has-verifier` means a linked, enabled verifying spec/test exists; test run results never enter the graph; they are CI's. The point stands: "did it actually happen" is structurally separate from "what we state should happen".)*
 
 ---
 
@@ -75,11 +75,11 @@ Concretely:
 - **No ID-freeze-after-a-binding-exists machinery.** Stable IDs (P6) already survive refactors; renaming an ID is a repo edit that git records. There is no freeze-and-supersede subsystem.
 - **Refinement does not retain a "superseded parent" as ghost state.** A parent spec refined into children is retained only if it still expresses current truth (architecture, AI context, roadmap framing) — i.e. because it is *present in the current repo*, not because the graph is bookkeeping its history.
 
-### The one kept forward-pointer
+### The one kept relation to a predecessor
 
-One narrow forward-pointer is kept, and only because it expresses **current** intent, not history:
+One narrow relation to a predecessor is kept, and only because it expresses **current** intent, not history:
 
-- A **decision spec may declare that it supersedes another** (`supersedes: "spec:decisions.006-..."`). This is a statement the author is making *now* about a relationship between two decisions that *both still exist in the repo as records*. It is current declared intent, identical in kind to `refines` or `dependsOn` — not the graph storing a timeline.
+- A decision Spec may declare that it supersedes another (`supersedes: spec:decisions.<name>`) while the older record still explains something a reader needs; otherwise the older record is deleted and git holds it. While both records exist, the relation is current declared intent, identical in kind to `refines` or `dependsOn` — not the graph storing a timeline.
 
 If a relationship can be reconstructed from git, it does not belong in the graph as live state. If it is a current, authored assertion about two things present in the repo, it may. That is the line.
 
@@ -109,15 +109,15 @@ These appear in the design and matter, but none is a Principle. Swapping any of 
 
 | Representation | The Principle it serves | Status |
 |---|---|---|
-| The carrier extractors — `ts-morph` (the TS carrier) and the ruled Markdown parser (`.sdp.md`) | P5 (statically extractable) | CORE |
-| The ID grammar `<ns>:<path>#<sub>` and namespace list | P6 (identity is the join key) | CORE |
-| Specific anchor syntaxes (decorator / JSDoc / anchor const) | P9/P10 (declared vs anchored) | CORE |
+| The carrier extractors — `ts-morph` (the TS carrier), the ruled Markdown parser (`.sdp.md`) and the pinned Gherkin parser (`.sdp.gherkin`) | P5 (statically extractable) | CORE |
+| The ID grammar `<ns>:<path>` (with `#` reserved for entry addresses) and namespace list | P6 (identity is the join key) | CORE |
+| The two extracted anchor forms, the constant form and the comment form; a decorator remains an unextracted representation | P9/P10 (declared vs anchored) | CORE for the extracted forms |
 | Flat node/edge arrays (hierarchy as edges, not nesting) | P2 (one queryable read model) | CORE |
 | The enum member sets on each descriptor | P8 (three descriptors) | CORE — reconciled in `spec:model.core-model` |
 | Generated `spec-ids` union for compile-time ref checks | early referential integrity | ASPIRATIONAL (optional convenience, L8) |
 | The runtime-composition adapter (Effect / Awilix / manual wiring) | "read architecture from live wiring" | ASPIRATIONAL |
 | HTML / Web Components for the rich view | "rich, shareable read surface from the graph" | ASPIRATIONAL |
-| Impact graph (derived import/symbol graph) | P10 corollary (impact + curation-assist) | ASPIRATIONAL (thin version may be MVP — `07`) |
+| Impact graph (derived import/symbol graph) | P10 corollary (impact + curation-assist) | CORE for file-level import curation (`spec:consumers.impact-graph.curation-assist`); ASPIRATIONAL for exhaustive symbol reach (`spec:consumers.impact-graph.symbol-reach`) |
 | The **agent surface** (a visible typed graph the agent scripts) + the **reader** (thin typed loader) | P2/P6 (one read model, agent-facing) | CORE |
 | Validation layer *count* and per-layer tooling | "conformance + honesty, layered by mechanism" | partly CORE, partly ASPIRATIONAL (`spec:validation.two-check-families`) |
 | Runtime-evidence overlay (the `observed` delivery fact; observations as pointers, not payloads) | design intent vs observed reality | ASPIRATIONAL |

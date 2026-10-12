@@ -5,7 +5,8 @@
 >
 > This document carries **terms only**; the model exposition lives in the authored Specs under
 > `specs/` (shipped with the package) and, in a source checkout of the repository, in the surviving
-> design docs under `docs/concept/`. The lean decision registry points to carrying Specs;
+> design docs under `docs/concept/`. The lean decision registry, `docs/concept/DECISIONS.md`
+> (shipped with the package), names each ratified decision and points to its carrying Spec;
 > historical rationale lives in git, plans, and those Specs.
 
 ## Governing rubric  [SETTLED]
@@ -14,20 +15,20 @@
   distinct word only for a genuine differentiator — and then the word must *name the difference*.
 - **Reject process *state-machine / lifecycle gating*** (sprint/ticket FSM, mandatory phase gates). Adopt the
   process *nouns*, not the process *gates*.
-- **Two naming tests:** (a) carry epistemic status where it matters (authored vs derived, claimed vs computed);
+- **Two naming tests:** (a) carry epistemic status where it matters (authored vs derived, stated vs computed);
   (b) concrete & unambiguous to all three readers — typed code/CLI, the coding agent, and a Studio user.
 
-## The meta-levels  (MOF-style meta-levels, made executable → `00` §2)
+## The meta-levels  (MOF-style meta-levels, made executable → `spec:decisions.executable-meta-model`)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
 | **the Protocol** | the meta-model — the primitive, descriptors, relations, and validators **as typed code**; the conformance contract instances conform to (Phase 0 built it) | "the process" (reserved, below) · "governs"/"polices" (it defines a contract) |
 | **software-delivery process** | the modeled activity teams perform — what the Protocol is a meta-model *of* | — ("process" survives **only** here, in "delivery-process execution," and in the rejected *process state-machine*) |
 | **authored model** | a project's authored instances; **conforms** — conformance checked, never workflow-gated | — |
-| **derived facts** | machine truth about the authored model (code realises it · a verifier exists · runtime observed it) — derived, never authored | — |
+| **derived facts** | machine truth about the authored model (code realizes it · a verifier exists · runtime observed it) — derived, never authored | — |
 
-Self-hosting — the Protocol's own repo conforming to its own meta-model — is a later milestone, never a
-Phase-0 claim (`00` §3).
+Self-hosting, the Protocol's own repo conforming to its own meta-model, came after Phase 0;
+`spec:protocol.self-hosting` carries it.
 
 ## The primitive & its descriptors  (→ `spec:model.core-model`)
 
@@ -50,7 +51,7 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 | **Scenario** | a low-altitude `example`-kind `Spec` that `refines`/`verifies` a Story | an altitude or a kind |
 | **NFR** | a `constraint` with a measurable `target`; the *flavor* (performance / security / …) lives on the section | a separate kind |
 | **Executable Spec** | an `example` that **has a verifier** (a delivery fact) | a readiness rung |
-| **capability / domain** | a **projection** (Capability Map over high-altitude `behavior` `Spec`s) and/or a **`Pack` grouping** | a kind or an altitude |
+| **capability / domain** | a **`Pack` grouping** and/or a designed-for Capability Map projection over high-altitude `behavior` Specs; no Capability Map is built, and its grouping is held open in `spec:consumers.spec-studio.lenses#question.capabilityGrouping` | a kind or an altitude |
 
 ## Sections  (→ `spec:model.spec-sections`)
 
@@ -58,7 +59,12 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 |---|---|---|
 | **section** | the typed, optional detail-slice of a `Spec` — the **extension surface**; one concern each: `intent` · `behavior` · `constraints` · `model` · `design` · `decision` · `verification` · `ui` | "Facet" · "aspect" |
 | **section ⟷ kind duality** | `constraints`/`model`/`decision` — and `behavior.rules`/`behavior.examples` vs the `rule`/`example` kinds — have a `kind` twin: keep **inline** when local detail; **promote** to a standalone `Spec` when shared or needing its own identity/lifecycle/review. **Sections carry content, relations carry linkage** (never a ref inside a section); **promotion is exclusive** (inline XOR promoted — content moves out, MD-10) | — |
+| **primary behavior owner** | the one of Behavior, Rule, Workflow or Contract a Spec uses; its entries are the ones a rule key addresses (`spec:carrier.markdown-body-grammar`) | — |
 | **question key** | the optional lower-camel key an open question carries in its marker, as in `[blocking #arcBoundary]`, unique in its Spec, which gives the question the entry address `spec:<id>#question.<key>` (`spec:model.open-question-keys`) | "question id" · "anchor" |
+| **question field** | one of the four optional lines an open question carries beside its text, flag and key: `decider`, `links`, `provisional`, `trigger`; a `trigger` marks a deferral, none moves a floor (`spec:model.open-question-fields`) | "status" · "owner" (of a question) |
+| **rule key** | the optional lower-camel key an entry of a Spec's primary behavior owner carries in its marker, unique with its question keys in that Spec, giving the entry the address `spec:<id>#rule.<key>`; an example's `verifies` lists the keys it exercises (`spec:model.rule-keys`) | "rule id" |
+| **marker** | the bracketed prefix that opens an open question's or a keyed entry's text in a carrier: `[blocking #key]`, `[non-blocking #key]` or `[#key]`; carrier syntax, never a binding (`spec:model.open-question-keys`, `spec:model.rule-keys`) | "anchor" (the in-code binding) · "flag" (names the blocking part only) |
+| **distillation boundary** | the point past which a Design entry may leave its Spec: the Spec is implemented with a verifier and a bound artifact carries the entry; explanatory prose always stays (`spec:model.enrichment-lifecycle`) | "slimming" (the act) |
 
 ## The other authored things  (no system truth — → `spec:model.pack-aggregate`, `spec:model.anchors`)
 
@@ -66,18 +72,18 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 |---|---|---|
 | **`Pack`** | the authored grouping / review **aggregate** over `Spec`s; states **no truth of its own**; its `framing` is a plain descriptive note; a spec may belong to many packs; membership lives on the manifest, the `belongsTo` edge is derived from it | "SpecPack" |
 | **anchor** | a human-written pointer **in source code**: *"this code location is a **binding** into the graph"* — identity, an optional label, zero or more Spec targets, and optional structure; a binding assertion only, never system-truth content (no behavior, rationale, readiness, status, acceptance criteria, or delivery facts); yields `anchored`-claim edges; written in one of **two representations**, the constant form or the comment form, feeding one closed envelope (`spec:model.anchors`); in prose, the verb **"annotate"** means "write an anchor" | "marker" · "annotation" |
-| **constant form** | the anchor as a top-level `const` initialized with a trusted builder call (`codeAnchor` · `specTest` · `specOracle`), reified statically; trust is by Protocol builder import, from the package or its zero-dependency `/anchors` subpath | "anchor constant" (the old name) · "marker constant" |
+| **constant form** | the anchor as a top-level `const` initialized with a trusted builder call (`codeAnchor` · `specTest` · `specOracle`), reified statically; trust is by a Protocol builder binding: the package, its zero-dependency `/anchors` subpath, or a relative import of the package's own `ids`, `anchors` or `model/code-anchor` module (`spec:model.anchors`) | "anchor constant" (the old name) · "marker constant" |
 | **comment form** | the anchor as a top-level `/** … */` block in a `.ts`/`.tsx` file, above a statement, after the last one, or alone in the file, carrying reserved camelCase, TSDoc-compatible tags (`@sdpAnchor` · `@sdpSatisfies` · `@sdpReferences` · `@sdpRole` · …); `@sdpAnchor <id>` opens it, only the reserved tags are read, prose authors nothing, and no import is required (the comment-form ruling, MD-36) | "JSDoc anchor" · "doc tag" |
 | **references** | the derived, `anchored` CodeNode → `Spec` edge from a code anchor's `references` list: *this code answers to that design* without claiming to realize it; the unit follows the design or realizes part of it, so a change to the design asks the code to follow; one direction only, so a design that builds on existing code says so by its own `dependsOn` or `refines` to the Spec the code satisfies, never by a reference from the code; a target names a whole Spec; it confers no delivery fact, moves no floor, and the drift alarm ignores it (the binding-grain ruling, MD-37) | "see-also" · "satisfies" (a realization claim) · "dependsOn" (a Spec relation) |
 | **role** | the optional one-token value on a code anchor, lowercase kebab and never normalized, naming the architectural pattern its unit plays (`service` · `decider` · `projection` · …); a corpus-owned vocabulary whose taxonomy the census renders with counts, checked against no list (the architectural-annotation ruling, MD-38) | "pattern" · "kind" (reserved for the Spec descriptor) · "tag" |
 | **layer** | the optional closed-set attribute of a `component:` anchor — `edge` · `application` · `domain` · `adapter` · `infrastructure`; outside the set, or on a non-component anchor, an envelope error | "tier" |
 | **context** | the optional one-token value on a `component:` anchor, in the token grammar of `role`, naming its bounded context; on a non-component anchor, an envelope error | "bounded_context" (the v0 field) · "domain" |
-| **architecturally significant unit** | a code unit with exported public surface or cross-component reach that warrants graph-visible structural binding — component membership, uses declarations for its architectural dependencies, a role, and references to the designs it answers to; annotated on the anchor of the code that realizes it; the accepted set is an owner-reviewed declaration, never derived from imports (carried by `spec:model.structural-patterns`) | "pattern" (refused by the architectural-annotation ruling, MD-38, which replaced MD-34) |
+| **architecturally significant unit** | a code unit with exported public surface or cross-component reach that warrants graph-visible structural binding — component membership, a role, and references to the designs it answers to, with uses declared for its architectural dependencies, normally between components (a unit's own uses is optional); annotated on the anchor of the code that realizes it; the accepted set is an owner-reviewed declaration, never derived from imports (carried by `spec:model.structural-patterns`) | "pattern" (refused by the architectural-annotation ruling, MD-38, which replaced MD-34) |
 
 **Two grouping mechanisms, kept distinct:** *refinement* (parent `Spec` → children — authored truth with
 descendants) vs *the aggregate* (the `Pack` — a cross-cutting review collection, no truth of its own).
 
-## Claims & the authored/derived split  (→ `01`, `spec:extraction.claim-taxonomy`)
+## Claims & the authored/derived split  (→ `spec:extraction.claim-taxonomy`)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
@@ -95,7 +101,7 @@ claim category** — it **inherits** its source's `claim` (so `belongsTo` carrie
 | Term | Definition | Aliases to avoid |
 |---|---|---|
 | **delivery fact** | a derived truth about a `Spec`'s *realization*, computed from edges, shown as a badge — **never authored** (authoring one is an honesty violation) | a readiness rung |
-| **`implemented`** | ≥1 `satisfies` edge resolves directly to the Spec — code **claims** to realise it, *not* that it works or is live; the fact never propagates through refinement | — |
+| **`implemented`** | ≥1 `satisfies` edge resolves directly to the Spec — code **claims** to realize it, *not* that it works or is live; the fact never propagates through refinement | — |
 | **`has-verifier`** | a resolving test anchor `verifies` the Spec directly, or an **enabled verifier** verifies it — a verifier *exists*, *not* that it passed | — |
 | **`observed`** *(aspirational)* | runtime evidence links to the Spec's target — the liveness rung | — |
 | **enabled verifier** | a verifying `example`/scenario backed by a **linked, resolvable test anchor** — *structurally bound*, not runner-executed (skip/quarantine is CI's, exactly as pass/fail is) | — |
@@ -110,11 +116,11 @@ facts literal while the canonical recipe reports both audited exclusions.
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
-| **the one graph** | the single *derived* read model — a flat, typed, deterministic, regenerable snapshot-projection of the repo at a commit; the **sole** input every consumer reads | "second store" (forbidden) |
+| **the one graph** | the single *derived* read model — a flat, typed, deterministic, regenerable snapshot-projection of the repo at a commit; the sole read model for current authored intent and bindings. A recipe or view whose contract admits it may read explicitly supplied input beside the graph (a base graph, imports, a perspective, a proposal, run records), identified apart from the graph and never answering in its name; validators and the shipped projections stay graph-only | "second store" (forbidden) · "sole input" (recipes take `--params`) |
 | **`extractor`** | the producer — the *only* component that reads source; derives nodes, edges, `claim`s, and the validation report | — |
-| **`nodeType` / `specKind`** | structural class (`Primitive`/`Pack`/`Anchor`/`CodeNode`/…) vs the truth-category on `Primitive` nodes — kept split so they never collide | a single `kind` field |
+| **`nodeType` / `specKind`** | structural class (`Primitive` · `Pack` · `Anchor` · `CodeNode`, a closed set) vs the truth-category on `Primitive` nodes — kept split so they never collide | a single `kind` field |
 | **git is the event log** | history and prior states live in git; the graph carries only current state | audit tables / lifecycle bookkeeping in the graph |
-| **location table** | the graph's table, beside its nodes and edges, of the source line of every keyed Design and UI entry and every open question; a location is never an identity or a binding target, and Primitive and Pack nodes carry no lines (`spec:extraction.entry-locations`) | "source map" · "entry anchor" |
+| **location table** | the graph's table, beside its nodes and edges, of the source line of every keyed Design and UI entry, every rule and flow entry, every open question and its fields, and every authored relation target; a location is never an identity or a binding target, and Primitive and Pack nodes carry no lines (`spec:extraction.entry-locations`) | "source map" · "entry anchor" |
 
 ## Validation & honesty  (→ `spec:validation.two-check-families`, `spec:validation.readiness-floor`)
 
@@ -123,11 +129,12 @@ facts literal while the canonical recipe reports both audited exclusions.
 | **`validator`** | one individual deterministic check; groups into the two families below | — |
 | **conformance checks** | "is this *well-formed* against the meta-model?" — referential integrity · duplicate IDs · `claim` separation · grouping coherence · ambiguity-is-loud | — |
 | **honesty checks** | "is this *not pretending*?" — authoring-shape honesty (no hand-authored derived edges/facts) · honest readiness against the floor | — |
+| **corpus rule** | an operator-selected graph body a corpus runs through its own `validate --rules` invocation; its findings name their corpus and sit outside the conformance and honesty families; neither a rule-kind Spec nor a Protocol validator (`spec:validation.corpus-rules`) | "corpus check" · "custom validator" |
 | **readiness floor** | the **minimum structural requirement to *state*** a readiness rung — a floor to clear, **never a quota to fill** or a score | "readiness profile" |
 | **`gap`** | a surfaced absence (e.g. `ready` with no verifier) — informative, never a gate | — |
 | **`orphan`** | a `Spec` with no relations and nothing pointing at it — informative | — |
 | **derived readiness** | the highest rung whose floor clauses pass, computed from the graph ("structural floor reached"); rendered **beside** the stated rung, never overwriting the author's statement | — |
-| **stated next rung** | the rung above a Spec's stated rung, with the floor clauses that keep the floor from reaching it; with no failing clause the rung waits only for its author's statement, which the Pack page writes as `nothing blocks`, never a promotion. It differs from the floor's next rung, the rung above the floor reached, which promotion preflight (recipe 9) reports (`spec:consumers.pack-design`) | "next rung" alone · "target rung" |
+| **stated next rung** | the rung above a Spec's stated rung, with the floor clauses that keep the floor from reaching it; with no failing clause the rung waits only for its author's statement, which the Pack page writes as `nothing blocks`, never a promotion. It differs from the floor's next rung, the rung above the floor reached; promotion preflight (recipe 9) reports both, as `aboveStated` and `aboveFloor` (`spec:consumers.pack-design`) | "next rung" alone · "target rung" |
 | **mention** | a `spec:` id written in a Spec's narrative or section text, outside the `gwt` and `gwt-vocabulary` fences; checked for resolution and for a backing declared relation in either direction, and it mints no edge (the checked-mentions decision, `spec:decisions.checked-mentions`) | "reference" · "citation" · "link" |
 | **entry address** | a Spec id followed by `#`, a section name (`design`, `ui`, `question`, or `rule`), a dot, and the entry's lower-camel ASCII key, naming one keyed entry of that Spec's open section, one of its open questions, or one entry of its primary behavior owner that carries that key; admitted in prose and by `parseId` and refused in every id slot, so a Spec's own id never carries `#`; checked in prose by `spec:validation.prose-mentions` | "anchor" (reserved for the in-code binding) · "fragment" · "sub-id" |
 | **dependency cycle** | a set of two or more Specs in which each reaches every other through declared `dependsOn` edges, or a Spec that declares `dependsOn` on itself; recipe 26 reports each and nothing refuses it (`spec:consumers.agent-surface.address-and-cycle-recipes`) | "circular dependency" · "loop" |
@@ -136,33 +143,35 @@ facts literal while the canonical recipe reports both audited exclusions.
 fact or a checked property (that would be workflow-gating). The honesty bound: claim **"deterministically
 validated," never "provably correct."**
 
-## Surfaces & projections  (→ `06`)
+## Surfaces & projections  (→ `spec:consumers.projections-model`)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
 | **`projection`** | a pure function of the graph producing a consumer artifact — disposable, regenerable, never a second source | — |
 | **Design Review** | the flagship curated review: a `Spec`/`Pack` rendered *in context* — the context in which a human decides to state `ready`; human practice, never a recorded fact or gate | — |
+| **census** | the projection of taxonomy, readiness divergence, structural bindings and findings that `sdp census` publishes | "inventory" |
 | **agent surface** | a **visible typed graph the agent *scripts*** via the typed CLI — no verb wall; the schema *is* the contract (under-typing hides a capability) | a 30-verb API · raw-JSON-you-rejoin |
 | **`reader`** | the thin typed loader: joins + `claim` decode done once, returns composable data; authors/persists nothing — a front door, not a store | "handle" |
 | **agent front door** | the CLI-facing realization of the agent surface (MD-22): **two entrances over one seam** — the package exports the `reader` constructor, and the CLI carries the evaluation sink; a composite naming both entrances, distinct from the `reader`'s own "front door, not a store" gloss above, which names the reader's role over the graph | a query API · a verb wall |
-| **evaluation sink** | the front door's CLI entrance, the verb `sdp q`: derives the graph in process on every invocation, injects `g` / `graph` / `report` / `params`, evaluates the operator-supplied async body, prints its `return`; writes nothing and mints no query vocabulary | a REPL · a second read model |
+| **evaluation sink** | the front door's CLI entrance, the verb `sdp q`: derives the graph in process on every invocation, injects `g` / `graph` / `report` / `params`, evaluates the operator-supplied async body, prints its `return`; writes nothing and mints no query vocabulary (`spec:consumers.agent-surface.evaluation-sink`) | a REPL · a second read model |
 | **demand map** | the ruled statement of how agents actually arrive — holding a **string**, a **file**, or a **changeset**, never the Spec id they are looking for — carried as clauses on `spec:consumers.agent-surface`; the reason the frozen entry adapters are `findByConcept` · `byFile` · `blastRadius` | — |
 | **recipe** | a runnable, documented `sdp q` body composing the frozen adapters — the growth valve past them: when a question is not answered, script it, and a join freezes into the `reader` only at the second-caller bar; catalog at `docs/agent-surface/recipes.md`, every body executed as written by the recipe check | a new query verb |
-| **recipe parameter** | the input a caller passes a recipe as data through `sdp q --params`, read by the body from `params` with the catalog's sample as its fallback (`spec:consumers.agent-surface.recipe-parameters`) | "argument" · "recipe flag" |
+| **recipe parameter** | the input a caller passes a recipe as data through `sdp q --params`, read by the body from `params`, falling back to the catalog's sample when the catalog gives one (`spec:consumers.agent-surface.recipe-parameters`) | "argument" · "recipe flag" |
 | **Pack design** | the reader's per-Pack assembly of each member's stated next rung, design columns and code bindings, with the Pack's boundary; the Design Review's Pack page renders it (`spec:consumers.pack-design`) | "Pack page" (names the rendering) · "capability page" |
-| **design columns** | the counts and lists derived for a Spec beside its readiness: its keyed Design and UI entries, pinned declarations, open and blocking questions, and the decisions it names; never a score or a rung, and design maturity is read from them, never stated (`spec:model.design-maturity`) | "design score" · "designed" (the original design's stage) |
+| **design columns** | the counts and lists derived for a Spec beside its readiness: its keyed Design and UI entries, pinned declarations, open and blocking questions, and the decisions it names; never a score or a rung; what design a Spec carries is read from these columns and never stated, while readiness stays the author's stated design maturity of the intent (`spec:model.design-maturity`) | "design score" · "designed" (the original design's stage) |
 | **boundary** | the Specs outside a Pack joined to a member by one of the four typed relations `refines`, `dependsOn`, `constrainedBy` and `decidedBy`: the Pack **rests on** a Spec a member names by one of them and is **rested on by** a Spec that names a member by one of them; outside Specs that `verifies` or `supersedes` a member list apart as `verifiedBy` and `supersededBy` (`spec:consumers.pack-design`) | "outside dependencies" · "perimeter" |
-| **perspective** | a reader's concern a Pack is read from, such as the domain model, operations or the runtime platform: corpus data a recipe takes as a parameter to filter and order a Pack's members and their content without changing them, adding no kind, stage or sequence; the corpus owns its perspectives and the Protocol ships none (`spec:consumers.review-perspectives`) | "lens" (names the Studio's graph views) · "discipline" (the kind-or-section filter) |
+| **perspective** | a reader's concern a Pack is read from, such as the domain model, operations or the runtime platform: corpus data a recipe takes as a parameter to select and order a Pack's members, leaving each member's content whole, adding no kind, stage or sequence; the corpus owns its perspectives and the Protocol ships none (`spec:consumers.review-perspectives`) | "lens" (names the Studio's graph views) · "discipline" (the kind-or-section filter) |
 | **blast radius** | the reader's file-level impact query: a changeset → the directly impacted `Spec`s/`Pack`s (authored at, or bound to, the changed files) + the explicit one-hop neighborhood; a changed identity-only CodeNode, bound to no Spec, is reported in its own bucket, neither dropped nor folded into coverage-unknown; never claims exhaustive reach | — |
 | **coverage-unknown** | the honest blind spot of file-level impact: a changed file the graph records nothing at, **named in the result** — never silently dropped | — |
 | **at-risk** | a node one explicit hop from an impacted node (the connecting edge + its `claim` carried), itself neither impacted nor at a changed file | — |
 | **context bundle** | the reading material for one design pass, composed from the graph on each invocation by a catalog recipe within a budget counted in UTF-16 code units, stating its scope and what it left out; never saved (`spec:consumers.context-bundle`) | "token-budgeted slice" · "AI slice" |
 | **MCP surface** | integration for user-facing **apps** (designed-in, deferred build) — distinct from the agent surface: agents *script*, apps *integrate* | — |
+| **curated graph** | the declared intent and anchored bindings the one graph holds, sparse by design, read apart from the `inferred` impact graph (`spec:consumers.impact-graph`) | "authored graph" |
 | **impact graph** | the mechanical code structure derived beside the curated graph under the `inferred` claim: file-level imports feed the curation report, and exhaustive symbol reach stays designed-in and deferred; divergence from the curated graph is **curation, not drift** (`spec:consumers.impact-graph`) | "mechanical substrate" |
 | **intent composition** | the write-affordance: compose **scoped intent**, hand it to an agent that edits source; git records it; conformance checks gate — no patch loop | patch-back / codemod-from-view |
 | **scoped intent** | *what* is composed: an explicit change bounded by a `Spec` / its neighbors / a `Pack` / open questions | — |
 
-## The executable half  (ratified at the plan-12 session — carrier-independent machinery)
+## The executable half  (carrier-independent machinery)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
@@ -183,11 +192,11 @@ validated," never "provably correct."**
 authoring-surface sugar that statically expands to N sibling examples at extraction, and renderers may project
 a sibling set back as a table — the graph never holds a multi-point example.
 
-## The authoring carrier  (ratified at the plan-16 ruling — the carrier ruling, MD-18)
+## The authoring carrier  (the carrier ruling, MD-18)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
-| **carrier** | the text format that carries the authored `Spec` document — the envelope, the prose, and the owned notation; **ruled: Markdown (`.sdp.md`) for all eight kinds**, Gherkin (`.sdp.gherkin`) as a lawful per-ID carrier for behavior and example Specs, and the TS DSL as the import source and a lawful per-ID option (one canonical surface per ID, `04` §1); bare `.feature` is non-canonical import-source territory | "format"/"file type" (say which level) · a carrier is never a second store |
+| **carrier** | the text format that carries the authored `Spec` document — the envelope, the prose, and the owned notation; **ruled: Markdown (`.sdp.md`) for all eight kinds**, Gherkin (`.sdp.gherkin`) as a lawful per-ID carrier for behavior and example Specs, and the TS DSL as the import source and a lawful per-ID option (one canonical surface per ID, `spec:decisions.carrier-ruling`, completed for Packs and Gherkin by their carrying decisions); bare `.feature` is non-canonical import-source territory | "format"/"file type" (say which level) · a carrier is never a second store |
 | **notation** | the Protocol-**owned** typed step language inside the carrier's fenced blocks — Given/When/Then step text and the slot vocabulary; owned by the Protocol whatever the carrier | "grammar" (the dismissed own-language direction) · "DSL" (reserved for the TS DSL) |
 
 ## Relations  (authored, typed, directed `Spec`→`Spec` edges — → `spec:model.relations`)
@@ -196,8 +205,8 @@ a sibling set back as a table — the graph never holds a multi-point example.
 |---|---|---|---|
 | **refines** | child → parent | a more precise child; how altitude descends; a decision that narrows one part of another decision refines it | UML «refine» |
 | **dependsOn** | dependent → dependency | needs another `Spec` to hold | UML *Dependency* |
-| **constrainedBy** | bounded → constraint | bounded by a rule / NFR / policy `Spec` (a *typed* dependency) | — |
-| **decidedBy** | shaped → decision | shaped by a Decision Record (`doc:` only for a genuinely external ADR) | UML «trace» |
+| **constrainedBy** | bounded → constraint | bounded by a `rule` or `constraint` Spec (a *typed* dependency) | — |
+| **decidedBy** | shaped → decision | shaped by a Decision Record (an external `doc:` ADR target is a named deferral, below) | UML «trace» |
 | **verifies** | verifier → target | an example/scenario verifies a target — also emitted derived from a test anchor (same type, different `claim`, never collapsed) | UML «verify» |
 | **supersedes** | new → old | the newer Decision Record replaces the older one whole; the older record and the edge stay only while its text explains something a reader still needs, otherwise the newer record carries what survives and the older one is deleted, with git as its history | — |
 
@@ -207,15 +216,21 @@ manifest) · `memberOf` and `uses` (CodeNode → CodeNode, anchored structure). 
 twelve**: these six plus the six authored relations above (`spec:extraction.derive-graph`). **Dropped:**
 `exemplifies` (= `example` kind + `refines` + `verifies`).
 
-## Delivery-process vocabulary  (adopted nouns, realized only as projections — → `06` §6)
+| Term | Definition | Aliases to avoid |
+|---|---|---|
+| **relation reason** | the one optional line of prose an authored relation carries saying why it holds, owned by that relation; intent, never a fact, a floor or an edge (`spec:model.relation-reasons`) | "strength" · "aspect" · "rationale" (on an edge) |
 
-**discipline** (a lens/filter over the graph, not a phase you pass through) · **phase / iteration /
+## Delivery-process vocabulary  (adopted nouns; any realization is a projection, and none is built — `spec:decisions.adopt-the-nouns`, `spec:consumers.projections-model.roadmap-views`)
+
+**discipline** (a filter over the graph by kind or section, not a phase you pass through) · **phase / iteration /
 milestone** (descriptive vocabulary, optional roadmap projections, never gates) · **release** (a tagged set —
 a git-tag projection) · **baseline** (a named approved snapshot; the **signed git tag is the approval
 artifact** — approval remains outside the model, never an authored primitive).
 
 **Guidance-only labels:** `delivery session` and `work shape` describe an agent interaction and
-its advisory entry in `sdp-sessions`; neither names a Protocol primitive, descriptor, relation,
+its advisory entry in `sdp-sessions`; `design pass`, `design diff`, `change proposal`, `design
+backlog` and `curation report` name a design activity or a recipe's answer, and their carrying
+Specs supply their meaning. None of them names a Protocol primitive, descriptor, relation,
 delivery fact, workflow state, or graph state.
 
 ## A worked dialogue  (the language in use)
@@ -235,16 +250,13 @@ delivery fact, workflow state, or graph state.
 ## Flagged ambiguities  (named, not silently resolved)
 
 - **"epistemic boundary"** is a *working name* for the humans-assert-intent / machines-assert-structure
-  division (`01`); a friendlier Studio-facing name is a minor open item.
+  division (`spec:extraction.claim-taxonomy`, `spec:model.anchors`); a friendlier Studio-facing
+  name is a minor open item.
 - **`ref()`** in the DSL is a **spec-only** reference builder wearing a generic name (it rejects
   `pack:`/`doc:` targets); a source checkout also notes this on the export in `src/ids.ts`. Consequently `decidedBy` → an
   external `doc:` ADR is a **named deferral** (MD-16, stated in `spec:decisions.carried-evidence`);
   revisit when `doc:`-target
   relations or pack-targeting arrive.
-- ~~Candidate vocabulary from the executable-spec exploration: *notation* · *carrier*~~ — **ratified
-  by the carrier ruling (MD-18)**; see **The authoring carrier** above. The rest
-  of the exploration's candidates ratified with their referents at the plan-12 session — see **The
-  executable half** above.
 - **"vault"** is Obsidian's word for a folder of linked notes, used by the `idea` captures in
   `pack:obsidian-vault-v1` for a projection regenerated from the graph. Whether that projection
   stands alone or is the Studio's local half is open (`spec:consumers.obsidian-vault`), and the
@@ -261,28 +273,34 @@ delivery fact, workflow state, or graph state.
   (`specOracle` anchor; rendered as "expected outcome") · `witness` · `coverage gap` · `sdp import` ·
   `carrier` · `notation` (both ratified at the carrier ruling, MD-18) ·
   `agent front door` · `evaluation sink` / `sdp q` · `demand map` · `recipe` (the growth-valve
-  sense) — the last four ratified at the phase-5 PR review (the front-door ruling, MD-22); the
-  **Surfaces & projections** rows above give the referents · `constant form` · `comment form` ·
-  `references` · `role` · `layer` · `context` — the six of the annotations arc (MD-36 to
-  MD-38; all three rulings state `ready`) · `question key` · `stated next rung` · `design
-  columns` · `Pack design` · `boundary` (rests on, rested on by) · `location table` · `recipe
-  parameter` · `pinned declaration` · `dependency cycle` · `perspective` · `mention` · `entry
-  address` — ratified at the owner's PR 30 rulings, the last two with the
-  checked-mentions decision.
+  sense) — the last four by the front-door ruling, MD-22; the **Surfaces & projections** rows give
+  the referents · `constant form` · `comment form` · `references` · `role` · `layer` · `context` —
+  the six of the comment form, binding-grain and architectural significance rulings, MD-36 to
+  MD-38 · `question key` · `stated next rung` · `design columns` · `Pack design` · `boundary`
+  (rests on, rested on by) · `location table` · `recipe parameter` · `pinned declaration` ·
+  `dependency cycle` · `perspective` · `mention` · `entry address` · `primary behavior owner` ·
+  `question field` · `rule key` · `marker` (the bracket prefix) · `distillation boundary` ·
+  `corpus rule` · `census` · `curated graph` · `relation reason` — carried by the named Specs
+  cited in their glossary rows; mention and entry address follow the checked-mentions decision.
 - **Descriptor values locked:** `kind` ∈ {`behavior`,`workflow`,`example`,`rule`,`constraint`,`model`,
   `decision`,`contract`} · `altitude` ∈ {`epic`,`feature`,`story`} · `readiness` ∈
   {`idea`,`scoped`,`defined`,`ready`}.
-- **Rejected:** `provenance` (→ `claim`) · `marker` (→ `anchor`) · `Facet` (→ `section`) · `SpecPack`
-  (→ `Pack`) · `abstraction` (→ `altitude`) · `candidate` (as a readiness rung — FSM imprint) · FSM /
-  status-FSM · `model element` (as the primitive's name) · `genus`/`species` · `Scenario`/`capability`/`NFR`
+- **Rejected:** `provenance` (as a fact's epistemic status → `claim`; the build-origin sense, the
+  package version and commit `sdp --version` names, keeps the word, `spec:consumers.engine-provenance`) ·
+  `marker` (as a name for the in-code binding → `anchor`; the bracket prefix `[#key]` /
+  `[blocking #key]` keeps the word) · `Facet` (→ `section`) · `SpecPack` (→ `Pack`) ·
+  `abstraction` (→ `altitude`) · `candidate` (as a readiness rung — FSM imprint) · FSM / status-FSM ·
+  `model element` (as the primitive's name) · `genus`/`species` · `Scenario`/`capability`/`NFR`
   as descriptors (labels / projections, not descriptors) · `exemplifies` (relation) · `status` (on the
   `decision` section — FSM imprint; adoption arc = `readiness`, replacement = `supersedes`, rejected paths =
   `alternatives`/`consequences` — MD-11) · `pattern` (as an architectural primitive, kind, or
   `pattern:` namespace — ordinary English remains; the architectural-annotation ruling, MD-38,
   which replaced MD-34) · `annotation` (→ `anchor`; the verb "annotate" survives as "write an anchor").
 - **Locked usage:** readiness is **"stated/asserted," never "claimed"** ("claim" is reserved for the `claim`
-  taxonomy) · the meta-model defines the **contract**, **instances conform**; "govern"/"police" retired ·
-  checks are **conformance checks + honesty checks** · **pre-graph** = upstream of graph derivation in the
+  taxonomy) · the meta-model defines the **contract**, **instances conform**; "govern"/"police" are
+  retired as descriptions of the Protocol's relation to a project, which it does not; "checks police
+  conformance and honesty" remains the guardrail's wording, because checks do enforce · checks are
+  **conformance checks + honesty checks** · **pre-graph** = upstream of graph derivation in the
   one validation path (the authored level before the extractor runs) — a level checks never live in:
   validators consume the one graph only, never a second validation path (one validation path, MD-14).
 - **Resolved (MD-15):** Markdown Spec files use the **`.sdp.md`** extension by default; **`.sdp.ts`**
@@ -293,13 +311,14 @@ delivery fact, workflow state, or graph state.
   Gherkin carrier option, MD-27, and the `.sdp.gherkin` extension, MD-28):** Specs and Packs default
   to Markdown; the TS DSL survives as import source and a lawful per-ID option; behavior and example
   Specs may instead use a `.sdp.gherkin` carrier. Bare `.feature` stays non-canonical import-source
-  territory. The surviving law is **one canonical surface per ID, no mixing** (`04` §1); the
-  `.sdp.ts` extension law (MD-15) is re-pointed, not repealed — its rationale carries to the
-  `.sdp.md` and `.sdp.gherkin` siblings.
+  territory. The surviving law is **one canonical surface per ID, no mixing**
+  (`spec:decisions.carrier-ruling`); the `.sdp.ts` extension law (MD-15) is re-pointed, not
+  repealed — its rationale carries to the `.sdp.md` and `.sdp.gherkin` siblings.
 - **Resolved (the prose-ownership law, MD-19):** free prose enters the graph as **description values on
   typed owners** — the owning section or the `Spec` itself (the spec-level narrative slot); never a
-  heading-path store, never a file-only pointer; the edge-text ownership rule is the surface-design
-  session's named deliverable, and unowned prose refuses loudly until it lands.
+  heading-path store, never a file-only pointer; a relation owns its one-line reason
+  (`spec:model.relation-reasons`), an open question owns its four fields
+  (`spec:model.open-question-fields`), and unowned prose refuses loudly.
 - **Naming (resolved — the protocol naming, MD-5):** product **Libar Software Delivery Protocol** (short form "the Protocol");
   CLI **`sdp`**; npm **`@libar-dev/software-delivery-protocol`** (single package); repo
   `libar-dev/software-delivery-protocol`; namespaces `@libar-dev/` (OSS) vs `@libar-ai/` (commercial).

@@ -2,7 +2,7 @@
 
 How truth gets into the repo. Authoring has three ruled **carriers**, all framework-neutral: the **Markdown carrier (`.sdp.md`)**, the default for Specs and Packs; the **TypeScript Spec DSL (`.sdp.ts`)**, an import source and lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25); and **graph-aware Gherkin (`.sdp.gherkin`)**, a lawful per-ID option for behavior and example Specs only (the Gherkin carrier option, MD-27, and the `.sdp.gherkin` extension, MD-28). **Generic source anchors** bind code under any carrier. The interactive harness UI stays named in §4 as **ASPIRATIONAL**. The carrier-independent executable machinery beneath richer surfaces is landed (CORE).
 
-Realises **P5** (statically extractable), **P6** (ID-linked), **P9/P10** (anchors are anchored bindings, not intent), and the epistemic boundary from `01`.
+Realizes **P5** (statically extractable), **P6** (ID-linked), **P9/P10** (anchors are anchored bindings, not intent), and the epistemic boundary from `01`.
 
 ---
 
@@ -49,7 +49,7 @@ If a non-static expression appears, the extractor responds in **two tiers**, dra
 
 A designed-for lint rule (`sdp/spec-static`) would flag both tiers earlier; the extractor is the backstop.
 
-**The two tiers above are the TS carrier's granularity — graceful degradation is per-carrier.** The TS carrier keeps L3's property-level graceful degradation: a non-static optional-section property drops with a warning, keeping the rest of the spec. The Markdown carrier is deliberately **all-or-nothing per document**: a malformed Markdown document refuses as a whole under one of the four hard finding IDs (`extract/invalid-frontmatter`, `extract/invalid-markdown-structure`, `extract/unrecognized-heading`, `extract/unowned-prose`) and is excluded while healthy sibling documents continue. This is an intentional corpus-scoped hardening, not a contradiction of the two-tier law — one L3 principle (one bad input never poisons the whole build) represented at different granularity per carrier.
+**The two tiers above are the TS carrier's granularity — graceful degradation is per-carrier.** The TS carrier keeps L3's property-level graceful degradation: a non-static optional-section property drops with a warning, keeping the rest of the spec. The Markdown carrier is deliberately all-or-nothing per document: a malformed document is refused with a hard extraction finding and excluded from the graph while healthy sibling documents continue. `spec:carrier.markdown-body-grammar` states the body refusals and whole-carrier behavior; `spec:carrier.markdown-parser` states bounded finding-class parity with TypeScript. This is an intentional corpus-scoped hardening, not a contradiction of the two-tier law — one L3 principle (one bad input never poisons the whole build) represented at different granularity per carrier.
 
 ### Enrichment in place, refinement into children
 
@@ -86,7 +86,7 @@ The MVP records runtime bindings *generically*: **anchors** name routes/handlers
 
 > The only **Principle** in this area is **one runtime truth**: do not run two composition mechanisms as first-class, or the extracted architecture sub-graph becomes unreliable. *Which* mechanism a team uses (Effect Layers, Awilix, a manual factory) is a pure Representation, read later by a framework-specific adapter.
 
-**Explicitly aspirational, and not in the core narrative:** Effect `Layer`/`provides`/`requires` extraction with `R`-parameter completeness analysis, Awilix `defineRegistrations` deep wiring, Fastify plugin trees and request-scope modelling, and any Awilix→Effect migration path. *"Complexities like Effect Layers + Awilix are definitely not required."* These slot in as adapters later without changing anything in the core model.
+**Explicitly aspirational, and not in the core narrative:** Effect `Layer`/`provides`/`requires` extraction with `R`-parameter completeness analysis, Awilix `defineRegistrations` deep wiring, Fastify plugin trees and request-scope modeling, and any Awilix→Effect migration path. *"Complexities like Effect Layers + Awilix are definitely not required."* These slot in as adapters later without changing anything in the core model.
 
 ---
 
@@ -95,7 +95,7 @@ The MVP records runtime bindings *generically*: **anchors** name routes/handlers
 The **carrier-independent executable machinery is landed (CORE)**; what stays deferred is named per surface below. The landed half — identical under whichever richer surface arrives, so none of it waits on one:
 
 - **Generated contracts.** `sdp build` emits a per-example **step contract** (the literal-union module a test binds handlers against — spec-side drift is a compile error naming the exact step) and a per-parent **space contract** (the typed dimensions of the example space · every child's bound point · the Outcome union derived from the parent's Then vocabulary). Both derive from the extracted graph, never the evaluated spec module (one validation path, MD-14), and a test may import them *because* they are projections — never the authored spec.
-- **The typed example space.** A parent spec's `exampleSpace` declares the parameter-slot vocabulary its steps use (typically a `behavior` spec; any kind may own the space when the vocabulary parameterizes its own law); each `example` child binds one **point** (point-per-example, MD-17 — a table of cases is authoring-surface sugar). The **concreteness law** is one structural cell in the example kind's `defined` floor: an unbound slot in a used step caps the example below `defined`.
+- **The typed example space.** A parent spec's `exampleSpace` declares the parameter-slot vocabulary its steps use (typically a `behavior` spec; any kind may own the space when the vocabulary parameterizes its own law); each `example` child binds one **point** (point-per-example, MD-17 — a table of cases is authoring-surface sugar). The **concreteness law** is one structural floor clause in the example kind's `defined` floor: an unbound slot in a used step caps the example below `defined`.
 - **The oracle.** The authored expected-outcome semantics for a parent's example space — implementation-side, beside the tests, bound by the `specOracle` anchor (§2), never extracted. Typed against the generated space contract on both sides: a renamed slot fails to compile, claiming an outcome the specs never stated is a `tsc` error, and `unspecified` is a first-class answer.
 - **The execution half.** The framework-neutral `/runner` core plus the `/vitest` adapter subpath (vitest an optional peer of the adapter alone); failure messages render in the spec's own language.
 
@@ -107,26 +107,35 @@ Consumers associate `*.sdp.gherkin` with Gherkin in the editor when they want hi
 
 ### Interactive harnesses (ASPIRATIONAL — a projection plus one anchored oracle)
 
-Interactive panels for "what does this spec do under conditions X, Y, Z?" exploration and coverage-gap discovery. The harness is **a projection plus one anchored oracle**, not an authoring surface plus interactive UI: the panel renders wholly from the graph + the generated space contract — the dials are the example space's dimensions, the presets are the children's bound points — and its only authored half is the ~15-line oracle bound by `specOracle` (§2). Explicitly *not* a test runner and *not* authoritative truth. The UI itself stays **cut** as a named later slice; its rendered spec lives at `explorations/executable-examples/5-harness/render/`.
+Interactive panels for "what does this spec do under conditions X, Y, Z?" exploration and coverage-gap discovery. The harness is **a projection plus one anchored oracle**, not an authoring surface plus interactive UI: the panel renders wholly from the graph + the generated space contract — the dials are the example space's dimensions, the presets are the children's bound points — and its only authored half is the oracle bound by `specOracle` (§2). Explicitly *not* a test runner and *not* authoritative truth. The UI itself stays **cut** as a named later slice; its rendered spec lives at `explorations/executable-examples/5-harness/render/`.
 
 ---
 
-## 5. Repository shape (MVP)
+## 5. Selected paths from the worked example
 
 ```
-/specs
-  checkout.pack.sdp.ts
-  orders/create-order.sdp.ts
-  payments/authorize-payment.sdp.ts
-/src
-  orders/
+examples/checkout-v1/
+  specs/
+    checkout.pack.sdp.md
+    orders/create-order.sdp.md
+    orders/create-order-valid-cart.sdp.md
+    decisions/order-lifecycle.sdp.md
+  src/orders/
     create-order.use-case.ts      // anchored: impl:orders.create-order-use-case
     create-order.route.ts         // anchored: api:orders.post
-/test
-  orders/create-order.valid-cart.test.ts   // specTest verifies spec:...
-/generated                         // gitignored, disposable (L8)
-  graph.json
-  design-review/                   // the one generated read-only view
+  test/orders/
+    create-order.valid-cart.test.ts   // specTest verifies spec:orders.create-order.valid-cart
+    create-order.oracle.ts            // specOracle models the example space
+  generated/                      // gitignored, disposable (L8)
+    graph.json
+    contracts/
+    registrars.json
+    design-review/
+    census/
+    mermaid/
+    gherkin/
 ```
 
-Specs are not separate from code — they are part of the codebase, committed alongside it. That is the whole point: the repo is the single source of truth (P1), and authoring is editing the canonical carrier + git — Markdown or TypeScript per ID (the MVP write path).
+The generated roots are disposable; an adopted registrar is a committed sibling of its authored test. `generated/imports.json` is an optional output of a build given `--imports`, not part of default example generation.
+
+Specs are not separate from code — they are part of the codebase, committed alongside it. That is the whole point: the repo is the single source of truth (P1), and authoring is editing the canonical carrier + git — Markdown, TypeScript or Gherkin per ID (the MVP write path).
