@@ -248,6 +248,7 @@ function shimmedPoolRoot(shimBody: string): { root: string; environment: NodeJS.
 
   const binDirectory = join(root, "shim-bin");
   mkdirSync(binDirectory);
+  writeFileSync(join(binDirectory, "package.json"), '{"type":"commonjs"}\n');
   const shim = join(binDirectory, "vitest");
   writeFileSync(shim, `#!/usr/bin/env node\n${shimBody}\nprocess.exit(0);\n`);
   chmodSync(shim, 0o755);
