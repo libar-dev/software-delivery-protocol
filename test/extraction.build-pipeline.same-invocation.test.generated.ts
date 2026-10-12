@@ -43,10 +43,10 @@ export function registerSameInvocation<World>(
         params,
       });
     },
-    "both graph entrances return the spec {returnedSpecId}": (execution, params) => {
+    "the reader and the raw graph both return the spec {returnedSpecId}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
-        text: "both graph entrances return the spec {returnedSpecId}",
+        text: "the reader and the raw graph both return the spec {returnedSpecId}",
         params,
       });
     },

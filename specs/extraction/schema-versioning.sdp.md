@@ -12,9 +12,8 @@ relations:
 - outcome: Let consumers identify the graph payload contract without premature migration machinery.
 
 ## Rule
-- Every graph declares its schemaVersion, and MVP consumers require that field to be present and readable.
-- Envelope-stable, section-extensible growth is normally additive; SemVer negotiation and a migration command remain deferred until a consumer needs them.
-- The declaring entrypoint is `schemaVersion` in `src/graph/schema.ts`, carried onto every derived payload by `deriveGraph`.
+- [#declaredVersion] Every derived graph carries `schemaVersion`, which identifies its payload contract for consumers.
+- Additive payload fields, including optional fields, increment the schema minor version; incompatible shape or meaning changes increment the major version, while patch changes preserve the payload contract.
 
 ## Example space
 ```gwt-vocabulary

@@ -5,7 +5,9 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:extraction.excludes
-  verifies: spec:extraction.excludes
+  verifies:
+    target: spec:extraction.excludes
+    exercises: [segmentBoundary]
 ---
 # A prefix excludes its own tree and leaves a similar sibling standing
 

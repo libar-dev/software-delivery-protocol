@@ -5,7 +5,9 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:extraction.schema-versioning
-  verifies: spec:extraction.schema-versioning
+  verifies:
+    target: spec:extraction.schema-versioning
+    exercises: [declaredVersion]
 ---
 # A derived payload carries a schema version its consumer can read
 
@@ -15,5 +17,5 @@ relations:
 ```gwt
 Given a graph derived from the authored spec {specId: "spec:probe.schema-versioning"}
 When the graph payload is serialized
-Then the payload declares the schema version {schemaVersion: "0.9.0"}
+Then the payload declares the schema version {schemaVersion: "0.10.0"}
 ```

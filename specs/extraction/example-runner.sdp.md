@@ -4,7 +4,9 @@ kind: behavior
 altitude: feature
 readiness: ready
 relations:
-  refines: spec:extraction.executable-contracts
+  dependsOn:
+    target: spec:extraction.executable-contracts
+    reason: runs the step contracts the build emits
 ---
 # A bound example runs its contract steps against a fresh world
 
@@ -13,16 +15,12 @@ relations:
 - outcome: Run a generated contract's steps in authored order and make a red step name itself in the Spec's own words.
 - value: A failing example reads as the Spec that failed rather than as an anonymous assertion.
 
-### Open questions
-- [non-blocking #runnerLawPromotion] Do the every-step-and-only-the-steps and fresh-world-per-example laws stated in the runner and vitest-adapter commentary promote here or to story-altitude children under comment promotion?
-
 ## Behavior
-- rule: The core plans every contract step in authored order and runs it against the world the caller hands in; creating a fresh world per example is the adapter's lifecycle, never the core's.
-- rule: Duplicate step text within one example binds one handler, and every occurrence runs that one handler with its own authored params.
-- rule: A red step names itself before the assertion detail: the failure message leads with the step's natural reading — the Spec's own words with bound values inlined — and the original error is preserved, carried as `cause` when it cannot be re-messaged, and wrapped when the thrown value is not an error.
+- rule: [#contractOrder] The core plans every contract step in authored order and runs it against the world the caller hands in; creating a fresh world per example is the adapter's lifecycle, never the core's.
+- rule: [#oneHandlerPerStep] Duplicate step text within one example binds one handler, and every occurrence runs it; an occurrence that binds a slot to a different value is a conflicting re-binding, named at generation, and every occurrence runs with the first binding, because an example is one point.
+- rule: [#redStepNamesItself] A red step names itself before the assertion detail: the failure message leads with the step's natural reading — the Spec's own words with bound values inlined — and the original error is preserved, carried as `cause` when it cannot be re-messaged, and wrapped when the thrown value is not an error.
 - rule: A missing or stale step handler is a compile-time refusal rather than a silent skip: the bindings type covers every step and only the steps, so spec-side drift fails the typecheck instead of the run.
 - rule: The core contributes `unspecified`, the one outcome no Spec ever states, so an uncovered region of an example space has an honest answer rather than a manufactured one.
-- rule: The realizing entrypoints are `planExample` and `runExamplePlan` in `src/runner/index.ts`.
 
 ## Example space
 ```gwt-vocabulary
@@ -38,3 +36,5 @@ Then the failure preserves the original detail {detail:string}
 ## Design
 
 Ports and adapters. The runner accepts a generated contract, step handlers, and a caller-owned world. The Vitest adapter registers tests and creates each world before calling the runner. Framework dependencies point from the adapter toward the runner; the runner remains usable without a test framework. Step ordering and failure labels belong to the core, while test registration and world lifecycle belong to the adapter.
+
+- failureMessage: `"at step: " + naturalReading + "\n" + originalMessage` is the message expression; naturalReading is the rendered contract step and originalMessage is the original error message or the string form of a non-Error throw.

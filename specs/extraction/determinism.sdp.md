@@ -15,9 +15,8 @@ relations:
 - flavor: quality
 - statement: Two clean derivations of the same committed source produce byte-identical generated trees.
 - target: sha256(tree@run1) == sha256(tree@run2)
-- measurableBy: test/cli.test.ts clean-repo determinism
+- measurableBy: test:protocol.extraction-determinism
 
 ## Behavior
-- rule: Nodes sort by ID, edges sort by from, type, and to, and semantically compared output excludes wall-clock timestamps and run-specific hashes.
+- rule: Nodes sort by id and edges by from, type and to. Generated graph and contract metadata contains no wall-clock timestamp or run-specific hash. Graph file locations are extraction-root-relative POSIX paths, never absolute paths; authored section text remains as authored.
 - rule: `sdp build --check-clean` repeats extraction and contract generation independently, failing on any graph or generated-contract byte divergence.
-- rule: Static envelope fields fail extraction when they cannot be reified; optional TypeScript section detail may warn and drop, while Markdown documents refuse as a whole.

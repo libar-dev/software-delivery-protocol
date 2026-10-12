@@ -55,13 +55,6 @@ export function registerManifestOrderKept<World>(
         params,
       });
     },
-    "the payload declares the schema version {schemaVersion}": (execution, params) => {
-      compareContractOutcome(execution, {
-        kind: "then",
-        text: "the payload declares the schema version {schemaVersion}",
-        params,
-      });
-    },
   } satisfies StepBindings<Execution, Step, StepParams>;
 
   registerRunnableExample(
