@@ -59,6 +59,13 @@ function collectDirectorySources(directory: string, collected: string[]): void {
   }
 }
 
+/**
+ * @sdpAnchor impl:protocol.sdp-import-scan
+ * @sdpLabel collects .sdp.ts paths and reports scan failures
+ * @sdpReferences spec:carrier.sdp-import
+ * @sdpComponent component:protocol.cli
+ * @sdpRole service
+ */
 export function scanImportPaths(
   paths: readonly string[],
   hooks: ImportScanHooks = {},

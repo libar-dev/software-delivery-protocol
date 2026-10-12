@@ -35,6 +35,7 @@ const cliComponentAnchor = codeAnchor({
     componentAnchorId("component:protocol.import"),
     componentAnchorId("component:protocol.graph"),
     componentAnchorId("component:protocol.model"),
+    componentAnchorId("component:protocol.adapters"),
   ],
   layer: "edge",
   context: "protocol",
@@ -221,7 +222,8 @@ const wholesaleViewBuildInvalidationAnchor = codeAnchor({
 });
 const buildPipelineEmitAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.build-pipeline-emit"),
-  label: "the build command owns the ordered flow through artifact emission",
+  label:
+    "runBuild stages graph, contracts and registrar outputs in temporary paths before publishing them, repeating derivation under --check-clean",
   satisfies: ref("spec:extraction.build-pipeline"),
   component: componentAnchorId("component:protocol.cli"),
   role: "service",
@@ -416,6 +418,9 @@ export function runBuild(
       if (
         priorRegistrarPaths.length !== nextRegistrarPaths.length ||
         priorRegistrarPaths.some((path, index) => path !== nextRegistrarPaths[index]) ||
+        (existsSync(registrarManifestPath) &&
+          readFileSync(registrarManifestPath, "utf8") !==
+            serializeRegistrarManifest(nextRegistrarPaths)) ||
         nextRegistrarPaths.some((path) => {
           const registrarPath = confinedRegistrarPath(resolvedRoot, registrarRootReal, path);
           return (

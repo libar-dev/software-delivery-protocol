@@ -174,7 +174,7 @@ void shippedProtocolCorpusImplementationAnchor;
 const shippedProtocolCorpusTestAnchor = specTest({
   id: testAnchorId("test:protocol.shipped-protocol-corpus"),
   label: "package smoke checks verify the shipped corpus",
-  verifies: ref("spec:consumers.shipped-protocol-corpus"),
+  verifies: [ref("spec:consumers.shipped-protocol-corpus"), ref("spec:consumers.adopter-on-ramp")],
 });
 void shippedProtocolCorpusTestAnchor;
 
@@ -284,10 +284,7 @@ void [${expectedRootExports.join(", ")}];
       );
 
       const sdpHelp = run(join(consumer, "node_modules", ".bin", "sdp"), ["--help"], consumer);
-      for (const path of [
-        ...adopterAssets.filter((path) => path !== "docs/agent-surface/architecture.md"),
-        "specs/",
-      ]) {
+      for (const path of [...adopterAssets, "schemas/sdp-proposal-1.schema.json", "specs/"]) {
         expect(sdpHelp).toContain(path);
       }
       expect(sdpHelp.replaceAll(/\s+/gu, " ")).toMatch(/That graph holds intent only\./u);
@@ -312,7 +309,7 @@ void [${expectedRootExports.join(", ")}];
       }
       expect(sdpHelp.replaceAll(/\s+/gu, " ")).toMatch(/its delivery facts are empty/u);
       expect(sdpHelp.replaceAll(/\s+/gu, " ")).toMatch(
-        /its gap warnings are not evidence about what the Protocol has realized/u,
+        /its gap and verifier-linkage warnings are not evidence about what the Protocol has realized/u,
       );
       const installedCli = join(consumer, "node_modules", ".bin", "sdp");
       const intentOnly = JSON.parse(

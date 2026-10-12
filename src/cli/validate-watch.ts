@@ -473,7 +473,7 @@ function createFilesystemWatchSource(input: {
 
 /**
  * @sdpAnchor impl:protocol.validate-watch
- * @sdpLabel re-runs the one validate path on every carrier change and stays alive after findings
+ * @sdpLabel watches carrier directories and coalesces events into a pending validation rerun
  * @sdpSatisfies spec:consumers.validate-watch
  * @sdpComponent component:protocol.cli
  * @sdpRole service

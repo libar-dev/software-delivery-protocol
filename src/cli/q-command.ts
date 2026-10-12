@@ -125,7 +125,7 @@ class BodyParseError extends Error {
 const queryAnswerShapeAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.query-answer-shapes"),
   label: "reports parse positions in the caller's query body",
-  satisfies: ref("spec:consumers.agent-surface.answer-shapes"),
+  satisfies: ref("spec:consumers.agent-surface.evaluation-sink"),
   component: componentAnchorId("component:protocol.cli"),
   role: "service",
 });
@@ -409,8 +409,11 @@ function resolveBody(parsed: QueryArgs, output: CliOutput, hooks: QueryHooks): s
 const buildPipelineQueryAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.build-pipeline-query"),
   label:
-    "one query invocation derives the graph once and serves reader, raw graph, and report from that one derivation",
-  satisfies: ref("spec:extraction.build-pipeline"),
+    "runQuery reads one body, derives the graph once for the reader, raw graph and report, and prints the return or refuses on stderr",
+  satisfies: [
+    ref("spec:extraction.build-pipeline"),
+    ref("spec:consumers.agent-surface.evaluation-sink"),
+  ],
   component: componentAnchorId("component:protocol.cli"),
   role: "service",
 });

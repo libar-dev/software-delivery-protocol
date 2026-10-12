@@ -196,6 +196,28 @@ describe("sdp new spec", () => {
     }
   });
 
+  it("accepts a .pack.sdp.md path when the envelope names a Spec", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-new-spec-pack-suffix-"));
+
+    try {
+      const result = runNewSpec(requiredFlags({ path: "probe.pack.sdp.md" }), root);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.stderr).toBe("");
+      expect(readFileSync(join(root, "probe.pack.sdp.md"), "utf8")).toBe(
+        expectedScaffold("rule", "Rule"),
+      );
+      const extracted = extract({ root });
+      expect(collectHardErrors(root)).toEqual([]);
+      expect(createReader(extracted.graph).specContext("spec:tmp.probe")?.file).toBe(
+        "probe.pack.sdp.md",
+      );
+      expect(extracted.graph.nodes.some((node) => node.nodeType === "Pack")).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("refuses to overwrite an existing target and leaves its bytes unchanged", () => {
     const root = mkdtempSync(join(tmpdir(), "sdp-new-spec-collision-"));
     const target = join(root, "probe.sdp.md");
