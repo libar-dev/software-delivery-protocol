@@ -1169,6 +1169,11 @@ for (const spec of g.specs()) {
       blocking: typeof entry === "string" ? false : entry.blocking ?? false,
       question,
       key: typeof entry === "string" ? null : entry.key ?? null,
+      decider: typeof entry === "string" ? null : entry.decider ?? null,
+      links: typeof entry === "string" ? [] : entry.links ?? [],
+      provisional: typeof entry === "string" ? null : entry.provisional ?? null,
+      trigger: typeof entry === "string" ? null : entry.trigger ?? null,
+      deferral: typeof entry !== "string" && entry.trigger !== undefined,
     });
   });
   if (questions.length === 0) continue;
@@ -1189,6 +1194,8 @@ return {
     questions: questionCount,
     blocking: blockingCount,
     nonBlocking: questionCount - blockingCount,
+    deferrals: rows.reduce((sum, row) => sum + row.questions.filter((question) => question.deferral).length, 0),
+    holds: rows.reduce((sum, row) => sum + row.questions.filter((question) => question.blocking && !question.deferral).length, 0),
     specs: rows.length,
     specsWithBlocking: withBlocking.length,
     malformed: malformed.length,
@@ -1210,6 +1217,10 @@ prose or as an object with no `blocking` flag in a TypeScript carrier reads as n
 `malformed` reports collections that are not lists, entries without non-empty question text,
 entries whose `blocking` flag is present but is not a boolean, and entries whose `key` is present
 but is not a lower-camel string. Those entries do not count as questions.
+
+The question columns include `decider`, `links`, `provisional` and `trigger`. Missing text fields
+are null and missing links are an empty list. A question with a trigger has `deferral: true`.
+The totals count those deferrals apart from holds, blocking questions without a trigger.
 
 ## 21. Dependency footing
 
@@ -1293,6 +1304,7 @@ empty or absent list audits the whole corpus.
 
 ```js
 const scope = params.scope ?? [];
+const intendedRows = params.intended ?? [];
 const backingTypes = [
   "refines",
   "dependsOn",
@@ -1305,7 +1317,7 @@ const escapePattern = /\\([!-/:-@[-`{-~])/gu;
 const idPattern =
   /(?<![A-Za-z0-9-])spec:(?:[^\p{White_Space}\P{ASCII}`"\u0027()[\]{}<>|]|[^\p{ASCII}\p{White_Space}\p{Pd}\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}\p{S}\p{Z}])*/gu;
 const mentionPattern =
-  /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#(design|ui|question)\.([a-z][A-Za-z0-9]*))?$/u;
+  /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#(design|ui|question|rule)\.([a-z][A-Za-z0-9]*))?$/u;
 const specIds = new Set(g.specs().map((spec) => spec.id));
 const declared = new Map();
 
@@ -1341,7 +1353,7 @@ for (const spec of g.specs()) {
   const texts = [];
   const collect = (value, section, entry = null) => {
     if (typeof value === "string") {
-      texts.push({ at: { section, entry }, text: value });
+      texts.push({ at: { section, entry }, text: value, link: section === "intent" && /^openQuestions\[\d+\]\.links\[\d+\]$/u.test(entry ?? "") });
     } else if (Array.isArray(value)) {
       value.forEach((item, index) => collect(item, section, `${entry ?? ""}[${index}]`));
     } else if (typeof value === "object" && value !== null) {
@@ -1373,11 +1385,11 @@ for (const spec of g.specs()) {
     }
   }
 
-  for (const { at, text } of texts) {
-    for (const match of text.replace(escapePattern, "$1").matchAll(idPattern)) {
-      const rest = match[0].slice("spec:".length).replace(/[.,;:!?*_~]+$/u, "");
-      if (rest === "") continue;
-      const token = `spec:${rest}`;
+  for (const { at, text, link } of texts) {
+    const tokens = link ? [text] : [...text.replace(escapePattern, "$1").matchAll(idPattern)]
+      .map((match) => match[0].slice("spec:".length).replace(/[.,;:!?*_~]+$/u, ""))
+      .filter((rest) => rest !== "").map((rest) => `spec:${rest}`);
+    for (const token of tokens) {
       if (token === spec.id) continue;
       occurrences += 1;
       const parsed = mentionPattern.exec(token);
@@ -1398,7 +1410,9 @@ for (const spec of g.specs()) {
           section === "question"
             ? Array.isArray(questions) &&
               questions.some((entry) => typeof entry === "object" && entry !== null && entry.key === key)
-            : key !== "description" && Object.hasOwn(sections[section] ?? {}, key);
+            : section === "rule"
+              ? Object.hasOwn(sections.behavior?.ruleKeys ?? {}, key)
+              : key !== "description" && Object.hasOwn(sections[section] ?? {}, key);
         if (!holds) record(unresolvedPairs, spec.id, token, at, "entry");
       }
       if (to !== spec.id) record(pairs, spec.id, to, at);
@@ -1417,6 +1431,10 @@ const withoutForward = rows.filter(
 );
 const unbacked = withoutForward.filter((row) => !declared.has(`${row.to} ${row.from}`));
 const reverseOnly = withoutForward.filter((row) => declared.has(`${row.to} ${row.from}`));
+const intendedByPair = new Map(intendedRows.map((row) => [`${row.from} ${row.to}`, row]));
+const intended = unbacked.filter((row) => intendedByPair.has(`${row.from} ${row.to}`))
+  .map((row) => ({...row, reason: intendedByPair.get(`${row.from} ${row.to}`).reason}));
+const staleIntended = intendedRows.filter((row) => !unbacked.some((pair) => pair.from === row.from && pair.to === row.to));
 
 return {
   totals: {
@@ -1428,7 +1446,9 @@ return {
     unresolved: unresolved.length,
   },
   unresolved,
-  unbacked,
+  unbacked: unbacked.filter((row) => !intendedByPair.has(`${row.from} ${row.to}`)),
+  intended,
+  staleIntended,
   reverseOnly,
 };
 ```
@@ -1472,6 +1492,13 @@ unresolved token, and one warning per `unbacked` pair that gives its location co
 location. This audit adds what the validator leaves out: a `scope` of chosen Specs, the `reverseOnly` list, and
 every location of every pair.
 
+`params.intended` is an optional list of `{ from, to, reason }` rows using whole Spec ids.
+`intended` holds matching unbacked pairs with their reasons. The remaining pairs stay in
+`unbacked`, and `staleIntended` lists supplied rows that match no current unbacked pair in the
+chosen scope. `totals.unbacked` counts both lists, matching the validator's warnings. The
+validator reads no intended list and its warnings stand. Rule addresses resolve through
+`behavior.ruleKeys`; question links are checked as complete ids or addresses.
+
 ## 23. Entry search
 
 *When you need this: you hold a word or a key and want the entries that carry it, where concept
@@ -1512,7 +1539,13 @@ for (const spec of g.specs()) {
       index === undefined || !Array.isArray(questions) ? undefined : questions[Number(index)]?.key;
     return typeof key === "string" && /^[a-z][A-Za-z0-9]*$/u.test(key) ? key : null;
   };
+  const ruleKeys = context.sections?.behavior?.ruleKeys ?? {};
+  const ruleKeyOf = (entry) => Object.keys(ruleKeys).find((key) => ruleKeys[key] === entry) ?? null;
   const addressOf = (section, entry) => {
+    if (section === "behavior") {
+      const key = ruleKeyOf(entry);
+      return key === null ? null : `${spec.id}#rule.${key}`;
+    }
     if (section === "intent") {
       const key = questionKeyOf(entry);
       return key === null ? null : `${spec.id}#question.${key}`;
@@ -1528,10 +1561,14 @@ for (const spec of g.specs()) {
   // path: a literal key `a.b` and a nested `a: { b }` join to one path, and only the top-level
   // entry has a row in the location table.
   const lineOf = (section, entry, topKey) => {
-    const index = /^openQuestions\[(\d+)\](?:\.question)?$/u.exec(entry ?? "")?.[1];
+    const question = /^openQuestions\[(\d+)\](?:\.(question|decider|links|provisional|trigger)(?:\[\d+\])?)?$/u.exec(entry ?? "");
+    const index = question?.[1];
+    const rule = /^(rules|flows)\[(\d+)\]$/u.exec(entry ?? "");
     const located =
       section === "intent" && index !== undefined
-        ? `question[${index}]`
+        ? `question[${index}]${question[2] && question[2] !== "question" ? "." + question[2] : ""}`
+        : section === "behavior" && rule !== null
+          ? `${rule[1] === "rules" ? "rule" : "flow"}[${rule[2]}]`
         : (section === "design" || section === "ui") && topKey !== null
           ? `${section}.${topKey}`
           : null;
@@ -1562,7 +1599,10 @@ for (const spec of g.specs()) {
       matches.push(row(section, entry, ["key"], JSON.stringify(value), topKey));
     }
     if (Array.isArray(value)) {
-      value.forEach((item, index) => walk(section, item, `${entry ?? ""}[${index}]`, null, null));
+      value.forEach((item, index) => {
+        const path = `${entry ?? ""}[${index}]`;
+        walk(section, item, path, section === "behavior" ? ruleKeyOf(path) : null, null);
+      });
     } else if (typeof value === "object" && value !== null) {
       // A key the author coins is content: any key of the open sections (`design`, `ui`) except
       // `description`, a `model.terms` term, and the key of an open question, which travels with
@@ -1572,6 +1612,7 @@ for (const spec of g.specs()) {
         section === "design" || section === "ui" || (section === "model" && entry === "terms");
       for (const [name, item] of Object.entries(value)) {
         const path = entry === null ? name : `${entry}.${name}`;
+        if (section === "behavior" && entry === null && name === "ruleKeys") continue;
         if (section === "intent" && /^openQuestions\[\d+\]\.key$/u.test(path)) continue;
         walk(
           section,
@@ -1651,6 +1692,10 @@ search. Rows keep Spec id order and then the order the graph holds the entries;
 `totals.matches` counts every matching entry, `totals.specs` counts the matching Specs, and `totals.shown` counts
 the rows shown. `matches` holds the first fifty.
 
+A rule key matches beside its entry's text, at `rules[<n>]` or `flows[<n>]` under Behavior.
+Its address uses `#rule.<key>` for either list. Rule and flow rows have their recorded lines,
+including unkeyed entries, and a question field uses its field's location row.
+
 ## 24. Pinned declarations
 
 *When you need this: you want every signature, type, validator or table a corpus pins as a
@@ -1694,90 +1739,64 @@ const addresses = params.addresses ?? [
   "spec:consumers.absent#design.anyKey",
   "spec:consumers.design-review",
 ];
-const pattern =
-  /^(spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*)#(design|ui|question)\.([a-z][A-Za-z0-9]*)$/u;
+const expected = "spec:<id>#<section>.<key>, section design, ui, question, or rule; key lower-camel ASCII";
+const pattern = /^(spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*)#(design|ui|question|rule)\.([a-z][A-Za-z0-9]*)$/u;
 const specIds = new Set(g.specs().map((spec) => spec.id));
-const entryOf = (sections, section, key) => {
-  if (section === "question") {
-    const questions = sections.intent?.openQuestions;
-    const index = Array.isArray(questions)
-      ? questions.findIndex(
-          (entry) => typeof entry === "object" && entry !== null && entry.key === key,
-        )
-      : -1;
-    return index < 0
-      ? undefined
-      : { value: questions[index].question, entry: `question[${index}]` };
-  }
-  const entries = sections[section];
-  if (key === "description" || typeof entries !== "object" || entries === null) return undefined;
-  return Object.hasOwn(entries, key)
-    ? { value: entries[key], entry: `${section}.${key}` }
-    : undefined;
-};
 const rows = addresses.map((address) => {
-  const miss = (reason) => ({
-    address,
-    resolves: false,
-    id: null,
-    section: null,
-    key: null,
-    value: null,
-    file: null,
-    line: null,
-    reason,
-  });
   const parsed = typeof address === "string" ? pattern.exec(address) : null;
-  if (parsed === null) return miss("malformed");
-  const [, id, section, key] = parsed;
+  const [, id = null, section = null, key = null] = parsed ?? [];
+  const miss = (reason, extra = {}) => ({address, resolves: false, id, section, key,
+    value: null, file: null, line: null, reason, ...extra});
+  if (parsed === null) return miss("malformed", {expected});
   if (!specIds.has(id)) return miss("spec");
   const context = g.specContext(id);
-  const found = entryOf(context.sections ?? {}, section, key);
-  if (found === undefined) return miss("entry");
-  const location = context.entryLocations.find((row) => row.entry === found.entry);
-  return {
-    address,
-    resolves: true,
-    id,
-    section,
-    key,
-    value: found.value,
-    file: location?.file ?? null,
-    line: location?.line ?? null,
-    reason: null,
-  };
+  const sections = context.sections ?? {};
+  const entries = section === "question" ? sections.intent?.openQuestions
+    : section === "rule" ? sections.behavior?.ruleKeys : sections[section];
+  if (entries === undefined || entries === null || typeof entries !== "object") return miss("section", {available: []});
+  const available = (section === "question"
+    ? entries.flatMap((entry) => typeof entry?.key === "string" ? [entry.key] : [])
+    : Object.keys(entries).filter((name) => section === "rule" || name !== "description")).sort();
+  if (!available.includes(key)) return miss("entry", {available});
+  let entry;
+  let value;
+  if (section === "question") {
+    const index = entries.findIndex((question) => question?.key === key);
+    entry = `question[${index}]`;
+    value = entries[index].question;
+  } else if (section === "rule") {
+    const path = entries[key];
+    const match = /^(rules|flows)\[(\d+)\]$/u.exec(path);
+    value = sections.behavior[match[1]][Number(match[2])];
+    entry = `${match[1] === "rules" ? "rule" : "flow"}[${match[2]}]`;
+  } else {
+    entry = `${section}.${key}`;
+    value = entries[key];
+  }
+  const location = context.entryLocations.find((row) => row.entry === entry);
+  return {address, resolves: true, id, section, key, value,
+    file: location?.file ?? null, line: location?.line ?? null, reason: null};
 });
 const count = (reason) => rows.filter((row) => row.reason === reason).length;
-
 return {
-  totals: {
-    addresses: rows.length,
-    resolved: rows.filter((row) => row.resolves).length,
-    malformed: count("malformed"),
-    spec: count("spec"),
-    entry: count("entry"),
-  },
+  totals: {addresses: rows.length, resolved: rows.filter((row) => row.resolves).length,
+    malformed: count("malformed"), spec: count("spec"), section: count("section"), entry: count("entry")},
   rows,
 };
 ```
 
-Each row answers one input, in input order, repeats included. A row that resolves carries the
-Spec `id`, the `section` (`design`, `ui`, or `question`), the `key`, the entry's `value`, and
-`reason: null`. The value is the Design or UI entry's value as the graph holds it, or the
-question's text. `file` and `line` say where the entry is written, from the location table the
-Spec context carries; both are null when the carrier did not locate the entry, which reads as not
-located, never as absent. A row that does not resolve carries `id`, `section`, `key`, `value`,
-`file`, and `line` as null and one `reason`: `"malformed"` for an
-input that is not an entry address, a bare Spec id, a `pack:` id, and a value that is not a string
-among them; `"spec"` for an address whose Spec is absent; and `"entry"` for an address whose Spec
-holds no such entry. A Design or UI key resolves as an own key of that section other than
-`description`. A question key resolves when one of the Spec's open questions carries it in its
-marker, `[blocking #aggregateReach]`. These are the grammar and the rule `sdp validate` applies to
-an address written in a Spec's prose, under `spec:decisions.checked-mentions`; the mention audit
-(recipe 22) reads addresses inside the Specs, and this recipe reads the ones written anywhere
-else. `totals` counts the inputs, the resolving rows, and each reason. The laws are
-`spec:consumers.agent-surface.address-and-cycle-recipes` and, for the value, file and line,
-`spec:extraction.entry-locations`.
+Each row answers one input in input order, repeats included. A resolving row carries the Spec
+id, section, key, value, carrier file and recorded line. An unlocated entry has `line: null`.
+A miss keeps the id, section and key it parsed, null where parsing failed. Its reason is
+`malformed`, `spec`, `section` or `entry`. A malformed input carries the expected grammar;
+a section or entry miss lists the available keys in code-unit order.
+
+Design and UI addresses resolve to their own keys other than `description`. A question address
+resolves to a question's text. A rule address reads `behavior.ruleKeys` and resolves to its
+rule or flow text, whatever the primary behavior owner. These are the rules the mention
+validator applies, carried by `spec:decisions.checked-mentions` and
+`spec:consumers.agent-surface.address-and-cycle-recipes`. Recipe 22 audits addresses inside
+Specs, and this recipe resolves ones written anywhere else.
 
 ## 26. Dependency cycles
 
@@ -2415,3 +2434,46 @@ direction of a corpus's dependencies reads at a glance. The recipe reports and n
 crossings are lawful is the corpus's own rule, as the architectural annotation decision leaves it.
 Roles, layers and contexts (recipe 28) lists the values the anchors state. The law is
 `spec:consumers.agent-surface.design-recipes`.
+
+## 34. Rule coverage
+
+Use this to see which keyed rules examples exercise and which have no example.
+Pass one scope, `params.spec` or `params.pack`. Without one the recipe asks for a scope.
+
+```js
+if (params.spec === undefined && params.pack === undefined) {
+  return {found: false, reason: "scope", expected: "params.spec or params.pack"};
+}
+if (params.spec !== undefined && params.pack !== undefined) {
+  return {found: false, reason: "scope", expected: "one of params.spec or params.pack"};
+}
+const scope = params.spec !== undefined ? g.specContext(params.spec) : g.packContext(params.pack);
+if (scope === undefined) return {found: false, reason: params.spec !== undefined ? "spec" : "pack"};
+const ids = params.spec !== undefined ? [params.spec] : scope.members.map((member) => member.id);
+const examples = new Map(g.specs().filter((spec) => spec.specKind === "example").map((spec) => [spec.id, spec]));
+const rows = [];
+let unkeyedRules = 0;
+for (const id of ids) {
+  const context = g.specContext(id);
+  if (context === undefined) continue;
+  const behavior = context.sections?.behavior ?? {};
+  const keys = behavior.ruleKeys ?? {};
+  unkeyedRules += (behavior.rules?.length ?? 0) + (behavior.flows?.length ?? 0) - Object.keys(keys).length;
+  for (const [key, path] of Object.entries(keys)) {
+    const match = /^(rules|flows)\[(\d+)\]$/u.exec(path);
+    const entry = `${match[1] === "rules" ? "rule" : "flow"}[${match[2]}]`;
+    const exercisedBy = graph.edges.filter((edge) => edge.type === "verifies" && edge.claim === "declared" && edge.to === id && examples.has(edge.from) && edge.exercises?.includes(key))
+      .map((edge) => ({example: edge.from, enabled: context.verifiers.some((binding) => binding.via === "example" && binding.verifierId === edge.from && binding.enabled)}))
+      .sort((left, right) => left.example < right.example ? -1 : left.example > right.example ? 1 : 0);
+    rows.push({address: `${id}#rule.${key}`, line: context.entryLocations.find((row) => row.entry === entry)?.line ?? null, exercisedBy});
+  }
+}
+const exercised = rows.filter((row) => row.exercisedBy.some((example) => example.enabled)).length;
+return {totals: {keyedRules: rows.length, exercised, unexercised: rows.length - exercised, unkeyedRules}, rows};
+```
+
+Rows keep each Spec's authored key order and include every keyed rule or flow entry. An example
+is enabled when a resolving test binding backs it. `exercisedBy` also lists declared examples
+without a test, with `enabled: false`; only a bound example counts toward `totals.exercised`.
+The recipe reports intent and verifier bindings. It records no runner pass or fail and confers
+no rule delivery fact. The contract is `spec:model.rule-keys`.
