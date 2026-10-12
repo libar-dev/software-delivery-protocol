@@ -17,11 +17,14 @@ current realization. A disagreement is **drift to resolve**, never permission to
 code behavior into intent.
 
 > **plan 41 is EXECUTED**. The design-management arc, intent in `pack:design-management-v1`: the
-> Design Review's Pack page shows a Pack's design (the Pack design page, held for the owner's
-> ratification), the graph records entry lines, recipes take `--params` and ship under
-> `dist/recipes/`, recipes 29 to 32 serve design work, `sdp --version` names the build, and the
-> original design's unbuilt promises are captured as Specs. Its implemented Specs and the drift
-> packet in the plan wait for the owner's `ready`.
+> Design Review's Pack page shows a Pack's design (the Pack design page, MD-39), the graph
+> records entry lines, recipes take `--params` and ship under `dist/recipes/`, recipes 29 to 32
+> serve design work, `sdp --version` names the build, and the original design's unbuilt promises
+> are captured as Specs. The owner ruled every open item and the fold landed in the
+> same branch: the arc's Specs and the drift queue state `ready`; a decision that narrows another
+> `refines` it, `supersedes` replaces whole, and a replaced record that explains nothing is
+> deleted (MD-30, MD-34 and MD-35 were); the captures' questions are answered; and the Studio's
+> phase 0 is ruled a read-only static root. The plan's last section lists the rulings.
 > **plan 40 is EXECUTED**. The annotations arc: the comment form (MD-36), optional plural
 > bindings and design references (MD-37), and architecture attributes (MD-38), all three
 > `ready`, with their open questions closed by the plan's rulings; the engine, self-binding,
@@ -30,9 +33,9 @@ code behavior into intent.
 > **plan 39 is DRAFTED**. The first-adopter arc, a thin lineage pointer in the plan-38 shape. Six
 > of its Specs (inline code spans, the unbound-example posture, the typed-dependency floor, the
 > register recipes, the adopter on-ramp, the shipped corpus) are implemented with bound evidence
-> and, like the verified Markdown body grammar, wait for the owner to state `ready`. The
-> entry-address engine is built: the prose-mentions validator and the open-section order carry
-> `implemented` and wait for the same statement, the checked-mentions decision and contract
+> and, like the verified Markdown body grammar, state `ready` since plan 41's fold. The
+> entry-address engine is built: the prose-mentions validator and the open-section order state
+> `ready` as well, the checked-mentions decision is ratified (MD-40), contract
 > declarations need no engine binding, and the list rendering an owner question held
 > (`spec:decisions.authored-entry-order`) was ratified and built in round 2. The backlog
 > and readiness are read from the graph (recipes 1, 2, 9, 11).

@@ -263,7 +263,7 @@ delivery fact, workflow state, or graph state.
   MD-38; all three rulings state `ready`) · `question key` · `stated next rung` · `design
   columns` · `Pack design` · `boundary` (rests on, rested on by) · `location table` · `recipe
   parameter` · `pinned declaration` · `dependency cycle` · `perspective` · `mention` · `entry
-  address` — ratified at the owner's PR 30 rulings of 2026-10-12, the last two with the
+  address` — ratified at the owner's PR 30 rulings, the last two with the
   checked-mentions decision.
 - **Descriptor values locked:** `kind` ∈ {`behavior`,`workflow`,`example`,`rule`,`constraint`,`model`,
   `decision`,`contract`} · `altitude` ∈ {`epic`,`feature`,`story`} · `readiness` ∈

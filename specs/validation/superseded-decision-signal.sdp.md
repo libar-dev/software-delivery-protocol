@@ -11,7 +11,7 @@ relations:
 
 The original design checked lifecycle integrity. It flagged a superseded Spec that live Specs still depend on, and a deprecated decision still named by `decidedBy` (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.3.4). The Protocol keeps decision lineage in the graph, as `supersedes` edges between decision Specs and `decidedBy` edges from the Specs they shape, but no check reads the two together. When this arc began, the corpus showed the cost. The Spec Studio's lenses Spec still named a decision the architectural annotation decision had superseded, and its architecture question still read the old ruling after the new one admitted layer and context.
 
-The rule needed one ruling first. Three decisions once declared `supersedes` on the projections freeze while each replaced only one part of it, so a signal reading every `supersedes` as a whole replacement would have warned on the consumer Specs the freeze still correctly shapes. The owner ruled on 2026-10-12 that `supersedes` replaces a whole decision and that a decision narrowing one part of another `refines` it; the three records now refine the freeze.
+The rule needed one ruling first. Three decisions once declared `supersedes` on the projections freeze while each replaced only one part of it, so a signal reading every `supersedes` as a whole replacement would have warned on the consumer Specs the freeze still correctly shapes. The owner ruled that `supersedes` replaces a whole decision and that a decision narrowing one part of another `refines` it; the three records now refine the freeze.
 
 ## Intent
 - problem: A Spec can stay shaped by a decision that a later decision replaced, and nothing tells its author that the ruling it rests on has moved.
