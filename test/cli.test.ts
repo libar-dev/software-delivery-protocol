@@ -465,14 +465,17 @@ export const example${idSegment.replace(/[^A-Za-z0-9]/gu, "")} = spec({
     const root = materializeExampleCopy();
 
     try {
-      expect(runSdpCli(["build", root], createCaptureOutput().output)).toBe(0);
+      for (const verb of ["build", "view", "census", "mermaid", "gherkin"]) {
+        expect(runSdpCli([verb, root], createCaptureOutput().output)).toBe(0);
+      }
       const firstBuild = readGeneratedTree(root);
 
       rmSync(join(root, "generated"), { recursive: true, force: true });
-      expect(runSdpCli(["build", root], createCaptureOutput().output)).toBe(0);
+      for (const verb of ["build", "view", "census", "mermaid", "gherkin"]) {
+        expect(runSdpCli([verb, root], createCaptureOutput().output)).toBe(0);
+      }
 
-      // The whole generated tree — graph.json and every contract module — regenerates
-      // byte-identically.
+      // The graph, contracts and all four projection trees regenerate byte-identically.
       expect(readGeneratedTree(root)).toEqual(firstBuild);
     } finally {
       rmSync(root, { recursive: true, force: true });

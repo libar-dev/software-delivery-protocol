@@ -117,7 +117,7 @@ describe("the Design Review's Pack page presents the Pack design", () => {
   it("renders the boundary as four lists, each row with its rung, its binding and the members it joins", () => {
     const boundary = section(renderPackPage(), "## Boundary");
     const [restsOn, inbound = ""] = boundary.split("### Rested on by");
-    const [restedOnBy, verifiedBy = ""] = inbound.split("### Verified by");
+    const [restedOnBy = "", verifiedBy = ""] = inbound.split("### Verified by");
 
     expect(restsOn).toContain(
       [
@@ -135,6 +135,33 @@ describe("the Design Review's Pack page presents the Pack design", () => {
     expect(verifiedBy).toContain("verifies: [`spec:probe.waiting`](../spec/probe.waiting.md)");
     expect(verifiedBy).toContain(
       "### Superseded by\n\nThe Specs outside the Pack that supersede a member.\n\nNone.",
+    );
+  });
+
+  it("renders outside superseding decisions apart from Specs that rest on members", () => {
+    const graph = packDesignProbeGraph();
+    const choice = graph.nodes.find((node) => node.id === "spec:probe.choice");
+    if (choice === undefined) throw new Error("Missing probe decision.");
+    const boundary = section(
+      renderPackPage({
+        ...graph,
+        nodes: [...graph.nodes, { ...choice, id: "spec:probe.replacement" }],
+        edges: [
+          ...graph.edges,
+          {
+            from: "spec:probe.replacement",
+            to: "spec:probe.top",
+            type: "supersedes",
+            claim: "declared",
+          },
+        ],
+      }),
+      "## Boundary",
+    );
+    const [before = "", supersededBy = ""] = boundary.split("### Superseded by");
+    expect(before).not.toContain("spec:probe.replacement");
+    expect(supersededBy).toContain(
+      "| [`spec:probe.replacement`](../spec/probe.replacement.md) Probe choice | defined | none | supersedes: [`spec:probe.top`](../spec/probe.top.md) |",
     );
   });
 
