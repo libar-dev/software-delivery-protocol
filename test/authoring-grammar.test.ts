@@ -153,46 +153,6 @@ describe("rule keys", () => {
     );
     expect(result.findings.map((finding) => finding.line)).toEqual([11, 12]);
   });
-  it.each(["TypeScript", "Markdown"])(
-    "refuses rule and flow keys shared with a question in %s",
-    (carrier) => {
-      const result =
-        carrier === "TypeScript"
-          ? reifyTypeScriptCarrier(
-              tsSpec(
-                'behavior: {rules: ["[#shared] Rule."], flows: ["[#sharedFlow] Flow."]}',
-              ).replace(
-                'intent: {outcome: "Probe"}',
-                'intent: {outcome: "Probe", openQuestions: [{key: "shared", question: "Which choice?", blocking: false}, {key: "sharedFlow", question: "Which flow?", blocking: false}]}',
-              ),
-              "probe.sdp.ts",
-            )
-          : reifyMarkdownCarrier(
-              mdSpec(
-                "## Intent\n- outcome: Probe\n\n### Open questions\n- [non-blocking #shared] Which choice?\n- [non-blocking #sharedFlow] Which flow?\n\n## Behavior\n- rule: [#shared] Rule.\n- flow: [#sharedFlow] Flow.",
-              ),
-              "probe.sdp.md",
-            );
-      expect(result.findings).toHaveLength(2);
-      expect(result.findings).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            validatorId: "extract/unrecognized-property",
-            severity: "error",
-            path: "behavior.rules[0]",
-            message: expect.stringContaining("open-question key") as unknown,
-          }),
-          expect.objectContaining({
-            validatorId: "extract/unrecognized-property",
-            severity: "error",
-            path: "behavior.flows[0]",
-            message: expect.stringContaining("open-question key") as unknown,
-          }),
-        ]),
-      );
-      expect(result.specs[0]?.data.behavior ?? {}).not.toHaveProperty("ruleKeys");
-    },
-  );
   it.each([
     "[#Bad] Text.",
     "[#bad-key] Text.",

@@ -119,24 +119,14 @@ function normalizeRules(spec: ReifiedSpec, findings: Finding[]): void {
     sites.set(key, paths);
     setOwn(keys, key, `${field}[${String(index)}]`);
   }
-  const questionKeys = new Set<string>();
-  const intent = spec.data.intent;
-  if (record(intent) && Array.isArray(intent.openQuestions)) {
-    for (const question of intent.openQuestions as unknown[]) {
-      if (record(question) && typeof question.key === "string") questionKeys.add(question.key);
-    }
-  }
   for (const [key, paths] of sites) {
-    const sharedWithQuestion = questionKeys.has(key);
-    if (paths.length < 2 && !sharedWithQuestion) continue;
+    if (paths.length < 2) continue;
     Reflect.deleteProperty(keys, key);
     for (const path of paths)
       error(
         spec,
         path,
-        sharedWithQuestion
-          ? `rule key "${key}" is shared with an open-question key; rule, flow and open-question keys must be unique within a Spec`
-          : `rule key "${key}" is repeated; rule keys must be unique within a Spec`,
+        `rule key "${key}" is repeated; rule keys must be unique within a Spec`,
         findings,
       );
   }
