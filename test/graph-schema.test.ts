@@ -1,6 +1,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
@@ -9,6 +10,7 @@ import {
   deliveryFactNames,
   derivedEdgeTypes,
   extract,
+  graphClaims,
   graphEdgeTypes,
   graphNodeTypes,
   renderDesignReview,
@@ -29,8 +31,15 @@ const openSectionOrderTestAnchor = specTest({
 });
 void openSectionOrderTestAnchor;
 
+const claimTaxonomyTestAnchor = specTest({
+  id: testAnchorId("test:protocol.claim-taxonomy"),
+  label: "schema and extraction tests verify claim categories and inheritance",
+  verifies: ref("spec:extraction.claim-taxonomy"),
+});
+void claimTaxonomyTestAnchor;
+
 describe("graph schema", () => {
-  it("serializes authored entry order with description first and schema 0.8.0", () => {
+  it("serializes authored entry order with description first and schema 0.9.0", () => {
     const graph = deriveFixtureGraph({
       specs: [
         spec({
@@ -53,7 +62,7 @@ describe("graph schema", () => {
     });
     const serialized = JSON.parse(serializeGraph(graph)) as GraphSchema;
     const node = serialized.nodes.find((entry) => entry.nodeType === "Primitive");
-    expect(serialized.schemaVersion).toBe("0.8.0");
+    expect(serialized.schemaVersion).toBe("0.9.0");
     expect(Object.keys(node?.sections?.design ?? {})).toEqual([
       "description",
       "zeta",
@@ -196,8 +205,43 @@ The Model prose.
     ]);
   });
 
+  it("inherits the Pack's declared claim for membership and keeps binding claims apart", () => {
+    const root = fileURLToPath(new URL("../examples/checkout-v1", import.meta.url));
+    const { graph, report } = extract({ root });
+    expect(report.findings).toEqual([]);
+    const pack = graph.nodes.find((node) => node.nodeType === "Pack");
+    if (pack?.nodeType !== "Pack") throw new Error("Missing example Pack.");
+    expect(pack.claim).toBe("declared");
+    const membership = graph.edges.filter((edge) => edge.type === "belongsTo");
+    expect(membership.map((edge) => edge.from).sort()).toEqual([...pack.members].sort());
+    expect(membership.every((edge) => edge.to === pack.id && edge.claim === pack.claim)).toBe(true);
+    const verifies = graph.edges.filter((edge) => edge.type === "verifies");
+    expect(new Set(verifies.map((edge) => edge.claim))).toEqual(new Set(["declared", "anchored"]));
+    expect(
+      verifies
+        .filter((edge) => edge.claim === "declared")
+        .every((edge) => edge.from.startsWith("spec:")),
+    ).toBe(true);
+    expect(
+      verifies
+        .filter((edge) => edge.claim === "anchored")
+        .every((edge) => edge.from.startsWith("test:")),
+    ).toBe(true);
+    expect(graph.edges.every((edge) => graphClaims.includes(edge.claim))).toBe(true);
+    expect(graph.nodes.every((node) => graphClaims.includes(node.claim))).toBe(true);
+    expect(graph.edges.some((edge) => edge.type === "satisfies" && edge.claim === "anchored")).toBe(
+      true,
+    );
+    expect(
+      graph.nodes.some(
+        (node) => node.nodeType === "Primitive" && node.deliveryFacts?.includes("implemented"),
+      ),
+    ).toBe(true);
+  });
+
   it("exports the graph schema contracts", () => {
-    expect(schemaVersion).toBe("0.8.0");
+    expect(schemaVersion).toBe("0.9.0");
+    expect(graphClaims).toEqual(["declared", "anchored", "inferred"]);
     expect(graphNodeTypes).toEqual(["Primitive", "Pack", "Anchor", "CodeNode"]);
     expect(deliveryFactNames).toEqual(["implemented", "has-verifier", "observed"]);
     expect(derivedEdgeTypes).toEqual([

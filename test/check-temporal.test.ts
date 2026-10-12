@@ -67,6 +67,7 @@ function runGuard(root: string) {
   return spawnSync(process.execPath, [join(root, guardName)], {
     cwd: root,
     encoding: "utf8",
+    env: { ...process.env, GIT_CEILING_DIRECTORIES: tmpdir() },
   });
 }
 

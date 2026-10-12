@@ -16,6 +16,18 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
+> **plan 42 is DRAFTED**. The Spec Studio's phase 0, a read-only static view (`sdp studio`),
+> re-entered on the owner's rulings; intent in `pack:spec-studio-v1`. A design pass splits the
+> Studio's Specs for honest binding and prototypes the Pack page before any code.
+> **plan 41 is EXECUTED**. The design-management arc, intent in `pack:design-management-v1`: the
+> Design Review's Pack page shows a Pack's design (the Pack design page, MD-39), the graph
+> records entry lines, recipes take `--params` and ship under `dist/recipes/`, recipes 29 to 32
+> serve design work, `sdp --version` names the build, and the original design's unbuilt promises
+> are captured as Specs. The owner ruled every open item and the fold landed in the
+> same branch: the arc's Specs and the drift queue state `ready`; a decision that narrows another
+> `refines` it, `supersedes` replaces whole, and a replaced record that explains nothing is
+> deleted (MD-30, MD-34 and MD-35 were); the captures' questions are answered; and the Studio's
+> phase 0 is ruled a read-only static root. The plan's last section lists the rulings.
 > **plan 40 is EXECUTED**. The annotations arc: the comment form (MD-36), optional plural
 > bindings and design references (MD-37), and architecture attributes (MD-38), all three
 > `ready`, with their open questions closed by the plan's rulings; the engine, self-binding,
@@ -24,10 +36,11 @@ code behavior into intent.
 > **plan 39 is DRAFTED**. The first-adopter arc, a thin lineage pointer in the plan-38 shape. Six
 > of its Specs (inline code spans, the unbound-example posture, the typed-dependency floor, the
 > register recipes, the adopter on-ramp, the shipped corpus) are implemented with bound evidence
-> and, like the verified Markdown body grammar, wait for the owner to state `ready`. The
-> entry-address engine is built: the prose-mentions validator and the open-section order carry
-> `implemented` and wait for the same statement, the checked-mentions decision and contract
-> declarations need no engine binding, and one Spec stays held by an owner question. The backlog
+> and, like the verified Markdown body grammar, state `ready` since plan 41's fold. The
+> entry-address engine is built: the prose-mentions validator and the open-section order state
+> `ready` as well, the checked-mentions decision is ratified (MD-40), contract
+> declarations need no engine binding, and the list rendering an owner question held
+> (`spec:decisions.authored-entry-order`) was ratified and built in round 2. The backlog
 > and readiness are read from the graph (recipes 1, 2, 9, 11).
 > **plan 38 is DRAFTED** — the graph-first planning arc, a thin lineage pointer, not a briefs
 > index: the arc's forward intent is authored as capture-rung Specs
@@ -89,7 +102,7 @@ Progressive disclosure — start at the top, follow the pointers down.
 | Look here | What you get | Read |
 |---|---|---|
 | `CONTEXT.md` (repo root) | **the vocabulary** — the ratified lean glossary (terms · relations · a worked dialogue · flagged ambiguities); sole source of truth for terminology; the model exposition lives in the Specs under `specs/` and in the surviving concept docs | **first, always** |
-| `.agents/skills/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — three repository-owned skills: `sdp-agent-surface` (reading the graph), `sdp-authoring` (authoring intent), `sdp-sessions` (advisory delivery-session routing), also exposed to Claude through the `.claude/skills` symlink; plus the twenty-eight runnable `sdp q` bodies | **mandatory** — after `CONTEXT.md`, load the matching skill before any corpus question, Spec authoring, or delivery-session routing; see "Query the graph first" |
+| `.agents/skills/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — three repository-owned skills: `sdp-agent-surface` (reading the graph), `sdp-authoring` (authoring intent), `sdp-sessions` (advisory delivery-session routing), also exposed to Claude through the `.claude/skills` symlink; plus the thirty-two runnable `sdp q` bodies | **mandatory** — after `CONTEXT.md`, load the matching skill before any corpus question, Spec authoring, or delivery-session routing; see "Query the graph first" |
 | `specs/` | **the self-hosted corpus** — the Protocol's own Specs in its own carrier (families: `model` · `extraction` · `validation` · `carrier` · `consumers` · `protocol` · `observation` · `decisions`, plus the self-hosting Pack); the primary carrier of intended truth | when design truth is in question — but query it through `sdp q` first, then read the carrying Spec |
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
 | `docs/concept/` (+ README) | **the technical design** — the surviving principle-led docs: vision & MVP boundary, founding principles (P1–P10), authoring & binding, consumers, roadmap; the core model, the one graph, and validation & honesty dissolved into the `model.*`, `extraction.*`, and `validation.*` Spec families — locate any of them with concept search (recipe 6) | to know *how* it is designed |
@@ -118,9 +131,10 @@ load `.agents/skills/sdp-authoring/SKILL.md`. Before routing delivery work, load
 questions.
 
 `sdp q` is the agent front door (MD-22): it derives the graph in process and evaluates a plain
-JavaScript async-function body you supply, with three bindings injected — `g` (the reader),
-`graph` (the raw schema), `report` (the validation report). `return` is the output contract; add
-`--json` for machine-readable output. For any corpus question — what a Spec guarantees, what is
+JavaScript async-function body you supply, with four bindings injected — `g` (the reader),
+`graph` (the raw schema), `report` (the validation report), and `params` (the JSON a caller passes
+with `--params`, `{}` without it). `return` is the output contract; add `--json` for
+machine-readable output. For any corpus question — what a Spec guarantees, what is
 ready but unimplemented, what a change touches, where a concept lives — script the graph instead
 of reading `.sdp.md` files by hand:
 
@@ -137,7 +151,7 @@ The full CLI surface is `sdp build · validate · view · census · mermaid · g
 and stays alive after findings; operator stop exits 0. `--watch` is validate-only and cannot combine
 with `--check-clean`. The four projection publishers remain independent public verbs; repository
 generation/check scripts certify all four roots through the private projection-suite driver. The
-twenty-eight runnable recipe bodies live in `docs/agent-surface/recipes.md` (each executed as written by
+thirty-two runnable recipe bodies live in `docs/agent-surface/recipes.md` (each executed as written by
 `test/recipes.test.ts`), and the repository-owned skills (`sdp-agent-surface` for reading,
 `sdp-authoring` for writing intent, `sdp-sessions` for advisory work-shape routing) are the
 on-ramps. In this checkout, always go through

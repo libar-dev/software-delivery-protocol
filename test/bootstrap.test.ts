@@ -108,7 +108,13 @@ describe("bootstrap package surface", () => {
     const graph = deriveGraph(specs, packs, anchors);
 
     expect(reification.findings).toEqual([]);
-    expect(Object.keys(reification.specs[0] ?? {}).sort()).toEqual(["data", "file", "id", "line"]);
+    expect(Object.keys(reification.specs[0] ?? {}).sort()).toEqual([
+      "data",
+      "entryLines",
+      "file",
+      "id",
+      "line",
+    ]);
     expect(graph.nodes.map((node) => node.id)).toEqual(["spec:carrier.public-seam"]);
   });
 

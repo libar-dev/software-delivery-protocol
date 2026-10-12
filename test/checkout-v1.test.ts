@@ -8,9 +8,10 @@ import {
   extract,
   extractFindingIds,
   createReader,
-  serializeGraph,
   validateGraph,
 } from "../src/index.js";
+
+import { serializeGraphStructure } from "./helpers/graph-structure.js";
 
 const exampleRoot = fileURLToPath(new URL("../examples/checkout-v1", import.meta.url));
 const goldenPath = fileURLToPath(
@@ -56,7 +57,7 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
     const expected = readFileSync(goldenPath, "utf8");
 
     expect(
-      serializeGraph(extraction.graph),
+      serializeGraphStructure(extraction.graph),
       "Golden graph mismatch. Review the diff against test/fixtures/checkout-v1/expected-graph.json; if the change is intended, regenerate the golden and commit the reviewed diff — the diff is the review.",
     ).toBe(expected);
   });

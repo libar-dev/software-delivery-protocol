@@ -31,6 +31,9 @@ export const structuralMembershipExceptions = [
   "impl:protocol.authoring-recipes",
   "impl:protocol.delivery-session-on-ramp",
   "impl:protocol.address-and-cycle-recipes",
+  "impl:protocol.recipe-parameters-catalog",
+  "impl:protocol.design-recipes",
+  "impl:protocol.entry-location-recipes",
 ] as const;
 
 export const acceptedArchitecturalUnits = [
@@ -469,9 +472,50 @@ export const acceptedArchitecturalUnits = [
     anchorId: "impl:protocol.next-rung-floor",
     componentId: "component:protocol.validate",
   },
+  // The design-management arc (plan 41): the engine units it added, each with its component.
+  {
+    unit: "src/extract/derive.ts#deriveEntryLocations",
+    anchorId: "impl:protocol.entry-locations",
+    componentId: "component:protocol.extract",
+  },
+  {
+    unit: "src/reader/reader.ts#packMemberDesign",
+    anchorId: "impl:protocol.pack-design",
+    componentId: "component:protocol.reader",
+  },
+  {
+    unit: "src/projections/design-review-pages.ts#renderPackPage",
+    anchorId: "impl:protocol.pack-design-page",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/design-review-pack-sections.ts#renderNextRungSection",
+    anchorId: "impl:protocol.pack-design-sections",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/cli/q-command.ts#readParams",
+    anchorId: "impl:protocol.query-params",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/cli/sdp.ts#runSdpCli",
+    anchorId: "impl:protocol.engine-provenance-cli",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/cli/build-artifacts.ts#writeBuildArtifacts",
+    anchorId: "impl:protocol.build-artifacts",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/cli/validate-watch.ts#runValidateWatch",
+    anchorId: "impl:protocol.validate-watch",
+    componentId: "component:protocol.cli",
+  },
 ] as const;
 
-// re-measured under plan 40
+// re-measured under plan 41
 export const expectedMemberOfEdges = acceptedArchitecturalUnits.map((row) => [
   row.anchorId,
   row.componentId,
@@ -479,13 +523,9 @@ export const expectedMemberOfEdges = acceptedArchitecturalUnits.map((row) => [
 
 // Helpers with no honest satisfies target of their own. Coverage rides the nearest honest
 // realization that consumes them; these rows never mint an anchor.
+// re-measured under plan 41: runValidateWatch left this list when it gained its own anchor,
+// impl:protocol.validate-watch, and joined the accepted units above.
 export const coarseGrainCoverage = [
-  {
-    unit: "src/cli/validate-watch.ts#runValidateWatch",
-    coveredBy: "impl:protocol.agent-surface-cli",
-    componentId: "component:protocol.cli",
-    rationale: "src/cli/sdp.ts#runSdpCli value-calls runValidateWatch",
-  },
   {
     unit: "src/import/markdown-fidelity.ts#assertMarkdownEmissionFidelity",
     coveredBy: "impl:protocol.sdp-import-markdown-emit",
@@ -522,12 +562,13 @@ export const coarseGrainCoverage = [
 // A uses edge tracks real imports (value or type) from another component's source files; imports
 // that exist only to author the anchors themselves (the stable-id and anchor-builder modules)
 // confer no edge. The convention is stated in spec:protocol.structural-self-binding.
-// re-measured under plan 40
+// re-measured under plan 41
 export const expectedUsesEdges = [
   ["impl:protocol.example-runner-adapter", "impl:protocol.example-runner"],
   ["impl:protocol.authored-honesty-delivery-facts", "impl:protocol.delivery-facts"],
   ["impl:protocol.reader", "impl:protocol.delivery-facts"],
   ["impl:protocol.derive-graph", "impl:protocol.delivery-facts"],
+  ["impl:protocol.reader", "impl:protocol.next-rung-floor"],
   ["component:protocol.adapters", "component:protocol.runner"],
   ["component:protocol.cli", "component:protocol.codegen"],
   ["component:protocol.cli", "component:protocol.extract"],

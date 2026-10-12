@@ -2,7 +2,7 @@
 id: spec:validation.prose-mentions
 kind: rule
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.referential-integrity
   decidedBy: spec:decisions.checked-mentions

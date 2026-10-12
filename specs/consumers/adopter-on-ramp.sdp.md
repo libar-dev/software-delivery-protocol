@@ -2,13 +2,14 @@
 id: spec:consumers.adopter-on-ramp
 kind: behavior
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.authoring-on-ramp
   dependsOn:
     - spec:validation.typed-dependency-floor
     - spec:consumers.agent-surface.register-recipes
     - spec:consumers.shipped-protocol-corpus
+    - spec:carrier.markdown-body-grammar
   decidedBy:
     - spec:decisions.planning-truths-placement
     - spec:decisions.decision-readiness-posture

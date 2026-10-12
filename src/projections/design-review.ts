@@ -1,6 +1,6 @@
 import type { Reader } from "../reader/reader.js";
 import { escapeRenderedField } from "./owned-prose.js";
-import { pageHref, pagePathOf } from "./design-review-markdown.js";
+import { pageHref, pagePathOf, singleLine } from "./design-review-markdown.js";
 import { renderIndexPage, renderPackPage, renderSpecPage } from "./design-review-pages.js";
 
 /**
@@ -60,7 +60,7 @@ export function renderDesignReview(reader: Reader): readonly DesignReviewPage[] 
 
       return known === undefined
         ? `\`${id}\``
-        : `[\`${id}\`](${pageHref(page, pagePathOf(id))})${known.title === undefined ? "" : ` — ${escapeRenderedField(known.title)}`}`;
+        : `[\`${id}\`](${pageHref(page, pagePathOf(id))})${known.title === undefined ? "" : ` — ${escapeRenderedField(singleLine(known.title))}`}`;
     };
   };
 

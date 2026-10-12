@@ -24,7 +24,7 @@ lineage evidence. The Protocol's intended truth lives in its Specs.
 | Design rationale | A declared `decidedBy` edge to a decision Spec |
 | Delivery state | Stated readiness beside independently derived delivery facts |
 
-The architectural significance ruling, `spec:decisions.architectural-significance-rides-primitives`,
+The architectural annotation ruling, `spec:decisions.architectural-annotation`,
 keeps the existing kinds. A runtime responsibility can be a behavior, an interface a contract,
 and a quality bound a constraint. A decision records a qualifying trade-off. Familiar software
 design pattern names can appear in ordinary Design prose without creating a tag registry,

@@ -76,6 +76,7 @@ specs:
   - spec:validation.authored-honesty
   - spec:validation.warn-level-signals
   - spec:consumers.projections-model
+  - spec:consumers.projections-model.roadmap-views
   - spec:consumers.impact-graph
   - spec:consumers.agent-surface
   - spec:consumers.design-review
@@ -188,12 +189,9 @@ specs:
   - spec:decisions.gherkin-carrier-option
   - spec:decisions.sdp-gherkin-extension
   - spec:decisions.carrier-universality
-  - spec:decisions.structural-anchor-semantics
   - spec:decisions.adopted-registrars-committed
   - spec:decisions.shipped-projections-frozen
   - spec:decisions.planning-truths-placement
-  - spec:decisions.architectural-significance-rides-primitives
-  - spec:decisions.jsdoc-graph-extraction-refused
   - spec:decisions.checked-mentions
   - spec:decisions.authored-entry-order
   - spec:validation.unbound-example-posture.lower-rungs
@@ -226,6 +224,33 @@ specs:
   - spec:decisions.studio-web-components
   - spec:consumers.spec-studio.responsive
   - spec:consumers.spec-studio.sharing
+  - spec:decisions.anchor-comment-form
+  - spec:decisions.anchor-binding-grain
+  - spec:decisions.architectural-annotation
+  - spec:decisions.pack-design-page
+  - spec:consumers.pack-design
+  - spec:consumers.design-review.pack-design-page
+  - spec:extraction.entry-locations
+  - spec:consumers.agent-surface.recipe-parameters
+  - spec:consumers.agent-surface.design-recipes
+  - spec:consumers.engine-provenance
+  - spec:model.design-maturity
+  - spec:consumers.validate-watch
+  - spec:consumers.agent-surface.example-space-coverage
+  - spec:model.planned-architecture
+  - spec:model.open-question-fields
+  - spec:model.rule-keys
+  - spec:model.relation-reasons
+  - spec:consumers.review-perspectives
+  - spec:consumers.context-bundle
+  - spec:consumers.design-diff
+  - spec:consumers.intent-composition.proposal
+  - spec:consumers.reference-projection
+  - spec:consumers.structural-mermaid
+  - spec:validation.superseded-decision-signal
+  - spec:validation.architecture-constraints
+  - spec:validation.corpus-rules
+  - spec:observation.run-evidence
 modelRefs:
   - spec:model.protocol-domain
   - spec:model.core-model

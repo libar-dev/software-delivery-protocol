@@ -11,6 +11,8 @@ import {
   serializeGraph,
 } from "../src/index.js";
 
+import { serializeGraphStructure } from "./helpers/graph-structure.js";
+
 const fixtureRoot = new URL("./fixtures/extract/self-hosting-carrier/", import.meta.url);
 
 const fixturePaths = [
@@ -784,8 +786,8 @@ export const prose = spec({
     const typeScriptResult = reifyTypeScriptCarrier(typeScript, "carrier.sdp");
     const markdownGraph = deriveGraph(markdownResult.specs, markdownResult.packs, []);
     const typeScriptGraph = deriveGraph(typeScriptResult.specs, typeScriptResult.packs, []);
-    const markdownSerialized = serializeGraph(markdownGraph);
-    const typeScriptSerialized = serializeGraph(typeScriptGraph);
+    const markdownSerialized = serializeGraphStructure(markdownGraph);
+    const typeScriptSerialized = serializeGraphStructure(typeScriptGraph);
 
     expect(markdownResult.findings).toEqual([]);
     expect(typeScriptResult.findings).toEqual([]);

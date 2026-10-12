@@ -17,10 +17,12 @@ with `sdp q 'return g.specContext("<id>")' --root node_modules/@libar-dev/softwa
 or open its carrier under that directory.
 
 At this repository root, the `sdp:q` wrapper supplies the exact self-hosting exclusions. Paste each
-recipe body between the quotes:
+recipe body between the quotes, or run the file the build ships for it under `dist/recipes/`, and
+pass a recipe's parameter as data with `--params`:
 
 ```sh
 pnpm --silent sdp:q '<body>'
+pnpm --silent sdp:q "$(cat dist/recipes/09-promotion-preflight.js)" --params '{"spec":"spec:<id>"}'
 ```
 
 For an adopter, select its root and exclusions explicitly:

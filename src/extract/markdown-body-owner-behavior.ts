@@ -1,5 +1,6 @@
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
+import type { ReifiedEntryLine } from "./reify.js";
 import type { Finding } from "../validate/contracts.js";
 import { parseSectionContent } from "./markdown-body-content.js";
 import type { MarkdownLine } from "./markdown-body-content.js";
@@ -68,6 +69,7 @@ export function mapIntent(
   file: string,
   kind: string,
   findings: Finding[],
+  entryLines: ReifiedEntryLine[],
 ): void {
   const parsed = parseSectionContent(lines, file, findings);
   addDescription(section, parsed.description, file, lines[0]?.line ?? 1, findings);
@@ -137,6 +139,7 @@ export function mapIntent(
           blocking: question[1] === "blocking",
           ...(key === undefined ? {} : { key }),
         };
+        entryLines.push({ entry: `question[${String(earlier.length)}]`, line: item.line });
         section.openQuestions = [...earlier, entry];
       }
       continue;

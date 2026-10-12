@@ -64,68 +64,19 @@ For any given Spec or Pack ID, exactly one surface is canonical, with no mixing 
 
 ---
 
-## 2. Generic source anchors — binding code to intent (CORE)
+## 2. Source anchors — binding code to intent (CORE)
 
-An **anchor** binds a code location to a spec ID and minimal structural facts. It is the anchored layer of the graph. Anchors are **framework-neutral**: they work on any class, function, route, or module, regardless of how the runtime is wired.
+The anchor law has moved into Specs. This section keeps only pointers to them, under the concept-documents dissolution decision (`spec:decisions.concept-docs-dissolve`).
 
-```ts
-// Decorator form (one Representation)
-@arch.node({ id: "impl:orders.create-order-use-case", satisfies: ["spec:orders.create-order"], component: "component:orders.domain" })
-export class CreateOrderUseCase { /* ... */ }
+- **The anchor model** — `spec:model.anchors`: identity, an optional label, zero or more Spec targets and optional structure, written in the constant form or the comment form, both feeding one closed envelope; code, test and oracle anchors; which builder imports the extractor trusts.
+- **The comment form** (MD-36) — `spec:decisions.anchor-comment-form`: a top-level `/** … */` block with reserved `@sdp*` tags binds code that cannot import the package. The decorator form stays an unextracted representation.
+- **Bindings are optional, plural, and may reference a design** (MD-37) — `spec:decisions.anchor-binding-grain`: `satisfies` is optional and plural, `verifies` is plural, `references` names a design the code answers to without realizing it, and every target names a whole Spec.
+- **Architectural significance is annotated where it is realized** (MD-38) — `spec:decisions.architectural-annotation`: `component`, `uses` and `role`, plus `layer` and `context` on a component anchor. None of them confers a delivery fact, and an anchor-required lint stays optional and warn-level.
+- **Binding, never liveness** (MD-7) — `spec:decisions.binding-not-liveness`: a test anchor records that a verifier exists, never that it ran; pass and fail stay in CI.
+- **Oracle targets** — `spec:validation.oracle-target-eligibility`: an example space has zero or one resolving oracle, and consumers fail closed.
+- **How to write one** — the `sdp-authoring` skill, "Bind code, tests, and oracles".
 
-// JSDoc form (equivalent)
-/** @arch.node id=impl:orders.create-order-use-case satisfies=spec:orders.create-order */
-export function createOrder() { /* ... */ }
-
-// Anchor-constant form (equivalent, decorator-free) — the one surface the MVP extractor reads
-export const _anchor = codeAnchor({
-  id: codeAnchorId("impl:orders.create-order-use-case"),
-  satisfies: ref("spec:orders.create-order"),
-});
-```
-
-The three syntaxes are interchangeable Representations; the *binding* is the thing. A team picks one style;
-the MVP extracts the **anchor-constant form** (a top-level `const` initialized with the builder call) — the
-decorator and JSDoc forms remain unextracted Representations. The builder is the generic **`codeAnchor`**
-over the implementation-flavored code namespaces (`impl` / `api` / `component`) — the generic `codeAnchor`
-decision (MD-8, folded into the builder's doc-comment in `src/model/anchors.ts`). One binding target per
-anchor (two bindings are two anchors); the decorator sketch above shows an array form and a `component`
-field that are possible later Representations, not the landed signature.
-
-### Anchors assert a binding — never intent (P9/P10)
-
-An anchor says exactly one thing: *"this code location is the implementation/test **binding** for this Spec ID"* — a binding assertion only, never system-truth content (DECISIONS R1). The landed contract is exactly that minimal: `id` · an optional display `label` · **one** binding target (`satisfies` on a code anchor, `verifies` on a test anchor, `models` on an oracle anchor). Any other field is an extraction **error** — the anchored-surface twin of authoring-shape honesty. Richer structural bindings (`component`, `implements`, `handles`/`emits`) are **ASPIRATIONAL** — possible later extensions (see the inline-vs-centralized open question, `07` §4), never the MVP contract. An anchor is **forbidden** from carrying anything spec-level: behavior, rationale, readiness, acceptance criteria, or delivery facts. This asymmetry is load-bearing:
-
-- **Intent stays centralized** in the spec files, never scattered through code comments.
-- Anchors produce **anchored**-`claim` edges, distinct from **declared** relations (P9).
-- The direction is one-way: code points *to* spec, never the reverse.
-
-### Test binding — the `verifies` trace (CORE)
-
-A test declares which spec it verifies via a **binding-only test anchor** — identity plus the `verifies`
-target, never an executing callback (DECISIONS R3: a binding that carried a `run` body would couple the
-graph binding to execution, contradicting "the graph records that an enabled verifier *exists*, never that
-it ran"). The test body itself stays an ordinary runner test beside the anchor:
-
-```ts
-import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
-
-export const createOrderValidCartTest = specTest({
-  id: testAnchorId("test:orders.create-order.valid-cart"),
-  label: "valid cart verifies the create-order happy path",
-  verifies: ref("spec:orders.create-order.valid-cart"),
-});
-
-// ... the real test (plain Vitest/Jest/etc.) lives alongside ...
-```
-
-Here the test `verifies` the **example** it backs (`spec:orders.create-order.valid-cart`); that test anchor is exactly what makes the example an **enabled verifier**, so the example's own `verifies` edge can confer `has-verifier` on the parent it targets (the direct, per-spec, non-transitive rule in `spec:model.spec-sections`). This produces the bidirectional spec↔test trace that is a core MVP deliverable: query "what verifies this spec?" and "what does this test cover?" from the graph. The test's *result and its runner status* (pass/fail, skipped, quarantined, glob-excluded) are operational — CI's, never in the graph; the graph records only that an enabled verifier — a **resolvable test binding** — *exists*, never that it ran (the derived `has-verifier` delivery fact, `spec:model.core-model`).
-
-The third builder beside `codeAnchor` and `specTest` is **`specOracle`** (`oracle:` namespace), under the same binding-only law: identity plus one `models` target, emitted as an **anchored** Anchor → `Spec` edge. It records that an **oracle** — the authored expected-outcome semantics for a parent's example space (§4) — *exists*; the graph never records what the oracle says (the function beside the anchor is never extracted, never authoritative), and the anchor confers **no delivery fact** — discovery is an anchor query. A behavior example space has **zero or one** resolving oracle binding: a non-behavior/no-space target or competing oracle is a conformance error, and consumers fail closed rather than selecting an authority.
-
-### An anchor-required lint (optional, CORE-adjacent)
-
-A lint rule can flag designated patterns (e.g. exported use-case classes, route handlers) that lack an anchor, so significant code does not silently fall out of the graph. Useful, not load-bearing.
+One point no Spec states, kept here: anchors are framework-neutral. An anchor binds any class, function, route or module, however the runtime is wired, so binding code never needs the framework's composition (§3).
 
 ---
 

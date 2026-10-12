@@ -19,6 +19,7 @@ export const validationSpecs = [
             question:
               "Does any remaining law in the src/validate/readiness-floor.ts file header promote here under comment promotion?",
             blocking: false,
+            key: "headerLawPromotion",
           },
         ],
       },
@@ -329,16 +330,17 @@ export const validationSpecs = [
             question:
               "Does the one-validation-path registry law stated in the src/validate/validators.ts file header promote here or to a story-altitude child under comment promotion?",
             blocking: false,
+            key: "registryLawPromotion",
           },
         ],
       },
       behavior: {
         rules: [
-          "Every validator belongs to either the conformance family, which checks meta-model well-formedness, or the honesty family, which rejects authored or overstated derived truth.",
-          "Validation errors fail the build; gaps and orphans remain informative signals rather than delivery-process gates.",
+          "Every validator the Protocol ships belongs to either the conformance family, which checks meta-model well-formedness, or the honesty family, which rejects authored or overstated derived truth; a corpus rule run through `sdp validate --rules` belongs to neither and reports in the corpus's own section.",
+          "Errors from the Protocol's validators fail the build; gaps and orphans remain informative signals rather than delivery-process gates.",
           "Types enforce structural shape, schema validates graph payloads, and graph validators enforce cross-file conformance and honesty; no one layer substitutes for the others.",
           "All graph validation runs through the one derived graph path: source, extraction, graph, then checks.",
-          "The two families are load-bearing, so an aggregate report spanning both states no family of its own while every finding names the family it came from.",
+          "The two families are load-bearing, so an aggregate report spanning both states no family of its own while every finding of the Protocol's own validators names the family it came from.",
           "The realizing entrypoints are `graphValidatorIds` and `validateGraph` in `src/validate/validators.ts`.",
         ],
         exampleSpace: {
@@ -1164,7 +1166,7 @@ export const validationSpecs = [
     id: "spec:validation.typed-dependency-floor",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/typed-dependency-floor.sdp.md",
     title: "A ready Spec rests only on settled dependencies",
     narrative: null,
@@ -1201,7 +1203,7 @@ export const validationSpecs = [
     id: "spec:validation.unbound-example-posture",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/unbound-example-posture.sdp.md",
     title: "An unbound example below ready is data, not a warning",
     narrative: null,
@@ -1236,7 +1238,7 @@ export const validationSpecs = [
     id: "spec:validation.prose-mentions",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/prose-mentions.sdp.md",
     title: "Every Spec id written in prose resolves",
     narrative: null,
@@ -1523,7 +1525,7 @@ export const validationSpecs = [
     id: "spec:validation.next-rung-floor",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The floor names what blocks the next rung",
     narrative: null,
     sections: {
@@ -1595,5 +1597,118 @@ export const validationSpecs = [
     },
     deliveryFacts: ["has-verifier"],
     file: "specs/validation/next-rung-floor.typed-dependency-targets.sdp.md",
+  },
+  // The design-management arc (plan 41): captures ahead of code.
+  {
+    id: "spec:validation.superseded-decision-signal",
+    specKind: "rule",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/superseded-decision-signal.sdp.md",
+    title: "A Spec shaped by a superseded decision warns",
+    narrative:
+      "The original design checked lifecycle integrity. It flagged a superseded Spec that live Specs still depend on, and a deprecated decision still named by `decidedBy` (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.3.4). The Protocol keeps decision lineage in the graph, as `supersedes` edges between decision Specs and `decidedBy` edges from the Specs they shape, but no check reads the two together. When this arc began, the corpus showed the cost. The Spec Studio's lenses Spec still named a decision the architectural annotation decision had superseded, and its architecture question still read the old ruling after the new one admitted layer and context.\n\nThe rule needed one ruling first. Three decisions once declared `supersedes` on the projections freeze while each replaced only one part of it, so a signal reading every `supersedes` as a whole replacement would have warned on the consumer Specs the freeze still correctly shapes. The owner ruled that `supersedes` replaces a whole decision and that a decision narrowing one part of another `refines` it; the three records now refine the freeze.",
+    sections: {
+      intent: {
+        problem:
+          "A Spec can stay shaped by a decision that a later decision replaced, and nothing tells its author that the ruling it rests on has moved.",
+        outcome:
+          "Surface a live Spec that is still shaped by a decision another decision has superseded, as an informative warning.",
+        openQuestions: [
+          {
+            question:
+              "Does the signal read only `decidedBy`, or also a `refines` or `dependsOn` that names a superseded decision?",
+            blocking: false,
+            key: "signalReach",
+          },
+          {
+            question:
+              "When a superseding decision is itself superseded, does the warning name the decision at the end of the chain?",
+            blocking: false,
+            key: "supersededChain",
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "A `supersedes` edge replaces the decision it targets whole; a decision that narrows part of another `refines` it instead, and the signal never reads a `refines` between decisions.",
+          "A replaced decision whose text no reader still needs is deleted rather than kept beside a `supersedes` edge, and a Spec still naming it then fails as an unresolved target, so the signal covers only replaced decisions kept as history.",
+          "A Spec that names a decision through `decidedBy`, where another decision `supersedes` that decision, carries one warning for each such pair, naming the superseded decision and every decision that supersedes it.",
+          "The warning is informative and never fails validation, as the orphan and gap signals never do, and its severity is fixed by the Protocol.",
+          "The `supersedes` edge itself is never warned, and a superseded decision is never warned for being superseded.",
+          "The signal reads the authored edges of the one graph and nothing else; it judges no content and never asks whether the newer ruling fits the Spec.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.architecture-constraints",
+    specKind: "rule",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/validation/architecture-constraints.sdp.md",
+    title: "Declared architecture rules are checked against anchored structure",
+    narrative:
+      "The original design gave architecture a validation tier of its own. Its rules said that only adapter components depend on external systems, that domain code imports no infrastructure and that layers depend in one direction; dependency-cruiser, architecture tests and lint rules ran them, and their findings joined the one report (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.4). Since the architectural annotation decision, the data those rules read is in the graph with no inference: a component anchor states its layer and its context, and `uses` and `memberOf` edges are anchored. The same decision keeps the check out of the Protocol. A negative architecture constraint stays declared intent in a Spec, and a corpus that wants it enforced checks its declared `uses`, `layer` and `context` in its own gate.\n\nThe first adopter needed one such rule as soon as the attributes landed. No component in its `platform` context may have a `uses` edge to a component in another context, with each end resolved to its component through `memberOf` first. It checks the rule in its own script (`libar-platform/design/tools/check.py`, the context rule of `libar-platform/design/PLAN.md` §2.1). Recipe 32, architecture crossings, reports every `uses` edge whose ends sit in different contexts or layers and refuses nothing. The owner ruled that the architectural annotation decision stands: an architecture rule stays the corpus's own and runs as one of its corpus rules, and the Protocol supplies the walk the adopter writes by hand today.",
+    sections: {
+      intent: {
+        problem:
+          "A corpus that states an architecture rule in a Spec cannot have it checked by the Protocol, so each adopter writes the same walk over `uses`, `memberOf`, `layer` and `context` in its own gate.",
+        outcome:
+          "Check a corpus's declared architecture rules, such as a forbidden uses direction or context isolation, against the layers, contexts and uses its anchors state.",
+        openQuestions: [
+          {
+            question:
+              "Which rule forms cover the need: a forbidden `uses` from one layer to another, an isolated context, a component that must state a layer? The original's list also held rules on ports and routes, which have no anchors here.",
+            blocking: false,
+            key: "ruleForms",
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "The Protocol's validators never judge a corpus's architecture; an architecture rule runs as one of the corpus's own rules, the corpus's gate decides what fails, and that gate may be the corpus's own invocation of `sdp validate --rules` with the severity the rule states.",
+          "A corpus states each architecture rule as intent in a `constraint` Spec that says what is forbidden and why, and keeps the rule's machine form, its forbidden layer pairs and isolated contexts, as data its corpus rule passes to the walk.",
+          "The Protocol supplies the walk as a catalog recipe that takes forbidden layer pairs and isolated contexts as recipe parameters, resolves each end of every anchored `uses` edge to its component, directly or through `memberOf`, and returns each edge a rule forbids with both units, both components and the rule.",
+          "The walk reads the given rules and anchored structure only; it infers no edge from imports, reads no file path, judges no role and refuses nothing.",
+          "A component that states no layer or context falls outside a rule that names one, and the walk reports it as unclassified rather than as a breach.",
+          "The corpus binds its rule file to the constraint Spec as that Spec's verifier through a test anchor, so `has-verifier` says a check for the constraint exists; pass and fail stay in the corpus's own run.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.corpus-rules",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "defined",
+    file: "specs/validation/corpus-rules.sdp.md",
+    title: "Corpus-authored rules run on the one validation path",
+    narrative:
+      "The original design let a team add its own rules beside the built-in validators, each with an id, a severity and the whole graph query API, run in the same pass and reported in the same output (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.5). The Protocol has two check families, conformance and honesty, and every validator belongs to one of them. The architectural annotation decision sends a corpus's own rules to the corpus's own gate.\n\nThe first adopter's gate shows what that costs. Its 363-line check script runs `sdp validate` and parses the summary line, then holds about ten rules of its own: context isolation over declared `uses`, entry addresses written outside the Specs resolved through recipe 25, no `dependsOn` cycle through recipe 26, every open question keyed, a prose mention allowed only with a listed reason, cited laws backed by `constrainedBy`, and the Pack pages current. To read kind, readiness and relations it parses the carriers' frontmatter with regular expressions, the second read model the agent surface warns against (`libar-platform/design/tools/check.py`).",
+    sections: {
+      intent: {
+        problem:
+          "A corpus with rules of its own checks them off the one validation path, reading the carriers a second way and reporting in a form no Protocol surface reads.",
+        outcome:
+          "Let a corpus author its own graph rules and have their findings join the one validation report, so no corpus re-parses its carriers to check itself.",
+      },
+      behavior: {
+        rules: [
+          "A corpus rule is a graph body the corpus authors, given the bindings a recipe body gets, the reader, the raw graph and the report, and returning findings that each carry a rule id, a subject, a message and a severity.",
+          "A corpus rule reads the one derived graph and nothing else, so no rule reads a carrier, a source file or the network.",
+          "Each corpus finding names its rule and its corpus as its source and stands apart from the Protocol's own findings; the Protocol states none of these rules and ships none.",
+          "Corpus findings stand outside the conformance and honesty families, in a section of the report labelled as the corpus's own, so the two families keep their meaning and the guardrail that checks never judge content quality or workflow keeps binding the Protocol's own validators.",
+          "Validation runs corpus rules only from a file the operator names with `sdp validate --rules PATH`, which may repeat, and never from a file it finds in the corpus or in a configuration; it asks the trust `sdp q` already asks, to run code the operator chose.",
+          "A corpus finding carries severity `error` or `warning`. When the operator names `--rules`, an `error` corpus finding makes `sdp validate` exit nonzero and a `warning` stays informative; without `--rules` no corpus rule runs and only the Protocol's validators set the exit code.",
+          "Corpus findings keep their own source and report section, are tallied apart from the Protocol's summary line, and neither add to, suppress nor change a Protocol finding or the exit reason it sets.",
+          "A rules file that cannot load, a rule that throws, or a rule that returns a finding without a rule id, subject, message and admitted severity is a rule execution failure; `sdp validate` reports it in the corpus section and exits nonzero, so a broken rule never passes as a clean run.",
+          "A corpus rule changes no node, edge or delivery fact; it reports on the graph it is given.",
+        ],
+      },
+    },
+    deliveryFacts: [],
   },
 ] as const;

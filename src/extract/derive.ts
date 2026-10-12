@@ -1,6 +1,7 @@
 import { computeDeliveryFacts } from "../graph/delivery-facts.js";
 import { schemaVersion } from "../graph/schema.js";
 import type {
+  EntryLocation,
   AnchorNode,
   CodeNode,
   GraphEdge,
@@ -70,6 +71,46 @@ function pickSections(data: Record<string, unknown>): SpecSections | undefined {
   }
 
   return present ? sections : undefined;
+}
+
+const entryLocationsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.entry-locations"),
+  label: "builds the carrier entry location table",
+  satisfies: ref("spec:extraction.entry-locations"),
+  component: componentAnchorId("component:protocol.extract"),
+  role: "extractor",
+});
+void entryLocationsAnchor;
+
+function deriveEntryLocations(specs: readonly ReifiedSpec[]): readonly EntryLocation[] {
+  return specs
+    .flatMap((spec) =>
+      (spec.entryLines ?? []).map(({ entry, line }) => {
+        const index = /^question\[(\d+)\]$/u.exec(entry)?.[1];
+        const intent = spec.data.intent;
+        const questions =
+          typeof intent === "object" && intent !== null && "openQuestions" in intent
+            ? intent.openQuestions
+            : undefined;
+        const question: unknown =
+          index !== undefined && Array.isArray(questions) ? questions[Number(index)] : undefined;
+        const key =
+          typeof question === "object" && question !== null && "key" in question
+            ? question.key
+            : undefined;
+        return {
+          spec: spec.id,
+          file: spec.file,
+          entry,
+          ...(typeof key === "string" ? { key } : {}),
+          line,
+        };
+      }),
+    )
+    .sort((left, right) => {
+      if (left.spec !== right.spec) return left.spec < right.spec ? -1 : 1;
+      return left.entry < right.entry ? -1 : left.entry > right.entry ? 1 : 0;
+    });
 }
 
 function derivePrimitiveNode(entry: ReifiedSpec): PrimitiveNode {
@@ -293,5 +334,5 @@ export function deriveGraph(
     return facts === undefined ? node : { ...node, deliveryFacts: facts };
   });
 
-  return { schemaVersion, nodes: decoratedNodes, edges };
+  return { schemaVersion, nodes: decoratedNodes, edges, locations: deriveEntryLocations(specs) };
 }

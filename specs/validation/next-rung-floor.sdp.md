@@ -2,7 +2,7 @@
 id: spec:validation.next-rung-floor
 kind: rule
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.readiness-floor
   dependsOn: spec:validation.typed-dependency-floor

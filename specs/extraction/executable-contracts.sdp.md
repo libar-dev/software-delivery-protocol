@@ -13,7 +13,7 @@ relations:
 - outcome: Give bound tests typed step and example-space contracts without reading authored Specs directly.
 
 ### Open questions
-- [non-blocking] Do the concreteness-refusal and no-guessing outcome-identity laws stated in src/codegen/contracts.ts commentary promote here or to a story-altitude child under comment promotion?
+- [non-blocking #contractLawPromotion] Do the concreteness-refusal and no-guessing outcome-identity laws stated in src/codegen/contracts.ts commentary promote here or to a story-altitude child under comment promotion?
 
 ## Behavior
 - rule: `generateContracts` derives per-example step contracts and per-parent space contracts solely from the extracted graph.

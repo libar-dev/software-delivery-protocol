@@ -21,7 +21,7 @@ export const carrierSpecs = [
         ],
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:carrier.gherkin-authoring",
@@ -846,7 +846,7 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-body-grammar",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-body-grammar.sdp.md",
     title: "The Markdown body accepts one closed form per section",
     narrative: null,
@@ -861,6 +861,7 @@ export const carrierSpecs = [
             question:
               "The Markdown carrier admits one constraint entry per Spec; the TypeScript model and carrier admit several, and the kind-evidence law reads every entry. The owner's ruling makes one entry the law across carriers. Two reviewers contest it: a `constrainedBy` edge points at one Spec and says nothing about how many entries that Spec holds, and the narrowing would force a Spec with two bounds to promote or bundle them. The revision stays unlanded until that cost is weighed.",
             blocking: false,
+            key: "constraintEntryCount",
           },
         ],
       },
@@ -898,7 +899,7 @@ export const carrierSpecs = [
     id: "spec:carrier.inline-code-spans",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/inline-code-spans.sdp.md",
     title: "Inline code is content, never markup",
     narrative: null,
@@ -913,11 +914,13 @@ export const carrierSpecs = [
             question:
               "CommonMark lets a code span cross a line ending inside a paragraph, so a renderer and the Protocol can disagree about which text is inside a span. Should the owner keep the line-scoped rule or match spans across a paragraph?",
             blocking: false,
+            key: "spanAcrossLines",
           },
           {
             question:
               "A backslash-escaped backtick still opens a span, and a tag that starts before a backtick pair loses to the span. CommonMark decides both cases the other way. Should the owner keep these readings or follow CommonMark in these two cases?",
             blocking: false,
+            key: "commonMarkCases",
           },
         ],
       },

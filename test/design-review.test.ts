@@ -24,6 +24,19 @@ import type { DesignReviewPage, GraphSchema } from "../src/index.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
+import {
+  ref as projectionRef,
+  specTest as projectionTest,
+  testAnchorId as projectionTestId,
+} from "@libar-dev/software-delivery-protocol";
+
+const projectionsModelTestAnchor = projectionTest({
+  id: projectionTestId("test:protocol.projections-model.rendering"),
+  label: "graph-only rendering tests verify pure disposable projection pages",
+  verifies: projectionRef("spec:consumers.projections-model"),
+});
+void projectionsModelTestAnchor;
+
 const exampleRoot = fileURLToPath(new URL("../examples/checkout-v1", import.meta.url));
 const goldenRoot = fileURLToPath(
   new URL("./fixtures/checkout-v1/expected-design-review", import.meta.url),
@@ -98,10 +111,16 @@ describe("the Design Review — the one generated read-only view", () => {
       "## Narrative\n\nThe Protocol's own delivery model exercises the same carrier, graph, checks, and projections offered to consumers.\n\n**Readiness:",
     );
     expect(page).toContain("## Intent\n\n- **outcome:");
-    expect(index).toContain("schema `0.8.0`");
-    expect(pack).toContain(
-      "| [`spec:protocol.self-hosting`](../spec/protocol.self-hosting.md) The Protocol authors and validates itself | behavior | epic | defined | ready | none | none |",
+    expect(index).toContain("schema `0.9.0`");
+    const row = pack
+      .split("\n")
+      .find((line) =>
+        line.startsWith("| [`spec:protocol.self-hosting`](../spec/protocol.self-hosting.md) ("),
+      );
+    expect(row).toContain(
+      ") The Protocol authors and validates itself | behavior | epic | defined | ready | ready · nothing blocks | 0 | 0 | 0 |",
     );
+    expect(row?.endsWith("| none | none | none |")).toBe(true);
   });
 
   it("renders every owned description as escaped prose and omits absent prose artifacts", () => {
@@ -255,6 +274,56 @@ describe("the Design Review — the one generated read-only view", () => {
     expect(() => {
       assertNarrativeAndIntent(firstWrongPage, "Narrative value.", "Intent description.");
     }).toThrow();
+  });
+
+  it("percent-encodes source link targets on Spec and Pack headers and every binding", () => {
+    const graph = extract({ root: exampleRoot }).graph;
+    const oddPath = "odd (dir)/file name#x.ts";
+    const pages = renderDesignReview(
+      createReader({
+        ...graph,
+        nodes: graph.nodes.map((node) => ({ ...node, file: oddPath })),
+      }),
+    );
+    for (const path of ["spec/orders.create-order.md", "pack/checkout-v1.md"]) {
+      const page = pageByPath(pages, path);
+      const targets = [...page.matchAll(/\]\(([^\n]+?)\)/gu)].map((match) => match[1] ?? "");
+      const sourceTargets = targets.filter((target) => target.startsWith("../../../"));
+      expect(sourceTargets.length).toBeGreaterThan(0);
+      expect(
+        sourceTargets.every((target) =>
+          target.startsWith("../../../odd%20%28dir%29/file%20name%23x.ts"),
+        ),
+      ).toBe(true);
+    }
+  });
+
+  it("percent-encodes page link targets on the index and detail pages", () => {
+    // Off-contract ids stay visible in diagnostic pages and still need safe link targets.
+    const graph = extract({ root: exampleRoot }).graph;
+    const rename = (id: string) => id.replace("orders.create-order", "orders.create (order)");
+    const pages = renderDesignReview(
+      createReader({
+        ...graph,
+        nodes: graph.nodes.map((node) =>
+          node.nodeType === "Pack"
+            ? { ...node, id: rename(node.id), members: node.members.map(rename) }
+            : { ...node, id: rename(node.id) },
+        ),
+        edges: graph.edges.map((edge) => ({
+          ...edge,
+          from: rename(edge.from),
+          to: rename(edge.to),
+        })),
+      }),
+    );
+    expect(pageByPath(pages, "index.md")).toContain("](" + "spec/orders.create%20%28order%29.md)");
+    expect(pageByPath(pages, "pack/checkout-v1.md")).toContain(
+      "../spec/orders.create%20%28order%29.md)",
+    );
+    expect(pageByPath(pages, "spec/orders.create (order).md")).toContain(
+      "orders.create%20%28order%29.valid-cart.md)",
+    );
   });
 
   it("golden correctness oracle: the renderer produces the right view, page set and bytes", () => {

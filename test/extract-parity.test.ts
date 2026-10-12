@@ -1,3 +1,4 @@
+import { deriveGraph } from "../src/extract/derive.js";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -13,6 +14,8 @@ import {
   reifyTypeScriptCarrier,
 } from "../src/index.js";
 import type { Finding } from "../src/validate/contracts.js";
+
+import { serializeGraphStructure } from "./helpers/graph-structure.js";
 
 const fixtureRoot = new URL("./fixtures/import/parity/", import.meta.url);
 
@@ -210,5 +213,40 @@ describe("the bounded TypeScript and Markdown refusal-parity matrix", () => {
     expect(typeScript.specs).toHaveLength(1);
     expect(markdownFinding?.severity).toBe("error");
     expect(markdown.specs).toEqual([]);
+  });
+});
+
+describe("carrier parity excludes entry locations", () => {
+  it("compares the nodes and edges of accepted Design entries", () => {
+    const markdown = reifyMarkdownCarrier(
+      `---
+id: spec:fixture.location-parity
+kind: model
+altitude: story
+readiness: idea
+relations: {}
+---
+# Location parity
+
+## Design
+- shape: A shared design.
+`,
+      "twin.sdp",
+    );
+    const typeScript = reifyTypeScriptCarrier(
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const subject = spec({
+  id: specId("spec:fixture.location-parity"), title: "Location parity",
+  kind: "model", altitude: "story", readiness: "idea",
+  design: { shape: "A shared design." },
+});`,
+      "twin.sdp",
+    );
+    expect(markdown.findings).toEqual([]);
+    expect(typeScript.findings).toEqual([]);
+    const left = deriveGraph(markdown.specs, [], []);
+    const right = deriveGraph(typeScript.specs, [], []);
+    expect(left.locations).not.toEqual(right.locations);
+    expect(serializeGraphStructure(left)).toBe(serializeGraphStructure(right));
   });
 });

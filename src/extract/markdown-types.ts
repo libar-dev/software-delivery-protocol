@@ -1,3 +1,4 @@
+import type { ReifiedEntryLine } from "./reify.js";
 import type { Finding } from "../validate/contracts.js";
 
 export interface MarkdownFrontmatter {
@@ -16,6 +17,7 @@ export type MarkdownFrontmatterResult =
 
 export interface MarkdownBody {
   readonly data: Record<string, unknown>;
+  readonly entryLines: readonly ReifiedEntryLine[];
 }
 
 export type MarkdownBodyResult =

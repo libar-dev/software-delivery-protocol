@@ -13,7 +13,7 @@ relations:
 - outcome: Give symbol and import impact questions an exhaustive derived substrate without promoting mechanical structure into curated intent.
 
 ### Open questions
-- [blocking] Which language-neutral identity and extraction boundary can support exhaustive symbol reach without freezing a single compiler's representation into the Protocol?
+- [blocking #symbolIdentity] Which language-neutral identity and extraction boundary can support exhaustive symbol reach without freezing a single compiler's representation into the Protocol?
 
 ## Behavior
 - rule: Mechanical import and symbol structure is inferred and remains distinct from the sparse curated graph.

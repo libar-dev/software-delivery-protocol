@@ -13,14 +13,14 @@ relations:
 - outcome: Keep the graph trustworthy by checking conformance and honesty without judging content quality or enforcing workflow.
 
 ### Open questions
-- [non-blocking] Does the one-validation-path registry law stated in the src/validate/validators.ts file header promote here or to a story-altitude child under comment promotion?
+- [non-blocking #registryLawPromotion] Does the one-validation-path registry law stated in the src/validate/validators.ts file header promote here or to a story-altitude child under comment promotion?
 
 ## Rule
-- Every validator belongs to either the conformance family, which checks meta-model well-formedness, or the honesty family, which rejects authored or overstated derived truth.
-- Validation errors fail the build; gaps and orphans remain informative signals rather than delivery-process gates.
+- Every validator the Protocol ships belongs to either the conformance family, which checks meta-model well-formedness, or the honesty family, which rejects authored or overstated derived truth; a corpus rule run through `sdp validate --rules` belongs to neither and reports in the corpus's own section.
+- Errors from the Protocol's validators fail the build; gaps and orphans remain informative signals rather than delivery-process gates.
 - Types enforce structural shape, schema validates graph payloads, and graph validators enforce cross-file conformance and honesty; no one layer substitutes for the others.
 - All graph validation runs through the one derived graph path: source, extraction, graph, then checks.
-- The two families are load-bearing, so an aggregate report spanning both states no family of its own while every finding names the family it came from.
+- The two families are load-bearing, so an aggregate report spanning both states no family of its own while every finding of the Protocol's own validators names the family it came from.
 - The realizing entrypoints are `graphValidatorIds` and `validateGraph` in `src/validate/validators.ts`.
 
 ## Example space

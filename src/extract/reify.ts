@@ -116,12 +116,18 @@ const RESERVED_DERIVED_PROPERTIES = new Set<string>([
   "models",
 ]);
 
+export interface ReifiedEntryLine {
+  readonly entry: string;
+  readonly line: number;
+}
+
 export interface ReifiedSpec {
   /** Plain `Spec`-shaped data in authored property order — built from the AST, never evaluated. */
   readonly data: Record<string, unknown>;
   readonly id: string;
   readonly file: string;
   readonly line: number;
+  readonly entryLines?: readonly ReifiedEntryLine[];
 }
 
 export interface ReifiedPack {
@@ -1051,6 +1057,48 @@ function firstPropertyNamed(node: Node, name: string): PropertyAssignment | unde
     );
 }
 
+function typeScriptEntryLines(
+  objectLiteral: Node,
+  data: Record<string, unknown>,
+): readonly ReifiedEntryLine[] {
+  const lines: ReifiedEntryLine[] = [];
+  for (const sectionName of ["design", "ui"]) {
+    const section = data[sectionName];
+    const initializer = firstPropertyNamed(objectLiteral, sectionName)?.getInitializer();
+    if (!isUnknownRecord(section) || initializer === undefined) continue;
+    for (const key of Object.keys(section)) {
+      if (key === "description") continue;
+      const property = firstPropertyNamed(initializer, key);
+      if (property !== undefined) {
+        lines.push({ entry: `${sectionName}.${key}`, line: property.getStartLineNumber() });
+      }
+    }
+  }
+  const intent = data.intent;
+  const intentNode = firstPropertyNamed(objectLiteral, "intent")?.getInitializer();
+  const questionsNode =
+    intentNode === undefined
+      ? undefined
+      : firstPropertyNamed(intentNode, "openQuestions")?.getInitializer();
+  const array = questionsNode === undefined ? undefined : unwrapTransparent(questionsNode);
+  if (
+    isUnknownRecord(intent) &&
+    Array.isArray(intent.openQuestions) &&
+    array !== undefined &&
+    Node.isArrayLiteralExpression(array)
+  ) {
+    for (const [index, element] of array.getElements().entries()) {
+      if (index >= intent.openQuestions.length) break;
+      const question = firstPropertyNamed(element, "question");
+      lines.push({
+        entry: `question[${String(index)}]`,
+        line: (question ?? element).getStartLineNumber(),
+      });
+    }
+  }
+  return lines;
+}
+
 /** The line of `openQuestions[<index>].key` in an authored Intent, or the Intent's own line. */
 function openQuestionKeyLine(intentNode: Node, index: number): number {
   const fallback = intentNode.getStartLineNumber();
@@ -1682,6 +1730,7 @@ function reifySpecCall(
       id: data.id as string,
       file,
       line: call.getStartLineNumber(),
+      entryLines: typeScriptEntryLines(objectLiteral, data),
     },
     findings,
   };

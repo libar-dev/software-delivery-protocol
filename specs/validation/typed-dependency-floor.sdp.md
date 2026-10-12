@@ -2,7 +2,7 @@
 id: spec:validation.typed-dependency-floor
 kind: rule
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.readiness-floor
   dependsOn: spec:model.relations

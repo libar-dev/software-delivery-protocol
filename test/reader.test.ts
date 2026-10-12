@@ -26,6 +26,19 @@ import type { GraphSchema, Reader } from "../src/index.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
+import {
+  ref as bindingRef,
+  specTest as bindingTest,
+  testAnchorId as bindingTestId,
+} from "@libar-dev/software-delivery-protocol";
+
+const projectionReaderTestAnchor = bindingTest({
+  id: bindingTestId("test:protocol.projections-model.reader"),
+  label: "reader tests verify composable graph joins without persistence",
+  verifies: bindingRef("spec:consumers.projections-model"),
+});
+void projectionReaderTestAnchor;
+
 const exampleRoot = join(fileURLToPath(new URL("..", import.meta.url)), "examples", "checkout-v1");
 
 /** The example graph, extracted once — the canonical consumer input (one graph, many readers). */
@@ -1176,6 +1189,11 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
           file: "src/comment-form.ts",
           line: 13,
           role: "service",
+          component: {
+            id: "component:platform.read-model",
+            layer: "application",
+            context: "platform",
+          },
         },
       ]);
       expect(context?.references).toEqual([
@@ -1186,6 +1204,7 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
           file: "src/constant-form.ts",
           line: 17,
           role: "decider",
+          component: { id: "component:platform.gateway", layer: "edge", context: "platform" },
         },
       ]);
     });

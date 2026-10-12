@@ -6,6 +6,7 @@ import { addMarkdownFinding, capMarkdownFindings, markdownFinding } from "./mark
 import { mapOwner } from "./markdown-body-owners.js";
 import { isUnsupportedCommonMarkBlock, normalizeProse } from "./markdown-body-content.js";
 import type { MarkdownLine } from "./markdown-body-content.js";
+import type { ReifiedEntryLine } from "./reify.js";
 import type { MarkdownBodyResult } from "./markdown-types.js";
 
 const primaryOwners = new Set(["Behavior", "Rule", "Workflow", "Contract"]);
@@ -199,6 +200,7 @@ export function parseMarkdownBody(
     else current.content.push(line);
   }
   const data: Record<string, unknown> = { title };
+  const entryLines: ReifiedEntryLine[] = [];
   const prose = narrative(before, file, findings);
   if (prose.length > 0) data.narrative = prose;
   const ownerNames = new Set<string>();
@@ -213,11 +215,11 @@ export function parseMarkdownBody(
     else {
       ownerNames.add(name);
       if (primaryOwners.has(owner.name)) primarySeen = true;
-      mapOwner(data, owner.name, owner.content, file, kind, findings);
+      mapOwner(data, owner.name, owner.content, file, kind, findings, entryLines);
     }
   }
   const capped = capMarkdownFindings(findings, file, "extract/invalid-markdown-structure");
   return capped.length === 0
-    ? { ok: true, body: { data }, findings: capped }
+    ? { ok: true, body: { data, entryLines }, findings: capped }
     : { ok: false, findings: capped };
 }
