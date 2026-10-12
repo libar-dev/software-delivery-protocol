@@ -401,3 +401,43 @@ adds this section.
 
 Commit per coherent unit after its focused tests pass; the full gate before the close commit.
 Never push without the owner's word.
+
+### The fold, as run
+
+| Lane | Model | Commits | What it did |
+| --- | --- | --- | --- |
+| F1 captures | Opus 5.5 | `2086781`, `ad98768`, `dda3432` | Answered 30 blocking questions on 18 carriers; 16 moved to `defined`. |
+| F2 decisions | Opus 5.5 | `7fbd194`, `c1318fa`, `35539a0`, `074ae7f` | Narrowing by `refines`; 20 `ready` statements and two ratifications; regenerability revised; the projections model split, with `spec:consumers.projections-model.roadmap-views` captured; twelve terms ratified; MD-30, MD-34 and MD-35 deleted after two consequences moved into MD-38. |
+| Corpus review | gpt-6.1-sol | `5b2d855` | Eight findings folded. Design maturity keeps readiness's ratified meaning; the planned component's own id is keyed `id`; perspective selectors, corpus-rule severity and the bundle's budget floor became blocking, so those three Specs state `scoped`. |
+| F3 engine | gpt-6.1-sol | `2cad2d9` to `176c4e9` | `nothing blocks`; the boundary on four relations with `verifiedBy` and `supersededBy` apart; every Design Review link target encoded; `designColumns` on the Spec context and in recipe 1; recipe 31's `narrows` and `narrowedBy`; verifiers for the claim taxonomy, core model, regenerability and projections model. |
+| F4 integration | gpt-6.1-sol | `134c184`, `4abeacb` | The oracle and test expectations re-pinned from carriers. |
+| Main thread | Opus 5.5 | `8d6a6bb`, `6a74e30` | Calendar dates out of Spec prose; status lines; plan 42 drafted. |
+
+### Review of the fold
+
+gpt-6-astra (xhigh) reviewed `90c75dd..4abeacb` read-only. No blocker. Its independent probes
+found no engine finding: the boundary split, shared design columns, recipe 1's counts, recipe 31's
+narrowing, and link encoding of spaces, parentheses, `#`, `%` and non-ASCII paths all held. It
+found no widened or graph-computed oracle pin, and nothing still in force lost from the three
+deleted records.
+
+| # | Finding | Fold |
+| --- | --- | --- |
+| 1 | Plan 42's acceptance needs two associations the adopter's graph does not hold: the register id OD-157, and the test comparing a declaration's type (major). | The design pass recommends their lawful homes in the adopter, and acceptance reads the page set with the files it links to. |
+| 2 | `spec:decisions.planning-truths-placement` (MD-33) still let a refusal reopen only through `supersedes` (minor). | Its decision, consequence and registry row now distinguish whole replacement from narrowing. |
+| 3 | The core-model verifier never compared coordinates with the supplied envelope, and its non-propagation case bound the parent (minor). | Both outputs are asserted against the envelope, and a child-only binding leaves the parent unimplemented; four mutations go red (gpt-6.1-sol). |
+
+### Acceptance of the fold, as measured
+
+Measured after the review's fold; re-run the recipes rather than inheriting these.
+
+- **The gate.** `npm run check` exits 0: 1,540 pooled tests in 77 files and 93 CLI tests, preflight
+  clean.
+- **The graph.** 250 Specs, 3 Packs, 263 anchors, 516 nodes, 1,222 edges; validate reports 0 errors
+  and 4 warnings (the spec-sections gap the owner kept, three prose mentions).
+- **The alarm and the backlog.** Recipe 2 is empty, down from 23. Recipe 1 is empty.
+- **Open questions.** 61, 9 of them blocking, down from 97 and 35. Of the nine, three are new holds
+  the corpus review raised for the owner (`spec:consumers.review-perspectives#question.perspectiveSelectors`,
+  `spec:validation.corpus-rules#question.ruleSeverity`, `spec:consumers.context-bundle#question.budgetFloor`),
+  three are re-entry triggers (reference projection, structural Mermaid, roadmap views), and three
+  predate this arc.
