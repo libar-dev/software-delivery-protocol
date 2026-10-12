@@ -342,3 +342,62 @@ the corpus is now past 250 Specs.
 The change: delete the two measured-evidence rules and keep the qualitative deferral, or replace
 them with a cited, reproducible measurement kept apart from an owner-chosen re-entry threshold.
 Then it can state `ready`; the regeneration contract needs no split.
+
+## The owner's rulings of 2026-10-12, and their fold
+
+The owner ruled every open item of PR 30 on a ruling sheet of 49 cards, each with the recommended
+option, and added one direction: when a newer decision replaces an older one whose text holds
+nothing a reader still needs, delete the older record instead of keeping it beside a `supersedes`
+edge. Git keeps it. The rulings land in their graph homes; this list is lineage.
+
+- **Decisions.** `supersedes` replaces a whole decision; a decision that narrows one part of
+  another `refines` it, so the three projection-freeze carve-outs re-point and the superseded-decision
+  signal's rule stands. Ratify `spec:decisions.pack-design-page` (MD-39) and
+  `spec:decisions.checked-mentions`. Apply the delete-noise direction to MD-30, MD-34 and MD-35,
+  moving any part still in force into the decision that replaced it first.
+- **Statements.** `ready` on the arc's seven built Specs (the Pack design pair after the two page
+  fixes) and on the fourteen drift-queue Specs. `spec:extraction.regenerability` loses its two
+  unmeasured rules, then states `ready`. `spec:consumers.projections-model` keeps its realized
+  contract, drops the curation figure, leaves the impact graph to its own Spec, captures roadmap
+  views as an `idea` child, then states `ready`.
+- **Pack page.** `holds` reads `nothing blocks`. The boundary's "rested on by" counts the four
+  relations recipe 30 follows; inbound `verifies` and `supersedes` list apart.
+- **Captures.** design maturity is derived, never stated (no rung, floor clause or design fact),
+  and recipe 1 shows the design columns; a component designed before code is a Spec its
+  `component:` anchor later satisfies, with Design keys named as the anchor's attributes; an arc
+  is a Pack named for its capability; example spaces decode once in the engine onto the Spec
+  context; a question's decider is a free corpus token and its fields ride labelled sub-items; a
+  rule key is a `[#key]` marker on any entry of the primary behavior owner, addressed `#rule.<key>`;
+  a relation reason is an object per target; perspective is the term, declared as corpus data a
+  recipe takes; a context bundle is a recipe with a character budget and a fixed cut order; a
+  design diff is a recipe given the base graph as a parameter, comparing keyed entries only by
+  key; a change proposal is one JSON schema that holds only the changes whose scope moved;
+  architecture rules stay the corpus's, declared in a constraint Spec and walked by a recipe;
+  corpus rules report outside the two families and run only from a file the operator names;
+  run evidence joins by test file and reads CTRF. The reference projection and structural
+  Mermaid triggers are not met.
+- **Studio.** Phase 0 is a read-only static root. It serves a person designing a capability in
+  the repository and a PR reviewer with a link, measured by the adopter's five reader tasks; the
+  read-only Studio ships in the open-source package; it stands beside the Markdown Design Review;
+  the build stamp lives in a file the publishing step writes; composed intent is copied or saved.
+- **Gaps and vocabulary.** The claim taxonomy gains a verifier; spec sections keeps its gap; the
+  five prose mentions stay; raw paths in the frozen pages' link targets are a defect under the
+  Design Review's encoding rule; the Gherkin question form waits. The nine candidate terms,
+  `perspective`, `mention` and `entry address` are ratified.
+- **Adopter.** Fold the edits into this PR, merge, then re-pin libar-platform once.
+
+### Lanes
+
+Each lane works in its own worktree on its own branch, on disjoint files, from the commit that
+adds this section.
+
+| Lane | Model | Owns |
+| --- | --- | --- |
+| F1 captures | Opus 5.5 | The captures' and Studio Specs' answered questions and rungs. |
+| F2 decisions and statements | Opus 5.5 | Decision records, the supersession re-pointing and deletions, ready statements, regenerability, the projections model split, both Pack manifests, `CONTEXT.md`, `DECISIONS.md`. |
+| F3 engine | gpt-6.1-sol | The Pack page fixes, link encoding, design columns on the Spec context and recipe 1, recipe 31's narrowing decisions, honest verifiers, and the Specs that state them. |
+| F4 integration | Opus 5.5 | Merges, the self-hosting oracle, test and doc fallout, the gate. |
+| F5 review | gpt-6-astra | A read-only adversarial review of the fold. |
+
+Commit per coherent unit after its focused tests pass; the full gate before the close commit.
+Never push without the owner's word.
