@@ -934,6 +934,35 @@ describe("query body positions and merged parameters", () => {
     expect(capture.readStderr().trimEnd().split("\n")).toHaveLength(1);
   });
 
+  it("reads inline JSON and @PATH before KEY=@PATH when the input contains =@", async () => {
+    const path = join(scratch, "params=@base.json");
+    writeFileSync(path, '{"fromFile":"x=@y"}');
+    const capture = createCaptureOutput();
+    expect(
+      await runQ(
+        [
+          "return params",
+          "--root",
+          scratch,
+          "--json",
+          "--params",
+          '{"request":"Use --params base=@graph.json"}',
+          "--params",
+          ' {"spaced":"a=@b"}',
+          "--params",
+          `@${path}`,
+        ],
+        capture,
+      ),
+    ).toBe(0);
+    expect(JSON.parse(capture.readStdout())).toEqual({
+      request: "Use --params base=@graph.json",
+      spaced: "a=@b",
+      fromFile: "x=@y",
+    });
+    expect(capture.readStderr()).toBe("");
+  });
+
   it("refuses a keyed file holding invalid JSON before extraction", async () => {
     const path = join(scratch, "invalid.json");
     writeFileSync(path, "{broken");

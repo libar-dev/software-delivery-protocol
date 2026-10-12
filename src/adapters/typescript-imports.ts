@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { isAbsolute, relative, resolve, sep, win32 } from "node:path";
 
-import { Node, Project } from "ts-morph";
+import { Node, Project, SyntaxKind } from "ts-morph";
 import type { SourceFile } from "ts-morph";
 
 /**
@@ -70,6 +70,33 @@ function sourcePaths(directory: string): string[] {
   return paths;
 }
 
+/** The checker resolves a module specifier literal to the file it names, when it can. */
+function moduleTarget(specifier: Node | undefined): SourceFile | undefined {
+  return specifier?.getSymbol()?.getDeclarations().find(Node.isSourceFile);
+}
+
+/** `import("./b.js")` and `import("./b.js").B` with a literal specifier; a computed one is skipped. */
+function importExpressions(file: SourceFile): SourceFile[] {
+  const literal = (node: Node | undefined) =>
+    node !== undefined && (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node))
+      ? node
+      : undefined;
+  const specifiers = [
+    ...file
+      .getDescendantsOfKind(SyntaxKind.CallExpression)
+      .filter((call) => call.getExpression().getKind() === SyntaxKind.ImportKeyword)
+      .map((call) => literal(call.getArguments()[0])),
+    ...file.getDescendantsOfKind(SyntaxKind.ImportType).map((type) => {
+      const argument = type.getArgument();
+      return Node.isLiteralTypeNode(argument) ? literal(argument.getLiteral()) : undefined;
+    }),
+  ];
+  return specifiers.flatMap((specifier) => {
+    const target = moduleTarget(specifier);
+    return target === undefined ? [] : [target];
+  });
+}
+
 function reexports(file: SourceFile): SourceFile[] {
   return file.getExportDeclarations().flatMap((entry) => {
     const target = entry.getModuleSpecifierSourceFile();
@@ -107,14 +134,11 @@ export function deriveTypeScriptImports(root: string, configPath: string): Impor
         for (const entry of source.getStatements().filter(Node.isImportEqualsDeclaration)) {
           const reference = entry.getModuleReference();
           if (Node.isExternalModuleReference(reference)) {
-            const target = reference
-              .getExpression()
-              ?.getSymbol()
-              ?.getDeclarations()
-              .find(Node.isSourceFile);
+            const target = moduleTarget(reference.getExpression());
             if (target !== undefined) direct.push(target);
           }
         }
+        direct.push(...importExpressions(source));
         const reached = new Set<string>();
         const pending = [...direct, ...reexports(source)];
         while (pending.length > 0) {

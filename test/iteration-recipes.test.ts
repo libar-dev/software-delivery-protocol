@@ -1,6 +1,14 @@
 import { createRequire } from "node:module";
 import { execFileSync } from "node:child_process";
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -341,12 +349,11 @@ describe("iteration loop: design diff", () => {
     });
   }, 20_000);
 
-  it("runs the documented base-worktree procedure, preserves constant anchors, and compares HEAD~1", async () => {
+  // HEAD is the base so a shallow checkout, such as CI's, holds the commit.
+  it("runs the documented base-worktree procedure, preserves constant anchors, and compares HEAD", async () => {
     const directory = mkdtempSync(join(repoRoot, ".lane-l-git-"));
     const worktree = join(directory, "base");
-    let added = false;
     try {
-      added = true;
       const catalog = readFileSync(join(repoRoot, "docs/agent-surface/recipes.md"), "utf8");
       const section = catalog.split(/^## 35\..+$/mu)[1]?.split(/^## /mu)[0];
       const procedure = /```sh\n([\s\S]*?)\n```/u.exec(section ?? "")?.[1];
@@ -355,7 +362,10 @@ describe("iteration loop: design diff", () => {
       const quotedWorktree = `'${worktree.replaceAll("'", "'\\''")}'`;
       execFileSync(
         "sh",
-        ["-c", preparation.replaceAll(".sdp-base", quotedWorktree).replace(/\bBASE\b/gu, "HEAD~1")],
+        [
+          "-c",
+          `set -e\n${preparation.replaceAll(".sdp-base", quotedWorktree).replace(/\bBASE\b/gu, "HEAD")}`,
+        ],
         {
           cwd: repoRoot,
           stdio: "pipe",
@@ -409,9 +419,10 @@ describe("iteration loop: design diff", () => {
         cwd: repoRoot,
         stdio: "pipe",
       });
-      added = false;
+      expect(existsSync(worktree)).toBe(false);
     } finally {
-      if (added)
+      // Clean up only a worktree the procedure created, so a failed creation keeps its own error.
+      if (existsSync(join(worktree, ".git")))
         execFileSync("git", ["-C", repoRoot, "worktree", "remove", "--force", worktree], {
           stdio: "pipe",
         });
@@ -505,7 +516,8 @@ describe("iteration loop: design diff", () => {
         delete (behavior as { ruleKeys?: unknown }).ruleKeys;
       }
       const diff = await runRecipe<Diff>(35, { base, detail: true }, head);
-      expect(diff.diagnostics).toEqual([]);
+      // Spec a keys a rule and a flow, whose order across the two lists the base cannot hold.
+      expect(diff.diagnostics.map((row) => row.part)).toEqual(["ruleOrder"]);
       expect(diff.specs.changed).toEqual([]);
       const check = await runRecipe<ProposalCheck>(
         38,
@@ -523,12 +535,83 @@ describe("iteration loop: design diff", () => {
         },
         head,
       );
-      expect(check.changes[0]?.moved).toBe(false);
+      expect(check.changes[0]?.moved).toBeNull();
+      expect(check.changes[0]?.scope.every((row) => row.resolvesAtBase && row.resolvesAtHead)).toBe(
+        true,
+      );
+      expect(check.changes[0]?.scope.map((row) => row.moved ?? row.comparable)).toEqual([
+        false,
+        false,
+        false,
+      ]);
+    });
+  }, 20_000);
+
+  it("invents no order across rules and flows from a legacy base", async () => {
+    await withCorpus(async (root) => {
+      edit(
+        root,
+        "a.sdp.md",
+        "- rule: [#first] First rule.\n- flow: [#last] Last flow.",
+        "- flow: [#last] Last flow.\n- rule: [#first] First rule.",
+      );
+      const head = extract({ root });
+      // A pre-rule-key engine kept the markers in the text and serialized rules before flows.
+      const legacyOf = (graph: GraphSchema) => {
+        const base = JSON.parse(JSON.stringify(graph)) as GraphSchema;
+        for (const node of base.nodes) {
+          if (node.nodeType !== "Primitive" || !node.sections?.behavior?.ruleKeys) continue;
+          const { rules, flows, ruleKeys = {}, ...rest } = node.sections.behavior;
+          const marked = (list: string, items: readonly string[] | undefined) =>
+            items?.map((text, index) => {
+              const key = Object.keys(ruleKeys).find(
+                (name) => ruleKeys[name] === `${list}[${String(index)}]`,
+              );
+              return key === undefined ? text : `[#${key}] ${text}`;
+            });
+          (node.sections as Record<string, unknown>).behavior = {
+            ...rest,
+            rules: marked("rules", rules),
+            flows: marked("flows", flows),
+          };
+        }
+        return base;
+      };
+      const base = legacyOf(head.graph);
+      const diff = await runRecipe<Diff>(35, { base, detail: true }, head);
+      expect(diff.specs.changed).toEqual([]);
+      expect(diff.diagnostics).toEqual([
+        expect.objectContaining({ part: "ruleOrder", id: "spec:probe.a" }),
+      ]);
+      const proposal = {
+        ...sampleProposal,
+        changes: [
+          {
+            scope: ["spec:probe.a#rule.first", "spec:probe.a#rule.last", "spec:probe.a"],
+            request: "Review unchanged rules.",
+          },
+        ],
+      };
+      const check = await runRecipe<ProposalCheck>(38, { base, proposal }, head);
+      expect(check.changes[0]?.scope.slice(0, 2).map((row) => row.moved)).toEqual([false, false]);
+      expect(check.changes[0]?.scope[2]).toMatchObject({ comparable: false });
+      expect(typeof check.changes[0]?.scope[2]?.reason).toBe("string");
+      expect(check.changes[0]?.scope[2]).not.toHaveProperty("moved");
+      expect(check.changes[0]?.moved).toBeNull();
+      // Values and order within one list still compare.
+      edit(root, "a.sdp.md", "- rule: [#first] First rule.", "- rule: [#first] Changed rule.");
+      const changed = extract({ root });
+      const later = await runRecipe<Diff>(35, { base, detail: true }, changed);
       expect(
-        check.changes[0]?.scope.every(
-          (row) => row.resolvesAtBase && row.resolvesAtHead && row.moved === false,
-        ),
-      ).toBe(true);
+        later.specs.changed
+          .find((row) => row.id === "spec:probe.a")
+          ?.parts.map((row) => [row.part, row.change]),
+      ).toEqual([
+        ["behavior.rules", "changed"],
+        ["rule.first", "changed"],
+      ]);
+      const recheck = await runRecipe<ProposalCheck>(38, { base, proposal }, changed);
+      expect(recheck.changes[0]?.scope.map((row) => row.moved)).toEqual([true, false, true]);
     });
   }, 20_000);
 
@@ -1038,6 +1121,33 @@ describe("iteration loop: context bundle", () => {
         derived,
       );
       expect(minimum.used).toBeLessThanOrEqual(minimum.budget);
+    });
+  }, 20_000);
+
+  it("keeps a pinned declaration whole through the fifth cut when its key contains a dot", async () => {
+    await withCorpus(async (root) => {
+      const long = "Reading material ".repeat(100);
+      writeFileSync(
+        join(root, "dotted.sdp.ts"),
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const dotted = spec({
+  id: specId("spec:probe.dotted"), title: "Dotted", kind: "behavior", altitude: "story", readiness: "idea",
+  intent: { outcome: "Keep pinned detail" },
+  design: { "a.b": "\`Thing\` required detail", ab: "\`Thing\` required detail", notes: ${JSON.stringify(long)} },
+});`,
+      );
+      const derived = extract({ root });
+      expect(derived.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
+      const specs = ["spec:probe.dotted"];
+      let result = await runRecipe<Bundle>(36, { specs, budget: 100000 }, derived);
+      while (result.leftOut.length < 5) {
+        result = await runRecipe<Bundle>(36, { specs, budget: result.used - 1 }, derived);
+      }
+      expect(result.members[0]?.sections.design).toMatchObject({
+        "a.b": "`Thing` required detail",
+        ab: "`Thing` required detail",
+      });
+      expect(JSON.stringify(result.members[0]?.sections.design)).not.toContain("Reading material");
     });
   }, 20_000);
 

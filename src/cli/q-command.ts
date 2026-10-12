@@ -199,7 +199,8 @@ function readParams(
   let text = value;
   let source = "--params";
   let key: string | undefined;
-  const keyed = /^([^=]+)=@(.*)$/u.exec(value);
+  // Inline JSON and @PATH are recognized first, so `=@` inside either is never read as a key.
+  const keyed = /^[ \t\r\n]*[{["]|^@/u.test(value) ? null : /^([^=]+)=@(.*)$/su.exec(value);
   if (keyed !== null) {
     key = keyed[1];
     if (key === undefined || !/^[a-z][A-Za-z0-9]*$/u.test(key)) {

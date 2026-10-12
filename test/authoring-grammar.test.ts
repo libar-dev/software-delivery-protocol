@@ -595,6 +595,8 @@ describe("question fields", () => {
     'status: "waiting"',
     'decider: "owner", decider: "delegated"',
     "decider: selectOwner()",
+    'links: [ref("spec:probe.parent")]',
+    'links: ["spec:probe.parent", ...others]',
   ])("refuses invalid TypeScript field %s", (field) => {
     const source = tsSpec(`intent: {openQuestions: [{question: "Who?", ${field}}]}`).replace(
       'intent: {outcome: "Probe"}, ',

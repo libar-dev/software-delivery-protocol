@@ -1345,7 +1345,9 @@ function appendDropFindings(
     findings.push(
       createExtractFinding(
         extractFindingIds.nonStaticSection,
-        /^intent\.openQuestions\[\d+\]\.(decider|links|provisional|trigger)$/u.test(
+        // A failure anywhere inside a question field drops the whole question list, blocking
+        // questions included, so it is an error rather than a lossy warning.
+        /^intent\.openQuestions\[\d+\]\.(decider|links|provisional|trigger)(?:$|[.[])/u.test(
           drop.failurePath,
         )
           ? "error"

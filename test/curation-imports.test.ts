@@ -117,6 +117,20 @@ describe("TypeScript curation imports", () => {
     });
   });
 
+  it("reads literal dynamic imports and import types, and skips computed specifiers", () => {
+    withFixture((root) => {
+      writeFileSync(
+        join(root, "code", "idle.tsx"),
+        'export type Leaf = import("./leaf.js").Shape; export const load = () => import("@core/index.js"); export const later = () => import(`./legacy.cjs`); const name = "./a.js"; export const computed = () => import(name);',
+      );
+      expect(
+        deriveTypeScriptImports(root, "imports.config.json").files.find(
+          (entry) => entry.file === "code/idle.tsx",
+        )?.imports,
+      ).toEqual(["code/index.ts", "code/leaf.ts", "code/legacy.cts", "code/nested.ts"]);
+    });
+  });
+
   it.each([
     {},
     { adapter: "other", tsconfig: "tsconfig.json", roots: ["code"] },

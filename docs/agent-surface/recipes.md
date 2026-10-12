@@ -2763,11 +2763,12 @@ ln -s "$PWD/node_modules" .sdp-base/node_modules
 npm --prefix .sdp-base run build
 node .sdp-base/dist/cli/sdp.js build .sdp-base --exclude explorations --exclude examples --exclude test/fixtures/import/parity
 pnpm --silent sdp:q "$(cat dist/recipes/35-the-design-diff.js)" --params base=@.sdp-base/generated/graph.json --json
-git worktree remove .sdp-base
+git worktree remove --force .sdp-base
 ```
 
 The linked `node_modules` reuses this checkout's dependencies; use `npm --prefix .sdp-base ci`
-instead of the link when the base needs its own lockfile's versions. An adopter whose anchors
+instead of the link when the base needs its own lockfile's versions. `--force` removes the link
+and the build output with the disposable worktree. An adopter whose anchors
 import the package by name may build its base with the engine it has, using its package runner and
 its own exclusions. A base written by another engine is accepted and reports what cannot compare.
 The caller keeps the base commit outside the graph. The recipe reads only the two graph objects.
@@ -2821,22 +2822,25 @@ for (const [part, minimum] of [
   if (!a || !b) unsupported.add(part);
   if (a !== b) diagnostics.push({ part, problem: "Part is outside the common schema.", base: a, head: b });
 }
-// Before ruleKeys, engines left the authored marker in the rule or flow string.
+// Before ruleKeys, engines left the authored marker in the rule or flow string and kept no
+// order between the two lists, so keyed entries in both lists have no comparable order across them.
 const behaviorOf = (content) => {
   const result = { ...content, rules: [...(content.rules ?? [])], flows: [...(content.flows ?? [])] };
-  if (content.ruleKeys !== undefined) return result;
-  const keys = {};
-  for (const list of Object.keys(content).filter((key) => key === "rules" || key === "flows")) {
+  if (content.ruleKeys !== undefined) return { behavior: result, crossListOrder: true };
+  const keys = {}, keyedLists = new Set();
+  for (const list of ["rules", "flows"]) {
     result[list] = result[list].map((text, index) => {
       const marker = /^\[#([a-z][A-Za-z0-9]*)\] (.*)$/su.exec(text);
       if (!marker) return text;
       keys[marker[1]] = `${list}[${index}]`;
+      keyedLists.add(list);
       return marker[2];
     });
   }
   result.ruleKeys = keys;
-  return result;
+  return { behavior: result, crossListOrder: keyedLists.size < 2 };
 };
+const unordered = new Set();
 const partsOf = (node, value) => {
   const parts = new Map();
   const put = (part, content, position) => parts.set(part, { value: content, position });
@@ -2868,17 +2872,20 @@ const partsOf = (node, value) => {
       if (unkeyed.length) put("intent.openQuestions", openQuestions.map((question) => question && typeof question === "object"
         ? Object.fromEntries(Object.entries(question).filter(([key]) => !unsupported.has(key))) : question));
     } else if (section === "behavior") {
-      const { rules, flows, ruleKeys, ...rest } = behaviorOf(content);
+      const { behavior, crossListOrder } = behaviorOf(content);
+      const { rules, flows, ruleKeys, ...rest } = behavior;
       if (Object.keys(rest).length) put(section, rest);
       const keys = unsupported.has("ruleKeys") ? {} : ruleKeys ?? {};
+      if (!crossListOrder && Object.keys(keys).length) unordered.add(node.id);
       const entries = new Map(Object.entries(keys).map(([key, path]) => [path, key]));
       const positions = new Map(Object.keys(keys).map((key, position) => [key, position]));
+      let listPosition = 0;
       for (const [list, items] of [["rules", rules], ["flows", flows]]) {
         const unkeyed = [];
         (items ?? []).forEach((entry, index) => {
           const key = entries.get(`${list}[${index}]`);
           if (key === undefined) unkeyed.push(entry);
-          else put(`rule.${key}`, { list, text: entry }, positions.get(key));
+          else parts.set(`rule.${key}`, { value: { list, text: entry }, position: positions.get(key), listPosition: listPosition++ });
         });
         if (unkeyed.length) put(`behavior.${list}`, items);
       }
@@ -2897,11 +2904,15 @@ const changed = [];
 for (const id of ids) {
   if (!before.has(id) || !after.has(id)) continue;
   const a = partsOf(before.get(id), base), b = partsOf(after.get(id), graph);
+  // Without order across rules and flows on one side, keyed entries compare by order within each list.
+  const order = unordered.has(id) ? "listPosition" : "position";
+  if (unordered.has(id)) diagnostics.push({ part: "ruleOrder", id, problem: "One graph keeps no order across rules and flows; keyed entries compare within each list." });
   const parts = [];
   for (const part of [...new Set([...a.keys(), ...b.keys()])].sort()) {
     const from = a.get(part), to = b.get(part);
+    const position = (entry) => part.startsWith("rule.") ? entry[order] : entry.position;
     const change = !from ? "added" : !to ? "removed" : !same(from.value, to.value) ? "changed"
-      : from.position !== to.position ? "moved" : null;
+      : position(from) !== position(to) ? "moved" : null;
     if (change !== null) parts.push({ part, change, from: from?.value ?? null, to: to?.value ?? null });
   }
   if (parts.length) changed.push({ id, parts: detail === true ? parts : parts.map((entry) => entry.part) });
@@ -2951,7 +2962,9 @@ alone do not change intent.
 referencing units, enabled verifiers and delivery facts. Each list has a count in `totals`.
 A schema difference is diagnostic data. Parts outside the schemas' shared capabilities are
 omitted and named in `diagnostics`; an unused optional section still compares. Legacy rule markers
-are normalized before comparison when a Spec carries no `ruleKeys`. The comparison confers nothing and
+are normalized before comparison when a Spec carries no `ruleKeys`. Such a graph keeps no order
+between rules and flows, so when it keys entries in both, keyed entries compare by order within
+each list and a `ruleOrder` diagnostic names the Spec. The comparison confers nothing and
 records no design pass. The law is `spec:consumers.design-diff`.
 
 ## 36. The context bundle
@@ -3121,14 +3134,12 @@ const cuts = [
   () => {
     for (const member of members) {
       const pinned = new Set(member.declarations.map((declaration) => declaration.key));
+      // A keyed entry is read by its own key, which may contain a dot, never from the joined path.
+      const keyedEntry = (section, key, value) => section === "design" && pinned.has(key) ? value
+        : reference(member.id, `${section}.${key}`, value, address(member.id, section, key));
       const reduce = (value, path) => {
         // Protected entries stay whole; everything else becomes a graph location or address.
         if (path.startsWith("intent.openQuestions[")) return value;
-        const keyed = /^(design|ui)\.(.+)$/u.exec(path);
-        if (keyed && !path.slice(keyed[1].length + 1).includes(".")) {
-          if (keyed[1] === "design" && pinned.has(keyed[2])) return value;
-          return reference(member.id, path, value, address(member.id, keyed[1], keyed[2]));
-        }
         const rule = /^behavior\.(rules|flows)\[(\d+)\]$/u.exec(path);
         if (rule) {
           const key = Object.keys(member.sections.behavior.ruleKeys ?? {}).find((key) => member.sections.behavior.ruleKeys[key] === `${rule[1]}[${rule[2]}]`);
@@ -3142,7 +3153,8 @@ const cuts = [
         if (Array.isArray(value) && value.some(isLocation) && value.every((entry) => isLocation(entry) ||
           typeof entry === "string" && addressesIn(entry).includes(entry))) return value;
         if (Array.isArray(value)) return value.map((entry, index) => reduce(entry, `${path}[${index}]`));
-        if (value !== null && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, reduce(entry, path ? `${path}.${key}` : key)]));
+        if (value !== null && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key,
+          path === "design" || path === "ui" ? keyedEntry(path, key, entry) : reduce(entry, path ? `${path}.${key}` : key)]));
         return reference(member.id, path, value);
       };
       member.sections = reduce(member.sections, "");
@@ -3403,22 +3415,25 @@ for (const [part, minimum] of [
   if (!a || !b) unsupported.add(part);
   if (a !== b) diagnostics.push({ part, problem: "Part is outside the common schema.", base: a, head: b });
 }
-// Before ruleKeys, engines left the authored marker in the rule or flow string.
+// Before ruleKeys, engines left the authored marker in the rule or flow string and kept no
+// order between the two lists, so keyed entries in both lists have no comparable order across them.
 const behaviorOf = (content) => {
   const result = { ...content, rules: [...(content.rules ?? [])], flows: [...(content.flows ?? [])] };
-  if (content.ruleKeys !== undefined) return result;
-  const keys = {};
-  for (const list of Object.keys(content).filter((key) => key === "rules" || key === "flows")) {
+  if (content.ruleKeys !== undefined) return { behavior: result, crossListOrder: true };
+  const keys = {}, keyedLists = new Set();
+  for (const list of ["rules", "flows"]) {
     result[list] = result[list].map((text, index) => {
       const marker = /^\[#([a-z][A-Za-z0-9]*)\] (.*)$/su.exec(text);
       if (!marker) return text;
       keys[marker[1]] = `${list}[${index}]`;
+      keyedLists.add(list);
       return marker[2];
     });
   }
   result.ruleKeys = keys;
-  return result;
+  return { behavior: result, crossListOrder: keyedLists.size < 2 };
 };
+const unordered = new Set();
 const partsOf = (node, value) => {
   const parts = new Map();
   const put = (part, content, position) => parts.set(part, { value: content, position });
@@ -3450,17 +3465,20 @@ const partsOf = (node, value) => {
       if (unkeyed.length) put("intent.openQuestions", openQuestions.map((question) => question && typeof question === "object"
         ? Object.fromEntries(Object.entries(question).filter(([key]) => !unsupported.has(key))) : question));
     } else if (section === "behavior") {
-      const { rules, flows, ruleKeys, ...rest } = behaviorOf(content);
+      const { behavior, crossListOrder } = behaviorOf(content);
+      const { rules, flows, ruleKeys, ...rest } = behavior;
       if (Object.keys(rest).length) put(section, rest);
       const keys = unsupported.has("ruleKeys") ? {} : ruleKeys ?? {};
+      if (!crossListOrder && Object.keys(keys).length) unordered.add(node.id);
       const entries = new Map(Object.entries(keys).map(([key, path]) => [path, key]));
       const positions = new Map(Object.keys(keys).map((key, position) => [key, position]));
+      let listPosition = 0;
       for (const [list, items] of [["rules", rules], ["flows", flows]]) {
         const unkeyed = [];
         (items ?? []).forEach((entry, index) => {
           const key = entries.get(`${list}[${index}]`);
           if (key === undefined) unkeyed.push(entry);
-          else put(`rule.${key}`, { list, text: entry }, positions.get(key));
+          else parts.set(`rule.${key}`, { value: { list, text: entry }, position: positions.get(key), listPosition: listPosition++ });
         });
         if (unkeyed.length) put(`behavior.${list}`, items);
       }
@@ -3480,11 +3498,14 @@ const changedParts = (id) => {
   const a = before.has(id) ? partsOf(before.get(id), base) : new Map();
   const b = after.has(id) ? partsOf(after.get(id), graph) : new Map();
   const changed = new Set(), ordered = new Set();
+  // Without order across rules and flows on one side, keyed entries compare by order within each list.
+  const order = unordered.has(id) ? "listPosition" : "position";
   for (const part of new Set([...a.keys(), ...b.keys()])) {
+    const position = (entry) => part.startsWith("rule.") ? entry[order] : entry.position;
     if (!a.has(part) || !b.has(part) || !same(a.get(part).value, b.get(part).value)) changed.add(part);
-    else if (a.get(part).position !== b.get(part).position) ordered.add(part);
+    else if (position(a.get(part)) !== position(b.get(part))) ordered.add(part);
   }
-  const result = { changed, ordered };
+  const result = { changed, ordered, crossListOrder: !unordered.has(id) };
   cache.set(id, result);
   return result;
 };
@@ -3495,7 +3516,7 @@ const resolves = (nodes, ref) => {
   if (suffix === undefined) return true;
   const [section, key] = suffix.split(".");
   if (section === "question") return (node.sections?.intent?.openQuestions ?? []).some((question) => question?.key === key);
-  if (section === "rule") return Object.hasOwn(behaviorOf(node.sections?.behavior ?? {}).ruleKeys ?? {}, key);
+  if (section === "rule") return Object.hasOwn(behaviorOf(node.sections?.behavior ?? {}).behavior.ruleKeys ?? {}, key);
   return key !== "description" && Object.hasOwn(node.sections?.[section] ?? {}, key);
 };
 const changes = proposal.changes.map((change, index) => {
@@ -3511,6 +3532,9 @@ const changes = proposal.changes.map((change, index) => {
     const parts = changedParts(id);
     const moved = before.has(id) !== after.has(id) || (suffix === undefined
       ? parts.changed.size > 0 || parts.ordered.size > 0 : parts.changed.has(suffix));
+    if (!moved && suffix === undefined && !parts.crossListOrder) {
+      return { ...resolution, comparable: false, reason: "One graph keeps no order across rules and flows." };
+    }
     return { ...resolution, moved };
   });
   const relationTarget = change.relation?.action === "declare"
@@ -3531,7 +3555,8 @@ value unchanged; a whole-Spec scope includes order changes. `relationTarget` rep
 the head for a declared relation, and is null otherwise. `totals.moved` and `totals.unresolved`
 count changes, so one moved entry leaves other changes independently visible. Unknown references
 remain explicit rows. A scope outside the common schema carries `comparable: false` and a
-`reason`, with no `moved` claim. Its change also carries `comparable: false`, and `moved` is null
+`reason`, with no `moved` claim, as does an otherwise unmoved whole-Spec scope whose order across
+rules and flows one graph does not keep. Its change also carries `comparable: false`, and `moved` is null
 unless another comparable scope moved. Schema differences and unsupported parts appear in
 `diagnostics`. A base missing from the parameters is a problem with no change rows.
 
