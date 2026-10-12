@@ -104,8 +104,8 @@ whether a verifier is bound, with an empty column read as unbound. Use roles, la
 (recipe 28) to review the architecture vocabulary the anchors state and to spot two spellings of
 one value. Pass the mention audit the pairs your corpus means to leave as prose as `intended`, so
 they report apart from missing relations. To review a Pack's design as it stands, use Pack design (recipe 29); to review decisions,
-the decision register (recipe 31), with each decision's rung, supersession, narrowing through `refines` both ways,
-and the Specs it shapes; to review dependency direction, architecture crossings (recipe 32), which reports the
+the decision register (recipe 31), with each decision's rung, supersession, refinement both ways
+with the reasons the relations state, and the Specs it shapes; to review dependency direction, architecture crossings (recipe 32), which reports the
 `uses` edges that cross a context or layer and refuses nothing. Review findings and gaps as data;
 the review never becomes a workflow gate.
 
