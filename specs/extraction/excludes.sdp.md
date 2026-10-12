@@ -13,10 +13,10 @@ relations:
 - outcome: Keep consumer-selected omissions precise without changing the extractor's canonical discovery rules.
 
 ## Rule
-- An exclusion is a unique, exact root-relative POSIX path prefix applied to both declared-carrier and anchor-candidate discovery surfaces.
-- A prefix excludes itself and slash-delimited descendants only; it never excludes a merely similar sibling path.
-- Empty, dot-relative, absolute, Windows-drive, backslash, trailing-slash, and parent-traversal paths are refused rather than normalized into a different meaning.
-- The realizing entrypoints are `normalizeExcludes` and `discoverFiles` in `src/extract/discover.ts`.
+- [#canonicalDiscovery] Discovery reads Spec and Pack carriers by the suffixes `.sdp.md`, `.sdp.gherkin` and `.sdp.ts`. Other `.ts` and `.tsx` files are anchor candidates, except `.d.ts` files. Discovery never descends into `node_modules`, `dist`, `generated`, `coverage` or a dot-directory, and configured exclusions apply to both lists.
+- An exclusion is an exact root-relative POSIX path prefix applied to Spec-carrier and anchor-candidate discovery; a repeated exclusion counts once.
+- [#segmentBoundary] A prefix excludes itself and slash-delimited descendants only; it never excludes a merely similar sibling path.
+- [#refusedPaths] Empty, absolute, Windows-drive, backslash and trailing-slash paths, and paths with an empty, `.` or `..` segment, are refused rather than normalized into a different meaning.
 
 ## Example space
 ```gwt-vocabulary

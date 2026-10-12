@@ -5,7 +5,9 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:extraction.example-runner
-  verifies: spec:extraction.example-runner
+  verifies:
+    target: spec:extraction.example-runner
+    exercises: [redStepNamesItself]
 ---
 # A red step names itself before the assertion detail
 

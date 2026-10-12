@@ -5,7 +5,9 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:extraction.example-runner
-  verifies: spec:extraction.example-runner
+  verifies:
+    target: spec:extraction.example-runner
+    exercises: [contractOrder, oneHandlerPerStep]
 ---
 # A repeated step runs its one handler at each occurrence, in contract order
 

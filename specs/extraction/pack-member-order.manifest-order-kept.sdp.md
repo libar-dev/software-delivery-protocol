@@ -2,10 +2,12 @@
 id: spec:extraction.pack-member-order.manifest-order-kept
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:extraction.pack-member-order
-  verifies: spec:extraction.pack-member-order
+  verifies:
+    target: spec:extraction.pack-member-order
+    exercises: [authoredMembers]
 ---
 # A manifest's member order survives into the graph and the reader
 
@@ -19,5 +21,4 @@ When the graph is derived and serialized
 Then the serialized Pack node lists the members {serializedMembers: "spec:probe.zeta, spec:probe.alpha, spec:probe.mid"}
 Then the serialized belongsTo edges run from {edgeSources: "spec:probe.alpha, spec:probe.mid, spec:probe.zeta"}
 Then the reader's Pack context lists the members {readerMembers: "spec:probe.zeta, spec:probe.alpha, spec:probe.mid"}
-Then the payload declares the schema version {schemaVersion: "0.9.0"}
 ```

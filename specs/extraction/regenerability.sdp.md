@@ -14,4 +14,4 @@ relations:
 ## Rule
 - Generated artifacts are disposable: deleting them and rebuilding from the same committed repository produces the same bytes.
 - Consumers read the graph or link to source locations recorded in it; they never re-parse source or keep a parallel model.
-- The graph is a single JSON projection with in-memory query support; a graph database remains deferred until measured traversal pain establishes a real need.
+- The graph is one JSON document queried in memory.

@@ -154,7 +154,7 @@ function expectedSameInvocation(point: Partial<BuildPipelineConditions>): BuildP
 function assertSameInvocation(world: SameInvocationWorld): void {
   const { returnedSpecId } = paramsForStep(
     sameInvocationContract,
-    "both graph entrances return the spec {returnedSpecId}",
+    "the reader and the raw graph both return the spec {returnedSpecId}",
   );
   const { findingSubjectId } = paramsForStep(
     sameInvocationContract,
