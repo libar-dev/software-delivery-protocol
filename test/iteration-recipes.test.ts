@@ -174,7 +174,12 @@ describe("iteration loop: design diff", () => {
             to: "`Alpha` declaration",
           },
           { part: "design.gamma", change: "added", from: null, to: "Added text" },
-          { part: "rule.first", change: "changed", from: "First rule.", to: "Edited first rule." },
+          {
+            part: "rule.first",
+            change: "changed",
+            from: { list: "rules", text: "First rule." },
+            to: { list: "rules", text: "Edited first rule." },
+          },
           {
             part: "behavior.rules",
             change: "changed",
@@ -384,6 +389,37 @@ describe("iteration loop: design diff", () => {
         });
       rmSync(directory, { recursive: true, force: true });
     }
+  }, 20_000);
+
+  it("compares a keyed rule that becomes a flow at the same address", async () => {
+    await withCorpus(async (root, base) => {
+      edit(root, "a.sdp.md", "- rule: [#first] First rule.", "- flow: [#first] First rule.");
+      const head = extract({ root });
+      const diff = await runRecipe<Diff>(35, { base: base.graph, detail: true }, head);
+      expect(diff.specs.changed.find((row) => row.id === "spec:probe.a")?.parts).toContainEqual({
+        part: "rule.first",
+        change: "changed",
+        from: { list: "rules", text: "First rule." },
+        to: { list: "flows", text: "First rule." },
+      });
+      const check = await runRecipe<ProposalCheck>(
+        38,
+        {
+          base: base.graph,
+          proposal: {
+            ...sampleProposal,
+            changes: [{ scope: ["spec:probe.a#rule.first"], request: "Review the flow." }],
+          },
+        },
+        head,
+      );
+      expect(check.changes[0]?.scope[0]).toEqual({
+        ref: "spec:probe.a#rule.first",
+        resolvesAtBase: true,
+        resolvesAtHead: true,
+        moved: true,
+      });
+    });
   }, 20_000);
 
   it("compares new Design entries across schema versions when the base corpus has none", async () => {
@@ -1363,8 +1399,18 @@ describe("iteration loop: comparison and budget edges", () => {
         head,
       );
       expect(result.specs.changed[0]?.parts).toEqual([
-        { part: "rule.first", change: "moved", from: "First rule.", to: "First rule." },
-        { part: "rule.last", change: "moved", from: "Last flow.", to: "Last flow." },
+        {
+          part: "rule.first",
+          change: "moved",
+          from: { list: "rules", text: "First rule." },
+          to: { list: "rules", text: "First rule." },
+        },
+        {
+          part: "rule.last",
+          change: "moved",
+          from: { list: "flows", text: "Last flow." },
+          to: { list: "flows", text: "Last flow." },
+        },
       ]);
       expect(result.bindings[0]?.verifiers.added).toEqual(["test:probe.a"]);
       expect(result.bindings[0]?.deliveryFacts.added).toEqual(["has-verifier"]);

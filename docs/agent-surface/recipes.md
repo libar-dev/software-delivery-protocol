@@ -2864,7 +2864,7 @@ const partsOf = (node, value) => {
         (items ?? []).forEach((entry, index) => {
           const key = entries.get(`${list}[${index}]`);
           if (key === undefined) unkeyed.push(entry);
-          else put(`rule.${key}`, entry, positions.get(key));
+          else put(`rule.${key}`, { list, text: entry }, positions.get(key));
         });
         if (unkeyed.length) put(`behavior.${list}`, items);
       }
@@ -2928,7 +2928,8 @@ return { base: { schemaVersion: base.schemaVersion, specs: ids.filter((id) => be
 or keyed Design, UI, question, rule or model term. A list with an unkeyed entry also compares as a whole, including its keyed entries, so an
 anonymous entry moving around a keyed one remains visible. A keyed entry
 with unchanged value and a different position among its section's keyed entries is `moved`.
-Changed values take precedence over order. Line changes and object property serialization order
+Keyed rule values include their owning list, `rules` or `flows`, so a rule becoming a flow changes
+its value at the same address. Changed values take precedence over order. Line changes and object property serialization order
 alone do not change intent.
 
 `packs` reports membership additions, removals and relative order changes among retained members.
@@ -3443,7 +3444,7 @@ const partsOf = (node, value) => {
         (items ?? []).forEach((entry, index) => {
           const key = entries.get(`${list}[${index}]`);
           if (key === undefined) unkeyed.push(entry);
-          else put(`rule.${key}`, entry, positions.get(key));
+          else put(`rule.${key}`, { list, text: entry }, positions.get(key));
         });
         if (unkeyed.length) put(`behavior.${list}`, items);
       }
