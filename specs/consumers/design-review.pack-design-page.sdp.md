@@ -2,7 +2,7 @@
 id: spec:consumers.design-review.pack-design-page
 kind: behavior
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.design-review
   dependsOn:

@@ -2,7 +2,7 @@
 id: spec:consumers.agent-surface.design-recipes
 kind: behavior
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.agent-surface.register-recipes
   dependsOn:
