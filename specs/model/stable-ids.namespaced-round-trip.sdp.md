@@ -5,7 +5,9 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:model.stable-ids
-  verifies: spec:model.stable-ids
+  verifies:
+    target: spec:model.stable-ids
+    exercises: [idGrammar]
 ---
 # A namespaced dotted path with a sub-part survives parsing unchanged
 

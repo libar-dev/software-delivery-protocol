@@ -2,10 +2,12 @@
 id: spec:model.open-question-keys.repeated-key-refused
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.open-question-keys
-  verifies: spec:model.open-question-keys
+  verifies:
+    target: spec:model.open-question-keys
+    exercises: [keyGrammar, markdownMarker]
 ---
 # A repeated question key refuses its carrier
 

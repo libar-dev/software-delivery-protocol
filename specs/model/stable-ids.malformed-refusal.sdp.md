@@ -5,7 +5,9 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:model.stable-ids
-  verifies: spec:model.stable-ids
+  verifies:
+    target: spec:model.stable-ids
+    exercises: [idGrammar]
 ---
 # An uppercase namespace is refused with its reason named
 
