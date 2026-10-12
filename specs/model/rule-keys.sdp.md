@@ -16,7 +16,7 @@ The original design gave a behavior rule an optional id, so the rule could later
 - outcome: Let an author key a rule or flow entry, so a review, a register row or an example can name the entry it is about.
 
 ### Open questions
-- [non-blocking #exampleNamesRule] Should an example name the rule it exercises, and where: in its prose, or in a field a rule-coverage view could read?
+- [non-blocking #exercisesCarrier] Where does an example carry the rule keys it exercises: a body line the example section admits, or an envelope field, which would reopen the closed envelope?
 - [non-blocking #ruleRationale] Does a rule keep the original's rationale, or is the rationale prose the Spec's narrative already owns?
 
 ## Rule
@@ -24,4 +24,5 @@ The original design gave a behavior rule an optional id, so the rule could later
 - A key sits in a marker at the start of the entry's text, after the `rule:` or `flow:` label where the entry has one, as in `- rule: [#graphOnly] The Studio is a projection.` and `- [#oneFamily] Every validator belongs to one family.`, the shape an open question's marker uses, so one form serves labelled and plain entries.
 - Every keyed entry is addressed as `spec:<id>#rule.<key>` whatever its section, because a Spec uses one primary behavior owner. The address resolves while the Spec carries an entry with that key and fails validation in every Spec that names it once the key is renamed or removed.
 - A rule address is refused in every id slot, as every entry address is, so no anchor targets a rule and no delivery fact attaches to one.
+- An example may name the keys of its parent's rules it exercises, in a field validation checks against the parent's keys. The field mints no edge and confers no delivery fact, so `verifies` stays whole-Spec, and a rule-coverage recipe reads it to report which keyed rules a bound example exercises and which none does.
 - A keyed rule promoted to a Spec of its own leaves its address behind, because promotion moves the content out, and every mention of that address fails until it names the new Spec.

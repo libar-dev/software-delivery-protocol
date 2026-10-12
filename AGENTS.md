@@ -16,6 +16,11 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
+> **plan 43 is DRAFTED**. Design iteration on a readable graph: the agent-surface fixes a
+> three-model usability trial asked for, the authoring grammar (rule keys, question fields,
+> relation reasons), the iteration loop (design diff, context bundles, perspectives, proposals),
+> and gen 1's curation and slimming lessons, in one arc; intent in `pack:design-iteration-v1`.
+> Plan 42 follows it.
 > **plan 42 is DRAFTED**. The Spec Studio's phase 0, a read-only static view (`sdp studio`),
 > re-entered on the owner's rulings; intent in `pack:spec-studio-v1`. A design pass splits the
 > Studio's Specs for honest binding and prototypes the Pack page before any code.

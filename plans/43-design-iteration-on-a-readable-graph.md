@@ -1,0 +1,110 @@
+# Plan 43. Design iteration on a readable graph
+
+> **Status:** DRAFTED on `feature/design-iteration-v0`, branched from `feature/design-management-v0`
+> at `bc2c84e`, PR 30's green head; it rebases onto `main` once PR 30 merges. A thin lineage
+> pointer: the arc's intent lives in `pack:design-iteration-v1`, and readiness, backlog and open
+> questions are read from the graph (recipes 1, 9, 11, 20, 29), never from this file. If this file
+> and the graph disagree, the graph wins and this file is stale.
+
+## Why
+
+Three inputs, read on 2026-10-12, after plan 41's fold.
+
+- **A usability trial of the agent surface.** gpt-6.1-sol, Opus 5.5 and gpt-6-astra answered the
+  same thirteen delivery questions from the skills and `sdp q` alone. All three answered every
+  task correctly without opening a carrier, and all three stumbled in the same places: oversized
+  answers, terse misses, two meanings of the next rung, rules with no address, a missing design
+  backlog, and a recipe label each repeated as fact though it overstated the relation it read.
+  Evidence: `.omo/evidence/agent-surface-trial/`.
+- **A review of gen 1** (`@libar-dev/architect`). Its sound ideas, badly built: curation help from
+  file-level imports, proof per rule, a slimming rule after implementation, and skill doctrine.
+- **The owner's rulings** on a nine-card sheet: plan 43's scope as one follow-up PR; the order 43,
+  then the Studio (plan 42); a file-level curation layer before symbol identity; rule-grain proof
+  through a checked field; `supersedes` kept but parked, with replaced decisions deleted by default
+  before the first release; the slimming rule; a re-entry trigger field; recipe 31 named after the
+  relation it reads; and `spec:decisions.studio-web-components` ratified (MD-42). The owner's
+  direction with them: fewer, larger PRs, because one developer works with capable models, and the
+  first adopter's Application Platform redesign is the large design the arc is tested on.
+
+## What this arc builds
+
+Each item is carried by a Spec in `pack:design-iteration-v1`; the owner states `ready` on each
+before its lane builds it.
+
+1. **Answers that fit** (`spec:consumers.agent-surface.answer-shapes`). Summary-first recipes 4 and
+   29 with a `detail` parameter; recipe 3 returns guarantee text; recipe 8 reports its exemptions;
+   recipe 9 reports both next rungs; recipe 25 explains a miss and lists the keys that exist;
+   recipe 31 reports `refines` and `refinedBy`; recipe 32 tallies same-layer edges; a design-backlog
+   recipe; a catalog index and the wrap-and-filter idiom; parse errors with line and column.
+2. **An authoring grammar for iteration.** Rule keys on every entry of the primary behavior owner,
+   with rule lines in the location table and an example's checked field naming the rule keys it
+   exercises (`spec:model.rule-keys`). Question fields `decider`, `links`, `provisional` and
+   `trigger` as labelled sub-items (`spec:model.open-question-fields`). Relation reasons as an
+   object per target (`spec:model.relation-reasons`). Both carriers, the envelope contract,
+   extraction, validation and the reader change together.
+3. **The iteration loop.** The design diff recipe, given the base graph as a parameter
+   (`spec:consumers.design-diff`); the context bundle recipe within a character budget
+   (`spec:consumers.context-bundle`); the perspective filter recipe
+   (`spec:consumers.review-perspectives`); the change proposal's JSON schema and its check recipe
+   (`spec:consumers.intent-composition.proposal`).
+4. **Gen 1's structural lessons.** The slimming-candidates recipe (`spec:model.enrichment-lifecycle`)
+   and the file-level curation layer with a TypeScript adapter
+   (`spec:consumers.impact-graph.curation-assist`).
+5. **Skills.** How much detail to write (`sdp-authoring`); review as a numbered gap list, a handoff
+   template and tripwires per work shape (`sdp-sessions`); where to log friction and a list of
+   ambiguous empty results (`sdp-agent-surface`).
+6. **Corpus repairs.** The two stale texts the trial found: `CONTEXT.md`'s "token-budgeted" bundle,
+   and `spec:consumers.spec-studio.data#question.aiSlices` calling the bundle deferred.
+
+## The design pass first
+
+An Opus 5.5 pass settles what each member still leaves open, and brings each answer to the owner as
+a recommendation: `spec:model.rule-keys#question.exercisesCarrier`, the curation layer's adapter
+home and load-bearing measure, the bundle's scopes and perspective filter, relation reasons' typed
+attributes, the question fields' link targets, and the output shapes of the changed recipes. Two
+typed-dependency holds need statements before their Specs can state `ready`:
+`spec:consumers.intent-composition` (`idea`) under the proposal, and `spec:consumers.impact-graph`
+(`idea`) under the curation layer.
+
+## Lanes (after the statements)
+
+| Lane | Model | Builds |
+| --- | --- | --- |
+| G grammar | gpt-6.1-sol | Rule keys and the exercised-rule field, question fields, relation reasons, in both carriers through the reader. |
+| A answers | gpt-6.1-sol | The recipe changes, the design-backlog recipe, the catalog index, parse-error positions. |
+| L loop | gpt-6.1-sol | Design diff, context bundle, perspective filter, the proposal schema and check; after G, since keyed rules compare by key. |
+| C curation | gpt-6.1-sol | The import adapter, the curation report, the slimming recipe. |
+| S skills | Opus 5.5 | The skill doctrine and the catalog's copy. |
+| Integration | gpt-6.1-sol | The self-hosting oracle, test fallout, the gate. |
+| Review | gpt-6-astra, gpt-6.1-sol | An adversarial review of the arc and a line read of the engine. |
+
+Opus 5.5 reviews copy and API shapes during the build, and the design pass's Specs are the API
+the gpt-6.1-sol lanes write against.
+
+## Acceptance criteria
+
+- **The trial, re-run.** The same brief and tasks on gpt-6.1-sol: 13 of 13, fewer than its 20
+  calls, no answer over a tool's output limit, recipe 31's fields read as the relation, and a
+  rule's source line where one was asked for.
+- **The adopter's design pass.** Over one of libar-platform's capability Packs, read-only: what
+  changed since the last pass in one call, the next pass's brief in one bundle within its stated
+  budget, open questions with their deciders and triggers, and curation candidates over its
+  source.
+- `npm run check` passes.
+
+## Candidates to join (the owner's call)
+
+Each states `defined` and would join by entering the Pack and taking a `ready` statement:
+`spec:validation.corpus-rules` with `spec:validation.architecture-constraints`, which together
+would retire the adopter's 363-line check script; `spec:consumers.agent-surface.example-space-coverage`;
+and `spec:observation.run-evidence` over CTRF.
+
+## Refused
+
+- Symbol identity in this arc; curation output that authors intent, gates, or reads a layout
+  convention in the engine.
+- An entry address in an id slot: rule-grain proof is a checked field, never a `verifies` target.
+- Reshaping the frozen Design Review to show question fields or rule anchors; the Studio shows
+  them (plan 42).
+- A new reader method or query verb; `--params` stays input to a body.
+- A status, date or verdict on a question or a proposal.

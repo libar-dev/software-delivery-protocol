@@ -4,6 +4,8 @@
 > pointer: the Studio's intent lives in `pack:spec-studio-v1`, and its readiness, open questions and
 > backlog are read from the graph (recipes 1, 9, 11, 20, 29), never from this file. If this file and
 > the graph disagree, the graph wins and this file is stale.
+> **Order:** after plan 43, on the owner's rulings of 2026-10-12; phase 0 then renders the rule
+> addresses, question fields and design columns plan 43 adds.
 
 ## Why
 
