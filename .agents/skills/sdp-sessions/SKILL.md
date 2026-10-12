@@ -94,8 +94,8 @@ references into a design (recipe 27): per member, the referencing units, the rea
 whether a verifier is bound, with an empty column read as unbound. Use roles, layers and contexts
 (recipe 28) to review the architecture vocabulary the anchors state and to spot two spellings of
 one value. To review a Pack's design as it stands, use Pack design (recipe 29); to review decisions,
-the decision register (recipe 31), with each decision's rung, supersession, and the Specs it
-shapes; to review dependency direction, architecture crossings (recipe 32), which reports the
+the decision register (recipe 31), with each decision's rung, supersession, narrowing through `refines` both ways,
+and the Specs it shapes; to review dependency direction, architecture crossings (recipe 32), which reports the
 `uses` edges that cross a context or layer and refuses nothing. Review findings and gaps as data;
 the review never becomes a workflow gate.
 

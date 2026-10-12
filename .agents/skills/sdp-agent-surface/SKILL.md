@@ -156,7 +156,8 @@ decisions, and the realizing and referencing units with their components, plus t
 boundary. The Design Review's Pack page renders the same assembly. Before changing a Spec,
 design-change impact (recipe 30) lists every Spec that rests on it, transitively, with the units,
 verifiers, and Packs to follow. The decision register (recipe 31) lists every decision with its
-rung, its supersession both ways, the Specs it shapes, and its keyed questions. Architecture
+rung, its supersession both ways, the decisions it narrows and those that narrow it through
+`refines`, the Specs it shapes, and its keyed questions. Architecture
 crossings (recipe 32) lists the `uses` edges whose components differ in context or layer, tallied
 by direction, and refuses nothing.
 

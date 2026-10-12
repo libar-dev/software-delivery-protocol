@@ -2260,7 +2260,7 @@ ones, and `totals.units` the distinct units across all rows. The law is
 ## 31. Decision register
 
 *When you need this: you want every decision with its rung, what it supersedes and what supersedes
-it, what it shapes, and what it leaves open, read from the graph instead of kept by hand.*
+it, what it narrows and what narrows it, what it shapes, and what it leaves open, read from the graph instead of kept by hand.*
 
 ```js
 const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
@@ -2269,9 +2269,10 @@ const ends = (relations, type) =>
     .filter((relation) => relation.type === type)
     .map((relation) => relation.otherId)
     .sort(byCodeUnit);
-const rows = g
-  .specs()
-  .filter((spec) => spec.specKind === "decision")
+const decisions = g.specs().filter((spec) => spec.specKind === "decision");
+const decisionIds = new Set(decisions.map((spec) => spec.id));
+const narrowing = (relations) => ends(relations, "refines").filter((id) => decisionIds.has(id));
+const rows = decisions
   .map((spec) => spec.id)
   .sort(byCodeUnit)
   .map((id) => {
@@ -2284,6 +2285,8 @@ const rows = g
       statedReadiness: context.statedReadiness,
       supersedes: ends(context.relationsOut, "supersedes"),
       supersededBy: ends(context.relationsIn, "supersedes"),
+      narrows: narrowing(context.relationsOut),
+      narrowedBy: narrowing(context.relationsIn),
       shapes: ends(context.relationsIn, "decidedBy"),
       questions: questions
         .filter((entry) => typeof entry === "object" && entry !== null)
@@ -2312,7 +2315,10 @@ return {
 
 The body takes no parameter. It returns one row per decision Spec, sorted by id in code-unit order.
 `supersedes` lists the decisions this one supersedes and `supersededBy` the ones that supersede it;
-follow either to walk a chain. `shapes` lists the Specs that name the decision through
+follow either to walk a chain. `narrows` lists decision-kind Specs this decision `refines`, and
+`narrowedBy` lists decision-kind Specs that `refines` it. Refinement narrows part of a decision;
+supersession replaces the whole decision. Other kinds that refine a decision stay out of these
+two lists. `shapes` lists the Specs that name the decision through
 `decidedBy`. `questions` lists the decision's open questions that carry a key, each with its
 blocking flag and entry address; the open-question register (recipe 20) lists the unkeyed ones
 too. `totals.byRung` counts the decisions by stated rung, `totals.superseded` the ones another

@@ -5175,6 +5175,12 @@ describe("design recipes", () => {
         statedReadiness: node.readiness,
         supersedes: ends("supersedes", "from", node.id),
         supersededBy: ends("supersedes", "to", node.id),
+        narrows: ends("refines", "from", node.id).filter(
+          (id) => primitivesById.get(id)?.specKind === "decision",
+        ),
+        narrowedBy: ends("refines", "to", node.id).filter(
+          (id) => primitivesById.get(id)?.specKind === "decision",
+        ),
         shapes: ends("decidedBy", "to", node.id),
         questions: (node.sections?.intent?.openQuestions ?? []).flatMap((entry) =>
           typeof entry === "string" || entry.key === undefined
@@ -5236,6 +5242,8 @@ describe("design recipes", () => {
       statedReadiness,
       supersedes: [],
       supersededBy: [],
+      narrows: [],
+      narrowedBy: [],
       shapes: [],
       questions: [],
       packs: [],
@@ -5264,6 +5272,39 @@ describe("design recipes", () => {
         }),
       ],
     });
+  });
+
+  it("registers narrowing decisions both ways and excludes refinement by other kinds", async () => {
+    const extraction = syntheticExtraction(
+      [
+        probeSpec("spec:probe.freeze", "decision"),
+        probeSpec("spec:probe.carve", "decision"),
+        probeSpec("spec:probe.child", "rule"),
+        probeSpec("spec:probe.parent", "model"),
+      ],
+      [
+        probeEdge("spec:probe.carve", "refines", "spec:probe.freeze"),
+        probeEdge("spec:probe.child", "refines", "spec:probe.freeze"),
+        probeEdge("spec:probe.carve", "refines", "spec:probe.parent"),
+      ],
+    );
+    const result = asRecord(await runRecipe(recipeByOrdinal(31), undefined, extraction));
+    expect(asArray(result.rows)).toMatchObject([
+      {
+        id: "spec:probe.carve",
+        narrows: ["spec:probe.freeze"],
+        narrowedBy: [],
+        supersedes: [],
+        supersededBy: [],
+      },
+      {
+        id: "spec:probe.freeze",
+        narrows: [],
+        narrowedBy: ["spec:probe.carve"],
+        supersedes: [],
+        supersededBy: [],
+      },
+    ]);
   });
 
   it("reports the corpus's architecture crossings as the raw edges state them", async () => {
