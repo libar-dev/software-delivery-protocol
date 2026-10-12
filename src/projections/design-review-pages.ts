@@ -6,6 +6,7 @@ import type {
   SpecSummary,
 } from "../reader/reader.js";
 import { escapeRenderedField, renderNarrative } from "./owned-prose.js";
+import { renderDiagnosticBanner } from "./diagnostic-banner.js";
 import {
   renderBoundarySection,
   renderCodeSection,
@@ -125,10 +126,9 @@ function renderMemberRow(member: PackMemberSummary, number: number, page: string
  */
 
 /**
- * The Pack page presents the Pack's design in a fixed order: title line, framing and vocabulary,
- * then the member table, the next rung, the boundary, the open questions, the code, the verifier
- * coverage gaps and the findings. Every value comes from the Pack context; no timestamp, commit
- * or run identity enters, so two renders of one graph are byte-identical.
+ * `renderPackPage` writes the header and member table, then calls the section renderers in
+ * `design-review-pack-sections.ts`; `escapeRenderedField` encodes values and `sourceHref` builds
+ * source links.
  *
  * @sdpAnchor impl:protocol.pack-design-page
  * @sdpLabel renders the Pack page from the Pack design
@@ -221,7 +221,8 @@ export function renderIndexPage(reader: Reader, specs: readonly SpecSummary[]): 
   const lines = [
     "# Design Review",
     "",
-    `The one generated read-only view — a pure projection of the one graph (\`graph.json\`, schema \`${reader.graph.schemaVersion}\`): ${String(reader.graph.nodes.length)} nodes · ${String(reader.graph.edges.length)} edges.`,
+    ...renderDiagnosticBanner(findings),
+    `The Design Review — a pure projection of the one graph (\`graph.json\`, schema \`${reader.graph.schemaVersion}\`): ${String(reader.graph.nodes.length)} nodes · ${String(reader.graph.edges.length)} edges.`,
     "",
     "## Specs",
     "",

@@ -151,8 +151,11 @@ function sliceFor(
     ids.add(edge.to);
   }
   const nodes = [...ids].sort(compareCodeUnits).map((id) => ({ id, node: nodesById.get(id) }));
-  const sliceCollision = findMachineTokenCollisions(nodes.map((entry) => entry.id)).refusal;
-  const collision = graphCollisions.ids.has(root.id) ? graphCollisions.refusal : sliceCollision;
+  const collidingId = nodes.find((entry) => graphCollisions.ids.has(entry.id))?.id;
+  const collision =
+    collidingId === undefined
+      ? undefined
+      : collisionRefusal(machineToken(collidingId), collidingId, collidingId);
   const refusal =
     collision ??
     (nodes.length > MAX_MERMAID_NODES_PER_DIAGRAM

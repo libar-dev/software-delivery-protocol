@@ -8,13 +8,10 @@ import { renderIndexPage, renderPackPage, renderSpecPage } from "./design-review
  * graph, rendered as Markdown pages (index + one page per spec and per pack). Fully derived and
  * regenerable; consumes **only** the reader (the one decode path — re-joining the graph here
  * would be the consumption-side second store), and links only to source locations the graph
- * records (R2). Pages carry no timestamps and no commit hashes: the view is `f(graph)`, nothing
+ * records (`spec:extraction.regenerability`). Pages carry no timestamps and no commit hashes: the view is `f(graph)`, nothing
  * else, so regeneration from the same graph is byte-identical.
  *
- * Views speak binding language (MD-7): the delivery-fact names stay internal; what renders is
- * "Implementation binding / Verifier binding / Runtime observation: not tracked" — bindings,
- * never liveness. Stated readiness renders beside the structurally-reached floor, and the
- * divergence banner fires only in the dishonest direction (`spec:consumers.derived-readiness-banner`).
+ * Rendering law: spec:consumers.binding-language-views and spec:consumers.derived-readiness-banner.
  */
 /**
  * @sdpAnchor impl:protocol.projections-model
