@@ -1,11 +1,15 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, win32 } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
-import { deriveTypeScriptImports } from "../src/adapters/typescript-imports.js";
+import {
+  deriveTypeScriptImports,
+  includedSourcePaths,
+  rootRelativePath,
+} from "../src/adapters/typescript-imports.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import { extract, serializeGraph } from "../src/index.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
@@ -55,6 +59,17 @@ function withFixture(run: (root: string) => void): void {
 }
 
 describe("TypeScript curation imports", () => {
+  it("compares Windows source paths in the form the compiler returns them", () => {
+    const files = ["C:/repo/src/a.ts", "C:/repo/src/generated/b.ts", "C:/repo/srcx/c.ts"];
+
+    expect(rootRelativePath("C:\\repo", "C:/repo/src/a.ts", win32)).toBe("src/a.ts");
+    expect([...includedSourcePaths("C:\\repo", files, [], win32)]).toEqual(files);
+    expect([...includedSourcePaths("C:\\repo", files, ["src/generated"], win32)]).toEqual([
+      "C:/repo/src/a.ts",
+      "C:/repo/srcx/c.ts",
+    ]);
+  });
+
   it("resolves aliases, JS specifiers, types, side effects, import equals and cyclic barrels within configured roots", () => {
     withFixture((root) => {
       expect(deriveTypeScriptImports(root, "imports.config.json")).toEqual({

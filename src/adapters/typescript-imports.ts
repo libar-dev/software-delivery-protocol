@@ -127,6 +127,34 @@ function reexports(file: SourceFile): SourceFile[] {
   });
 }
 
+interface PathApi {
+  relative(from: string, to: string): string;
+}
+
+/** A path relative to the root in POSIX form, whichever separator the path arrives with. */
+export function rootRelativePath(
+  root: string,
+  file: string,
+  paths: PathApi = { relative },
+): string {
+  return paths.relative(root, file).split(/[\\/]/u).join("/");
+}
+
+/** The files the imports file lists: every loaded file outside the excluded paths. */
+export function includedSourcePaths(
+  root: string,
+  files: readonly string[],
+  exclude: readonly string[],
+  paths: PathApi = { relative },
+): Set<string> {
+  return new Set(
+    files.filter((file) => {
+      const path = rootRelativePath(root, file, paths);
+      return !exclude.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+    }),
+  );
+}
+
 /** Runs only from build or an explicit adapter caller, never from extraction or the reader. */
 export function deriveTypeScriptImports(root: string, configPath: string): ImportsFile {
   const config = readConfig(root, configPath);
@@ -143,13 +171,14 @@ export function deriveTypeScriptImports(root: string, configPath: string): Impor
   });
   const paths = [...new Set(directories.flatMap(sourcePaths))].sort();
   const sources = project.addSourceFilesAtPaths(paths);
-  const rootRelative = (path: string) => relative(root, path).split(sep).join("/");
-  const isExcluded = (path: string) =>
-    exclude.some(
-      (prefix) => rootRelative(path) === prefix || rootRelative(path).startsWith(`${prefix}/`),
-    );
-  // Load excluded files too: their re-exports can still reach included endpoints.
-  const included = new Set(paths.filter((path) => !isExcluded(path)));
+  const rootRelative = (path: string) => rootRelativePath(root, path);
+  // Load excluded files too: their re-exports can still reach included endpoints. Compare the
+  // compiler's own paths, which use forward slashes on Windows, never the native list above.
+  const included = includedSourcePaths(
+    root,
+    sources.map((source) => source.getFilePath()),
+    exclude,
+  );
 
   return {
     schema: "sdp-imports/1",

@@ -256,8 +256,8 @@ describe("the generated Gherkin-shaped READ projection", () => {
         .split("\n")
         .filter((line) => line.includes(" relation reason cannot be carried honestly:")),
     ).toEqual([
-      `# LOSSY: dependsOn relation reason cannot be carried honestly: ${escapeGherkinViewText(hostile)}`,
-      "# LOSSY: refines relation reason cannot be carried honestly: Narrow the parent.",
+      `# LOSSY: dependsOn spec:probe.a relation reason cannot be carried honestly: ${escapeGherkinViewText(hostile)}`,
+      "# LOSSY: refines spec:probe.z relation reason cannot be carried honestly: Narrow the parent.",
     ]);
     expect(page).not.toContain("\nFeature: invented");
     expect(

@@ -314,7 +314,7 @@ function renderSpecPage(context: SpecContext): GherkinViewPage {
         ? []
         : [
             commentary(
-              `${relation.type} relation reason cannot be carried honestly: ${relation.reason}`,
+              `${relation.type} ${relation.otherId} relation reason cannot be carried honestly: ${relation.reason}`,
             ),
           ],
     ),
