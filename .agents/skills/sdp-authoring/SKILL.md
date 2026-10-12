@@ -127,6 +127,30 @@ entries opens with `[blocking]` or `[non-blocking]`. To cite a question from pro
 lower-camel key, unique in the Spec, after `#` inside the marker: `[blocking #aggregateReach]` is
 addressed as `spec:<id>#question.aggregateReach`. On an example, one `gwt` fence closes Intent.
 
+A question may carry four fields, each on one line indented by exactly two spaces under it, each
+at most once: `decider:`, one lowercase token naming who settles it (`owner`, `delegated`);
+`links:`, a comma-separated list of Spec ids or entry addresses it rests on, checked as mentions
+are; `provisional:`, the reading the design proceeds on while it is open; and `trigger:`, on a
+blocking question only, what brings a deferred Spec back. None of them moves a floor, and a
+question carries no status, date or owner of the work:
+
+```md
+### Open questions
+
+- [blocking #symbolIdentity] Which language-neutral identity supports exhaustive symbol reach?
+  - decider: owner
+  - links: spec:consumers.impact-graph
+  - trigger: a reader needs symbol-level reach that file-level imports cannot give
+```
+
+Any entry of the primary behavior owner, a Behavior `rule:` or `flow:`, a Rule or Contract
+bullet, or a Workflow entry, may open with a key, `- rule: [#graphOnly] The Studio is a
+projection.` or `- [#oneFamily] Every validator belongs to one family.`, addressed as
+`spec:<id>#rule.<key>`. Key a rule when something outside the Spec will cite it: a review finding,
+a register row, an example's `exercises`. A key is unique across one Spec's rules and flows, and a
+renamed key fails every address that names it. A rule carries its key and its text and nothing
+else; why it holds is the narrative's, or a decision Spec's. The law is `spec:model.rule-keys`.
+
 A Spec carries at most one of Behavior, Rule, Workflow, and Contract. Leading prose may stand under
 that owner or under Example space, not both. In Rule, Contract, Workflow, and Verification, open
 each plain entry with more than one word before any colon. The parser reads `- Note: x` as a key
@@ -145,8 +169,8 @@ so it needs no extra tag, status key, or side table.
 
 - An open question goes under Intent's `### Open questions`. A `[blocking]` entry holds the Spec
   below `defined`, the floor clause in `spec:validation.readiness-floor`.
-- A deferral is a `[blocking]` open question that names its re-entry trigger, plus `dependsOn`
-  when another Spec must hold first; `spec:decisions.planning-truths-placement` rules this home.
+- A deferral is a `[blocking]` open question that names its re-entry trigger in a `trigger:`
+  field, plus `dependsOn` when another Spec must hold first; `spec:decisions.planning-truths-placement` rules this home.
   The `defined` floor does not read the parent's readiness, so the deferred Spec's example children
   can still state `defined` once their bound points are complete and match the parent's example
   vocabulary, when it has one. The `ready` floor does read the parent's readiness, so their `ready`
@@ -156,8 +180,10 @@ so it needs no extra tag, status key, or side table.
   bounded Spec can still state `defined`; the floor refuses its `ready` until the constraint states
   `defined`, under `spec:validation.typed-dependency-floor`.
 - A ruling that awaits its owner is a `decision` Spec below `ready`, with `decidedBy` from each
-  Spec it shapes. The owner's ratification is the edit that states `ready`, under
-  `spec:decisions.decision-readiness-posture`.
+  Spec it shapes. A lean on an open question is its `provisional:` line; a worked lean, with its
+  case and its consequences, is that decision Spec's draft, and while it stays below `defined` it
+  holds the Specs it shapes below `ready`. The owner's ratification is the edit that states
+  `ready`, under `spec:decisions.decision-readiness-posture`.
 - A statement a test checks lives in the Spec that states it, plus an `example` Spec that
   `verifies` it. Bind the example with a `specTest` anchor, as "Make an example executable" below
   shows. The graph then derives `has-verifier` on the Spec, under
@@ -171,6 +197,42 @@ so it needs no extra tag, status key, or side table.
 `sdp validate` checks these homes and nothing your project adds. Keep a project policy, such as a
 required Design key or a naming rule, as a script in your own repository.
 
+### Say why a relation holds
+
+A relation may carry one line on why it holds. Write the target as an object instead of a plain
+id; plain ids and objects mix in one list:
+
+```yaml
+relations:
+  refines: spec:consumers.agent-surface
+  dependsOn:
+    - spec:extraction.derive-graph
+    - target: spec:model.planned-architecture
+      reason: the report names component designs no anchor realizes yet
+```
+
+A reason is intent and confers nothing. On a `refines` from one decision to another it says which
+part the newer decision narrows; on `supersedes`, what it replaces. A TypeScript carrier passes it
+as the builder's second argument, `dependsOn(target, { reason })`. A mention you leave as prose on
+purpose takes no reason in the Spec; keep those pairs in a file of your own and pass it to the
+mention audit (recipe 22) as `intended`. The law is `spec:model.relation-reasons`.
+
+### How much to write
+
+Write the least design that lets two people work apart: a builder and a test author, or an author
+and a reviewer.
+
+- Give every name, field, shape or message two parties must agree on a keyed Design entry, and
+  open it with a code span when it pins a declaration; pinned declarations (recipe 24) lists them
+  for both sides.
+- State behavior as rules, and key the ones something outside the Spec will cite.
+- Keep why in the narrative or in a decision Spec, once.
+- Leave out implementation order, restated code, counts and status: recipes derive counts, and git
+  keeps the history.
+- Once the code and its verifier exist, slimming candidates (recipe 39) lists pinned declarations
+  the bound code may now carry. Compare each with the code; removing one is your edit, never the
+  recipe's.
+
 ### Author behavior and examples in Gherkin
 
 Use one `.sdp.gherkin` file only when every carried Spec is `behavior` or `example`. That suffix is
@@ -180,7 +242,9 @@ is never discovered. Renaming a carrier to `.feature` takes it out of the graph;
 
 Each ID still has one canonical carrier surface. Query
 `spec:carrier.gherkin-authoring` for the closed grammar before authoring or
-changing this syntax.
+changing this syntax. A `Rule:` title takes the same `[#key]` marker, and `@exercises.<key>` on a
+Scenario names a rule of the Spec it verifies. Gherkin has no form for open questions, their
+fields, or a relation reason; a Spec that needs one is authored in Markdown.
 
 ## Author a Pack
 
@@ -387,7 +451,10 @@ coverage-unknown for the Markdown file. This repository binds its own skills exa
 
 1. Put the typed `gwt-vocabulary` example space on the parent.
 2. Put one concrete `gwt` bound point on each example child, following
-   `spec:decisions.point-per-example`.
+   `spec:decisions.point-per-example`. When the parent keys its rules, name the ones the example
+   exercises on its `verifies` target, `verifies: { target: spec:<parent>, exercises: [graphOnly] }`;
+   validation checks each key against the parent, and rule coverage (recipe 34) lists the keyed
+   rules no example exercises. The list confers nothing: `verifies` stays whole-Spec.
 3. Generate contracts and registrars from the extraction root. In this source checkout use the
    repository scripts, which supply the three fixture exclusions:
 

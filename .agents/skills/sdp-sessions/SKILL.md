@@ -64,6 +64,15 @@ holds the member below it, the design columns, open questions with their lines, 
 answers to it. Before changing a Spec, run design-change impact (recipe 30) for every Spec that
 rests on it and the units, verifiers, and Packs the change asks to follow.
 
+A design pass over a Pack runs in a loop. Start from what changed since the last pass, the design
+diff (recipe 35) given the graph `sdp build` wrote at the commit that pass read. Compose the pass's
+reading material with the context bundle (recipe 36) within a stated budget, narrowed to one
+perspective's members by the perspective filter (recipe 37) when the pass reads for one concern.
+Hand findings back as a change proposal, the JSON document `spec:consumers.intent-composition.proposal`
+states, and run the proposal check (recipe 38) before an agent applies it: a change whose scope
+moved since the base goes to a person. The design backlog (recipe 33) lists what is designed and
+unbuilt; rule coverage (recipe 34) lists keyed rules no example exercises.
+
 ### Implement
 
 Use the build backlog (recipe 1) to orient the available ready work and the target Spec context
@@ -93,18 +102,28 @@ map (recipe 17), and the decision map (recipe 18). For a Pack reviewed from the 
 references into a design (recipe 27): per member, the referencing units, the realizing units, and
 whether a verifier is bound, with an empty column read as unbound. Use roles, layers and contexts
 (recipe 28) to review the architecture vocabulary the anchors state and to spot two spellings of
-one value. To review a Pack's design as it stands, use Pack design (recipe 29); to review decisions,
+one value. Pass the mention audit the pairs your corpus means to leave as prose as `intended`, so
+they report apart from missing relations. To review a Pack's design as it stands, use Pack design (recipe 29); to review decisions,
 the decision register (recipe 31), with each decision's rung, supersession, narrowing through `refines` both ways,
 and the Specs it shapes; to review dependency direction, architecture crossings (recipe 32), which reports the
 `uses` edges that cross a context or layer and refuses nothing. Review findings and gaps as data;
 the review never becomes a workflow gate.
 
+Report a review as a numbered list, most severe first. Each item names one entry address or Spec
+section, states the gap in one sentence, and gives the exact text proposed with the address it
+replaces or follows. That is the shape a change proposal's changes take, so the list becomes a
+proposal without rewriting.
+
 ### Close / slim
 
 Use the drift alarm (recipe 2) and changed-file blast radius (recipe 4) over the session diff.
 Slimming is optional judgment: remove obsolete implementation-sequencing scaffolding only when
-durable law and one prose owner remain. `spec:model.enrichment-lifecycle` deliberately leaves the
-universal distillation boundary unresolved.
+durable law and one prose owner remain. Slimming candidates (recipe 39) lists the pinned
+declarations of implemented, verified Specs, the distillation boundary
+`spec:model.enrichment-lifecycle` states; compare each with the bound code before removing it, and
+keep every why. The curation report (recipe 40), over an imports file `sdp build --imports` writes,
+lists load-bearing files no anchor covers and `uses` edges the imports do not back; it is advice,
+and an anchor you add answers to it as usual.
 
 ## Hand off for re-measurement
 
@@ -112,8 +131,31 @@ Name the chosen shape, target Spec ids or Pack, changed files, stated and derive
 findings or blocking open questions, and the exact commands, commits, or artifact locations from
 which evidence can be re-derived. An arc-scale handoff follows the register-carrier rule on
 `spec:consumers.delivery-session-on-ramp` and names those Spec ids so the next session
-re-measures them. Never hand off a carried "verified" verdict: the next session re-runs the named evidence.
-Git remains the event log; no session state enters the graph.
+re-measures them. Never hand off a carried "verified" verdict: the next session
+re-runs the named evidence. Git remains the event log; no session state enters the graph. A handoff fits this form:
+
+```md
+## Handoff: <shape> on <Pack or Spec ids>
+
+- Base: <the commit the work read>; head: <the commit it left>
+- Targets: <Spec ids>, each with its stated and derived readiness (recipe 9 or 29)
+- Changed files: <paths>
+- Open: <blocking questions by address>, <findings by validator id>
+- Re-measure with: <recipe numbers and their params>, `npm run check`
+- Next: <the first thing the next session does>
+```
+
+## Tripwires
+
+Stop and reconsider when one of these fires; each is a sign the work has slipped out of its shape.
+
+- Capture: you are writing Design entries or rules at `idea`.
+- Design: you are writing code, or stating a rung while a blocking question is still yours to
+  answer.
+- Implement: the target is not stated `ready`, or the drift alarm (recipe 2) is not empty after
+  your change.
+- Review: you are about to state a rung for the author, or to fix what you were asked to review.
+- Close: you are removing a why, or slimming an entry no bound code carries.
 
 All preflights are advisory. They never authorize, block, scope, unlock, or advance delivery work,
 and they never create a process state machine.
