@@ -25,7 +25,7 @@ import { runValidate, runView } from "./validate-view-command.js";
 
 /**
  * @sdpAnchor impl:protocol.adopter-help
- * @sdpLabel prints the package-relative skill and reference index from SDP_HELP_TEXT
+ * @sdpLabel SDP_HELP_TEXT indexes the shipped skills, recipe catalog, schema, walkthrough, glossary and specs/ by package-relative path
  * @sdpSatisfies spec:consumers.adopter-on-ramp
  * @sdpComponent component:protocol.cli
  * @sdpRole service
@@ -129,7 +129,8 @@ Agent skills and reference:
                                               and recipes cite by id
   Read a cited Protocol Spec: sdp q 'return g.specContext("spec:model.anchors")' --root PKG/specs
   That graph holds intent only. The package ships no source anchors, so its delivery facts are
-  empty and its gap and verifier-linkage warnings are not evidence about what the Protocol has realized.`;
+  empty and its gap and verifier-linkage warnings are not evidence about what the Protocol has
+  realized.`;
 
 /** Reads one file the package ships, by URL; `sdp --version` reads through it. */
 export type EngineFileReader = (url: URL) => string;

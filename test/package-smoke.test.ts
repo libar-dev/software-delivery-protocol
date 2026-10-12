@@ -284,7 +284,7 @@ void [${expectedRootExports.join(", ")}];
       );
 
       const sdpHelp = run(join(consumer, "node_modules", ".bin", "sdp"), ["--help"], consumer);
-      for (const path of [...packedAssets, "specs/"]) {
+      for (const path of [...adopterAssets, "schemas/sdp-proposal-1.schema.json", "specs/"]) {
         expect(sdpHelp).toContain(path);
       }
       expect(sdpHelp.replaceAll(/\s+/gu, " ")).toMatch(/That graph holds intent only\./u);
