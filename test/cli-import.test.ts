@@ -69,7 +69,8 @@ describe("sdp import", () => {
 
     try {
       // When: import receives the root.
-      const exitCode = runSdpCli(["import", root], createCaptureOutput().output, {
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["import", root], capture.output, {
         import: { importTypeScriptSpec: (_source, relativePath) => emittedImport(relativePath) },
       });
 
@@ -77,6 +78,10 @@ describe("sdp import", () => {
       expect(exitCode).toBe(0);
       expect(readFileSync(join(root, "nested", "order.sdp.md"), "utf8")).toBe("# Imported Spec\n");
       expect(existsSync(sourcePath)).toBe(true);
+      expect(capture.readStdout()).toBe(
+        `Wrote ${join(realpathSync(root), "nested", "order.sdp.md")}\n` +
+          "The TypeScript source remains. Keep one canonical carrier before extraction by moving, renaming, excluding or removing the source.\n",
+      );
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

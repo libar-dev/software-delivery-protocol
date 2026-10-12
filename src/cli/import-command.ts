@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { importFindingIds, importTypeScriptSpec } from "../index.js";
+import { importFindingIds, importTypeScriptSpec } from "../import/import.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { Finding } from "../validate/contracts.js";
@@ -143,6 +143,10 @@ export function runImport(parsed: ImportArgs, output: CliOutput, hooks: ImportHo
 
   for (const entry of planned) {
     writeStdout(output, `Wrote ${entry.targetPath}\n`);
+    writeStdout(
+      output,
+      "The TypeScript source remains. Keep one canonical carrier before extraction by moving, renaming, excluding or removing the source.\n",
+    );
   }
   return 0;
 }

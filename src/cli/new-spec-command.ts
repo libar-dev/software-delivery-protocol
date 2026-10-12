@@ -294,7 +294,7 @@ function resolveScaffoldPath(rawPath: string, output: CliOutput): string | undef
     return undefined;
   }
 
-  if (!posixPath.endsWith(".sdp.md") || posixPath.endsWith(".pack.sdp.md")) {
+  if (!posixPath.endsWith(".sdp.md")) {
     refuse(output, "PATH must be a .sdp.md Spec carrier.");
     return undefined;
   }
