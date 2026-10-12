@@ -11,20 +11,20 @@ export const extractionSpecs = [
     file: "specs/extraction/derive-graph.sdp.md",
     title: "Carrier reification derives the one graph",
     narrative:
-      "The graph is the current projection of the repository at a commit. Git holds lifecycle history, so removed records disappear from the current graph and a current `supersedes` relation is the only forward pointer between records that still exist.",
+      "The graph is the current projection of the repository at a commit. Git holds lifecycle history, so removed records disappear from the current graph. A current `supersedes` relation, from a decision to the one it replaces, is the only relation between a record and its predecessor, and it lasts only while both records exist.",
     sections: {
       intent: {
         outcome: "Expose one carrier-neutral derivation seam.",
       },
       behavior: {
         rules: [
-          "Carrier reification feeds deriveGraph once; no consumer creates a second graph.",
-          "The graph is flat arrays of typed nodes and edges; hierarchy and containment are expressed by edges rather than nested nodes.",
-          "Declared relations resolve Primitive to Primitive, while `satisfies`, `references`, and test `verifies` edges derive from anchors and run from their binding node to the direct Spec target, one edge per target.",
+          "Each extraction feeds reified carriers to `deriveGraph`; no consumer derives a graph of its own from source.",
+          "The graph payload carries `schemaVersion`, flat arrays of typed nodes and edges, and the location table. Hierarchy and containment are edges, never nested nodes.",
+          "Each derived node and edge uses the claim and endpoint row in Design. Kind restrictions on authored relations remain those of the relations Spec; binding eligibility remains that of the anchors and delivery-facts Specs.",
           "The edge list is closed at twelve types: the six declared relations `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, and `supersedes`, and the six derived edges `belongsTo`, `satisfies`, `models`, `memberOf`, `uses`, and `references`.",
           "A `references` edge is anchored, runs from a CodeNode to the Spec its code answers to, and contributes no delivery fact.",
           "Delivery facts are computed node facts: a resolving `satisfies` edge contributes `implemented`, and an enabled direct verifier contributes `has-verifier` only to its target.",
-          "Inferred structural edges are advisory inputs to impact analysis and never become authoritative graph truth.",
+          "Mechanical file-level imports carry `inferred` as external input apart from the curated graph. They remain advisory and derive no `uses`, `memberOf` or `satisfies` edge and no delivery fact in that graph.",
           "The key order of `design`, `ui`, and `model.terms` is the authored order and part of the graph contract.",
           "A Pack node carries its manifest's members in authored order, and the `belongsTo` edges that re-express them keep the global edge sort.",
         ],
@@ -32,6 +32,17 @@ export const extractionSpecs = [
       design: {
         description:
           "One read model. Carrier reifiers translate each supported syntax into common reified input. Graph derivation joins that input with bindings and computes delivery facts before consumers read it. Adding a carrier changes the input boundary; validators and projections continue to consume the same graph. The shared delivery-fact policy belongs to the graph component so graph construction does not define a competing policy.",
+        authoredEdges:
+          "`refines`, `dependsOn`, `constrainedBy`, `decidedBy` and `supersedes` carry declared and run Primitive to Primitive.",
+        verifiesEdge:
+          "Declared `verifies` runs Primitive to Primitive; anchored `verifies` runs from a test Anchor to a Primitive. Enabled-verifier eligibility and conferral are owned by the delivery-facts Spec.",
+        bindingEdges:
+          "`satisfies` and `references` carry anchored and run CodeNode to Primitive; `models` carries anchored and runs from an oracle Anchor to a Primitive.",
+        structureEdges:
+          "`memberOf` and `uses` carry anchored and run CodeNode to CodeNode; structural endpoint restrictions are owned by the anchors Spec.",
+        membershipEdge:
+          "`belongsTo` carries declared and runs Primitive to Pack, derived from the manifest.",
+        nodeClaims: "Primitive and Pack carry declared; Anchor and CodeNode carry anchored.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -51,18 +62,18 @@ export const extractionSpecs = [
       },
       intent: {
         outcome:
-          "State the one delivery-fact conferral law shared by the extractor, the delivery-facts honesty check, and the reader's enabled decode, so the three surfaces can never disagree.",
+          "State the shared delivery-fact conferral law used by extraction, the delivery-facts honesty check and the reader's verifier eligibility checks.",
       },
       behavior: {
         rules: [
           "Delivery facts are derived from resolving graph edges and are never authored.",
           "`implemented` is conferred only by an anchored `satisfies` edge that resolves to the Spec — its source is a CodeNode present in the graph; a dangling or off-contract binding confers nothing.",
-          "`has-verifier` is conferred by an anchored `verifies` edge that resolves to the Spec from an Anchor node present in the graph, or by a declared `verifies` edge from an enabled example that resolves to it.",
-          "An enabled example is an example-kind Spec that is itself the target of a resolving anchored `verifies` edge; a declared verifier that is not enabled confers nothing — binding, never liveness.",
+          "`has-verifier` is conferred by an anchored `verifies` edge that resolves to the Spec from a test anchor, an `Anchor` node in the `test:` namespace, present in the graph, or by a declared `verifies` edge from an enabled verifier that resolves to it.",
+          "An enabled verifier is an example-kind Spec that declares `verifies` to a target and is itself backed by a resolving anchored `verifies` edge from a test anchor. A declared verifier without that binding confers nothing; binding says nothing about whether a run passed.",
           "Both facts are direct and per-target; neither propagates through `refines`.",
           "`observed` is never computed; it remains the aspirational liveness rung.",
           "An edge the claim-separation check would reject confers no fact, so any graph producer other than the extractor is fail-closed.",
-          "A duplicate-id verifier keys the same first carrier exactly as the graph index keys it, and the duplicate-ids check reports the ambiguity loudly.",
+          "Binding eligibility resolves ids through the same first node in node order as the graph index; the duplicate-ids check reports the ambiguity.",
           "The extractor, the delivery-facts honesty check, and the reader's enabled decode share the one conferral computation and its two eligibility predicates, so the three surfaces can never disagree.",
           "Facts are emitted in ladder order — `implemented`, then `has-verifier`.",
         ],
@@ -79,21 +90,22 @@ export const extractionSpecs = [
     title: "Committed source derives byte-identical output",
     narrative: null,
     sections: {
-      intent: { outcome: "Make regeneration independent of location and prior generated state." },
+      intent: {
+        outcome: "Make regeneration independent of location and prior generated state.",
+      },
       constraints: [
         {
           flavor: "quality",
           statement:
             "Two clean derivations of the same committed source produce byte-identical generated trees.",
           target: "sha256(tree@run1) == sha256(tree@run2)",
-          measurableBy: "test/cli.test.ts clean-repo determinism",
+          measurableBy: "test:protocol.extraction-determinism",
         },
       ],
       behavior: {
         rules: [
-          "Nodes sort by ID, edges sort by from, type, and to, and semantically compared output excludes wall-clock timestamps and run-specific hashes.",
+          "Nodes sort by id and edges by from, type and to. Generated graph and contract metadata contains no wall-clock timestamp or run-specific hash. Graph file locations are extraction-root-relative POSIX paths, never absolute paths; authored section text remains as authored.",
           "`sdp build --check-clean` repeats extraction and contract generation independently, failing on any graph or generated-contract byte divergence.",
-          "Static envelope fields fail extraction when they cannot be reified; optional TypeScript section detail may warn and drop, while Markdown documents refuse as a whole.",
         ],
       },
     },
@@ -114,10 +126,10 @@ export const extractionSpecs = [
       },
       behavior: {
         rules: [
-          "An exclusion is a unique, exact root-relative POSIX path prefix applied to both declared-carrier and anchor-candidate discovery surfaces.",
+          "Discovery reads Spec and Pack carriers by the suffixes `.sdp.md`, `.sdp.gherkin` and `.sdp.ts`. Other `.ts` and `.tsx` files are anchor candidates, except `.d.ts` files. Discovery never descends into `node_modules`, `dist`, `generated`, `coverage` or a dot-directory, and configured exclusions apply to both lists.",
+          "An exclusion is an exact root-relative POSIX path prefix applied to Spec-carrier and anchor-candidate discovery; a repeated exclusion counts once.",
           "A prefix excludes itself and slash-delimited descendants only; it never excludes a merely similar sibling path.",
-          "Empty, dot-relative, absolute, Windows-drive, backslash, trailing-slash, and parent-traversal paths are refused rather than normalized into a different meaning.",
-          "The realizing entrypoints are `normalizeExcludes` and `discoverFiles` in `src/extract/discover.ts`.",
+          "Empty, absolute, Windows-drive, backslash and trailing-slash paths, and paths with an empty, `.` or `..` segment, are refused rather than normalized into a different meaning.",
         ],
         exampleSpace: {
           given: [
@@ -130,6 +142,11 @@ export const extractionSpecs = [
             "the surviving spec carrier is {specCarrier:string} and the surviving anchor candidate is {anchorCandidate:string}",
             "the refusal states {diagnostic:string} and names the offending path",
           ],
+        },
+        ruleKeys: {
+          canonicalDiscovery: "rules[0]",
+          segmentBoundary: "rules[2]",
+          refusedPaths: "rules[3]",
         },
       },
     },
@@ -218,7 +235,7 @@ export const extractionSpecs = [
           inferred:
             "Machine-derived structural information; it is advisory and never authoritative.",
           "claim inheritance":
-            "An edge computed from an authored source retains that source's declared claim; derivation is a mechanism, not a fourth claim.",
+            "An edge computed from an authored source keeps that source's claim. `belongsTo` derives from a Pack manifest and carries declared; anchor-derived edges carry anchored. Derivation is a mechanism, not a fourth claim.",
           "delivery fact":
             "A realization signal computed from resolving edges, never an authored claim or edge.",
         },
@@ -243,7 +260,7 @@ export const extractionSpecs = [
         rules: [
           "Generated artifacts are disposable: deleting them and rebuilding from the same committed repository produces the same bytes.",
           "Consumers read the graph or link to source locations recorded in it; they never re-parse source or keep a parallel model.",
-          "The graph is a single JSON projection with in-memory query support; a graph database remains deferred until measured traversal pain establishes a real need.",
+          "The graph is one JSON document queried in memory.",
         ],
       },
     },
@@ -264,14 +281,16 @@ export const extractionSpecs = [
       },
       behavior: {
         rules: [
-          "Every graph declares its schemaVersion, and MVP consumers require that field to be present and readable.",
-          "Envelope-stable, section-extensible growth is normally additive; SemVer negotiation and a migration command remain deferred until a consumer needs them.",
-          "The declaring entrypoint is `schemaVersion` in `src/graph/schema.ts`, carried onto every derived payload by `deriveGraph`.",
+          "Every derived graph carries `schemaVersion`, which identifies its payload contract for consumers.",
+          "Additive payload fields, including optional fields, increment the schema minor version; incompatible shape or meaning changes increment the major version, while patch changes preserve the payload contract.",
         ],
         exampleSpace: {
           given: ["a graph derived from the authored spec {specId:string}"],
           when: ["the graph payload is serialized"],
           then: ["the payload declares the schema version {schemaVersion:string}"],
+        },
+        ruleKeys: {
+          declaredVersion: "rules[0]",
         },
       },
     },
@@ -293,8 +312,7 @@ export const extractionSpecs = [
               'a graph derived from the authored spec {specId: "spec:probe.schema-versioning"}',
             ],
             when: ["the graph payload is serialized"],
-            // re-measured under plan 41
-            then: ['the payload declares the schema version {schemaVersion: "0.9.0"}'],
+            then: ['the payload declares the schema version {schemaVersion: "0.10.0"}'],
           },
         ],
       },
@@ -310,33 +328,25 @@ export const extractionSpecs = [
     altitude: "feature",
     readiness: "ready",
     file: "specs/extraction/executable-contracts.sdp.md",
-    title: "The build derives executable contracts from graph examples",
+    title: "The build derives step and space contracts from graph examples",
     narrative: null,
     sections: {
       intent: {
         outcome:
-          "Give bound tests typed step and example-space contracts without reading authored Specs directly.",
-        openQuestions: [
-          {
-            question:
-              "Do the concreteness-refusal and no-guessing outcome-identity laws stated in src/codegen/contracts.ts commentary promote here or to a story-altitude child under comment promotion?",
-            blocking: false,
-            key: "contractLawPromotion",
-          },
-        ],
+          "Give bound tests typed step contracts and space contracts without reading authored Specs directly.",
       },
       behavior: {
         rules: [
           "`generateContracts` derives per-example step contracts and per-parent space contracts solely from the extracted graph.",
-          "A generated contract is disposable, keyed by Spec ID, and becomes unavailable when its authored example cannot bind honestly to its shared vocabulary.",
+          "A generated contract is disposable, keyed by Spec ID, and withheld when its example is not in the bindable form or its steps do not resolve against the shared vocabulary.",
           "The concreteness law is a refusal, never a guess — an example carrying an unbound slot in any used step of any entry is not the bindable form and receives no step contract, and a prose-only example receives none either.",
-          "The concreteness law reads the example's own form alone, so it refuses whether or not a parent declares a shared vocabulary; vocabulary resolution is a separate, later gate whose withholding names its own finding.",
-          "An example is one point, so the step contract and the bound point derive from the same first complete entry; a further structured entry is named rather than left silently inert.",
-          "Degradation is loud and local — an undeclared slot, a value outside its declared type, and a conflicting re-binding each name the drift and drop exactly that one slot, so the emitted module still compiles.",
+          "Concreteness reads the example's own form, whether or not a parent declares shared vocabulary. Vocabulary resolution is a separate later check; incompatible resolution withholds the step contract with `contracts/unmatched-vocabulary-step`.",
+          "An example is one point, so the step contract and bound point derive from the same first complete structured Given/When/Then entry. A further entry, which the TypeScript carrier can carry, is named `contracts/multi-entry-example` rather than left silently inert.",
+          "Degradation is loud and local: an undeclared slot or a value outside its declared type is named and left out of the bound point; an off-type value stays in the step contract, widened to its scalar kind, so the emitted module still compiles; and a conflicting re-binding is named and its first value wins, in the bound point for a slot bound twice and in the step contract for a step that recurs with other values.",
           "A vocabulary slot group that declares no usable type is named rather than dropped in silence, and no dimension enters the space for it.",
+          "Each Then step of the parent's example space is one variant of the space contract's Outcome union, whose `kind` is that step's skeleton text; the build derives no slug or ordinal, and the runner core adds `unspecified`.",
           "Two contract paths differing only by letter case cannot coexist on a case-insensitive filesystem, so the contracts tree is withheld whole and the finding names the colliding pair.",
           "Every generation finding is a warning that describes what did not emit; gating belongs to graph validation alone, so a withheld contract never fails the build by itself.",
-          "The realizing entrypoint is `generateContracts` in `src/codegen/contracts.ts`.",
         ],
         exampleSpace: {
           given: [
@@ -353,6 +363,16 @@ export const extractionSpecs = [
             "the findings name {findingId:string}",
           ],
         },
+        ruleKeys: {
+          concreteness: "rules[2]",
+          onePoint: "rules[4]",
+          outcomeIdentity: "rules[7]",
+          caseCollision: "rules[8]",
+        },
+      },
+      design: {
+        findingIds:
+          "`contracts/undeclared-slot` · `contracts/off-dimension-value` · `contracts/conflicting-binding` · `contracts/conflicting-dimension` · `contracts/untyped-vocabulary-slot` · `contracts/multi-entry-example` · `contracts/unmatched-vocabulary-step` · `contracts/case-colliding-path` · `contracts/multiple-registrar-paths`, each at warning severity.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -463,46 +483,43 @@ export const extractionSpecs = [
     sections: {
       intent: {
         problem:
-          "Bound example tests still carry mechanical registration, step-key mapping, parameter dispatch, and oracle↔Then re-encoding that the graph and generated contracts already know.",
+          "A bound example test would otherwise repeat registration, step dispatch and oracle comparison that the graph and contracts already determine.",
         outcome:
-          "Freeze the adopter-facing derived-runnable-module interface before any codegen change so authored tests shrink to irreducible semantics.",
+          "Give each bindable example a generated registrar, so its authored test keeps semantics derivation cannot supply.",
         value:
-          'A Spec plus a small authored semantics module become the honest form of "the spec is the test," without the engine loading or executing adopter code (O5 stayed refused).',
+          "A Spec and a small authored semantics module express the test while the engine neither loads nor executes adopter code.",
       },
       behavior: {
         rules: [
-          "Registrar over self-running module — codegen emits a generated registrar whose call shape is frozen as register Example with the five adapters createWorld, invoke, observe, expected, and optional assertions (see example-space signature line for the exact type-parameter spelling the Markdown carrier cannot put in a list item). That registrar owns describe/it registration, step dispatch, the three-way comparator, and failure rendering. The authored `.test.ts` keeps the top-level `specTest` anchor and ONE activation call that passes the five adapters (`createWorld`, `invoke`, `observe`, `expected`, and optional `assertions`) beside the irreducible functions. IMPORT DIRECTION IS AUTHORED→GENERATED ONLY: the authored file imports the generated registrar and calls it with its semantics; the generated module NEVER imports authored code (no import cycle, and no export-identity problem — the graph stays binding-only per MD-7). Registration executes when the test runner's normal discovery loads the authored file; self-running generated modules are refused.",
+          "Code generation emits a registrar called with `createWorld`, `invoke`, `observe`, `expected` and optional `assertions`. It owns describe/it registration, step dispatch, the three-way comparator and failure rendering. The authored test keeps its top-level `specTest` anchor and one activation call beside its semantics. The authored file imports the generated registrar; the generated module imports no authored code. Normal runner discovery loads the authored file and activates registration. Generated modules never self-register; the graph records binding, never liveness.",
           "Generated sibling path — for each bindable example, codegen emits exactly one generated registration module as a sibling `*.generated.ts` of the authored `.test.ts` (deterministic filename keyed by Spec ID, not by the authored suite filename). One authored suite may verify many examples without their registrar map keys or output paths colliding. Exactly one generated registration per example; a second registration path for the same example is refused. Generated siblings are disposable build output: an adopted registrar is committed because authored code imports it, while unadopted registrars remain ignored, regenerable output and confer no migration claim.",
-          "Registrar ownership and falsifiability — `generated/registrars.json` is a versioned, sorted manifest of every extraction-root-relative registrar sibling owed by the build. Publication stages graph, contracts, manifest, and registrar bytes before replacement, removes siblings no longer owed, and leaves no partially current known set on failure. `--check-clean` compares the manifest and every sibling byte with fresh generation. Preflight independently compares every tracked adopted registrar in the worktree and Git index with regenerated bytes.",
+          "`generated/registrars.json` is a versioned, sorted manifest of every extraction-root-relative registrar sibling owed by the build. Publication reconciles the manifest and removes siblings no longer owed under the build-pipeline law. `--check-clean` compares the manifest and every sibling byte with fresh generation. Preflight independently compares every tracked adopted registrar in the worktree and Git index with regenerated bytes.",
           "Registration-path loudness — multiple anchors in one authored suite still locate one registrar sibling; when one example resolves to more than one distinct authored suite path, generation emits a named finding and withholds that registrar rather than selecting a path silently.",
-          'Shared testing runtime and export strategy — generated registrars import runtime helpers only from `@libar-dev/software-delivery-protocol/testing` (the shared registrar/comparator/failure-rendering runtime). Package export strategy freezes three adopter-facing subpaths plus the root: `.` (model/anchors/public types), `./runner` (framework-neutral plan/run core), `./vitest` (low-level `bindExample` adapter), and `./testing` (registrar runtime used by generated siblings). Authored and generated modules may import the root package for types only from the model surface; they must not reach into private `src/` paths. The actual supported Vitest peer range is the package\'s declared optional peer `vitest: ">=2"` (optional peerDependencyMeta), exercised in-repo against the current devDependency line `vitest@^4.1.10` — no tighter floor is frozen here than `>=2`.',
-          "Step identity stays skeleton-text identity with deterministic fail-loudly semantics (wording edits redden types by design). Do NOT introduce generated ordinals or slugs; a wording-stable operation key is a model/carrier change and is out of this freeze.",
+          "Generated registrars import shared runtime helpers from `@libar-dev/software-delivery-protocol/testing` and types through public package subpaths. Public exports are the root for model, anchors and public types, `./anchors` for zero-dependency anchor builders, `./runner` for the framework-neutral plan/run core, `./vitest` for `bindExample`, and `./testing` for the registrar runtime. Authored suites may import anchor builders through the root or `./anchors`. Authored and generated modules never import private `src` paths. The supported optional Vitest peer range is `>=2`, as declared by the package.",
+          "Step identity is the authored skeleton text; wording changes intentionally fail typechecks. Generation introduces no ordinal or slug identity. A wording-stable operation key requires separate model and carrier design.",
           "Handler resolution — the generated registrar's internal dispatch object is an exhaustive mapped type over the contract's step skeletons: removing or staling one of those generated callbacks is a `tsc` error naming that step. The adopted authored surface retains no per-step callbacks (and therefore no literal step-skeleton keys); its five adapters are required keys (`assertions` optional), so a missing or stale authored callback is a `tsc` error naming that adapter. These are the two exhaustive mapped-type checks; demanding an authored error name a step while simultaneously retaining no authored per-step surface is refused as contradictory. Codegen cannot statically see authored handlers, so no generation-time handler refusal is promised — the type system carries it. Existing generation-time refusals (unbindable example, incompatible vocabulary, colliding path) are reused unchanged.",
           "Scenario-level invocation — the five-adapter interface carries one product `invoke` per example, so the first `When` occurrence invokes it and later `When` occurrences in the same lawful scenario do not repeat side effects.",
-          "The three-way comparator is the exact generated algorithm: (1) at the first `Then`, refuse an incomplete point without calling the oracle, otherwise evaluate and cache `expected(point)`; (2) find this example's Then contract step whose skeleton equals `expected.kind`; (3) compare that step's authored params with the oracle payload; (4) call authored `observe(world)` for the actual Outcome; (5) compare observed vs oracle outcomes; (6) run remaining authored domain assertions separately. Actual===oracle alone is FORBIDDEN — a Spec `{total}` mutation must redden. Oracle input typing is compatible with Partial Conditions space points (exact `Partial` of `Conditions` spelling in the example-space signature line) — never cast Partial to Conditions; refuse only oracle comparison for incomplete points.",
-          "Equality semantics — oracle payload vs Spec Then params and observed vs oracle Outcomes compare by deep structural equality on the authored shape. Failures emit readable missing/extra/changed diagnostics naming the path and the expected vs actual values; they never collapse to a bare boolean. Verbatim Then expectations stay the Spec's authored Then params and skeleton text — the comparator quotes them, it does not rephrase them. The freeze names this law as verbatim `Then` expectations.",
+          "At the first Then, the comparator refuses an incomplete point before calling the oracle and otherwise evaluates and caches `expected(point)`. It finds the authored Then whose skeleton equals `expected.kind`, compares that step's authored parameters with the oracle payload, reads `observe(world)`, compares observed and oracle outcomes, and runs additional assertions separately. Actual-equals-oracle alone is insufficient: a Spec parameter mutation must fail. The oracle accepts `Partial<Conditions>`; the registrar never casts a partial point to Conditions.",
+          "Oracle payload versus Spec Then parameters and observed versus oracle outcomes use deep structural equality on the authored shape. Diagnostics name missing, extra or changed values by path and show expected and actual values. The comparator quotes authored Then parameters and skeleton text without rephrasing them.",
           "Failure rendering reuses the contract's matching Then step plus the existing `renderContractStep` path. When the oracle selected no authored Then, emit a scenario-level diagnostic quoting Spec ID, oracle kind, and available Then skeletons; preserve the original assertion as `cause`.",
           "Bound unspecified outcome — `unspecified` names a coverage gap in the example space, but a bound executable example selecting it reddens because no authored Then may silently witness that gap.",
-          "Non-empty `verifies` — the authored top-level `specTest` must carry a non-empty `verifies` target (the example Spec ID). The anchor remains the sole `has-verifier` source; generated execution confers no delivery fact and says nothing about pass state (claim taxonomy unchanged; MD-7).",
+          "The authored top-level `specTest` carries a non-empty `verifies` target naming the example. It remains the source of `has-verifier`; generated execution confers no delivery fact and records no pass state.",
           "Additive assertions — optional `assertions` may add domain checks the Outcome union cannot express; they never replace steps (3) or (5) of the three-way comparator and never silence a Spec-param or oracle mismatch.",
           "Case mapping and outlines — outline rows map one deterministic case per row in carrier order when a multi-row table sugar expands statically into sibling examples (point-per-example). Scenario Outlines and inline Examples tables stay refused as executable carrier constructs inside a single example; one example remains one point and earns exactly one generated registration.",
-          "Explicit refusals — env/global/module side channels are refused (no ambient `process.env` contract, no mutable global registry, no module-level singleton world shared across examples). Self-running generated modules are refused (generated siblings export the registrar only; they do not self-register on import). Silently deriving domain observation is refused. O5 engine-side execution of adopter code is refused. Growing into harness projection (O4) is out of this freeze. Scenario Outlines stay refused. Claim taxonomy, the anchor layer, and ordinal/slug step identity stay untouched.",
+          "Registrars use no environment, global or module side channel, mutable global registry or singleton world shared across examples. Generated siblings export the registrar and never self-register. Generation derives no domain observation; the engine never loads or executes adopter code. Registrars do not become generated test harnesses. Scenario Outlines stay refused. The interface changes neither the claim taxonomy, anchor bindings nor skeleton-text identity.",
         ],
-        exampleSpace: {
-          given: [
-            "a bindable example {exampleId:string} with a generated sibling registrar module",
-            "the authored test keeps top-level specTest with non-empty verifies and passes the five adapters",
-            "the frozen registrar signature is register<Example>({ createWorld, invoke, observe, expected, assertions? })",
-            "oracle input typing is Partial<Conditions> and never casts Partial to Conditions",
-          ],
-          when: ["the test runner discovers the authored file and the registrar activates"],
-          then: [
-            "exactly one generated registration runs for the example",
-            "the three-way comparator applies equality semantics with readable missing/extra/changed diagnostics",
-            "a Spec Then param mutation reddens via verbatim `Then` expectations",
-            "a missing adapter or stale skeleton-text identity fails as a tsc exhaustive mapped type error",
-          ],
-        },
+      },
+      design: {
+        registrar:
+          "`export declare function registerExample<World>(adapters: RunnableExampleAdapters<World, Conditions, Outcome>): void;` is the signature template; substitute the generated function name and the parent's generated Conditions and Outcome names.",
+        registrarName:
+          "Prefix `register` to the example's final dot-delimited id segment in PascalCase after removing the first occurrence of the parent's final segment in PascalCase; if removal leaves an empty name, use the example's PascalCase segment. PascalCase splits that segment at non-alphanumeric characters, capitalizes each part, and prefixes `X` when the result starts with a digit.",
+        adapters:
+          "`interface RunnableExampleAdapters<W, C, O extends { readonly kind: string }> { readonly createWorld: (point: Partial<C>) => W; readonly invoke: (world: W, point: Partial<C>) => void | Promise<void>; readonly observe: (world: W) => O; readonly expected: (point: Partial<C>) => O; readonly assertions?: (world: W, observed: O) => void | Promise<void>; }`",
+        registrarPath:
+          "The authored suite directory plus the example id without the `spec:` prefix and the suffix `.test.generated.ts`, retaining the id's dots.",
+        registrarManifest:
+          "`generated/registrars.json` carries the versioned, sorted extraction-root-relative registrar paths owed by the build.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -519,6 +536,8 @@ export const extractionSpecs = [
       design: {
         description:
           "Ports and adapters. The runner accepts a generated contract, step handlers, and a caller-owned world. The Vitest adapter registers tests and creates each world before calling the runner. Framework dependencies point from the adapter toward the runner; the runner remains usable without a test framework. Step ordering and failure labels belong to the core, while test registration and world lifecycle belong to the adapter.",
+        failureMessage:
+          '`"at step: " + naturalReading + "\\n" + originalMessage` is the message expression; naturalReading is the rendered contract step and originalMessage is the original error message or the string form of a non-Error throw.',
       },
       intent: {
         problem:
@@ -527,23 +546,14 @@ export const extractionSpecs = [
           "Run a generated contract's steps in authored order and make a red step name itself in the Spec's own words.",
         value:
           "A failing example reads as the Spec that failed rather than as an anonymous assertion.",
-        openQuestions: [
-          {
-            question:
-              "Do the every-step-and-only-the-steps and fresh-world-per-example laws stated in the runner and vitest-adapter commentary promote here or to story-altitude children under comment promotion?",
-            blocking: false,
-            key: "runnerLawPromotion",
-          },
-        ],
       },
       behavior: {
         rules: [
           "The core plans every contract step in authored order and runs it against the world the caller hands in; creating a fresh world per example is the adapter's lifecycle, never the core's.",
-          "Duplicate step text within one example binds one handler, and every occurrence runs that one handler with its own authored params.",
+          "Duplicate step text within one example binds one handler, and every occurrence runs it; an occurrence that binds a slot to a different value is a conflicting re-binding, named at generation, and every occurrence runs with the first binding, because an example is one point.",
           "A red step names itself before the assertion detail: the failure message leads with the step's natural reading — the Spec's own words with bound values inlined — and the original error is preserved, carried as `cause` when it cannot be re-messaged, and wrapped when the thrown value is not an error.",
           "A missing or stale step handler is a compile-time refusal rather than a silent skip: the bindings type covers every step and only the steps, so spec-side drift fails the typecheck instead of the run.",
           "The core contributes `unspecified`, the one outcome no Spec ever states, so an uncovered region of an example space has an honest answer rather than a manufactured one.",
-          "The realizing entrypoints are `planExample` and `runExamplePlan` in `src/runner/index.ts`.",
         ],
         exampleSpace: {
           given: [
@@ -557,6 +567,11 @@ export const extractionSpecs = [
             "the failure names the step in the Spec's own words as {failureLabel:string}",
             "the failure preserves the original detail {detail:string}",
           ],
+        },
+        ruleKeys: {
+          contractOrder: "rules[0]",
+          oneHandlerPerStep: "rules[1]",
+          redStepNamesItself: "rules[2]",
         },
       },
     },
@@ -633,33 +648,36 @@ export const extractionSpecs = [
     narrative: null,
     sections: {
       intent: {
-        outcome: "Turn authored carriers into validated derived artifacts.",
-        openQuestions: [
-          {
-            question:
-              "Does the derive-in-process freshness law stated in src/cli/q-command.ts commentary promote here or to a story-altitude child under comment promotion?",
-            blocking: false,
-            key: "freshnessPromotion",
-          },
-        ],
+        outcome:
+          "Turn authored carriers into one graph and the artifacts derived from it, with every command that checks reading that same graph.",
       },
       behavior: {
-        rules: ["Every command uses the same extracted graph and validation seam."],
+        rules: [
+          "Every command uses the same extracted graph and validation seam.",
+          "`sdp build` publishes derived outputs only after extraction reports no error. A warning does not fail the build; a contract-generation warning may withhold the contract or registrar it names under the executable-contracts law.",
+          "Before replacing current outputs, `sdp build` stages the graph, the owed contracts, the registrar manifest and the registrar siblings, and the imports when `--imports` is supplied, in temporary locations. It then publishes the staged set and removes registrar siblings no longer owed.",
+          "On failure, `sdp build` removes its graph, contracts, manifest, temporary outputs and the confined registrar siblings known from the previous and new manifests. It removes imports only when that invocation requested them. A failed removal names the surviving path and says it must not be read as current; an untrusted registrar path is outside generated ownership.",
+        ],
         flows: [
-          "Discover carriers.",
-          "Reify carriers.",
-          "Derive the graph.",
-          "Validate the graph.",
-          "Emit derived artifacts.",
+          "The build discovers carriers, reifies them, derives the graph, stops on any extraction error, and emits the graph, the executable contracts and the registrars without running the graph checks.",
+          "Validation runs the build, then checks the graph that build derived and reports every finding, exiting nonzero on an error.",
+          "Each projection verb runs validation, then renders its root from that same graph and publishes it whatever the findings, keeping validation's exit code.",
+          "A query discovers, reifies and derives in process, stops on any extraction error, checks the graph, and hands the body the reader, the raw graph and the report from that one derivation, writing nothing.",
         ],
         exampleSpace: {
           given: ["an extraction root containing the isolated spec {specId:string}"],
           when: ["one query invocation reads the reader, raw graph, and validation report"],
           then: [
             "the query exits {exitCode:number}",
-            "both graph entrances return the spec {returnedSpecId:string}",
+            "the reader and the raw graph both return the spec {returnedSpecId:string}",
             "the validation report names the same subject {findingSubjectId:string}",
           ],
+        },
+        ruleKeys: {
+          oneSeam: "rules[0]",
+          emitOnClean: "rules[1]",
+          stagedPublication: "rules[2]",
+          failedPublication: "rules[3]",
         },
       },
     },
@@ -687,7 +705,7 @@ export const extractionSpecs = [
             when: ["one query invocation reads the reader, raw graph, and validation report"],
             then: [
               "the query exits {exitCode: 0}",
-              'both graph entrances return the spec {returnedSpecId: "spec:probe.same-invocation"}',
+              'the reader and the raw graph both return the spec {returnedSpecId: "spec:probe.same-invocation"}',
               'the validation report names the same subject {findingSubjectId: "spec:probe.same-invocation"}',
             ],
           },
@@ -703,11 +721,11 @@ export const extractionSpecs = [
     readiness: "ready",
     file: "specs/extraction/open-section-order.sdp.md",
     title: "Serialization preserves authored entry order",
-    narrative: null,
+    narrative:
+      "Integer-like keys are refused rather than carried in an ordered list: JavaScript orders integer-like object keys before all others, so a plain object keeps authored order only when no key is integer-like.",
     sections: {
       intent: {
-        problem:
-          "Before schema `0.6.0`, canonical serialization sorted the keys of `design`, `ui`, and `model` terms by code unit, and the Design Review sorted them again, so a ten-step sequence read as step 1, step 10, step 2 and an author's grouping was lost.",
+        problem: "Sorting entries by code unit loses the author's sequence and grouping.",
         outcome:
           "Carry the authored order of open-section entries and model terms through the serialized graph and the Design Review's key order.",
       },
@@ -715,12 +733,18 @@ export const extractionSpecs = [
         rules: [
           "The entry order of `design`, `ui`, and `model` terms is authored content. Extraction keeps it, the serialized graph emits it, the Design Review's entry list follows it for open sections, and the Model table follows it for terms.",
           "Authored order is a function of the committed source, so two derivations of one commit stay byte-identical. What is given up is invariance under permutation: two carriers that author the same entries in different orders derive different graph bytes, and parity for these sections means the same entries in the same order.",
-          'A key is integer-like when it matches `^(0|[1-9][0-9]*)$`. The Markdown carrier refuses an integer-like Model term with the structure finding `model terms must not be integer-like` and drops the carrier, as it does for every structure refusal; its open-section keys are lower-camel and cannot be integer-like. The TypeScript carrier reads each name under `design`, `ui`, or `model.terms` as the key JavaScript gives it. A name written as an identifier or a string is its text, and a numeric name is the string form of its number, so `1e3` is `"1000"`, `0x10` is `"16"`, and `0.0000001` is `"1e-7"`. A property, method, getter, or setter whose key is integer-like is refused with the finding `extract/unrecognized-property` at severity error, where that finding is otherwise a warning, and the message `property "<key>" is refused: integer-like keys are not accepted in design, ui, or model terms`. Each refused member gets one finding whatever its value, and only that member drops; the Spec and its other keys stay. A numeric name whose key is not integer-like, such as `1.5`, drops as a non-static name, as it did before this rule. The Gherkin carrier has no open section. The owner ruled the refusal over an ordered-list representation; re-measured at `242d8e6`, neither this corpus nor the first adopter\'s carries such a key.',
+          "A key is integer-like when it matches `^(0|[1-9][0-9]*)$`; `design`, `ui` and `model.terms` refuse such keys in every carrier that carries those sections.",
+          "The Markdown carrier refuses an integer-like Model term with the structure finding `model terms must not be integer-like` and drops the carrier. Its lower-camel Design and UI keys cannot be integer-like. Gherkin carries no open section.",
+          'The TypeScript carrier reads identifier and string names as their text and numeric names as JavaScript\'s string form of the number, so `1e3` becomes `"1000"`, `0x10` becomes `"16"`, and `0.0000001` becomes `"1e-7"`.',
+          'The TypeScript carrier refuses each integer-like property, method, getter or setter with one `extract/unrecognized-property` error regardless of value, with the message `property "<key>" is refused: integer-like keys are not accepted in design, ui, or model terms`. Only that member drops; the Spec and other keys remain.',
+          "A non-integer numeric name such as `1.5` drops as a non-static name.",
           "With integer-like keys refused, a plain object keeps insertion order, so the representation stays an object and no field shape changes. Authored key order is part of the graph contract. The derived graph establishes it, so the reader, the serialized graph, and the Design Review agree. In `design` and `ui` the section's own `description`, its leading prose, comes first, then every other key in authored order. `model.terms` keeps pure authored order, and a term named `description` is an ordinary term, because the Model section's prose lives at `model.description`.",
-          "The schema version moves from `0.5.0` to `0.6.0`, documented as a change of accepted ids, since the `#` sub-part becomes an entry address, and of ordering semantics, with unchanged field shapes. The serialized graph changes for every Spec whose entries are not already in code-unit order.",
           "The reader exposes authored order as the key order of a Spec context's `sections.design`, `sections.ui`, and `sections.model.terms`; entry search rows follow it, and no reader method is added.",
-          "This rule is an ordinary revision, and no Spec stated the sort it replaced. `canonicalDynamicSection` in `src/extract/serialize.ts`, `renderDynamicRecord` in `src/projections/design-review-markdown.ts`, and `renderModel` in `src/projections/design-review-section-content.ts` are the sites that keep authored order. Rendering entries as a list is a change to the Design Review's encoding rule, ruled by `spec:decisions.authored-entry-order`; this rule supplies only the order the list follows.",
+          "Rendering open-section entries as a list follows the authored-entry-order decision; this Spec supplies the order the list follows.",
         ],
+        ruleKeys: {
+          integerLikeKey: "rules[2]",
+        },
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -731,35 +755,15 @@ export const extractionSpecs = [
     altitude: "feature",
     readiness: "defined",
     file: "specs/extraction/contract-declarations.sdp.md",
-    title: "Contract declarations derive a compilable module",
+    title: "Pinned declarations give an adopter a derived module to typecheck",
     narrative:
-      "The re-entry trigger held with the first adopter's rebuild package. At the adopter's commit `2b6b9db`, the package authored its design as keyed Design entries whose values open with a one-line code span, and a test author and a builder wrote 325 tests and the code from that text apart from each other. Every disagreement that went up for a ruling at the merge was a prose sentence with two readings, and none was a declaration. A long table was split across a table, a validator, and an index entry rather than wrapped. That evidence rules the declaration shape below, and the owner's ruling settles the module's emission as the adopter's own recipe.",
+      "The first adopter authored its design as keyed Design entries whose values open with a one-line code span, and a builder and a test author worked apart from that text. Every disagreement raised at the merge was a prose sentence with two readings, never a declaration, and a long table was split across several keyed entries rather than wrapped. That evidence rules the declaration shape below: a one-line code span rather than a fence or a closed section. The shape leaves the contract kind's evidence row unchanged, and a request for a closed contract section needs a Spec of its own. The adopter owns the derived module's emission with its own preamble; implementation and tests may import that module, and compiling it alone does not check their agreement. Nor does it check a span used inside a step bullet against its declaration.",
     sections: {
       intent: {
         problem:
           "Signatures and types in a design are code, yet an author writes them as prose entries no compiler reads, so a name used and never declared, or declared twice, is found only by a reviewer.",
         outcome:
-          "Give a declaration one ruled shape inside the Design section, so that a module derived from the graph can carry every pinned signature of a corpus and a Spec that disagrees with its code fails the adopter's typecheck the way a step contract does.",
-        openQuestions: [
-          {
-            question:
-              "The contract kind's evidence row in the kind-evidence table is unchanged by this Spec. A closed contract section is not planned; if an adopter asks for one, it enters as a Spec of its own.",
-            blocking: false,
-            key: "contractSection",
-          },
-          {
-            question:
-              "A compiled module finds a name used and never declared and a name declared twice. It does not find a bullet whose prose uses a declared name with another type, which is the drift the first adopter met at its merge. Checking a span used inside a step bullet as an expression is deferred until an adopter asks for it.",
-            blocking: false,
-            key: "bulletTypeDrift",
-          },
-          {
-            question:
-              "The source report's full shape is kept here so the capture does not narrow it in silence: an opaque language-tagged fence as the value of one keyed entry, then the closed section whose declarations derive one module per corpus, then implementation code importing the derived types so that a Spec which disagrees with its code fails the build. Compiling the derived module alone finds only names used and never declared, and names declared twice.",
-            blocking: false,
-            key: "reportShape",
-          },
-        ],
+          "Give a pinned declaration one ruled shape inside Design, so the adopter can derive a module and typecheck agreement with its implementation.",
       },
       behavior: {
         rules: [
@@ -768,7 +772,7 @@ export const extractionSpecs = [
           "The key names the declaration's role, and the Protocol fixes no key vocabulary. An adopter's prefix convention, such as `fn`, `type`, `table`, `validator`, and `index`, is a project policy that a recipe reads and never a carrier rule.",
           "A declaration states a shape and never a delivery fact. The anchor's `satisfies` binds the code that claims to realize it and a test anchor binds the verifier that claims to check it, both outside the span.",
           "The derived module is a projection: regenerable, never edited, imported by the adopter's tests and never by an authored Spec.",
-          "The adopter emits the derived module from the pinned declarations list with its own preamble of imports and placeholder declarations, until a second adopter needs the same preamble and the emitter freezes into `sdp build`. The module earns its place only when a changed pinned signature fails the adopter's typecheck against its implementation; a module that merely compiles proves nothing.",
+          "The adopter emits the derived module from the pinned declarations list with its own preamble of imports and placeholder declarations, until a second adopter needs the same preamble and the emitter freezes into `sdp build`. The module earns its place only when a changed pinned declaration fails the adopter's typecheck against its implementation; compiling it alone establishes no agreement with that implementation.",
         ],
       },
     },
@@ -778,7 +782,7 @@ export const extractionSpecs = [
     id: "spec:extraction.pack-member-order.manifest-order-kept",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A manifest's member order survives into the graph and the reader",
     narrative: null,
     sections: {
@@ -793,8 +797,6 @@ export const extractionSpecs = [
               'the serialized Pack node lists the members {serializedMembers: "spec:probe.zeta, spec:probe.alpha, spec:probe.mid"}',
               'the serialized belongsTo edges run from {edgeSources: "spec:probe.alpha, spec:probe.mid, spec:probe.zeta"}',
               'the reader\'s Pack context lists the members {readerMembers: "spec:probe.zeta, spec:probe.alpha, spec:probe.mid"}',
-              // re-measured under plan 41
-              'the payload declares the schema version {schemaVersion: "0.9.0"}',
             ],
           },
         ],
@@ -830,9 +832,7 @@ export const extractionSpecs = [
           "`members` is always present on a Pack node, and an empty manifest list derives `members: []`. The serialized Pack node writes its fields in the order `id`, `nodeType`, `claim`, `title`, `framing`, `file`, `members`, `modelRefs`, omitting an absent optional field.",
           "Nodes keep their sort by id and edges keep their sort by from, type, and to. Authored member order is content of the Pack node, as authored entry order is content of a Spec's open sections, so two derivations of one commit stay byte-identical and two manifests that list the same members in different orders derive different Pack nodes.",
           "The reader's Pack context lists one member row per entry of `members`, in that order, and its verifier gaps follow the same order. The Design Review's Pack page renders its member table and its verifier gap list in that order.",
-          "The schema version moves from `0.6.0` to `0.7.0`, documented as a field added to the Pack node and an optional field added to an open question, with node and edge order unchanged. One bump covers both additions.",
-          "A repeated member is kept only where the carrier admits it. The TypeScript carrier carries a repeated member into `members` and the reader's rows as the manifest wrote it, and the repetition stays the pack-coherence error it is today, counted on the `belongsTo` edges. The Markdown carrier refuses a repeated member in a Pack manifest before derivation with `extract/invalid-frontmatter` and the message `duplicate entry in specs`, as it does today.",
-          "The realizing sites are `derivePackNode` and the membership loop in `src/extract/derive.ts`, the Pack case of `canonicalNode` in `src/extract/serialize.ts`, and `packContext` in `src/reader/reader.ts`.",
+          "A repeated member is kept only where its carrier admits it. TypeScript keeps repetitions in `members` and reader rows, and pack-coherence reports the duplicate `belongsTo` edge. Markdown refuses a repeated manifest member with `extract/invalid-frontmatter` and the message `duplicate entry in specs`.",
         ],
         exampleSpace: {
           given: ["a Markdown Pack manifest whose specs list reads {manifestOrder:string}"],
@@ -841,14 +841,16 @@ export const extractionSpecs = [
             "the serialized Pack node lists the members {serializedMembers:string}",
             "the serialized belongsTo edges run from {edgeSources:string}",
             "the reader's Pack context lists the members {readerMembers:string}",
-            "the payload declares the schema version {schemaVersion:string}",
           ],
+        },
+        ruleKeys: {
+          authoredMembers: "rules[0]",
         },
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/extraction/pack-member-order.sdp.md",
-  }, // The design-management arc (plan 41).
+  },
   {
     id: "spec:extraction.entry-locations",
     specKind: "behavior",
@@ -857,23 +859,23 @@ export const extractionSpecs = [
     file: "specs/extraction/entry-locations.sdp.md",
     title: "The graph records where each addressable entry is written",
     narrative:
-      "An entry address names one keyed Design or UI entry, or one keyed open question. A reader that follows an address to the text needs the line it sits on, and today only the carrier file knows it, so the first adopter's page parses every member's carrier a second time to find them.",
+      "An entry address names one keyed Design or UI entry, one keyed rule or flow, or one keyed open question. A reader following an address needs its recorded source line.",
     sections: {
       intent: {
         problem:
           "The graph records the file of a Spec and the line of every anchor, but not the line of an entry inside a Spec, so a page that links an address to its text, or a review that cites one, re-reads carrier syntax the extractor already parsed.",
         outcome:
-          "Record the source line of every keyed Design and UI entry and every open question in the graph, apart from the nodes, so any consumer links an entry to its text without parsing a carrier.",
+          "Record source lines for Design and UI entries, rules and flows, open questions and their optional fields, and authored relation targets beside the graph's nodes, so consumers locate text without parsing carriers.",
       },
       behavior: {
         rules: [
-          "The graph carries a location table beside its nodes and edges. Each row names a Spec id, the carrier file, the entry, and the 1-based line the entry starts on in that file. An entry is a `design` or `ui` key other than `description`, written as `design.<key>` or `ui.<key>`, or an open question, written as `question[<index>]` by its position in the Spec's open questions counted from 0, with its key beside it when the question carries one.",
+          "The graph carries a location table beside its nodes and edges. Each row names a Spec id, carrier file, entry and 1-based source line. Entries are `design.<key>` or `ui.<key>` for keys other than `description`, `rule[<i>]` or `flow[<i>]` for entries of the primary behavior owner, `question[<i>]` for an open question, `question[<i>].decider`, `question[<i>].links`, `question[<i>].provisional` or `question[<i>].trigger` for each of those optional fields present, and `relation.<type>.<target>` for an authored relation target. Indexes count from 0 within their authored lists. A rule, flow or question row carries `key` when that entry has one.",
           "Primitive and Pack nodes stay free of lines, so a comparison of nodes and edges is unchanged by an edit that only moves an entry, and carrier parity compares nodes and edges and never the location table, whose lines differ by carrier by nature.",
-          "Every carrier the extractor reads records the lines it can locate: the Markdown carrier records each entry it reifies; the TypeScript carrier records the line of each entry's property; the Gherkin carrier records the open questions it carries. An entry with no row has no recorded line, which a consumer reads as not located and never as absent.",
+          "Markdown and TypeScript record the entry forms their syntax carries. TypeScript questions are located at the question property or string literal. Gherkin records its Rule lines and authored or defaulted relation sites; it carries no Design or UI section, open question or question field. A missing row means not located, never absent.",
+          "An authored relation target has a location row whose entry is `relation.<type>.<target>`, at its carrier's recorded relation site. A defaulted Gherkin relation uses the Scenario identity line when no explicit relation tag locates it.",
           "Rows sort by Spec id, then by entry, in code-unit order. The table is a deterministic function of the carriers at the extracted commit, as every other part of the graph is.",
           "A location names where an entry is written and nothing else: it is not an identity, never an anchor target or a binding, and an edit above an entry moves its line.",
           "The reader's Spec context carries the Spec's rows as its entry locations. Address resolution (recipe 25) adds the entry's value, file and line to each resolving row, and entry search (recipe 23) adds the line to each entry it matches.",
-          "The graph schema version moves to `0.9.0`. The realizing sites are the Markdown, TypeScript and Gherkin extractors in `src/extract/`, the graph schema in `src/graph/schema.ts`, and `specContext` in `src/reader/reader.ts`.",
         ],
       },
     },

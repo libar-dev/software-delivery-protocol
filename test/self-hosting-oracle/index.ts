@@ -49,31 +49,51 @@ export const expectedSpecs: readonly ExpectedSpec[] = specFamilies.flatMap(
   (family) => family.specs,
 );
 
-// These projections pin the owner's retained honesty gap on spec:model.spec-sections and
-// three prose-mention warnings, one per mentioning and target Spec pair with no declared
-// relation either way. The relatedId keeps distinct pairs separate. The CLI suite also pins
-// each diagnostic's file, validator, and message prefix. Re-measured after plan 43 integration.
+// The owner retains the honesty gap on spec:model.spec-sections and six intended prose-mention
+// pairs with no declared relation either way. Question links name related designs without
+// asserting a dependency; each subject and relatedId pair remains visible as a warning.
 export const expectedWarnings = [
   {
     validatorId: "conformance/prose-mentions",
     family: "conformance",
     severity: "warning",
-    subjectId: "spec:consumers.delivery-session-on-ramp",
-    relatedId: "spec:decisions.shipped-projections-frozen",
+    subjectId: "spec:consumers.obsidian-vault.iteration",
+    relatedId: "spec:consumers.validate-watch",
   },
   {
     validatorId: "conformance/prose-mentions",
     family: "conformance",
     severity: "warning",
-    subjectId: "spec:decisions.carrier-ruling",
-    relatedId: "spec:decisions.carrier-universality",
+    subjectId: "spec:consumers.obsidian-vault",
+    relatedId: "spec:consumers.spec-studio",
   },
   {
     validatorId: "conformance/prose-mentions",
     family: "conformance",
     severity: "warning",
-    subjectId: "spec:decisions.planning-truths-placement",
-    relatedId: "spec:consumers.impact-graph.symbol-reach",
+    subjectId: "spec:consumers.spec-studio.lenses",
+    relatedId: "spec:consumers.structural-mermaid",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.lenses",
+    relatedId: "spec:observation.run-evidence",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.verification-panels",
+    relatedId: "spec:observation.run-evidence",
+  },
+  {
+    validatorId: "conformance/prose-mentions",
+    family: "conformance",
+    severity: "warning",
+    subjectId: "spec:consumers.structural-mermaid",
+    relatedId: "spec:consumers.spec-studio.lenses",
   },
   {
     validatorId: "honesty/gaps",

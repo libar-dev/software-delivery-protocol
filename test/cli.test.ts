@@ -300,29 +300,50 @@ describe("sdp cli", () => {
       ] as const) {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
       }
-      for (const [file, target, specId] of [
+      for (const [file, line, target, specId] of [
         [
-          "specs/consumers/delivery-session-on-ramp.sdp.md",
-          "spec:decisions.shipped-projections-frozen",
-          "spec:consumers.delivery-session-on-ramp",
+          "specs/consumers/obsidian-vault.iteration.sdp.md",
+          30,
+          "spec:consumers.validate-watch",
+          "spec:consumers.obsidian-vault.iteration",
         ],
         [
-          "specs/decisions/carrier-ruling.sdp.md",
-          "spec:decisions.carrier-universality",
-          "spec:decisions.carrier-ruling",
+          "specs/consumers/obsidian-vault.sdp.md",
+          35,
+          "spec:consumers.spec-studio",
+          "spec:consumers.obsidian-vault",
         ],
         [
-          "specs/decisions/planning-truths-placement.sdp.md",
-          "spec:consumers.impact-graph.symbol-reach",
-          "spec:decisions.planning-truths-placement",
+          "specs/consumers/spec-studio.lenses.sdp.md",
+          30,
+          "spec:consumers.structural-mermaid",
+          "spec:consumers.spec-studio.lenses",
+        ],
+        [
+          "specs/consumers/spec-studio.lenses.sdp.md",
+          33,
+          "spec:observation.run-evidence",
+          "spec:consumers.spec-studio.lenses",
+        ],
+        [
+          "specs/consumers/spec-studio.verification-panels.sdp.md",
+          26,
+          "spec:observation.run-evidence",
+          "spec:consumers.spec-studio.verification-panels",
+        ],
+        [
+          "specs/consumers/structural-mermaid.sdp.md",
+          23,
+          "spec:consumers.spec-studio.lenses",
+          "spec:consumers.structural-mermaid",
         ],
       ] as const) {
         expect(stderr).toContain(
-          `${file} — [warning] conformance/prose-mentions — Mention of "${target}" in "${specId}"`,
+          `${file}:${String(line)} — [warning] conformance/prose-mentions — Mention of "${target}" in "${specId}"`,
         );
       }
-      // Re-measured with sdp validate after plan 43 integration.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 4 warnings");
+      // Re-measured from the refreshed carriers and their retained warning pairs.
+      expect(capture.readStdout()).toContain("validate: 0 errors · 7 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
