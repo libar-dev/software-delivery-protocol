@@ -87,6 +87,8 @@ function packWorld(point: Partial<MarkdownPackAuthoringConditions>): PackWorld {
 id: pack:probe.parity
 specs:
   - spec:probe.member
+modelRefs:
+  - spec:probe.member
 ---
 # Probe parity pack
 
@@ -103,6 +105,7 @@ export const parityPack = pack({
   title: "Probe parity pack",
   framing: "The Pack parity point.",
   specs: [ref("spec:probe.member")],
+  modelRefs: [ref("spec:probe.member")],
 });
 `,
       "utf8",
@@ -144,6 +147,7 @@ function observeParity(world: PackWorld): MarkdownPackAuthoringOutcome {
   const markdownPack = world.markdown.graph.nodes.find((node) => node.id === outcome.packId);
   const typeScriptPack = world.typeScript.graph.nodes.find((node) => node.id === outcome.packId);
   expect(markdownPack?.nodeType).toBe("Pack");
+  expect(markdownPack).toMatchObject({ modelRefs: ["spec:probe.member"] });
   expect(withoutFile(markdownPack)).toEqual(withoutFile(typeScriptPack));
   expect(membership(world.markdown, outcome.packId)).toEqual(
     membership(world.typeScript, outcome.packId),
@@ -210,6 +214,30 @@ function expectedRefusal(
   };
 }
 
+/** The parity point's equality step, computed from both observed Pack nodes and their edges. */
+function assertParityEquality(world: PackWorld): void {
+  if (world.markdown === undefined || world.typeScript === undefined)
+    throw new Error("The parity point requires both carrier extractions.");
+
+  const { packId } = paramsForStep(
+    markdownTsParityContract,
+    "the graph holds the pack {packId} whose membership names {memberId}",
+  );
+  const { equal } = paramsForStep(
+    markdownTsParityContract,
+    "the Markdown and TypeScript Pack nodes are equal apart from carrier file paths, and their membership edges are equal: {equal}",
+  );
+  const markdownPack = world.markdown.graph.nodes.find((node) => node.id === packId);
+  const typeScriptPack = world.typeScript.graph.nodes.find((node) => node.id === packId);
+  const observedEqual =
+    markdownPack !== undefined &&
+    typeScriptPack !== undefined &&
+    JSON.stringify(withoutFile(markdownPack)) === JSON.stringify(withoutFile(typeScriptPack)) &&
+    JSON.stringify(membership(world.markdown, packId)) ===
+      JSON.stringify(membership(world.typeScript, packId));
+  expect(observedEqual).toBe(equal);
+}
+
 const parityTestAnchor = specTest({
   id: testAnchorId("test:protocol.markdown-pack-authoring.markdown-ts-parity"),
   label: "the parity point verifies equal Markdown and TypeScript Pack derivation",
@@ -228,6 +256,7 @@ registerMarkdownTsParity({
   invoke: invokePackExtraction,
   observe: observeParity,
   expected: expectedParity,
+  assertions: assertParityEquality,
 });
 registerSpecEnvelopeRefused({
   createWorld: packWorld,

@@ -1,9 +1,10 @@
-import { rmSync } from "node:fs";
+import { readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
 import { extract, generateContracts, serializeGraph } from "../src/index.js";
+import type { GraphSchema } from "../src/index.js";
 import { materializeGherkinCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 
 import { serializeGraphStructure } from "./helpers/graph-structure.js";
@@ -16,35 +17,53 @@ function materialize(name: string): string {
   return root;
 }
 
+/** A parity root holding only the carriers of one suffix, one canonical surface per id. */
+function parityRoot(keptSuffix: ".sdp.md" | ".sdp.gherkin"): string {
+  const root = materialize("parity");
+  const droppedSuffix = keptSuffix === ".sdp.md" ? ".sdp.gherkin" : ".sdp.md";
+  for (const name of readdirSync(root)) {
+    if (name.endsWith(droppedSuffix)) rmSync(join(root, name));
+  }
+  return root;
+}
+
+/** The graph structure with every node's carrier file replaced by one carrier-neutral name. */
+function carrierNeutralStructure(graph: GraphSchema): string {
+  const structure = JSON.parse(serializeGraphStructure(graph)) as {
+    readonly nodes: readonly Record<string, unknown>[];
+  };
+  return JSON.stringify({
+    ...structure,
+    nodes: structure.nodes.map((node) =>
+      typeof node.file === "string" ? { ...node, file: "carrier" } : node,
+    ),
+  });
+}
+
 describe("Gherkin carrier graph parity", () => {
   afterEach(() => {
     for (const root of temporaryRoots.splice(0)) removeMaterializedCorpus(root);
   });
 
-  it("serializes the Markdown and Gherkin twins identically modulo carrier filename", () => {
-    const markdownRoot = materialize("parity");
-    const gherkinRoot = materialize("parity");
-    rmSync(join(markdownRoot, "twin.sdp.gherkin"));
-    rmSync(join(gherkinRoot, "twin.sdp.md"));
-
-    const markdown = extract({ root: markdownRoot });
-    const gherkin = extract({ root: gherkinRoot });
-    const markdownGraph = serializeGraphStructure(markdown.graph).replaceAll(
-      "twin.sdp.md",
-      "twin.carrier",
-    );
-    const gherkinGraph = serializeGraphStructure(gherkin.graph).replaceAll(
-      "twin.sdp.gherkin",
-      "twin.carrier",
-    );
+  it("serializes the Markdown and Gherkin twins identically modulo carrier files", () => {
+    const markdown = extract({ root: parityRoot(".sdp.md") });
+    const gherkin = extract({ root: parityRoot(".sdp.gherkin") });
     const markdownContracts = generateContracts(markdown.graph);
     const gherkinContracts = generateContracts(gherkin.graph);
 
     expect(markdown.report.findings).toEqual([]);
     expect(gherkin.report.findings).toEqual([]);
-    expect(markdownGraph).toBe(gherkinGraph);
+    expect(
+      markdown.graph.nodes
+        .filter((node) => node.nodeType === "Primitive")
+        .map((node) => node.id)
+        .sort(),
+    ).toEqual(["spec:fixture.parity-twin", "spec:fixture.parity-twin.child"]);
+    expect(carrierNeutralStructure(markdown.graph)).toBe(carrierNeutralStructure(gherkin.graph));
     expect(markdownContracts.findings).toEqual([]);
     expect(gherkinContracts.findings).toEqual([]);
+    expect([...markdownContracts.files.keys()]).toContain("fixture.parity-twin.child.contract.ts");
+    expect([...gherkinContracts.files.keys()]).toContain("fixture.parity-twin.child.contract.ts");
     expect([...markdownContracts.files]).toEqual([...gherkinContracts.files]);
   });
 

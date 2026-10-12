@@ -1,4 +1,6 @@
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { expect } from "vitest";
@@ -9,7 +11,7 @@ import type { SdpImportOutcome } from "../generated/contracts/carrier.sdp-import
 import { importTypeScriptSpec } from "../src/index.js";
 import type { ImportResult } from "../src/import/import.js";
 import { registerRoundTrip } from "./carrier.sdp-import.round-trip.test.generated.js";
-import { assertAuthoredRoundTrip } from "./import-round-trip.helpers.js";
+import { assertAuthoredRoundTrip, assertGraphRoundTrip } from "./import-round-trip.helpers.js";
 
 interface ImportRoundTripWorld {
   readonly source: string;
@@ -23,6 +25,33 @@ function importResult(world: ImportRoundTripWorld): ImportResult {
   }
 
   return world.result;
+}
+
+function emittedOf(result: ImportResult): NonNullable<ImportResult["emitted"]> {
+  if (result.emitted === undefined) {
+    throw new Error("The import must return emitted Markdown before the round trip is asserted.");
+  }
+
+  return result.emitted;
+}
+
+/** Extracts the source and the returned Markdown in two roots and compares the graphs. */
+function assertReturnedGraphRoundTrip(
+  world: ImportRoundTripWorld,
+  emitted: NonNullable<ImportResult["emitted"]>,
+): void {
+  const root = mkdtempSync(join(tmpdir(), "sdp-self-hosting-import-"));
+  try {
+    const tsRoot = join(root, "typescript");
+    const mdRoot = join(root, "markdown");
+    mkdirSync(tsRoot);
+    mkdirSync(mdRoot);
+    writeFileSync(join(tsRoot, world.relativePath), world.source, "utf8");
+    writeFileSync(join(mdRoot, emitted.path), emitted.content, "utf8");
+    assertGraphRoundTrip(tsRoot, mdRoot);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 }
 
 const sdpImportRoundTripTestAnchor = specTest({
@@ -54,7 +83,21 @@ registerRoundTrip({
   assertions: (world) => {
     const result = importResult(world);
     expect(result.findings).toEqual([]);
-    expect(result.emitted).toBeDefined();
-    assertAuthoredRoundTrip(world.source, world.relativePath);
+    const emitted = emittedOf(result);
+    assertAuthoredRoundTrip(world.source, world.relativePath, emitted);
+    assertReturnedGraphRoundTrip(world, emitted);
+
+    // A corrupted return must fail the same check, so the point reads what import returned.
+    const corrupted = {
+      ...emitted,
+      content: emitted.content.replace(
+        "An order is accepted only when its total is positive.",
+        "An order is accepted even when its total is negative.",
+      ),
+    };
+    expect(corrupted.content).not.toBe(emitted.content);
+    expect(() => {
+      assertAuthoredRoundTrip(world.source, world.relativePath, corrupted);
+    }).toThrow();
   },
 });

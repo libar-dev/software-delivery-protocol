@@ -5,12 +5,14 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:carrier.gherkin-authoring
-  verifies: spec:carrier.gherkin-authoring
+  verifies:
+    - spec:carrier.gherkin-authoring
+    - spec:validation.kind-evidence
 ---
-# A ready example with an unbound used slot is refused
+# A Gherkin example with an unbound used slot fails its stated readiness floor
 
 ## Intent
-- outcome: Prove Gherkin-authored examples share the existing readiness floor and concreteness law without carrier exceptions.
+- outcome: Execute the readiness floor on a Gherkin-carried example whose used step leaves a slot unbound.
 
 ```gwt
 Given the Gherkin fixture corpus {probe: "unbound-ready"}

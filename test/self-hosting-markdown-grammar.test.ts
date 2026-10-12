@@ -54,8 +54,9 @@ import { paramsForStep } from "./helpers/generated-contract.js";
 
 const REFUSAL_STEP =
   "the carrier is refused whole with the finding {findingId} whose message contains {reason} at line {line}" as const;
+const SIBLING_STEP = "the healthy sibling {siblingId} stays in the graph" as const;
 
-// Every sibling binds the same three vocabulary steps, so one contract shape types them all.
+// Every sibling binds the same vocabulary, so one contract shape types them all.
 type RefusalContract = ExampleContract<Step, StepParams>;
 
 const temporaryRoots = new Set<string>();
@@ -164,12 +165,19 @@ function adaptersFor(contract: RefusalContract) {
         `${findingId} containing ${JSON.stringify(reason)} at line ${String(line)}; got ${JSON.stringify(world.result.report.findings.map((finding) => [finding.validatorId, finding.line, finding.message]))}`,
       ).toBeDefined();
       expect(refusal?.severity).toBe("error");
+      return outcome();
+    },
+    // The sibling step reads the graph the extraction derived: the refused carrier is absent and
+    // the healthy sibling the point names is the only Spec left.
+    assertions: (world: GrammarWorld): void => {
+      if (world.result === undefined) throw new Error("The sibling point requires an extraction.");
+
+      const { siblingId } = paramsForStep(contract, SIBLING_STEP);
       expect(
         world.result.graph.nodes
           .filter((node) => node.nodeType === "Primitive")
           .map((node) => node.id),
-      ).toEqual(["spec:probe.sibling"]);
-      return outcome();
+      ).toEqual([siblingId]);
     },
     expected: (point: Partial<MarkdownBodyGrammarConditions>): MarkdownBodyGrammarOutcome =>
       point.owner === undefined || point.construct === undefined ? unspecified : outcome(),

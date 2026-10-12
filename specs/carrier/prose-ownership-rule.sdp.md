@@ -5,16 +5,20 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:carrier.markdown-authoring
+  dependsOn:
+    - spec:carrier.markdown-body-grammar
+    - spec:model.relation-reasons
+    - spec:model.open-question-fields
   decidedBy: spec:decisions.prose-ownership
 ---
-# Every prose edge has one owner
+# Every prose value has one typed owner
 
 ## Intent
 - outcome: Keep free prose in the graph without ambiguous attachment.
 
 ## Rule
 - Narrative lives before the first H2 and is owned directly by the Spec; it is Spec content, never an envelope field.
-- A description is owned only by a singular section and lives under that section's own heading; the array-shaped constraints section has no description owner, so its explanatory prose belongs in narrative or intent instead.
+- A description belongs to one typed section; under `spec:carrier.markdown-body-grammar`, the primary behavior heading and Example space share the behavior section's one description, so leading prose may occur under either, never both. Constraints has no description owner; its explanatory prose belongs in narrative or Intent.
 - Unowned prose — prose standing under no typed owner — is refused loudly rather than attached by guess or dropped in silence.
-- Prose is stored as graph content inside its typed owner, never as a file pointer or a heading-path key: a consumer reads prose from the graph without re-parsing the document, and churned document structure carries no identity.
-- The realizing entrypoints are `parseMarkdownBody` in `src/extract/markdown-body.ts` and `mapOwner` in `src/extract/markdown-body-owners.ts`.
+- Prose is graph content inside its typed owner, never a file pointer or a heading-path key: a consumer reads prose from the graph without re-parsing the document, and churned document structure carries no identity.
+- Additional typed prose owners are stated by `spec:model.relation-reasons` for a relation's reason and `spec:model.open-question-fields` for a question's provisional and trigger lines.

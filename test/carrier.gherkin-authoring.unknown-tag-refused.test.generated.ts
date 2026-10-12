@@ -48,6 +48,13 @@ export function registerUnknownTagRefused<World>(
         params,
       });
     },
+    "the first finding message contains {messageText}": (execution, params) => {
+      compareContractOutcome(execution, {
+        kind: "then",
+        text: "the first finding message contains {messageText}",
+        params,
+      });
+    },
     "the graph omits the Spec {absentId}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",

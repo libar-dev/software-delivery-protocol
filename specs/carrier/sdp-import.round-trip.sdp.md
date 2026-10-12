@@ -19,4 +19,4 @@ Then the emitted Markdown re-parses to an equal graph
 ```
 
 ## Verification — executable
-- The bound test runs `assertAuthoredRoundTrip` against the import behavior fixture.
+- The actual returned Markdown preserves the source's Spec content and declared relations after carrier locations are normalized.

@@ -1,4 +1,4 @@
-import { rmSync } from "node:fs";
+import { readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 
 import { afterEach, expect } from "vitest";
@@ -55,6 +55,42 @@ function materialize(probe: string): string {
   temporaryRoots.push(root);
   return root;
 }
+
+/** Removes every carrier of the other suffix, so the root holds one canonical surface per id. */
+function keepOneCarrier(root: string, keptSuffix: ".sdp.md" | ".sdp.gherkin"): void {
+  const droppedSuffix = keptSuffix === ".sdp.md" ? ".sdp.gherkin" : ".sdp.md";
+  for (const name of readdirSync(root)) {
+    if (name.endsWith(droppedSuffix)) rmSync(join(root, name));
+  }
+}
+
+function carrierSuffixOf(file: string): ".sdp.md" | ".sdp.gherkin" {
+  if (file.endsWith(".sdp.md")) return ".sdp.md";
+  if (file.endsWith(".sdp.gherkin")) return ".sdp.gherkin";
+  throw new Error(`The parity carrier ${file} has no canonical suffix.`);
+}
+
+/** A parity root that keeps only the carriers sharing the named file's suffix. */
+function parityRoot(carrierFile: string): string {
+  const root = materialize("parity");
+  keepOneCarrier(root, carrierSuffixOf(carrierFile));
+  return root;
+}
+
+/** The graph structure with every node's carrier file replaced by one carrier-neutral name. */
+function carrierNeutralStructure(graph: GraphSchema): string {
+  const structure = JSON.parse(serializeGraphStructure(graph)) as {
+    readonly nodes: readonly Record<string, unknown>[];
+  };
+  return JSON.stringify({
+    ...structure,
+    nodes: structure.nodes.map((node) =>
+      typeof node.file === "string" ? { ...node, file: "carrier" } : node,
+    ),
+  });
+}
+
+const PARITY_CHILD_CONTRACT = "fixture.parity-twin.child.contract.ts";
 
 interface GherkinWorld {
   root: string;
@@ -181,7 +217,7 @@ const bindings = {
   "the Gherkin fixture corpus {probe}": (state: GherkinWorld, params: { probe: string }) => {
     state.root = materialize(params.probe);
     if (params.probe === "parity") {
-      rmSync(join(state.root, "twin.sdp.md"));
+      keepOneCarrier(state.root, ".sdp.gherkin");
     }
   },
   "the fixture corpus is extracted and validated": (state: GherkinWorld) => {
@@ -210,6 +246,12 @@ const bindings = {
       validatorId: params.findingId,
       line: params.line,
     });
+  },
+  "the first finding message contains {messageText}": (
+    state: GherkinWorld,
+    params: { messageText: string },
+  ) => {
+    expect(extractionReportOf(state).findings[0]?.message).toContain(params.messageText);
   },
   "the report contains finding {findingId}": (
     state: GherkinWorld,
@@ -300,35 +342,21 @@ const bindings = {
     state: GherkinWorld,
     params: { parityLeft: string; parityRight: string },
   ) => {
-    const leftRoot = materialize("parity");
-    const rightRoot = materialize("parity");
-    rmSync(join(leftRoot, params.parityRight));
-    rmSync(join(rightRoot, params.parityLeft));
-    const left = extract({ root: leftRoot });
-    const right = extract({ root: rightRoot });
+    const left = extract({ root: parityRoot(params.parityLeft) });
+    const right = extract({ root: parityRoot(params.parityRight) });
     expect(left.report.findings).toEqual([]);
     expect(right.report.findings).toEqual([]);
-    const leftBytes = serializeGraphStructure(left.graph).replaceAll(
-      params.parityLeft,
-      "twin.carrier",
-    );
-    const rightBytes = serializeGraphStructure(right.graph).replaceAll(
-      params.parityRight,
-      "twin.carrier",
-    );
-    expect(leftBytes).toBe(rightBytes);
+    expect(carrierNeutralStructure(left.graph)).toBe(carrierNeutralStructure(right.graph));
   },
   "the contracts for {parityLeft} equal the contracts for {parityRight}": (
     state: GherkinWorld,
     params: { parityLeft: string; parityRight: string },
   ) => {
-    const leftRoot = materialize("parity");
-    const rightRoot = materialize("parity");
-    rmSync(join(leftRoot, params.parityRight));
-    rmSync(join(rightRoot, params.parityLeft));
-    const left = extract({ root: leftRoot });
-    const right = extract({ root: rightRoot });
-    expect(generateContracts(left.graph)).toEqual(generateContracts(right.graph));
+    const left = generateContracts(extract({ root: parityRoot(params.parityLeft) }).graph);
+    const right = generateContracts(extract({ root: parityRoot(params.parityRight) }).graph);
+    expect([...left.files.keys()]).toContain(PARITY_CHILD_CONTRACT);
+    expect([...right.files.keys()]).toContain(PARITY_CHILD_CONTRACT);
+    expect(left).toEqual(right);
   },
 };
 
@@ -587,6 +615,11 @@ registerUnknownTagRefused({
       paramsForStep(unknownTagRefusedContract, "the first finding is {findingId} at line {line}"),
       paramsForStep(unknownTagRefusedContract, "the graph omits the Spec {absentId}"),
     );
+    const { messageText } = paramsForStep(
+      unknownTagRefusedContract,
+      "the first finding message contains {messageText}",
+    );
+    expect(extractionReportOf(state).findings[0]?.message).toContain(messageText);
   },
 });
 
