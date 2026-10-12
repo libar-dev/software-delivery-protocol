@@ -1268,7 +1268,7 @@ const sampleProposal = {
   reason: "The declaration needs review.",
   changes: [sampleChange],
 };
-// ESLint's dependency validates the published Draft 7 schema independently of the recipe's checks.
+// A declared devDependency validates the published Draft 7 schema independently of the recipe's checks.
 const Ajv = createRequire(import.meta.url)("ajv") as new () => {
   compile: (schema: unknown) => (value: unknown) => boolean;
 };

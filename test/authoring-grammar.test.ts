@@ -7,6 +7,7 @@ import { serializeGraph } from "../src/extract/serialize.js";
 import { importTypeScriptSpec } from "../src/import/import.js";
 import { createReader } from "../src/reader/reader.js";
 import { validateGraph } from "../src/validate/validators.js";
+import { normalizeAuthoring } from "../src/extract/authoring-normalization.js";
 import { renderDesignReview } from "../src/projections/design-review.js";
 import {
   dependsOn,
@@ -421,6 +422,29 @@ Feature: Probe
       expect(result.specs).toEqual([]);
     }
   });
+  it("keeps collection order for rule keys when only some entries carry a line", () => {
+    const behavior: Record<string, unknown> = {
+      rules: ["[#zeta] First rule.", "[#alpha] Second rule."],
+      flows: ["[#beta] First flow."],
+    };
+    normalizeAuthoring({
+      specs: [
+        {
+          id: "spec:probe.parent",
+          file: "probe.sdp.ts",
+          line: 1,
+          data: { behavior },
+          entryLines: [
+            { entry: "rule[1]", line: 9 },
+            { entry: "flow[0]", line: 2 },
+          ],
+        },
+      ],
+      packs: [],
+      findings: [],
+    });
+    expect(Object.keys(behavior.ruleKeys as object)).toEqual(["zeta", "alpha", "beta"]);
+  });
   it("keeps relation finding lines after serialization reorders edges", () => {
     const parent = reifyMarkdownCarrier(
       mdSpec("## Rule\n- [#first] First text.", "rule"),
@@ -442,6 +466,7 @@ Feature: Probe
         (row) => row.validatorId === "conformance/rule-exercises",
       );
       expect(finding?.line).toBe(7);
+      expect(finding?.path).toBe("relation.verifies.spec:probe.parent.exercises.missing");
     }
   });
   it("refuses exercises on an anchored verifies edge", () => {

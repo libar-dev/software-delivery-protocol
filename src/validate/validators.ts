@@ -1457,15 +1457,14 @@ void ruleExercisesAnchor;
 
 function checkRuleExercises(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
   const findings: Finding[] = [];
-  const positionBySpec = new Map<string, number>();
   for (const edge of graph.edges) {
-    const position = positionBySpec.get(edge.from) ?? 0;
-    if (edge.claim === "declared") positionBySpec.set(edge.from, position + 1);
     if (edge.exercises === undefined) continue;
+    // The location table's entry names the relation, so the path survives any edge order.
+    const entry = `relation.${edge.type}.${edge.to}`;
     const source = index.primitivesById.get(edge.from);
     const fail = (key: string, message: string): void => {
       const line = graph.locations?.find(
-        (row) => row.spec === edge.from && row.entry === `relation.${edge.type}.${edge.to}`,
+        (row) => row.spec === edge.from && row.entry === entry,
       )?.line;
       findings.push(
         createFinding({
@@ -1475,7 +1474,7 @@ function checkRuleExercises(graph: GraphSchema, index: GraphIndex): readonly Fin
           message,
           subjectId: edge.from,
           relatedId: edge.to,
-          path: `relations[${String(position)}].exercises${key ? "." + key : ""}`,
+          path: `${entry}.exercises${key ? "." + key : ""}`,
           ...(source === undefined ? {} : { file: source.file }),
           ...(line === undefined ? {} : { line }),
         }),

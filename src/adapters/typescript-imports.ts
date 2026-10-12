@@ -109,7 +109,7 @@ export function deriveTypeScriptImports(root: string, configPath: string): Impor
   const config = readConfig(root, configPath);
   const directories = config.roots.map((path) => configuredPath(root, path));
   for (const directory of directories) {
-    if (!statSync(directory).isDirectory()) {
+    if (statSync(directory, { throwIfNoEntry: false })?.isDirectory() !== true) {
       throw new Error(`imports source root "${directory}" is not a directory`);
     }
   }

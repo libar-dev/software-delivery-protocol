@@ -159,6 +159,21 @@ describe("TypeScript curation imports", () => {
     });
   });
 
+  it.each(["missing", "code/leaf.ts"])(
+    "refuses the source root %s by its configured path",
+    (path) => {
+      withFixture((root) => {
+        writeFileSync(
+          join(root, "imports.config.json"),
+          JSON.stringify({ adapter: "typescript", tsconfig: "tsconfig.json", roots: [path] }),
+        );
+        expect(() => deriveTypeScriptImports(root, "imports.config.json")).toThrow(
+          `imports source root "${join(root, path)}" is not a directory`,
+        );
+      });
+    },
+  );
+
   it("builds the imports file atomically and leaves the curated graph byte-identical", () => {
     withFixture((root) => {
       const before = serializeGraph(extract({ root }).graph);

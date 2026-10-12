@@ -92,8 +92,10 @@ function normalizeRules(spec: ReifiedSpec, findings: Finding[]): void {
         });
     });
   }
-  // Physical entry lines preserve a Markdown owner's interleaved rules and flows.
-  entries.sort((a, b) => (a.line !== undefined && b.line !== undefined ? a.line - b.line : 0));
+  // Physical entry lines preserve a Markdown owner's interleaved rules and flows. With any line
+  // missing there is no physical order to recover, so the collection order stands.
+  if (entries.every((entry) => entry.line !== undefined))
+    entries.sort((a, b) => (a.line ?? 0) - (b.line ?? 0));
   const sites = new Map<string, string[]>();
   const keys: Record<string, string> = {};
   for (const { field, index, text } of entries) {
