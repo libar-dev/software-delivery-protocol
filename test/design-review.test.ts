@@ -24,6 +24,19 @@ import type { DesignReviewPage, GraphSchema } from "../src/index.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
+import {
+  ref as projectionRef,
+  specTest as projectionTest,
+  testAnchorId as projectionTestId,
+} from "@libar-dev/software-delivery-protocol";
+
+const projectionsModelTestAnchor = projectionTest({
+  id: projectionTestId("test:protocol.projections-model.rendering"),
+  label: "graph-only rendering tests verify pure disposable projection pages",
+  verifies: projectionRef("spec:consumers.projections-model"),
+});
+void projectionsModelTestAnchor;
+
 const exampleRoot = fileURLToPath(new URL("../examples/checkout-v1", import.meta.url));
 const goldenRoot = fileURLToPath(
   new URL("./fixtures/checkout-v1/expected-design-review", import.meta.url),

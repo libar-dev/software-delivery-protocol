@@ -49,6 +49,18 @@ import {
   removeMaterializedCorpus,
 } from "./helpers/extract-corpus.js";
 
+const regenerationTestAnchor = specTest({
+  id: testAnchorId("test:protocol.regenerability"),
+  label: "delete and rebuild tests verify byte-identical generated artifacts",
+  verifies: ref("spec:extraction.regenerability"),
+});
+const projectionPublicationTestAnchor = specTest({
+  id: testAnchorId("test:protocol.projections-model.publication"),
+  label: "projection publication tests verify regeneration and diagnostic exit codes",
+  verifies: ref("spec:consumers.projections-model"),
+});
+void [regenerationTestAnchor, projectionPublicationTestAnchor];
+
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const exampleRoot = join(repoRoot, "examples", "checkout-v1");
 
@@ -270,7 +282,6 @@ describe("sdp cli", () => {
       expect(exitCode).toBe(0);
       const stderr = capture.readStderr();
       for (const [file, specId] of [
-        ["specs/extraction/claim-taxonomy.sdp.md", "spec:extraction.claim-taxonomy"],
         ["specs/model/spec-sections.sdp.md", "spec:model.spec-sections"],
       ] as const) {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
@@ -307,7 +318,7 @@ describe("sdp cli", () => {
         );
       }
       // re-measured under plan 41
-      expect(capture.readStdout()).toContain("validate: 0 errors · 7 warnings");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 6 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
@@ -1370,11 +1381,13 @@ export const probe = spec({
       const pagePath = join(root, "generated", "design-review", "spec", "orders.create-order.md");
       expect(runSdpCli(["view", root], createCaptureOutput().output)).toBe(0);
       const firstRender = readFileSync(pagePath, "utf8");
+      const firstTree = readGeneratedTree(root);
 
       rmSync(join(root, "generated"), { recursive: true, force: true });
       expect(runSdpCli(["view", root], createCaptureOutput().output)).toBe(0);
 
       expect(readFileSync(pagePath, "utf8")).toBe(firstRender);
+      expect(readGeneratedTree(root)).toEqual(firstTree);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
