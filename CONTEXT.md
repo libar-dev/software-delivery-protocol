@@ -72,7 +72,7 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 | **role** | the optional one-token value on a code anchor, lowercase kebab and never normalized, naming the architectural pattern its unit plays (`service` · `decider` · `projection` · …); a corpus-owned vocabulary whose taxonomy the census renders with counts, checked against no list (the architectural-annotation ruling, MD-38) | "pattern" · "kind" (reserved for the Spec descriptor) · "tag" |
 | **layer** | the optional closed-set attribute of a `component:` anchor — `edge` · `application` · `domain` · `adapter` · `infrastructure`; outside the set, or on a non-component anchor, an envelope error | "tier" |
 | **context** | the optional one-token value on a `component:` anchor, in the token grammar of `role`, naming its bounded context; on a non-component anchor, an envelope error | "bounded_context" (the v0 field) · "domain" |
-| **architecturally significant unit** | a code unit with exported public surface or cross-component reach that warrants graph-visible structural binding — component membership, uses declarations for its architectural dependencies, a role, and references to the designs it answers to; annotated on the anchor of the code that realizes it; the accepted set is an owner-reviewed declaration, never derived from imports (carried by `spec:model.structural-patterns`) | "pattern" (refused by the architectural-annotation ruling, MD-38, which supersedes MD-34) |
+| **architecturally significant unit** | a code unit with exported public surface or cross-component reach that warrants graph-visible structural binding — component membership, uses declarations for its architectural dependencies, a role, and references to the designs it answers to; annotated on the anchor of the code that realizes it; the accepted set is an owner-reviewed declaration, never derived from imports (carried by `spec:model.structural-patterns`) | "pattern" (refused by the architectural-annotation ruling, MD-38, which replaced MD-34) |
 
 **Two grouping mechanisms, kept distinct:** *refinement* (parent `Spec` → children — authored truth with
 descendants) vs *the aggregate* (the `Pack` — a cross-cutting review collection, no truth of its own).
@@ -275,7 +275,7 @@ delivery fact, workflow state, or graph state.
   `decision` section — FSM imprint; adoption arc = `readiness`, replacement = `supersedes`, rejected paths =
   `alternatives`/`consequences` — MD-11) · `pattern` (as an architectural primitive, kind, or
   `pattern:` namespace — ordinary English remains; the architectural-annotation ruling, MD-38,
-  superseding MD-34) · `annotation` (→ `anchor`; the verb "annotate" survives as "write an anchor").
+  which replaced MD-34) · `annotation` (→ `anchor`; the verb "annotate" survives as "write an anchor").
 - **Locked usage:** readiness is **"stated/asserted," never "claimed"** ("claim" is reserved for the `claim`
   taxonomy) · the meta-model defines the **contract**, **instances conform**; "govern"/"police" retired ·
   checks are **conformance checks + honesty checks** · **pre-graph** = upstream of graph derivation in the
