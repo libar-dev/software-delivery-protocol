@@ -11,11 +11,11 @@ relations:
 # Machine truth is never authored
 
 ## Intent
-- outcome: Keep derived graph truth trustworthy by rejecting any authored substitute for machine-derived claims or facts.
+- outcome: Keep derived graph truth trustworthy by rejecting any authored substitute for a derived edge or delivery fact.
 
 ## Rule
-- Specs and Packs must not author derived edges, claims, or delivery facts, and any stated delivery facts must equal the graph's recomputed facts.
-- The realizing validator entrypoints are `checkAuthoringShape` and `checkDeliveryFacts` in `src/validate/validators.ts`.
+- Specs and Packs author no derived edge or delivery fact.
+- A Primitive node's `deliveryFacts` equals the facts the one derivation recomputes from the graph.
 
 ## Example space
 ```gwt-vocabulary

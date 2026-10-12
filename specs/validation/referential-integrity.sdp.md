@@ -13,8 +13,7 @@ relations:
 
 ## Rule
 - Every edge endpoint and every Pack model reference must resolve to a node in the derived graph; an unresolved reference is a conformance error.
-- The finding names the unique nearest known id as a suggestion and stays silent when two candidates tie, because resolving ambiguity silently is never the check's job.
-- The realizing validator entrypoint is `checkReferentialIntegrity` in `src/validate/validators.ts`.
+- The finding names the unique nearest known id within edit distance two as a suggestion, and stays silent when no id is that near or two candidates tie, because resolving ambiguity silently is never the check's job.
 
 ## Example space
 ```gwt-vocabulary

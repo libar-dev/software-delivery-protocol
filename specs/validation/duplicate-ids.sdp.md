@@ -5,7 +5,9 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:protocol.self-hosting
-  dependsOn: spec:carrier.markdown-parser
+  dependsOn:
+    target: spec:carrier.markdown-parser
+    reason: duplicate exclusion includes the default Markdown carrier
 ---
 # Duplicate carrier IDs are excluded loudly
 
@@ -14,6 +16,7 @@ relations:
 
 ## Behavior
 - rule: If more than one carrier declares an ID, every duplicate site receives extract/duplicate-id and no ambiguous node is derived.
+- rule: Over a graph from any producer, every node whose id is carried by another node receives a conformance/duplicate-ids error; the extractor separately excludes ambiguous authored carriers through extract/duplicate-id.
 
 ## Example space
 ```gwt-vocabulary

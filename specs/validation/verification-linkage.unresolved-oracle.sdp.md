@@ -7,10 +7,10 @@ relations:
   refines: spec:validation.verification-linkage
   verifies: spec:validation.verification-linkage
 ---
-# An oracle with no example space to model confers nothing
+# An oracle targeting a Spec with no example space is refused
 
 ## Intent
-- outcome: Execute the oracle-linkage law where the modeled spec owns no example space.
+- outcome: Execute the oracle-linkage law where the modeled Spec owns no example space.
 
 ```gwt
 Given the graph holds a parent spec {parentId: "spec:probe.order-policy"}

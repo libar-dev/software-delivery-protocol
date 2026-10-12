@@ -5,9 +5,11 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:validation.readiness-floor
-  verifies: spec:validation.readiness-floor
+  verifies:
+    target: spec:validation.readiness-floor
+    exercises: [definedFloor]
 ---
-# A blocking open question holds a spec below defined
+# A blocking open question holds a Spec below defined
 
 ## Intent
 - outcome: Execute the defined rung where a recorded open question is flagged as blocking.

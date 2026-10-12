@@ -5,9 +5,11 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:validation.readiness-floor
-  verifies: spec:validation.readiness-floor
+  verifies:
+    target: spec:validation.readiness-floor
+    exercises: [scopedFloor]
 ---
-# A scoped spec with no relation names the relation clause
+# A scoped Spec with no relation names the relation clause
 
 ## Intent
 - outcome: Execute the scoped rung where every clause but the relation clause is satisfied.
