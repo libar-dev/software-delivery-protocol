@@ -224,13 +224,13 @@ export const extractionSpecs = [
         },
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:extraction.regenerability",
     specKind: "rule",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/extraction/regenerability.sdp.md",
     title: "Generated artifacts are disposable projections",
     narrative: null,
@@ -244,12 +244,10 @@ export const extractionSpecs = [
           "Generated artifacts are disposable: deleting them and rebuilding from the same committed repository produces the same bytes.",
           "Consumers read the graph or link to source locations recorded in it; they never re-parse source or keep a parallel model.",
           "The graph is a single JSON projection with in-memory query support; a graph database remains deferred until measured traversal pain establishes a real need.",
-          "Measured evidence from the self-hosting corpus keeps full rebuilds comfortable below roughly 50 Specs.",
-          "Measured evidence defers a graph database until the graph reaches roughly 10k+ nodes or traversal pain establishes a real need.",
         ],
       },
     },
-    deliveryFacts: ["implemented"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:extraction.schema-versioning",
@@ -702,7 +700,7 @@ export const extractionSpecs = [
     id: "spec:extraction.open-section-order",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/extraction/open-section-order.sdp.md",
     title: "Serialization preserves authored entry order",
     narrative: null,
@@ -816,7 +814,7 @@ export const extractionSpecs = [
     id: "spec:extraction.pack-member-order",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A Pack node keeps its members in authored order",
     narrative: null,
     sections: {
@@ -850,13 +848,12 @@ export const extractionSpecs = [
     },
     deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/extraction/pack-member-order.sdp.md",
-  },
-  // The design-management arc (plan 41).
+  }, // The design-management arc (plan 41).
   {
     id: "spec:extraction.entry-locations",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/extraction/entry-locations.sdp.md",
     title: "The graph records where each addressable entry is written",
     narrative:

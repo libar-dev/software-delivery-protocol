@@ -21,6 +21,54 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "test:protocol.projections-model.rendering",
+    nodeType: "Anchor",
+    label: "graph-only rendering tests verify pure disposable projection pages",
+    file: "test/design-review.test.ts",
+    constant: "projectionsModelTestAnchor",
+    site: "const exampleRoot =",
+  },
+  {
+    id: "test:protocol.projections-model.reader",
+    nodeType: "Anchor",
+    label: "reader tests verify composable graph joins without persistence",
+    file: "test/reader.test.ts",
+    constant: "projectionReaderTestAnchor",
+    site: "const exampleRoot =",
+  },
+  {
+    id: "test:protocol.projections-model.publication",
+    nodeType: "Anchor",
+    label: "projection publication tests verify regeneration and diagnostic exit codes",
+    file: "test/cli.test.ts",
+    constant: "projectionPublicationTestAnchor",
+    site: "const repoRoot =",
+  },
+  {
+    id: "test:protocol.regenerability",
+    nodeType: "Anchor",
+    label: "delete and rebuild tests verify byte-identical generated artifacts",
+    file: "test/cli.test.ts",
+    constant: "regenerationTestAnchor",
+    site: "const repoRoot =",
+  },
+  {
+    id: "test:protocol.core-model",
+    nodeType: "Anchor",
+    label: "Spec builders and derivation verify independent coordinates and direct realization",
+    file: "test/builders.test.ts",
+    constant: "coreModelTestAnchor",
+    site: 'describe("builders"',
+  },
+  {
+    id: "test:protocol.claim-taxonomy",
+    nodeType: "Anchor",
+    label: "schema and extraction tests verify claim categories and inheritance",
+    file: "test/graph-schema.test.ts",
+    constant: "claimTaxonomyTestAnchor",
+    site: 'describe("graph schema"',
+  },
+  {
     id: "test:protocol.open-section-order",
     nodeType: "Anchor",
     label: "verifies serialized authored entry order",
@@ -2020,7 +2068,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     nodeType: "CodeNode",
     label: "the Pack design helpers and the Pack context assembly they serve",
     file: "src/reader/reader.ts",
-    site: "function packMemberDesign(",
+    site: "function specDesignColumns(",
     role: "reader",
   },
   {
@@ -2180,6 +2228,12 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  ["test:protocol.projections-model.rendering", "verifies", "spec:consumers.projections-model"],
+  ["test:protocol.projections-model.reader", "verifies", "spec:consumers.projections-model"],
+  ["test:protocol.projections-model.publication", "verifies", "spec:consumers.projections-model"],
+  ["test:protocol.regenerability", "verifies", "spec:extraction.regenerability"],
+  ["test:protocol.core-model", "verifies", "spec:model.core-model"],
+  ["test:protocol.claim-taxonomy", "verifies", "spec:extraction.claim-taxonomy"],
   ["test:protocol.open-section-order", "verifies", "spec:extraction.open-section-order"],
   ["impl:protocol.open-section-order", "satisfies", "spec:extraction.open-section-order"],
   ["component:protocol.model", "satisfies", "spec:model.core-model"],

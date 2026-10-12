@@ -860,47 +860,6 @@ export const decisionsSpecs = [
     deliveryFacts: [],
   },
   {
-    id: "spec:decisions.structural-anchor-semantics",
-    specKind: "decision",
-    altitude: "feature",
-    readiness: "ready",
-    file: "specs/decisions/structural-anchor-semantics.sdp.md",
-    title: "Structural anchor semantics",
-    narrative: null,
-    sections: {
-      intent: {
-        outcome:
-          "Resolve which intent-free structural relationships code anchors may author without creating a second architecture truth.",
-      },
-      decision: {
-        context:
-          "The generic `codeAnchor` already binds realization to a Spec through `satisfies`, while the reserved structural-semantics question leaves component membership and dependencies between anchored code units unresolved. Gen-1 also used `@architect-implements` to join separate test-pattern identities, not code to Spec, and exposed authored `uses` relationships through a broad tag registry.",
-        decision:
-          "In order, first, `satisfies` remains the only code-to-Spec realization slot: code that realizes a contract-kind Spec satisfies that Spec by authoring convention, so no `implements` field is admitted. Second, `component` and `uses` enter the `codeAnchor` contract as the only new structural fields. Third, their value forms are closed graph-ID references: `component?: ComponentAnchorId` is one statically reifiable reference, and `uses?: readonly CodeAnchorId[]` is a statically reifiable array of references; neither field accepts free strings or an enum detached from graph identity. Fourth, the structural references derive only the anchored `memberOf` and `uses` edges under the validation rules below. Fifth, the census always derives their taxonomy and rows from the graph and runtime constants; it is generated, disposable, and never hand-maintained.",
-        rationale: [
-          "This is hard to reverse because the anchor authoring API and persisted edge vocabulary become contracts for source, validators, queries, and projections. It is surprising without context that contract realization remains `satisfies`, that a dependency cycle is accepted, and that structural edges confer no realization state. It is a real trade-off: local authored structure and referential checks justify two narrow fields, while rejecting `implements`, inference, lifecycle metadata, and an open tag system gives up looser notation to preserve one graph language. The caution is gen-1's taxonomy drift: a claimed 50 tags was corrected to about 26 while inconsistent counts remained (`reviews/14-executable-verification-design-review.md`, which cites the gen-1 formal-spec findings review); generated census output is therefore evidence, never another registry.",
-        ],
-        consequences: [
-          "Every `component` and `uses` target must exist as a `CodeNode`; a dangling graph ID is an error. A `memberOf` edge runs only from an `impl:` or `api:` `CodeNode` to a `component:` `CodeNode`, and each source has at most one component, enforcing one-level membership: a `component:` node cannot itself be a member. A `uses` edge runs between `CodeNode` endpoints whose IDs use the `impl:`, `api:`, or `component:` namespace.",
-          "A present `uses` array must be non-empty and contain unique targets. Structural edges must be unique, and any structural self-reference is an error. Multi-node `uses` cycles remain authored data for census projection, not validator findings; validators do not infer transitive edges or reject cycles.",
-          "The census renders the admitted structural bindings from graph edges, including component membership and uses relationships, and reports an explicit empty state when none exist. It may group cycles as data, but it neither re-derives validation findings nor owns a manually curated taxonomy.",
-          "The new fields extend `codeAnchor` only; there are no per-namespace sibling anchor builders.",
-          "The new edges are anchored claims only, never inferred claims; deriving architecture from imports is refused, because these edges are authored declarations in code. Derivation remains a mechanism and does not add a fourth claim.",
-          "Anchors carry no intent, readiness, status, or delivery fact. `memberOf` and structural `uses` mint no delivery facts, add no delivery status, and do not change readiness floors.",
-          "No free-form tag vocabulary, authored lifecycle, or parallel registry is admitted.",
-          "Foreign fields remain extraction errors; after admitting `component` and `uses`, the anchor envelope remains closed and a malformed structural field refuses the whole anchor rather than yielding a partial declaration.",
-          "Anchor-required lint remains warn-level and optional; absence of an anchor is useful evidence but never a load-bearing workflow gate.",
-        ],
-        alternatives: [
-          "Adding `implements` would mirror gen-1 terminology, but would duplicate `satisfies` for contract-kind targets and make code-to-Spec realization ambiguous.",
-          "Deriving dependencies from imports would increase coverage without annotations, but would turn incidental runtime wiring into authoritative architecture and misclassify an inferred observation as an anchored claim.",
-          "Closed enums or free-form tags would be easy to author, but would not resolve to graph nodes and would recreate the taxonomy-governance failure this decision is intended to avoid.",
-        ],
-      },
-    },
-    deliveryFacts: [],
-  },
-  {
     id: "spec:decisions.shipped-projections-frozen",
     specKind: "decision",
     altitude: "feature",
@@ -917,12 +876,12 @@ export const decisionsSpecs = [
         context:
           "An earlier projection-settling record refused re-specifying the four shipped projections, and the adoption register carried that refusal as a standing do-not-reopen row, but the refusal lived only as plan prose the graph could not check.",
         decision:
-          "Re-specifying the shipped Design Review, census, Mermaid, or Gherkin projection is refused. These four projections are the ruled read surfaces over the one graph, and the ruling reopens only through a later decision Spec that supersedes this one and passes the ADR three-part test.",
+          "Re-specifying the shipped Design Review, census, Mermaid, or Gherkin projection is refused. These four projections are the ruled read surfaces over the one graph. A later decision Spec that supersedes this one replaces the ruling whole; a decision Spec that refines this one narrows it for one projection or one rendering and leaves the rest frozen. Either passes the ADR three-part test.",
         rationale: [
           "The four projections are shipped, curated read surfaces over the one graph. Re-specifying them re-litigates settled law and risks a second truth store, while a graph-checkable decision record carries the refusal where agents and validators can read it.",
         ],
         consequences: [
-          "Plans treat the four projections as settled read models. Any proposal to reshape one of them arrives as a superseding decision record, never as a follow-up work item.",
+          "Plans treat the four projections as settled read models. Any proposal to reshape one of them arrives as a decision record that refines this one for that projection, or supersedes it whole, never as a follow-up work item.",
         ],
       },
     },
@@ -957,78 +916,10 @@ export const decisionsSpecs = [
     deliveryFacts: [],
   },
   {
-    id: "spec:decisions.architectural-significance-rides-primitives",
-    specKind: "decision",
-    altitude: "feature",
-    readiness: "ready",
-    file: "specs/decisions/architectural-significance-rides-primitives.sdp.md",
-    title: "Architectural significance rides existing primitives",
-    narrative: null,
-    sections: {
-      intent: {
-        outcome:
-          "Rule that Specs carrying architectural significance, and relationships among those Specs, are authored on the existing Spec primitive, relation vocabulary, and structural anchors, so the graph answers architecture questions without a second architecture vocabulary.",
-      },
-      decision: {
-        context:
-          '`spec:model.structural-patterns` asked whether a vocabulary beyond `component` and `uses` passes the ADR three-part test, and "pattern" is not a ratified term; gen-1\'s tag-registry drift (~50→~26 tags) is the recorded failure of an open structural vocabulary (MD-30 cites it).',
-        decision:
-          'Architectural significance is authored on existing primitives, in order. First, architectural significance does not select a Spec kind. Choose the kind of truth being stated: behavior for runtime responsibilities, model for concepts, contract for an interface, constraint for a quality bound, and decision for a trade-off that passes the ADR test. The other existing kinds retain their meaning; no "pattern" term or kind is ratified. Second, relationships among those Specs are the existing relations — `dependsOn`, `supersedes`, `refines`, `decidedBy` — with `dependsOn` reserved for genuine semantic need and `supersedes` for actual replacement under the ADR test; scheduling-flavored edges stay refused (MD-33). Third, code linkage rides the `satisfies` → `decidedBy` join: a component or member anchor satisfies the Spec it realizes, and that Spec names its shaping decisions by `decidedBy`; code never satisfies a decision Spec directly (MD-26). Fourth, grouping is derived from id families and the component graph, not new Packs. Fifth, the significance criterion for engine self-binding is exported public surface or cross-component reach; under it `component:protocol.import` and `component:protocol.testing` enter the accepted component set.',
-        rationale: [
-          'Hard to reverse — it permanently closes the vocabulary question and sets the grain at which architecture is authored; surprising without context — the concept "pattern" dissolves into named coordinates rather than gaining a word; real trade-off — CodeNode-grain roles for Specs carrying architectural significance and machine-checked forbidden dependencies are given up to preserve one graph language.',
-        ],
-        consequences: [
-          'The two blocking open questions on `spec:model.structural-patterns` resolve: no vocabulary beyond `component`/`uses` passes the ADR test, and no "pattern" term is ratified.',
-          "Two documented grain limits stand as named limits, not holes: membership of Specs carrying architectural significance is Spec-grain (one `codeAnchor` carries one `satisfies`), and negative constraints remain declared intent, not machine-enforced graph findings.",
-          "New `codeAnchor`s minted under this ruling satisfy only Specs the unit already realizes; anchors are never pointed at decision Specs or unfinished Specs to manufacture coverage.",
-          "`component:protocol.import` and `component:protocol.testing` join the accepted component set; the structural-edges oracle's import exception comment is retired by this ruling.",
-        ],
-        alternatives: [
-          "A dedicated pattern layer (`participatesIn` fields, `pattern:` ids, an architecture validator) was refused — it recreates the MD-30/MD-33-refused engine surface and the gen-1 taxonomy drift.",
-          "Deriving architecture from imports stays refused (MD-30): structural edges are authored declarations, never inference.",
-        ],
-      },
-    },
-    deliveryFacts: [],
-  },
-  {
-    id: "spec:decisions.jsdoc-graph-extraction-refused",
-    specKind: "decision",
-    altitude: "feature",
-    readiness: "ready",
-    file: "specs/decisions/jsdoc-graph-extraction-refused.sdp.md",
-    title: "Source commentary never enters the graph",
-    narrative: null,
-    sections: {
-      intent: {
-        outcome:
-          "Rule that JSDoc, doc comments, and other source commentary never author graph nodes, relations, membership, or Spec intent, so the statically reified anchor constant remains the only write path from code into the graph.",
-      },
-      decision: {
-        context:
-          "The v0 lineage supported three marker styles — decorators, JSDoc tags, and marker constants — all extracted (docs/lineage/v0-design/04-authoring-surfaces.md §2, 06-extraction-and-validation.md). The landed corpus keeps only the statically reified anchor constant; decorator and JSDoc forms remain unextracted representations (`spec:model.anchors`). Law-grade prose now sits in some engine file headers (for example `src/graph/delivery-facts.ts`), which raises whether the extractor should parse that prose into the graph. The ratified base rules which binding syntaxes extract (`spec:model.anchors`, MD-30); whether comment prose may author graph content is unruled until this decision, and the PR #25 review session genuinely deliberated that fork — this rules an open question, it does not repair drift.",
-        decision:
-          "Ordinary JSDoc and local commentary never author graph content — no nodes, no relations, no component membership, no delivery facts, no Spec intent. The only write path from source into the graph is the statically reified anchor constant under `spec:model.anchors`, and it is identity only. When a comment states rules other surfaces depend on, those rules promote into a Spec under the promotion law (`spec:model.spec-sections`) and the comment demotes to local commentary plus a Spec pointer.",
-        rationale: [
-          "Hard to reverse — a comment-parsing write path would become a contract for source, extractor, and validators. Surprising without context — the lineage tool extracted identity tags from JSDoc, so the obvious parity move looks like extracting prose too; this refusal is about prose, not identity. Real trade-off — comment-prose extraction would make implementation files authoritative for intent (lineage 04 §2.4: markers are read-only pointers from code to spec, never the reverse) and would create a second, silently divergent read model beside the one extraction path (MD-14); giving that up keeps one graph language.",
-        ],
-        consequences: [
-          "The extractor never reads comment content; a comment's presence, absence, or wording produces no graph finding.",
-          "A comment may explain the implementation and point at a Spec id; it confers nothing, and restating promoted law in the comment violates exclusive promotion (MD-10).",
-        ],
-        alternatives: [
-          "Extracting identity tags from JSDoc (the v0 JSDoc marker style) stays refused with the decorator form — both are unextracted representations, and the anchor constant is the single binding syntax.",
-          "Parsing law-grade prose comments into Spec sections was refused — it inverts the separation of intent from binding and recreates a shadow intent carrier beside the Specs.",
-        ],
-      },
-    },
-    deliveryFacts: [],
-  },
-  {
     id: "spec:decisions.checked-mentions",
     specKind: "decision",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/decisions/checked-mentions.sdp.md",
     title: "A Spec id written in prose is a checked mention",
     narrative: null,
@@ -1036,14 +927,6 @@ export const decisionsSpecs = [
       intent: {
         outcome:
           "Make a Spec id written in prose resolve, and make one keyed entry of an open section or one keyed open question addressable, so a reference below the Spec level can be checked.",
-        openQuestions: [
-          {
-            question:
-              "`mention` and `entry address` are candidate terms, defined in the glossary's flagged list. They move into the ratified tables when this record states `ready`.",
-            blocking: false,
-            key: "candidateTerms",
-          },
-        ],
       },
       decision: {
         context:
@@ -1092,7 +975,7 @@ export const decisionsSpecs = [
       },
       decision: {
         context:
-          "The Design Review prints an open section as one fenced JSON object, so each entry's value is an escaped string. Authored order is restored by `spec:extraction.open-section-order` as an ordinary revision, because no Spec states the sort. Rendering is different: `spec:consumers.design-review` states that fenced JSON preserves authored keys and values, and the shipped projections are frozen, so a list rendering needs a superseding record. The first adopter corpus carries 762 keyed entries, and its reviewers read the carrier files instead of the review.",
+          "The Design Review prints an open section as one fenced JSON object, so each entry's value is an escaped string. Authored order is restored by `spec:extraction.open-section-order` as an ordinary revision, because no Spec states the sort. Rendering is different: `spec:consumers.design-review` states that fenced JSON preserves authored keys and values, and the shipped projections are frozen, so a list rendering needs a decision that narrows the freeze for this one rendering. The first adopter corpus carries 762 keyed entries, and its reviewers read the carrier files instead of the review.",
         decision:
           "The Design Review renders each entry of a `design` or `ui` section as a list item in authored order, its key as inline code. A string value renders as Markdown text through the prose escaping rule; a number or boolean renders as inline code; an array or object renders as a fenced JSON block nested under its item, so a structured value the TypeScript carrier admits survives without loss. The fenced-JSON rule of the Design Review stops covering an open section as a whole and keeps covering a structured value inside one entry. The freeze on the four shipped projections stands for everything else.",
         rationale: [
@@ -1124,7 +1007,7 @@ export const decisionsSpecs = [
       },
       decision: {
         context:
-          "`spec:model.open-question-keys` gives an open question an optional key in its marker and an entry address `spec:<id>#question.<key>`. The Design Review renders an open question as its escaped text, with the word blocking after a blocking one, and the shipped projections are frozen, so a reader of the page cannot see the key the address needs. The first adopter cites its open questions from a decision register and from generated pages.",
+          "`spec:model.open-question-keys` gives an open question an optional key in its marker and an entry address `spec:<id>#question.<key>`. The Design Review renders an open question as its escaped text, with the word blocking after a blocking one, and the shipped projections are frozen, so a reader of the page cannot see the key the address needs until a decision narrows the freeze for it. The first adopter cites its open questions from a decision register and from generated pages.",
         decision:
           "The Design Review renders an open question that carries a key with the key as inline code, `#<key>`, at the start of its item, before the question's text; a question without a key renders as before. The freeze on the four shipped projections stands for everything else.",
         rationale: [
@@ -1146,33 +1029,13 @@ export const decisionsSpecs = [
     id: "spec:decisions.studio-html-surface",
     specKind: "decision",
     altitude: "feature",
-    readiness: "scoped",
+    readiness: "defined",
     title: "The Studio renders HTML, and the HTML stays derived",
     narrative: null,
     sections: {
       intent: {
         outcome:
           "Record why the Studio's surface is generated HTML rather than Markdown, and what keeps the HTML out of the diffs a reviewer reads.",
-        openQuestions: [
-          {
-            question:
-              "Is the Studio's HTML the primary surface for a person reviewing a design, with Markdown as the fallback, as the original states, or one human projection beside the generated Markdown Design Review, which the consumers concept keeps as the MVP view after agents, the first sink?",
-            blocking: true,
-            key: "primarySurface",
-          },
-          {
-            question:
-              "The original accepts HTML at about two to four times Markdown's generation time, with a negligible token cost under prompt caching and million-token windows, which prices a page a model writes; a projection is rendered by code from the graph, so does the argument become a bound on page weight or build time, or fall away?",
-            blocking: false,
-            key: "generationCost",
-          },
-          {
-            question:
-              "The original keeps git diffs over canonical TypeScript Specs; the carrier ruling makes Markdown the default carrier and the TypeScript DSL a lawful per-ID option. Does any part of the case for derived HTML depend on the carrier being TypeScript?",
-            blocking: false,
-            key: "canonicalCarrier",
-          },
-        ],
       },
       decision: {
         context:
@@ -1184,14 +1047,15 @@ export const decisionsSpecs = [
           "HTML is shareable: a build uploaded to S3 or any static host is a link, with no rendering-engine mismatch between viewers.",
           "HTML is interactive: a reader can move an NFR target on a slider, toggle a scenario harness, or reorder a Pack's members by drag and drop, none of which Markdown can do.",
           "When a model writes the Specs, review is the person's main act, and HTML beats Markdown for review by a wide margin.",
-          "The download is acceptable: HTML takes about two to four times Markdown's generation time, and with prompt caching and million-token windows the token cost is negligible for the value gained.",
+          "The Studio's code renders its HTML from the graph, so the original's argument from generation time and token cost, which priced a page a model writes, does not apply.",
         ],
         alternatives: [
           "Markdown as the primary surface diffs cleanly in git, but caps out at about a hundred lines and cannot be interactive.",
         ],
         consequences: [
           "The principal trade-off of HTML, diffs that are noisier in git, is sidestepped because the HTML is derived and never committed.",
-          "Markdown remains a fallback surface.",
+          "The Studio stands beside the Markdown Design Review rather than above it. The Studio is the workbench a person reads, and the frozen Markdown Design Review stays the surface git diffs, GitHub renders and agents read; neither ranks above the other.",
+          "The case for derived HTML holds for any canonical carrier, because it rests on the HTML being derived and never committed, not on the Specs being written in TypeScript.",
         ],
       },
     },
@@ -1245,12 +1109,12 @@ export const decisionsSpecs = [
       },
       decision: {
         context:
-          "The source-commentary ruling it supersedes (`spec:decisions.jsdoc-graph-extraction-refused`, MD-35) refused two things in one record: comment prose authoring graph content, and identity tags in doc comments. Its rationale said the refusal \"is about prose, not identity\", while its operative alternative also refused structured identity tags; the annotation scout under `docs/lineage/` names that mismatch and finds that gen 1's drift was duplicate identities, scan scope, and syntax handling, never an extracted identity tag as such. The first adopter showed the cost of the single form: every one of its code anchors sits in a test or a harness because its runtime code cannot import this package, `byFile` on a source file returns nothing, and a hand-kept join stands in for the binding. The original design (`docs/lineage/v0-design/04-authoring-surfaces.md` §2) supported three marker styles feeding one extractor, and its package shape (`docs/lineage/v0-design/02-system-architecture.md` §3) kept the marker library free of runtime dependencies so product code could import it. The owner's direction opening plan 40 is to move closer to that design.",
+          "The source-commentary ruling this record replaced (MD-35, deleted because nothing in it still needed its own text; it reads in git at `90c75dd`) refused two things in one record: comment prose authoring graph content, and identity tags in doc comments. Its rationale said the refusal \"is about prose, not identity\", while its operative alternative also refused structured identity tags; the annotation scout under `docs/lineage/` names that mismatch and finds that gen 1's drift was duplicate identities, scan scope, and syntax handling, never an extracted identity tag as such. The first adopter showed the cost of the single form: every one of its code anchors sits in a test or a harness because its runtime code cannot import this package, `byFile` on a source file returns nothing, and a hand-kept join stands in for the binding. The original design (`docs/lineage/v0-design/04-authoring-surfaces.md` §2) supported three marker styles feeding one extractor, and its package shape (`docs/lineage/v0-design/02-system-architecture.md` §3) kept the marker library free of runtime dependencies so product code could import it. The owner's direction opening plan 40 is to move closer to that design.",
         decision:
           "An anchor has two extracted representations that feed one closed envelope, the constant form as ruled and a comment form. The comment form is a top-level `/** … */` block in a `.ts` or `.tsx` file carrying reserved camelCase, TSDoc-compatible tags; `@sdpAnchor <id>` opens it, and the id's namespace selects the flavor exactly as the constant builders do. Comment prose still authors nothing: only the reserved tags are read, and a comment that does not open with `/**` is never read. Trust is by reserved grammar, not by builder import, so no import is required. The same id in two forms is a duplicate id. The package also ships a zero-dependency subpath `@libar-dev/software-delivery-protocol/anchors` exporting the id builders and the three anchor builders and nothing else, for runtimes that may import but must not load `node:*` modules or ts-morph; the extractor trusts that specifier as a Protocol builder module.",
         rationale: [
-          "Hard to reverse: a second write path from source becomes a contract for the extractor, the validators, and every adopter's code. Surprising without context: the superseded ruling refused the obvious parity move, and this one admits exactly the half its own rationale left open while keeping the half it was about. Real trade-off: a tag grammar in a comment gets no compiler check and the extractor gains a second parser; in exchange, code that cannot import the package binds at its real site and `byFile` answers for it.",
-          "What survives from the superseded ruling: comment prose authors nothing; a comment's wording beyond the reserved tags produces no graph finding; a comment that states law other surfaces depend on still promotes into a Spec under the promotion law, and restating promoted law in a comment violates exclusive promotion (MD-10), so the comment demotes to local commentary plus a Spec pointer; one graph language stays, because both forms feed one envelope and one extraction path (one validation path, MD-14).",
+          "Hard to reverse: a second write path from source becomes a contract for the extractor, the validators, and every adopter's code. Surprising without context: the replaced ruling refused the obvious parity move, and this one admits exactly the half its own rationale left open while keeping the half it was about. Real trade-off: a tag grammar in a comment gets no compiler check and the extractor gains a second parser; in exchange, code that cannot import the package binds at its real site and `byFile` answers for it.",
+          "What survives from the replaced ruling: comment prose authors nothing; a comment's wording beyond the reserved tags produces no graph finding; a comment that states law other surfaces depend on still promotes into a Spec under the promotion law, and restating promoted law in a comment violates exclusive promotion (MD-10), so the comment demotes to local commentary plus a Spec pointer; one graph language stays, because both forms feed one envelope and one extraction path (one validation path, MD-14).",
         ],
         consequences: [
           "The reserved tags are `@sdpAnchor`, `@sdpLabel`, `@sdpSatisfies`, `@sdpVerifies`, `@sdpModels`, `@sdpReferences`, `@sdpComponent`, `@sdpUses`, `@sdpRole`, `@sdpLayer`, and `@sdpContext`; the spelling is camelCase so TSDoc tooling reads each as one tag.",
@@ -1343,12 +1207,12 @@ export const decisionsSpecs = [
       },
       decision: {
         context:
-          "Two rulings carried the structural half of the anchor: structural anchors confer nothing (`spec:decisions.structural-anchor-semantics`, MD-30) admitted `component` and `uses` as the only structural fields, and architectural significance rides existing primitives (`spec:decisions.architectural-significance-rides-primitives`, MD-34) refused a vocabulary beyond them and gave up CodeNode-grain roles. Both cited gen 1's tag-registry drift, about 50 tags to about 26, as the failure of an open structural vocabulary. The annotation scout under `docs/lineage/` corrects that account: the 50-to-26 collapse was a cleanup of gen 1's formal vocabulary that never shipped as a runtime registry, and what drifted there was duplicate identities, scan scope, and syntax handling. The original design declared a Component with `layer` and `bounded_context` (`docs/lineage/v0-design/03-graph-metamodel.md` §2.5), and gen 1 carried a role on each annotated unit. The owner's direction opening plan 40 is to bring back the value of annotating architecturally significant units and their relationships in code.",
+          "Two rulings carried the structural half of the anchor: structural anchors confer nothing (MD-30) admitted `component` and `uses` as the only structural fields, and architectural significance rides existing primitives (MD-34) refused a vocabulary beyond them and gave up CodeNode-grain roles. Both cited gen 1's tag-registry drift, about 50 tags to about 26, as the failure of an open structural vocabulary. The annotation scout under `docs/lineage/` corrects that account: the 50-to-26 collapse was a cleanup of gen 1's formal vocabulary that never shipped as a runtime registry, and what drifted there was duplicate identities, scan scope, and syntax handling. The original design declared a Component with `layer` and `bounded_context` (`docs/lineage/v0-design/03-graph-metamodel.md` §2.5), and gen 1 carried a role on each annotated unit. The owner's direction opening plan 40 is to bring back the value of annotating architecturally significant units and their relationships in code.",
         decision:
           "Architectural significance is annotated on the anchor of the unit that realizes it. A code anchor may carry `role`, the architectural pattern the unit plays; a `component:` anchor may additionally carry `layer`, one of `edge`, `application`, `domain`, `adapter`, or `infrastructure`, and `context`, its bounded context. The `component:` anchor is anchored architecture: it is the declared component, and there is no separate architecture file, because the anchor sits where the component is realized. It is not the original design's declared Component that could exist before code; an unrealized component lives in Specs and never as an invented CodeNode. A role is a free, corpus-owned vocabulary whose taxonomy the census renders with counts from the graph; `service`, `decider`, `projection`, `read-model`, `codec`, `contract`, `barrel`, and `utility` are the lineage set, not a closed list. `layer` is a closed set, and a value outside it is an envelope error; `layer` or `context` on a non-component anchor is an envelope error. All three attributes are optional, and omission is lawful.",
         rationale: [
-          "Hard to reverse: the anchor envelope and the CodeNode fields are contracts for the extractor, the census, the Design Review, and every adopter's annotations. Surprising without context: the superseded rulings refused exactly these attributes on the strength of a drift account the scout found inaccurate, so the reversal reads as a repeat of gen 1 until the correction is on the table. Real trade-off: a free role vocabulary can drift across a corpus and no validator will say so; in exchange, the role, layer, and context live on the one anchor at the one site, and the census taxonomy makes drift visible without a registry.",
-          "What survives from both superseded rulings is restated here as consequences: the `component` and `uses` semantics and their validation rules, structural non-conferral, no inference from imports, no status or readiness on code, significance never selects a Spec kind, no `pattern:` namespace, and the engine significance criterion.",
+          "Hard to reverse: the anchor envelope and the CodeNode fields are contracts for the extractor, the census, the Design Review, and every adopter's annotations. Surprising without context: the replaced rulings refused exactly these attributes on the strength of a drift account the scout found inaccurate, so the reversal reads as a repeat of gen 1 until the correction is on the table. Real trade-off: a free role vocabulary can drift across a corpus and no validator will say so; in exchange, the role, layer, and context live on the one anchor at the one site, and the census taxonomy makes drift visible without a registry.",
+          "This record replaced both rulings, and both records were deleted because nothing in them still needed its own text; they read in git at `90c75dd`. What survives from them is restated here as consequences: the `component` and `uses` semantics and their validation rules, structural non-conferral, no inference from imports, no status or readiness on code, significance never selects a Spec kind, no `pattern:` namespace, and the engine significance criterion.",
         ],
         consequences: [
           "`component?: ComponentAnchorId` and `uses?: readonly CodeAnchorId[]` stay closed graph-ID references deriving only anchored `memberOf` and `uses` edges; neither accepts a free string or an enum detached from graph identity, and there are no per-namespace sibling builders.",
@@ -1366,6 +1230,8 @@ export const decisionsSpecs = [
           "No `pattern` term, kind, or `pattern:` namespace is admitted; a role is an attribute of a CodeNode, not a node; grouping is derived from id families and the component graph, not new Packs.",
           "The engine significance criterion stays exported public surface or cross-component reach; code never satisfies a decision Spec directly (MD-26), and an anchor is never pointed at an unfinished Spec to manufacture coverage.",
           "`role` and `context` values are one lowercase kebab token matching `^[a-z][a-z0-9-]*$`, with no normalization, so `read-model`, `readModel`, and `Read Model` cannot coexist as three categories; a value outside the token grammar is an envelope error.",
+          "The census derives its structural rows and taxonomy from graph edges and runtime constants on every run; it re-derives no validation finding, owns no hand-kept taxonomy, and may group `uses` cycles as data.",
+          "Code reaches the decisions that shape it through the `satisfies` → `decidedBy` join: a unit satisfies the Spec it realizes, and that Spec names its shaping decisions by `decidedBy`.",
           "The census links each role, layer, and context value to the units that carry it, so an owner can reconcile two spellings of one category by editing the anchors; nothing forces a label, and an unlabelled unit does not populate the taxonomy.",
           "The five layers, one line each: `edge` is the transport and presentation boundary; `application` is use cases and orchestration; `domain` is the model and its rules; `adapter` is the implementations of ports toward external systems; `infrastructure` is runtime, persistence, and platform plumbing.",
           "A package may hold several layers or several contexts; the package-to-component mapping is reviewed, and one component per package is a choice, never a rule.",
@@ -1383,13 +1249,12 @@ export const decisionsSpecs = [
       },
     },
     deliveryFacts: [],
-  },
-  // The design-management arc (plan 41).
+  }, // The design-management arc (plan 41).
   {
     id: "spec:decisions.pack-design-page",
     specKind: "decision",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/decisions/pack-design-page.sdp.md",
     title: "The Design Review's Pack page presents the Pack's design",
     narrative: null,
@@ -1400,7 +1265,7 @@ export const decisionsSpecs = [
       },
       decision: {
         context:
-          "The Design Review's Pack page lists the members with their readiness and bindings, and the verifier gaps. The first adopter designs whole capabilities ahead of their code as Packs and generates its own page beside the Design Review, 1,201 lines of script that walks the readiness floor one rung above the stated rung, reads what the members rest on outside the Pack, joins the open questions, and re-parses carrier files for the line of each entry. Its design passes read that page first. The shipped projections are frozen, so the Pack page cannot change without a superseding record.",
+          "The Design Review's Pack page lists the members with their readiness and bindings, and the verifier gaps. The first adopter designs whole capabilities ahead of their code as Packs and generates its own page beside the Design Review, 1,201 lines of script that walks the readiness floor one rung above the stated rung, reads what the members rest on outside the Pack, joins the open questions, and re-parses carrier files for the line of each entry. Its design passes read that page first. The shipped projections are frozen, so the Pack page cannot change until a decision narrows the freeze for it.",
         decision:
           "The Design Review's Pack page renders the Pack design that `spec:consumers.pack-design` assembles: a member table in authored order with each member's stated rung, floor reached, the rung above the stated rung with the clause that holds it there, its design columns and its bindings; a section naming what holds each member below its next rung; the Specs outside the Pack that members rest on and that rest on members; each member's open questions with their entry addresses and source lines; and each member's realizing and referencing code units with their roles and their components' layers and contexts. The verifier gaps and findings stay. The freeze on the four shipped projections stands for everything else, the Spec page and the index included.",
         rationale: [

@@ -211,20 +211,20 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    // re-measured under plan 41
-    expect(result.counts).toEqual({ specs: 252, packs: 3, anchors: 257 });
-    // re-measured under plan 41
-    expect(expectedSpecs).toHaveLength(252);
-    // re-measured under plan 41
-    expect(expectedPackMembers).toHaveLength(252);
-    // re-measured under plan 41
-    expect(expectedAnchors).toHaveLength(257);
-    // re-measured under plan 41
-    expect(expectedBindingEdges).toHaveLength(268);
-    // re-measured under plan 41
-    expect(result.graph.nodes).toHaveLength(512);
-    // re-measured under plan 41
-    expect(result.graph.edges).toHaveLength(1224);
+    // re-measured under plan 41's fold
+    expect(result.counts).toEqual({ specs: 250, packs: 3, anchors: 263 });
+    // re-measured under plan 41's fold
+    expect(expectedSpecs).toHaveLength(250);
+    // re-measured under plan 41's fold
+    expect(expectedPackMembers).toHaveLength(250);
+    // re-measured under plan 41's fold
+    expect(expectedAnchors).toHaveLength(263);
+    // re-measured under plan 41's fold
+    expect(expectedBindingEdges).toHaveLength(274);
+    // re-measured under plan 41's fold
+    expect(result.graph.nodes).toHaveLength(516);
+    // re-measured under plan 41's fold
+    expect(result.graph.edges).toHaveLength(1222);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -266,7 +266,7 @@ describe("the self-hosting corpus", () => {
   });
 
   it("holds the frozen stated-readiness distribution", () => {
-    // re-measured under plan 41
+    // re-measured under plan 41's fold
     expect(
       primitiveNodes.reduce<Record<string, number>>(
         (histogram, node) => ({
@@ -275,7 +275,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 66, idea: 9, ready: 153, scoped: 24 });
+    ).toEqual({ defined: 56, idea: 6, ready: 175, scoped: 13 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {
@@ -319,7 +319,7 @@ describe("the self-hosting corpus", () => {
   });
 
   it("gives every owned impl/api CodeNode exactly one component", () => {
-    // re-measured under plan 41
+    // re-measured under plan 41's fold
     expect(expectedMemberOfEdges).toHaveLength(95);
     const exceptions = new Set<string>(structuralMembershipExceptions);
     const codeUnits = result.graph.nodes.filter(
@@ -344,7 +344,7 @@ describe("the self-hosting corpus", () => {
   });
 
   it("derives exactly the sparse authored component uses edges", () => {
-    // re-measured under plan 41
+    // re-measured under plan 41's fold
     expect(expectedUsesEdges).toHaveLength(40);
     expect(
       result.graph.edges
@@ -479,7 +479,7 @@ describe("the self-hosting corpus", () => {
   });
 
   it("finds every converted comment anchor at its block's first line", () => {
-    // re-measured under plan 41
+    // re-measured under plan 41's fold
     expect(expectedCommentAnchorIds).toHaveLength(25);
     expect(
       expectedAnchors

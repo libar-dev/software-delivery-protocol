@@ -49,12 +49,12 @@ export const expectedSpecs: readonly ExpectedSpec[] = specFamilies.flatMap(
   (family) => family.specs,
 );
 
-// These projections identify the two informative honesty gaps from owner-ratified ready Specs
-// without resolving verifier bindings, and the five informative prose-mention warnings, one per
+// These projections identify the one informative honesty gap from owner-ratified ready Specs
+// without resolving verifier bindings, and the three informative prose-mention warnings, one per
 // mentioning and target Spec pair with no declared relation either way. A prose-mention row also
 // pins its target Spec as relatedId, so two pairs from one Spec differ in the pin. The CLI suite
 // separately pins each diagnostic's file, validator, and message prefix.
-// re-measured under plan 41
+// re-measured under plan 41's fold
 export const expectedWarnings = [
   {
     validatorId: "conformance/prose-mentions",
@@ -67,13 +67,6 @@ export const expectedWarnings = [
     validatorId: "conformance/prose-mentions",
     family: "conformance",
     severity: "warning",
-    subjectId: "spec:decisions.architectural-significance-rides-primitives",
-    relatedId: "spec:model.structural-patterns",
-  },
-  {
-    validatorId: "conformance/prose-mentions",
-    family: "conformance",
-    severity: "warning",
     subjectId: "spec:decisions.carrier-ruling",
     relatedId: "spec:decisions.carrier-universality",
   },
@@ -81,21 +74,8 @@ export const expectedWarnings = [
     validatorId: "conformance/prose-mentions",
     family: "conformance",
     severity: "warning",
-    subjectId: "spec:decisions.jsdoc-graph-extraction-refused",
-    relatedId: "spec:model.spec-sections",
-  },
-  {
-    validatorId: "conformance/prose-mentions",
-    family: "conformance",
-    severity: "warning",
     subjectId: "spec:decisions.planning-truths-placement",
     relatedId: "spec:consumers.impact-graph",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
-    subjectId: "spec:extraction.claim-taxonomy",
   },
   {
     validatorId: "honesty/gaps",
