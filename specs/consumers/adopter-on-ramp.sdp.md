@@ -2,7 +2,7 @@
 id: spec:consumers.adopter-on-ramp
 kind: behavior
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.authoring-on-ramp
   dependsOn:

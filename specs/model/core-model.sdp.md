@@ -2,7 +2,7 @@
 id: spec:model.core-model
 kind: model
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:protocol.self-hosting
   decidedBy:

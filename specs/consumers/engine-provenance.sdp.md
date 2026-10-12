@@ -2,7 +2,7 @@
 id: spec:consumers.engine-provenance
 kind: behavior
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.adopter-on-ramp
   constrainedBy: spec:extraction.determinism

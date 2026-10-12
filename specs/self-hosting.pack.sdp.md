@@ -76,6 +76,7 @@ specs:
   - spec:validation.authored-honesty
   - spec:validation.warn-level-signals
   - spec:consumers.projections-model
+  - spec:consumers.projections-model.roadmap-views
   - spec:consumers.impact-graph
   - spec:consumers.agent-surface
   - spec:consumers.design-review
