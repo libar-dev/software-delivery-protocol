@@ -293,19 +293,9 @@ describe("sdp cli", () => {
           "spec:consumers.delivery-session-on-ramp",
         ],
         [
-          "specs/decisions/architectural-significance-rides-primitives.sdp.md",
-          "spec:model.structural-patterns",
-          "spec:decisions.architectural-significance-rides-primitives",
-        ],
-        [
           "specs/decisions/carrier-ruling.sdp.md",
           "spec:decisions.carrier-universality",
           "spec:decisions.carrier-ruling",
-        ],
-        [
-          "specs/decisions/jsdoc-graph-extraction-refused.sdp.md",
-          "spec:model.spec-sections",
-          "spec:decisions.jsdoc-graph-extraction-refused",
         ],
         [
           "specs/decisions/planning-truths-placement.sdp.md",
@@ -317,8 +307,8 @@ describe("sdp cli", () => {
           `${file} — [warning] conformance/prose-mentions — Mention of "${target}" in "${specId}"`,
         );
       }
-      // re-measured under plan 41
-      expect(capture.readStdout()).toContain("validate: 0 errors · 6 warnings");
+      // re-measured under plan 41's fold
+      expect(capture.readStdout()).toContain("validate: 0 errors · 4 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

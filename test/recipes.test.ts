@@ -1627,16 +1627,14 @@ describe("the agent-surface recipe corpus", () => {
     expect(absent).toEqual({ id: unknownId, found: false });
   });
 
-  // Given: catalog recipe 19 with its parameter naming the structural-anchor
-  // decision (live graph: one outgoing dependsOn, two inbound dependsOn from MD-34/MD-35).
-  // When: the otherwise unchanged body runs through real runSdpCli.
-  // Then: dependencies.dependsOn and dependencies.dependedOnBy are both non-empty and name the
-  // exact ready decision neighbors — so dropping, reversing, renaming, or readiness-skewing either
-  // direction reddens this characterization.
-  it("returns non-empty bidirectional dependencies for the structural-anchor planning slice", async () => {
+  // Given: catalog recipe 19 with its parameter naming the binding-grain decision.
+  // Its carrier depends on binding-not-liveness; architectural-annotation depends on it.
+  // When: the unchanged body runs through the real CLI runner.
+  // Then: both dependency directions retain their ready decision neighbors.
+  it("returns non-empty bidirectional dependencies for the binding-grain planning slice", async () => {
     const recipe = recipeByOrdinal(19);
     const catalogId = "spec:consumers.agent-surface";
-    const id = "spec:decisions.structural-anchor-semantics";
+    const id = "spec:decisions.anchor-binding-grain";
     expect(recipe.body).toContain(`const id = params.spec ?? "${catalogId}";`);
 
     const result = asRecord(await runRecipe(recipe, { spec: id }));
@@ -1650,14 +1648,7 @@ describe("the agent-surface recipe corpus", () => {
       { id: "spec:decisions.binding-not-liveness", statedReadiness: "ready" },
     ]);
     expect(dependedOnBy).toEqual([
-      {
-        id: "spec:decisions.architectural-significance-rides-primitives",
-        statedReadiness: "ready",
-      },
-      {
-        id: "spec:decisions.jsdoc-graph-extraction-refused",
-        statedReadiness: "ready",
-      },
+      { id: "spec:decisions.architectural-annotation", statedReadiness: "ready" },
     ]);
   });
 
@@ -5196,7 +5187,7 @@ describe("design recipes", () => {
         packs: ends("belongsTo", "from", node.id),
       })),
     );
-    expect(rows.some((row) => asArray(row.supersededBy).length > 0)).toBe(true);
+    expect(rows.some((row) => asArray(row.narrowedBy).length > 0)).toBe(true);
     const totals = asRecord(result.totals);
     expect(totals.decisions).toBe(decisions.length);
     expect(
