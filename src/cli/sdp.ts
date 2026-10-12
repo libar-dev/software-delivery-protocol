@@ -27,7 +27,7 @@ export const SDP_HELP_TEXT = `sdp — Libar Software Delivery Protocol
 Usage:
   sdp --help
   sdp --version
-  sdp build [root] [--exclude PATH]... [--check-clean]
+  sdp build [root] [--exclude PATH]... [--check-clean] [--imports PATH]
   sdp validate [root] [--exclude PATH]... [--check-clean | --watch]
   sdp view [root] [--exclude PATH]... [--check-clean]
   sdp census [root] [--exclude PATH]... [--check-clean]
@@ -51,7 +51,9 @@ Commands:
              any hard error — the emitted artifacts are all-or-nothing. --check-clean
              additionally runs a second independent extraction + generation and fails on any
              byte divergence (the determinism self-check). Repeat --exclude PATH to omit exact
-             root-relative POSIX path prefixes from both extraction surfaces.
+             root-relative POSIX path prefixes from both extraction surfaces. --imports PATH
+             reads a TypeScript adapter configuration and writes generated/imports.json as
+             external inferred input for curation, apart from the curated graph.
   validate   build, then run the conformance + honesty checks over the one graph (one
              validation path). A check error exits 1; gaps and orphans inform as warnings.
              graph.json is still written when the checks fail — the graph is the faithful

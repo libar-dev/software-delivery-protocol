@@ -10,6 +10,7 @@ export interface BuildArgs {
   readonly exclude: readonly string[];
   readonly checkClean: boolean;
   readonly watch?: boolean;
+  readonly imports?: string;
 }
 
 export function parseBuildArgs(
@@ -20,6 +21,7 @@ export function parseBuildArgs(
   let root: string | undefined;
   let checkClean = false;
   let watchMode = false;
+  let imports: string | undefined;
   const rawExcludes: string[] = [];
 
   for (let index = 0; index < args.length; index += 1) {
@@ -31,6 +33,25 @@ export function parseBuildArgs(
 
     if (argument === "--check-clean") {
       checkClean = true;
+      continue;
+    }
+
+    if (argument === "--imports") {
+      const path = args[index + 1];
+      if (command !== "build") {
+        writeStderr(output, `sdp ${command}: --imports is only valid on build.\n`);
+        return undefined;
+      }
+      if (path === undefined || path.trim() === "" || path.startsWith("--")) {
+        writeStderr(output, "sdp build: --imports requires a configuration path.\n");
+        return undefined;
+      }
+      if (imports !== undefined) {
+        writeStderr(output, "sdp build: --imports may be supplied only once.\n");
+        return undefined;
+      }
+      imports = path;
+      index += 1;
       continue;
     }
 
@@ -97,7 +118,13 @@ export function parseBuildArgs(
 
   return resolvedRoot === undefined
     ? undefined
-    : { root: resolvedRoot, exclude, checkClean, watch: watchMode };
+    : {
+        root: resolvedRoot,
+        exclude,
+        checkClean,
+        watch: watchMode,
+        ...(imports === undefined ? {} : { imports }),
+      };
 }
 
 /**
