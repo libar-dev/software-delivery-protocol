@@ -229,7 +229,7 @@ function deriveAnchorNode(entry: ReifiedAnchor): AnchorNode | CodeNode {
 export const deriveGraphAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.derive-graph"),
   label: "derives the graph from reified carriers and bindings",
-  satisfies: ref("spec:extraction.derive-graph"),
+  satisfies: [ref("spec:extraction.derive-graph"), ref("spec:extraction.claim-taxonomy")],
   component: componentAnchorId("component:protocol.extract"),
   uses: [codeAnchorId("impl:protocol.delivery-facts")],
   references: [ref("spec:decisions.anchor-binding-grain")],

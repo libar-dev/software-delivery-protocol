@@ -425,10 +425,10 @@ class AnchorEnvelope {
       }
     }
 
-    // An anchor asserts a binding only — never system-truth content (R1). The typed anchor cannot
-    // carry a foreign field, so a smuggled one (readiness, a delivery fact, acceptance criteria)
-    // is an envelope error, not droppable detail — the extraction-layer twin of authoring-shape
-    // honesty, on the anchored surface.
+    // An anchor asserts a binding only, never system-truth content (spec:model.anchors). The typed
+    // anchor cannot carry a foreign field, so a smuggled one (readiness, a delivery fact, acceptance
+    // criteria) is an envelope error, not droppable detail. This is the extraction-layer twin of
+    // authoring-shape honesty, on the anchored surface.
     this.failEnvelope(line, this.contractMessage(name), name);
   }
 

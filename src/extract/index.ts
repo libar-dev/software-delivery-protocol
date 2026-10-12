@@ -32,7 +32,7 @@ export interface ExtractOptions {
   /**
    * The extraction root: every `*.sdp.ts`, `*.sdp.md`, and `*.sdp.gherkin` below it (minus tooling
    * output) is read as the declared layer, and every other `*.ts`/`*.tsx` source file is swept for
-   * anchor constants (the anchored layer).
+   * anchors in either form (the anchored layer).
    */
   readonly root: string;
   /** Root-relative POSIX path prefixes excluded from both discovery surfaces. */
@@ -173,7 +173,7 @@ function fileParses(program: Program, source: ParsedSourceFile, findings: Findin
 /**
  * The extractor — the producer, the only component that reads source
  * (`spec:extraction.derive-graph`): the declared
- * layer (spec files, pack manifests) plus the anchored layer (anchor constants in source files).
+ * layer (spec files, pack manifests) plus the anchored layer (anchors in source files).
  * Files are reified standalone by pure AST reading (no type checker, no tsconfig dependence, no
  * import following — static reification without execution, MD-14); a file that does not parse is
  * excluded whole, loudly (`fileParses`). Then the one graph is derived, delivery facts included.

@@ -9,7 +9,7 @@ const SPEC_FILE_SUFFIXES = [".sdp.ts", ".sdp.md", ".sdp.gherkin"] as const;
 
 /**
  * Anchor-candidate source files: the anchored layer lives in real product code (`04` §2), so any
- * TypeScript source under the root may carry an anchor constant. Spec files are the declared
+ * TypeScript source under the root may carry an anchor in either form. Spec files are the declared
  * surface (never an anchor home), and declaration files are not source.
  */
 const SOURCE_FILE_SUFFIXES = [".ts", ".tsx"] as const;
@@ -54,7 +54,7 @@ export function normalizeExcludes(exclude: readonly string[] | undefined): reado
       path.startsWith("/") ||
       WINDOWS_DRIVE_LETTER_ABSOLUTE_PATH.test(path) ||
       path.includes("\\") ||
-      path.split("/").some((segment) => segment === "" || segment === "..")
+      path.split("/").some((segment) => segment === "" || segment === "." || segment === "..")
     ) {
       throw new InvalidExcludePathError(path);
     }

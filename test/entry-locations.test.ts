@@ -114,6 +114,91 @@ describe("entry locations", () => {
     ]);
   });
 
+  it("locates Markdown question fields, rules, flows and declared relation targets", () => {
+    const source = `---
+id: spec:fixture.locations
+kind: behavior
+altitude: story
+readiness: idea
+relations:
+  dependsOn:
+    - spec:fixture.first
+    - target: spec:fixture.second
+      reason: Uses its output.
+---
+# Entry locations
+
+## Intent
+- outcome: Locate authored entries.
+
+### Open questions
+- [blocking #choice] Which choice?
+  - decider: owner
+  - links: spec:fixture.first
+  - provisional: Keep the existing choice.
+  - trigger: A reader needs another choice.
+
+## Behavior
+- rule: [#locatedRule] The rule is located.
+- flow: The flow is located.
+`;
+    const result = reifyMarkdownCarrier(source, "subject.sdp.md");
+    expect(result.findings).toEqual([]);
+    expect(deriveGraph(result.specs, [], []).locations).toEqual([
+      { spec: "spec:fixture.locations", file: "subject.sdp.md", entry: "flow[0]", line: 26 },
+      {
+        spec: "spec:fixture.locations",
+        file: "subject.sdp.md",
+        entry: "question[0]",
+        key: "choice",
+        line: 18,
+      },
+      {
+        spec: "spec:fixture.locations",
+        file: "subject.sdp.md",
+        entry: "question[0].decider",
+        line: 19,
+      },
+      {
+        spec: "spec:fixture.locations",
+        file: "subject.sdp.md",
+        entry: "question[0].links",
+        line: 20,
+      },
+      {
+        spec: "spec:fixture.locations",
+        file: "subject.sdp.md",
+        entry: "question[0].provisional",
+        line: 21,
+      },
+      {
+        spec: "spec:fixture.locations",
+        file: "subject.sdp.md",
+        entry: "question[0].trigger",
+        line: 22,
+      },
+      {
+        spec: "spec:fixture.locations",
+        file: "subject.sdp.md",
+        entry: "relation.dependsOn.spec:fixture.first",
+        line: 8,
+      },
+      {
+        spec: "spec:fixture.locations",
+        file: "subject.sdp.md",
+        entry: "relation.dependsOn.spec:fixture.second",
+        line: 9,
+      },
+      {
+        spec: "spec:fixture.locations",
+        file: "subject.sdp.md",
+        entry: "rule[0]",
+        key: "locatedRule",
+        line: 25,
+      },
+    ]);
+  });
+
   it("records TypeScript property lines through transparent wrappers", () => {
     const { graph, report } = extract({ root: corpus("subject.sdp.ts", typeScript) });
     expect(report.findings).toEqual([]);

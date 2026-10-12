@@ -372,13 +372,27 @@ function tagHead(tagName: string): string {
 }
 
 function authoredFactReason(name: string): string | undefined {
-  if (name === "@implemented" || name === "@has-verifier" || name === "@observed") {
-    return "delivery-fact lookalike";
+  const head =
+    /^@(implemented|has-verifier|hasVerifier|observed|claim|status|lifecycle|workflow|architect)(?=$|[.-])/iu
+      .exec(name)?.[1]
+      ?.toLowerCase();
+  switch (head) {
+    case "implemented":
+    case "has-verifier":
+    case "hasverifier":
+    case "observed":
+      return "delivery-fact lookalike";
+    case "claim":
+      return "authored claim lookalike";
+    case "status":
+    case "lifecycle":
+    case "workflow":
+      return "authored lifecycle-status lookalike";
+    case "architect":
+      return "retired architect-status lookalike";
+    default:
+      return undefined;
   }
-  if (name.startsWith("@claim")) return "authored claim lookalike";
-  if (name.startsWith("@status-")) return "authored lifecycle-status lookalike";
-  if (name.startsWith("@architect-")) return "retired architect-status lookalike";
-  return undefined;
 }
 
 function decorationTagFinding(tag: Tag, file: string): Finding | undefined {
