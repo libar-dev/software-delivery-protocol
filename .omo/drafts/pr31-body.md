@@ -1,4 +1,4 @@
-This PR carries [plan 43](https://github.com/libar-dev/software-delivery-protocol/blob/0fe675adb87edd466d4284f43c6d53861f6013d5/plans/43-design-iteration-on-a-readable-graph.md): one arc that lets a design be iterated pass after pass on a graph an agent reads in one call. It answers a usability trial of the agent surface, adds the authoring grammar iteration needs, builds the iteration loop on that grammar, and takes two structural lessons from gen 1. The design pass, the build and the acceptance all landed on this branch. The arc's intent is [`pack:design-iteration-v1`](https://github.com/libar-dev/software-delivery-protocol/blob/0fe675adb87edd466d4284f43c6d53861f6013d5/specs/design-iteration.pack.sdp.md).
+This PR carries [plan 43](https://github.com/libar-dev/software-delivery-protocol/blob/0fe675adb87edd466d4284f43c6d53861f6013d5/plans/43-design-iteration-on-a-readable-graph.md): one arc that lets a design be iterated pass after pass on a graph an agent reads in one call. It answers a usability trial of the agent surface, adds the authoring grammar iteration needs, builds the iteration loop on that grammar, and takes two structural lessons from gen 1. The design pass, the build and the acceptance all landed on this branch, and so did a prototype that renders the graph as an Obsidian vault, captured at `idea` (see [Upcoming](#upcoming)). The arc's intent is [`pack:design-iteration-v1`](https://github.com/libar-dev/software-delivery-protocol/blob/0fe675adb87edd466d4284f43c6d53861f6013d5/specs/design-iteration.pack.sdp.md).
 
 **Read this first.** The owner delegated the design pass's rulings and the `ready` statements to the main thread while away, with Fable 5.1 advising. They are the second table under [Decisions and rulings](#decisions-and-rulings), and each is a candidate for the owner to overturn before merge.
 
@@ -165,11 +165,11 @@ The bundle returns the whole Pack in 78,130 code units, about 19,500 tokens, wit
 
 ## Measured at close
 
-Re-measured at `703f09c`; re-run the recipes rather than inheriting these.
+Re-measured at `1b014d0`; re-run the recipes rather than inheriting these.
 
 - `npm run check` exits 0: 1,760 pooled tests in 81 files and 93 CLI tests. At `51a3225` it also passed in a depth-1 clone like CI's.
-- Validate reports 253 Specs, 4 Packs, 287 anchors, 544 nodes and 1,283 edges, with 0 errors and 4 warnings: the spec-sections gap the owner keeps, and three prose mentions.
-- Recipes 1 and 2 are empty. Recipe 20 counts four deferrals and one hold; recipe 33 lists 19 designed, unbuilt Specs.
+- Validate reports 258 Specs, 5 Packs, 287 anchors, 550 nodes and 1,304 edges, with 0 errors and 4 warnings: the spec-sections gap the owner keeps, and three prose mentions.
+- Recipes 1 and 2 are empty. Recipe 20 counts four deferrals and eight holds, seven of them the vault captures' questions for the owner; recipe 33 lists 19 designed, unbuilt Specs.
 
 **Acceptance.** The trial re-run on gpt-6.1-sol answered 13 of 13, read recipe 31's fields as the relation, and found the rule line it was asked for. It missed two criteria: it took 23 calls against the first trial's 20, eight of them on the open task, and its own batched call overflowed once. Evidence: [the re-run](https://github.com/libar-dev/software-delivery-protocol/tree/0fe675adb87edd466d4284f43c6d53861f6013d5/.omo/evidence/agent-surface-trial-2). The first trial keeps the two relay reports verbatim, and the Opus 5.5 report and the gen 1 review as summaries in its synthesis. In [the adopter's read-only pass](https://github.com/libar-dev/software-delivery-protocol/blob/0fe675adb87edd466d4284f43c6d53861f6013d5/.omo/evidence/plan-43-adopter-pass.md), the design diff of `pack:history-view` came back in one call. The curation report found an uncovered file 44 others import, and two cross-context imports no `uses` states. That whole Pack needs about 300,000 code units for one bundle.
 
@@ -202,8 +202,13 @@ CodeRabbit then posted four minor findings on `759b911`, all valid and fixed in 
 | The tests lens's data | Example-space coverage and run evidence, both `defined` and already joined to plan 42 | The adopter's fifth reader task asks for run evidence; its records need a CTRF mapping first |
 | Plan 43's open questions | The four under "Feedback wanted", once ruled, and the memo recipe the Studio's copy action would share | Each is small, and the adopter's bundle needs the first |
 | Rule keys at home | Key the Protocol rules that reviews and examples cite, and name them in `exercises` | Recipe 34 and the Studio's rule anchors get real data |
+| Obsidian vault | The vault captures' rulings, then the vault as a projection, standing alone or as the Studio's local half | It is the designer's view for iterating on a Pack, and the prototype already runs |
 
 Re-entry: PR 31 merged and the owner's statements on the Studio's phase 0 Specs after plan 42's design pass.
+
+**Captured on this branch: the graph as an Obsidian vault.** A prototype generated an Obsidian vault from the reader's values alone: a note per Spec, Pack, code unit and Model term, relations and checked mentions as wikilinks, entry addresses as block links, and a Base per Pack. Every link resolved, and a Pack's members read as one sortable, filterable table, the view a person needs while iterating on a design. [`pack:obsidian-vault-v1`](https://github.com/libar-dev/software-delivery-protocol/blob/1b014d0132dbb1ec69414b5a2c5731686ef83539/specs/obsidian-vault.pack.sdp.md) holds five `idea` Specs whose blocking questions are the owner's: whether the vault stands alone or is the Studio's local half, note names and properties, the standing views, where a person composes intent, and what regenerates the vault during a pass. The generator and its findings: [`explorations/obsidian-vault/`](https://github.com/libar-dev/software-delivery-protocol/tree/1b014d0132dbb1ec69414b5a2c5731686ef83539/explorations/obsidian-vault).
+
+![The design-iteration Pack's members as an Obsidian Base](https://raw.githubusercontent.com/libar-dev/software-delivery-protocol/1b014d0132dbb1ec69414b5a2c5731686ef83539/explorations/obsidian-vault/pack-base-in-obsidian.png)
 
 **3. Then: corpus rules and architecture constraints.** `spec:validation.corpus-rules` and `spec:validation.architecture-constraints` are both `defined`, with their questions ruled in PR #30: `sdp validate --rules PATH`, findings in a labelled corpus section, and forbidden layer pairs as data walked by a recipe over recipe 32. The realization comparison from `spec:model.planned-architecture` fits the same arc. Acceptance: the adopter's check script loses its graph half, about 145 of 363 lines, on the Application Platform redesign.
 
