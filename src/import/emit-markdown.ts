@@ -1,7 +1,7 @@
 import type { ReifiedSpec } from "../extract/reify.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
-import { importData, importText, importTexts, targetsForRelationType } from "./data-access.js";
+import { importData, importText, importTexts } from "./data-access.js";
 import type { ImportData } from "./data-access.js";
 import { assertMarkdownEmissionFidelity } from "./markdown-fidelity.js";
 import { MarkdownEmissionError } from "./markdown-fidelity.js";
@@ -69,6 +69,15 @@ function intentSection(
           ? []
           : [
               `- [${blocking === true ? "blocking" : "non-blocking"}${key === undefined ? "" : ` #${key}`}] ${value}`,
+              ...["decider", "links", "provisional", "trigger"].flatMap((name) => {
+                const content =
+                  name === "links"
+                    ? entry?.links === undefined
+                      ? undefined
+                      : importTexts(entry.links).join(", ")
+                    : importText(entry?.[name]);
+                return content === undefined ? [] : [`  - ${name}: ${content}`];
+              }),
             ];
       })
     : [];
@@ -82,8 +91,16 @@ function intentSection(
 }
 
 function behaviorSection(data: ImportData, behavior: ImportData): string | undefined {
-  const rules = importTexts(behavior.rules);
-  const flows = importTexts(behavior.flows);
+  const ruleKeys = importData(behavior.ruleKeys);
+  const keyedText = (field: string, values: readonly string[]): string[] =>
+    values.map((value, index) => {
+      const key = Object.entries(ruleKeys ?? {}).find(
+        ([, path]) => path === `${field}[${String(index)}]`,
+      )?.[0];
+      return key === undefined ? value : `[#${key}] ${value}`;
+    });
+  const rules = keyedText("rules", importTexts(behavior.rules));
+  const flows = keyedText("flows", importTexts(behavior.flows));
   const kind = importText(data.kind);
   const ownsExampleSpace = fence("gwt-vocabulary", behavior.exampleSpace) !== undefined;
   if (kind === "behavior" && ownsExampleSpace && rules.length === 0 && flows.length === 0)
@@ -237,7 +254,21 @@ export function emitMarkdownSpec(reified: ReifiedSpec, options: EmitMarkdownOpti
     relationKeys.add(key);
   }
   const relationLines = relationTypes.flatMap((type) => {
-    const targets = targetsForRelationType(data.relations, type);
+    const targets = (Array.isArray(data.relations) ? data.relations : []).flatMap(
+      (relation: unknown) => {
+        const entry = importData(relation);
+        if (entry?.type !== type || typeof entry.target !== "string") return [];
+        return [
+          entry.reason === undefined && entry.exercises === undefined
+            ? entry.target
+            : JSON.stringify({
+                target: entry.target,
+                ...(entry.reason === undefined ? {} : { reason: entry.reason }),
+                ...(entry.exercises === undefined ? {} : { exercises: entry.exercises }),
+              }),
+        ];
+      },
+    );
     if (targets.length === 0) return [];
     const target = targets[0];
     return targets.length === 1 && target !== undefined

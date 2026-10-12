@@ -61,6 +61,8 @@ export interface PackSummary {
 
 /** One decoded relation end: the edge, its `claim`, and the other endpoint's display data. */
 export interface RelationEnd {
+  readonly reason?: string;
+  readonly exercises?: readonly string[];
   readonly type: GraphEdgeType;
   readonly claim: GraphClaim;
   readonly otherId: string;
@@ -169,6 +171,10 @@ export interface SpecContext extends SpecSummary {
 
 /** One open question of a Pack member, with its position, flag, key and recorded line. */
 export interface PackMemberQuestion {
+  readonly decider?: string;
+  readonly links?: readonly string[];
+  readonly provisional?: string;
+  readonly trigger?: string;
   /** The question's position among the Spec's authored open questions, from 0. */
   readonly index: number;
   readonly question: string;
@@ -448,6 +454,8 @@ function relationEnd(index: GraphIndex, edge: GraphEdge, otherId: string): Relat
   return {
     type: edge.type,
     claim: edge.claim,
+    ...(edge.reason === undefined ? {} : { reason: edge.reason }),
+    ...(edge.exercises === undefined ? {} : { exercises: edge.exercises }),
     otherId,
     resolved: other !== undefined,
     ...(other === undefined ? {} : { otherNodeType: other.nodeType }),
@@ -568,6 +576,10 @@ function specDesignColumns(
       question,
       blocking: record?.blocking === true,
       ...(typeof key === "string" ? { key } : {}),
+      ...(typeof record?.decider === "string" ? { decider: record.decider } : {}),
+      ...(Array.isArray(record?.links) ? { links: record.links as string[] } : {}),
+      ...(typeof record?.provisional === "string" ? { provisional: record.provisional } : {}),
+      ...(typeof record?.trigger === "string" ? { trigger: record.trigger } : {}),
       ...(line === undefined ? {} : { line }),
     });
   });

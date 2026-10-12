@@ -11,10 +11,9 @@ const ENTRY_ADDRESS_NAMESPACE = "spec";
 const ENTRY_ADDRESS_KEY_PATTERN = /^[a-z][A-Za-z0-9]*$/u;
 
 /**
- * The sections an entry address may name: a keyed entry of `design` or `ui`, or a keyed open
- * question (`spec:model.open-question-keys`).
+ * The sections an entry address may name: `design`, `ui`, `question`, or `rule`.
  */
-export const ENTRY_ADDRESS_SECTIONS = ["design", "ui", "question"] as const;
+export const ENTRY_ADDRESS_SECTIONS = ["design", "ui", "question", "rule"] as const;
 export type EntryAddressSection = (typeof ENTRY_ADDRESS_SECTIONS)[number];
 
 function isEntryAddressSection(value: string | undefined): value is EntryAddressSection {
@@ -70,7 +69,7 @@ function validatePath(value: string, path: string): void {
 
 /**
  * The `#` sub-part is an entry address, `spec:<path>#<section>.<key>`, naming one keyed entry of a
- * Spec's `design` or `ui` section or one keyed open question. It is reserved in every namespace
+ * Spec's Design or UI section, open questions, or primary behavior owner. It is reserved in every namespace
  * and never part of an identity: the parser admits it so prose can carry it, and every id slot
  * refuses it. The refusal rows run in order and the first match wins.
  */
@@ -87,7 +86,10 @@ function validateEntryAddress(value: string, namespace: string, subpath: string)
   const section = dotIndex === -1 ? undefined : subpath.slice(0, dotIndex);
 
   if (!isEntryAddressSection(section)) {
-    failId(value, "entry address must be <section>.<key> with section design, ui, or question");
+    failId(
+      value,
+      "entry address must be <section>.<key> with section design, ui, question, or rule",
+    );
   }
 
   if (!ENTRY_ADDRESS_KEY_PATTERN.test(subpath.slice(dotIndex + 1))) {
