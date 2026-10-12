@@ -86,17 +86,27 @@ git worktree remove --force .sdp-base
 
 The bundle returns the whole Pack in about 77,000 code units, roughly 19,000 tokens, with nothing cut. The diff reports all 11 members changed, part by part, and 10 binding rows.
 
-At close: `npm run check` exits 0 with 1,750 pooled tests in 81 files and 93 CLI tests. Validate reports 253 Specs, 287 anchors, 0 errors and 4 warnings (the spec-sections gap the owner keeps, three prose mentions). Recipes 1 and 2 are empty.
+At `be35578`: `npm run check` exits 0 with 1,757 pooled tests in 81 files and 93 CLI tests; at `51a3225` it also passed in a depth-1 clone like CI's. Validate reports 253 Specs, 287 anchors, 0 errors and 4 warnings (the spec-sections gap the owner keeps, three prose mentions). Recipes 1 and 2 are empty.
 
 **Acceptance.** The trial re-run on gpt-6.1-sol answered 13 of 13, read recipe 31's fields as the relation, and found the rule line it was asked for. It took 23 calls against the first trial's 20, eight of them on the open task, and its own batched call overflowed once. Evidence: [`agent-surface-trial-2/`](https://github.com/libar-dev/software-delivery-protocol/tree/feature/design-iteration-v0/.omo/evidence/agent-surface-trial-2). The adopter's read-only pass is in [`plan-43-adopter-pass.md`](https://github.com/libar-dev/software-delivery-protocol/blob/feature/design-iteration-v0/.omo/evidence/plan-43-adopter-pass.md). The design diff of `pack:history-view` came back in one call. The curation report found an uncovered file 44 others import, and two cross-context imports no `uses` states. The whole Pack needs about 300,000 code units for one bundle.
 
-**Review.** gpt-6-astra (xhigh) found no blocker, four majors and five minors, all fixed with regression tests; the plan's "Review" section has the table.
+**Review.** gpt-6-astra (xhigh) found no blocker, four majors and five minors before the push, all fixed with regression tests. After the push, a second gpt-6-astra review and Greptile found two P1 and five P2 defects, all fixed in `51a3225` and `be35578`, each with a regression test:
+
+- A non-literal value nested in a question field, such as a `ref()` link, dropped blocking questions with only a warning, so a Spec could read `ready` falsely. It is now an error.
+- The base-worktree test needed history CI's shallow checkout lacks, and the documented cleanup refused the linked `node_modules`. This failed CI at `bac264d`.
+- `--params` read `=@` inside inline JSON or an `@PATH` as a key binding.
+- Against a base engine that kept no order between rules and flows, the design diff and the proposal check invented moves. They now compare order within each list and say so. A read-only gpt-6-astra check of the first fix found that its position counter still ran across both lists; `be35578` fixes that and two test and wording gaps.
+- The imports adapter missed `import("./b.js")` and `import("./b.js").B`.
+- The bundle's fifth cut reduced a pinned declaration whose key contains a dot.
+
+Plan 43's "Review" section has both tables.
 
 ## Feedback wanted
 
 - **The delegated rulings above.** Which would you rule differently?
 - **The bundle in a declaration-heavy Pack.** The adopter's `pack:history-view` protects 190 pinned declarations, about 300k code units after every cut. Should a caller be able to reduce pinned declarations to their addresses, which the protected list refuses today?
 - **Curation exclusions.** The imports adapter takes no exclusion, so generated files rank as load-bearing. Add an `exclude` list to its configuration?
+- **Dropped question lists.** A non-literal `blocking` flag or question text in a TypeScript question still drops the whole list with a warning, under the section tier's lossy rule, so a blocking question can vanish without an error. Should any dropped question list be an error, as a dropped question field now is?
 
 ## Upcoming
 

@@ -108,8 +108,11 @@ record, and `npm run check` exits 0.
 
 Not done, for the owner:
 
-- **Push.** The permission classifier refused `git push`, so the branch's commits after `258df34`
-  are local only. PR 31's description is drafted in `.omo/drafts/pr31-body.md`; apply it with
-  `gh pr edit 31 --body-file .omo/drafts/pr31-body.md` after pushing.
 - **Review the delegated rulings** (plan 43, "The design pass, as run") before merging.
-- The three questions in plan 43's "What comes next".
+- The four questions in plan 43's "What comes next".
+
+The owner pushed and applied `.omo/drafts/pr31-body.md` to PR 31. A second review (gpt-6-astra
+for the owner, and Greptile) found seven defects at `bac264d`, CI failing on one; all seven were
+fixed in `51a3225`, with three gaps from a check of that fix closed in `be35578`, and recorded in
+plan 43's "Second review". The PR description's source stays
+`.omo/drafts/pr31-body.md`; keep Greptile's appended block when re-applying it.

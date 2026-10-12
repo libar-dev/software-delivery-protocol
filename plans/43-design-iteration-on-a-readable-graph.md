@@ -194,11 +194,38 @@ Astra found the frozen projections byte-identical for the base corpus under the 
 engines, the Markdown and TypeScript carriers equal for every new form, and the bundle's budget
 held exactly across budgets from 0 to 100,000.
 
+### Second review
+
+After the push, gpt-6-astra reviewed `0353f10..bac264d` for the owner and Greptile reviewed the
+PR; CI failed at `bac264d`. Seven findings, two P1 and five P2, two of them found by both
+reviewers. Opus 5.5 fixed all seven in `51a3225`, each reproduced as a failing test first.
+
+| # | Finding | Fold |
+| --- | --- | --- |
+| 1 | A non-literal value nested in a question field, such as a `ref()` link, dropped the question list with a warning, so a blocking question could vanish and the floor rise (P1). | A failure anywhere under the four fields is an error. |
+| 2 | The base-worktree test needed `HEAD~1`, absent from CI's depth-1 checkout, and its cleanup masked the cause (P1). | The test reads `HEAD` and removes only a worktree that exists. |
+| 3 | The documented cleanup refused the linked `node_modules`, which `node_modules/` does not ignore; a local exclude hid it (P2). | `git worktree remove --force`; the gate also passes in a depth-1 clone. |
+| 4 | `--params` read `=@` inside inline JSON or an `@PATH` as a key binding (P2, both reviewers). | Inline JSON and `@PATH` are recognized first. |
+| 5 | Against a base from before rule keys, recipes 35 and 38 invented moves across rules and flows, an order that engine never kept (P2). | Keyed entries compare by order within each list, with a `ruleOrder` diagnostic; an otherwise unmoved whole-Spec scope reads incomparable. |
+| 6 | The imports adapter missed `import("./b.js")` and `import("./b.js").B` (P2). | Literal import calls and import types resolve through the checker. |
+| 7 | The bundle's fifth cut reduced a pinned declaration whose key contains a dot (P2, both reviewers). | Design and UI entries are read by their own key. |
+
+gpt-6-astra then checked `51a3225`, read-only. Six fixes held. Three gaps remained, fixed in
+`be35578` with tests shown to fail without the fix: the within-list position ran across both lists,
+so adding a keyed rule moved every flow; recipe 38 left out the `ruleOrder` diagnostic; and the
+import-type test passed without its branch, because a barrel already reached the file.
+
+The proposal Spec's `checkRecipe` and `checkRows` now name the `diagnostics` and incomparable
+items the first review's fix added. Left for a ruling: a non-literal `blocking` flag or question
+text still drops a TypeScript question list with a warning, under the section tier's lossy rule.
+
 ## Acceptance, as measured at close
 
-Measured at the merge of the review fixes; re-run the recipes rather than inheriting these.
+Measured at the merge of the review fixes, and the gate again at `be35578`; re-run the recipes
+rather than inheriting these.
 
-- **The gate.** `npm run check` exits 0: 1,750 pooled tests in 81 files and 93 CLI tests.
+- **The gate.** `npm run check` exits 0: 1,757 pooled tests in 81 files and 93 CLI tests. At
+  `51a3225` it also passed in a depth-1 clone like CI's, and CI passed.
 - **The graph.** 253 Specs, 4 Packs, 287 anchors, 544 nodes, 1,283 edges; validate reports 0
   errors and 4 warnings (the spec-sections gap the owner keeps, three prose mentions). Recipes 1
   and 2 are empty. Ten of the Pack's eleven members carry `implemented` and `has-verifier`; the
@@ -219,10 +246,11 @@ Measured at the merge of the review fixes; re-run the recipes rather than inheri
 
 - **The owner's review of the delegated rulings**, listed in "The design pass, as run"; then the
   merge of PR 31 with a merge commit.
-- **Three questions this arc raised**, each for a later ruling: whether a caller may reduce pinned
+- **Four questions this arc raised**, each for a later ruling: whether a caller may reduce pinned
   declarations to their addresses in a bundle; an `exclude` list in the imports adapter's
-  configuration, since generated files rank as load-bearing; and the trial's on-ramp and
-  impact-answer friction (one task-to-recipe sheet, impacted Pack ids in recipe 4's summary).
+  configuration, since generated files rank as load-bearing; the trial's on-ramp and
+  impact-answer friction (one task-to-recipe sheet, impacted Pack ids in recipe 4's summary); and
+  whether any dropped question list is an error, as a dropped question field now is.
 - **The adopter** re-pins once, moves its register's deciders, sources and leans onto question
   fields, and adds the two associations plan 42's acceptance needs.
 - **Plan 42**, then the arc led by corpus rules and architecture constraints.
