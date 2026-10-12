@@ -2,7 +2,7 @@
 id: spec:consumers.context-bundle
 kind: behavior
 altitude: feature
-readiness: scoped
+readiness: defined
 relations:
   refines: spec:consumers.agent-surface
   dependsOn: spec:consumers.agent-surface.design-recipes
@@ -20,16 +20,16 @@ Plan 35 deferred the bundle until evidence showed agent sessions still hand-asse
 - outcome: Give an agent the reading material for one design pass in one composed, token-budgeted slice of the graph, so no session hand-assembles it.
 
 ### Open questions
-- [blocking #budgetFloor] What does a bundle return when the content it never cuts (member ids, stated and next rungs, blocking questions, pinned declarations, entry addresses) alone exceeds the budget: a refusal, the protected content over budget with the overrun stated, or something else?
 - [non-blocking #bundleScopes] Which scopes does a bundle take beyond a Pack: a Spec with its neighborhood, the Specs a changeset touches, the open questions of a Pack?
 - [non-blocking #perspectiveFilter] Does a bundle take a review perspective as a filter, so one call yields the brief for one lens?
 
 ## Behavior
 - rule: A bundle is a catalog recipe that takes its scope and its budget as recipe parameters; it adds no entrance and no query verb.
-- rule: A bundle is composed from the graph on each invocation by the reader every recipe uses; nothing is precomputed, saved or committed, and two invocations at one commit with one scope and one budget compose the same bundle.
+- rule: A bundle is composed from the graph on each invocation by the reader every recipe uses; nothing is precomputed, saved or committed, and two invocations over the same graph with the same parameters compose the same bundle.
 - rule: A bundle for a Pack carries the Pack design assembly, its members in authored order with their design columns and its boundary, then each member's open questions with their addresses and lines, its dependency footing, its pinned declarations and its examples.
-- rule: A budget counts the characters of the bundle's output, and the bundle reports a token estimate labelled as an estimate, so no model's tokenizer binds the Protocol.
+- rule: The budget is a hard limit on a successful bundle, counted in UTF-16 code units, the `length` a recipe body reads, of the compact `JSON.stringify` of the value the recipe returns, its scope, budget and left-out statement included; `sdp q --json` prints a longer indented form, and the budget never measures printed text. The bundle also reports a token estimate labelled as an estimate, so no model's tokenizer binds the Protocol.
 - rule: When the scope exceeds the budget, the bundle cuts in a fixed order: boundary rows down to their ids first, then member narrative, then example step text, then non-blocking questions. It never cuts member ids, stated and next rungs, blocking questions, pinned declarations or entry addresses.
+- rule: When the protected content alone exceeds the budget after every permitted cut, the recipe returns a budget-exceeded result as data and no partial bundle: the requested scope, the budget, and the minimum count the protected content needs in the same unit; `sdp q` exits 0, because the result is the body's return and not a refusal.
 - rule: A bundle gives the file and line of an entry or a binding in place of a source excerpt, because the reader never reads source.
 - rule: A bundle states its scope, its budget and what it left out to stay within the budget, so a reader knows what to read in the Specs themselves.
 - rule: A bundle carries facts from the graph and no instructions of its own; the brief that tells an agent what to look for stays the corpus's own text.

@@ -17,7 +17,10 @@ The owner ruled the Studio's re-entry on 2026-10-12, on the PR 30 ruling sheet:
 - **The measure.** The adopter's five reader tasks, completed from the Studio page set and the
   files it links to, as in the adopter's own trial: find the
   history contract, locate OD-157, explain the aggregate dependency, find one declaration's type
-  comparison, and say whether a paused-rebuild example has native-backend evidence.
+  comparison, and say whether a paused-rebuild example has native-backend evidence. Phase 0
+  reads no run evidence, so the last task passes when the reader finds that the example requires
+  the native backend tier and has a bound verifier, and reports that no run result is supplied.
+  `spec:consumers.spec-studio` states the same tasks and the same access boundary.
 - **The home.** The read-only Studio ships in `@libar-dev/software-delivery-protocol`; hosted
   collaboration may later live under `@libar-ai/`.
 - **Its place.** It stands beside the Markdown Design Review, which stays frozen and stays the

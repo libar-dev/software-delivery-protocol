@@ -1485,7 +1485,7 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "The Studio serves a person working in the repository who designs a capability ahead of its code and iterates on it in passes, and a reviewer of a pull request who holds only a link. The Markdown Design Review serves neither well: its pages have no search, no filters and no navigation beyond links, and its readers in the first adopter open the carrier files instead.",
-          "The Studio's first build is accepted when a reader completes, from the Studio alone, the five reader tasks the first adopter set over its history-view Pack (`libar-platform/docs/feedback/sdp-feedback-01.md`): find the history contract, locate one keyed decision question, explain the aggregate dependency, find one declaration's type comparison, and say whether a paused-rebuild example has native-backend evidence.",
+          "The Studio's first build is accepted when a reader completes, from the Studio's page set and the files it links to, the five reader tasks the first adopter set over its history-view Pack (`libar-platform/docs/feedback/sdp-feedback-01.md`): find the history contract, locate OD-157, explain the aggregate dependency, find one declaration's type comparison, and say whether a paused-rebuild example has native-backend evidence. The first build reads no run evidence, so the last task passes when the reader finds that the example requires the native backend tier and has a bound verifier, and reports that no run result is supplied.",
           "The read-only Studio ships in the open-source package `@libar-dev/software-delivery-protocol`, beside the four shipped projections; hosted review, shared comments and hosted previews may later ship under `@libar-ai/`.",
           "The Studio is a projection of the one graph: its page set under `generated/spec-studio/` is regenerated from the graph, states no truth, and confers nothing back into the graph.",
           "The Studio is a mostly static single-page application, buildable as an `index.html` page and its assets, and it needs no server.",
@@ -1953,7 +1953,7 @@ export const consumersSpecs = [
     id: "spec:consumers.review-perspectives",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "scoped",
+    readiness: "defined",
     file: "specs/consumers/review-perspectives.sdp.md",
     title: "A Pack is read from a named perspective",
     narrative:
@@ -1966,14 +1966,6 @@ export const consumersSpecs = [
           "Every reading of a Pack shows every member in the same order with the same emphasis, so a reader with one concern sorts it by hand, and an adopter keeps its perspectives as prose briefs the graph cannot apply.",
         outcome:
           "Let a reviewer read the same Pack from one perspective at a time, filtered and ordered for that perspective, without a new kind or a stage.",
-        openQuestions: [
-          {
-            question:
-              "What may a perspective select on: kind, section, Design key, question key, relation type, component layer or context, or a Spec family? The filter recipe cannot be built until its selectors are settled.",
-            blocking: true,
-            key: "perspectiveSelectors",
-          },
-        ],
       },
       behavior: {
         rules: [
@@ -1981,6 +1973,10 @@ export const consumersSpecs = [
           "A perspective adds no kind, readiness, stage or sequence; reading a Pack from one perspective records nothing, and no perspective is required before another or before `ready` is stated.",
           "The corpus owns its perspectives and their questions; the Protocol supplies the filter and ships no list of perspectives.",
           "A perspective is corpus data: a JSON object the corpus keeps beside its briefs and passes to the perspective filter, a catalog recipe, through `--params`. The reader loads no perspective file, and no validator lists or checks perspectives, so no registry forms.",
+          "A perspective selects members by Spec id or id prefix, kind, section presence, Design key with an optional value, question key, and authored relation type with a stated direction; it selects component layer or context only through the member's code unit bindings, satisfying or referencing, that the perspective names; it infers nothing from prose, paths or imports.",
+          "A member selected by a Design key, including the `layer` and `context` keys a component design states, is selected on declared intent; a member selected through a binding's component is selected on anchored structure; each row names which, and the two are never merged into one architecture answer.",
+          "Values within one selector are alternatives and different selectors combine as requirements; an unsupported selector is a diagnostic in the result, and a valid selector that matches nothing is an explicit empty result.",
+          "Members keep the manifest's authored order unless the perspective gives an explicit priority order, authored order breaking ties; every selected member's blocking questions stay visible whatever else the perspective filters out.",
         ],
       },
     },
@@ -1990,7 +1986,7 @@ export const consumersSpecs = [
     id: "spec:consumers.context-bundle",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "scoped",
+    readiness: "defined",
     file: "specs/consumers/context-bundle.sdp.md",
     title: "A context bundle is composed per invocation within a token budget",
     narrative:
@@ -2004,12 +2000,6 @@ export const consumersSpecs = [
         outcome:
           "Give an agent the reading material for one design pass in one composed, token-budgeted slice of the graph, so no session hand-assembles it.",
         openQuestions: [
-          {
-            question:
-              "What does a bundle return when the content it never cuts (member ids, stated and next rungs, blocking questions, pinned declarations, entry addresses) alone exceeds the budget: a refusal, the protected content over budget with the overrun stated, or something else?",
-            blocking: true,
-            key: "budgetFloor",
-          },
           {
             question:
               "Which scopes does a bundle take beyond a Pack: a Spec with its neighborhood, the Specs a changeset touches, the open questions of a Pack?",
@@ -2027,10 +2017,11 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "A bundle is a catalog recipe that takes its scope and its budget as recipe parameters; it adds no entrance and no query verb.",
-          "A bundle is composed from the graph on each invocation by the reader every recipe uses; nothing is precomputed, saved or committed, and two invocations at one commit with one scope and one budget compose the same bundle.",
+          "A bundle is composed from the graph on each invocation by the reader every recipe uses; nothing is precomputed, saved or committed, and two invocations over the same graph with the same parameters compose the same bundle.",
           "A bundle for a Pack carries the Pack design assembly, its members in authored order with their design columns and its boundary, then each member's open questions with their addresses and lines, its dependency footing, its pinned declarations and its examples.",
-          "A budget counts the characters of the bundle's output, and the bundle reports a token estimate labelled as an estimate, so no model's tokenizer binds the Protocol.",
+          "The budget is a hard limit on a successful bundle, counted in UTF-16 code units, the `length` a recipe body reads, of the compact `JSON.stringify` of the value the recipe returns, its scope, budget and left-out statement included; `sdp q --json` prints a longer indented form, and the budget never measures printed text. The bundle also reports a token estimate labelled as an estimate, so no model's tokenizer binds the Protocol.",
           "When the scope exceeds the budget, the bundle cuts in a fixed order: boundary rows down to their ids first, then member narrative, then example step text, then non-blocking questions. It never cuts member ids, stated and next rungs, blocking questions, pinned declarations or entry addresses.",
+          "When the protected content alone exceeds the budget after every permitted cut, the recipe returns a budget-exceeded result as data and no partial bundle: the requested scope, the budget, and the minimum count the protected content needs in the same unit; `sdp q` exits 0, because the result is the body's return and not a refusal.",
           "A bundle gives the file and line of an entry or a binding in place of a source excerpt, because the reader never reads source.",
           "A bundle states its scope, its budget and what it left out to stay within the budget, so a reader knows what to read in the Specs themselves.",
           "A bundle carries facts from the graph and no instructions of its own; the brief that tells an agent what to look for stays the corpus's own text.",

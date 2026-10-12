@@ -54,9 +54,9 @@ export const observationSpecs = [
       behavior: {
         rules: [
           "Run records are an input a view reads beside the graph, named by the caller; the graph never holds them, and no node, edge or delivery fact derives from them.",
-          "A run record joins every verifier whose test anchor sits in the test file the record names, because the file is the binding grain of both anchor forms and every reporter prints it; each test name in the record shows as a row under that verifier.",
+          "A run record joins every verifier whose test anchor sits in the test file the record names, because the file is the binding grain of both anchor forms and every reporter prints it; each test name in the record shows as a row under that verifier. The join is at file grain: a result is evidence from the verifier's file, never the result of that verifier, because a file may hold several suites and a filtered run may exercise only one.",
           "The Protocol reads run records in the Common Test Report Format, CTRF, an open JSON schema with reporters for the common test runners, passed to a view as a recipe parameter. A record joins only when its reporter fills CTRF's optional `filePath` field, and an adopter with records of another shape maps them into CTRF itself.",
-          "A view shows each run joined to the verifier it exercised, with its result, its commit and the input it came from, labelled as external run evidence and never as `has-verifier` or `implemented`.",
+          "A view shows each run beside the verifiers anchored in its file, with its result, its commit and the input it came from, labelled as external run evidence from that file and never as `has-verifier`, `implemented` or a pass verdict for one verifier.",
           "A run whose commit differs from the commit being read shows both commits, so a reader sees how old it is.",
           "The Design Review stays a function of the graph alone and shows no run; run evidence appears only in a view that admits external input, such as a recipe that takes the records as a parameter, or the Studio.",
         ],

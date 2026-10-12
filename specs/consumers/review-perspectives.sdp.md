@@ -2,7 +2,7 @@
 id: spec:consumers.review-perspectives
 kind: behavior
 altitude: feature
-readiness: scoped
+readiness: defined
 relations:
   refines: spec:consumers.projections-model
   dependsOn: spec:consumers.pack-design
@@ -18,11 +18,12 @@ The owner ruled the word: perspective. The Spec Studio keeps lens for its graph 
 - problem: Every reading of a Pack shows every member in the same order with the same emphasis, so a reader with one concern sorts it by hand, and an adopter keeps its perspectives as prose briefs the graph cannot apply.
 - outcome: Let a reviewer read the same Pack from one perspective at a time, filtered and ordered for that perspective, without a new kind or a stage.
 
-### Open questions
-- [blocking #perspectiveSelectors] What may a perspective select on: kind, section, Design key, question key, relation type, component layer or context, or a Spec family? The filter recipe cannot be built until its selectors are settled.
-
 ## Behavior
 - rule: A perspective filters and orders a Pack's members and their content and never changes them; every row opens the same Spec, and the whole Pack stays one step away.
 - rule: A perspective adds no kind, readiness, stage or sequence; reading a Pack from one perspective records nothing, and no perspective is required before another or before `ready` is stated.
 - rule: The corpus owns its perspectives and their questions; the Protocol supplies the filter and ships no list of perspectives.
 - rule: A perspective is corpus data: a JSON object the corpus keeps beside its briefs and passes to the perspective filter, a catalog recipe, through `--params`. The reader loads no perspective file, and no validator lists or checks perspectives, so no registry forms.
+- rule: A perspective selects members by Spec id or id prefix, kind, section presence, Design key with an optional value, question key, and authored relation type with a stated direction; it selects component layer or context only through the member's code unit bindings, satisfying or referencing, that the perspective names; it infers nothing from prose, paths or imports.
+- rule: A member selected by a Design key, including the `layer` and `context` keys a component design states, is selected on declared intent; a member selected through a binding's component is selected on anchored structure; each row names which, and the two are never merged into one architecture answer.
+- rule: Values within one selector are alternatives and different selectors combine as requirements; an unsupported selector is a diagnostic in the result, and a valid selector that matches nothing is an explicit empty result.
+- rule: Members keep the manifest's authored order unless the perspective gives an explicit priority order, authored order breaking ties; every selected member's blocking questions stay visible whatever else the perspective filters out.

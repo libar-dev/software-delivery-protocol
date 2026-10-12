@@ -4,9 +4,10 @@
 > corpus, recipes and skills changed together; the full gate passes. The arc's intent lives in the
 > graph: `pack:design-management-v1` holds the built and captured Specs in reading order, and
 > readiness, backlog and findings are read from the graph (recipes 1, 2, 9, 11, 20), never from
-> this file. What waits for the owner: ratifying `spec:decisions.pack-design-page`, `ready`
-> statements on the arc's implemented Specs and on the drift queue (the packet is the last
-> section), the captures' blocking questions, and the candidate terms. If this file and the graph
+> this file. The owner ruled every open item on 2026-10-12, and the fold landed on the same branch:
+> MD-39 and MD-40 ratified, the arc's Specs and the drift queue `ready`, the captures' questions
+> answered, the candidate terms ratified, and plan 42 drafted for the Studio. The rulings, the
+> fold's lanes, its review and its measurements are the last section. If this file and the graph
 > disagree, the graph wins and this file is stale.
 
 ## Why this arc
@@ -427,6 +428,30 @@ deleted records.
 | 2 | `spec:decisions.planning-truths-placement` (MD-33) still let a refusal reopen only through `supersedes` (minor). | Its decision, consequence and registry row now distinguish whole replacement from narrowing. |
 | 3 | The core-model verifier never compared coordinates with the supplied envelope, and its non-propagation case bound the parent (minor). | Both outputs are asserted against the envelope, and a child-only binding leaves the parent unimplemented; four mutations go red (gpt-6.1-sol). |
 
+### The owner's second round
+
+Before the push, the owner forwarded an outside review of `92e70d7` and asked for its points to be
+resolved. Fable 5.1 (high) advised on the exact wording of the three rulings against standing law.
+
+- **Perspective selectors.** A perspective selects by Spec id or id prefix, kind, section presence,
+  Design key with an optional value, question key and authored relation type with a direction, and
+  by layer or context only through a binding it names. Each row says whether it matched on declared
+  intent or anchored structure, and selected members keep their blocking questions in view.
+- **Corpus-rule severity.** Under `sdp validate --rules`, an `error` corpus finding exits nonzero,
+  a `warning` stays informative, and a broken rule exits nonzero as a rule execution failure. The
+  two-family rule now names the Protocol's own validators, and architecture constraints may be
+  gated by the corpus's `--rules` invocation.
+- **The bundle's budget floor.** The budget is a hard limit in UTF-16 code units of the compact
+  JSON the recipe returns. When protected content alone exceeds it, the recipe returns a
+  budget-exceeded result as data, with exit 0, and no partial bundle.
+- **The Studio's measure.** `spec:consumers.spec-studio` states plan 42's five tasks and access
+  boundary; the native-backend task passes on a bound verifier with no run result supplied.
+- **Run evidence.** A result joined by file is evidence from the verifier's file, never a verdict
+  for one verifier.
+- **The HTML decision.** `spec:decisions.studio-html-surface` drops its unsupported claims, rests
+  on search, filters, navigation and progressive disclosure, defers richer interactions, and
+  states `ready`.
+
 ### Acceptance of the fold, as measured
 
 Measured after the review's fold; re-run the recipes rather than inheriting these.
@@ -436,8 +461,5 @@ Measured after the review's fold; re-run the recipes rather than inheriting thes
 - **The graph.** 250 Specs, 3 Packs, 263 anchors, 516 nodes, 1,222 edges; validate reports 0 errors
   and 4 warnings (the spec-sections gap the owner kept, three prose mentions).
 - **The alarm and the backlog.** Recipe 2 is empty, down from 23. Recipe 1 is empty.
-- **Open questions.** 61, 9 of them blocking, down from 97 and 35. Of the nine, three are new holds
-  the corpus review raised for the owner (`spec:consumers.review-perspectives#question.perspectiveSelectors`,
-  `spec:validation.corpus-rules#question.ruleSeverity`, `spec:consumers.context-bundle#question.budgetFloor`),
-  three are re-entry triggers (reference projection, structural Mermaid, roadmap views), and three
-  predate this arc.
+- **Open questions.** 58, 6 of them blocking, down from 97 and 35: three re-entry triggers
+  (reference projection, structural Mermaid, roadmap views) and three that predate this arc.

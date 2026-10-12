@@ -336,11 +336,11 @@ export const validationSpecs = [
       },
       behavior: {
         rules: [
-          "Every validator belongs to either the conformance family, which checks meta-model well-formedness, or the honesty family, which rejects authored or overstated derived truth.",
-          "Validation errors fail the build; gaps and orphans remain informative signals rather than delivery-process gates.",
+          "Every validator the Protocol ships belongs to either the conformance family, which checks meta-model well-formedness, or the honesty family, which rejects authored or overstated derived truth; a corpus rule run through `sdp validate --rules` belongs to neither and reports in the corpus's own section.",
+          "Errors from the Protocol's validators fail the build; gaps and orphans remain informative signals rather than delivery-process gates.",
           "Types enforce structural shape, schema validates graph payloads, and graph validators enforce cross-file conformance and honesty; no one layer substitutes for the others.",
           "All graph validation runs through the one derived graph path: source, extraction, graph, then checks.",
-          "The two families are load-bearing, so an aggregate report spanning both states no family of its own while every finding names the family it came from.",
+          "The two families are load-bearing, so an aggregate report spanning both states no family of its own while every finding of the Protocol's own validators names the family it came from.",
           "The realizing entrypoints are `graphValidatorIds` and `validateGraph` in `src/validate/validators.ts`.",
         ],
         exampleSpace: {
@@ -1668,7 +1668,7 @@ export const validationSpecs = [
       },
       behavior: {
         rules: [
-          "The Protocol's validators never judge a corpus's architecture; an architecture rule runs as one of the corpus's own rules, and the corpus's gate decides what fails.",
+          "The Protocol's validators never judge a corpus's architecture; an architecture rule runs as one of the corpus's own rules, the corpus's gate decides what fails, and that gate may be the corpus's own invocation of `sdp validate --rules` with the severity the rule states.",
           "A corpus states each architecture rule as intent in a `constraint` Spec that says what is forbidden and why, and keeps the rule's machine form, its forbidden layer pairs and isolated contexts, as data its corpus rule passes to the walk.",
           "The Protocol supplies the walk as a catalog recipe that takes forbidden layer pairs and isolated contexts as recipe parameters, resolves each end of every anchored `uses` edge to its component, directly or through `memberOf`, and returns each edge a rule forbids with both units, both components and the rule.",
           "The walk reads the given rules and anchored structure only; it infers no edge from imports, reads no file path, judges no role and refuses nothing.",
@@ -1683,7 +1683,7 @@ export const validationSpecs = [
     id: "spec:validation.corpus-rules",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "scoped",
+    readiness: "defined",
     file: "specs/validation/corpus-rules.sdp.md",
     title: "Corpus-authored rules run on the one validation path",
     narrative:
@@ -1694,14 +1694,6 @@ export const validationSpecs = [
           "A corpus with rules of its own checks them off the one validation path, reading the carriers a second way and reporting in a form no Protocol surface reads.",
         outcome:
           "Let a corpus author its own graph rules and have their findings join the one validation report, so no corpus re-parses its carriers to check itself.",
-        openQuestions: [
-          {
-            question:
-              "May a corpus rule fail validation, or are its findings always informative and the corpus's own gate decides? The answer sets the exit code of `sdp validate --rules PATH`.",
-            blocking: true,
-            key: "ruleSeverity",
-          },
-        ],
       },
       behavior: {
         rules: [
@@ -1710,6 +1702,9 @@ export const validationSpecs = [
           "Each corpus finding names its rule and its corpus as its source and stands apart from the Protocol's own findings; the Protocol states none of these rules and ships none.",
           "Corpus findings stand outside the conformance and honesty families, in a section of the report labelled as the corpus's own, so the two families keep their meaning and the guardrail that checks never judge content quality or workflow keeps binding the Protocol's own validators.",
           "Validation runs corpus rules only from a file the operator names with `sdp validate --rules PATH`, which may repeat, and never from a file it finds in the corpus or in a configuration; it asks the trust `sdp q` already asks, to run code the operator chose.",
+          "A corpus finding carries severity `error` or `warning`. When the operator names `--rules`, an `error` corpus finding makes `sdp validate` exit nonzero and a `warning` stays informative; without `--rules` no corpus rule runs and only the Protocol's validators set the exit code.",
+          "Corpus findings keep their own source and report section, are tallied apart from the Protocol's summary line, and neither add to, suppress nor change a Protocol finding or the exit reason it sets.",
+          "A rules file that cannot load, a rule that throws, or a rule that returns a finding without a rule id, subject, message and admitted severity is a rule execution failure; `sdp validate` reports it in the corpus section and exits nonzero, so a broken rule never passes as a clean run.",
           "A corpus rule changes no node, edge or delivery fact; it reports on the graph it is given.",
         ],
       },
