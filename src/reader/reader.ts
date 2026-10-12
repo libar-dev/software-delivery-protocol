@@ -139,6 +139,8 @@ export interface OracleBinding {
 /** The irreducible per-spec join — what a Design Review renders and an agent starts from. */
 export interface SpecContext extends SpecSummary {
   readonly sections?: SpecSections;
+  /** Derived design counts and lists, shared with the Pack member's design. */
+  readonly designColumns: PackMemberDesign;
   readonly floorFailures: readonly ReadinessFloorFailure[];
   /**
    * The unmet clauses of the rung above derived readiness (`idea` when no rung derives), by the
@@ -528,7 +530,7 @@ function statedNextRungOf(stated: SpecReadiness): SpecReadiness | undefined {
 }
 
 /**
- * The file's Pack design code: `packMemberDesign` reads a member's design columns and
+ * The file's Pack design code: `specDesignColumns` reads a member's design columns and
  * `packBoundary` the Pack's boundary, and `packContext` in `createReader` joins them with each
  * member's stated next rung, bindings and verifier counts. The evaluator call sits in
  * `createReader`, whose anchor declares it.
@@ -540,7 +542,7 @@ function statedNextRungOf(stated: SpecReadiness): SpecReadiness | undefined {
  * @sdpComponent component:protocol.reader
  * @sdpRole reader
  */
-function packMemberDesign(
+function specDesignColumns(
   node: PrimitiveNode,
   index: GraphIndex,
   locations: readonly EntryLocation[],
@@ -958,6 +960,7 @@ export function createReader(graph: GraphSchema): Reader {
     return {
       ...summary,
       ...(node.sections === undefined ? {} : { sections: node.sections }),
+      designColumns: specDesignColumns(node, index, locationsOf(id)),
       floorFailures: evaluateReadinessFloor(node, index),
       nextRungFailures: nextRung === undefined ? [] : evaluateReadinessFloor(node, index, nextRung),
       relationsOut,
@@ -1004,7 +1007,7 @@ export function createReader(graph: GraphSchema): Reader {
         ...(statedNextRung === undefined ? {} : { statedNextRung }),
         statedNextRungFailures:
           statedNextRung === undefined ? [] : evaluateReadinessFloor(member, index, statedNextRung),
-        design: packMemberDesign(member, index, locationsOf(member.id)),
+        design: specDesignColumns(member, index, locationsOf(member.id)),
         implementations: codeUnitBindingsTo(member.id, "satisfies"),
         references: codeUnitBindingsTo(member.id, "references"),
         verifiers: enabledCount(verifiers),

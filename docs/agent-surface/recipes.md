@@ -124,11 +124,19 @@ const byFamily = Object.create(null);
 for (const spec of backlog) {
   const family = spec.id.slice("spec:".length).split(".")[0];
   byFamily[family] = byFamily[family] ?? [];
+  const { designColumns } = g.specContext(spec.id);
   byFamily[family].push({
     id: spec.id,
     kind: spec.specKind,
     altitude: spec.altitude,
     hasVerifier: spec.deliveryFacts.includes("has-verifier"),
+    designColumns: {
+      entries: designColumns.entries,
+      declarations: designColumns.declarations,
+      openQuestions: designColumns.openQuestions.length,
+      blockingQuestions: designColumns.blockingQuestions,
+      decisions: designColumns.decisions.length,
+    },
   });
 }
 
@@ -149,7 +157,9 @@ verification evidence rather than implementation work (MD-24); ready decision re
 registry-ratification evidence rather than implementation or verifier work (MD-26). The raw
 `ready ∧ ¬implemented` expression remains literally true while this operational recipe excludes
 both kinds, audits example verifier bindings, and reports both excluded counts. The reverse pairing
-is recipe 2.
+is recipe 2. Each backlog row also reports `designColumns` from its Spec context: counts of keyed
+Design and UI entries, pinned declarations, open and blocking questions, and shaping decisions.
+These columns are derived, never a score, rung or approval.
 
 ## 2. The drift alarm
 

@@ -1786,6 +1786,43 @@ describe("the agent-surface recipe corpus", () => {
   // are Object.prototype keys, with no resolving implementation.
   // When: catalog recipe 1 runs through real runSdpCli on that override.
   // Then: each hostile family is an own byFamily key carrying the exact synthetic Spec id.
+  it("reports derived design columns beside the existing backlog fields", async () => {
+    const extraction = syntheticExtraction(
+      [
+        probeSpec("spec:probe.backlog", "rule", "ready", {
+          intent: {
+            outcome: "Build the design.",
+            openQuestions: [{ question: "Who follows up?", blocking: false, key: "followUp" }],
+          },
+          design: {
+            fnBuild: "`function build(): void` declaration",
+            prose: "An approach.",
+            description: "Design prose.",
+          },
+          ui: { layout: "One page." },
+        }),
+        probeSpec("spec:probe.choice", "decision", "defined"),
+      ],
+      [probeEdge("spec:probe.backlog", "decidedBy", "spec:probe.choice")],
+    );
+    const result = asRecord(await runRecipe(recipeByOrdinal(1), undefined, extraction));
+    expect(asRecord(result.byFamily).probe).toEqual([
+      {
+        id: "spec:probe.backlog",
+        kind: "rule",
+        altitude: "story",
+        hasVerifier: false,
+        designColumns: {
+          entries: 3,
+          declarations: 1,
+          openQuestions: 1,
+          blockingQuestions: 0,
+          decisions: 1,
+        },
+      },
+    ]);
+  });
+
   it("groups backlog rows under lawful Object.prototype path segments", async () => {
     const leaf = "hostile-backlog";
     const extraction = extractionWithHostilePrimitives({ leaf, readiness: "ready" });
@@ -4759,6 +4796,8 @@ describe("design recipes", () => {
       expect({
         restsOn: asArray(boundary.restsOn).map((row) => asRecord(row).id),
         restedOnBy: asArray(boundary.restedOnBy).map((row) => asRecord(row).id),
+        verifiedBy: asArray(boundary.verifiedBy).map((row) => asRecord(row).id),
+        supersededBy: asArray(boundary.supersededBy).map((row) => asRecord(row).id),
       }).toEqual({
         restsOn: outside(
           memberEdges
@@ -4766,7 +4805,19 @@ describe("design recipes", () => {
             .map((edge) => edge.to),
         ),
         restedOnBy: outside(
-          memberEdges.filter((edge) => inside.has(edge.to)).map((edge) => edge.from),
+          memberEdges
+            .filter((edge) => inside.has(edge.to) && designFollowedTypes.has(edge.type))
+            .map((edge) => edge.from),
+        ),
+        verifiedBy: outside(
+          memberEdges
+            .filter((edge) => inside.has(edge.to) && edge.type === "verifies")
+            .map((edge) => edge.from),
+        ),
+        supersededBy: outside(
+          memberEdges
+            .filter((edge) => inside.has(edge.to) && edge.type === "supersedes")
+            .map((edge) => edge.from),
         ),
       });
     }
@@ -4806,6 +4857,8 @@ describe("design recipes", () => {
         withReferences: 1,
         restsOn: 2,
         restedOnBy: 1,
+        verifiedBy: 0,
+        supersededBy: 0,
       },
       members: [
         {
@@ -4929,6 +4982,8 @@ describe("design recipes", () => {
             via: [bound("refines", ["spec:probe.store"])],
           },
         ],
+        verifiedBy: [],
+        supersededBy: [],
       },
     });
   });

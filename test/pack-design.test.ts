@@ -161,6 +161,28 @@ describe("the Pack design on the Pack context", () => {
     });
   });
 
+  it("exposes the same design columns on Spec context and Pack members", () => {
+    const reader = createReader(probeGraph());
+    for (const member of reader.packContext(PACK_ID)?.members ?? []) {
+      if (!member.resolved) continue;
+      expect(reader.specContext(member.id)?.designColumns).toEqual(member.design);
+    }
+    expect(reader.specContext("spec:probe.held")?.designColumns).toMatchObject({
+      entries: 6,
+      declarations: 2,
+      blockingQuestions: 0,
+      openQuestions: [{ key: "basisOwner", line: 21 }, { question: "Is the <name> | # final?" }],
+      decisions: [{ id: "spec:probe.choice", statedReadiness: "defined" }],
+    });
+    expect(reader.specContext("spec:probe.top")?.designColumns).toEqual({
+      entries: 0,
+      declarations: 0,
+      blockingQuestions: 0,
+      openQuestions: [],
+      decisions: [],
+    });
+  });
+
   it("lists the decisions a member names, unresolved when the target is no Spec", () => {
     expect(member("spec:probe.held").design?.decisions).toEqual([
       {
