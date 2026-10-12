@@ -5,21 +5,31 @@ altitude: story
 readiness: defined
 relations:
   refines: spec:consumers.agent-surface.design-recipes
-  dependsOn: spec:carrier.slot-notation
+  dependsOn:
+    - spec:carrier.slot-notation
+    - target: spec:extraction.executable-contracts
+      reason: its decoded slots and bound points reuse the space-contract interpretation
 ---
 # Example spaces report which values their examples cover
 
-The original design rendered a coverage heatmap from each example space: which combinations of its typed slots an example witnesses and which none does (`docs/lineage/v0-design/04-authoring-surfaces.md` §4 and §4.1, `06-extraction-and-validation.md` §8). The Protocol ratified the terms witness and coverage gap and computes neither, so a designer cannot see, before code exists, which examples a space still lacks.
+The original design rendered a coverage heatmap from each example space: which combinations of its typed slots an example witnesses and which none does (`docs/lineage/v0-design/04-authoring-surfaces.md` §4 and §4.1, `06-extraction-and-validation.md` §8). This Spec reports slot-value coverage; the glossary keeps witness for an example in an outcome class.
 
 ## Intent
-- problem: A parent's example space declares literal-union slots and its example children bind one point each, but no recipe or reader value says which literal values the children witness and which no child does.
-- outcome: Report, for every example space, each literal slot value with the children that witness it and the values no child witnesses, so a design pass sees its missing examples before code exists.
+- problem: The graph carries example spaces and bound points, but no reader value or recipe reports which literal slot values example children bind.
+- outcome: Report each literal slot value with the example children that bind it, and each value no child binds, before code exists.
 
 ### Open questions
 - [non-blocking #combinationCoverage] Is coverage per slot value enough, or does a design pass need the combinations of two or more slots, as the original heatmap drew them?
+  - decider: owner
+  - links: spec:consumers.spec-studio.verification-panels#question.coverageSource
+  - provisional: the recipe reports per-slot literal-union values
+- [non-blocking #coverageShape] What reader field names and decoded slot and bound-point shapes, recipe parameters and result rows, eligible-example relation policy, and treatment of an unbound slot form the coverage contract?
+  - decider: owner
+  - links: spec:extraction.executable-contracts
+  - provisional: the tests-lens design pass settles the decoded fields and the row shape and records them as keyed Design entries before implementation
 
 ## Behavior
 - rule: The engine decodes each Spec's example space into its typed slots, and each example child's steps into its bound point, once, through the notation module that writes the space contracts, and the reader carries both on the Spec context; no recipe or projection parses slot notation a second time.
-- rule: Coverage is a catalog recipe over the decoded values: for each slot typed as a union of literals, each value with the example children whose bound point witnesses it, and the values no child witnesses.
-- rule: A slot that is not a union of literals has no finite set of values, and coverage reports it as not enumerable rather than as covered or as a coverage gap.
-- rule: Coverage reports and confers nothing: it moves no readiness, records no verdict, and a coverage gap is what a design pass reads, never a validation finding.
+- rule: Slot-value coverage is a catalog recipe over the decoded reader values, listing each literal-union value with the example children that bind it and each value no child binds.
+- rule: The recipe enumerates slots typed as closed unions of quoted literals. It reports every other slot type, a boolean included, as not enumerable by this recipe, never as covered or as missing a value.
+- rule: Slot-value coverage reports and confers nothing: it moves no readiness, records no verdict and emits no validation finding.

@@ -236,7 +236,7 @@ const frontDoorBindings = {
     params: { readonly symbolEntry: boolean },
   ) => {
     // Absent, not stubbed: `typeof` reports the honest absence rather than a method that would
-    // answer for a substrate that does not exist.
+    // answer for the symbol reach the impact graph defers.
     expect(recordAnswerOf(world).symbolEntry !== "undefined").toBe(params.symbolEntry);
   },
 };
