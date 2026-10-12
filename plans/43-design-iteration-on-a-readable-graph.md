@@ -112,3 +112,43 @@ through `--params`, and load-bearing is a ranked list the caller cuts.
   them (plan 42).
 - A new reader method or query verb; `--params` stays input to a body.
 - A status, date or verdict on a question or a proposal.
+
+## The design pass, as run
+
+On 2026-10-12 the owner delegated the design pass's rulings to the Opus 5.5 main thread while away,
+with Fable 5.1 (xhigh) as adviser. Fable agreed with every lean and supplied the wordings and five
+fixes the list below includes. The rulings landed in their Specs; this list is lineage.
+
+- **The two held parents.** Exhaustive symbol reach moved into
+  `spec:consumers.impact-graph.symbol-reach` (`idea`), which carries the blocking symbol-identity
+  question; the impact graph keeps the inferred-and-apart law, drops its comparing rule and its
+  duplicate advice rule, retitles, and states `defined`. Intent composition keeps one law neither
+  child owns, every composing surface hands off on the one proposal contract, and states `defined`.
+- **Rule keys.** An example names the rules it exercises as `exercises` on its `verifies` target
+  object, checked against the verified Spec's keys (Gherkin: `@exercises.<key>`); a rule carries no
+  rationale.
+- **Question fields.** A link is a Spec id or an entry address, checked by the mention validator
+  with both of its findings; a lean is a provisional line on the question or a decision Spec.
+- **Relation reasons.** One free reason for every relation type; `exercises` is the only typed
+  attribute. Intended mentions stay corpus data that the mention audit takes as a parameter.
+- **The loop.** The design diff owns comparison, the caller always names the base, and two engine
+  versions compare on what both carry. A bundle takes `pack` or `specs`, and `members` from the
+  perspective filter narrows a Pack scope; a fifth cut reduces section entries to their addresses.
+  A proposal names no proposer.
+- **Parameters.** `--params` is repeatable, with `KEY=@PATH` binding a file to one key.
+- **Gherkin.** Rule keys use the same marker on a `Rule:` title; no Gherkin form for reasons or
+  question fields.
+- **Shapes.** Each member gained keyed Design entries stating its fields, recipe numbers 33 to 40,
+  and the output shapes the build lanes write against.
+
+gpt-6.1-sol line-read the pass read-only and found one blocker (the envelope refused `exercises`)
+and nine majors, all folded: impact rows say incoming and outgoing instead of claiming dependency,
+slimming rows are potential candidates, the proposal check covers every entry a change touches, the
+bundle cuts text everywhere it appears, a component is realized only through `satisfies`, rule
+addresses entered the address law (`spec:decisions.checked-mentions`, `CONTEXT.md`,
+`spec:validation.prose-mentions`, recipe 25's Spec), a required input has no sample fallback,
+question fields get location rows, and perspectives leave content intact.
+
+Statements, on the owner's delegation: `ready` on the ten members the lanes build; the impact graph
+and intent composition at `defined`; symbol reach at `idea`. Recipe 29 at the statement: 69 keyed
+entries, 23 pinned declarations, no open question.

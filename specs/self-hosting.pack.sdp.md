@@ -78,6 +78,7 @@ specs:
   - spec:consumers.projections-model
   - spec:consumers.projections-model.roadmap-views
   - spec:consumers.impact-graph
+  - spec:consumers.impact-graph.symbol-reach
   - spec:consumers.agent-surface
   - spec:consumers.design-review
   - spec:consumers.census-page

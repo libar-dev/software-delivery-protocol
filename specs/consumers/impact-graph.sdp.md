@@ -2,21 +2,16 @@
 id: spec:consumers.impact-graph
 kind: behavior
 altitude: feature
-readiness: idea
+readiness: defined
 relations:
   refines: spec:consumers.projections-model
   dependsOn: spec:extraction.derive-graph
 ---
-# An impact graph can answer exhaustive code-structure questions
+# Mechanical code structure stays inferred and apart from curated intent
 
 ## Intent
-- outcome: Give symbol and import impact questions an exhaustive derived substrate without promoting mechanical structure into curated intent.
-
-### Open questions
-- [blocking #symbolIdentity] Which language-neutral identity and extraction boundary can support exhaustive symbol reach without freezing a single compiler's representation into the Protocol?
+- outcome: Let mechanically derived import and symbol structure inform impact and curation without ever standing in for curated intent.
 
 ## Behavior
-- rule: Mechanical import and symbol structure is inferred and remains distinct from the sparse curated graph.
-- rule: File-level import structure, keyed by repository-relative path, needs no symbol identity and ships first as `spec:consumers.impact-graph.curation-assist`; only exhaustive symbol reach waits on the open question.
-- rule: Comparing commits derives `graph(A)` and `graph(B)` and reports added, removed, or changed nodes and edges without persisting either projection as a second store.
-- rule: Candidate relationship suggestions and unambiguous-drift flags are assistive outputs; neither authors intent or silently rewrites the curated graph.
+- rule: Mechanical import and symbol structure derives under the `inferred` claim and stays apart from the sparse curated graph; no curated edge, binding or delivery fact derives from it.
+- rule: File-level import structure, keyed by repository-relative path, is `spec:consumers.impact-graph.curation-assist`, and exhaustive symbol reach is `spec:consumers.impact-graph.symbol-reach`, which holds the symbol-identity question.

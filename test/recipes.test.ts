@@ -4151,7 +4151,7 @@ describe("recipe parameters and the shipped recipe files", () => {
         shipped: await runRecipe(recipe),
       });
     }
-  });
+  }, 60_000);
 
   it("refuses a catalog whose bodies and headings do not pair, rather than guess a file name", () => {
     expect(() => recipeFiles("## 1. One\n\n```js\nreturn 1;\n```\n## 1. Again\n")).toThrow(

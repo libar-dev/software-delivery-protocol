@@ -2,7 +2,7 @@
 id: spec:consumers.review-perspectives
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.projections-model
   dependsOn: spec:consumers.pack-design
@@ -19,7 +19,7 @@ The owner ruled the word: perspective. The Spec Studio keeps lens for its graph 
 - outcome: Let a reviewer read the same Pack from one perspective at a time, filtered and ordered for that perspective, without a new kind or a stage.
 
 ## Behavior
-- rule: A perspective filters and orders a Pack's members and their content and never changes them; every row opens the same Spec, and the whole Pack stays one step away.
+- rule: A perspective filters and orders a Pack's members and leaves each selected member's content intact; every row opens the same Spec, and the whole Pack stays one step away.
 - rule: A perspective adds no kind, readiness, stage or sequence; reading a Pack from one perspective records nothing, and no perspective is required before another or before `ready` is stated.
 - rule: The corpus owns its perspectives and their questions; the Protocol supplies the filter and ships no list of perspectives.
 - rule: A perspective is corpus data: a JSON object the corpus keeps beside its briefs and passes to the perspective filter, a catalog recipe, through `--params`. The reader loads no perspective file, and no validator lists or checks perspectives, so no registry forms.
@@ -27,3 +27,10 @@ The owner ruled the word: perspective. The Spec Studio keeps lens for its graph 
 - rule: A member selected by a Design key, including the `layer` and `context` keys a component design states, is selected on declared intent; a member selected through a binding's component is selected on anchored structure; each row names which, and the two are never merged into one architecture answer.
 - rule: Values within one selector are alternatives and different selectors combine as requirements; an unsupported selector is a diagnostic in the result, and a valid selector that matches nothing is an explicit empty result.
 - rule: Members keep the manifest's authored order unless the perspective gives an explicit priority order, authored order breaking ties; every selected member's blocking questions stay visible whatever else the perspective filters out.
+
+## Design
+
+- perspectiveObject: `{ "name": "domain", "select": { "ids": [], "idPrefixes": [], "kinds": [], "sections": [], "designKeys": [{ "key": "layer", "value": "domain" }], "questionKeys": [], "relations": [{ "type": "dependsOn", "direction": "out", "target": "<spec id>" }], "bindings": { "via": ["satisfies", "references"], "layers": [], "contexts": [] } }, "order": ["<spec id>"] }`, every selector optional; an absent selector imposes no requirement and a present empty list matches no member, an absent or empty `select` object selects every member, absent binding `layers` or `contexts` impose no restriction, `target` and a Design key's `value` are optional, and `direction` is `out` or `in`.
+- perspectiveRecipe: recipe 37, the perspective filter, takes `params.pack` and `params.perspective` and returns `{ pack, perspective, totals: { members, selected }, diagnostics, selected, notSelected }`.
+- perspectiveRows: each `selected` row is `{ id, matchedOn: [{ selector, value, claim }], blockingQuestions: [{ address, question }] }` in the perspective's order and then authored order; `claim` is `declared` for a match on authored intent and `anchored` for a match through a binding; `notSelected` lists the remaining member ids in authored order.
+- perspectiveDiagnostics: an unknown selector, a value of the wrong type or a `bindings` selector with no `via` is a diagnostic row `{ selector, problem }`, and the recipe still applies the selectors it understood.

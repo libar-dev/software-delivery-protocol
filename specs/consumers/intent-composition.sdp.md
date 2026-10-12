@@ -2,15 +2,18 @@
 id: spec:consumers.intent-composition
 kind: behavior
 altitude: story
-readiness: idea
+readiness: defined
 relations:
   refines: spec:consumers.edit-model
 ---
-# Intent composition needs a realizing surface
+# Composed intent hands off on one proposal shape
 
 ## Intent
-- outcome: Realize the absent user and agent surface that composes scoped intent before ordinary source edits.
+- actor: A person or an agent reading a view who wants a design change made.
+- problem: Each composing surface could invent its own hand-off, so a reviewer, an agent and a check would read one change in as many shapes as there are surfaces.
+- outcome: Give every surface that composes scoped intent one hand-off shape, applied as an ordinary edit.
 
 ## Behavior
-- rule: `spec:consumers.edit-model` owns the settled intent → agent → git law; this child owns only the future composing interaction that does not yet exist.
-- rule: No entrypoint, persistence path, or structured patch contract is implied at the idea rung.
+- rule: `spec:consumers.edit-model` owns the settled intent, agent and git law; this Spec owns how a composing surface hands its intent off.
+- rule: Every surface that composes scoped intent, the Studio's composing panel first, hands off on the one change-proposal contract, `spec:consumers.intent-composition.proposal`.
+- rule: A composing surface writes no source, and its hand-off is applied as an ordinary edit under the edit model.

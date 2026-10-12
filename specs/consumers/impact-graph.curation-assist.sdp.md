@@ -2,7 +2,7 @@
 id: spec:consumers.impact-graph.curation-assist
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.impact-graph
   dependsOn: spec:model.planned-architecture
@@ -30,3 +30,12 @@ Gen 1 of this tool, `@libar-dev/architect`, derived a mechanical import graph be
 - rule: The recipe labels the file as external inferred input and reports a file present on one side only; it states nothing in the graph's name.
 - rule: The adapter follows re-exports through barrel files, so a `uses` that reaches a component through an index file counts as backed by an import.
 - rule: Load-bearing is a ranked list, not a threshold: the recipe reports each uncovered file's import fan-in and fan-out, takes a `limit`, and leaves the cut to the caller.
+
+## Design
+
+- importsFlag: `sdp build --imports PATH` names the adapter configuration, a JSON object `{ "adapter": "typescript", "tsconfig": "tsconfig.json", "roots": ["src"] }` with root-relative paths; without the flag the build writes no imports file and leaves an existing one untouched.
+- importsFile: `{ "schema": "sdp-imports/1", "adapter": "typescript", "files": [{ "file": "src/a.ts", "imports": ["src/b.ts"] }] }` in `generated/imports.json`, files and imports sorted in code-unit order, paths root-relative with POSIX separators, every file under the configured roots listed even when it imports nothing, and imports outside the roots left out.
+- barrelImports: when a file imports a barrel that re-exports another file, its `imports` lists the barrel and every file the barrel's re-exports reach, so the list is already the backing a `uses` check reads.
+- curationRecipe: recipe 40, the curation report, takes `params.imports`, the imports file's object, and `params.limit`, 20 by default, and returns `{ input, totals, uncovered, usesWithoutImport, importsWithoutUses, unrealizedComponents, oneSided }`.
+- curationRows: `uncovered` rows are `{ file, fanIn, fanOut }` for files no anchor sits in, ranked by fan-in then path and cut at `limit`; `usesWithoutImport` rows are `{ from, to, fromComponent, toComponent }`; `importsWithoutUses` rows are `{ fromComponent, toComponent, imports, sample: { from, to } }`; `unrealizedComponents` rows are `{ spec, componentId }` for component designs with no resolving anchored `satisfies` edge from the planned `component:` unit to the design, so an existing id without that binding stays unrealized.
+- curationInput: `input` is `{ label: "external inferred input", schema, adapter, files }`, and `oneSided` lists anchored source files the imports file does not list and imports-file entries outside every anchored component, so a stale or partial file shows.
