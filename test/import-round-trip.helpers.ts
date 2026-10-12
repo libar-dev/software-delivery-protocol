@@ -21,7 +21,16 @@ function oneSpec(specs: readonly ReifiedSpec[]): ReifiedSpec | undefined {
   return specs[0];
 }
 
-export function assertAuthoredRoundTrip(tsSourceText: string, relativePath: string): void {
+/**
+ * Reifies the TypeScript source and its Markdown sibling and compares the authored Spec data.
+ * Given `emitted`, the Markdown an import actually returned, the helper reifies that text at its
+ * path; without it, the helper emits the sibling itself.
+ */
+export function assertAuthoredRoundTrip(
+  tsSourceText: string,
+  relativePath: string,
+  emitted?: { readonly path: string; readonly content: string },
+): void {
   const tsReification = reifyTypeScriptCarrier(tsSourceText, relativePath);
   expect(tsReification.findings).toEqual([]);
   const tsSpec = oneSpec(tsReification.specs);
@@ -29,8 +38,8 @@ export function assertAuthoredRoundTrip(tsSourceText: string, relativePath: stri
   if (tsSpec === undefined) return;
 
   const markdownReification = reifyMarkdownCarrier(
-    emitMarkdownSpec(tsSpec),
-    markdownSiblingPath(relativePath),
+    emitted?.content ?? emitMarkdownSpec(tsSpec),
+    emitted?.path ?? markdownSiblingPath(relativePath),
   );
   expect(markdownReification.findings).toEqual([]);
   const markdownSpec = oneSpec(markdownReification.specs);

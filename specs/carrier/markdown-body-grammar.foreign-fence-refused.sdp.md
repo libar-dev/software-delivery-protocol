@@ -5,9 +5,11 @@ altitude: story
 readiness: defined
 relations:
   refines: spec:carrier.markdown-body-grammar
-  verifies: spec:carrier.markdown-body-grammar
+  verifies:
+    target: spec:carrier.markdown-body-grammar
+    exercises: [closedFences]
 ---
-# A fence other than gwt is refused
+# A fence other than gwt or gwt-vocabulary is refused
 
 ## Intent
 - outcome: Execute the closed fence set on a language-tagged code fence under an open section.
@@ -16,4 +18,5 @@ relations:
 Given a Markdown Spec carrier whose {owner: "Design"} section holds {construct: "a ts fence"}
 When the extractor reifies the carrier
 Then the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "fences must be exact gwt or gwt-vocabulary fences"} at line {line: 14}
+Then the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph
 ```

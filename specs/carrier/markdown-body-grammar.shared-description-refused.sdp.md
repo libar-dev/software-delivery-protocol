@@ -5,7 +5,9 @@ altitude: story
 readiness: defined
 relations:
   refines: spec:carrier.markdown-body-grammar
-  verifies: spec:carrier.markdown-body-grammar
+  verifies:
+    target: spec:carrier.markdown-body-grammar
+    exercises: [sectionProse]
 ---
 # A second description across Behavior and Example space is refused
 
@@ -16,4 +18,5 @@ relations:
 Given a Markdown Spec carrier whose {owner: "Example space"} section holds {construct: "a description when Behavior already has one"}
 When the extractor reifies the carrier
 Then the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "behavior description has more than one owner"} at line {line: 19}
+Then the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph
 ```

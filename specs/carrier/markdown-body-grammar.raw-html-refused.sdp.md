@@ -5,7 +5,9 @@ altitude: story
 readiness: defined
 relations:
   refines: spec:carrier.markdown-body-grammar
-  verifies: spec:carrier.markdown-body-grammar
+  verifies:
+    target: spec:carrier.markdown-body-grammar
+    exercises: [rawHtml]
 ---
 # Raw HTML outside a code span is refused
 
@@ -16,4 +18,5 @@ relations:
 Given a Markdown Spec carrier whose {owner: "Behavior"} section holds {construct: "a line break tag"}
 When the extractor reifies the carrier
 Then the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "raw HTML is unsupported"} at line {line: 14}
+Then the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph
 ```

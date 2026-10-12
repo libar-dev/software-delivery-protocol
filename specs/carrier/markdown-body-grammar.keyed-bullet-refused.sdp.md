@@ -5,7 +5,9 @@ altitude: story
 readiness: defined
 relations:
   refines: spec:carrier.markdown-body-grammar
-  verifies: spec:carrier.markdown-body-grammar
+  verifies:
+    target: spec:carrier.markdown-body-grammar
+    exercises: [keyedEntryShape]
 ---
 # A keyed bullet under a plain-bullet owner is refused
 
@@ -16,4 +18,5 @@ relations:
 Given a Markdown Spec carrier whose {owner: "Rule"} section holds {construct: "a bullet opening with one word and a colon"}
 When the extractor reifies the carrier
 Then the carrier is refused whole with the finding {findingId: "extract/unrecognized-property"} whose message contains {reason: "is not accepted"} at line {line: 14}
+Then the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph
 ```

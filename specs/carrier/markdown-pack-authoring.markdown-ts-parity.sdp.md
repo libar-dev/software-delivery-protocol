@@ -16,4 +16,5 @@ relations:
 Given an extraction root holding the pack carrier {carrierSource: "the Markdown twin of a TS manifest"}
 When the extractor derives the graph
 Then the graph holds the pack {packId: "pack:probe.parity"} whose membership names {memberId: "spec:probe.member"}
+Then the Markdown and TypeScript Pack nodes are equal apart from carrier file paths, and their membership edges are equal: {equal: true}
 ```

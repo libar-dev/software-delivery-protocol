@@ -49,6 +49,14 @@ export function registerMarkdownTsParity<World>(
         params,
       });
     },
+    "the Markdown and TypeScript Pack nodes are equal apart from carrier file paths, and their membership edges are equal: {equal}":
+      (execution, params) => {
+        compareContractOutcome(execution, {
+          kind: "then",
+          text: "the Markdown and TypeScript Pack nodes are equal apart from carrier file paths, and their membership edges are equal: {equal}",
+          params,
+        });
+      },
   } satisfies StepBindings<Execution, Step, StepParams>;
 
   registerRunnableExample(
