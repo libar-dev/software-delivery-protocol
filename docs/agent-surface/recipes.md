@@ -2879,9 +2879,9 @@ const partsOf = (node, value) => {
       if (!crossListOrder && Object.keys(keys).length) unordered.add(node.id);
       const entries = new Map(Object.entries(keys).map(([key, path]) => [path, key]));
       const positions = new Map(Object.keys(keys).map((key, position) => [key, position]));
-      let listPosition = 0;
       for (const [list, items] of [["rules", rules], ["flows", flows]]) {
         const unkeyed = [];
+        let listPosition = 0;
         (items ?? []).forEach((entry, index) => {
           const key = entries.get(`${list}[${index}]`);
           if (key === undefined) unkeyed.push(entry);
@@ -3472,9 +3472,9 @@ const partsOf = (node, value) => {
       if (!crossListOrder && Object.keys(keys).length) unordered.add(node.id);
       const entries = new Map(Object.entries(keys).map(([key, path]) => [path, key]));
       const positions = new Map(Object.keys(keys).map((key, position) => [key, position]));
-      let listPosition = 0;
       for (const [list, items] of [["rules", rules], ["flows", flows]]) {
         const unkeyed = [];
+        let listPosition = 0;
         (items ?? []).forEach((entry, index) => {
           const key = entries.get(`${list}[${index}]`);
           if (key === undefined) unkeyed.push(entry);
@@ -3500,6 +3500,7 @@ const changedParts = (id) => {
   const changed = new Set(), ordered = new Set();
   // Without order across rules and flows on one side, keyed entries compare by order within each list.
   const order = unordered.has(id) ? "listPosition" : "position";
+  if (unordered.has(id) && before.has(id) && after.has(id)) diagnostics.push({ part: "ruleOrder", id, problem: "One graph keeps no order across rules and flows; keyed entries compare within each list." });
   for (const part of new Set([...a.keys(), ...b.keys()])) {
     const position = (entry) => part.startsWith("rule.") ? entry[order] : entry.position;
     if (!a.has(part) || !b.has(part) || !same(a.get(part).value, b.get(part).value)) changed.add(part);
@@ -3557,8 +3558,8 @@ count changes, so one moved entry leaves other changes independently visible. Un
 remain explicit rows. A scope outside the common schema carries `comparable: false` and a
 `reason`, with no `moved` claim, as does an otherwise unmoved whole-Spec scope whose order across
 rules and flows one graph does not keep. Its change also carries `comparable: false`, and `moved` is null
-unless another comparable scope moved. Schema differences and unsupported parts appear in
-`diagnostics`. A base missing from the parameters is a problem with no change rows.
+unless another comparable scope moved. Schema differences, unsupported parts and a compared Spec
+whose order across rules and flows one graph does not keep appear in `diagnostics`. A base missing from the parameters is a problem with no change rows.
 
 The rows carry facts about declared intent, with anchored changes excluded from scope movement.
 They confer no status or approval. A caller routes a moved change to a person and applies other

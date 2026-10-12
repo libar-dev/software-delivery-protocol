@@ -2278,7 +2278,7 @@ export const consumersSpecs = [
         proposalSchemaFile:
           "the package ships the document's JSON Schema as `schemas/sdp-proposal-1.schema.json`, so an agent can use it as a structured-output schema; the check recipe validates the same shape itself, and a test holds the two to the same accepted and refused samples.",
         checkRecipe:
-          "recipe 38, the proposal check, takes `params.proposal` and `params.base`, the base graph, and returns `{ schemaProblems: [{ path, problem }], base, diagnostics, totals: { changes, moved, unresolved }, changes }`, with the design diff's `diagnostics`; when the document breaks the schema or the base graph is missing it returns the problems and no change rows.",
+          "recipe 38, the proposal check, takes `params.proposal` and `params.base`, the base graph, and returns `{ schemaProblems: [{ path, problem }], base, diagnostics, totals: { changes, moved, unresolved }, changes }`, with the design diff's `diagnostics` for the Specs it compares; when the document breaks the schema or the base graph is missing it returns the problems and no change rows.",
         checkedScope:
           "the check resolves and compares the deduplicated union of `scope`, `replaces`, `follows` and `relation.from`, and a change row's `scope` reports that union, so an entry a change replaces or follows cannot move unseen.",
         checkRows:

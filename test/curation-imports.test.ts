@@ -119,15 +119,26 @@ describe("TypeScript curation imports", () => {
 
   it("reads literal dynamic imports and import types, and skips computed specifiers", () => {
     withFixture((root) => {
+      // One form per file, so each form's resolution is tested on its own.
       writeFileSync(
         join(root, "code", "idle.tsx"),
-        'export type Leaf = import("./leaf.js").Shape; export const load = () => import("@core/index.js"); export const later = () => import(`./legacy.cjs`); const name = "./a.js"; export const computed = () => import(name);',
+        'export type Leaf = import("./leaf.js").Shape;',
       );
-      expect(
+      writeFileSync(
+        join(root, "code", "lazy.ts"),
+        'export const load = () => import("@core/index.js"); const name = "./a.js"; export const computed = () => import(name);',
+      );
+      writeFileSync(
+        join(root, "code", "later.ts"),
+        "export const later = () => import(`./legacy.cjs`);",
+      );
+      const imports = (file: string) =>
         deriveTypeScriptImports(root, "imports.config.json").files.find(
-          (entry) => entry.file === "code/idle.tsx",
-        )?.imports,
-      ).toEqual(["code/index.ts", "code/leaf.ts", "code/legacy.cts", "code/nested.ts"]);
+          (entry) => entry.file === file,
+        )?.imports;
+      expect(imports("code/idle.tsx")).toEqual(["code/leaf.ts"]);
+      expect(imports("code/lazy.ts")).toEqual(["code/index.ts", "code/leaf.ts", "code/nested.ts"]);
+      expect(imports("code/later.ts")).toEqual(["code/legacy.cts"]);
     });
   });
 

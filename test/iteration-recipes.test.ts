@@ -117,6 +117,27 @@ function edit(root: string, file: string, from: string, to: string): void {
   expect(text).toContain(from);
   writeFileSync(path, text.replace(from, to));
 }
+/** A pre-rule-key engine kept the markers in the text and serialized rules before flows. */
+function legacyOf(graph: GraphSchema): GraphSchema {
+  const base = JSON.parse(JSON.stringify(graph)) as GraphSchema;
+  for (const node of base.nodes) {
+    if (node.nodeType !== "Primitive" || !node.sections?.behavior?.ruleKeys) continue;
+    const { rules, flows, ruleKeys = {}, ...rest } = node.sections.behavior;
+    const marked = (list: string, items: readonly string[] | undefined) =>
+      items?.map((text, index) => {
+        const key = Object.keys(ruleKeys).find(
+          (name) => ruleKeys[name] === `${list}[${String(index)}]`,
+        );
+        return key === undefined ? text : `[#${key}] ${text}`;
+      });
+    (node.sections as Record<string, unknown>).behavior = {
+      ...rest,
+      rules: marked("rules", rules),
+      flows: marked("flows", flows),
+    };
+  }
+  return base;
+}
 interface Part {
   part: string;
   change: string;
@@ -556,27 +577,6 @@ describe("iteration loop: design diff", () => {
         "- flow: [#last] Last flow.\n- rule: [#first] First rule.",
       );
       const head = extract({ root });
-      // A pre-rule-key engine kept the markers in the text and serialized rules before flows.
-      const legacyOf = (graph: GraphSchema) => {
-        const base = JSON.parse(JSON.stringify(graph)) as GraphSchema;
-        for (const node of base.nodes) {
-          if (node.nodeType !== "Primitive" || !node.sections?.behavior?.ruleKeys) continue;
-          const { rules, flows, ruleKeys = {}, ...rest } = node.sections.behavior;
-          const marked = (list: string, items: readonly string[] | undefined) =>
-            items?.map((text, index) => {
-              const key = Object.keys(ruleKeys).find(
-                (name) => ruleKeys[name] === `${list}[${String(index)}]`,
-              );
-              return key === undefined ? text : `[#${key}] ${text}`;
-            });
-          (node.sections as Record<string, unknown>).behavior = {
-            ...rest,
-            rules: marked("rules", rules),
-            flows: marked("flows", flows),
-          };
-        }
-        return base;
-      };
       const base = legacyOf(head.graph);
       const diff = await runRecipe<Diff>(35, { base, detail: true }, head);
       expect(diff.specs.changed).toEqual([]);
@@ -593,6 +593,9 @@ describe("iteration loop: design diff", () => {
         ],
       };
       const check = await runRecipe<ProposalCheck>(38, { base, proposal }, head);
+      expect(check.diagnostics).toEqual([
+        expect.objectContaining({ part: "ruleOrder", id: "spec:probe.a" }),
+      ]);
       expect(check.changes[0]?.scope.slice(0, 2).map((row) => row.moved)).toEqual([false, false]);
       expect(check.changes[0]?.scope[2]).toMatchObject({ comparable: false });
       expect(typeof check.changes[0]?.scope[2]?.reason).toBe("string");
@@ -612,6 +615,49 @@ describe("iteration loop: design diff", () => {
       ]);
       const recheck = await runRecipe<ProposalCheck>(38, { base, proposal }, changed);
       expect(recheck.changes[0]?.scope.map((row) => row.moved)).toEqual([true, false, true]);
+    });
+  }, 20_000);
+
+  it("compares a legacy base's keyed entries by order within each list", async () => {
+    await withCorpus(async (root) => {
+      edit(
+        root,
+        "a.sdp.md",
+        "- flow: [#last] Last flow.",
+        "- flow: [#last] Last flow.\n- flow: [#second] Second flow.",
+      );
+      const base = legacyOf(extract({ root }).graph);
+      const partsOf = async (from: string, to: string) => {
+        const text = readFileSync(join(root, "a.sdp.md"), "utf8");
+        edit(root, "a.sdp.md", from, to);
+        const diff = await runRecipe<Diff>(35, { base, detail: true }, extract({ root }));
+        writeFileSync(join(root, "a.sdp.md"), text);
+        return Object.fromEntries(
+          (diff.specs.changed.find((row) => row.id === "spec:probe.a")?.parts ?? []).map((row) => [
+            row.part,
+            row.change,
+          ]),
+        );
+      };
+      // A keyed rule added to the rules leaves the flows' order untouched.
+      expect(
+        await partsOf(
+          "- rule: [#first] First rule.",
+          "- rule: [#first] First rule.\n- rule: [#added] Added rule.",
+        ),
+      ).toEqual({ "behavior.rules": "changed", "rule.added": "added" });
+      // A rule removed while two flows swap still shows both flows moved.
+      expect(
+        await partsOf(
+          "- rule: [#first] First rule.\n- flow: [#last] Last flow.\n- flow: [#second] Second flow.",
+          "- flow: [#second] Second flow.\n- flow: [#last] Last flow.",
+        ),
+      ).toEqual({
+        "behavior.rules": "changed",
+        "rule.first": "removed",
+        "rule.last": "moved",
+        "rule.second": "moved",
+      });
     });
   }, 20_000);
 
