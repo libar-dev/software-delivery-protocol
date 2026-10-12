@@ -16,7 +16,9 @@ The projections model once defined release, baseline and roadmap vocabulary besi
 
 ### Open questions
 
-- [blocking #namedRoadmapReader] Re-entry trigger: a named reader who needs release, baseline or roadmap views that the shipped projections, the recipes and git do not serve, with a way to measure that need inside the arc that builds them.
+- [blocking #namedRoadmapReader] Does a reader need release, baseline or roadmap views that the shipped projections, the recipes and git do not serve?
+  - decider: owner
+  - trigger: a named reader with that need, and a way to measure it inside the arc that builds the views
 
 ## Model
 

@@ -4,7 +4,9 @@ kind: decision
 altitude: feature
 readiness: ready
 relations:
-  refines: spec:decisions.carrier-ruling
+  refines:
+    target: spec:decisions.carrier-ruling
+    reason: admits Gherkin as a canonical per-ID carrier for behavior and example Specs beside the Markdown default
 ---
 # Behavior and example Specs may use Gherkin canonically
 

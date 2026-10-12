@@ -15,7 +15,9 @@ The shipped Mermaid projection draws bounded one-hop diagrams rooted at a Spec o
 - outcome: Draw component, membership and uses diagrams rooted at code units, once a reader needs them and the existing views do not serve it.
 
 ### Open questions
-- [blocking #namedStructuralReader] Re-entry trigger from plan 35: a named reader who needs diagrams rooted at code units, which census tables and Spec-rooted one-hop Mermaid do not serve, plus a recorded decision to extend or abandon the one-generated-view posture.
+- [blocking #namedStructuralReader] Does a reader need diagrams rooted at code units, which census tables and Spec-rooted one-hop Mermaid do not serve?
+  - decider: owner
+  - trigger: a named reader with that need, plus a recorded decision to extend or abandon the one-generated-view posture
 - [non-blocking #layerAndContext] Would a component diagram group its nodes by context and order them by layer, and would that make it the architecture view the Studio's architecture lens draws?
 
 ## Behavior

@@ -6,7 +6,8 @@ readiness: ready
 relations:
   refines:
     - spec:consumers.design-review
-    - spec:decisions.shipped-projections-frozen
+    - target: spec:decisions.shipped-projections-frozen
+      reason: carves out one change, an open question's key shown before its text
   dependsOn: spec:model.open-question-keys
 ---
 # The Design Review shows an open question's key

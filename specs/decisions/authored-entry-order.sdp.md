@@ -6,7 +6,8 @@ readiness: ready
 relations:
   refines:
     - spec:consumers.design-review
-    - spec:decisions.shipped-projections-frozen
+    - target: spec:decisions.shipped-projections-frozen
+      reason: carves out how the Design Review renders open-section entries, as a list in authored order
   dependsOn: spec:extraction.open-section-order
 ---
 # The Design Review renders open-section entries as a list

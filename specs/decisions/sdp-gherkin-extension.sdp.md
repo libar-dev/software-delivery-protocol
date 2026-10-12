@@ -4,7 +4,9 @@ kind: decision
 altitude: feature
 readiness: ready
 relations:
-  refines: spec:decisions.gherkin-carrier-option
+  refines:
+    target: spec:decisions.gherkin-carrier-option
+    reason: fixes the canonical Gherkin suffix as .sdp.gherkin and keeps bare .feature files out of discovery
   dependsOn: spec:decisions.sdp-ts-extension
 ---
 # Canonical Gherkin carriers use `.sdp.gherkin`

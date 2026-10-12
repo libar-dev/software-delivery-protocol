@@ -4,7 +4,9 @@ kind: decision
 altitude: feature
 readiness: ready
 relations:
-  refines: spec:decisions.gherkin-carrier-option
+  refines:
+    target: spec:decisions.gherkin-carrier-option
+    reason: bounds the Gherkin option to behavior and example Specs, the two kinds Gherkin structure states honestly
   dependsOn:
     - spec:decisions.prose-ownership
     - spec:decisions.pack-markdown-carrier

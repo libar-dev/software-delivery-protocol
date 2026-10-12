@@ -6,7 +6,8 @@ readiness: ready
 relations:
   refines:
     - spec:consumers.design-review
-    - spec:decisions.shipped-projections-frozen
+    - target: spec:decisions.shipped-projections-frozen
+      reason: carves out the Pack page, which renders the Pack design
   dependsOn: spec:consumers.pack-design
 ---
 # The Design Review's Pack page presents the Pack's design
