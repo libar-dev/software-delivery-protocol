@@ -102,10 +102,10 @@ The public projection publishers are `sdp view`, `sdp census`, `sdp mermaid`, an
 In this source checkout, use `npm run generate:self-hosting` or `npm run check:self-hosting` when
 all four roots must be published or certified together.
 
-The catalog contains thirty-two ready-made bodies in `docs/agent-surface/recipes.md` in the
+The catalog contains forty ready-made bodies in `docs/agent-surface/recipes.md` in the
 Protocol repository and
 `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an adopter.
-Recipes 1-32 each open under a numbered heading that names the recipe. Every body there runs
+Recipes 1-40 each open under a numbered heading that names the recipe. Every body there runs
 verbatim and a test proves it. Start from a recipe; adapt it in place.
 
 A recipe that takes a subject (a Spec id, a Pack id, changed files, addresses, a term) reads it
