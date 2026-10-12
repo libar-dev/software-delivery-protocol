@@ -31,6 +31,7 @@ The original runtime panel linked Fastify routes to Effect programs, showed what
 - [non-blocking #questionMetadata] The original shows each open question's owner and the date it was added; an open question carries its text, whether it blocks, an optional key and the optional fields `decider`, `links`, `provisional` and `trigger`, where `decider` names who settles it as a corpus token rather than a person, and git, not the graph, records when its line was added. Which fields does the panel show, and does a date stay off a page that is a function of the graph?
   - decider: owner
   - links: spec:model.open-question-fields
+  - provisional: the panel shows every field the graph supplies, as the intent panel states, and no date
 - [non-blocking #runtimeComposition] Does the runtime panel show more than the structural neighborhood of the Spec's implementation anchors?
 - [non-blocking #schemaBindings] The original's bindings panel lists schema bindings beside code and test bindings; anchors bind implementation code, tests and oracles, and no anchor binds a schema. Does a schema binding need a home?
 - [non-blocking #uiStories] The original's page outline names a section `UI / Stories`, whose UI half the UI panel carries; the original never says what a story is. What is a story, and does the page show one?
@@ -60,4 +61,4 @@ The panels in page order.
 - relationsPanel: relations both ways, each with its type, claim, endpoint, resolution, reason and exercises when present; a resolving Spec endpoint links to its page.
 - impactPanel: the upstream parents and downstream children, the Specs that depend on this one, the decision records it names, the tests that verify it, and the code its bindings reach.
 - uiPanel: the `ui` entries.
-- entryIds: every keyed Design, UI, rule or flow entry and every keyed open question carries an HTML element id equal to its entry address without the Spec id, the section and lower-camel key the entry-address grammar defines, so a link opens the entry on its page.
+- entryIds: every addressable keyed Design or UI entry, every keyed entry of the primary behavior owner and every keyed open question carries an HTML element id equal to its entry address suffix, the section and lower-camel key without the Spec id or `#`, so a link opens the entry on its page.

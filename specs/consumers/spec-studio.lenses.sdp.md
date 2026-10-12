@@ -25,6 +25,7 @@ relations:
 ### Open questions
 - [non-blocking #capabilityGrouping] A capability is a projection over high-altitude behavior Specs or a Pack grouping, and an arc's Pack is named for the capability it designs. Which grouping does the capability tree use, and which graph values supply it?
   - decider: owner
+  - provisional: the Packs lens groups Specs by Pack, and no capability tree is drawn
 - [non-blocking #architectureVocabulary] The original's architecture lens draws runtime layers, ports and external systems beside components and their dependencies; `spec:decisions.architectural-annotation` gives a component anchor a layer and a bounded context and any code anchor a role, beside component membership and `uses`, and admits no port or external-system node. Does the lens group components by layer and context and draw only what those anchors hold?
   - links: spec:consumers.structural-mermaid#question.layerAndContext
 - [non-blocking #testRunResults] The original's tests lens shows each test's last run result; a verifier binding states that a verifier exists, and pass and fail stay in CI, as `spec:decisions.binding-not-liveness` rules. Does the lens show run results read from CI output, or bindings only?
@@ -34,6 +35,7 @@ relations:
 - [non-blocking #ruleCoverage] The original's tests lens names the rules of a Spec that no test exercises; a rule may carry a key, an example's `verifies` may name the keys it exercises, and recipe 34 lists each keyed rule with its examples, while the graph cannot tell which examples exercise a rule with no key. Does the lens show keyed-rule coverage with the unkeyed rules counted apart, or name the uncovered Specs only?
   - decider: owner
   - links: spec:model.rule-keys
+  - provisional: the tests lens lists each keyed rule with the examples recipe 34 reports and counts the unkeyed rules apart
 
 ## Behavior
 - rule: The Packs lens is the default landing page.
