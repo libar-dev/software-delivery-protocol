@@ -3627,8 +3627,8 @@ if (!object(input) || input.schema !== "sdp-imports/1" || typeof input.adapter !
     input.files.some((entry) => !object(entry) || typeof entry.file !== "string" || !Array.isArray(entry.imports) || entry.imports.some((file) => typeof file !== "string"))) {
   diagnostics.push({ parameter: "imports", problem: "Supply an sdp-imports/1 object." });
 }
-const limit = params.limit === undefined ? 20 : params.limit;
-if (!Number.isInteger(limit) || limit <= 0) diagnostics.push({ parameter: "limit", problem: "Expected a positive integer." });
+const limit = params.limit ?? 20;
+if (params.limit === null || !Number.isInteger(limit) || limit <= 0) diagnostics.push({ parameter: "limit", problem: "Expected a positive integer." });
 if (diagnostics.length) return { diagnostics };
 const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
 const nodes = new Map(graph.nodes.map((node) => [node.id, node]));

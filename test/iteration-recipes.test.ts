@@ -403,6 +403,13 @@ describe("iteration loop: design diff", () => {
         b = authoredOf(head.graph);
       const changedIds = [...a.keys()].filter((id) => b.has(id) && a.get(id) !== b.get(id)).sort();
       expect(result.specs.changed.map((row) => row.id)).toEqual(changedIds);
+      const cleanup = procedure.split("\n").find((line) => line.startsWith("git worktree remove "));
+      if (!cleanup) throw new Error("missing documented base-worktree cleanup");
+      execFileSync("sh", ["-c", cleanup.replaceAll(".sdp-base", quotedWorktree)], {
+        cwd: repoRoot,
+        stdio: "pipe",
+      });
+      added = false;
     } finally {
       if (added)
         execFileSync("git", ["-C", repoRoot, "worktree", "remove", "--force", worktree], {

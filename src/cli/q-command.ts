@@ -144,15 +144,6 @@ function oneLine(message: string): string {
   return message.replace(/\s+/gu, " ").trim();
 }
 
-const queryParamsAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.query-params"),
-  label: "reads --params as JSON data and injects it as the sink's fourth binding, params",
-  satisfies: ref("spec:consumers.agent-surface.recipe-parameters"),
-  component: componentAnchorId("component:protocol.cli"),
-  role: "service",
-});
-void queryParamsAnchor;
-
 /** How a refusal names a parsed JSON value that is not an object. */
 function jsonKind(value: unknown): string {
   return value === null ? "null" : Array.isArray(value) ? "an array" : `a ${typeof value}`;
@@ -184,6 +175,15 @@ function repeatedTopLevelKey(source: string): string | undefined {
   }
   return undefined;
 }
+
+const queryParamsAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.query-params"),
+  label: "reads --params as JSON data and injects it as the sink's fourth binding, params",
+  satisfies: ref("spec:consumers.agent-surface.recipe-parameters"),
+  component: componentAnchorId("component:protocol.cli"),
+  role: "service",
+});
+void queryParamsAnchor;
 
 /**
  * `--params` carries a recipe's parameter as data, never as body source: a JSON object inline, or
