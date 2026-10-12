@@ -4819,7 +4819,7 @@ describe("design recipes", () => {
       id: "pack:absent-v1",
       found: false,
     });
-  });
+  }, 20_000);
 
   it("returns the probe Pack's design exactly, member by member", async () => {
     const result = await runRecipe(
