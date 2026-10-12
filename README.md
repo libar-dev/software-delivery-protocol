@@ -28,9 +28,9 @@ pnpm --silent sdp:q 'return g.specs().length'
 ```
 
 The `sdp:q` script supplies this repository's required fixture exclusions. Use the
-[thirty-two graph-first recipes](docs/agent-surface/recipes.md) for backlog, drift, verifier, impact,
-Pack, readiness, promotion, open-question, dependency, mention, entry-search, Pack design,
-design-change, decision, and architecture queries.
+[graph-first recipes](docs/agent-surface/recipes.md) for backlog, drift, verifier, impact, Pack,
+readiness, promotion, open-question, dependency, mention, entry-search, Pack design, design-change,
+decision, architecture, design backlog, design diff, context bundle, and curation queries.
 
 The [architecture walkthrough](docs/agent-surface/architecture.md) follows shared policy,
 runner and adapter responsibilities, and the one read model through the graph.
@@ -64,10 +64,12 @@ pnpm exec sdp view .
 pnpm exec sdp q 'return g.specs().map((spec) => spec.id)'
 ```
 
-`build` derives the graph and executable contracts, `validate` adds conformance and honesty
-checks, `view` generates the Design Review, `import` converts TypeScript Spec carriers to Markdown,
-and `q` evaluates a local JavaScript query body against a freshly derived graph. Run `sdp --help`
-for the complete option contract. Adopters own their root and exclusion policy.
+`build` derives the graph, executable contracts and registrars, `validate` adds conformance and
+honesty checks, `view` generates the Design Review, `census` the census, `mermaid` the Mermaid
+diagrams, and `gherkin` the Gherkin-shaped read view. `new spec` scaffolds an idea-rung Markdown
+carrier, `import` converts TypeScript Spec carriers to Markdown, and `q` evaluates a local
+JavaScript query body against a freshly derived graph. Run `sdp --help` for the complete option
+contract. Adopters own their root and exclusion policy.
 
 ## Gherkin carrier
 
@@ -77,8 +79,9 @@ Bare `.feature` is not discovered. It stays ordinary Cucumber / import-source te
 ```gherkin
 @spec.orders.submit
 @altitude.feature
-@readiness.defined
+@readiness.idea
 Feature: Submit an order
+  - outcome: A valid order is accepted when it is submitted.
 
   @example-space
   Scenario: Vocabulary
@@ -90,36 +93,41 @@ Feature: Submit an order
   @altitude.story
   @readiness.defined
   Scenario: A valid order is accepted
+    - outcome: The order "order-42" is accepted.
     Given an order {orderId: "order-42"}
     When the order is submitted
     Then the order is accepted
 ```
 
-Build the graph and generated contracts:
+The parent states `idea` until it declares a relation; `sdp validate` checks each rung against its
+floor.
 
-```sh
-pnpm exec sdp build .
-```
-
-Bind the generated step contract to code-side handlers and a resolving test anchor:
+Bind the example through a test suite that carries a static test anchor:
 
 ```ts
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
-import { bindExample } from "@libar-dev/software-delivery-protocol/vitest";
-import { acceptedContract } from "../generated/contracts/orders.submit.accepted.contract.js";
+import { registerAccepted } from "./orders.submit.accepted.test.generated.js";
 
 const acceptedAnchor = specTest({
   id: testAnchorId("test:orders.submit.accepted"),
   label: "valid order acceptance",
-  verifies: ref(acceptedContract.spec),
+  verifies: ref("spec:orders.submit.accepted"),
 });
 void acceptedAnchor;
 
-bindExample(acceptedContract, createWorld, handlers);
+registerAccepted({ createWorld, invoke, observe, expected });
 ```
 
-Cucumber execution is not part of the design. Generated contracts and anchored code-side handlers
-remain the execution boundary.
+Create the authored suite with this test anchor, then run `pnpm exec sdp build .` to emit its
+registrar sibling. Import that sibling and activate it with your four semantics adapters; an
+optional `assertions` adapter adds domain checks. `createWorld`, `invoke`, `observe` and
+`expected` are your product's semantics: build the world from the bound point, run the behavior,
+read its outcome, and give the expected outcome for the point. The generated registrar owns step
+dispatch and the comparator. `bindExample` from `@libar-dev/software-delivery-protocol/vitest` is
+the low-level adapter for cases the registrar cannot serve.
+
+Cucumber execution is not part of the design. Generated contracts and registrars with anchored
+code-side adapters remain the execution boundary.
 
 Editors do not recognize `*.sdp.gherkin` as Gherkin by default. Associate the suffix with Gherkin
 (often the `cucumber` language id) for highlighting and formatting. This repository ships the VS
@@ -148,4 +156,4 @@ for carrier support.
 The package installs three agent on-ramps as `SKILL.md` files under
 `node_modules/@libar-dev/software-delivery-protocol/.agents/skills/`. Use `sdp-agent-surface` to read
 the graph, `sdp-authoring` to author intent, and `sdp-sessions` for advisory delivery-session
-routing. The same package includes the thirty-two recipe bodies at `docs/agent-surface/recipes.md`.
+routing. The same package includes the runnable recipe bodies at `docs/agent-surface/recipes.md`.

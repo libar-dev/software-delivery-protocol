@@ -17,6 +17,7 @@ import {
 import type { PrimitiveNode } from "../src/index.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
+import { SDP_HELP_TEXT } from "../src/cli/sdp.js";
 import { parseMarkdownBody } from "../src/extract/markdown-body.js";
 
 import { parse } from "yaml";
@@ -69,16 +70,18 @@ function readSkill(path: string) {
   };
 }
 
+// A fence inside a numbered step is indented, so fences are matched after trimming.
 function shellFenceLines(body: string): readonly string[] {
   const lines: string[] = [];
   let inShellFence = false;
 
   for (const line of body.split("\n")) {
-    if (line.startsWith("```") && line !== "```") {
-      inShellFence = line === "```sh";
+    const fence = line.trim();
+    if (fence.startsWith("```") && fence !== "```") {
+      inShellFence = fence === "```sh";
       continue;
     }
-    if (line === "```") {
+    if (fence === "```") {
       inShellFence = false;
       continue;
     }
@@ -90,13 +93,6 @@ function shellFenceLines(body: string): readonly string[] {
   return lines;
 }
 
-const authoringRecipesImplementationAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.authoring-recipes"),
-  label: "asserts realization of the shipped authoring recipe catalog",
-  satisfies: ref("spec:consumers.agent-surface.authoring-recipes"),
-});
-void authoringRecipesImplementationAnchor;
-
 function documentedCommands(body: string): readonly string[] {
   return shellFenceLines(body)
     .map((line) => line.trim())
@@ -106,6 +102,32 @@ function documentedCommands(body: string): readonly string[] {
         line.startsWith("pnpm --silent sdp ") ||
         line.startsWith("pnpm exec sdp "),
     );
+}
+
+/** The public commands, read from the help's usage block: one token each, two for `new spec`. */
+function publicCommands(): ReadonlySet<string> {
+  const usage = SDP_HELP_TEXT.slice(
+    SDP_HELP_TEXT.indexOf("Usage:"),
+    SDP_HELP_TEXT.indexOf("Options:"),
+  );
+  const commands = new Set<string>();
+  for (const match of usage.matchAll(
+    /^ {2}sdp (?<first>[a-z][\w-]*)(?: (?<second>[a-z][\w-]*))?/gmu,
+  )) {
+    const { first, second } = match.groups ?? {};
+    if (first !== undefined) commands.add(second === undefined ? first : `${first} ${second}`);
+  }
+  return commands;
+}
+
+/** The command a documented invocation runs, when it is one the CLI knows. */
+function documentedCommand(line: string, commands: ReadonlySet<string>): string | undefined {
+  if (line.startsWith("pnpm --silent sdp:q ")) return commands.has("q") ? "q" : undefined;
+  const rest = /^(?:pnpm --silent sdp|pnpm exec sdp) (?<rest>.+)$/u.exec(line)?.groups?.rest;
+  const [first, second] = (rest ?? "").split(/\s+/u);
+  if (first === undefined || first === "") return undefined;
+  if (second !== undefined && commands.has(`${first} ${second}`)) return `${first} ${second}`;
+  return commands.has(first) ? first : undefined;
 }
 
 const authoringOnRampTestAnchor = specTest({
@@ -121,12 +143,6 @@ const deliverySessionOnRampTestAnchor = specTest({
   verifies: ref("spec:consumers.delivery-session-on-ramp"),
 });
 void deliverySessionOnRampTestAnchor;
-const authoringRecipesTestAnchor = specTest({
-  id: testAnchorId("test:protocol.authoring-recipes"),
-  label: "skill-asset checks verify the authoring recipes",
-  verifies: ref("spec:consumers.agent-surface.authoring-recipes"),
-});
-void authoringRecipesTestAnchor;
 
 describe("Protocol skill assets", () => {
   it("owns skills under .agents and exposes them to Claude through one relative symlink", () => {
@@ -223,7 +239,7 @@ describe("Protocol skill assets", () => {
 
   it("names the complete closed graph schema in the shape section", () => {
     // Lockstep with the engine: adding or removing a node type, edge type, or claim must
-    // force this prose to move with it, exactly as the recipe-count test pins the catalog.
+    // force this prose to move with it, as the task-sheet test does for the catalog.
     const surface = readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source;
 
     expect(surface).toContain("The shape of the graph");
@@ -272,27 +288,54 @@ describe("Protocol skill assets", () => {
   });
 
   it("documents only valid CLI verbs and keeps root-specific exclusions intact", () => {
-    const knownVerbs = new Set(["build", "q"]);
+    const commands = publicCommands();
+    const rootExclusions = ["explorations", "examples", "test/fixtures/import/parity"];
     const packageJson = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
       scripts: Record<string, string>;
     };
     const localQuery = packageJson.scripts["sdp:q"] ?? "";
 
-    for (const exclusion of ["explorations", "examples", "test/fixtures/import/parity"]) {
+    expect([...commands].sort()).toEqual(
+      [
+        "build",
+        "census",
+        "gherkin",
+        "import",
+        "mermaid",
+        "new spec",
+        "q",
+        "validate",
+        "view",
+      ].sort(),
+    );
+    expect(documentedCommand("pnpm exec sdp frobnicate .", commands)).toBeUndefined();
+    expect(documentedCommand("pnpm exec sdp new widget PATH", commands)).toBeUndefined();
+    expect(documentedCommand("pnpm exec sdp new spec PATH", commands)).toBe("new spec");
+
+    for (const exclusion of rootExclusions) {
       expect(localQuery).toContain(`--exclude ${exclusion}`);
     }
 
     for (const path of skillPaths) {
-      const commands = documentedCommands(readSkill(path).body);
-      expect(commands.length).toBeGreaterThan(0);
+      const documented = documentedCommands(readSkill(path).body);
+      expect(documented.length).toBeGreaterThan(0);
 
-      for (const command of commands) {
-        const verb = command.startsWith("pnpm --silent sdp:q ")
-          ? "q"
-          : command.startsWith("pnpm --silent sdp ")
-            ? /^pnpm --silent sdp (?<verb>[\w-]+)/u.exec(command)?.groups?.verb
-            : /exec sdp (?<verb>[\w-]+)/u.exec(command)?.groups?.verb;
-        expect(verb === undefined ? false : knownVerbs.has(verb)).toBe(true);
+      for (const line of documented) {
+        expect({ path, line, known: documentedCommand(line, commands) !== undefined }).toEqual({
+          path,
+          line,
+          known: true,
+        });
+        // The repository's own `sdp` script at this root needs the three fixture exclusions.
+        if (line.startsWith("pnpm --silent sdp ") && / \.(?: |$)/u.test(line)) {
+          for (const exclusion of rootExclusions) {
+            expect({ path, line, exclusion: line.includes(`--exclude ${exclusion}`) }).toEqual({
+              path,
+              line,
+              exclusion: true,
+            });
+          }
+        }
       }
     }
   });
@@ -328,63 +371,140 @@ describe("Protocol skill assets", () => {
     }
   });
 
-  it("keeps recipe-count prose synchronized with the executable catalog", () => {
-    const catalog = readFileSync(join(repoRoot, "docs/agent-surface/recipes.md"), "utf8");
-    const headings = [...catalog.matchAll(/^## \d+\. /gmu)];
-    const countWords = [
-      "zero",
-      "one",
-      "two",
-      "three",
-      "four",
-      "five",
-      "six",
-      "seven",
-      "eight",
-      "nine",
-      "ten",
-      "eleven",
-      "twelve",
-      "thirteen",
-      "fourteen",
-      "fifteen",
-      "sixteen",
-      "seventeen",
-      "eighteen",
-      "nineteen",
-      "twenty",
-      "twenty-one",
-      "twenty-two",
-      "twenty-three",
-      "twenty-four",
-      "twenty-five",
-      "twenty-six",
-      "twenty-seven",
-      "twenty-eight",
-      "twenty-nine",
-      "thirty",
-      "thirty-one",
-      "thirty-two",
-      "thirty-three",
-      "thirty-four",
-      "thirty-five",
-      "thirty-six",
-      "thirty-seven",
-      "thirty-eight",
-      "thirty-nine",
-      "forty",
-    ] as const;
-    const countWord = countWords[headings.length];
+  it("states no recipe-catalog size in an on-ramp", () => {
+    // The catalog's size is derived, never quoted: an on-ramp points to the catalog and names
+    // recipes by number and name. A recipe's own number is not a size.
+    const size = catalogOrdinals().length;
+    const sizeStatement = catalogSizePattern();
 
-    expect(countWord).toBeDefined();
-    if (countWord === undefined) {
-      throw new Error(`recipe count ${String(headings.length)} is outside the checked prose range`);
+    expect(size).toBeGreaterThan(0);
+    for (const statement of [
+      "the forty runnable sdp q bodies",
+      "the 40 recipe bodies",
+      "thirty-two graph-first recipes",
+      "catalog contains forty-one ready-made bodies",
+    ]) {
+      expect(statement).toMatch(sizeStatement);
+    }
+    for (const ordinal of [
+      "recipes 33 to 40",
+      "recipes 12-16",
+      "run recipe 4 and recipe 22",
+      "Use recipe 6 to locate recipes.",
+      "Recipe 35 compares bodies.",
+      "recipes 4, 29 and 35 return summary bodies",
+    ]) {
+      expect(ordinal).not.toMatch(sizeStatement);
     }
 
-    const agents = readFileSync(join(repoRoot, "AGENTS.md"), "utf8");
-    const skill = readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source;
-    expect(agents).toContain(`${countWord} runnable \`sdp q\` bodies`);
-    expect(skill).toContain(`catalog contains ${countWord} ready-made bodies`);
+    for (const path of ["AGENTS.md", "README.md", ...skillPaths]) {
+      const text = teachingText(readFileSync(join(repoRoot, path), "utf8"));
+      const wholeRange = new RegExp(`\\brecipes 1 ?(?:-|–|to) ?${String(size)}\\b`, "iu");
+      expect({ path, stated: sizeStatement.exec(text)?.[0] ?? null }).toEqual({
+        path,
+        stated: null,
+      });
+      expect({ path, wholeRange: wholeRange.exec(text)?.[0] ?? null }).toEqual({
+        path,
+        wholeRange: null,
+      });
+    }
+  });
+});
+
+/** The recipe numbers the catalog's numbered headings carry, in order. */
+function catalogOrdinals(): readonly number[] {
+  const catalog = readFileSync(join(repoRoot, "docs/agent-surface/recipes.md"), "utf8");
+  return [...catalog.matchAll(/^## (\d+)\. /gmu)].map((match) => Number(match[1]));
+}
+
+/**
+ * A count, in digits or words up to ninety-nine, followed within three words by recipes or bodies.
+ * A number that names recipes, after `recipe` or `recipes` or after another such number through a
+ * list or range joiner, is the recipe's own number and never a count.
+ */
+function catalogSizePattern(): RegExp {
+  const ones = [
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "eleven",
+    "twelve",
+    "thirteen",
+    "fourteen",
+    "fifteen",
+    "sixteen",
+    "seventeen",
+    "eighteen",
+    "nineteen",
+  ];
+  const tens = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+  const words = [
+    ...ones,
+    ...tens.flatMap((ten) => [ten, ...ones.slice(0, 9).map((one) => `${ten}-${one}`)]),
+  ];
+  const counts = words.sort((left, right) => right.length - left.length).join("|");
+  const recipeOwnNumber = String.raw`(?<!\brecipes?\s+(?:\d+\s*(?:,|-|–|to|and|or)\s*)*)`;
+  return new RegExp(
+    `${recipeOwnNumber}\\b(?:${counts}|\\d+)(?:\\s+[\\w-]+){0,3}?\\s+(?:recipes|bodies)\\b`,
+    "iu",
+  );
+}
+
+const readingOnRampImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.reading-on-ramp"),
+  label: "asserts realization of the shipped graph-reading skill document",
+  satisfies: ref("spec:consumers.reading-on-ramp"),
+});
+void readingOnRampImplementationAnchor;
+
+const readingOnRampTestAnchor = specTest({
+  id: testAnchorId("test:protocol.reading-on-ramp"),
+  label: "skill-asset checks verify the graph-reading on-ramp",
+  verifies: ref("spec:consumers.reading-on-ramp"),
+});
+void readingOnRampTestAnchor;
+
+describe("the graph-reading on-ramp", () => {
+  it("maps a task to every catalog recipe in one sheet", () => {
+    const surface = readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source;
+    const heading = "### Which recipe answers a task";
+    const start = surface.indexOf(heading);
+    expect(start).toBeGreaterThan(-1);
+    const sheet = surface
+      .slice(start + heading.length)
+      .trimStart()
+      .split("\n\n")[0];
+    const rows = (sheet ?? "").split("\n").filter((line) => /^\| [^-]/u.test(line));
+    const ordinals = rows.flatMap((row) =>
+      [...row.matchAll(/\(recipe (\d+)\)/gu)].map((match) => Number(match[1])),
+    );
+
+    expect(rows.length).toBeGreaterThan(1);
+    for (const row of rows.slice(1)) {
+      expect({ row, namesRecipe: /\(recipe \d+\)/u.test(row) }).toEqual({ row, namesRecipe: true });
+    }
+    expect([...new Set(ordinals)].sort((left, right) => left - right)).toEqual(catalogOrdinals());
+  });
+
+  it("links the Specs that own the graph contract, the claims and the sink", () => {
+    const surface = readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source;
+    for (const owner of [
+      "spec:consumers.agent-surface",
+      "spec:decisions.agent-front-door",
+      "spec:extraction.derive-graph",
+      "spec:extraction.claim-taxonomy",
+      "spec:consumers.agent-surface.evaluation-sink",
+    ]) {
+      expect(surface).toContain(`\`${owner}\``);
+    }
   });
 });
 
