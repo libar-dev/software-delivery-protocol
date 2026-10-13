@@ -1272,7 +1272,7 @@ export const validationSpecs = [
           'A token whose Spec exists and whose entry address names no key of that `design` or `ui` section, names `description` there, names a question key no open question of that Spec carries, or names a rule key that Spec\'s `behavior.ruleKeys` does not carry, is an error with the message `Mention in "<spec>" at <path> points to missing entry "<section>.<key>" of "<target>".`',
           "Errors are reported once per scanning Spec, text path, and distinct token; `subjectId` is the scanning Spec, `relatedId` the token as written, `path` the text path, and `file` the Spec's carrier. The path is `narrative` or the section path in the mention audit's form, such as `intent.openQuestions[0].question`, `behavior.rules[2]`, `design.step2`, or `model.terms.<term>`.",
           'A target Spec that exists and shares no declared `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, or `supersedes` edge with the scanning Spec, in either direction, is one warning per scanning Spec and target Spec pair, counting every location where any token names that Spec or one of its entries. The message is `Mention of "<target>" in "<spec>" at <n> locations, first at <path>, with no declared relation between them; informative only. Declare the relation that fits, or leave the mention as prose and let the warning stand when none does.` with `<n>` the count of distinct paths, written `1 location` when it is one, and `<path>` the first in scan order; `subjectId` is the scanning Spec, `relatedId` the target Spec id, `path` that first path, and `file` the Spec\'s carrier. An address on the scanning Spec\'s own id is checked for its entry and never warned.',
-          "A mention error or pair warning carries `line` when the location table records the corresponding text path; a question link uses the `question[<i>].links` row, and an unrecorded line is omitted.",
+          "A mention error or pair warning carries `line` when the location table records the corresponding text path; `behavior.rules[<i>]` uses `rule[<i>]`, `behavior.flows[<i>]` uses `flow[<i>]`, an open question's text uses `question[<i>]`, and a question field uses `question[<i>].<field>`, with each question link using the `links` row. Entries of Rule, Workflow and Contract use the same behavior paths as entries of Behavior. An unrecorded line is omitted.",
           "The warning is honest when it stands: the six relations are typed, a mention that none of them describes is lawful prose, and no author declares a relation to silence the report. Warnings never fail `sdp validate`; the mention audit recipe reports every location of every pair as data and stays the way to list them at once.",
         ],
       },
@@ -1670,50 +1670,62 @@ export const validationSpecs = [
     id: "spec:validation.architecture-constraints",
     specKind: "rule",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/architecture-constraints.sdp.md",
     title: "Declared architecture rules are checked against anchored structure",
     narrative:
-      "The original design gave architecture a validation tier of its own. Its rules said that only adapter components depend on external systems, that domain code imports no infrastructure and that layers depend in one direction; dependency-cruiser, architecture tests and lint rules ran them, and their findings joined the one report (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.4). Since the architectural annotation decision, the data those rules read is in the graph with no inference: a component anchor states its layer and its context, and `uses` and `memberOf` edges are anchored. The same decision keeps the check out of the Protocol. A negative architecture constraint stays declared intent in a Spec, and a corpus that wants it enforced checks its declared `uses`, `layer` and `context` in its own gate.\n\nThe first adopter checks that a component in its `platform` context has no `uses` edge to a component in another context, resolving each end through `memberOf`. Architecture crossings, recipe 32, reports differences in context or layer and refuses nothing. The architectural annotation decision keeps architecture checks in the corpus's own gate, and the Protocol supplies the reusable graph walk.",
+      "The original design gave architecture a validation tier of its own. Its rules said that only adapter components depend on external systems, that domain code imports no infrastructure and that layers depend in one direction; dependency-cruiser, architecture tests and lint rules ran them, and their findings joined the one report (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.4). Since the architectural annotation decision, the data those rules read is in the graph with no inference: a component anchor states its layer and its context, and `uses` and `memberOf` edges are anchored. The same decision keeps the check out of the Protocol. A negative architecture constraint stays declared intent in a Spec, and a corpus that wants it enforced checks its declared `uses`, `layer` and `context` in its own gate.\n\nThe first adopter checks that a component in its `platform` context has no `uses` edge to a component in another context, resolving each end through `memberOf`. Architecture crossings, recipe 32, reports differences in context or layer and refuses nothing. The architectural annotation decision keeps architecture checks in the corpus's own gate, and the Protocol supplies the reusable graph walk.\n\nThe walk returns the edges a rule forbids as corpus findings, so one body answers a reader through `sdp q` and fails a gate when the corpus names it as a rules file; the first adopter's isolation check becomes the walk named by `sdp validate --rules` with the isolated context `platform`, and none of its own code. An edge the walk cannot decide, because a component states no layer or context or an end belongs to no component, is listed apart: a breach the anchors cannot show is a curation gap, not a finding.",
     sections: {
       intent: {
         problem:
           "A corpus that states an architecture rule in a Spec cannot have it checked by the Protocol, so each adopter writes the same walk over `uses`, `memberOf`, `layer` and `context` in its own gate.",
         outcome:
           "Check a corpus's declared architecture rules, such as a forbidden uses direction or context isolation, against the layers, contexts and uses its anchors state.",
-        openQuestions: [
-          {
-            question:
-              "Do corpus rules need to require a component to state a layer or context, or check ports and routes that anchors do not carry, beyond the selected forbidden layer pairs and isolated contexts?",
-            blocking: false,
-            key: "ruleForms",
-            decider: "owner",
-            provisional:
-              "the supplied walk checks forbidden layer pairs and isolated contexts; absent attributes are unclassified rather than breaches",
-          },
-          {
-            question:
-              "Which pure callable walk serves both the catalog recipe and a loaded corpus rule, and what rule-data and result shapes do they share?",
-            blocking: false,
-            key: "walkInvocation",
-            decider: "owner",
-            provisional:
-              "one pure walk takes `params.forbidden`, a list of `{ from, to }` layer pairs, and `params.isolated`, a list of context tokens whose components may have no `uses` edge into another context, either list possibly empty; it returns each forbidden edge as `{ from, to, fromComponent, toComponent, rule }` and lists unclassified edges apart; recipe 32's result stays as it is",
-          },
-        ],
       },
       behavior: {
         rules: [
           "The Protocol's validators never judge a corpus's architecture; an architecture rule runs as one of the corpus's own rules, the corpus's gate decides what fails, and that gate may be the corpus's own invocation of `sdp validate --rules` with the severity the rule states.",
           "A corpus states each architecture rule as intent in a `constraint` Spec that says what is forbidden and why, and keeps the rule's machine form, its forbidden layer pairs and isolated contexts, as data its corpus rule passes to the walk.",
-          "The Protocol supplies the walk as a catalog recipe that takes forbidden layer pairs and isolated contexts as recipe parameters, resolves each end of every anchored `uses` edge to its component, directly or through `memberOf`, and returns each edge a rule forbids with both units, both components and the rule.",
+          "The Protocol supplies the walk as a catalog recipe, recipe 42, that takes forbidden layer pairs and isolated contexts as recipe parameters, resolves each end of every anchored `uses` edge to its component, directly or through `memberOf`, and returns each edge a rule forbids with both units, both components and the rule.",
+          "The walk returns the edges it forbids as corpus findings in its answer's `findings`, so the shipped recipe file runs unchanged as a rules file under `sdp validate --rules`, at the severity the corpus passes it.",
+          "The walk checks two forms, forbidden layer pairs and isolated contexts. It requires no component to state a layer or a context and checks no port, route or other fact the anchors do not carry; a corpus that wants such a check writes a rule of its own.",
           "The walk reads the given rules and anchored structure only; it infers no edge from imports, reads no file path, judges no role and refuses nothing.",
-          "A component that states no layer or context falls outside a rule that names one, and the walk reports it as unclassified rather than as a breach.",
+          "A component that states no layer or context falls outside a rule that names one, and the walk lists the edge as unclassified rather than as a breach, as it lists an edge with an end that belongs to no component.",
           "The corpus binds a discovered TypeScript check site to its constraint Spec through a test anchor; that check invokes the corpus rule, and `has-verifier` states that the check exists while its result stays in the corpus's run.",
         ],
+        exampleSpace: {
+          given: [
+            'a member of a component at the layer {fromLayer:"domain"|"application"} in the context {fromContext:"platform"|"orders"} that uses a member of a component at the layer {toLayer:"infrastructure"|"adapter"|"unstated"} in the context {toContext:"platform"|"orders"}',
+          ],
+          when: [
+            'the architecture walk runs {invocation:"through sdp q"|"as a rules file named by sdp validate --rules"} with the forbidden pair domain to infrastructure and the isolated context platform',
+          ],
+          then: [
+            "the walk reports {findings:number} findings with the rule ids {ruleIds:string}",
+            "the walk lists {unclassified:number} unclassified edges",
+            "the command exits {exitCode:number}",
+          ],
+        },
         ruleKeys: {
           walk: "rules[2]",
+          walkAsRule: "rules[3]",
+          forms: "rules[4]",
+          unclassified: "rules[6]",
         },
+      },
+      design: {
+        walkParams:
+          'recipe 42, the architecture walk, takes `params.forbidden`, a list of `{ from, to }` pairs of layers from the closed set; `params.isolated`, a list of context tokens; and `params.severity`, `"error"` by default or `"warning"`; either list may be empty, and a pair or context given twice counts once; a parameter name outside these three returns `{ unknownParams, accepts }` alone, before any other check, as every catalog recipe answers a name it does not take; neither list given, a layer outside the set, a malformed token or another severity returns `{ diagnostics }` with no `findings`; and either answer fails the file when the walk runs as a rules file.',
+        walkAnswer:
+          "`{ input: { forbidden, isolated, severity }, totals: { usesEdges, resolved, findings, unclassified }, findings, unclassified }` is the answer when every parameter name is known and every value lawful, where `resolved` counts the `uses` edges whose two ends both resolve to a component; findings sort by `from`, then `to`, then rule id, and unclassified rows by `from`, then `to`; recipe 32's answer stays as it is.",
+        walkBreach:
+          "an anchored `uses` edge whose ends resolve to two distinct components breaks the pair `{ from, to }` when the using component states layer `from` and the used one states layer `to`, and breaks the isolation of a context when the using component states that context and the used one states another; two units of one component never break a rule, as recipe 32 never counts them as crossing.",
+        walkFinding:
+          "`{ validatorId, subjectId, relatedId, severity, message, from, to, fromComponent, toComponent, rule }`, a corpus finding in the shape `spec:validation.corpus-rules#design.ruleFinding` pins, where `subjectId` is the using unit `from`, `relatedId` the used unit `to`, both components are `{ id, layer, context }` with null for an unstated attribute, and `validatorId` is `forbidden-layer` with `rule: { from, to }` the pair it breaks, or `isolated-context` with `rule: { context }` the isolated context it leaves.",
+        walkMessages:
+          "a `forbidden-layer` message reads `<from> uses <to>: layer <from layer> uses layer <to layer> (<fromComponent id> to <toComponent id>), a forbidden pair`, and an `isolated-context` message reads `<from> uses <to>: <fromComponent id> in the isolated context <context> uses <toComponent id> in the context <other context>`.",
+        walkUnclassified:
+          '`unclassified` rows `{ from, to, fromComponent, toComponent, missing }` list each anchored `uses` edge the walk cannot decide while a list is non-empty: an edge with an end that belongs to no component, that end\'s component null and `missing: ["component"]`, and an edge between two distinct components where either leaves unstated an attribute a non-empty list reads, `layer` for `forbidden` and `context` for `isolated`, named in `missing`.',
       },
     },
     deliveryFacts: [],
@@ -1722,64 +1734,340 @@ export const validationSpecs = [
     id: "spec:validation.corpus-rules",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/corpus-rules.sdp.md",
     title: "Corpus-authored rules run on the one validation path",
     narrative:
-      "The original design let a team add its own rules beside the built-in validators, each with an id, a severity and the whole graph query API, run in the same pass and reported in the same output (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.5). The Protocol has two check families, conformance and honesty, and every validator belongs to one of them. The architectural annotation decision sends a corpus's own rules to the corpus's own gate.\n\nThe first adopter's gate runs `sdp validate` and parses its summary line, then checks its own context isolation, entry addresses, dependency cycles, question keys, prose mentions, cited laws and Pack pages. It also parses carrier frontmatter to read kind, readiness and relations, a second read model that a graph-based corpus-rule runner would remove.",
+      "The original design let a team add its own rules beside the built-in validators, each with an id, a severity and the whole graph query API, run in the same pass and reported in the same output (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.5). The Protocol has two check families, conformance and honesty, and every validator belongs to one of them. The architectural annotation decision sends a corpus's own rules to the corpus's own gate.\n\nThe first adopter's gate runs `sdp validate` and parses its summary line, then checks its own context isolation, entry addresses, dependency cycles, question keys, prose mentions, cited laws and Pack pages. It also parses carrier frontmatter to read kind, readiness and relations, a second read model that a graph-based corpus-rule runner would remove.\n\nA rules file holds the body `sdp q` evaluates, so a rule tried through `sdp q` runs unchanged under `sdp validate`, and a catalog recipe whose answer carries findings, such as the architecture walk, is a rules file as shipped. The runner reads only the answer's findings, so the recipe keeps the rest of its answer for a reader. Corpus findings print after the Protocol's and are tallied on a line of their own, so a gate that reads the Protocol's summary line reads it unchanged; any error, the Protocol's or the corpus's, exits 1, and the two lines say which. Each rules file receives its own copy of what it reads, so a careless rule cannot change another rule's input and the order of the files changes only the order of the output. Its parameters are its own too: a catalog recipe answers a parameter name it does not take with that name and no findings, so parameters shared by every file would fail the walk on the names another file reads.",
     sections: {
       intent: {
         problem:
           "A corpus with rules of its own checks them off the one validation path, reading the carriers a second way and reporting in a form no Protocol surface reads.",
         outcome:
           "Let a corpus author its own graph rules and have their findings join the one validation report, so no corpus re-parses its carriers to check itself.",
-        openQuestions: [
-          {
-            question:
-              "Does an operator-named rules file hold one async body returning findings or a module exporting named rule functions, how are parameters supplied, in what order do several files run, and does `sdp validate --watch` rerun them?",
-            blocking: false,
-            key: "rulesRepresentation",
-            decider: "owner",
-            provisional:
-              "one async body per file, given `g`, `graph`, `report` and `params`, with `params` from `sdp validate --params` and `{}` without it; files run in the order named, each to completion; a rule id is unique within its file; `sdp validate --watch` runs the same named rules each cycle",
-          },
-          {
-            question:
-              "What shape does a corpus finding take beside the one diagnostic currency, where does the report carry it, and does it reach `report`, the reader's `findings()` or the Design Review?",
-            blocking: false,
-            key: "findingCurrency",
-            decider: "owner",
-            provisional:
-              "the shared finding contract has a Protocol branch carrying `validatorId`, `family`, severity and message, and a corpus branch carrying the corpus, the rule id as `validatorId`, `subjectId`, severity and message and no family; `relatedId`, `path`, `file` and `line` stay optional on both branches; corpus findings are collected as `corpusFindings` in the same report and rendered under a corpus-labelled section with the existing location, severity, identifier and message composition; Protocol findings, the summary line and the Design Review stay unchanged, as the frozen-projections decision requires",
-          },
-          {
-            question:
-              "Does the runner enforce that a rule reads only the graph and changes nothing, or are both obligations on the rule's author?",
-            blocking: false,
-            key: "ruleIsolation",
-            decider: "owner",
-            provisional:
-              "changing nothing is a guarantee, with the Protocol's validators run first and each rule given a frozen or cloned graph; reading only the graph is the author's obligation, run with the trust `sdp q` asks and no sandbox",
-          },
-        ],
       },
       behavior: {
         rules: [
           "A corpus rule is a graph body the corpus authors, given `g`, `graph`, `report` and `params` as a recipe body is, and returning findings that each carry a rule id, a subject, a message and a severity.",
-          "A corpus rule reads the one derived graph and nothing else, so no rule reads a carrier, a source file or the network.",
-          "Each corpus finding names its rule and its corpus as its source and stands apart from the Protocol's own findings; the Protocol states none of these rules and ships none.",
-          "Corpus findings stand outside the conformance and honesty families, in a section of the report labelled as the corpus's own, so the two families keep their meaning and the guardrail that checks never judge content quality or workflow keeps binding the Protocol's own validators.",
+          "A corpus rule reads the one derived graph, the Protocol's report and the `params` the operator supplies for its file, and no carrier, source file or network; that is the rule author's obligation, because the runner evaluates the body with the trust `sdp q` asks and claims no sandbox.",
           "Validation runs corpus rules only from a file the operator names with `sdp validate --rules PATH`, which may repeat, and never from a file it finds in the corpus or in a configuration; it asks the trust `sdp q` already asks, to run code the operator chose.",
+          "Rules files run one at a time in the order named, each to completion, after the Protocol's validators; every file receives the same Protocol report and none sees another file's findings, so the order changes only the order of the output.",
+          "Each rules file receives its own copy of the graph and the report, made after the graph is written, and its own `params`, so a body that changes what it receives changes no node, edge, delivery fact or Protocol finding, and nothing another rules file receives.",
+          "Each rules file receives as `params` only the parameters the operator names after its `--rules` and before the next `--rules`, or `{}` when none follow it, so no file receives a parameter meant for another.",
+          "A rule id names one check within its rules file; two files may use the same id, and their findings stay apart by the file that reported them.",
+          "Each corpus finding names its rule and its rules file as its source. The Protocol states none of these rules: a shipped recipe that a corpus names as a rules file checks the rule data the corpus passes it.",
+          "Corpus findings stand outside the conformance and honesty families, in a section of the output labelled as the corpus's own and tallied on a summary line of their own, so the two families keep their meaning, the guardrail that checks never judge content quality or workflow keeps binding the Protocol's own validators, and no corpus finding adds to, suppresses or changes a Protocol finding or the exit reason it sets.",
           "A corpus finding carries severity `error` or `warning`. When the operator names `--rules`, an `error` corpus finding makes `sdp validate` exit nonzero and a `warning` stays informative; without `--rules` no corpus rule runs and only the Protocol's validators set the exit code.",
-          "Corpus findings keep their own source and report section, are tallied apart from the Protocol's summary line, and neither add to, suppress nor change a Protocol finding or the exit reason it sets.",
-          "A rules file that cannot load, a rule that throws, or a rule that returns a finding without a rule id, subject, message and admitted severity is a rule execution failure; `sdp validate` reports it in the corpus section and exits nonzero, so a broken rule never passes as a clean run.",
-          "A corpus rule changes no node, edge or delivery fact; it reports on the graph it is given.",
+          "A corpus finding moves no readiness floor and reaches no other surface: not the report `sdp q` hands a body, not the reader, not the written graph, and not the Design Review or another projection.",
+          "A rules file that cannot be read or does not parse, a body that throws, or an answer that is not an object with a `findings` array of well-formed findings is a rule execution failure; `sdp validate` reports it in the corpus section and exits nonzero, so a broken rule never passes as a clean run. A failed file reports none of its findings, and the other files still run.",
+          "`sdp validate --watch` with `--rules` reads and runs every named rules file afresh in each cycle, after the Protocol's validators; an edit to a rules file alone starts no cycle, because the watcher watches carriers.",
+          "When the graph does not derive, no rules file runs, and the corpus summary line says so.",
         ],
-        ruleKeys: {
-          operatorNamed: "rules[4]",
-          exitCode: "rules[5]",
-          brokenRuleFails: "rules[7]",
+        exampleSpace: {
+          given: [
+            "a probe corpus the Protocol's validators find clean",
+            'a first rules file that {first:"returns one error finding"|"returns one warning finding"|"returns a finding with no subject"|"empties the graph it receives"}',
+            "a second rules file that returns one warning when the graph it receives holds no node",
+          ],
+          when: [
+            "the probe corpus is validated with the rules files named by --rules in that order",
+          ],
+          then: [
+            "the command exits {exitCode:number}",
+            "the Protocol summary line reads {protocolSummary:string}",
+            "the corpus summary line reads {corpusSummary:string}",
+          ],
         },
+        ruleKeys: {
+          readsGraphOnly: "rules[1]",
+          operatorNamed: "rules[2]",
+          namedOrder: "rules[3]",
+          copiesPerFile: "rules[4]",
+          exitCode: "rules[9]",
+          neverMovesFloor: "rules[10]",
+          brokenRuleFails: "rules[11]",
+          watchReruns: "rules[12]",
+        },
+      },
+      design: {
+        rulesFlag:
+          "`sdp validate [root] [--exclude PATH]... [--check-clean | --watch] [--rules PATH [--params JSON | --params @PATH | --params KEY=@PATH]...]...`; `--rules` and `--params` are options of `validate` alone, a `--params` before the first `--rules` is refused, one file named twice is refused, and each PATH resolves from the working directory, as a `--params @PATH` file does.",
+        paramsFlag:
+          "`--params` on `validate` takes the three forms of `sdp q --params` with the same refusals, before the graph derives; each `--params` belongs to the nearest `--rules` before it in the argument list, whatever other options stand between them; one file's parameters merge as `sdp q` merges them, a key given twice for one file is refused, two files may each take the same key, and a file with no `--params` after it receives `{}`.",
+        rulesFile:
+          "a rules file is UTF-8 text holding one plain JavaScript async function body, the form `sdp q` evaluates, with the bindings `g`, `graph`, `report` and `params`; the runner reads the text and never imports it as a module, so no file extension is required and a catalog recipe file under `dist/recipes/` is a lawful rules file.",
+        ruleAnswer:
+          "`{ findings: [] }`: the body returns an object whose `findings` is an array, possibly empty; the runner reads `findings` and nothing else, so the answer's other keys stay the body's own data and are never printed.",
+        ruleFinding:
+          '`{ validatorId, subjectId, severity, message, relatedId?, path?, file?, line? }`, where `validatorId` is the rule id, one token matching `^[a-z][a-z0-9-]*$`, so it never reads as a Protocol validator id; `subjectId` and `message` are non-empty strings; `severity` is `"error"` or `"warning"`; `relatedId` and `path` are strings; `file` is a non-empty string read as a root-relative POSIX path, and `line` a positive integer that requires `file`; the runner ignores a finding\'s other keys.',
+        corpusFinding:
+          "`{ rulesFile, validatorId, subjectId, severity, message, relatedId?, path?, file?, line? }` is the corpus branch of the finding currency, where `rulesFile` is the path as the operator named it; it carries no `family`, and the Protocol's findings keep their shape.",
+        corpusReport:
+          "the report a run with `--rules` builds keeps the Protocol's findings unchanged in `findings` and adds `corpusFindings`, the corpus findings of each file that did not fail, in the order the files are named and then in the order returned, and `corpusFailures`, one `{ rulesFile, reason }` for each failed file in the order named, never a finding; the report a rules file receives, like the one `sdp q` hands a body, carries neither.",
+        corpusSection:
+          "on standard error, after every Protocol finding, each rules file in the order named prints the line `corpus rules <path>` and then its findings in the order returned, each in the one composition of location, severity in brackets, rule id and message; a failed file prints `corpus rules <path> failed: <reason>` in place of its findings.",
+        corpusSummary:
+          "`corpus rules: <errors> errors · <warnings> warnings · <failed> of <files> files failed (the corpus's own rules)`, written to standard output directly after the Protocol's summary line, which stays as `spec:validation.diagnostic-rendering#design.summaryLine` pins it; without `--rules` no such line prints; when the graph does not derive, no rules file runs and no Protocol summary line prints, and the corpus line, the last line on standard output, reads `corpus rules: not run, the graph did not derive`.",
+        exitCodes:
+          "with `--rules`, `sdp validate` exits 1 when a Protocol finding is an error, a corpus finding is an error, a rules file fails or the graph does not derive, and 0 otherwise; the two summary lines say which.",
+        failureReasons:
+          "`<reason>` is `cannot be read (<cause>)`, `does not parse at line <L>, column <C>: <cause>`, `threw: <message on one line>`, `returned no findings array`, followed by `; diagnostics: <the answer's diagnostics as JSON>` when the answer carries `diagnostics` or by `; unknownParams: <as JSON>; accepts: <as JSON>` when it carries `unknownParams`, or `finding <N> has no lawful <field>`, with N counted from 1.",
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.corpus-rules.copies-contain-changes",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/corpus-rules.copies-contain-changes.sdp.md",
+    title: "A rules file that empties its graph leaves the next file's graph whole",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the copy rule on two rules files, the first changing the graph it receives and the second reading its own.",
+        assumptions: [
+          "The world writes the probe corpus of the error example. The first rules file's body sets the length of `graph.nodes` and of `graph.edges` to zero and returns `{ findings: [] }`. The second rules file's body returns one warning finding when `graph.nodes` is empty and `{ findings: [] }` otherwise. The world runs `sdp validate` on the probe root with the first file, then the second, named by `--rules`, and reads the exit code and standard output.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a probe corpus the Protocol's validators find clean",
+              'a first rules file that {first: "empties the graph it receives"}',
+              "a second rules file that returns one warning when the graph it receives holds no node",
+            ],
+            when: [
+              "the probe corpus is validated with the rules files named by --rules in that order",
+            ],
+            then: [
+              "the command exits {exitCode: 0}",
+              'the Protocol summary line reads {protocolSummary: "validate: 0 errors · 0 warnings (conformance + honesty over the one graph)"}',
+              'the corpus summary line reads {corpusSummary: "corpus rules: 0 errors · 0 warnings · 0 of 2 files failed (the corpus\'s own rules)"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.corpus-rules.error-finding-fails",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/corpus-rules.error-finding-fails.sdp.md",
+    title: "An error from a corpus rule fails validation and leaves the Protocol's line alone",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the exit rule on one rules file that returns one error finding over a corpus the Protocol finds clean.",
+        assumptions: [
+          'The world writes a probe corpus of two story-altitude behavior Specs stating `idea`, each with an Intent outcome, the second declaring `refines` on the first, so the Protocol\'s validators report no finding. The rules file\'s body returns `{ findings: [{ validatorId: "probe-rule", subjectId: "probe-subject", severity: "error", message: "the probe rule reports its subject" }] }`. The world runs `sdp validate` on the probe root with that file named by `--rules` and reads the exit code and standard output.',
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a probe corpus the Protocol's validators find clean",
+              'a first rules file that {first: "returns one error finding"}',
+            ],
+            when: [
+              "the probe corpus is validated with the rules files named by --rules in that order",
+            ],
+            then: [
+              "the command exits {exitCode: 1}",
+              'the Protocol summary line reads {protocolSummary: "validate: 0 errors · 0 warnings (conformance + honesty over the one graph)"}',
+              'the corpus summary line reads {corpusSummary: "corpus rules: 1 errors · 0 warnings · 0 of 1 files failed (the corpus\'s own rules)"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.corpus-rules.malformed-finding-fails",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/corpus-rules.malformed-finding-fails.sdp.md",
+    title: "A finding with no subject fails its rules file",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the broken-rule rule on one rules file whose only finding carries no subject.",
+        assumptions: [
+          'The world writes the probe corpus of the error example. The rules file\'s body returns `{ findings: [{ validatorId: "probe-rule", severity: "warning", message: "the probe rule forgets its subject" }] }`, a warning that would pass if it were well formed. The world runs `sdp validate` on the probe root with that file named by `--rules`, reads the exit code and standard output, and reads on standard error the failure line naming the first finding\'s `subjectId`.',
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a probe corpus the Protocol's validators find clean",
+              'a first rules file that {first: "returns a finding with no subject"}',
+            ],
+            when: [
+              "the probe corpus is validated with the rules files named by --rules in that order",
+            ],
+            then: [
+              "the command exits {exitCode: 1}",
+              'the Protocol summary line reads {protocolSummary: "validate: 0 errors · 0 warnings (conformance + honesty over the one graph)"}',
+              'the corpus summary line reads {corpusSummary: "corpus rules: 0 errors · 0 warnings · 1 of 1 files failed (the corpus\'s own rules)"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.corpus-rules.warning-finding-informs",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/corpus-rules.warning-finding-informs.sdp.md",
+    title: "A warning from a corpus rule informs and passes",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the exit rule on one rules file that returns one warning finding over a corpus the Protocol finds clean.",
+        assumptions: [
+          'The world writes the probe corpus of the error example. The rules file\'s body returns `{ findings: [{ validatorId: "probe-rule", subjectId: "probe-subject", severity: "warning", message: "the probe rule reports its subject" }] }`. The world runs `sdp validate` on the probe root with that file named by `--rules` and reads the exit code and standard output.',
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a probe corpus the Protocol's validators find clean",
+              'a first rules file that {first: "returns one warning finding"}',
+            ],
+            when: [
+              "the probe corpus is validated with the rules files named by --rules in that order",
+            ],
+            then: [
+              "the command exits {exitCode: 0}",
+              'the Protocol summary line reads {protocolSummary: "validate: 0 errors · 0 warnings (conformance + honesty over the one graph)"}',
+              'the corpus summary line reads {corpusSummary: "corpus rules: 0 errors · 1 warnings · 0 of 1 files failed (the corpus\'s own rules)"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.architecture-constraints.forbidden-layer-pair",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/architecture-constraints.forbidden-layer-pair.sdp.md",
+    title: "A domain member that uses an infrastructure member breaks a forbidden pair",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the walk through `sdp q` on one `uses` edge between members of two components whose layers form a forbidden pair.",
+        assumptions: [
+          'The world writes a probe root with no Spec and two comment-form `component:` anchors, each with one `impl:` member; the using member\'s anchor `uses` the used member. Each component states the layer and context its slots give, and the Protocol\'s validators find the root clean. The world runs the walk\'s shipped recipe file through `sdp q --json` with `params` `{ "forbidden": [{ "from": "domain", "to": "infrastructure" }], "isolated": ["platform"] }`; the rule ids are the findings\' `validatorId` values joined by a comma and a space, in answer order.',
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a member of a component at the layer {fromLayer: "domain"} in the context {fromContext: "orders"} that uses a member of a component at the layer {toLayer: "infrastructure"} in the context {toContext: "orders"}',
+            ],
+            when: [
+              'the architecture walk runs {invocation: "through sdp q"} with the forbidden pair domain to infrastructure and the isolated context platform',
+            ],
+            then: [
+              'the walk reports {findings: 1} findings with the rule ids {ruleIds: "forbidden-layer"}',
+              "the walk lists {unclassified: 0} unclassified edges",
+              "the command exits {exitCode: 0}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.architecture-constraints.isolated-context-as-rule",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/architecture-constraints.isolated-context-as-rule.sdp.md",
+    title: "The walk named as a rules file fails validation on an isolation breach",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the walk's shipped recipe file, unchanged, as a rules file under `sdp validate --rules` on one `uses` edge that leaves an isolated context.",
+        assumptions: [
+          "The world writes the probe root of the forbidden-pair example, with the layers and contexts the slots give. It runs `sdp validate` on that root with the walk's shipped recipe file named by `--rules` and followed by `--params` with the parameters of that example. The findings are the lines in that file's corpus section, and the rule ids are their rule ids joined by a comma and a space, in output order.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a member of a component at the layer {fromLayer: "application"} in the context {fromContext: "platform"} that uses a member of a component at the layer {toLayer: "adapter"} in the context {toContext: "orders"}',
+            ],
+            when: [
+              'the architecture walk runs {invocation: "as a rules file named by sdp validate --rules"} with the forbidden pair domain to infrastructure and the isolated context platform',
+            ],
+            then: [
+              'the walk reports {findings: 1} findings with the rule ids {ruleIds: "isolated-context"}',
+              "the command exits {exitCode: 1}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.architecture-constraints.unstated-layer-unclassified",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/architecture-constraints.unstated-layer-unclassified.sdp.md",
+    title: "A component with no layer leaves its edge unclassified",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the walk through `sdp q` on one `uses` edge whose used component states no layer.",
+        assumptions: [
+          "The world writes the probe root of the forbidden-pair example, except that the used component's anchor states no layer, which the `unstated` value names. It runs the walk as that example does; an empty rule-id string names no finding.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a member of a component at the layer {fromLayer: "domain"} in the context {fromContext: "platform"} that uses a member of a component at the layer {toLayer: "unstated"} in the context {toContext: "platform"}',
+            ],
+            when: [
+              'the architecture walk runs {invocation: "through sdp q"} with the forbidden pair domain to infrastructure and the isolated context platform',
+            ],
+            then: [
+              'the walk reports {findings: 0} findings with the rule ids {ruleIds: ""}',
+              "the walk lists {unclassified: 1} unclassified edges",
+              "the command exits {exitCode: 0}",
+            ],
+          },
+        ],
       },
     },
     deliveryFacts: [],

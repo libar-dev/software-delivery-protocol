@@ -297,6 +297,25 @@ describe("sdp cli", () => {
       const stderr = capture.readStderr();
       for (const [file, specId] of [
         ["specs/model/spec-sections.sdp.md", "spec:model.spec-sections"],
+        ["specs/model/planned-architecture.sdp.md", "spec:model.planned-architecture"],
+        [
+          "specs/validation/architecture-constraints.sdp.md",
+          "spec:validation.architecture-constraints",
+        ],
+        ["specs/validation/corpus-rules.sdp.md", "spec:validation.corpus-rules"],
+        ...[
+          "data",
+          "index-page",
+          "pack-page",
+          "page-elements",
+          "publisher",
+          "search",
+          "shell",
+          "spec-page.core",
+        ].map((name) => [
+          `specs/consumers/spec-studio.${name}.sdp.md`,
+          `spec:consumers.spec-studio.${name}`,
+        ]),
       ] as const) {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
       }
@@ -308,12 +327,6 @@ describe("sdp cli", () => {
           "spec:consumers.obsidian-vault.iteration",
         ],
         [
-          "specs/consumers/obsidian-vault.sdp.md",
-          35,
-          "spec:consumers.spec-studio",
-          "spec:consumers.obsidian-vault",
-        ],
-        [
           "specs/consumers/spec-studio.lenses.sdp.md",
           30,
           "spec:consumers.structural-mermaid",
@@ -321,13 +334,13 @@ describe("sdp cli", () => {
         ],
         [
           "specs/consumers/spec-studio.lenses.sdp.md",
-          33,
+          37,
           "spec:observation.run-evidence",
           "spec:consumers.spec-studio.lenses",
         ],
         [
           "specs/consumers/spec-studio.verification-panels.sdp.md",
-          26,
+          28,
           "spec:observation.run-evidence",
           "spec:consumers.spec-studio.verification-panels",
         ],
@@ -343,7 +356,7 @@ describe("sdp cli", () => {
         );
       }
       // Re-measured from the refreshed carriers and their retained warning pairs.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 7 warnings");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 17 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

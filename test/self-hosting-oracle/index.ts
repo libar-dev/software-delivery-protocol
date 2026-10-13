@@ -49,9 +49,9 @@ export const expectedSpecs: readonly ExpectedSpec[] = specFamilies.flatMap(
   (family) => family.specs,
 );
 
-// The owner retains the honesty gap on spec:model.spec-sections and six intended prose-mention
-// pairs with no declared relation either way. Question links name related designs without
-// asserting a dependency; each subject and relatedId pair remains visible as a warning.
+// Five intended prose-mention pairs have no declared relation either way. The owner retains
+// the honesty gap on spec:model.spec-sections; the ready corpus-check and Studio designs await
+// their verifier bindings. These warnings remain informative while their builds are pending.
 export const expectedWarnings = [
   {
     validatorId: "conformance/prose-mentions",
@@ -61,11 +61,16 @@ export const expectedWarnings = [
     relatedId: "spec:consumers.validate-watch",
   },
   {
-    validatorId: "conformance/prose-mentions",
-    family: "conformance",
+    validatorId: "honesty/gaps",
+    family: "honesty",
     severity: "warning",
-    subjectId: "spec:consumers.obsidian-vault",
-    relatedId: "spec:consumers.spec-studio",
+    subjectId: "spec:consumers.spec-studio.data",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.index-page",
   },
   {
     validatorId: "conformance/prose-mentions",
@@ -80,6 +85,42 @@ export const expectedWarnings = [
     severity: "warning",
     subjectId: "spec:consumers.spec-studio.lenses",
     relatedId: "spec:observation.run-evidence",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.pack-page",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.page-elements",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.publisher",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.search",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.shell",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.spec-page.core",
   },
   {
     validatorId: "conformance/prose-mentions",
@@ -99,7 +140,25 @@ export const expectedWarnings = [
     validatorId: "honesty/gaps",
     family: "honesty",
     severity: "warning",
+    subjectId: "spec:model.planned-architecture",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
     subjectId: "spec:model.spec-sections",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:validation.architecture-constraints",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:validation.corpus-rules",
   },
 ] as const;
 
@@ -107,6 +166,7 @@ export type { ExpectedAnchor } from "./anchors.js";
 export { expectedAnchors, expectedBindingEdges, expectedCommentAnchorIds } from "./anchors.js";
 export { expectedDeclaredRelations } from "./declared-relations.js";
 export {
+  expectedCorpusChecksPackMembers,
   expectedDesignIterationPackMembers,
   expectedObsidianVaultPackMembers,
   expectedDesignManagementPackMembers,

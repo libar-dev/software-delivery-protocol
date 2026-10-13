@@ -21,6 +21,13 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "test:protocol.example-runner-cleanup",
+    nodeType: "Anchor",
+    label: "the Vitest adapter cleans up a world whether its steps pass or fail",
+    file: "test/vitest-adapter.test.ts",
+    site: "const contract:",
+  },
+  {
     id: "test:protocol.projections-model.rendering",
     nodeType: "Anchor",
     label: "graph-only rendering tests verify pure disposable projection pages",
@@ -2521,6 +2528,8 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  ["test:protocol.example-runner-cleanup", "verifies", "spec:extraction.example-runner"],
+  ["test:protocol.entry-locations", "verifies", "spec:validation.prose-mentions"],
   ["test:protocol.projections-model.rendering", "verifies", "spec:consumers.projections-model"],
   ["test:protocol.projections-model.reader", "verifies", "spec:consumers.projections-model"],
   ["test:protocol.projections-model.publication", "verifies", "spec:consumers.projections-model"],
@@ -3318,6 +3327,7 @@ export const expectedBindingEdges = [
 
 // re-measured under plan 41
 export const expectedCommentAnchorIds = [
+  "test:protocol.example-runner-cleanup",
   "component:protocol.reader",
   "impl:protocol.agent-surface",
   "impl:protocol.reader",

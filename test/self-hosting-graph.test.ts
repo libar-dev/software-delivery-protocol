@@ -31,6 +31,7 @@ import {
   expectedCommentAnchorIds,
   expectedComponentIds,
   expectedDeclaredRelations,
+  expectedCorpusChecksPackMembers,
   expectedDesignIterationPackMembers,
   expectedObsidianVaultPackMembers,
   expectedDesignManagementPackMembers,
@@ -203,7 +204,7 @@ describe("the self-hosting corpus", () => {
     expect(result.report.findings).toEqual([]);
   });
 
-  it("reports exactly the retained honesty gap and six intended prose mentions", () => {
+  it("reports exactly the pending verifier gaps and five intended prose mentions", () => {
     expect(
       validateGraph(result.graph).findings.map(
         ({ validatorId, family, severity, subjectId, relatedId }) => ({
@@ -221,16 +222,16 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    // Re-measured from the refreshed tree: 256 Markdown Specs and four Gherkin Specs,
-    // all 260 in the self-hosting Pack; five Pack manifests and 299 source anchors.
-    // The excluded-root validate run corroborates 564 nodes and 1452 edges.
-    expect(result.counts).toEqual({ specs: 260, packs: 5, anchors: 299 });
-    expect(expectedSpecs).toHaveLength(260);
+    // Re-measured from the refreshed tree: 272 Markdown Specs and four Gherkin Specs,
+    // 260 in the self-hosting Pack; six Pack manifests and 300 source anchors.
+    // The excluded-root validate run corroborates 582 nodes and 1534 edges.
+    expect(result.counts).toEqual({ specs: 276, packs: 6, anchors: 300 });
+    expect(expectedSpecs).toHaveLength(276);
     expect(expectedPackMembers).toHaveLength(260);
-    expect(expectedAnchors).toHaveLength(299);
-    expect(expectedBindingEdges).toHaveLength(339);
-    expect(result.graph.nodes).toHaveLength(564);
-    expect(result.graph.edges).toHaveLength(1452);
+    expect(expectedAnchors).toHaveLength(300);
+    expect(expectedBindingEdges).toHaveLength(341);
+    expect(result.graph.nodes).toHaveLength(582);
+    expect(result.graph.edges).toHaveLength(1534);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -292,7 +293,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 16, idea: 11, ready: 224, scoped: 9 });
+    ).toEqual({ defined: 27, idea: 11, ready: 235, scoped: 3 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {
@@ -302,6 +303,7 @@ describe("the self-hosting corpus", () => {
         .map((edge) => [edge.from, edge.to, edge.claim]),
     ).toEqual([
       ...expectedStudioPackMembers.map((id) => [id, "pack:spec-studio-v1", "declared"]),
+      ...expectedCorpusChecksPackMembers.map((id) => [id, "pack:corpus-checks-v1", "declared"]),
       ...expectedDesignIterationPackMembers.map((id) => [
         id,
         "pack:design-iteration-v1",
@@ -503,7 +505,7 @@ describe("the self-hosting corpus", () => {
 
   it("finds every converted comment anchor at its block's first line", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedCommentAnchorIds).toHaveLength(29);
+    expect(expectedCommentAnchorIds).toHaveLength(30);
     expect(
       expectedAnchors
         .filter((anchor) => anchor.constant === undefined)
