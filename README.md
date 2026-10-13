@@ -116,15 +116,24 @@ pnpm exec sdp --help
 pnpm exec sdp build .
 pnpm exec sdp validate .
 pnpm exec sdp view .
+pnpm exec sdp studio .
+pnpm exec sdp validate . --rules design/policy.js --params @design/policy.json
 pnpm exec sdp q 'return g.specs().map((spec) => spec.id)'
 ```
 
 `build` derives the graph, executable contracts and registrars, `validate` adds conformance and
 honesty checks, `view` generates the Design Review, `census` the census, `mermaid` the Mermaid
-diagrams, and `gherkin` the Gherkin-shaped read view. `new spec` scaffolds an idea-rung Markdown
-carrier, `import` converts TypeScript Spec carriers to Markdown, and `q` evaluates a local
+diagrams, `gherkin` the Gherkin-shaped read view, and `studio` the static Spec Studio pages.
+`new spec` scaffolds an idea-rung Markdown carrier, `import` converts TypeScript Spec carriers to Markdown, and `q` evaluates a local
 JavaScript query body against a freshly derived graph. Run `sdp --help` for the complete option
 contract. Adopters own their root and exclusion policy.
+
+`validate --rules PATH [--params FORM]...` runs a local async graph body returning `{ findings }`.
+Repeat `--rules` for more files and put each file's parameters after that flag. Corpus findings
+and failed files print apart from Protocol findings; a corpus error or failed file exits 1.
+With `--watch`, carrier changes reread the rules files; editing a rules file alone starts no cycle.
+The five projection publishers each replace their own root after the build clears the previous
+roots. The repository's generation and check scripts publish all five together.
 
 ### Upgrade recipe callers
 

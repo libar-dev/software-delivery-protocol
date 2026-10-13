@@ -124,7 +124,7 @@ function sections(ctx: PageContext, spec: SpecContext): string {
           .join("")}</dl>`;
         const questions = spec.designColumns.openQuestions;
         if (questions.length)
-          body += `<h3>Open questions</h3><ul class="questions">${questions.map((q) => `<li${q.key === undefined ? "" : ` id="question.${escape(q.key)}"`}>${q.blocking ? "blocking" : "non-blocking"}${q.key === undefined ? "" : ` · ${code(`question.${q.key}`)} · ${code(`${spec.id}#question.${q.key}`)}${copy(`${spec.id}#question.${q.key}`)}`}${lineLabel(q.line)} · ${text(ctx, q.question)}${questionFields(ctx, q, (v) => text(ctx, v))}</li>`).join("")}</ul>`;
+          body += `<h3>Open questions</h3><ul class="questions">${questions.map((q) => `<li${q.key === undefined ? "" : ` id="question.${escape(q.key)}"`}>${q.blocking ? "blocking" : "non-blocking"}${q.key === undefined ? "" : ` · ${code(`question.${q.key}`)}${copy(`${spec.id}#question.${q.key}`)}`}${lineLabel(q.line)} · ${text(ctx, q.question)}${questionFields(ctx, q, (v) => text(ctx, v))}</li>`).join("")}</ul>`;
       } else {
         if (name === "verification" && typeof record.mode === "string")
           title += ` · ${record.mode}`;

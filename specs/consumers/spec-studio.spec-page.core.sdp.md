@@ -28,7 +28,7 @@ The full Spec page adds panels to this core: diagrams, a runtime neighborhood, v
 - rule: [#summary] A summary in words follows the header with what the header does not show: the open and blocking questions, and the implementation, verifier and oracle bindings as present or none. It repeats no rung the header shows.
 - rule: [#sections] The narrative comes next, then each section the Spec carries as a panel open by default, in the order intent, behavior, constraints, model, design, decision, verification, ui, with its entries in authored order. A section the Spec lacks is absent, and the page adds no section the graph does not hold. The narrative carries the element id `narrative` and each section panel `section.<name>`, such as `section.behavior`.
 - rule: [#entryIds] Every entry an entry address can name, a keyed Design or UI entry, a keyed rule or flow and a keyed open question, carries an element id equal to its address after the `#`, such as `design.<key>`, and shows its key and its recorded line.
-- rule: [#questions] Each open question shows its blocking flag in words, its key and address when it has one, its text, its decider, its links, linked, its provisional reading and its trigger when present, and its recorded line. It shows no date: git records when a line changed.
+- rule: [#questions] Each open question shows its blocking flag in words, its key as code with a copy action for the full entry address when it has one, its text, its decider, its links, linked, its provisional reading and its trigger when present, and its recorded line. It shows no date: git records when a line changed.
 - rule: A `gwt` or `gwt-vocabulary` fence shows as preformatted step text, as authored.
 - rule: [#relations] Relations show both ways, each with its type, its direction, its claim, the other endpoint, linked when it is a Spec or a Pack, whether it resolves, and its reason and the rule keys it exercises when present.
 - rule: [#bindings] Bindings speak binding language. The implementation binding, design reference, verifier binding and expected-outcome oracle each read present or none, and list each unit, test anchor, example or oracle by id, label, and recorded file and line as text with a copy action; a unit adds its role and component, and an example verifier says whether it is enabled. Runtime observation reads not tracked, and run results read not recorded in the graph.
@@ -39,7 +39,7 @@ The full Spec page adds panels to this core: diagrams, a runtime neighborhood, v
 - summaryLine: one sentence under the header.
 - sectionPanel: an open disclosure per section, headed with the section's name, and for Verification its mode.
 - entryRow: an entry's key as code, its value, and `line <n>` when recorded, in a definition list.
-- questionItem: the blocking flag in words, the key and address, the text, each present field on its own labelled line, and `line <n>` when recorded.
+- questionItem: the blocking flag in words, `question.<key>` as code when keyed, a copy action whose text and accessible name carry the full entry address, with no second code span of that address, the text, each present field on its own labelled line, and `line <n>` when recorded.
 - relationsTable: five columns, relation and direction, other end, claim, reason, and exercised keys, with an unresolved endpoint marked in words.
 - bindingsBlock: four labelled lines, each present or none with its items below it, then runtime observation and run results.
 - findingsList: one line per finding, the severity word first.

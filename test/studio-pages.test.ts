@@ -222,11 +222,25 @@ describe("Studio static pages", () => {
       expect(page.content).toContain('for="q"');
       expect(page.content).toContain('<sdp-stamp page-root="');
       expect(page.content).toMatch(/<script defer src="(?:\.\.\/)?assets\/studio.js"><\/script>/u);
-      expect(page.content).toContain("Example spaces");
       expect(page.content).toContain(`${String(data.rail.findings.errors)} errors`);
     }
     expect(html("pack:probe")).toContain('href="#spec:probe.target"');
     expect(html("spec:probe.all")).toContain('aria-current="page"');
+  });
+  it("lists example-space owners only in Pack and Spec rails", () => {
+    for (const id of ["index.html", "search.html"])
+      expect(rail(html(id))).not.toContain("Example spaces");
+    for (const id of ["pack:probe", "spec:probe.all"])
+      expect(rail(html(id))).toContain("Example spaces</h2><ul><li><a");
+  });
+  it("shows a keyed question once with a copy action naming its full address", () => {
+    const question =
+      /<li id="question.choice">(.*?)<\/li>/su.exec(html("spec:probe.all"))?.[1] ?? "";
+    expect(question).toContain("<code>question.choice</code>");
+    expect(question).toContain('text="spec:probe.all#question.choice"');
+    expect(question).not.toContain("<code>spec:probe.all#question.choice</code>");
+    expect(question).toContain("Which choice?");
+    expect(question).toContain("line 20");
   });
   it("opens the index with counts, four task routes, every facet and stable section ids", () => {
     const index = html("index.html");

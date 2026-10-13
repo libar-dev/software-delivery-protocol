@@ -40,7 +40,7 @@ Choosing a provider stays prose. The original's distinctions between the interfa
 ```gwt-vocabulary
 Given a component design for {componentId:string} that plans the layer {plannedLayer:"domain"|"application"} and uses {plannedUses:string}
 Given the component anchor for that design {anchor:"is absent"|"satisfies the design"}
-Given that anchor states the layer {realizedLayer:"domain"|"application"} and its member uses {realizedUses:string}
+Given that anchor states the layer {realizedLayer:"domain"|"application"|"absent"} and its member uses {realizedUses:string}
 When the realization comparison runs
 Then the comparison lists {unrealized:number} unrealized designs, {matching:number} matching designs and {differing:number} differing rows
 Then the differing fields are {fields:string}

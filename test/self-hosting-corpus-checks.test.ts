@@ -265,7 +265,7 @@ const planAdapters = (contract: Contract) => ({
         member("impl:probe.kernel", "component:probe.kernel") +
         component("component:probe.audit") +
         member("impl:probe.audit", "component:probe.audit");
-      if (p.anchor === "satisfies the design")
+      if (p.anchor === "satisfies the design" && p.realizedLayer !== "absent")
         anchors +=
           component(p.componentId ?? "", p.realizedLayer, undefined, "spec:probe.design") +
           member(

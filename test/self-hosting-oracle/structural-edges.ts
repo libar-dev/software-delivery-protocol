@@ -5,6 +5,7 @@
 // re-transcribed.
 
 export const expectedComponentIds = [
+  "component:protocol.studio-elements",
   "component:protocol.adapters",
   "component:protocol.cli",
   "component:protocol.codegen",
@@ -24,6 +25,8 @@ export const expectedComponentIds = [
 // outside the engine source seams and therefore have no truthful owner among the accepted
 // component set.
 export const structuralMembershipExceptions = [
+  "impl:protocol.architecture-walk-recipe",
+  "impl:protocol.planned-components-recipe",
   "impl:protocol.authoring-on-ramp",
   "impl:protocol.register-recipes",
   "impl:protocol.adopter-on-ramp",
@@ -47,6 +50,106 @@ export const structuralMembershipExceptions = [
 ] as const;
 
 export const acceptedArchitecturalUnits = [
+  {
+    unit: "src/cli/validate-view-command.ts#runValidateRules",
+    anchorId: "impl:protocol.corpus-rules",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/projections/studio/data.ts#packTotals",
+    anchorId: "impl:protocol.studio-data",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/paths.ts#pagePath",
+    anchorId: "impl:protocol.studio-paths",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/publish.ts#studioFiles",
+    anchorId: "impl:protocol.studio-publish",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/cli/studio-command.ts#runStudio",
+    anchorId: "impl:protocol.studio-command",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/cli/build-command.ts#runBuild",
+    anchorId: "impl:protocol.studio-build-invalidation",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/reader/concept-match.ts#matchConcept",
+    anchorId: "impl:protocol.studio-concept-match",
+    componentId: "component:protocol.reader",
+  },
+  {
+    unit: "src/studio-elements/copy.ts#registerCopy",
+    anchorId: "impl:protocol.studio-copy",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/studio-elements/expander.ts#registerExpander",
+    anchorId: "impl:protocol.studio-expander",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/studio-elements/filter.ts#registerFilter",
+    anchorId: "impl:protocol.studio-filter",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/studio-elements/search.ts#registerSearch",
+    anchorId: "impl:protocol.studio-search-form",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/studio-elements/search-results.ts#searchRecords",
+    anchorId: "impl:protocol.studio-search-results",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/studio-elements/stamp.ts#registerStamp",
+    anchorId: "impl:protocol.studio-stamp",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/projections/studio/pages/frame.ts#frame",
+    anchorId: "impl:protocol.studio-frame",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/text.ts#text",
+    anchorId: "impl:protocol.studio-text",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/index-page.ts#indexPage",
+    anchorId: "impl:protocol.studio-index-page",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/pack-page.ts#packPage",
+    anchorId: "impl:protocol.studio-pack-page",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/spec-page.ts#specPage",
+    anchorId: "impl:protocol.studio-spec-page",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/search-page.ts#searchPage",
+    anchorId: "impl:protocol.studio-search-page",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/code-spans.ts#mapCodeSpans",
+    anchorId: "impl:protocol.studio-code-spans",
+    componentId: "component:protocol.projections",
+  },
   {
     unit: "src/extract/serialize.ts#canonicalDynamicSection",
     anchorId: "impl:protocol.open-section-order",
@@ -503,7 +606,7 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.projections",
   },
   {
-    unit: "src/cli/q-command.ts#readParams",
+    unit: "src/cli/q-command.ts#parseQueryArgs",
     anchorId: "impl:protocol.query-params",
     componentId: "component:protocol.cli",
   },
@@ -573,7 +676,7 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.cli",
   },
   {
-    unit: "src/cli/validate-view-command.ts#runValidate",
+    unit: "src/cli/validate-view-command.ts#writeProtocolValidation",
     anchorId: "impl:protocol.validate-summary",
     componentId: "component:protocol.cli",
   },
@@ -594,6 +697,24 @@ export const expectedMemberOfEdges = acceptedArchitecturalUnits
 // impl:protocol.validate-watch, and joined the accepted units above. Plan 43 removed the
 // unused targetsForRelationType helper after the emitter switched to full relation objects.
 export const coarseGrainCoverage = [
+  {
+    unit: "src/cli/params.ts#mergeParams",
+    coveredBy: "impl:protocol.query-params",
+    componentId: "component:protocol.cli",
+    rationale: "src/cli/q-command.ts#parseQueryArgs value-calls mergeParams",
+  },
+  {
+    unit: "src/studio-elements/dom.ts#button",
+    coveredBy: "impl:protocol.studio-search-results",
+    componentId: "component:protocol.studio-elements",
+    rationale: "src/studio-elements/search-results.ts#registerSearchResults value-calls button",
+  },
+  {
+    unit: "src/studio-elements/dom.ts#liveOutput",
+    coveredBy: "impl:protocol.studio-search-results",
+    componentId: "component:protocol.studio-elements",
+    rationale: "src/studio-elements/search-results.ts#registerSearchResults value-calls liveOutput",
+  },
   {
     unit: "src/import/markdown-fidelity.ts#assertMarkdownEmissionFidelity",
     coveredBy: "impl:protocol.sdp-import-markdown-emit",
@@ -632,6 +753,8 @@ export const coarseGrainCoverage = [
 // confer no edge. The convention is stated in spec:protocol.structural-self-binding.
 // re-measured under plan 41
 export const expectedUsesEdges = [
+  ["component:protocol.studio-elements", "component:protocol.reader"],
+  ["component:protocol.studio-elements", "component:protocol.projections"],
   ["impl:protocol.example-runner-adapter", "impl:protocol.example-runner"],
   ["impl:protocol.authored-honesty-delivery-facts", "impl:protocol.delivery-facts"],
   ["impl:protocol.reader", "impl:protocol.delivery-facts"],
