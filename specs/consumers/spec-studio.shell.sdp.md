@@ -9,30 +9,37 @@ relations:
     - spec:consumers.spec-studio.data
     - target: spec:consumers.spec-studio.lenses
       reason: the top navigation opens each lens
+    - target: spec:consumers.spec-studio.responsive
+      reason: the rail moves below the canvas under the phone breakpoint
+    - target: spec:validation.prose-mentions
+      reason: a mention links where the validator resolves it
+    - target: spec:consumers.spec-studio.sharing
+      reason: the shell shows the stamp a publishing step writes beside the page set
 ---
 # The Studio's shell frames every page with navigation, a rail and a canvas
 
+The shell carries what every page shares, including the rules that keep a page readable: by keyboard, without color, on a phone and without its script. Recent edits stay out of it, because a page is a function of the graph alone and git holds the history.
+
 ## Intent
-- outcome: Let a person move between lenses, Packs and Specs from any page, and find a Spec by what they remember of it.
-### Open questions
-- [non-blocking #railHarnesses] The original's left rail shows the current Pack's tree, its specs and then its harnesses; the graph has no harness node. Does the rail list harnesses, and from which graph value?
-  - decider: owner
-  - provisional: the rail lists the current Pack's members that own an example space, each linked to its Spec page, and creates no harness identity
-- [non-blocking #recentEdits] The original's left rail lists recent edits; the graph carries only current state, git is the event log, and the shipped views are a function of the graph alone. Does the rail read recent edits from git when the Studio is built, or leave them out?
-  - decider: owner
-  - provisional: leave recent edits out, so a Studio page stays a function of the graph alone
-- [non-blocking #searchTags] The original's search indexes tags; the Spec envelope is closed to `id`, `kind`, `altitude`, `readiness` and `relations` with the H1 as title, and no free-form tag vocabulary is admitted. What, if anything, does search index in place of tags?
-  - decider: owner
-  - provisional: search matches what `findByConcept` matches, and indexing any further value needs the phase-0 search Spec's own contract
+- outcome: Let a person move between the index, Packs and Specs from any page, find a Spec by what they remember of it, and read every page by keyboard, on a phone and without its script.
 
 ## Behavior
-- rule: Every page has the same shell: a top navigation, a left rail and a main canvas.
-- rule: Search is persistent on every page and uses the searchIndex data entry's scope; each result identifies its node type. A Spec result shows its stated rung beside the floor reached and opens its page; a Pack result opens its page without a readiness label; an Anchor or CodeNode result shows its recorded source location.
+- rule: Every page has the same shell: a top navigation, a left rail and a main canvas, and it opens with a link that skips to the canvas.
+- rule: A search field is on every page; `spec:consumers.spec-studio.search` states what it matches and how its results show.
 - rule: The rail's count of findings is the count of the validation report's findings, never a count the page derives.
+- rule: [#noRecentEdits] The shell shows no recent edits and no other history: git holds it.
+- rule: [#stamp] Served over http or https, the shell reads `stamp.json` beside the page set and, when it loads, shows the build context it names; a page opened through `file://` requests nothing and shows no stamp.
+- rule: [#rungBadge] A stated rung shows as a badge that carries the rung's word, colored from a palette of four that stays distinct under color blindness; the floor reached shows beside it as words with no color of its own, and only the divergence banner adds a warning color, beside its words.
+- rule: [#wordsBesideColor] Every status a color marks is also written in words, so no reading depends on color.
+- rule: [#keyboard] Every link and control is reachable from the keyboard in reading order and shows where the focus is.
+- rule: [#lineLength] Prose runs no wider than about 80 characters, and a table wider than the canvas scrolls inside its own box, never the page.
+- rule: [#text] Authored text renders as plain text with each inline code span as code, and no other Markdown is read. A mention the prose-mentions validator reads links to its target's page when the target resolves, and to the entry when the mention is an entry address.
+- rule: [#withoutScript] Every page reads in full without its script: its collapsible parts are native disclosure elements, and only filtering, search, copying and the stamp need the script.
 
 ## UI
 The parts of the shell, top to bottom and left to right.
-- topNavigation: Packs, Architecture, Tests, Evidence and Search; a capability grouping awaits `spec:consumers.spec-studio.lenses#question.capabilityGrouping`.
-- leftRail: the current Pack's tree, its member Specs in authored order and the validation report's finding counts by severity; recent edits await `spec:consumers.spec-studio.shell#question.recentEdits`.
+- topNavigation: the Studio's name linking to the index, then Packs, linking to the index's Packs section, then the search field; each lens page the page set holds adds its entry in the order `spec:consumers.spec-studio.lenses` gives.
+- stampLine: at the end of the top navigation, the stamp's corpus commit, engine and build time, when the stamp loads.
+- leftRail: on a Pack page, the Pack's members in authored order, each linked to its card on the page; on a Spec page, each Pack the Spec belongs to with its members in authored order, each linked to its Spec page and the current one marked; on any other page, every Pack; then each member of the rail's Packs that owns an example space, linked to its Spec page, with no harness named; then the validation report's finding counts by severity, linked to the index's findings.
+- railOnPhone: below the phone breakpoint the rail follows the canvas, so a page opens on its content.
 - mainCanvas: the page of the Spec or Pack selected in the rail or in a lens.
-- search: matches the fields `spec:consumers.spec-studio.data#design.searchIndex` lists, with the same matching and ordering as `findByConcept`; results follow the search rule.

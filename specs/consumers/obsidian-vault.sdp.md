@@ -16,7 +16,7 @@ relations:
 ---
 # An Obsidian vault lets a person iterate on designs from the one graph
 
-The Design Review links a Spec's relations both ways and gives keyed Pack questions a separate carrier-line link, but it offers no built-in filtering of a Pack or navigation from arbitrary prose mentions to their entries. The Spec Studio is designed for both a person who iterates on a design in the repository and a pull request reviewer who holds only a link. A linked-notes view would let a person follow relations, filter members by rung and design columns, open entries by address and see each pass's edits arrive; whether it is the Studio's local half is the question below.
+The Design Review links a Spec's relations both ways and gives keyed Pack questions a separate carrier-line link, but it offers no built-in filtering of a Pack or navigation from arbitrary prose mentions to their entries. The Spec Studio is designed for both a person who iterates on a design in the repository and a pull request reviewer who holds only a link. A linked-notes view would let a person follow relations, filter members by rung and design columns, open entries by address and see each pass's edits arrive. It is a projection of its own, not the Studio's local half: the Studio's page set serves a reader who holds a link, the vault serves a person who iterates in a notes app, and each has its own verb and root. It waits for a reader who asks for it once the Studio's page set exists.
 
 Obsidian already does that for linked Markdown notes with properties: backlinks, a graph view, search, and filterable tables it calls Bases. The prototype in `explorations/obsidian-vault/` wrote notes from dumped graph and reader values, with relations and checked mentions as wikilinks, entry addresses as block links, and Bases for Pack members and standing queries. Pack members could be read as a sortable table. The prototype joined relation lists and computed flat properties itself, and its dump renamed `statedNextRungFailures` to `nextRungFailures`; those shortcuts are evidence for the product design, not the reader's contract.
 
@@ -30,14 +30,12 @@ The principle is a linked-notes view regenerated from the one graph; Obsidian an
 - risk: A notes app invites editing, and an edit to a generated note is lost at the next regeneration without reaching the carrier.
 
 ### Open questions
-- [blocking #studioRelation] Is the vault a projection of its own, or the Studio's local half beside the static page set a reviewer with only a link reads?
-  - decider: owner
-  - links: spec:consumers.spec-studio
-  - provisional: a projection of its own, written by its own verb under `generated/obsidian-vault/`, which the Studio's design pass may adopt as its local half
 - [non-blocking #otherNotesTools] Does the vault keep to the wikilinks and properties other notes tools read, or use Obsidian's Bases freely?
   - provisional: notes and links stay plain Markdown with wikilinks any such tool reads, and the Bases are Obsidian's alone
 - [blocking #regenerationScope] Which files does the generator own, how are stale generated files removed, and where do Obsidian settings and a person's intent notes live so that regeneration and build invalidation never remove them?
   - decider: owner
   - provisional: the generator owns only its generated note folders and Bases; Obsidian settings and authored intent notes sit outside that owned set, and a completed regeneration removes stale generated notes
+  - trigger: a person asks for a vault beside the Studio's static page set
 
 ## Behavior
+- rule: [#ownProjection] The vault is a projection of its own, written by its own verb under `generated/obsidian-vault/`, and no part of the Studio's page set.

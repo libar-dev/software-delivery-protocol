@@ -13,22 +13,22 @@ relations:
     - spec:extraction.entry-locations
   constrainedBy: spec:extraction.determinism
 ---
-# The Studio hydrates from the serialized graph and the reader's values
+# The Studio renders from the reader's values and embeds only what its script reads
+
+The build writes each value into the page's markup, so a page reads in full as HTML. Search is the exception: a browser refuses a fetch from a page opened through `file://`, so the search page carries its index inside it. On the first adopter's corpus that index is too large to repeat on every page, which is why search runs on a page of its own.
 
 ## Intent
-- outcome: Give every Studio page its data as files the build writes beside it, so the page reads the graph the agent surface reads and derives nothing of its own.
-### Open questions
-- [non-blocking #aiSlices] The original hydrates the Studio from AI slices beside the graph and the validation report; the context bundle is a catalog recipe composed on each invocation and never saved, so no Spec states a saved slice. Does the Studio's data hold a slice, and which Spec would state it?
-  - decider: owner
+- outcome: Render every Studio page from the values the reader returns for the graph the agent surface reads, so a page derives nothing of its own and carries only the data its script needs.
 
 ## Contract
-- The Studio hydrates from data files under `generated/spec-studio/data/`, written by the build that writes its pages.
-- Each data file holds values the graph serializes or the reader returns, and the page follows `spec:consumers.spec-studio`'s rule against recomputing graph joins, claims, delivery facts, readiness and floor failures.
-- A page embeds the data it reads in one `script` element of type `application/json` with the id `sdp-graph`, parses it once into `window.__sdp__.graph`, and every element on the page reads from that one object.
+- [#readerValues] The build renders the index from `specs()`, `packs()`, `findings()` and each Spec's design columns, a Pack page from `packContext` and the Pack totals, a Spec page from `specContext`, and the search page from the search index; every page's rail renders the rail values. A page states no value the reader did not return, apart from counts the build takes of those values.
+- [#embeddedData] A page whose script reads data embeds it in one `script` element of type `application/json` with the id `sdp-data`, written with every `<` as `<` so no text can close the element. The search page embeds the search index there; every other page embeds no data, because its values are in its markup.
+- [#noDataFiles] The page set writes no data file of its own: an agent reads the graph through `sdp q`, and `sdp build` writes the serialized graph.
+- [#noSlices] The Studio's data holds no context bundle or other AI slice: the context bundle is composed on each invocation and never saved, and a design pass composes one with its recipe when it needs it.
 
 ## Design
-- graphFile: the serialized graph exactly as `sdp build` writes `generated/graph.json`, with its `schemaVersion`.
-- reportFile: the validation report, the findings the reader returns from `findings()`.
-- specContexts: for each Spec, the reader's `specContext` value whole: descriptors, narrative, sections, `designColumns`, stated and derived readiness, `floorFailures`, the stated next rung with `statedNextRungFailures`, the floor's `nextRungFailures`, relations both ways with their reason and exercises when present, implementations, references, verifiers, the oracle binding when present, `entryLocations` and findings.
-- packContexts: for each Pack, the reader's `packContext` value whole: framing, model references, members in authored order with each member's stated next rung, design columns and bindings, verifier gaps, boundary and findings.
-- searchIndex: for each node, the fields the reader's `findByConcept` matches: id, title, anchor label, Pack framing, narrative and section content, so a search on the page matches what the concept entry matches.
+- packTotals: `{ members: number; unresolved: number; heldBelowNextRung: number; waitingForAuthor: number; entries: number; declarations: number; openQuestions: number; blockingQuestions: number; withImplementations: number; withReferences: number; restsOn: number; restedOnBy: number; verifiedBy: number; supersededBy: number }`, the totals recipe 29 returns for the Pack, each counted as that recipe counts it.
+- railValues: `{ packs: { id: string; title?: string; members: { id: string; title?: string; statedReadiness?: string; ownsExampleSpace: boolean }[] }[]; findings: { errors: number; warnings: number } }`, the values every page's rail renders: each Pack in id order with its members in authored order, a member owning an example space when its Spec context carries one, and the validation report's findings counted by severity.
+- searchIndex: `{ records: SearchRecord[] }`, one record per graph node, in id order.
+- searchRecord: `{ id: string; nodeType: "Primitive" | "Pack" | "Anchor" | "CodeNode"; page: string | null; title?: string; label?: string; framing?: string; narrative?: string; sections?: Record<string, unknown>; file?: string; line?: number; specKind?: string; statedReadiness?: string; floorReached?: string | null; bindings: { edge: string; specId: string }[]; entries: SearchEntry[] }`: `title`, `label`, `framing`, `narrative` and `sections` exactly as the graph node holds them, the fields `findByConcept` reads; `page` the node's page path in the page set, null for an Anchor or a CodeNode; `file` and `line` as recorded; the kind and the two rungs on a Spec only, `floorReached` null when no rung derives; `bindings` the Specs an Anchor's or CodeNode's outgoing edges reach, with the edge type, and empty for any other node.
+- searchEntry: `{ section: string; entry: string | null; key: string | null; address: string | null; line: number | null; text: string }`, one per entry recipe 23's walk visits in a Spec's narrative and sections, in that walk's order, with that recipe's entry path, coined key, address and line; a value that is not a string is its JSON text.
