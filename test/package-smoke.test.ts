@@ -74,6 +74,7 @@ const expectedRootExports = [
   "isResolvingTestAnchorVerify",
   "kindEvidence",
   "machineToken",
+  "matchConcept",
   "MarkdownEmissionError",
   "mermaidToken",
   "oracleAnchorId",
@@ -109,6 +110,7 @@ const expectedRootExports = [
 ] as const;
 
 const typeOnlyRootExports = [
+  "ConceptRecord",
   "CarrierReification",
   "CarrierReifier",
   "ImportResult",

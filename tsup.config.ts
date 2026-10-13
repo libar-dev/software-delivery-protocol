@@ -15,6 +15,7 @@ export default defineConfig([
     entry: [
       "src/index.ts",
       "src/anchors.ts",
+      "src/reader/concept-match.ts",
       "src/cli/sdp.ts",
       "src/runner/index.ts",
       "src/adapters/vitest.ts",
@@ -24,7 +25,7 @@ export default defineConfig([
     dts: true,
     platform: "node",
     target: "es2022",
-    clean: [`!${RECIPES_DIRECTORY}/**`, `!cli/${BUILD_INFO_FILE}`],
+    clean: [`!${RECIPES_DIRECTORY}/**`, `!cli/${BUILD_INFO_FILE}`, "!studio/**"],
     splitting: false,
     outDir: "dist",
     onSuccess: () => {
@@ -41,5 +42,16 @@ export default defineConfig([
     clean: false,
     splitting: false,
     outDir: "dist",
+  },
+  {
+    entry: { studio: "src/studio-elements/index.ts" },
+    format: ["iife"],
+    outExtension: () => ({ js: ".js" }),
+    dts: false,
+    platform: "browser",
+    target: "es2022",
+    clean: true,
+    splitting: false,
+    outDir: "dist/studio",
   },
 ]);
