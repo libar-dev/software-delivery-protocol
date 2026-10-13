@@ -64,12 +64,12 @@ the recipe check derives with. Run `npm run build` first if `dist/` is absent. D
 link itself into its own `node_modules/.bin`; an unresolved `sdp` can select macOS's unrelated
 binary.
 
-The same CLI publishes four independent read roots with `view`, `census`, `mermaid`, and `gherkin`.
-Each publisher's build removes all four projection roots first.
-The repository's generate/check scripts preserve and publish all four roots together. They save
+The same CLI publishes five independent read roots with `view`, `census`, `mermaid`, `gherkin`, and `studio`.
+Each publisher's build removes all five projection roots first.
+The repository's generate/check scripts preserve and publish all five roots together. They save
 the prior trees before the individual publishers run, preserve each result across the next build's
-invalidation, and restore all four results at the end. In check mode a prior tree must exist for
-each root; Design Review checks repeat-render determinism, while census, Mermaid and Gherkin also
+invalidation, and restore all five results at the end. In check mode a prior tree must exist for
+each root; Design Review checks repeat-render determinism, while census, Mermaid, Gherkin and Studio also
 compare the prior tree's bytes with the current render. Graph questions enter through `q`.
 
 For adopters, the portable form keeps root and exclusions project-selected:
@@ -103,7 +103,7 @@ reason and expected input. Missing required input is never answered as empty, ex
 `files`, which reads as an empty change list.
 The samples name this repository's corpus, so every body runs as written here. The recipe check
 executes each one unchanged. Recipes report absent subjects in their documented result shape.
-Most use `found: false`; the design diff, context bundle and perspective filter report an absent
+Most use `found: false`; the design diff, context bundle, perspective filter and key-family register report an absent
 Pack in `diagnostics`. A value that is not JSON, JSON that is not an object (null, an array, a
 string, a number or a boolean), or a file that cannot be read is refused before the body runs,
 with exit 1 and one line on stderr.
@@ -3244,7 +3244,7 @@ const isPointer = (entry) => entry && typeof entry === "object" && !Array.isArra
   (entry.line === null || typeof entry.line === "number") &&
   Object.keys(entry).length === 1 && Object.hasOwn(entry, "line");
 const address = (id, section, key) => key !== "description" && /^[a-z][A-Za-z0-9]*$/u.test(key) ? `${id}#${section}.${key}` : null;
-const addressesIn = (value) => [...new Set((JSON.stringify(value) ?? "").match(/spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*#(?:design|ui|question|rule)\.[a-z][A-Za-z0-9]*(?![A-Za-z0-9_.#-])/gu) ?? [])];
+const addressesIn = (value) => [...new Set((JSON.stringify(value) ?? "").match(/spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*#(?:design|ui|question|rule)\.[a-z][A-Za-z0-9]*(?![A-Za-z0-9_#-]|\.[A-Za-z0-9])/gu) ?? [])];
 const reference = (id, path, value, own = null) => {
   const addresses = [...new Set([...(own === null ? [] : [own]), ...addressesIn(value)])];
   if (own !== null) return addresses.length === 1 ? own : addresses;
@@ -3981,7 +3981,10 @@ let scope = { corpus: true }, ids = g.specs().map((spec) => spec.id);
 if (params.pack !== undefined) {
   const pack = typeof params.pack === "string" ? g.packContext(params.pack) : undefined;
   if (!pack) bad("pack", "Pack does not resolve.");
-  else { scope = { pack: params.pack }; ids = pack.members.map((member) => member.id); }
+  else {
+    scope = { pack: params.pack }; ids = pack.members.map((member) => member.id);
+    for (const member of pack.members) if (!member.resolved) bad("pack", `${member.id} does not resolve.`);
+  }
 } else if (params.specs !== undefined) {
   if (!Array.isArray(params.specs) || !params.specs.every((id) => typeof id === "string")) bad("specs", "Expected a list of Spec ids.");
   else {
@@ -4095,7 +4098,7 @@ const accepts = [];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
 const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
-const read = (value) => typeof value === "string" ? (/^`([^`]+)`/u.exec(value)?.[1] ?? value).trim() : null;
+const read = (value) => typeof value === "string" ? (/^(`+)(?!`)([^\r\n]+?)(?<!`)\1(?!`)/u.exec(value)?.[2] ?? value).trim() : null;
 const componentId = /^component:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*$/u;
 const token = /^[a-z][a-z0-9-]*$/u;
 const layers = ["edge", "application", "domain", "adapter", "infrastructure"];

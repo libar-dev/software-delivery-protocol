@@ -2056,16 +2056,21 @@ describe("iteration loop: protected entry addresses", () => {
   it("keeps addresses in each place when narrative, example, question and section text are cut", async () => {
     await withCorpus(async (root) => {
       prepareBundleCorpus(root);
-      edit(root, "a.sdp.md", "Narrative for a.", "Narrative for a. spec:probe.a#rule.first");
-      edit(root, "a.sdp.md", "Beta text", "Beta text spec:probe.a#ui.panel");
-      edit(root, "b.sdp.md", "Later question?", "Later question? spec:probe.a#design.beta");
+      edit(
+        root,
+        "a.sdp.md",
+        "Narrative for a.",
+        "Narrative for a. spec:probe.a#rule.first. A tail follows.",
+      );
+      edit(root, "a.sdp.md", "Beta text", "Beta text spec:probe.a#ui.panel.");
+      edit(root, "b.sdp.md", "Later question?", "Later question? spec:probe.a#design.beta.");
       edit(
         root,
         "b.sdp.md",
         "\n\n## Behavior",
         "\n  - links: spec:probe.a#rule.last\n\n## Behavior",
       );
-      edit(root, "example.sdp.md", "Step text secret", "Step text secret spec:probe.a#rule.first");
+      edit(root, "example.sdp.md", "Step text secret", "Step text secret spec:probe.a#rule.first.");
       const derived = extract({ root });
       let result = await runRecipe<Bundle>(
         36,

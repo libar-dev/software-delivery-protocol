@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { posix, win32 } from "node:path";
 import type { RulesInput } from "./build-args.js";
 import { compileBody } from "./q-command.js";
 import { errorMessage, oneLine } from "./output.js";
@@ -15,6 +16,17 @@ function object(value: unknown): value is Record<string, unknown> {
 function nonempty(value: unknown): value is string {
   return typeof value === "string" && value.trim() !== "";
 }
+function rootRelativeFile(value: unknown): value is string {
+  if (
+    !nonempty(value) ||
+    value.includes("\\") ||
+    posix.isAbsolute(value) ||
+    win32.isAbsolute(value)
+  )
+    return false;
+  const normalized = posix.normalize(value);
+  return normalized !== ".." && !normalized.startsWith("../");
+}
 function checkFinding(value: unknown): string | undefined {
   const row = object(value) ? value : {};
   if (typeof row.validatorId !== "string" || !/^[a-z][a-z0-9-]*$/u.test(row.validatorId))
@@ -24,7 +36,7 @@ function checkFinding(value: unknown): string | undefined {
   if (!nonempty(row.message)) return "message";
   for (const field of ["relatedId", "path"])
     if (row[field] !== undefined && typeof row[field] !== "string") return field;
-  if (row.file !== undefined && !nonempty(row.file)) return "file";
+  if (row.file !== undefined && !rootRelativeFile(row.file)) return "file";
   if (
     row.line !== undefined &&
     (typeof row.line !== "number" ||

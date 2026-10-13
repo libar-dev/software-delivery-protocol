@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -96,6 +96,48 @@ describe("corpus rule arguments", () => {
 });
 
 describe("corpus rules on validate", () => {
+  it("refuses the same rules file through a symlink before deriving", async () => {
+    const root = probe();
+    const file = rules(root, "finding.js", `return { findings: [${finding("warning")}] };`);
+    const alias = join(root, "finding-alias.js");
+    symlinkSync(file, alias);
+    const result = await validate(root, "--rules", file, "--rules", alias);
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain(`--rules file ${JSON.stringify(alias)} was given twice.`);
+    expect(result.stdout).toBe("");
+  });
+  it.each([
+    "/etc/passwd",
+    "../outside.ts",
+    "src/../../outside.ts",
+    "src\\\\probe.ts",
+    "C:/outside.ts",
+  ])("refuses a finding file outside root-relative POSIX paths: %s", async (file) => {
+    const root = probe();
+    const path = rules(
+      root,
+      "bad-path.js",
+      `return { findings: [{ ...${finding("warning")}, file: ${JSON.stringify(file)}, line: 1 }] };`,
+    );
+    const result = await validate(root, "--rules", path);
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain("finding 1 has no lawful file");
+    expect(result.stdout).toContain("0 errors · 0 warnings · 1 of 1 files failed");
+  });
+  it.each(["src/probe.ts", "src/../probe.ts"])(
+    "reports a root-relative finding path: %s",
+    async (file) => {
+      const root = probe();
+      const path = rules(
+        root,
+        "path.js",
+        `return { findings: [{ ...${finding("warning")}, file: ${JSON.stringify(file)}, line: 1 }] };`,
+      );
+      const result = await validate(root, "--rules", path);
+      expect(result.code).toBe(0);
+      expect(result.stderr).toContain(`${file}:1`);
+    },
+  );
   it.each(["error", "warning"])(
     "reports a %s finding apart from Protocol findings",
     async (severity) => {

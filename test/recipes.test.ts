@@ -2142,6 +2142,24 @@ describe("register recipe semantics", () => {
     expect(asArray(unlocated.rows).map(asRecord)[0]?.line).toBeNull();
   });
 
+  it("diagnoses an unresolved Pack member without returning a partial register", async () => {
+    const extraction = markdownProbe("sdp-key-family-missing-", {
+      "a.sdp.md":
+        "---\nid: spec:probe.a\nkind: rule\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# A\n## Intent\n- outcome: List keyed values.\n## Design\n- limitOne: One\n",
+      "p.pack.sdp.md":
+        "---\nid: pack:probe.family\nspecs: [spec:probe.a, spec:probe.missing]\n---\n# Family\n",
+    });
+    expect(
+      await runRecipe(
+        recipeByOrdinal(41),
+        { prefixes: ["limit"], pack: "pack:probe.family" },
+        extraction,
+      ),
+    ).toEqual({
+      diagnostics: [{ parameter: "pack", problem: "spec:probe.missing does not resolve." }],
+    });
+  });
+
   it.each([
     { prefixes: [] },
     { prefixes: [""] },
