@@ -1,5 +1,5 @@
 import { mergeParams } from "./params.js";
-import { statSync } from "node:fs";
+import { realpathSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { InvalidExcludePathError, normalizeExcludes } from "../extract/discover.js";
@@ -54,7 +54,12 @@ export function parseBuildArgs(
         return undefined;
       }
       if (argument === "--rules") {
-        const path = resolve(value);
+        let path = resolve(value);
+        try {
+          path = realpathSync(path);
+        } catch {
+          // An unreadable file remains the runner's failure, with the operator's path.
+        }
         if (rulePaths.has(path)) {
           writeStderr(
             output,

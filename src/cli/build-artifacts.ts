@@ -156,11 +156,16 @@ export type GitRunner = (cwd: string, args: readonly string[]) => string;
 const runGit: GitRunner = (cwd, args) =>
   execFileSync("git", [...args], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
 
-/** The full hash of the commit checked out at `root`, or `unknown` when git cannot name one. */
+/** Git names a checkout first; a substituted archive file can name a build without git. */
 export function readBuildCommit(root: string, git: GitRunner = runGit): string {
   try {
     const commit = git(root, ["rev-parse", "HEAD"]).trim();
-
+    if (isFullCommit(commit)) return commit;
+  } catch {
+    // Hosted git dependencies may build from an archive with no .git directory.
+  }
+  try {
+    const commit = readFileSync(join(root, ".git-archive-commit"), "utf8").trim();
     return isFullCommit(commit) ? commit : UNKNOWN_COMMIT;
   } catch {
     return UNKNOWN_COMMIT;

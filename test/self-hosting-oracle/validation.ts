@@ -1791,7 +1791,7 @@ export const validationSpecs = [
       },
       design: {
         rulesFlag:
-          "`sdp validate [root] [--exclude PATH]... [--check-clean | --watch] [--rules PATH [--params JSON | --params @PATH | --params KEY=@PATH]...]...`; `--rules` and `--params` are options of `validate` alone, a `--params` before the first `--rules` is refused, one file named twice is refused, and each PATH resolves from the working directory, as a `--params @PATH` file does.",
+          "`sdp validate [root] [--exclude PATH]... [--check-clean | --watch] [--rules PATH [--params JSON | --params @PATH | --params KEY=@PATH]...]...`; `--rules` and `--params` are options of `validate` alone, a `--params` before the first `--rules` is refused, one file named twice is refused, including through a symlink, and each PATH resolves from the working directory, as a `--params @PATH` file does. Diagnostics retain the path the operator named.",
         paramsFlag:
           "`--params` on `validate` takes the three forms of `sdp q --params` with the same refusals, before the graph derives; each `--params` belongs to the nearest `--rules` before it in the argument list, whatever other options stand between them; one file's parameters merge as `sdp q` merges them, a key given twice for one file is refused, two files may each take the same key, and a file with no `--params` after it receives `{}`.",
         rulesFile:
@@ -1799,7 +1799,7 @@ export const validationSpecs = [
         ruleAnswer:
           "`{ findings: [] }`: the body returns an object whose `findings` is an array, possibly empty; the runner reads `findings` and nothing else, so the answer's other keys stay the body's own data and are never printed.",
         ruleFinding:
-          '`{ validatorId, subjectId, severity, message, relatedId?, path?, file?, line? }`, where `validatorId` is the rule id, one token matching `^[a-z][a-z0-9-]*$`, so it never reads as a Protocol validator id; `subjectId` and `message` are non-empty strings; `severity` is `"error"` or `"warning"`; `relatedId` and `path` are strings; `file` is a non-empty string read as a root-relative POSIX path, and `line` a positive integer that requires `file`; the runner ignores a finding\'s other keys.',
+          '`{ validatorId, subjectId, severity, message, relatedId?, path?, file?, line? }`, where `validatorId` is the rule id, one token matching `^[a-z][a-z0-9-]*$`, so it never reads as a Protocol validator id; `subjectId` and `message` are non-empty strings; `severity` is `"error"` or `"warning"`; `relatedId` and `path` are strings; `file` is a non-empty root-relative POSIX path, with absolute paths, backslashes and traversal above the root refused, and `line` a positive integer that requires `file`; the runner ignores a finding\'s other keys.',
         corpusFinding:
           "`{ rulesFile, validatorId, subjectId, severity, message, relatedId?, path?, file?, line? }` is the corpus branch of the finding currency, where `rulesFile` is the path as the operator named it; it carries no `family`, and the Protocol's findings keep their shape.",
         corpusReport:

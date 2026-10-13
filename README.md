@@ -20,8 +20,11 @@ npm ci
 ```
 
 `npm run check:git-install -- <commit>` installs a committed revision from a local git URL with
-npm and, when present, pnpm, then checks its CLI, export files and a shipped recipe. It needs
-network access and tests only committed work, so CI runs it after `npm run check`.
+npm and, when present, pnpm. It also extracts a git archive without `.git`, runs `prepare` through
+`npm pack`, and installs that package with npm. Both routes check the commit in the CLI version,
+export files and a shipped recipe. The archive route exercises the build used by hosted git
+dependencies locally; it makes no request to GitHub. The check needs network access for
+dependencies and tests only committed work, so CI runs it after `npm run check`.
 
 Then query this repository's self-hosting graph with either supported script runner:
 
@@ -107,6 +110,10 @@ Verify either install through the linked binary:
 ```sh
 ./node_modules/.bin/sdp --version
 ```
+
+The output is `sdp 0.0.0 (<sha>)`, with the full commit you pinned. The build reads it from git in
+a clone or from the substituted commit file in a hosted git archive. It reports `unknown` when
+neither source supplies a full commit.
 
 In an adopter repository where the Protocol is installed as a dependency, its binary **is** linked
 into `node_modules/.bin`, so the package runner resolves it:

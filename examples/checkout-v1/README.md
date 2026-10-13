@@ -32,7 +32,7 @@ pointed at.
   authored example space.
 
 - **`generated/`** is untracked output from the walk: `graph.json`, contracts, the registrar
-  manifest, and all four projections. It is regenerable and never edited by hand. The valid-cart
+  manifest, and all five projections. It is regenerable and never edited by hand. The valid-cart
   registrar beside the authored test is the one committed adopted generated sibling because the
   authored test imports it; preflight byte-checks that exception against fresh generation.
 
@@ -52,7 +52,7 @@ npm run build
 node ./dist/cli/sdp.js build    examples/checkout-v1   # extract, graph, and contracts
 node ./dist/cli/sdp.js validate examples/checkout-v1   # build, conformance, and honesty checks
 node ./dist/cli/sdp.js view     examples/checkout-v1   # validate and the Design Review
-npm run generate:example                              # publish all four projection roots
+npm run generate:example                              # publish all five projection roots
 ```
 
 `build` prints an extraction summary and writes the one graph. Its flat nodes and edges retain
@@ -109,8 +109,8 @@ parent has no gap. An unbound example that states `ready` still gets a verifies-
 - **relations and one-hop impact**: the relation list is the blast radius of changing this Spec.
 
 `--check-clean` rejects divergent graph, contract, registrar-manifest, registrar, or projection
-bytes. `npm run check:example` certifies Design Review, census, Mermaid, and Gherkin roots while
-preserving all four despite each public projection verb's build invalidation. Delete `generated/`
+bytes. `npm run check:example` certifies Design Review, census, Mermaid, Gherkin, and Studio roots while
+preserving all five despite each public projection verb's build invalidation. Delete `generated/`
 and rerun `npm run generate:example` to reproduce the same bytes.
 
 ## Break it on purpose

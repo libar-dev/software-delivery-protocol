@@ -178,6 +178,35 @@ describe("architecture walk", () => {
   });
 });
 describe("planned components", () => {
+  it.each([2, 3])(
+    "reads matching %s-backtick opening spans for every component design value",
+    async (length) => {
+      const graph = probe();
+      const ticks = "`".repeat(length);
+      const span = (text: string) => `${ticks}${text}${ticks} because this is the plan`;
+      design(graph, {
+        id: span("component:probe.future"),
+        layer: span("domain"),
+        context: span("platform"),
+        role: span("service"),
+        uses: span("none"),
+      });
+      graph.edges.pop();
+      const result = await recipe(43, graph);
+      expect(result.totals).toMatchObject({ designs: 1, unrealized: 1, unreadable: 0 });
+      expect(result.unrealized).toEqual([
+        {
+          spec: "spec:probe.design",
+          componentId: "component:probe.future",
+          anchorExists: false,
+          layer: "domain",
+          context: "platform",
+          role: "service",
+          uses: [],
+        },
+      ]);
+    },
+  );
   it("refuses any parameter name", async () => {
     expect(await recipe(43, probe(), { typo: 1 })).toEqual({
       unknownParams: ["typo"],
