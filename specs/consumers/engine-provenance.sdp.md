@@ -18,4 +18,8 @@ relations:
 ## Behavior
 - rule: `sdp --version` prints one line, `sdp <version> (<commit>)`, and exits 0. The version is the package's own version; the commit is the full hash the build was made from, or `unknown` when the build could not read one; a build from a checkout with uncommitted changes names the commit checked out when it ran.
 - rule: The build records the commit in a file beside the compiled CLI, and the CLI reads that file; it never runs git at run time.
+- rule: The build reads the commit from git first. When git gives no full commit, it reads the archive's substituted commit file; a full commit there names the archived revision, and an absent, unsubstituted or malformed file leaves the commit `unknown`.
 - rule: Neither the version nor the commit enters the graph, a projection or a generated contract, so a derived artifact stays a function of the corpus alone.
+
+## Design
+- archiveCommit: `.git-archive-commit` contains `$Format:%H$` in a checkout and is marked `export-subst` in `.gitattributes`, so git archives carry their full commit. The build reads the trimmed file only as a full Git object name, never as a command or an abbreviated hash.

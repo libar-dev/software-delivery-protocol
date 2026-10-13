@@ -1,5 +1,6 @@
 import { execFileSync, spawn } from "node:child_process";
 import {
+  copyFileSync,
   cpSync,
   existsSync,
   mkdirSync,
@@ -2504,6 +2505,81 @@ describe("sdp --version", () => {
       expect(readFileSync(join(outDir, "cli", BUILD_INFO_FILE), "utf8")).toBe(
         `${JSON.stringify({ commit: fullCommit })}\n`,
       );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("builds commit metadata from a substituted git archive extracted without .git", () => {
+    const scratch = mkdtempSync(join(tmpdir(), "sdp-archive-build-"));
+    const source = join(scratch, "source");
+    const archived = join(scratch, "archived");
+    const archive = join(scratch, "source.tar");
+    const git = (args: string[]) =>
+      execFileSync("git", args, {
+        cwd: source,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+    try {
+      mkdirSync(source);
+      mkdirSync(archived);
+      for (const file of [".gitattributes", ".git-archive-commit"])
+        copyFileSync(join(repoRoot, file), join(source, file));
+      mkdirSync(join(source, "docs/agent-surface"), { recursive: true });
+      writeFileSync(
+        join(source, "docs/agent-surface/recipes.md"),
+        "## 1. One\n\n```js\nreturn 1;\n```\n",
+      );
+      git(["init", "--quiet"]);
+      git(["add", ".gitattributes", ".git-archive-commit", "docs/agent-surface/recipes.md"]);
+      git([
+        "-c",
+        "user.name=Archive test",
+        "-c",
+        "user.email=archive@example.invalid",
+        "commit",
+        "--quiet",
+        "-m",
+        "Archive fixture",
+      ]);
+      const commit = git(["rev-parse", "HEAD"]).trim();
+      git(["archive", "--format=tar", "--output", archive, commit]);
+      execFileSync("tar", ["-xf", archive, "-C", archived]);
+      expect(existsSync(join(archived, ".git"))).toBe(false);
+      expect(readFileSync(join(archived, ".git-archive-commit"), "utf8").trim()).toBe(commit);
+      writeBuildArtifacts({ root: archived, outDir: join(archived, "dist") });
+      expect(JSON.parse(readFileSync(join(archived, "dist/cli/build-info.json"), "utf8"))).toEqual({
+        commit,
+      });
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
+  it("uses only a full archive commit when git gives none, keeping git first", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-archive-info-"));
+    const noGit = () => {
+      throw new Error("no git");
+    };
+    try {
+      for (const text of [fullCommit, "a".repeat(64)]) {
+        writeFileSync(join(root, ".git-archive-commit"), `${text}\n`);
+        expect(readBuildCommit(root, noGit)).toBe(text);
+        expect(readBuildCommit(root, () => "not a full commit")).toBe(text);
+        expect(readBuildCommit(root, () => `${"b".repeat(40)}\n`)).toBe("b".repeat(40));
+      }
+      for (const text of [
+        "$Format:%H$",
+        "cc88076",
+        `${fullCommit}\nextra`,
+        fullCommit.toUpperCase(),
+      ]) {
+        writeFileSync(join(root, ".git-archive-commit"), text);
+        expect(readBuildCommit(root, noGit)).toBe("unknown");
+      }
+      rmSync(join(root, ".git-archive-commit"));
+      expect(readBuildCommit(root, noGit)).toBe("unknown");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

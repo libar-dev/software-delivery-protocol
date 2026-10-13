@@ -21,15 +21,35 @@ const run = (command, args, cwd = root) =>
     maxBuffer: 8 * 1024 * 1024,
   });
 const commit = run("git", ["rev-parse", "--verify", `${revision}^{commit}`]).trim();
-const dependency = `git+${pathToFileURL(root).href}#${commit}`;
+const cloneDependency = `git+${pathToFileURL(root).href}#${commit}`;
 
 try {
   const managers = ["npm"];
   const pnpm = spawnSync("pnpm", ["--version"], { encoding: "utf8" });
   if (pnpm.status === 0) managers.push("pnpm");
   else console.log("pnpm unavailable; npm install only");
-  for (const manager of managers) {
-    const consumer = join(scratch, manager);
+  // Build the archived source exactly where no enclosing checkout can supply a commit.
+  // npm pack runs prepare; a direct tarball install alone would not run this build.
+  const archiveRoot = join(scratch, "archive-source");
+  const archive = join(scratch, "source.tar");
+  mkdirSync(archiveRoot);
+  run("git", ["archive", "--format=tar", "--output", archive, commit]);
+  run("tar", ["-xf", archive, "-C", archiveRoot]);
+  assert.ok(!existsSync(join(archiveRoot, ".git")));
+  run("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], archiveRoot);
+  const packed = JSON.parse(
+    run("npm", ["pack", "--json", "--pack-destination", scratch], archiveRoot),
+  );
+  assert.equal(
+    JSON.parse(readFileSync(join(archiveRoot, "dist/cli/build-info.json"), "utf8")).commit,
+    commit,
+  );
+  const routes = [
+    ...managers.map((manager) => ({ manager, route: "clone", dependency: cloneDependency })),
+    { manager: "npm", route: "archive", dependency: `file:${join(scratch, packed[0].filename)}` },
+  ];
+  for (const { manager, route, dependency } of routes) {
+    const consumer = join(scratch, `${manager}-${route}`);
     mkdirSync(consumer);
     writeFileSync(
       join(consumer, "package.json"),
@@ -94,7 +114,7 @@ try {
     assert.equal(result.totals.addresses, 1);
     assert.equal(result.totals.resolved, 1);
     console.log(
-      `${manager}: ${version}; exports and shipped recipe work; ${((Date.now() - started) / 1000).toFixed(1)}s; commit ${commit}`,
+      `${manager} ${route}: ${version}; exports and shipped recipe work; ${((Date.now() - started) / 1000).toFixed(1)}s; commit ${commit}`,
     );
   }
 } finally {
