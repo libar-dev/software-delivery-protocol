@@ -129,7 +129,7 @@ facts literal while the canonical recipe reports both audited exclusions.
 | **`validator`** | one individual deterministic check; groups into the two families below | — |
 | **conformance checks** | "is this *well-formed* against the meta-model?" — referential integrity · duplicate IDs · `claim` separation · grouping coherence · ambiguity-is-loud | — |
 | **honesty checks** | "is this *not pretending*?" — authoring-shape honesty (no hand-authored derived edges/facts) · honest readiness against the floor | — |
-| **corpus rule** | an operator-selected graph body a corpus runs through its own `validate --rules` invocation, designed and not yet built; its findings name their corpus and sit outside the conformance and honesty families; neither a rule-kind Spec nor a Protocol validator (`spec:validation.corpus-rules`) | "corpus check" · "custom validator" |
+| **corpus rule** | an operator-selected graph body a corpus runs through its own `validate --rules` invocation, designed and not yet built; its findings name their rule and rules file and sit outside the conformance and honesty families; neither a rule-kind Spec nor a Protocol validator (`spec:validation.corpus-rules`) | "corpus check" · "custom validator" |
 | **readiness floor** | the **minimum structural requirement to *state*** a readiness rung — a floor to clear, **never a quota to fill** or a score | "readiness profile" |
 | **`gap`** | a surfaced absence (e.g. `ready` with no verifier) — informative, never a gate | — |
 | **`orphan`** | a `Spec` with no relations and nothing pointing at it — informative | — |
