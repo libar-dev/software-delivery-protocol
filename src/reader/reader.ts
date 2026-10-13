@@ -1,3 +1,8 @@
+import { matchConcept } from "./concept-match.js";
+import type { ConceptMatch } from "./concept-match.js";
+export { matchConcept } from "./concept-match.js";
+export type { ConceptRecord, ConceptMatch, ConceptMatchField } from "./concept-match.js";
+
 import {
   computeDeliveryFacts,
   isEnabledExampleVerify,
@@ -294,22 +299,6 @@ export interface PackContext extends PackSummary {
   readonly findings: readonly Finding[];
 }
 
-export type ConceptMatchField =
-  | "id"
-  | "title"
-  | "label"
-  | "framing"
-  | "narrative"
-  | `sections.${string}`;
-
-/** Where a concept search hit: the node plus the fields that matched. */
-export interface ConceptMatch {
-  readonly id: string;
-  readonly nodeType: GraphNodeType;
-  readonly title?: string;
-  readonly matchedIn: readonly ConceptMatchField[];
-}
-
 export interface FileNodeRef {
   readonly id: string;
   readonly nodeType: GraphNodeType;
@@ -462,45 +451,6 @@ function relationEnd(index: GraphIndex, edge: GraphEdge, otherId: string): Relat
 
 function compareRelationEnds(left: RelationEnd, right: RelationEnd): number {
   return compareCodeUnits(left.type, right.type) || compareCodeUnits(left.otherId, right.otherId);
-}
-
-/** Deep scan of reified section content for a substring; returns matched section names. */
-function matchSections(sections: SpecSections | undefined, needle: string): readonly string[] {
-  if (sections === undefined) {
-    return [];
-  }
-
-  const containsNeedle = (value: unknown, includeKeys: boolean): boolean => {
-    if (typeof value === "string") {
-      return value.toLowerCase().includes(needle);
-    }
-
-    if (Array.isArray(value)) {
-      return value.some((entry) => containsNeedle(entry, includeKeys));
-    }
-
-    if (typeof value === "object" && value !== null) {
-      return Object.entries(value as Record<string, unknown>).some(
-        ([key, entry]) =>
-          (includeKeys && key.toLowerCase().includes(needle)) || containsNeedle(entry, includeKeys),
-      );
-    }
-
-    return false;
-  };
-
-  const matched: string[] = [];
-
-  for (const [name, content] of Object.entries(sections as Record<string, unknown>)) {
-    // String values are content everywhere; record keys are content only in `model.terms`, where
-    // the keys *are* the vocabulary (`spec:model.spec-sections`) — structural keys (`given`,
-    // `outcome`) never match.
-    if (containsNeedle(content, name === "model")) {
-      matched.push(name);
-    }
-  }
-
-  return matched.sort(compareCodeUnits);
 }
 
 /* ----- the Pack design (`spec:consumers.pack-design`) ----- */
@@ -1064,76 +1014,8 @@ export function createReader(graph: GraphSchema): Reader {
     };
   };
 
-  const findByConcept = (text: string): readonly ConceptMatch[] => {
-    const needle = text.toLowerCase().trim();
-
-    if (needle.length === 0) {
-      return [];
-    }
-
-    const fieldRank: Readonly<Record<string, number>> = {
-      id: 0,
-      title: 1,
-      label: 2,
-      framing: 3,
-      narrative: 4,
-    };
-    const rankOf = (field: ConceptMatchField): number => fieldRank[field] ?? 4;
-    const matches: { match: ConceptMatch; bestRank: number }[] = [];
-
-    for (const node of [...index.nodesById.values()].sort((left, right) =>
-      compareCodeUnits(left.id, right.id),
-    )) {
-      const matchedIn: ConceptMatchField[] = [];
-
-      if (node.id.toLowerCase().includes(needle)) {
-        matchedIn.push("id");
-      }
-
-      if (node.nodeType === "Primitive" || node.nodeType === "Pack") {
-        if (node.title?.toLowerCase().includes(needle) === true) {
-          matchedIn.push("title");
-        }
-      } else if (node.label?.toLowerCase().includes(needle) === true) {
-        matchedIn.push("label");
-      }
-
-      if (node.nodeType === "Pack" && node.framing?.toLowerCase().includes(needle) === true) {
-        matchedIn.push("framing");
-      }
-
-      if (node.nodeType === "Primitive") {
-        if (node.narrative?.toLowerCase().includes(needle) === true) {
-          matchedIn.push("narrative");
-        }
-
-        for (const section of matchSections(node.sections, needle)) {
-          matchedIn.push(`sections.${section}`);
-        }
-      }
-
-      if (matchedIn.length === 0) {
-        continue;
-      }
-
-      matches.push({
-        match: {
-          id: node.id,
-          nodeType: node.nodeType,
-          ...(titleOf(index, node.id) === undefined ? {} : { title: titleOf(index, node.id) }),
-          matchedIn,
-        },
-        bestRank: Math.min(...matchedIn.map(rankOf)),
-      });
-    }
-
-    return matches
-      .sort(
-        (left, right) =>
-          left.bestRank - right.bestRank || compareCodeUnits(left.match.id, right.match.id),
-      )
-      .map((entry) => entry.match);
-  };
+  const findByConcept = (text: string): readonly ConceptMatch[] =>
+    matchConcept([...index.nodesById.values()], text);
 
   const byFile = (path: string): FileEntry => {
     const normalized = normalizePath(path);
