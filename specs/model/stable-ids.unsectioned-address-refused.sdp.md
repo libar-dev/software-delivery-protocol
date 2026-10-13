@@ -2,10 +2,12 @@
 id: spec:model.stable-ids.unsectioned-address-refused
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.stable-ids
-  verifies: spec:model.stable-ids
+  verifies:
+    target: spec:model.stable-ids
+    exercises: [idGrammar]
 ---
 # A `#` sub-part without its section is refused with its reason named
 

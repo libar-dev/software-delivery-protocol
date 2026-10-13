@@ -15,4 +15,4 @@ relations:
 - context: The graph already supports typed agent and human projections without an MCP transport.
 - decision: MCP integration is deferred until a concrete caller establishes its boundary and contract.
 - rationale: Adding an MCP surface without a caller invents verbs and persistence choices outside the projection model.
-- consequence: Consumers use the current graph and reader surfaces while MCP remains designed-in rather than claimed.
+- consequence: Consumers use the current graph and reader surfaces while MCP integration remains designed-in and unbuilt.

@@ -33,6 +33,7 @@ const curationRecipeAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.curation-recipe"),
   label: "asserts the curation report over external inferred imports",
   satisfies: ref("spec:consumers.impact-graph.curation-assist"),
+  references: [ref("spec:model.planned-architecture")],
 });
 void curationRecipeAnchor;
 const slimmingTestAnchor = specTest({
@@ -293,6 +294,8 @@ describe("curation report recipe", () => {
       { schema: "sdp-imports/2", adapter: "typescript", files: [] },
       { schema: "sdp-imports/1", files: [] },
       { schema: "sdp-imports/1", adapter: "typescript", files: null },
+      { schema: "sdp-imports/1", adapter: "typescript", files: [], exclude: "src/private" },
+      { schema: "sdp-imports/1", adapter: "typescript", files: [], exclude: [42] },
       { schema: "sdp-imports/1", adapter: "typescript", files: [null] },
       { schema: "sdp-imports/1", adapter: "typescript", files: [1] },
       {
@@ -339,6 +342,15 @@ describe("curation report recipe", () => {
     ]);
   });
 
+  it("echoes import exclusions without changing the supplied graph or inferring omissions", async () => {
+    const before = JSON.stringify(graph);
+    const exclude = ["code/generated", "code/idle.ts"];
+    const result = await runRecipe(40, graph, { imports: { ...imports, exclude } });
+    expect(result.input).toMatchObject({ label: "external inferred input", exclude });
+    expect(result.oneSided).toEqual((await runRecipe(40, graph, { imports })).oneSided);
+    expect(JSON.stringify(graph)).toBe(before);
+  });
+
   it("joins directed component pairs, ranks uncovered files and reports incomplete input and unrealized designs", async () => {
     const before = JSON.stringify(graph);
     const result = await runRecipe(40, graph, { imports });
@@ -348,6 +360,7 @@ describe("curation report recipe", () => {
         schema: "sdp-imports/1",
         adapter: "typescript",
         files: 5,
+        exclude: [],
       },
       totals: {
         files: 5,

@@ -1,7 +1,7 @@
 # Plan 43. Design iteration on a readable graph
 
 > **Status:** EXECUTED on `feature/design-iteration-v0`. The design pass's rulings and `ready`
-> statements were made on the owner's delegation and await the owner's review before PR 31 merges.
+> statements were made on the owner's delegation and await the owner's review; PR 31 has merged.
 > The branch started from `feature/design-management-v0` at `bc2c84e`, PR 30's head, which `main`
 > merged as `0353f10`. A thin lineage
 > pointer: the arc's intent lives in `pack:design-iteration-v1`, and readiness, backlog and open

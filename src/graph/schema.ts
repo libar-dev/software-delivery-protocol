@@ -4,7 +4,7 @@ import type { CodeAnchorLayer } from "../model/anchors.js";
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSections } from "../model/sections.js";
 
-export const schemaVersion = "0.9.0" as const;
+export const schemaVersion = "0.10.0" as const;
 
 const schemaVersionAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.schema-version"),
@@ -129,7 +129,8 @@ export interface PackNode extends GraphNodeBase {
 /**
  * The test anchor's node (the `verifies` edge contract row: Anchor (test) → Primitive, anchored).
  * Binding nodes carry `file` + `line`: the line *is* the binding location — what a Design Review
- * links to (consumers may link to source locations recorded in the graph, R2). `Primitive`/`Pack`
+ * links to (consumers may link to source locations recorded in the graph,
+ * `spec:extraction.regenerability`). `Primitive`/`Pack`
  * nodes stay line-free so the golden stays robust to spec-file editing.
  */
 export interface AnchorNode extends GraphNodeBase {
@@ -169,10 +170,14 @@ export interface GraphEdge {
 }
 
 /**
- * One row of the location table (`spec:extraction.entry-locations`): where an addressable entry
- * of a Spec is written. `entry` is `design.<key>`, `ui.<key>`, or `question[<index>]` by the
- * question's position in the Spec's open questions, with `key` beside it when the question carries
- * one. The table rides beside the nodes, so Primitive and Pack nodes stay line-free.
+ * One row of the location table (`spec:extraction.entry-locations`): where a Spec entry is
+ * written. `entry` is `design.<key>` or `ui.<key>` for keys other than `description`,
+ * `rule[<index>]` or `flow[<index>]` for entries of the primary behavior owner,
+ * `question[<index>]` for an open question, `question[<index>].<field>` for each optional
+ * `decider`, `links`, `provisional` or `trigger` field, or `relation.<type>.<target>` for an
+ * authored relation target. Indexes count from 0 within authored lists; a keyed rule, flow or
+ * question carries `key` beside its entry. The table rides beside the nodes, so Primitive and
+ * Pack nodes stay line-free. A missing row means not located, never absent.
  */
 export interface EntryLocation {
   readonly spec: string;

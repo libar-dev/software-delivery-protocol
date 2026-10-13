@@ -8,6 +8,7 @@ import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protoc
 import { extract, reifyMarkdownCarrier, serializeGraph } from "../src/index.js";
 import type { GraphSchema } from "../src/graph/schema.js";
 import { deriveGraph } from "../src/extract/derive.js";
+import { reifyGherkinCarrier } from "../src/extract/gherkin.js";
 import { serializeGraphStructure } from "./helpers/graph-structure.js";
 
 const entryLocationsTestAnchor = specTest({
@@ -96,6 +97,41 @@ Feature: Gherkin locations
 `;
 
 describe("entry locations", () => {
+  it("locates each Gherkin relation at its own tag and defaults at the Scenario line", () => {
+    const source = `@spec.fixture.parent @altitude.story @readiness.idea
+@depends-on.spec:fixture.first
+@decided-by.spec:fixture.decision
+@refines.spec:fixture.basis
+@constrained-by.spec:fixture.limit
+Feature: Relation locations
+  - outcome: Locate relations.
+
+  @spec.fixture.child @altitude.story @readiness.idea
+  @depends-on.spec:fixture.first
+  @depends-on.spec:fixture.second
+  @decided-by.spec:fixture.decision
+  @constrained-by.spec:fixture.limit
+  Scenario: A child
+    Given a carrier
+    When extracted
+    Then the graph is derived
+`;
+    const result = reifyGherkinCarrier(source, "subject.sdp.gherkin");
+    expect(result.findings).toEqual([]);
+    const graph = deriveGraph(result.specs, [], []);
+    expect(graph.locations?.map(({ spec, entry, line }) => ({ spec, entry, line }))).toEqual([
+      { spec: "spec:fixture.child", entry: "relation.constrainedBy.spec:fixture.limit", line: 13 },
+      { spec: "spec:fixture.child", entry: "relation.decidedBy.spec:fixture.decision", line: 12 },
+      { spec: "spec:fixture.child", entry: "relation.dependsOn.spec:fixture.first", line: 10 },
+      { spec: "spec:fixture.child", entry: "relation.dependsOn.spec:fixture.second", line: 11 },
+      { spec: "spec:fixture.child", entry: "relation.refines.spec:fixture.parent", line: 14 },
+      { spec: "spec:fixture.child", entry: "relation.verifies.spec:fixture.parent", line: 14 },
+      { spec: "spec:fixture.parent", entry: "relation.constrainedBy.spec:fixture.limit", line: 5 },
+      { spec: "spec:fixture.parent", entry: "relation.decidedBy.spec:fixture.decision", line: 3 },
+      { spec: "spec:fixture.parent", entry: "relation.dependsOn.spec:fixture.first", line: 2 },
+      { spec: "spec:fixture.parent", entry: "relation.refines.spec:fixture.basis", line: 4 },
+    ]);
+  });
   it("records Markdown Design, UI, keyed and unkeyed questions at their first item lines", () => {
     const { graph, report } = extract({ root: corpus("subject.sdp.md", markdown) });
     expect(report.findings).toEqual([]);
@@ -111,6 +147,91 @@ describe("entry locations", () => {
       },
       { spec: "spec:fixture.locations", file: "subject.sdp.md", entry: "question[1]", line: 15 },
       { spec: "spec:fixture.locations", file: "subject.sdp.md", entry: "ui.screen", line: 27 },
+    ]);
+  });
+
+  it("locates Markdown question fields, rules, flows and declared relation targets", () => {
+    const source = `---
+id: spec:fixture.locations
+kind: behavior
+altitude: story
+readiness: idea
+relations:
+  dependsOn:
+    - spec:fixture.first
+    - target: spec:fixture.second
+      reason: Uses its output.
+---
+# Entry locations
+
+## Intent
+- outcome: Locate authored entries.
+
+### Open questions
+- [blocking #choice] Which choice?
+  - decider: owner
+  - links: spec:fixture.first
+  - provisional: Keep the existing choice.
+  - trigger: A reader needs another choice.
+
+## Behavior
+- rule: [#locatedRule] The rule is located.
+- flow: The flow is located.
+`;
+    const result = reifyMarkdownCarrier(source, "subject.sdp.md");
+    expect(result.findings).toEqual([]);
+    expect(deriveGraph(result.specs, [], []).locations).toEqual([
+      { spec: "spec:fixture.locations", file: "subject.sdp.md", entry: "flow[0]", line: 26 },
+      {
+        spec: "spec:fixture.locations",
+        file: "subject.sdp.md",
+        entry: "question[0]",
+        key: "choice",
+        line: 18,
+      },
+      {
+        spec: "spec:fixture.locations",
+        file: "subject.sdp.md",
+        entry: "question[0].decider",
+        line: 19,
+      },
+      {
+        spec: "spec:fixture.locations",
+        file: "subject.sdp.md",
+        entry: "question[0].links",
+        line: 20,
+      },
+      {
+        spec: "spec:fixture.locations",
+        file: "subject.sdp.md",
+        entry: "question[0].provisional",
+        line: 21,
+      },
+      {
+        spec: "spec:fixture.locations",
+        file: "subject.sdp.md",
+        entry: "question[0].trigger",
+        line: 22,
+      },
+      {
+        spec: "spec:fixture.locations",
+        file: "subject.sdp.md",
+        entry: "relation.dependsOn.spec:fixture.first",
+        line: 8,
+      },
+      {
+        spec: "spec:fixture.locations",
+        file: "subject.sdp.md",
+        entry: "relation.dependsOn.spec:fixture.second",
+        line: 9,
+      },
+      {
+        spec: "spec:fixture.locations",
+        file: "subject.sdp.md",
+        entry: "rule[0]",
+        key: "locatedRule",
+        line: 25,
+      },
     ]);
   });
 

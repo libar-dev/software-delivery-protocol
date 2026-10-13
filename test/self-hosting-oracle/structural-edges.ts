@@ -39,6 +39,11 @@ export const structuralMembershipExceptions = [
   "impl:protocol.curation-recipe",
   "impl:protocol.answer-shape-recipes",
   "impl:protocol.authoring-grammar-recipes",
+  "impl:protocol.reading-on-ramp",
+  "impl:protocol.design-diff-recipe",
+  "impl:protocol.perspective-filter-recipe",
+  "impl:protocol.context-bundle-recipe",
+  "impl:protocol.proposal-schema-and-recipe",
 ] as const;
 
 export const acceptedArchitecturalUnits = [
@@ -354,7 +359,7 @@ export const acceptedArchitecturalUnits = [
   },
   {
     unit: "src/reader/reader.ts#BlastRadius",
-    anchorId: "impl:protocol.reader-impact",
+    anchorId: "impl:protocol.reader",
     componentId: "component:protocol.reader",
   },
   {
@@ -477,7 +482,6 @@ export const acceptedArchitecturalUnits = [
     anchorId: "impl:protocol.next-rung-floor",
     componentId: "component:protocol.validate",
   },
-  // The design-management arc (plan 41): the engine units it added, each with its component.
   {
     unit: "src/extract/derive.ts#deriveEntryLocations",
     anchorId: "impl:protocol.entry-locations",
@@ -518,7 +522,6 @@ export const acceptedArchitecturalUnits = [
     anchorId: "impl:protocol.validate-watch",
     componentId: "component:protocol.cli",
   },
-  // Plan 43 structural bindings, as declared on their anchors.
   {
     unit: "src/adapters/typescript-imports.ts#deriveTypeScriptImports",
     anchorId: "impl:protocol.typescript-imports",
@@ -545,32 +548,45 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.validate",
   },
   {
-    unit: "test/iteration-recipes.test.ts#runRecipe",
-    anchorId: "impl:protocol.design-diff-recipe",
-    componentId: "component:protocol.reader",
+    unit: "src/validate/validators.ts#checkStructuralAnchors",
+    anchorId: "impl:protocol.structural-anchors",
+    componentId: "component:protocol.validate",
   },
   {
-    unit: "test/iteration-recipes.test.ts#runRecipe",
-    anchorId: "impl:protocol.perspective-filter-recipe",
-    componentId: "component:protocol.reader",
+    unit: "src/validate/validators.ts#checkDuplicateIds",
+    anchorId: "impl:protocol.duplicate-ids",
+    componentId: "component:protocol.validate",
   },
   {
-    unit: "test/iteration-recipes.test.ts#runRecipe",
-    anchorId: "impl:protocol.context-bundle-recipe",
-    componentId: "component:protocol.reader",
+    unit: "src/cli/sdp.ts#SDP_HELP_TEXT",
+    anchorId: "impl:protocol.adopter-help",
+    componentId: "component:protocol.cli",
   },
   {
-    unit: "test/iteration-recipes.test.ts#runRecipe",
-    anchorId: "impl:protocol.proposal-schema-and-recipe",
-    componentId: "component:protocol.reader",
+    unit: "src/cli/import-scan.ts#scanImportPaths",
+    anchorId: "impl:protocol.sdp-import-scan",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/cli/import-publish.ts#publishImports",
+    anchorId: "impl:protocol.sdp-import-publish",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/cli/validate-view-command.ts#runValidate",
+    anchorId: "impl:protocol.validate-summary",
+    componentId: "component:protocol.cli",
   },
 ] as const;
 
 // re-measured under plan 41
-export const expectedMemberOfEdges = acceptedArchitecturalUnits.map((row) => [
-  row.anchorId,
-  row.componentId,
-]);
+export const expectedMemberOfEdges = acceptedArchitecturalUnits
+  .map((row) => [row.anchorId, row.componentId])
+  .filter(
+    ([anchorId, componentId], position, rows) =>
+      rows.findIndex(([anchor, component]) => anchor === anchorId && component === componentId) ===
+      position,
+  );
 
 // Helpers with no honest satisfies target of their own. Coverage rides the nearest honest
 // realization that consumes them; these rows never mint an anchor.
@@ -602,6 +618,12 @@ export const coarseGrainCoverage = [
     coveredBy: "impl:protocol.sdp-import-markdown-emit",
     componentId: "component:protocol.import",
     rationale: "src/import/emit-markdown.ts#emitMarkdownSpec value-calls importTexts",
+  },
+  {
+    unit: "src/extract/gherkin-kind-honesty.ts#gherkinKindLieReason",
+    coveredBy: "impl:protocol.gherkin-authoring",
+    componentId: "component:protocol.extract",
+    rationale: "src/extract/gherkin.ts#decorationTagFinding value-calls gherkinKindLieReason",
   },
 ] as const;
 
@@ -650,4 +672,5 @@ export const expectedUsesEdges = [
   ["component:protocol.validate", "component:protocol.graph"],
   ["component:protocol.validate", "component:protocol.model"],
   ["component:protocol.validate", "component:protocol.notation"],
+  ["component:protocol.cli", "component:protocol.adapters"],
 ] as const;

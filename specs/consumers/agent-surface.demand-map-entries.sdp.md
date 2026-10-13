@@ -5,7 +5,7 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:consumers.agent-surface
-  verifies: spec:consumers.agent-surface
+  verifies: { target: spec:consumers.agent-surface, exercises: [demandMap, entryAdapters, noSymbolEntry] }
 ---
 # One body reaches every entry point the demand map names, and no symbol entry
 

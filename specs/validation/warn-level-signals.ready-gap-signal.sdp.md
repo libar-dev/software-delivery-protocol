@@ -7,10 +7,10 @@ relations:
   refines: spec:validation.warn-level-signals
   verifies: spec:validation.warn-level-signals
 ---
-# A ready spec without a verifier warns and fails nothing
+# A ready Spec without a verifier warns and fails nothing
 
 ## Intent
-- outcome: Execute the gap signal on a connected ready spec no verifier resolves.
+- outcome: Execute the gap signal on a connected ready Spec no verifier resolves.
 
 ```gwt
 Given the graph holds a spec {specId: "spec:probe.gap-signal"} at readiness {readiness: "ready"}

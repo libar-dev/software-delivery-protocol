@@ -6,16 +6,15 @@ readiness: ready
 relations:
   refines: spec:validation.two-check-families
 ---
-# Declared verification resolves to a performing trace
+# Example verification and oracle bindings resolve honestly
 
 ## Intent
-- outcome: Keep verification relationships meaningful by requiring declared test and oracle traces to resolve to their enabled bindings.
+- outcome: Keep declared example verification bound to a resolving test anchor, and keep an oracle's expected-outcome binding resolved to its example space.
 
 ## Rule
-- A declared verifies relation and an oracle model relation must resolve through their respective binding traces before either can stand as verification evidence.
-- A non-resolving trace confers no delivery fact. The verifies-linkage warning names an unbound example only when it states `ready`, and names a non-example Spec that declares `verifies` at every rung. The oracle-linkage check continues to name a non-resolving oracle trace.
+- A declared `verifies` from an example stands as verification evidence only when a resolving test anchor binds that example. An oracle's anchored `models` edge records expected-outcome semantics for a Spec that owns an example space and confers no delivery fact.
+- A non-resolving trace confers no delivery fact. Which unbound declared verifiers warn is stated by `spec:validation.unbound-example-posture`; ineligible oracle bindings are reported by the oracle-linkage check.
 - At most one expected-outcome authority may model an example space: a second resolving oracle binding on the same space is an error, because two authorities leave the modeled outcome ambiguous.
-- The realizing validator entrypoints are `checkVerifiesLinkage` and `checkOracleLinkage` in `src/validate/validators.ts`.
 
 ## Example space
 ```gwt-vocabulary

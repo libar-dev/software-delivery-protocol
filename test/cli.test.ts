@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import {
   cpSync,
   existsSync,
@@ -146,6 +146,8 @@ describe("sdp cli", () => {
       ".agents/skills/sdp-authoring/SKILL.md",
       ".agents/skills/sdp-sessions/SKILL.md",
       "docs/agent-surface/recipes.md",
+      "docs/agent-surface/architecture.md",
+      "schemas/sdp-proposal-1.schema.json",
       "CONTEXT.md",
       "specs/",
     ]) {
@@ -173,8 +175,20 @@ describe("sdp cli", () => {
     }
     expect(SDP_HELP_TEXT.replaceAll(/\s+/gu, " ")).toMatch(/its delivery facts are empty/u);
     expect(SDP_HELP_TEXT.replaceAll(/\s+/gu, " ")).toMatch(
-      /its gap warnings are not evidence about what the Protocol has realized/u,
+      /its gap and verifier-linkage warnings are not evidence about what the Protocol has realized/u,
     );
+  });
+
+  it("describes both anchor forms and non-failing warnings in help", () => {
+    const help = SDP_HELP_TEXT.replaceAll(/\s+/gu, " ");
+    expect(help).toContain(
+      "the anchors, in the constant form or comment form, in the other *.ts/*.tsx source files",
+    );
+    expect(help).toContain("warnings inform and do not fail the run");
+    expect(help).toContain("the Protocol's own Specs and Packs");
+    expect(help).toContain("refuses when the published page differs from the current projection");
+    expect(help).toContain("so findings are queryable data");
+    expect(help).not.toContain("the A2 mechanism");
   });
 
   it("prints the exact help text for --help", () => {
@@ -286,29 +300,50 @@ describe("sdp cli", () => {
       ] as const) {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
       }
-      for (const [file, target, specId] of [
+      for (const [file, line, target, specId] of [
         [
-          "specs/consumers/delivery-session-on-ramp.sdp.md",
-          "spec:decisions.shipped-projections-frozen",
-          "spec:consumers.delivery-session-on-ramp",
+          "specs/consumers/obsidian-vault.iteration.sdp.md",
+          30,
+          "spec:consumers.validate-watch",
+          "spec:consumers.obsidian-vault.iteration",
         ],
         [
-          "specs/decisions/carrier-ruling.sdp.md",
-          "spec:decisions.carrier-universality",
-          "spec:decisions.carrier-ruling",
+          "specs/consumers/obsidian-vault.sdp.md",
+          35,
+          "spec:consumers.spec-studio",
+          "spec:consumers.obsidian-vault",
         ],
         [
-          "specs/decisions/planning-truths-placement.sdp.md",
-          "spec:consumers.impact-graph.symbol-reach",
-          "spec:decisions.planning-truths-placement",
+          "specs/consumers/spec-studio.lenses.sdp.md",
+          30,
+          "spec:consumers.structural-mermaid",
+          "spec:consumers.spec-studio.lenses",
+        ],
+        [
+          "specs/consumers/spec-studio.lenses.sdp.md",
+          33,
+          "spec:observation.run-evidence",
+          "spec:consumers.spec-studio.lenses",
+        ],
+        [
+          "specs/consumers/spec-studio.verification-panels.sdp.md",
+          26,
+          "spec:observation.run-evidence",
+          "spec:consumers.spec-studio.verification-panels",
+        ],
+        [
+          "specs/consumers/structural-mermaid.sdp.md",
+          23,
+          "spec:consumers.spec-studio.lenses",
+          "spec:consumers.structural-mermaid",
         ],
       ] as const) {
         expect(stderr).toContain(
-          `${file} — [warning] conformance/prose-mentions — Mention of "${target}" in "${specId}"`,
+          `${file}:${String(line)} — [warning] conformance/prose-mentions — Mention of "${target}" in "${specId}"`,
         );
       }
-      // Re-measured with sdp validate after plan 43 integration.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 4 warnings");
+      // Re-measured from the refreshed carriers and their retained warning pairs.
+      expect(capture.readStdout()).toContain("validate: 0 errors · 7 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
@@ -906,6 +941,52 @@ export const probe = spec({
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it("passes --check-clean without a prior manifest when no registrars are owed", () => {
+    const root = materializeExtractCorpus("orphan-spec");
+    try {
+      expect(existsSync(join(root, "generated/registrars.json"))).toBe(false);
+      const capture = createCaptureOutput();
+      expect(runSdpCli(["build", root, "--check-clean"], capture.output)).toBe(0);
+      expect(capture.readStderr()).toBe("");
+      expect(JSON.parse(readFileSync(join(root, "generated/registrars.json"), "utf8"))).toEqual({
+        version: 1,
+        files: [],
+      });
+    } finally {
+      removeMaterializedCorpus(root);
+    }
+  });
+
+  it.each(["whitespace", "ignored property"])(
+    "fails --check-clean on registrar manifest %s drift",
+    (drift) => {
+      const root = materializeExampleCopy();
+
+      try {
+        expect(runSdpCli(["build", root], createCaptureOutput().output)).toBe(0);
+        const manifestPath = join(root, "generated/registrars.json");
+        const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as {
+          readonly version: number;
+          readonly files: readonly string[];
+        };
+        const changed =
+          drift === "whitespace"
+            ? JSON.stringify(manifest)
+            : `${JSON.stringify({ ...manifest, ignored: true }, null, 2)}\n`;
+        writeFileSync(manifestPath, changed, "utf8");
+        const capture = createCaptureOutput();
+
+        expect(runSdpCli(["build", root, "--check-clean"], capture.output)).toBe(1);
+        expect(capture.readStderr()).toContain(
+          "generated registrar manifest or sibling bytes differ from the current projection",
+        );
+        expect(existsSync(manifestPath)).toBe(false);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    },
+  );
 
   it("removes graph, contracts, manifest, and registrar siblings after a staged write failure", () => {
     const root = materializeExampleCopy();
@@ -1602,6 +1683,90 @@ const validateWatchTestAnchor = specTest({
 void validateWatchTestAnchor;
 
 describe("sdp validate --watch", () => {
+  it.skipIf(process.platform === "win32")(
+    "closes the compiled watch process with exit 0 after operator SIGINT",
+    async () => {
+      const root = mkdtempSync(join(tmpdir(), "sdp-watch-sigint-"));
+      writeFileSync(
+        join(root, "probe.sdp.md"),
+        `---
+id: spec:probe.watch-stop
+kind: behavior
+altitude: story
+readiness: idea
+relations: {}
+---
+# Watch stop
+
+## Intent
+
+- outcome: Exercise operator stop.
+`,
+        "utf8",
+      );
+      const child = spawn(
+        process.execPath,
+        [join(repoRoot, "dist/cli/sdp.js"), "validate", root, "--watch"],
+        {
+          stdio: ["ignore", "pipe", "pipe"],
+        },
+      );
+      const exited = new Promise<{ code: number | null; signal: NodeJS.Signals | null }>(
+        (resolve) => {
+          child.once("close", (code, signal) => {
+            resolve({ code, signal });
+          });
+        },
+      );
+      let stdout = "";
+      let stderr = "";
+      child.stderr.on("data", (chunk: Buffer) => {
+        stderr += chunk.toString();
+      });
+
+      let stopDeadline: ReturnType<typeof setTimeout> | undefined;
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const deadline = setTimeout(() => {
+            reject(new Error(`watch first cycle timed out: ${stderr}`));
+          }, 10000);
+          child.stdout.on("data", (chunk: Buffer) => {
+            stdout += chunk.toString();
+            if (stdout.includes("validate: 0 errors")) {
+              clearTimeout(deadline);
+              resolve();
+            }
+          });
+          child.once("error", (error) => {
+            clearTimeout(deadline);
+            reject(error);
+          });
+          child.once("close", () => {
+            clearTimeout(deadline);
+            reject(new Error(`watch closed before operator stop: ${stderr}`));
+          });
+        });
+        expect(child.kill("SIGINT")).toBe(true);
+        const stopped = await Promise.race([
+          exited,
+          new Promise<never>((_resolve, reject) => {
+            stopDeadline = setTimeout(() => {
+              reject(new Error(`watch did not close after SIGINT: ${stderr}`));
+            }, 5000);
+          }),
+        ]);
+        expect(stopped).toEqual({ code: 0, signal: null });
+        expect(child.exitCode).toBe(0);
+      } finally {
+        clearTimeout(stopDeadline);
+        if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
+        await exited;
+        rmSync(root, { recursive: true, force: true });
+      }
+    },
+    15000,
+  );
+
   it("documents --watch as a validate-only authoring loop", () => {
     expect(SDP_HELP_TEXT).toContain(
       "sdp validate [root] [--exclude PATH]... [--check-clean | --watch]",

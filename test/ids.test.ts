@@ -116,6 +116,25 @@ describe("ids", () => {
     expect(anchorId("api:orders.post")).toBe("api:orders.post");
   });
 
+  it.each(["impl", "api", "component", "test", "oracle"])(
+    "brands the %s namespace through anchorId",
+    (namespace) => {
+      const id = `${namespace}:probe.binding`;
+      expect(anchorId(id)).toBe(id);
+    },
+  );
+
+  it.each([
+    "spec:probe.x",
+    "spec:probe.x#design.key",
+    "pack:probe.x",
+    "doc:probe.x",
+    "custom:probe.x",
+    "test:probe.x#design.key",
+  ])("refuses %s as a generic anchor id", (id) => {
+    expect(() => anchorId(id)).toThrow();
+  });
+
   it("brands every implementation-flavored code namespace through the one codeAnchorId (MD-8)", () => {
     expect(codeAnchorId("impl:orders.create-order-use-case")).toBe(
       "impl:orders.create-order-use-case",

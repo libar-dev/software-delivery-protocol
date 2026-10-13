@@ -24,7 +24,7 @@ One row per member in the manifest's order. The stated next rung is the rung abo
 | [`spec:orders.order-model`](../spec/orders.order-model.md) (10) Order-management domain vocabulary | model | story | defined | ready | ready · nothing blocks | 0 | 0 | 0 | — | none | none | none |
 | [`spec:decisions.order-lifecycle`](../spec/decisions.order-lifecycle.md) (11) Order lifecycle keeps validation before creation | decision | feature | defined | ready | ready · nothing blocks | 0 | 0 | 0 | — | none | none | none |
 
-## Next rung
+## Stated next rung
 
 The floor clauses that fail at the rung above each member's stated rung, with the targets a failing dependency clause names. This is a report, never a promotion: only an author's edit states a rung.
 
@@ -42,7 +42,7 @@ Stated `idea`; the floor does not hold `scoped`:
 
 ### Waiting for the author's statement
 
-The floor already holds these members at their next rung. That is not approval: the page records no review, and the rung stays unstated until its author states it.
+The floor already holds these members at their stated next rung. That is not approval: the page records no review, and the rung stays unstated until its author states it.
 
 - stated `defined`, next `ready`: [`spec:orders.order-management`](../spec/orders.order-management.md) Order management
 - stated `defined`, next `ready`: [`spec:orders.create-order`](../spec/orders.create-order.md) Customer creates an order
@@ -140,7 +140,7 @@ No implementation or design-reference binding is recorded for this member.
 
 ## Verifier coverage gaps
 
-Members with no verifier binding — a surfaced absence, informative, never a gate. `ready` members are the priority slice (designed, stated done, unverified):
+Members other than decisions with no verifier binding — a surfaced absence, informative, never a gate. `ready` members are the priority slice (designed, stated done, unverified):
 
 - [`spec:orders.order-management`](../spec/orders.order-management.md) — Order management (stated `defined`)
 - [`spec:orders.order-placement-flow`](../spec/orders.order-placement-flow.md) — Order placement flow (stated `scoped`)
@@ -150,7 +150,6 @@ Members with no verifier binding — a surfaced absence, informative, never a ga
 - [`spec:orders.order-inventory-rule`](../spec/orders.order-inventory-rule.md) — Order creation requires available inventory (stated `defined`)
 - [`spec:orders.order-latency-constraint`](../spec/orders.order-latency-constraint.md) — Create-order latency stays within checkout budget (stated `defined`)
 - [`spec:orders.order-model`](../spec/orders.order-model.md) — Order-management domain vocabulary (stated `defined`)
-- [`spec:decisions.order-lifecycle`](../spec/decisions.order-lifecycle.md) — Order lifecycle keeps validation before creation (stated `defined`)
 
 ## Findings
 

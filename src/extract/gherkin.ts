@@ -138,6 +138,7 @@ interface ParsedMetadata {
   readonly altitude: SpecAltitude;
   readonly readiness: SpecReadiness;
   readonly relations: readonly ReifiedRelation[];
+  readonly relationLines: readonly { readonly entry: string; readonly line: number }[];
   readonly exercises: readonly string[];
 }
 
@@ -372,13 +373,27 @@ function tagHead(tagName: string): string {
 }
 
 function authoredFactReason(name: string): string | undefined {
-  if (name === "@implemented" || name === "@has-verifier" || name === "@observed") {
-    return "delivery-fact lookalike";
+  const head =
+    /^@(implemented|has-verifier|hasVerifier|observed|claim|status|lifecycle|workflow|architect)(?=$|[.-])/iu
+      .exec(name)?.[1]
+      ?.toLowerCase();
+  switch (head) {
+    case "implemented":
+    case "has-verifier":
+    case "hasverifier":
+    case "observed":
+      return "delivery-fact lookalike";
+    case "claim":
+      return "authored claim lookalike";
+    case "status":
+    case "lifecycle":
+    case "workflow":
+      return "authored lifecycle-status lookalike";
+    case "architect":
+      return "retired architect-status lookalike";
+    default:
+      return undefined;
   }
-  if (name.startsWith("@claim")) return "authored claim lookalike";
-  if (name.startsWith("@status-")) return "authored lifecycle-status lookalike";
-  if (name.startsWith("@architect-")) return "retired architect-status lookalike";
-  return undefined;
 }
 
 function decorationTagFinding(tag: Tag, file: string): Finding | undefined {
@@ -483,6 +498,7 @@ function parseMetadataTags(
   let altitudeTags = 0;
   let readinessTags = 0;
   const relations: ReifiedRelation[] = [];
+  const relationLines: { entry: string; line: number }[] = [];
   const exercises: string[] = [];
 
   for (const tag of tags) {
@@ -603,9 +619,13 @@ function parseMetadataTags(
       if (!name.startsWith(prefix)) continue;
       relationMatched = true;
       const parsed = parseSpecIdToken(name.slice(prefix.length), name, file, tag.location.line);
-      if (parsed.ok)
+      if (parsed.ok) {
         relations.push({ type: relationType, target: parsed.value, claim: "declared" });
-      else appendFinding(collector, parsed.finding, file);
+        relationLines.push({
+          entry: `relation.${relationType}.${parsed.value}`,
+          line: tag.location.line,
+        });
+      } else appendFinding(collector, parsed.finding, file);
       break;
     }
     if (relationMatched) continue;
@@ -672,7 +692,7 @@ function parseMetadataTags(
   ) {
     return { id };
   }
-  return { id, value: { id, idLine, altitude, readiness, relations, exercises } };
+  return { id, value: { id, idLine, altitude, readiness, relations, relationLines, exercises } };
 }
 
 function normalizeNarrative(lines: readonly string[]): string | undefined {
@@ -1139,11 +1159,9 @@ function reifyOrdinaryScenario(
     entryLines: authoredRelations.map((relation) => ({
       entry: `relation.${relation.type}.${relation.target}`,
       line:
-        scenario.tags.find(
-          (tag) =>
-            tag.name.startsWith(`@${relation.type}.`) ||
-            (relation.type === "verifies" && tag.name.startsWith("@exercises.")),
-        )?.location.line ?? scenario.location.line,
+        metadata.value?.relationLines.find(
+          (row) => row.entry === `relation.${relation.type}.${relation.target}`,
+        )?.line ?? scenario.location.line,
     })),
     data: {
       id: metadata.value.id,
@@ -1262,7 +1280,7 @@ function reifyFeature(
     ...(exampleSpace === undefined ? {} : { exampleSpace }),
   };
   const parent: ReifiedSpec = {
-    entryLines: ruleLines,
+    entryLines: [...ruleLines, ...metadata.value.relationLines],
     id: metadata.value.id,
     file,
     line: metadata.value.idLine,

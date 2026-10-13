@@ -5,6 +5,9 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:validation.two-check-families
+  dependsOn:
+    - spec:extraction.claim-taxonomy
+    - spec:extraction.derive-graph
 ---
 # Graph claims and contracts stay distinct
 
@@ -14,7 +17,6 @@ relations:
 ## Rule
 - Node and edge types, claims, descriptors, and relation endpoint contracts must use their ratified forms; the claim taxonomy never collapses.
 - An unratified descriptor value fails closed: it is a conformance error, and no readiness floor is evaluated over it.
-- The realizing validator entrypoint is `checkClaimSeparation` in `src/validate/validators.ts`.
 
 ## Example space
 ```gwt-vocabulary

@@ -78,6 +78,13 @@ async function runQ(
   return await runSdpCli(["q", ...args], capture.output, hooks);
 }
 
+const evaluationSinkTestAnchor = specTest({
+  id: testAnchorId("test:protocol.evaluation-sink"),
+  label: "front-door checks verify how the sink takes a body, prints its return and refuses",
+  verifies: ref("spec:consumers.agent-surface.evaluation-sink"),
+});
+void evaluationSinkTestAnchor;
+
 describe("sdp q — the agent front door", () => {
   afterAll(() => {
     removeMaterializedCorpus(corpusRoot);
@@ -722,7 +729,10 @@ describe("sdp q --params — a recipe parameter as data", () => {
 
 const answerShapesTestAnchor = specTest({
   id: testAnchorId("test:protocol.query-answer-shapes"),
-  verifies: ref("spec:consumers.agent-surface.answer-shapes"),
+  verifies: [
+    ref("spec:consumers.agent-surface.evaluation-sink"),
+    ref("spec:consumers.agent-surface.recipe-parameters"),
+  ],
 });
 void answerShapesTestAnchor;
 

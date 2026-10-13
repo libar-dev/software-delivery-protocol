@@ -23,6 +23,13 @@ import { runValidateWatch } from "./validate-watch.js";
 import type { ValidateWatchHooks } from "./validate-watch.js";
 import { runValidate, runView } from "./validate-view-command.js";
 
+/**
+ * @sdpAnchor impl:protocol.adopter-help
+ * @sdpLabel SDP_HELP_TEXT indexes the shipped skills, recipe catalog, schema, walkthrough, glossary and specs/ by package-relative path
+ * @sdpSatisfies spec:consumers.adopter-on-ramp
+ * @sdpComponent component:protocol.cli
+ * @sdpRole service
+ */
 export const SDP_HELP_TEXT = `sdp — Libar Software Delivery Protocol
 Usage:
   sdp --help
@@ -44,10 +51,10 @@ Options:
 
 Commands:
   build      Extract every *.sdp.ts, *.sdp.md, and *.sdp.gherkin under root (default: cwd), plus
-             the anchor constants in the other *.ts/*.tsx source files, into
-             <root>/generated/graph.json — then derive the
-             executable contracts (per-example step contracts + per-parent space contracts,
-             the A2 mechanism) into <root>/generated/contracts/. Exits 1 and writes nothing on
+             the anchors, in the constant form or comment form, in the other *.ts/*.tsx
+             source files, into <root>/generated/graph.json — then derive the
+             executable contracts (per-example step contracts + per-parent space contracts)
+             into <root>/generated/contracts/. Exits 1 and writes nothing on
              any hard error — the emitted artifacts are all-or-nothing. --check-clean
              additionally runs a second independent extraction + generation and fails on any
              byte divergence (the determinism self-check). Repeat --exclude PATH to omit exact
@@ -55,7 +62,7 @@ Commands:
              reads a TypeScript adapter configuration and writes generated/imports.json as
              external inferred input for curation, apart from the curated graph.
   validate   build, then run the conformance + honesty checks over the one graph (one
-             validation path). A check error exits 1; gaps and orphans inform as warnings.
+             validation path). A check error exits 1; warnings inform and do not fail the run.
              graph.json is still written when the checks fail — the graph is the faithful
              projection; check errors describe the repo's conformance, not the artifact.
              --watch re-runs the same validate path on carrier create/change/delete/rename
@@ -66,7 +73,7 @@ Commands:
              exit code follows validate. --check-clean independently re-renders.
   census     validate, then generate the taxonomy census into <root>/generated/census/ as a
              separate wholesale tmp-to-rename projection. --check-clean independently re-renders
-             and refuses when the checked-in/generated page differs from the current projection.
+             and refuses when the published page differs from the current projection.
   mermaid    validate, then generate Mermaid diagrams into <root>/generated/mermaid/ as a
              separate wholesale tmp-to-rename projection. --check-clean independently re-renders
              and refuses when the published bytes differ from the current projection.
@@ -92,7 +99,7 @@ Commands:
              body — no import/export, no TypeScript-only syntax — and \`return\` is the output
              contract. Four bindings are injected: \`g\`, the reader over the derived graph (the
              same createReader the package exports); \`graph\`, the raw graph schema object;
-             \`report\`, the validation report, so honesty findings are queryable data rather than a
+             \`report\`, the validation report, so findings are queryable data rather than a
              gate — checks never gate the read path; and \`params\`, the JSON object --params
              supplies, or {} without it. Repeat --params with JSON objects, @PATH for a file
              holding one, or KEY=@PATH for any JSON value under a lower-camel key. Objects merge
@@ -114,13 +121,16 @@ Agent skills and reference:
   docs/agent-surface/recipes.md               the recipe catalog: runnable q bodies
   dist/recipes/NN-slug.js                     each catalog body as a file, run as shipped with
                                               sdp q "$(cat PKG/dist/recipes/NN-slug.js)"
+  schemas/sdp-proposal-1.schema.json          the JSON Schema for a change proposal
+  docs/agent-surface/architecture.md          the architecture walkthrough
   CONTEXT.md                                  the Protocol's glossary, which the skills and
                                               recipes use
-  specs/                                      the Protocol's own Specs and Pack, which the skills
+  specs/                                      the Protocol's own Specs and Packs, which the skills
                                               and recipes cite by id
   Read a cited Protocol Spec: sdp q 'return g.specContext("spec:model.anchors")' --root PKG/specs
   That graph holds intent only. The package ships no source anchors, so its delivery facts are
-  empty and its gap warnings are not evidence about what the Protocol has realized.`;
+  empty and its gap and verifier-linkage warnings are not evidence about what the Protocol has
+  realized.`;
 
 /** Reads one file the package ships, by URL; `sdp --version` reads through it. */
 export type EngineFileReader = (url: URL) => string;
@@ -182,7 +192,7 @@ export function readEngineProvenance(read: EngineFileReader = readShippedFile): 
 
 /**
  * @sdpAnchor impl:protocol.engine-provenance-cli
- * @sdpLabel sdp --version names the package version and the commit the build recorded
+ * @sdpLabel prints sdp version and the commit parsed from the build-info file beside the compiled CLI
  * @sdpSatisfies spec:consumers.engine-provenance
  * @sdpComponent component:protocol.cli
  * @sdpRole service

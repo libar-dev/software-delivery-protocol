@@ -217,6 +217,47 @@ Feature: Complete carrier
     expect(decorated.specs).toEqual(undecorated.specs);
   });
 
+  it.each(
+    [
+      "implemented",
+      "has-verifier",
+      "hasVerifier",
+      "observed",
+      "claim",
+      "status",
+      "lifecycle",
+      "workflow",
+      "architect",
+    ].flatMap((head) =>
+      ["", ".ready", "-ready"].flatMap((suffix) =>
+        [head, head.toUpperCase()].map((variant) => `@${variant}${suffix}`),
+      ),
+    ),
+  )("refuses reserved head %s at its tag line", (tag) => {
+    const found = refusal(feature("", `${FEATURE_TAGS} ${tag}`));
+    expect(found?.message).toContain(`Gherkin tag "${tag}" is refused`);
+    expect(found?.line).toBe(1);
+  });
+
+  it.each([
+    "@wip",
+    "@smoke",
+    "@implementedness",
+    "@has-verifiers",
+    "@hasVerifierExtra",
+    "@observedness",
+    "@claimant",
+    "@statusready",
+    "@lifecycleReady",
+    "@workflowing",
+    "@architecture",
+  ])("keeps nonmatching decoration %s graph-inert", (tag) => {
+    const undecorated = reify(feature(scenario()));
+    const decorated = reify(feature(scenario(), `${FEATURE_TAGS} ${tag}`));
+    expect(decorated.findings).toEqual([]);
+    expect(decorated.specs).toEqual(undecorated.specs);
+  });
+
   it("suggests exactly one unique reserved head for a length ≤5 one-edit near miss", () => {
     const found = refusal(feature("", `${FEATURE_TAGS} @spe.probe`));
 

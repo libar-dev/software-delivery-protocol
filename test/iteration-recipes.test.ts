@@ -15,7 +15,6 @@ import { describe, expect, it } from "vitest";
 import {
   codeAnchor,
   codeAnchorId,
-  componentAnchorId,
   ref,
   specTest,
   testAnchorId,
@@ -29,7 +28,6 @@ const diffDocumentAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.design-diff-recipe"),
   label: "realizes the design diff in the shipped recipe catalog",
   satisfies: ref("spec:consumers.design-diff"),
-  component: componentAnchorId("component:protocol.reader"),
   role: "projection",
 });
 void diffDocumentAnchor;
@@ -237,6 +235,7 @@ describe("iteration loop: design diff", () => {
       );
       const summary = await runRecipe<{
         specs: { changed: { id: string; parts: string[] }[] };
+        totals: Diff["totals"];
         leftOut: string[];
       }>(35, { base: base.graph }, head);
       expect(summary.specs.changed).toEqual(
@@ -245,7 +244,9 @@ describe("iteration loop: design diff", () => {
           parts: row.parts.map((part) => part.part),
         })),
       );
-      expect(summary.leftOut).toHaveLength(1);
+      expect(summary.totals).toEqual(result.totals);
+      expect(summary).toEqual(await runRecipe(35, { base: base.graph, detail: false }, head));
+      expect(summary.leftOut).toEqual(["Changed part values and change types; pass detail: true."]);
     });
   }, 20_000);
 
@@ -522,7 +523,70 @@ describe("iteration loop: design diff", () => {
     });
   }, 20_000);
 
-  it("normalizes legacy rule markers when both engines declare schema 0.9.0", async () => {
+  it.each([
+    ["0.9.0", "0.9.0"],
+    ["0.9.0", "0.10.0"],
+    ["0.10.0", "0.9.0"],
+  ])(
+    "diagnoses uncertain optional fields at base %s and head %s",
+    async (baseVersion, headVersion) => {
+      await withCorpus(async (root, derived) => {
+        const base = { ...derived.graph, schemaVersion: baseVersion };
+        edit(root, "a.sdp.md", "A needs the outside law.", "Changed relation reason.");
+        edit(root, "a.sdp.md", "- alpha: `Alpha` declaration", "- alpha: `Changed` declaration");
+        const extracted = extract({ root });
+        const head = {
+          ...extracted,
+          graph: { ...extracted.graph, schemaVersion: headVersion as GraphSchema["schemaVersion"] },
+        };
+        const diff = await runRecipe<Diff>(35, { base, detail: true }, head);
+        expect(diff.diagnostics.map((row) => row.part)).toEqual(
+          expect.arrayContaining([
+            "ruleKeys",
+            "decider",
+            "links",
+            "provisional",
+            "trigger",
+            "reason",
+            "exercises",
+          ]),
+        );
+        expect(diff.specs.changed.find((row) => row.id === "spec:probe.a")?.parts).toEqual([
+          {
+            part: "design.alpha",
+            change: "changed",
+            from: "`Alpha` declaration",
+            to: "`Changed` declaration",
+          },
+        ]);
+        const check = await runRecipe<ProposalCheck>(
+          38,
+          {
+            base,
+            proposal: {
+              ...sampleProposal,
+              changes: [
+                {
+                  scope: ["spec:probe.a", "spec:probe.a#rule.first", "spec:probe.a#design.alpha"],
+                  request: "Review comparable design and uncertain rule metadata.",
+                },
+              ],
+            },
+          },
+          head,
+        );
+        expect(check.diagnostics?.map((row) => row.part)).toEqual(
+          expect.arrayContaining(["ruleKeys", "reason"]),
+        );
+        expect(check.changes[0]?.scope[0]).toMatchObject({ comparable: false });
+        expect(check.changes[0]?.scope[1]).toMatchObject({ comparable: false });
+        expect(check.changes[0]?.scope[2]).toMatchObject({ moved: true });
+      });
+    },
+    20_000,
+  );
+
+  it("normalizes legacy rule markers in graphs with comparable rule-key capability", async () => {
     await withCorpus(async (_root, head) => {
       const base = JSON.parse(JSON.stringify(head.graph)) as GraphSchema;
       for (const node of base.nodes) {
@@ -688,7 +752,6 @@ const perspectiveDocumentAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.perspective-filter-recipe"),
   label: "realizes the perspective filter in the shipped recipe catalog",
   satisfies: ref("spec:consumers.review-perspectives"),
-  component: componentAnchorId("component:protocol.reader"),
   role: "projection",
 });
 void perspectiveDocumentAnchor;
@@ -701,7 +764,6 @@ const bundleDocumentAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.context-bundle-recipe"),
   label: "realizes the context bundle in the shipped recipe catalog",
   satisfies: ref("spec:consumers.context-bundle"),
-  component: componentAnchorId("component:protocol.reader"),
   role: "projection",
 });
 void bundleDocumentAnchor;
@@ -1230,7 +1292,6 @@ const proposalDocumentAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.proposal-schema-and-recipe"),
   label: "realizes the shipped proposal schema and proposal check in the recipe catalog",
   satisfies: ref("spec:consumers.intent-composition.proposal"),
-  component: componentAnchorId("component:protocol.reader"),
   role: "contract",
 });
 void proposalDocumentAnchor;

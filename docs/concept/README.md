@@ -1,6 +1,6 @@
 # Libar Software Delivery Protocol — Concept
 
-> Libar Software Delivery Protocol is an **executable, self-validating meta-model of the software-delivery process**: teams author delivery intent as instances of one primitive — a `Spec` — and the meta-model (typed code in the repo) deterministically checks **conformance and honesty** and derives **one graph**. The familiar delivery nouns (Use Case, NFR, Decision Record; Epic, Feature, Story) are **named coordinates** on that one primitive, not separate artifact types. A static extractor derives the graph from the repo's authored carriers — `ts-morph` for the TS carrier (`.sdp.ts`), the ruled Markdown parser for the Markdown carrier (`.sdp.md`); the graph is never a second source of truth — it is a pure, regenerable projection. Conformance + honesty checks keep it honest in CI; every human- and AI-facing surface is a projection of the graph.
+> Libar Software Delivery Protocol is an **executable, self-validating meta-model of the software-delivery process**: teams author delivery intent as instances of one primitive — a `Spec` — and the meta-model (typed code in the repo) deterministically checks **conformance and honesty** and derives **one graph**. The familiar delivery nouns (Use Case, NFR, Decision Record; Epic, Feature, Story) are **named coordinates** on that one primitive, not separate artifact types. A static extractor derives the graph from the repo's authored carriers — `ts-morph` for the TS carrier (`.sdp.ts`), the ruled Markdown parser for the Markdown carrier (`.sdp.md`), the pinned Gherkin parser for the Gherkin carrier (`.sdp.gherkin`); the graph is never a second source of truth — it is a pure, regenerable projection. Conformance + honesty checks keep it honest in CI; every human- and AI-facing surface is a projection of the graph.
 
 **Slogan:** *Specs are code; the graph is derived; the `claim` stays honest; git is the event log.*
 
@@ -27,7 +27,7 @@ Everything in this document set is downstream of this. If any document conflicts
 These documents are deliberately principle-led and lean. The single most important distinction they make is **Principle vs Representation**:
 
 - A **Principle** is a law the design stands or falls on. Swapping it changes what the Protocol *is*.
-- A **Representation** is one chosen mechanism among several. Swapping it changes *how* a principle is realised, nothing more.
+- A **Representation** is one chosen mechanism among several. Swapping it changes *how* a principle is realized, nothing more.
 
 Every load-bearing claim is named as one or the other, on purpose — so a Representation is never mistaken for a Principle.
 
@@ -37,13 +37,13 @@ Every load-bearing claim is named as one or the other, on purpose — so a Repre
 | — | [Ubiquitous Language](../../CONTEXT.md) | The ratified **glossary** (`CONTEXT.md`, repo root): terms, descriptor values, relations, a worked dialogue, flagged ambiguities. The terminology base for every doc below. |
 | 00 | [Vision, Scope & MVP Boundary](./00-vision-scope-and-mvp-boundary.md) | The honest full ambition **and** the sharp MVP line, in one place. |
 | 01 | [Founding Principles & Invariants](./01-founding-principles-and-invariants.md) | The load-bearing laws, each tagged Principle/Representation and CORE/ASPIRATIONAL. Git-as-event-log. The `claim` epistemics. |
-| 04 | [Authoring & Binding](./04-authoring-and-binding.md) | The two ruled authoring carriers — Markdown (`.sdp.md`, the default for Specs and Packs) and the TypeScript DSL (`.sdp.ts`, import source and lawful per-ID option) — plus generic source anchors (framework-neutral); harnesses named but deferred; the carrier competition is ruled (MD-18, completed by MD-25). |
-| 06 | [Consumers & Projections](./06-consumers-and-projections.md) | MVP: the agent surface (a typed graph the agent scripts) + Design Review + reader; edits via intent→agent→git (no patch loop). Two surfaces (curated graph vs impact graph). Aspirational: Studio, exports, MCP surface. |
-| 07 | [MVP Roadmap & Open Questions](./07-mvp-roadmap-and-open-questions.md) | The vertical slice, the CORE/ASPIRATIONAL map, the cut list with rationale, and the residual open questions. |
+| 04 | [Authoring & Binding](./04-authoring-and-binding.md) | The three ruled authoring carriers: Markdown (`.sdp.md`, the default for Specs and Packs), the TypeScript DSL (`.sdp.ts`, import source and lawful per-ID option) and Gherkin (`.sdp.gherkin`, behavior and example Specs only), plus generic source anchors (framework-neutral); harnesses named but deferred; the carrier competition is ruled (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25). |
+| 06 | [Consumers & Projections](./06-consumers-and-projections.md) | Pointers to the Specs that carry the consumer law: the projections, the two surfaces (curated graph vs impact graph), the agent surface, the edit model (intent→agent→git, no patch loop) and the Design Review; plus the discipline-to-kind mapping no Spec carries. |
+| 07 | [MVP Acceptance of Record](./07-mvp-roadmap-and-open-questions.md) | The MVP acceptance criterion no Spec carries: the correctness oracle kept apart from the determinism self-checks. |
 
 **Reading paths:**
 - Evaluating the idea → `00`, then `01`.
-- Building the MVP → `07`, then the model Specs (`spec:model.core-model` and siblings), `04`, then the validation Specs (`spec:validation.two-check-families`, `spec:validation.readiness-floor`, `spec:validation.kind-evidence` and siblings).
+- Building on the Protocol → the model Specs (`spec:model.core-model` and siblings), `04`, then the validation Specs (`spec:validation.two-check-families`, `spec:validation.readiness-floor`, `spec:validation.kind-evidence` and siblings).
 - Understanding the trust model → `01`, then the extraction Specs (`spec:extraction.derive-graph`, `spec:extraction.determinism`, `spec:extraction.claim-taxonomy`, `spec:extraction.regenerability`).
 - Reasoning about the long-term shape → `00`, `06`.
 
@@ -65,9 +65,9 @@ Every statement in this set carries one of these tags so the boundary is never b
 The MVP is a tight vertical slice on **one** bounded context (Order Management, ~8–12 specs):
 
 - the typed `Spec` DSL (the MVP's TS carrier, still supported) + generic source anchors,
-- the one-graph extractor over both carriers (`ts-morph` for `.sdp.ts`, the ruled Markdown parser for `.sdp.md`),
+- the one-graph extractor over every ruled carrier (`ts-morph` for `.sdp.ts`, the ruled Markdown parser for `.sdp.md`, the pinned Gherkin parser for `.sdp.gherkin`),
 - core conformance + honesty checks (referential integrity, duplicate IDs, honest readiness against the floor, orphan detection, `verifies` linkage),
 - one generated read-only view,
 - bidirectional spec↔test trace.
 
-The write-path is simply **edit the canonical carrier + git** — no patch loop. Specs and Packs default to Markdown; the TS DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25). Everything else is aspirational and labelled as such, with the rationale for cutting it in `07`.
+The write-path is simply **edit the canonical carrier + git** — no patch loop. Specs and Packs default to Markdown; the TS DSL survives as import source and a lawful per-ID option (the carrier ruling, MD-18, completed by the Pack syntax ruling, MD-25). Everything else is aspirational and labeled as such, with the rationale for cutting it in `00` §4.

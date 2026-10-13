@@ -15,7 +15,7 @@ relations:
 ## Rule
 - Oracle target eligibility follows ownership of an example space, not a behavior-kind check.
 - A resolving binding is an anchored `models` edge from an `oracle:` Anchor to a Spec that owns an example space.
-- Missing targets, wrong namespaces, absent example spaces, and competing oracles remain fail-closed refusals.
+- Missing targets, wrong namespaces, absent example spaces, and competing oracles are fail-closed refusals.
 - Validators and graph readers consume the same eligibility result.
 
 ## Example space

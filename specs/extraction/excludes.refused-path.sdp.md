@@ -5,7 +5,9 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:extraction.excludes
-  verifies: spec:extraction.excludes
+  verifies:
+    target: spec:extraction.excludes
+    exercises: [refusedPaths]
 ---
 # A Windows-drive absolute path is refused rather than normalized
 

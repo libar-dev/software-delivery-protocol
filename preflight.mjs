@@ -8,8 +8,10 @@ import {
   readFileSync,
   rmSync,
 } from "node:fs";
-import { join } from "node:path";
+import { join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import ts from "typescript";
 
 import { trackedRegistrarDifferences } from "./preflight-registrars.mjs";
 
@@ -167,6 +169,46 @@ function semanticPaths() {
     .sort();
 }
 
+// Every TypeScript and JavaScript module extension a test runner may load.
+const importerSource = /\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/u;
+const generatedImporter = /\.test\.generated\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/u;
+
+function untrackedAdoptedRegistrars(trackedPaths) {
+  const tracked = new Set(trackedPaths);
+  const missing = new Set();
+
+  for (const importer of trackedPaths) {
+    if (
+      !importerSource.test(importer) ||
+      generatedImporter.test(importer) ||
+      isGeneratedPath(importer) ||
+      !existsSync(join(repoRoot, importer))
+    ) {
+      continue;
+    }
+
+    const source = readFileSync(join(repoRoot, importer), "utf8");
+    for (const { fileName: specifier } of ts.preProcessFile(source, true, true).importedFiles) {
+      if (
+        !specifier.startsWith(".") ||
+        !/\.test\.generated(?:\.(?:js|ts|mjs|mts))?$/u.test(specifier)
+      ) {
+        continue;
+      }
+      const sibling = specifier.replace(/\.js$/u, ".ts").replace(/\.mjs$/u, ".mts");
+      const path = posix.normalize(
+        posix.join(
+          posix.dirname(importer),
+          sibling.endsWith(".test.generated") ? `${sibling}.ts` : sibling,
+        ),
+      );
+      if (!tracked.has(path)) missing.add(path);
+    }
+  }
+
+  return [...missing].sort();
+}
+
 function main() {
   const status = gitLines(["status", "--short", "--untracked-files=all"]);
   const nonignoredUntracked = gitLines(["ls-files", "--others", "--exclude-standard"])
@@ -195,6 +237,10 @@ function main() {
     ),
   );
   const failures = [];
+
+  for (const path of untrackedAdoptedRegistrars(gitLines(["ls-files"]))) {
+    failures.push(`preflight: adopted registrar imported by tracked code is not tracked: ${path}`);
+  }
 
   if (trackedGeneratedWrites.length > 0) {
     failures.push(

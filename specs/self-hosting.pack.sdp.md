@@ -4,8 +4,10 @@ specs:
   - spec:carrier.markdown-authoring
   - spec:carrier.envelope-contract
   - spec:carrier.markdown-parser
+  - spec:carrier.markdown-parser.bounded-parity
   - spec:carrier.sdp-import
   - spec:carrier.sdp-import.round-trip
+  - spec:carrier.sdp-import.feature-adapter
   - spec:carrier.prose-ownership-rule
   - spec:carrier.markdown-pack-authoring
   - spec:carrier.markdown-pack-authoring.markdown-ts-parity
@@ -44,98 +46,94 @@ specs:
   - spec:carrier.gherkin-authoring.description-location-refused
   - spec:carrier.gherkin-authoring.step-less-scenario-refused
   - spec:carrier.gherkin-authoring.multi-finding-bounded
-  - spec:protocol.self-hosting
-  - spec:protocol.structural-self-binding
-  - spec:observation.runtime-overlay
+  - spec:carrier.slot-notation
+  - spec:carrier.slot-notation.typed-declaration
+  - spec:carrier.slot-notation.refused-guess
+  - spec:model.core-model
+  - spec:model.enrichment-lifecycle
+  - spec:model.spec-sections
+  - spec:model.relations
+  - spec:model.stable-ids
+  - spec:model.stable-ids.namespaced-round-trip
+  - spec:model.stable-ids.malformed-refusal
+  - spec:model.stable-ids.unsectioned-address-refused
+  - spec:model.pack-aggregate
+  - spec:model.anchors
+  - spec:model.anchors.lookalike-refusal
+  - spec:model.anchors.physical-identity
+  - spec:model.structural-patterns
+  - spec:model.open-question-keys
+  - spec:model.open-question-keys.keyed-question-resolves
+  - spec:model.open-question-keys.renamed-key-breaks
+  - spec:model.open-question-keys.repeated-key-refused
+  - spec:model.design-maturity
+  - spec:model.planned-architecture
+  - spec:model.open-question-fields
+  - spec:model.rule-keys
+  - spec:model.relation-reasons
+  - spec:model.term-addresses
   - spec:extraction.derive-graph
   - spec:extraction.delivery-facts
   - spec:extraction.determinism
   - spec:extraction.build-pipeline
   - spec:extraction.build-pipeline.same-invocation
   - spec:extraction.excludes
+  - spec:extraction.excludes.segment-boundary
+  - spec:extraction.excludes.refused-path
   - spec:extraction.claim-taxonomy
   - spec:extraction.regenerability
   - spec:extraction.schema-versioning
+  - spec:extraction.schema-versioning.declared-version
   - spec:extraction.executable-contracts
+  - spec:extraction.executable-contracts.concreteness-refusal
+  - spec:extraction.executable-contracts.multi-entry-example
+  - spec:extraction.executable-contracts.case-colliding-path
   - spec:extraction.contract-declarations
   - spec:extraction.open-section-order
   - spec:extraction.runnable-modules
+  - spec:extraction.example-runner
+  - spec:extraction.example-runner.step-order
+  - spec:extraction.example-runner.red-step-naming
+  - spec:extraction.pack-member-order
+  - spec:extraction.pack-member-order.manifest-order-kept
+  - spec:extraction.entry-locations
   - spec:validation.readiness-floor
+  - spec:validation.readiness-floor.unrelated-scoped-spec
+  - spec:validation.readiness-floor.blocking-open-question
   - spec:validation.typed-dependency-floor
+  - spec:validation.typed-dependency-floor.relation-rungs
+  - spec:validation.typed-dependency-floor.missing-targets
+  - spec:validation.typed-dependency-floor.unsettled-fact
+  - spec:validation.typed-dependency-floor.stated-readiness
   - spec:validation.duplicate-ids
+  - spec:validation.duplicate-ids.dual-carrier
   - spec:validation.two-check-families
+  - spec:validation.two-check-families.split-report
   - spec:validation.referential-integrity
+  - spec:validation.referential-integrity.dangling-target
+  - spec:validation.referential-integrity.did-you-mean
   - spec:validation.prose-mentions
   - spec:validation.claim-separation
+  - spec:validation.claim-separation.collapsed-edge-claim
+  - spec:validation.claim-separation.unratified-descriptor
   - spec:validation.verification-linkage
+  - spec:validation.verification-linkage.unbound-example
+  - spec:validation.verification-linkage.unresolved-oracle
   - spec:validation.unbound-example-posture
+  - spec:validation.unbound-example-posture.lower-rungs
+  - spec:validation.unbound-example-posture.warning-cases
+  - spec:validation.unbound-example-posture.parent-traces
   - spec:validation.oracle-target-eligibility
   - spec:validation.oracle-target-eligibility.rule-space-accepted
   - spec:validation.oracle-target-eligibility.missing-space-refused
   - spec:validation.pack-coherence
+  - spec:validation.pack-coherence.incoherent-aggregate
   - spec:validation.authored-honesty
-  - spec:validation.warn-level-signals
-  - spec:consumers.projections-model
-  - spec:consumers.projections-model.roadmap-views
-  - spec:consumers.impact-graph
-  - spec:consumers.impact-graph.symbol-reach
-  - spec:consumers.agent-surface
-  - spec:consumers.design-review
-  - spec:consumers.census-page
-  - spec:consumers.mermaid-view
-  - spec:consumers.gherkin-view
-  - spec:consumers.reader
-  - spec:consumers.edit-model
-  - spec:consumers.authoring-on-ramp
-  - spec:consumers.delivery-session-on-ramp
-  - spec:consumers.agent-surface.authoring-recipes
-  - spec:consumers.agent-surface.register-recipes
-  - spec:consumers.intent-composition
-  - spec:consumers.graph-first-planning
-  - spec:consumers.adopter-on-ramp
-  - spec:consumers.shipped-protocol-corpus
-  - spec:model.protocol-domain
-  - spec:model.core-model
-  - spec:model.enrichment-lifecycle
-  - spec:model.spec-sections
-  - spec:model.relations
-  - spec:model.stable-ids
-  - spec:model.pack-aggregate
-  - spec:model.anchors
-  - spec:model.structural-patterns
-  - spec:validation.duplicate-ids.dual-carrier
-  - spec:validation.warn-level-signals.orphan-signal
-  - spec:validation.warn-level-signals.ready-gap-signal
-  - spec:validation.referential-integrity.dangling-target
-  - spec:validation.referential-integrity.did-you-mean
   - spec:validation.authored-honesty.section-authored-fact
   - spec:validation.authored-honesty.unearned-stated-fact
-  - spec:validation.claim-separation.collapsed-edge-claim
-  - spec:validation.claim-separation.unratified-descriptor
-  - spec:validation.verification-linkage.unbound-example
-  - spec:validation.verification-linkage.unresolved-oracle
-  - spec:validation.pack-coherence.incoherent-aggregate
-  - spec:extraction.excludes.segment-boundary
-  - spec:extraction.excludes.refused-path
-  - spec:extraction.schema-versioning.declared-version
-  - spec:model.stable-ids.namespaced-round-trip
-  - spec:model.stable-ids.malformed-refusal
-  - spec:model.stable-ids.unsectioned-address-refused
-  - spec:carrier.markdown-parser.bounded-parity
-  - spec:extraction.example-runner
-  - spec:extraction.example-runner.step-order
-  - spec:extraction.example-runner.red-step-naming
-  - spec:extraction.executable-contracts.concreteness-refusal
-  - spec:extraction.executable-contracts.multi-entry-example
-  - spec:extraction.executable-contracts.case-colliding-path
-  - spec:carrier.slot-notation
-  - spec:carrier.slot-notation.typed-declaration
-  - spec:carrier.slot-notation.refused-guess
-  - spec:model.anchors.lookalike-refusal
-  - spec:model.anchors.physical-identity
-  - spec:validation.two-check-families.split-report
-  - spec:validation.readiness-floor.unrelated-scoped-spec
-  - spec:validation.readiness-floor.blocking-open-question
+  - spec:validation.warn-level-signals
+  - spec:validation.warn-level-signals.orphan-signal
+  - spec:validation.warn-level-signals.ready-gap-signal
   - spec:validation.kind-evidence
   - spec:validation.kind-evidence.constraints-alone
   - spec:validation.kind-evidence.untargeted-constraint
@@ -144,6 +142,41 @@ specs:
   - spec:validation.diagnostic-rendering.composed-location
   - spec:validation.diagnostic-rendering.table-cell-location
   - spec:validation.validator-self-testing
+  - spec:validation.next-rung-floor
+  - spec:validation.next-rung-floor.typed-dependency-targets
+  - spec:validation.next-rung-floor.blocking-question
+  - spec:validation.superseded-decision-signal
+  - spec:validation.architecture-constraints
+  - spec:validation.corpus-rules
+  - spec:consumers.projections-model
+  - spec:consumers.projections-model.roadmap-views
+  - spec:consumers.impact-graph
+  - spec:consumers.impact-graph.curation-assist
+  - spec:consumers.impact-graph.symbol-reach
+  - spec:consumers.agent-surface
+  - spec:consumers.agent-surface.scripted-context-body
+  - spec:consumers.agent-surface.demand-map-entries
+  - spec:consumers.agent-surface.answer-shapes
+  - spec:consumers.agent-surface.evaluation-sink
+  - spec:consumers.design-review
+  - spec:consumers.design-review.pure-projection
+  - spec:consumers.census-page
+  - spec:consumers.mermaid-view
+  - spec:consumers.gherkin-view
+  - spec:consumers.reader
+  - spec:consumers.reader.concept-entry
+  - spec:consumers.reader.file-entry
+  - spec:consumers.reader.changeset-entry
+  - spec:consumers.edit-model
+  - spec:consumers.authoring-on-ramp
+  - spec:consumers.reading-on-ramp
+  - spec:consumers.delivery-session-on-ramp
+  - spec:consumers.agent-surface.authoring-recipes
+  - spec:consumers.agent-surface.register-recipes
+  - spec:consumers.intent-composition
+  - spec:consumers.graph-first-planning
+  - spec:consumers.adopter-on-ramp
+  - spec:consumers.shipped-protocol-corpus
   - spec:consumers.derived-readiness-banner
   - spec:consumers.derived-readiness-banner.dishonest-divergence
   - spec:consumers.derived-readiness-banner.honest-headroom
@@ -155,12 +188,38 @@ specs:
   - spec:consumers.wholesale-view-rewrite.late-stale-page
   - spec:consumers.wholesale-view-rewrite.failed-run-view-removed
   - spec:consumers.wholesale-view-rewrite.build-invalidates-view
-  - spec:consumers.agent-surface.scripted-context-body
-  - spec:consumers.agent-surface.demand-map-entries
-  - spec:consumers.reader.concept-entry
-  - spec:consumers.reader.file-entry
-  - spec:consumers.reader.changeset-entry
-  - spec:consumers.design-review.pure-projection
+  - spec:consumers.agent-surface.address-and-cycle-recipes
+  - spec:consumers.spec-studio
+  - spec:consumers.spec-studio.data
+  - spec:consumers.spec-studio.shell
+  - spec:consumers.spec-studio.lenses
+  - spec:consumers.spec-studio.spec-page
+  - spec:consumers.spec-studio.verification-panels
+  - spec:consumers.spec-studio.intent-panel
+  - spec:consumers.spec-studio.components
+  - spec:consumers.spec-studio.responsive
+  - spec:consumers.spec-studio.sharing
+  - spec:consumers.pack-design
+  - spec:consumers.design-review.pack-design-page
+  - spec:consumers.agent-surface.recipe-parameters
+  - spec:consumers.agent-surface.design-recipes
+  - spec:consumers.engine-provenance
+  - spec:consumers.validate-watch
+  - spec:consumers.agent-surface.example-space-coverage
+  - spec:consumers.review-perspectives
+  - spec:consumers.context-bundle
+  - spec:consumers.design-diff
+  - spec:consumers.intent-composition.proposal
+  - spec:consumers.reference-projection
+  - spec:consumers.structural-mermaid
+  - spec:consumers.obsidian-vault
+  - spec:consumers.obsidian-vault.notes
+  - spec:consumers.obsidian-vault.bases
+  - spec:consumers.obsidian-vault.iteration
+  - spec:observation.runtime-overlay
+  - spec:observation.run-evidence
+  - spec:protocol.self-hosting
+  - spec:protocol.structural-self-binding
   - spec:decisions.plain-language-references
   - spec:decisions.concept-docs-dissolve
   - spec:decisions.one-validation-path
@@ -195,72 +254,16 @@ specs:
   - spec:decisions.planning-truths-placement
   - spec:decisions.checked-mentions
   - spec:decisions.authored-entry-order
-  - spec:validation.unbound-example-posture.lower-rungs
-  - spec:validation.unbound-example-posture.warning-cases
-  - spec:validation.unbound-example-posture.parent-traces
-  - spec:validation.typed-dependency-floor.relation-rungs
-  - spec:validation.typed-dependency-floor.missing-targets
-  - spec:validation.typed-dependency-floor.unsettled-fact
-  - spec:validation.typed-dependency-floor.stated-readiness
-  - spec:extraction.pack-member-order
-  - spec:extraction.pack-member-order.manifest-order-kept
-  - spec:consumers.agent-surface.address-and-cycle-recipes
-  - spec:validation.next-rung-floor
-  - spec:validation.next-rung-floor.typed-dependency-targets
-  - spec:validation.next-rung-floor.blocking-question
-  - spec:model.open-question-keys
-  - spec:model.open-question-keys.keyed-question-resolves
-  - spec:model.open-question-keys.renamed-key-breaks
-  - spec:model.open-question-keys.repeated-key-refused
   - spec:decisions.question-key-rendering
-  - spec:consumers.spec-studio
   - spec:decisions.studio-html-surface
-  - spec:consumers.spec-studio.data
-  - spec:consumers.spec-studio.shell
-  - spec:consumers.spec-studio.lenses
-  - spec:consumers.spec-studio.spec-page
-  - spec:consumers.spec-studio.verification-panels
-  - spec:consumers.spec-studio.intent-panel
-  - spec:consumers.spec-studio.components
   - spec:decisions.studio-web-components
-  - spec:consumers.spec-studio.responsive
-  - spec:consumers.spec-studio.sharing
   - spec:decisions.anchor-comment-form
   - spec:decisions.anchor-binding-grain
   - spec:decisions.architectural-annotation
   - spec:decisions.pack-design-page
-  - spec:consumers.pack-design
-  - spec:consumers.design-review.pack-design-page
-  - spec:extraction.entry-locations
-  - spec:consumers.agent-surface.recipe-parameters
-  - spec:consumers.agent-surface.design-recipes
-  - spec:consumers.engine-provenance
-  - spec:model.design-maturity
-  - spec:consumers.validate-watch
-  - spec:consumers.agent-surface.example-space-coverage
-  - spec:model.planned-architecture
-  - spec:model.open-question-fields
-  - spec:model.rule-keys
-  - spec:model.relation-reasons
-  - spec:consumers.review-perspectives
-  - spec:consumers.context-bundle
-  - spec:consumers.design-diff
-  - spec:consumers.intent-composition.proposal
-  - spec:consumers.reference-projection
-  - spec:consumers.structural-mermaid
-  - spec:validation.superseded-decision-signal
-  - spec:validation.architecture-constraints
-  - spec:validation.corpus-rules
-  - spec:observation.run-evidence
-  - spec:consumers.obsidian-vault
-  - spec:consumers.obsidian-vault.notes
-  - spec:consumers.obsidian-vault.bases
-  - spec:consumers.obsidian-vault.iteration
-  - spec:model.term-addresses
 modelRefs:
-  - spec:model.protocol-domain
   - spec:model.core-model
 ---
 # Self-hosting
 
-The Protocol authors and validates its own delivery model.
+The Protocol authors and validates its own delivery model. Every Spec of the self-hosted corpus is a member, grouped for review by carrier, model, extraction, validation, consumers, observation and protocol, then decisions; an example follows the Spec it refines when both share a family.

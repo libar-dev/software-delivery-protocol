@@ -10,7 +10,7 @@ relations:
 # One finding class is shared while the carriers' outcomes stay their own
 
 ## Intent
-- outcome: Execute one same-class row of the parity matrix, including the outcomes it never claims.
+- outcome: Execute one same-class row of the parity matrix, including each carrier's severity and extraction outcome.
 
 ```gwt
 Given the paired carrier probes named {probe: "unrecognized-property"}

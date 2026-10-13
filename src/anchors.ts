@@ -22,7 +22,6 @@ export {
   ref,
   specId,
   testAnchorId,
-  CODE_ANCHOR_NAMESPACES,
 } from "./ids.js";
 export type {
   AnchorId,
@@ -33,7 +32,7 @@ export type {
   SpecId,
   TestAnchorId,
 } from "./ids.js";
-export { codeAnchor, specOracle, specTest, CODE_ANCHOR_LAYERS } from "./model/anchors.js";
+export { codeAnchor, specOracle, specTest } from "./model/anchors.js";
 export type {
   Anchor,
   CodeAnchor,

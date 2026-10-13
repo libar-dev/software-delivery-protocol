@@ -11,7 +11,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
-import { afterEach, expect } from "vitest";
+import { afterEach, expect, it } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
@@ -510,6 +510,40 @@ registerHonestHeadroom({
   },
 });
 
+/**
+ * The branch no example point reaches: the space binds the `scoped` and `ready` floors only. A
+ * probe with neither an outcome nor a parent fails the `idea` floor itself, so the page has no
+ * rung to name and the banner says the floor stands below `idea`.
+ */
+const ideaFloorUnmetTestAnchor = specTest({
+  id: testAnchorId("test:protocol.derived-readiness-banner.idea-floor-unmet"),
+  label: "a Spec below the idea floor renders the floor reached as none and the banner below idea",
+  verifies: ref("spec:consumers.derived-readiness-banner"),
+});
+void ideaFloorUnmetTestAnchor;
+
+it("renders a Spec whose idea floor is unmet with no rung and a below-idea banner", () => {
+  const subject = spec({
+    id: specId("spec:probe.below-idea"),
+    title: "Probe subject below the idea floor",
+    kind: "rule",
+    altitude: "story",
+    readiness: "idea",
+    behavior: { rules: ["A rule's statement is its own evidence."] },
+  });
+  const page = pageOf(
+    renderDesignReview(createReader(deriveFixtureGraph({ specs: [subject] }))),
+    "spec/probe.below-idea.md",
+  );
+  const banner = page.split("\n").find((line) => line.startsWith("> **Readiness divergence.**"));
+
+  expect(page).toContain(
+    "**Readiness:** stated `idea` · structural floor reached: none (the `idea` floor is unmet)",
+  );
+  expect(banner).toContain("the structural floor reached is below `idea`.");
+  expect(banner).toContain("First unmet clause: `intent.outcome-or-parent-relation`");
+});
+
 /* ----- spec:consumers.binding-language-views ----- */
 
 const BINDING_PARENT_ID = "spec:probe.binding-parent";
@@ -671,8 +705,13 @@ const bindingLanguageBindings = {
     params: { readonly verifier: "present" | "none" },
   ) => {
     expect(bindingPage(world)).toContain(`- Verifier binding: **${params.verifier}**`);
+  },
+  "the spec page renders the expected-outcome oracle as {oracle}": (
+    world: BindingWorld,
+    params: { readonly oracle: "present" | "none" },
+  ) => {
     // The oracle line is the third of the three existence lines, and reads the same two words.
-    expect(bindingPage(world)).toContain("- Expected-outcome oracle: **none**");
+    expect(bindingPage(world)).toContain(`- Expected-outcome oracle: **${params.oracle}**`);
   },
   "the spec page renders the runtime observation as {observation}": (
     world: BindingWorld,

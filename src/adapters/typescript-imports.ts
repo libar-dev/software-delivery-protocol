@@ -14,6 +14,7 @@ import type { SourceFile } from "ts-morph";
 export interface ImportsFile {
   readonly schema: "sdp-imports/1";
   readonly adapter: "typescript";
+  readonly exclude: readonly string[];
   readonly files: readonly { readonly file: string; readonly imports: readonly string[] }[];
 }
 
@@ -21,6 +22,7 @@ interface TypeScriptImportsConfig {
   readonly adapter: "typescript";
   readonly tsconfig: string;
   readonly roots: readonly string[];
+  readonly exclude?: readonly string[];
 }
 
 function configuredPath(root: string, path: string): string {
@@ -51,13 +53,34 @@ function readConfig(root: string, path: string): TypeScriptImportsConfig {
     !("roots" in value) ||
     !Array.isArray(value.roots) ||
     value.roots.length === 0 ||
-    value.roots.some((entry: unknown) => typeof entry !== "string")
+    value.roots.some((entry: unknown) => typeof entry !== "string") ||
+    Object.keys(value).some((key) => !["adapter", "tsconfig", "roots", "exclude"].includes(key)) ||
+    ("exclude" in value &&
+      (!Array.isArray(value.exclude) ||
+        value.exclude.some((entry: unknown) => typeof entry !== "string")))
   ) {
     throw new Error(
-      "imports configuration requires adapter: typescript, tsconfig, and non-empty roots",
+      "imports configuration accepts only adapter: typescript, tsconfig, non-empty roots, and optional exclude paths",
     );
   }
   return value as TypeScriptImportsConfig;
+}
+
+function normalizedExcludes(root: string, paths: readonly string[] | undefined): string[] {
+  return [
+    ...new Set(
+      (paths ?? []).map((path) => {
+        const absolute = configuredPath(root, path);
+        const normalized = relative(root, absolute).split(sep).join("/");
+        if (normalized === "" || path.includes("\\") || /^[A-Za-z]:/u.test(path)) {
+          throw new Error(
+            `imports configuration requires a root-relative exclusion path, got "${path}"`,
+          );
+        }
+        return normalized;
+      }),
+    ),
+  ].sort();
 }
 
 function sourcePaths(directory: string): string[] {
@@ -104,9 +127,38 @@ function reexports(file: SourceFile): SourceFile[] {
   });
 }
 
+interface PathApi {
+  relative(from: string, to: string): string;
+}
+
+/** A path relative to the root in POSIX form, whichever separator the path arrives with. */
+export function rootRelativePath(
+  root: string,
+  file: string,
+  paths: PathApi = { relative },
+): string {
+  return paths.relative(root, file).split(/[\\/]/u).join("/");
+}
+
+/** The files the imports file lists: every loaded file outside the excluded paths. */
+export function includedSourcePaths(
+  root: string,
+  files: readonly string[],
+  exclude: readonly string[],
+  paths: PathApi = { relative },
+): Set<string> {
+  return new Set(
+    files.filter((file) => {
+      const path = rootRelativePath(root, file, paths);
+      return !exclude.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+    }),
+  );
+}
+
 /** Runs only from build or an explicit adapter caller, never from extraction or the reader. */
 export function deriveTypeScriptImports(root: string, configPath: string): ImportsFile {
   const config = readConfig(root, configPath);
+  const exclude = normalizedExcludes(root, config.exclude);
   const directories = config.roots.map((path) => configuredPath(root, path));
   for (const directory of directories) {
     if (statSync(directory, { throwIfNoEntry: false })?.isDirectory() !== true) {
@@ -119,13 +171,21 @@ export function deriveTypeScriptImports(root: string, configPath: string): Impor
   });
   const paths = [...new Set(directories.flatMap(sourcePaths))].sort();
   const sources = project.addSourceFilesAtPaths(paths);
-  const included = new Set(paths);
-  const rootRelative = (path: string) => relative(root, path).split(sep).join("/");
+  const rootRelative = (path: string) => rootRelativePath(root, path);
+  // Load excluded files too: their re-exports can still reach included endpoints. Compare the
+  // compiler's own paths, which use forward slashes on Windows, never the native list above.
+  const included = includedSourcePaths(
+    root,
+    sources.map((source) => source.getFilePath()),
+    exclude,
+  );
 
   return {
     schema: "sdp-imports/1",
     adapter: "typescript",
+    exclude,
     files: sources
+      .filter((source) => included.has(source.getFilePath()))
       .map((source) => {
         const direct = source.getImportDeclarations().flatMap((entry) => {
           const target = entry.getModuleSpecifierSourceFile();

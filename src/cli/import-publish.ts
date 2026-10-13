@@ -20,6 +20,13 @@ interface PreparedImport extends PlannedImport {
   readonly temporaryPath: string;
 }
 
+/**
+ * @sdpAnchor impl:protocol.sdp-import-publish
+ * @sdpLabel stages Markdown siblings and publishes them with atomic hard links
+ * @sdpReferences spec:carrier.sdp-import
+ * @sdpComponent component:protocol.cli
+ * @sdpRole service
+ */
 export function publishImports(
   planned: readonly PlannedImport[],
   output: CliOutput,

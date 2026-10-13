@@ -754,7 +754,7 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
       expect(context?.members).toHaveLength(11);
       expect(context?.members.every((member) => member.resolved)).toBe(true);
 
-      // Verifier gaps: every member without a verifier binding; the example has two covered
+      // Verifier gaps: every non-decision member without a verifier binding; the example has two covered
       // specs (create-order and its valid-cart example — the one ready member, covered, so not
       // a gap) and no ready member among the gaps, so no priority.
       expect(context?.verifierGaps.map((gap) => gap.id)).toEqual([
@@ -766,9 +766,56 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
         "spec:orders.order-inventory-rule",
         "spec:orders.order-latency-constraint",
         "spec:orders.order-model",
-        "spec:decisions.order-lifecycle",
       ]);
       expect(context?.verifierGaps.every((gap) => !gap.priority)).toBe(true);
+    });
+
+    it("excludes ready and below-ready decisions from gaps while preserving non-decision order", () => {
+      const decision = (id: string, readiness: "ready" | "defined") =>
+        spec({
+          id: specId(id),
+          title: "Decision posture",
+          kind: "decision",
+          altitude: "story",
+          readiness,
+          intent: { outcome: "Keep ratification separate from verifier bindings." },
+          decision: { decision: "Ratification does not require a verifier." },
+        });
+      const rule = (id: string, readiness: "ready" | "defined") =>
+        spec({
+          id: specId(id),
+          title: "An unverified rule",
+          kind: "rule",
+          altitude: "story",
+          readiness,
+          intent: { outcome: "Surface missing verifier bindings." },
+          behavior: { rules: ["A verifier gap is informative."] },
+        });
+      const members = [
+        decision("spec:probe.ready-decision", "ready"),
+        rule("spec:probe.z-rule", "defined"),
+        decision("spec:probe.defined-decision", "defined"),
+        rule("spec:probe.a-rule", "ready"),
+      ];
+      const graph = deriveFixtureGraph({
+        specs: members,
+        packs: [
+          pack({
+            id: packId("pack:probe.gaps"),
+            title: "Verifier gaps",
+            specs: members.map((member) => member.id),
+          }),
+        ],
+      });
+      const context = createReader(graph).packContext("pack:probe.gaps");
+
+      expect(context?.members.map((member) => member.id)).toEqual(
+        members.map((member) => member.id),
+      );
+      expect(context?.verifierGaps).toEqual([
+        { id: "spec:probe.z-rule", statedReadiness: "defined", priority: false },
+        { id: "spec:probe.a-rule", statedReadiness: "ready", priority: true },
+      ]);
     });
 
     it("flags a ready member without a verifier as the priority gap", () => {

@@ -13,30 +13,23 @@ export const validationSpecs = [
     narrative: null,
     sections: {
       intent: {
-        outcome: "Refuse maturity claims that their authored evidence does not support.",
-        openQuestions: [
-          {
-            question:
-              "Does any remaining law in the src/validate/readiness-floor.ts file header promote here under comment promotion?",
-            blocking: false,
-            key: "headerLawPromotion",
-          },
-        ],
+        outcome: "Refuse a stated readiness that its authored evidence does not support.",
       },
       behavior: {
         rules: [
           "A Spec may state a readiness only when every clause in that readiness floor passes.",
           "Floors are cumulative: a stated rung is checked against its own clauses and every lower rung's, so a Spec that clears a higher rung has cleared each one beneath it.",
-          "The `idea` floor reads the envelope through five clauses: the Spec carries a stable id, a human-readable title, a stated kind, and a stated altitude, and it either states its intended outcome or declares a parent relation through `refines`.",
+          "The `idea` floor has five clauses: the Spec carries a stable id, a human-readable title, a stated kind and a stated altitude, and it either states its intended outcome or declares a parent relation through `refines`.",
           "The `scoped` floor adds three clauses: the intended outcome is stated, at least one authored relation is declared, and the kind's natural evidence is present.",
           "The `defined` floor adds two clauses: the kind's natural evidence is complete, and no open question the Spec records is flagged as blocking.",
           "The `ready` floor reads the Spec's own edges through three clauses: every authored relation resolves to a known target, every resolving `refines`, `dependsOn`, `constrainedBy`, and `decidedBy` target itself states at least `defined`, and every anchor bound to the Spec resolves.",
-          "Readiness is independent across a refinement relation: a child may be authored at a higher readiness than its parent. Only the child's own cumulative floor applies, including the `ready` target bound above when the child states `ready`.",
+          "A child's readiness statement is its own and may be higher than its parent's. Below `ready`, the child's floor does not read the parent's rung; at `ready`, its typed-dependency clause requires a resolving `refines` parent to state at least `defined`.",
           "The anchor clause reads the bindings that are present, so a Spec carrying no anchor clears it — the floor never demands a binding an author has not made.",
           "Only relations the Spec itself declares count toward the relation clauses; membership of a Pack is derived from the manifest and never stands in for an authored relation.",
-          "Every clause stated here is kind-blind. The two evidence clauses are the one kind-conditional place in the floor, and what counts as a kind's natural evidence is stated in full by the refining Spec that carries the per-kind evidence table.",
-          "One clause table serves both readings: it checks the readiness an author states, and it yields derived readiness — the highest rung whose cumulative clauses all pass — which is read beside the stated rung and never overwrites it, and it answers for a target rung an evaluation names, which yields the next rung's unmet clauses.",
-          "The floor is the mechanism while the specific clause thresholds are one chosen representation, so a team-overridable floor configuration is a designed-for deferral rather than a landed capability: no validator reads a per-team floor setting, and the shipped clause table is the only floor any Spec is checked against.",
+          "Every clause except the two evidence clauses is kind-blind; what counts as a kind's natural evidence is stated in full by `spec:validation.kind-evidence`.",
+          "One clause table checks the stated rung and yields derived readiness, the highest rung whose cumulative clauses all pass, which is read beside the stated rung and never overwrites it. Asked about a named rung, the evaluator yields that rung's unmet clauses; the reader uses it for the stated next rung and the floor's next rung.",
+          "Given a Primitive node and a valid graph index over plain value data, evidence predicates tolerate section containers of the wrong shape and treat missing expected containers as absent evidence. An unratified kind derives no rung; an evaluation with an unratified kind or rung returns no failures, and descriptor conformance reports the invalid descriptor.",
+          "The shipped clause table is the only floor any Spec is checked against; no validator reads a per-team floor setting.",
           "The floor table in `src/validate/readiness-floor.ts` is the clause set's code-level source of truth and the realizing entrypoint. The clauses stated here and the rows of that table are one law read twice, so any disagreement between them is drift to resolve on one side, never a second floor.",
         ],
         exampleSpace: {
@@ -51,6 +44,13 @@ export const validationSpecs = [
             "the report holds {errorCount:number} errors",
           ],
         },
+        ruleKeys: {
+          ideaFloor: "rules[2]",
+          scopedFloor: "rules[3]",
+          definedFloor: "rules[4]",
+          readyFloor: "rules[5]",
+          floorTable: "rules[13]",
+        },
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -61,7 +61,7 @@ export const validationSpecs = [
     altitude: "story",
     readiness: "ready",
     file: "specs/validation/readiness-floor.unrelated-scoped-spec.sdp.md",
-    title: "A scoped spec with no relation names the relation clause",
+    title: "A scoped Spec with no relation names the relation clause",
     narrative: null,
     sections: {
       intent: {
@@ -92,7 +92,7 @@ export const validationSpecs = [
     altitude: "story",
     readiness: "ready",
     file: "specs/validation/readiness-floor.blocking-open-question.sdp.md",
-    title: "A blocking open question holds a spec below defined",
+    title: "A blocking open question holds a Spec below defined",
     narrative: null,
     sections: {
       intent: {
@@ -133,13 +133,13 @@ export const validationSpecs = [
       behavior: {
         rules: [
           "Each kind names its natural evidence: the `scoped` rung requires that evidence present, and the `defined` rung requires it complete wherever the kind defines a stronger form. This table is the whole kind-aware story — there is no second overlay mechanism.",
-          "`behavior`, `workflow`, and `contract` share one row. Evidence is present with rules, examples, flows, or constraints — inline, or promoted onto a refining child or a `constrainedBy` constraint. Evidence is complete with rules and/or examples, inline or promoted; constraints alone no longer suffice.",
+          "`behavior`, `workflow`, and `contract` share one row. Evidence is present with rules, examples, flows, or constraints — inline, or promoted onto a refining child or a `constrainedBy` constraint. Evidence is complete with rules and/or examples, inline or promoted; constraints alone do not suffice.",
           "A `rule` converges across the two rungs: its statement is its evidence, because a rule's content is its statement.",
-          "An `example` shows evidence present with an examples entry, prose acceptable. It shows evidence complete with at least one structured given/when/then entry whose every used step is fully bound and belongs compatibly to any example space its parent owns — the concreteness law.",
+          "An `example` shows evidence present with an examples entry, prose acceptable. It shows evidence complete with at least one structured given/when/then entry whose every used step is fully bound, the concreteness law, and belongs compatibly to any example space its parent owns.",
           "A `constraint` shows evidence present with a non-empty constraints section, and complete when every entry carries a machine-readable target.",
           "A `model` converges on non-empty terms: a vocabulary either has terms or it does not.",
           "A `decision` shows evidence present once its decision section is there — context and alternatives may precede the choice — and complete once the chosen option is written.",
-          "The `contract` row stands on the behavior row as a named deferral: when a dedicated contract section lands, the typing law pulls it in and this row repoints to it.",
+          "The `contract` kind uses the behavior-family evidence row; the Contract carrier heading reifies into behavior and is not a separate typed section.",
           "Promoted evidence carries an honesty bound. A promoted child counts only when it is a `rule` or `example` Spec that itself clears its own kind's present cell, and a `constrainedBy` edge counts only when it resolves to a `constraint` Spec carrying its constraints — promotion moves content out, so an empty stub child is not a promotion and confers nothing.",
           "The rows are monotonic, promotion-neutral, and converge honestly where a kind has no stronger form; those three bounds belong to the decision this Spec is shaped by and to the carried-evidence decision, and are not restated as law here.",
           "The evidence table in `src/validate/readiness-floor.ts` is the row set's code-level source of truth and the realizing entrypoint; the rows stated here and that table are one law read twice, so any disagreement between them is drift to resolve on one side.",
@@ -265,10 +265,13 @@ export const validationSpecs = [
     title: "Duplicate carrier IDs are excluded loudly",
     narrative: null,
     sections: {
-      intent: { outcome: "Prevent ambiguous authored identity from entering the graph." },
+      intent: {
+        outcome: "Prevent ambiguous authored identity from entering the graph.",
+      },
       behavior: {
         rules: [
           "If more than one carrier declares an ID, every duplicate site receives extract/duplicate-id and no ambiguous node is derived.",
+          "Over a graph from any producer, every node whose id is carried by another node receives a conformance/duplicate-ids error; the extractor separately excludes ambiguous authored carriers through extract/duplicate-id.",
         ],
         exampleSpace: {
           given: [
@@ -294,7 +297,9 @@ export const validationSpecs = [
     title: "TypeScript and Markdown duplicates are both refused",
     narrative: null,
     sections: {
-      intent: { outcome: "Execute the duplicate-ID rule across both carrier surfaces." },
+      intent: {
+        outcome: "Execute the duplicate-ID rule across both carrier surfaces.",
+      },
       behavior: {
         examples: [
           {
@@ -325,23 +330,15 @@ export const validationSpecs = [
       intent: {
         outcome:
           "Keep the graph trustworthy by checking conformance and honesty without judging content quality or enforcing workflow.",
-        openQuestions: [
-          {
-            question:
-              "Does the one-validation-path registry law stated in the src/validate/validators.ts file header promote here or to a story-altitude child under comment promotion?",
-            blocking: false,
-            key: "registryLawPromotion",
-          },
-        ],
       },
       behavior: {
         rules: [
-          "Every validator the Protocol ships belongs to either the conformance family, which checks meta-model well-formedness, or the honesty family, which rejects authored or overstated derived truth; a corpus rule run through `sdp validate --rules` belongs to neither and reports in the corpus's own section.",
+          "Every validator the Protocol ships belongs to either the conformance family, which checks meta-model well-formedness, or the honesty family, which rejects authored or overstated derived truth; a corpus's own rules belong to neither family, and `spec:validation.corpus-rules` designs how they run and report.",
           "Errors from the Protocol's validators fail the build; gaps and orphans remain informative signals rather than delivery-process gates.",
-          "Types enforce structural shape, schema validates graph payloads, and graph validators enforce cross-file conformance and honesty; no one layer substitutes for the others.",
+          "Types check the shape of what is authored in TypeScript, extraction checks every carrier as it reads it, and graph validators check cross-file conformance and honesty; no one layer substitutes for the others.",
           "All graph validation runs through the one derived graph path: source, extraction, graph, then checks.",
           "The two families are load-bearing, so an aggregate report spanning both states no family of its own while every finding of the Protocol's own validators names the family it came from.",
-          "The realizing entrypoints are `graphValidatorIds` and `validateGraph` in `src/validate/validators.ts`.",
+          "A validator id, once shipped, names one check for good: it is never reused or repurposed, and a new check ships under a new id.",
         ],
         exampleSpace: {
           given: [
@@ -354,6 +351,9 @@ export const validationSpecs = [
             'the conformance family reports {conformanceId:string} at severity {conformanceSeverity:"warning"|"error"}',
             'the honesty family reports {honestyId:string} at severity {honestySeverity:"warning"|"error"}',
           ],
+        },
+        ruleKeys: {
+          stableIds: "rules[5]",
         },
       },
     },
@@ -407,8 +407,7 @@ export const validationSpecs = [
       behavior: {
         rules: [
           "Every edge endpoint and every Pack model reference must resolve to a node in the derived graph; an unresolved reference is a conformance error.",
-          "The finding names the unique nearest known id as a suggestion and stays silent when two candidates tie, because resolving ambiguity silently is never the check's job.",
-          "The realizing validator entrypoint is `checkReferentialIntegrity` in `src/validate/validators.ts`.",
+          "The finding names the unique nearest known id within edit distance two as a suggestion, and stays silent when no id is that near or two candidates tie, because resolving ambiguity silently is never the check's job.",
         ],
         exampleSpace: {
           given: [
@@ -502,7 +501,6 @@ export const validationSpecs = [
         rules: [
           "Node and edge types, claims, descriptors, and relation endpoint contracts must use their ratified forms; the claim taxonomy never collapses.",
           "An unratified descriptor value fails closed: it is a conformance error, and no readiness floor is evaluated over it.",
-          "The realizing validator entrypoint is `checkClaimSeparation` in `src/validate/validators.ts`.",
         ],
         exampleSpace: {
           given: [
@@ -589,19 +587,18 @@ export const validationSpecs = [
     altitude: "feature",
     readiness: "ready",
     file: "specs/validation/verification-linkage.sdp.md",
-    title: "Declared verification resolves to a performing trace",
+    title: "Example verification and oracle bindings resolve honestly",
     narrative: null,
     sections: {
       intent: {
         outcome:
-          "Keep verification relationships meaningful by requiring declared test and oracle traces to resolve to their enabled bindings.",
+          "Keep declared example verification bound to a resolving test anchor, and keep an oracle's expected-outcome binding resolved to its example space.",
       },
       behavior: {
         rules: [
-          "A declared verifies relation and an oracle model relation must resolve through their respective binding traces before either can stand as verification evidence.",
-          "A non-resolving trace confers no delivery fact. The verifies-linkage warning names an unbound example only when it states `ready`, and names a non-example Spec that declares `verifies` at every rung. The oracle-linkage check continues to name a non-resolving oracle trace.",
+          "A declared `verifies` from an example stands as verification evidence only when a resolving test anchor binds that example. An oracle's anchored `models` edge records expected-outcome semantics for a Spec that owns an example space and confers no delivery fact.",
+          "A non-resolving trace confers no delivery fact. Which unbound declared verifiers warn is stated by `spec:validation.unbound-example-posture`; ineligible oracle bindings are reported by the oracle-linkage check.",
           "At most one expected-outcome authority may model an example space: a second resolving oracle binding on the same space is an error, because two authorities leave the modeled outcome ambiguous.",
-          "The realizing validator entrypoints are `checkVerifiesLinkage` and `checkOracleLinkage` in `src/validate/validators.ts`.",
         ],
         exampleSpace: {
           given: [
@@ -630,7 +627,7 @@ export const validationSpecs = [
     sections: {
       intent: {
         outcome:
-          "Execute the verifies-linkage law where no test anchor completes the spec-to-test trace.",
+          "Execute the verifies-linkage law where no test anchor completes the Spec-to-test trace.",
       },
       behavior: {
         examples: [
@@ -657,11 +654,11 @@ export const validationSpecs = [
     altitude: "story",
     readiness: "ready",
     file: "specs/validation/verification-linkage.unresolved-oracle.sdp.md",
-    title: "An oracle with no example space to model confers nothing",
+    title: "An oracle targeting a Spec with no example space is refused",
     narrative: null,
     sections: {
       intent: {
-        outcome: "Execute the oracle-linkage law where the modeled spec owns no example space.",
+        outcome: "Execute the oracle-linkage law where the modeled Spec owns no example space.",
       },
       behavior: {
         examples: [
@@ -698,7 +695,7 @@ export const validationSpecs = [
         rules: [
           "Oracle target eligibility follows ownership of an example space, not a behavior-kind check.",
           "A resolving binding is an anchored `models` edge from an `oracle:` Anchor to a Spec that owns an example space.",
-          "Missing targets, wrong namespaces, absent example spaces, and competing oracles remain fail-closed refusals.",
+          "Missing targets, wrong namespaces, absent example spaces, and competing oracles are fail-closed refusals.",
           "Validators and graph readers consume the same eligibility result.",
         ],
         exampleSpace: {
@@ -782,7 +779,8 @@ export const validationSpecs = [
     readiness: "ready",
     file: "specs/validation/pack-coherence.sdp.md",
     title: "Packs are coherent aggregates",
-    narrative: null,
+    narrative:
+      "A Pack is a review grouping, so a coherent Pack may hold low-detail Specs without turning grouping into implementation demand.",
     sections: {
       intent: {
         outcome:
@@ -793,8 +791,7 @@ export const validationSpecs = [
           "Pack membership must not repeat a Spec, and every modelRef must resolve to a model-kind Spec.",
           "Membership is counted on the derived belongsTo edges the manifest re-expresses, so a repeated manifest entry is named once per repeated member.",
           "A Pack's members list and its belongsTo edges agree: every listed member has one belongsTo edge into the Pack, and every belongsTo edge into the Pack comes from a listed member. A listed member with no edge, a listed member that is no Spec and no edge carries, and an edge from an unlisted source are each one error, in authored order, so the Pack context, a Spec's packs, and blast radius read the same membership. An edge whose source is absent or no Spec stays referential integrity's or the edge contract's finding, never a second one here.",
-          "There is no duplicated-intent check on a Pack: a Pack states no system truth to duplicate, and semantic overlap among its members remains human or agent review rather than validator judgment. This lets a coherent group contain low-detail Specs without turning grouping into implementation demand.",
-          "The realizing validator entrypoint is `checkPackCoherence` in `src/validate/validators.ts`.",
+          "There is no duplicated-intent check on a Pack: a Pack states no system truth to duplicate, and semantic overlap among its members remains human or agent review rather than validator judgment.",
         ],
         exampleSpace: {
           given: [
@@ -852,12 +849,12 @@ export const validationSpecs = [
     sections: {
       intent: {
         outcome:
-          "Keep derived graph truth trustworthy by rejecting any authored substitute for machine-derived claims or facts.",
+          "Keep derived graph truth trustworthy by rejecting any authored substitute for a derived edge or delivery fact.",
       },
       behavior: {
         rules: [
-          "Specs and Packs must not author derived edges, claims, or delivery facts, and any stated delivery facts must equal the graph's recomputed facts.",
-          "The realizing validator entrypoints are `checkAuthoringShape` and `checkDeliveryFacts` in `src/validate/validators.ts`.",
+          "Specs and Packs author no derived edge or delivery fact.",
+          "A Primitive node's `deliveryFacts` equals the facts the one derivation recomputes from the graph.",
         ],
         exampleSpace: {
           given: [
@@ -952,10 +949,9 @@ export const validationSpecs = [
       behavior: {
         rules: [
           "Orphaned Specs and ready Specs lacking a resolving verifier are warnings, not validation errors.",
-          "The gap signal excludes kind `decision`: a decision record's evidence is its registry row and complete record, never a verifier, so the signal is definitional noise for that kind.",
-          "The gap signal reads the delivery facts the one derivation rule recomputes from the graph, never the facts a Spec states, so a hand-authored fact can never silence it.",
-          "The severity these informative signals carry is fixed by the Protocol and no validator reads a per-team setting, so a per-team severity override is a designed-for deferral rather than a landed capability.",
-          "The realizing validator entrypoints are `checkOrphans` and `checkGaps` in `src/validate/validators.ts`.",
+          "The gap signal excludes kind `decision`.",
+          "The gap signal reads the delivery facts the one derivation recomputes from the graph, never the `deliveryFacts` a node carries, so a hand-authored fact cannot silence it.",
+          "The Protocol fixes the severity of these signals; no validator reads a per-team setting.",
         ],
         exampleSpace: {
           given: [
@@ -978,10 +974,12 @@ export const validationSpecs = [
     altitude: "story",
     readiness: "ready",
     file: "specs/validation/warn-level-signals.orphan-signal.sdp.md",
-    title: "A disconnected spec warns and fails nothing",
+    title: "A disconnected Spec warns and fails nothing",
     narrative: null,
     sections: {
-      intent: { outcome: "Execute the orphan signal on a spec no relation reaches." },
+      intent: {
+        outcome: "Execute the orphan signal on a Spec no relation reaches.",
+      },
       behavior: {
         examples: [
           {
@@ -1006,11 +1004,11 @@ export const validationSpecs = [
     altitude: "story",
     readiness: "ready",
     file: "specs/validation/warn-level-signals.ready-gap-signal.sdp.md",
-    title: "A ready spec without a verifier warns and fails nothing",
+    title: "A ready Spec without a verifier warns and fails nothing",
     narrative: null,
     sections: {
       intent: {
-        outcome: "Execute the gap signal on a connected ready spec no verifier resolves.",
+        outcome: "Execute the gap signal on a connected ready Spec no verifier resolves.",
       },
       behavior: {
         examples: [
@@ -1050,7 +1048,6 @@ export const validationSpecs = [
           "The command-line rendering is the path and line, the severity in brackets, the validator id, and the message, in that order and separated by the same one-line punctuation for every finding.",
           "The location degrades by field rather than by placeholder: a file with a line renders both, a file without a line renders the path alone, and a finding carrying no file renders no location prefix at all.",
           "The Design Review renders the same currency in its findings table under the same composition rule, and shows an em dash where a finding carries no file, because a table cell cannot be absent the way a prefix can.",
-          "The realizing entrypoints are `formatFinding` in `src/cli/output.ts` and `renderFindings` in `src/projections/design-review-context.ts`.",
         ],
         exampleSpace: {
           given: [
@@ -1068,6 +1065,10 @@ export const validationSpecs = [
             "the same row carrying neither renders {absentRow:string}",
           ],
         },
+      },
+      design: {
+        summaryLine:
+          "`validate: <errors> errors · <warnings> warnings (conformance + honesty over the one graph)`, written once to standard output after all findings have been written to standard error.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -1145,19 +1146,31 @@ export const validationSpecs = [
     readiness: "defined",
     file: "specs/validation/validator-self-testing.sdp.md",
     title: "Every validator ships evidence in both directions",
-    narrative: null,
+    narrative:
+      "A validator that stops firing reports nothing, and an empty report looks like a clean graph unless a test asserts the refusal. A validator that refuses every input is just as useless. Refusing and accepting inputs, one probe world per direction, tell the two failures apart, so the check families are themselves checked. No validator checks this discipline, because the Protocol's checks concern conformance and honesty, never the delivery process.",
     sections: {
       intent: {
         outcome: "Keep a validator that has silently stopped firing from reading as a clean build.",
+        openQuestions: [
+          {
+            question:
+              "Does every shipped validator, and every extraction refusal if those count as validators, carry both a refusing and an accepting test, and which suite binds this Spec as its verifier?",
+            blocking: false,
+            key: "evidenceAudit",
+            decider: "owner",
+            provisional:
+              "enumerate graphValidatorIds against accepting and refusing tests, then bind the suite",
+          },
+        ],
       },
       behavior: {
         rules: [
-          "Each validator ships evidence in both directions: at least one input it must refuse, and at least one it must accept.",
-          "The should-fail half is what catches the regression that matters most — a validator that no longer fires reports nothing, and nothing is indistinguishable from a clean graph unless something asserts the refusal.",
-          "The should-pass half bounds the first: a validator that refuses everything is as useless as one that refuses nothing, and only an accepted input separates the two.",
-          "This is evidence discipline over the two check families, never a check of its own. No validator polices whether another validator carries tests: that would police the delivery process rather than conformance or honesty, which the standing guardrail forbids.",
-          "The discipline is cheap by construction — a probe world per direction — and it is stated here so the two families are read as checks that are themselves checked.",
+          "Each validator ships evidence in both directions: at least one input it must refuse and at least one it must accept.",
+          "The discipline is evidence over the two check families, never a check of its own; no validator checks whether another validator carries tests.",
         ],
+        ruleKeys: {
+          bothDirections: "rules[0]",
+        },
       },
     },
     deliveryFacts: [],
@@ -1169,7 +1182,8 @@ export const validationSpecs = [
     readiness: "ready",
     file: "specs/validation/typed-dependency-floor.sdp.md",
     title: "A ready Spec rests only on settled dependencies",
-    narrative: null,
+    narrative:
+      "A `decidedBy` target at `defined` is a complete decision record awaiting ratification. Requiring `ready` of that target would make a shaped Spec's `ready` statement wait on registry ratification; the floor instead lets a shaped Spec state `ready` while its decision awaits the owner.",
     sections: {
       intent: {
         problem:
@@ -1180,8 +1194,9 @@ export const validationSpecs = [
       behavior: {
         rules: [
           "The `ready` floor's target clause reads every typed dependency the Spec declares. Each resolving `refines`, `dependsOn`, `constrainedBy`, and `decidedBy` target itself states at least `defined`. The clause reads stated readiness, so a dependent does not inherit a target's own floor failure.",
-          "The threshold is `defined` for all four relations. A `decidedBy` target at `defined` is a complete decision record awaiting ratification, and demanding `ready` of it would make `ready` on every shaped Spec a transitive registry fact, so a design can state `ready` while the decisions that shape it stay proposals.",
+          "The threshold is `defined` for all four typed dependencies.",
           "The clause stays kind-blind and reads resolving targets only. An unresolved target remains the relation-resolution clause's failure, never a second one.",
+          "A Spec naming itself as a typed dependency is read like any other resolving target, by its own stated readiness.",
           "`verifies` and `supersedes` stay outside the clause. A verifier's rung is independent of the Spec it verifies, and a replacement decision does not rest on the record it supersedes.",
           "An unsettled fact is stated the way any unsettled truth is. A constraint Spec that records a blocking open question clears at most `scoped`. When it states a rung below `defined`, a Spec bounded by it may state `defined` if its own floor clears, but cannot lawfully state `ready`.",
           "The floor keeps one target clause, `typed-dependency-targets-are-defined`, in `src/validate/readiness-floor.ts`. Its parent `spec:validation.readiness-floor` states the same target bound. A failure of the clause names every target that breaks it.",
@@ -1218,10 +1233,9 @@ export const validationSpecs = [
         rules: [
           "An example that declares `verifies` and has no resolving test anchor is named by the verifies-linkage warning only when the example states `ready`.",
           "Below `ready` the same state is data. The reader reports the example's verifier binding as declared and not enabled, the declared-versus-enabled recipe lists it, and it confers no `has-verifier`.",
-          "A Spec of any other kind that declares `verifies` keeps its warning at every rung, and the oracle-linkage check is unchanged.",
-          "The gap signal still names a `ready` Spec with no enabled verifier, except kind `decision`. A ready parent of any other kind keeps its gap while no enabled verifier verifies it. Once another enabled example or a direct test anchor verifies the parent, an unbound example below `ready` is visible as data alone. An unbound `ready` example keeps its own verifies-linkage warning even when the parent has another verifier.",
-          "The worked example teaches the incomplete trace through the verifier bindings its Design Review page renders and through the declared-versus-enabled recipe, not through a warning. Its walkthrough and example check move with this rule.",
-          "This rule revises the sentence of `spec:validation.verification-linkage` that names every non-resolving trace loudly. The realizing entrypoint stays `checkVerifiesLinkage` in `src/validate/validators.ts`.",
+          "A Spec of any other kind that declares `verifies` warns at every rung.",
+          "A `ready` parent other than a `decision` keeps its gap while no resolving verifier verifies it. Once another enabled example or a direct test anchor verifies it, an unbound example below `ready` is data alone, and an unbound `ready` example keeps its own warning.",
+          "The worked example shows its unbound example through its Design Review verifier bindings and the declared-versus-enabled recipe.",
         ],
         exampleSpace: {
           given: ["the verification posture matrix {matrix:string}"],
@@ -1249,14 +1263,16 @@ export const validationSpecs = [
       },
       behavior: {
         rules: [
-          "The validator id is `conformance/prose-mentions`, in the conformance family; the realizing entrypoint is `checkProseMentions` in `src/validate/validators.ts`, which reads the graph's Primitive nodes and edges and nothing else.",
+          "The validator id is `conformance/prose-mentions`, in the conformance family; it reads the graph's Primitive nodes, edges and location table and nothing else.",
           "The scanned text of a Spec is its narrative and every string value under its sections, except the `gwt-vocabulary` fence at `behavior.exampleSpace` and the `gwt` fences that are object entries of `behavior.examples`. The title is not scanned. Scan order is the narrative first, then the sections in the serialized graph's order, then entries in their authored order.",
           "A mention starts at `spec:` where the character before it, if any, is not an ASCII letter, an ASCII digit, or `-`. A backslash before ASCII punctuation is read as that punctuation, as Markdown reads an escape. The token ends at ASCII whitespace, at one of the ASCII delimiters `` ` `` `\"` `'` `(` `)` `[` `]` `{` `}` `<` `>` `|`, or at a character outside ASCII that is whitespace, U+0085 included, punctuation other than connector punctuation, a symbol, or a space, line, or paragraph separator, so every dash, ellipsis, typographic quote, and arrow ends it. Every other character stays in the token, letters, combining marks, digits, connector punctuation, control characters other than whitespace, and format, private-use, and unassigned characters among them. Trailing `.` `,` `;` `:` `!` `?` `*` `_` `~` are then removed after the prefix, so a sentence, a list, or emphasis may end in an id. When nothing remains after `spec:`, there is no mention, so a bare prefix or a placeholder such as `spec:<id>` stays prose. The whole token goes to `parseId`, so an underscore, a slash, a comma, a control character, or any character outside ASCII that stays in it refuses the whole token as malformed; the token is never cut short to the valid id before that character, and a refused token counts toward no pair. A token equal to the scanning Spec's own id is skipped.",
+          "An open question's links entry is checked whole as a Spec id or entry address, under `spec:model.open-question-fields`, at path `intent.openQuestions[<i>].links[<j>]`. It uses the same malformed-token error; an otherwise parsed id outside the Spec namespace has reason `expected spec namespace`.",
           'A token that fails `parseId` is an error with the message `Mention "<token>" in "<spec>" at <path> is not a Spec id or entry address: <reason>`, where `<reason>` is the grammar\'s refusal text with its `Invalid ID "<token>": ` prefix stripped.',
           'A token whose Spec part names no Primitive node is an error with the message `Mention in "<spec>" at <path> points to missing target "<token>".`, followed by the referential-integrity nearest-id suggestion when one is unique.',
           'A token whose Spec exists and whose entry address names no key of that `design` or `ui` section, names `description` there, names a question key no open question of that Spec carries, or names a rule key that Spec\'s `behavior.ruleKeys` does not carry, is an error with the message `Mention in "<spec>" at <path> points to missing entry "<section>.<key>" of "<target>".`',
           "Errors are reported once per scanning Spec, text path, and distinct token; `subjectId` is the scanning Spec, `relatedId` the token as written, `path` the text path, and `file` the Spec's carrier. The path is `narrative` or the section path in the mention audit's form, such as `intent.openQuestions[0].question`, `behavior.rules[2]`, `design.step2`, or `model.terms.<term>`.",
           'A target Spec that exists and shares no declared `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, or `supersedes` edge with the scanning Spec, in either direction, is one warning per scanning Spec and target Spec pair, counting every location where any token names that Spec or one of its entries. The message is `Mention of "<target>" in "<spec>" at <n> locations, first at <path>, with no declared relation between them; informative only. Declare the relation that fits, or leave the mention as prose and let the warning stand when none does.` with `<n>` the count of distinct paths, written `1 location` when it is one, and `<path>` the first in scan order; `subjectId` is the scanning Spec, `relatedId` the target Spec id, `path` that first path, and `file` the Spec\'s carrier. An address on the scanning Spec\'s own id is checked for its entry and never warned.',
+          "A mention error or pair warning carries `line` when the location table records the corresponding text path; a question link uses the `question[<i>].links` row, and an unrecorded line is omitted.",
           "The warning is honest when it stands: the six relations are typed, a mention that none of them describes is lawful prose, and no author declares a relation to silence the report. Warnings never fail `sdp validate`; the mention audit recipe reports every location of every pair as data and stays the way to list them at once.",
         ],
       },
@@ -1267,7 +1283,7 @@ export const validationSpecs = [
     id: "spec:validation.unbound-example-posture.lower-rungs",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/unbound-example-posture.lower-rungs.sdp.md",
     title: "Below-ready examples keep declared verifier data",
     narrative: null,
@@ -1277,7 +1293,7 @@ export const validationSpecs = [
         assumptions: [
           "The world has three behavior parents stating `defined`, each with one unbound example child, stating `idea`, `scoped`, or `defined`. No parent or child has a test binding or oracle binding.",
           "All probes are story-altitude Specs with declared claims and an Intent outcome, with no other section evidence. Each child declares `verifies` to its resolving parent. A binding is a resolving `test:` Anchor with an anchored `verifies` edge. No other relations or anchors are present except those stated here. Outcome counts read only `conformance/verifies-linkage`, parent `honesty/gaps`, and `conformance/oracle-linkage`; other findings stay outside the counts.",
-          "Every child remains a declared, disabled verifier. Neither child nor parent derives `has-verifier`. No linkage warning, parent gap, or oracle error appears.",
+          "Every child remains a declared verifier that is not enabled. Neither child nor parent derives `has-verifier`. No linkage warning, parent gap, or oracle error appears.",
         ],
       },
       behavior: {
@@ -1298,7 +1314,7 @@ export const validationSpecs = [
     id: "spec:validation.unbound-example-posture.warning-cases",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/unbound-example-posture.warning-cases.sdp.md",
     title: "Ready examples and non-example verifiers keep warnings",
     narrative: null,
@@ -1308,7 +1324,7 @@ export const validationSpecs = [
         assumptions: [
           "The world has one unbound example stating `ready` and 28 non-example children, one for each pairing of behavior, workflow, rule, constraint, model, decision, and contract with `idea`, `scoped`, `defined`, and `ready`. Each child verifies its own behavior parent stating `defined`. No parent or child has a test binding or oracle binding.",
           "All probes are story-altitude Specs with declared claims and an Intent outcome, with no other section evidence. Each child declares `verifies` to its resolving parent. A binding is a resolving `test:` Anchor with an anchored `verifies` edge. No other relations or anchors are present except those stated here. Outcome counts read only `conformance/verifies-linkage`, parent `honesty/gaps`, and `conformance/oracle-linkage`; other findings stay outside the counts.",
-          "Each child remains a declared, disabled verifier and emits one conformance warning whose subject is the child and whose related Spec is its parent. Neither child nor parent derives `has-verifier`. No parent gap or oracle error appears.",
+          "Each child remains a declared verifier that is not enabled and emits one conformance warning whose subject is the child and whose related Spec is its parent. Neither child nor parent derives `has-verifier`. No parent gap or oracle error appears.",
         ],
       },
       behavior: {
@@ -1329,7 +1345,7 @@ export const validationSpecs = [
     id: "spec:validation.unbound-example-posture.parent-traces",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/unbound-example-posture.parent-traces.sdp.md",
     title: "Parent gaps follow enabled bindings and preserve the decision exemption",
     narrative: null,
@@ -1340,7 +1356,7 @@ export const validationSpecs = [
         assumptions: [
           "The world has six parents stating `ready`. Five are behaviors and one is a decision. Four example children state `defined`: one behavior parent has no binding, one has a bound `defined` example sibling, one has a direct test binding, and the decision parent has no binding. Two example children state `ready`: one is unbound beside a bound `defined` example sibling, and the other has its own resolving test binding.",
           "All probes are story-altitude Specs with declared claims and an Intent outcome, with no other section evidence. Each child declares `verifies` to its resolving parent. A binding is a resolving `test:` Anchor with an anchored `verifies` edge. No other relations or anchors are present except those stated here. Outcome counts read only `conformance/verifies-linkage`, parent `honesty/gaps`, and `conformance/oracle-linkage`; other findings stay outside the counts.",
-          "The unbound children remain declared, disabled verifiers with no `has-verifier`. The bound `ready` child is a declared, enabled verifier, derives `has-verifier`, and emits no linkage warning. The direct binding, either sibling binding, and the bound `ready` child each confer `has-verifier` on their parent.",
+          "The unbound children remain declared verifiers that are not enabled, with no `has-verifier`. The bound `ready` child is a declared, enabled verifier, derives `has-verifier`, and emits no linkage warning. The direct binding, either sibling binding, and the bound `ready` child each confer `has-verifier` on their parent.",
           "Only the unbound `ready` child emits a linkage warning, at warning severity in the conformance family, naming its behavior parent as the related Spec. Only the behavior parent with no binding emits a parent gap. The decision parent stays exempt.",
           "An `oracle:` Anchor declares an anchored `models` edge to the behavior parent with no binding. That parent owns no example space, so the oracle emits one error naming the oracle as subject and that parent as related Spec.",
         ],
@@ -1363,7 +1379,7 @@ export const validationSpecs = [
     id: "spec:validation.typed-dependency-floor.relation-rungs",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/typed-dependency-floor.relation-rungs.sdp.md",
     title: "Every relation reads the four stated target rungs",
     narrative: null,
@@ -1395,7 +1411,7 @@ export const validationSpecs = [
     id: "spec:validation.typed-dependency-floor.missing-targets",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/typed-dependency-floor.missing-targets.sdp.md",
     title: "Missing targets fail relation resolution once",
     narrative: null,
@@ -1426,7 +1442,7 @@ export const validationSpecs = [
     id: "spec:validation.typed-dependency-floor.unsettled-fact",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/typed-dependency-floor.unsettled-fact.sdp.md",
     title: "An unsettled constraint bounds ready but permits defined",
     narrative: null,
@@ -1457,7 +1473,7 @@ export const validationSpecs = [
     id: "spec:validation.typed-dependency-floor.stated-readiness",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/typed-dependency-floor.stated-readiness.sdp.md",
     title: "Target floor failures do not propagate across dependencies",
     narrative: null,
@@ -1489,7 +1505,7 @@ export const validationSpecs = [
     id: "spec:validation.next-rung-floor.blocking-question",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A scoped Spec held by a blocking question is told the clause",
     narrative: null,
     sections: {
@@ -1526,23 +1542,22 @@ export const validationSpecs = [
     specKind: "rule",
     altitude: "story",
     readiness: "ready",
-    title: "The floor names what blocks the next rung",
+    title: "The floor names what blocks the floor's next rung",
     narrative: null,
     sections: {
       intent: {
         problem:
           "The floor is evaluated only at the stated rung, so promotion preflight answers no unmet clause for a Spec that states `defined` and cannot state `ready`, and an author or an adopter's page walks the floor table one rung up with its own code. A failed typed-dependency clause names the clause and not the dependencies that break it, so the same page recomputes which targets stand below `defined`.",
         outcome:
-          "Let the one evaluator answer for any rung, name the next rung's unmet clauses in the reader, and name the targets that fail the typed-dependency clause, so no consumer evaluates the floor a second way.",
+          "Let the one evaluator answer for any named rung, name the floor's next rung's unmet clauses in the reader, and name the targets that fail the typed-dependency clause, so no consumer evaluates the floor a second way.",
       },
       behavior: {
         rules: [
-          "The evaluator takes an optional target rung. Given one, it evaluates the cumulative clauses of every rung up to and including that rung; without one, it evaluates up to the stated rung, as before. A Spec of an unratified kind, or an evaluation with no ratified rung to reach, yields no failure, and the descriptor conformance error owns that case.",
-          "The next rung is the rung above derived readiness: `idea` when no rung derives, and none when derived readiness is `ready`. Because derived readiness is the highest rung whose cumulative clauses all pass, the failures at the next rung are that rung's own clauses, and there is at least one whenever a next rung exists for a Spec of a ratified kind.",
-          "The reader's Spec context carries the next rung's failures beside the stated rung's failures, computed by the same evaluator, and an empty list when there is no next rung. This is a field on the existing per-Spec context, not a new reader method, and it meets the second-caller bar: promotion preflight and the first adopter's Pack page both need it, and the page's own walk read the rung above the stated one where preflight reads the rung above the floor reached.",
+          "The evaluator takes an optional rung to evaluate. Given one, it evaluates the cumulative clauses of every rung up to and including it; without one, it evaluates up to the stated rung. A Spec of an unratified kind, or an evaluation with no ratified rung to reach, yields no failure, and the descriptor conformance error owns that case.",
+          "The floor's next rung is the rung above derived readiness: `idea` when no rung derives, and none when derived readiness is `ready`. Because derived readiness is the highest rung whose cumulative clauses all pass, the failures at the floor's next rung are that rung's own clauses, and there is at least one whenever that rung exists for a Spec of a ratified kind.",
+          "The reader's Spec context carries these failures as `nextRungFailures`, beside `floorFailures` for the stated rung and `statedNextRungFailures` for the stated next rung, which `spec:consumers.pack-design` owns. All three come from the one evaluator, and `nextRungFailures` is empty when derived readiness is `ready`.",
           "A failure of the typed-dependency clause carries its targets: every distinct resolving `refines`, `dependsOn`, `constrainedBy`, or `decidedBy` target that states a rung below `defined`, or that is not a Spec, each with its relation type, its id, and its stated rung when it is a Spec. Targets sort by relation type in that order and then by id in code-unit order. No other clause carries targets.",
-          "Promotion preflight keeps every field it reports and adds the next rung's failures and the first of them, each failure with its targets when it has them. The next rung's first unmet clause is a report and never a promotion: stating any rung stays a human's edit.",
-          "The realizing sites are `evaluateReadinessFloor` and the typed-dependency clause in `src/validate/readiness-floor.ts`, and `specContext` in `src/reader/reader.ts`.",
+          "Promotion preflight reports the floor's next rung with its failures, each with its targets when it has them, and the first of them. The report is never a promotion: stating any rung stays a human's edit.",
         ],
         exampleSpace: {
           given: [
@@ -1566,7 +1581,7 @@ export const validationSpecs = [
     id: "spec:validation.next-rung-floor.typed-dependency-targets",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A defined Spec resting on a scoped dependency is told which one",
     narrative: null,
     sections: {
@@ -1598,16 +1613,15 @@ export const validationSpecs = [
     deliveryFacts: ["has-verifier"],
     file: "specs/validation/next-rung-floor.typed-dependency-targets.sdp.md",
   },
-  // The design-management arc (plan 41): captures ahead of code.
   {
     id: "spec:validation.superseded-decision-signal",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "scoped",
     file: "specs/validation/superseded-decision-signal.sdp.md",
     title: "A Spec shaped by a superseded decision warns",
     narrative:
-      "The original design checked lifecycle integrity. It flagged a superseded Spec that live Specs still depend on, and a deprecated decision still named by `decidedBy` (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.3.4). The Protocol keeps decision lineage in the graph, as `supersedes` edges between decision Specs and `decidedBy` edges from the Specs they shape, but no check reads the two together. When this arc began, the corpus showed the cost. The Spec Studio's lenses Spec still named a decision the architectural annotation decision had superseded, and its architecture question still read the old ruling after the new one admitted layer and context.\n\nThe rule needed one ruling first. Three decisions once declared `supersedes` on the projections freeze while each replaced only one part of it, so a signal reading every `supersedes` as a whole replacement would have warned on the consumer Specs the freeze still correctly shapes. The owner ruled that `supersedes` replaces a whole decision and that a decision narrowing one part of another `refines` it; the three records now refine the freeze.",
+      "The original design checked lifecycle integrity. It flagged a superseded Spec that live Specs still depend on, and a deprecated decision still named by `decidedBy` (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.3.4). A corpus may keep a replaced decision whose text still explains something a reader needs. Its `supersedes` edge and a shaped Spec's `decidedBy` edge then make a stale shaping relation visible in the graph, but no check reads the two together.",
     sections: {
       intent: {
         problem:
@@ -1617,23 +1631,32 @@ export const validationSpecs = [
         openQuestions: [
           {
             question:
+              "Does a corpus keep a replaced decision whose text a reader still needs beside its `supersedes` edge?",
+            blocking: true,
+            key: "keptRecord",
+            decider: "owner",
+            trigger: "a corpus keeps a replaced decision record whose text a reader still needs",
+          },
+          {
+            question:
               "Does the signal read only `decidedBy`, or also a `refines` or `dependsOn` that names a superseded decision?",
             blocking: false,
             key: "signalReach",
+            decider: "owner",
+            provisional: "the signal reads `decidedBy` only",
           },
           {
             question:
               "When a superseding decision is itself superseded, does the warning name the decision at the end of the chain?",
             blocking: false,
             key: "supersededChain",
+            decider: "owner",
           },
         ],
       },
       behavior: {
         rules: [
-          "A `supersedes` edge replaces the decision it targets whole; a decision that narrows part of another `refines` it instead, and the signal never reads a `refines` between decisions.",
-          "Before the Protocol's first release a replaced decision is deleted by default, because the corpus is unreleased and its history lives in git; the signal stays unbuilt until a corpus keeps a replaced decision as history, and a `supersedes` edge stays lawful for that case.",
-          "A replaced decision whose text no reader still needs is deleted rather than kept beside a `supersedes` edge, and a Spec still naming it then fails as an unresolved target, so the signal covers only replaced decisions kept as history.",
+          "The signal reads `supersedes` edges between decisions kept in the graph and never reads a `refines` between decisions; a deleted decision is handled by referential integrity.",
           "A Spec that names a decision through `decidedBy`, where another decision `supersedes` that decision, carries one warning for each such pair, naming the superseded decision and every decision that supersedes it.",
           "The warning is informative and never fails validation, as the orphan and gap signals never do, and its severity is fixed by the Protocol.",
           "The `supersedes` edge itself is never warned, and a superseded decision is never warned for being superseded.",
@@ -1651,7 +1674,7 @@ export const validationSpecs = [
     file: "specs/validation/architecture-constraints.sdp.md",
     title: "Declared architecture rules are checked against anchored structure",
     narrative:
-      "The original design gave architecture a validation tier of its own. Its rules said that only adapter components depend on external systems, that domain code imports no infrastructure and that layers depend in one direction; dependency-cruiser, architecture tests and lint rules ran them, and their findings joined the one report (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.4). Since the architectural annotation decision, the data those rules read is in the graph with no inference: a component anchor states its layer and its context, and `uses` and `memberOf` edges are anchored. The same decision keeps the check out of the Protocol. A negative architecture constraint stays declared intent in a Spec, and a corpus that wants it enforced checks its declared `uses`, `layer` and `context` in its own gate.\n\nThe first adopter needed one such rule as soon as the attributes landed. No component in its `platform` context may have a `uses` edge to a component in another context, with each end resolved to its component through `memberOf` first. It checks the rule in its own script (`libar-platform/design/tools/check.py`, the context rule of `libar-platform/design/PLAN.md` §2.1). Recipe 32, architecture crossings, reports every `uses` edge whose ends sit in different contexts or layers and refuses nothing. The owner ruled that the architectural annotation decision stands: an architecture rule stays the corpus's own and runs as one of its corpus rules, and the Protocol supplies the walk the adopter writes by hand today.",
+      "The original design gave architecture a validation tier of its own. Its rules said that only adapter components depend on external systems, that domain code imports no infrastructure and that layers depend in one direction; dependency-cruiser, architecture tests and lint rules ran them, and their findings joined the one report (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.4). Since the architectural annotation decision, the data those rules read is in the graph with no inference: a component anchor states its layer and its context, and `uses` and `memberOf` edges are anchored. The same decision keeps the check out of the Protocol. A negative architecture constraint stays declared intent in a Spec, and a corpus that wants it enforced checks its declared `uses`, `layer` and `context` in its own gate.\n\nThe first adopter checks that a component in its `platform` context has no `uses` edge to a component in another context, resolving each end through `memberOf`. Architecture crossings, recipe 32, reports differences in context or layer and refuses nothing. The architectural annotation decision keeps architecture checks in the corpus's own gate, and the Protocol supplies the reusable graph walk.",
     sections: {
       intent: {
         problem:
@@ -1661,9 +1684,21 @@ export const validationSpecs = [
         openQuestions: [
           {
             question:
-              "Which rule forms cover the need: a forbidden `uses` from one layer to another, an isolated context, a component that must state a layer? The original's list also held rules on ports and routes, which have no anchors here.",
+              "Do corpus rules need to require a component to state a layer or context, or check ports and routes that anchors do not carry, beyond the selected forbidden layer pairs and isolated contexts?",
             blocking: false,
             key: "ruleForms",
+            decider: "owner",
+            provisional:
+              "the supplied walk checks forbidden layer pairs and isolated contexts; absent attributes are unclassified rather than breaches",
+          },
+          {
+            question:
+              "Which pure callable walk serves both the catalog recipe and a loaded corpus rule, and what rule-data and result shapes do they share?",
+            blocking: false,
+            key: "walkInvocation",
+            decider: "owner",
+            provisional:
+              "one pure walk takes `params.forbidden`, a list of `{ from, to }` layer pairs, and `params.isolated`, a list of context tokens whose components may have no `uses` edge into another context, either list possibly empty; it returns each forbidden edge as `{ from, to, fromComponent, toComponent, rule }` and lists unclassified edges apart; recipe 32's result stays as it is",
           },
         ],
       },
@@ -1674,8 +1709,11 @@ export const validationSpecs = [
           "The Protocol supplies the walk as a catalog recipe that takes forbidden layer pairs and isolated contexts as recipe parameters, resolves each end of every anchored `uses` edge to its component, directly or through `memberOf`, and returns each edge a rule forbids with both units, both components and the rule.",
           "The walk reads the given rules and anchored structure only; it infers no edge from imports, reads no file path, judges no role and refuses nothing.",
           "A component that states no layer or context falls outside a rule that names one, and the walk reports it as unclassified rather than as a breach.",
-          "The corpus binds its rule file to the constraint Spec as that Spec's verifier through a test anchor, so `has-verifier` says a check for the constraint exists; pass and fail stay in the corpus's own run.",
+          "The corpus binds a discovered TypeScript check site to its constraint Spec through a test anchor; that check invokes the corpus rule, and `has-verifier` states that the check exists while its result stays in the corpus's run.",
         ],
+        ruleKeys: {
+          walk: "rules[2]",
+        },
       },
     },
     deliveryFacts: [],
@@ -1688,17 +1726,46 @@ export const validationSpecs = [
     file: "specs/validation/corpus-rules.sdp.md",
     title: "Corpus-authored rules run on the one validation path",
     narrative:
-      "The original design let a team add its own rules beside the built-in validators, each with an id, a severity and the whole graph query API, run in the same pass and reported in the same output (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.5). The Protocol has two check families, conformance and honesty, and every validator belongs to one of them. The architectural annotation decision sends a corpus's own rules to the corpus's own gate.\n\nThe first adopter's gate shows what that costs. Its 363-line check script runs `sdp validate` and parses the summary line, then holds about ten rules of its own: context isolation over declared `uses`, entry addresses written outside the Specs resolved through recipe 25, no `dependsOn` cycle through recipe 26, every open question keyed, a prose mention allowed only with a listed reason, cited laws backed by `constrainedBy`, and the Pack pages current. To read kind, readiness and relations it parses the carriers' frontmatter with regular expressions, the second read model the agent surface warns against (`libar-platform/design/tools/check.py`).",
+      "The original design let a team add its own rules beside the built-in validators, each with an id, a severity and the whole graph query API, run in the same pass and reported in the same output (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.5). The Protocol has two check families, conformance and honesty, and every validator belongs to one of them. The architectural annotation decision sends a corpus's own rules to the corpus's own gate.\n\nThe first adopter's gate runs `sdp validate` and parses its summary line, then checks its own context isolation, entry addresses, dependency cycles, question keys, prose mentions, cited laws and Pack pages. It also parses carrier frontmatter to read kind, readiness and relations, a second read model that a graph-based corpus-rule runner would remove.",
     sections: {
       intent: {
         problem:
           "A corpus with rules of its own checks them off the one validation path, reading the carriers a second way and reporting in a form no Protocol surface reads.",
         outcome:
           "Let a corpus author its own graph rules and have their findings join the one validation report, so no corpus re-parses its carriers to check itself.",
+        openQuestions: [
+          {
+            question:
+              "Does an operator-named rules file hold one async body returning findings or a module exporting named rule functions, how are parameters supplied, in what order do several files run, and does `sdp validate --watch` rerun them?",
+            blocking: false,
+            key: "rulesRepresentation",
+            decider: "owner",
+            provisional:
+              "one async body per file, given `g`, `graph`, `report` and `params`, with `params` from `sdp validate --params` and `{}` without it; files run in the order named, each to completion; a rule id is unique within its file; `sdp validate --watch` runs the same named rules each cycle",
+          },
+          {
+            question:
+              "What shape does a corpus finding take beside the one diagnostic currency, where does the report carry it, and does it reach `report`, the reader's `findings()` or the Design Review?",
+            blocking: false,
+            key: "findingCurrency",
+            decider: "owner",
+            provisional:
+              "the shared finding contract has a Protocol branch carrying `validatorId`, `family`, severity and message, and a corpus branch carrying the corpus, the rule id as `validatorId`, `subjectId`, severity and message and no family; `relatedId`, `path`, `file` and `line` stay optional on both branches; corpus findings are collected as `corpusFindings` in the same report and rendered under a corpus-labelled section with the existing location, severity, identifier and message composition; Protocol findings, the summary line and the Design Review stay unchanged, as the frozen-projections decision requires",
+          },
+          {
+            question:
+              "Does the runner enforce that a rule reads only the graph and changes nothing, or are both obligations on the rule's author?",
+            blocking: false,
+            key: "ruleIsolation",
+            decider: "owner",
+            provisional:
+              "changing nothing is a guarantee, with the Protocol's validators run first and each rule given a frozen or cloned graph; reading only the graph is the author's obligation, run with the trust `sdp q` asks and no sandbox",
+          },
+        ],
       },
       behavior: {
         rules: [
-          "A corpus rule is a graph body the corpus authors, given the bindings a recipe body gets, the reader, the raw graph and the report, and returning findings that each carry a rule id, a subject, a message and a severity.",
+          "A corpus rule is a graph body the corpus authors, given `g`, `graph`, `report` and `params` as a recipe body is, and returning findings that each carry a rule id, a subject, a message and a severity.",
           "A corpus rule reads the one derived graph and nothing else, so no rule reads a carrier, a source file or the network.",
           "Each corpus finding names its rule and its corpus as its source and stands apart from the Protocol's own findings; the Protocol states none of these rules and ships none.",
           "Corpus findings stand outside the conformance and honesty families, in a section of the report labelled as the corpus's own, so the two families keep their meaning and the guardrail that checks never judge content quality or workflow keeps binding the Protocol's own validators.",
@@ -1708,6 +1775,11 @@ export const validationSpecs = [
           "A rules file that cannot load, a rule that throws, or a rule that returns a finding without a rule id, subject, message and admitted severity is a rule execution failure; `sdp validate` reports it in the corpus section and exits nonzero, so a broken rule never passes as a clean run.",
           "A corpus rule changes no node, edge or delivery fact; it reports on the graph it is given.",
         ],
+        ruleKeys: {
+          operatorNamed: "rules[4]",
+          exitCode: "rules[5]",
+          brokenRuleFails: "rules[7]",
+        },
       },
     },
     deliveryFacts: [],

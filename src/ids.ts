@@ -173,7 +173,7 @@ export function parseId(value: string): IdParts {
 const stableIdsAnchor = codeAnchor({
   id: "impl:protocol.stable-ids" as CodeAnchorId,
   label: "stable ID grammar parser",
-  satisfies: "spec:model.stable-ids" as SpecId,
+  satisfies: ["spec:model.stable-ids", "spec:model.open-question-keys"] as SpecId[],
   component: createComponentAnchorId("component:protocol.model"),
   role: "codec",
 });
@@ -187,8 +187,7 @@ export function formatId(parts: IdParts): string {
 }
 
 export function anchorId(value: string): AnchorId {
-  validateIdShape(value);
-  return brandId<"AnchorId">(value);
+  return requireNamespace<"AnchorId">(value, [...CODE_ANCHOR_NAMESPACES, "test", "oracle"]);
 }
 
 /**

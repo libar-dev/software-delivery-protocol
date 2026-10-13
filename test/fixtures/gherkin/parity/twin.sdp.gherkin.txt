@@ -10,4 +10,13 @@ Feature: Carrier parity twin
     When the cart is submitted
     Then the order contains the item
 
+  @spec.fixture.parity-twin.child
+  @altitude.story
+  @readiness.defined
+  Scenario: One cart item
+    - outcome: Bind one point of the shared vocabulary.
+    Given a cart containing {item: "lamp"}
+    When the cart is submitted
+    Then the order contains the item
+
   Rule: Both carriers enter one graph shape.

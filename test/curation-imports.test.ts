@@ -1,11 +1,15 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, win32 } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
-import { deriveTypeScriptImports } from "../src/adapters/typescript-imports.js";
+import {
+  deriveTypeScriptImports,
+  includedSourcePaths,
+  rootRelativePath,
+} from "../src/adapters/typescript-imports.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import { extract, serializeGraph } from "../src/index.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
@@ -55,11 +59,23 @@ function withFixture(run: (root: string) => void): void {
 }
 
 describe("TypeScript curation imports", () => {
+  it("compares Windows source paths in the form the compiler returns them", () => {
+    const files = ["C:/repo/src/a.ts", "C:/repo/src/generated/b.ts", "C:/repo/srcx/c.ts"];
+
+    expect(rootRelativePath("C:\\repo", "C:/repo/src/a.ts", win32)).toBe("src/a.ts");
+    expect([...includedSourcePaths("C:\\repo", files, [], win32)]).toEqual(files);
+    expect([...includedSourcePaths("C:\\repo", files, ["src/generated"], win32)]).toEqual([
+      "C:/repo/src/a.ts",
+      "C:/repo/srcx/c.ts",
+    ]);
+  });
+
   it("resolves aliases, JS specifiers, types, side effects, import equals and cyclic barrels within configured roots", () => {
     withFixture((root) => {
       expect(deriveTypeScriptImports(root, "imports.config.json")).toEqual({
         schema: "sdp-imports/1",
         adapter: "typescript",
+        exclude: [],
         files: [
           { file: "code/a.ts", imports: ["code/index.ts", "code/leaf.ts", "code/nested.ts"] },
           { file: "code/idle.tsx", imports: [] },
@@ -142,6 +158,126 @@ describe("TypeScript curation imports", () => {
     });
   });
 
+  it("excludes exact files and subtrees with segment boundaries and normalized metadata", () => {
+    withFixture((root) => {
+      mkdirSync(join(root, "code", "sub"));
+      mkdirSync(join(root, "code", "submarine"));
+      writeFileSync(join(root, "code", "sub", "hidden.ts"), "export const hidden = 1;");
+      writeFileSync(join(root, "code", "submarine", "kept.ts"), "export const kept = 1;");
+      writeFileSync(join(root, "code", "leaf.ts.extra.ts"), "export const extra = 1;");
+      writeFileSync(
+        join(root, "code", "idle.tsx"),
+        'import "./sub/hidden.js"; import "./submarine/kept.js";',
+      );
+      writeFileSync(
+        join(root, "imports.config.json"),
+        JSON.stringify({
+          adapter: "typescript",
+          tsconfig: "tsconfig.json",
+          roots: ["code"],
+          exclude: ["code/sub", "code/leaf.ts", "code/sub"],
+        }),
+      );
+      const first = deriveTypeScriptImports(root, "imports.config.json");
+      expect(first).toMatchObject({ exclude: ["code/leaf.ts", "code/sub"] });
+      expect(first.files.map(({ file }) => file)).toEqual([
+        "code/a.ts",
+        "code/idle.tsx",
+        "code/index.ts",
+        "code/leaf.ts.extra.ts",
+        "code/legacy.cts",
+        "code/nested.ts",
+        "code/submarine/kept.ts",
+      ]);
+      expect(first.files.find(({ file }) => file === "code/a.ts")?.imports).toEqual([
+        "code/index.ts",
+        "code/nested.ts",
+      ]);
+      expect(first.files.find(({ file }) => file === "code/idle.tsx")?.imports).toEqual([
+        "code/submarine/kept.ts",
+      ]);
+      expect(first.files.flatMap(({ imports }) => imports)).not.toContain("code/leaf.ts");
+      expect(first).toEqual(deriveTypeScriptImports(root, "imports.config.json"));
+    });
+  });
+
+  it("resolves barrel reach through excluded intermediates without emitting them", () => {
+    withFixture((root) => {
+      writeFileSync(
+        join(root, "code", "a.ts"),
+        'import { value } from "./index.js"; export { value };',
+      );
+      writeFileSync(
+        join(root, "imports.config.json"),
+        JSON.stringify({
+          adapter: "typescript",
+          tsconfig: "tsconfig.json",
+          roots: ["code"],
+          exclude: ["code/nested.ts", "code/index.ts"],
+        }),
+      );
+      const result = deriveTypeScriptImports(root, "imports.config.json");
+      expect(result.files.map(({ file }) => file)).not.toContain("code/index.ts");
+      expect(result.files.map(({ file }) => file)).not.toContain("code/nested.ts");
+      expect(result.files.find(({ file }) => file === "code/a.ts")?.imports).toEqual([
+        "code/leaf.ts",
+      ]);
+    });
+  });
+
+  it("accepts empty exclusions and normalizes root-relative exclusion spellings", () => {
+    withFixture((root) => {
+      const config = { adapter: "typescript", tsconfig: "tsconfig.json", roots: ["code"] };
+      const unfiltered = deriveTypeScriptImports(root, "imports.config.json");
+      writeFileSync(join(root, "imports.config.json"), JSON.stringify({ ...config, exclude: [] }));
+      expect(deriveTypeScriptImports(root, "imports.config.json")).toEqual(unfiltered);
+      writeFileSync(
+        join(root, "imports.config.json"),
+        JSON.stringify({
+          ...config,
+          exclude: ["./code/idle.tsx", "code/./idle.tsx", "code/missing/"],
+        }),
+      );
+      const result = deriveTypeScriptImports(root, "imports.config.json");
+      expect(result).toMatchObject({ exclude: ["code/idle.tsx", "code/missing"] });
+      expect(result.files.some(({ file }) => file === "code/idle.tsx")).toBe(false);
+    });
+  });
+
+  it.each([
+    { extra: true },
+    { exclude: null },
+    { exclude: "code" },
+    { exclude: [1] },
+    ...[
+      "",
+      " ",
+      ".",
+      "./",
+      "../other",
+      "code/../../other",
+      "/code",
+      "C:/code",
+      "C:code",
+      "code\\leaf.ts",
+    ].map((path) => ({ exclude: [path] })),
+  ])("refuses invalid exclusion configuration %j", (options) => {
+    withFixture((root) => {
+      writeFileSync(
+        join(root, "imports.config.json"),
+        JSON.stringify({
+          adapter: "typescript",
+          tsconfig: "tsconfig.json",
+          roots: ["code"],
+          ...options,
+        }),
+      );
+      expect(() => deriveTypeScriptImports(root, "imports.config.json")).toThrow(
+        /imports configuration/u,
+      );
+    });
+  });
+
   it.each([
     {},
     { adapter: "other", tsconfig: "tsconfig.json", roots: ["code"] },
@@ -176,6 +312,15 @@ describe("TypeScript curation imports", () => {
 
   it("builds the imports file atomically and leaves the curated graph byte-identical", () => {
     withFixture((root) => {
+      writeFileSync(
+        join(root, "imports.config.json"),
+        JSON.stringify({
+          adapter: "typescript",
+          tsconfig: "tsconfig.json",
+          roots: ["code"],
+          exclude: ["code/index.ts"],
+        }),
+      );
       const before = serializeGraph(extract({ root }).graph);
       const capture = createCaptureOutput();
       expect(

@@ -1,0 +1,19 @@
+---
+id: spec:fixture.parity-twin.child
+kind: example
+altitude: story
+readiness: defined
+relations:
+  refines: spec:fixture.parity-twin
+  verifies: spec:fixture.parity-twin
+---
+# One cart item
+
+## Intent
+- outcome: Bind one point of the shared vocabulary.
+
+```gwt
+Given a cart containing {item: "lamp"}
+When the cart is submitted
+Then the order contains the item
+```

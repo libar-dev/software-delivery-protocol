@@ -5,6 +5,7 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:model.core-model
+  decidedBy: spec:decisions.checked-mentions
 ---
 # Stable IDs are the Protocol's durable join key
 
@@ -13,11 +14,10 @@ relations:
 
 ## Rule
 - A Protocol ID is stable, unique, namespaced, human-readable, and the only binding between intent and code.
-- An ID uses a lowercase namespace and a dotted path whose segments admit mixed case (case binds only on the namespace), with an optional single `#` sub-part; the `#` sub-part is an entry address, reserved in every namespace and never part of an identity; referential-integrity checks reject malformed or unresolved references.
+- [#idGrammar] An ID has a lowercase namespace followed by a colon and a dotted path whose segments admit mixed case. An optional single `#` suffix is an entry address, `<section>.<key>`, with section `design`, `ui`, `question` or `rule` and a lower-camel ASCII key; it is admitted only in the `spec:` namespace and never belongs to an identity. Referential-integrity checks reject malformed or unresolved references.
 - IDs carry no history: a rename is a repository edit recorded by git rather than graph-resident bookkeeping.
-- The builders reserve one namespace per binding direction — `spec:` for a Spec and for every Spec reference, `pack:` for the aggregate, `impl:` · `api:` · `component:` for a code anchor, `test:` for a verifying test anchor, and `oracle:` for an expected-outcome anchor — while the grammar itself admits any lowercase namespace, so the reserved set is the builders' law rather than the parser's.
-- `doc:` is reserved for a genuinely external document a decision Spec links to, never for an in-system decision: in-system decisions are Specs, and this corpus places them by convention under a dotted path opening with the `decisions` segment. No builder mints a `doc:` identifier and the Spec-only reference builder refuses one, so the reservation is a named deferral rather than a landed namespace.
-- The realizing entrypoints are `parseId` and `formatId` in `src/ids.ts`.
+- The Spec and Spec-reference builders admit `spec:`, the Pack builder `pack:`, the code-anchor builder `impl:`, `api:` and `component:`, the test-anchor builder `test:`, and the oracle-anchor builder `oracle:`. These are the namespaces of the flavored authored identities and targets; the grammar itself admits any lowercase namespace.
+- `doc:` is reserved for a genuinely external document a decision Spec links to; in-system decisions are Specs. Authored relations and the Spec-reference builder accept `spec:` targets, so the `doc:` relation-target reservation is a named deferral rather than a landed relation target.
 
 ## Example space
 ```gwt-vocabulary

@@ -16,13 +16,17 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
-> **plan 43 is EXECUTED** on its branch, PR 31 open. Design iteration on a readable graph: answers
+> **plan 44 is EXECUTED** on its branch. A whole-corpus refresh: every Spec read against the
+> engine, the other Specs and the vocabulary, cross-family verified, and the findings fixed,
+> ruled on the owner's delegation, or homed as keyed questions with provisional answers for the
+> next arcs; the record is `reviews/26-whole-corpus-refresh.md`. Plan 42 follows it.
+> **plan 43 is EXECUTED**, merged as PR 31. Design iteration on a readable graph: answers
 > that fit (summaries, both next rungs, explained misses, the design backlog, repeatable
 > `--params`), the authoring grammar (rule keys, question fields, relation reasons), the iteration
 > loop (design diff, context bundle, perspective filter, change proposal), and gen 1's curation
 > and slimming lessons; intent in `pack:design-iteration-v1`, recipes 33 to 40. The design pass's
-> rulings and `ready` statements were delegated by the owner and await the owner's review before
-> merge; the plan's last sections list them. Plan 42 follows it.
+> rulings and `ready` statements were delegated by the owner and still await the owner's review;
+> the plan's last sections list them. Plan 42 follows it.
 > **plan 42 is DRAFTED**. The Spec Studio's phase 0, a read-only static view (`sdp studio`),
 > re-entered on the owner's rulings; intent in `pack:spec-studio-v1`. A design pass splits the
 > Studio's Specs for honest binding and prototypes the Pack page before any code.
@@ -109,13 +113,13 @@ Progressive disclosure — start at the top, follow the pointers down.
 | Look here | What you get | Read |
 |---|---|---|
 | `CONTEXT.md` (repo root) | **the vocabulary** — the ratified lean glossary (terms · relations · a worked dialogue · flagged ambiguities); sole source of truth for terminology; the model exposition lives in the Specs under `specs/` and in the surviving concept docs | **first, always** |
-| `.agents/skills/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — three repository-owned skills: `sdp-agent-surface` (reading the graph), `sdp-authoring` (authoring intent), `sdp-sessions` (advisory delivery-session routing), also exposed to Claude through the `.claude/skills` symlink; plus the forty runnable `sdp q` bodies | **mandatory** — after `CONTEXT.md`, load the matching skill before any corpus question, Spec authoring, or delivery-session routing; see "Query the graph first" |
-| `specs/` | **the self-hosted corpus** — the Protocol's own Specs in its own carrier (families: `model` · `extraction` · `validation` · `carrier` · `consumers` · `protocol` · `observation` · `decisions`, plus the self-hosting Pack); the primary carrier of intended truth | when design truth is in question — but query it through `sdp q` first, then read the carrying Spec |
+| `.agents/skills/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — three repository-owned skills: `sdp-agent-surface` (reading the graph), `sdp-authoring` (authoring intent), `sdp-sessions` (advisory delivery-session routing), also exposed to Claude through the `.claude/skills` symlink; plus the catalog of runnable `sdp q` bodies | **mandatory** — after `CONTEXT.md`, load the matching skill before any corpus question, Spec authoring, or delivery-session routing; see "Query the graph first" |
+| `specs/` | **the self-hosted corpus** — the Protocol's own Specs in its own carrier (families: `model` · `extraction` · `validation` · `carrier` · `consumers` · `protocol` · `observation` · `decisions`, plus Pack manifests for self-hosting and grouped design work); the primary carrier of intended truth | when design truth is in question — but query it through `sdp q` first, then read the carrying Spec |
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
-| `docs/concept/` (+ README) | **the technical design** — the surviving principle-led docs: vision & MVP boundary, founding principles (P1–P10), authoring & binding, consumers, roadmap; the core model, the one graph, and validation & honesty dissolved into the `model.*`, `extraction.*`, and `validation.*` Spec families — locate any of them with concept search (recipe 6) | to know *how* it is designed |
+| `docs/concept/` (+ README) | **the technical design** — the surviving principle-led docs: vision & MVP boundary, founding principles (P1–P10), authoring & binding, the consumer pointers and discipline mapping (06), and the MVP acceptance of record (07); the core model, the one graph, validation & honesty and the consumer law dissolved into the `model.*`, `extraction.*`, `validation.*` and `consumers.*` Spec families; the historical MVP slice record lives in the slice-5 plan under `plans/` and in `examples/checkout-v1`, while forward roadmap intent lives in capture Specs — locate any of them with concept search (recipe 6) | to know *how* it is designed |
 | `docs/concept/DECISIONS.md` | **the lean decision registry** — ratified names, one-line glosses, carrying Specs, and the D1–D6 lookup; historical rationale lives in git, plans, and the Specs themselves | when resolving a decision name or following its canonical pointer |
-| `src/` | **the engine** — `model` (Spec/descriptors/pack/anchors) · `extract` · `graph` · `validate` · `reader` (agent surface) · `projections` (Design Review) · `cli` (`sdp build` · `validate` · `view` · `census` · `mermaid` · `gherkin` · `import` · `new spec` · `q`) · `runner` / `codegen` / `notation` / `adapters` | when implementing or verifying **current engine** behavior |
-| `examples/checkout-v1` | **the worked MVP example** (TS DSL tracer bullet) — specs, anchors, untracked `generated/` (regenerated in-pipeline); walkthrough in its README | when proving the loop end-to-end |
+| `src/` | **the engine** — `model` (Spec/descriptors/pack/anchors) · `extract` · `graph` · `validate` · `reader` (agent surface) · `projections` (Design Review, census, Mermaid and Gherkin) · `cli` (`sdp build` · `validate` · `view` · `census` · `mermaid` · `gherkin` · `import` · `new spec` · `q`) · `import` (carrier conversion and import analysis) · `testing` (the registrar runtime exported through `./testing`) · `runner` / `codegen` / `notation` / `adapters` | when implementing or verifying **current engine** behavior |
+| `examples/checkout-v1` | **the worked MVP example** (Markdown carriers; originally the TS DSL tracer bullet) — specs, anchors, untracked `generated/` (regenerated in-pipeline); walkthrough in its README | when proving the loop end-to-end |
 | `explorations/` | **evidence only** (carrier exhibits, executable-example findings) — mapping evidence for design; **never promote spike code into product** | when judging design evidence; not a source tree to ship |
 | `docs/lineage/` | restored historical design documents — the v0 concept set, verbatim with lineage headers; evidence for design reviews, never intended truth | when a review needs superseded design on the table rather than in git history |
 | `plans/` | **the build plan** — what each implementation session does, and why | before writing code — highest primary-numbered plan's status header, plus active subplans it designates; if DRAFTED, also the latest ✅ EXECUTED/RUN plan |
@@ -150,7 +154,7 @@ of reading `.sdp.md` files by hand:
 pnpm --silent sdp:q 'return g.specs().filter((s) => s.statedReadiness === "ready" && s.specKind !== "example" && s.specKind !== "decision" && !s.deliveryFacts.includes("implemented")).map((s) => s.id)'
 
 # Concept search (recipe 6): where does a concept live?
-pnpm --silent sdp:q 'return g.findByConcept("readiness floor").slice(0, 5).map((n) => n.id)'
+pnpm --silent sdp:q "$(cat dist/recipes/06-where-is-this-concept.js)" --params '{"term":"readiness floor"}'
 ```
 
 The full CLI surface is `sdp build · validate · view · census · mermaid · gherkin · import · new spec · q`.
@@ -158,7 +162,7 @@ The full CLI surface is `sdp build · validate · view · census · mermaid · g
 and stays alive after findings; operator stop exits 0. `--watch` is validate-only and cannot combine
 with `--check-clean`. The four projection publishers remain independent public verbs; repository
 generation/check scripts certify all four roots through the private projection-suite driver. The
-forty runnable recipe bodies live in `docs/agent-surface/recipes.md` (each executed as written by
+runnable recipe bodies live in `docs/agent-surface/recipes.md` (each executed as written by
 `test/recipes.test.ts`), and the repository-owned skills (`sdp-agent-surface` for reading,
 `sdp-authoring` for writing intent, `sdp-sessions` for advisory work-shape routing) are the
 on-ramps. In this checkout, always go through
@@ -169,7 +173,7 @@ on-ramps. In this checkout, always go through
 The MVP proved the founding principle on **one** bounded context — Order Management,
 `pack:checkout-v1` — built as thin **end-to-end slices on the Phase 0 foundation**; the worked
 example lives at `examples/checkout-v1` (documented walkthrough in its README). **Slices 0–5 are
-complete** — the per-slice record is plan 10 and the roadmap `docs/concept/07`. Live work is the
+complete** — the per-slice record is plan 10. Live work is the
 highest primary-numbered plan under `plans/` — read it before writing code.
 
 > **Tracer-bullet discipline.** Author the example specs and anchored code *first*, so the carrier and extractor are
@@ -209,8 +213,8 @@ Every doc honours both — never mistake one half for the other:
   for dense insider prose.
 - **Terminology is ratified, not provisional.** Use the exact terms in the language base; flag, don't silently
   invent, new ones. The docs speak the ratified language end-to-end — a residual pre-ratification term
-  (`abstraction`, `provenance`, `marker`, `facet`, "two axes", the old readiness ladder) is a **bug to fix against
-  the base**, not current usage.
+  (`abstraction`, `provenance` for a claim, `marker` for an anchor, `facet`, "two axes", the old readiness
+  ladder) is a **bug to fix against the base**, not current usage.
 - **DECISIONS.md admits sparingly, and reads by name.** An entry must pass the ADR three-part test — *hard to
   reverse · surprising without context · a real trade-off*. If the "Why" says the base already forced the
   answer, it's drift repair, not a decision — its paper trail is git + the plan done-record. Authoring
@@ -234,14 +238,13 @@ Every doc honours both — never mistake one half for the other:
 - **A "verified" row is re-measured, never inherited.** A docket or ledger row claiming *fixed* or *verified*
   is re-checked against the tree at the moment of verification, never trusted from the row that closed it —
   the phase-4 close caught a "verified — intact" row that had been false since the commit after the one it cited.
-- **OmO state is recoverable project state.** Track durable `.omo/` state that carries decisions, plans,
-  review history, proofs, or orchestration recovery (`boulder.json`, `drafts/`, `plans/`, and durable
-  `evidence/`). Commit coherent checkpoints when that state is created or materially changed; a plan may mark
-  narrowly named runtime evidence as workspace-local. Never delete, prune, overwrite, or blanket-ignore
-  unfamiliar `.omo/` state as cleanup — inspect it and preserve it until its owner and recovery value are clear.
-- **Checkpoint runtime ledgers before destructive changes.** `.omo/start-work/ledger.jsonl` is ignored runtime
-  state; before replacing or deleting it, preserve required recovery records under `.omo/evidence/<work-id>/`
-  with source provenance and hashes.
+- **`.omo/` belongs to OmO.** It is the oh-my-openagent harness's state, and only OmO sessions read or
+  write it, under OmO's own protocol. Every other agent leaves it alone: it adds no plan, draft or evidence
+  there and never deletes, prunes or overwrites what is there. A Claude session keeps its working material
+  in its own scratchpad.
+- **Tests are the evidence.** A change proves itself with a test that fails without it, and the corpus's
+  state with a recipe anyone can re-run. Keep a separate evidence artifact only for what no test or recipe
+  can carry, such as a rendered page or an adopter measurement, and commit it beside the record that cites it.
 - **Commits are recovery boundaries, not workflow gates.** An execution plan's explicit commit strategy counts
   as authorization on its work branch; otherwise ask before committing. Prefer a commit after a coherent
   logical unit and its relevant quality gate, but never force one per todo, create empty commits, absorb
@@ -271,8 +274,8 @@ that reader brings. The standard, set by PR #19 (the universal-Spec arc) buildin
 - **Show it to a person.** Prose, rendered tables and screenshots are welcome. When the PR moves a
   human view, such as a Design Review page, show it at the arc's base and at the head. Render a
   recipe's answer as a short table rather than pasting JSON, and say plainly what no human view
-  shows yet. `gh` cannot attach images, so commit them under `.omo/evidence/<work-id>/` with a
-  README naming the commit, the commands and the hashes.
+  shows yet. `gh` cannot attach images, so commit them under `reviews/assets/pr<n>/` with a
+  short README naming the commit and the commands.
 - **Self-hosted and graph-measured.** The arc's intent is a Pack in the corpus: link it, and
   describe its state and its changes with the Protocol's own recipes, Pack design (29) and the
   design diff (35) from the arc's base among them. Check every claim about the Protocol's own
@@ -293,9 +296,9 @@ that reader brings. The standard, set by PR #19 (the universal-Spec arc) buildin
   carries out, and the diff stat from the base, so each finished piece of work appears or is left
   out on purpose. Pin links and images to a commit so they outlive the branch (`blob/<sha>/…`,
   `raw.githubusercontent.com/<owner>/<repo>/<sha>/…`; a line anchor on a Markdown file needs
-  `?plain=1#L…`), and confirm each linked path exists at that commit. The draft lives in
-  `.omo/drafts/pr<n>-body.md`, committed; when replacing the body, keep the sections Greptile and
-  CodeRabbit append.
+  `?plain=1#L…`), and confirm each linked path exists at that commit. Draft the body in your own
+  working area; the published description is the record. When replacing the body, keep the sections
+  Greptile and CodeRabbit append.
 
 > `CLAUDE.md` is a symlink to `AGENTS.md` — **edit `AGENTS.md`.**
 

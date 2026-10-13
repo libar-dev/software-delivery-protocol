@@ -15,4 +15,4 @@ specs:
 ---
 # Design iteration
 
-The arc that lets a design be iterated pass after pass on a graph an agent reads in one call, in the order a reviewer reads it. First the recipe answers a usability trial of the agent surface asked for. Then the authoring grammar that gives rules, question fields and relation reasons a place in the graph, which the iteration loop reads: what changed since the last pass, the brief for the next one, a perspective to read it from, and a proposal to hand back. Then when design detail may leave an implemented Spec, and the file-level imports that show where curation is missing, the two structural lessons a review of gen 1 brought.
+This Pack groups the contracts used to iterate on a design through the graph, in review order. Its members cover concise recipe answers; rule keys, question fields and relation reasons; comparison between design passes; context bundles, perspectives and change proposals. The final members cover when implemented design detail may leave a Spec and how file-level imports inform anchor curation, drawing on lessons from the Protocol's predecessor, `@libar-dev/architect`.

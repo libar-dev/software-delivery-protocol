@@ -7,10 +7,10 @@ relations:
   refines: spec:consumers.binding-language-views
   verifies: spec:consumers.binding-language-views
 ---
-# The pack member table speaks the page's binding language, not a shorthand
+# The Pack member table speaks the page's binding language, not a shorthand
 
 ## Intent
-- outcome: Execute the aggregate half of the rule on the surface a reviewer reads a whole pack from, where a two-column yes/no shorthand would be cheapest to reach for.
+- outcome: Execute the aggregate half of the rule on the surface a reviewer reads a whole Pack from, where a two-column yes/no shorthand would be cheapest to reach for.
 
 ```gwt
 Given the graph holds a spec {specId: "spec:probe.bound-surface"} bound by {bindings: "an implementing code anchor and a verifying test anchor"}

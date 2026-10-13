@@ -33,8 +33,8 @@ import { setOwn } from "./set-own.js";
  * stays out of the graph.
  */
 /**
- * The extraction finding ids, pinned. Two tiers (`spec:extraction.determinism`), covering both authored surfaces (spec
- * files and anchor constants): envelope failures (`non-static-envelope` · `invalid-id` ·
+ * The extraction finding ids, pinned. Two tiers (`spec:extraction.determinism`), covering both authored surfaces
+ * (spec files and anchors in source files): envelope failures (`non-static-envelope` · `invalid-id` ·
  * `duplicate-id` · `reserved-property`) are hard errors — the carrier is not extracted and the
  * build fails; content failures (`non-static-section` · `unrecognized-statement` ·
  * `unrecognized-property` · `misplaced-authoring`) degrade loudly — one property, statement, or
@@ -2078,7 +2078,11 @@ function unrecognizedStatement(file: string, line: number, message: string): Fin
 const staticReificationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.static-reification"),
   label: "reifies authored carriers from the AST and never evaluates them",
-  satisfies: ref("spec:extraction.determinism"),
+  satisfies: [
+    ref("spec:extraction.determinism"),
+    ref("spec:carrier.markdown-parser"),
+    ref("spec:model.open-question-keys"),
+  ],
   component: componentAnchorId("component:protocol.extract"),
   role: "extractor",
 });

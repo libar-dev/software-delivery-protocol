@@ -2,7 +2,7 @@
 id: spec:validation.next-rung-floor.blocking-question
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.next-rung-floor
   verifies: spec:validation.next-rung-floor

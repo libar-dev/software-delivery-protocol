@@ -2,10 +2,12 @@
 id: spec:model.open-question-keys.renamed-key-breaks
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.open-question-keys
-  verifies: spec:model.open-question-keys
+  verifies:
+    target: spec:model.open-question-keys
+    exercises: [questionAddress]
 ---
 # A renamed question key fails the mention that addresses it
 

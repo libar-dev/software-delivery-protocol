@@ -4,27 +4,6 @@
 
 export const modelSpecs = [
   {
-    id: "spec:model.protocol-domain",
-    specKind: "model",
-    altitude: "feature",
-    readiness: "defined",
-    file: "specs/model/protocol-domain.sdp.md",
-    title: "The Protocol domain uses one ratified language",
-    narrative: null,
-    sections: {
-      intent: { outcome: "Give self-hosting specs the same core vocabulary." },
-      model: {
-        terms: {
-          Pack: "A grouping and review aggregate that states no system truth.",
-          Spec: "The one authored truth-primitive.",
-          anchor: "An in-code identity binding that states no intent.",
-          "delivery fact": "A machine-derived realization signal.",
-        },
-      },
-    },
-    deliveryFacts: [],
-  },
-  {
     id: "spec:model.core-model",
     specKind: "model",
     altitude: "feature",
@@ -40,14 +19,15 @@ export const modelSpecs = [
       model: {
         terms: {
           Spec: "The one authored truth-primitive, enriched in place without changing artifact type.",
-          altitude: "The scope position `epic`, `feature`, or `story`.",
+          altitude:
+            "The scope position `epic`, `feature`, or `story`; `epic` is the ceiling, and anything above it is deferred.",
           "delivery fact":
-            "A derived realization signal such as implemented or has-verifier; it is never authored readiness.",
+            "A derived realization signal, `implemented`, `has-verifier` or the deferred `observed`, computed from edges and never authored; it is independent of the stated readiness.",
           "direct realization":
             "`implemented` follows a resolving implementation binding and never propagates through refinement; examples normally provide verification evidence rather than implementation work.",
           envelope:
             "The stable outer shape of id, title, kind, altitude, readiness, and relations; sections carry extension detail.",
-          kind: "The true subtype that categorizes a Spec's truth and changes its required detail and validation.",
+          kind: "The true subtype that categorizes a Spec's truth and changes its required detail and validation; one of eight, each shown by its display label: `behavior` (Use Case / Behavior), `workflow` (Workflow), `example` (Example / Scenario), `rule` (Business Rule), `constraint` (Constraint (NFR)), `model` (Domain Model), `decision` (Decision Record), `contract` (Contract).",
           "one-kind rule":
             "A Spec states one category of truth; when one fact straddles kinds, author two Specs and join them with the relation that preserves their distinct intents.",
           readiness:
@@ -77,7 +57,7 @@ export const modelSpecs = [
           "content-only section":
             "A section carries local content, while relations carry links to promoted standalone Specs.",
           "enabled verifier":
-            "An example or direct test with a linked, resolvable test anchor; runner execution and pass state remain outside the graph.",
+            "A verifying example backed by a linked, resolvable test anchor; a test anchor that verifies a Spec directly confers `has-verifier` without being an enabled verifier, and runner execution and pass state stay outside the graph.",
           promotion:
             "Moving shared or independently reviewed content into a standalone Spec of the matching kind, exclusively rather than alongside inline content.",
           section:
@@ -104,7 +84,7 @@ export const modelSpecs = [
     sections: {
       intent: {
         outcome:
-          "Keep a Spec useful after implementation without recreating value-transfer duplication.",
+          "Keep a Spec useful after implementation without copying its detail into a second artifact that drifts from it.",
       },
       model: {
         terms: {
@@ -144,11 +124,14 @@ export const modelSpecs = [
           constrainedBy: "A bounded Spec points to its rule, constraint, or policy Spec.",
           decidedBy: "A shaped Spec points to its Decision Record.",
           dependsOn: "A dependent Spec points to the Spec it needs.",
-          refines: "A child points to its more precise parent.",
-          supersedes: "A current Decision Record points forward to the decision it replaces.",
+          refines:
+            "A more precise child points to its parent; refinement is how altitude descends, and a decision that narrows one part of another decision refines it.",
+          supersedes:
+            "A newer Decision Record points to the older record it replaces whole; the older record and the edge stay only while its text explains something a reader still needs.",
           "typed dependency distinction":
             "`constrainedBy` and `decidedBy` preserve separately queryable intents that a generic `dependsOn` edge would flatten.",
-          verifies: "A verifier points to the Spec it verifies.",
+          verifies:
+            "A verifier points to the Spec it verifies; an example declares it, a test anchor's binding derives it, and the two claims are never collapsed.",
         },
       },
     },
@@ -170,11 +153,10 @@ export const modelSpecs = [
       behavior: {
         rules: [
           "A Protocol ID is stable, unique, namespaced, human-readable, and the only binding between intent and code.",
-          "An ID uses a lowercase namespace and a dotted path whose segments admit mixed case (case binds only on the namespace), with an optional single `#` sub-part; the `#` sub-part is an entry address, reserved in every namespace and never part of an identity; referential-integrity checks reject malformed or unresolved references.",
+          "An ID has a lowercase namespace followed by a colon and a dotted path whose segments admit mixed case. An optional single `#` suffix is an entry address, `<section>.<key>`, with section `design`, `ui`, `question` or `rule` and a lower-camel ASCII key; it is admitted only in the `spec:` namespace and never belongs to an identity. Referential-integrity checks reject malformed or unresolved references.",
           "IDs carry no history: a rename is a repository edit recorded by git rather than graph-resident bookkeeping.",
-          "The builders reserve one namespace per binding direction — `spec:` for a Spec and for every Spec reference, `pack:` for the aggregate, `impl:` · `api:` · `component:` for a code anchor, `test:` for a verifying test anchor, and `oracle:` for an expected-outcome anchor — while the grammar itself admits any lowercase namespace, so the reserved set is the builders' law rather than the parser's.",
-          "`doc:` is reserved for a genuinely external document a decision Spec links to, never for an in-system decision: in-system decisions are Specs, and this corpus places them by convention under a dotted path opening with the `decisions` segment. No builder mints a `doc:` identifier and the Spec-only reference builder refuses one, so the reservation is a named deferral rather than a landed namespace.",
-          "The realizing entrypoints are `parseId` and `formatId` in `src/ids.ts`.",
+          "The Spec and Spec-reference builders admit `spec:`, the Pack builder `pack:`, the code-anchor builder `impl:`, `api:` and `component:`, the test-anchor builder `test:`, and the oracle-anchor builder `oracle:`. These are the namespaces of the flavored authored identities and targets; the grammar itself admits any lowercase namespace.",
+          "`doc:` is reserved for a genuinely external document a decision Spec links to; in-system decisions are Specs. Authored relations and the Spec-reference builder accept `spec:` targets, so the `doc:` relation-target reservation is a named deferral rather than a landed relation target.",
         ],
         exampleSpace: {
           given: ["the authored identifier {identifier:string}"],
@@ -184,6 +166,9 @@ export const modelSpecs = [
             "reformatting the parsed parts restores {restored:string}",
             "the refusal names the reason {reason:string}",
           ],
+        },
+        ruleKeys: {
+          idGrammar: "rules[1]",
         },
       },
     },
@@ -249,7 +234,7 @@ export const modelSpecs = [
     id: "spec:model.stable-ids.unsectioned-address-refused",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/model/stable-ids.unsectioned-address-refused.sdp.md",
     title: "A `#` sub-part without its section is refused with its reason named",
     narrative: null,
@@ -319,19 +304,19 @@ export const modelSpecs = [
           anchor:
             "A human-written source binding from one code location into the graph, carrying identity, an optional label, zero or more targets, and optional structure; written in one of two extracted representations, the constant form or the comment form, which feed one closed envelope. It never carries behavior, rationale, readiness, status, acceptance criteria, or delivery facts.",
           "constant form":
-            "The top-level const initialized with a trusted builder call; the extractor reifies it statically. It was formerly named the anchor-constant form. The decorator form remains an unextracted representation.",
+            "The top-level const initialized with a trusted builder call; the extractor reifies it statically. The decorator form remains an unextracted representation.",
           "comment form":
             "A top-level `/** … */` block in a `.ts` or `.tsx` file carrying reserved camelCase tags (`@sdpAnchor`, `@sdpLabel`, `@sdpSatisfies`, `@sdpVerifies`, `@sdpModels`, `@sdpReferences`, `@sdpComponent`, `@sdpUses`, `@sdpRole`, `@sdpLayer`, `@sdpContext`); `@sdpAnchor <id>` opens it, each tag appears at most once, prose precedes the tags, only the reserved tags are read, and comment prose authors nothing. No import is required: trust is by reserved grammar. The same id in both forms is a duplicate id. The law is the comment-form ruling (MD-36).",
           "anchors subpath":
             "The zero-dependency package subpath `@libar-dev/software-delivery-protocol/anchors`, exporting the id builders and the three anchor builders and nothing else; the extractor trusts it as a Protocol builder module.",
           "code anchor":
-            "An implementation-flavored binding in the `impl:`, `api:`, or `component:` namespace. Its optional, plural `satisfies` derives one anchored `satisfies` edge per target; its optional `references` derives one anchored `references` edge per target. It may additionally name one `component?: ComponentAnchorId`, a non-empty, unique `uses?: readonly CodeAnchorId[]`, and a `role`; a `component:` anchor may also name `layer` and `context`. The binding grain is the binding-grain ruling (MD-37); the structural attributes are the architectural-annotation ruling (MD-38).",
+            "An implementation-flavored binding in the `impl:`, `api:`, or `component:` namespace. Its optional, plural `satisfies` derives one anchored `satisfies` edge per target; its optional `references` derives one anchored `references` edge per target. It may also name one `component:` anchor it belongs to, a non-empty list of distinct code units it `uses`, and a `role`; a `component:` anchor may also name `layer` and `context`. The binding grain is the binding-grain ruling (MD-37); the structural attributes are the architectural-annotation ruling (MD-38).",
           "plural targets":
             "`satisfies` on a code anchor and `verifies` on a test anchor accept one `ref(…)` or a fresh array literal of them; `verifies` is non-empty. Each resolving target confers its fact as a single target does, and `implemented` stays a whole-Spec fact.",
           "identity-only anchor":
             "A code anchor with no `satisfies` and no `references`; it mints a CodeNode for structure and for `byFile`, derives no realization edge, and confers nothing.",
           references:
-            "The anchored CodeNode-to-Spec edge derived from `references?: readonly SpecId[]` on a code anchor: this code answers to that design without claiming to realize it. The unit follows the design or realizes part of it, so a change to the design asks the code to follow. The direction is one way: a design that builds on existing code states that on its own side, by a `dependsOn` or `refines` relation to the Spec the code satisfies, never by a reference from the code. It confers no delivery fact, moves no readiness floor, and the drift alarm ignores it; a target also named in `satisfies` is an error. The reader reports the referencing units on the Spec's context, and blast radius traverses the edge as a binding.",
+            "The anchored CodeNode-to-Spec edge derived from `references?: readonly SpecId[]` on a code anchor: this code answers to that design without claiming to realize it. The unit follows the design without realizing any of its promises, or realizes part of a Spec whose remaining promises no unit yet realizes, so a change to the design asks the code to follow. The direction is one way: a design that builds on existing code states that on its own side, by a `dependsOn` or `refines` relation to the Spec the code satisfies, never by a reference from the code. It confers no delivery fact, moves no readiness floor, and the drift alarm ignores it; a target also named in `satisfies` is an error. The reader reports the referencing units on the Spec's context, and blast radius traverses the edge as a binding.",
           role: "An optional one-token value on a code anchor, lowercase kebab and never normalized, naming the architectural pattern the unit plays; a corpus-owned vocabulary whose taxonomy the census renders with counts, checked against no list.",
           layer:
             "An optional attribute of a `component:` anchor, one of `edge`, `application`, `domain`, `adapter`, or `infrastructure`; a value outside the set, or the attribute on a non-component anchor, is an envelope error.",
@@ -340,7 +325,7 @@ export const modelSpecs = [
           "declared component":
             "The `component:` anchor is the component's declaration; there is no separate architecture file, because the anchor sits where the component is realized.",
           "component realization convention":
-            "A `component:` anchor that satisfies a Spec satisfies its seam's most-specific design Spec; that `satisfies` edge is the component's own realization claim. As guidance, checked by no validator: a component either satisfies its seam's design Spec or binds no Spec its members satisfy, and it never references one. Structural edges confer nothing under the architectural-annotation ruling (MD-38), which supersedes structural anchors confer nothing (MD-30) without changing this.",
+            "A `component:` anchor that satisfies a Spec satisfies its seam's most-specific design Spec; that `satisfies` edge is the component's own realization claim. As guidance, checked by no validator: a component either satisfies its seam's design Spec or binds no Spec its members satisfy, and it never references one. Structural edges confer nothing (the architectural-annotation ruling, MD-38).",
           "structural anchor validity":
             "A `memberOf` source is an `impl:` or `api:` CodeNode and its target is a `component:` CodeNode; every structural target exists, every edge is unique, each source has at most one component, and structural self-reference is refused. A malformed or non-static structural field, an unknown `layer`, or `layer` or `context` on a non-component anchor refuses the whole anchor at reification; a graph-validly reified edge that later fails referential or structural validation remains visible with its anchor and independent `satisfies` binding. Multi-node `uses` cycles remain data and produce no finding.",
           "structural non-conferral":
@@ -350,13 +335,13 @@ export const modelSpecs = [
           "oracle anchor":
             "A binding in the `oracle:` namespace that records an oracle's `models` target without deriving a delivery fact.",
           "executable binding boundary":
-            "A resolving `specTest` anchor can establish verifier realization; a `bindExample` call executes a generated contract but is not extracted graph data, so the graph cannot claim from that call alone that the contract is bound.",
+            "A resolving `specTest` anchor can establish verifier realization; a registrar activation or a `bindExample` call executes a generated contract but is not extracted graph data, so the graph cannot claim from that call alone that the contract is bound.",
           "document-realization binding":
             "When the realizing artifact is authored Markdown that cannot carry an extracted in-code anchor, the executable suite that asserts the shipped document may carry its code anchor. Its label must name the document realization rather than imply the test body is the product, and file-level blast radius remains coverage-unknown for the Markdown artifact.",
           "Protocol builder binding":
-            "A builder import from the public Protocol package or its anchors subpath, or a relative import whose importer-relative resolution, including the TypeScript `.js`-to-`.ts` convention, canonicalizes to this package's `ids` or `model/code-anchor` module; consumer-local lookalike modules confer no binding authority. On the CommonJS package surface the trusted relative-module set is empty (`import.meta.url` is rewritten away), so relative bindings mint no anchors there while package imports stay trusted. The comment form needs no builder binding.",
+            "A builder import from the public Protocol package or its anchors subpath, or a relative import whose importer-relative resolution, including the TypeScript `.js`-to-`.ts` convention, canonicalizes to this package's `ids`, `anchors` or `model/code-anchor` module; consumer-local lookalike modules confer no binding authority. On the CommonJS package surface the trusted relative-module set is empty (`import.meta.url` is rewritten away), so relative bindings mint no anchors there while package imports stay trusted. The comment form needs no builder binding.",
           "untrusted builder":
-            "A constant-form builder call whose import is no Protocol builder binding: it mints nothing and reports nothing, because a source file that never bound to the Protocol is not authoring drift to report. The realizing entrypoints are `protocolBindingScopeFor` and `collectProtocolBindings` in `src/extract/protocol-bindings.ts`.",
+            "A constant-form builder call whose import is no Protocol builder binding: it mints nothing and reports nothing, because a source file that never bound to the Protocol is not authoring drift to report.",
         },
       },
       behavior: {
@@ -370,6 +355,10 @@ export const modelSpecs = [
             "the extraction reports {findingCount:number} findings",
           ],
         },
+      },
+      design: {
+        structuralValidator:
+          "`conformance/structural-anchors`, the conformance error for graph structural-anchor violations; referential integrity and generic edge-contract errors keep their own diagnostic ownership.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -445,16 +434,16 @@ export const modelSpecs = [
     sections: {
       intent: {
         outcome:
-          "Annotate each architecturally significant unit on the anchor of the code that realizes it, with its role, its component's layer and bounded context, its uses, and the designs it references, so the graph answers architecture questions from the code itself. Architectural significance adds no Spec kind, no node type, and no vocabulary registry.",
+          "Annotate each architecturally significant unit on the anchor of the code that realizes it, with its role, its component's layer and bounded context, and the designs it references, and declare `uses` where a dependency is architectural, so the graph answers architecture questions from the code itself. Architectural significance adds no Spec kind, no node type, and no vocabulary registry.",
       },
       model: {
         terms: {
           "architecturally significant unit":
-            "A code unit with exported public surface or cross-component reach that warrants graph-visible structural binding: component membership, uses declarations for its architectural dependencies, a role, and `references` to the designs it answers to.",
+            "A code unit with exported public surface or cross-component reach that warrants graph-visible structural binding: component membership, a role, and `references` to the designs it answers to. An architectural dependency is declared as `uses`, normally between components; a unit's own `uses` is optional.",
           "structural attributes":
-            "`role` on any code anchor; `layer` and `context` on a `component:` anchor; all three describe what the unit is, never where it stands, and the census renders their taxonomy from the graph.",
+            "`role` on any code anchor; `layer` and `context` on a `component:` anchor; they describe the unit's architecture and carry no readiness or delivery fact, and the census renders their taxonomy from the graph.",
           "accepted set":
-            "The set of architecturally significant units in a corpus is an owner-reviewed declaration, never derived from imports or exports; annotations are curated, never a coverage quota.",
+            "The set of architecturally significant units in a corpus is an owner-reviewed declaration, never derived from imports or exports; anchors are curated, never a coverage quota.",
         },
       },
     },
@@ -464,7 +453,7 @@ export const modelSpecs = [
     id: "spec:model.open-question-keys.keyed-question-resolves",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A keyed question is reified and its address resolves",
     narrative: null,
     sections: {
@@ -500,7 +489,7 @@ export const modelSpecs = [
     id: "spec:model.open-question-keys.renamed-key-breaks",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A renamed question key fails the mention that addresses it",
     narrative: null,
     sections: {
@@ -536,7 +525,7 @@ export const modelSpecs = [
     id: "spec:model.open-question-keys.repeated-key-refused",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A repeated question key refuses its carrier",
     narrative: null,
     sections: {
@@ -584,13 +573,12 @@ export const modelSpecs = [
       },
       behavior: {
         rules: [
-          "An open question is prose, or an object with `question`, an optional `blocking` flag, and an optional `key`. A key matches `^[a-z][A-Za-z0-9]*$`, the grammar of a Design key, and is unique among the open questions of one Spec. An unkeyed question stays lawful and has no address.",
+          "An open question is prose, or an object with `question`, an optional `blocking` flag, an optional `key`, and the optional fields of spec:model.open-question-fields. A key matches `^[a-z][A-Za-z0-9]*$`, the entry-address key grammar, and is unique among the open questions of one Spec. An unkeyed question stays lawful and has no address.",
           "In the Markdown carrier the key follows the flag inside the marker, after one space and `#`, as in `- [blocking #aggregateReach] Does the owner widen the aggregate?` or `- [non-blocking #pageHome] Where does the page live?`. A marker whose key text is empty or off the grammar is refused with `open question keys must be lower-camel ASCII`, and a key that repeats an earlier key of the same Spec is refused with `open question keys must be unique`, each as the structure finding `extract/invalid-markdown-structure` at the line of the entry, and the carrier is refused whole as for every structure refusal.",
           'In the TypeScript carrier the key is the `key` property of the question object. A key that is not a string on the grammar, or that repeats an earlier key of the same Spec, is refused with the finding `extract/unrecognized-property` at severity error and the message `property "intent.openQuestions[<n>].key" is refused: open question keys must be lower-camel ASCII` or `property "intent.openQuestions[<n>].key" is refused: open question keys must be unique`, with `<n>` the zero-based position; only the key drops, and the question and the Spec stay.',
-          "The serialized graph writes a question object's fields in the order `question`, `blocking`, `key`, omitting an absent one. The import emitter writes a keyed question's marker as `[<flag> #<key>]`, so a keyed TypeScript question round-trips into Markdown.",
-          "The entry address gains the section `question`: `spec:<id>#question.<key>` parses, is refused in every id slot as every entry address is, and resolves when the Spec exists and one of its open questions carries that key. A mention whose question key no open question carries is the prose-mentions error for a missing entry, so renaming or removing a key fails validation in every Spec that addresses it.",
+          "The serialized graph writes a question object's fields in the order `question`, `blocking`, `key`, `decider`, `links`, `provisional`, `trigger`, omitting an absent field. The import emitter writes a keyed question's marker as `[<flag> #<key>]` and its optional fields as one-line sub-items under it, so an object-form TypeScript question round-trips into Markdown.",
+          "An entry address may name an open question as `spec:<id>#question.<key>`; it parses, is refused in every id slot, and resolves when the Spec exists and an open question carries the key. A missing question key is a prose-mentions error, so renaming or removing it fails validation where it is addressed.",
           "The open-question register reports each question's key, or null for an unkeyed question. The mention audit and entry search read the `question` address as they read a `design` or `ui` address, and entry search gives a keyed question's text the address `spec:<id>#question.<key>`.",
-          "The realizing sites are `IntentOpenQuestion` in `src/model/sections.ts`, the open-question marker in `src/extract/markdown-body-owner-behavior.ts`, the question shape in `src/extract/reify.ts`, `canonicalOpenQuestion` in `src/extract/serialize.ts`, the Intent emission in `src/import/emit-markdown.ts`, the entry-address grammar in `src/ids.ts`, and `hasAddressedEntry` in `src/validate/validators.ts`.",
         ],
         exampleSpace: {
           given: [
@@ -605,40 +593,56 @@ export const modelSpecs = [
             "the report holds {mentionErrors:number} prose-mention errors",
           ],
         },
+        ruleKeys: {
+          keyGrammar: "rules[0]",
+          markdownMarker: "rules[1]",
+          questionAddress: "rules[4]",
+        },
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/model/open-question-keys.sdp.md",
-  }, // The design-management arc (plan 41): captures ahead of code.
+  },
   {
     id: "spec:model.design-maturity",
     specKind: "model",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/model/design-maturity.sdp.md",
     title: "What a Spec's design carries is derived, beside its readiness",
     narrative:
-      "The original design had seven readiness stages, and its `designed` stage meant the Spec's key abstractions were settled before code (`docs/lineage/v0-design/01-core-primitives.md` §1.4 and §8). The Protocol rules four rungs, and they describe the intent, so readiness alone does not tell a `defined` Spec with no design from a `defined` Spec whose interfaces are settled. When the design-management arc was planned, the owner ruled that it derives design columns beside readiness and adds no rung. Later the owner ruled the rest: what design a Spec carries is read from the derived columns and never stated, so no rung, floor clause or design fact carries it. Readiness stays the author-stated design maturity of the Spec's intent.",
+      "The original design's `designed` stage meant a Spec's key concepts were settled before code (`docs/lineage/v0-design/01-core-primitives.md` §1.4 and §8). The Protocol's readiness describes the maturity of intent. The graph therefore derives what design a Spec carries beside readiness, without adding a rung, floor clause or delivery fact. A new rung would change the locked readiness values, a floor clause reading Design would close that section's shape, and a design fact would mix design with realization signals.",
     sections: {
       intent: {
         problem:
-          "A reviewer or an implementer cannot tell from readiness alone which Specs carry a settled design and which carry only intent, and the first adopter's owner asked for Specs whose key abstractions are designed as stubs before code.",
+          "A reviewer or an implementer cannot tell from readiness alone which Specs carry a settled design and which carry only intent, and the first adopter's owner asked for Specs whose key concepts are designed as stubs before code.",
         outcome:
           "Show what design a Spec carries in values the graph derives, so the backlog and a review can tell a designed Spec from one that states only its intent.",
         assumptions: [
           "The design columns tell a Spec with pinned declarations and keyed entries from one that states only its intent.",
         ],
+        openQuestions: [
+          {
+            question:
+              "If the first adopter's design passes show that the design columns cannot distinguish settled design from intent alone, should this representation be revisited?",
+            blocking: false,
+            key: "designColumnsSufficiency",
+            decider: "owner",
+            provisional:
+              "derive what design a Spec carries beside readiness without a new rung, floor clause or delivery fact",
+          },
+        ],
       },
       model: {
         terms: {
           "design columns":
-            "the counts and lists the reader derives for a Spec beside its readiness: keyed Design and UI entries, pinned declarations, open and blocking questions, and the decisions it names. The Pack design carries them for each member, and the build backlog recipe shows them for each ready Spec no code realizes yet. They are derived on every read and never stated: no readiness rung, floor clause or delivery fact carries the design they show, because a rung would break the four locked readiness values, a floor clause that read Design would close that section's shape, and a design fact would mix design into the facts that say what code and tests bind.",
+            "The counts and lists the reader derives for a Spec beside its readiness under spec:consumers.pack-design; they are read on every pass and never stated.",
           "designed stage":
-            "the original design's readiness stage for a Spec whose key abstractions are settled; not a rung of the Protocol. The question reopens if the first adopter's design passes show that the design columns cannot tell a designed Spec from one that states only its intent.",
+            "The original design's readiness stage for a Spec whose key concepts were settled; it is not a Protocol rung.",
         },
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:model.planned-architecture",
@@ -648,7 +652,7 @@ export const modelSpecs = [
     file: "specs/model/planned-architecture.sdp.md",
     title: "Components are designed ahead of their code",
     narrative:
-      "The original design declared a component before its code, as a Component node with a layer, a bounded context and a capability, kept in an architecture folder and reconciled with the code markers and the Specs (`docs/lineage/v0-design/03-graph-metamodel.md` §2.5; `04-authoring-surfaces.md` §7). Its runtime chapter separated what a unit requires from the provider that supplies it, the provider a composition root selects and the one a test puts in its place, and gave one mechanism the ownership of runtime composition (`05-runtime-anchors.md` §1, §3.3, §7).\n\nThe Protocol records the architecture the code realizes. A `component:` anchor states its layer and context, and anchored `memberOf` and `uses` edges join the code units. Under the architectural annotation decision, a component no code realizes is a Spec, and the graph holds no node for it until an anchor exists. The first adopter states its component list and its context rule in prose (`libar-platform/design/PLAN.md` §2.1) and checks context isolation over anchored `uses` in its own script (`libar-platform/design/tools/check.py`). The owner ruled that the architectural annotation decision stands: a component designed before its code is a component design Spec, and the `component:` anchor that later realizes it satisfies that Spec, which is the join a comparison reads.",
+      "The original design declared a component before its code, as a Component node with a layer, a bounded context and a capability, kept in an architecture folder and reconciled with its code anchors and the Specs (`docs/lineage/v0-design/03-graph-metamodel.md` §2.5; `04-authoring-surfaces.md` §7). Its runtime chapter separated what a unit requires from the provider that supplies it, the provider a composition root selects and the one a test puts in its place, and gave one mechanism the ownership of runtime composition (`05-runtime-anchors.md` §1, §3.3, §7).\n\nThe Protocol records the architecture the code realizes. A `component:` anchor states its layer and context, and anchored `memberOf` and `uses` edges join the code units. Under the architectural annotation decision, a component no code realizes is a Spec, and the graph holds no node for it until an anchor exists. The first adopter states its component list and its context rule in prose (`libar-platform/design/PLAN.md` §2.1) and checks context isolation over anchored `uses` in its own script (`libar-platform/design/tools/check.py`). The owner ruled that the architectural annotation decision stands: a component designed before its code is a component design Spec, and the `component:` anchor that later realizes it satisfies that Spec, which is the join a comparison reads.",
     sections: {
       intent: {
         problem:
@@ -664,12 +668,23 @@ export const modelSpecs = [
               "The original kept apart the interface a unit requires, the providers that supply it, the provider a composition root selects and the one a test substitutes, for Fastify, Effect, Awilix and plain factories alike. Does a component design state these without naming a framework, and does any of them earn graph structure beyond `uses`?",
             blocking: false,
             key: "providerSelection",
+            decider: "owner",
           },
           {
             question:
               "Is the original's one-runtime-truth rule, one composition mechanism per application, a Protocol rule or a corpus's own architecture rule?",
             blocking: false,
             key: "oneRuntimeOwner",
+            decider: "owner",
+          },
+          {
+            question:
+              "How is a component design selected, what value form does its `uses` entry take, and what rows does the realization comparison return for an unrealized design and for a layer, context or `uses` that differs?",
+            blocking: false,
+            key: "comparisonShape",
+            decider: "owner",
+            provisional:
+              "a Spec is a component design when its Design `id` value, bare or in the code span that opens it, is a `component:` id, as the curation report reads it",
           },
         ],
       },
@@ -694,9 +709,10 @@ export const modelSpecs = [
     altitude: "story",
     readiness: "ready",
     file: "specs/model/open-question-fields.sdp.md",
-    title: "An open question may name who decides it, its links and a provisional reading",
+    title:
+      "An open question may name who decides it, its links, a provisional reading and a re-entry trigger",
     narrative:
-      "The original design gave an open question an owner and a list of links to decision records, discussions and tickets, beside its text and its blocking flag (`docs/lineage/v0-design/01-core-primitives.md` §2.1). The Protocol gave a question an optional key and an address and stopped there. The first adopter keeps the rest beside the graph. Its decision register (`libar-platform/design/decisions/register.json`, 175 rows, described in `design/advisors/register.md`) records for each open decision its sources, who decides it as a class (`tactical`, `delegated` or `owner`) and an advisor lens, the provisional reading the design proceeds on, which 96 rows carry, and a lean. It also records a status, the work unit it blocks, dates and who checked the lean. This Spec captures the part that states something about the question and leaves the work record outside.",
+      "The original design gave an open question an owner and a list of links to decision records, discussions and tickets, beside its text and its blocking flag (`docs/lineage/v0-design/01-core-primitives.md` §2.1). A question key gives a question an address and nothing more, so the first adopter keeps the rest beside the graph. Its decision register (`libar-platform/design/decisions/register.json`, described in `design/advisors/register.md`) records for each open decision its sources, who decides it as a class (`tactical`, `delegated` or `owner`) and an advisor lens, the provisional reading the design proceeds on, and a lean. It also records a status, the work unit it blocks, dates and who checked the lean. This Spec captures the part that states something about the question and leaves the work record outside.",
     sections: {
       intent: {
         problem:
@@ -706,18 +722,29 @@ export const modelSpecs = [
         risks: [
           "A field for who decides invites fields for when and for what state the question is in, which would rebuild a workflow tracker inside the Spec.",
         ],
+        openQuestions: [
+          {
+            question:
+              "A non-static question text, blocking flag or spread in a TypeScript open-question list also drops the whole list, blocking questions included, and stays a warning; is every dropped question list an error?",
+            blocking: false,
+            key: "droppedQuestionList",
+            decider: "owner",
+            provisional: "only a failure under the four fields is an error",
+          },
+        ],
       },
       behavior: {
         rules: [
           "An open question may carry four optional fields beside its text, flag and key, namely who decides it, the links it rests on, its provisional reading and its re-entry trigger; a question without them stays lawful.",
           "Who decides a question names the person, role or body whose ruling settles it. It authorizes nothing, gates no edit, and no validator compares it with the author of a change.",
           "Who decides a question is one lowercase kebab token the corpus owns, on the grammar a role uses, such as `owner` or `delegated`. The graph holds no person or role to point at, so the value references nothing, and the Protocol ships no list of values.",
-          "In the Markdown carrier the four fields ride labelled sub-items indented under the question's own line, `decider:`, `links:`, `provisional:` and `trigger:`, each at most once and each one line, so the question line stays as authored. They are the one indented line the body grammar admits, and the TypeScript carrier carries the same four fields on the question object.",
-          "A link is a Spec id or an entry address the question rests on, and nothing else. Each is checked as a mention is: a missing target or entry is an error, and a target with no declared relation either way raises the pair warning. A link mints no relation, and a document outside the graph is named in the question's text as prose, because the graph holds no identity for it to resolve.",
+          "In the Markdown carrier the four fields ride labelled sub-items indented under the question's own line, `decider:`, `links:`, `provisional:` and `trigger:`, each at most once and each one line, so the question line stays as authored. They are the only indented field lines the body grammar admits, and the TypeScript carrier carries the same four fields on the question object.",
+          "In the TypeScript carrier, a value under any of the four fields that cannot be read statically is an extraction error rather than a lossy warning, because the failure drops the Spec's whole open-question list, blocking questions included.",
+          "A link is a Spec id or an entry address the question rests on, and nothing else. Each is checked as a mention is: a missing target or entry is an error, and a target with no declared relation either way raises the `conformance/prose-mentions` warning for that pair. A link mints no relation, and a document outside the graph is named in the question's text as prose, because the graph holds no identity for it to resolve.",
           "The provisional reading is one line stating what the design assumes while the question is open. It is intent, never a ruling.",
-          "A question carries at most its one-line provisional reading of a lean. A worked lean is a decision Spec whose Decision section holds its parts as `decision`, `context`, `rationale`, `alternative` and `consequence`, stated at the rung its record earns, and the Specs it shapes name it through `decidedBy`, so a lean below `defined` holds them below `ready` under the typed-dependency floor.",
+          "A question carries at most one provisional line. A worked proposal for settling it is a decision Spec whose Decision section holds its decision, context, rationales, alternatives and consequences, stated at the rung its record earns. Each shaped Spec names it through `decidedBy`, so a decision below `defined` holds that Spec below `ready` under the typed-dependency floor.",
           "A re-entry trigger is one line naming what brings a deferred Spec back, such as a named reader the shipped views do not serve. It sits on the blocking question that holds the deferral, and the open-question register reports questions that carry one apart from design holds, so no reader tells the two apart by their wording.",
-          "An open question carries no status, date, blocked work unit or record of who checked it. A settled question leaves the Spec, a ruling that passes the decision test lands as a decision Spec the shaped Specs name through `decidedBy`, and the rest of the history stays in git and in the adopter's own records.",
+          "An open question carries no status, date, blocked work unit or record of who checked it. A settled question leaves the Spec, a ruling that passes the ADR three-part test lands as a decision Spec the shaped Specs name through `decidedBy`, and the rest of the history stays in git and in the adopter's own records.",
           "Whether a question holds the readiness floor stays its `[blocking]` flag alone; none of the four fields moves a floor.",
         ],
       },
@@ -725,17 +752,17 @@ export const modelSpecs = [
         subItemLine:
           "a field is one line of exactly two spaces, `- `, a label from `decider`, `links`, `provisional` and `trigger`, a colon, a space and the value, directly under its question's line or a sibling field; any other indented line stays refused, as is a field under an entry that is not an open question.",
         questionObject:
-          "the open question object gains `decider`, `links`, a list of strings in authored order, `provisional` and `trigger`, each absent when the author wrote none, and the TypeScript carrier writes the same four fields on its question object.",
+          "the open question object carries optional `decider`, `links` as a list of strings in authored order, `provisional` and `trigger` fields, each absent when the author wrote none; the TypeScript carrier writes the same fields.",
         linksValue:
           "`links:` takes a comma-separated list, as an anchor comment's target tags do, non-empty and with no repeat.",
         fieldFindings:
           "an unknown or repeated label, an empty value, a `decider` off the token grammar, and a `trigger` on a non-blocking question are conformance errors at the field's line.",
         fieldLocations:
-          "each carrier that records entry lines adds a location row per field present, `question[<i>].decider`, `question[<i>].links`, `question[<i>].provisional` or `question[<i>].trigger`; a link finding reads the `links` row, and a line the carrier did not record stays absent.",
+          "each carrier that records entry lines records a row per field present, `question[<i>].decider`, `question[<i>].links`, `question[<i>].provisional` or `question[<i>].trigger`; a link finding reads the `links` row, and a line the carrier did not record stays absent.",
         linkResolution:
           "each link is checked as a mention is, at the field's line, by the same validator and with the same two findings.",
         registerColumns:
-          "the open-question register (recipe 20) adds the four fields to each row, marks a question that carries a trigger as a deferral, and counts deferrals and holds apart in its totals.",
+          "the open-question register (recipe 20) reports the four fields on each row, marks a question carrying a trigger as a deferral, and counts deferrals and holds apart.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -748,7 +775,7 @@ export const modelSpecs = [
     file: "specs/model/rule-keys.sdp.md",
     title: "A rule or flow entry may carry a key that addresses it",
     narrative:
-      "The original design gave a behavior rule an optional id, so the rule could later be promoted to a Spec of its own, and an optional rationale (`docs/lineage/v0-design/01-core-primitives.md` §2.2). The Protocol kept promotion and dropped the id. An inline rule has no key and no address, so a review finding, a register row or an example cannot name the rule it is about, and the Spec Studio's tests lens cannot name the rules no example exercises until a rule gains an address. Open questions gained optional keys on the Design key grammar; this Spec follows that pattern for rules.",
+      "The original design gave a behavior rule an optional id, so the rule could later be promoted to a Spec of its own, and an optional rationale (`docs/lineage/v0-design/01-core-primitives.md` §2.2). The Protocol kept promotion and dropped the id. An unkeyed rule has no address, so a review finding, a register row or an example cannot name it; a key gives it an address. Open questions carry optional keys on the entry-address key grammar; this Spec follows that pattern for rules.",
     sections: {
       intent: {
         problem:
@@ -763,7 +790,7 @@ export const modelSpecs = [
           "Every keyed entry is addressed as `spec:<id>#rule.<key>` whatever its section, because a Spec uses one primary behavior owner. The address resolves while the Spec carries an entry with that key and fails validation in every Spec that names it once the key is renamed or removed.",
           "A rule address is refused in every id slot, as every entry address is, so no anchor targets a rule and no delivery fact attaches to one.",
           "An example names the keyed rules it exercises on its `verifies` relation: the target is an object with `target` and `exercises`, a list of the verified Spec's rule keys, beside an optional `reason`. A key the verified Spec does not carry is a conformance error at the relation, as a missing entry address is. The list mints no edge and confers no delivery fact, so `verifies` stays whole-Spec, and a rule-coverage recipe reads it to report which keyed rules a bound example exercises and which none does.",
-          "A keyed entry carries its key and its text and nothing else; why a rule holds is the Spec's narrative, or a decision Spec named through `decidedBy` when the why passes the decision test.",
+          "A keyed entry carries its key and its text and nothing else; why a rule holds is the Spec's narrative, or a decision Spec named through `decidedBy` when the why passes the ADR three-part test.",
           "A keyed rule promoted to a Spec of its own leaves its address behind, because promotion moves the content out, and every mention of that address fails until it names the new Spec.",
         ],
       },
@@ -771,13 +798,13 @@ export const modelSpecs = [
         keyMarker:
           "`[#<key>]` and one space open the entry's text, after `rule: ` or `flow: ` where the entry has a label, with the key on the open-question key grammar, `^[a-z][A-Za-z0-9]*$`; text that opens with `[#` and does not match is refused at its line, and a marker later in the text is plain text.",
         ruleKeysField:
-          "`behavior.rules` and `behavior.flows` stay lists of strings with the marker removed, and `behavior.ruleKeys` maps each key to the entry it names, `rules[<i>]` or `flows[<i>]`, in authored order; a Spec with no keyed entry carries no `ruleKeys`, and the frozen projections read the rule text unchanged.",
+          "`behavior.rules` and `behavior.flows` are lists of strings with the marker removed, and `behavior.ruleKeys` maps each key to the entry it names, `rules[<i>]` or `flows[<i>]`, in authored order; a Spec with no keyed entry carries no `ruleKeys`, and the frozen projections read the rule text unchanged.",
         carrierSpelling:
           "the TypeScript carrier writes the same marker at the start of a rule or flow string, and the Gherkin carrier at the start of a `Rule:` line's text, so one normalization after reification reads all three carriers.",
         duplicateKey:
-          "a key repeated across one Spec's rules and flows is a conformance error at each site, as a repeated question key is.",
+          "a key repeated across one Spec's rules and flows is a conformance error at each site, as a repeated question key is; rule keys and question keys address different sections, so the two namespaces stay apart.",
         ruleLocations:
-          "the location table gains a row for every rule and flow entry, keyed or not, `rule[<i>]` or `flow[<i>]` with `key` beside it when the entry is keyed, from every carrier that records entry lines.",
+          "the location table records every rule and flow entry, keyed or not, as `rule[<i>]` or `flow[<i>]` with `key` beside a keyed entry, from each carrier that records its line.",
         exercisesAttribute:
           "`verifies: { target: <spec id>, exercises: [<key>] }`, with an optional `reason`, is lawful on a declared `verifies` only; the graph's declared `verifies` edge carries `exercises` in authored order, an anchored `verifies` from a test anchor carries none, and `exercises` on any other relation type is refused.",
         gherkinExercises:
@@ -786,6 +813,8 @@ export const modelSpecs = [
           "recipe 34, rule coverage, takes `params.spec` or `params.pack` and returns `{ totals: { keyedRules, exercised, unexercised, unkeyedRules }, rows }`, one row per keyed rule `{ address, line, exercisedBy: [{ example, enabled }] }`, with an empty `exercisedBy` for a rule no example exercises.",
         ruleAddress:
           "`spec:<id>#rule.<key>` resolves through `ruleKeys`; address resolution (recipe 25) reads `rule` as a fourth section and returns the entry's text, file and line, and entry search (recipe 23) matches rule keys as it matches Design keys.",
+        exercisesValidator:
+          "`conformance/rule-exercises`, a conformance error for an off-contract `exercises` list or a rule key absent from the verified Spec.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -798,7 +827,7 @@ export const modelSpecs = [
     file: "specs/model/relation-reasons.sdp.md",
     title: "An authored relation may carry its reason",
     narrative:
-      "The original design let a relation say why it holds: a rationale on `refines`, a strength on `dependsOn`, an aspect on `constrainedBy` and a reason on `supersedes` (`docs/lineage/v0-design/01-core-primitives.md` §4; `04-authoring-surfaces.md` §1.3). The Protocol's relations carry a type, a target and a claim, and the envelope that holds them is closed, so the reason a Spec rests on another lives, if anywhere, in narrative prose a reader has to find. The prose-ownership decision gives free prose a home on a typed owner and leaves the text on an edge for later; a relation's reason is that text.\n\nThe first adopter meets the reverse case. When its mention audit reported Spec pairs named in prose with no relation behind them, it declared the relations that were missing dependencies and kept twelve pairs as prose, each listed with a one-line reason no typed relation fits (`libar-platform/docs/feedback/sdp-feedback-01.md`, \"The mention warnings were mostly missing edges\"; `libar-platform/design/tools/prose-mentions.json`). A reason on a relation says why an edge holds; a listed mention reason says why none does.",
+      "The original design let a relation say why it holds: a rationale on `refines`, a strength on `dependsOn`, an aspect on `constrainedBy` and a reason on `supersedes` (`docs/lineage/v0-design/01-core-primitives.md` §4; `04-authoring-surfaces.md` §1.3). The Protocol's relations carry a type, a target and a claim; a relation without a reason leaves the explanation of why a Spec rests on another in narrative prose a reader has to find. The prose-ownership decision gives free prose a typed owner; this Spec gives a relation's reason its home on that relation.\n\nThe first adopter meets the reverse case. When its mention audit reported Spec pairs named in prose with no relation behind them, it declared the relations that were missing dependencies and kept the rest as prose, each listed with a one-line reason no typed relation fits (`libar-platform/docs/feedback/sdp-feedback-01.md`, \"The mention warnings were mostly missing edges\"; `libar-platform/design/tools/prose-mentions.json`). A reason on a relation says why an edge holds; a listed mention reason says why none does.",
     sections: {
       intent: {
         problem:
@@ -810,8 +839,8 @@ export const modelSpecs = [
         rules: [
           "An authored relation may carry one optional reason, a single line of prose owned by that relation from that Spec to that target.",
           "One optional reason serves every relation type. No strength, aspect or other attribute rides a relation, except the rule keys an example's `verifies` lists, which the rule-coverage recipe reads.",
-          "A reason is intent, as its relation is; it confers no delivery fact, moves no readiness floor and changes no edge, and a relation without one stays lawful.",
-          "In the envelope a relation target that carries a reason is an object with `target` and `reason` in place of the plain id, and plain ids and objects mix in one relation, so a relation without a reason is written as before and no target is written twice. The TypeScript carrier passes the same reason beside the target.",
+          "A reason is intent, as its relation is; it confers no delivery fact, moves no readiness floor and changes nothing its edge confers, and a relation without one stays lawful.",
+          "In the envelope a relation target is a plain Spec id or an object with `target` and optional `reason`; a declared `verifies` object may also carry `exercises`. A target-only object reads as the plain id, plain ids and objects may mix in one relation, and no target is written twice. The TypeScript carrier passes the same reason beside the target.",
           "A reason on `supersedes` says what the newer decision replaces, and a reason on a `refines` from one decision to another says which part of the older decision the newer one narrows.",
           "A reason reaches readers with its relation through the graph, so a projection or a recipe reads it from the edge and never from the carrier.",
           "A mention left as prose carries no reason in the Spec. A corpus may keep the mentions it intends as rows of `from`, `to` and `reason` beside its Specs and pass them to the mention audit as a parameter; the audit reports the pairs a row matches apart from the rest, each with its reason, and lists the rows that match no current pair, while the validator reads no such list and its warning stands.",
@@ -819,15 +848,15 @@ export const modelSpecs = [
       },
       design: {
         envelopeTarget:
-          "a relation target is a Spec id or `{ target: <spec id>, reason: <one line> }`, the two mixing in one list and a single target taking either form; a declared `verifies` object may also carry `exercises`, and an object with another key, an empty reason, or a reason on two lines is refused.",
+          "a relation target is a Spec id or `{ target: <spec id>, reason: <one line> }`, the two mixing in one list and a single target taking either form; a declared `verifies` object may also carry `exercises`, and an object with another key, an empty reason, or a reason on two lines is refused; an object carrying only `target` reads as the plain id.",
         builderArgument:
-          "each TypeScript relation builder takes an optional second argument, `dependsOn(target, { reason })`, with `verifies(target, { reason, exercises })` also taking the rule keys, and a builder called without it writes the relation as today.",
+          "each TypeScript relation builder takes an optional second argument, `dependsOn(target, { reason })`, with `verifies(target, { reason, exercises })` also taking the rule keys, and a builder called without it writes a plain declared relation.",
         edgeReason:
-          "an authored graph edge gains an optional `reason`, and the reader's relation ends carry it; the guarantees recipe (3), dependency footing (21), the planning slice (19) and the decision register (31) show it beside the relation.",
+          "an authored graph edge carries an optional `reason`, and the reader's relation ends carry it; the guarantees recipe (3), dependency footing (21), the planning slice (19) and the decision register (31) show it beside the relation.",
         gherkinRelations:
           "no Gherkin form is invented for a relation reason, because relation tags carry no prose; a Spec that needs one is authored in Markdown or TypeScript.",
         intendedMentions:
-          "the mention audit (recipe 22) takes `params.intended`, rows `{ from, to, reason }` keyed by Spec ids, and adds `intended`, the unbacked pairs a row matches with its reason, kept apart from the remaining pairs, and `staleIntended`, the rows that match no current pair.",
+          "the mention audit (recipe 22) takes `params.intended`, rows `{ from, to, reason }` keyed by Spec ids, and returns `intended`, the unbacked pairs a row matches with its reason, kept apart from the remaining pairs, and `staleIntended`, the rows that match no current pair.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -840,7 +869,7 @@ export const modelSpecs = [
     file: "specs/model/term-addresses.sdp.md",
     title: "A Model term may carry a key that addresses it",
     narrative:
-      "A Model section defines a Spec's terms, and other prose names those terms by word. Nothing checks such a reference, and a view can link a term only by matching words, which reads meaning from text in the way the Protocol refuses. Design, UI, question and rule entries already carry keys that a mention addresses and validation checks; a Model term has none. With a key, prose could cite a concept as a checked mention, and every view, the Obsidian vault included, could link it exactly.",
+      "A Model section defines a Spec's terms, and prose can name those terms by word. Such a word is not a checked entry address, so a view cannot resolve it to one authored definition without a rule for its owner and key. Design, UI, question and rule entries already carry keys that a mention addresses and validation checks; a Model term has none. With a key, prose could cite a concept as a checked mention, and every view, the Obsidian vault included, could link it exactly.",
     sections: {
       intent: {
         outcome:
@@ -862,6 +891,14 @@ export const modelSpecs = [
             key: "glossaryTerms",
             provisional:
               "no; the glossary stays a document, and a term gains an address where a Spec defines it",
+            decider: "owner",
+          },
+          {
+            question:
+              "Does a keyed Model term use the term segment or the model segment in its entry address?",
+            blocking: false,
+            key: "addressSection",
+            decider: "owner",
           },
         ],
       },

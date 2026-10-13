@@ -161,6 +161,29 @@ describe("the derived census/taxonomy projection", () => {
     expect(pageByPath(pages, "index.md")).toBe(readFileSync(join(goldenRoot, "index.md"), "utf8"));
   });
 
+  it("labels the index as diagnostic when the real reader reports validation errors", () => {
+    const cleanGraph = extract({ root: exampleRoot }).graph;
+    const diagnosticGraph: GraphSchema = {
+      ...cleanGraph,
+      edges: [
+        ...cleanGraph.edges,
+        {
+          from: "spec:orders.create-order",
+          type: "dependsOn",
+          to: "spec:probe.missing",
+          claim: "declared",
+        },
+      ],
+    };
+    const diagnostic = pageByPath(renderCensus(createReader(diagnosticGraph)), "index.md");
+
+    expect(pageByPath(renderCensus(createReader(cleanGraph)), "index.md")).not.toContain(
+      "Diagnostic projection",
+    );
+    expect(diagnostic).toContain("Diagnostic projection — validation errors present");
+    expect(diagnostic).toMatch(/1 error and \d+ warnings/u);
+  });
+
   it("is byte-identical under reordered graph input", () => {
     const graph = foreignGraph();
     const permuted = {
@@ -634,27 +657,31 @@ describe("sdp census publication", () => {
 
     try {
       const capture = createCaptureOutput();
-      const diagnosticPages = [{ path: "index.md", content: "# Diagnostic census\n" }];
-
       expect(
         runSdpCli(["census", root], capture.output, {
-          validateGraph: () => ({
-            validatorId: "graph/report",
-            findings: [
-              {
-                validatorId: "conformance/referential-integrity",
-                family: "conformance",
-                severity: "error",
-                message: "retained-graph validation failure",
+          extract: (options) => {
+            const result = extract(options);
+            return {
+              ...result,
+              graph: {
+                ...result.graph,
+                edges: [
+                  ...result.graph.edges,
+                  {
+                    from: "spec:orders.create-order",
+                    type: "dependsOn",
+                    to: "spec:probe.missing",
+                    claim: "declared",
+                  },
+                ],
               },
-            ],
-          }),
-          renderCensus: () => diagnosticPages,
+            };
+          },
         }),
       ).toBe(1);
-      expect(capture.readStderr()).toContain("retained-graph validation failure");
-      expect(readFileSync(join(root, "generated", "census", "index.md"), "utf8")).toBe(
-        "# Diagnostic census\n",
+      expect(capture.readStderr()).toContain("spec:probe.missing");
+      expect(readFileSync(join(root, "generated", "census", "index.md"), "utf8")).toContain(
+        "Diagnostic projection — validation errors present",
       );
     } finally {
       rmSync(root, { recursive: true, force: true });

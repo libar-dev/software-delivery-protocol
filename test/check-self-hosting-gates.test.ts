@@ -76,11 +76,11 @@ afterEach(() => {
 });
 
 describe("the self-hosting records gate", () => {
-  it("discovers plan 43 as the current primary plan", () => {
-    // re-measured after plan 43's corpus commit
+  it("discovers plan 44 as the current primary plan", () => {
+    // re-measured after plan 44's record commit
     expect(currentPlan).toMatchObject({
-      number: 43,
-      name: "43-design-iteration-on-a-readable-graph.md",
+      number: 44,
+      name: "44-whole-corpus-refresh.md",
     });
   });
 

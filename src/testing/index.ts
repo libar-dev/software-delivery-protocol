@@ -33,7 +33,7 @@ export interface RunnableExampleWorld<W, C, O extends RunnableOutcome> {
 const testingComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.testing"),
   label: "Protocol testing seam",
-  satisfies: ref("spec:extraction.example-runner"),
+  satisfies: ref("spec:extraction.runnable-modules"),
   uses: [
     componentAnchorId("component:protocol.adapters"),
     componentAnchorId("component:protocol.runner"),
@@ -44,7 +44,7 @@ const testingComponentAnchor = codeAnchor({
 const exampleTestingHelpersAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.example-testing-helpers"),
   label: "adapter-lifecycle and oracle-comparison helpers for bound examples",
-  satisfies: ref("spec:extraction.example-runner"),
+  satisfies: ref("spec:extraction.runnable-modules"),
   component: componentAnchorId("component:protocol.testing"),
   role: "utility",
 });

@@ -2,7 +2,7 @@
 id: spec:validation.typed-dependency-floor.stated-readiness
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.typed-dependency-floor
   verifies: spec:validation.typed-dependency-floor

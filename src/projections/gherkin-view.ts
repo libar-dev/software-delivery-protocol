@@ -70,19 +70,22 @@ function relationTag(type: string, target: string): string {
   return `@${head}.${escapeGherkinViewText(target)}`;
 }
 
+function orderedRelations(context: SpecContext) {
+  return context.relationsOut
+    .slice()
+    .sort(
+      (left, right) =>
+        compareCodeUnits(left.type, right.type) || compareCodeUnits(left.otherId, right.otherId),
+    );
+}
+
 function identityTags(context: SpecContext): readonly string[] {
   const dottedId = context.id.startsWith("spec:") ? context.id.slice("spec:".length) : context.id;
   return [
     `@spec.${escapeGherkinViewText(dottedId)}`,
     `@altitude.${escapeGherkinViewText(context.altitude)}`,
     `@readiness.${escapeGherkinViewText(context.statedReadiness)}`,
-    ...context.relationsOut
-      .slice()
-      .sort(
-        (left, right) =>
-          compareCodeUnits(left.type, right.type) || compareCodeUnits(left.otherId, right.otherId),
-      )
-      .map((relation) => relationTag(relation.type, relation.otherId)),
+    ...orderedRelations(context).map((relation) => relationTag(relation.type, relation.otherId)),
   ];
 }
 
@@ -306,6 +309,15 @@ function renderSpecPage(context: SpecContext): GherkinViewPage {
         : [commentary(`unrecognized kind ${kind} cannot be carried honestly`)]
       : [commentary(lieReason)]),
     "",
+    ...orderedRelations(context).flatMap((relation) =>
+      relation.reason === undefined
+        ? []
+        : [
+            commentary(
+              `${relation.type} ${relation.otherId} relation reason cannot be carried honestly: ${relation.reason}`,
+            ),
+          ],
+    ),
     identityTags(context).join(" "),
     `${keyword}: ${title}`,
     ...narrativeLines(context.narrative),

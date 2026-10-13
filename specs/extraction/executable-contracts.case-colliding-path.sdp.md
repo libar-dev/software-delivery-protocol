@@ -5,7 +5,9 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:extraction.executable-contracts
-  verifies: spec:extraction.executable-contracts
+  verifies:
+    target: spec:extraction.executable-contracts
+    exercises: [caseCollision]
 ---
 # A case-only path collision withholds the whole contracts tree
 

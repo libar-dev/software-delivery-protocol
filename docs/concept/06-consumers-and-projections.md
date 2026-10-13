@@ -1,218 +1,64 @@
 # 06 — Consumers & Projections
 
-Everything human- or AI-facing is **generated from the one graph** (P1, P2, L8). The #1 consumer is **agents**; human views are second; static document exports are last. This document covers what the MVP ships — the graph plus the agent surface, the flagship Design Review, the taxonomy census, bounded Mermaid diagrams, and the Gherkin-shaped read view — and names the richer projections that are designed-for and deferred.
+Everything human- or AI-facing is **generated from the one graph** (P1, P2, L8). The law of each surface now lives in the Spec that carries it, under the concept-documents dissolution decision (`spec:decisions.concept-docs-dissolve`). Each section below keeps its pointers; §6 also keeps the one mapping no Spec carries.
 
-> Sink priority (a Representation-level stance, but a firm one): **agents first, human view second, document exports last.** The MVP optimises the sink the old framing optimised least.
-
-A **`projection`** is a pure function of the graph producing a consumer artifact: disposable, regenerable, **never a second source**. *Everything* consumer-facing is a projection.
+> Sink priority (a Representation-level stance, but a firm one): **agents first, human view second, document exports last.**
 
 ---
 
-## 1. The principle: projections are a fan-out off one model
+## 1. Projections fan out from one graph
 
-**Principle · CORE.** The graph fans out to many co-equal projections, each serving a consumer, all pure functions of the graph (`output = f(graph)`). No projection is a second source of truth; all are disposable and regenerable. *Which* projections exist is Representation; *that they are all derived from the one graph* is the principle.
-
-```
-                 ┌── agent surface (typed graph + graph.json)   (agents — the #1 sink)   ← MVP
-graph  ──fan──►  ├── Design Review + census + Mermaid + Gherkin  (humans)                 ← MVP
-                 ├── Spec Studio (rich interactive)              (stakeholders)           ← aspirational
-                 ├── LikeC4 / OpenAPI / JSON-LD exports                                   ← aspirational
-                 └── MCP surface (user-facing app integration)                            ← aspirational
-```
-
-### The surfaces & projections taxonomy
-
-The canonical set of surfaces, each a projection of the one graph:
-
-| Surface | What it is | Notes |
-|---|---|---|
-| **Design Review** | the flagship curated review: a `Spec`/`Pack` rendered *in context* — neighbors, relations, `claim`/delivery badges, auto-generated **design questions** + a **findings** table | the context in which a human decides to state `ready` (validators check only the structural floor — never a gate) |
-| **agent surface** | a **visible typed graph the agent *scripts*** via the CLI — no verb wall; the schema *is* the contract | **push** a Design-Review slice + **pull** by scripting the graph |
-| **reader** | the thin typed loader: joins + `claim`/taxonomy decode done **once**, returns composable data; persists nothing | a front door, not a store |
-| **census projection** | complete runtime taxonomy, readiness divergence, structural bindings, and validation findings | shipped, generated at `generated/census/` |
-| **Mermaid projection** | bounded one-hop Spec and Pack diagrams | shipped, generated at `generated/mermaid/` |
-| **Gherkin-shaped read projection** | visibly lossy `.feature.md` reading shape for every Spec kind | shipped, generated at `generated/gherkin/`; never a carrier |
-| **reference projection** | interface / API reference, kept current | live |
-| **context bundle** | a token-budgeted curated slice pushed to an agent | |
-| **MCP surface** | integration for user-facing apps — designed-in, **deferred build**, shape TBD | distinct from the agent surface (agents *script*; apps *integrate*) |
-| **impact graph** | the exhaustive import/symbol structure for blast-radius / find-all-usages | divergence from the curated graph is **curation, not drift** |
+- **The projection law** — `spec:consumers.projections-model`: a projection is a pure, disposable, regenerable function of the graph and never a second source of truth. The same Spec defines the curated graph, the reader and curation.
+- **The shipped projections stay frozen** (MD-32) — `spec:decisions.shipped-projections-frozen`: the Design Review (`spec:consumers.design-review`), the census (`spec:consumers.census-page`), the Mermaid diagrams (`spec:consumers.mermaid-view`) and the Gherkin-shaped read view (`spec:consumers.gherkin-view`).
+- **Surfaces designed and not built** — the Spec Studio, a workbench ruled to render derived HTML (MD-41) from custom elements (MD-42) and designed in `pack:spec-studio-v1`, with per-pull-request previews in `spec:consumers.spec-studio.sharing`; the reference projection, captured at `idea` (`spec:consumers.reference-projection`); and the MCP surface for user-facing apps (`spec:decisions.mcp-deferred`).
 
 ---
 
 ## 2. The two surfaces — curated graph vs impact graph
 
-**Principle · CORE.** There are two graph surfaces that answer *different questions*. They are not truth-vs-approximation; conflating them is a category error.
-
-| | **Curated graph** | **Impact graph** |
-|---|---|---|
-| answers | "what *is* the architecture" | "what could break / where is this used at all" |
-| virtue | **editorial sparsity** (human judgment) | **exhaustiveness** (derived) |
-| source | authored specs + anchors (declared / anchored) | code structure — imports, symbols, calls (inferred) |
-| authored by | a human, deliberately | derived on demand, never curated |
-| feeds | the view, AI context, exports | impact / blast-radius / find-all-usages / curation assist |
-| relation to a language server | **is the differentiator** | **is the language server** |
-
-This is the `claim` taxonomy (P9) elevated to two consumable surfaces: the curated graph is the `declared` + `anchored` layers; the impact graph is the `inferred` layer.
-
-**Does this violate "no second graph, ever"? No.** The curated graph *is* the read model. The impact graph is a *separate derived structure* — regenerable from code, never authored, never authoritative (P10) — not a competing source of truth. Both are pure functions of the repo, and the **reader** over both authors and persists nothing — a front door, not a store.
-
-### The correction that defines this model (do not regress)
-
-**Do not derive the architecture from code.** Architectural significance is an editorial judgment no import graph can produce. So:
-
-- The divergence between the curated graph and the impact graph is **curation, not drift.** A curated graph that selects architectural significance from the mechanical firehose is *correct by design*.
-- Never "densify" the curated graph by inferring edges from imports — that just rebuilds the language server and throws away the curation.
-- The impact graph has exactly one firehose job (impact / re-test scope) plus two *assist* roles that never overwrite the curated layer: **propose candidates** (e.g. high-fan-in modules with no node) and **flag unambiguous drift** (a `satisfies` target whose source file was deleted) — narrow, honest signals only.
-
-> MVP boundary (decided, not a sequencing call): the curated surface is MVP, and so is **file-level** impact — `git diff` → `byFile` → a curated-graph walk of `refines`/`dependsOn`/`satisfies`/`verifies` yields changeset blast-radius **without a symbol index**. The **exhaustive** impact graph — symbol-level identity, `bySymbol`, cross-package find-all-usages — is the `inferred` surface and stays **aspirational** (the glossary's *impact graph* entry). So MVP impact rides the curated graph + file-level reach; symbol-level reach is deferred. This is a boundary on the impact graph's *depth*, not a reopening of the two-surface model. Because it rides anchors + curated edges, it answers *which anchored specs a changeset touches*: **a changed file with no anchor maps to no spec and is surfaced as an explicit `coverage-unknown` item, never silently dropped** — file-level reach can under-report for shared or unanchored code, and the answer says so rather than implying a complete reach set.
+- **The principle** — P10's two-surface corollary in `01`: the inferred layer serves impact and curation assist and never derives or densifies the authored architecture.
+- **Mechanical structure stays inferred and apart** — `spec:consumers.impact-graph`: no curated edge, binding or delivery fact derives from it, and the divergence between the two surfaces is curation, not drift (`spec:consumers.projections-model`).
+- **File-level curation advice** — `spec:consumers.impact-graph.curation-assist`: file-level imports show uncovered load-bearing files and disagreements between anchored `uses` and the code's imports, as advice that authors nothing.
+- **Exhaustive symbol reach** — `spec:consumers.impact-graph.symbol-reach`: deferred until a language-neutral symbol identity exists.
+- **Changeset blast radius** — `spec:consumers.reader`: file-level reach over the curated graph that names every changed file the graph records nothing at as `coverage-unknown`.
 
 ---
 
 ## 3. The agent surface — a typed graph the agent scripts
 
-**Principle · CORE.** Structured graph context beats raw text for AI; the Protocol is a *producer* of structured context, not just another consumer. This is a genuine differentiator and it is a principle.
-
-The agent-surface decision (D5) settled *how* to expose it. The **agent surface** is a **visible, self-describing typed graph the agent *scripts*** via the CLI — deliberately **neither** of two failure modes:
-
-- **not a 30-verb API** — that hides the shapes and rebuilds the pipeline we are deleting;
-- **not raw-JSON-you-rejoin** — that makes every agent re-derive the same joins and decode the same taxonomy quirks.
-
-**The schema file is the contract:** read it, then script freely. **Under-typing a shape hides a capability** — an agent reading the contract cannot use a field that isn't typed. There is no verb wall. The harness **pushes** a Design-Review slice for the task (D4); the agent **pulls** the long tail by scripting the graph (D5). **The coding agent never goes through MCP** — MCP is the *user-facing-app* integration surface (§7), a different consumer.
-
-**The front door — two entrances, one seam.** The package exports the reader constructor, and the CLI carries `sdp q`: one evaluation sink that derives the graph in process, injects that same reader plus the raw graph and the validation report, and prints what the supplied body returns (the agent front door, `spec:decisions.agent-front-door`). A single sink is the *anti*-verb-wall — it adds no query vocabulary, so the schema stays the contract and the body does the composing. Derivation runs per invocation, so a just-authored Spec is queryable immediately and no committed artifact answers in the graph's name; the sink never re-parses carriers and never writes. It evaluates local operator-supplied code with the trust stance of any local developer tool — no sandbox is claimed.
-
-**The demand map and the recipe valve.** An agent arrives holding a **string**, a **file**, or a **changeset** — not the Spec id it is looking for — which is why the frozen adapters below are exactly those three entries (`bySymbol`, the fourth, stays named-and-deferred). Everything past them is a **recipe**, not a verb: runnable bodies catalogued at `docs/agent-surface/recipes.md`, each checked to run as written. That catalog is the release valve that keeps the frozen surface small — a question the recipes already answer is never a reason to mint a verb.
-
-### The reader — the thin typed loader
-
-The **`reader`** is the *component* behind the surface: joins and `claim`/taxonomy-decode are done **once at construction**; accessors return plain, composable data; it persists nothing and is rebuilt fresh each load (a front door, not a store). *Needs drive the surface, not storage.*
-
-**Freeze only** the small irreducible set — a *universal bridge* or an *irreducible cross-source join* — the things an agent hand-rolling would get wrong:
-
-- **Entry adapters** — the grep→graph bridge. Real work starts from a **string** ("rate limiter"), a **file** (`src/...`), or a **changeset** (`git diff`); the graph is keyed by name. `findByConcept(str)` and `byFile(path)` bridge from what-the-agent-has to what-the-graph-knows and are **MVP** (both resolve off the curated graph + anchors, no symbol index). `bySymbol(sym)` is the same shape but resolves through the **exhaustive impact graph**, so it is frozen-in-*shape* yet **aspirational** in build (§2 boundary; the glossary's *impact graph* entry). *(grep is an entry-point problem, not a context problem.)*
-- **Blast-radius** over a changeset (impact + at-risk specs). The **file-level** form (`git diff` → `byFile` → curated-graph walk) is **MVP**; **symbol-level** exhaustive reach rides the aspirational impact graph. The MVP form **reports uncovered (unanchored) changed files explicitly** (a `coverage-unknown` signal) — honest coverage, never a silently-small answer (§2).
-- **Irreducible joins** — e.g. the multi-hop `spec → satisfies → … → invariants/scenarios` bridge with maturity/`claim` decode. Freeze because it is a true cross-source join, not a thin walk.
-
-Everything else (single-field traversals, group-bys, the maturity ladder) stays a script. The discriminator is not "is it a traversal" but **"would an agent hand-rolling this get it wrong?"** Freeze a typed contract only when a **second machine consumer** appears — **the second-caller bar** (the name `00` §4 and `07` cite; §4 below applies it to writes).
-
-> Context efficiency is a measured win, not a hope (the measured evidence, `DECISIONS.md`): keeping the data in-process and returning only conclusions runs a multi-probe agent session at a measured fraction of the tokens of a grep/verb-API equivalent. Freezing answers is expensive both as bytes on disk and as tokens in context.
-
-**Aspirational (named, deferred):** `bySymbol` and symbol-level / cross-package reach (they ride the exhaustive impact graph — §2 boundary); token-budgeted self-contained slices (`per-pack`, `change-impact-<id>`); the **MCP surface** (§7) exposing a read-only window; GraphRAG retrieval for very large graphs. All stay inside the read-only gate (§4).
+- **The surface** — `spec:consumers.agent-surface` and the agents-script-the-graph decision (D5, `spec:decisions.agent-surface-scripts-graph`): a visible typed graph is the contract, agents arrive holding a string, a file or a changeset, and the surface grows by recipe, freezing a join into the reader only at the second-caller bar. `bySymbol` would resolve through symbol reach, whose identity is still open (`spec:consumers.impact-graph.symbol-reach`).
+- **The reader** — `spec:consumers.reader`: the thin typed loader that decodes joins and claims once and persists nothing.
+- **The front door** (MD-22) — `spec:decisions.agent-front-door`: the package exports the reader, and the CLI's one evaluation sink, `sdp q`, injects that same reader plus the raw graph, the validation report and the caller's `params`.
+- **Recipes** — `spec:consumers.agent-surface.register-recipes` and the catalog at `docs/agent-surface/recipes.md`, each body executed as written.
+- **Context bundles** — `spec:consumers.context-bundle`: the reading material for one design pass, composed per invocation within a stated budget.
 
 ---
 
 ## 4. The edit model — intent composition, not patching
 
-**Principle · CORE.** A view never writes to canonical source. Its write-affordance is **composing intent**, not mutating state. There is no structured-patch subsystem, no speculative apply, no codemod-from-view.
-
-The loop — **intent → agent → git → conformance checks**:
-
-```
-human explores in the view
-   │  selects scope (parent / siblings / slice / open-questions), writes intent
-   ▼
-view composes scoped, token-budgeted intent              ← the only thing the view produces
-   │  handed to an AI agent (CLI)
-   ▼
-agent edits the source (spec files + code)               ← identical to a human editing source
-   ▼
-git records it · conformance + honesty checks are the gate ← the same gate every edit passes
-```
-
-Two locked terms name the affordance:
-
-- **intent composition** — the write-affordance: compose **scoped intent**, hand it to an agent that edits source exactly as a human would; git records it; conformance checks (`spec:validation.two-check-families`) gate. The view is a process-orchestrator, not an editor.
-- **scoped intent** — *what* is composed: an explicit change bounded by a `Spec` / its neighbors / a `Pack` / open questions.
-
-Why patching dissolves:
-
-- The editor is an **agent editing source**, identical in kind to a human editing source. There is no "derived layer writing back to canonical."
-- Every edit is an ordinary commit; **conformance + honesty checks are the gate**. A speculative in-memory patch-check adds nothing they do not already do.
-- Lifecycle operations — split, combine, refine, delete — are **plain git + edit** (`git mv`, edit in place, `git rm`), no tooling required. Maturity/readiness signals are **computed**, not stored.
-- A structured edit *contract* would be justified only when a **second machine writer** appears (the second-caller bar applied to writes). Not in the MVP; possibly never.
+- **The loop** — `spec:consumers.edit-model`: a view composes scoped intent, an agent edits source as a human would, git records the edit, and the conformance and honesty checks evaluate it. Lifecycle changes are ordinary source and git edits. A speculative check of an in-memory patch adds nothing to the conformance and honesty checks that evaluate every ordinary source edit.
+- **The hand-off** — `spec:consumers.intent-composition` and `spec:consumers.intent-composition.proposal`: a change proposal is the one structured hand-off, a reviewable request an agent applies as an ordinary source edit. It is not an automated patch writer, and no tool rewrites a carrier from it.
 
 ---
 
 ## 5. Design Review — the flagship human projection
 
-**Principle · CORE (concept).** The flagship curated surface is the **Design Review**: a `Spec` (or a `Pack`) rendered **in context** — its neighbors, relations, `claim`/delivery badges, auto-generated **design questions** (from blocking open questions + `gap`s), and a **findings** table. It adopts the recognized SDLC noun.
-
-- It is the context in which a human **decides** to state `ready`: a spec is reviewed *in context* (alone and in its related set / `Pack`), and stating `ready` is the human's call coming out of that review. The review is **never an automated gate** — validators check only the structural **readiness floor** (`spec:validation.readiness-floor`); they do not adjudicate the review or state `ready` on the author's behalf. This keeps the honesty guardrail from `00` and `spec:validation.two-check-families` (checks police conformance & honesty, never workflow) intact (`spec:model.core-model`). So `ready` is an **authored `declared` statement** — its *checkable* content is the floor; that a review actually happened is **not a fact the graph records**, so where review evidence matters it rides **git** (authorship, commit, the baseline tag — `spec:extraction.derive-graph`), never an authored approval primitive.
-- It is a **pure projection** — findings resolve through the edit loop (§4); there is **no stored `Finding` type**, no second store.
-- *Concept is core; rich diagrams grow later* — the MVP renders the relationship slice; heatmaps and interactive trees are aspirational (Spec Studio, §8).
-
-### The flagship MVP human view (read-only)
-
-The flagship human view is the Design Review's relationship slice: a derived, regenerable human-readable projection — **fully derived** and reproducible (delete and rebuild identically). Per spec it shows: header (title, `kind`, `altitude`, `readiness`, and any stated-vs-derived divergence); intent and behaviour (rules/examples); relations; bindings (implementing code, tests, with source links, derived from anchors); verification status (does a linked, enabled verifier *exist* — the `has-verifier` delivery fact, not run results); an impact list; and `claim` cues (declared vs anchored vs inferred shown distinguishably, P9). The census, Mermaid, and Gherkin-shaped read projections are co-equal derived views with narrower jobs; none re-specifies the Design Review.
-
-Owned prose is already available through the graph and Reader: `narrative` appears in a spec summary/context and concept search, while section descriptions remain in `SpecContext.sections` and are searchable. Design Review now renders `Spec.narrative` and the seven approved section descriptions from those Reader/graph values (schema `0.9.0`), with no source reparse and stable omission when prose is absent.
-
-Schema `0.6.0` changes accepted ids by reserving the `#` sub-part for an entry address and changes ordering semantics by preserving authored key order in `design`, `ui`, and `model.terms`, with a `design` or `ui` section's `description` first. Field shapes are unchanged.
-
-Schema `0.7.0` adds a Pack node's ordered `members` list and an open question's optional `key`, and admits `question` as an entry-address section. Node and edge order are unchanged.
-
-Schema `0.8.0` adds the anchored `references` edge, one `satisfies` or `verifies` edge per target, and a code unit's optional `role`, `layer`, and `context`.
-
-**Form is a Representation — settled for the MVP: generated Markdown.** An index plus one page per `Spec` and per `Pack` under `generated/design-review/` (`sdp view`), rewritten wholesale each run so no stale page survives; byte-exact regeneration is the same determinism discipline as the graph. The dev-mode and CI surfaces are the *same* generated artifact (no drift-prone "dev view"). The rich interactive **Spec Studio**, and HTML-over-Markdown as a product thesis, are aspirational (§8).
+- **The review** — `spec:consumers.design-review`: a Spec or a Pack rendered in context, the context in which a human decides to state `ready`; validators check only the structural floor, and the review is never a gate or a recorded fact.
+- **What a page shows** — derived readiness beside the stated rung (`spec:consumers.derived-readiness-banner`), binding language instead of delivery-fact names (`spec:consumers.binding-language-views`), and the Pack's design on its Pack page (the Pack design page, MD-39, `spec:consumers.design-review.pack-design-page`).
+- **How it is written** — `spec:consumers.wholesale-view-rewrite`: generated Markdown, rewritten wholesale on each run. The Spec Studio renders derived HTML beside it (the Studio renders derived HTML, MD-41).
 
 ---
 
 ## 6. Delivery-process execution — projections & vocabulary, not gates
 
-**Principle · CORE (vocabulary) / ASPIRATIONAL (most projections).** The Protocol adopts the established delivery-process nouns from the industry — but realizes them, where realized at all, as **projections or descriptive vocabulary** over the one graph, **never** as gates, FSM states, or mandatory sequences.
+The Protocol adopts the established delivery nouns and rejects the process gates (adopt the nouns, reject the gates, MD-2, `spec:decisions.adopt-the-nouns`). Discipline is a filter by kind or section (`spec:consumers.projections-model`); release, baseline, phase, iteration and milestone are optional roadmap views, deferred until a reader needs them (`spec:consumers.projections-model.roadmap-views`).
 
-| Term | How it lands in the Protocol |
-|---|---|
-| **discipline** | a **lens / projection** — filter or group `Spec`s by `kind` or section ("show me the Requirements discipline" = the `behavior` `Spec`s + the Capability Map projection). Not a phase you pass through. **Realized** — as a trivial filter off the existing graph, with **no dedicated MVP slice or machinery**. |
-| **release** | a **tagged set** surfaced as a projection (backed by a git tag). **Realized** — as a trivial git-tag projection, **no dedicated MVP slice or machinery**. |
-| **baseline** | a **named approved snapshot** (≈ a git tag over a set of `ready` `Spec`s); the **git tag is the approval artifact** (a signed tag carries approver + approved-at), so the approval record is **git-native**, not an authored fact. Vocabulary + optional projection. **Realized** — as a trivial git-tag projection, **no dedicated MVP slice or machinery**. |
-| **phase / iteration / milestone** | **descriptive vocabulary** with optional roadmap / now-next-later projections. Never a gate or enforced sequence. |
+How the classic disciplines map onto the one graph, as filters rather than phases:
 
-The **discipline ≈ kind/section mapping** (how the Protocol supports the disciplines-and-phases picture without its gates):
-
-- **Requirements** → `behavior` `Spec`s (+ the Capability Map projection)
+- **Requirements** → `behavior` Specs (+ a designed-for, unbuilt Capability Map projection)
 - **Analysis & Design** → `design` sections + Decision Records
-- **Test** → `example` `Spec`s + `verifies` relations
-- **Deployment** → `observed` / evidence nodes
+- **Test** → `example` Specs + `verifies` relations
+- **Deployment** → the `observed` delivery fact, aspirational (`spec:observation.runtime-overlay`)
 - **Config & Change Management** → git (the source of truth)
-- **Project Management** → `Pack`s + roadmap projections
-- **Business Modeling** → `model` `Spec`s
-
-The Protocol imposes no particular delivery style (iterative or sequential), and none of these terms is ever modeled as an additional authored truth-primitive, relation, or validator.
-
-A classic disciplines × phases × iterations distribution chart becomes a **Mermaid / analytical projection** — a view of how authored and derived activity distributes across the graph, never a plan the system enforces. This is what lets `00`'s non-goal be honest: the Protocol *adopts the delivery nouns as projections* and *rejects only the gating FSM/sprint-state*.
-
----
-
-## 7. The MCP surface — designed-in, deferred build
-
-**Principle · ASPIRATIONAL.** The **MCP surface** is the integration surface for **user-facing apps** — *one more projection of the one read model*. It is **distinct from the agent surface**: agents *script* the typed graph (§3); apps *integrate* through MCP. The coding agent never goes through it.
-
-It is **designed-in but its build is deferred**, and its concrete shape is a **fresh design** — not specified here, and **not carried over from any prior implementation**. Like every surface it stays inside the read-only gate (§4): producing context never gives a direct write path to canonical source.
-
----
-
-## 8. Aspirational projections (named, deferred)
-
-Real, designed-for, out of the MVP — each a generator/subsystem with its own surface area, none required to prove that views are pure functions of the graph.
-
-| Projection | What it is | Why deferred |
-|---|---|---|
-| **Spec Studio** | rich interactive HTML workbench (tabs, trees, diagrams, heatmaps, scoped intent composition) | The stakeholder-facing surface + HTML-over-Markdown thesis; large UI. One read-only view proves derivation. |
-| **Contract / model exports** | OpenAPI 3.1 / AsyncAPI, LikeC4 models, JSON-LD + PROV-O, SHACL | Format-fidelity generators; the "membrane" posture, not the core loop. |
-| **MCP surface / AI slices** | token-budgeted slices, the read-only **MCP surface** (§7), GraphRAG | The agent surface + graph JSON is sufficient structured context at MVP scale (§3). |
-| **Per-PR hosted preview** | publish the view per-PR for stakeholder review | Collaboration mechanic; depends on the richer view. |
-
-There is **no patch-back loop** (§4). The aspirational write surface is a richer *intent-composition* UI, never a patch format.
-
----
-
-## 9. Interop posture (aspirational): the membrane, not a replacement
-
-**Principle · ASPIRATIONAL.** Long-term, the Protocol layers *with* the ecosystem: it ingests adjacent tools' outputs (dependency graphs, ADR markdown, later runtime telemetry) and emits into their formats (OpenAPI, LikeC4, JSON-LD). It links the issue tracker, the design tool, LikeC4, and OpenAPI rather than replacing them. None of it is in the MVP, which ingests only specs, anchors, and basic structural facts, and emits the graph (agent surface + JSON) and the Design Review / one view.
-
----
-
-## 10. What the MVP consumer story proves
-
-With the agent surface + graph JSON + the shipped projection family, an agent reads structured context (and scripts the rest) at a measured fraction of the token cost of grep; a human selects a derived view for contextual review, taxonomy, topology, or Gherkin-shaped reading — all regenerable; and edits flow as *intent → agent → git → conformance checks*, with no patch subsystem. That proves the founding principle's consumer half — *views are lenses; the repo is the truth; the agent is the editor* — without any aspirational surface area.
+- **Project Management** → Packs (+ the deferred roadmap views)
+- **Business Modeling** → `model` Specs

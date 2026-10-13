@@ -39,10 +39,17 @@ export const carrierSpecs = [
       behavior: {
         rules: [
           "One `.sdp.gherkin` file carries exactly one behavior Spec as its Feature and zero or more example Specs as ordinary Scenarios, with one canonical carrier surface per Spec ID.",
-          "Feature and ordinary Scenario tags carry exactly one identity, altitude, and readiness; kind is structural (Feature → behavior, Scenario → example), Pack membership stays manifest-owned, and authored delivery facts, claims, lifecycle state, and workflow status are refused.",
-          "Gherkin is an honest canonical per-ID option only for `behavior` and `example`; the other six kinds stay Markdown because a Gherkin mapping would lie — `workflow` has no distinct Gherkin root and Feature mapping erases the kind; `rule` collides with `Rule:` already consumed as inline `behavior.rules`; `constraint` needs machine-readable targets a Scenario cannot own; `model` needs keyed terms; `decision` needs context/decision/rationale/consequences (and supersedes) that Feature structure cannot distinguish; `contract` shares the behavior family row today but Feature cannot structurally mark the kind.",
-          "The closed relation tags map one-for-one to declared `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, and `verifies` relations, while an ordinary Scenario defaults `refines` and `verifies` to its Feature unless that relation type is explicit, and `@exercises.<key>` on an ordinary Scenario names a rule key of the Spec it verifies.",
-          "Closed keyed description bullets populate existing intent and verification fields; remaining non-heading prose belongs to narrative on the typed Spec owner; unknown keys and heading-shaped lines are refused at their exact physical source line despite blanks and comments; no Gherkin form is invented for open questions, their fields, or a relation reason; Feature and Scenario description prose is lawful only as free prose on MD-19's existing owners and never as a new field or a parser-within-a-parser.",
+          "A `.sdp.gherkin` file uses Gherkin's English dialect, by default or under `# language: en`; any other `# language:` header refuses the file at that line with `extract/gherkin-grammar`.",
+          "A Feature and each ordinary Scenario carry exactly one `@spec.<dotted-id>` tag, with the Spec id's `spec:` prefix omitted, one `@altitude.<value>` tag taking `epic`, `feature` or `story`, and one `@readiness.<value>` tag taking `idea`, `scoped`, `defined` or `ready`.",
+          "Kind is structural: a Feature carries a `behavior` Spec and an ordinary Scenario carries an `example` Spec; Pack membership stays manifest-owned.",
+          "A `.sdp.gherkin` carrier holds only `behavior` and `example` Specs; the Markdown and TypeScript carriers remain lawful for the other kinds, under `spec:decisions.carrier-universality`.",
+          "A relation tag is a head, a dot and a full Spec id, as in `@depends-on.spec:carrier.slot-notation`, and the heads `@refines.`, `@depends-on.`, `@constrained-by.`, `@decided-by.` and `@verifies.` declare `refines`, `dependsOn`, `constrainedBy`, `decidedBy` and `verifies`; an ordinary Scenario defaults `refines` and `verifies` to its Feature unless it explicitly declares that relation type.",
+          "`@exercises.<key>` on an ordinary Scenario names a rule key of the Spec it verifies, and it and a Rule title key follow `spec:model.rule-keys`; `@kind.`, `@pack`, `@pack.` and `@supersedes.` are refused.",
+          "A tag whose head, compared case-insensitively, is `implemented`, `has-verifier`, `hasVerifier`, `observed`, `claim`, `status`, `lifecycle`, `workflow` or `architect`, followed by the end of the tag, `.` or `-`, is refused, so the carrier authors no delivery fact, claim, lifecycle state or workflow status.",
+          "A tag whose head has a unique nearest reserved head, within one edit of a reserved head of at most five letters or two edits of a longer one, is refused, and the refusal suggests that head only when its suggested form is lawful; every other tag, `@wip` included, is decoration and authors no graph state.",
+          "A keyed Feature or ordinary Scenario description line has the form `- <key>: <value>` with a nonempty value; `actor`, `problem`, `outcome`, `value` and `description` occur at most once and populate Intent, `risk` and `assumption` repeat in Intent, `criterion` repeats in Verification, and `verification-mode` occurs at most once with `manual`, `reviewed`, `contract` or `executable`.",
+          "An unknown description key or a heading-shaped description line is refused at its physical source line, despite blanks and comments; remaining non-heading prose is narrative, lawful only as free prose on the typed prose owners named by the prose-ownership decision, `spec:decisions.prose-ownership`, and never a new field or a parser within a parser.",
+          "The carrier has no form for open questions, their fields, or a relation reason; a Spec that needs one is authored in Markdown.",
           "Trailing title-only Rule blocks populate behavior rules in source order, and a Rule title may open with a rule key marker, `[#key]` and a space; a Rule carrying tags, description, or positionally nested children is refused.",
           "At most one `@example-space` pseudo-scenario supplies the parent vocabulary without producing a Spec node, while each ordinary Scenario supplies exactly one bound example point.",
           "An ordinary Scenario and an `@example-space` pseudo-scenario must each carry at least one step; a step-less Scenario is refused at its Scenario line without inventing a complete-GWT rule.",
@@ -50,8 +57,8 @@ export const carrierSpecs = [
           "Independent semantic Gherkin findings accumulate in physical source order up to a hard cap of 100; any semantic finding excludes the entire invalid carrier from the graph while healthy sibling files survive.",
           "Gherkin is a canonical authoring carrier rather than a Cucumber execution path; generated contracts and resolving code-side anchors remain the execution and delivery-fact boundary.",
           "Markdown remains the default Spec carrier; a default flip to Gherkin is refused before full honest round-trip exists.",
-          "Packs stay under MD-25; this carrier neither admits a Gherkin Pack surface nor reopens the Pack Markdown envelope.",
-          "Universality is a generated Gherkin-shaped READ projection of any Spec, never an authored `.sdp.gherkin` in an authored tree and never round-trip parity.",
+          "Packs follow the Pack syntax ruling, `spec:decisions.pack-markdown-carrier`; this carrier neither admits a Gherkin Pack surface nor reopens the Pack Markdown envelope.",
+          "Universality is a generated Gherkin-shaped read projection of any Spec, never an authored `.sdp.gherkin` in an authored tree and never round-trip parity.",
         ],
         exampleSpace: {
           given: ["the Gherkin fixture corpus {probe:string}"],
@@ -60,6 +67,7 @@ export const carrierSpecs = [
             "extraction reports {findingCount:number} findings",
             "validation reports {findingCount:number} findings",
             "the first finding is {findingId:string} at line {line:number}",
+            "the first finding message contains {messageText:string}",
             "the report contains finding {findingId:string}",
             "the graph contains exactly {specCount:number} Specs",
             'the graph contains the Spec {specId:string} with kind {specKind:"behavior"|"example"}',
@@ -73,6 +81,17 @@ export const carrierSpecs = [
             "the contracts for {parityLeft:string} equal the contracts for {parityRight:string}",
           ],
         },
+        ruleKeys: {
+          identityTags: "rules[2]",
+          kindBound: "rules[4]",
+          relationTags: "rules[5]",
+          decorationTags: "rules[8]",
+          descriptionKeys: "rules[9]",
+        },
+      },
+      design: {
+        reservedTagHeads:
+          "the reserved heads are `spec`, `altitude`, `readiness`, `refines`, `depends-on`, `constrained-by`, `decided-by`, `verifies`, `exercises`, `kind`, `pack`, `supersedes` and `example-space`; the near-miss refusal measures a tag head against them.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -291,7 +310,7 @@ export const carrierSpecs = [
     altitude: "story",
     readiness: "ready",
     file: "specs/carrier/gherkin-authoring.unbound-ready-refused.sdp.md",
-    title: "A ready example with an unbound used slot is refused",
+    title: "A Gherkin example with an unbound used slot fails its stated readiness floor",
     narrative: null,
     sections: {
       behavior: {
@@ -309,7 +328,7 @@ export const carrierSpecs = [
       },
       intent: {
         outcome:
-          "Prove Gherkin-authored examples share the existing readiness floor and concreteness law without carrier exceptions.",
+          "Execute the readiness floor on a Gherkin-carried example whose used step leaves a slot unbound.",
       },
     },
     deliveryFacts: ["has-verifier"],
@@ -331,6 +350,7 @@ export const carrierSpecs = [
             then: [
               "extraction reports {findingCount: 1} findings",
               'the first finding is {findingId: "extract/gherkin-grammar"} at line {line: 1}',
+              'the first finding message contains {messageText: "did you mean"}',
               'the graph omits the Spec {absentId: "spec:fixture.unknown-tag"}',
             ],
           },
@@ -478,11 +498,12 @@ export const carrierSpecs = [
         rules: [
           "A Markdown Spec declares id, kind, altitude, readiness, and relations in bounded YAML frontmatter; its first H1 declares title.",
           "The envelope key set is closed and every one of its five keys is required: a key outside the set is refused rather than absorbed, and a missing key refuses the document rather than being defaulted.",
-          "Each relation type takes one target or a list. A target is a Spec id or an object with a required `target` and an optional one-line `reason`, and a declared `verifies` object may also carry `exercises`, the rule keys the rule-keys Spec defines. Plain ids and objects mix in one list, and any other object key is refused.",
+          "Each relation type takes one target or a list; its target forms follow `spec:model.relation-reasons`, and an example's declared `verifies` may carry `exercises` under `spec:model.rule-keys`.",
           "`relations: {}` is written explicitly when the logical relation set is empty — honest carrier syntax, not a new logical requirement: the physical key catches a truncated envelope at reification while the model itself stays relation-optional.",
-          "A derived name is never authorable in the envelope: a delivery-fact or graph-shape key is refused under its own finding class, because delivery facts are derived and never authored.",
+          "A derived name is never authorable in the envelope: a delivery-fact or graph-field key (`implemented`, `has-verifier`, `hasVerifier`, `observed`, `claim`, `deliveryFacts`, `nodeType`, `specKind`, `satisfies`, `verifies`, `belongsTo` or `models`) is refused as `extract/reserved-property`, because delivery facts are derived and never authored; `title` is refused as `extract/invalid-frontmatter`, and any other unknown envelope key as `extract/unrecognized-property`.",
           "The Protocol owns the envelope grammar and the parser policy while the pinned YAML library stays a swappable representation behind that contract, so an unsupported YAML construct is refused within explicit byte bounds on the carrier and its frontmatter rather than silently becoming carrier semantics.",
-          "The realizing entrypoints are `readMarkdownEnvelope` in `src/extract/markdown-envelope.ts` and `parseMarkdownFrontmatter` in `src/extract/markdown-frontmatter.ts`.",
+          "The bounds are 256 KiB per carrier, 32 KiB of frontmatter, 16 KiB per scalar, 2,000 YAML nodes, and a nesting depth of 16; YAML anchor (`&name`) and alias (`*name`) syntax and explicit YAML tags (`!tag`) are refused at any size.",
+          "The frontmatter opens at byte zero with an exact `---` line and closes at the next exact `---` line; a byte-order mark, a `...` line in the frontmatter, a further exact `---` line in the body, a lone CR, or mixed LF and CRLF newlines refuses the carrier.",
         ],
       },
     },
@@ -494,7 +515,7 @@ export const carrierSpecs = [
     altitude: "feature",
     readiness: "ready",
     file: "specs/carrier/markdown-pack-authoring.sdp.md",
-    title: "Packs may gain a Markdown authoring carrier",
+    title: "A Pack has a Markdown manifest carrier",
     narrative: null,
     sections: {
       intent: {
@@ -503,8 +524,8 @@ export const carrierSpecs = [
       },
       behavior: {
         rules: [
-          "Routing is by envelope id namespace: `pack:` reifies as a Pack manifest; `spec:` keeps the Spec path; any other namespace keeps the existing invalid-id refusal.",
-          "The pack envelope is closed to exactly `id` (required, `pack:` namespace), `specs` (required YAML list of `spec:` ids, manifest order; may be empty), and `modelRefs` (optional YAML list of `spec:` ids). A derived-name key is refused as `extract/reserved-property`. Any other key — including the Spec-only keys `kind`, `altitude`, `readiness`, `relations`, `title` — refuses with `extract/unrecognized-property`. Symmetrically, `specs` or `modelRefs` on a `spec:` carrier refuse the same way.",
+          "Routing is by envelope id namespace: `pack:` reifies as a Pack manifest; `spec:` keeps the Spec path; any other namespace is refused as `extract/invalid-id`.",
+          "The pack envelope is closed to exactly `id` (required, `pack:` namespace), `specs` (required YAML list of `spec:` ids, manifest order; may be empty), and `modelRefs` (optional YAML list of `spec:` ids). A derived-name key is refused as `extract/reserved-property`. Any other key — including the Spec envelope keys `kind`, `altitude`, `readiness` and `relations`, and `title` — refuses with `extract/unrecognized-property`. Symmetrically, `specs` or `modelRefs` on a `spec:` carrier refuse the same way.",
           "The body H1 is the Pack title. All remaining body prose is the framing, owned by the Pack node. Any `##` section heading refuses with `extract/unrecognized-heading` — a Pack has no section tier.",
           "A Markdown manifest and a TypeScript manifest of the same Pack derive the identical Pack node (the `file` field aside) and identical `belongsTo` edges. The same id authored in both carriers is the standing duplicate-id refusal.",
           "The TypeScript `pack()` builder stays a lawful per-ID option and the import source; `sdp import` remains Spec-only and does not convert pack manifests.",
@@ -515,21 +536,9 @@ export const carrierSpecs = [
           then: [
             "the graph holds the pack {packId:string} whose membership names {memberId:string}",
             "the report names the refusal {findingId:string} and the graph holds no pack node",
+            "the Markdown and TypeScript Pack nodes are equal apart from carrier file paths, and their membership edges are equal: {equal:boolean}",
           ],
         },
-      },
-      design: {
-        description: "The implementing Design: one envelope, one walk, one Pack node.",
-        envelopeSketch:
-          "Frontmatter closed to `id` · `specs` · `modelRefs`; H1 owns the title; remaining paragraphs normalize to framing the same way a Spec narrative slot does.",
-        routingRule:
-          "After the bounded frontmatter parse, the envelope id namespace selects the carrier class. `pack:` never asks for `kind`.",
-        refusalSet:
-          "Unrecognized keys share `extract/unrecognized-property` across both carrier classes. A Pack `##` heading shares `extract/unrecognized-heading` with an unrecognized Spec heading. Wrong-namespace `id` or membership entries reuse the existing id-grammar refusal.",
-        rejectedSuffix:
-          "A distinct `.pack.md` suffix would invent a second discovery walk the carrier ruling never chose.",
-        rejectedBodyList:
-          "Membership as a body list would give Packs a section tier and split identity between envelope and prose.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -538,7 +547,7 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-pack-authoring.markdown-ts-parity",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-pack-authoring.markdown-ts-parity.sdp.md",
     title: "A Markdown Pack twin matches its TypeScript manifest",
     narrative: null,
@@ -556,6 +565,7 @@ export const carrierSpecs = [
             when: ["the extractor derives the graph"],
             then: [
               'the graph holds the pack {packId: "pack:probe.parity"} whose membership names {memberId: "spec:probe.member"}',
+              "the Markdown and TypeScript Pack nodes are equal apart from carrier file paths, and their membership edges are equal: {equal: true}",
             ],
           },
         ],
@@ -567,7 +577,7 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-pack-authoring.spec-envelope-refused",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-pack-authoring.spec-envelope-refused.sdp.md",
     title: "A Spec key on a Pack envelope is refused",
     narrative: null,
@@ -598,7 +608,7 @@ export const carrierSpecs = [
     altitude: "feature",
     readiness: "ready",
     file: "specs/carrier/markdown-parser.sdp.md",
-    title: "The product parser reifies the ruled Markdown subset",
+    title: "The Markdown parser reifies the ruled subset",
     narrative: null,
     sections: {
       intent: {
@@ -608,12 +618,15 @@ export const carrierSpecs = [
       },
       behavior: {
         rules: [
-          "The parser accepts only the ruled heading grammar, keeps matched code spans literal at its raw-HTML guards under `spec:carrier.inline-code-spans`, and excludes one malformed carrier while continuing healthy siblings.",
-          "The ruled Markdown parser has bounded finding-class parity with the TypeScript carrier for `extract/non-static-envelope`, `extract/invalid-id`, `extract/duplicate-id`, `extract/reserved-property`, `extract/unowned-prose`, and `extract/unrecognized-property`; the shared validator ID is the claim, while severity and extract-versus-refuse outcomes remain carrier-specific.",
-          "Named non-claim — `extract/parse-error` remains distinct because YAML/frontmatter parsing has no TypeScript parser-diagnostic analogue.",
-          "Named non-claim — `extract/non-static-section` remains distinct because TypeScript degrades optional section properties while Markdown refuses malformed documents whole.",
-          "Named non-claim — `extract/unrecognized-statement` remains distinct because Markdown owns prose and structures, not TypeScript statement recognition.",
-          "Named non-claim — `extract/misplaced-authoring` remains distinct because Markdown has no executable authoring-call surface.",
+          "The parser accepts the grammar stated by `spec:carrier.markdown-body-grammar`, keeps matched code spans literal under `spec:carrier.inline-code-spans`, and excludes a malformed Markdown carrier while continuing healthy siblings.",
+          "The ruled Markdown parser has bounded finding-class parity with the TypeScript carrier for `extract/non-static-envelope`, `extract/invalid-id`, `extract/duplicate-id`, `extract/reserved-property`, `extract/unowned-prose`, and `extract/unrecognized-property`; both carriers report each of these findings under the same validator id, while severity and extract-versus-refuse outcomes remain carrier-specific.",
+          "Carrier-specific finding — `extract/parse-error` remains distinct because YAML/frontmatter parsing has no TypeScript parser-diagnostic analogue.",
+          "Carrier-specific finding — `extract/non-static-section` remains distinct because TypeScript degrades optional section properties while Markdown refuses malformed documents whole.",
+          "A static envelope field that cannot be reified fails extraction in either carrier. A non-static optional TypeScript section property drops with a warning, except the question failures below; a malformed Markdown carrier is refused whole.",
+          "The TypeScript carrier refuses an integer-like Design or UI key or Model term with an error and drops only that member. An unknown property inside a question, or a malformed question key, is an error at that property; refusing it does not remove the question's blocking flag.",
+          "In the TypeScript carrier, a non-static value under a question's `decider`, `links`, `provisional` or `trigger` field drops the whole question list with an error; a non-static question text or blocking flag drops the whole list with a warning.",
+          "Carrier-specific finding — `extract/unrecognized-statement` remains distinct because Markdown owns prose and structures, not TypeScript statement recognition.",
+          "Carrier-specific finding — `extract/misplaced-authoring` remains distinct because Markdown has no executable authoring-call surface.",
         ],
         exampleSpace: {
           given: ["the paired carrier probes named {probe:string}"],
@@ -628,7 +641,7 @@ export const carrierSpecs = [
       verification: {
         mode: "executable",
         criteria: [
-          "`test/extract-parity.test.ts` executes the settled finding-class parity matrix, including the six same-class findings, their carrier-specific outcomes, and four named non-claims.",
+          "Each same-class matrix row reports the same validator id from both carriers, with the specified severity and extraction outcome for each carrier; carrier-specific rows keep their distinct findings.",
         ],
       },
     },
@@ -645,7 +658,7 @@ export const carrierSpecs = [
     sections: {
       intent: {
         outcome:
-          "Execute one same-class row of the parity matrix, including the outcomes it never claims.",
+          "Execute one same-class row of the parity matrix, including each carrier's severity and extraction outcome.",
       },
       behavior: {
         examples: [
@@ -669,24 +682,26 @@ export const carrierSpecs = [
     altitude: "feature",
     readiness: "ready",
     file: "specs/carrier/sdp-import.sdp.md",
-    title: "TypeScript-carried Specs can become Markdown twins",
+    title: "A TypeScript-carried Spec can be converted to Markdown",
     narrative: null,
     sections: {
       intent: {
         actor: "A coding agent or maintainer.",
         outcome:
-          "Convert a TypeScript-carrier Spec into an idiomatic `.sdp.md` twin beside its source.",
+          "Convert a TypeScript-carrier Spec into an idiomatic Markdown carrier beside its source.",
         value:
-          "The TypeScript DSL survives as an import source while Markdown becomes the authored twin.",
+          "The TypeScript DSL remains an import source and a lawful per-ID option; the author chooses which carrier remains canonical.",
       },
       behavior: {
         rules: [
           "Import writes the emitted Markdown sibling beside the TypeScript carrier and never deletes the source carrier.",
+          "A written Markdown sibling and its retained TypeScript source carry the same Spec id; before extracting both paths in one root, the author keeps one canonical surface by moving, renaming, excluding or removing the source, and the import success message explains this hand-off.",
           "Import refuses an existing Markdown sibling rather than overwriting it.",
           "Refusal outcomes retain the TypeScript reifier findings and add import-local findings honestly.",
           "Import consumes the TypeScript reifier so source acceptance follows one validation path.",
+          "Import accepts only carriers whose builders come from the public package or its `/anchors` subpath; a relative builder import that a source checkout trusts during extraction is refused here.",
           "`sdp import` converts Spec carriers; Pack manifests are out of scope — the TypeScript manifest stays a lawful per-ID option.",
-          "A batch scans only bounded source directories, canonicalizes physical carrier identity, and computes every refusal and target collision before publishing any sibling.",
+          "A batch walks only ordinary directory entries in requested source directories, skips dot-directories and `node_modules`, `dist`, `generated` and `coverage`, selects `.sdp.ts` files, canonicalizes physical carrier identity, and computes refusals and target collisions before publishing.",
           "Publication prepares exclusive temporary siblings and atomically creates targets without clobbering; rollback attempts every artifact, reports survivors, and never deletes a TypeScript source.",
         ],
         exampleSpace: {
@@ -694,6 +709,12 @@ export const carrierSpecs = [
           when: ["importTypeScriptSpec runs"],
           then: ["the emitted Markdown re-parses to an equal graph"],
         },
+      },
+      design: {
+        findingIds:
+          "`import/refusal`, `import/pack-unsupported`, `import/target-exists`, `import/unsupported-construct`, `import/invalid-source-path`, `import/no-sources` and `import/empty` name the importer's findings; retained TypeScript reifier findings keep their own ids.",
+        dryRun:
+          "`sdp import <path...> --dry-run` computes refusals and target collisions, prints the planned Markdown siblings and writes none.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -722,7 +743,7 @@ export const carrierSpecs = [
       verification: {
         mode: "executable",
         criteria: [
-          "The bound test runs `assertAuthoredRoundTrip` against the import behavior fixture.",
+          "The actual returned Markdown preserves the source's Spec content and declared relations after carrier locations are normalized.",
         ],
       },
     },
@@ -734,17 +755,19 @@ export const carrierSpecs = [
     altitude: "story",
     readiness: "ready",
     file: "specs/carrier/prose-ownership-rule.sdp.md",
-    title: "Every prose edge has one owner",
+    title: "Every prose value has one typed owner",
     narrative: null,
     sections: {
-      intent: { outcome: "Keep free prose in the graph without ambiguous attachment." },
+      intent: {
+        outcome: "Keep free prose in the graph without ambiguous attachment.",
+      },
       behavior: {
         rules: [
           "Narrative lives before the first H2 and is owned directly by the Spec; it is Spec content, never an envelope field.",
-          "A description is owned only by a singular section and lives under that section's own heading; the array-shaped constraints section has no description owner, so its explanatory prose belongs in narrative or intent instead.",
+          "A description belongs to one typed section; under `spec:carrier.markdown-body-grammar`, the primary behavior heading and Example space share the behavior section's one description, so leading prose may occur under either, never both. Constraints has no description owner; its explanatory prose belongs in narrative or Intent.",
           "Unowned prose — prose standing under no typed owner — is refused loudly rather than attached by guess or dropped in silence.",
-          "Prose is stored as graph content inside its typed owner, never as a file pointer or a heading-path key: a consumer reads prose from the graph without re-parsing the document, and churned document structure carries no identity.",
-          "The realizing entrypoints are `parseMarkdownBody` in `src/extract/markdown-body.ts` and `mapOwner` in `src/extract/markdown-body-owners.ts`.",
+          "Prose is graph content inside its typed owner, never a file pointer or a heading-path key: a consumer reads prose from the graph without re-parsing the document, and churned document structure carries no identity.",
+          "Additional typed prose owners are stated by `spec:model.relation-reasons` for a relation's reason and `spec:model.open-question-fields` for a question's provisional and trigger lines.",
         ],
       },
     },
@@ -762,16 +785,27 @@ export const carrierSpecs = [
       intent: {
         outcome:
           "Give step text one owned typed placeholder syntax whose normalized identity a generated contract can key on.",
+        openQuestions: [
+          {
+            question:
+              "Should a group holding one double-quoted literal declare a one-value dimension in a vocabulary?",
+            blocking: false,
+            key: "oneLiteralVocabulary",
+            decider: "owner",
+            provisional:
+              "the group is a binding and declares no vocabulary type; contract generation reports contracts/untyped-vocabulary-slot.",
+          },
+        ],
       },
       behavior: {
         rules: [
-          "A slot group opens with an identifier; a brace group that does not open with one is prose, and prose is never policed.",
+          "A slot group opens with a name matching ASCII `[A-Za-z_][A-Za-z0-9_]*`, and `__proto__` is always a malformed slot; a brace group that does not open with such a name is prose, and prose is never policed.",
           "A vocabulary slot declares a type only in the ratified type form — `number`, `string`, `boolean`, or a closed union of two or more quoted literals — while an example binds one scalar literal in the same position.",
           "The skeleton — every slot group normalized to `{name}` with prose braces left untouched — is the step's identity: it keys the generated step contract, matches an example step to its vocabulary entry, and makes a declaration and its binding the same step.",
           "An identifier-led group whose remainder parses as neither a type nor a value stays a named but unusable slot: it declares nothing, binds nothing, and reads as unbound rather than being guessed into meaning.",
-          "The single-quoted-literal form parses as a binding, and what it would declare in a vocabulary is unruled — so a vocabulary consumer treats it as declaring nothing and says so rather than inventing a one-value dimension.",
+          'A group holding one double-quoted literal, `{x: "only"}`, is a binding; in a vocabulary it declares no type, the provisional reading of the open question above, and contract generation reports `contracts/untyped-vocabulary-slot`.',
+          "A bare group, `{n}`, names a slot and binds nothing; in an example it is unbound, and in a vocabulary it declares no type.",
           "Lexical degradation stays local: a stray or unterminated brace group is prose only up to the next candidate, so it never swallows a well-formed binding that follows it.",
-          "The realizing entrypoints are `parseSlots` and `stepSkeleton` in `src/notation/slots.ts`.",
         ],
         exampleSpace: {
           given: ["the step text {stepText:string}"],
@@ -854,15 +888,19 @@ export const carrierSpecs = [
     sections: {
       intent: {
         problem:
-          "The default carrier's body grammar is stated only in parser source, so an author learns it by probing refusals and keeps a private copy that drifts when the parser changes.",
+          "Without a stated body grammar, an author learns the default carrier by probing refusals and keeps a private copy that drifts when the parser changes.",
         outcome:
-          "State what each section of a Markdown Spec body accepts and refuses, so an author can write a lawful carrier from this Spec alone.",
+          "State what each section of a Markdown Spec body accepts and refuses, and name the Spec that owns each field's values, so an author can write a lawful carrier from this Spec and the Specs it depends on.",
         openQuestions: [
           {
             question:
-              "The Markdown carrier admits one constraint entry per Spec; the TypeScript model and carrier admit several, and the kind-evidence law reads every entry. The owner's ruling makes one entry the law across carriers. Two reviewers contest it: a `constrainedBy` edge points at one Spec and says nothing about how many entries that Spec holds, and the narrowing would force a Spec with two bounds to promote or bundle them. The revision stays unlanded until that cost is weighed.",
+              "Should the held ruling of one Constraints entry per Spec be applied to the TypeScript carrier, or should the cross-carrier cardinality be reconsidered? A `constrainedBy` edge targets a Spec and does not specify its entry count.",
             blocking: false,
             key: "constraintEntryCount",
+            decider: "owner",
+            provisional:
+              "Markdown admits one Constraints entry; TypeScript admits several while the cross-carrier revision remains held.",
+            links: ["spec:validation.kind-evidence"],
           },
         ],
       },
@@ -875,23 +913,38 @@ export const carrierSpecs = [
           "The refused block shapes are read line by line in narrative, section prose, and list text: a line that opens with a pipe, a block-quote marker, whitespace, a star or plus bullet, an ordered-list marker, or a `<`, and a line that is only a thematic break or a setext underline. A table without outer pipes is prose to the parser.",
           "Raw HTML is refused in narrative, section prose, and list text, and is not scanned in the H1 title or inside fence steps. The test matches an HTML tag with its closing `>`, a comment delimiter, a declaration, or a processing instruction, so `a < b` and an unclosed `Promise<T` pass. The test ignores matched code spans, as ruled by `spec:carrier.inline-code-spans`.",
           "The only fences are `gwt` and `gwt-vocabulary`. A fence holds Given steps, exactly one When step, and Then steps in that order, with no blank or indented line, and its slot syntax is `spec:carrier.slot-notation`. An example's Intent owns one `gwt` fence that closes the section. Example space owns optional leading prose, which counts as the shared description above, and then exactly one `gwt-vocabulary` fence, with no list entry or H3.",
-          "Intent accepts `actor`, `problem`, `outcome`, and `value` once each and `risk` and `assumption` repeatedly. One `### Open questions` heading may follow those fields, each of its entries opens with `[blocking]` or `[non-blocking]`, optionally with a lower-camel key after one space and `#` inside the brackets, unique within the Spec, and it is the only H3 any section accepts. Under a question's line may follow its `decider`, `links`, `provisional` and `trigger` fields, one line each and each at most once.",
-          "Behavior entries are keyed `rule` or `flow`. Rule and Contract entries are plain bullets, each one rule. Workflow entries are plain bullets, each one flow, plus keyed `rule` entries. Any entry of the primary behavior owner may open its text, after its label where it has one, with a rule key marker, `[#key]` and a space. Verification entries are plain criteria.",
+          "Intent accepts `actor`, `problem`, `outcome`, and `value` once each and `risk` and `assumption` repeatedly. One `### Open questions` heading may follow those fields, each of its entries opens with `[blocking]` or `[non-blocking]`, optionally with a lower-camel key after one space and `#` inside the brackets, unique within the Spec, and it is the only H3 any section accepts. Under a question's line may follow its `decider`, `links`, `provisional` and `trigger` fields, one line each and each at most once; their values follow `spec:model.open-question-fields`.",
+          "Behavior entries are keyed `rule` or `flow`. Rule and Contract entries are plain bullets, each one rule. Workflow entries are plain bullets, each one flow, plus keyed `rule` entries. Any entry of the primary behavior owner may open its text, after its label where it has one, with a rule key marker, `[#key]` and a space, and the key follows `spec:model.rule-keys`. Verification entries are plain criteria.",
           "A keyed entry is one ASCII word, a colon, and a space before its value. Where a section takes plain bullets, a bullet of that shape is read as a key and refused unless the section names that key, so a plain bullet never opens with a single word and a colon.",
-          "Constraints accept one flat entry of `statement`, `flavor`, `target`, and `measurableBy`, each at most once, with `statement` required and no prose. A second entry is refused by this carrier; whether one entry becomes the law for every carrier is the open question above.",
+          "Constraints accept one flat entry of `statement`, `flavor`, `target`, and `measurableBy`, each at most once, with `statement` required and no prose. A second entry is refused by this carrier; the cross-carrier revision is held at `spec:carrier.markdown-body-grammar#question.constraintEntryCount`.",
           "A Model entry is a bold term, the em dash character with a space on each side, and the definition; a hyphen is refused, terms are unique, and an integer-like term is refused. Decision accepts `context` and `decision` once each and `rationale`, `alternative`, and `consequence` repeatedly.",
           "Design and UI are open sections. Each entry is a lower-camel ASCII key, unique within its section, and a one-line value; the same key may appear once under Design and once under UI.",
-          "The keys `implemented`, `hasVerifier`, `observed`, `claim`, `deliveryFacts`, `nodeType`, `specKind`, `satisfies`, `verifies`, `belongsTo`, and `models` are refused in every keyed section, under `spec:validation.authored-honesty`. The structural edge names `uses` and `memberOf` are not in that set and pass as ordinary keys.",
+          "The keys `implemented`, `hasVerifier`, `observed`, `claim`, `deliveryFacts`, `nodeType`, `specKind`, `satisfies`, `verifies`, `belongsTo`, and `models` are refused in every keyed section, under `spec:validation.authored-honesty`. In Design and UI, an otherwise lawful lower-camel key outside this set is ordinary content, including `dependsOn`, `references`, `uses` and `memberOf`; it creates no edge. Every closed section still admits only its own fields.",
           "A refused construct excludes its whole carrier from the graph, and healthy sibling carriers survive.",
-          "The realizing entrypoints are `parseSectionContent` in `src/extract/markdown-body-content.ts` and the per-owner mappers that `mapOwner` in `src/extract/markdown-body-owners.ts` dispatches to.",
         ],
         exampleSpace: {
           given: ["a Markdown Spec carrier whose {owner:string} section holds {construct:string}"],
           when: ["the extractor reifies the carrier"],
           then: [
             "the carrier is refused whole with the finding {findingId:string} whose message contains {reason:string} at line {line:number}",
+            "the healthy sibling {siblingId:string} stays in the graph",
           ],
         },
+        ruleKeys: {
+          closedOwners: "rules[1]",
+          sectionProse: "rules[2]",
+          oneLineEntries: "rules[3]",
+          blockShapes: "rules[4]",
+          rawHtml: "rules[5]",
+          closedFences: "rules[6]",
+          singleH3: "rules[7]",
+          keyedEntryShape: "rules[9]",
+          constraintFields: "rules[10]",
+          modelEntries: "rules[11]",
+          openSectionKeys: "rules[12]",
+        },
+        description:
+          "The world writes two Markdown carriers in one extraction root, the refused carrier and a healthy sibling. The sibling is a story-altitude behavior Spec stating `idea`, with no relations and an Intent outcome.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -916,12 +969,15 @@ export const carrierSpecs = [
               "CommonMark lets a code span cross a line ending inside a paragraph, so a renderer and the Protocol can disagree about which text is inside a span. Should the owner keep the line-scoped rule or match spans across a paragraph?",
             blocking: false,
             key: "spanAcrossLines",
+            decider: "owner",
+            provisional: "the line-scoped reading stands",
           },
           {
             question:
               "A backslash-escaped backtick still opens a span, and a tag that starts before a backtick pair loses to the span. CommonMark decides both cases the other way. Should the owner keep these readings or follow CommonMark in these two cases?",
             blocking: false,
             key: "commonMarkCases",
+            decider: "owner",
           },
         ],
       },
@@ -929,9 +985,8 @@ export const carrierSpecs = [
         rules: [
           "A code span is literal content. The raw-HTML refusal never reads inside one, whether the span sits in a Spec's narrative, a section description, a list entry, or a Pack's framing prose.",
           "A code span opens at a backtick run and closes at the next run of the same length on that same line. Both runs must sit on one line. An unmatched run is ordinary text and shields nothing.",
-          "Raw HTML outside a code span stays refused, with the same finding and message as before.",
-          "The graph stores the line as authored, backticks included. Each projection renders it through the encoding its own Spec already requires for that field.",
-          "The scanner in `src/extract/markdown-inline-code.ts` realizes this rule. The raw-HTML guards that call it live in `src/extract/markdown-body.ts`, `src/extract/markdown-body-content.ts`, and `src/extract/markdown-pack.ts`.",
+          "Raw HTML outside a code span is refused as `extract/invalid-markdown-structure` with the message `raw HTML is unsupported`.",
+          "The graph stores the line as authored, backticks included. Each projection renders it through the encoding its own Spec requires for that field.",
         ],
         exampleSpace: {
           given: ["the code-span matrix in {location:string}"],
@@ -940,6 +995,8 @@ export const carrierSpecs = [
             "matched spans preserve {accepted:number} carriers and exposed HTML refuses {refused:number} carriers",
           ],
         },
+        description:
+          'The matrix uses matched and unmatched backtick runs of one, two, and three backticks, multiple spans, literal tags and comment delimiters inside spans, exposed HTML before and after spans, closing tags, declarations, processing instructions, and ordinary angle-bracket comparisons. It includes ``Use <T title=`value>.``, ``Use </T`>.``, and ``Use <img alt="`">.`` as refused tag bodies with an unmatched backtick, and ``Use <!-`x`-> here.`` as accepted text whose matched span separates the comment delimiter.\n\nParagraph probes run in narrative, section-description and Pack-framing locations; the list-entry location uses only the single-line matrix. The paragraph probes split a single-backtick pair across two lines. One puts ``Use `Promise<T>.`` on the first line and ``Close here`.`` on the second; another puts ``Open here `.`` first and ``Use Promise<T>`.`` second. Neither pair shields HTML. A third puts ``Open here `.`` first and ``Use `Promise<T>`.`` second, so the pair on the second line shields that line despite the unmatched run on the first.',
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -948,7 +1005,7 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-body-grammar.table-refused",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-body-grammar.table-refused.sdp.md",
     title: "A table under a section is refused",
     narrative: null,
@@ -965,6 +1022,7 @@ export const carrierSpecs = [
             when: ["the extractor reifies the carrier"],
             then: [
               'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "nested or unsupported Markdown structure"} at line {line: 14}',
+              'the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph',
             ],
           },
         ],
@@ -976,7 +1034,7 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-body-grammar.continuation-line-refused",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-body-grammar.continuation-line-refused.sdp.md",
     title: "A bullet wrapped onto a second line is refused",
     narrative: null,
@@ -994,6 +1052,7 @@ export const carrierSpecs = [
             when: ["the extractor reifies the carrier"],
             then: [
               'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "nested or unsupported Markdown structure"} at line {line: 15}',
+              'the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph',
             ],
           },
         ],
@@ -1005,7 +1064,7 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-body-grammar.ordered-list-refused",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-body-grammar.ordered-list-refused.sdp.md",
     title: "An ordered list is refused",
     narrative: null,
@@ -1022,6 +1081,7 @@ export const carrierSpecs = [
             when: ["the extractor reifies the carrier"],
             then: [
               'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "nested or unsupported Markdown structure"} at line {line: 14}',
+              'the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph',
             ],
           },
         ],
@@ -1033,9 +1093,9 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-body-grammar.foreign-fence-refused",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-body-grammar.foreign-fence-refused.sdp.md",
-    title: "A fence other than gwt is refused",
+    title: "A fence other than gwt or gwt-vocabulary is refused",
     narrative: null,
     sections: {
       intent: {
@@ -1051,6 +1111,7 @@ export const carrierSpecs = [
             when: ["the extractor reifies the carrier"],
             then: [
               'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "fences must be exact gwt or gwt-vocabulary fences"} at line {line: 14}',
+              'the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph',
             ],
           },
         ],
@@ -1062,9 +1123,9 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-body-grammar.h3-refused",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-body-grammar.h3-refused.sdp.md",
-    title: "An H3 outside Intent is refused",
+    title: "An H3 under Design is refused",
     narrative: null,
     sections: {
       intent: {
@@ -1079,6 +1140,7 @@ export const carrierSpecs = [
             when: ["the extractor reifies the carrier"],
             then: [
               'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "open sections do not accept an H3 or fence"} at line {line: 14}',
+              'the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph',
             ],
           },
         ],
@@ -1090,7 +1152,7 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-body-grammar.plain-bullet-refused",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-body-grammar.plain-bullet-refused.sdp.md",
     title: "A plain bullet under an open section is refused",
     narrative: null,
@@ -1108,6 +1170,7 @@ export const carrierSpecs = [
             when: ["the extractor reifies the carrier"],
             then: [
               'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "open section keys must be lower-camel ASCII"} at line {line: 14}',
+              'the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph',
             ],
           },
         ],
@@ -1119,7 +1182,7 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-body-grammar.keyed-bullet-refused",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-body-grammar.keyed-bullet-refused.sdp.md",
     title: "A keyed bullet under a plain-bullet owner is refused",
     narrative: null,
@@ -1137,6 +1200,7 @@ export const carrierSpecs = [
             when: ["the extractor reifies the carrier"],
             then: [
               'the carrier is refused whole with the finding {findingId: "extract/unrecognized-property"} whose message contains {reason: "is not accepted"} at line {line: 14}',
+              'the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph',
             ],
           },
         ],
@@ -1148,7 +1212,7 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-body-grammar.trailing-prose-refused",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-body-grammar.trailing-prose-refused.sdp.md",
     title: "Prose after structured content is refused",
     narrative: null,
@@ -1166,6 +1230,7 @@ export const carrierSpecs = [
             when: ["the extractor reifies the carrier"],
             then: [
               'the carrier is refused whole with the finding {findingId: "extract/unowned-prose"} whose message contains {reason: "prose after structured content has no owner"} at line {line: 16}',
+              'the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph',
             ],
           },
         ],
@@ -1177,7 +1242,7 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-body-grammar.repeated-field-refused",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-body-grammar.repeated-field-refused.sdp.md",
     title: "A repeated single-valued field is refused",
     narrative: null,
@@ -1194,6 +1259,7 @@ export const carrierSpecs = [
             when: ["the extractor reifies the carrier"],
             then: [
               'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "is authored more than once"} at line {line: 15}',
+              'the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph',
             ],
           },
         ],
@@ -1205,7 +1271,7 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-body-grammar.unrecognized-heading-refused",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-body-grammar.unrecognized-heading-refused.sdp.md",
     title: "An unrecognized heading is refused with a suggestion",
     narrative: null,
@@ -1223,6 +1289,7 @@ export const carrierSpecs = [
             when: ["the extractor reifies the carrier"],
             then: [
               'the carrier is refused whole with the finding {findingId: "extract/unrecognized-heading"} whose message contains {reason: "did you mean"} at line {line: 13}',
+              'the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph',
             ],
           },
         ],
@@ -1234,7 +1301,7 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-body-grammar.second-primary-owner-refused",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-body-grammar.second-primary-owner-refused.sdp.md",
     title: "A second primary owner is refused",
     narrative: null,
@@ -1252,6 +1319,7 @@ export const carrierSpecs = [
             when: ["the extractor reifies the carrier"],
             then: [
               'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "a single-valued Markdown owner is authored more than once"} at line {line: 16}',
+              'the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph',
             ],
           },
         ],
@@ -1263,7 +1331,7 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-body-grammar.raw-html-refused",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-body-grammar.raw-html-refused.sdp.md",
     title: "Raw HTML outside a code span is refused",
     narrative: null,
@@ -1280,6 +1348,7 @@ export const carrierSpecs = [
             when: ["the extractor reifies the carrier"],
             then: [
               'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "raw HTML is unsupported"} at line {line: 14}',
+              'the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph',
             ],
           },
         ],
@@ -1291,7 +1360,7 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-body-grammar.shared-description-refused",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-body-grammar.shared-description-refused.sdp.md",
     title: "A second description across Behavior and Example space is refused",
     narrative: null,
@@ -1309,6 +1378,7 @@ export const carrierSpecs = [
             when: ["the extractor reifies the carrier"],
             then: [
               'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "behavior description has more than one owner"} at line {line: 19}',
+              'the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph',
             ],
           },
         ],
@@ -1320,7 +1390,7 @@ export const carrierSpecs = [
     id: "spec:carrier.markdown-body-grammar.integer-term-refused",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/markdown-body-grammar.integer-term-refused.sdp.md",
     title: "An integer-like Model term is refused",
     narrative: null,
@@ -1328,9 +1398,6 @@ export const carrierSpecs = [
       intent: {
         outcome:
           "Execute the integer-like term refusal on a Model term written as a bare digit, and keep the healthy sibling carrier as the only Spec in the graph.",
-        assumptions: [
-          "The world writes two Markdown carriers in one extraction root, the refused carrier and a healthy sibling. The sibling is a story-altitude behavior Spec stating `idea`, with no relations and an Intent outcome.",
-        ],
       },
       behavior: {
         examples: [
@@ -1341,6 +1408,7 @@ export const carrierSpecs = [
             when: ["the extractor reifies the carrier"],
             then: [
               'the carrier is refused whole with the finding {findingId: "extract/invalid-markdown-structure"} whose message contains {reason: "model terms must not be integer-like"} at line {line: 14}',
+              'the healthy sibling {siblingId: "spec:probe.sibling"} stays in the graph',
             ],
           },
         ],
@@ -1352,7 +1420,7 @@ export const carrierSpecs = [
     id: "spec:carrier.inline-code-spans.narrative",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/inline-code-spans.narrative.sdp.md",
     title: "Code spans in a Spec narrative are literal",
     narrative: null,
@@ -1361,8 +1429,6 @@ export const carrierSpecs = [
         outcome:
           "Check matched and unmatched runs, literal HTML, exposed HTML on the same line, and authored text in the narrative probes.",
         assumptions: [
-          'The matrix uses matched and unmatched backtick runs of one, two, and three backticks, multiple spans, literal tags and comment delimiters inside spans, exposed HTML before and after spans, closing tags, declarations, processing instructions, and ordinary angle-bracket comparisons. It includes ``Use <T title=`value>.``, ``Use </T`>.``, and ``Use <img alt="`">.`` as refused tag bodies with an unmatched backtick, and ``Use <!-`x`-> here.`` as accepted text whose matched span separates the comment delimiter.',
-          "The paragraph probes split a single-backtick pair across two lines. One puts ``Use `Promise<T>.`` on the first line and ``Close here`.`` on the second; another puts ``Open here `.`` first and ``Use Promise<T>`.`` second. Neither pair shields HTML. A third puts ``Open here `.`` first and ``Use `Promise<T>`.`` second, so the pair on the second line shields that line despite the unmatched run on the first.",
           "Each probe has its own carrier. Each Spec is a story-altitude behavior stating idea with no relations and an Intent outcome. The probe sits in narrative before Intent.",
         ],
       },
@@ -1384,7 +1450,7 @@ export const carrierSpecs = [
     id: "spec:carrier.inline-code-spans.description",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/inline-code-spans.description.sdp.md",
     title: "Code spans in section descriptions are literal",
     narrative: null,
@@ -1393,8 +1459,6 @@ export const carrierSpecs = [
         outcome:
           "Check matched and unmatched runs, literal HTML, exposed HTML on the same line, and authored text in the description probes.",
         assumptions: [
-          'The matrix uses matched and unmatched backtick runs of one, two, and three backticks, multiple spans, literal tags and comment delimiters inside spans, exposed HTML before and after spans, closing tags, declarations, processing instructions, and ordinary angle-bracket comparisons. It includes ``Use <T title=`value>.``, ``Use </T`>.``, and ``Use <img alt="`">.`` as refused tag bodies with an unmatched backtick, and ``Use <!-`x`-> here.`` as accepted text whose matched span separates the comment delimiter.',
-          "The paragraph probes split a single-backtick pair across two lines. One puts ``Use `Promise<T>.`` on the first line and ``Close here`.`` on the second; another puts ``Open here `.`` first and ``Use Promise<T>`.`` second. Neither pair shields HTML. A third puts ``Open here `.`` first and ``Use `Promise<T>`.`` second, so the pair on the second line shields that line despite the unmatched run on the first.",
           "Each probe has its own carrier. Each Spec is a story-altitude behavior stating idea with no relations and an Intent outcome. The probe sits in the Behavior description.",
         ],
       },
@@ -1416,7 +1480,7 @@ export const carrierSpecs = [
     id: "spec:carrier.inline-code-spans.list",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/inline-code-spans.list.sdp.md",
     title: "Code spans in list entries are literal",
     narrative: null,
@@ -1425,7 +1489,6 @@ export const carrierSpecs = [
         outcome:
           "Check matched and unmatched runs, literal HTML, exposed HTML on the same line, and authored text in the list probes.",
         assumptions: [
-          'The matrix uses matched and unmatched backtick runs of one, two, and three backticks, multiple spans, literal tags and comment delimiters inside spans, exposed HTML before and after spans, closing tags, declarations, processing instructions, and ordinary angle-bracket comparisons. It includes ``Use <T title=`value>.``, ``Use </T`>.``, and ``Use <img alt="`">.`` as refused tag bodies with an unmatched backtick, and ``Use <!-`x`-> here.`` as accepted text whose matched span separates the comment delimiter.',
           "Each probe has its own carrier. Each Spec is a story-altitude behavior stating idea with no relations and an Intent outcome. The probe sits in one Behavior rule entry.",
         ],
       },
@@ -1447,7 +1510,7 @@ export const carrierSpecs = [
     id: "spec:carrier.inline-code-spans.pack",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/inline-code-spans.pack.sdp.md",
     title: "Code spans in Pack framing are literal",
     narrative: null,
@@ -1456,8 +1519,6 @@ export const carrierSpecs = [
         outcome:
           "Check matched and unmatched runs, literal HTML, exposed HTML on the same line, and authored text in the pack probes.",
         assumptions: [
-          'The matrix uses matched and unmatched backtick runs of one, two, and three backticks, multiple spans, literal tags and comment delimiters inside spans, exposed HTML before and after spans, closing tags, declarations, processing instructions, and ordinary angle-bracket comparisons. It includes ``Use <T title=`value>.``, ``Use </T`>.``, and ``Use <img alt="`">.`` as refused tag bodies with an unmatched backtick, and ``Use <!-`x`-> here.`` as accepted text whose matched span separates the comment delimiter.',
-          "The paragraph probes split a single-backtick pair across two lines. One puts ``Use `Promise<T>.`` on the first line and ``Close here`.`` on the second; another puts ``Open here `.`` first and ``Use Promise<T>`.`` second. Neither pair shields HTML. A third puts ``Open here `.`` first and ``Use `Promise<T>`.`` second, so the pair on the second line shields that line despite the unmatched run on the first.",
           "Each probe has its own carrier. Each Pack has an empty membership list and puts the probe in framing prose.",
         ],
       },
@@ -1474,5 +1535,30 @@ export const carrierSpecs = [
       },
     },
     deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:carrier.sdp-import.feature-adapter",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/carrier/sdp-import.feature-adapter.sdp.md",
+    title: "A bare .feature corpus can be imported",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Convert a bare .feature source corpus into canonical Protocol carriers without adding a second extraction path.",
+        openQuestions: [
+          {
+            question: "Which bare .feature constructs can an import adapter preserve honestly?",
+            blocking: true,
+            key: "featureAdapter",
+            decider: "owner",
+            trigger: "an adopter migrates a gen-1 `.feature` corpus into the Protocol",
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
   },
 ] as const;

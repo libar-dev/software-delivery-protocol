@@ -17,5 +17,6 @@ Given the Gherkin fixture corpus {probe: "unknown-tag"}
 When the fixture corpus is extracted and validated
 Then extraction reports {findingCount: 1} findings
 Then the first finding is {findingId: "extract/gherkin-grammar"} at line {line: 1}
+Then the first finding message contains {messageText: "did you mean"}
 Then the graph omits the Spec {absentId: "spec:fixture.unknown-tag"}
 ```

@@ -50,6 +50,13 @@ export function registerPlainBulletRefused<World>(
           params,
         });
       },
+    "the healthy sibling {siblingId} stays in the graph": (execution, params) => {
+      compareContractOutcome(execution, {
+        kind: "then",
+        text: "the healthy sibling {siblingId} stays in the graph",
+        params,
+      });
+    },
   } satisfies StepBindings<Execution, Step, StepParams>;
 
   registerRunnableExample(

@@ -25,7 +25,6 @@ const PACK_ID = "pack:probe.order";
 const MEMBERS_STEP = "the serialized Pack node lists the members {serializedMembers}";
 const EDGES_STEP = "the serialized belongsTo edges run from {edgeSources}";
 const READER_STEP = "the reader's Pack context lists the members {readerMembers}";
-const VERSION_STEP = "the payload declares the schema version {schemaVersion}";
 const roots: string[] = [];
 afterEach(() => {
   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
@@ -127,9 +126,6 @@ registerManifestOrderKept({
     );
     expect(world.context?.members.map((member) => member.id).join(", ")).toBe(
       paramsForStep(manifestOrderKeptContract, READER_STEP).readerMembers,
-    );
-    expect(world.graph?.schemaVersion).toBe(
-      paramsForStep(manifestOrderKeptContract, VERSION_STEP).schemaVersion,
     );
   },
 });

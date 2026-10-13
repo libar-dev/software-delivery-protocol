@@ -10,6 +10,8 @@ relations:
     - spec:decisions.content-only-sections
     - spec:decisions.typing-law
     - spec:decisions.verification-posture-not-realization
+    - target: spec:decisions.anchor-comment-form
+      reason: it restates comment promotion for the comment form
 ---
 # Spec sections carry typed detail and direct verifier semantics
 
@@ -23,5 +25,5 @@ relations:
 - **promotion** — Moving shared or independently reviewed content into a standalone Spec of the matching kind, exclusively rather than alongside inline content.
 - **comment promotion** — Source commentary that states rules other surfaces depend on is a promotion trigger: those rules promote into a standalone Spec under the promotion law, and the comment demotes to local commentary plus a Spec pointer; restating the promoted rules in the comment violates exclusive promotion.
 - **verifies** — A direct verifier-to-target relation whose enabled test binding can derive has-verifier only for that stated target.
-- **enabled verifier** — An example or direct test with a linked, resolvable test anchor; runner execution and pass state remain outside the graph.
+- **enabled verifier** — A verifying example backed by a linked, resolvable test anchor; a test anchor that verifies a Spec directly confers `has-verifier` without being an enabled verifier, and runner execution and pass state stay outside the graph.
 - **verification mode** — Authored intended posture such as executable; it never stands in for the derived enabled-verifier realization.

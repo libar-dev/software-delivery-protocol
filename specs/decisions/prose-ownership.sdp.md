@@ -16,3 +16,4 @@ relations:
 - decision: Free prose is stored as a narrative or a description on its typed owner; unowned prose is refused.
 - rationale: File pointers force consumer re-parsing, while heading-path keys make churned document structure carry identity.
 - consequence: Prose remains graph content inside typed shapes and ambiguous attachment fails loudly.
+- consequence: A relation owns its reason and an open question owns its fields, so the one typed-owner law covers edge text.

@@ -5,17 +5,24 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:consumers.agent-surface.register-recipes
-  dependsOn: spec:decisions.checked-mentions
+  dependsOn:
+    - spec:decisions.checked-mentions
+    - target: spec:consumers.agent-surface.recipe-parameters
+      reason: address resolution reads its addresses from params
+    - target: spec:model.rule-keys
+      reason: a rule address resolves through the Spec's rule keys
 ---
-# Address checks and dependency cycles stay executable graph recipes
+# Address resolution and dependency cycles stay executable graph recipes
+
+A dependency cycle is data about the authored dependencies. The readiness floor reads each dependency target's stated rung without walking a chain.
 
 ## Intent
-- problem: An adopter that cites entry addresses outside its Specs resolves each one with its own grammar and its own lookup, and no recipe reports a cycle in `dependsOn`, so a Spec can rest on itself through a chain no one has traced.
+- problem: An adopter that cites entry addresses outside its Specs resolves each one with its own grammar, and a Spec can rest on itself through a `dependsOn` chain no one has traced.
 - outcome: Resolve a list of entry addresses and report every `dependsOn` cycle with catalog recipes, so neither is rebuilt by hand.
 
 ## Behavior
-- rule: Address resolution takes a list of entry addresses on its opening line and returns one row per input, in input order, repeats included. Each row carries `address`, `resolves`, `id`, `section`, `key`, and `reason`. A resolving row carries the Spec id, the section `design`, `ui`, `question`, or `rule`, the key, and `reason: null`. A row that does not resolve keeps the `id`, `section`, and `key` it parsed, null where parsing failed, and one reason: `"malformed"` for an input that is not an entry address, a bare Spec id included, `"spec"` for an address whose Spec is absent, `"section"` for a Spec with no such section, and `"entry"` for a section with no such key; a `section` or `entry` miss lists the keys that section does carry.
-- rule: Address resolution reads the address grammar and the resolution rule of the checked-mentions record: a `design` or `ui` key resolves as an own key of that section other than `description`, and a `question` key resolves when one of the Spec's open questions carries it. Its totals count the inputs, the resolving rows, and each reason.
+- rule: Address resolution reads `params.addresses`, falling back to the catalog sample when absent, and returns one row per input in input order, repeats included; each row carries `address`, `resolves`, `id`, `section`, `key`, `value`, `file`, `line` and `reason`. A resolving row carries the entry text or value and its recorded file and line, null when unlocated, with `reason` null. A miss keeps `id`, `section` and `key` when parsed, keeps `value`, `file` and `line` null, and gives `reason` `malformed` for an input that is no entry address, a bare Spec id included, or `spec`, `section` or `entry` for an absent Spec, section or key; `malformed` carries `expected`, the grammar in one line, and `section` or `entry` carries `available`, the keys that section holds sorted in code-unit order.
+- rule: Address resolution follows the checked-mentions address grammar: a `design` or `ui` key resolves as an own key other than `description`, a `question` key resolves when an open question carries it, and a `rule` key resolves through `behavior.ruleKeys` to its rule or flow text; totals count inputs, resolving rows and each miss reason.
 - rule: Dependency cycles take no parameter and read the whole graph. They report every set of two or more Specs in which each Spec reaches every other through declared `dependsOn` edges, and every Spec that declares `dependsOn` on itself and belongs to no such set. An edge whose target is not a Spec in the graph is ignored.
 - rule: Each reported set lists its members sorted by id in code-unit order and one cycle through it as a closed path that starts and ends at its first member. The cycle is the shortest such path, found by a breadth-first walk from the first member over targets in code-unit order and restricted to the set; a Spec that depends only on itself reports the path of that Spec twice. Sets are ordered by their first member, and the totals count the sets, the self-dependent Specs, and the Specs in any set.
-- rule: Both recipes report and never refuse: a cycle is data about the authored dependencies, as a structural cycle is, and the readiness floor reads each `dependsOn` target's stated rung without walking a chain.
+- rule: Both recipes report their answers and never refuse an authored dependency cycle.

@@ -236,7 +236,7 @@ function scaffoldBehaviorHeading(kind: string | undefined): string | undefined {
 const sdpImportMarkdownEmitAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.sdp-import-markdown-emit"),
   label: "emits the Markdown document twin for an imported Spec",
-  satisfies: ref("spec:carrier.sdp-import"),
+  satisfies: [ref("spec:carrier.sdp-import"), ref("spec:model.open-question-keys")],
   component: componentAnchorId("component:protocol.import"),
   role: "codec",
 });

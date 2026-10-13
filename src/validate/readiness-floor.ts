@@ -462,8 +462,7 @@ export const kindEvidence = {
       predicate: hasWrittenDecision,
     },
   },
-  // Documented interim (MD-12): when a dedicated contract section lands, the typing law (MD-11)
-  // pulls it in and this row repoints to it.
+  // The contract kind uses the behavior-family row; the Contract carrier heading reifies into behavior.
   contract: behaviorFamilyEvidence,
 } as const satisfies Record<SpecKind, KindEvidenceRow>;
 

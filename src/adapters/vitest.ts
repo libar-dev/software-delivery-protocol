@@ -17,7 +17,7 @@ import { codeAnchor } from "../model/code-anchor.js";
  */
 const adaptersComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.adapters"),
-  label: "Protocol Vitest adapter seam",
+  label: "Protocol adapters: Vitest examples and TypeScript file imports",
   satisfies: ref("spec:extraction.example-runner"),
   uses: [componentAnchorId("component:protocol.runner")],
   layer: "adapter",

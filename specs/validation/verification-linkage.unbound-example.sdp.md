@@ -10,7 +10,7 @@ relations:
 # A declared verifier no test binds confers nothing
 
 ## Intent
-- outcome: Execute the verifies-linkage law where no test anchor completes the spec-to-test trace.
+- outcome: Execute the verifies-linkage law where no test anchor completes the Spec-to-test trace.
 
 ```gwt
 Given the graph holds a parent spec {parentId: "spec:probe.create-order"}

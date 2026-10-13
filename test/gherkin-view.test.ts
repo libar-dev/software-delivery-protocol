@@ -210,6 +210,61 @@ describe("the generated Gherkin-shaped READ projection", () => {
     expect(page).not.toContain(".sdp.gherkin");
   });
 
+  it("marks escaped relation reasons as lossy commentary in relation order without changing tags", () => {
+    const hostile = 'quotes " ``` \\ """\r\n@readiness.ready\nFeature: invented';
+    const graph: GraphSchema = {
+      schemaVersion,
+      nodes: [
+        {
+          id: "spec:probe.reasons",
+          nodeType: "Primitive",
+          claim: "declared",
+          specKind: "behavior",
+          altitude: "story",
+          readiness: "idea",
+          file: "specs/reasons.sdp.md",
+          title: "Relation reasons",
+          sections: { intent: { outcome: "Keep relation reasons visible." } },
+        },
+      ],
+      edges: [
+        {
+          from: "spec:probe.reasons",
+          type: "refines",
+          to: "spec:probe.z",
+          claim: "declared",
+          reason: "Narrow the parent.",
+        },
+        {
+          from: "spec:probe.reasons",
+          type: "dependsOn",
+          to: "spec:probe.a",
+          claim: "declared",
+          reason: hostile,
+        },
+        { from: "spec:probe.reasons", type: "dependsOn", to: "spec:probe.b", claim: "declared" },
+      ],
+    };
+    const pages = renderGherkinView(createReader(graph));
+    const page = pageByPath(pages, "spec/probe.reasons.feature.md");
+
+    expect(page).toContain(
+      "@spec.probe.reasons @altitude.story @readiness.idea @depends-on.spec:probe.a @depends-on.spec:probe.b @refines.spec:probe.z",
+    );
+    expect(
+      page
+        .split("\n")
+        .filter((line) => line.includes(" relation reason cannot be carried honestly:")),
+    ).toEqual([
+      `# LOSSY: dependsOn spec:probe.a relation reason cannot be carried honestly: ${escapeGherkinViewText(hostile)}`,
+      "# LOSSY: refines spec:probe.z relation reason cannot be carried honestly: Narrow the parent.",
+    ]);
+    expect(page).not.toContain("\nFeature: invented");
+    expect(
+      renderGherkinView(createReader({ ...graph, edges: [...graph.edges].reverse() })),
+    ).toEqual(pages);
+  });
+
   it("marks every populated section that a canonical Gherkin shape cannot represent", () => {
     const pages = renderGherkinView(
       readerStub([

@@ -12,9 +12,12 @@ read the same shipped catalog at
 `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md`. The catalog is the
 sole owner of the bodies; copy from it, never from session notes or earlier prompts.
 
-Every `spec:` id this skill cites is a Protocol Spec. In an adopter it is not in your graph. Read it
-with `sdp q 'return g.specContext("<id>")' --root node_modules/@libar-dev/software-delivery-protocol/specs`,
-or open its carrier under that directory.
+Protocol references in this skill name the carrying Specs shipped with the package. Placeholder
+ids and the order-domain examples demonstrate syntax and do not name Specs in that corpus. In an
+adopter a cited Protocol Spec is not in your graph. Read it with
+`pnpm exec sdp q 'return g.specContext("<id>")' --root node_modules/@libar-dev/software-delivery-protocol/specs`,
+replacing `<id>` with the cited id, or open its carrier under that directory. In this source
+checkout the same read is `pnpm --silent sdp:q 'return g.specContext("<id>")'`.
 
 At this repository root, the `sdp:q` wrapper supplies the exact self-hosting exclusions. Paste each
 recipe body between the quotes, or run the file the build ships for it under `dist/recipes/`, and
@@ -63,7 +66,12 @@ runner.
    `generated`, `dist`, `node_modules`, `coverage`, dot-directories, configured `--exclude` prefixes,
    and non-carrier paths. Events during a run coalesce to one pending rerun. In this source
    checkout, invoke it through the repository `sdp` script with the three fixture exclusions; do
-   not invent extra watch flags.
+   not invent extra watch flags:
+
+   ```sh
+   pnpm --silent sdp validate . --watch --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+   ```
+
 3. State only the rung the structure clears. Use recipe 9 for the current floor, recipe 11 for the
    lower ladder, and read `spec:validation.readiness-floor` plus
    `spec:validation.kind-evidence` for the clauses.
@@ -75,9 +83,9 @@ runner.
 
 Run concept search (recipe 6) first and place the carrier beside the family it finds. In the
 Protocol repository that normally means `specs/<family>/`; an adopter follows its own canonical
-carrier root rather than inventing a second one. Prefer `sdp new spec` for every ratified kind; it
-emits this exact cheap-capture shape and never invents typed content. `constraint` stops after
-Intent and does not add a twin heading:
+carrier root rather than inventing a second one. Prefer `sdp new spec` for every ratified kind. It
+emits the shape below followed by the kind's bare typed heading, and never invents typed content;
+`constraint` is the exception and stops after Intent with no twin heading:
 
 ```md
 ---
@@ -154,10 +162,11 @@ else; why it holds is the narrative's, or a decision Spec's. The law is `spec:mo
 A Spec carries at most one of Behavior, Rule, Workflow, and Contract. Leading prose may stand under
 that owner or under Example space, not both. In Rule, Contract, Workflow, and Verification, open
 each plain entry with more than one word before any colon. The parser reads `- Note: x` as a key
-and refuses it. In Design and UI, whose keys are otherwise open, delivery-fact, edge, and
-graph-field names (`implemented`, `hasVerifier`, `satisfies`, `verifies`, and the rest the grammar
-lists) are refused as keys. A relation lives in the frontmatter; `dependsOn` as a Design key is
-plain text and creates no edge.
+and refuses it. The derived names listed by `spec:carrier.markdown-body-grammar`, such as
+`implemented`, `hasVerifier`, `satisfies` and `verifies`, are refused wherever a section reads
+keyed entries. Design and UI admit other lawful lower-camel keys, including `dependsOn`,
+`references`, `uses` and `memberOf`, as plain content that creates no edge; closed sections keep
+their own field sets. A relation lives in the frontmatter.
 
 The full grammar, with every refusal, is `spec:carrier.markdown-body-grammar`; each of its example
 children executes one refusal. Read it when `sdp validate` refuses a carrier.
@@ -171,7 +180,8 @@ so it needs no extra tag, status key, or side table.
   below `defined`, the floor clause in `spec:validation.readiness-floor`.
 - A deferral is a `[blocking]` open question that names its re-entry trigger in a `trigger:`
   field, plus `dependsOn` when another Spec must hold first; `spec:decisions.planning-truths-placement` rules this home.
-  The `defined` floor does not read the parent's readiness, so the deferred Spec's example children
+  A deferral that is itself a ruling, such as MCP integration or external `doc:` decision targets,
+  stays on its decision Spec, which names its re-entry condition. The `defined` floor does not read the parent's readiness, so the deferred Spec's example children
   can still state `defined` once their bound points are complete and match the parent's example
   vocabulary, when it has one. The `ready` floor does read the parent's readiness, so their `ready`
   waits until the parent states `defined`.
@@ -217,6 +227,10 @@ as the builder's second argument, `dependsOn(target, { reason })`. A mention you
 purpose takes no reason in the Spec; keep those pairs in a file of your own and pass it to the
 mention audit (recipe 22) as `intended`. The law is `spec:model.relation-reasons`.
 
+A decision `refines` the Spec whose question it settles, and that Spec names the decision through
+`decidedBy`, so the two relations come in pairs. A decision that narrows one part of another
+decision refines that decision. The convention is `spec:decisions.planning-truths-placement`.
+
 ### How much to write
 
 Write the least design that lets two people work apart: a builder and a test author, or an author
@@ -229,6 +243,9 @@ and a reviewer.
 - Keep why in the narrative or in a decision Spec, once.
 - Leave out implementation order, restated code, counts and status: recipes derive counts, and git
   keeps the history.
+- Leave out a rule that only points at the file or entrypoint realizing the Spec: the anchor
+  records that site. A public name two parties need becomes a keyed Design entry, and a rule that
+  names the source a table is read from stays, because that source is law.
 - Once the code and its verifier exist, slimming candidates (recipe 39) lists pinned declarations
   the bound code may now carry. Compare each with the code; removing one is your edit, never the
   recipe's.
@@ -312,7 +329,7 @@ or a sandboxed function runtime, imports the same builders from the zero-depende
 builders and nothing else.
 
 Trust comes from the import. The builder import must be a Protocol builder binding: the public
-package, its `/anchors` subpath, or a relative import that resolves to the package's `ids` or
+package, its `/anchors` subpath, or a relative import that resolves to the package's `ids`, `anchors` or
 `model/code-anchor` module. A consumer-local lookalike mints nothing and reports nothing, because
 a source file that never bound to the Protocol is not authoring drift to report. On the CommonJS
 package surface the trusted relative-module set is empty, so relative bindings mint no anchors
@@ -361,8 +378,8 @@ export async function rebuild(stream: string): Promise<void> {
   resolves is an authoritative binding until someone edits the block. Review a block with the code
   beneath it.
 - The file is the binding grain of both forms. A block names no declaration, and the graph records
-  no symbol, so keep a file's blocks together and write one identity per realizing site rather than
-  one block above each declaration.
+  no symbol, so keep a file's blocks together rather than writing one block above each
+  declaration.
 - `sdp validate --watch` re-runs on carrier edits only, never on source edits. After editing an
   anchor, run `sdp validate` or query the graph again.
 
@@ -371,29 +388,35 @@ representation and mints nothing.
 
 ### Choose targets honestly
 
-`satisfies` claims the code realizes the whole Spec and confers `implemented`. `references` says
-the code answers to the design without claiming to realize it: the unit follows the design or
-realizes part of it, so a change to the design asks the code to follow. It confers nothing: no
-delivery fact, no readiness floor, no drift alarm. A target named in both is an error. A code
-anchor with neither is identity-only and lawful; it mints a code unit for structure and for
-`byFile`, and confers nothing.
+`satisfies` is a claim about the whole Spec, made by the set of units that satisfy it. A unit
+satisfies a Spec when it realizes at least one promise the Spec carries, and those units together
+realize every promise it carries. A satisfying unit confers `implemented`. A unit that follows a
+design without realizing any of its promises references it. `references` says the code answers
+to the design without claiming to realize it, so a change to the design asks the code to follow.
+It confers nothing: no delivery fact, no readiness floor, no drift alarm. A target named in both
+is an error. A code anchor with neither is identity-only and lawful; it mints a code unit for
+structure and for `byFile`, and confers nothing.
 
 A reference runs one way, from the code to the design it answers to. When a new design builds on
 code that already exists, the design says so with `dependsOn` or `refines` to the Spec that code
 satisfies. The existing code gets no reference to the new design.
 
 Targets name whole Specs; an entry address is never a target. To choose between `satisfies` and
-`references` for one Spec, list what the Spec promises that no satisfying unit realizes. Read every
-promise it carries, not only its Design entries: a rule, a flow, a contract entry, a UI entry, or a
-constraint promises as much, and a Spec without a Design section still promises.
+`references` for one Spec, run the promise pass: list what the Spec promises that no satisfying
+unit realizes. Read every promise it carries, not only its Design entries: a rule, a flow, a
+contract entry, a UI entry, or a constraint promises as much, and a Spec without a Design section
+still promises.
 
 - None: keep `satisfies`.
 - A coherent part with its own trigger or step: split it into a child Spec that refines the
   parent, then run the pass again on what the parent still promises before it keeps `satisfies`.
 - Anything else: write `references` until the code realizes what the Spec promises.
 
-Never write a whole-Spec `satisfies` over a promise no unit builds. Apply the same pass to a
-component and its members together.
+A promise no satisfying unit realizes is a binding defect; never write `satisfies` over a promise
+no unit builds. A component and its members are one set for this pass, and a component anchor is
+never added only to complete a set. Run the pass again whenever a Spec's rules or Design entries
+change, reading the change through the design diff (recipe 35): a promise added after the anchors
+were written still reads as covered by them, and no validator judges completeness.
 
 Write a reference for the design relationship it names. A reference added to make a test pass,
 move a count, or give `byFile` an answer does not belong; remove it. Never point `satisfies` at
@@ -411,7 +434,7 @@ follows. The law is `spec:decisions.anchor-binding-grain`.
   data, never findings. There is no `implements` field; contract realization stays `satisfies`.
 - `role` names the architectural pattern the unit plays, on any code anchor. The corpus owns the
   vocabulary: `service`, `decider`, `projection`, `read-model`, `codec`, `contract`, `barrel`, and
-  `utility` are the lineage set, not a closed list. A value is one lowercase kebab token matching
+  `utility` are common values, not a closed list. A value is one lowercase kebab token matching
   `^[a-z][a-z0-9-]*$` and is never normalized, so `readModel` is refused rather than folded into
   `read-model`.
 - `layer` goes on a `component:` anchor only and takes one of five values:
@@ -434,10 +457,11 @@ so map packages to components by review rather than one component per package. R
 
 ### Curate the anchors
 
-Annotations are curated, never a coverage quota. Anchor the units that carry the architecture, its
+Anchors are curated, never a coverage quota. Anchor the units that carry the architecture, its
 exported public surface and its cross-component reach, and leave the rest bare. An identity has
-one owner: one anchor per realizing unit, so an identity that would stand for several files
-becomes several identities, each choosing `satisfies` or `references` for what its own code does.
+one owner, so an identity that would stand for several files becomes several identities; a site
+that realizes several Specs may carry one identity per Spec, each labeled with its own local how.
+Each identity chooses `satisfies` or `references` for what its own code does.
 A realizing unit's comment documents its local how, never a paraphrase of the Spec's what or why;
 the Spec already owns those, and a restatement in code is a second owner that drifts.
 
@@ -479,7 +503,9 @@ coverage-unknown for the Markdown file. This repository binds its own skills exa
    owns the filename, so one consolidated suite can bind many examples without collisions.
    Repository generation also publishes the independent Design Review, census, Mermaid, and
    Gherkin-shaped read roots. Use the repository generate/check scripts to certify the complete
-   projection suite; do not treat the Gherkin read root as an authored carrier.
+   projection suite; do not treat the Gherkin read root as an authored carrier. In an adopter,
+   each publisher leaves only its own root current, because every build first removes all four;
+   run the publisher for the root you need to read.
 
 4. Author the oracle for the space and bind it with a top-level `specOracle` anchor whose `models`
    names the parent. Eligibility follows example-space ownership, not kind: a missing target, a

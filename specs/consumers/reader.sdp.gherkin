@@ -4,6 +4,9 @@
 @depends-on.spec:extraction.delivery-facts
 @refines.spec:consumers.agent-surface
 @decided-by.spec:decisions.agent-surface-scripts-graph
+@decided-by.spec:decisions.agent-front-door
+@decided-by.spec:decisions.anchor-binding-grain
+@decided-by.spec:decisions.decision-readiness-posture
 Feature: The reader bridges agent entry points to composable graph context
   - outcome: Let agents enter the curated graph from the strings, files, and changesets they already have without rebuilding its joins or taxonomy.
 
@@ -28,6 +31,7 @@ Feature: The reader bridges agent entry points to composable graph context
   @spec.consumers.reader.concept-entry
   @altitude.story
   @readiness.ready
+  @exercises.conceptEntry
   Scenario: A concept recorded only inside a Spec's sections is still reached, and the field is named
     - outcome: Execute the string entry against the case a title-and-id lookup would miss, and read back the field the match was recorded in.
     Given a reader built over the graph a real extraction derives from the probe root
@@ -39,6 +43,7 @@ Feature: The reader bridges agent entry points to composable graph context
   @spec.consumers.reader.file-entry
   @altitude.story
   @readiness.ready
+  @exercises.fileEntry
   Scenario: A source file reaches the Spec its binding names, and a carrier reaches its own Spec
     - outcome: Execute the file entry on both halves it has to bridge — a source file the graph records only a binding at, and the carrier a Spec is authored in.
     Given a reader built over the graph a real extraction derives from the probe root
@@ -51,6 +56,8 @@ Feature: The reader bridges agent entry points to composable graph context
   @spec.consumers.reader.changeset-entry
   @altitude.story
   @readiness.ready
+  @exercises.blastRadius
+  @exercises.reasonsAsData
   Scenario: A changeset names what it reaches, why, and what it cannot see
     - outcome: Execute the changeset entry on a mixed changeset, so the impacted reason, the one-hop at-risk edge with its claim, and the coverage-unknown file are all read from one answer.
     Given a reader built over the graph a real extraction derives from the probe root
@@ -63,12 +70,14 @@ Feature: The reader bridges agent entry points to composable graph context
     Then the coverage-unknown files name {coverageUnknownFile: "src/price-book.ts"}
     Then the coverage-unknown files number {coverageUnknownCount: 1}
 
-  Rule: `createReader` constructs a fresh thin typed loader that decodes graph joins, claims, delivery facts, derived readiness, and validation findings once, then returns plain composable data without persisting state.
-  Rule: `findByConcept` and `byFile` bridge strings and extraction-root-relative files to the graph's recorded context.
-  Rule: `findByConcept` matches a string against every field the graph records — ids, titles, anchor labels, Pack framing, narrative, and reified section content — and names the fields a node matched on rather than returning a bare hit.
-  Rule: `byFile` answers with the nodes the graph records at the path and with the Specs those nodes reach, so a source file carrying a binding names the Spec it binds and a carrier file names the Spec authored in it.
-  Rule: The reader's `blastRadius` surface maps changed files to directly impacted Specs and Packs, their explicit one-hop at-risk neighbors, and every coverage-unknown file.
-  Rule: Every impact and at-risk answer carries its reason as data — the changed file, the binding it travelled through, the connecting edge, and that edge's claim — so nothing about the reach is left to the caller's inference.
+  Rule: `createReader` constructs a fresh thin typed loader that indexes graph joins and claims and computes delivery facts and validation findings once, derives readiness when a caller asks, and returns plain composable data without persisting state.
+  Rule: The reader exposes `graph`, the raw graph it reads, and the methods `specs`, `packs`, `findings`, `findByConcept`, `byFile`, `blastRadius`, `specContext` and `packContext`; a join is added only when a second machine consumer needs it and hand-rolled attempts get it wrong.
+  Rule: [#conceptEntry] `findByConcept` matches ids, titles, anchor labels, Pack framing, Spec narrative, and reified section content, including model term keys, and names the fields a node matched on rather than returning a bare hit.
+  Rule: [#fileEntry] `byFile` answers with the nodes the graph records at the path and with the Specs those nodes reach, so a source file carrying a binding names the Spec it binds and a carrier file names the Spec authored in it.
+  Rule: [#blastRadius] `blastRadius` maps changed files to Specs and Packs authored at them and Specs reached through `satisfies`, `references`, `verifies` or a usable oracle `models` binding, plus their explicit one-hop at-risk neighbors; it reports every file the graph records nothing at as `coverageUnknown` and every changed code unit with no Spec linkage as `unlinked`, and neither list claims exhaustive coverage.
+  Rule: [#reasonsAsData] Every reason is data; a direct impact names the changed file and, when it travelled through a binding, that binding's id, edge type and claim, and an at-risk neighbor names the connecting edge with both its ends and its claim, so its impacted end leads back to that impact's reasons.
   Rule: File-level blast radius reports curated graph reach without claiming exhaustive symbol-level usage reach.
+  Rule: `specContext` returns `undefined` for an id that is no Spec; otherwise it returns the Spec summary and sections, design columns, failures of the stated rung's floor, failures at the stated next rung and at the rung above the floor reached, relations both ways with claims and optional reasons, realizing and referencing code units, decoded verifiers, an optional usable oracle binding, entry locations and findings naming the Spec.
+  Rule: `packContext` returns `undefined` for an id that is no Pack; otherwise it returns the Pack summary, one row per manifest entry in authored order, the Pack design on resolved rows, verifier gaps, boundary and findings naming the Pack.
   Rule: `packContext` lists one member row per manifest entry in the manifest's authored order, and its verifier gaps follow that order.
-  Rule: The realizing entrypoint is `createReader` in `src/reader/reader.ts`.
+  Rule: `packContext` lists a verifier gap for each resolved non-decision member that carries no `has-verifier`; a member stated `ready` has priority true, and the list is informative, never a gate.

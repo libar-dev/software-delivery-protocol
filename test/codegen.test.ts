@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { contractsFindingIds, generateContracts, refines, spec, specId } from "../src/index.js";
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 import type { GraphSchema, Spec } from "../src/index.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
@@ -9,6 +10,13 @@ import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
  * end-to-end bytes through the CLI; here each generation law and each loud degradation is pinned
  * in isolation).
  */
+
+const registrarGenerationTestAnchor = specTest({
+  id: testAnchorId("test:protocol.runnable-modules-generation"),
+  label: "checks registrar generation, sibling paths and competing suite paths",
+  verifies: ref("spec:extraction.runnable-modules"),
+});
+void registrarGenerationTestAnchor;
 
 const parent = (exampleSpace?: {
   given?: readonly string[];

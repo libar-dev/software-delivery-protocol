@@ -24,7 +24,11 @@ If the active pnpm binary cannot run this package-lock-based checkout, the equiv
 wrapper is `npm run --silent sdp:q -- '<body>'`. Never fall through to a global `sdp`.
 
 When a session needs human-readable output, the public publishers are `view`, `census`, `mermaid`,
-and `gherkin`; the source checkout's generate/check scripts certify the four roots together.
+and `gherkin`. Each one's build first removes all four roots, so after one publisher runs only its
+own root is current. The repository's generate/check scripts preserve and publish all four roots
+together. In check mode a prior tree must exist for each root; Design Review checks repeat-render
+determinism, while census, Mermaid and Gherkin also compare the prior tree's bytes with the current
+render.
 
 An adopter selects its root and exclusions through its installed package runner:
 
@@ -118,21 +122,23 @@ proposal without rewriting.
 
 Use the drift alarm (recipe 2) and changed-file blast radius (recipe 4) over the session diff.
 Slimming is optional judgment: remove obsolete implementation-sequencing scaffolding only when
-durable law and one prose owner remain. Slimming candidates (recipe 39) lists the pinned
-declarations of implemented, verified Specs, the distillation boundary
-`spec:model.enrichment-lifecycle` states; compare each with the bound code before removing it, and
-keep every why. The curation report (recipe 40), over an imports file `sdp build --imports` writes,
-lists load-bearing files no anchor covers and `uses` edges the imports do not back; it is advice,
-and an anchor you add answers to it as usual.
+durable law and one prose owner remain. A Design entry may leave its Spec only past the
+distillation boundary `spec:model.enrichment-lifecycle` states: the Spec is implemented with a
+verifier, and a bound artifact carries the entry. Slimming candidates (recipe 39) lists the pinned
+declarations of implemented, verified Specs; compare each with the bound code before removing it,
+and keep every why. The curation report (recipe 40), over an imports file
+`sdp build --imports` writes, lists load-bearing files no anchor covers and `uses` edges the
+imports do not back; it is advice, and an anchor you add answers to it as usual.
 
 ## Hand off for re-measurement
 
 Name the chosen shape, target Spec ids or Pack, changed files, stated and derived readiness,
 findings or blocking open questions, and the exact commands, commits, or artifact locations from
-which evidence can be re-derived. An arc-scale handoff follows the register-carrier rule on
-`spec:consumers.delivery-session-on-ramp` and names those Spec ids so the next session
-re-measures them. Never hand off a carried "verified" verdict: the next session
-re-runs the named evidence. Git remains the event log; no session state enters the graph. A handoff fits this form:
+which evidence can be re-derived. An arc-scale handoff follows
+`spec:consumers.delivery-session-on-ramp#rule.arcHandoff` and names the Spec ids that carry the
+arc's refusals, guarantees and holds, so the next session re-measures them.
+Never hand off a carried "verified" verdict: the next session re-runs the named evidence. Git
+remains the event log; no session state enters the graph. A handoff fits this form:
 
 ```md
 ## Handoff: <shape> on <Pack or Spec ids>
@@ -141,7 +147,7 @@ re-runs the named evidence. Git remains the event log; no session state enters t
 - Targets: <Spec ids>, each with its stated and derived readiness (recipe 9 or 29)
 - Changed files: <paths>
 - Open: <blocking questions by address>, <findings by validator id>
-- Re-measure with: <recipe numbers and their params>, `npm run check`
+- Re-measure with: <recipe numbers and their params>, then the project's own gate (`npm run check` in the Protocol repository)
 - Next: <the first thing the next session does>
 ```
 

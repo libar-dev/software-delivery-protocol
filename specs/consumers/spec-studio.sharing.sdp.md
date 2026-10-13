@@ -14,6 +14,12 @@ relations:
 
 ## Intent
 - outcome: Let a stakeholder open the Studio of a pull request from a link, and let its author know which graph and which build the stakeholder read.
+### Open questions
+- [non-blocking #stampLoading] How does the shell read the publishing stamp while generated pages stay a function of the graph and a page opened through `file://` makes no request, which keys does the stamp hold, and which step publishes a preview?
+  - decider: owner
+  - links: spec:consumers.spec-studio#question.phaseZeroSplit
+  - provisional: the shell reads `stamp.json` only when served over http or https, so a `file://` page makes no stamp request; its keys are `schemaVersion`, `corpusCommit`, `engine` and `builtAt`; publishing a preview and writing its stamp are the adopter's step, and the Studio build writes only its graph-derived page set
+
 ## Behavior
 - rule: A build is shared by uploading its page set to a static host, such as S3, Vercel or GitHub Pages.
 - rule: Each pull request can publish its Studio as a preview.

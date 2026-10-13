@@ -18,6 +18,15 @@ export interface ValidationViewHooks extends BuildHooks {
   readonly validateGraph?: typeof validateGraph;
 }
 
+const validateSummaryAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.validate-summary"),
+  label: "prints validate's findings and its summary line",
+  satisfies: ref("spec:validation.diagnostic-rendering"),
+  component: componentAnchorId("component:protocol.cli"),
+  role: "renderer",
+});
+void validateSummaryAnchor;
+
 export function runValidate(
   parsed: BuildArgs,
   output: CliOutput,

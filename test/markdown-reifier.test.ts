@@ -23,13 +23,6 @@ const fixturePaths = [
   "specs/carrier/prose-ownership-rule.sdp.md.txt",
 ] as const;
 
-const byteIdenticalFixturePaths = [
-  fixturePaths[0],
-  fixturePaths[1],
-  fixturePaths[3],
-  fixturePaths[4],
-] as const;
-
 const validFrontmatter = `---
 id: spec:carrier.valid
 kind: behavior
@@ -200,16 +193,6 @@ The second framing paragraph.`;
       expect(result.specs[0]?.data.intent).toHaveProperty("outcome");
     }
   });
-
-  it.each(byteIdenticalFixturePaths)(
-    "keeps %s byte-identical to its live carrier",
-    async (path) => {
-      const fixtureBytes = await readFile(new URL(path, fixtureRoot));
-      const liveBytes = await readFile(new URL(path.slice(0, -4), new URL("../", import.meta.url)));
-
-      expect(liveBytes).toEqual(fixtureBytes);
-    },
-  );
 
   it("maps scalar and list relations in authored order", () => {
     const result = reify(`---

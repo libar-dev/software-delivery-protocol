@@ -1,6 +1,22 @@
-import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, parseId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { DeliveryFactName, GraphEdge, GraphNode, PrimitiveNode } from "./schema.js";
+
+function hasTestNamespace(id: string): boolean {
+  try {
+    return parseId(id).namespace === "test";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Returns whether `edge` targets a Spec. On a duplicate id the first node wins, as in the graph
+ * index, so a target whose first node is not a Primitive confers nothing.
+ */
+function targetsPrimitive(edge: GraphEdge, nodesById: ReadonlyMap<string, GraphNode>): boolean {
+  return nodesById.get(edge.to)?.nodeType === "Primitive";
+}
 
 /**
  * Conferral law: `spec:extraction.delivery-facts`.
@@ -16,7 +32,9 @@ export function isResolvingTestAnchorVerify(
   return (
     edge.type === "verifies" &&
     edge.claim === "anchored" &&
-    nodesById.get(edge.from)?.nodeType === "Anchor"
+    nodesById.get(edge.from)?.nodeType === "Anchor" &&
+    hasTestNamespace(edge.from) &&
+    targetsPrimitive(edge, nodesById)
   );
 }
 
@@ -37,7 +55,10 @@ export function isEnabledExampleVerify(
   const source = nodesById.get(edge.from);
 
   return (
-    source?.nodeType === "Primitive" && source.specKind === "example" && anchorVerified(source.id)
+    source?.nodeType === "Primitive" &&
+    source.specKind === "example" &&
+    anchorVerified(source.id) &&
+    targetsPrimitive(edge, nodesById)
   );
 }
 
@@ -73,14 +94,11 @@ export function computeDeliveryFacts(
   const anchorVerified = new Set<string>();
 
   for (const edge of edges) {
-    if (!primitivesById.has(edge.to)) {
-      continue;
-    }
-
     if (
       edge.type === "satisfies" &&
       edge.claim === "anchored" &&
-      nodesById.get(edge.from)?.nodeType === "CodeNode"
+      nodesById.get(edge.from)?.nodeType === "CodeNode" &&
+      targetsPrimitive(edge, nodesById)
     ) {
       implemented.add(edge.to);
     }
@@ -93,10 +111,6 @@ export function computeDeliveryFacts(
   const hasVerifier = new Set<string>(anchorVerified);
 
   for (const edge of edges) {
-    if (!primitivesById.has(edge.to)) {
-      continue;
-    }
-
     if (isEnabledExampleVerify(edge, nodesById, (verifierId) => anchorVerified.has(verifierId))) {
       hasVerifier.add(edge.to);
     }

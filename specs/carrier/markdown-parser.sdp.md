@@ -5,10 +5,12 @@ altitude: feature
 readiness: ready
 relations:
   refines: spec:carrier.markdown-authoring
-  dependsOn: spec:carrier.envelope-contract
+  dependsOn:
+    - spec:carrier.envelope-contract
+    - spec:carrier.markdown-body-grammar
   constrainedBy: spec:carrier.inline-code-spans
 ---
-# The product parser reifies the ruled Markdown subset
+# The Markdown parser reifies the ruled subset
 
 ## Intent
 - problem: Prevent carrier-specific graph and validation paths from diverging.
@@ -16,12 +18,15 @@ relations:
 - value: Markdown-carried intent remains subject to the Protocol's deterministic checks.
 
 ## Behavior
-- rule: The parser accepts only the ruled heading grammar, keeps matched code spans literal at its raw-HTML guards under `spec:carrier.inline-code-spans`, and excludes one malformed carrier while continuing healthy siblings.
-- rule: The ruled Markdown parser has bounded finding-class parity with the TypeScript carrier for `extract/non-static-envelope`, `extract/invalid-id`, `extract/duplicate-id`, `extract/reserved-property`, `extract/unowned-prose`, and `extract/unrecognized-property`; the shared validator ID is the claim, while severity and extract-versus-refuse outcomes remain carrier-specific.
-- rule: Named non-claim — `extract/parse-error` remains distinct because YAML/frontmatter parsing has no TypeScript parser-diagnostic analogue.
-- rule: Named non-claim — `extract/non-static-section` remains distinct because TypeScript degrades optional section properties while Markdown refuses malformed documents whole.
-- rule: Named non-claim — `extract/unrecognized-statement` remains distinct because Markdown owns prose and structures, not TypeScript statement recognition.
-- rule: Named non-claim — `extract/misplaced-authoring` remains distinct because Markdown has no executable authoring-call surface.
+- rule: The parser accepts the grammar stated by `spec:carrier.markdown-body-grammar`, keeps matched code spans literal under `spec:carrier.inline-code-spans`, and excludes a malformed Markdown carrier while continuing healthy siblings.
+- rule: The ruled Markdown parser has bounded finding-class parity with the TypeScript carrier for `extract/non-static-envelope`, `extract/invalid-id`, `extract/duplicate-id`, `extract/reserved-property`, `extract/unowned-prose`, and `extract/unrecognized-property`; both carriers report each of these findings under the same validator id, while severity and extract-versus-refuse outcomes remain carrier-specific.
+- rule: Carrier-specific finding — `extract/parse-error` remains distinct because YAML/frontmatter parsing has no TypeScript parser-diagnostic analogue.
+- rule: Carrier-specific finding — `extract/non-static-section` remains distinct because TypeScript degrades optional section properties while Markdown refuses malformed documents whole.
+- rule: A static envelope field that cannot be reified fails extraction in either carrier. A non-static optional TypeScript section property drops with a warning, except the question failures below; a malformed Markdown carrier is refused whole.
+- rule: The TypeScript carrier refuses an integer-like Design or UI key or Model term with an error and drops only that member. An unknown property inside a question, or a malformed question key, is an error at that property; refusing it does not remove the question's blocking flag.
+- rule: In the TypeScript carrier, a non-static value under a question's `decider`, `links`, `provisional` or `trigger` field drops the whole question list with an error; a non-static question text or blocking flag drops the whole list with a warning.
+- rule: Carrier-specific finding — `extract/unrecognized-statement` remains distinct because Markdown owns prose and structures, not TypeScript statement recognition.
+- rule: Carrier-specific finding — `extract/misplaced-authoring` remains distinct because Markdown has no executable authoring-call surface.
 
 ## Example space
 ```gwt-vocabulary
@@ -33,4 +38,4 @@ Then the Markdown carrier reports severity {markdownSeverity:"warning"|"error"} 
 ```
 
 ## Verification — executable
-- `test/extract-parity.test.ts` executes the settled finding-class parity matrix, including the six same-class findings, their carrier-specific outcomes, and four named non-claims.
+- Each same-class matrix row reports the same validator id from both carriers, with the specified severity and extraction outcome for each carrier; carrier-specific rows keep their distinct findings.

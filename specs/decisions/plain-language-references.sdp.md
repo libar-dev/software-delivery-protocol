@@ -15,4 +15,4 @@ relations:
 - context: Decision codes are useful lookup keys but poor standalone prose.
 - decision: Durable references lead with plain-language meaning; decision codes follow parenthetically when useful.
 - rationale: Meaning survives registry churn.
-- consequence: AGENTS and plans lead with names.
+- consequence: Specs, AGENTS.md, skills, registry glosses and plans lead with a decision's plain-language meaning; its code follows in parentheses when useful.
