@@ -184,9 +184,14 @@ describe("published package surface", () => {
     const consumer = join(packageRoot, "consumer");
 
     try {
-      // npm pack runs prepare. One pack proves the lifecycle and supplies the file inventory.
+      // npm ci or the check gate has built dist/. Reuse that build here; the separate git-install
+      // gate proves prepare from a clean commit without rebuilding inside the pooled suite.
       const packed = JSON.parse(
-        run("npm", ["pack", "--json", "--pack-destination", packageRoot], repositoryRoot),
+        run(
+          "npm",
+          ["pack", "--ignore-scripts", "--json", "--pack-destination", packageRoot],
+          repositoryRoot,
+        ),
       ) as readonly [
         { readonly filename: string; readonly files: readonly { readonly path: string }[] },
       ];
