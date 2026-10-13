@@ -1,0 +1,509 @@
+/* The Studio's Pack page, prototype. Hand-written, no build step, no network. */
+
+:root {
+  --bg: #fbfbfa;
+  --surface: #ffffff;
+  --surface-2: #f3f4f2;
+  --text: #1d2125;
+  --muted: #5b636b;
+  --line: #d9dcd8;
+  --link: #1f5fa8;
+  --focus: #c25e00;
+  --warn-bg: #fff4d6;
+  --warn-text: #6b4500;
+  --warn-line: #e0b54a;
+  --code-bg: #eef0ec;
+  /* The rung palette: one hue in four lightness steps, so it stays ordered under any color
+     vision; the word is always inside the badge. */
+  --rung-idea-bg: #eef3f9;
+  --rung-idea-text: #26425f;
+  --rung-scoped-bg: #c8daf0;
+  --rung-scoped-text: #1c3854;
+  --rung-defined-bg: #5d8fca;
+  --rung-defined-text: #ffffff;
+  --rung-ready-bg: #1f4878;
+  --rung-ready-text: #ffffff;
+  --measure: 80ch;
+  --radius: 6px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15181b;
+    --surface: #1c2024;
+    --surface-2: #23282d;
+    --text: #e6e8ea;
+    --muted: #a3abb3;
+    --line: #353b41;
+    --link: #8cbcf2;
+    --focus: #ffb062;
+    --warn-bg: #3a2e12;
+    --warn-text: #f3d68f;
+    --warn-line: #8a6a1e;
+    --code-bg: #262c31;
+    --rung-idea-bg: #26313d;
+    --rung-idea-text: #d6e3f2;
+    --rung-scoped-bg: #2f4b6b;
+    --rung-scoped-text: #e4eefa;
+    --rung-defined-bg: #4c7fbf;
+    --rung-defined-text: #ffffff;
+    --rung-ready-bg: #9cc3f0;
+    --rung-ready-text: #0d2238;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    15px/1.55 system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+}
+
+a {
+  color: var(--link);
+}
+
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--code-bg);
+  border-radius: 3px;
+  padding: 0.05em 0.3em;
+  overflow-wrap: anywhere;
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  background: var(--surface);
+  padding: 0.5rem 1rem;
+  z-index: 10;
+}
+
+.skip-link:focus {
+  left: 1rem;
+}
+
+/* The prototype's own note, which the product does not have. */
+.prototype-note {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  border-bottom: 1px solid var(--warn-line);
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.prototype-note p {
+  margin: 0;
+  max-width: 110ch;
+}
+
+/* The shell. */
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.top .brand {
+  font-weight: 650;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.top nav a {
+  margin-right: 0.9rem;
+}
+
+.top form {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.top input[type="search"] {
+  font: inherit;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  width: 16rem;
+  max-width: 50vw;
+}
+
+button {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
+  gap: 0 2rem;
+  max-width: 82rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.rail {
+  font-size: 0.9rem;
+  position: sticky;
+  top: 0.5rem;
+  align-self: start;
+  max-height: calc(100vh - 1rem);
+  overflow: auto;
+  padding-right: 0.5rem;
+}
+
+.rail h2 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 1rem 0 0.4rem;
+}
+
+.rail ol,
+.rail ul {
+  margin: 0;
+  padding-left: 1.4rem;
+}
+
+.rail li {
+  margin: 0.2rem 0;
+}
+
+main {
+  min-width: 0;
+}
+
+.page-head .eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+h1 {
+  font-size: 1.7rem;
+  line-height: 1.25;
+  margin: 0.15rem 0 0.5rem;
+}
+
+h2 {
+  font-size: 1.25rem;
+  margin: 2rem 0 0.6rem;
+}
+
+h3 {
+  font-size: 1rem;
+  margin: 1rem 0 0.35rem;
+}
+
+.prose,
+.prose p,
+.summary {
+  max-width: var(--measure);
+}
+
+.ids {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  align-items: center;
+  margin: 0.2rem 0 0.8rem;
+  color: var(--muted);
+}
+
+.summary {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.summary li {
+  margin: 0.15rem 0;
+}
+
+.summary strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.toolbar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.4rem 0 0.8rem;
+}
+
+/* Rung badges and the other words that carry a status. */
+.badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.rung-idea {
+  background: var(--rung-idea-bg);
+  color: var(--rung-idea-text);
+  border-color: transparent;
+}
+
+.rung-scoped {
+  background: var(--rung-scoped-bg);
+  color: var(--rung-scoped-text);
+  border-color: transparent;
+}
+
+.rung-defined {
+  background: var(--rung-defined-bg);
+  color: var(--rung-defined-text);
+  border-color: transparent;
+}
+
+.rung-ready {
+  background: var(--rung-ready-bg);
+  color: var(--rung-ready-text);
+  border-color: transparent;
+}
+
+.floor {
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.kind {
+  font-size: 0.8rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.diverges {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  border-color: var(--warn-line);
+}
+
+.held {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  border-color: var(--warn-line);
+}
+
+/* Member cards. */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin: 0.45rem 0;
+}
+
+.card:target,
+.card:has(:target) {
+  border-color: var(--focus);
+}
+
+.card > summary {
+  cursor: pointer;
+  padding: 0.55rem 0.8rem;
+  list-style-position: outside;
+  margin-left: 1rem;
+}
+
+.card > summary .line1 {
+  font-weight: 600;
+}
+
+.card > summary .line2 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  align-items: center;
+  margin-top: 0.25rem;
+  font-weight: 400;
+}
+
+.card-body {
+  padding: 0.2rem 1rem 0.9rem 1.8rem;
+  border-top: 1px solid var(--line);
+}
+
+.card-body h3 {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin-top: 0.9rem;
+}
+
+.card-body p,
+.card-body li {
+  max-width: var(--measure);
+}
+
+.questions {
+  padding-left: 1.2rem;
+  margin: 0.3rem 0;
+}
+
+.questions > li {
+  margin: 0.5rem 0;
+}
+
+.field {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.9rem;
+}
+
+.field b {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.units {
+  list-style: none;
+  padding: 0;
+  margin: 0.2rem 0;
+}
+
+.units li {
+  margin: 0.35rem 0;
+}
+
+.loc {
+  white-space: nowrap;
+}
+
+/* Sections that close: the boundary and the lists after the cards. */
+.section {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  margin: 0.45rem 0;
+}
+
+.section > summary {
+  cursor: pointer;
+  padding: 0.5rem 0.8rem;
+  font-weight: 600;
+}
+
+.section > .section-body {
+  padding: 0 0.8rem 0.8rem;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.plain-list {
+  padding-left: 1.2rem;
+}
+
+sdp-copy button {
+  font-size: 0.75rem;
+  padding: 0.05rem 0.45rem;
+  margin-left: 0.25rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Below the phone breakpoint every layout is one column and the rail follows the canvas. */
+@media (max-width: 720px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rail {
+    position: static;
+    max-height: none;
+    order: 2;
+    border-top: 1px solid var(--line);
+    margin-top: 2rem;
+  }
+
+  main {
+    order: 1;
+  }
+
+  .top form {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .top input[type="search"] {
+    flex: 1;
+    max-width: none;
+  }
+
+  .card-body {
+    padding-left: 1rem;
+  }
+}

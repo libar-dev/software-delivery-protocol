@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pack · Spec Studio prototype</title>
+    <link rel="stylesheet" href="studio.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to the page</a>
+    <div class="prototype-note" role="note">
+      <p>
+        A prototype of the Spec Studio's Pack page, rendered from recipe 29's answer and the Pack
+        context of the first adopter's corpus. It holds this page only, so links to the index, search and Spec pages
+        point where the build will write them and do not open here. The same page for the other
+        Pack: <a href="design-management-v1.html">design-management-v1</a>.
+      </p>
+    </div>
+    <header class="top">
+      <a class="brand" href="../index.html">Spec Studio</a>
+      <nav aria-label="Studio"><a href="../index.html#packs">Packs</a></nav>
+      <form action="../search.html" role="search">
+        <label class="visually-hidden" for="q">Search the corpus</label>
+        <input id="q" name="q" type="search" placeholder="Search Specs, keys and files" />
+        <button type="submit">Search</button>
+      </form>
+    </header>
+    <div class="layout">
+      <nav class="rail" id="rail" aria-label="Pack members"></nav>
+      <main id="main">
+        <noscript>
+          <p>
+            This prototype renders the page from its data with a script. The Studio's build
+            writes the same markup into the page, which then reads without a script.
+          </p>
+        </noscript>
+      </main>
+    </div>
+    <script src="data/history-view.js"></script>
+    <script src="studio.js"></script>
+  </body>
+</html>
