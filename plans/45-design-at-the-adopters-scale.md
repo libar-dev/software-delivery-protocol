@@ -102,12 +102,27 @@ mention in a rule loses), the corpus-checks build, the Studio's data and verb be
 and then its pages, and lane E's first half, which moves the platform to this commit. Lane E's
 second half follows the builds: rules files and the Studio on the platform.
 
+## Rulings after wave 2
+
+Wave 2 merged at `eef8ba9`. Each build was reviewed by Opus 5.5, and the Studio's pages also by
+Fable 5.1, before the main thread ruled. Delegated; each awaits the owner's review.
+
+| Ruling | Carrying Spec |
+| --- | --- |
+| Search indexes only the graph; an adopter's register id is found once the adopter writes it into a Spec, so the second reader task keeps its wording | `spec:consumers.spec-studio.search` |
+| A keyed question on a Spec page shows its key, with a copy action for the full address | `spec:consumers.spec-studio.spec-page.core#ui.questionItem` |
+| The left rail lists example-space owners only on Pack and Spec pages | `spec:consumers.spec-studio.shell#ui.leftRail` |
+| An example states a component design no anchor realizes as `realizedLayer: "absent"` | `spec:model.planned-architecture` |
+| The rules runner lives in the CLI; the validation layer holds only the corpus finding types | `spec:validation.corpus-rules` |
+| The concept matcher ships as the browser-safe subpath `./concept-match`, as the anchor builders ship as `./anchors` | `spec:consumers.spec-studio.search` |
+
 ## Deferred, with their triggers
 
 | Item | Comes back when |
 | --- | --- |
 | A context bundle for the platform's application and foundation Packs, which stay over budget after every cut | A design pass needs either Pack whole; until then, read them through a perspective (recipe 37) |
 | Watching rules files under `--watch` | An author asks for a rerun on editing a rules file |
+| Exporting `sdp q`'s body evaluator from the package, so a script holding a graph runs shipped recipes without deriving it again | An adopter script other than the Pack page the Studio retires needs it |
 | Run evidence | The platform's CI writes CTRF for its native tier, or the Studio's verification panels open |
 | Example-space coverage | A design pass asks which slot values no example exercises |
 | The Obsidian vault | A reader asks for it after the Studio's phase 0 ships |
