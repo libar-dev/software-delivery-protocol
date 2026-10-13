@@ -52,30 +52,41 @@ function hasTokens(text: string, wanted: readonly string[]): boolean {
   );
 }
 
-// The index carries JSON text for non-string coined values. Read their original type from the
-// same record, rather than treating serialized text as authored prose.
-function isStringEntry(record: SearchRecord, entry: SearchEntry): boolean {
-  if (entry.section === "narrative") return true;
-  const walk = (value: unknown, path: string | null): boolean => {
-    if (typeof value === "string") return path === entry.entry && value === entry.text;
-    if (Array.isArray(value))
-      return value.some((item: unknown, i) => walk(item, `${path ?? ""}[${String(i)}]`));
-    if (typeof value === "object" && value !== null) {
-      return Object.entries(value).some(([key, item]: [string, unknown]) =>
-        walk(item, path === null ? key : `${path}.${key}`),
-      );
-    }
-    return false;
-  };
-  return walk((record.sections as Record<string, unknown> | undefined)?.[entry.section], null);
+// Serialized non-string values are not authored prose. Walk the original sections once per
+// search and identify strings by section, entry path and text, without changing the index shape.
+function stringEntries(record: SearchRecord): ReadonlySet<string> {
+  const strings = new Set<string>();
+  for (const [section, content] of Object.entries(record.sections ?? {})) {
+    const walk = (value: unknown, path: string | null): void => {
+      if (typeof value === "string") strings.add(JSON.stringify([section, path, value]));
+      else if (Array.isArray(value))
+        value.forEach((item: unknown, i) => {
+          walk(item, `${path ?? ""}[${String(i)}]`);
+        });
+      else if (typeof value === "object" && value !== null)
+        for (const [key, item] of Object.entries(value))
+          walk(item, path === null ? key : `${path}.${key}`);
+    };
+    walk(content, null);
+  }
+  return strings;
+}
+
+function matchesEntry(
+  entry: SearchEntry,
+  wanted: readonly string[],
+  strings: ReadonlySet<string>,
+): boolean {
+  return (
+    (entry.key !== null && hasTokens(entry.key, wanted)) ||
+    ((entry.section === "narrative" ||
+      strings.has(JSON.stringify([entry.section, entry.entry, entry.text]))) &&
+      hasTokens(entry.text, wanted))
+  );
 }
 
 export function entryMatches(record: SearchRecord, entry: SearchEntry, term: string): boolean {
-  const wanted = tokensOf(term);
-  return (
-    (entry.key !== null && hasTokens(entry.key, wanted)) ||
-    (isStringEntry(record, entry) && hasTokens(entry.text, wanted))
-  );
+  return matchesEntry(entry, tokensOf(term), stringEntries(record));
 }
 
 /**
@@ -90,21 +101,35 @@ export function entryMatches(record: SearchRecord, entry: SearchEntry, term: str
 export function searchRecords(index: SearchIndex, term: string): readonly SearchHit[] {
   const needle = term.toLowerCase().trim();
   if (needle.length === 0) return [];
+  const wanted = tokensOf(term);
   const concepts = matchConcept(index.records, term);
   const byId = new Map(index.records.map((record) => [record.id, record]));
   const conceptIds = new Set(concepts.map((hit) => hit.id));
   const makeHit = (record: SearchRecord, fields: readonly string[]): SearchHit => {
+    const strings = stringEntries(record);
+    const entries =
+      record.nodeType === "Primitive"
+        ? record.entries.filter((entry) => matchesEntry(entry, wanted, strings))
+        : [];
     const matchedIn = [...fields];
-    if (record.entries.some((entry) => entry.key?.toLowerCase().includes(needle)))
+    if (
+      record.entries.some(
+        (entry) =>
+          entry.key !== null &&
+          (entry.key.toLowerCase().includes(needle) || hasTokens(entry.key, wanted)),
+      )
+    )
       matchedIn.push("key");
     if (record.file?.toLowerCase().includes(needle)) matchedIn.push("file");
+    if (matchedIn.length === 0)
+      for (const entry of entries) {
+        const field = entry.section === "narrative" ? "narrative" : `sections.${entry.section}`;
+        if (!matchedIn.includes(field)) matchedIn.push(field);
+      }
     return {
       record,
       matchedIn,
-      entries:
-        record.nodeType === "Primitive"
-          ? record.entries.filter((entry) => entryMatches(record, entry, term))
-          : [],
+      entries,
     };
   };
   const base = concepts.flatMap((hit) => {

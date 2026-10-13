@@ -1,6 +1,8 @@
+import { spawn } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { parseBuildArgs } from "../src/cli/build-args.js";
 import { runValidateRules } from "../src/cli/validate-view-command.js";
@@ -337,6 +339,100 @@ it("awaits bodies in file order and keeps a Protocol error fatal", async () => {
   );
   expect(result.stdout).toContain("corpus rules: 0 errors · 2 warnings");
 });
+
+/**
+ * @sdpAnchor test:protocol.validate-watch-rules
+ * @sdpLabel process checks verify operator stop during active corpus rules
+ * @sdpVerifies spec:consumers.validate-watch
+ */
+it.skipIf(process.platform === "win32").each([false, true])(
+  "SIGINT exits 0 during a live rules body, with no later output or rules, even if it can settle: %s",
+  async (settlesAfterStop) => {
+    const root = probe();
+    const first = rules(
+      root,
+      "pending.js",
+      `const interval = setInterval(() => {}, 1000);
+console.log("first rule entered");
+await new Promise(resolve => {
+  ${settlesAfterStop ? 'process.once("SIGINT", () => setImmediate(resolve));' : ""}
+});
+clearInterval(interval);
+console.log("first rule resumed");
+return { findings: [] };`,
+    );
+    const second = rules(
+      root,
+      "next.js",
+      'console.log("second rule ran"); console.error("second rule stderr"); return { findings: [] };',
+    );
+    const child = spawn(
+      process.execPath,
+      [
+        fileURLToPath(new URL("../dist/cli/sdp.js", import.meta.url)),
+        "validate",
+        root,
+        "--watch",
+        "--rules",
+        first,
+        "--rules",
+        second,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+    const exited = new Promise<{ code: number | null; signal: NodeJS.Signals | null }>((resolve) =>
+      child.once("close", (code, signal) => {
+        resolve({ code, signal });
+      }),
+    );
+    let stdout = "";
+    let stderr = "";
+    let entered: (() => void) | undefined;
+    child.stdout.on("data", (chunk: Buffer) => {
+      stdout += chunk.toString();
+      if (stdout.includes("first rule entered\n")) entered?.();
+    });
+    child.stderr.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString();
+    });
+    let startDeadline: ReturnType<typeof setTimeout> | undefined;
+    let stopDeadline: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await new Promise<void>((resolve, reject) => {
+        entered = resolve;
+        startDeadline = setTimeout(() => {
+          reject(new Error(`first rules body did not start: ${stderr}`));
+        }, 10000);
+        child.once("error", reject);
+        child.once("close", () => {
+          reject(new Error(`watch exited before stop: ${stderr}`));
+        });
+      });
+      clearTimeout(startDeadline);
+      const beforeStop = { stdout, stderr };
+      expect(child.kill("SIGINT")).toBe(true);
+      const stopped = await Promise.race([
+        exited,
+        new Promise<never>((_resolve, reject) => {
+          stopDeadline = setTimeout(() => {
+            reject(new Error("watch did not exit within 2s of SIGINT during a rules body"));
+          }, 2000);
+        }),
+      ]);
+      expect(stopped).toEqual({ code: 0, signal: null });
+      expect({ stdout, stderr }).toEqual(beforeStop);
+      expect(stdout).not.toContain("second rule ran");
+      expect(stderr).not.toContain("second rule stderr");
+    } finally {
+      clearTimeout(startDeadline);
+      clearTimeout(stopDeadline);
+      if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
+      await exited;
+    }
+  },
+  15000,
+);
+
 it("rereads rules on the next carrier cycle and ignores a rules-file event", async () => {
   const root = probe();
   const file = rules(root, "rules.js", "return { findings: [] };");

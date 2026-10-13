@@ -514,6 +514,10 @@ export async function runValidateWatch(
 
   const onAbort = (): void => {
     close();
+    if (watchHooks.abortSignal === undefined) {
+      // An in-process rules body cannot be cancelled and may keep live handles indefinitely.
+      process.exit(0);
+    }
   };
 
   if (watchHooks.abortSignal === undefined) {

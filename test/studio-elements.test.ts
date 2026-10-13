@@ -201,6 +201,41 @@ describe("Studio page interactions", () => {
     expect(entryMatches(record, entryAt(1), "")).toBe(false);
   });
 
+  it("keeps a node whose only match is a tokenized coined entry key", () => {
+    const keyed: SearchRecord = {
+      ...record,
+      sections: { design: { verifyPass: 42 } },
+      entries: [{ ...entryAt(0), text: "42" }],
+    };
+    expect(searchRecords({ records: [keyed] }, "verify pass")).toEqual([
+      { record: keyed, matchedIn: ["key"], entries: keyed.entries },
+    ]);
+  });
+
+  it("reads authored values at most twice per search, regardless of the entry count", () => {
+    const count = 128;
+    let reads = 0;
+    const design: Record<string, unknown> = {};
+    const entries = Array.from({ length: count }, (_, index) => {
+      const key = `entry${String(index)}`;
+      Object.defineProperty(design, key, {
+        enumerable: true,
+        get: () => {
+          reads += 1;
+          return "needle";
+        },
+      });
+      return { ...entryAt(1), entry: key, key, text: "needle" };
+    });
+    const large: SearchRecord = { ...record, sections: { design }, entries };
+    for (const term of ["needle", "absent"]) {
+      reads = 0;
+      const hits = searchRecords({ records: [large] }, term);
+      expect(hits.flatMap((hit) => hit.entries)).toHaveLength(term === "needle" ? count : 0);
+      expect(reads).toBeLessThanOrEqual(2 * count);
+    }
+  });
+
   it("links addressed hits to the entry and other hits to their section or narrative", () => {
     expect(entryUrl(record, entryAt(0))).toBe("specs/probe.find.html#design.verifyPass");
     expect(entryUrl(record, { ...entryAt(0), address: null })).toBe(
