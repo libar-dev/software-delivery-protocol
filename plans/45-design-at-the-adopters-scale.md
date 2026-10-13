@@ -36,6 +36,7 @@ A read of the platform, its feedback and the Protocol's backlog found four needs
 | **L** the loop at scale | A compact context bundle; `declarations: "addresses"`; recipe 41, the key-family register; a diagnostic for a parameter a recipe does not take | design, then build | Opus 5.5 designs, gpt-6.1-sol builds, Opus 5.5 reviews |
 | **B** corpus checks | Design: keyed Design entries for corpus rules, architecture constraints and planned architecture, and `pack:corpus-checks-v1`. Build: `sdp validate --rules`, recipe 42 (the architecture walk), recipe 43 (planned against realized components) | design, then build | Opus 5.5 designs, gpt-6-sol reviews; gpt-6.1-sol builds |
 | **S** the Studio's phase 0 | Plan 42's design pass (child Specs, the phase-0 questions, a Pack-page prototype, the data and element contracts), then its lanes S1 to S3 | design, then build | Opus 5.5 designs, Fable 5.1 and gpt-6-sol review; gpt-6.1-sol builds |
+| **E** the platform on `main` | In libar-platform: the re-pin, its migration, the tooling the Protocol now replaces, and the two associations the Studio's reader tasks need | adopter build | gpt-6.1-sol, reviewed by Opus 5.5 |
 | **X** integration and close | Recipe catalog, self-hosting oracle, skills, `CONTEXT.md`, help text; an adversarial review; the Studio's acceptance on the platform; the PR | close | gpt-6.1-sol, gpt-6-sol, gpt-6-astra |
 
 Wave 1 runs P, L and the design passes of B and S in parallel worktrees. The main thread then
@@ -43,8 +44,12 @@ rules on what the design passes recommend and states the `ready` the builds star
 builds B and S. Wave 3 integrates, reviews and measures. Recipe numbers are pre-assigned so lanes
 do not collide: 41 to L, 42 and 43 to B.
 
-The platform's re-pin is the platform's own work. This chunk prepares it as a branch in that
-repository, with the migration the read found, for the owner to merge.
+When the platform needs a capability, the Protocol builds it; the platform does not work around
+it. Lane **E** then moves the platform onto the chunk's head in its own repository, on the owner's
+word of 2026-10-13: install from the commit, apply the migration the read found, and retire the
+platform's home-grown tooling where the Protocol now serves (the graph-side half of `check.py` as
+rules files, recipe bodies cut from the catalog by regular expression, the hand-built Pack page).
+A gap E finds comes back to the Protocol as a fix in this chunk.
 
 ## Rulings at the start
 
