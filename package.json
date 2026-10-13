@@ -34,6 +34,10 @@
       "types": "./dist/anchors.d.ts",
       "import": "./dist/anchors.js"
     },
+    "./concept-match": {
+      "types": "./dist/reader/concept-match.d.ts",
+      "import": "./dist/reader/concept-match.js"
+    },
     "./runner": {
       "types": "./dist/runner/index.d.ts",
       "import": "./dist/runner/index.js"

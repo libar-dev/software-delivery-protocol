@@ -21,6 +21,11 @@ The Markdown Pack page renders the Pack design as one wide member table, and the
 ## Intent
 - outcome: Show where a Pack's design stands, member by member in reading order, on one page a reviewer scans quickly and opens where they need detail.
 
+### Open questions
+- [non-blocking #summaryFormat] Should the summary state its counts as sentences or as a table?
+  - decider: owner
+  - provisional: Keep the counts as sentences.
+
 ## Behavior
 - rule: [#header] The page opens with the Pack's title, its id and its carrier file as text with a copy action, then the summary; the framing follows as prose under the heading Framing, with the vocabulary references, linked.
 - rule: [#summary] The summary states each Pack total in one sentence that opens with its count: the members and the unresolved ones, the members held below their stated next rung and those waiting only for their author, the design entries and pinned declarations, the open and blocking questions, the members with an implementation binding and with a design reference, and the boundary in each direction.
@@ -35,7 +40,7 @@ The Markdown Pack page renders the Pack design as one wide member table, and the
 - rule: An unresolved member's card says only that the manifest names an id the graph does not hold.
 - rule: [#boundary] The boundary follows in four closed sections, Rests on, Rested on by, Verified by and Superseded by, each headed with its count. Each row shows the outside Spec, linked, its stated rung, its implementation binding as present or none, and the members it joins under each relation type; an empty section reads None.
 - rule: Then come the members with no verifier binding, those stated `ready` first, under one sentence saying the graph records bindings and never runs, so no page shows a run result; then the findings that name the Pack.
-- rule: [#openAll] One control opens or closes every card and section at once, and opening the page at a card's fragment opens that card.
+- rule: [#openAll] `Open all` and `Close all` open or close every card and section at once, and opening the page at a card's fragment opens that card.
 
 ## UI
 - headerBlock: the title as the page heading; below it the id and the carrier file, each with a copy action; then the summary; then the framing under a `Framing` heading, and the vocabulary references.

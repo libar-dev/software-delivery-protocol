@@ -1,4 +1,4 @@
-/* The Studio's Pack page, prototype. Hand-written, no build step, no network. */
+/* One hue in four lightness steps orders the rungs; each badge always carries its word. */
 
 :root {
   --bg: #fbfbfa;
@@ -19,7 +19,7 @@
   --rung-idea-text: #26425f;
   --rung-scoped-bg: #c8daf0;
   --rung-scoped-text: #1c3854;
-  --rung-defined-bg: #5d8fca;
+  --rung-defined-bg: #356eae;
   --rung-defined-text: #ffffff;
   --rung-ready-bg: #1f4878;
   --rung-ready-text: #ffffff;
@@ -46,7 +46,7 @@
     --rung-idea-text: #d6e3f2;
     --rung-scoped-bg: #2f4b6b;
     --rung-scoped-text: #e4eefa;
-    --rung-defined-bg: #4c7fbf;
+    --rung-defined-bg: #356eae;
     --rung-defined-text: #ffffff;
     --rung-ready-bg: #9cc3f0;
     --rung-ready-text: #0d2238;
@@ -82,6 +82,7 @@ a {
 
 a:focus-visible,
 button:focus-visible,
+select:focus-visible,
 summary:focus-visible,
 input:focus-visible {
   outline: 3px solid var(--focus);
@@ -108,20 +109,6 @@ code {
 
 .skip-link:focus {
   left: 1rem;
-}
-
-/* The prototype's own note, which the product does not have. */
-.prototype-note {
-  background: var(--warn-bg);
-  color: var(--warn-text);
-  border-bottom: 1px solid var(--warn-line);
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-}
-
-.prototype-note p {
-  margin: 0;
-  max-width: 110ch;
 }
 
 /* The shell. */
@@ -210,16 +197,18 @@ button {
   margin: 0.2rem 0;
 }
 
-main {
-  min-width: 0;
+.rail a[aria-current="page"] {
+  font-weight: 650;
+  color: var(--text);
+  text-decoration: none;
 }
 
-.page-head .eyebrow {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+.rail a[aria-current="page"]::before {
+  content: "▸ ";
+}
+
+main {
+  min-width: 0;
 }
 
 h1 {
@@ -253,6 +242,22 @@ h3 {
   color: var(--muted);
 }
 
+.ids > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 100%;
+}
+
+.ids > span > code {
+  min-width: 0;
+}
+
+sdp-copy {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .summary {
   margin: 0;
   padding-left: 1.2rem;
@@ -260,17 +265,6 @@ h3 {
 
 .summary li {
   margin: 0.15rem 0;
-}
-
-.summary strong {
-  font-variant-numeric: tabular-nums;
-}
-
-.toolbar {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  margin: 0.4rem 0 0.8rem;
 }
 
 /* Rung badges and the other words that carry a status. */
@@ -314,28 +308,6 @@ h3 {
   white-space: nowrap;
 }
 
-.kind {
-  font-size: 0.8rem;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
-.sep {
-  color: var(--muted);
-}
-
-.diverges {
-  background: var(--warn-bg);
-  color: var(--warn-text);
-  border-color: var(--warn-line);
-}
-
-.held {
-  background: var(--warn-bg);
-  color: var(--warn-text);
-  border-color: var(--warn-line);
-}
-
 /* Member cards. */
 .card {
   background: var(--surface);
@@ -361,10 +333,7 @@ h3 {
 }
 
 .card > summary .line2 {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem 0.5rem;
-  align-items: center;
+  display: block;
   margin-top: 0.25rem;
   font-weight: 400;
 }
@@ -413,10 +382,6 @@ h3 {
 
 .units li {
   margin: 0.35rem 0;
-}
-
-.loc {
-  white-space: nowrap;
 }
 
 /* Sections that close: the boundary and the lists after the cards. */
@@ -509,5 +474,157 @@ sdp-copy button {
 
   .card-body {
     padding-left: 1rem;
+  }
+}
+
+/* Static sections, rows, entry addresses and the search element. */
+[hidden] {
+  display: none !important;
+}
+sdp-search {
+  margin-left: auto;
+  min-width: 0;
+}
+sdp-expander,
+sdp-filter,
+sdp-search-results {
+  display: block;
+}
+sdp-expander > button {
+  margin: 0.4rem 0.4rem 0.6rem 0;
+}
+sdp-search-results form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: end;
+}
+sdp-search-results input,
+select {
+  font: inherit;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.4rem;
+  max-width: 100%;
+}
+sdp-search-results label {
+  display: grid;
+  gap: 0.3rem;
+  flex: 1;
+}
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-bottom: 0.7rem;
+}
+.filter-bar label {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+}
+.spec-list {
+  padding: 0;
+  list-style: none;
+}
+.spec-row {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.entry {
+  margin: 0.75rem 0;
+}
+dt {
+  font-weight: 600;
+}
+dd {
+  margin: 0.3rem 0 0.5rem 1rem;
+  max-width: var(--measure);
+}
+.entry-line {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: var(--measure);
+  padding: 0.75rem;
+  background: var(--code-bg);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+}
+p,
+li,
+dd,
+td,
+.line1 {
+  overflow-wrap: anywhere;
+}
+.divergence {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  border: 1px solid var(--warn-line);
+  border-radius: var(--radius);
+  padding: 0.65rem;
+  max-width: var(--measure);
+}
+.rungs {
+  white-space: nowrap;
+}
+.search-result {
+  padding: 0.8rem 0 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.search-result h2 {
+  margin: 0.2rem 0 0.5rem;
+}
+.search-result p {
+  margin: 0.4rem 0;
+  max-width: var(--measure);
+}
+a {
+  text-underline-offset: 0.15em;
+}
+a:hover {
+  text-decoration-thickness: 0.12em;
+}
+button:hover {
+  border-color: var(--muted);
+}
+input,
+select {
+  caret-color: var(--link);
+}
+::selection {
+  background: var(--rung-scoped-bg);
+  color: var(--rung-scoped-text);
+}
+output {
+  display: block;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+sdp-copy output {
+  display: inline;
+  margin-left: 0.25rem;
+}
+@media (max-width: 720px) {
+  sdp-search {
+    width: 100%;
+    margin-left: 0;
+  }
+  .top input[type="search"] {
+    min-width: 0;
+    width: 100%;
+  }
+  .rungs {
+    white-space: normal;
+  }
+  .layout {
+    padding: 1rem 0.75rem;
   }
 }

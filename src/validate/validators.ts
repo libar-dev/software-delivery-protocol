@@ -1281,7 +1281,7 @@ function proseMentionTexts(node: PrimitiveNode): readonly MentionText[] {
  * The punctuation is removed after the prefix only, so the prefix's own colon stays. A bare
  * `spec:`, or a placeholder such as `spec:<id>`, leaves nothing after the prefix and is no mention.
  */
-function mentionTokens(text: string): readonly string[] {
+export function mentionTokens(text: string): readonly string[] {
   return [...text.replace(MARKDOWN_ESCAPE, "$1").matchAll(MENTION_PATTERN)]
     .map((match) => match[0].slice("spec:".length).replace(MENTION_TRAILING_PUNCTUATION, ""))
     .filter((rest) => rest.length > 0)

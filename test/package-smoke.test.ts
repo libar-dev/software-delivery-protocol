@@ -74,6 +74,8 @@ const expectedRootExports = [
   "isResolvingTestAnchorVerify",
   "kindEvidence",
   "machineToken",
+  "matchConcept",
+  "mentionTokens",
   "MarkdownEmissionError",
   "mermaidToken",
   "oracleAnchorId",
@@ -109,6 +111,7 @@ const expectedRootExports = [
 ] as const;
 
 const typeOnlyRootExports = [
+  "ConceptRecord",
   "CarrierReification",
   "CarrierReifier",
   "ImportResult",
@@ -263,9 +266,37 @@ describe("published package surface", () => {
       );
       await writeFile(join(consumer, "consumer.mjs"), consumerDriver());
       await writeFile(
+        join(consumer, "node-free-loader.mjs"),
+        `export async function resolve(specifier, context, nextResolve) {
+  if (specifier.startsWith("node:")) throw new Error("Unexpected Node dependency: " + specifier);
+  return nextResolve(specifier, context);
+}
+`,
+      );
+      expect(
+        run(
+          process.execPath,
+          [
+            "--no-warnings",
+            "--loader",
+            "./node-free-loader.mjs",
+            "--input-type=module",
+            "-e",
+            `import { matchConcept } from "${packageName}/concept-match";
+if (matchConcept([{ id: "spec:smoke", nodeType: "Primitive", title: "needle" }], "needle")[0]?.id !== "spec:smoke") throw new Error("Matcher not callable");
+console.log("node-free matcher available");`,
+          ],
+          consumer,
+        ),
+      ).toBe("node-free matcher available\n");
+      await writeFile(
         join(consumer, "type-surface.mts"),
         `import { ${expectedRootExports.join(", ")} } from "${packageName}";
 import type { ${typeOnlyRootExports.join(", ")} } from "${packageName}";
+import { matchConcept as standaloneMatcher } from "${packageName}/concept-match";
+import type { ConceptRecord as StandaloneConceptRecord } from "${packageName}/concept-match";
+const record: StandaloneConceptRecord = { id: "spec:smoke", nodeType: "Primitive" };
+standaloneMatcher([record], "smoke");
 void [${expectedRootExports.join(", ")}];
 `,
       );
