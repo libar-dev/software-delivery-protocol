@@ -788,15 +788,18 @@ interface Perspective {
 interface Bundle {
   scope: { pack?: string; subset?: boolean; members?: string[]; specs?: string[] };
   budget: number;
+  declarations: "whole" | "addresses";
   used: number;
   tokenEstimate: { value: number; method: string };
   leftOut: string[];
   pack: { id: string; framing: string } | null;
   members: {
     id: string;
+    file: string;
     narrative: string | null;
     sections: Record<string, unknown>;
     questions: {
+      index: number;
       question: string;
       blocking: boolean;
       address: string | null;
@@ -804,8 +807,8 @@ interface Bundle {
       decider?: string;
       trigger?: string;
     }[];
-    declarations: { spec: string; key: string; declaration: string }[];
-    examples: { id: string; steps: unknown; enabled: boolean }[];
+    declarations: string[];
+    examples: { id: string; member: boolean; file: string; steps: unknown; enabled: boolean }[];
     footing: { type: string; id: string; claim: string; reason?: string }[];
   }[];
   boundary: Record<string, (string | { id: string; via: { type: string; members: string[] }[] })[]>;
@@ -813,6 +816,7 @@ interface Bundle {
 interface BudgetExceeded {
   scope: Bundle["scope"];
   budget: number;
+  declarations: "whole" | "addresses";
   budgetExceeded: true;
   protectedLength: number;
   leftOut: string[];
@@ -1089,7 +1093,166 @@ function prepareBundleCorpus(root: string): void {
   );
 }
 
+function asSection(value: unknown): Record<string, unknown> {
+  return value as Record<string, unknown>;
+}
+
 describe("iteration loop: context bundle", () => {
+  it("keeps questions and declarations in one place and member-example steps only in their member row", async () => {
+    await withCorpus(async (root) => {
+      prepareBundleCorpus(root);
+      edit(
+        root,
+        "review.pack.sdp.md",
+        "  - spec:probe.model",
+        "  - spec:probe.model\n  - spec:probe.example",
+      );
+      const derived = extract({ root });
+      const bundle = await runRecipe<Bundle>(36, { pack: "pack:probe.review" }, derived);
+      expect(bundle.declarations).toBe("whole");
+      const parent = bundle.members[0];
+      expect(parent?.file).toBe("a.sdp.md");
+      expect(parent?.declarations).toEqual(["alpha"]);
+      expect(asSection(parent?.sections.design).alpha).toBe("`Alpha` declaration");
+      const questioning = bundle.members[1];
+      expect(asSection(questioning?.sections.intent)).not.toHaveProperty("openQuestions");
+      expect(questioning?.questions.map((question) => question.index)).toEqual([0, 1]);
+      expect(questioning?.questions[0]).not.toHaveProperty("file");
+      expect(questioning?.questions[0]?.address).toBe("spec:probe.b#question.hold");
+      expect(typeof questioning?.questions[0]?.line).toBe("number");
+      expect(parent?.examples).toEqual([
+        expect.objectContaining({
+          id: "spec:probe.example",
+          member: true,
+          file: "example.sdp.md",
+          steps: null,
+        }),
+      ]);
+      expect(JSON.stringify(bundle.members[3]?.sections)).toContain("Step text secret");
+      const subset = await runRecipe<Bundle>(36, { specs: ["spec:probe.a"] }, derived);
+      expect(subset.members[0]?.examples[0]?.member).toBe(false);
+      expect(JSON.stringify(subset.members[0]?.examples[0]?.steps)).toContain("Step text secret");
+    });
+  });
+
+  it("takes the declaration cut last only with addresses and keeps compact pointers and links", async () => {
+    await withCorpus(async (root) => {
+      prepareBundleCorpus(root);
+      const long = "Declaration detail ".repeat(100);
+      edit(root, "a.sdp.md", "`Alpha` declaration", `\`Alpha\` declaration ${long}`);
+      edit(
+        root,
+        "a.sdp.md",
+        "- outcome: Read a in context.",
+        "- outcome: Read a in context. spec:probe.a#rule.first",
+      );
+      edit(
+        root,
+        "b.sdp.md",
+        "\n\n## Behavior",
+        "\n  - links: spec:probe.a#rule.last\n\n## Behavior",
+      );
+      const derived = extract({ root });
+      const scope = { pack: "pack:probe.review", declarations: "addresses" };
+      let prior = await runRecipe<Bundle>(36, scope, derived);
+      const lines = [
+        "Boundary details; ids kept per direction.",
+        "Footing details; ids kept per relation type.",
+        "Member narrative.",
+        "Example step text, including member sections and example-space vocabulary.",
+        "Non-blocking question text; addresses and links kept.",
+        "Section entry values other than pinned declarations; addresses and lines kept.",
+        "Pinned declaration text; entry addresses kept.",
+      ];
+      for (let cut = 1; cut <= 7; cut += 1) {
+        const budget = prior.used - 20;
+        const result = await runRecipe<Bundle>(36, { ...scope, budget }, derived);
+        expect(result.leftOut).toEqual(lines.slice(0, cut));
+        expect(result.used).toBe(JSON.stringify(result).length);
+        expect(result.used).toBeLessThanOrEqual(budget);
+        expect(result.declarations).toBe("addresses");
+        if (cut === 2)
+          expect(result.members[0]?.footing).toEqual({ dependsOn: ["spec:probe.outside"] });
+        if (cut === 6) {
+          const sections = result.members[0]?.sections;
+          expect(asSection(sections?.intent).outcome).toEqual([
+            "spec:probe.a#rule.first",
+            { line: null },
+          ]);
+          expect(asSection(sections?.design).beta).toBe("spec:probe.a#design.beta");
+          const ruleLine = derived.graph.locations?.find(
+            (at) => at.spec === "spec:probe.a" && at.entry === "rule[1]",
+          )?.line;
+          expect(typeof ruleLine).toBe("number");
+          expect(asSection(sections?.behavior).rules).toEqual([
+            "spec:probe.a#rule.first",
+            { line: ruleLine },
+          ]);
+          expect(result.members[1]?.questions[1]).toEqual({
+            pointer: "spec:probe.b#question.later",
+            links: ["spec:probe.a#rule.last"],
+          });
+          expect(JSON.stringify(result)).not.toContain('"path":');
+          expect(JSON.stringify(result)).not.toContain('"spec":"spec:probe.a"');
+        }
+        if (cut === 7) {
+          expect(asSection(result.members[0]?.sections.design).alpha).toBe(
+            "spec:probe.a#design.alpha",
+          );
+          expect(result.members[0]?.declarations).toEqual(["alpha"]);
+          const whole = await runRecipe<BudgetExceeded>(36, { pack: scope.pack, budget }, derived);
+          expect(whole).toMatchObject({
+            budgetExceeded: true,
+            declarations: "whole",
+            leftOut: lines.slice(0, 6),
+          });
+          expect(whole).not.toHaveProperty("members");
+        }
+        expect(await runRecipe<Bundle>(36, { ...scope, budget }, derived)).toEqual(result);
+        prior = result;
+      }
+      const exceeded = await runRecipe<BudgetExceeded>(36, { ...scope, budget: 0 }, derived);
+      expect(exceeded).toMatchObject({
+        declarations: "addresses",
+        budgetExceeded: true,
+        leftOut: lines,
+      });
+    });
+  }, 20_000);
+
+  it("cuts a pinned dotted key to its line when it has no entry address", async () => {
+    await withCorpus(async (root) => {
+      writeFileSync(
+        join(root, "dotted.sdp.ts"),
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const dotted = spec({
+  id: specId("spec:probe.dotted"), title: "Dotted", kind: "behavior", altitude: "story", readiness: "idea",
+  intent: { outcome: "Keep pinned detail" },
+  design: { "a.b": "\`Thing\` ${"required detail ".repeat(100)}" },
+});`,
+      );
+      const derived = extract({ root });
+      const full = await runRecipe<Bundle>(36, { specs: ["spec:probe.dotted"] }, derived);
+      const whole = await runRecipe<BudgetExceeded>(
+        36,
+        { specs: ["spec:probe.dotted"], budget: 1 },
+        derived,
+      );
+      const bundle = await runRecipe<Bundle>(
+        36,
+        {
+          specs: ["spec:probe.dotted"],
+          budget: Math.min(full.used, whole.protectedLength) - 20,
+          declarations: "addresses",
+        },
+        derived,
+      );
+      expect(bundle.leftOut).toHaveLength(7);
+      expect(bundle.members[0]?.declarations).toEqual(["a.b"]);
+      expect(asSection(bundle.members[0]?.sections.design)["a.b"]).toEqual({ line: 5 });
+    });
+  });
+
   it("composes both scopes, dependency footing, declarations, example bindings and a perspective subset", async () => {
     await withCorpus(async (root) => {
       prepareBundleCorpus(root);
@@ -1109,9 +1272,7 @@ describe("iteration loop: context bundle", () => {
       expect(result.members[0]?.footing).toEqual([
         expect.objectContaining({ id: "spec:probe.outside", type: "dependsOn", claim: "declared" }),
       ]);
-      expect(result.members[0]?.declarations).toEqual([
-        { spec: "spec:probe.a", key: "alpha", declaration: "Alpha" },
-      ]);
+      expect(result.members[0]?.declarations).toEqual(["alpha"]);
       expect(result.members[0]?.examples).toEqual([
         expect.objectContaining({ id: "spec:probe.example", enabled: true }),
       ]);
@@ -1162,7 +1323,7 @@ describe("iteration loop: context bundle", () => {
     });
   }, 20_000);
 
-  it("takes all five cuts in fixed order and counts the complete returned value including Unicode", async () => {
+  it("takes all six whole-mode cuts in fixed order and counts the complete returned value including Unicode", async () => {
     await withCorpus(async (root) => {
       prepareBundleCorpus(root);
       edit(root, "b.sdp.md", "# b", "# b 🐈");
@@ -1175,7 +1336,7 @@ describe("iteration loop: context bundle", () => {
       const full = prior;
       expect(Buffer.byteLength(JSON.stringify(full), "utf8")).toBeGreaterThan(full.used);
       const results: Bundle[] = [];
-      for (let cut = 1; cut <= 5; cut += 1) {
+      for (let cut = 1; cut <= 6; cut += 1) {
         const budget = prior.used - 20;
         const result = await runRecipe<Bundle>(36, { pack: "pack:probe.review", budget }, derived);
         expect(result.leftOut).toHaveLength(cut);
@@ -1189,16 +1350,17 @@ describe("iteration loop: context bundle", () => {
         prior = result;
       }
       expect(results[0]?.boundary.restsOn).toEqual(["spec:probe.outside"]);
-      expect(results[1]?.members[0]?.narrative).toBeNull();
-      expect(JSON.stringify(results[2])).not.toContain("Step text secret");
-      expect(JSON.stringify(results[3])).not.toContain("Later question?");
-      expect(JSON.stringify(results[3])).toContain("spec:probe.b#question.later");
-      expect(JSON.stringify(results[4]?.members[0]?.sections)).not.toContain("Beta text");
-      expect(JSON.stringify(results[4]?.members[0]?.sections)).toContain(
+      expect(results[1]?.members[0]?.footing).toEqual({ dependsOn: ["spec:probe.outside"] });
+      expect(results[2]?.members[0]?.narrative).toBeNull();
+      expect(JSON.stringify(results[3])).not.toContain("Step text secret");
+      expect(JSON.stringify(results[4])).not.toContain("Later question?");
+      expect(JSON.stringify(results[4])).toContain("spec:probe.b#question.later");
+      expect(JSON.stringify(results[5]?.members[0]?.sections)).not.toContain("Beta text");
+      expect(JSON.stringify(results[5]?.members[0]?.sections)).toContain(
         "spec:probe.a#design.beta",
       );
-      expect(JSON.stringify(results[4]?.members[0]?.sections)).toContain("`Alpha` declaration");
-      expect(JSON.stringify(results[4]?.members[1]?.sections)).toContain(
+      expect(JSON.stringify(results[5]?.members[0]?.sections)).toContain("`Alpha` declaration");
+      expect(JSON.stringify(results[5]?.members[1]?.questions)).toContain(
         "Protected blocking question?",
       );
       const equal = await runRecipe<Bundle>(
@@ -1217,6 +1379,7 @@ describe("iteration loop: context bundle", () => {
       expect(exceeded).toEqual({
         scope: full.scope,
         budget: 1,
+        declarations: "whole",
         budgetExceeded: true,
         protectedLength: exceeded.protectedLength,
         leftOut: prior.leftOut,
@@ -1232,7 +1395,7 @@ describe("iteration loop: context bundle", () => {
     });
   }, 20_000);
 
-  it("keeps a pinned declaration whole through the fifth cut when its key contains a dot", async () => {
+  it("keeps a pinned declaration whole through the sixth cut when its key contains a dot", async () => {
     await withCorpus(async (root) => {
       const long = "Reading material ".repeat(100);
       writeFileSync(
@@ -1248,9 +1411,10 @@ export const dotted = spec({
       expect(derived.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
       const specs = ["spec:probe.dotted"];
       let result = await runRecipe<Bundle>(36, { specs, budget: 100000 }, derived);
-      while (result.leftOut.length < 5) {
+      for (let attempt = 0; result.leftOut.length < 6 && attempt < 6; attempt += 1) {
         result = await runRecipe<Bundle>(36, { specs, budget: result.used - 1 }, derived);
       }
+      expect(result.leftOut).toHaveLength(6);
       expect(result.members[0]?.sections.design).toMatchObject({
         "a.b": "`Thing` required detail",
         ab: "`Thing` required detail",
@@ -1273,6 +1437,9 @@ export const dotted = spec({
         { specs: [], budget: -1 },
         { specs: [], budget: 0.5 },
         { specs: [], budget: "100" },
+        { specs: [], declarations: "all" },
+        { specs: [], declarations: true },
+        { specs: [], declarations: null },
       ]) {
         const result = await runRecipe<{ diagnostics: unknown[] }>(36, params, derived);
         expect(Object.keys(result)).toEqual(["diagnostics"]);
@@ -1737,24 +1904,26 @@ describe("iteration loop: comparison and budget edges", () => {
     });
   }, 20_000);
 
-  it("cuts example text in both member sections and related examples and preserves locations after the fifth cut", async () => {
+  it("cuts example text once and preserves compact pointers after the sixth cut", async () => {
     await withCorpus(async (root) => {
       prepareBundleCorpus(root);
       const derived = extract({ root });
       const specs = ["spec:probe.a", "spec:probe.b", "spec:probe.example"];
       let result = await runRecipe<Bundle>(36, { specs, budget: 100000 }, derived);
-      expect(JSON.stringify(result.members[0]?.examples)).toContain("Step text secret");
+      expect(result.members[0]?.examples[0]?.steps).toBeNull();
       expect(JSON.stringify(result.members[2]?.sections)).toContain("Step text secret");
-      for (let cut = 1; cut <= 5; cut += 1) {
+      for (let cut = 1; cut <= 6; cut += 1) {
         result = await runRecipe<Bundle>(36, { specs, budget: result.used - 20 }, derived);
         expect(result.leftOut).toHaveLength(cut);
-        if (cut >= 3) expect(JSON.stringify(result)).not.toContain("Step text secret");
-        if (cut >= 4) expect(JSON.stringify(result)).not.toContain("Later question?");
+        if (cut >= 4) expect(JSON.stringify(result)).not.toContain("Step text secret");
+        if (cut >= 5) expect(JSON.stringify(result)).not.toContain("Later question?");
       }
       expect(JSON.stringify(result.members[0]?.sections)).toContain("spec:probe.a#rule.first");
       expect(JSON.stringify(result.members[0]?.sections)).toContain('"line":null');
-      expect(JSON.stringify(result.members[0]?.sections)).toContain('"path":"intent.outcome"');
-      expect(JSON.stringify(result.members[1]?.sections)).toContain("Protected blocking question?");
+      expect(asSection(result.members[0]?.sections.intent).outcome).toEqual({ line: null });
+      expect(JSON.stringify(result.members[1]?.questions)).toContain(
+        "Protected blocking question?",
+      );
       expect(result.used).toBe(JSON.stringify(result).length);
     });
   }, 20_000);
@@ -1903,7 +2072,7 @@ describe("iteration loop: protected entry addresses", () => {
         { specs: ["spec:probe.a", "spec:probe.b", "spec:probe.example"], budget: 100000 },
         derived,
       );
-      for (let cut = 1; cut <= 5; cut += 1) {
+      for (let cut = 1; cut <= 6; cut += 1) {
         result = await runRecipe<Bundle>(
           36,
           {
@@ -1915,12 +2084,12 @@ describe("iteration loop: protected entry addresses", () => {
         expect(result.leftOut).toHaveLength(cut);
       }
       expect(result.members[0]?.narrative).toBe("spec:probe.a#rule.first");
-      expect(JSON.stringify(result.members[0]?.examples)).toContain("spec:probe.a#rule.first");
+      expect(result.members[0]?.examples[0]?.steps).toBeNull();
       expect(JSON.stringify(result.members[2]?.sections)).toContain("spec:probe.a#rule.first");
       expect(JSON.stringify(result.members[1]?.questions)).toContain("spec:probe.b#question.later");
       expect(JSON.stringify(result.members[1]?.questions)).toContain("spec:probe.a#design.beta");
       expect(JSON.stringify(result.members[1]?.questions)).toContain("spec:probe.a#rule.last");
-      expect(JSON.stringify(result.members[1]?.sections)).toContain("spec:probe.b#question.later");
+      expect(asSection(result.members[1]?.sections.intent)).not.toHaveProperty("openQuestions");
       expect(JSON.stringify(result.members[0]?.sections)).toContain("spec:probe.a#design.beta");
       expect(JSON.stringify(result.members[0]?.sections)).toContain("spec:probe.a#ui.panel");
       expect(result.used).toBe(JSON.stringify(result).length);

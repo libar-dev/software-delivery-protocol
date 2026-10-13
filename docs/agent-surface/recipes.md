@@ -37,11 +37,12 @@
 | 33 | The design backlog | none | Pick defined design work |
 | 34 | Rule coverage | spec or pack | Find keyed rules no example exercises |
 | 35 | The design diff | base, pack, detail | Compare design at entry grain |
-| 36 | The context bundle | pack or specs, members, budget | Compose one pass within a budget |
+| 36 | The context bundle | pack or specs, members, budget, declarations | Compose one pass within a budget |
 | 37 | The perspective filter | pack, perspective | Select and order Pack members |
 | 38 | The proposal check | proposal, base | Resolve proposal scopes and compare intent |
 | 39 | Slimming candidates | pack | Compare pinned declarations with bound code |
 | 40 | Curation report | imports, limit | Find curation gaps from file imports |
+| 41 | The key-family register | prefixes, pack or specs | List a key family's entries |
 
 Runnable bodies for the agent front door. Each recipe below is a body you can pass verbatim to
 `sdp q`, unchanged. In the Protocol source checkout, pass one to the repository wrapper:
@@ -81,8 +82,9 @@ repeatable for root-relative path prefixes. `PATH` is a placeholder, not a liter
 
 Recipes read their documented input from `params`: Spec or component ids, changed files, Pack
 ids, search terms, Spec or address lists, base graphs, proposals, perspectives, imports objects,
-budgets and detail selections. Each recipe names its parameter. Pass it as JSON data with
-`--params`, never by editing the body:
+budgets and detail selections. Each recipe declares the parameter names it takes before reading its
+input; a name it does not take returns only `{ unknownParams, accepts }`, with exit 0.
+Pass parameters as JSON data with `--params`, never by editing the body:
 
 ```sh
 pnpm --silent sdp:q '<body>' --params '{"spec":"spec:model.anchors"}' --json
@@ -118,10 +120,12 @@ pnpm --silent sdp:q "$(cat dist/recipes/25-address-resolution.js)" --params @add
 This catalog stays the one owner of the bodies. The files are derived from it, and the recipe
 check holds each one byte for byte to its body here.
 
-To filter a shipped answer, wrap its body in an async arrow function and return the part you need:
+To filter a shipped answer, wrap its body in an async arrow function and return the part you need.
+Give the inner body only its own parameters, so an outer caller's parameters do not become unknown
+names in the recipe:
 
 ```sh
-pnpm --silent sdp:q "$(printf '%s\n' 'const answer = await (async () => {'; cat dist/recipes/33-the-design-backlog.js; printf '%s\n' '})();' 'return answer.rows.filter((row) => row.specKind === "behavior");')" --json
+pnpm --silent sdp:q "$(printf '%s\n' 'const answer = await (async (params) => {'; cat dist/recipes/33-the-design-backlog.js; printf '%s\n' '})({});' 'return answer.rows.filter((row) => row.specKind === "behavior");')" --json
 ```
 
 The caller's part must hold no shell expansion. Single-quote it as above so the shell inserts only
@@ -177,6 +181,9 @@ for a new query verb. A join freezes into the reader only when a second machine 
 example evidence and decision records — while keeping both exclusions visible in the result.*
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const ready = g.specs().filter((spec) => spec.statedReadiness === "ready");
 const backlog = ready.filter(
   (spec) =>
@@ -239,6 +246,9 @@ These columns are derived, never a score, rung or approval.
 finished, `implemented ∧ ¬ready`.*
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const rungs = ["idea", "scoped", "defined", "ready"];
 const alarms = g
   .specs()
@@ -273,6 +283,9 @@ The parameter is `params.spec`, the Spec id to read; an unknown id returns `{ id
 rather than failing.
 
 ```js
+const accepts = ["spec"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const id = params.spec ?? "spec:consumers.reader";
 const context = g.specContext(id);
 
@@ -361,6 +374,9 @@ filenames. `--params` parses data, so quotes, shell metacharacters, spaces, Unic
 newlines remain filenames rather than JavaScript or shell syntax. The reader never shells to git.
 
 ```js
+const accepts = ["files", "detail"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const detail = params.detail ?? false;
 const changed = params.files ?? [];
 const radius = g.blastRadius(changed);
@@ -439,6 +455,9 @@ The parameter is `params.pack`, the Pack to review; without it the body reads th
 the graph. An unknown Pack returns `{ id, found: false }`.
 
 ```js
+const accepts = ["pack"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const id = params.pack ?? g.packs()[0]?.id;
 
 if (id === undefined) {
@@ -486,6 +505,9 @@ aggregate over Specs that do.
 The parameter is `params.term`, the phrase to look for.
 
 ```js
+const accepts = ["term"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const term = params.term ?? "blast radius";
 const matches = g.findByConcept(term);
 
@@ -510,6 +532,9 @@ deterministic substring, never fuzzy-scored: the same query returns the same row
 *When you need this: you want the Specs stating a rung their structure does not earn.*
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const rungs = ["idea", "scoped", "defined", "ready"];
 const rank = (rung) => (rung === undefined ? -1 : rungs.indexOf(rung));
 
@@ -541,6 +566,9 @@ the stated rung — is information, not a problem: a floor is a floor, never a q
 *When you need this: you want the warn-level signals as data — informative absences, not a gate.*
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const warnings = report.findings.filter((finding) => finding.severity === "warning");
 const byValidator = {};
 
@@ -581,6 +609,9 @@ refusals; a green corpus has no errors, but may carry intentional warnings.
 evidence before touching the carrier.*
 
 ```js
+const accepts = ["spec"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const id = params.spec ?? "spec:model.enrichment-lifecycle";
 const context = g.specContext(id);
 
@@ -630,6 +661,9 @@ A typed-dependency failure lists its `targets`; neither answer confers a rung.
 *When you need this: you want example intent and graph-visible verifier realization kept distinct.*
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const rows = [];
 
 for (const spec of g.specs()) {
@@ -666,6 +700,9 @@ contract no suite binds, and it never reports runner pass or fail.
 and the first clause that holds it below that rung.*
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const lower = g.specs().filter((spec) => spec.statedReadiness !== "ready");
 const byFamily = Object.create(null);
 
@@ -693,6 +730,9 @@ blocks that rung. The author still decides whether to state it; the recipe never
 *When you need this: you want to know which code units belong to each declared component.*
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const componentIds = new Set(
   graph.nodes
     .filter((node) => node.nodeType === "CodeNode" && node.id.startsWith("component:"))
@@ -722,6 +762,9 @@ and the component ids come from the graph's declared component nodes.
 *When you need this: you want to know which components depend on which, with both directions visible.*
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const componentIds = new Set(
   graph.nodes
     .filter((node) => node.nodeType === "CodeNode" && node.id.startsWith("component:"))
@@ -772,6 +815,9 @@ The parameter is `params.component`, the component you are reviewing; an unknown
 returns the exact not-found shape and does not throw.
 
 ```js
+const accepts = ["component"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const subject = params.component ?? "component:protocol.reader";
 const component = graph.nodes.find((node) => node.nodeType === "CodeNode" && node.id === subject);
 
@@ -811,6 +857,9 @@ This reads validation findings already supplied by `report`; it never revalidate
 dangling references.
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const components = graph.nodes
   .filter((node) => node.nodeType === "CodeNode" && node.id.startsWith("component:"))
   .map((node) => node.id)
@@ -849,6 +898,9 @@ keeps census's validator-owned honesty signal distinct from structural data.
 *When you need this: you want the graph-side slice each shipped projection root is allowed to render.*
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const specs = graph.nodes.filter((node) => node.nodeType === "Primitive");
 const packs = graph.nodes.filter((node) => node.nodeType === "Pack");
 const anchors = graph.nodes.filter(
@@ -874,6 +926,9 @@ refusal or inclusion can therefore make rendered output smaller than these count
 satisfied Specs, and shaping decisions in one map.*
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const nodes = graph.nodes;
 const edges = graph.edges;
 const codeNodesById = new Map(
@@ -1025,6 +1080,9 @@ For worked examples and the gen-1 design comparison, see [Architecture through t
 (dependsOn, refines, supersedes) and the Specs it decides, ranked by how much it shapes.*
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const decisionNodes = graph.nodes
   .filter(
     (node) =>
@@ -1126,6 +1184,9 @@ The parameter is `params.spec`, the Spec you are planning around; an unknown id 
 `{ id, found: false }` rather than failing.
 
 ```js
+const accepts = ["spec"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const id = params.spec ?? "spec:consumers.agent-surface";
 const context = g.specContext(id);
 
@@ -1302,6 +1363,9 @@ Dependency neighbors carry `statedReadiness` because an unready
 first, without keeping that table by hand.*
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const rows = [];
 const malformed = [];
 
@@ -1412,6 +1476,9 @@ The parameter is `params.spec`, the Spec you are weighing; an unknown id returns
 `{ id, found: false }` rather than failing.
 
 ```js
+const accepts = ["spec"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const id = params.spec ?? "spec:extraction.derive-graph";
 const context = g.specContext(id);
 
@@ -1485,6 +1552,9 @@ The parameter is `params.scope`, a list of Spec ids to audit mentions from those
 empty or absent list audits the whole corpus.
 
 ```js
+const accepts = ["scope", "intended"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const scope = params.scope ?? [];
 const intendedRows = params.intended ?? [];
 const backingTypes = [
@@ -1691,6 +1761,9 @@ search (recipe 6) stops at the section.*
 The parameter is `params.term`, your word or phrase; an empty term returns no matches.
 
 ```js
+const accepts = ["term"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const term = params.term ?? "suffix";
 const tokensOf = (text) =>
   text
@@ -1893,6 +1966,9 @@ skipped. Keys carry the adopter's own role prefixes. The Protocol fixes no vocab
 rows by prefix in your own corpus if you need to.
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const rows = [];
 for (const spec of g.specs()) {
   const design = g.specContext(spec.id)?.sections?.design;
@@ -1915,6 +1991,9 @@ The parameter is `params.addresses`, the list of addresses you hold; an empty li
 rows. A long list belongs in a file passed as `--params @PATH`.
 
 ```js
+const accepts = ["addresses"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const addresses = params.addresses ?? [
   "spec:consumers.design-review#ui.packPage",
   "spec:consumers.design-review#ui.memberTable",
@@ -1986,6 +2065,9 @@ Specs, and this recipe resolves ones written anywhere else.
 through `dependsOn`.*
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const ids = g.specs().map((spec) => spec.id);
 const known = new Set(ids);
 const targets = new Map(ids.map((id) => [id, []]));
@@ -2103,6 +2185,9 @@ The parameter is `params.pack`, the Pack you are reviewing; an unknown Pack retu
 `{ id, found: false }`.
 
 ```js
+const accepts = ["pack"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const id = params.pack ?? "pack:spec-studio-v1";
 const pack = g.packContext(id);
 
@@ -2177,6 +2262,9 @@ role, layer, and context value with the units that carry it, before you name a n
 reconcile two spellings of one.*
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const units = graph.nodes.filter((node) => node.nodeType === "CodeNode");
 const taxonomy = (field) => {
   const byValue = new Map();
@@ -2229,6 +2317,9 @@ for summaries, true for full rows, or a list of member ids for those full rows. 
 `{ id, found: false }`.
 
 ```js
+const accepts = ["pack", "detail"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const detail = params.detail ?? false;
 const id = params.pack ?? "pack:spec-studio-v1";
 const pack = g.packContext(id);
@@ -2407,6 +2498,9 @@ The parameter is `params.specs`, the Spec ids you are changing; an id the graph 
 back in `changed` with `resolved: false` and reaches nothing.
 
 ```js
+const accepts = ["specs"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const changed = params.specs ?? ["spec:validation.readiness-floor"];
 const followed = new Set(["refines", "dependsOn", "constrainedBy", "decidedBy"]);
 const specIds = new Set(g.specs().map((spec) => spec.id));
@@ -2499,6 +2593,9 @@ ones, and `totals.units` the distinct units across all rows. The law is
 it, which decisions it refines and which refine it, what it shapes, and what it leaves open, read from the graph instead of kept by hand.*
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
 const ends = (relations, type) =>
   relations
@@ -2574,6 +2671,9 @@ decisions by shaping fan-in. The law is `spec:consumers.agent-surface.design-rec
 layer, and which way it runs, before you write or review an architecture rule.*
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
 const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
 const componentOf = new Map();
@@ -2680,6 +2780,9 @@ references, before maturing the next design.*
 The body takes no parameter.
 
 ```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const defined = g.specs().filter((spec) => spec.statedReadiness === "defined" && !spec.deliveryFacts.includes("implemented"));
 const backlog = defined.filter((spec) => spec.specKind !== "example" && spec.specKind !== "decision");
 const byFamily = Object.create(null);
@@ -2727,6 +2830,9 @@ code-unit order. The law is `spec:consumers.agent-surface.answer-shapes`.
 Pass one scope, `params.spec` or `params.pack`. Without one the recipe asks for a scope.
 
 ```js
+const accepts = ["spec", "pack"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 if (params.spec === undefined && params.pack === undefined) {
   return {found: false, reason: "scope", expected: "params.spec or params.pack"};
 }
@@ -2795,6 +2901,9 @@ its own exclusions. A base written by another engine is accepted and reports wha
 The caller keeps the base commit outside the graph. The recipe reads only the two graph objects.
 
 ```js
+const accepts = ["base", "pack", "detail"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const base = params.base;
 const packId = params.pack;
 const detail = params.detail ?? false;
@@ -3004,18 +3113,25 @@ with a budget and an account of what was left out.*
 Supply exactly one scope: `params.pack`, a Pack id, or `params.specs`, an ordered list of Spec ids.
 `params.members` optionally narrows a Pack to an ordered subset, such as the member ids recipe 37
 returns. The Pack's framing and full boundary stay visible. `params.budget` defaults to 100,000
-UTF-16 code units and accepts a non-negative integer, including zero. There is no sample scope.
+UTF-16 code units and accepts a non-negative integer, including zero. `params.declarations` defaults
+to `"whole"`; `"addresses"` allows the final cut to reduce pinned declarations to entry addresses.
+Any other value returns diagnostics. There is no sample scope.
 
 ```js
+const accepts = ["pack", "specs", "members", "budget", "declarations"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const packId = params.pack;
 const specIds = params.specs;
 const subset = params.members;
 const budget = params.budget ?? 100000;
+const declarationMode = params.declarations ?? "whole";
 const diagnostics = [];
 const bad = (scope, problem) => diagnostics.push({ scope, problem });
 const strings = (value) => Array.isArray(value) && value.every((item) => typeof item === "string");
 if ((packId !== undefined) === (specIds !== undefined)) bad("scope", "Supply exactly one of pack or specs.");
 if (!Number.isInteger(budget) || budget < 0) bad("budget", "Expected a non-negative integer in UTF-16 code units.");
+if (params.declarations === null || (declarationMode !== "whole" && declarationMode !== "addresses")) bad("declarations", "Expected \"whole\" or \"addresses\".");
 let pack = null, ids = [];
 if (packId !== undefined) {
   pack = typeof packId === "string" ? g.packContext(packId) : undefined;
@@ -3072,26 +3188,28 @@ const unitOf = (unit) => ({ id: unit.codeId, claim: unit.claim, file: unit.file 
 const members = ids.map((id) => {
   const context = g.specContext(id);
   const sections = JSON.parse(JSON.stringify(context.sections ?? {}));
+  // One copy: open questions live in `questions`, never also in sections.intent.
+  if (sections.intent) delete sections.intent.openQuestions;
   const questions = context.designColumns.openQuestions.map((question) => ({ ...question,
-    address: question.key === undefined ? null : `${id}#question.${question.key}`, file: context.file, line: question.line ?? null }));
+    address: question.key === undefined ? null : `${id}#question.${question.key}`, line: question.line ?? null }));
   const footing = context.relationsOut.filter((end) => types.includes(end.type)).map((end) => {
     const target = summaries.get(end.otherId);
     return { type: end.type, id: end.otherId, claim: end.claim, resolved: end.resolved,
       ...(end.reason === undefined ? {} : { reason: end.reason }),
       statedReadiness: target?.statedReadiness ?? null, floorReached: target === undefined ? null : target.derivedReadiness ?? "none" };
   }).sort((a, b) => types.indexOf(a.type) - types.indexOf(b.type) || byCodeUnit(a.id, b.id));
-  const declarations = Object.entries(sections.design ?? {}).flatMap(([key, value]) => {
-    const declaration = key === "description" ? null : declarationOf(value);
-    return declaration === null ? [] : [{ spec: id, key, declaration }];
-  });
+  // One copy: each pinned value stays in sections.design; `declarations` names its key.
+  const declarations = Object.entries(sections.design ?? {}).flatMap(([key, value]) =>
+    key !== "description" && declarationOf(value) !== null ? [key] : []);
   const exampleIds = [...new Set(context.relationsIn.filter((end) => ["refines", "verifies"].includes(end.type) &&
     summaries.get(end.otherId)?.specKind === "example").map((end) => end.otherId))].sort();
   const examples = exampleIds.map((exampleId) => {
     const example = g.specContext(exampleId);
-    return { id: exampleId, statedReadiness: example.statedReadiness, enabled: example.verifiers.some((verifier) => verifier.via === "test-anchor" && verifier.enabled),
-      file: example.file, steps: JSON.parse(JSON.stringify(example.sections?.behavior?.examples ?? [])) };
+    const member = ids.includes(exampleId);
+    return { id: exampleId, member, file: example.file, statedReadiness: example.statedReadiness, enabled: example.verifiers.some((verifier) => verifier.via === "test-anchor" && verifier.enabled),
+      steps: member ? null : JSON.parse(JSON.stringify(example.sections?.behavior?.examples ?? [])) };
   });
-  return { id, title: context.title ?? null, specKind: context.specKind, altitude: context.altitude,
+  return { id, file: context.file, title: context.title ?? null, specKind: context.specKind, altitude: context.altitude,
     statedReadiness: context.statedReadiness, floorReached: context.derivedReadiness ?? "none", statedNextRung: context.statedNextRung ?? null,
     holds: context.statedNextRungFailures, narrative: context.narrative ?? null, sections, questions, footing, declarations, examples,
     design: { entries: context.designColumns.entries, declarations: context.designColumns.declarations,
@@ -3100,7 +3218,7 @@ const members = ids.map((id) => {
     verifiers: context.verifiers.map((verifier) => ({ id: verifier.verifierId, claim: verifier.claim, enabled: verifier.enabled,
       file: verifier.file ?? null, line: verifier.line ?? null })) };
 });
-const answer = { scope, budget, used: 0, tokenEstimate: { value: 0, method: "UTF-16 code units divided by four, an estimate" }, leftOut: [],
+const answer = { scope, budget, declarations: declarationMode, used: 0, tokenEstimate: { value: 0, method: "UTF-16 code units divided by four, an estimate" }, leftOut: [],
   pack: pack ? { id: packId, title: pack.title ?? null, framing: pack.framing ?? null } : null, members, boundary };
 const measure = () => {
   for (;;) {
@@ -3111,16 +3229,19 @@ const measure = () => {
     answer.tokenEstimate.value = estimate;
   }
 };
+// The enclosing member names the Spec and file; the entry position names its path.
 const location = (id, path) => {
   const context = g.specContext(id);
   const question = /^intent\.openQuestions\[(\d+)\]/u.exec(path);
   const rule = /^behavior\.(rules|flows)\[(\d+)\]/u.exec(path);
   const entry = question ? `question[${question[1]}]` : rule ? `${rule[1] === "rules" ? "rule" : "flow"}[${rule[2]}]` : path;
   const at = context.entryLocations.find((row) => row.entry === entry);
-  return { spec: id, path, file: at?.file ?? context.file, line: at?.line ?? null };
+  return { line: at?.line ?? null };
 };
+const isPointer = (entry) => entry && typeof entry === "object" && !Array.isArray(entry) &&
+  (entry.line === null || typeof entry.line === "number") &&
+  Object.keys(entry).length === 1 && Object.hasOwn(entry, "line");
 const address = (id, section, key) => key !== "description" && /^[a-z][A-Za-z0-9]*$/u.test(key) ? `${id}#${section}.${key}` : null;
-// Entry addresses remain reading pointers even when the text containing them is cut.
 const addressesIn = (value) => [...new Set((JSON.stringify(value) ?? "").match(/spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*#(?:design|ui|question|rule)\.[a-z][A-Za-z0-9]*(?![A-Za-z0-9_.#-])/gu) ?? [])];
 const reference = (id, path, value, own = null) => {
   const addresses = [...new Set([...(own === null ? [] : [own]), ...addressesIn(value)])];
@@ -3129,13 +3250,19 @@ const reference = (id, path, value, own = null) => {
 };
 const questionReference = (id, question, index) => {
   const own = question?.key === undefined ? null : `${id}#question.${question.key}`;
-  const pointer = reference(id, `intent.openQuestions[${index}]`, question, own);
-  return question?.links?.length ? { pointer, links: question.links } : pointer;
+  const { links, ...text } = question;
+  const pointer = reference(id, `intent.openQuestions[${index}]`, text, own);
+  return links?.length ? { pointer, links } : pointer;
 };
+const order = ["refines", "dependsOn", "constrainedBy", "decidedBy"];
 const cuts = [
   () => {
     answer.boundary = Object.fromEntries(Object.entries(answer.boundary).map(([name, rows]) => [name, rows.map((row) => row.id)]));
     answer.leftOut.push("Boundary details; ids kept per direction.");
+  },
+  () => {
+    for (const member of members) member.footing = Object.fromEntries(order.map((type) => [type, member.footing.filter((row) => row.type === type).map((row) => row.id)]).filter(([, list]) => list.length));
+    answer.leftOut.push("Footing details; ids kept per relation type.");
   },
   () => {
     for (const member of members) member.narrative = addressesIn(member.narrative).join(" ") || null;
@@ -3148,38 +3275,30 @@ const cuts = [
         if (behavior.examples) behavior.examples = behavior.examples.map((entry, index) => reference(member.id, `behavior.examples[${index}]`, entry));
         if (behavior.exampleSpace) behavior.exampleSpace = reference(member.id, "behavior.exampleSpace", behavior.exampleSpace);
       }
-      for (const example of member.examples) example.steps = reference(example.id, "behavior.examples", example.steps);
+      for (const example of member.examples) if (example.steps !== null) example.steps = reference(example.id, "behavior.examples", example.steps);
     }
     answer.leftOut.push("Example step text, including member sections and example-space vocabulary.");
   },
   () => {
     for (const member of members) {
       member.questions = member.questions.map((question) => question.blocking ? question : questionReference(member.id, question, question.index));
-      if (member.sections.intent?.openQuestions) member.sections.intent.openQuestions = member.sections.intent.openQuestions
-        .map((question, index) => question?.blocking ? question : questionReference(member.id, question, index));
     }
-    answer.leftOut.push("Non-blocking question text, including member sections; addresses and links kept.");
+    answer.leftOut.push("Non-blocking question text; addresses and links kept.");
   },
   () => {
     for (const member of members) {
-      const pinned = new Set(member.declarations.map((declaration) => declaration.key));
-      // A keyed entry is read by its own key, which may contain a dot, never from the joined path.
+      const pinned = new Set(member.declarations);
       const keyedEntry = (section, key, value) => section === "design" && pinned.has(key) ? value
         : reference(member.id, `${section}.${key}`, value, address(member.id, section, key));
       const reduce = (value, path) => {
-        // Protected entries stay whole; everything else becomes a graph location or address.
-        if (path.startsWith("intent.openQuestions[")) return value;
         const rule = /^behavior\.(rules|flows)\[(\d+)\]$/u.exec(path);
         if (rule) {
           const key = Object.keys(member.sections.behavior.ruleKeys ?? {}).find((key) => member.sections.behavior.ruleKeys[key] === `${rule[1]}[${rule[2]}]`);
           return reference(member.id, path, value, key === undefined ? null : `${member.id}#rule.${key}`);
         }
         if (path === "behavior.ruleKeys") return value;
-        const isLocation = (entry) => entry && typeof entry === "object" && !Array.isArray(entry) &&
-          typeof entry.spec === "string" && typeof entry.path === "string" && typeof entry.file === "string" &&
-          (entry.line === null || typeof entry.line === "number") && Object.keys(entry).every((key) => ["spec", "path", "file", "line"].includes(key));
-        if (isLocation(value)) return value;
-        if (Array.isArray(value) && value.some(isLocation) && value.every((entry) => isLocation(entry) ||
+        if (isPointer(value)) return value;
+        if (Array.isArray(value) && value.some(isPointer) && value.every((entry) => isPointer(entry) ||
           typeof entry === "string" && addressesIn(entry).includes(entry))) return value;
         if (Array.isArray(value)) return value.map((entry, index) => reduce(entry, `${path}[${index}]`));
         if (value !== null && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key,
@@ -3188,12 +3307,19 @@ const cuts = [
       };
       member.sections = reduce(member.sections, "");
     }
-    answer.leftOut.push("Section entry values other than pinned declarations and blocking questions; addresses and locations kept.");
+    answer.leftOut.push("Section entry values other than pinned declarations; addresses and lines kept.");
   },
 ];
+if (declarationMode === "addresses") cuts.push(() => {
+  for (const member of members) for (const key of member.declarations) {
+    const value = member.sections.design[key];
+    member.sections.design[key] = reference(member.id, `design.${key}`, value, address(member.id, "design", key));
+  }
+  answer.leftOut.push("Pinned declaration text; entry addresses kept.");
+});
 if (measure() <= budget) return answer;
 for (const cut of cuts) { cut(); if (measure() <= budget) return answer; }
-return { scope, budget, budgetExceeded: true, protectedLength: answer.used, leftOut: answer.leftOut };
+return { scope, budget, declarations: declarationMode, budgetExceeded: true, protectedLength: answer.used, leftOut: answer.leftOut };
 ```
 
 `scope` states a Pack and whether it is narrowed, with its ordered member ids, or the ordered
@@ -3201,22 +3327,26 @@ Spec list. Each member keeps its stated rung, floor and stated next rung, with `
 unmet floor clauses. `design` counts entries, declarations and questions, beside shaping decisions
 and the Pack design's bindings. Questions keep addresses, recorded lines and their fields.
 `footing` has recipe 21's dependency rows, including `reason` when the relation states one;
-`declarations` has recipe 24's pinned declarations.
-`examples` lists refining or verifying examples with their rung, enabled binding and steps.
+`declarations` lists pinned keys, with each value kept once in `sections.design`.
+Each member carries its carrier `file`; questions live only in `questions`, with no second copy
+in `sections.intent`. `examples` lists refining or verifying examples with their file, rung,
+enabled binding and steps. An example that is itself a member has `member: true` and `steps: null`,
+with the steps in its own member row.
 Bindings carry their claims and recorded source locations. Boundary rows carry declared
 relations, grouped exactly as the Pack design does.
 
-The fixed cuts are boundary details, member narrative, example step text, non-blocking questions,
-then remaining section values. Each cut removes text everywhere it appears, including `sections`, while retaining entry addresses
-and question links from that text.
-The fifth cut retains pinned declarations and blocking questions whole, reduces keyed entries to
-their addresses and other entries to `{ spec, path, file, line }`. If the cut value contains other
-entry addresses, they stay beside that pointer in a list. Non-blocking questions retain their
-addresses or locations and any links. Null lines mean unlocated.
+The fixed cuts are boundary details, footing details, member narrative, example step text,
+non-blocking question text, then section values other than pinned declarations. With
+`declarations: "addresses"`, a final cut reduces pinned values to entry addresses. The recipe
+stops at the first cut after which it fits. Footing becomes target ids grouped by relation type.
+Blocking questions stay whole. Other entries keep their addresses or `{ line }`, with the
+enclosing row and position naming the Spec, file and path. Entry addresses written in cut text
+stay beside its pointer, and question links stay beside the question pointer. Null lines mean
+unlocated.
 `leftOut` lists the cuts taken in that order. `used` counts the compact returned JSON, including
 itself, `scope`, `budget`, `tokenEstimate` and `leftOut`. The estimate divides code units by four,
 rounded up. A successful bundle always fits the requested budget. A budget-exceeded result carries
-only the scope, budget, protected length and omission list, and the CLI exits 0. Invalid or unknown
+only the scope, budget, declaration mode, protected length and omission list, and the CLI exits 0. Invalid or unknown
 scopes return diagnostics without a bundle. The law is `spec:consumers.context-bundle`.
 
 ## 37. The perspective filter
@@ -3250,6 +3380,9 @@ contexts must match the same bound unit's component. An absent restriction match
 an empty restriction matches nothing.
 
 ```js
+const accepts = ["pack", "perspective"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const packId = params.pack;
 const perspective = params.perspective;
 const diagnostics = [];
@@ -3371,6 +3504,9 @@ and its type is one of the six authored relations. Scope entries are Spec ids or
 A proposer, status, date, approval, verdict or any other field is refused.
 
 ```js
+const accepts = ["proposal", "base"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const proposal = params.proposal;
 const base = params.base;
 const schemaProblems = [];
@@ -3615,6 +3751,9 @@ returns `{ pack, found: false }`. An existing Pack with no candidates keeps its 
 rows. A row is a potential candidate, never permission to delete an entry.
 
 ```js
+const accepts = ["pack"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
 const pack = params.pack === undefined ? undefined : g.packContext(params.pack);
 if (params.pack !== undefined && !pack) return { pack: params.pack, found: false };
@@ -3690,6 +3829,9 @@ excluded intermediates, and records the normalized exclusions in its output. Onl
 component identity and `memberOf` assign files to components.
 
 ```js
+const accepts = ["imports", "limit"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
 const input = params.imports;
 const diagnostics = [];
 const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
@@ -3810,3 +3952,63 @@ units with no component. Component designs are declared intent, bindings are anc
 imports are inferred. Every mismatch and ranking is advice; the body changes nothing and no
 finding enters validation. Bad parameters are input errors, not curation findings. The law is
 `spec:consumers.impact-graph.curation-assist`.
+
+## 41. The key-family register
+
+*When you need this: you want a corpus's keyed values, such as limits, error messages or storage
+tables, as a register derived each time you read it.*
+
+`params.prefixes` is a non-empty list of unique non-empty strings, matched case-sensitively against
+the start of each Design or UI key. It defaults to `["finding", "impact"]`. Pass at most one scope,
+`params.pack` or `params.specs`; without either, the register reads the corpus. A repeated Spec id
+is read once. Rule, flow and question keys and `description` are left out. Rows have no cap and
+sort by key, Spec id and section in code-unit order. A malformed prefix list or scope returns only
+`{ diagnostics: [{ parameter, problem }] }`.
+
+```js
+const accepts = ["prefixes", "pack", "specs"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const prefixes = params.prefixes ?? ["finding", "impact"];
+const diagnostics = [];
+const bad = (parameter, problem) => diagnostics.push({ parameter, problem });
+if (params.prefixes === null || !Array.isArray(prefixes) || prefixes.length === 0 || !prefixes.every((prefix) => typeof prefix === "string" && prefix.length > 0) ||
+  new Set(prefixes).size !== prefixes.length) bad("prefixes", "Expected a non-empty list of unique non-empty strings.");
+if (params.pack !== undefined && params.specs !== undefined) bad("specs", "Supply at most one of pack or specs.");
+let scope = { corpus: true }, ids = g.specs().map((spec) => spec.id);
+if (params.pack !== undefined) {
+  const pack = typeof params.pack === "string" ? g.packContext(params.pack) : undefined;
+  if (!pack) bad("pack", "Pack does not resolve.");
+  else { scope = { pack: params.pack }; ids = pack.members.map((member) => member.id); }
+} else if (params.specs !== undefined) {
+  if (!Array.isArray(params.specs) || !params.specs.every((id) => typeof id === "string")) bad("specs", "Expected a list of Spec ids.");
+  else {
+    for (const id of params.specs) if (!g.specContext(id)) bad("specs", `${id} does not resolve.`);
+    scope = { specs: params.specs }; ids = [...new Set(params.specs)];
+  }
+}
+if (diagnostics.length) return { diagnostics };
+const byCodeUnit = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const byPrefix = Object.fromEntries(prefixes.map((prefix) => [prefix, 0]));
+const rows = [];
+for (const id of ids) {
+  const context = g.specContext(id);
+  for (const section of ["design", "ui"]) {
+    for (const [key, value] of Object.entries(context.sections?.[section] ?? {})) {
+      if (key === "description") continue;
+      const matched = prefixes.filter((prefix) => key.startsWith(prefix));
+      if (matched.length === 0) continue;
+      for (const prefix of matched) byPrefix[prefix] += 1;
+      const at = context.entryLocations.find((row) => row.entry === `${section}.${key}`);
+      rows.push({ key, spec: id, section, value, file: at?.file ?? context.file, line: at?.line ?? null });
+    }
+  }
+}
+rows.sort((a, b) => byCodeUnit(a.key, b.key) || byCodeUnit(a.spec, b.spec) || byCodeUnit(a.section, b.section));
+return { prefixes, scope, totals: { rows: rows.length, specs: new Set(rows.map((row) => row.spec)).size, byPrefix }, rows };
+```
+
+The answer is `{ prefixes, scope, totals: { rows, specs, byPrefix }, rows }`, each row
+`{ key, spec, section, value, file, line }`, with `line` null when the location table records none.
+`byPrefix` counts a key under every prefix it matches. The law is
+`spec:consumers.agent-surface.register-recipes`.
