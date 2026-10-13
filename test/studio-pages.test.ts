@@ -320,6 +320,41 @@ describe("Studio static pages", () => {
     );
     expect(summaryItems(waiting)[2]).not.toContain("href");
   });
+  it("agrees each boundary verb with its count", () => {
+    const member = primitive("spec:probe.member");
+    const one = (id: string, type: "dependsOn" | "verifies" | "supersedes") => ({
+      node: primitive(id),
+      edge: { from: id, to: member.id, type, claim: "declared" as const },
+    });
+    const outside = [
+      one("spec:probe.rester", "dependsOn"),
+      one("spec:probe.verifier", "verifies"),
+      one("spec:probe.successor", "supersedes"),
+    ];
+    const page =
+      renderStudio(
+        createStudioData(
+          createReader({
+            schemaVersion,
+            nodes: [
+              member,
+              ...outside.map((o) => o.node),
+              {
+                id: "pack:boundary",
+                nodeType: "Pack",
+                claim: "declared",
+                file: "boundary.pack.sdp.md",
+                members: [member.id],
+              },
+            ],
+            edges: outside.map((o) => o.edge),
+          }),
+        ),
+      ).find((p) => p.path === "packs/boundary.html")?.content ?? "";
+    expect(decode(summaryItems(page).at(-1) ?? "")).toBe(
+      "No outside Specs the Pack rests on; 1 outside Spec rests on the Pack; 1 outside Spec verifies it; 1 outside Spec supersedes it.",
+    );
+  });
   it("shows only the Spec's own Packs in its rail and every Pack on the index", () => {
     const rendered = renderStudio(
       createStudioData(

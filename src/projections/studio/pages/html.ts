@@ -36,6 +36,9 @@ export const count = (
   plural = `${singular}s`,
   opening = true,
 ): string => `${n === 0 ? (opening ? "No" : "no") : String(n)} ${n === 1 ? singular : plural}`;
+/** The verb that agrees with a count: `rests` after one, `rest` after any other count. */
+export const verb = (n: number, plural: string, singular = `${plural}s`): string =>
+  n === 1 ? singular : plural;
 export const badge = (rung?: string): string =>
   rung === undefined
     ? "stated rung not recorded"

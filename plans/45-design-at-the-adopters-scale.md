@@ -1,9 +1,11 @@
 # Plan 45. Design at the adopter's scale
 
-> **Status:** EXECUTING on `feature/design-at-scale-v0`, from `main` at `7eef29b`, the merge of
-> PR 32. A thin lineage pointer: readiness, backlog and open questions are read from the graph
-> (recipes 1, 9, 11, 20, 29, 33), never from this file. If this file and the graph disagree, the
-> graph wins and this file is stale.
+> **Status:** ✅ EXECUTED on `feature/design-at-scale-v0`, from `main` at `7eef29b`, the merge of
+> PR 32, as PR 33; the platform's side is `sdp/design-at-scale` of libar-platform. Every lane landed,
+> each reviewed across model families, and the rulings below were made on the owner's delegation
+> and await the owner's review. A thin lineage pointer: readiness, backlog and open questions are
+> read from the graph (recipes 1, 9, 11, 20, 29, 33), never from this file. If this file and the
+> graph disagree, the graph wins and this file is stale.
 
 ## Why
 
@@ -116,6 +118,33 @@ Fable 5.1, before the main thread ruled. Delegated; each awaits the owner's revi
 | The rules runner lives in the CLI; the validation layer holds only the corpus finding types | `spec:validation.corpus-rules` |
 | The concept matcher ships as the browser-safe subpath `./concept-match`, as the anchor builders ship as `./anchors` | `spec:consumers.spec-studio.search` |
 
+## Rulings after wave 3
+
+Two adversarial reviews (gpt-6-sol on the code, Opus 5.5 on the design's honesty) and the
+platform's second half found the last defects; each was fixed with a test that failed first.
+Delegated; each awaits the owner's review.
+
+| Ruling | Carrying Spec |
+| --- | --- |
+| A build from a git archive, as npm builds a GitHub pin, records its commit through `export-subst`, so `sdp --version` names the pinned commit on every install route | `spec:consumers.engine-provenance` |
+| A corpus finding's `file` is a root-relative POSIX path; one rules file named twice is refused through a symlink too | `spec:validation.corpus-rules#design.ruleFinding` |
+| The key-family register answers an unresolved Pack member with a diagnostic, never a partial register | `spec:consumers.agent-surface.register-recipes#design.familyRecipe` |
+| Lane E keeps the platform's committed Pack page beside the Studio: the platform's decision 58 makes it the page a pass reads first, and replacing it is the owner's call | — |
+
+## Acceptance, measured at close
+
+- `npm run check` passes; the Markdown Design Review, census, Mermaid and Gherkin projections are
+  unchanged, and the Studio joins the projection suite as a fifth root.
+- The platform's history-view Pack fits the context bundle's default budget with
+  `declarations: "addresses"`: 93,806 of 100,000 units, on the platform itself.
+- The graph-side half of the platform's `check.py` runs as `design/rules/policy.js` and recipe 42
+  under `sdp validate --rules`, in the platform's own gate, and every planted mistake its tests
+  carry still fails it.
+- An Astra job given only the platform's Studio pages answered four of the five reader tasks from
+  them. The fourth, a declaration's type comparison, is met in part: the page names the suite that
+  compares the Pack's declarations and its file and line, but no page shows the assertion for one
+  declaration, since no link leaves the page set.
+
 ## Deferred, with their triggers
 
 | Item | Comes back when |
@@ -123,6 +152,8 @@ Fable 5.1, before the main thread ruled. Delegated; each awaits the owner's revi
 | A context bundle for the platform's application and foundation Packs, which stay over budget after every cut | A design pass needs either Pack whole; until then, read them through a perspective (recipe 37) |
 | Watching rules files under `--watch` | An author asks for a rerun on editing a rules file |
 | Exporting `sdp q`'s body evaluator from the package, so a script holding a graph runs shipped recipes without deriving it again | An adopter script other than the Pack page the Studio retires needs it |
+| Address resolution and cycle search a rules file can call, as a reader verb or as `findings` answers from recipes 25 and 26; the platform's rules file keeps a copy of both, its section list read from the package | The next arc's design pass, first lane: a second rules file needs either |
+| A Studio view of one declaration's comparison, from its pin to the assertion that checks it | A reader task needs the assertion, not only the suite's file and line |
 | Run evidence | The platform's CI writes CTRF for its native tier, or the Studio's verification panels open |
 | Example-space coverage | A design pass asks which slot values no example exercises |
 | The Obsidian vault | A reader asks for it after the Studio's phase 0 ships |

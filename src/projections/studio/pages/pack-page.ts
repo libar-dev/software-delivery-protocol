@@ -12,6 +12,7 @@ import {
   questionFields,
   rungLine,
   unitList,
+  verb,
 } from "./html.js";
 import type { PageContext } from "./html.js";
 import { frame } from "./frame.js";
@@ -85,7 +86,7 @@ export function packPage(ctx: PageContext, pack: PackContext, totals: PackTotals
     `${count(totals.openQuestions, "open question")} and ${count(totals.blockingQuestions, "blocking question", "blocking questions", false)}.`,
     `${count(totals.withImplementations, "member")} with an implementation binding.`,
     `${count(totals.withReferences, "member")} with a design reference.`,
-    `${count(totals.restsOn, "outside Spec")} the Pack rests on; ${count(totals.restedOnBy, "outside Spec", "outside Specs", false)} rest on the Pack; ${count(totals.verifiedBy, "outside Spec", "outside Specs", false)} verify it; ${count(totals.supersededBy, "outside Spec", "outside Specs", false)} supersede it.`,
+    `${count(totals.restsOn, "outside Spec")} the Pack rests on; ${count(totals.restedOnBy, "outside Spec", "outside Specs", false)} ${verb(totals.restedOnBy, "rest")} on the Pack; ${count(totals.verifiedBy, "outside Spec", "outside Specs", false)} ${verb(totals.verifiedBy, "verify", "verifies")} it; ${count(totals.supersededBy, "outside Spec", "outside Specs", false)} ${verb(totals.supersededBy, "supersede")} it.`,
   ];
   const boundary = (
     [
