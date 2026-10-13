@@ -62,7 +62,9 @@ Resolve the target's blocking open questions and review the carrying Specs. The 
 register (recipe 20) lists every open question in the corpus when the neighbors matter too. A
 clear floor is evidence, not an automatic `ready` statement. Use pinned declarations (recipe 24)
 to list every signature, type, validator or table the target and its neighbors pin as a code span
-opening a keyed Design entry, so a test author and a builder working apart read one list. When the
+opening a keyed Design entry, so a test author and a builder working apart read one list. The
+key-family register (recipe 41) lists every Design and UI entry whose key starts with a prefix
+you give, such as `limit` or `error`, across the corpus, a Pack or a list of Specs. When the
 design is a Pack, read it with Pack design (recipe 29): per member, the stated next rung and what
 holds the member below it, the design columns, open questions with their lines, and the code that
 answers to it. Before changing a Spec, run design-change impact (recipe 30) for every Spec that

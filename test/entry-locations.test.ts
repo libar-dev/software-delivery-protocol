@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
-import { extract, reifyMarkdownCarrier, serializeGraph } from "../src/index.js";
+import { extract, reifyMarkdownCarrier, serializeGraph, validateGraph } from "../src/index.js";
 import type { GraphSchema } from "../src/graph/schema.js";
 import { deriveGraph } from "../src/extract/derive.js";
 import { reifyGherkinCarrier } from "../src/extract/gherkin.js";
@@ -13,7 +13,7 @@ import { serializeGraphStructure } from "./helpers/graph-structure.js";
 
 const entryLocationsTestAnchor = specTest({
   id: testAnchorId("test:protocol.entry-locations"),
-  verifies: ref("spec:extraction.entry-locations"),
+  verifies: [ref("spec:extraction.entry-locations"), ref("spec:validation.prose-mentions")],
 });
 void entryLocationsTestAnchor;
 
@@ -386,5 +386,113 @@ relations:
   it("extracts the location table byte-identically twice", () => {
     const root = corpus("subject.sdp.md", markdown);
     expect(serializeGraph(extract({ root }).graph)).toBe(serializeGraph(extract({ root }).graph));
+  });
+});
+
+describe("prose mention finding lines", () => {
+  it.each([
+    ["behavior", "Behavior", "rule: ", "rules", "rule"],
+    ["behavior", "Behavior", "flow: ", "flows", "flow"],
+    ["rule", "Rule", "", "rules", "rule"],
+    ["workflow", "Workflow", "", "flows", "flow"],
+    ["workflow", "Workflow", "rule: ", "rules", "rule"],
+    ["contract", "Contract", "", "rules", "rule"],
+  ])("locates errors and warnings in %s %s %s entries", (kind, heading, prefix, list, entry) => {
+    const source = `---
+id: spec:probe.mentions
+kind: ${kind}
+altitude: story
+readiness: idea
+relations: {}
+---
+# Mention locations
+
+## Intent
+- outcome: Locate every finding in the primary behavior owner.
+
+## ${heading}
+- ${prefix}Read spec:probe.target here.
+- ${prefix}Read spec:missing.target here.
+- ${prefix}Read spec:probe.target#design.absent here.
+- ${prefix}Read spec:bad_token here.
+`;
+    const root = corpus("mentions.sdp.md", source);
+    writeFileSync(
+      join(root, "target.sdp.md"),
+      `---
+id: spec:probe.target
+kind: behavior
+altitude: story
+readiness: idea
+relations: {}
+---
+# Target
+
+## Intent
+- outcome: Be mentioned.
+`,
+    );
+    const result = extract({ root });
+    expect(result.report.findings).toEqual([]);
+    expect(result.graph.locations?.filter((row) => row.spec === "spec:probe.mentions")).toEqual(
+      [14, 15, 16, 17].map((line, index) => ({
+        spec: "spec:probe.mentions",
+        file: "mentions.sdp.md",
+        entry: `${entry}[${String(index)}]`,
+        line,
+      })),
+    );
+    const findings = validateGraph(result.graph).findings.filter(
+      (finding) => finding.validatorId === "conformance/prose-mentions",
+    );
+    expect(
+      findings
+        .map(({ severity, path, line }) => ({ severity, path, line }))
+        .sort((a, b) => (a.path ?? "").localeCompare(b.path ?? "")),
+    ).toEqual([
+      { severity: "warning", path: `behavior.${list}[0]`, line: 14 },
+      { severity: "error", path: `behavior.${list}[1]`, line: 15 },
+      { severity: "error", path: `behavior.${list}[2]`, line: 16 },
+      { severity: "error", path: `behavior.${list}[3]`, line: 17 },
+    ]);
+  });
+
+  it("locates question text, fields and links and omits an unrecorded line", () => {
+    const root = corpus(
+      "mentions.sdp.md",
+      `---
+id: spec:probe.mentions
+kind: behavior
+altitude: story
+readiness: idea
+relations: {}
+---
+# Mention locations
+
+Read spec:missing.narrative here.
+
+## Intent
+- outcome: Locate question text and fields.
+
+### Open questions
+- [non-blocking #choice] Read spec:missing.question here?
+  - links: spec:missing.link
+  - provisional: Read spec:missing.provisional here.
+- [blocking #later] Which design?
+  - trigger: Read spec:missing.trigger here.
+`,
+    );
+    const result = extract({ root });
+    expect(result.report.findings).toEqual([]);
+    const findings = validateGraph(result.graph).findings.filter(
+      (finding) => finding.validatorId === "conformance/prose-mentions",
+    );
+    expect(findings.map(({ path, line }) => ({ path, line }))).toEqual([
+      { path: "narrative", line: undefined },
+      { path: "intent.openQuestions[0].question", line: 16 },
+      { path: "intent.openQuestions[0].links[0]", line: 17 },
+      { path: "intent.openQuestions[0].provisional", line: 18 },
+      { path: "intent.openQuestions[1].trigger", line: 20 },
+    ]);
   });
 });

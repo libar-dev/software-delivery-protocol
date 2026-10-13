@@ -1347,7 +1347,10 @@ function backingPairs(graph: GraphSchema): ReadonlySet<string> {
 
 function mentionLine(graph: GraphSchema, spec: string, path: string): number | undefined {
   const entry = path
+    .replace(/^behavior\.rules(?=\[\d+\]$)/u, "rule")
+    .replace(/^behavior\.flows(?=\[\d+\]$)/u, "flow")
     .replace(/^intent\.openQuestions/u, "question")
+    .replace(/^(question\[\d+\])\.question$/u, "$1")
     .replace(/\.links\[\d+\]$/u, ".links");
   return graph.locations?.find((row) => row.spec === spec && row.entry === entry)?.line;
 }
