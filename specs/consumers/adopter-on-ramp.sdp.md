@@ -24,6 +24,9 @@ The help names the on-ramps by path because an operator can reach the CLI withou
 - outcome: Teach each ruled home in the shipped skills, one line each with its carrying Spec, so an adopter states those truths in the graph and not beside it.
 
 ## Behavior
+- rule: [#commitInstall] An adopter can pin the package to a git commit; its `prepare` script builds the CLI, subpath exports and shipped recipes before installation completes. While the package version is `0.0.0`, the installation guidance uses a commit pin rather than an npm prerelease.
+- rule: [#installGuidance] The shipped README teaches commit installation with npm and the dependency build permission pnpm needs, and checks the installed CLI with `sdp --version`.
+- rule: [#recipeUpgrade] The upgrade guidance teaches callers to pass recipe subjects through `--params` and run the shipped recipe files; address resolution reads `params.addresses`, so rewriting a sample in the recipe body is no longer an input mechanism.
 - rule: The authoring skill teaches a deferral as a blocking open question whose `trigger:` field names what brings the Spec back, plus `dependsOn` for a true precondition. Its blocking question holds the Spec below `defined` without an adopter-specific tag. Example children may still state `defined` once their bound points are complete and match the parent's example vocabulary when it has one; their `ready` waits until the parent states at least `defined`.
 - rule: It teaches an unsettled fact as a constraint Spec whose blocking open question names the check that would settle it. Specs bounded by it declare `constrainedBy`; they may state `defined` when their own floor clears, and their `ready` waits until the constraint states at least `defined`.
 - rule: It teaches a ruling that awaits its owner as a decision Spec below `ready`, with `decidedBy` from each Spec the ruling shapes.

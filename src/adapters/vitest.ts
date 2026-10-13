@@ -46,8 +46,18 @@ export function bindExample<W, S extends string, PM extends Record<S, ParamShape
     it("executes the bound example against a fresh world", async () => {
       // The adapter's lifecycle law: the fresh world is created here, per example.
       const freshWorld = world();
-      await runExamplePlan(plan, freshWorld);
-      await after?.(freshWorld);
+      let stepsPassed = false;
+      try {
+        await runExamplePlan(plan, freshWorld);
+        stepsPassed = true;
+      } finally {
+        try {
+          await after?.(freshWorld);
+        } catch (error) {
+          // eslint-disable-next-line no-unsafe-finally -- Only a passing step run can be replaced by a cleanup error.
+          if (stepsPassed) throw error;
+        }
+      }
     });
   });
 }

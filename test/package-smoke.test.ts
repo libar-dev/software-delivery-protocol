@@ -184,11 +184,13 @@ describe("published package surface", () => {
     const consumer = join(packageRoot, "consumer");
 
     try {
-      run("npm", ["run", "build"], repositoryRoot);
-      const dryRun = JSON.parse(
-        run("npm", ["pack", "--dry-run", "--json"], repositoryRoot),
-      ) as readonly [{ readonly files: readonly { readonly path: string }[] }];
-      const dryRunPaths = dryRun[0].files.map((file) => file.path);
+      // npm pack runs prepare. One pack proves the lifecycle and supplies the file inventory.
+      const packed = JSON.parse(
+        run("npm", ["pack", "--json", "--pack-destination", packageRoot], repositoryRoot),
+      ) as readonly [
+        { readonly filename: string; readonly files: readonly { readonly path: string }[] },
+      ];
+      const dryRunPaths = packed[0].files.map((file) => file.path);
       const adopterAssets = [
         "CONTEXT.md",
         ".agents/skills/sdp-agent-surface/SKILL.md",
@@ -234,14 +236,7 @@ describe("published package surface", () => {
         dryRunPaths.filter((path) => !path.startsWith("dist/") && /\.tsx?$/u.test(path)),
       ).toEqual([]);
 
-      run("npm", ["pack", "--pack-destination", packageRoot], repositoryRoot);
-
-      const tarballs = await readdir(packageRoot);
-      const tarball = tarballs.find((entry) => entry.endsWith(".tgz"));
-
-      if (tarball === undefined) {
-        throw new Error("npm pack did not create a tarball.");
-      }
+      const tarball = packed[0].filename;
 
       await mkdir(consumer);
       await writeFile(

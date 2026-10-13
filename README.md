@@ -13,11 +13,10 @@ Read the [concept](docs/concept/README.md), the [ubiquitous language](CONTEXT.md
 
 ## Source-checkout quick start
 
-Install from the committed lockfile and build the CLI:
+Install from the committed lockfile. The `prepare` script builds the CLI:
 
 ```sh
 npm ci
-npm run build
 ```
 
 Then query this repository's self-hosting graph with either supported script runner:
@@ -53,6 +52,44 @@ disables pnpm 11's dependency auto-reconciliation for repository scripts, so the
 
 ## Installed CLI (adopter repositories)
 
+Pin the Protocol to a full commit SHA in your adopter's `package.json`:
+
+```json
+{
+  "dependencies": {
+    "@libar-dev/software-delivery-protocol": "github:libar-dev/software-delivery-protocol#<sha>"
+  }
+}
+```
+
+Replace `<sha>` with the commit you reviewed, then run `npm install` and commit the lockfile.
+The package's `prepare` script builds `dist/`, the CLI, subpath exports and shipped recipes during
+the git install. npm installs the build dependencies for this step. While the version is `0.0.0`,
+use a commit pin; no npm prerelease is published. See [npm's prepare lifecycle](https://docs.npmjs.com/cli/v11/using-npm/scripts/).
+
+pnpm 10 blocks dependency build scripts unless allowed. Before `pnpm install`, add the Protocol to
+your adopter's `pnpm-workspace.yaml`:
+
+```yaml
+onlyBuiltDependencies:
+  - "@libar-dev/software-delivery-protocol"
+```
+
+On pnpm 10.26 or later, including pnpm 11, use `allowBuilds` instead of `onlyBuiltDependencies`:
+
+```yaml
+allowBuilds:
+  "@libar-dev/software-delivery-protocol": true
+```
+
+Keep this alongside your existing build permissions. The permission lets pnpm prepare the git
+dependency. See the [pnpm 10 build settings](https://pnpm.io/10.x/settings#allowbuilds).
+Verify either install through the linked binary:
+
+```sh
+./node_modules/.bin/sdp --version
+```
+
 In an adopter repository where the Protocol is installed as a dependency, its binary **is** linked
 into `node_modules/.bin`, so the package runner resolves it:
 
@@ -70,6 +107,26 @@ diagrams, and `gherkin` the Gherkin-shaped read view. `new spec` scaffolds an id
 carrier, `import` converts TypeScript Spec carriers to Markdown, and `q` evaluates a local
 JavaScript query body against a freshly derived graph. Run `sdp --help` for the complete option
 contract. Adopters own their root and exclusion policy.
+
+### Upgrade recipe callers
+
+Recipe 25, address resolution, now reads `params.addresses`. A script that replaces the recipe's
+sample address array with a regular expression can silently stop matching. Remove that rewrite
+and pass the subject as data to the shipped recipe:
+
+```sh
+./node_modules/.bin/sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/recipes/25-address-resolution.js)" --params '{"addresses":["spec:orders.create-order#rule.validCart"]}' --json
+```
+
+Use your corpus's addresses, or pass `--params @addresses.json` with an object containing
+`addresses`. Other parameterized recipes follow the same pattern. The
+[recipe catalog](docs/agent-surface/recipes.md) names each parameter.
+
+In the Protocol source checkout, `npm run test:git-install -- <commit>` proves a committed revision
+installs through a local git URL with npm and, when available, pnpm. It checks the installed CLI,
+export files and a parameterized shipped recipe. This separate gate downloads dependencies and
+builds the committed package, so it runs after the unit suite in CI. It does not test uncommitted
+edits. An optional second argument selects the parent directory for its temporary projects.
 
 ## Gherkin carrier
 
