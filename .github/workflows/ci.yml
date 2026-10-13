@@ -26,4 +26,4 @@ jobs:
         run: npm run check
 
       - name: Install the committed package
-        run: npm run test:git-install
+        run: npm run check:git-install

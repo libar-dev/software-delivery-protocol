@@ -17,7 +17,10 @@ vi.mock("vitest", async (importOriginal) => ({
 }));
 
 /**
+ * The Vitest adapter cleans up each world it creates, whether the steps pass or fail.
+ *
  * @sdpAnchor test:protocol.example-runner-cleanup
+ * @sdpLabel the Vitest adapter cleans up a world whether its steps pass or fail
  * @sdpVerifies spec:extraction.example-runner
  */
 

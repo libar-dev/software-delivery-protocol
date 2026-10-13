@@ -195,7 +195,7 @@ describe("published package surface", () => {
       ) as readonly [
         { readonly filename: string; readonly files: readonly { readonly path: string }[] },
       ];
-      const dryRunPaths = packed[0].files.map((file) => file.path);
+      const packedPaths = packed[0].files.map((file) => file.path);
       const adopterAssets = [
         "CONTEXT.md",
         ".agents/skills/sdp-agent-surface/SKILL.md",
@@ -211,9 +211,9 @@ describe("published package surface", () => {
         "docs/concept/DECISIONS.md",
       ];
 
-      expect(dryRunPaths).toEqual(expect.arrayContaining(packedAssets));
+      expect(packedPaths).toEqual(expect.arrayContaining(packedAssets));
       expect(
-        dryRunPaths.filter(
+        packedPaths.filter(
           (path) =>
             !["LICENSE", "README.md", "package.json", ...packedAssets].includes(path) &&
             !path.startsWith("dist/") &&
@@ -234,11 +234,11 @@ describe("published package surface", () => {
         }
       };
       await walkCarriers("specs");
-      expect(dryRunPaths.filter((path) => path.startsWith("specs/")).sort()).toEqual(
+      expect(packedPaths.filter((path) => path.startsWith("specs/")).sort()).toEqual(
         carrierPaths.sort(),
       );
       expect(
-        dryRunPaths.filter((path) => !path.startsWith("dist/") && /\.tsx?$/u.test(path)),
+        packedPaths.filter((path) => !path.startsWith("dist/") && /\.tsx?$/u.test(path)),
       ).toEqual([]);
 
       const tarball = packed[0].filename;

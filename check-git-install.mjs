@@ -38,15 +38,20 @@ try {
         private: true,
         type: "module",
         dependencies: { [packageName]: dependency },
+        ...(manager === "npm"
+          ? { allowScripts: { [`git+${pathToFileURL(root).href}`]: true } }
+          : {}),
       }),
     );
-    if (manager === "pnpm") {
+    if (manager === "npm") {
+      writeFileSync(join(consumer, ".npmrc"), "allow-git=root\n");
+    } else {
       const major = Number(pnpm.stdout.trim().split(".")[0]);
       writeFileSync(
         join(consumer, "pnpm-workspace.yaml"),
         major >= 11
           ? `allowBuilds:\n  ${JSON.stringify(`${packageName}@${dependency}`)}: true\n`
-          : `onlyBuiltDependencies:\n  - '${packageName}'\n`,
+          : `onlyBuiltDependencies:\n  - ${JSON.stringify(`${packageName}@${dependency}`)}\n`,
       );
     }
     const started = Date.now();
@@ -54,14 +59,16 @@ try {
       manager,
       [
         "install",
-        ...(manager === "npm" ? ["--no-audit", "--no-fund"] : ["--reporter=append-only"]),
+        ...(manager === "npm"
+          ? ["--no-audit", "--no-fund"]
+          : ["--reporter=append-only", "--store-dir", join(scratch, "pnpm-store")]),
       ],
       consumer,
     );
     const installed = join(consumer, "node_modules", ...packageName.split("/"));
     const cli = join(consumer, "node_modules", ".bin", "sdp");
     const version = run(cli, ["--version"], consumer).trim();
-    assert.match(version, /0\.0\.0/u);
+    assert.ok(version.includes(commit), `${version} does not name ${commit}`);
     const manifest = JSON.parse(readFileSync(join(installed, "package.json"), "utf8"));
     for (const surface of Object.values(manifest.exports)) {
       for (const path of Object.values(surface)) assert.ok(existsSync(join(installed, path)), path);

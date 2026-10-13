@@ -19,6 +19,10 @@ Install from the committed lockfile. The `prepare` script builds the CLI:
 npm ci
 ```
 
+`npm run check:git-install -- <commit>` installs a committed revision from a local git URL with
+npm and, when present, pnpm, then checks its CLI, export files and a shipped recipe. It needs
+network access and tests only committed work, so CI runs it after `npm run check`.
+
 Then query this repository's self-hosting graph with either supported script runner:
 
 ```sh
@@ -62,32 +66,42 @@ Pin the Protocol to a full commit SHA in your adopter's `package.json`:
 }
 ```
 
-Replace `<sha>` with the commit you reviewed, then run `npm install` and commit the lockfile.
+Replace `<sha>` with the commit you reviewed, then install and commit the lockfile.
 The package's `prepare` script builds `dist/`, the CLI, subpath exports and shipped recipes during
-the git install. npm installs the build dependencies for this step. While the version is `0.0.0`,
-use a commit pin; no npm prerelease is published. See [npm's prepare lifecycle](https://docs.npmjs.com/cli/v11/using-npm/scripts/).
+the git install. While the version is `0.0.0`, use a commit pin; no npm prerelease is published.
+See [npm's prepare lifecycle](https://docs.npmjs.com/cli/v11/using-npm/scripts/).
 
-pnpm 10 blocks dependency build scripts unless allowed. Before `pnpm install`, add the Protocol to
-your adopter's `pnpm-workspace.yaml`:
+Both package managers approve this build by its git source, never by package name alone.
 
-```yaml
-onlyBuiltDependencies:
-  - "@libar-dev/software-delivery-protocol"
+With npm, approve the repository in your adopter's `package.json` and allow root git
+dependencies in its `.npmrc`. npm 11.16 and later warn without the approval; npm 12 refuses git
+dependencies and skips unapproved scripts by default.
+
+```json
+{ "allowScripts": { "github:libar-dev/software-delivery-protocol": true } }
 ```
 
-pnpm 11 requires the git source in the build permission. With pnpm 11.19 or later and the GitHub
-pin above, use this repository permission instead:
+```ini
+allow-git=root
+```
+
+Then run `npm install`.
+
+With pnpm 11.19 or later, approve the repository once in `pnpm-workspace.yaml`. The approval
+covers every commit you pin:
 
 ```yaml
 allowBuilds:
   "@libar-dev/software-delivery-protocol@git+https://github.com/libar-dev/software-delivery-protocol.git": true
 ```
 
-Keep this alongside your existing build permissions. It permits builds from this repository
-across commit updates. A package name alone does not approve a git build on pnpm 11. To allow
-only one commit, or on earlier pnpm 11 versions, use the exact source and commit key shown by
-`ERR_PNPM_GIT_DEP_PREPARE_NOT_ALLOWED`. See the [pnpm 10 build settings](https://pnpm.io/10.x/settings#onlybuiltdependencies)
-and [source-qualified permissions](https://pnpm.io/settings/build#allowbuilds).
+On pnpm 10 and earlier pnpm 11 releases, approve the exact source and commit instead: copy the
+key that `ERR_PNPM_GIT_DEP_PREPARE_NOT_ALLOWED` prints under `onlyBuiltDependencies` (pnpm 10)
+or `allowBuilds` (pnpm 11), and replace it at each re-pin. Keep this alongside your existing
+build permissions, then run `pnpm install`. See npm's
+[`approve-scripts`](https://docs.npmjs.com/cli/v11/commands/npm-approve-scripts) and pnpm's
+[source-qualified permissions](https://pnpm.io/settings/build#allowbuilds).
+
 Verify either install through the linked binary:
 
 ```sh
@@ -125,12 +139,6 @@ and pass the subject as data to the shipped recipe:
 Use your corpus's addresses, or pass `--params @addresses.json` with an object containing
 `addresses`. Other parameterized recipes follow the same pattern. The
 [recipe catalog](docs/agent-surface/recipes.md) names each parameter.
-
-In the Protocol source checkout, `npm run test:git-install -- <commit>` proves a committed revision
-installs through a local git URL with npm and, when available, pnpm. It checks the installed CLI,
-export files and a parameterized shipped recipe. This separate gate downloads dependencies and
-builds the committed package, so it runs after the unit suite in CI. It does not test uncommitted
-edits. An optional second argument selects the parent directory for its temporary projects.
 
 ## Gherkin carrier
 
