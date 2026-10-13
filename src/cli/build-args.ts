@@ -1,3 +1,4 @@
+import { mergeParams } from "./params.js";
 import { statSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -11,6 +12,12 @@ export interface BuildArgs {
   readonly checkClean: boolean;
   readonly watch?: boolean;
   readonly imports?: string;
+  readonly rules?: readonly RulesInput[];
+}
+
+export interface RulesInput {
+  readonly rulesFile: string;
+  readonly params: Readonly<Record<string, unknown>>;
 }
 
 export function parseBuildArgs(
@@ -23,11 +30,49 @@ export function parseBuildArgs(
   let watchMode = false;
   let imports: string | undefined;
   const rawExcludes: string[] = [];
+  const rawRules: { rulesFile: string; forms: string[] }[] = [];
+  const rulePaths = new Set<string>();
 
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
 
     if (argument === undefined) {
+      continue;
+    }
+
+    if (argument === "--rules" || argument === "--params") {
+      if (command !== "validate") {
+        writeStderr(output, `sdp ${command}: ${argument} is only valid on validate.\n`);
+        return undefined;
+      }
+      const value = args[index + 1];
+      if (value === undefined || value.trim() === "" || value.startsWith("--")) {
+        writeStderr(
+          output,
+          `sdp validate: ${argument} requires ${argument === "--rules" ? "a path" : "a JSON object, @PATH or KEY=@PATH"}.\n`,
+        );
+        return undefined;
+      }
+      if (argument === "--rules") {
+        const path = resolve(value);
+        if (rulePaths.has(path)) {
+          writeStderr(
+            output,
+            `sdp validate: --rules file ${JSON.stringify(value)} was given twice.\n`,
+          );
+          return undefined;
+        }
+        rulePaths.add(path);
+        rawRules.push({ rulesFile: value, forms: [] });
+      } else {
+        const last = rawRules.at(-1);
+        if (last === undefined) {
+          writeStderr(output, "sdp validate: --params must follow its --rules file.\n");
+          return undefined;
+        }
+        last.forms.push(value);
+      }
+      index += 1;
       continue;
     }
 
@@ -114,6 +159,13 @@ export function parseBuildArgs(
     return undefined;
   }
 
+  const rules: RulesInput[] = [];
+  for (const item of rawRules) {
+    const params = mergeParams(item.forms, output, "validate");
+    if (params === undefined) return undefined;
+    rules.push({ rulesFile: item.rulesFile, params });
+  }
+
   const resolvedRoot = resolveExtractionRoot(root, output, command);
 
   return resolvedRoot === undefined
@@ -122,6 +174,7 @@ export function parseBuildArgs(
         root: resolvedRoot,
         exclude,
         checkClean,
+        ...(rules.length === 0 ? {} : { rules }),
         watch: watchMode,
         ...(imports === undefined ? {} : { imports }),
       };

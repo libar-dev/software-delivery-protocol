@@ -21,7 +21,7 @@ import { parseQueryArgs, runQuery } from "./q-command.js";
 import type { QueryHooks } from "./q-command.js";
 import { runValidateWatch } from "./validate-watch.js";
 import type { ValidateWatchHooks } from "./validate-watch.js";
-import { runValidate, runView } from "./validate-view-command.js";
+import { runValidate, runValidateRules, runView } from "./validate-view-command.js";
 
 /**
  * @sdpAnchor impl:protocol.adopter-help
@@ -35,7 +35,7 @@ Usage:
   sdp --help
   sdp --version
   sdp build [root] [--exclude PATH]... [--check-clean] [--imports PATH]
-  sdp validate [root] [--exclude PATH]... [--check-clean | --watch]
+  sdp validate [root] [--exclude PATH]... [--check-clean | --watch] [--rules PATH [--params FORM]...]...
   sdp view [root] [--exclude PATH]... [--check-clean]
   sdp census [root] [--exclude PATH]... [--check-clean]
   sdp mermaid [root] [--exclude PATH]... [--check-clean]
@@ -67,7 +67,12 @@ Commands:
              projection; check errors describe the repo's conformance, not the artifact.
              --watch re-runs the same validate path on carrier create/change/delete/rename
              and stays alive after findings; operator stop (SIGINT) exits 0. --watch cannot
-             be combined with --check-clean.
+             be combined with --check-clean. --rules PATH runs an operator-selected JavaScript
+             async body with g, graph, report and params after the Protocol checks. Repeat --rules;
+             each --params belongs to the preceding file, with the q grammar: JSON, @PATH or
+             KEY=@PATH. Each file receives its own copies. Corpus findings print separately;
+             any corpus error or failed file exits 1. --watch rereads rules on each carrier cycle;
+             editing a rules file alone starts no cycle. --rules combines with --check-clean.
   view       validate, then generate the Design Review — the contextual read-only human view —
              into <root>/generated/design-review/ (rewritten wholesale). Findings remain data;
              exit code follows validate. --check-clean independently re-renders.
@@ -199,8 +204,8 @@ export function readEngineProvenance(read: EngineFileReader = readShippedFile): 
  */
 
 /**
- * Every verb but `q` and `validate --watch` completes synchronously. `q` awaits an
- * operator-supplied async body; `validate --watch` stays open until abort. The dispatcher's return
+ * The query and corpus-rule branches await operator-supplied async bodies;
+ * `validate --watch` stays open until abort. Other branches complete synchronously. The dispatcher's return
  * type carries those asynchronous branches rather than making every caller of a synchronous verb
  * await a resolved promise.
  */
@@ -298,7 +303,9 @@ export function runSdpCli(
   if (command === "validate") {
     return parsed.watch
       ? runValidateWatch(parsed, output, hooks, hooks)
-      : runValidate(parsed, output, "validate", hooks).exitCode;
+      : parsed.rules === undefined
+        ? runValidate(parsed, output, "validate", hooks).exitCode
+        : runValidateRules(parsed, output, hooks).then((result) => result.exitCode);
   }
 
   if (command === "view") {

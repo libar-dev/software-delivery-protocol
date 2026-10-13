@@ -2,7 +2,7 @@
 id: spec:validation.architecture-constraints.unstated-layer-unclassified
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.architecture-constraints
   verifies:

@@ -1,4 +1,4 @@
-import type { Finding } from "../validate/contracts.js";
+import type { CorpusFinding, Finding } from "../validate/contracts.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 
@@ -29,7 +29,7 @@ const diagnosticCliAnchor = codeAnchor({
 });
 void diagnosticCliAnchor;
 
-export function formatFinding(finding: Finding): string {
+export function formatFinding(finding: Finding | CorpusFinding): string {
   const location =
     finding.file === undefined
       ? ""
@@ -40,4 +40,9 @@ export function formatFinding(finding: Finding): string {
 
 export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+/** Collapses an error message onto one line, so a refusal stays the one-line diagnostic. */
+export function oneLine(message: string): string {
+  return message.replace(/\s+/gu, " ").trim();
 }

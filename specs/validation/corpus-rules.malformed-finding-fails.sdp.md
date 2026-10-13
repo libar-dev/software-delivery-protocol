@@ -2,7 +2,7 @@
 id: spec:validation.corpus-rules.malformed-finding-fails
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.corpus-rules
   verifies:

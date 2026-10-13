@@ -6,7 +6,7 @@ import { isExcludedDiscoveryDirectory } from "../extract/discover.js";
 import type { BuildArgs } from "./build-args.js";
 import type { CliOutput } from "./output.js";
 import { writeStderr } from "./output.js";
-import { runValidate } from "./validate-view-command.js";
+import { runValidate, runValidateRules } from "./validate-view-command.js";
 import type { ValidationViewHooks } from "./validate-view-command.js";
 
 const CARRIER_SUFFIXES = [".sdp.ts", ".sdp.md", ".sdp.gherkin"] as const;
@@ -575,7 +575,10 @@ export async function runValidateWatch(
       await watchHooks.watchCycleGate?.(state.cycleIndex);
 
       if (!isWatchClosed(state)) {
-        const outcome = runValidate(parsed, output, "validate", hooks);
+        const outcome =
+          parsed.rules === undefined
+            ? runValidate(parsed, output, "validate", hooks)
+            : await runValidateRules(parsed, output, hooks);
         watchHooks.onWatchCycleComplete?.({
           index: state.cycleIndex,
           exitCode: outcome.exitCode,

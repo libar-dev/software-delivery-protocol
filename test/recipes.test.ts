@@ -4495,7 +4495,8 @@ describe("recipe parameters and the shipped recipe files", () => {
           ) &&
           !(recipe.ordinal === 39 && name === "pack") &&
           !(recipe.ordinal === 40 && name === "imports") &&
-          !(recipe.ordinal === 41 && name !== "prefixes");
+          !(recipe.ordinal === 41 && name !== "prefixes") &&
+          !(recipe.ordinal === 42 && name !== "severity");
         expect({
           recipe: recipe.ordinal,
           fallback: recipe.body.includes(`params.${name} ?? `),
