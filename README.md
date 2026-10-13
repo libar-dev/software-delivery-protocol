@@ -75,15 +75,19 @@ onlyBuiltDependencies:
   - "@libar-dev/software-delivery-protocol"
 ```
 
-On pnpm 10.26 or later, including pnpm 11, use `allowBuilds` instead of `onlyBuiltDependencies`:
+pnpm 11 requires the git source in the build permission. With pnpm 11.19 or later and the GitHub
+pin above, use this repository permission instead:
 
 ```yaml
 allowBuilds:
-  "@libar-dev/software-delivery-protocol": true
+  "@libar-dev/software-delivery-protocol@git+https://github.com/libar-dev/software-delivery-protocol.git": true
 ```
 
-Keep this alongside your existing build permissions. The permission lets pnpm prepare the git
-dependency. See the [pnpm 10 build settings](https://pnpm.io/10.x/settings#allowbuilds).
+Keep this alongside your existing build permissions. It permits builds from this repository
+across commit updates. A package name alone does not approve a git build on pnpm 11. To allow
+only one commit, or on earlier pnpm 11 versions, use the exact source and commit key shown by
+`ERR_PNPM_GIT_DEP_PREPARE_NOT_ALLOWED`. See the [pnpm 10 build settings](https://pnpm.io/10.x/settings#onlybuiltdependencies)
+and [source-qualified permissions](https://pnpm.io/settings/build#allowbuilds).
 Verify either install through the linked binary:
 
 ```sh

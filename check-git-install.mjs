@@ -45,7 +45,7 @@ try {
       writeFileSync(
         join(consumer, "pnpm-workspace.yaml"),
         major >= 11
-          ? `allowBuilds:\n  '${packageName}': true\n`
+          ? `allowBuilds:\n  ${JSON.stringify(`${packageName}@${dependency}`)}: true\n`
           : `onlyBuiltDependencies:\n  - '${packageName}'\n`,
       );
     }
