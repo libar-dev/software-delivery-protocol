@@ -20,12 +20,6 @@ relations:
 
 - outcome: Capture the intent of the next body of work as Specs below `ready`, so planning sessions derive backlog and readiness from the graph and plan files point to their carrying Specs.
 
-### Open questions
-
-- [non-blocking #nextPacks] Which Packs group the next bodies of work once each is commissioned?
-  - decider: owner
-  - provisional: a focused corpus-checks Pack holds corpus rules, architecture constraints and planned architecture; coverage and run evidence join the Spec Studio Pack only if they join its design
-
 ## Behavior
 
 - rule: `spec:consumers.delivery-session-on-ramp` owns per-session routing from graph state; this Spec owns how the next body of work's intent enters the corpus and is read back.
