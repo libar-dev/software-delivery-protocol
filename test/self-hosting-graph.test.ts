@@ -204,7 +204,7 @@ describe("the self-hosting corpus", () => {
     expect(result.report.findings).toEqual([]);
   });
 
-  it("reports exactly the pending verifier gaps and five intended prose mentions", () => {
+  it("reports exactly the retained verifier gap and five intended prose mentions", () => {
     expect(
       validateGraph(result.graph).findings.map(
         ({ validatorId, family, severity, subjectId, relatedId }) => ({
@@ -223,15 +223,15 @@ describe("the self-hosting corpus", () => {
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
     // Re-measured from the refreshed tree: 272 Markdown Specs and four Gherkin Specs,
-    // 260 in the self-hosting Pack; six Pack manifests and 300 source anchors.
-    // The excluded-root validate run corroborates 582 nodes and 1534 edges.
-    expect(result.counts).toEqual({ specs: 276, packs: 6, anchors: 300 });
+    // 276 in the self-hosting Pack; six Pack manifests and 338 source anchors.
+    // The excluded-root validate run corroborates 620 nodes and 1623 edges.
+    expect(result.counts).toEqual({ specs: 276, packs: 6, anchors: 338 });
     expect(expectedSpecs).toHaveLength(276);
-    expect(expectedPackMembers).toHaveLength(260);
-    expect(expectedAnchors).toHaveLength(300);
-    expect(expectedBindingEdges).toHaveLength(341);
-    expect(result.graph.nodes).toHaveLength(582);
-    expect(result.graph.edges).toHaveLength(1534);
+    expect(expectedPackMembers).toHaveLength(276);
+    expect(expectedAnchors).toHaveLength(338);
+    expect(expectedBindingEdges).toHaveLength(392);
+    expect(result.graph.nodes).toHaveLength(620);
+    expect(result.graph.edges).toHaveLength(1623);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -293,7 +293,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 27, idea: 11, ready: 235, scoped: 3 });
+    ).toEqual({ defined: 17, idea: 11, ready: 245, scoped: 3 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {
@@ -345,7 +345,7 @@ describe("the self-hosting corpus", () => {
 
   it("gives every owned impl/api CodeNode exactly one component", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedMemberOfEdges).toHaveLength(105);
+    expect(expectedMemberOfEdges).toHaveLength(125);
     const exceptions = new Set<string>(structuralMembershipExceptions);
     const codeUnits = result.graph.nodes.filter(
       (node) =>
@@ -370,7 +370,7 @@ describe("the self-hosting corpus", () => {
 
   it("derives exactly the sparse authored component uses edges", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedUsesEdges).toHaveLength(41);
+    expect(expectedUsesEdges).toHaveLength(43);
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "uses")
@@ -505,7 +505,7 @@ describe("the self-hosting corpus", () => {
 
   it("finds every converted comment anchor at its block's first line", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedCommentAnchorIds).toHaveLength(30);
+    expect(expectedCommentAnchorIds).toHaveLength(51);
     expect(
       expectedAnchors
         .filter((anchor) => anchor.constant === undefined)
@@ -590,8 +590,10 @@ describe("the self-hosting corpus", () => {
 
       expect(anchorLine).toBeGreaterThan(0);
       expect(siteLine, anchor.id).toBeGreaterThan(0);
-      // The refreshed build-command binding group spans 29 lines, including its wrapped label.
-      expect(Math.abs(anchorLine - siteLine), anchor.id).toBeLessThanOrEqual(29);
+      // The build-command constants precede the Studio invalidation block beside runBuild.
+      // Preserve the tighter bound for every other declaration group.
+      const maxDistance = anchor.file === "src/cli/build-command.ts" ? 36 : 29;
+      expect(Math.abs(anchorLine - siteLine), anchor.id).toBeLessThanOrEqual(maxDistance);
       expect(node).toMatchObject({ file: anchor.file, line: anchorLine, claim: "anchored" });
     }
   });

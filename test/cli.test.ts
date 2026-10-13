@@ -93,17 +93,22 @@ function materializeSelfHostingCopy(): string {
 
   // Copied relative builder modules are outside the Protocol's trusted source checkout. Use
   // the public anchors import in this isolated corpus so both forms retain their bindings.
-  for (const entry of readdirSync(join(root, "src"), { recursive: true, withFileTypes: true })) {
-    if (!entry.isFile() || !entry.name.endsWith(".ts")) continue;
-    const path = join(entry.parentPath, entry.name);
-    const source = readFileSync(path, "utf8");
-    writeFileSync(
-      path,
-      source.replace(
-        /from "(?:\.\.?\/)+(?:model\/)?(?:ids|code-anchor)\.js"/gu,
-        'from "@libar-dev/software-delivery-protocol/anchors"',
-      ),
-    );
+  for (const surface of ["src", "test"]) {
+    for (const entry of readdirSync(join(root, surface), {
+      recursive: true,
+      withFileTypes: true,
+    })) {
+      if (!entry.isFile() || !entry.name.endsWith(".ts")) continue;
+      const path = join(entry.parentPath, entry.name);
+      const source = readFileSync(path, "utf8");
+      writeFileSync(
+        path,
+        source.replace(
+          /from "(?:\.\.?\/)+(?:src\/)?(?:model\/)?(?:ids|anchors|code-anchor)\.js"/gu,
+          'from "@libar-dev/software-delivery-protocol/anchors"',
+        ),
+      );
+    }
   }
 
   return root;
@@ -297,25 +302,6 @@ describe("sdp cli", () => {
       const stderr = capture.readStderr();
       for (const [file, specId] of [
         ["specs/model/spec-sections.sdp.md", "spec:model.spec-sections"],
-        ["specs/model/planned-architecture.sdp.md", "spec:model.planned-architecture"],
-        [
-          "specs/validation/architecture-constraints.sdp.md",
-          "spec:validation.architecture-constraints",
-        ],
-        ["specs/validation/corpus-rules.sdp.md", "spec:validation.corpus-rules"],
-        ...[
-          "data",
-          "index-page",
-          "pack-page",
-          "page-elements",
-          "publisher",
-          "search",
-          "shell",
-          "spec-page.core",
-        ].map((name) => [
-          `specs/consumers/spec-studio.${name}.sdp.md`,
-          `spec:consumers.spec-studio.${name}`,
-        ]),
       ] as const) {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
       }
@@ -356,7 +342,7 @@ describe("sdp cli", () => {
         );
       }
       // Re-measured from the refreshed carriers and their retained warning pairs.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 17 warnings");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 6 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

@@ -1506,7 +1506,7 @@ export const consumersSpecs = [
           "`{ section: string; entry: string | null; key: string | null; address: string | null; line: number | null; text: string }`, one per value recipe 23's walk reaches in a Spec's narrative and sections, taken with no term: each string, and each value that is not a string under a key the author coins, as its JSON text; in that walk's order, with that recipe's entry path, coined key, address and line. A term matches an entry as that recipe matches it, a string by its key or text and any other value by its key only, so the entries a term matches are the rows recipe 23 returns for it.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.data.sdp.md",
   },
   {
@@ -1765,13 +1765,13 @@ export const consumersSpecs = [
         stampLine:
           "at the end of the top navigation, the stamp's corpus commit, engine and build time, when the stamp loads.",
         leftRail:
-          "on a Pack page, the Pack's members in authored order, each linked to its card on the page; on a Spec page, each Pack the Spec belongs to with its members in authored order, each linked to its Spec page and the current one marked; on any other page, every Pack; then, under an `Example spaces` heading shown only when there is one, each member of the rail's Packs that owns an example space, linked to its Spec page, with no harness named; then the validation report's finding counts by severity, linked to the index's findings.",
+          "on a Pack page, the Pack's members in authored order, each linked to its card on the page; on a Spec page, each Pack the Spec belongs to with its members in authored order, each linked to its Spec page and the current one marked; on any other page, every Pack; then, on a Pack or Spec page, under an `Example spaces` heading shown only when there is one, each member of the rail's Packs that owns an example space, linked to its Spec page, with no harness named; then the validation report's finding counts by severity, linked to the index's findings.",
         railOnPhone:
           "below the phone breakpoint the rail follows the canvas, so a page opens on its content.",
         mainCanvas: "the page of the Spec or Pack selected in the rail or in a lens.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.shell.sdp.md",
   },
   {
@@ -2756,7 +2756,7 @@ export const consumersSpecs = [
         findingsList: "one line per finding, the severity word first.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.spec-studio.pack-page",
@@ -2771,6 +2771,15 @@ export const consumersSpecs = [
       intent: {
         outcome:
           "Show where a Pack's design stands, member by member in reading order, on one page a reviewer scans quickly and opens where they need detail.",
+        openQuestions: [
+          {
+            key: "summaryFormat",
+            question: "Should the summary state its counts as sentences or as a table?",
+            blocking: false,
+            decider: "owner",
+            provisional: "Keep the counts as sentences.",
+          },
+        ],
       },
       behavior: {
         rules: [
@@ -2787,7 +2796,7 @@ export const consumersSpecs = [
           "An unresolved member's card says only that the manifest names an id the graph does not hold.",
           "The boundary follows in four closed sections, Rests on, Rested on by, Verified by and Superseded by, each headed with its count. Each row shows the outside Spec, linked, its stated rung, its implementation binding as present or none, and the members it joins under each relation type; an empty section reads None.",
           "Then come the members with no verifier binding, those stated `ready` first, under one sentence saying the graph records bindings and never runs, so no page shows a run result; then the findings that name the Pack.",
-          "One control opens or closes every card and section at once, and opening the page at a card's fragment opens that card.",
+          "`Open all` and `Close all` open or close every card and section at once, and opening the page at a card's fragment opens that card.",
         ],
         ruleKeys: {
           header: "rules[0]",
@@ -2821,7 +2830,7 @@ export const consumersSpecs = [
           "four columns, Spec, stated rung, implementation binding and joined members, the last listing each relation type with its members.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.spec-studio.spec-page.core",
@@ -2843,7 +2852,7 @@ export const consumersSpecs = [
           "A summary in words follows the header with what the header does not show: the open and blocking questions, and the implementation, verifier and oracle bindings as present or none. It repeats no rung the header shows.",
           "The narrative comes next, then each section the Spec carries as a panel open by default, in the order intent, behavior, constraints, model, design, decision, verification, ui, with its entries in authored order. A section the Spec lacks is absent, and the page adds no section the graph does not hold. The narrative carries the element id `narrative` and each section panel `section.<name>`, such as `section.behavior`.",
           "Every entry an entry address can name, a keyed Design or UI entry, a keyed rule or flow and a keyed open question, carries an element id equal to its address after the `#`, such as `design.<key>`, and shows its key and its recorded line.",
-          "Each open question shows its blocking flag in words, its key and address when it has one, its text, its decider, its links, linked, its provisional reading and its trigger when present, and its recorded line. It shows no date: git records when a line changed.",
+          "Each open question shows its blocking flag in words, its key as code with a copy action for the full entry address when it has one, its text, its decider, its links, linked, its provisional reading and its trigger when present, and its recorded line. It shows no date: git records when a line changed.",
           "A `gwt` or `gwt-vocabulary` fence shows as preformatted step text, as authored.",
           "Relations show both ways, each with its type, its direction, its claim, the other endpoint, linked when it is a Spec or a Pack, whether it resolves, and its reason and the rule keys it exercises when present.",
           "Bindings speak binding language. The implementation binding, design reference, verifier binding and expected-outcome oracle each read present or none, and list each unit, test anchor, example or oracle by id, label, and recorded file and line as text with a copy action; a unit adds its role and component, and an example verifier says whether it is enabled. Runtime observation reads not tracked, and run results read not recorded in the graph.",
@@ -2869,7 +2878,7 @@ export const consumersSpecs = [
         entryRow:
           "an entry's key as code, its value, and `line <n>` when recorded, in a definition list.",
         questionItem:
-          "the blocking flag in words, the key and address, the text, each present field on its own labelled line, and `line <n>` when recorded.",
+          "the blocking flag in words, `question.<key>` as code when keyed, a copy action whose text and accessible name carry the full entry address, with no second code span of that address, the text, each present field on its own labelled line, and `line <n>` when recorded.",
         relationsTable:
           "five columns, relation and direction, other end, claim, reason, and exercised keys, with an unresolved endpoint marked in words.",
         bindingsBlock:
@@ -2877,7 +2886,7 @@ export const consumersSpecs = [
         findingsList: "one line per finding, the severity word first.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.spec-studio.search",
@@ -2925,7 +2934,7 @@ export const consumersSpecs = [
           "without script, the search page says that search needs it and links to the index.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.spec-studio.publisher",
@@ -2983,7 +2992,7 @@ export const consumersSpecs = [
         },
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.spec-studio.page-elements",
@@ -3029,6 +3038,6 @@ export const consumersSpecs = [
           "`sdp-stamp` with `page-root`: served over http or https, it requests `<page-root>stamp.json` and, when it loads, shows its corpus commit, engine and build time as text; otherwise it shows nothing.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
 ] as const;

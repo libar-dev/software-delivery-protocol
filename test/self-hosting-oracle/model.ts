@@ -694,7 +694,7 @@ export const modelSpecs = [
           given: [
             'a component design for {componentId:string} that plans the layer {plannedLayer:"domain"|"application"} and uses {plannedUses:string}',
             'the component anchor for that design {anchor:"is absent"|"satisfies the design"}',
-            'that anchor states the layer {realizedLayer:"domain"|"application"} and its member uses {realizedUses:string}',
+            'that anchor states the layer {realizedLayer:"domain"|"application"|"absent"} and its member uses {realizedUses:string}',
           ],
           when: ["the realization comparison runs"],
           then: [
@@ -704,7 +704,7 @@ export const modelSpecs = [
         },
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:model.open-question-fields",
@@ -913,7 +913,7 @@ export const modelSpecs = [
     id: "spec:model.planned-architecture.unrealized-design",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/model/planned-architecture.unrealized-design.sdp.md",
     title: "A component design no anchor satisfies is listed as unrealized",
     narrative: null,
@@ -931,6 +931,7 @@ export const modelSpecs = [
             given: [
               'a component design for {componentId: "component:probe.history"} that plans the layer {plannedLayer: "domain"} and uses {plannedUses: "component:probe.kernel"}',
               'the component anchor for that design {anchor: "is absent"}',
+              'that anchor states the layer {realizedLayer: "absent"} and its member uses {realizedUses: ""}',
             ],
             when: ["the realization comparison runs"],
             then: [
@@ -941,13 +942,13 @@ export const modelSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:model.planned-architecture.differing-layer-and-uses",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/model/planned-architecture.differing-layer-and-uses.sdp.md",
     title: "A realized component that differs from its design gives one row per field",
     narrative: null,
@@ -976,13 +977,13 @@ export const modelSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:model.planned-architecture.matching-design",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/model/planned-architecture.matching-design.sdp.md",
     title: "A realized component that matches its design gives no row",
     narrative: null,
@@ -1011,6 +1012,6 @@ export const modelSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
 ] as const;
