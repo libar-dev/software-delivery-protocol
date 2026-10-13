@@ -16,10 +16,14 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
-> **plan 44 is EXECUTED** on its branch. A whole-corpus refresh: every Spec read against the
+> **plan 45 is EXECUTING** on `feature/design-at-scale-v0`. Design at the adopter's scale: the
+> adopter installs from a commit, the design-pass loop fits a large corpus, corpus checks and
+> planned architecture get their design and build, and the Spec Studio's phase 0 (plan 42 is its
+> brief) is designed and built. The plan lists its lanes and the rulings made at its start.
+> **plan 44 is EXECUTED**, merged as PR 32. A whole-corpus refresh: every Spec read against the
 > engine, the other Specs and the vocabulary, cross-family verified, and the findings fixed,
 > ruled on the owner's delegation, or homed as keyed questions with provisional answers for the
-> next arcs; the record is `reviews/26-whole-corpus-refresh.md`. Plan 42 follows it.
+> next arcs; the record is `reviews/26-whole-corpus-refresh.md`.
 > **plan 43 is EXECUTED**, merged as PR 31. Design iteration on a readable graph: answers
 > that fit (summaries, both next rungs, explained misses, the design backlog, repeatable
 > `--params`), the authoring grammar (rule keys, question fields, relation reasons), the iteration
@@ -27,9 +31,10 @@ code behavior into intent.
 > and slimming lessons; intent in `pack:design-iteration-v1`, recipes 33 to 40. The design pass's
 > rulings and `ready` statements were delegated by the owner and still await the owner's review;
 > the plan's last sections list them. Plan 42 follows it.
-> **plan 42 is DRAFTED**. The Spec Studio's phase 0, a read-only static view (`sdp studio`),
-> re-entered on the owner's rulings; intent in `pack:spec-studio-v1`. A design pass splits the
-> Studio's Specs for honest binding and prototypes the Pack page before any code.
+> **plan 42 is DRAFTED**, and briefs the Studio lane above. The Spec Studio's phase 0, a
+> read-only static view (`sdp studio`), re-entered on the owner's rulings; intent in
+> `pack:spec-studio-v1`. A design pass splits the Studio's Specs for honest binding and
+> prototypes the Pack page before any code.
 > **plan 41 is EXECUTED**. The design-management arc, intent in `pack:design-management-v1`: the
 > Design Review's Pack page shows a Pack's design (the Pack design page, MD-39), the graph
 > records entry lines, recipes take `--params` and ship under `dist/recipes/`, recipes 29 to 32

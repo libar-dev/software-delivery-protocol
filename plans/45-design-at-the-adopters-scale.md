@@ -1,0 +1,87 @@
+# Plan 45. Design at the adopter's scale
+
+> **Status:** EXECUTING on `feature/design-at-scale-v0`, from `main` at `7eef29b`, the merge of
+> PR 32. A thin lineage pointer: readiness, backlog and open questions are read from the graph
+> (recipes 1, 9, 11, 20, 29, 33), never from this file. If this file and the graph disagree, the
+> graph wins and this file is stale.
+
+## Why
+
+The first adopter, libar-platform, designs a Convex transactional domain platform as a corpus of
+about 240 Specs in six Packs. It is a large design, and most of it will stay design for months:
+layers 3 to 6 exist only on paper. On 2026-10-13 the owner asked for the next chunk to unlock as
+much of the Protocol as possible for that design work, without machinery no reader needs.
+
+A read of the platform, its feedback and the Protocol's backlog found four needs, in order:
+
+1. **Reach `main` cheaply.** The platform pins the Protocol at `822aea4`, a vendored tarball from
+   before PRs 30 to 32. About fifteen of its asks are delivered on `main` and unusable at its pin.
+   Main's engine validates its corpus identically and passes its tests; one script must change.
+2. **Design passes that fit a model's budget.** The context bundle (recipe 36) overflows its
+   default budget on every platform Pack: most of the cut bundle is repeated locations and
+   pinned declarations carried twice.
+3. **A page a person can read.** The owner wants to present designs ahead of their code, and the
+   platform's reviewers read carrier files because the Markdown Pack page is a 13-column table.
+   This is the Spec Studio's phase 0 (plan 42).
+4. **The platform's own rules inside `sdp validate`.** The platform's gate (`design/tools/check.py`)
+   parses carriers to check citation edges, isolation and readiness policy. Corpus rules and
+   architecture constraints give those checks a Protocol home; planned architecture lets layers 3
+   to 6 state their components before their code.
+
+## The lanes
+
+| Lane | Delivers | Kind | Models |
+| --- | --- | --- | --- |
+| **P** the adopter on-ramp | Install from a commit; `bindExample` runs `after` in a `finally`; `check-carrier-rule.mjs` wired or deleted; an adopter migration note | build | gpt-6.1-sol, reviewed by Opus 5.5 |
+| **L** the loop at scale | A compact context bundle; `declarations: "addresses"`; recipe 41, the key-family register; a diagnostic for a parameter a recipe does not take | design, then build | Opus 5.5 designs, gpt-6.1-sol builds, Opus 5.5 reviews |
+| **B** corpus checks | Design: keyed Design entries for corpus rules, architecture constraints and planned architecture, and `pack:corpus-checks-v1`. Build: `sdp validate --rules`, recipe 42 (the architecture walk), recipe 43 (planned against realized components) | design, then build | Opus 5.5 designs, gpt-6-sol reviews; gpt-6.1-sol builds |
+| **S** the Studio's phase 0 | Plan 42's design pass (child Specs, the phase-0 questions, a Pack-page prototype, the data and element contracts), then its lanes S1 to S3 | design, then build | Opus 5.5 designs, Fable 5.1 and gpt-6-sol review; gpt-6.1-sol builds |
+| **X** integration and close | Recipe catalog, self-hosting oracle, skills, `CONTEXT.md`, help text; an adversarial review; the Studio's acceptance on the platform; the PR | close | gpt-6.1-sol, gpt-6-sol, gpt-6-astra |
+
+Wave 1 runs P, L and the design passes of B and S in parallel worktrees. The main thread then
+rules on what the design passes recommend and states the `ready` the builds start from. Wave 2
+builds B and S. Wave 3 integrates, reviews and measures. Recipe numbers are pre-assigned so lanes
+do not collide: 41 to L, 42 and 43 to B.
+
+The platform's re-pin is the platform's own work. This chunk prepares it as a branch in that
+repository, with the migration the read found, for the owner to merge.
+
+## Rulings at the start
+
+Made by the main thread on the owner's delegation, before the lanes; each awaits the owner's
+review.
+
+| Ruling | Carrying Spec |
+| --- | --- |
+| One branch and one PR for the chunk; plan 42 is lane S's brief | — |
+| An adopter installs from a commit through a `prepare` script that builds the package; no npm prerelease while the version is `0.0.0` | `spec:consumers.adopter-on-ramp` |
+| The context bundle may cut pinned declarations to entry addresses, opt-in through `params.declarations`; a partial bundle stays refused | `spec:consumers.context-bundle` |
+| The key-family register is one recipe and needs no model change | `spec:consumers.agent-surface.register-recipes` |
+| A parameter name a recipe does not take is reported in its answer, never ignored | `spec:consumers.agent-surface.recipe-parameters` |
+| A corpus-checks Pack holds corpus rules, architecture constraints and planned architecture | `spec:consumers.graph-first-planning` |
+| The provisional answers on corpus rules and architecture constraints stand | `spec:validation.corpus-rules`, `spec:validation.architecture-constraints` |
+| Choosing a provider stays prose; one runtime owner per concern is a corpus's own rule, not a Protocol shape | `spec:model.planned-architecture` |
+| The provisional answers on the Studio's Specs stand, `spec-page#sourceLinks` among them; phase 0 has no AI slices | `pack:spec-studio-v1` |
+| The vault is its own projection, not the Studio's local half, and waits for a reader | `spec:consumers.obsidian-vault` |
+
+## Deferred, with their triggers
+
+| Item | Comes back when |
+| --- | --- |
+| Run evidence | The platform's CI writes CTRF for its native tier, or the Studio's verification panels open |
+| Example-space coverage | A design pass asks which slot values no example exercises |
+| The Obsidian vault | A reader asks for it after the Studio's phase 0 ships |
+| Lineage roots and checked external references | The owner rules what of the earlier system the platform may cite |
+| A readiness-statement planner | The owner cannot order the platform's `ready` statements with recipes 9, 21, 29 and 30 |
+| Wording-stable step keys | Rewording breaks bound examples during the platform's next slices |
+
+## Acceptance
+
+- `npm run check` passes; the Markdown Design Review, census, Mermaid and Gherkin projections are
+  unchanged.
+- The platform's history-view Pack fits the context bundle's default budget with
+  `declarations: "addresses"`, measured read-only on a copy of the platform.
+- The graph-side half of the platform's `check.py` runs as rules files under
+  `sdp validate --rules`, on a copy of the platform.
+- An Astra job given only the Studio pages built from the platform, and the files they link to,
+  completes plan 42's five reader tasks, with the two associations applied on its copy.
