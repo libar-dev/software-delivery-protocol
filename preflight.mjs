@@ -169,14 +169,18 @@ function semanticPaths() {
     .sort();
 }
 
+// Every TypeScript and JavaScript module extension a test runner may load.
+const importerSource = /\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/u;
+const generatedImporter = /\.test\.generated\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/u;
+
 function untrackedAdoptedRegistrars(trackedPaths) {
   const tracked = new Set(trackedPaths);
   const missing = new Set();
 
   for (const importer of trackedPaths) {
     if (
-      !/\.(?:ts|mts|mjs)$/u.test(importer) ||
-      /\.test\.generated\.(?:ts|mts|mjs)$/u.test(importer) ||
+      !importerSource.test(importer) ||
+      generatedImporter.test(importer) ||
       isGeneratedPath(importer) ||
       !existsSync(join(repoRoot, importer))
     ) {

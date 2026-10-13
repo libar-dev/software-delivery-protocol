@@ -85,6 +85,10 @@ describe("preflight adopted registrar tracking", () => {
     ["test/authored.ts", 'import { register } from "./example.test.generated.js";'],
     ["test/authored.mts", 'import { register } from "./example.test.generated";'],
     ["src/authored.mjs", 'import { register } from "../test/example.test.generated.js";'],
+    ["test/authored.tsx", 'import { register } from "./example.test.generated.js";'],
+    ["test/authored.cts", 'import { register } from "./example.test.generated.js";'],
+    ["test/authored.js", 'import { register } from "./example.test.generated.js";'],
+    ["test/authored.cjs", 'const { register } = require("./example.test.generated.js");'],
   ])("refuses an ignored registrar imported by tracked %s", (path, source) => {
     const root = fixture(path, `${source}\n`);
     try {

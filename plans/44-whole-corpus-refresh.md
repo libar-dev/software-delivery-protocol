@@ -54,7 +54,7 @@ evidence under `.omo/`; it moved out, and `AGENTS.md` now says only OmO writes t
 
 Re-run the recipes rather than inheriting these.
 
-- `npm run check` exits 0: 1,889 pooled tests in 82 files and 98 CLI tests.
+- `npm run check` exits 0: 1,894 pooled tests in 82 files and 98 CLI tests.
 - 260 Specs, 5 Packs, 299 anchors, 564 nodes, 1,452 edges, schema `0.10.0`. Validate reports 0
   errors and 7 warnings: the owner-kept gap on `spec:model.spec-sections` and six prose mentions
   that question `links:` fields write.

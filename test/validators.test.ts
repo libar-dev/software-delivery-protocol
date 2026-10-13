@@ -737,6 +737,11 @@ describe("graph validators", () => {
         expect(reader.specs().find((node) => node.id === target.id)?.deliveryFacts).toEqual(
           expected,
         );
+        if (route !== "satisfies") {
+          expect(
+            reader.specContext(target.id)?.verifiers.map((verifier) => verifier.enabled),
+          ).toEqual([primitiveFirst]);
+        }
         const findings = validateGraph(graph).findings;
         expect(
           findings.filter((finding) => finding.validatorId === graphValidatorIds.duplicateIds),
