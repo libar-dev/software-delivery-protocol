@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { parseBuildArgs } from "../src/cli/build-args.js";
 import { runValidateRules } from "../src/cli/validate-view-command.js";
 import type { ValidateWatchEvent } from "../src/cli/validate-watch.js";
-import { runSdpCli } from "../src/cli/sdp.js";
+import { runSdpCli, SDP_HELP_TEXT } from "../src/cli/sdp.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 
 const roots: string[] = [];
@@ -40,6 +40,12 @@ afterEach(() => {
 });
 
 describe("corpus rule arguments", () => {
+  it("documents repeatable rules, per-file parameters and check-clean", () => {
+    expect(SDP_HELP_TEXT).toContain(
+      "sdp validate [root] [--exclude PATH]... [--check-clean | --watch] [--rules PATH [--params FORM]...]...",
+    );
+    expect(SDP_HELP_TEXT).toContain("--rules combines with --check-clean");
+  });
   it.each([
     ["--params", "{}"],
     ["--params", "{}", "--rules", "a"],
@@ -127,6 +133,12 @@ describe("corpus rules on validate", () => {
       "finding 1 has no lawful validatorId",
     ],
     [`return { findings: [{ ...${finding()}, line: 1 }] }`, "finding 1 has no lawful line"],
+    [
+      `return { findings: [{ ...${finding()}, relatedId: 1 }] }`,
+      "finding 1 has no lawful relatedId",
+    ],
+    [`return { findings: [{ ...${finding()}, path: 1 }] }`, "finding 1 has no lawful path"],
+    [`return { findings: [{ ...${finding()}, file: '' }] }`, "finding 1 has no lawful file"],
   ])("fails a broken file and continues: %s", async (body, reason) => {
     const root = probe();
     const first = rules(root, "broken", body);
@@ -156,12 +168,12 @@ describe("corpus rules on validate", () => {
     const first = rules(
       root,
       "first.rules",
-      "graph.nodes.length = 0; report.findings.push({ severity: 'error' }); return { findings: [] };",
+      "graph.nodes.length = 0; graph.edges.length = 0; report.findings.push({ severity: 'error' }); return { findings: [] };",
     );
     const second = rules(
       root,
       "second.rules",
-      "return { findings: graph.nodes.length === 2 && report.findings.length === 0 && !('corpusFindings' in report) && !('corpusFailures' in report) ? [] : [{ validatorId: 'changed', subjectId: 'probe', severity: 'error', message: 'changed' }] };",
+      "return { findings: graph.nodes.length === 2 && graph.edges.length === 1 && report.findings.length === 0 && !('corpusFindings' in report) && !('corpusFailures' in report) ? [] : [{ validatorId: 'changed', subjectId: 'probe', severity: 'error', message: 'changed' }] };",
     );
     const result = await validate(root, "--rules", first, "--rules", second);
     expect(result.code).toBe(0);
@@ -235,7 +247,11 @@ describe("corpus rules on validate", () => {
 it("exposes corpus data only on the aggregate validate outcome", async () => {
   const root = probe();
   const capture = createCaptureOutput();
-  const first = rules(root, "ok", `return { findings: [${finding("warning")}] };`);
+  const first = rules(
+    root,
+    "ok",
+    `return { findings: [{ ...${finding("warning")}, relatedId: "other", path: "design.layer", extra: 1 }] };`,
+  );
   const second = rules(root, "bad", "return {}");
   const parsed = parseBuildArgs(
     [root, "--rules", first, "--rules", second],
@@ -248,6 +264,15 @@ it("exposes corpus data only on the aggregate validate outcome", async () => {
     findings: [],
     corpusFindings: [{ rulesFile: first, validatorId: "probe-rule" }],
     corpusFailures: [{ rulesFile: second, reason: "returned no findings array" }],
+  });
+  expect(outcome.report?.corpusFindings[0]).toEqual({
+    rulesFile: first,
+    validatorId: "probe-rule",
+    subjectId: "probe-subject",
+    severity: "warning",
+    message: "probe finding",
+    relatedId: "other",
+    path: "design.layer",
   });
 });
 it("awaits bodies in file order and keeps a Protocol error fatal", async () => {
@@ -303,6 +328,48 @@ it("rereads rules on the next carrier cycle and ignores a rules-file event", asy
     expect(await running).toBe(0);
     expect(completed).toEqual([0, 1]);
     expect(capture.readStdout()).toContain("corpus rules: 1 errors · 0 warnings");
+  } finally {
+    abort.abort();
+  }
+});
+
+it("gives each watch cycle fresh parameters after a body mutates them", async () => {
+  const root = probe();
+  const file = rules(
+    root,
+    "rules.js",
+    `const findings = params.x === 1 ? [] : [${finding()}]; params.x = 2; return { findings };`,
+  );
+  const capture = createCaptureOutput();
+  const abort = new AbortController();
+  let listener: ((event: ValidateWatchEvent) => void) | undefined;
+  const completed: number[] = [];
+  try {
+    const code = await runSdpCli(
+      ["validate", root, "--watch", "--rules", file, "--params", '{"x":1}'],
+      capture.output,
+      {
+        abortSignal: abort.signal,
+        createWatchSource: () => ({
+          on: (callback) => {
+            listener = callback;
+          },
+          onError: () => {
+            /* This event source never fails. */
+          },
+          close: () => {
+            /* No native watch handle is allocated. */
+          },
+        }),
+        onWatchCycleComplete: (cycle) => {
+          completed.push(cycle.exitCode);
+          if (cycle.index === 1) listener?.({ type: "change", path: "first.sdp.md" });
+          else abort.abort();
+        },
+      },
+    );
+    expect(code).toBe(0);
+    expect(completed).toEqual([0, 0]);
   } finally {
     abort.abort();
   }

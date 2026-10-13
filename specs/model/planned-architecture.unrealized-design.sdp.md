@@ -2,7 +2,7 @@
 id: spec:model.planned-architecture.unrealized-design
 kind: example
 altitude: story
-readiness: ready
+readiness: defined
 relations:
   refines: spec:model.planned-architecture
   verifies: spec:model.planned-architecture

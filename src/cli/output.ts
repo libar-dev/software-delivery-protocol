@@ -41,3 +41,8 @@ export function formatFinding(finding: Finding | CorpusFinding): string {
 export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
+
+/** Collapses an error message onto one line, so a refusal stays the one-line diagnostic. */
+export function oneLine(message: string): string {
+  return message.replace(/\s+/gu, " ").trim();
+}

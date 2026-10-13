@@ -1,9 +1,6 @@
 import { readFileSync } from "node:fs";
 import type { CliOutput } from "./output.js";
-import { errorMessage, writeStderr } from "./output.js";
-function oneLine(message: string): string {
-  return message.replace(/\s+/gu, " ").trim();
-}
+import { errorMessage, oneLine, writeStderr } from "./output.js";
 
 /** How a refusal names a parsed JSON value that is not an object. */
 function jsonKind(value: unknown): string {

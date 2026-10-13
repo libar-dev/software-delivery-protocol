@@ -15,7 +15,7 @@ import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import { resolveExtractionRoot } from "./build-args.js";
 import type { CliOutput } from "./output.js";
-import { errorMessage, formatFinding, writeStderr, writeStdout } from "./output.js";
+import { errorMessage, formatFinding, oneLine, writeStderr, writeStdout } from "./output.js";
 
 /**
  * The agent front door (`spec:decisions.agent-front-door`): one evaluation sink over the same
@@ -138,11 +138,6 @@ function defaultIsStdinTty(): boolean {
 
 function defaultReadStdin(): string {
   return readFileSync(0, "utf8");
-}
-
-/** Collapses an error message onto one line, so a refusal stays the one-line diagnostic. */
-function oneLine(message: string): string {
-  return message.replace(/\s+/gu, " ").trim();
 }
 
 const queryParamsAnchor = codeAnchor({

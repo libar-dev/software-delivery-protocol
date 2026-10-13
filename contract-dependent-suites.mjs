@@ -35,7 +35,6 @@ export const contractDependentSuites = [
       "test/model.planned-architecture.differing-layer-and-uses.test.generated.ts",
       "test/model.planned-architecture.matching-design.test.generated.ts",
       "test/model.planned-architecture.unrealized-design.test.generated.ts",
-
       "test/self-hosting-next-rung-floor.test.ts",
       "test/validation.next-rung-floor.blocking-question.test.generated.ts",
       "test/validation.next-rung-floor.typed-dependency-targets.test.generated.ts",

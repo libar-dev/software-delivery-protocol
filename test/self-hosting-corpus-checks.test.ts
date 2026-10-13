@@ -111,7 +111,7 @@ const corpusAdapters = (contract: Contract) => ({
       };
       const body =
         first === "empties the graph it receives"
-          ? "graph.nodes.length = 0; return { findings: [] };"
+          ? "graph.nodes.length = 0; graph.edges.length = 0; return { findings: [] };"
           : `return { findings: [${JSON.stringify(first === "returns a finding with no subject" ? { validatorId: row.validatorId, severity: row.severity, message: row.message } : row)}] };`;
       writeFileSync(file, body);
       const args = ["validate", root, "--rules", file];

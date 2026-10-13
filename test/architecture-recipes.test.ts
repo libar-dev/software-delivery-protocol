@@ -69,9 +69,9 @@ function probe(): MutableGraph {
     ],
   };
 }
-function design(graph: MutableGraph, entries: Record<string, string>) {
+function design(graph: MutableGraph, entries: Record<string, string>, id = "spec:probe.design") {
   graph.nodes.push({
-    id: "spec:probe.design",
+    id,
     nodeType: "Primitive",
     claim: "declared",
     specKind: "model",
@@ -83,7 +83,7 @@ function design(graph: MutableGraph, entries: Record<string, string>) {
   });
   graph.edges.push({
     from: "component:probe.a",
-    to: "spec:probe.design",
+    to: id,
     type: "satisfies",
     claim: "anchored",
   });
@@ -125,6 +125,33 @@ describe("architecture walk", () => {
         fromComponent: { id: "component:probe.a" },
       },
       { validatorId: "isolated-context" },
+    ]);
+  });
+  it("sorts findings and unclassified edges independently of insertion order", async () => {
+    const graph = probe();
+    graph.nodes.push({
+      id: "impl:probe.0",
+      nodeType: "CodeNode",
+      claim: "anchored",
+      file: "a.ts",
+      line: 3,
+    });
+    graph.edges.push(
+      { from: "impl:probe.a", to: "impl:probe.bare", type: "uses", claim: "anchored" },
+      { from: "impl:probe.0", to: "component:probe.a", type: "memberOf", claim: "anchored" },
+      { from: "impl:probe.0", to: "impl:probe.b", type: "uses", claim: "anchored" },
+      { from: "impl:probe.0", to: "impl:probe.bare", type: "uses", claim: "anchored" },
+    );
+    const result = await recipe(42, graph, {
+      forbidden: [{ from: "domain", to: "infrastructure" }],
+    });
+    expect((result.findings as { subjectId: string }[]).map((row) => row.subjectId)).toEqual([
+      "impl:probe.0",
+      "impl:probe.a",
+    ]);
+    expect((result.unclassified as { from: string }[]).map((row) => row.from)).toEqual([
+      "impl:probe.0",
+      "impl:probe.a",
     ]);
   });
   it("reports missing components and attributes apart, ignoring same-component uses", async () => {
@@ -191,6 +218,23 @@ describe("planned components", () => {
         planned: [],
         realized: ["component:probe.b"],
       },
+    ]);
+  });
+  it("sorts differing fields and unrealized designs independently of insertion order", async () => {
+    const graph = probe();
+    design(graph, { layer: "application", context: "orders" });
+    design(graph, { id: "component:probe.z" }, "spec:probe.z");
+    graph.edges.pop();
+    design(graph, { id: "component:probe.0" }, "spec:probe.0");
+    graph.edges.pop();
+    const result = await recipe(43, graph);
+    expect((result.differing as { field: string }[]).map((row) => row.field)).toEqual([
+      "context",
+      "layer",
+    ]);
+    expect((result.unrealized as { spec: string }[]).map((row) => row.spec)).toEqual([
+      "spec:probe.0",
+      "spec:probe.z",
     ]);
   });
   it("deduplicates padded uses and skips unstated fields", async () => {

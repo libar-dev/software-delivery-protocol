@@ -1,14 +1,14 @@
 import { readFileSync } from "node:fs";
-import type { RulesInput } from "../cli/build-args.js";
-import { compileBody } from "../cli/q-command.js";
-import { errorMessage } from "../cli/output.js";
+import type { RulesInput } from "./build-args.js";
+import { compileBody } from "./q-command.js";
+import { errorMessage, oneLine } from "./output.js";
 import type { GraphSchema } from "../graph/schema.js";
 import { createReader } from "../reader/reader.js";
-import type { CorpusFinding, CorpusValidationReport, ValidationReport } from "./contracts.js";
-
-function oneLine(value: string): string {
-  return value.replace(/\s+/gu, " ").trim();
-}
+import type {
+  CorpusFinding,
+  CorpusValidationReport,
+  ValidationReport,
+} from "../validate/contracts.js";
 function object(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
