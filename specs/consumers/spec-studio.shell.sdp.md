@@ -34,12 +34,12 @@ The shell carries what every page shares, including the rules that keep a page r
 - rule: [#keyboard] Every link and control is reachable from the keyboard in reading order and shows where the focus is.
 - rule: [#lineLength] Prose runs no wider than about 80 characters, and a table wider than the canvas scrolls inside its own box, never the page.
 - rule: [#text] Authored text renders as plain text with each inline code span as code, and no other Markdown is read. A mention the prose-mentions validator reads links to its target's page when the target resolves, and to the entry when the mention is an entry address.
-- rule: [#withoutScript] Every page reads in full without its script: its collapsible parts are native disclosure elements, and only filtering, search, copying and the stamp need the script.
+- rule: [#withoutScript] The index, every Pack page and every Spec page read in full without their script: their collapsible parts are native disclosure elements, and only filtering, copying and the stamp need the script. The search page needs its script to match, and without it says so and links to the index.
 
 ## UI
 The parts of the shell, top to bottom and left to right.
 - topNavigation: the Studio's name linking to the index, then Packs, linking to the index's Packs section, then the search field; each lens page the page set holds adds its entry in the order `spec:consumers.spec-studio.lenses` gives.
 - stampLine: at the end of the top navigation, the stamp's corpus commit, engine and build time, when the stamp loads.
-- leftRail: on a Pack page, the Pack's members in authored order, each linked to its card on the page; on a Spec page, each Pack the Spec belongs to with its members in authored order, each linked to its Spec page and the current one marked; on any other page, every Pack; then each member of the rail's Packs that owns an example space, linked to its Spec page, with no harness named; then the validation report's finding counts by severity, linked to the index's findings.
+- leftRail: on a Pack page, the Pack's members in authored order, each linked to its card on the page; on a Spec page, each Pack the Spec belongs to with its members in authored order, each linked to its Spec page and the current one marked; on any other page, every Pack; then, under an `Example spaces` heading shown only when there is one, each member of the rail's Packs that owns an example space, linked to its Spec page, with no harness named; then the validation report's finding counts by severity, linked to the index's findings.
 - railOnPhone: below the phone breakpoint the rail follows the canvas, so a page opens on its content.
 - mainCanvas: the page of the Spec or Pack selected in the rail or in a lens.

@@ -26,7 +26,9 @@ A capability is read as a Pack, or as a projection over high-altitude behavior S
 - outcome: Let a person see the graph four ways, by Pack, by architecture, by verification and by evidence, from one top navigation.
 ### Open questions
 - [non-blocking #architectureVocabulary] The original's architecture lens draws runtime layers, ports and external systems beside components and their dependencies; `spec:decisions.architectural-annotation` gives a component anchor a layer and a bounded context and any code anchor a role, beside component membership and `uses`, and admits no port or external-system node. Does the lens group components by layer and context and draw only what those anchors hold?
+  - decider: owner
   - links: spec:consumers.structural-mermaid#question.layerAndContext
+  - provisional: the lens groups components by their recorded layer and context and draws only component membership and `uses` edges, with no port or external-system node
 
 ## Behavior
 - rule: The Packs lens is the default landing page.
@@ -39,5 +41,5 @@ A capability is read as a Pack, or as a projection over high-altitude behavior S
 The lenses in the order of the top navigation.
 - packsLens: a Spec-by-Spec tree grouped by Pack, with each Pack's members in authored order, which the index page holds.
 - architectureLens: the graph drawn as components and their dependencies, from component membership and `uses` edges, in an embedded interactive diagram whose renderer follows `spec:consumers.spec-studio.components#rule.diagramRenderer`.
-- testsLens: a coverage view: for each Spec, its verifiers with their bindings, then each keyed rule with the examples recipe 34 reports as exercising it, with the unkeyed rules counted apart.
+- testsLens: a coverage view: for each Spec, its verifiers with their bindings, then each keyed rule with the examples recipe 34 reports as exercising it, with the unkeyed rules counted apart, because the graph cannot tell which examples exercise a rule with no key.
 - evidenceLens: the graph-recorded evidence fields and absence labels `spec:consumers.spec-studio.verification-panels` states; while the graph records no observation or other evidence, each reads not tracked.

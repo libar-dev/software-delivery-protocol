@@ -15,7 +15,7 @@ relations:
 The build renders every page whole, so these elements add behavior to markup that is already there rather than rendering views of their own. A browser refuses a module script on a page opened through `file://`, so they ship as one classic script.
 
 ## Intent
-- outcome: Give the Studio's pages their few interactions through custom elements that enhance markup the build wrote, so a page with its script filters, searches and copies, and a page without it still reads in full.
+- outcome: Give the Studio's pages their few interactions through custom elements that enhance markup the build wrote, so a page with its script filters, searches and copies, and every page but the search page still reads in full without it.
 
 ## Contract
 - [#oneScript] The elements ship in one classic script, `assets/studio.js`, with no module syntax and nothing loaded at run time; the build bundles it from the package's source, with the concept matcher.

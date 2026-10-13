@@ -66,9 +66,13 @@ done
   instead.
 - Desktop Chrome will not open a window narrower than about 500 pixels, so a phone layout is checked
   with a headless shell such as the one Playwright caches.
-- Questions the owner may want to react to: the full question address inside its own member's card
-  is long, and a short `question.<key>` would read faster; the summary states counts as sentences
-  rather than a table.
+- The review of the first version changed the page: the summary comes before the framing, each
+  summary sentence opens with its count, the held and waiting members are named in the summary
+  instead of a section repeating the cards, a card's line colors only its rung, a question links
+  as `question.<key>` with its full address behind a copy action, and the note that the graph
+  records no run result appears once, above the members with no verifier binding.
+- A question the owner may want to react to: the summary states counts as sentences rather than
+  a table.
 
 ## The two associations the reader tasks need
 

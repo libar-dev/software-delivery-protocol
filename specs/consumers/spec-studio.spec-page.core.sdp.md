@@ -25,8 +25,8 @@ The full Spec page adds panels to this core: diagrams, a runtime neighborhood, v
 
 ## Behavior
 - rule: [#header] The header shows the title; the id with a copy action; the kind's display label and the altitude; the stated rung beside the floor reached on one line, with the divergence banner only in the dishonest direction; the stated next rung with `nothing blocks` or each unmet clause and its targets; the Packs the Spec belongs to, linked; its design columns; its findings by severity; and its carrier file as text with a copy action. It shows no owner, capability, tag or last-verified time: the envelope holds none, the Packs stand for a capability, and a binding never records a run.
-- rule: [#summary] A summary in words follows the header: the stated rung against the floor, what holds the stated next rung, the open and blocking questions, and the implementation, verifier and oracle bindings as present or none.
-- rule: [#sections] The narrative comes next, then each section the Spec carries as a panel open by default, in the order intent, behavior, constraints, model, design, decision, verification, ui, with its entries in authored order. A section the Spec lacks is absent, and the page adds no section the graph does not hold.
+- rule: [#summary] A summary in words follows the header with what the header does not show: the open and blocking questions, and the implementation, verifier and oracle bindings as present or none. It repeats no rung the header shows.
+- rule: [#sections] The narrative comes next, then each section the Spec carries as a panel open by default, in the order intent, behavior, constraints, model, design, decision, verification, ui, with its entries in authored order. A section the Spec lacks is absent, and the page adds no section the graph does not hold. The narrative carries the element id `narrative` and each section panel `section.<name>`, such as `section.behavior`.
 - rule: [#entryIds] Every entry an entry address can name, a keyed Design or UI entry, a keyed rule or flow and a keyed open question, carries an element id equal to its address after the `#`, such as `design.<key>`, and shows its key and its recorded line.
 - rule: [#questions] Each open question shows its blocking flag in words, its key and address when it has one, its text, its decider, its links, linked, its provisional reading and its trigger when present, and its recorded line. It shows no date: git records when a line changed.
 - rule: A `gwt` or `gwt-vocabulary` fence shows as preformatted step text, as authored.
@@ -36,7 +36,7 @@ The full Spec page adds panels to this core: diagrams, a runtime neighborhood, v
 
 ## UI
 - headerBlock: the title as the page heading; below it a line with the id, kind, altitude, the rung badge with the floor in words, and the next rung; then the Packs, the design columns, the finding counts and the carrier file.
-- summaryLine: one or two sentences under the header.
+- summaryLine: one sentence under the header.
 - sectionPanel: an open disclosure per section, headed with the section's name, and for Verification its mode.
 - entryRow: an entry's key as code, its value, and `line <n>` when recorded, in a definition list.
 - questionItem: the blocking flag in words, the key and address, the text, each present field on its own labelled line, and `line <n>` when recorded.

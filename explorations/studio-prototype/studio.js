@@ -89,26 +89,26 @@
       : '<span class="badge rung-' + esc(rung) + '">' + esc(rung) + "</span>";
   }
 
+  // The stated rung as the one colored badge, the floor beside it in words, and the warning color
+  // only on the divergence, beside its words.
   function stated(rung, floor) {
     var diverges = RUNGS.indexOf(floor) < RUNGS.indexOf(rung);
     return (
       rungBadge(rung) +
-      ' <span class="floor">floor ' +
+      ' <span class="kind">floor ' +
       esc(floor) +
       "</span>" +
       (diverges ? ' <span class="badge diverges">stated above its floor</span>' : "")
     );
   }
 
+  // The next rung in words, or null when the member states ready and has none.
   function nextRung(member) {
-    if (member.statedNextRung === null) return { text: "states ready", held: false };
+    if (member.statedNextRung === null) return null;
     var n = member.statedNextRungFailures.length;
     return n === 0
-      ? { text: "next rung " + member.statedNextRung + ": nothing blocks", held: false }
-      : {
-          text: "next rung " + member.statedNextRung + ": held by " + count(n, "clause", "clauses"),
-          held: true,
-        };
+      ? "nothing blocks " + member.statedNextRung
+      : "waits on " + count(n, "unmet clause", "unmet clauses") + " for " + member.statedNextRung;
   }
 
   function copy(text) {
@@ -181,12 +181,26 @@
     return (
       "<li>" +
       '<span class="badge' + (q.blocking ? " held" : "") + '">' + (q.blocking ? "blocking" : "non-blocking") + "</span> " +
-      (q.address ? '<a href="' + esc(specHref(q.address)) + '"><code>' + esc(q.address) + "</code></a> " : "") +
+      (q.address
+        ? '<a href="' + esc(specHref(q.address)) + '"><code>' + esc(q.address.slice(q.address.indexOf("#") + 1)) +
+          '</code></a><sdp-copy text="' + esc(q.address) + '"></sdp-copy> '
+        : "") +
       (q.line === null ? "" : '<span class="floor">line ' + q.line + "</span>") +
       "<div>" + inline(q.question) + "</div>" +
       lines.map(function (l) { return '<span class="field">' + l + "</span>"; }).join("") +
       "</li>"
     );
+  }
+
+  function verifierCounts(member) {
+    var parts = [];
+    if (member.verifiers.total > 0) {
+      parts.push(count(member.verifiers.total, "verifier", "verifiers") + ", " + member.verifiers.enabled + " enabled");
+    }
+    if (member.examples.total > 0) {
+      parts.push(count(member.examples.total, "verifying example", "verifying examples") + ", " + member.examples.enabled + " enabled");
+    }
+    return parts.length === 0 ? "" : ": " + parts.join("; ");
   }
 
   function card(member, position, context) {
@@ -205,7 +219,7 @@
     var questionsText =
       d.openQuestions === 0
         ? "no open questions"
-        : count(d.openQuestions, "question", "questions") + ", " + (d.blockingQuestions === 0 ? "none" : d.blockingQuestions) + " blocking";
+        : count(d.openQuestions, "open question", "open questions") + ", " + (d.blockingQuestions === 0 ? "none" : d.blockingQuestions) + " blocking";
     var labels = {};
     (context.implementations || []).concat(context.references || []).forEach(function (b) {
       if (b.label) labels[b.codeId] = b.label;
@@ -224,7 +238,9 @@
         ? "<p>States ready, so it has no next rung.</p>"
         : member.statedNextRungFailures.length === 0
           ? "<p><b>" + esc(member.statedNextRung) + ":</b> nothing blocks. The floor already holds it, so it waits only for its author's statement.</p>"
-          : "<p><b>" + esc(member.statedNextRung) + "</b> is held by:</p>" + clauses(member.statedNextRungFailures);
+          : "<p><b>" + esc(member.statedNextRung) + "</b> waits on " +
+            count(member.statedNextRungFailures.length, "unmet clause", "unmet clauses") + ":</p>" +
+            clauses(member.statedNextRungFailures);
 
     var decisions =
       member.decisions.length === 0
@@ -244,12 +260,16 @@
       "<summary>" +
       '<span class="line1">' + position + ". " + esc(member.title || id) + "</span>" +
       '<span class="line2">' +
-      '<span class="kind">' + esc(member.specKind) + "</span> " +
-      stated(member.statedReadiness, member.floorReached) + " " +
-      '<span class="badge' + (next.held ? " held" : "") + '">' + esc(next.text) + "</span> " +
-      '<span class="badge">' + esc(questionsText) + "</span> " +
-      '<span class="badge">implementation ' + implementation + "</span> " +
-      '<span class="badge">verifier ' + verifier + "</span>" +
+      [
+        '<span class="kind">' + esc(member.specKind) + "</span>",
+        stated(member.statedReadiness, member.floorReached),
+        next === null ? null : '<span class="kind">' + esc(next) + "</span>",
+        '<span class="kind">' + esc(questionsText) + "</span>",
+        '<span class="kind">implementation ' + implementation + "</span>",
+        '<span class="kind">verifier ' + verifier + "</span>",
+      ]
+        .filter(Boolean)
+        .join('<span class="sep" aria-hidden="true">·</span>') +
       "</span></summary>" +
       '<div class="card-body">' +
       '<p class="ids"><a href="' + esc(specHref(id)) + '"><code>' + esc(id) + "</code></a><sdp-copy text=\"" + esc(id) + "\"></sdp-copy></p>" +
@@ -269,10 +289,7 @@
       "<p><b>Design references:</b> " + (member.referencedBy.length === 0 ? "none" : "present") + "</p>" +
       units(member.referencedBy, labels, "No unit answers to its design.") +
       "<h3>Verification</h3>" +
-      "<p><b>Verifier binding:</b> " + verifier + ". " +
-      count(member.verifiers.total, "verifier", "verifiers") + ", " + member.verifiers.enabled + " enabled; " +
-      count(member.examples.total, "verifying example", "verifying examples") + ", " + member.examples.enabled + " enabled. " +
-      "No run result: the graph records bindings, never runs.</p>" +
+      "<p><b>Verifier binding:</b> " + verifier + verifierCounts(member) + ".</p>" +
       "</div></details>"
     );
   }
@@ -318,26 +335,45 @@
     var membersById = {};
     design.members.forEach(function (m) { membersById[m.id] = m; });
     var resolved = design.members.filter(function (m) { return m.resolved; });
-    var statesReady = resolved.filter(function (m) { return m.statedNextRung === null; }).length;
     var errors = context.findings.filter(function (f) { return f.severity === "error"; }).length;
     var warnings = context.findings.length - errors;
-
-    var summary = [
-      count(t.members, "member", "members") + (t.unresolved === 0 ? ", all in the graph." : ", " + t.unresolved + " of them not in the graph."),
-      (t.heldBelowNextRung === 0 ? "No member is held below its stated next rung; " : count(t.heldBelowNextRung, "member is", "members are") + " held below their stated next rung; ") +
-        count(t.waitingForAuthor, "member waits", "members wait") + " only for their author's statement" +
-        (statesReady === 0 ? "." : ", and " + count(statesReady, "states", "state") + " ready."),
-      count(t.entries, "Design or UI entry", "Design and UI entries") + ", " + t.declarations + " of them pinned declarations.",
-      count(t.openQuestions, "open question", "open questions") + ", " + (t.blockingQuestions === 0 ? "none" : t.blockingQuestions) + " blocking.",
-      count(t.withImplementations, "member has", "members have") + " implementing units, and " + count(t.withReferences, "member has", "members have") + " referencing units.",
-      "The Pack rests on " + count(t.restsOn, "Spec", "Specs") + " outside it and is rested on by " + t.restedOnBy + "; " +
-        count(t.verifiedBy, "outside Spec verifies", "outside Specs verify") + " a member, and " + (t.supersededBy === 0 ? "none supersedes" : count(t.supersededBy, "supersedes", "supersede")) + " one.",
-      count(errors, "error", "errors") + " and " + count(warnings, "warning", "warnings") + " name the Pack.",
-    ];
-
+    var link = function (m) { return '<a href="' + esc(cardHref(m.id)) + '">' + esc(m.title || m.id) + "</a>"; };
     var held = resolved.filter(function (m) { return m.statedNextRungFailures.length > 0; });
     var waiting = resolved.filter(function (m) { return m.statedNextRung !== null && m.statedNextRungFailures.length === 0; });
-    var link = function (m) { return '<a href="' + esc(cardHref(m.id)) + '">' + esc(m.title || m.id) + "</a>"; };
+
+    // Each Pack total in one sentence that opens with its count, a zero written as No. The held
+    // sentence links each held member to its card; the waiting sentence names its members unless
+    // every member waits.
+    var summary = [
+      count(t.members, "member", "members") + (t.unresolved === 0 ? ", all in the graph." : ", " + t.unresolved + " of them not in the graph."),
+      held.length === 0
+        ? "No member is held below its stated next rung."
+        : count(t.heldBelowNextRung, "member", "members") + " held below " + (t.heldBelowNextRung === 1 ? "its" : "their") + " stated next rung: " +
+          held
+            .map(function (m) { return link(m) + " (" + count(m.statedNextRungFailures.length, "unmet clause", "unmet clauses") + ")"; })
+            .join(", ") + ".",
+      t.waitingForAuthor === 0
+        ? "No member waits only for its author's statement."
+        : t.waitingForAuthor === t.members
+          ? "All " + t.members + " members wait only for their author's statement."
+          : count(t.waitingForAuthor, "member waits", "members wait") + " only for " + (t.waitingForAuthor === 1 ? "its" : "their") +
+            " author's statement: " + waiting.map(link).join(", ") + ".",
+      t.entries === 0
+        ? "No Design or UI entries."
+        : count(t.entries, "Design or UI entry", "Design and UI entries") + ", " + (t.declarations === 0 ? "none" : t.declarations) + " of them pinned declarations.",
+      t.openQuestions === 0
+        ? "No open questions."
+        : count(t.openQuestions, "open question", "open questions") + ", " + (t.blockingQuestions === 0 ? "none" : t.blockingQuestions) + " blocking.",
+      count(t.withImplementations, "member has", "members have") + " an implementation binding; " +
+        (t.withReferences === 0 ? "none has" : t.withReferences + (t.withReferences === 1 ? " has" : " have")) + " a design reference.",
+      count(t.restsOn, "outside Spec the Pack rests on", "outside Specs the Pack rests on") + "; " +
+        (t.restedOnBy === 0 ? "none rests" : t.restedOnBy + (t.restedOnBy === 1 ? " rests" : " rest")) + " on it; " +
+        (t.verifiedBy === 0 ? "none verifies" : t.verifiedBy + (t.verifiedBy === 1 ? " verifies" : " verify")) + " a member; " +
+        (t.supersededBy === 0 ? "none supersedes" : t.supersededBy + (t.supersededBy === 1 ? " supersedes" : " supersede")) + " one.",
+      errors === 0 && warnings === 0
+        ? "No errors and no warnings name the Pack."
+        : count(errors, "error", "errors") + " and " + count(warnings, "warning", "warnings") + " name the Pack.",
+    ];
 
     var gaps = context.verifierGaps.slice().sort(function (a, b) { return (b.priority ? 1 : 0) - (a.priority ? 1 : 0); });
 
@@ -346,27 +382,21 @@
       '<p class="eyebrow">Pack</p>' +
       "<h1>" + esc(design.title || design.id) + "</h1>" +
       '<p class="ids"><span>' + copy(design.id) + "</span><span>" + copy(context.file) + "</span></p>" +
-      (context.framing ? '<div class="prose">' + prose(context.framing) + "</div>" : "") +
-      (context.modelRefs.length === 0
-        ? ""
-        : "<p><b>Vocabulary:</b> " + context.modelRefs.map(function (r) { return '<a href="' + esc(specHref(r)) + '">' + esc(r) + "</a>"; }).join(", ") + "</p>") +
       "</header>" +
       '<sdp-expander>' +
       '<section id="summary" aria-labelledby="summary-h"><h2 id="summary-h">Where the design stands</h2><ul class="summary">' +
       summary.map(function (s) { return "<li>" + capital(s) + "</li>"; }).join("") +
       "</ul></section>" +
+      (context.framing || context.modelRefs.length > 0
+        ? '<section id="framing" aria-labelledby="framing-h"><h2 id="framing-h">Framing</h2>' +
+          (context.framing ? '<div class="prose">' + prose(context.framing) + "</div>" : "") +
+          (context.modelRefs.length === 0
+            ? ""
+            : "<p><b>Vocabulary:</b> " + context.modelRefs.map(function (r) { return '<a href="' + esc(specHref(r)) + '">' + esc(r) + "</a>"; }).join(", ") + "</p>") +
+          "</section>"
+        : "") +
       '<section id="members" aria-labelledby="members-h"><h2 id="members-h">Members, in reading order</h2>' +
       design.members.map(function (m, i) { return card(m, i + 1, contextById[m.id] || {}); }).join("") +
-      "</section>" +
-      '<section id="holds" aria-labelledby="holds-h"><h2 id="holds-h">What holds members below their next rung</h2>' +
-      (held.length === 0
-        ? "<p>No member is held below its stated next rung.</p>"
-        : "<ul class=\"plain-list\">" +
-          held.map(function (m) { return "<li>" + link(m) + " is held below <b>" + esc(m.statedNextRung) + "</b> by:" + clauses(m.statedNextRungFailures) + "</li>"; }).join("") +
-          "</ul>") +
-      (waiting.length === 0
-        ? ""
-        : "<p>" + count(waiting.length, "member waits", "members wait") + " only for their author's statement, which is never an approval: " + waiting.map(link).join(", ") + ".</p>") +
       "</section>" +
       '<section id="boundary" aria-labelledby="boundary-h"><h2 id="boundary-h">Outside the Pack</h2>' +
       "<p>Specs outside the Pack joined to a member by an authored relation. The Pack rests on a Spec a member refines, depends on, is constrained by or decided by, and is rested on by a Spec that relates to a member the same ways.</p>" +
@@ -376,6 +406,7 @@
       boundarySection("Superseded by", design.boundary.supersededBy, membersById, "Members it supersedes") +
       "</section>" +
       '<section id="gaps" aria-labelledby="gaps-h"><h2 id="gaps-h">Members with no verifier binding</h2>' +
+      "<p>The graph records bindings, never runs, so no page shows a run result.</p>" +
       (gaps.length === 0
         ? "<p>Every member has a verifier binding.</p>"
         : '<ul class="plain-list">' +
@@ -399,7 +430,7 @@
         })
         .join("") +
       "</ol>" +
-      '<h2 id="rail-findings">Findings</h2><p><a href="#findings">' + count(errors, "error", "errors") + ", " + count(warnings, "warning", "warnings") + "</a> name this Pack.</p>";
+      '<h2 id="rail-findings">Findings</h2><p><a href="#findings">' + capital(count(errors, "error", "errors")) + ", " + count(warnings, "warning", "warnings") + "</a> name this Pack.</p>";
 
     return { html: html, rail: rail };
   }

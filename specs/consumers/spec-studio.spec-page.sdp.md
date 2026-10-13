@@ -27,6 +27,8 @@ The page shows only what the graph holds. The original header's owner, tags and 
 - outcome: Show everything the graph holds about one Spec on one page, in panels a person opens and closes one at a time.
 ### Open questions
 - [non-blocking #runtimeComposition] Does the runtime panel show more than the structural neighborhood of the Spec's implementation anchors?
+  - decider: owner
+  - provisional: the panel shows only the structural neighborhood the anchors record, until a reader asks for more of the runtime composition
 
 ## Behavior
 - rule: Each panel collapses and expands on its own.

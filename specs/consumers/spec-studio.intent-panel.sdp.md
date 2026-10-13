@@ -12,6 +12,8 @@ relations:
 ---
 # A composing panel on every page gathers scoped intent for an agent
 
+The change-proposal contract requires the commit whose graph the person read, and a generated page set carries no commit, so a proposal's base comes from the build stamp when one is present and from the person otherwise.
+
 ## Intent
 - outcome: Let a person gather the changes they want while they read, each bounded by a Spec, its neighbors, a Pack or one open question, and hand them to an agent that edits source.
 

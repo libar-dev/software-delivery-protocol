@@ -23,7 +23,7 @@ The first adopter asked to search entry keys, pinned declarations and file paths
 - rule: A term matches where it appears in a field, without regard to case, as `findByConcept` matches; an empty term matches nothing.
 - rule: [#searchPage] The search field on any page opens the search page with the term in its fragment, `search.html#q=<term>`; the search page matches as the person types and keeps the term in its fragment, so a search is a link.
 - rule: [#resultShape] Each result names its node type in words. A Spec result shows its title, id, kind, and stated rung beside the floor reached, and opens its page; a Pack result shows its title and id and opens its page, with no readiness; an Anchor or CodeNode result shows its id, label, and recorded file and line as text with a copy action, and links each Spec its edges reach, with the edge type.
-- rule: [#entryHits] Under a Spec result, the page lists the Spec's entries whose text or coined key holds the term, in the index's order, each with its section, key and recorded line, linked to the entry on the Spec page when it has an entry address and to its section otherwise.
+- rule: [#entryHits] Under a Spec result, the page lists the Spec's entries the term matches, as `spec:consumers.spec-studio.data#design.searchEntry` states, in the index's order, each with its section, key and recorded line, linked to the entry's element id on the Spec page when it has an entry address, and otherwise to its section's element id, or to the narrative's.
 - rule: The page shows fifty results at a time, with a control that shows the next fifty.
 - rule: The search page reads only the index it embeds; it fetches nothing and joins nothing.
 

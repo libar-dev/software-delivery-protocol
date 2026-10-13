@@ -26,12 +26,13 @@ A reader of a large design needs two ways in: by the task they came to do and by
 - rule: [#packsLens] The Packs section lists every Pack in id order with its title and its members in authored order, each member with its stated rung beside its floor; it draws no capability tree.
 - rule: [#specRows] The Specs section lists every Spec in id order, one row each: its title and id, kind and altitude, stated rung beside the floor reached, implementation binding and verifier binding as present or none, open and blocking questions, and its Packs.
 - rule: [#filters] Filters narrow the Specs section by kind, altitude, stated rung, floor reached, implementation binding, verifier binding and Pack; each filter takes one value or any, the filters combine, and the section says how many of its rows it shows. Without script every row shows.
-- rule: [#findings] The findings section lists the validation report's findings in its order, each with its severity in words, its validator id, its subject linked to its page, its message, and its recorded file and line as text.
+- rule: [#findings] The findings section lists the validation report's findings in its order, each with its severity in words, its validator id, its subject when it has one, linked to its page when it is a Spec or a Pack and as text otherwise, its message, and its recorded file and line as text.
 
 ## UI
 - summary: a short list of sentences under the page title, each with a count.
-- taskRoutes: four or five links under a `Start here` heading.
+- taskRoutes: four links under a `Start here` heading: Read a Pack's design, Find a Spec, entry or file by a word, Narrow the Specs, Read the findings.
 - packList: one closed disclosure per Pack, its summary line the Pack's title, id and member count, its body the members in authored order as links with their rung badges.
-- specRow: two lines per Spec, the title linked to its page with the id beside it, then badges for kind, altitude, stated rung and floor, the two binding values, the question counts and the Packs.
+- specRow: one line per Spec: the title linked to its page, the id as code, the rung badge, then as plain text the kind, altitude, floor in words, the two binding values, the question counts and the Packs; the line wraps on a narrow screen.
 - filterBar: one labelled select per filter above the Specs, each listing any and the values the rows hold, and a line saying how many of all rows show.
+- sectionIds: the Packs, Specs and findings sections carry the element ids `packs`, `specs` and `findings`, which the top navigation, the rail and the task routes link to.
 - findingsList: one line per finding, the severity word first.

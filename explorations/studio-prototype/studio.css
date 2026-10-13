@@ -320,6 +320,10 @@ h3 {
   white-space: nowrap;
 }
 
+.sep {
+  color: var(--muted);
+}
+
 .diverges {
   background: var(--warn-bg);
   color: var(--warn-text);

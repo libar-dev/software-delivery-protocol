@@ -31,6 +31,7 @@ The principle is a linked-notes view regenerated from the one graph; Obsidian an
 
 ### Open questions
 - [non-blocking #otherNotesTools] Does the vault keep to the wikilinks and properties other notes tools read, or use Obsidian's Bases freely?
+  - decider: owner
   - provisional: notes and links stay plain Markdown with wikilinks any such tool reads, and the Bases are Obsidian's alone
 - [blocking #regenerationScope] Which files does the generator own, how are stale generated files removed, and where do Obsidian settings and a person's intent notes live so that regeneration and build invalidation never remove them?
   - decider: owner

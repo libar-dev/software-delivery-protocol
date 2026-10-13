@@ -25,7 +25,7 @@ relations:
 ## Behavior
 - rule: The read-only Studio ships in the open-source package `@libar-dev/software-delivery-protocol`, beside the four shipped projections; hosted review, shared comments and hosted previews may later ship under `@libar-ai/`.
 - rule: The Studio is a projection of the one graph: its page set under `generated/spec-studio/` is regenerated from the graph, states no truth, and confers nothing back into the graph.
-- rule: [#staticPageSet] The Studio is a static page set: an index page, a search page, and one page per Pack and per Spec, with their local assets. Its build renders each page whole, so a page needs no server and reads without its script, which adds filtering, search and copying.
+- rule: [#staticPageSet] The Studio is a static page set: an index page, a search page, and one page per Pack and per Spec, with their local assets. Its build renders each page whole, so a page needs no server, and every page but the search page reads without its script, which adds filtering, search and copying.
 - rule: The Studio works offline: the same files open from the file system through `file://` for local use and from any static host for sharing.
 - rule: The Studio is reproducible: one graph renders byte-identical files, and an asset whose filename embeds a hash of its content gets the same name from the same graph.
 - rule: The Studio is read-rich: everything the graph holds about a Spec or a Pack is explorable in it.
