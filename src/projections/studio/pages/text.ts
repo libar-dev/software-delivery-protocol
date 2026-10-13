@@ -1,6 +1,8 @@
 import { mentionTokens } from "../../../validate/validators.js";
 import { escape, link } from "./html.js";
 import type { PageContext } from "./html.js";
+import { mapCodeSpans } from "./code-spans.js";
+export { codeSpans } from "./code-spans.js";
 
 /**
  * Escapes text first and links only graph-resolving tokens read by the mention validator.
@@ -35,22 +37,7 @@ export function text(ctx: PageContext, value: string): string {
     }
     return out + escape(part.slice(at));
   };
-  const runs = [...value.matchAll(/`+/gu)];
-  let at = 0;
-  let out = "";
-  for (let i = 0; i < runs.length; i++) {
-    const open = runs[i];
-    if (!open) continue;
-    const closing = runs.findIndex((run, j) => j > i && run[0].length === open[0].length);
-    if (closing < 0) continue;
-    const close = runs[closing];
-    if (!close) continue;
-    out += mentions(value.slice(at, open.index));
-    out += `<code>${mentions(value.slice(open.index + open[0].length, close.index))}</code>`;
-    at = close.index + close[0].length;
-    i = closing;
-  }
-  return out + mentions(value.slice(at));
+  return mapCodeSpans(value, mentions, (v) => `<code>${mentions(v)}</code>`);
 }
 
 export function prose(ctx: PageContext, value?: string): string {

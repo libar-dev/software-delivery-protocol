@@ -19,7 +19,7 @@ import { copyText } from "../src/studio-elements/copy.js";
 import { fragmentTarget } from "../src/studio-elements/expander.js";
 
 const anchor = specTest({
-  id: testAnchorId("test:studio.page-elements"),
+  id: testAnchorId("test:protocol.studio-page-elements"),
   verifies: [
     ref("spec:consumers.spec-studio.page-elements"),
     ref("spec:consumers.spec-studio.search"),
@@ -72,6 +72,62 @@ const entryAt = (index: number): SearchEntry => {
 };
 
 describe("Studio page interactions", () => {
+  it("offers a prompt before searching and puts a real miss before the field list", () => {
+    for (const term of ["", "   "]) {
+      const html = renderResults([], term, 50);
+      expect(html).toContain("Type a word to search.");
+      expect(html).toContain("Fields searched:");
+      expect(html).not.toMatch(/No node matches|0 nodes/u);
+    }
+    const miss = renderResults([], "missing <&>", 50);
+    expect(miss).toContain("No node matches missing &lt;&amp;&gt;");
+    expect(miss.indexOf("No node matches")).toBeLessThan(miss.indexOf("Fields searched:"));
+  });
+  it("writes singular counts, readable fields, code-span titles and linked entry keys", () => {
+    const single: SearchRecord = {
+      ...record,
+      title: "Use `safe <&>`",
+      sections: { design: { aggregateReadModelRebuild: "needle" }, intent: { outcome: "needle" } },
+      entries: [
+        {
+          ...entryAt(1),
+          entry: "aggregateReadModelRebuild",
+          key: "aggregateReadModelRebuild",
+          text: "needle",
+        },
+      ],
+    };
+    const html = renderResults(searchRecords({ records: [single] }, "needle"), "needle", 50);
+    expect(html).toContain("1 node and 1 entry match");
+    expect(html).toContain("Use <code>safe &lt;&amp;&gt;</code>");
+    expect(html).toContain("Spec · behavior · stated defined · floor ready");
+    expect(html).toContain("Matched in: the Design section, the Intent section");
+    expect(html).not.toContain("sections.design");
+    expect(html).toContain(
+      '<a href="specs/probe.find.html#design.pin"><code>aggregateReadModelRebuild</code></a> · Design · line 10',
+    );
+  });
+  it("cuts long excerpts at word boundaries around the term", () => {
+    const long: SearchRecord = {
+      ...record,
+      narrative: "projection ".repeat(40) + "needle " + "continuation ".repeat(30),
+      entries: [],
+    };
+    const entry = {
+      ...entryAt(1),
+      section: "narrative",
+      address: null,
+      text: long.narrative ?? "",
+    };
+    const html = renderResults(
+      [{ record: long, matchedIn: ["narrative"], entries: [entry] }],
+      "needle",
+      50,
+    );
+    expect(html).toContain("needle");
+    expect(html).not.toMatch(/…(?:rojection|ontinuation)|(?:projectio|continuatio)…/u);
+    expect(html).toContain("…projection");
+  });
   it("copies the requested text and reports successful clipboard writes", async () => {
     const written: string[] = [];
     const selected: string[] = [];
@@ -274,5 +330,89 @@ describe("Studio page interactions", () => {
       "sdp-search-results",
       "sdp-stamp",
     ]);
+  });
+  it("uses the navigation search input, announces the empty prompt and reveals paging progress", () => {
+    const defined = new Map<string, new () => FakeNode & { connectedCallback(): void }>();
+    const created: string[] = [];
+    const listeners = new Map<string, () => void>();
+    class FakeNode {
+      ownerDocument = doc;
+      children: FakeNode[] = [];
+      textContent = "";
+      className = "";
+      hidden = false;
+      value = "";
+      innerHTML = "";
+      parentNode?: FakeNode;
+      append(...nodes: FakeNode[]): void {
+        for (const node of nodes) {
+          node.parentNode = this;
+          this.children.push(node);
+        }
+      }
+      replaceChildren(...nodes: FakeNode[]): void {
+        this.children = [];
+        this.append(...nodes);
+      }
+      setAttribute(): void {
+        /* Native attribute has no effect on this probe. */
+      }
+      querySelectorAll(): FakeNode[] {
+        return [];
+      }
+      addEventListener(name: string, listener: () => void): void {
+        listeners.set(name, listener);
+      }
+    }
+    const doc = {
+      location: { hash: "" },
+      defaultView: {
+        addEventListener(): void {
+          /* Only direct input events are used here. */
+        },
+        history: {
+          replaceState(): void {
+            /* The location is controlled by the probe. */
+          },
+        },
+      },
+      getElementById: () => ({
+        textContent: JSON.stringify({
+          records: Array.from({ length: 60 }, (_, i) => ({
+            ...record,
+            id: `spec:probe.${String(i)}`,
+          })),
+        }),
+      }),
+      querySelector: () => input,
+      createElement: (name: string) => {
+        created.push(name);
+        return new FakeNode();
+      },
+    };
+    const input = new FakeNode();
+    runInNewContext(readFileSync(new URL("../dist/studio/studio.js", import.meta.url), "utf8"), {
+      HTMLElement: FakeNode,
+      customElements: {
+        get: () => undefined,
+        define: (name: string, ctor: new () => FakeNode & { connectedCallback(): void }) =>
+          defined.set(name, ctor),
+      },
+    });
+    const Results = defined.get("sdp-search-results");
+    if (!Results) throw new Error("Missing results element");
+    const element = new Results();
+    element.connectedCallback();
+    expect(created).not.toContain("form");
+    const status = element.children[0];
+    expect(status?.textContent).toBe("Type a word to search.");
+    expect(status?.className).toBe("visually-hidden");
+    input.value = "needle";
+    listeners.get("input")?.();
+    expect(element.children[1]?.innerHTML).toContain("60 nodes and 120 entries match");
+    expect(status?.textContent).toBe("Showing 50 of 60 nodes");
+    expect(status?.className).toBe("");
+    listeners.get("click")?.();
+    expect(status?.textContent).toBe("Showing 60 of 60 nodes");
   });
 });

@@ -7,7 +7,7 @@ import { matchConcept } from "../src/reader/concept-match.js";
 import { searchRecords, type SearchRecord } from "../src/studio-elements/search-results.js";
 
 const anchor = specTest({
-  id: testAnchorId("test:studio.concept-match"),
+  id: testAnchorId("test:protocol.studio-concept-match"),
   verifies: ref("spec:consumers.spec-studio.search"),
 });
 void anchor;

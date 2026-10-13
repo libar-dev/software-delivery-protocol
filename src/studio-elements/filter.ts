@@ -12,7 +12,7 @@ export function rowMatches(
 /**
  * Reads each row's facet attributes and changes only its hidden state.
  *
- * @sdpAnchor impl:studio.filter
+ * @sdpAnchor impl:protocol.studio-filter
  * @sdpSatisfies spec:consumers.spec-studio.page-elements
  * @sdpReferences spec:consumers.spec-studio.components
  * @sdpComponent component:protocol.studio-elements

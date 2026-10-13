@@ -2,6 +2,8 @@ import type { ConceptRecord } from "../reader/concept-match.js";
 import { matchConcept } from "../reader/concept-match.js";
 import { button, escapeHtml, liveOutput } from "./dom.js";
 import { searchFragment, searchTerm } from "./search.js";
+import { pagePath } from "../projections/studio/paths.js";
+import { codeSpans } from "../projections/studio/pages/code-spans.js";
 
 export interface SearchEntry {
   readonly section: string;
@@ -79,7 +81,7 @@ export function entryMatches(record: SearchRecord, entry: SearchEntry, term: str
 /**
  * Keeps concept hits in their existing order and appends key/file-only hits by id.
  *
- * @sdpAnchor impl:studio.search-results
+ * @sdpAnchor impl:protocol.studio-search-results
  * @sdpSatisfies spec:consumers.spec-studio.search, spec:consumers.spec-studio.page-elements
  * @sdpReferences spec:consumers.spec-studio.components
  * @sdpComponent component:protocol.studio-elements
@@ -140,45 +142,70 @@ export function resultPage(
 const fieldsSearched =
   "Fields searched: ids, titles, labels, Pack framing, Spec narrative and sections, coined keys, recorded file paths.";
 const nodeWords = { Primitive: "Spec", Pack: "Pack", Anchor: "Anchor", CodeNode: "Code unit" };
-const specPage = (id: string): string =>
-  `specs/${id.slice(5).replace(/[A-Z]/gu, (letter) => `_${letter.toLowerCase()}`)}.html`;
-const link = (url: string, label: string): string =>
-  `<a href="${escapeHtml(url)}">${escapeHtml(label)}</a>`;
+const link = (url: string, label: string, htmlLabel = escapeHtml(label)): string =>
+  `<a href="${escapeHtml(url)}">${htmlLabel}</a>`;
+const plural = (n: number, singular: string, plural = `${singular}s`): string =>
+  `${String(n)} ${n === 1 ? singular : plural}`;
+const sectionTitle = (name: string): string =>
+  name === "ui" ? "UI" : name.charAt(0).toUpperCase() + name.slice(1);
+function fieldLabel(field: string): string {
+  if (field.startsWith("sections.")) return `the ${sectionTitle(field.slice(9))} section`;
+  return (
+    (
+      {
+        key: "a coined key",
+        file: "the file path",
+        framing: "Pack framing",
+        narrative: "narrative",
+        id: "id",
+        title: "title",
+        label: "label",
+      } as Record<string, string>
+    )[field] ?? field
+  );
+}
 
 function excerpt(text: string, term: string): string {
   if (text.length <= 180) return text;
   const at = text.toLowerCase().indexOf(term.toLowerCase().trim());
-  const start = Math.max(0, at - 60);
-  return `${start > 0 ? "…" : ""}${text.slice(start, start + 180)}${start + 180 < text.length ? "…" : ""}`;
+  const start = at < 60 ? 0 : text.lastIndexOf(" ", at - 60) + 1;
+  const boundary = text.indexOf(" ", start + 180);
+  const end = boundary < 0 ? text.length : boundary;
+  return `${start > 0 ? "…" : ""}${text.slice(start, end).trimEnd()}${end < text.length ? "…" : ""}`;
 }
 
 export function renderResults(hits: readonly SearchHit[], term: string, limit: number): string {
   const page = resultPage(hits, limit);
-  const header = `<p>${escapeHtml(term)} · ${String(page.total)} nodes and ${String(page.entryTotal)} entries match.</p><p>${fieldsSearched}</p>`;
-  if (hits.length === 0) return `${header}<p>No node matches ${escapeHtml(term)}</p>`;
+  if (term.trim().length === 0) return `<p>Type a word to search.</p><p>${fieldsSearched}</p>`;
+  if (hits.length === 0)
+    return `<p>No node matches ${escapeHtml(term)}</p><p>${fieldsSearched}</p>`;
+  const header = `<p><code>${escapeHtml(term)}</code>: ${plural(page.total, "node")} and ${plural(page.entryTotal, "entry", "entries")} match. ${fieldsSearched}</p>`;
   return (
     header +
     page.shown
       .map(({ record, matchedIn, entries }) => {
         const heading = record.title ?? record.label ?? record.id;
-        const title = record.page === null ? escapeHtml(heading) : link(record.page, heading);
+        const title =
+          record.page === null
+            ? codeSpans(heading)
+            : link(record.page, heading, codeSpans(heading));
         const descriptor =
           record.nodeType === "Primitive"
-            ? `<p>${escapeHtml(record.specKind ?? "")} · stated ${escapeHtml(record.statedReadiness ?? "unknown")} · floor ${escapeHtml(record.floorReached ?? "none")}</p>`
-            : "";
+            ? `<p>Spec · ${escapeHtml(record.specKind ?? "")} · stated ${escapeHtml(record.statedReadiness ?? "unknown")} · floor ${escapeHtml(record.floorReached ?? "none")}</p>`
+            : `<p>${nodeWords[record.nodeType]}</p>`;
         const location =
           record.file === undefined
             ? ""
             : `${record.file}${record.line === undefined ? "" : `:${String(record.line)}`}`;
         const unit =
           record.nodeType === "Anchor" || record.nodeType === "CodeNode"
-            ? `<p>${escapeHtml(location)} <sdp-copy text="${escapeHtml(location || record.id)}"></sdp-copy></p><ul>${record.bindings.map((binding) => `<li>${escapeHtml(binding.edge)} ${link(specPage(binding.specId), binding.specId)}</li>`).join("")}</ul>`
+            ? `<p>${escapeHtml(location)} <sdp-copy text="${escapeHtml(location || record.id)}"></sdp-copy></p><ul>${record.bindings.map((binding) => `<li>${escapeHtml(binding.edge)} ${link(pagePath(binding.specId) ?? "", binding.specId)}</li>`).join("")}</ul>`
             : "";
         const entryList =
           entries.length === 0
             ? ""
-            : `<ul class="search-entries">${entries.map((entry) => `<li>${link(entryUrl(record, entry), entry.section)} <code>${escapeHtml(entry.key ?? entry.entry ?? "")}</code> · ${entry.line === null ? "line not recorded" : `line ${String(entry.line)}`} · ${escapeHtml(excerpt(entry.text, term))}</li>`).join("")}</ul>`;
-        return `<article class="search-result"><p>${nodeWords[record.nodeType]}</p><h2>${title}</h2><code>${escapeHtml(record.id)}</code>${descriptor}<p>Matched ${escapeHtml(matchedIn.join(", "))}</p>${unit}${entryList}</article>`;
+            : `<ul class="search-entries">${entries.map((entry) => `<li>${link(entryUrl(record, entry), entry.key ?? entry.entry ?? entry.section, `<code>${escapeHtml(entry.key ?? entry.entry ?? entry.section)}</code>`)} · ${escapeHtml(sectionTitle(entry.section))} · ${entry.line === null ? "line not recorded" : `line ${String(entry.line)}`} · ${escapeHtml(excerpt(entry.text, term))}</li>`).join("")}</ul>`;
+        return `<article class="search-result"><h2>${title}</h2><code>${escapeHtml(record.id)}</code>${descriptor}<p>Matched in: ${escapeHtml(matchedIn.map(fieldLabel).join(", "))}</p>${unit}${entryList}</article>`;
       })
       .join("")
   );
@@ -193,6 +220,9 @@ export function registerSearchResults(): void {
     private results?: HTMLDivElement;
     private more?: HTMLButtonElement;
     private status?: HTMLOutputElement;
+    private readonly onInput = (): void => {
+      this.setTerm(this.input?.value ?? "", true);
+    };
 
     private readonly onHash = (): void => {
       this.setTerm(searchTerm(this.ownerDocument.location.hash), false);
@@ -212,8 +242,15 @@ export function registerSearchResults(): void {
       const page = resultPage(hits, this.limit);
       if (this.results) this.results.innerHTML = renderResults(hits, this.term, this.limit);
       if (this.more) this.more.hidden = page.remaining === 0;
-      if (this.status)
-        this.status.textContent = `${String(page.shown.length)} of ${String(page.total)} nodes shown · ${String(page.entryTotal)} entries match`;
+      if (this.status) {
+        this.status.textContent =
+          this.term.trim().length === 0
+            ? "Type a word to search."
+            : hits.length === 0
+              ? `No node matches ${this.term}`
+              : `Showing ${String(page.shown.length)} of ${plural(page.total, "node")}`;
+        this.status.className = page.total > 50 ? "" : "visually-hidden";
+      }
     }
 
     connectedCallback(): void {
@@ -225,24 +262,26 @@ export function registerSearchResults(): void {
       } catch {
         this.index = { records: [] };
       }
-      if (!this.input) {
-        const form = this.ownerDocument.createElement("form");
-        const label = this.ownerDocument.createElement("label");
-        label.textContent = "Search the corpus ";
-        this.input = this.ownerDocument.createElement("input");
-        this.input.type = "search";
-        this.input.name = "q";
-        label.append(this.input);
-        const submit = button(this, "Search");
-        submit.type = "submit";
-        form.append(label, submit);
-        form.addEventListener("submit", (event) => {
-          event.preventDefault();
-          this.setTerm(this.input?.value ?? "", true);
-        });
-        this.input.addEventListener("input", () => {
-          this.setTerm(this.input?.value ?? "", true);
-        });
+      if (!this.results) {
+        this.input =
+          this.ownerDocument.querySelector<HTMLInputElement>('sdp-search input[name="q"]') ??
+          undefined;
+        const form = this.input ? undefined : this.ownerDocument.createElement("form");
+        if (form) {
+          const label = this.ownerDocument.createElement("label");
+          label.textContent = "Search the corpus ";
+          this.input = this.ownerDocument.createElement("input");
+          this.input.type = "search";
+          this.input.name = "q";
+          label.append(this.input);
+          const submit = button(this, "Search");
+          submit.type = "submit";
+          form.append(label, submit);
+          form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            this.setTerm(this.input?.value ?? "", true);
+          });
+        }
         this.results = this.ownerDocument.createElement("div");
         this.results.className = "search-results";
         this.more = button(this, "Show next fifty");
@@ -250,15 +289,17 @@ export function registerSearchResults(): void {
           this.limit += 50;
           this.render();
         });
-        this.replaceChildren(form);
+        this.replaceChildren(...(form ? [form] : []));
         this.status = liveOutput(this);
         this.append(this.results, this.more);
       }
+      this.input?.addEventListener("input", this.onInput);
       this.ownerDocument.defaultView?.addEventListener("hashchange", this.onHash);
       this.onHash();
     }
 
     disconnectedCallback(): void {
+      this.input?.removeEventListener("input", this.onInput);
       this.ownerDocument.defaultView?.removeEventListener("hashchange", this.onHash);
     }
   }

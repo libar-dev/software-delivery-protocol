@@ -15,10 +15,9 @@ import {
   railValues,
   searchIndex,
 } from "../src/projections/studio/data.js";
-import type { SearchEntry } from "../src/projections/studio/data.js";
 import { pagePath } from "../src/projections/studio/paths.js";
 import { createReader } from "../src/reader/reader.js";
-import type { Reader } from "../src/reader/reader.js";
+import { entryMatches } from "../src/studio-elements/search-results.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 
@@ -71,47 +70,6 @@ async function recipe<T>(
   return JSON.parse(capture.readStdout()) as T;
 }
 
-function tokens(text: string): string[] {
-  return text
-    .replace(/(\p{Lu}+)(\p{Lu}\p{Ll})/gu, "$1 $2")
-    .replace(/([\p{Ll}\p{N}])(\p{Lu})/gu, "$1 $2")
-    .toLowerCase()
-    .split(/[^\p{L}\p{N}]+/u)
-    .filter(Boolean);
-}
-
-function hits(text: string, term: string): boolean {
-  const wanted = tokens(term);
-  const found = tokens(text);
-  return (
-    wanted.length > 0 &&
-    found.some((_, start) => wanted.every((token, offset) => found[start + offset] === token))
-  );
-}
-
-// Recipe 23 matches non-string values by coined key only. Their original values remain in sections.
-function matching(entry: SearchEntry, term: string, reader: Reader, id: string): string[] {
-  let value: unknown =
-    entry.section === "narrative"
-      ? reader.specContext(id)?.narrative
-      : reader.specContext(id)?.sections?.[
-          entry.section as keyof NonNullable<ReturnType<Reader["specContext"]>>["sections"]
-        ];
-  for (const part of (entry.entry ?? "")
-    .replace(/\[(\d+)\]/gu, ".$1")
-    .split(".")
-    .filter(Boolean)) {
-    value =
-      typeof value === "object" && value !== null
-        ? (value as Record<string, unknown>)[part]
-        : undefined;
-  }
-  return [
-    ...(entry.key !== null && hits(entry.key, term) ? ["key"] : []),
-    ...(typeof value === "string" && hits(entry.text, term) ? ["text"] : []),
-  ];
-}
-
 describe.each(corpora)("Studio data over $name", (corpus) => {
   const reader = createReader(corpus.extracted.graph);
 
@@ -162,12 +120,14 @@ describe.each(corpora)("Studio data over $name", (corpus) => {
   it.each(["suffix", "rule", "type", "outcome", "order", "decision", "graphOnly"])(
     "matches recipe 23's exact rows for %s",
     async (term) => {
-      const answer = await recipe<{ matches: unknown[]; totals: { matches: number } }>(23, corpus, {
+      const answer = await recipe<{
+        matches: { matchedIn: string[] }[];
+        totals: { matches: number };
+      }>(23, corpus, {
         term,
       });
       const rows = searchIndex(reader).records.flatMap((record) =>
         record.entries.flatMap((entry) => {
-          const matchedIn = matching(entry, term, reader, record.id);
           const row = {
             section: entry.section,
             entry: entry.entry,
@@ -175,10 +135,15 @@ describe.each(corpora)("Studio data over $name", (corpus) => {
             line: entry.line,
             text: entry.text,
           };
-          return matchedIn.length === 0 ? [] : [{ id: record.id, ...row, matchedIn }];
+          return entryMatches(record, entry, term) ? [{ id: record.id, ...row }] : [];
         }),
       );
-      expect(rows.slice(0, 50)).toEqual(answer.matches);
+      expect(rows.slice(0, 50)).toEqual(
+        answer.matches.map(({ matchedIn, ...row }) => {
+          void matchedIn;
+          return row;
+        }),
+      );
       expect(rows.length).toBe(answer.totals.matches);
     },
   );

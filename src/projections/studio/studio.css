@@ -1,4 +1,4 @@
-/* The Studio keeps the reviewed prototype's palette and reading layout. */
+/* One hue in four lightness steps orders the rungs; each badge always carries its word. */
 
 :root {
   --bg: #fbfbfa;
@@ -197,16 +197,18 @@ button {
   margin: 0.2rem 0;
 }
 
-main {
-  min-width: 0;
+.rail a[aria-current="page"] {
+  font-weight: 650;
+  color: var(--text);
+  text-decoration: none;
 }
 
-.page-head .eyebrow {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+.rail a[aria-current="page"]::before {
+  content: "▸ ";
+}
+
+main {
+  min-width: 0;
 }
 
 h1 {
@@ -240,6 +242,22 @@ h3 {
   color: var(--muted);
 }
 
+.ids > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 100%;
+}
+
+.ids > span > code {
+  min-width: 0;
+}
+
+sdp-copy {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .summary {
   margin: 0;
   padding-left: 1.2rem;
@@ -247,17 +265,6 @@ h3 {
 
 .summary li {
   margin: 0.15rem 0;
-}
-
-.summary strong {
-  font-variant-numeric: tabular-nums;
-}
-
-.toolbar {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  margin: 0.4rem 0 0.8rem;
 }
 
 /* Rung badges and the other words that carry a status. */
@@ -299,22 +306,6 @@ h3 {
   color: var(--muted);
   font-size: 0.85rem;
   white-space: nowrap;
-}
-
-.kind {
-  font-size: 0.8rem;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
-.sep {
-  color: var(--muted);
-}
-
-.diverges {
-  background: var(--warn-bg);
-  color: var(--warn-text);
-  border-color: var(--warn-line);
 }
 
 /* Member cards. */
@@ -391,10 +382,6 @@ h3 {
 
 .units li {
   margin: 0.35rem 0;
-}
-
-.loc {
-  white-space: nowrap;
 }
 
 /* Sections that close: the boundary and the lists after the cards. */
@@ -633,9 +620,6 @@ sdp-copy output {
   .top input[type="search"] {
     min-width: 0;
     width: 100%;
-  }
-  .loc {
-    white-space: normal;
   }
   .rungs {
     white-space: normal;

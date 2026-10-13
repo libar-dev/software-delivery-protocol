@@ -43,7 +43,7 @@ function contains(value: unknown, needle: string, includeKeys: boolean): boolean
 /**
  * Ranks matches by the first field that matched, then by id using code-unit order.
  *
- * @sdpAnchor impl:studio.concept-match
+ * @sdpAnchor impl:protocol.studio-concept-match
  * @sdpSatisfies spec:consumers.spec-studio.search
  * @sdpComponent component:protocol.reader
  * @sdpRole utility

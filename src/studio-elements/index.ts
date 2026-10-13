@@ -10,7 +10,7 @@ import { registerStamp } from "./stamp.js";
  *
  * @sdpAnchor component:protocol.studio-elements
  * @sdpSatisfies spec:consumers.spec-studio.page-elements
- * @sdpUses component:protocol.reader
+ * @sdpUses component:protocol.reader, component:protocol.projections
  * @sdpLayer edge
  * @sdpContext protocol
  */

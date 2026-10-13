@@ -18,7 +18,7 @@ export function searchUrl(root: string, term: string): string {
 /**
  * Uses the page-root attribute when the native form submits.
  *
- * @sdpAnchor impl:studio.search-form
+ * @sdpAnchor impl:protocol.studio-search-form
  * @sdpSatisfies spec:consumers.spec-studio.page-elements
  * @sdpComponent component:protocol.studio-elements
  * @sdpRole utility

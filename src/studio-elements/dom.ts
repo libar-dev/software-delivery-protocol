@@ -18,10 +18,4 @@ export function button(host: HTMLElement, text: string): HTMLButtonElement {
   return control;
 }
 
-export function escapeHtml(value: string): string {
-  return value.replace(
-    /[&<>"']/gu,
-    (char) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char] ?? char,
-  );
-}
+export { escapeHtml } from "../projections/studio/pages/code-spans.js";

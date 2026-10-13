@@ -12,7 +12,7 @@ export function fragmentTarget(fragment: string): string | null {
 /**
  * Opens every enclosing details before scrolling to a fragment target.
  *
- * @sdpAnchor impl:studio.expander
+ * @sdpAnchor impl:protocol.studio-expander
  * @sdpSatisfies spec:consumers.spec-studio.page-elements
  * @sdpComponent component:protocol.studio-elements
  * @sdpRole utility

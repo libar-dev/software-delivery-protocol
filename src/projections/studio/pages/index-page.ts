@@ -2,6 +2,7 @@ import { SPEC_READINESS } from "../../../model/descriptors.js";
 import { badge, code, count, escape, findingList, link, present, rungLine } from "./html.js";
 import type { PageContext } from "./html.js";
 import { frame } from "./frame.js";
+import { codeSpans } from "./text.js";
 
 /**
  * Counts reader values and writes native Pack disclosures and filterable Spec rows.
@@ -18,7 +19,7 @@ export function indexPage(ctx: PageContext): string {
       (s.derivedReadiness === undefined ? -1 : SPEC_READINESS.indexOf(s.derivedReadiness)),
   ).length;
   const summary = [
-    `${count(specs.length, "Spec")} and ${count(packs.length, "Pack")} in this corpus.`,
+    `${count(specs.length, "Spec")} and ${count(packs.length, "Pack", "Packs", false)} in this corpus.`,
     ...SPEC_READINESS.map(
       (rung) =>
         `${count(specs.filter((s) => s.statedReadiness === rung).length, "Spec")} stated ${rung}.`,
@@ -30,15 +31,17 @@ export function indexPage(ctx: PageContext): string {
     )} and ${count(
       specs.reduce((n, s) => n + s.designColumns.blockingQuestions, 0),
       "blocking question",
+      "blocking questions",
+      false,
     )}.`,
-    `${count(specs.filter((s) => s.implementations.length > 0).length, "Spec")} with an implementation binding and ${count(specs.filter((s) => s.deliveryFacts.includes("has-verifier")).length, "Spec")} with a verifier binding.`,
-    `${count(findings.filter((f) => f.severity === "error").length, "error")} and ${count(findings.filter((f) => f.severity === "warning").length, "warning")}.`,
+    `${count(specs.filter((s) => s.implementations.length > 0).length, "Spec")} with an implementation binding and ${count(specs.filter((s) => s.deliveryFacts.includes("has-verifier")).length, "Spec", "Specs", false)} with a verifier binding.`,
+    `${count(findings.filter((f) => f.severity === "error").length, "error")} and ${count(findings.filter((f) => f.severity === "warning").length, "warning", "warnings", false)}.`,
   ];
   const rowValues = specs.map((spec) => ({
     kind: spec.specKind,
     altitude: spec.altitude,
     stated: spec.statedReadiness,
-    floor: spec.derivedReadiness ?? "not-reached",
+    floor: spec.derivedReadiness ?? "none",
     implementation: present(spec.implementations.length > 0),
     verifier: present(spec.deliveryFacts.includes("has-verifier")),
     pack: spec.packs.join(" "),
@@ -60,7 +63,15 @@ export function indexPage(ctx: PageContext): string {
             (row[name as keyof typeof row] || "").split(" ").filter(Boolean),
           ),
         ),
-      ].sort();
+      ].sort((a, b) =>
+        name === "stated" || name === "floor"
+          ? [...SPEC_READINESS, "none"].indexOf(a) - [...SPEC_READINESS, "none"].indexOf(b)
+          : a < b
+            ? -1
+            : a > b
+              ? 1
+              : 0,
+      );
       return `<label>${label}<select data-facet="${name}"><option value="any">Any</option>${values.map((v) => `<option value="${escape(v)}">${escape(v)}</option>`).join("")}</select></label>`;
     })
     .join("");
@@ -71,13 +82,13 @@ export function indexPage(ctx: PageContext): string {
           .map(([name, value]) => `data-${name}="${escape(value)}"`)
           .join(
             " ",
-          )}>${link(ctx, spec.id, spec.title ?? spec.id)} · ${code(spec.id)} · ${rungLine(spec.statedReadiness, spec.derivedReadiness)} · ${escape(spec.specKind)} · ${escape(spec.altitude)} · implementation binding ${present(spec.implementations.length > 0)} · verifier binding ${present(spec.deliveryFacts.includes("has-verifier"))} · ${String(spec.designColumns.openQuestions.length)} open, ${String(spec.designColumns.blockingQuestions)} blocking questions · Packs ${spec.packs.length === 0 ? "none" : spec.packs.map((id) => link(ctx, id)).join(", ")}</li>`,
+          )}>${link(ctx, spec.id, spec.title ?? spec.id, codeSpans(spec.title ?? spec.id))} · ${code(spec.id)} · ${rungLine(spec.statedReadiness, spec.derivedReadiness)} · ${escape(spec.specKind)} · ${escape(spec.altitude)} · implementation binding ${present(spec.implementations.length > 0)} · verifier binding ${present(spec.deliveryFacts.includes("has-verifier"))} · ${String(spec.designColumns.openQuestions.length)} open, ${String(spec.designColumns.blockingQuestions)} blocking questions · Packs ${spec.packs.length === 0 ? "none" : spec.packs.map((id) => link(ctx, id)).join(", ")}</li>`,
     )
     .join("");
   const packList = packs
     .map(
       ({ context: pack }) =>
-        `<details class="section"><summary>${link(ctx, pack.id, pack.title ?? pack.id)} · ${code(pack.id)} · ${count(pack.members.length, "member")}</summary><div class="section-body"><ol>${pack.members.map((m) => `<li>${link(ctx, m.id, m.title ?? m.id)} · ${m.resolved ? `${badge(m.statedReadiness)} · floor ${escape(m.derivedReadiness ?? "not reached")}` : "unresolved member"}</li>`).join("")}</ol></div></details>`,
+        `<details class="section"><summary>${codeSpans(pack.title ?? pack.id)} · ${code(pack.id)} · ${count(pack.members.length, "member")}</summary><div class="section-body"><p>${link(ctx, pack.id, "Read the Pack page")}</p><ol>${pack.members.map((m) => `<li>${link(ctx, m.id, m.title ?? m.id, codeSpans(m.title ?? m.id))} · ${m.resolved ? `${badge(m.statedReadiness)} · floor ${escape(m.derivedReadiness ?? "none")}` : "unresolved member"}</li>`).join("")}</ol></div></details>`,
     )
     .join("");
   return frame(

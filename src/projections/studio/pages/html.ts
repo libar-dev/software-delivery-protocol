@@ -30,8 +30,12 @@ export const location = (file?: string, line?: number): string =>
     ? "location not recorded"
     : `${file}${line === undefined ? "" : `:${String(line)}`}`;
 export const present = (value: boolean): string => (value ? "present" : "none");
-export const count = (n: number, singular: string, plural = `${singular}s`): string =>
-  `${n === 0 ? "No" : String(n)} ${n === 1 ? singular : plural}`;
+export const count = (
+  n: number,
+  singular: string,
+  plural = `${singular}s`,
+  opening = true,
+): string => `${n === 0 ? (opening ? "No" : "no") : String(n)} ${n === 1 ? singular : plural}`;
 export const badge = (rung?: string): string =>
   rung === undefined
     ? "stated rung not recorded"
@@ -45,18 +49,18 @@ export const list = (rows: readonly string[], className = "plain-list"): string 
 export const relative = (ctx: PageContext, path: string): string =>
   posix.relative(posix.dirname(ctx.path), path);
 
-export function link(ctx: PageContext, id: string, label = id): string {
+export function link(ctx: PageContext, id: string, label = id, htmlLabel = escape(label)): string {
   const [base = "", fragment] = id.split("#");
   const path = pagePath(base);
   const spec = ctx.data.specs.find((s) => s.id === base);
   const pack = ctx.data.packs.find((p) => p.context.id === base);
-  if (path === null || (!spec && !pack)) return escape(label);
+  if (path === null || (!spec && !pack)) return htmlLabel;
   if (
     fragment !== undefined &&
     !ctx.data.search.records.find((r) => r.id === base)?.entries.some((e) => e.address === id)
   )
-    return escape(label);
-  return `<a href="${escape(relative(ctx, path))}${fragment === undefined ? "" : `#${escape(fragment)}`}">${escape(label)}</a>`;
+    return htmlLabel;
+  return `<a href="${escape(relative(ctx, path))}${fragment === undefined ? "" : `#${escape(fragment)}`}">${htmlLabel}</a>`;
 }
 
 export function findingList(ctx: PageContext, rows: readonly Finding[]): string {

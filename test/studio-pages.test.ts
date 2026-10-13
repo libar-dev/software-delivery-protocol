@@ -39,7 +39,10 @@ const primitive = (id: string, changes: Partial<PrimitiveNode> = {}): PrimitiveN
   deliveryFacts: [],
   sections: {
     intent: { outcome: "Read the design" },
-    behavior: { rules: ["A rule"], examples: ["An example"] },
+    behavior: {
+      rules: ["A rule"],
+      examples: [{ given: ["Before"], when: ["Action"], then: ["After"] }],
+    },
   },
   ...changes,
 });
@@ -182,6 +185,12 @@ const decode = (s: string): string =>
     .replaceAll("&#39;", "'")
     .replaceAll("&lt;", "<")
     .replaceAll("&gt;", ">");
+const summaryItems = (page: string): string[] =>
+  [
+    ...(/<ul class="summary">(.*?)<\/ul>/su.exec(page)?.[1] ?? "").matchAll(/<li>(.*?)<\/li>/gsu),
+  ].map((m) => m[1] ?? "");
+const rail = (page: string): string =>
+  /<nav class="rail"[^>]*>(.*?)<\/nav>/su.exec(page)?.[1] ?? "";
 
 function checkLinks(set: readonly StudioPage[]): void {
   const byPath = new Map(set.map((page) => [page.path, page.content]));
@@ -261,10 +270,187 @@ describe("Studio static pages", () => {
     expect(pack.indexOf("Where the design stands")).toBeLessThan(pack.indexOf("<h2>Framing</h2>"));
     expect(pack).not.toContain("<h2>Holds</h2>");
     expect(pack).toContain("nothing blocks");
-    expect(pack).toContain("unmet clauses");
+    expect(pack).toMatch(/unmet clauses?/u);
     expect(pack).toContain('href="#spec:probe.dishonest"');
     expect(pack).toContain("No members with a design reference");
     expect(pack).toContain("manifest names an id the graph does not hold");
+    const summary = summaryItems(pack);
+    const held = data.packs[0]?.context.members.find((m) => m.id === "spec:probe.target");
+    expect(summary[1]).toContain('href="#spec:probe.target"');
+    expect(summary[1]).toContain(`(${String(held?.statedNextRungFailures?.length)} unmet clause`);
+    expect(summary[2]).toContain('href="#spec:probe.all"');
+  });
+  it("leaves member names out when every member waits only for its author", () => {
+    const all = primitive("spec:probe.waiting");
+    const waiting =
+      renderStudio(
+        createStudioData(
+          createReader({
+            schemaVersion,
+            nodes: [
+              all,
+              {
+                id: "pack:waiting",
+                nodeType: "Pack",
+                claim: "declared",
+                file: "waiting.pack.sdp.md",
+                members: [all.id],
+              },
+            ],
+            edges: [{ from: all.id, to: all.id, type: "dependsOn", claim: "declared" }],
+          }),
+        ),
+      ).find((p) => p.path === "packs/waiting.html")?.content ?? "";
+    expect(decode(summaryItems(waiting)[2] ?? "")).toBe(
+      "1 member waiting only for their author's statement.",
+    );
+    expect(summaryItems(waiting)[2]).not.toContain("href");
+  });
+  it("shows only the Spec's own Packs in its rail and every Pack on the index", () => {
+    const rendered = renderStudio(
+      createStudioData(
+        createReader({
+          ...probe,
+          nodes: [
+            ...probe.nodes,
+            {
+              id: "pack:other",
+              nodeType: "Pack",
+              claim: "declared",
+              title: "Other Pack",
+              file: "other.pack.sdp.md",
+              members: ["spec:probe.target"],
+            },
+          ],
+        }),
+      ),
+    );
+    expect(
+      rail(rendered.find((p) => p.path === "specs/probe.all.html")?.content ?? ""),
+    ).not.toContain("Other Pack");
+    expect(rail(rendered.find((p) => p.path === "index.html")?.content ?? "")).toContain(
+      "Other Pack",
+    );
+  });
+  it("asserts every index summary sentence including fact-based verifier counts", () => {
+    const verifier = data.specs.find((s) => s.id === "spec:probe.all")?.verifiers[0];
+    if (!verifier) throw new Error("Missing probe verifier");
+    const rendered = renderStudio({
+      ...data,
+      specs: data.specs.map((s) =>
+        s.id === "spec:probe.target"
+          ? {
+              ...s,
+              verifiers: [{ ...verifier, via: "example" as const, enabled: false }],
+            }
+          : s,
+      ),
+      findings: [
+        { family: "conformance", validatorId: "probe", severity: "error", message: "error" },
+        { family: "conformance", validatorId: "probe", severity: "warning", message: "warning" },
+        { family: "conformance", validatorId: "probe", severity: "warning", message: "warning" },
+      ],
+    });
+    expect(data.specs.find((s) => s.id === "spec:probe.all")?.verifiers).toHaveLength(1);
+    expect(
+      summaryItems(rendered.find((p) => p.path === "index.html")?.content ?? "").map(decode),
+    ).toEqual([
+      "3 Specs and 1 Pack in this corpus.",
+      "No Specs stated idea.",
+      "No Specs stated scoped.",
+      "2 Specs stated defined.",
+      "1 Spec stated ready.",
+      "2 Specs stated above their floor.",
+      "1 open question and no blocking questions.",
+      "1 Spec with an implementation binding and 1 Spec with a verifier binding.",
+      "1 error and 2 warnings.",
+    ]);
+  });
+  it("renders code spans in titles on every page and strips them in document titles", () => {
+    const title = "Use `safe <&>` with spec:probe.target";
+    const rendered = renderStudio(
+      createStudioData(
+        createReader({
+          ...probe,
+          nodes: probe.nodes.map((n) =>
+            n.id === "spec:probe.all" || n.id === "pack:probe" ? { ...n, title } : n,
+          ),
+        }),
+      ),
+    );
+    for (const path of ["specs/probe.all.html", "packs/probe.html", "index.html"]) {
+      const page = rendered.find((p) => p.path === path)?.content ?? "";
+      expect(page).toContain("Use <code>safe &lt;&amp;&gt;</code> with spec:probe.target");
+      expect(page).not.toContain("`safe");
+    }
+    expect(rendered.find((p) => p.path === "specs/probe.all.html")?.content).toContain(
+      "<title>Use safe &lt;&amp;&gt; with spec:probe.target · Spec Studio</title>",
+    );
+    expect(html("index.html")).toContain("<title>Spec Studio</title>");
+  });
+  it("orders rung filters by the ladder and uses none everywhere for an unmet idea floor", () => {
+    const graph: GraphSchema = {
+      schemaVersion,
+      nodes: [
+        ...["ready", "defined", "scoped", "idea"].map((readiness) =>
+          primitive(`spec:probe.${readiness}`, {
+            readiness: readiness as PrimitiveNode["readiness"],
+          }),
+        ),
+        primitive("spec:probe.empty", { title: "", sections: {} }),
+        {
+          id: "pack:empty",
+          nodeType: "Pack",
+          claim: "declared",
+          file: "empty.pack.sdp.md",
+          members: ["spec:probe.empty"],
+        },
+      ],
+      edges: ["ready", "defined", "scoped", "idea"].map((r) => ({
+        from: `spec:probe.${r}`,
+        to: `spec:probe.${r}`,
+        type: "dependsOn",
+        claim: "declared",
+      })),
+    };
+    const page =
+      renderStudio(createStudioData(createReader(graph))).find((p) => p.path === "index.html")
+        ?.content ?? "";
+    const options = (name: string) =>
+      [
+        ...(
+          new RegExp(`<select data-facet="${name}">(.*?)</select>`, "su").exec(page)?.[1] ?? ""
+        ).matchAll(/<option value="([^"]+)"/gu),
+      ].map((m) => m[1]);
+    expect(options("stated")).toEqual(["any", "idea", "scoped", "defined", "ready"]);
+    expect(options("floor")).toEqual(["any", "defined", "ready", "none"]);
+    expect(page).toContain('data-floor="none"');
+    expect(page).not.toMatch(/not-reached|not reached/u);
+  });
+  it("keeps navigation links outside Pack disclosure controls", () => {
+    const disclosure =
+      /<details class="section"><summary>(.*?)<\/summary><div class="section-body">(.*?)<\/div>/su.exec(
+        html("index.html"),
+      );
+    expect(disclosure?.[1]).not.toContain("<a");
+    expect(disclosure?.[2]).toMatch(/^<p><a href="packs\/probe.html"/u);
+  });
+  it("labels next rungs, UI and finding links and avoids repeating absent bindings", () => {
+    const all = html("spec:probe.all");
+    expect(all).toContain("Next rung ready: nothing blocks");
+    expect(all).toContain("<summary>UI</summary>");
+    for (const id of ["relations", "bindings", "findings"]) expect(all).toContain(`id="${id}"`);
+    expect(all).toContain('href="#findings">Findings:');
+    const absent = html("spec:probe.target");
+    expect(absent).not.toMatch(/binding: none<\/h3><p>None\./u);
+    const pack = html("pack:probe");
+    expect(pack).not.toMatch(/Verifier binding: none<\/h3><p>Verifier binding: none/u);
+    expect(pack).toContain("1 verifier, 1 enabled");
+    expect(pack).not.toMatch(
+      /1 unmet clauses|1 verifiers|1 verifying examples|and No |; No |· No /u,
+    );
+    expect(pack).toContain("Members with no verifier binding");
+    expect(pack).toContain("Decision records are left out");
   });
   it("renders Pack members in authored order, closed and with one colored badge per summary", () => {
     const pack = html("pack:probe");
@@ -284,7 +470,7 @@ describe("Studio static pages", () => {
     for (const name of ["Rests on", "Rested on by", "Verified by", "Superseded by"])
       expect(pack).toContain(name);
     expect(pack.match(/The graph records bindings and never runs/gu)).toHaveLength(1);
-    expect(pack).toContain("No verifier binding");
+    expect(pack).toContain("Members with no verifier binding");
     expect(pack).not.toContain("0 verifiers");
   });
   it("shows the stated rung beside its floor and warns only in the dishonest direction", () => {
@@ -382,6 +568,7 @@ describe("Studio static pages", () => {
   });
   it("links validator-readable escaped mentions and preserves unequal code delimiters", () => {
     const ctx = { data, path: "specs/probe.all.html" };
+    expect(text(ctx, "spec:probe.target#design.missing")).not.toContain("href");
     expect(text(ctx, "spec:probe.target\\#design.alpha")).toContain(
       'href="probe.target.html#design.alpha"',
     );

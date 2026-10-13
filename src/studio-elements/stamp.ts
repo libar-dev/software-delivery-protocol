@@ -17,7 +17,7 @@ export function stampText(stamp: unknown): string {
 /**
  * Checks the document's protocol before requesting the optional stamp.
  *
- * @sdpAnchor impl:studio.stamp
+ * @sdpAnchor impl:protocol.studio-stamp
  * @sdpSatisfies spec:consumers.spec-studio.page-elements
  * @sdpComponent component:protocol.studio-elements
  * @sdpRole utility

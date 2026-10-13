@@ -22,7 +22,7 @@ export async function copyText(
 /**
  * Falls back to a focused, selected textarea when clipboard access is unavailable.
  *
- * @sdpAnchor impl:studio.copy
+ * @sdpAnchor impl:protocol.studio-copy
  * @sdpSatisfies spec:consumers.spec-studio.page-elements
  * @sdpComponent component:protocol.studio-elements
  * @sdpRole utility
