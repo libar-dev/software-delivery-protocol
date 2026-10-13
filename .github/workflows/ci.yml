@@ -19,7 +19,11 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        # The check gate builds the package. Skip prepare here to avoid building it twice.
+        run: npm ci --ignore-scripts
 
       - name: Check
         run: npm run check
+
+      - name: Install the committed package
+        run: npm run check:git-install

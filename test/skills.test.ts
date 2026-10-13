@@ -765,6 +765,24 @@ describe("adopter rule meanings", () => {
   });
 });
 
+const readmeClauses = [
+  ["commit pin", /github:libar-dev\/software-delivery-protocol#<sha>/u],
+  ["npm script approval", /allowScripts/u],
+  ["npm git approval", /allow-git=root/u],
+  ["pnpm repository approval", /allowBuilds/u],
+  ["pnpm 10 exact approval", /onlyBuiltDependencies \(pnpm 10\)/u],
+  ["installed CLI check", /node_modules\/\.bin\/sdp --version/u],
+  ["recipe subject as params", /dist\/recipes\/25-address-resolution\.js\)" --params/u],
+] as const;
+
+describe("adopter install and upgrade guidance", () => {
+  it.each(readmeClauses)("the README teaches %s", (_clause, pattern) => {
+    const readme = readFileSync(join(repoRoot, "README.md"), "utf8");
+    // Keep underscores in executable paths while ignoring code spans and line wrapping.
+    expect(readme.replaceAll("`", "").replaceAll(/\s+/gu, " ")).toMatch(pattern);
+  });
+});
+
 function grammarProbe(section: string) {
   return parseMarkdownBody(
     `# Teaching probe\n\n${section}\n`,

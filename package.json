@@ -52,9 +52,11 @@
   },
   "scripts": {
     "build": "tsup",
+    "prepare": "npm run build 1>&2",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "typecheck:examples": "tsc --noEmit -p tsconfig.examples.json",
     "test": "node ./vitest-test.mjs",
+    "check:git-install": "node ./check-git-install.mjs",
     "test:watch": "vitest",
     "sdp": "node ./dist/cli/sdp.js",
     "sdp:q": "node ./dist/cli/sdp.js q --exclude explorations --exclude examples --exclude test/fixtures/import/parity",

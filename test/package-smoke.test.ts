@@ -184,11 +184,18 @@ describe("published package surface", () => {
     const consumer = join(packageRoot, "consumer");
 
     try {
-      run("npm", ["run", "build"], repositoryRoot);
-      const dryRun = JSON.parse(
-        run("npm", ["pack", "--dry-run", "--json"], repositoryRoot),
-      ) as readonly [{ readonly files: readonly { readonly path: string }[] }];
-      const dryRunPaths = dryRun[0].files.map((file) => file.path);
+      // npm ci or the check gate has built dist/. Reuse that build here; the separate git-install
+      // gate proves prepare from a clean commit without rebuilding inside the pooled suite.
+      const packed = JSON.parse(
+        run(
+          "npm",
+          ["pack", "--ignore-scripts", "--json", "--pack-destination", packageRoot],
+          repositoryRoot,
+        ),
+      ) as readonly [
+        { readonly filename: string; readonly files: readonly { readonly path: string }[] },
+      ];
+      const packedPaths = packed[0].files.map((file) => file.path);
       const adopterAssets = [
         "CONTEXT.md",
         ".agents/skills/sdp-agent-surface/SKILL.md",
@@ -204,9 +211,9 @@ describe("published package surface", () => {
         "docs/concept/DECISIONS.md",
       ];
 
-      expect(dryRunPaths).toEqual(expect.arrayContaining(packedAssets));
+      expect(packedPaths).toEqual(expect.arrayContaining(packedAssets));
       expect(
-        dryRunPaths.filter(
+        packedPaths.filter(
           (path) =>
             !["LICENSE", "README.md", "package.json", ...packedAssets].includes(path) &&
             !path.startsWith("dist/") &&
@@ -227,21 +234,14 @@ describe("published package surface", () => {
         }
       };
       await walkCarriers("specs");
-      expect(dryRunPaths.filter((path) => path.startsWith("specs/")).sort()).toEqual(
+      expect(packedPaths.filter((path) => path.startsWith("specs/")).sort()).toEqual(
         carrierPaths.sort(),
       );
       expect(
-        dryRunPaths.filter((path) => !path.startsWith("dist/") && /\.tsx?$/u.test(path)),
+        packedPaths.filter((path) => !path.startsWith("dist/") && /\.tsx?$/u.test(path)),
       ).toEqual([]);
 
-      run("npm", ["pack", "--pack-destination", packageRoot], repositoryRoot);
-
-      const tarballs = await readdir(packageRoot);
-      const tarball = tarballs.find((entry) => entry.endsWith(".tgz"));
-
-      if (tarball === undefined) {
-        throw new Error("npm pack did not create a tarball.");
-      }
+      const tarball = packed[0].filename;
 
       await mkdir(consumer);
       await writeFile(
