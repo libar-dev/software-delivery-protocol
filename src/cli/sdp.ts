@@ -19,6 +19,8 @@ import { defaultCliOutput, errorMessage, writeStderr, writeStdout } from "./outp
 import type { CliOutput } from "./output.js";
 import { parseQueryArgs, runQuery } from "./q-command.js";
 import type { QueryHooks } from "./q-command.js";
+import { runStudio } from "./studio-command.js";
+import type { StudioHooks } from "./studio-command.js";
 import { runValidateWatch } from "./validate-watch.js";
 import type { ValidateWatchHooks } from "./validate-watch.js";
 import { runValidate, runView } from "./validate-view-command.js";
@@ -40,6 +42,7 @@ Usage:
   sdp census [root] [--exclude PATH]... [--check-clean]
   sdp mermaid [root] [--exclude PATH]... [--check-clean]
   sdp gherkin [root] [--exclude PATH]... [--check-clean]
+  sdp studio [root] [--exclude PATH]... [--check-clean]
   sdp import <path...> [--dry-run]
   sdp new spec PATH --id ID --kind KIND --altitude ALT --title TITLE --outcome OUTCOME
   sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--params JSON | --params @PATH | --params KEY=@PATH]... [--json]
@@ -81,6 +84,9 @@ Commands:
              <root>/generated/gherkin/ as a separate wholesale tmp-to-rename projection. The
              pages are disposable and never use .sdp.gherkin. --check-clean independently
              re-renders and refuses when the published bytes differ from the current projection.
+  studio     validate, then publish static Studio pages into <root>/generated/spec-studio/.
+             Findings remain visible; exit code follows validate. --check-clean independently
+             re-renders and refuses missing or drifted output. Pages open through file://.
   import     Convert one or more *.sdp.ts files or recursively scanned roots to write-beside
              *.sdp.md documents. The TypeScript source is never deleted. --dry-run writes
              each would-be document to stdout, headed by its target path, without writing.
@@ -135,7 +141,8 @@ Agent skills and reference:
 /** Reads one file the package ships, by URL; `sdp --version` reads through it. */
 export type EngineFileReader = (url: URL) => string;
 
-interface CliHooks extends CensusHooks, MermaidHooks, GherkinViewHooks, ValidateWatchHooks {
+interface CliHooks
+  extends CensusHooks, MermaidHooks, GherkinViewHooks, ValidateWatchHooks, StudioHooks {
   readonly import?: ImportHooks;
   readonly query?: QueryHooks;
   readonly readEngineFile?: EngineFileReader;
@@ -230,6 +237,7 @@ export function runSdpCli(
     command !== "census" &&
     command !== "mermaid" &&
     command !== "gherkin" &&
+    command !== "studio" &&
     command !== "import" &&
     command !== "new" &&
     command !== "q"
@@ -307,6 +315,10 @@ export function runSdpCli(
 
   if (command === "census") {
     return runCensus(parsed, output, hooks);
+  }
+
+  if (command === "studio") {
+    return runStudio(parsed, output, hooks);
   }
 
   return command === "mermaid"

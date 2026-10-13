@@ -213,6 +213,13 @@ function readRegistrarManifest(path: string, root: string, rootReal: string): re
  * @sdpComponent component:protocol.cli
  * @sdpRole publisher
  */
+/**
+ * @sdpAnchor impl:protocol.studio-build-invalidation
+ * @sdpLabel removes the Studio root and temporary sibling before shared extraction
+ * @sdpSatisfies spec:consumers.spec-studio.publisher
+ * @sdpComponent component:protocol.cli
+ * @sdpRole service
+ */
 const wholesaleViewBuildInvalidationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.wholesale-view-build-invalidation"),
   label: "invalidates the prior Design Review before every build attempt",
@@ -273,6 +280,7 @@ export function runBuild(
     join(resolvedRoot, "generated", "census"),
     join(resolvedRoot, "generated", "mermaid"),
     join(resolvedRoot, "generated", "gherkin"),
+    join(resolvedRoot, "generated", "spec-studio"),
   ];
 
   const failBuild = (message: string): BuildOutcome => {
