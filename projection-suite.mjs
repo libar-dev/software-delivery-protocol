@@ -7,6 +7,7 @@ const projectionCommands = [
   ["census", "census"],
   ["mermaid", "mermaid"],
   ["gherkin", "gherkin"],
+  ["studio", "spec-studio"],
 ];
 
 const argv = process.argv.slice(2);

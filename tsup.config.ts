@@ -1,4 +1,5 @@
 import { defineConfig } from "tsup";
+import { copyFileSync } from "node:fs";
 
 import { RECIPES_DIRECTORY, writeBuildArtifacts } from "./src/cli/build-artifacts.js";
 import { BUILD_INFO_FILE } from "./src/cli/build-info.js";
@@ -53,5 +54,9 @@ export default defineConfig([
     clean: true,
     splitting: false,
     outDir: "dist/studio",
+    onSuccess: () => {
+      copyFileSync("src/projections/studio/studio.css", "dist/studio/studio.css");
+      return Promise.resolve();
+    },
   },
 ]);

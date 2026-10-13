@@ -232,6 +232,7 @@ describe("Studio page interactions", () => {
   });
 
   it("requests a stamp only over HTTP and HTTPS and shows only its text fields", () => {
+    const builtAt = new Date(0).toISOString();
     expect(stampUrl("file:", "../")).toBeNull();
     expect(stampUrl("data:", "")).toBeNull();
     expect(stampUrl("https:", "../")).toBe("../stamp.json");
@@ -241,9 +242,9 @@ describe("Studio page interactions", () => {
         schemaVersion: "1",
         corpusCommit: "abc",
         engine: "sdp 0.0.0",
-        builtAt: "2026-01-01T00:00:00Z",
+        builtAt,
       }),
-    ).toBe("Corpus abc · sdp 0.0.0 · Built 2026-01-01T00:00:00Z");
+    ).toBe(`Corpus abc · sdp 0.0.0 · Built ${builtAt}`);
     expect(stampText({ corpusCommit: 4 })).toBe("");
   });
 

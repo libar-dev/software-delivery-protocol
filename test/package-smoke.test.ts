@@ -75,6 +75,7 @@ const expectedRootExports = [
   "kindEvidence",
   "machineToken",
   "matchConcept",
+  "mentionTokens",
   "MarkdownEmissionError",
   "mermaidToken",
   "oracleAnchorId",
