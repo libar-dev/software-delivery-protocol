@@ -1,4 +1,4 @@
-import type { Finding } from "../validate/contracts.js";
+import type { CorpusFinding, Finding } from "../validate/contracts.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 
@@ -29,7 +29,7 @@ const diagnosticCliAnchor = codeAnchor({
 });
 void diagnosticCliAnchor;
 
-export function formatFinding(finding: Finding): string {
+export function formatFinding(finding: Finding | CorpusFinding): string {
   const location =
     finding.file === undefined
       ? ""

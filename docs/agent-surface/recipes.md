@@ -43,6 +43,8 @@
 | 39 | Slimming candidates | pack | Compare pinned declarations with bound code |
 | 40 | Curation report | imports, limit | Find curation gaps from file imports |
 | 41 | The key-family register | prefixes, pack or specs | List a key family's entries |
+| 42 | The architecture walk | forbidden, isolated, severity | Check anchored architecture rules |
+| 43 | Planned against realized components | none | Compare component designs with anchors |
 
 Runnable bodies for the agent front door. Each recipe below is a body you can pass verbatim to
 `sdp q`, unchanged. In the Protocol source checkout, pass one to the repository wrapper:
@@ -4012,3 +4014,142 @@ The answer is `{ prefixes, scope, totals: { rows, specs, byPrefix }, rows }`, ea
 `{ key, spec, section, value, file, line }`, with `line` null when the location table records none.
 `byPrefix` counts a key under every prefix it matches. The law is
 `spec:consumers.agent-surface.register-recipes`.
+
+## 42. The architecture walk
+
+*When you need this: check forbidden layer directions and isolated contexts against anchored uses.*
+
+Pass `params.forbidden` as layer pairs `{ from, to }`, `params.isolated` as context tokens, or
+both. `params.severity` defaults to `error`. An empty list checks nothing for that form. Missing
+attributes appear in `unclassified`; they are curation gaps. With neither list, the answer gives
+diagnostics. The same shipped body runs as an operator-selected rules file:
+
+```sh
+pnpm --silent sdp validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --rules dist/recipes/42-the-architecture-walk.js --params '{"forbidden":[{"from":"domain","to":"infrastructure"}]}'
+```
+
+```js
+const accepts = ["forbidden", "isolated", "severity"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const layers = ["edge", "application", "domain", "adapter", "infrastructure"];
+const token = /^[a-z][a-z0-9-]*$/u;
+const diagnostics = [];
+if (params.forbidden === undefined && params.isolated === undefined) diagnostics.push("Supply params.forbidden or params.isolated.");
+const forbidden = params.forbidden === undefined ? [] : params.forbidden;
+const isolated = params.isolated === undefined ? [] : params.isolated;
+const severity = params.severity ?? "error";
+if (!Array.isArray(forbidden) || forbidden.some((pair) => !pair || typeof pair !== "object" || !layers.includes(pair.from) || !layers.includes(pair.to))) diagnostics.push("forbidden must be a list of { from, to } pairs of layers.");
+if (!Array.isArray(isolated) || isolated.some((context) => typeof context !== "string" || !token.test(context))) diagnostics.push("isolated must be a list of lowercase kebab context tokens.");
+if (params.severity !== undefined && params.severity !== "error" && params.severity !== "warning") diagnostics.push("severity must be error or warning.");
+if (diagnostics.length > 0) return { diagnostics };
+const pairs = [...new Map(forbidden.map(({from, to}) => [`${from}:${to}`, {from, to}])).values()];
+const contexts = [...new Set(isolated)];
+const components = new Map(graph.nodes.filter((node) => node.nodeType === "CodeNode" && node.claim === "anchored" && node.id.startsWith("component:")).map((node) => [node.id, node]));
+const membership = new Map(graph.edges.filter((edge) => edge.type === "memberOf" && edge.claim === "anchored").map((edge) => [edge.from, edge.to]));
+const componentOf = (id) => components.get(id) ?? components.get(membership.get(id));
+const summary = (node) => node ? { id: node.id, layer: node.layer ?? null, context: node.context ?? null } : null;
+const uses = graph.edges.filter((edge) => edge.type === "uses" && edge.claim === "anchored");
+const findings = [], unclassified = [];
+let resolved = 0;
+for (const { from, to } of uses) {
+  const a = componentOf(from), b = componentOf(to);
+  if (a && b) resolved++;
+  const fromComponent = summary(a), toComponent = summary(b);
+  if (!a || !b) {
+    if (pairs.length > 0 || contexts.length > 0) unclassified.push({ from, to, fromComponent, toComponent, missing: ["component"] });
+    continue;
+  }
+  if (a.id === b.id) continue;
+  const missing = [];
+  if (pairs.length > 0 && (a.layer === undefined || b.layer === undefined)) missing.push("layer");
+  if (contexts.length > 0 && (a.context === undefined || b.context === undefined)) missing.push("context");
+  if (missing.length > 0) unclassified.push({ from, to, fromComponent, toComponent, missing });
+  const base = { subjectId: from, relatedId: to, severity, from, to, fromComponent, toComponent };
+  for (const rule of pairs) {
+    if (a.layer === rule.from && b.layer === rule.to) findings.push({ ...base, validatorId: "forbidden-layer", rule,
+      message: `${from} uses ${to}: layer ${a.layer} uses layer ${b.layer} (${a.id} to ${b.id}), a forbidden pair` });
+  }
+  if (contexts.includes(a.context) && b.context !== undefined && a.context !== b.context) findings.push({ ...base, validatorId: "isolated-context", rule: { context: a.context },
+    message: `${from} uses ${to}: ${a.id} in the isolated context ${a.context} uses ${b.id} in the context ${b.context}` });
+}
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+findings.sort((a, b) => compare(a.from, b.from) || compare(a.to, b.to) || compare(a.validatorId, b.validatorId));
+unclassified.sort((a, b) => compare(a.from, b.from) || compare(a.to, b.to));
+return { input: { forbidden: pairs, isolated: contexts, severity }, totals: { usesEdges: uses.length, resolved, findings: findings.length, unclassified: unclassified.length }, findings, unclassified };
+```
+
+Findings retain both units, both component attributes and the rule breached. The runner prints the
+shared finding fields. The law is `spec:validation.architecture-constraints`.
+
+## 43. Planned against realized components
+
+*When you need this: compare component designs with the anchors that realize them.*
+
+This recipe takes no parameters. It selects Specs whose Design `id` names a component, then reads
+only the keys the design states. A bare value or an opening code span carries the machine value;
+prose after the span explains it. `uses: none` states an empty set. An omitted `uses` stays null.
+
+```js
+const accepts = [];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const read = (value) => typeof value === "string" ? (/^`([^`]+)`/u.exec(value)?.[1] ?? value).trim() : null;
+const componentId = /^component:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*$/u;
+const token = /^[a-z][a-z0-9-]*$/u;
+const layers = ["edge", "application", "domain", "adapter", "infrastructure"];
+const components = new Map(graph.nodes.filter((node) => node.nodeType === "CodeNode" && node.claim === "anchored" && node.id.startsWith("component:")).map((node) => [node.id, node]));
+const membership = new Map(graph.edges.filter((edge) => edge.type === "memberOf" && edge.claim === "anchored").map((edge) => [edge.from, edge.to]));
+const componentOf = (id) => components.get(id) ?? components.get(membership.get(id));
+const uses = graph.edges.filter((edge) => edge.type === "uses" && edge.claim === "anchored");
+const designs = graph.nodes.filter((node) => node.nodeType === "Primitive" && componentId.test(read(node.sections?.design?.id) ?? ""));
+const unrealized = [], differing = [], unreadable = [];
+let realizedCount = 0, matching = 0;
+for (const spec of designs) {
+  const entries = spec.sections.design;
+  const id = read(entries.id);
+  const planned = { layer: null, context: null, role: null, uses: null };
+  const invalid = new Set();
+  for (const key of ["layer", "context", "role", "uses"]) {
+    if (entries[key] === undefined) continue;
+    const value = read(entries[key]);
+    let valid;
+    if (key === "uses") {
+      const ids = value === "none" ? [] : value?.split(",").map((item) => item.trim());
+      valid = ids !== undefined && ids.every((item) => componentId.test(item));
+      if (valid) planned.uses = [...new Set(ids)].sort(compare);
+    } else {
+      valid = value !== null && (key === "layer" ? layers.includes(value) : token.test(value));
+      if (valid) planned[key] = value;
+    }
+    if (!valid) { invalid.add(key); unreadable.push({ spec: spec.id, key, value: entries[key] }); }
+  }
+  const anchor = components.get(id);
+  const realized = anchor && graph.edges.some((edge) => edge.type === "satisfies" && edge.claim === "anchored" && edge.from === id && edge.to === spec.id);
+  if (!realized) { unrealized.push({ spec: spec.id, componentId: id, anchorExists: Boolean(anchor), ...planned }); continue; }
+  realizedCount++;
+  const before = differing.length;
+  for (const field of ["layer", "context", "role", "uses"]) {
+    if (entries[field] === undefined || invalid.has(field)) continue;
+    if (field === "uses") {
+      const actual = new Set(uses.filter((edge) => componentOf(edge.from)?.id === id).map((edge) => componentOf(edge.to)?.id).filter((target) => target !== undefined && target !== id));
+      const plannedOnly = planned.uses.filter((target) => !actual.has(target));
+      const realizedOnly = [...actual].filter((target) => !planned.uses.includes(target)).sort(compare);
+      if (plannedOnly.length > 0 || realizedOnly.length > 0) differing.push({ spec: spec.id, componentId: id, field, planned: plannedOnly, realized: realizedOnly });
+    } else {
+      const actual = anchor[field] ?? null;
+      if (planned[field] !== actual) differing.push({ spec: spec.id, componentId: id, field, planned: planned[field], realized: actual });
+    }
+  }
+  if (differing.length === before && invalid.size === 0) matching++;
+}
+unrealized.sort((a, b) => compare(a.spec, b.spec));
+differing.sort((a, b) => compare(a.spec, b.spec) || compare(a.field, b.field));
+unreadable.sort((a, b) => compare(a.spec, b.spec) || compare(a.key, b.key));
+return { totals: { designs: designs.length, realized: realizedCount, matching, unrealized: unrealized.length, differing: differing.length, unreadable: unreadable.length }, unrealized, differing, unreadable };
+```
+
+An anchor without an anchored `satisfies` edge stays unrealized. `differing` counts rows; `matching`
+counts realized designs with neither differences nor unreadable fields. The law is
+`spec:model.planned-architecture`.

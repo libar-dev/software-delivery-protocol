@@ -53,3 +53,17 @@ export interface Validator<TInput = GraphSchema> {
   readonly family: ValidatorFamily;
   validate(input: TInput): ValidationReport;
 }
+
+/** Corpus rules share diagnostic fields without joining a Protocol validator family. */
+export interface CorpusFinding extends Omit<Finding, "family" | "subjectId"> {
+  readonly rulesFile: string;
+  readonly subjectId: string;
+}
+export interface CorpusFailure {
+  readonly rulesFile: string;
+  readonly reason: string;
+}
+export interface CorpusValidationReport extends ValidationReport {
+  readonly corpusFindings: readonly CorpusFinding[];
+  readonly corpusFailures: readonly CorpusFailure[];
+}

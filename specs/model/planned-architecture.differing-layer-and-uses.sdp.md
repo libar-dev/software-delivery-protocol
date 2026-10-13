@@ -2,7 +2,7 @@
 id: spec:model.planned-architecture.differing-layer-and-uses
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.planned-architecture
   verifies: spec:model.planned-architecture
