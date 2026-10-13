@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.responsive
 kind: behavior
 altitude: story
-readiness: scoped
+readiness: defined
 relations:
   refines: spec:consumers.spec-studio
   dependsOn: spec:extraction.claim-taxonomy

@@ -2,7 +2,7 @@
 id: spec:validation.corpus-rules
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   dependsOn:
     - spec:consumers.agent-surface

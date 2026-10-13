@@ -69,10 +69,45 @@ review.
 | The provisional answers on the Studio's Specs stand, `spec-page#sourceLinks` among them; phase 0 has no AI slices | `pack:spec-studio-v1` |
 | The vault is its own projection, not the Studio's local half, and waits for a reader | `spec:consumers.obsidian-vault` |
 
+## Rulings after wave 1
+
+Wave 1 merged at `af30233`. Each design pass was reviewed across model families (B by gpt-6-sol;
+S by gpt-6-sol and Fable 5.1; L and P by Opus 5.5) and fixed before the main thread ruled. These
+rulings were delegated, and each awaits the owner's review.
+
+| Ruling | Carrying Spec |
+| --- | --- |
+| A cut entry without an entry address keeps only `{ line }`; its row and its place in the bundle name the rest | `spec:consumers.context-bundle#design.pointer` |
+| A parameter name a recipe does not take replaces the whole answer with `{ unknownParams, accepts }` | `spec:consumers.agent-surface.recipe-parameters#rule.unknownNames` |
+| A rules file is one `sdp q` body returning `{ findings }`, so a recipe that returns findings is a rules file as shipped | `spec:validation.corpus-rules#design.ruleAnswer` |
+| A rule id is one kebab token, never a Protocol validator id; a corpus finding names its rule and rules file | `spec:validation.corpus-rules#design.ruleFinding` |
+| Each `--params` belongs to the `--rules` before it; each file gets its own copy of the graph and report; one path named twice is refused | `spec:validation.corpus-rules#design.paramsFlag` |
+| `validate` exits 1 on any Protocol error, corpus error or failed rules file; the two summary lines say which | `spec:validation.corpus-rules#design.exitCodes` |
+| Under `--watch`, rules files are read again each cycle; editing one does not start a cycle | `spec:validation.corpus-rules#rule.watchReruns` |
+| A component design states an empty `uses` as `none` | `spec:model.planned-architecture#design.designKeys` |
+| The Studio publishes static pages that read without script, except search; elements only enhance | `spec:consumers.spec-studio#rule.staticPageSet` |
+| Search lives on one page that embeds the index and shares `findByConcept`'s matcher, adding coined keys and file paths | `spec:consumers.spec-studio.search` |
+| A Pack page leads with its computed summary, folds the holds into it, and gives each card one colored badge | `spec:consumers.spec-studio.pack-page` |
+| The fifth reader task passes when the reader finds whether a verifier is bound, since the platform binds none there | `spec:consumers.spec-studio` |
+| The Studio joins the repository's projection suite; element tests run under Node without a DOM library | `spec:consumers.spec-studio.publisher` |
+
+Stated on the same delegation, each at the floor recipe 9 reported: `ready` for corpus rules,
+architecture constraints, planned architecture, and the Studio's data, shell, search, publisher,
+index page, Pack page, Spec page core and page elements; `defined` for the Studio's lenses, Spec
+page, components and responsive layout. Their build lands in wave 2; until then each `ready` one
+reports an honest verifier gap.
+
+Wave 2 runs in parallel: an integration pass (the oracle, the shared skills and the line a
+mention in a rule loses), the corpus-checks build, the Studio's data and verb beside its elements
+and then its pages, and lane E's first half, which moves the platform to this commit. Lane E's
+second half follows the builds: rules files and the Studio on the platform.
+
 ## Deferred, with their triggers
 
 | Item | Comes back when |
 | --- | --- |
+| A context bundle for the platform's application and foundation Packs, which stay over budget after every cut | A design pass needs either Pack whole; until then, read them through a perspective (recipe 37) |
+| Watching rules files under `--watch` | An author asks for a rerun on editing a rules file |
 | Run evidence | The platform's CI writes CTRF for its native tier, or the Studio's verification panels open |
 | Example-space coverage | A design pass asks which slot values no example exercises |
 | The Obsidian vault | A reader asks for it after the Studio's phase 0 ships |

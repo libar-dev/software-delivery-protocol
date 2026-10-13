@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.components
 kind: contract
 altitude: story
-readiness: scoped
+readiness: defined
 relations:
   refines: spec:consumers.spec-studio
   dependsOn: spec:consumers.spec-studio.data

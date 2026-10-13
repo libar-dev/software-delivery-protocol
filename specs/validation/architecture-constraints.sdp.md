@@ -2,7 +2,7 @@
 id: spec:validation.architecture-constraints
 kind: rule
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   dependsOn:
     - spec:model.anchors

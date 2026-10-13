@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.publisher
 kind: behavior
 altitude: story
-readiness: idea
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio
   dependsOn:

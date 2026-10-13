@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.page-elements
 kind: contract
 altitude: story
-readiness: idea
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio.components
   dependsOn:

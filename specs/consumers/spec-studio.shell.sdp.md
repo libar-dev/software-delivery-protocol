@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.shell
 kind: behavior
 altitude: story
-readiness: scoped
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio
   dependsOn:

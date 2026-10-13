@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.index-page
 kind: behavior
 altitude: story
-readiness: idea
+readiness: ready
 relations:
   refines:
     target: spec:consumers.spec-studio.lenses

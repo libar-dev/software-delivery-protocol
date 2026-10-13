@@ -2,7 +2,7 @@
 id: spec:model.planned-architecture
 kind: model
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   dependsOn:
     target: spec:model.anchors
