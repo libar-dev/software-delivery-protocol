@@ -314,8 +314,8 @@ to run. Development is terminal-driven. Node ≥ 20 (Node 22 is installed); depe
 the committed `package-lock.json` (npm is the lockfile-native package manager; `pnpm` scripts also
 work, but never a bare `sdp`).
 
-The startup update script only refreshes dependencies (`npm ci`). It does **not** build, so on a
-fresh pod you must run `npm run build` before the `sdp` CLI (`dist/cli/sdp.js`) exists.
+`npm ci` builds the package through its `prepare` script. CI installs with `--ignore-scripts`
+and builds in `npm run check`. `npm run check:git-install` checks installation from a commit.
 
 Non-obvious gotcha: `npm test` refuses to run until the generated contracts exist and errors with
 "Generated contracts required by the selected test suite are missing." Build and generate first:

@@ -201,7 +201,8 @@ so it needs no extra tag, status key, or side table.
   passed; pass and fail stay in CI. Author no checked or verified status.
 - Derive a count, a register, or a review scope each time you need it: census counts from
   `sdp census`, open questions from recipe 20, one Spec's dependencies from recipe 21, prose
-  mentions from recipe 22, and a change's review scope from changed-file blast radius (recipe 4).
+  mentions from recipe 22, a family of Design and UI keys from the key-family register (recipe 41),
+  and a change's review scope from changed-file blast radius (recipe 4).
   In prose, name the recipe and leave the number out.
 
 `sdp validate` checks these homes and nothing your project adds. Keep a project policy, such as a
