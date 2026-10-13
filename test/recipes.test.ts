@@ -457,7 +457,9 @@ describe("the agent-surface recipe corpus", () => {
 
     // A parameter is data on `--params`, never source spliced into a body, and no recipe reads
     // the environment. The intro teaches exactly that and names no retired channel.
-    expect(introProse).toContain("Pass it as JSON data with `--params`, never by editing the body");
+    expect(introProse).toContain(
+      "Pass parameters as JSON data with `--params`, never by editing the body",
+    );
     expect(source).not.toContain("SDP_CHANGED_FILES_JSON");
     for (const recipe of recipes) {
       expect({ recipe: recipe.ordinal, env: recipe.body.includes("process.env") }).toEqual({

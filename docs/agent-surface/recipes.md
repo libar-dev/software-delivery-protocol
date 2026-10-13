@@ -82,8 +82,9 @@ repeatable for root-relative path prefixes. `PATH` is a placeholder, not a liter
 
 Recipes read their documented input from `params`: Spec or component ids, changed files, Pack
 ids, search terms, Spec or address lists, base graphs, proposals, perspectives, imports objects,
-budgets and detail selections. Each recipe declares its accepted parameter names before reading its input. A name it does not take returns only `{ unknownParams, accepts }`, with exit 0. Pass it as JSON data with
-`--params`, never by editing the body:
+budgets and detail selections. Each recipe declares the parameter names it takes before reading its
+input; a name it does not take returns only `{ unknownParams, accepts }`, with exit 0.
+Pass parameters as JSON data with `--params`, never by editing the body:
 
 ```sh
 pnpm --silent sdp:q '<body>' --params '{"spec":"spec:model.anchors"}' --json
@@ -119,7 +120,9 @@ pnpm --silent sdp:q "$(cat dist/recipes/25-address-resolution.js)" --params @add
 This catalog stays the one owner of the bodies. The files are derived from it, and the recipe
 check holds each one byte for byte to its body here.
 
-To filter a shipped answer, wrap its body in an async arrow function and return the part you need. Give the inner body only its own parameters, so an outer caller's parameters do not become unknown names in the recipe:
+To filter a shipped answer, wrap its body in an async arrow function and return the part you need.
+Give the inner body only its own parameters, so an outer caller's parameters do not become unknown
+names in the recipe:
 
 ```sh
 pnpm --silent sdp:q "$(printf '%s\n' 'const answer = await (async (params) => {'; cat dist/recipes/33-the-design-backlog.js; printf '%s\n' '})({});' 'return answer.rows.filter((row) => row.specKind === "behavior");')" --json
@@ -3110,7 +3113,9 @@ with a budget and an account of what was left out.*
 Supply exactly one scope: `params.pack`, a Pack id, or `params.specs`, an ordered list of Spec ids.
 `params.members` optionally narrows a Pack to an ordered subset, such as the member ids recipe 37
 returns. The Pack's framing and full boundary stay visible. `params.budget` defaults to 100,000
-UTF-16 code units and accepts a non-negative integer, including zero. `params.declarations` defaults to `"whole"`; `"addresses"` allows the final cut to reduce pinned declarations to entry addresses. Any other value returns diagnostics. There is no sample scope.
+UTF-16 code units and accepts a non-negative integer, including zero. `params.declarations` defaults
+to `"whole"`; `"addresses"` allows the final cut to reduce pinned declarations to entry addresses.
+Any other value returns diagnostics. There is no sample scope.
 
 ```js
 const accepts = ["pack", "specs", "members", "budget", "declarations"];
@@ -3948,12 +3953,17 @@ imports are inferred. Every mismatch and ranking is advice; the body changes not
 finding enters validation. Bad parameters are input errors, not curation findings. The law is
 `spec:consumers.impact-graph.curation-assist`.
 
-
 ## 41. The key-family register
 
-*When you need this: you want a corpus's keyed values, such as limits, error messages or storage tables, as a register derived each time you read it.*
+*When you need this: you want a corpus's keyed values, such as limits, error messages or storage
+tables, as a register derived each time you read it.*
 
-`params.prefixes` is a non-empty list of unique non-empty strings, matched case-sensitively against the start of each Design or UI key. It defaults to `["finding", "impact"]`. Pass at most one scope, `params.pack` or `params.specs`; without either, the register reads the corpus. A repeated Spec id is read once. Rule, flow and question keys and `description` are left out. Rows have no cap and sort by key, Spec id and section in code-unit order. A malformed prefix list or scope returns only `{ diagnostics: [{ parameter, problem }] }`.
+`params.prefixes` is a non-empty list of unique non-empty strings, matched case-sensitively against
+the start of each Design or UI key. It defaults to `["finding", "impact"]`. Pass at most one scope,
+`params.pack` or `params.specs`; without either, the register reads the corpus. A repeated Spec id
+is read once. Rule, flow and question keys and `description` are left out. Rows have no cap and
+sort by key, Spec id and section in code-unit order. A malformed prefix list or scope returns only
+`{ diagnostics: [{ parameter, problem }] }`.
 
 ```js
 const accepts = ["prefixes", "pack", "specs"];
@@ -3997,3 +4007,8 @@ for (const id of ids) {
 rows.sort((a, b) => byCodeUnit(a.key, b.key) || byCodeUnit(a.spec, b.spec) || byCodeUnit(a.section, b.section));
 return { prefixes, scope, totals: { rows: rows.length, specs: new Set(rows.map((row) => row.spec)).size, byPrefix }, rows };
 ```
+
+The answer is `{ prefixes, scope, totals: { rows, specs, byPrefix }, rows }`, each row
+`{ key, spec, section, value, file, line }`, with `line` null when the location table records none.
+`byPrefix` counts a key under every prefix it matches. The law is
+`spec:consumers.agent-surface.register-recipes`.
